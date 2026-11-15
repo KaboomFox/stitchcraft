@@ -40,7 +40,7 @@
 
 use stitchcraft_core::{Code, Diagnostic, ElementId, Exhausted, Fix, Meter, Mm, Point};
 
-use super::narrow::{Edges, farthest, piece, spread, widest, width};
+use super::narrow::{Edges, farthest, piece, reach, spread, widest, width};
 use super::rules::{Bounds, Breadth, Measures, RuleId, choose, fills};
 use super::{AutoParams, at_most};
 use crate::design::Path;
@@ -94,16 +94,19 @@ pub(super) enum Made {
 
 /// What is measured of `part`, no wider than a satin column, whose columns are `found` and whose edges
 /// `edges` holds, with `meter`'s work: its area, its width along its columns' lines and how much it varies,
-/// and how many lines it has. `None` for lines of no length or no width.
+/// how many lines it has, and how far it reaches from them on both sides ([`reach`]). `None` for lines of no
+/// length or no width.
 fn measured(part: &Polygon, found: &[Column], edges: &Edges, meter: &mut Meter) -> Result<Option<Measures>, Exhausted> {
     let lines: Vec<Line> = found.iter().map(|column| column.line.clone()).collect();
-    let spread = spread(edges, &lines, meter)?.filter(|spread| spread.mean.get() > 0.0);
-    Ok(spread.map(|spread| Measures {
+    let Some(spread) = spread(edges, &lines, meter)?.filter(|spread| spread.mean.get() > 0.0) else { return Ok(None) };
+    let reach = reach(edges, found, meter)?;
+    Ok(Some(Measures {
         area: part.area(),
         breadth: Breadth::Medium,
         width: spread.mean.get(),
         unevenness: spread.deviation / spread.mean.get(),
         lines: found.len(),
+        reach,
     }))
 }
 
@@ -777,6 +780,78 @@ mod tests {
         let small: Vec<(f64, f64)> = arc(3.0, 48, 0.0, -std::f64::consts::TAU).into_iter().take(48).collect();
         let ring = part(&[(-6.0, -6.0), (6.0, -6.0), (6.0, 6.0), (-6.0, 6.0)], &[&small]);
         assert!(matches!(made(&ring, &[]), Made::Columns { .. }) && matches!(made(&ring, &[("auto_max_satin_width_mm", "5")]), Made::Long(..)));
+    }
+
+    /// A star of `points` points round the origin, its points `outer` millimetres out and the corners between
+    /// them `inner`, the first point straight up.
+    fn star(points: usize, outer: f64, inner: f64) -> Polygon {
+        let corners: Vec<(f64, f64)> = (0..2 * points)
+            .map(|i| {
+                let (sin, cos) = sin_cos(std::f64::consts::PI * i as f64 / points as f64);
+                let r = if i % 2 == 0 { outer } else { inner };
+                (r * sin, -r * cos)
+            })
+            .collect();
+        part(&corners, &[])
+    }
+
+    #[test]
+    fn req_auto_050_a_star_is_filled_and_not_sewn_as_one_column() {
+        let made = |part: &Polygon, set: &[(&str, &str)]| {
+            let rules = AutoParams::from_set(&set.iter().copied().collect()).unwrap().params;
+            columns(part, &Bounds::of(&rules, Mm::new(1.0).unwrap()), &rules, &[], &mut Budget::DEFAULT.meter()).unwrap()
+        };
+        // The star of the browser demo's badge, 5.33 mm across with 4 points. Its centre lines keep one of
+        // its 2 axes, and the other axis' points are left out of them as bumps: it has arms, and is filled.
+        let badge = star(4, 8.0 / 3.0, 8.0_f64.sqrt() / 3.0);
+        let Made::Filled(RuleId::Arms, Some(measures)) = made(&badge, &[]) else { panic!("no arms") };
+        assert_eq!((measures.lines, measures.breadth), (1, Breadth::Medium));
+        assert!((measures.reach - 2.604).abs() < 0.01 && (measures.width - 0.97).abs() < 0.01, "{measures:?}");
+        // As it sewed before the rule, which a shape gets back with a bound no star reaches: one column, 7.5
+        // times as slender as its width squared, whose stitches reach from one left-out point to the other.
+        let Made::Columns { sewn, rule: RuleId::Column, measures } = made(&badge, &[("auto_max_reach", "20")]) else { panic!("no column") };
+        assert!(sewn.len() == 1 && (measures.slenderness() - 7.5).abs() < 0.1 && (measures.unevenness - 0.4).abs() < 0.01, "{measures:?}");
+        assert!(matches!(made(&badge, &[("auto_stitch", "satin")]), Made::Columns { rule: RuleId::Asked, .. }));
+        // The layers are told so too, and fill its holes under what fills them.
+        let filled = |part: &Polygon| filled(part, &bounds(1.0), &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!([filled(&badge), filled(&band(3.0))], [Some(RuleId::Arms), None]);
+        // Stars of 4, 5 and 6 points from 3 to 12 mm across make no columns: each has arms, or is uneven, or
+        // from 8 mm would sew a stitch too long.
+        for (points, inner) in [(4, 0.3536), (5, 0.382), (6, 0.5)] {
+            for across in [3.0, 4.0, 5.33, 8.0, 12.0] {
+                let star = star(points, across / 2.0, inner * across / 2.0);
+                let by = match made(&star, &[]) {
+                    Made::Filled(rule, _) => Some(rule),
+                    _ => None,
+                };
+                assert!(matches!(by, Some(RuleId::Arms | RuleId::Uneven)), "{points} points, {across} mm: {by:?}");
+            }
+        }
+        // A cross of 2 bars keeps a column along each bar and each arm, a leaf its one column, and so does a
+        // letter V, whose corner is no arm.
+        let cross = part(
+            &[
+                (2.0, 0.0),
+                (4.0, 0.0),
+                (4.0, 2.0),
+                (6.0, 2.0),
+                (6.0, 4.0),
+                (4.0, 4.0),
+                (4.0, 6.0),
+                (2.0, 6.0),
+                (2.0, 4.0),
+                (0.0, 4.0),
+                (0.0, 2.0),
+                (2.0, 2.0),
+            ],
+            &[],
+        );
+        let v = part(&[(-2.07, -5.7), (-0.8, -5.7), (0.0, -3.51), (0.8, -5.7), (2.07, -5.7), (0.0, 0.0)], &[]);
+        let kite = part(&[(0.0, -4.0), (1.5, 0.0), (0.0, 4.0), (-1.5, 0.0)], &[]);
+        for (name, part, columns) in [("cross", &cross, 4), ("V", &v, 2), ("kite", &kite, 1)] {
+            let Made::Columns { sewn, rule: RuleId::Column, measures } = made(part, &[]) else { panic!("{name}: no columns") };
+            assert!(sewn.len() == columns && measures.reach <= 1.0 + 1e-6, "{name}: {} columns, {measures:?}", sewn.len());
+        }
     }
 
     #[test]
