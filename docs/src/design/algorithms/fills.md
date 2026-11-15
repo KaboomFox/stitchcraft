@@ -78,8 +78,15 @@ ring's bounds are found once. A ring that bounds no face is located only in the 
 its own, and a hole apart from every outline only in the outlines whose bounds cover its own.
 
 The cuts cost the most where a region is shrunk again and again ([offset curves](offset.md#speed)). The
-hot points, the corners and the points where edges cross, are kept in a sorted list, and a segment seeks
-the cells it passes through among the points within its span along x. Each edge is worked out once,
+hot points, the corners and the points where edges cross, are kept in a sorted list. For each round they
+are also put in a grid of buckets over their bounds, as many each way as the square root of their number.
+A segment seeks the cells it passes through among the points of the buckets within a half cell of it,
+and the edges that may cross it among those put in the same buckets (`REQ-FILL-006`). Edges that would
+take more than 4 buckets each, taken together, get larger buckets, so the memory stays in step with
+the edges. Before M13.23 both searches went through everything within a segment's span along x. The raw
+outline of a traced photo's background shrunk by 3.5 mm is some 85,000 short edges that lie many times
+over each other, and cutting it took 950 million units of work, more than the budget of 500 million.
+With the buckets it takes about 25 million, and gives the same points. Each edge is worked out once,
 however many times the rings draw it. A ring is rebuilt when one of its edges is bent. A round's crossings
 join the hot points at once, merged into the sorted list. The arrangement finds each point's number by its
 place in that list, and groups the steps the rings take by their lower point. The steps between the same 2
