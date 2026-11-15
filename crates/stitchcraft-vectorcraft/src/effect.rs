@@ -264,7 +264,7 @@ pub fn effect_solid(
             FillRule::EvenOdd => winding % 2 != 0,
         };
         // A ribbon turns clockwise as its corners are listed, which undoes one anticlockwise turn.
-        let ribbon = ribbon(&a, &b, gap).map(|[c0, c1, c2, c3]| if winding > 0 { [c0, c1, c2, c3] } else { [c3, c2, c1, c0] });
+        let ribbon = ribbon(&a, &b, gap).map(|[c0, c1, c2, c3]| if winding.is_positive() { [c0, c1, c2, c3] } else { [c3, c2, c1, c0] });
         if let Some(corners) = ribbon.filter(|_| filled) {
             geometry.subpath(&corners, true);
         }
@@ -550,6 +550,10 @@ mod tests {
             solid(&[SQUARE, INNER], FillRule::EvenOdd, &[inside, between]),
             [square, vec![(30, 30), (70, 30), (70, 70), (30, 70)], vec![(10, 51), (20, 51), (20, 49), (10, 49)]]
         );
+        // A side that rises little: the line's middle, at (5.5, 0.25), lies to the left of the side from
+        // (4, 0) to (8, 0.5), which passes it at x = 6.
+        const WEDGE: &[(f64, f64)] = &[(0.0, 0.0), (4.0, 0.0), (8.0, 0.5), (0.0, 0.5)];
+        assert_eq!(solid(&[WEDGE], FillRule::NonZero, &[[5.0, 0.25, 6.0, 0.25]]).len(), 2);
         // No ring, nothing to draw.
         assert_eq!(effect_solid(&[], FillRule::NonZero, [], 0.2, &mut Budget::DEFAULT.meter()), Ok(None));
     }

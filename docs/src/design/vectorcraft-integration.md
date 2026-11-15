@@ -608,6 +608,20 @@ A satin column's stitches end outside the edge of a small shape, as its thread d
 as hairlines of the fill, which add less than 3 % of the star's area. A stroke's and a satin column's own
 effects return lines, which the object's stroke draws, and they are unchanged.
 
+The shape costs about what the ribbons cost. Its outline takes one anchor a point where it took a ribbon
+a side, and telling which way the gaps are wound is little work beside laying the rows. Measured in
+VectorCraft 0.24.1's host with the contract crate's runs (2026-11-15), before and after:
+
+| Preview | Instructions before | Instructions from M6.16 |
+|---|---|---|
+| A fill's rows, a square 3.5 mm a side | 2.77 million | 2.82 million |
+| A fill's rows, a square 226 mm a side | 12.7 million | 13.5 million |
+| A fill's outline, a square 3.5 mm a side | 3.00 million | 2.99 million |
+| A fill's outline, a square 903 mm a side | 6.46 million | 6.67 million |
+| The Auto effect at auto, a filled square 56 mm a side | 12.8 million | 13.1 million |
+| The Auto effect at auto, a filled ring 30 mm across | 30.6 million | 30.3 million |
+| The Auto effect's outline, a filled square 903 mm a side | 4.82 million | 5.04 million |
+
 The `preview_level` parameter, `auto` by default, lets the user pick a level (VectorCraft reserves the
 name `preview`). A level the user picks gets the whole budget, and when that is not enough, `SC-I0810`
 names a cheaper one. The units of a stroke's work and of a satin column's cost the same on every shape
