@@ -186,6 +186,18 @@ a whole counts as ragged and is filled. For art drawn in strokes of changing thi
 parts** off, or use the `logo` style ([changing the choice](#changing-the-choice)), and the T sews as 2
 satin columns.
 
+A small star is filled too. Its centre line runs from one point to the point opposite, and one satin
+column along that line would sew the other points as bumps on its sides. StitchCraft measures how far a
+shape lies from its centre line on both sides, and fills one that reaches much farther than a column
+does. A cross with square arms sews a column along each arm, and a letter V keeps its columns: its corner
+lies on one side only.
+
+A fill can sew an outline, a running stitch round its edge after its rows, in its own thread. The outline
+draws the points of a small shape, which the ends of a fill's rows leave blunt. It is off unless you ask,
+since on a traced photo each piece of edge is a jump thread to cut:
+`stitch plan badge.svg --auto -o badge.pes --set auto_fill_outline=true`. It sews only where the edge
+shows, and not where a shape sewn later covers it.
+
 ### Stitches by width
 
 A line, a column and an area differ by their width. A shape's width at a place is the diameter of the
@@ -335,8 +347,8 @@ of `stitch plan --report`). The settings that change the choice come in 3 tiers:
   fills, **Fill uneven parts** (`auto_fill_uneven`) turns the filling of ragged patches off, and **Fill
   angle** (`auto_fill_angle`) turns every fill's rows. In VectorCraft, apply StitchCraft's Auto effect to
   the layer or the group, and set them in its dialog.
-- **Advanced**, each rule's bound is a setting too, such as the least slenderness of a column. No dialog
-  shows these. On the command line, `--set` sets one on every shape digitized automatically:
+- **Advanced**, each rule's bound is a setting too, such as the least slenderness of a column, and so is
+  the switch that sews an outline round each fill (`auto_fill_outline`). No dialog shows these. On the command line, `--set` sets one on every shape digitized automatically:
   `stitch plan photo.jpg -o photo.pes --set auto_min_slenderness=4`.
 
 A style is a named set of these settings. `stitch plan --style logo` suits flat art drawn in strokes: it

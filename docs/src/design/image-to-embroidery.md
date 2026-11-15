@@ -123,6 +123,11 @@ running dog, 62 of 107 shapes sewed so.
   The letters of a drawn patch measure 0.11 to 0.23, and the ragged patches of 4 traced photos 0.39 to
   0.52 at the median.
 - **Lines.** How many centre lines the part has. A part of one line has no branch.
+- **Reach.** How far the part lies from one of its centre lines on both sides of the line, in radii of the
+  widest circle that fits inside it centred on its lines. A column has 2 rails, the part's outline on either
+  side of its line. Each rail lies as far from the line as its farthest corner beside the line. The column
+  reaches as far as the nearer of its rails, and the part as far as its column that reaches farthest. A
+  column measures 1 however its width tapers, and a star 1.6 to 2.6.
 
 ### The rules
 
@@ -130,8 +135,8 @@ The [rules' table](../user/reference/auto-rules.md) is generated from the code's
 (`stitchcraft_engine::auto::rules::RULES`), with each bound's default, so that the table, the notice a
 shape gives and the tests at each bound can't drift apart. The rules are tried in this order. First a shape whose
 setting names a stitch sews so. Then a speck merges into a neighbour and a line runs. Areas are filled next,
-with compact parts and uneven parts after them. Any other part sews as satin columns, unless its columns
-are refused.
+with compact parts and uneven parts after them, and then a part with arms. Any other part sews as satin
+columns, unless its columns are refused.
 One function compares every bound (`auto::rules::choose`), a length to the micrometre and a ratio to its
 third decimal. A width written in another unit that converts to a bound give or take a rounding error,
 such as 7 mm in CSS pixels, is that bound.
@@ -149,6 +154,25 @@ sews each well. A piece of an uneven part that is narrower than the narrowest sa
 fill, cut as a narrow part of a broad one is ([Shapes in parts](#stitch-types-by-width)), and sews as a line.
 The measure is of the whole part, so a letter of a thick and a thin stroke is uneven too, though each
 stroke is even. A design drawn in such strokes turns the rule off, which the `logo` style does.
+
+**A part with arms is filled** (`REQ-AUTO-050`, M13.27). A star of 4 points 5 mm across has 2 axes, and
+its centre lines keep one of them. The points of the other axis are short for the star's middle, so they
+are left out of the lines as bumps, as the corner of a sharp turn is
+([strips, junctions and ends](algorithms/centre-lines.md#strips-junctions-and-ends)). Such a star counted
+one line, 0.97 mm wide and 7.5 times as slender, which is neither compact nor uneven. It sewed as one satin
+column from point to point, with its 2 other points as bumps on the column's sides. The reach tells such a
+part from a column: the points left out lie on both rails, far from the line, where a column's rails lie
+no farther than its widest circle reaches. A part that reaches more than 1.4 times as far is filled. The
+corner of a sharp turn lies on one rail only, so a letter V measures under 1 and keeps its columns. The
+rule comes after the uneven one, so a part that was filled before is filled by the same rule as before,
+and only columns moved.
+
+2 other measures were tried first. Counting the points left out as centre lines makes a star uneven, but a
+letter V 4 mm tall varies by 0.29 of its width, 0.01 under that rule's bound. The reach on one side alone,
+like the longest stitch for the line's length, measures a sharp corner as it measures a star's point. The
+rule has 2 limits. A star of 3 points measures 0.87, since its third point lies on one rail as a corner
+does, and stays a column. A star nowhere wider than the narrowest satin stroke is a line before its
+columns are looked for.
 
 **Holes** (`REQ-AUTO-033`). A part that is filled is filled whole under the areas that fill its holes, and
 they sew on it ([Layers](#neighbours)). A dog's nose sews as one fill with the nostrils on it, where it sewed
@@ -189,7 +213,10 @@ to 1.5 mm, and split a satin stitch at 7 mm to keep its look. The least slendern
 varies and the narrowest piece of a fill are StitchCraft's own. Their values come from measurements of 9
 pictures, which are 2 traced dogs, 2 traced photos, a pear, 3 emblems and a lettered patch, whose letters all kept
 their columns.
-Between a slenderness of 2 and 4 the running dog's result moves by 7 shapes of 107. MC-8 confirms the
+Between a slenderness of 2 and 4 the running dog's result moves by 7 shapes of 107. The farthest reach,
+1.4, lies between what was measured on 2026-11-15. Drawn bands, leaves, crosses and letters measure at
+most 1.0, the lettered patch's letters at most 1.19, and the dogs' parts that sew as columns at most 1.23.
+Drawn stars of 4, 5 and 6 points measure 1.61 to 2.62, and 5 blobs of the dogs' fur 1.51 to 2.11. MC-8 confirms the
 defaults or changes them.
 
 ### What it costs
@@ -211,6 +238,19 @@ searches for the order that changes thread least, and the dogs change thread 8, 
 ([Sewing order](#sewing-order)). With `auto_fill_uneven` off they change thread 6, 9, 7 and 10 times and
 jump 113, 135, 105 and 132 times, where they jump 84, 91, 79 and 108 times as planned. The switch trades
 thread changes for jump threads.
+
+M13.27's rule for a part with arms fills 5 parts of the dogs that sewed as columns, blobs of fur 2 to 13 mm²
+large, and the 2 stars of the lettered patch. Measured on 2026-11-15 against the step before, the thread
+changes stay as they were:
+
+| Picture | Parts that moved | Stitches | Jumps |
+|---|---:|---:|---:|
+| Dog on turf, 6 threads | 2 | 10464 to 10420 | 84 to 79 |
+| Dog on turf, 9 threads | 0 | 11158 | 91 |
+| Running dog, 6 threads | 1 | 11331 to 11330 | 79 |
+| Running dog, 9 threads | 2 | 13108 to 13115 | 108 to 106 |
+| Lettered patch | 2 | 25333 to 25340 | 37 |
+| Alpine Night, the demo's badge | 2 | 5419 to 5443 | 9 |
 
 ## Stitch types by width
 
@@ -564,6 +604,40 @@ the badge at three fifths of its size and sewn in the order below, covers its ed
 stacked it sews the abutting row's stitches. Without pull, every edge is covered as drawn and
 digitized alike, to within a hundredth. `tests/auto_pictures.rs` keeps the numbers
 from falling back, and MC-8 tells whether 0.4 mm is the pull on the machine.
+
+### An outline round a fill
+
+A tatami fill's rows end at its edge, and the thread pulls each row's end in. On a small shape with points,
+such as a star 5 mm across, the ends of the rows are most of what shows, and the points sew blunt. A
+digitizer runs a stitch round such a shape after filling it, which draws the edge as one line. A design
+asks for that with `auto_fill_outline` (M13.27, `REQ-AUTO-051`), read of its lowest automatic shape as the
+base layer's settings are.
+
+Each automatic area then sews a running stitch along its edge, in its own thread, in an element of its own
+straight after the area, named after it with `#2`. The edge is the area's as the layers and the specks
+leave it, before the area reaches under its neighbours: what shows of it. Where a shape sewn after the area
+touches the edge, the area reaches the overlap under that shape, and a run along the edge would lie under
+that shape's stitches and thicken them. So the outline leaves out the edge within `auto::TOUCHING` of each
+shape sewn after the area, and of each other element of the area's own shape, whose columns and lines are
+the same shape going on. A line digitized from a stroke goes over an area, and hides no edge. The edge is
+cut into pieces no longer than 0.5 mm, and a piece shows when its middle lies in none of those shapes. The
+pieces that show in a row are one line, a ring where the whole edge shows. A line shorter than 3 mm is left
+out, since 2 stitches beside a neighbour's edge sew a knot.
+
+The setting is off by default, for what it costs, measured on 2026-11-15:
+
+| Picture | Stitches | Jumps | Thread changes |
+|---|---:|---:|---:|
+| Alpine Night, the demo's badge | 5443 to 5554 | 9 | 3 |
+| Lettered patch | 25340 to 25991 | 37 to 40 | 4 |
+| Dog on turf, 6 threads | 10420 to 11031 | 79 to 101 | 8 |
+| Running dog, 6 threads | 11330 to 12089 | 79 to 102 | 8 |
+
+An outline sews in its fill's thread straight after the fill, so it changes no thread. On the badge the
+needle reaches each outline from where its fill ends without a jump. A traced photo's areas have edges in
+many pieces between their neighbours, and each piece is a jump, which a machine with one needle leaves as
+a thread to cut by hand. So a badge or a logo gains by it and a photo doesn't. It is an advanced setting:
+the Auto effect's dialog holds 12 rows in its window, and a thirteenth doesn't fit ([Settings](#settings)).
 
 ## Covering the fabric
 
@@ -984,7 +1058,8 @@ the dogs, because its lines then sew before the fills beside them.
 Fewer thread changes leave more jump threads. The machine cuts the thread at a change and not at a jump,
 so a thread that sews once jumps where it changed before. The dogs jump 84, 91, 79 and 108 times, where
 they jumped 82, 94, 81 and 112 times, and leave 77, 78, 70 and 95 jump threads to cut by hand, where they
-left 71, 73, 64 and 84. The traced pear and the test pictures change thread once for each thread after
+left 71, 73, 64 and 84. Since M13.27 filled 5 of their blobs they jump 79, 91, 79 and 106 times, and leave
+71, 78, 70 and 93 jump threads. The traced pear and the test pictures change thread once for each thread after
 the first, as they did. The digitized halves of the TS-13 sheets change thread 2, 4, 4 and 6 times, where
 they changed 5, 4, 5 and 8 times. TS-13B's black sews twice: its base layer and letters first, and the
 lines of its windows after the fills they border. The search keeps 87 to 3,584 rows of batches on the
@@ -1011,30 +1086,33 @@ leaves are counted apart.
 | Emblem, abutting or stacked | 0 | 0.35 mm | 0 | 2 |
 | Button, abutting or stacked | 0 | 0.40 mm | 6 | 0 |
 | Traced pear | 0 | 0.44 mm | 0 | 2 |
-| Traced dog on turf, 6 threads | 0 | 1.33 mm | 7 | 77 |
+| Traced dog on turf, 6 threads | 0 | 1.33 mm | 5 | 71 |
 | Traced dog on turf, 9 threads | 0 | 3.15 mm | 11 | 78 |
 | Traced running dog, 6 threads | 0.18 mm² | 2.14 mm | 3 | 70 |
-| Traced running dog, 9 threads | 0 | 1.13 mm | 5 | 95 |
+| Traced running dog, 9 threads | 0 | 1.86 mm | 4 | 93 |
 
 The button's 7 dots sew on from one to the next, each move 2.7 mm long across its yellow. The pear leaves 2
 jump threads, where it left 4: the narrow ends of its olive and dark olive bands are uneven, and sew as
 fills with their bands (M13.21). `tests/auto_fabric.rs` keeps the moves and the jump threads as measured.
 
 The owner's dog, traced from her 2 photos in 6 and in 9 threads (M13.15, `docs/fixtures/README.md` › The
-traced dogs), lays 17 stitches astray: 2 and 5 on the dog on turf in 6 and in 9 threads, and 7 and 3 on the
-running dog. One is the straight move, 2.25 mm long, between 2 lines of one narrow part, which is a stitch
-because it is shorter than the collapse length. The other 16 are rows of fills, each up to 4 mm long, a
-fill's stitch. M13.21, which fills where columns sewed, brought 20 of them. Of the 6 that were traced
+traced dogs), lays 19 stitches astray: 2 and 5 on the dog on turf in 6 and in 9 threads, and 8 and 4 on the
+running dog. 2 are straight moves, 2.25 and 2.1 mm long, each between 2 lines of one narrow part, which is
+a stitch because it is shorter than the collapse length. The other 17 are rows of fills, each up to 4 mm
+long, a fill's stitch. M13.21, which fills where columns sewed, brought 20 of them. Of the 6 that were traced
 then, 5 lay along a line of fur of another colour that sews on the fill or that the fill reaches under.
 The line sews as wide as its thread, and the row shows beside it. The sixth lay under the edge of a column
 sewn after its fill. M13.22's order took 8 of the 20 away and brought 4 others, beside neighbours that
-now sew in another order. Before
+now sew in another order. M13.27 fills 5 blobs of fur that sewed as columns
+([which stitch a shape gets](#which-stitch-a-shape-gets)). A row of the largest shows beside a line of fur
+in both running dogs, the second move crosses a blob that a column covered before, and one row of the
+running dog in 9 threads no longer shows: 19 stitches where there were 17. Before
 M13.21 the dogs laid 7 stitches astray. 2 of them were satin stitches 7.89 and 4.72 mm long that fanned
 across a shape biting into their column, and M13.21 removed those. `tests/auto_photos.rs` lists each stitch,
 with where it lies and why, and its case fails on any other stitch astray and on any listed one that no
 longer is. Of the [roadmap](../plan/roadmap.md)'s steps, M13.17 removes the move and M13.18 the rows, by
 merging the thin lines into their neighbours. The dogs' moves astray are moves from one element to the next,
-as the button's are. Their jump threads, 70 to 95, are the design's limit as it stands: each thread sews
+as the button's are. Their jump threads, 70 to 93, are the design's limit as it stands: each thread sews
 its shapes one after another and jumps between those that don't touch, and the PE800 cuts no jump. M13.17
 runs the thread under the shapes sewn later instead, which cover it. Each dog takes
 too long to digitize and measure in the tests' debug build, so CI's `perf` job runs these cases in the
@@ -1070,14 +1148,16 @@ generated from the registry.
 | Advanced | Narrowest triple run | `auto_min_triple_run_width_mm` | a running stitch tripled |
 | Advanced | Least slenderness of a column | `auto_min_slenderness` | a compact part |
 | Advanced | Most a column's width varies | `auto_max_unevenness` | an uneven part |
+| Advanced | Farthest a column reaches from its line | `auto_max_reach` | a part with arms |
 | Advanced | Narrowest piece of a fill | `auto_min_fill_width_mm` | what leaves the fill of an area |
 | Advanced | Smallest area | `auto_min_area_mm2` | specks, the narrow parts too small to cut from a broad part, and what details may leave of a hole they fill |
+| Advanced | Outline round fills | `auto_fill_outline` | whether each fill sews [an outline](#an-outline-round-a-fill), read of the lowest shape |
 | Advanced | Largest sliver | `auto_base_sliver_mm2` | the largest gap in the top thread that is left to the base layer: a limit of the [measure](#the-stricter-measure), by which nothing sews differently |
 | Advanced | Most left to the base layer | `auto_base_bare_percent` | the most of the design that the top thread may leave bare over a base layer, the measure's other limit |
 
 A design's settings are a shape's too: VectorCraft's Auto effect on a group or a layer sets them on every
 path inside it. The Auto effect's dialog held 13 rows after M13.16 and was 903 px tall in a window of 900.
-With the bounds and the 2 limits of the measure left out it holds 12.
+With the bounds, the outline's switch and the 2 limits of the measure left out it holds 12.
 
 The defaults are the values on this page, and MC-8 confirms or changes them. A shape that sets none of the
 settings takes the defaults, and an automatic shape with a setting that doesn't read sews nothing

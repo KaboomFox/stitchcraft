@@ -141,3 +141,140 @@ fn uncovered(ring: &[Point], parts: &[(Envelope, &Polygon)], meter: &mut Meter) 
     lines.retain(|line| line.length() >= SHORTEST);
     Ok(lines)
 }
+
+#[cfg(test)]
+mod tests {
+    use stitchcraft_core::{Budget, Mm};
+    use stitchcraft_params::ParamSet;
+
+    use super::super::tests::{filled, square};
+    use super::super::{AutoParams, Sewn};
+    use super::*;
+    use crate::design::{Cap, DesignSettings, Element, Join, Path, Segment, Shape, Subpath};
+
+    fn p(x: f64, y: f64) -> Point {
+        Point::new(x, y).unwrap()
+    }
+
+    /// An automatic area `id`, `part`, of the shape at `shape` in the design.
+    fn area(id: &str, part: Polygon, shape: usize) -> Sewn {
+        Sewn { element: filled(id, &[part]), area: Some(AutoParams::defaults()), automatic: true, reach: None, shape, part: None }
+    }
+
+    /// The outlines of `sewn`, by area, each line's length to the micrometre and whether it closes, found
+    /// with `budget`, and how much was said.
+    fn outlined(sewn: Vec<Sewn>, budget: &Budget) -> (Vec<(String, Vec<(f64, bool)>)>, usize) {
+        let mut shapes = Shapes::new(sewn, &DesignSettings::default(), &Budget::DEFAULT);
+        let (found, said) = outlines(&mut shapes, budget);
+        assert!(said.iter().all(|said| said.code == Code::AutoUnder && said.message.ends_with("so it sews no outline.")), "{said:?}");
+        let lines = |lines: &[Line]| lines.iter().map(|line| ((line.length() * 1000.0).round() / 1000.0, line.closed)).collect();
+        (found.iter().map(|(id, found)| (id.as_str().to_string(), lines(found))).collect(), said.len())
+    }
+
+    /// [`outlined`] with the default budget, of which nothing is said.
+    fn outlines_of(sewn: Vec<Sewn>) -> Vec<(String, Vec<(f64, bool)>)> {
+        let (found, said) = outlined(sewn, &Budget::DEFAULT);
+        assert_eq!(said, 0);
+        found
+    }
+
+    fn one(id: &str, length: f64, closed: bool) -> (String, Vec<(f64, bool)>) {
+        (id.to_string(), vec![(length, closed)])
+    }
+
+    #[test]
+    fn req_auto_051_an_area_s_outline_runs_round_its_edge_where_no_shape_sewn_after_it_covers_it() {
+        let (left, right) = (square((0.0, 0.0), (10.0, 10.0)), square((10.0, 0.0), (20.0, 10.0)));
+        // Alone, a square is outlined whole: its ring, by its 4 corners.
+        let mut shapes = Shapes::new(vec![area("a", left.clone(), 0)], &DesignSettings::default(), &Budget::DEFAULT);
+        let (found, said) = outlines(&mut shapes, &Budget::DEFAULT);
+        let [(id, lines)] = found.as_slice() else { panic!("{found:?}") };
+        assert_eq!((id.as_str(), said.len()), ("a", 0));
+        assert_eq!(lines, &[Line { points: vec![p(0.0, 10.0), p(10.0, 10.0), p(10.0, 0.0), p(0.0, 0.0)], closed: true }]);
+        // Beside a square sewn after it, it leaves out the edge they share: the later square covers that
+        // edge, and is outlined whole itself.
+        let pair = outlines_of(vec![area("a", left.clone(), 0), area("b", right.clone(), 1)]);
+        assert_eq!(pair, [one("a", 30.0, false), one("b", 40.0, true)]);
+        // 2 elements of one shape leave the edge between them out both: the shape goes on across it.
+        let own = outlines_of(vec![area("a", left.clone(), 0), area("b", right.clone(), 0)]);
+        assert_eq!(own, [one("a", 30.0, false), one("b", 30.0, false)]);
+        // A line that starts where the ring does isn't cut there: a square that covers 2 mm of the first
+        // side's middle leaves one line of 38 mm, from one of its sides round to the other.
+        let notch = square((-1.0, 4.0), (1.0, 6.0));
+        let mut shapes = Shapes::new(vec![area("a", left.clone(), 0), area("n", notch, 1)], &DesignSettings::default(), &Budget::DEFAULT);
+        let (found, _) = outlines(&mut shapes, &Budget::DEFAULT);
+        let line = &found[0].1[0];
+        assert_eq!((found[0].1.len(), line.closed, line.points.first(), line.points.last()), (1, false, Some(&p(0.0, 6.0)), Some(&p(0.0, 4.0))));
+        assert!((line.length() - 38.0).abs() < 1e-9 && line.points.len() == 6, "{line:?}");
+        // A shape far from it covers none of it, and neither does a line digitized from a stroke, which
+        // goes over the area.
+        let far = square((50.0, 50.0), (60.0, 60.0));
+        assert_eq!(outlines_of(vec![area("a", left.clone(), 0), area("f", far, 1)])[0], one("a", 40.0, true));
+        let along = Subpath { start: p(10.0, -5.0), segments: vec![Segment::Line(p(10.0, 15.0))], closed: false };
+        let stroke = Shape::Stroke { path: Path { subpaths: vec![along] }, width: Mm::new(0.4).unwrap(), join: Join::Round, cap: Cap::Round };
+        let line = Sewn {
+            element: Element { shape: stroke, params: ParamSet::default(), ..filled("l", std::slice::from_ref(&left)) },
+            area: None,
+            automatic: true,
+            reach: Some(1.0),
+            shape: 1,
+            part: None,
+        };
+        assert_eq!(outlines_of(vec![area("a", left, 0), line]), [one("a", 40.0, true)]);
+    }
+
+    #[test]
+    fn req_auto_051_an_outline_shorter_than_2_stitches_is_left_out() {
+        // A square 1 mm across has a ring of 4 mm, which sews, and one 0.7 mm across a ring of 2.8 mm, which
+        // doesn't: the area has no outline.
+        assert_eq!(outlines_of(vec![area("a", square((0.0, 0.0), (1.0, 1.0)), 0)]), [one("a", 4.0, true)]);
+        assert_eq!(outlines_of(vec![area("a", square((0.0, 0.0), (0.7, 0.7)), 0)]), []);
+        // A square 2.5 mm across in the mouth of a U sewn after it shows one side: 2.5 mm, left out.
+        let u = Polygon {
+            outline: vec![p(-5.0, -5.0), p(-5.0, 2.5), p(0.0, 2.5), p(0.0, 0.0), p(2.5, 0.0), p(2.5, 2.5), p(7.5, 2.5), p(7.5, -5.0), p(-5.0, -5.0)],
+            holes: Vec::new(),
+        };
+        let small = square((0.0, 0.0), (2.5, 2.5));
+        assert_eq!(outlines_of(vec![area("a", small.clone(), 0), area("u", u.clone(), 1)]).iter().map(|(id, _)| id.as_str()).collect::<Vec<_>>(), ["u"]);
+        // In a mouth 3 mm wide the side of 3 mm sews.
+        let wide = Polygon { outline: u.outline.iter().map(|q| if q.x() == 2.5 { p(3.0, q.y()) } else { *q }).collect(), holes: Vec::new() };
+        let found = outlines_of(vec![area("a", square((0.0, 0.0), (3.0, 2.5)), 0), area("u", wide, 1)]);
+        assert_eq!(found[0], one("a", 3.0, false));
+    }
+
+    #[test]
+    fn req_auto_051_an_edge_in_a_hole_of_a_later_shape_shows() {
+        // A square in the hole of a frame sewn after it, 1 mm clear of it all round, is outlined whole: the
+        // frame's bounds hold it, and its hole does too. A square that fills the hole shows no edge.
+        let frame = |hole: Polygon| Polygon { holes: vec![hole.outline.iter().rev().copied().collect()], ..square((0.0, 0.0), (10.0, 10.0)) };
+        let clear = outlines_of(vec![area("a", square((4.0, 4.0), (6.0, 6.0)), 0), area("f", frame(square((3.0, 3.0), (7.0, 7.0))), 1)]);
+        assert_eq!(clear[0], one("a", 8.0, true));
+        let filling = outlines_of(vec![area("a", square((4.0, 4.0), (6.0, 6.0)), 0), area("f", frame(square((4.0, 4.0), (6.0, 6.0))), 1)]);
+        assert_eq!(filling.iter().map(|(id, _)| id.as_str()).collect::<Vec<_>>(), ["f"]);
+        // A part with no ring at all has no outline.
+        assert_eq!(uncovered(&[], &[], &mut Budget::DEFAULT.meter()).map_err(|_| ()), Ok(Vec::new()));
+    }
+
+    #[test]
+    fn req_auto_051_an_area_whose_outline_needs_more_work_than_its_budget_allows_sews_none_and_says_so() {
+        let sewn = || vec![area("a", square((0.0, 0.0), (10.0, 10.0)), 0), area("b", square((10.0, 0.0), (20.0, 10.0)), 1)];
+        let full = outlined(sewn(), &Budget::DEFAULT);
+        let with = |work: u64| outlined(sewn(), &Budget { max_work: work, ..Budget::DEFAULT });
+        let least = (0..1 << 20).find(|work| with(*work) == full).unwrap();
+        // With less, the first area, which looks at the second, has no outline, and that is said of it; the
+        // second, which needs less, may have its own.
+        for work in 0..least {
+            let (found, said) = with(work);
+            assert!(said >= 1 && found.iter().all(|(id, _)| id == "b"), "{work}: {found:?}");
+        }
+        assert!(least > 80, "{least}");
+        let mut shapes = Shapes::new(sewn(), &DesignSettings::default(), &Budget::DEFAULT);
+        let (_, said) = outlines(&mut shapes, &Budget { max_work: 0, ..Budget::DEFAULT });
+        assert_eq!(said[0].element.as_ref().map(|id| id.as_str()), Some("a"));
+        assert_eq!(
+            said[0].to_string(),
+            "info SC-I0904: Finding where this area's edge meets the shapes sewn after it needed more than the work budget of 0 units, so it \
+             sews no outline."
+        );
+    }
+}
