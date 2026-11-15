@@ -170,7 +170,7 @@ fn a_file_far_larger_than_its_pin_is_read_only_to_a_byte_past_it() {
 }
 
 #[test]
-fn pins_that_dont_read_are_a_bug_of_the_repositorys() {
+fn pins_that_dont_read_are_a_bug_of_the_repository() {
     for (text, why) in [("", "missing field `model`"), ("[model.u2netp]\nfile = \"u2netp.onnx\"", "missing field")] {
         let said = Pins::parse(text).unwrap_err();
         assert_eq!(said.code, Code::InternalCheckFailed);

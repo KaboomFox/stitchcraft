@@ -54,8 +54,7 @@ impl CutOut {
         }
         work.charge(picture.pixels())?;
         // The picture's own alpha, where it is lower.
-        let alpha: Vec<u8> =
-            alpha.iter().zip(picture.rgba().chunks_exact(4)).map(|(a, pixel)| (*a).min(pixel.get(3).copied().unwrap_or(0))).collect();
+        let alpha: Vec<u8> = alpha.iter().zip(picture.rgba().as_chunks::<4>().0).map(|(a, [.., own])| (*a).min(*own)).collect();
         let mut bounds: Option<[usize; 4]> = None;
         for (at, _) in alpha.iter().enumerate().filter(|(_, a)| **a >= KEPT) {
             let (x, y) = (at % columns, at / columns);
@@ -67,7 +66,7 @@ impl CutOut {
         let Some([x0, y0, x1, y1]) = bounds else { return Err(nothing_kept(&subject, from)) };
         let mut rgba = Vec::with_capacity((x1 - x0) * (y1 - y0) * 4);
         for (row, alphas) in picture.rgba().chunks_exact(columns * 4).zip(alpha.chunks_exact(columns)).skip(y0).take(y1 - y0) {
-            let pixels = row.chunks_exact(4).zip(alphas).skip(x0).take(x1 - x0);
+            let pixels = row.as_chunks::<4>().0.iter().zip(alphas).skip(x0).take(x1 - x0);
             rgba.extend(pixels.flat_map(|(pixel, a)| pixel.iter().take(3).copied().chain([*a])));
         }
         let crop = [x0, y0, x1, y1].map(|edge| u32::try_from(edge).unwrap_or(u32::MAX));

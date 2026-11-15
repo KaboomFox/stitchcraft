@@ -32,7 +32,9 @@ sha256 = "309c8469258dda742793dce0ebea8e6dd393174f89934733ecc8b14c76f4ddd8"
 file = "mobilesam-encoder.onnx"
 address = "https://github.com/KaboomFox/stitchcraft/releases/download/cutout-models-1/mobilesam-encoder.onnx"
 size = 27969741
-sha256 = "047b16d8c829fb9f313acb9943bafd4d9f98b7fbd8f3d19149f221cfeefe0327"
+# The sum of the export of the workflow's runner, where the release is built. An export's bytes depend on the
+# machine that runs it (release/EXPORT.md, The checks).
+sha256 = "71268b41f17ab47538384f408a7e1d25c7f7451f4e8f5cba31b34a047aeff7ff"
 
 [model.decoder]
 file = "mobilesam-decoder.onnx"

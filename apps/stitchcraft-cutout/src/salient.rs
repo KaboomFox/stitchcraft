@@ -34,12 +34,12 @@ pub fn input(picture: &Picture, work: &mut Work) -> Result<Vec<f32>, Diagnostic>
     let small = resize(&view, SIZE, SIZE, FilterType::Lanczos3);
     let pixels = small.as_raw();
     work.charge_each(pixels.len())?;
-    let largest = pixels.chunks_exact(4).flat_map(|pixel| pixel.iter().take(3)).copied().max().unwrap_or(0).max(1);
+    let largest = pixels.as_chunks::<4>().0.iter().flat_map(|pixel| pixel.iter().take(3)).copied().max().unwrap_or(0).max(1);
     let largest = f32::from(largest);
     let plane = pixels.len() / 4;
     let mut values = vec![0.0; 3 * plane];
     for (channel, ((mean, deviation), out)) in MEAN.iter().zip(DEVIATION).zip(values.chunks_exact_mut(plane)).enumerate() {
-        for (value, pixel) in out.iter_mut().zip(pixels.chunks_exact(4)) {
+        for (value, pixel) in out.iter_mut().zip(pixels.as_chunks::<4>().0) {
             let colour = pixel.get(channel).copied().unwrap_or(0);
             *value = (f32::from(colour) / largest - mean) / deviation;
         }

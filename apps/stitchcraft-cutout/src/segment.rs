@@ -91,7 +91,7 @@ pub fn encoder_input(picture: &Picture, frame: &Frame, work: &mut Work) -> Resul
     let width = usize::try_from(frame.scaled_width).unwrap_or(0);
     for (channel, ((mean, deviation), out)) in MEAN.iter().zip(DEVIATION).zip(values.chunks_exact_mut(plane)).enumerate() {
         for (row, pixels) in out.chunks_exact_mut(side).zip(scaled.as_raw().chunks_exact(width * 4)) {
-            for (value, pixel) in row.iter_mut().zip(pixels.chunks_exact(4)) {
+            for (value, pixel) in row.iter_mut().zip(pixels.as_chunks::<4>().0) {
                 *value = (f32::from(pixel.get(channel).copied().unwrap_or(0)) - mean) / deviation;
             }
         }
@@ -253,7 +253,7 @@ mod tests {
     }
 
     #[test]
-    fn req_cli_015_the_prompt_is_the_points_then_the_boxs_corners_with_their_labels() {
+    fn req_cli_015_the_prompt_is_the_points_then_the_corners_of_the_box_with_their_labels() {
         let frame = Frame::of(1200, 1600);
         let marks = Marks {
             subject_box: None,
