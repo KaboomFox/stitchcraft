@@ -46,6 +46,18 @@ use crate::stitches::{JumpThread, jump_threads};
 
 mod cover;
 pub use cover::{BARE, Cover, FAR, GAP, cover, painted};
+pub use stitchcraft_plan::thickness::{Limits, Measure, Report, Thickness};
+
+/// How thick `plan` sews against `limits`, with the default budget's work.
+///
+/// # Panics
+///
+/// When the plan sews no stitch, or is too large to measure.
+pub fn thickness(plan: &StitchPlan, limits: &Limits) -> Report {
+    let mut meter = Budget::DEFAULT.meter();
+    let measured = Thickness::of(plan, &mut meter).expect("the plan is measured").expect("the plan sews a stitch");
+    measured.report(plan, limits, &mut meter).expect("the plan is measured")
+}
 
 /// How long a stretch of a stitch, in millimetres, may lie where the picture has another colour before the
 /// stitch is astray: past a satin column's rail by its pull compensation, 0.4 mm, and twice that.
