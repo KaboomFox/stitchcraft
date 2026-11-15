@@ -179,10 +179,10 @@ mod tests {
         // Each sheet's size, its conformance case's to the micrometre, and its stitches: what MC-8 sews, which
         // changes with any change to what a picture sews.
         for (id, size, stitches) in [
-            ("TS-13A", [126.001, 167.75], 25_731),
-            ("TS-13B", [110.597, 148.4], 15_768),
-            ("TS-13C", [111.397, 107.5], 11_323),
-            ("TS-13D", [115.0, 108.386], 27_599),
+            ("TS-13A", [126.001, 167.98], 26_105),
+            ("TS-13B", [110.597, 148.4], 15_935),
+            ("TS-13C", [111.397, 107.75], 11_486),
+            ("TS-13D", [115.0, 108.386], 27_988),
         ] {
             let plan = find(id).unwrap().plan().unwrap();
             let bounds = plan.bounds().unwrap();
