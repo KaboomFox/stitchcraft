@@ -29,8 +29,8 @@ def git(*args, cwd, check=True):
 
 
 def publish(destination, source):
-    if not re.fullmatch(r'app|dev|site-root|v[0-9]+\.[0-9]+|pr/[1-9][0-9]*', destination):
-        raise ValueError('Destination must be app, dev, site-root, v<major>.<minor> or pr/<positive number>')
+    if not re.fullmatch(r'app|dev|sheet|site-root|v[0-9]+\.[0-9]+|pr/[1-9][0-9]*', destination):
+        raise ValueError('Destination must be app, dev, sheet, site-root, v<major>.<minor> or pr/<positive number>')
     source = Path(source).resolve() if source else None
     if source and not (source / 'index.html').is_file():
         raise ValueError('The built site must contain index.html')
