@@ -28,6 +28,7 @@ mod buffer;
 mod generator;
 
 pub use buffer::{buffer, buffer_with};
+pub(crate) use buffer::line_curves;
 pub(crate) use generator::{Meet, segments_meet};
 
 use stitchcraft_core::{Exhausted, Meter, Point};

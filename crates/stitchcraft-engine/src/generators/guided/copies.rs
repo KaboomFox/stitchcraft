@@ -39,18 +39,14 @@ pub(super) fn rows(piece: &Polygon, rings: &Rings<'_>, guide: &[Point], guided: 
     let (Some(&first), Some(&last)) = (guide.first(), guide.last()) else { return Ok(Vec::new()) };
     let bounds = Bounds::of(&piece.outline);
     let along = unit(first, last);
-    // Far enough that each end lies outside the bounds, however the copies are moved.
-    let reach = [first, last].iter().map(|&end| bounds.farthest(end)).fold(0.0, f64::max);
-    let lengthened: Vec<Point> =
-        std::iter::once(moved(first, along, -reach)).chain(guide.iter().copied()).chain(std::iter::once(moved(last, along, reach))).collect();
-    meter.charge(u64::try_from(lengthened.len()).unwrap_or(u64::MAX))?;
+    let lengthened = lengthened(guide, &bounds, meter)?;
     let step = match guided.angle {
         Some(degrees) => {
             let (sin, cos) = sin_cos(degrees.to_radians());
             [cos, sin]
         }
         // A right angle clockwise as the drawing shows it, y down.
-        None => [-along[1], along[0]],
+        None => square_to(along),
     };
     let start = start(piece, rings, &lengthened, step, guided.spacing, meter)?;
     let smoothed = if guided.smoothness > 0.0 { smooth(&lengthened, guided.smoothness, guided.travel.min_stitch, meter)? } else { lengthened };
@@ -78,10 +74,30 @@ pub(super) fn rows(piece: &Polygon, rings: &Rings<'_>, guide: &[Point], guided: 
     Ok(rows)
 }
 
+/// `guide` lengthened straight on at both ends, along the line from its first point to its last, by the
+/// larger of the distances from its 2 ends to the corner of `bounds` farthest from each, as the module says.
+/// A unit of `meter`'s work for each of its points.
+pub(super) fn lengthened(guide: &[Point], bounds: &Bounds, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+    let (Some(&first), Some(&last)) = (guide.first(), guide.last()) else { return Ok(Vec::new()) };
+    let along = unit(first, last);
+    // Far enough that each end lies outside the bounds, however the copies are moved.
+    let reach = [first, last].iter().map(|&end| bounds.farthest(end)).fold(0.0, f64::max);
+    let lengthened: Vec<Point> =
+        std::iter::once(moved(first, along, -reach)).chain(guide.iter().copied()).chain(std::iter::once(moved(last, along, reach))).collect();
+    meter.charge(u64::try_from(lengthened.len()).unwrap_or(u64::MAX))?;
+    Ok(lengthened)
+}
+
+/// The direction a right angle clockwise from `along` as the drawing shows it, y down: Ink/Stitch's
+/// `rotate_left`, as the axes count angles.
+pub(super) fn square_to(along: [f64; 2]) -> [f64; 2] {
+    [-along[1], along[0]]
+}
+
 /// The copy the rows start from, by its number: 0 where `lengthened` meets the piece, and otherwise the
 /// whole number of `spacing`s, rounded towards 0, the point of it nearest the piece's centroid lies from the
 /// centroid, negative where `step` points away from the centroid.
-fn start(piece: &Polygon, rings: &Rings<'_>, lengthened: &[Point], step: [f64; 2], spacing: f64, meter: &mut Meter) -> Result<i64, Exhausted> {
+pub(super) fn start(piece: &Polygon, rings: &Rings<'_>, lengthened: &[Point], step: [f64; 2], spacing: f64, meter: &mut Meter) -> Result<i64, Exhausted> {
     if meets(lengthened, rings, meter)? {
         return Ok(0);
     }
@@ -105,7 +121,7 @@ fn start(piece: &Polygon, rings: &Rings<'_>, lengthened: &[Point], step: [f64; 2
 
 /// Whether the line `points` meets the piece whose rings are `rings`: crosses or touches one of its rings, or
 /// lies in it. Costs as [`Rings::meeting`] and [`Rings::covers`] do.
-fn meets(points: &[Point], rings: &Rings<'_>, meter: &mut Meter) -> Result<bool, Exhausted> {
+pub(super) fn meets(points: &[Point], rings: &Rings<'_>, meter: &mut Meter) -> Result<bool, Exhausted> {
     let mut met = false;
     for side in points.windows(2) {
         meter.charge(1)?;
@@ -143,27 +159,27 @@ fn first_of(row: &[Point]) -> Point {
 }
 
 /// The unit vector from `from` to `to`; nothing for points at one place.
-fn unit(from: Point, to: Point) -> [f64; 2] {
+pub(super) fn unit(from: Point, to: Point) -> [f64; 2] {
     let (dx, dy) = (to.x() - from.x(), to.y() - from.y());
     let length = (dx * dx + dy * dy).sqrt();
     if length > 0.0 { [dx / length, dy / length] } else { [0.0, 0.0] }
 }
 
 /// `p` moved `by` along the unit vector `along`.
-fn moved(p: Point, along: [f64; 2], by: f64) -> Point {
+pub(super) fn moved(p: Point, along: [f64; 2], by: f64) -> Point {
     Point::new(p.x() + along[0] * by, p.y() + along[1] * by).unwrap_or(p)
 }
 
 /// The box round a piece's outline, where its copies are looked for.
 #[derive(Clone, Copy, Debug)]
-struct Bounds {
+pub(super) struct Bounds {
     min: [f64; 2],
     max: [f64; 2],
 }
 
 impl Bounds {
     /// The box round `points`.
-    fn of(points: &[Point]) -> Bounds {
+    pub(super) fn of(points: &[Point]) -> Bounds {
         let mut bounds = Bounds { min: [f64::INFINITY; 2], max: [f64::NEG_INFINITY; 2] };
         for p in points {
             bounds.min = [bounds.min[0].min(p.x()), bounds.min[1].min(p.y())];
@@ -180,7 +196,7 @@ impl Bounds {
     }
 
     /// Whether the line `points` meets the box, its edges included. A unit of `meter`'s work for each side.
-    fn met_by(&self, points: &[Point], meter: &mut Meter) -> Result<bool, Exhausted> {
+    pub(super) fn met_by(&self, points: &[Point], meter: &mut Meter) -> Result<bool, Exhausted> {
         for side in points.windows(2) {
             meter.charge(1)?;
             if self.meets(side[0], side[1]) {
@@ -188,6 +204,11 @@ impl Bounds {
             }
         }
         Ok(points.first().is_some_and(|&p| self.holds(p)))
+    }
+
+    /// Whether `other` lies in the box, its edges included.
+    pub(super) fn holds_box(&self, other: &Bounds) -> bool {
+        self.min[0] <= other.min[0] && self.min[1] <= other.min[1] && other.max[0] <= self.max[0] && other.max[1] <= self.max[1]
     }
 
     /// Whether `p` lies in the box or on its edges.
