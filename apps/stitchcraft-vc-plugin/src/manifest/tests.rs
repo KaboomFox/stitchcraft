@@ -61,7 +61,9 @@ fn req_vc_011_each_exporter_s_manifest_is_one_vectorcraft_accepts() {
 
 #[test]
 fn req_vc_016_the_auto_effect_s_dialog_holds_the_rules_settings_and_its_preview_levels() {
-    use stitchcraft_engine::auto::{ADVANCED, AutoParams, FILL_ANGLE, FILL_OUTLINE, FILL_UNEVEN, IGNORE_BACKGROUND, MIN_AREA, OVERLAP, PREFER, STITCH};
+    use stitchcraft_engine::auto::{
+        ADVANCED, AutoParams, FILL_ANGLE, FILL_OUTLINE, FILL_UNEVEN, IGNORE_BACKGROUND, MIN_AREA, OVERLAP, PREFER, STITCH,
+    };
 
     let manifest = auto();
     assert_eq!(validate(&text(&manifest)), Ok(()));
