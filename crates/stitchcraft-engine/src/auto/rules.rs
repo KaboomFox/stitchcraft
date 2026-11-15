@@ -1,0 +1,423 @@
+//! The rules that choose the stitches of an automatic shape from its geometry, as one table ([`RULES`],
+//! `REQ-AUTO-030`), and the one place a bound is compared (`choose`).
+//!
+//! Design: `docs/src/design/image-to-embroidery.md` › Which stitch a shape gets. Width alone chose the
+//! stitch before M13.21: a blob as wide as a satin column sewed as a column bent into its corners, and a
+//! ragged patch of a traced photo as several columns that fan where they meet. The choice was also spread
+//! over the code that sorts a stroke, a part, a part's columns, a part's broad places and its holes, each
+//! with a comparison of its own. Here it is one function of a part's measures and its shape's
+//! bounds, so that the docs, the notice that names the rule a part sewed by (`SC-I0912`) and the tests at
+//! each bound come from one table, and a rule can't be changed in one place and not in another.
+//!
+//! The rules ask only about geometry: how large a part is, how wide, how long for its width, how evenly
+//! wide, and how many centre lines it has. None asks what a picture shows, so a flower, a drawing and an
+//! animal go by the same table.
+//!
+//! - **The bounds** are the shape's settings ([`AutoParams`]) and the design's narrowest satin stroke. One
+//!   choice leans 3 of them together towards satin columns or towards fills ([`LEAN`]).
+//! - **Ties.** A length is compared to the micrometre and a ratio to its third decimal, so that a value
+//!   written in another unit, which converts to a bound give or take a rounding error, is that bound. A part
+//!   as wide as a bound falls on its narrower side, one exactly as slender as the least slenderness is a
+//!   column, and one whose width varies by exactly the most it may is even.
+//! - **Asked.** A shape that names its stitch (`auto_stitch`) sews so where it can, and by the table where
+//!   it can't.
+
+use stitchcraft_core::{Code, Diagnostic, ElementId, Exhausted, Meter, Mm};
+
+use super::neighbours::speck;
+use super::params::{FILL_UNEVEN, MAX_SATIN_WIDTH, MAX_UNEVENNESS, MIN_AREA, MIN_FILL_WIDTH, MIN_SLENDERNESS, MIN_TRIPLE_RUN_WIDTH, PREFER, STITCH};
+use super::{AutoParams, micrometres, narrow};
+use crate::design::DesignSettings;
+use crate::generators::mm;
+use crate::normalize::region::Polygon;
+
+/// A rule of the table.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum RuleId {
+    /// The shape names its stitch, and the part can sew so.
+    Asked,
+    /// The part is smaller than the smallest area.
+    Speck,
+    /// The part is nowhere wider than the narrowest satin stroke.
+    Line,
+    /// The part is wider than the widest satin column somewhere.
+    Area,
+    /// The part is short for its width: a blob.
+    Compact,
+    /// The part has several centre lines, and its width varies along them.
+    Uneven,
+    /// Any other part: it sews as satin columns.
+    Column,
+    /// A column that can't be drawn, or that would sew a stitch longer than the widest satin column.
+    Refused,
+}
+
+impl RuleId {
+    /// The word for the rule in `SC-I0912` and the docs.
+    pub const fn key(self) -> &'static str {
+        match self {
+            RuleId::Asked => "asked",
+            RuleId::Speck => "speck",
+            RuleId::Line => "line",
+            RuleId::Area => "area",
+            RuleId::Compact => "compact",
+            RuleId::Uneven => "uneven",
+            RuleId::Column => "column",
+            RuleId::Refused => "refused",
+        }
+    }
+}
+
+/// A row of the table: what a part is, and what it sews as. A `{key}` in a text stands for the default of
+/// the setting with that key, with its unit, and `{narrowest}` for the design's narrowest satin stroke
+/// ([`filled`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Rule {
+    /// Which rule.
+    pub id: RuleId,
+    /// Its name in the docs' table.
+    pub label: &'static str,
+    /// What the part is, completing "The part is …".
+    pub is: &'static str,
+    /// What it sews as.
+    pub sewn: &'static str,
+    /// The keys of the settings that its texts name.
+    pub bounds: &'static [&'static str],
+}
+
+/// The rules, in the order they are tried: the first that a part matches decides.
+pub const RULES: [Rule; 8] = [
+    Rule {
+        id: RuleId::Asked,
+        label: "Asked",
+        is: "of a shape whose `auto_stitch` names a stitch, and can sew so",
+        sewn: "that stitch: a running stitch along its centre lines, satin columns along them, or a tatami fill of the whole shape",
+        bounds: &[STITCH],
+    },
+    Rule {
+        id: RuleId::Speck,
+        label: "Speck",
+        is: "smaller than {auto_min_area_mm2}",
+        sewn: "merged into the neighbour it shares the longest edge with, or left out when it shares none",
+        bounds: &[MIN_AREA],
+    },
+    Rule {
+        id: RuleId::Line,
+        label: "Line",
+        is: "nowhere wider than the design's narrowest satin stroke, {narrowest}",
+        sewn: "a running stitch along its centre lines, a triple run from {auto_min_triple_run_width_mm} wide",
+        bounds: &[MIN_TRIPLE_RUN_WIDTH],
+    },
+    Rule {
+        id: RuleId::Area,
+        label: "Area",
+        is: "wider than {auto_max_satin_width_mm} somewhere",
+        sewn: "a tatami fill. A piece of it narrower than {auto_min_fill_width_mm} leaves the fill when the rules below make it a line or a column",
+        bounds: &[MAX_SATIN_WIDTH, MIN_FILL_WIDTH],
+    },
+    Rule {
+        id: RuleId::Compact,
+        label: "Compact",
+        is: "smaller in area than {auto_min_slenderness} times its width squared",
+        sewn: "a tatami fill",
+        bounds: &[MIN_SLENDERNESS, PREFER],
+    },
+    Rule {
+        id: RuleId::Uneven,
+        label: "Uneven",
+        is: "of several centre lines, with a width that varies along them by more than {auto_max_unevenness} of itself",
+        sewn: "a tatami fill. A piece of it narrower than the narrowest satin stroke leaves the fill as a line",
+        bounds: &[MAX_UNEVENNESS, FILL_UNEVEN, PREFER],
+    },
+    Rule { id: RuleId::Column, label: "Column", is: "anything else", sewn: "satin columns along its centre lines", bounds: &[] },
+    Rule {
+        id: RuleId::Refused,
+        label: "Refused",
+        is: "a column that can't be drawn, or that would sew a stitch longer than {auto_max_satin_width_mm} between its rails",
+        sewn: "a tatami fill",
+        bounds: &[MAX_SATIN_WIDTH],
+    },
+];
+
+/// `text`, a rule's, with each `{key}` replaced by the default of the setting with that key and its unit, and
+/// `{narrowest}` by the default of the design's narrowest satin stroke.
+pub fn filled(text: &str) -> String {
+    let mut filled = text.replace("{narrowest}", &format!("{} mm", mm(DesignSettings::MIN_SATIN_STROKE_WIDTH.get())));
+    for spec in AutoParams::SPECS {
+        let value = format!("{} {}", spec.default, spec.kind.unit());
+        filled = filled.replace(&format!("{{{}}}", spec.key), value.trim_end());
+    }
+    filled
+}
+
+/// A named set of values of the rules' settings: a style of digitizing, which `stitch plan --style` sets on
+/// every automatic shape.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Preset {
+    /// Its name on the command line.
+    pub name: &'static str,
+    /// What it is for.
+    pub help: &'static str,
+    /// The settings it sets, each with its value.
+    pub values: &'static [(&'static str, &'static str)],
+}
+
+/// The presets. Each names values of the settings that lean the rules, and no rule of its own.
+pub const PRESETS: [Preset; 2] = [
+    Preset {
+        name: "logo",
+        help: "Flat art drawn in strokes, such as a logo, lettering or an ink drawing: more parts sew as satin columns, and a part of \
+               several strokes keeps its columns though its width varies.",
+        values: &[(PREFER, "satin"), (FILL_UNEVEN, "false")],
+    },
+    Preset {
+        name: "photo",
+        help: "A traced photo, whose shapes are patches and not strokes: the rules as they are by default, which fill a ragged patch.",
+        values: &[(PREFER, "balanced"), (FILL_UNEVEN, "true")],
+    },
+];
+
+/// By how much `auto_prefer` moves the least slenderness, the most a width varies and the narrowest piece of
+/// a fill together: `satin` divides the first by it and multiplies the other 2, and `fill` does the reverse.
+pub const LEAN: f64 = 1.5;
+
+/// The stitch a shape asks for (`auto_stitch`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum Asked {
+    /// None: the rules choose.
+    Auto,
+    /// A running stitch along each part's centre lines.
+    Run,
+    /// Satin columns along them.
+    Satin,
+    /// A tatami fill of the whole shape.
+    Fill,
+}
+
+impl Asked {
+    /// The stitch that the setting's value `id` names: the rules' choice for `auto`, and for any other.
+    fn named(id: &str) -> Asked {
+        match id {
+            "run" => Asked::Run,
+            "satin" => Asked::Satin,
+            "fill" => Asked::Fill,
+            _ => Asked::Auto,
+        }
+    }
+}
+
+/// The bounds a shape's parts are held to: its settings of the rules, leaned as it prefers, and its design's
+/// narrowest satin stroke.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) struct Bounds {
+    /// The design's narrowest satin stroke: a part nowhere wider is a line.
+    pub(crate) narrowest: Mm,
+    /// The widest satin column, and the longest stitch one sews between its rails.
+    pub(crate) max_satin: Mm,
+    /// The narrowest piece that stays in a fill, in millimetres: no wider than the widest satin column.
+    pub(crate) min_fill: f64,
+    /// The least slenderness of a part sewn as columns.
+    pub(crate) min_slenderness: f64,
+    /// The most the width of a part of several lines varies, as a share of it.
+    pub(crate) max_unevenness: f64,
+    /// Whether a part more uneven is filled.
+    pub(crate) fill_uneven: bool,
+    /// The smallest area, in square millimetres.
+    pub(crate) min_area: f64,
+    /// The stitch the shape asks for.
+    pub(crate) asked: Asked,
+}
+
+impl Bounds {
+    /// The bounds of a shape whose settings of the rules are `rules`, in a design whose narrowest satin stroke
+    /// is `narrowest`.
+    pub(crate) fn of(rules: &AutoParams, narrowest: Mm) -> Bounds {
+        // How far each of the 3 bounds leans: towards columns, not at all, or towards fills.
+        let (slender, uneven) = match rules.auto_prefer {
+            "satin" => (1.0 / LEAN, LEAN),
+            "fill" => (LEAN, 1.0 / LEAN),
+            _ => (1.0, 1.0),
+        };
+        Bounds {
+            narrowest,
+            max_satin: rules.auto_max_satin_width_mm,
+            min_fill: (rules.auto_min_fill_width_mm.get() * uneven).min(rules.auto_max_satin_width_mm.get()),
+            min_slenderness: rules.auto_min_slenderness * slender,
+            max_unevenness: rules.auto_max_unevenness * uneven,
+            fill_uneven: rules.auto_fill_uneven,
+            min_area: rules.auto_min_area_mm2,
+            asked: Asked::named(rules.auto_stitch),
+        }
+    }
+
+    /// How broad a stroke `width` millimetres wide is, or a part that is that wide at its widest.
+    pub(crate) fn breadth(&self, width: f64) -> Breadth {
+        if micrometres(width) <= micrometres(self.narrowest.get()) {
+            Breadth::Narrow
+        } else if micrometres(width) <= micrometres(self.max_satin.get()) {
+            Breadth::Medium
+        } else {
+            Breadth::Broad
+        }
+    }
+
+    /// How broad `part` is, with `meter`'s work: whether a circle as wide as the narrowest satin stroke fits
+    /// inside it nowhere, or one as wide as the widest satin column ([`narrow::within`]). `None` when the
+    /// part, shrunk, can't be joined, a bug.
+    pub(super) fn breadth_of(&self, part: &Polygon, meter: &mut Meter) -> Result<Option<Breadth>, Exhausted> {
+        let Some(narrow) = narrow::within(part, self.narrowest, meter)? else { return Ok(None) };
+        if narrow {
+            return Ok(Some(Breadth::Narrow));
+        }
+        let Some(column) = narrow::within(part, self.max_satin, meter)? else { return Ok(None) };
+        Ok(Some(if column { Breadth::Medium } else { Breadth::Broad }))
+    }
+
+    /// Whether a satin stitch `length` millimetres long between a column's rails is longer than the widest
+    /// satin column, so that the column is refused.
+    pub(crate) fn too_long(&self, length: f64) -> bool {
+        micrometres(length) > micrometres(self.max_satin.get())
+    }
+}
+
+/// How broad a part is at its widest, against its shape's bounds.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum Breadth {
+    /// Nowhere wider than the narrowest satin stroke.
+    Narrow,
+    /// Wider than that somewhere, and nowhere wider than the widest satin column.
+    Medium,
+    /// Wider than the widest satin column somewhere.
+    Broad,
+}
+
+/// What is measured of a part, or of a stroke, to choose its stitches.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) struct Measures {
+    /// Its area, in square millimetres.
+    pub(crate) area: f64,
+    /// How broad it is at its widest.
+    pub(crate) breadth: Breadth,
+    /// Its width: the diameter of the circles that fit inside it centred on its centre lines, averaged
+    /// along them, in millimetres. 0 for a part without a centre line, and for one whose lines weren't
+    /// looked for.
+    pub(crate) width: f64,
+    /// How much its width varies along its centre lines: the standard deviation of the width over the width.
+    pub(crate) unevenness: f64,
+    /// How many centre lines it has.
+    pub(crate) lines: usize,
+}
+
+impl Measures {
+    /// The measures of a stroke `width` millimetres wide, held to `bounds`: one line of even width, as long
+    /// as it likes.
+    pub(crate) fn of_stroke(width: f64, bounds: &Bounds) -> Measures {
+        Measures { area: f64::INFINITY, breadth: bounds.breadth(width), width, unevenness: 0.0, lines: 1 }
+    }
+
+    /// The measures of a part of `area` square millimetres that is `breadth` broad, whose centre lines
+    /// weren't looked for.
+    pub(crate) fn of_breadth(area: f64, breadth: Breadth) -> Measures {
+        Measures { area, breadth, width: 0.0, unevenness: 0.0, lines: 0 }
+    }
+
+    /// How long it is for its width: its area over its width squared. 0 for a part without a width.
+    pub(crate) fn slenderness(&self) -> f64 {
+        if self.width > 0.0 { self.area / (self.width * self.width) } else { 0.0 }
+    }
+}
+
+/// A ratio in thousandths, as the rules compare it.
+fn thousandths(ratio: f64) -> f64 {
+    (ratio * 1000.0).round()
+}
+
+/// The rule that a part, or a stroke, with `measures` sews by under `bounds`: the first of the table that it
+/// matches. [`RuleId::Refused`] is found later, once its columns are drawn.
+pub(crate) fn choose(measures: &Measures, bounds: &Bounds) -> RuleId {
+    if speck(measures.area, bounds.min_area) {
+        return RuleId::Speck;
+    }
+    match (bounds.asked, measures.breadth) {
+        (Asked::Run | Asked::Fill, _) | (Asked::Satin, Breadth::Medium) => return RuleId::Asked,
+        (Asked::Auto | Asked::Satin, _) => {}
+    }
+    match measures.breadth {
+        Breadth::Narrow => RuleId::Line,
+        Breadth::Broad => RuleId::Area,
+        Breadth::Medium if thousandths(measures.slenderness()) < thousandths(bounds.min_slenderness) => RuleId::Compact,
+        Breadth::Medium if bounds.fill_uneven && measures.lines > 1 && thousandths(measures.unevenness) > thousandths(bounds.max_unevenness) => {
+            RuleId::Uneven
+        }
+        Breadth::Medium => RuleId::Column,
+    }
+}
+
+/// Whether a part that sews by `rule` under `bounds` is filled: an area, a compact part, an uneven one, and
+/// any part of a shape that asks to be filled.
+pub(crate) fn fills(rule: RuleId, bounds: &Bounds) -> bool {
+    match rule {
+        RuleId::Area | RuleId::Compact | RuleId::Uneven => true,
+        RuleId::Asked => bounds.asked == Asked::Fill,
+        RuleId::Speck | RuleId::Line | RuleId::Column | RuleId::Refused => false,
+    }
+}
+
+/// The rule a part of a shape sewed by, and what was measured of it, when anything was.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) struct Fired {
+    /// The rule.
+    pub(crate) rule: RuleId,
+    /// Its measures.
+    pub(crate) measures: Option<Measures>,
+}
+
+impl Fired {
+    /// The rule and the measures that decided it, for `SC-I0912`: the area of a speck, and the width, the
+    /// slenderness, how much the width varies and the lines of a part whose lines were measured.
+    fn text(&self) -> String {
+        let measured = self.measures.and_then(|m| match (self.rule, m.breadth) {
+            (RuleId::Speck, _) => Some(format!("{} mm²", mm(m.area))),
+            (_, Breadth::Medium) if m.lines > 0 && m.area.is_finite() => {
+                let lines = if m.lines == 1 { "1 centre line".to_string() } else { format!("{} centre lines", m.lines) };
+                Some(format!("{} mm wide, slenderness {:.1}, width varying by {:.2}, {lines}", mm(m.width), m.slenderness(), m.unevenness))
+            }
+            _ if m.width > 0.0 => Some(format!("{} mm wide", mm(m.width))),
+            _ => None,
+        });
+        match measured {
+            Some(measured) => format!("{} ({measured})", self.rule.key()),
+            None => self.rule.key().to_string(),
+        }
+    }
+}
+
+/// How many parts `SC-I0912` gives the measures of: a traced shape can have dozens, and the rest are counted
+/// by rule.
+const LISTED: usize = 3;
+
+/// `SC-I0912` for the automatic shape `id` whose parts sewed by `fired`, in order: the rule each part sewed
+/// by, with the measures that decided it for the first [`LISTED`], and the rest counted by rule. `None` for
+/// a shape with no part.
+pub(super) fn said(id: &ElementId, fired: &[Fired]) -> Option<Diagnostic> {
+    let message = match fired {
+        [] => return None,
+        [only] => format!("This shape sews by the rule {}.", only.text()),
+        _ => {
+            let listed: Vec<String> = fired.iter().take(LISTED).enumerate().map(|(n, part)| format!("part {}: {}", n + 1, part.text())).collect();
+            let rest = fired.get(LISTED..).unwrap_or_default();
+            let counted: Vec<String> = RULES
+                .iter()
+                .map(|rule| (rule.id.key(), rest.iter().filter(|part| part.rule == rule.id).count()))
+                .filter(|(_, count)| *count > 0)
+                .map(|(key, count)| format!("{count} {key}"))
+                .collect();
+            let more = if rest.is_empty() { String::new() } else { format!(", and {} more: {}", rest.len(), counted.join(", ")) };
+            format!("This shape's {} parts sew by these rules, {}{more}.", fired.len(), listed.join(", "))
+        }
+    };
+    Some(Diagnostic::new(Code::AutoRule, message).with_element(id.clone()))
+}
+
+#[cfg(test)]
+mod tests;

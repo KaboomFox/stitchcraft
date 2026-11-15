@@ -130,8 +130,13 @@ fn req_vc_015_a_record_holds_each_setting_as_its_dialog_row_takes_it() {
     );
     // An automatic shape's settings of the rules are the Auto effect's, which declares no stitch's.
     let auto = declared().into_iter().find(|(each, _)| *each == Module::Auto).unwrap().1;
-    let rules = record_params(Module::Auto, &set(&[("auto_min_area_mm2", "2.5"), ("auto_ignore_background", "false")]), &auto).unwrap();
-    assert_eq!(Value::Object(rules), json!({"auto_ignore_background": false, "auto_min_area_mm2": 2.5}));
+    let rules = record_params(Module::Auto, &set(&[("auto_overlap_mm", "0.5"), ("auto_ignore_background", "false")]), &auto).unwrap();
+    assert_eq!(Value::Object(rules), json!({"auto_ignore_background": false, "auto_overlap_mm": 0.5}));
+    // A bound of the rules has no row in the dialog, so a sheet cannot record it.
+    assert_eq!(
+        record_params(Module::Auto, &set(&[("auto_min_area_mm2", "2.5")]), &auto),
+        Err("its setting `auto_min_area_mm2 = 2.5` is no setting of its auto effect's record".to_string())
+    );
     assert_eq!(
         record_params(Module::Auto, &set(&[("row_spacing_mm", "0.3")]), &auto),
         Err("its setting `row_spacing_mm = 0.3` is no setting of its auto effect's record".to_string())

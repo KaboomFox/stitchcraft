@@ -8,6 +8,32 @@ pub stitchcraft_engine::assemble::Assembled::shortest: alloc::vec::Vec<stitchcra
 pub stitchcraft_engine::assemble::Assembled::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_engine::assemble::assemble(&[(&stitchcraft_engine::design::Element, stitchcraft_engine::generate::Generated)], &stitchcraft_engine::design::DesignSettings, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::option::Option<stitchcraft_engine::assemble::Assembled>, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::auto
+pub mod stitchcraft_engine::auto::rules
+pub enum stitchcraft_engine::auto::rules::RuleId
+pub stitchcraft_engine::auto::rules::RuleId::Area
+pub stitchcraft_engine::auto::rules::RuleId::Asked
+pub stitchcraft_engine::auto::rules::RuleId::Column
+pub stitchcraft_engine::auto::rules::RuleId::Compact
+pub stitchcraft_engine::auto::rules::RuleId::Line
+pub stitchcraft_engine::auto::rules::RuleId::Refused
+pub stitchcraft_engine::auto::rules::RuleId::Speck
+pub stitchcraft_engine::auto::rules::RuleId::Uneven
+impl stitchcraft_engine::auto::rules::RuleId
+pub const fn stitchcraft_engine::auto::rules::RuleId::key(self) -> &'static str
+pub struct stitchcraft_engine::auto::rules::Preset
+pub stitchcraft_engine::auto::rules::Preset::help: &'static str
+pub stitchcraft_engine::auto::rules::Preset::name: &'static str
+pub stitchcraft_engine::auto::rules::Preset::values: &'static [(&'static str, &'static str)]
+pub struct stitchcraft_engine::auto::rules::Rule
+pub stitchcraft_engine::auto::rules::Rule::bounds: &'static [&'static str]
+pub stitchcraft_engine::auto::rules::Rule::id: stitchcraft_engine::auto::rules::RuleId
+pub stitchcraft_engine::auto::rules::Rule::is: &'static str
+pub stitchcraft_engine::auto::rules::Rule::label: &'static str
+pub stitchcraft_engine::auto::rules::Rule::sewn: &'static str
+pub const stitchcraft_engine::auto::rules::LEAN: f64
+pub const stitchcraft_engine::auto::rules::PRESETS: [stitchcraft_engine::auto::rules::Preset; 2]
+pub const stitchcraft_engine::auto::rules::RULES: [stitchcraft_engine::auto::rules::Rule; 8]
+pub fn stitchcraft_engine::auto::rules::filled(&str) -> alloc::string::String
 pub enum stitchcraft_engine::auto::Stitches
 pub stitchcraft_engine::auto::Stitches::Fill
 pub stitchcraft_engine::auto::Stitches::FilledStroke
@@ -23,12 +49,19 @@ pub stitchcraft_engine::auto::AutoParams::auto_base_layer: <stitchcraft_params::
 pub stitchcraft_engine::auto::AutoParams::auto_base_offset_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_base_sliver_mm2: <stitchcraft_params::kinds::Area as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_base_stitch_length_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_fill_angle: <stitchcraft_params::kinds::Angle as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_fill_uneven: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_ignore_background: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_max_satin_width_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_max_unevenness: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_min_area_mm2: <stitchcraft_params::kinds::Area as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_min_fill_width_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_min_slenderness: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_min_triple_run_width_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_overlap_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_prefer: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_pull_compensation_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_stitch: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
 impl stitchcraft_engine::auto::AutoParams
 pub const stitchcraft_engine::auto::AutoParams::GROUP: stitchcraft_params::spec::ParamGroup
 pub const stitchcraft_engine::auto::AutoParams::SPECS: &'static [stitchcraft_params::spec::ParamSpec]
@@ -39,12 +72,21 @@ pub stitchcraft_engine::auto::Digitized::diagnostics: alloc::vec::Vec<stitchcraf
 pub stitchcraft_engine::auto::Digitized::elements: alloc::vec::Vec<stitchcraft_engine::design::Element>
 pub stitchcraft_engine::auto::Digitized::parts: alloc::vec::Vec<core::option::Option<stitchcraft_engine::normalize::region::Polygon>>
 pub stitchcraft_engine::auto::Digitized::stitches: core::option::Option<stitchcraft_engine::auto::Stitches>
+pub const stitchcraft_engine::auto::ADVANCED: &str
 pub const stitchcraft_engine::auto::CONTOUR_FROM: stitchcraft_core::units::Mm
+pub const stitchcraft_engine::auto::FILL_ANGLE: &str
+pub const stitchcraft_engine::auto::FILL_UNEVEN: &str
 pub const stitchcraft_engine::auto::IGNORE_BACKGROUND: &str
+pub const stitchcraft_engine::auto::LONGEST_SATIN_STITCH: f64
 pub const stitchcraft_engine::auto::MAX_SATIN_WIDTH: &str
+pub const stitchcraft_engine::auto::MAX_UNEVENNESS: &str
 pub const stitchcraft_engine::auto::MIN_AREA: &str
+pub const stitchcraft_engine::auto::MIN_FILL_WIDTH: &str
+pub const stitchcraft_engine::auto::MIN_SLENDERNESS: &str
 pub const stitchcraft_engine::auto::MIN_TRIPLE_RUN_WIDTH: &str
 pub const stitchcraft_engine::auto::OVERLAP: &str
+pub const stitchcraft_engine::auto::PREFER: &str
+pub const stitchcraft_engine::auto::STITCH: &str
 pub const stitchcraft_engine::auto::TOUCHING: f64
 pub const stitchcraft_engine::auto::ZIGZAG_ABOVE: stitchcraft_core::units::Mm
 pub fn stitchcraft_engine::auto::digitize(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::auto::Digitized, stitchcraft_core::budget::Exhausted>
@@ -130,6 +172,7 @@ pub struct stitchcraft_engine::design::Design
 pub stitchcraft_engine::design::Design::settings: stitchcraft_engine::design::DesignSettings
 pub stitchcraft_engine::design::Design::sort_colours: bool
 impl stitchcraft_engine::design::Design
+pub fn stitchcraft_engine::design::Design::automatic_with(self, &[(alloc::string::String, alloc::string::String)]) -> stitchcraft_engine::design::Design
 pub fn stitchcraft_engine::design::Design::bounds(&self) -> core::option::Option<stitchcraft_core::rect::Rect>
 pub fn stitchcraft_engine::design::Design::elements(&self) -> &[stitchcraft_engine::design::Element]
 pub fn stitchcraft_engine::design::Design::moved(&self, [f64; 2]) -> core::result::Result<stitchcraft_engine::design::Design, stitchcraft_core::diag::Diagnostic>

@@ -113,11 +113,28 @@ them. Do they sew as cleanly as the triple runs beside them, and does the M keep
 
 MC-8 also sews one of the owner's traced dogs, `docs/fixtures/traced-dog-running-9.vectorcraft`, 100 mm
 tall: `stitch plan docs/fixtures/traced-dog-running-9.vectorcraft --auto -o dog.pes`. Does the fur read as
-fur, the face and the eyes as hers, and do its 117 jump threads, which the PE800 doesn't cut, take long to
-snip (M13.17)? One satin stitch of its dark grey fur crosses a lighter grey patch beside it (M13.18): does it show?
+fur, the face and the eyes as hers, and do its 84 jump threads, which the PE800 doesn't cut, take long to
+snip (M13.17)? 5 rows of its fills show beside thin lines of fur of another colour (M13.18): do they show?
 
-M13.16 changed what the digitized half of every TS-13 sheet sews, and what the dog sews: write them again
-before sewing. A design digitized automatically now sews a base layer first, an open underlay under all of
+M13.21 changed what the digitized halves of TS-13A and TS-13C sew, and what the dog sews: write them again
+before sewing. Automatic digitizing now chooses a part's stitches from its geometry
+([which stitch a shape gets](../design/image-to-embroidery.md#which-stitch-a-shape-gets)), and its bounds
+are StitchCraft's own values, which MC-8 confirms or changes:
+
+- On TS-13A, the 2 large badges' blue squares are fills, whole under their gold discs, where they were satin
+  columns round the discs with stitches of 8 mm at the corners. The 3 small badges' squares are columns
+  still. Which sews flatter, and does the gold disc lie flat on the fill?
+- On TS-13C, the fill of the star's middle goes on into each point as far as a disc 4 mm across fits. The
+  tips sew as columns. Does a point read as well as it did as one column from its cut 6.6 mm wide?
+- Sew the dog twice, as planned and with **Fill uneven parts** off (`--set auto_fill_uneven=false`), which
+  sews its ragged patches as columns again. As planned it changes thread 28 times and jumps 112 times,
+  and with the switch off 19 and 136 times. Which reads better, and which takes longer at the machine?
+- A blob sews as a small fill, where a column bent into its corners. Compare the dog's nostrils and the
+  buttons' dots of TS-13D with a satin dot drawn by hand. Does a fill 1 to 2 mm across sew cleanly without
+  an underlay?
+- The longest satin stitch between a column's rails is 7 mm. Is that the right limit on the fabric sewn?
+
+M13.16 changed what the digitized half of every TS-13 sheet sews, and what the dog sews. A design digitized automatically now sews a base layer first, an open underlay under all of
 it, and its fills sew no underlay of their own. Its neighbours overlap by 1 mm where they overlapped by
 0.4 mm. Its fills turn from row to row in a stitch 0.3 mm long at the outline
 ([covering the fabric](../design/image-to-embroidery.md#covering-the-fabric)). Whether an underlay belongs
@@ -128,11 +145,11 @@ changes them:
 - Sew the dog on black fabric twice, as planned and with the base layer off. The Auto effect's dialog in
   VectorCraft turns it off (`auto_base_layer`), and each fill then sews its own underlay.
 - On black, does fabric show between patches, with the base layer and without it?
-- The top thread of this dog leaves 2 slivers, 0.135 and 0.12 mm², and 0.073 % of the design bare. The
+- Since M13.21 the top thread of this dog has 0 slivers, and leaves 0.001 % of the design bare. The
   measure passes slivers up to 0.4 mm² over the base layer or within 0.4 mm of the design's outline, and 0.5 % bare
   in all (`auto_base_sliver_mm2`, `auto_base_bare_percent`). Both limits are StitchCraft's own, set from
   the 4 traced dogs. With the base layer on, can a sliver be found by eye, and does the base layer's
-  thread hide it? The dog on turf in 9 threads has the most, 10 slivers up to 0.335 mm²: sew it on black
+  thread hide it? The running dog in 6 threads has the largest, one sliver of 0.26 mm²: sew it on black
   too when the first dog leaves the question open.
 - Does the base layer's thread show beside a patch's edge, or through a lighter fill sewn over it? The
   base layer lies 0.4 mm inside the design's outline, a value of StitchCraft's own, and the measure doesn't

@@ -8,7 +8,7 @@
 //! groups of needle points each given a thread, and assembles and finalizes them as `plan` does. Every
 //! case of an element sewn in several threads starts from it, [`three_threads`] among them.
 
-use stitchcraft_core::{Budget, ElementId, Mm, Point};
+use stitchcraft_core::{Budget, Code, ElementId, Mm, Point};
 use stitchcraft_engine::assemble::{Assembled, assemble};
 use stitchcraft_engine::auto::{self, AutoParams};
 use stitchcraft_engine::design::{Cap, Clip, Design, DesignSettings, Element, FillRule, Hints, Path, Segment, Shape, Subpath};
@@ -290,9 +290,17 @@ pub fn shape_of(outcome: &PlanOutcome) -> String {
     shape(outcome.plan.as_ref().unwrap())
 }
 
-/// `outcome`'s diagnostics as people read them.
+/// `outcome`'s diagnostics as people read them, but for the rule that each automatic shape sewed by
+/// (`SC-I0912`): every automatic shape says one, and [`rules_said`] gives them.
 pub fn messages(outcome: &PlanOutcome) -> Vec<String> {
-    outcome.diagnostics.iter().map(ToString::to_string).collect()
+    outcome.diagnostics.iter().filter(|said| said.code != Code::AutoRule).map(ToString::to_string).collect()
+}
+
+/// The rule that each automatic shape of `outcome`'s design sewed by, as `SC-I0912` says it: the shape's id,
+/// then what is said.
+pub fn rules_said(outcome: &PlanOutcome) -> Vec<(String, String)> {
+    let said = outcome.diagnostics.iter().filter(|said| said.code == Code::AutoRule);
+    said.map(|said| (said.element.as_ref().map(ToString::to_string).unwrap_or_default(), said.message.clone())).collect()
 }
 
 #[cfg(test)]
