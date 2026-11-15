@@ -95,7 +95,7 @@ class CommentTest(unittest.TestCase):
     def test_the_browser_s_checks_are_said_with_the_middle_time_and_its_limit(self):
         said = sheet.browser_lines(BROWSER)
         self.assertIn('byte for byte, of alpine-night, dog-on-turf-6.', said[0])
-        self.assertIn('the 97 shapes of dog-on-turf-6 the Auto effect took 5.0 s (limit 60.0 s)', said[1])
+        self.assertIn('Giving dog-on-turf-6 the Auto effect took 5.0 s (limit 60.0 s)', said[1])
         self.assertIn('its PES export 0.7 s:', said[1])
         self.assertEqual(sheet.browser_lines(None), ['The browser\'s checks did not run.'])
 

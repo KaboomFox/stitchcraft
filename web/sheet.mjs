@@ -26,8 +26,9 @@ const DESIGNS = [
 const TIMED = DESIGNS[1];
 const RUNS = 3;
 // The most the middle of the 3 runs may take, in milliseconds, or null while none is set
-// (docs/src/design/before-after-sheet.md, The time's limit, says where the numbers come from).
-const LIMIT_MS = {turn: null, export: null};
+// (docs/src/design/before-after-sheet.md, The time's limit, says where the numbers come from). The export
+// has no limit while VectorCraft stops the traced photo's export for its instruction budget.
+const LIMIT_MS = {turn: 30000, export: null};
 // How long the editor may take to draw the effects it left waiting before a run is recorded with them left.
 const DRAWN_WITHIN_MS = 120000;
 
@@ -48,7 +49,7 @@ try {
   await page.evaluate(() => window.stitchcraftReady);
 
   // Opens a design as a new document and gives every shape the Auto effect, as the demo's button does.
-  // Answers how many shapes it has, how long the call that gives them the effect took, how long it took until
+  // A traced photo is one group, which takes the effect for every path in it. Answers how many objects took it, how long the call that gives them the effect took, how long it took until
   // the editor had drawn every effect, and how many it still had not drawn when the wait ran out.
   const turned = async ({file, name}) => {
     const dataBase64 = (await readFile(join(root, file))).toString('base64');
@@ -130,8 +131,10 @@ try {
     assert.ok(turn.shapes > 0, 'the traced photo has shapes');
     console.log(`Run ${run + 1} of ${TIMED.design}, the effect: ${JSON.stringify(turn)}`);
     // The first run's document is the one compared, so its export is timed there. A refused export has no time.
-    const pes = run === 0 ? await compared(TIMED.design) : await exported('pes');
-    runs.push({...turn, export_ms: pes.refused === undefined ? pes.ms : null, ...(pes.refused === undefined ? {} : {export_refused_after_ms: Math.round(pes.ms)})});
+    // An export VectorCraft stopped in the first run takes half a minute to be stopped again, and tells nothing new.
+    const stopped = runs[0]?.export_ms === null;
+    const pes = run === 0 ? await compared(TIMED.design) : stopped ? {refused: 'not tried again', ms: 0} : await exported('pes');
+    runs.push({...turn, export_ms: pes.refused === undefined ? pes.ms : null, ...(pes.refused === undefined || stopped ? {} : {export_refused_after_ms: Math.round(pes.ms)})});
     console.log(`Run ${run + 1} of ${TIMED.design}: ${JSON.stringify(runs[run])}`);
   }
   results.speed = {design: TIMED.design, shapes: runs[0].shapes, runs, limit_ms: LIMIT_MS,

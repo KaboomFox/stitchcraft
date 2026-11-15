@@ -77,8 +77,9 @@ other refusal fails the run.
 The `stitch` compared is built without link-time optimization, which saves minutes
 ([determinism](determinism.md) is why its files are those of the published build).
 
-**The time of the Auto effect.** The script gives the traced dog's shapes the Auto effect 3 times, each
-time in a new document, and exports each to PES. It records 2 times of each run, on the page's main thread:
+**The time of the Auto effect.** The script gives the traced dog the Auto effect 3 times, each
+time in a new document, and exports each to PES. The traced dog is one group, and the effect on the group
+digitizes every path in it. It records 2 times of each run, on the page's main thread:
 from the call that applies the effect until the editor doesn't list an effect left to draw, and the
 export. The sheet shows the middle one of the 3 for the pull request and for main.
 
@@ -92,10 +93,26 @@ frame. So the times include frames drawn far more slowly than on a person's comp
 about a change than about how fast the editor is for a visitor. The limit is several times the measured time for that reason, and a
 run fails only when the middle time is above it. The limits are `LIMIT_MS` in `web/sheet.mjs`.
 
+Measured on 2026-11-15 in pull request #274's run, on GitHub's Linux runner, the 3 runs took 5.9 s, 2.5 s
+and 2.4 s from the call until the editor had drawn the dog. The first run also loads the plug-in's module.
+The limit is 30 s, 5 times the slowest run, so a slower runner passes and a change that makes the effect
+several times slower fails.
+
+The export has no limit yet. VectorCraft 0.24.1 stopped the dog's PES and DST exports after 27 s for
+the instruction budget it gives an export
+([exporters](vectorcraft-integration.md#exporters-file--export-writes-pes-and-dst)). `stitch` plans the
+same document. So the sheet reports that a traced dog doesn't export from the editor, and the files are
+compared for the starter drawing alone until it does.
+
 ## The time the sheet adds
 
 The sheet's steps come after the demo's checks in the `web` workflow's build job. They build `stitch` and
 the example, measure the pictures and run the editor once more.
+
+In pull request #274's run they took 5 minutes 53 seconds of the job's 25 minutes: 2 minutes 13 seconds
+to build `stitch`, 2 minutes 50 seconds in the browser and 50 seconds to build the example and measure
+the 10 pictures. A minute of the browser's time was the dog's export stopped twice more, which the
+script no longer tries after the first run.
 
 ## Not in this step
 
