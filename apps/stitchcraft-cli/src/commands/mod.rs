@@ -3,6 +3,7 @@
 
 pub mod bug_report;
 pub mod convert;
+pub mod cutout;
 pub mod explain;
 pub mod inspect;
 pub mod palette;
