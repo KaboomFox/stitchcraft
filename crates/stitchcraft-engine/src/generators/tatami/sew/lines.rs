@@ -70,6 +70,26 @@ pub(crate) fn lines_sewn(
     meter: &mut Meter,
     warnings: &mut Vec<Diagnostic>,
 ) -> Result<Option<Vec<Marked>>, Exhausted> {
+    let Some((runs, jumped)) = lines_routed(part, rings, lines, given, start, end, meter)? else { return Ok(None) };
+    if jumped {
+        warnings.push(Diagnostic::new(Code::InternalCheckFailed, "The needle found no way between 2 pieces of this fill, so it jumps there."));
+    }
+    Ok(Some(runs))
+}
+
+/// [`lines_sewn`]'s runs, and whether the needle has to jump between them: it finds no way where no line
+/// joins 2 rings that other lines end on, such as lines along a hole's edge that none meets from the
+/// outline. For most fills that is a bug, which [`lines_sewn`] says. A guided fill's rows can lie so, and it
+/// says so itself (`SC-W0333`).
+pub(crate) fn lines_routed(
+    part: &Polygon,
+    rings: &Rings<'_>,
+    lines: &[Vec<Point>],
+    given: &Given,
+    start: Option<Point>,
+    end: Option<Point>,
+    meter: &mut Meter,
+) -> Result<Option<(Vec<Marked>, bool)>, Exhausted> {
     let across = Rows::Lines(lines);
     let Some(route) = route(rings, across, start, end, meter)? else { return Ok(None) };
     let mut ways = Ways::new(part, rings, &route, across, given.angle, given.travel, start, meter)?;
@@ -119,10 +139,7 @@ pub(crate) fn lines_sewn(
         }
     }
     runs.push(run);
-    if jumped {
-        warnings.push(Diagnostic::new(Code::InternalCheckFailed, "The needle found no way between 2 pieces of this fill, so it jumps there."));
-    }
-    Ok(Some(runs))
+    Ok(Some((runs, jumped)))
 }
 
 /// The line the row `step` sews, from the end the route enters it by: the end nearer the node it is sewn

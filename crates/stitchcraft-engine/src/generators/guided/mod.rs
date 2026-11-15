@@ -56,7 +56,7 @@ use crate::generators::passes;
 use crate::generators::tatami::rings::Rings;
 use crate::generators::tatami::rows::Grid;
 use crate::generators::tatami::rows::Segment;
-use crate::generators::tatami::sew::lines::{Given, Marked, lines_sewn};
+use crate::generators::tatami::sew::lines::{Given, Marked, lines_routed};
 use crate::generators::tatami::sew::{Fill, Layer, Parts, Pull, Travel, layer_sewn, parts_sewn, pieces, tatami_fill, too_thin, top_rows};
 use crate::generators::tatami::stitches::Stitching;
 use crate::generators::{Approach, Stitched, settled};
@@ -374,13 +374,14 @@ fn rows_of(
 }
 
 /// What sewing a guided fill's pieces counted, for its diagnostics: the pieces, those no row of the guide
-/// leaves a line in, those of them too thin for the tatami fill's rows too, and whether a buffer's edges
-/// failed to join into rings.
+/// leaves a line in, those of them too thin for the tatami fill's rows too, whether the needle jumped between
+/// rows it found no way between, and whether a buffer's edges failed to join into rings.
 #[derive(Default)]
 struct Tally {
     pieces: usize,
     missed: usize,
     outlined: usize,
+    apart: bool,
     unjoined: bool,
     strategy: Option<Strategy>,
 }
@@ -411,13 +412,16 @@ impl Tally {
             return Ok(runs);
         };
         let given = Given { travel: guided.travel, angle: guided.angle.unwrap_or(0.0), skip_last: guided.skip_last };
-        let runs = lines_sewn(piece, &rings, &lines, &given, needle, end, meter, warnings)?.unwrap_or_default();
+        // Rows that no line joins to the others, along a hole's edge for one, are sewn after a jump, as
+        // Ink/Stitch sews the rows it can't join on their own.
+        let (runs, jumped) = lines_routed(piece, &rings, &lines, &given, needle, end, meter)?.unwrap_or_default();
+        self.apart |= jumped;
         runs.into_iter().map(|run| finished(run, guided, meter)).collect()
     }
 
     /// What the counts say: `SC-W0332` for the pieces no row of the guide leaves a line in, sewn as a tatami
-    /// fill, `SC-W0305` for those of them too thin for its rows too, sewn round their outline, and `SC-E0009`
-    /// should a buffer's edges not join into rings.
+    /// fill, `SC-W0305` for those of them too thin for its rows too, sewn round their outline, `SC-W0333`
+    /// where the needle jumped between rows, and `SC-E0009` should a buffer's edges not join into rings.
     fn said(&self) -> impl Iterator<Item = Diagnostic> {
         let rows = match self.strategy {
             Some(Strategy::Offset) => "offset curve of this guided fill's guide meets",
@@ -441,7 +445,15 @@ impl Tally {
                  please report it with the design.",
             )
         });
-        missed.map(|message| Diagnostic::new(Code::FillGuidedMissed, message)).into_iter().chain(too_thin(self.outlined, self.pieces)).chain(unjoined)
+        let apart = self.apart.then(|| {
+            Diagnostic::new(Code::FillGuidedApart, "The needle finds no way between some rows of this guided fill, so it jumps between them.")
+        });
+        missed
+            .map(|message| Diagnostic::new(Code::FillGuidedMissed, message))
+            .into_iter()
+            .chain(too_thin(self.outlined, self.pieces))
+            .chain(apart)
+            .chain(unjoined)
     }
 }
 

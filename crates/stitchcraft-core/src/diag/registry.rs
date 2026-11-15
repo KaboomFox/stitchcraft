@@ -503,6 +503,16 @@ macro_rules! codes {
         /// The message counts the parts. Draw the guide across the fill, or clear `guided_fill_angle`.
         FillGuidedMissed = "SC-W0332", Warning, "Guided fill's rows along its guide meet no part; sewn as a tatami fill";
 
+        /// Some rows of this guided fill lie where the needle finds no way to them from the others, along the
+        /// fill's edge or under its rows. Rows that only meet a hole's edge are such, when no other row runs
+        /// from that hole to the outline: a guide drawn as a ring inside a hole, off its middle, gives them.
+        /// The needle jumps to those rows, as Ink/Stitch sews the rows it can't join on their own, with a jump
+        /// between. Rows that run from edge to edge of the fill are always joined.
+        ///
+        /// Draw the guide so that its rows cross the fill from its outline to its holes, or cut the jump
+        /// thread after sewing.
+        FillGuidedApart = "SC-W0333", Warning, "Guided fill's rows apart, the needle jumps between them";
+
         /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
         /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is
         /// a single point (a stray node), shorter than the shortest stitch, or longer but curled up so that

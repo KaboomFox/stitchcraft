@@ -63,6 +63,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0330`](#sc-w0330) | Warning | Gradient stop within 2 rows of the blend before; passed over |
 | [`SC-W0331`](#sc-w0331) | Warning | Guided fill without a guide line; sewn as a tatami fill |
 | [`SC-W0332`](#sc-w0332) | Warning | Guided fill's rows along its guide meet no part; sewn as a tatami fill |
+| [`SC-W0333`](#sc-w0333) | Warning | Guided fill's rows apart, the needle jumps between them |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
@@ -800,6 +801,19 @@ own direction moves them along the guide, past a small part, and a guide far fro
 its nearest copy beyond it.
 
 The message counts the parts. Draw the guide across the fill, or clear `guided_fill_angle`.
+
+## SC-W0333
+
+**Warning** — Guided fill's rows apart, the needle jumps between them
+
+Some rows of this guided fill lie where the needle finds no way to them from the others, along the
+fill's edge or under its rows. Rows that only meet a hole's edge are such, when no other row runs
+from that hole to the outline: a guide drawn as a ring inside a hole, off its middle, gives them.
+The needle jumps to those rows, as Ink/Stitch sews the rows it can't join on their own, with a jump
+between. Rows that run from edge to edge of the fill are always joined.
+
+Draw the guide so that its rows cross the fill from its outline to its holes, or cut the jump
+thread after sewing.
 
 ## SC-W0401
 
