@@ -16,8 +16,26 @@ try {
   const failures = [];
   page.on('pageerror', error => failures.push(error.message));
   page.on('response', response => {if (response.status() >= 400) failures.push(`${response.status()} ${response.url()}`);});
+  // A page that never starts says nothing by itself, so keep what it wrote and what failed to load, and
+  // print them when the wait runs out: the timeout alone doesn't tell a slow start from a broken one.
+  const said = [];
+  page.on('console', message => said.push(`${message.type()}: ${message.text()}`.slice(0, 400)));
+  page.on('requestfailed', request => failures.push(`${request.failure()?.errorText} ${request.url()}`));
   await page.goto(url.href, {waitUntil: 'domcontentloaded', timeout: 60000});
-  await page.waitForFunction(() => Boolean(window.stitchcraftReady), null, {timeout: 180000});
+  try {
+    await page.waitForFunction(() => Boolean(window.stitchcraftReady), null, {timeout: 180000});
+  } catch (error) {
+    const state = await page.evaluate(() => ({
+      editor: typeof window.vectorcraft, loading: document.getElementById('vectorcraft_loading')?.textContent ?? null,
+      notes: [...document.querySelectorAll('body > p, body > details')].map(node => node.textContent.slice(0, 300)),
+      scripts: [...document.scripts].map(script => script.src),
+    })).catch(failed => ({unreadable: failed.message}));
+    console.error(`The demo did not start at ${url.href}.`);
+    console.error(`The page: ${JSON.stringify(state)}`);
+    console.error(`Failed to load or threw (${failures.length}):\n  ${failures.join('\n  ')}`);
+    console.error(`The page's console, last ${Math.min(said.length, 40)} of ${said.length} lines:\n  ${said.slice(-40).join('\n  ')}`);
+    throw error;
+  }
   const installed = await page.evaluate(() => window.stitchcraftReady);
   // Every module the build lists as light installs, so a heavy one listed as light fails here.
   const listed = JSON.parse(await readFile(new URL('../target/web/demo/plugins.json', import.meta.url)));
