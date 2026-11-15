@@ -2,6 +2,12 @@
 # between two runs of the same code. mdBook makes the anchor ids `cargo xtask docs --check` reproduces
 # (xtask/src/markdown.rs), and the API snapshots are cargo-public-api's output (xtask/src/api.rs): tests
 # there read the versions below. Every workflow installs these tools through this action.
+#
+# The browser demo's build (web/build.py) runs Trunk without the network, so Trunk finds its 2 helpers here:
+# wasm-bindgen at the version VectorCraft's Cargo.lock names at the release the demo pins
+# (compat/vectorcraft.toml, [web]), and wasm-opt at the Binaryen release Trunk 0.22.1 asks for. taiki-e's
+# action, pinned by commit, holds a checksum for each tool it installs. It has none for Binaryen, whose
+# archive is checked against the SHA-256 below.
 name: Pinned tools
 description: Install the named tools at the versions the gates are made for.
 inputs:
@@ -24,7 +30,10 @@ runs:
           [cargo-public-api]=0.52.0
           [lychee]=0.24.2
           [mdbook]=0.5.4
+          [trunk]=0.22.1
           [typos]=1.50.3
+          [wasm-bindgen]=0.2.129
+          [wasm-opt]=version_131
         )
         wanted=()
         for tool in ${TOOLS//,/ }; do
@@ -32,9 +41,28 @@ runs:
             echo "::error::No version of $tool is pinned in .github/actions/tools/action.yml."
             exit 1
           fi
+          if [ "$tool" = wasm-opt ]; then
+            echo "binaryen=${pinned[$tool]}" >> "$GITHUB_OUTPUT"
+            continue
+          fi
           wanted+=("$tool@${pinned[$tool]}")
         done
         echo "tools=$(IFS=,; echo "${wanted[*]}")" >> "$GITHUB_OUTPUT"
-    - uses: taiki-e/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39 # v2.90.3
+    - if: steps.pinned.outputs.tools != ''
+      uses: taiki-e/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39 # v2.90.3
       with:
         tool: ${{ steps.pinned.outputs.tools }}
+    - name: wasm-opt, from Binaryen's release archive
+      if: steps.pinned.outputs.binaryen != ''
+      shell: bash
+      env:
+        VERSION: ${{ steps.pinned.outputs.binaryen }}
+        # Of binaryen-version_131-x86_64-linux.tar.gz. A new version above needs its own.
+        SHA256: b5bf1f0eaf17c63ee588ff7a5954dc8f6ce2c26989051c66f24dfe9ece3e46db
+      run: |
+        archive="$RUNNER_TEMP/binaryen.tar.gz"
+        curl -fsSL --retry 3 -o "$archive" \
+          "https://github.com/WebAssembly/binaryen/releases/download/$VERSION/binaryen-$VERSION-x86_64-linux.tar.gz"
+        echo "$SHA256  $archive" | sha256sum --check --quiet
+        tar -xzf "$archive" -C "$RUNNER_TEMP"
+        echo "$RUNNER_TEMP/binaryen-$VERSION/bin" >> "$GITHUB_PATH"
