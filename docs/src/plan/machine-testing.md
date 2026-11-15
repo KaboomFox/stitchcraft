@@ -113,18 +113,27 @@ them. Do they sew as cleanly as the triple runs beside them, and does the M keep
 
 MC-8 also sews one of the owner's traced dogs, `docs/fixtures/traced-dog-running-9.vectorcraft`, 100 mm
 tall: `stitch plan docs/fixtures/traced-dog-running-9.vectorcraft --auto -o dog.pes`. Does the fur read as
-fur, the face and the eyes as hers, and do its 93 jump threads, which the PE800 doesn't cut, take long to
+fur, the face and the eyes as hers, and do its 96 jump threads, which the PE800 doesn't cut, take long to
 snip (M13.17)? 3 rows of its fills show beside thin lines of fur of another colour (M13.18): do they show?
 
 M13.27 changed what the dog sews: 2 blobs of its fur that sewed as satin columns are fills now, as a small
 star is ([which stitch a shape gets](../design/image-to-embroidery.md#which-stitch-a-shape-gets)). Write
 the dog again before sewing. MC-8 also sews the demo's badge, `web/templates/alpine-night.svg`, twice:
 `stitch plan web/templates/alpine-night.svg --auto -o badge.pes`, and the same with
-`--set auto_fill_outline=true`.
+`--set auto_fill_outline=false`.
 
 - Do the 2 stars, 5.3 and 4 mm across, read as stars of 4 points when they are filled?
 - With the outline, are the stars' points sharper, and is the run round the moon and the mountains on the
   fill's edge or beside it?
+
+M13.28 changed what every automatic design sews: each fill sews an outline now
+([an outline round a fill](../design/image-to-embroidery.md#an-outline-round-a-fill)). Write the badge, the
+dog and TS-13A to TS-13D again before sewing.
+
+- Does the moon's outline, 18 stitches round a circle 9.6 mm across, read as round?
+- On the dog, do the outlines sharpen the fur's edges or draw lines that the photo doesn't have?
+- An outline sews through a stretch of its edge under a later shape. Does that run show through the shape
+  that covers it, or raise it?
 
 M13.22 changed the order that the digitized halves of TS-13A, TS-13C and TS-13D sew in, and the dog's:
 write them again before sewing. The elements now sew in the order that changes thread least
@@ -204,7 +213,7 @@ drawn as a test sheet yet: M13.30 draws it, and until then it is drawn in Vector
   needle. Look at the needle for a bend or a burr, and at the fabric round the square for puckers. Bend
   the square, and measure how thick it is with calipers.
 - The first square that breaks thread or thumps sets the failing limit, and the square before it, less
-  one, sets the warning. Then sew the running dog in 9 threads, whose thickest spot has 7.6 fills, and
+  one, sets the warning. Then sew the running dog in 9 threads, whose thickest spot has 8.0 fills, and
   compare where it gives trouble with its heat map (`stitch preview --style thickness`).
 
 ## Report template

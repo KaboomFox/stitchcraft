@@ -613,7 +613,7 @@ from falling back, and MC-8 tells whether 0.4 mm is the pull on the machine.
 A tatami fill's rows end at its edge, and the thread pulls each row's end in. On a small shape with points,
 such as a star 5 mm across, the ends of the rows are most of what shows, and the points sew blunt. A
 digitizer runs a stitch round such a shape after filling it, which draws the edge as one line.
-`auto_fill_outline` turns that on for a design (M13.27, `REQ-AUTO-051`), read of its lowest automatic
+`auto_fill_outline` does that for a design (M13.27, `REQ-AUTO-051`), read of its lowest automatic
 shape as the base layer's settings are.
 
 Each automatic area then sews a running stitch along its edge, in its own thread, in an element of its own
@@ -627,20 +627,44 @@ cut into pieces no longer than 0.5 mm, and a piece shows when its middle lies in
 pieces that show in a row are one line, a ring where the whole edge shows. A line shorter than 3 mm is left
 out, since 2 stitches beside a neighbour's edge sew a knot.
 
-The setting is off by default, for what it costs, measured on 2026-11-15:
+The setting is on by default since M13.28. M13.27 left it off, for the jumps it cost a traced photo.
+Shown the badge's stars with and without it, the owner said that outlines were better all along. The Auto
+effect's dialog has a row for it ([Settings](#settings)).
+
+An outline's stitches follow a round edge. A running stitch keeps to its path within its tolerance, which
+is 0.2 mm unless a shape sets it. Stitches 2.5 mm long stray 0.16 mm from a circle 9.6 mm across, so the
+badge's moon was outlined with 12 sides. An outline has a tolerance of `auto::OUTLINE_TOLERANCE`,
+0.1 mm, unless its shape sets `running_stitch_tolerance_mm`. Its stitches are then shorter where the edge
+bends, never shorter than the machine's shortest stitch, and the moon has 18 sides.
+
+An outline is sewn with as few jumps as its lines allow (`REQ-AUTO-052`). A traced area's edge is hidden
+wherever a neighbour sewn later touches it, often for a few millimetres, and each hidden stretch parted 2
+lines by a jump. The outline now sews through a hidden stretch of `BRIDGE`, 25 mm, or less, along the edge
+and under the shape that covers it, at a stitch for each 2.5 mm. The longest hidden stretch of a ring stays
+out, because sewing it would join nothing. Of an outline's lines, the one with an end nearest where the
+next element starts sews last and ends there. An open line is turned round for that if need be, and a ring
+starts at its corner nearest that place.
+
+What the outline costs, measured on 2026-11-15 with the setting off and on:
 
 | Picture | Stitches | Jumps | Thread changes |
 |---|---:|---:|---:|
-| Alpine Night, the demo's badge | 5443 to 5554 | 9 | 3 |
-| Lettered patch | 25340 to 25991 | 37 to 40 | 4 |
-| Dog on turf, 6 threads | 10420 to 11031 | 79 to 101 | 8 |
-| Running dog, 6 threads | 11330 to 12089 | 79 to 102 | 8 |
+| Alpine Night, the demo's badge | 5443 to 5575 | 9 | 3 |
+| Pear | 5096 to 5517 | 4 | 2 |
+| Lettered patch | 25340 to 25944 | 37 to 38 | 4 |
+| Dog on turf, 6 threads | 10420 to 11400 | 79 to 84 | 8 |
+| Dog on turf, 9 threads | 11158 to 12261 | 91 to 97 | 12 |
+| Running dog, 6 threads | 11330 to 12479 | 79 to 82 | 8 |
+| Running dog, 9 threads | 13115 to 14417 | 106 to 109 | 12 |
 
-An outline sews in its fill's thread straight after the fill, and doesn't change the thread. On the badge
-the needle sews on from where each fill ends to its outline without a jump. A traced photo's areas have edges in
-many pieces between their neighbours, and each piece is a jump, which a machine with one needle leaves as
-a thread to cut by hand. So a badge or a logo gains by it and a photo doesn't. It is an advanced setting:
-the Auto effect's dialog holds 12 rows in its window, and a thirteenth doesn't fit ([Settings](#settings)).
+An outline sews in its fill's thread straight after the fill, and doesn't change the thread. Before the 2
+wins the traced dogs' outlines brought 19 to 30 jumps each, and they bring 3 to 6 now. Sewing through every
+hidden stretch, whatever its length, brings 0 to 3, for 400 more stitches on each dog: 25 mm is where the
+stitches spent stop buying jumps. The jumps that are left come from a fill joined from 2 parts of one
+shape, whose 2 outlines each leave out the edge between the parts, from a ring and a line of one outline
+that lie far apart, and from hidden stretches longer than 25 mm. Each jump is a thread that a machine with
+one needle leaves to cut by hand, until M13.17 of the [roadmap](../plan/roadmap.md) sews those moves under
+the shapes that cover them.
 
 ## Covering the fabric
 
@@ -988,61 +1012,61 @@ The user page shows [the running dog's](../user/stitches/automatic.md#how-thick-
 
 ### What today's designs measure
 
-Measured on 2026-11-15, with the base layer on and the outline off, which is what `--auto` sews. The
-last 2 pairs of columns give the thickest spot and the area at 3 fills or more with one setting changed.
+Measured on 2026-11-15 as `--auto` sews each picture, with the base layer and the outline on. The last
+2 pairs of columns give the thickest spot and the area at 3 fills or more with one of them off.
 
-| Picture | Design, mm² | Thickest, fills | At 3 fills or more, mm² | At 6 or more, mm² | Most needle points | Base layer off | Outline on |
+| Picture | Design, mm² | Thickest, fills | At 3 fills or more, mm² | At 6 or more, mm² | Most needle points | Base layer off | Outline off |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Lettered patch | 1,813 | 5.7 | 144 | 0 | 12 | 5.9, 160 | 5.7, 144 |
-| Alpine Night, the demo's badge | 1,963 | 5.4 | 115 | 0 | 18 | 6.2, 142 | 5.4, 127 |
-| TS-13A, digitized half | 5,756 | 5.7 | 94 | 0 | 22 | 5.7, 114 | 5.9, 103 |
-| TS-13B, digitized half | 2,610 | 5.9 | 103 | 0 | 22 | 7.1, 94 | 6.1, 102 |
-| TS-13C, digitized half | 2,201 | 6.8 | 324 | 0 | 20 | 7.6, 324 | 7.1, 332 |
-| TS-13D, digitized half | 4,373 | 7.9 | 238 | 0 | 15 | 8.8, 299 | 7.9, 247 |
-| Traced pear | 2,252 | 5.6 | 28 | 0 | 16 | 5.8, 40 | 5.6, 37 |
-| Traced dog on turf, 6 threads | 1,639 | 8.0 | 368 | 5.1 | 30 | 9.9, 476 | 8.1, 400 |
-| Traced dog on turf, 9 threads | 1,639 | 8.5 | 403 | 5.8 | 30 | 9.3, 531 | 8.4, 451 |
-| Traced running dog, 6 threads | 1,944 | 7.8 | 391 | 0 | 27 | 8.9, 551 | 7.9, 451 |
-| Traced running dog, 9 threads | 1,944 | 7.6 | 510 | 2.5 | 29 | 9.1, 688 | 7.8, 571 |
+| Alpine Night, the demo's badge | 1,963 | 6.3 | 129 | 0 | 20 | 8.0, 169 | 5.4, 115 |
+| TS-13A, digitized half | 5,756 | 6.0 | 114 | 0 | 23 | 5.9, 156 | 5.7, 94 |
+| TS-13B, digitized half | 2,610 | 6.5 | 109 | 0 | 23 | 7.6, 108 | 5.9, 103 |
+| TS-13C, digitized half | 2,201 | 7.0 | 330 | 0 | 22 | 7.6, 335 | 6.8, 324 |
+| TS-13D, digitized half | 4,373 | 7.9 | 242 | 0 | 15 | 8.8, 341 | 7.9, 238 |
+| Traced pear | 2,252 | 5.7 | 37 | 0 | 19 | 5.9, 71 | 5.6, 28 |
+| Traced dog on turf, 6 threads | 1,639 | 8.7 | 433 | 7.8 | 35 | 10.3, 556 | 8.0, 368 |
+| Traced dog on turf, 9 threads | 1,639 | 8.6 | 476 | 7.2 | 33 | 9.5, 626 | 8.5, 403 |
+| Traced running dog, 6 threads | 1,944 | 7.9 | 492 | 6.3 | 33 | 9.2, 682 | 7.8, 391 |
+| Traced running dog, 9 threads | 1,944 | 8.0 | 614 | 4.3 | 30 | 9.5, 800 | 7.6, 510 |
 
 The badge is measured on its PES file, and its area is that of a disc 50 mm across. The lettered patch
 sews no outline, because its letters are satin columns.
 
-Every standard picture is over the warning's limit somewhere, and a fifth to a quarter of each traced dog
-is. Each part of the stack has its own share:
+Every standard picture is over the warning's limit somewhere, and a quarter to a third of each traced
+dog is. Each part of the stack has its own share:
 
 - **The 1 mm that areas reach under their neighbours causes most of it.** Without any overlap the running
-  dog in 9 threads has 100 mm² at 3 fills or more where it has 510 mm², and the other dogs 81 to 99 mm².
-  Among small patches the overlaps of several neighbours lie on each other.
+  dog in 9 threads has 141 mm² at 3 fills or more where it has 614 mm², and the other dogs 113 to
+  137 mm². Among small patches the overlaps of several neighbours lie on each other.
 - **The base layer makes a design thinner.** It replaces an underlay under each fill, which is more
-  thread: with the base layer off the dogs have 29 to 41 % more area at 3 fills or more.
-- **An outline adds 9 to 15 %** on the dogs. It lies on the edge, where 2 fills already do.
+  thread: with the base layer off the dogs have 28 to 39 % more area at 3 fills or more.
+- **The outline adds 18 to 26 %** on the dogs. It lies on the edge, where 2 fills already do.
 
-The thickest spots are another matter. On 2 of the dogs one fill alone lays 4.3 and 6.5 fills in its
-window: a patch 1 to 2 mm across, whose rows are short and whose turns lie beside each other. The dogs
-also have 14 to 67 mm² with 15 needle points or more to a square millimetre, in such patches.
+The thickest spots are another matter. On the running dog in 6 threads one fill alone lays 6.5 fills in
+its window: a patch 1 to 2 mm across, whose rows are short and whose turns lie beside each other. The
+dogs also have 34 to 94 mm² with 15 needle points or more to a square millimetre, in such patches.
 
 ### What would take thread away
 
 This step measures and changes nothing that sews. Each row was measured on the running dog in 9 threads
-by changing a setting, and the bare share is what the top thread leaves of the design
+by changing one setting, and the bare share is what the top thread leaves of the design
 ([covering the fabric](#covering-the-fabric)), 0.000 % today:
 
 | Change | At 3 fills or more, mm² | Bare, % of the design | Stitches |
 |---|---:|---:|---:|
-| As sewn today | 510 | 0.000 | 13,115 |
-| No overlap (`auto_overlap_mm` 0) | 100 | 0.486 | 11,624 |
-| Overlap of 0.5 mm | 303 | 0.013 | 12,405 |
-| Overlap of 0.5 mm, with the outline | 363 | 0.012 | 13,189 |
-| Smallest area 4 mm² (`auto_min_area_mm2`) | 433 | 0.000 | 12,175 |
-| Smallest area 10 mm² | 211 | 0.150 | 10,028 |
+| As sewn today | 614 | 0.000 | 14,417 |
+| No outline (`auto_fill_outline` off) | 510 | 0.000 | 13,115 |
+| No overlap (`auto_overlap_mm` 0) | 141 | 0.409 | 12,898 |
+| Overlap of 0.5 mm | 421 | 0.012 | 13,689 |
+| Smallest area 4 mm² (`auto_min_area_mm2`) | 565 | 0.000 | 13,700 |
+| Smallest area 10 mm² | 312 | 0.138 | 11,324 |
 
-Halving the overlap takes away 40 % and still covers. Merging patches under 10 mm² takes away 59 %, and
+Halving the overlap takes away 31 % and still covers. Merging patches under 10 mm² takes away 49 %, and
 changes the picture. 2 more ways need code and are not measured. One cuts an area's overlap away
 where 2 fills already lie under it, as other embroidery software removes hidden stitching. The other
-sews the overlap with rows twice as far apart. Fills with rows 0.4 mm apart would lower every number of this page by 37 %.
-The step that removes thread is M13.30 ([roadmap](../plan/roadmap.md)), and the bare-fabric measure
-checks each change: one that lowers the thickness and leaves a gap is not taken.
+sews the overlap with rows twice as far apart. Fills with rows 0.4 mm apart would lower every number of
+this page by 37 %. The step that removes thread is M13.30 ([roadmap](../plan/roadmap.md)), and the
+bare-fabric measure checks each change: one that lowers the thickness and leaves a gap is not taken.
 
 ## Sewing order
 
@@ -1183,7 +1207,9 @@ Fewer thread changes leave more jump threads. The machine cuts the thread at a c
 so a thread that sews once jumps where it changed before. The dogs jump 84, 91, 79 and 108 times, where
 they jumped 82, 94, 81 and 112 times, and leave 77, 78, 70 and 95 jump threads to cut by hand, where they
 left 71, 73, 64 and 84. Since M13.27 filled 5 of their blobs they jump 79, 91, 79 and 106 times, and leave
-71, 78, 70 and 93 jump threads. The traced pear and the test pictures change thread once for each thread after
+71, 78, 70 and 93 jump threads. With an outline after each fill (M13.28,
+[an outline round a fill](#an-outline-round-a-fill)) they jump 84, 97, 82 and 109 times, and leave 76, 84,
+73 and 96. The traced pear and the test pictures change thread once for each thread after
 the first, as they did. The digitized halves of the TS-13 sheets change thread 2, 4, 4 and 6 times, where
 they changed 5, 4, 5 and 8 times. TS-13B's black sews twice: its base layer and letters first, and the
 lines of its windows after the fills they border. The search keeps 87 to 3,584 rows of batches on the
@@ -1210,19 +1236,20 @@ leaves are counted apart.
 | Emblem, abutting or stacked | 0 | 0.35 mm | 0 | 2 |
 | Button, abutting or stacked | 0 | 0.40 mm | 6 | 0 |
 | Traced pear | 0 | 0.44 mm | 0 | 2 |
-| Traced dog on turf, 6 threads | 0 | 1.33 mm | 5 | 71 |
-| Traced dog on turf, 9 threads | 0 | 3.15 mm | 11 | 78 |
-| Traced running dog, 6 threads | 0.18 mm² | 2.14 mm | 3 | 70 |
-| Traced running dog, 9 threads | 0 | 1.86 mm | 4 | 93 |
+| Traced dog on turf, 6 threads | 0 | 1.33 mm | 5 | 76 |
+| Traced dog on turf, 9 threads | 0 | 3.00 mm | 10 | 84 |
+| Traced running dog, 6 threads | 0.18 mm² | 1.95 mm | 3 | 73 |
+| Traced running dog, 9 threads | 0 | 1.86 mm | 7 | 96 |
 
 The button's 7 dots sew on from one to the next, each move 2.7 mm long across its yellow. The pear leaves 2
 jump threads, where it left 4: the narrow ends of its olive and dark olive bands are uneven, and sew as
 fills with their bands (M13.21). `tests/auto_fabric.rs` keeps the moves and the jump threads as measured.
 
 The owner's dog, traced from her 2 photos in 6 and in 9 threads (M13.15, `docs/fixtures/README.md` › The
-traced dogs), lays 19 stitches astray: 2 and 5 on the dog on turf in 6 and in 9 threads, and 8 and 4 on the
+traced dogs), lays 14 stitches astray: 2 and 5 on the dog on turf in 6 and in 9 threads, and 5 and 2 on the
 running dog. 2 are straight moves, 2.25 and 2.1 mm long, each between 2 lines of one narrow part, which is
-a stitch because it is shorter than the collapse length. The other 17 are rows of fills, each up to 4 mm
+a stitch because it is shorter than the collapse length. 2 are stitches of outlines, 2.34 and 2.24 mm
+long, each along the edge of a thin, ragged fill. The other 10 are rows of fills, each up to 4 mm
 long, a fill's stitch. M13.21, which fills where columns sewed, brought 20 of them. Of the 6 that were traced
 then, 5 lay along a line of fur of another colour that sews on the fill or that the fill reaches under.
 The line sews as wide as its thread, and the row shows beside it. The sixth lay under the edge of a column
@@ -1230,13 +1257,15 @@ sewn after its fill. M13.22's order took 8 of the 20 away and brought 4 others, 
 now sew in another order. M13.27 fills 5 blobs of fur that sewed as columns
 ([which stitch a shape gets](#which-stitch-a-shape-gets)). A row of the largest shows beside a line of fur
 in both running dogs, the second move crosses a blob that a column covered before, and one row of the
-running dog in 9 threads no longer shows: 19 stitches where there were 17. Before
+running dog in 9 threads no longer shows: 19 stitches where there were 17. M13.28 sews an outline after
+each fill, and the fills end elsewhere. 8 of the rows no longer show and one other does, and the 2
+stitches of outlines came: 14 stitches. Which neighbour hid each of the 8 rows was not traced. Before
 M13.21 the dogs laid 7 stitches astray. 2 of them were satin stitches 7.89 and 4.72 mm long that fanned
 across a shape biting into their column, and M13.21 removed those. `tests/auto_photos.rs` lists each stitch,
 with where it lies and why, and its case fails on any other stitch astray and on any listed one that no
 longer is. Of the [roadmap](../plan/roadmap.md)'s steps, M13.17 removes the move and M13.18 the rows, by
 merging the thin lines into their neighbours. The dogs' moves astray are moves from one element to the next,
-as the button's are. Their jump threads, 70 to 93, are the design's limit as it stands: each thread sews
+as the button's are. Their jump threads, 73 to 96, are the design's limit as it stands: each thread sews
 its shapes one after another and jumps between those that don't touch, and the PE800 cuts no jump. M13.17
 runs the thread under the shapes sewn later instead, which cover it. Each dog takes
 too long to digitize and measure in the tests' debug build, so CI's `perf` job runs these cases in the
@@ -1261,12 +1290,12 @@ generated from the registry.
 | A design | Satin or fill | `auto_prefer` | leans the least slenderness, the most a width varies and the narrowest piece of a fill together, by half |
 | A design | Fill uneven parts | `auto_fill_uneven` | whether a part of several lines whose width varies is filled |
 | A design | Fill angle | `auto_fill_angle` | the angle of every fill made of the shape |
+| A design | Outline round fills | `auto_fill_outline` | whether each fill sews [an outline](#an-outline-round-a-fill), read of the lowest shape |
 | A design | Overlap | `auto_overlap_mm` | an area reaching under its neighbours and cut away under them, a satin column past a rail that a shape sewn after it runs along |
 | A design | Pull compensation | `auto_pull_compensation_mm` | a satin column past a rail with no shape sewn after it beside it, and its end under another column |
 | A design | Leave out the background | `auto_ignore_background` | the background, read of the lowest shape |
-| A design | Base layer | `auto_base_layer` | whether the design sews one, read of the lowest shape whose settings read, as the 5 below it are |
+| A design | Base layer | `auto_base_layer` | whether the design sews one, read of the lowest shape whose settings read, as its other settings are |
 | A design | Base layer's stitch length | `auto_base_stitch_length_mm` | its rows' stitches and their spacing |
-| A design | Base layer's offset | `auto_base_offset_mm` | how far inside the design's outer shape it lies, and how wide the rim is |
 | A design | Base layer keeps holes | `auto_base_keep_holes` | whether the outer shape keeps its holes |
 | Advanced | Widest satin column | `auto_max_satin_width_mm` | a line's stitches, a part's columns and their longest stitch, the split of a part into its fill and the pieces that leave it. A shape may set it lower, never higher |
 | Advanced | Narrowest triple run | `auto_min_triple_run_width_mm` | a running stitch tripled |
@@ -1275,13 +1304,16 @@ generated from the registry.
 | Advanced | Farthest a column reaches from its line | `auto_max_reach` | a part with arms |
 | Advanced | Narrowest piece of a fill | `auto_min_fill_width_mm` | what leaves the fill of an area |
 | Advanced | Smallest area | `auto_min_area_mm2` | specks, the narrow parts too small to cut from a broad part, and what details may leave of a hole they fill |
-| Advanced | Outline round fills | `auto_fill_outline` | whether each fill sews [an outline](#an-outline-round-a-fill), read of the lowest shape |
+| Advanced | Base layer's offset | `auto_base_offset_mm` | how far inside the design's outer shape it lies, and how wide the rim is |
 | Advanced | Largest sliver | `auto_base_sliver_mm2` | the largest gap in the top thread that is left to the base layer: a limit of the [measure](#the-stricter-measure), by which nothing sews differently |
 | Advanced | Most left to the base layer | `auto_base_bare_percent` | the most of the design that the top thread may leave bare over a base layer, the measure's other limit |
 
 A design's settings are a shape's too: VectorCraft's Auto effect on a group or a layer sets them on every
 path inside it. The Auto effect's dialog held 13 rows after M13.16 and was 903 px tall in a window of 900.
-With the bounds, the outline's switch and the 2 limits of the measure left out it holds 12.
+With the bounds and the 2 limits of the measure left out it holds 12. M13.28 gave the outline's switch a
+row, and the base layer's offset became an advanced setting to make room. No picture so far has needed
+that fine adjustment changed, which is matched to the pull compensation, where the base layer's switch,
+its stitch length and its holes each change what one sees.
 
 The defaults are the values on this page, and MC-8 confirms or changes them. A shape that sets none of the
 settings takes the defaults, and an automatic shape with a setting that doesn't read sews nothing
@@ -1561,14 +1593,15 @@ area kept wrongly and 3 % lost.
   stop, and how many a later stitch of their colour sews down (`stitchcraft_testkit::stitches`). Digitized,
   the letters sew as columns with a jump between each 2. A thread that sews once jumps between its shapes
   where it changed before M13.22, and the PE800 cuts at a thread change and not at a jump, so the digitized
-  halves of TS-13A, TS-13C and TS-13D leave 3, 1 and 2 jump threads more:
+  halves of TS-13A, TS-13C and TS-13D leave 3, 1 and 2 jump threads more. With an outline after each fill
+  (M13.28) TS-13D's half leaves 2 more again:
 
   | Sheet | As drawn: jump threads | sewn down | Digitized: jump threads | sewn down |
   |---|---:|---:|---:|---:|
   | TS-13A | 8 | 0 | 18 | 9 |
   | TS-13B | 6 | 0 | 44 | 19 |
   | TS-13C | 9 | 4 | 13 | 5 |
-  | TS-13D | 1 | 0 | 15 | 4 |
+  | TS-13D | 1 | 0 | 17 | 5 |
 
 - Ink/Stitch sews the TS-13 sheets too, every night ([conformance](conformance.md#l3--inkstitch-differential-nightly),
   `REQ-AUTO-021`). Ink/Stitch can't choose a picture's stitches, but it can sew what StitchCraft chose:

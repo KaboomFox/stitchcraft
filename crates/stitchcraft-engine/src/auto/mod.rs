@@ -98,8 +98,10 @@ use stitchcraft_params::{ParamSet, Validated};
 
 use crate::common::{STOP_AFTER, TRIM_AFTER};
 use crate::design::{Cap, Design, DesignSettings, Element, FillRule, Hints, Join, Path, Segment, Shape, Subpath, within_working_limit};
+use crate::generate::approach;
 use crate::generators::passes::BEAN_STITCH_REPEATS;
 use crate::generators::pull::PULL_COMPENSATION;
+use crate::generators::running::TOLERANCE;
 use crate::generators::satin::{
     self, CENTER_WALK_UNDERLAY, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PUSH_COMPENSATION, SATIN_COLUMN, ZIGZAG_UNDERLAY,
 };
@@ -119,6 +121,11 @@ pub const ZIGZAG_ABOVE: Mm = Mm::from_tenths(40);
 
 /// The width of the line an outline round a fill is drawn as (`REQ-AUTO-051`): a thread's.
 pub const OUTLINE_WIDTH: Mm = Mm::from_tenths(4);
+
+/// How far an outline round a fill may stray from the fill's edge (`REQ-AUTO-051`), its
+/// `running_stitch_tolerance_mm` unless the shape sets one: half a running stitch's own 0.2 mm, a quarter of
+/// a thread. At 0.2 mm, stitches 2.5 mm long keep to a circle 9.6 mm across, and it sews with 12 sides.
+pub const OUTLINE_TOLERANCE: Mm = Mm::from_tenths(1);
 
 /// Room left in an id made for a column of a stroke of several subpaths, for the `~2` a clash adds
 /// ([`Labels::claim`]).
@@ -363,7 +370,7 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     let mut beside = neighbours::beside(sewn, &design.settings, budget, design.sort_colours, base.map(|rules| (rules, &mut taken)), outlined);
     diagnostics.extend(std::mem::take(&mut beside.said));
     for (id, lines) in std::mem::take(&mut beside.outlines) {
-        outline_after(&mut beside.elements, &id, &lines, &mut taken, &mut budget.meter());
+        diagnostics.extend(outline_after(&mut beside.elements, &id, lines, &mut taken, &design.settings, budget));
     }
     // Of the shapes digitized, those that sew: the areas sewn after one may cover it whole.
     let mut counts = Counts::default();
@@ -376,22 +383,43 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
 
 /// Adds the outline of the fill `id` among `elements` after it, when it still sews: a running stitch along
 /// `lines` in the fill's thread, named after the fill with `#2`, or the next name free among `taken`, found
-/// with `meter`'s work. It has the fill's settings but those of a fill, and takes over a trim or a stop
-/// after the fill, which follows the last element of a shape.
-fn outline_after(elements: &mut Vec<Element>, id: &ElementId, lines: &[Line], taken: &mut Labels, meter: &mut Meter) {
-    let Some(at) = elements.iter().position(|element| element.id == *id) else { return };
-    let Some(fill) = elements.get_mut(at) else { return };
+/// with `budget`'s work. It has the fill's settings but those of a fill, keeps to the edge within
+/// [`OUTLINE_TOLERANCE`] unless the fill sets a tolerance, and takes over a trim or a stop after the fill,
+/// which follows the last element of a shape. Its last line ends nearest where the element after the fill
+/// starts, in a design with `settings` ([`neighbours::ending_near`]), each with `budget`'s work to itself; an
+/// outline that needs more is not sewn, which the diagnostic returned says.
+fn outline_after(
+    elements: &mut Vec<Element>,
+    id: &ElementId,
+    lines: Vec<Line>,
+    taken: &mut Labels,
+    settings: &DesignSettings,
+    budget: &Budget,
+) -> Option<Diagnostic> {
+    let at = elements.iter().position(|element| element.id == *id)?;
+    let lines = match elements.get(at + 1).and_then(|next| approach(next, settings, budget)) {
+        Some(target) => match neighbours::ending_near(lines, &target, budget, id) {
+            Ok(lines) => lines,
+            Err(said) => return Some(said),
+        },
+        None => lines,
+    };
+    let fill = elements.get_mut(at)?;
     let path = Path { subpaths: lines.iter().filter_map(subpath).collect() };
     // A name that fits by construction ([`numbered`]); an outline without one is left out.
-    let named = numbered(id, 2).and_then(|name| taken.claim(name.as_str().to_string(), meter).ok()).and_then(|name| ElementId::new(name).ok());
-    let Some(name) = named else { return };
+    let named = numbered(id, 2).and_then(|name| taken.claim(name.as_str().to_string(), &mut budget.meter()).ok());
+    let name = named.and_then(|name| ElementId::new(name).ok())?;
     let (rest, after) = split_after(&fill.params);
     fill.params = rest.clone();
-    let params = rest.iter().filter(|(key, _)| ![TURN_STITCHES, ANGLE].contains(key)).collect();
+    let mut params: ParamSet = rest.iter().filter(|(key, _)| ![TURN_STITCHES, ANGLE].contains(key)).collect();
+    if params.get(TOLERANCE).is_none() {
+        params.set(TOLERANCE, OUTLINE_TOLERANCE.get().to_string());
+    }
     let shape = Shape::Stroke { path, width: OUTLINE_WIDTH, join: Join::Round, cap: Cap::Round };
     let mut outline = [part(fill, name, shape, params)];
     keep_after(&mut outline, &after);
     elements.splice(at + 1..at + 1, outline);
+    None
 }
 
 /// `element` as automatic digitizing made it, a fill with its turns kept as stitches (`turn_stitches`,
@@ -868,28 +896,69 @@ mod tests {
             clips: Vec::new(),
         };
         let settings = [(TURN_STITCHES, "true"), (ANGLE, "30"), (OVERLAP, "0.5"), (TRIM_AFTER, "true")];
-        let mut elements = vec![fill("a", &settings), fill("b", &[])];
+        let mut elements = vec![fill("a", &settings), fill("b", &[(TOLERANCE, "0.3")])];
         let mut taken = Labels::default();
-        let mut meter = Budget::DEFAULT.meter();
+        let (design, budget) = (DesignSettings::default(), Budget::DEFAULT);
         let (a, b) = (elements[0].id.clone(), elements[1].id.clone());
-        outline_after(&mut elements, &a, &[ring, side.clone()], &mut taken, &mut meter);
+        assert_eq!(outline_after(&mut elements, &a, vec![ring, side.clone()], &mut taken, &design, &budget), None);
         let ids: Vec<&str> = elements.iter().map(|element| element.id.as_str()).collect();
         assert_eq!(ids, ["a", "a#2", "b"]);
         // The outline is a line a thread wide along both lines, in the fill's thread, with the fill's settings
-        // but a fill's own, and the trim after the fill follows it now.
+        // but a fill's own, and the trim after the fill follows it now. It keeps to the edge within 0.1 mm.
+        // The ring goes last, and starts at the first of its corners on the edge of the fill sewn next.
         let (filled, outline) = (&elements[0], &elements[1]);
         let Shape::Stroke { path, width, .. } = &outline.shape else { panic!("{:?}", outline.shape) };
-        assert_eq!((path.subpaths.len(), path.subpaths[0].closed, path.subpaths[1].closed, *width), (2, true, false, OUTLINE_WIDTH));
+        assert_eq!((path.subpaths.len(), path.subpaths[0].closed, path.subpaths[1].closed, *width), (2, false, true, OUTLINE_WIDTH));
+        assert_eq!((path.subpaths[0].start, path.subpaths[1].start), (p(20.0, 0.0), p(0.0, 0.0)));
         assert_eq!((outline.thread.clone(), outline.automatic, OUTLINE_WIDTH.get()), (filled.thread.clone(), false, 0.4));
-        assert_eq!(outline.params.iter().collect::<Vec<_>>(), [(OVERLAP, "0.5"), (TRIM_AFTER, "true")]);
+        assert_eq!((OUTLINE_TOLERANCE.get(), TOLERANCE), (0.1, "running_stitch_tolerance_mm"));
+        assert_eq!(outline.params.iter().collect::<Vec<_>>(), [(OVERLAP, "0.5"), (TOLERANCE, "0.1"), (TRIM_AFTER, "true")]);
         assert_eq!(filled.params.iter().collect::<Vec<_>>(), [(ANGLE, "30"), (OVERLAP, "0.5"), (TURN_STITCHES, "true")]);
         // A name another element has steps aside, and a fill that no longer sews has no outline.
-        outline_after(&mut elements, &a, std::slice::from_ref(&side), &mut taken, &mut meter);
+        assert_eq!(outline_after(&mut elements, &a, vec![side.clone()], &mut taken, &design, &budget), None);
         assert_eq!(elements[1].id.as_str(), "a#2~2");
+        // That one is followed by an outline, a line, which offers its first point: the side ends at its end
+        // nearest that, turned round.
+        let Shape::Stroke { path, .. } = &elements[1].shape else { panic!("{:?}", elements[1].shape) };
+        assert_eq!(path.subpaths[0].start, p(30.0, 0.0));
         let gone = ElementId::new("gone").unwrap();
-        outline_after(&mut elements, &gone, std::slice::from_ref(&side), &mut taken, &mut meter);
-        outline_after(&mut elements, &b, &[side], &mut taken, &mut Budget { max_work: 0, ..Budget::DEFAULT }.meter());
+        assert_eq!(outline_after(&mut elements, &gone, vec![side.clone()], &mut taken, &design, &budget), None);
+        // The last element's outline ends where its lines do, and needs no work. It keeps the tolerance its
+        // fill sets.
+        assert_eq!(outline_after(&mut elements, &b, vec![side], &mut taken, &design, &Budget { max_work: 0, ..Budget::DEFAULT }), None);
         assert_eq!(elements.iter().map(|element| element.id.as_str()).collect::<Vec<_>>(), ["a", "a#2~2", "a#2", "b", "b#2"]);
+        assert_eq!(elements[4].params.get(TOLERANCE), Some("0.3"));
+    }
+
+    #[test]
+    fn req_auto_052_an_outline_whose_end_needs_more_work_than_its_budget_allows_is_not_sewn_and_says_so() {
+        let p = |x: f64, y: f64| Point::new(x, y).unwrap();
+        let square = Polygon { outline: vec![p(0.0, 0.0), p(0.0, 10.0), p(10.0, 10.0), p(10.0, 0.0), p(0.0, 0.0)], holes: Vec::new() };
+        let fill = |id: &str| Element {
+            id: ElementId::new(id).unwrap(),
+            name: None,
+            shape: Shape::Fill { path: outline(std::slice::from_ref(&square)), rule: FillRule::NonZero, gradient: None },
+            thread: stitchcraft_plan::Thread::new(stitchcraft_plan::Rgb::new(200, 30, 30)),
+            params: ParamSet::new(),
+            automatic: false,
+            hints: Hints::default(),
+            clips: Vec::new(),
+        };
+        // A ring of 4,000 corners before a fill: each corner costs the 5 units of the fill's ring, 20,000 in
+        // all, far more than the fill's area costs to find.
+        let ring = Line { points: (0..4000).map(|k| p(f64::from(k % 2000), f64::from(k / 2000))).collect(), closed: true };
+        let after = |work: u64| {
+            let mut elements = vec![fill("a"), fill("b")];
+            let id = elements[0].id.clone();
+            let budget = Budget { max_work: work, ..Budget::DEFAULT };
+            (outline_after(&mut elements, &id, vec![ring.clone()], &mut Labels::default(), &DesignSettings::default(), &budget), elements.len())
+        };
+        assert_eq!(after(20_000), (None, 3));
+        let (said, sewn) = after(19_999);
+        assert_eq!(sewn, 2);
+        let said = said.unwrap();
+        assert_eq!((said.code, said.element.as_ref().map(|id| id.as_str())), (Code::AutoUnder, Some("a")));
+        assert!(said.message.ends_with("needed more than the work budget of 19999 units, so it sews no outline."), "{said}");
     }
 
     #[test]

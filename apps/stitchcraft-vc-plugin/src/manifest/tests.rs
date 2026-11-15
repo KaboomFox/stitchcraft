@@ -61,18 +61,21 @@ fn req_vc_011_each_exporter_s_manifest_is_one_vectorcraft_accepts() {
 
 #[test]
 fn req_vc_016_the_auto_effect_s_dialog_holds_the_rules_settings_and_its_preview_levels() {
-    use stitchcraft_engine::auto::{ADVANCED, AutoParams, FILL_ANGLE, FILL_UNEVEN, IGNORE_BACKGROUND, MIN_AREA, OVERLAP, PREFER, STITCH};
+    use stitchcraft_engine::auto::{
+        ADVANCED, AutoParams, FILL_ANGLE, FILL_OUTLINE, FILL_UNEVEN, IGNORE_BACKGROUND, MIN_AREA, OVERLAP, PREFER, STITCH,
+    };
 
     let manifest = auto();
     assert_eq!(validate(&text(&manifest)), Ok(()));
     assert_eq!((manifest.id.as_str(), manifest.kind), ("dev.stitchcraft.auto", "effect"));
     let keys: Vec<&str> = manifest.params.iter().map(|(key, _)| *key).collect();
-    let shape = [STITCH, PREFER, FILL_UNEVEN, FILL_ANGLE];
+    let shape = [STITCH, PREFER, FILL_UNEVEN, FILL_ANGLE, FILL_OUTLINE];
     let neighbours = [OVERLAP, "auto_pull_compensation_mm", IGNORE_BACKGROUND];
-    let base = ["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_offset_mm", "auto_base_keep_holes"];
+    let base = ["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_keep_holes"];
     assert_eq!(keys, [&shape[..], &neighbours[..], &base[..], &[PREVIEW_LEVEL]].concat());
-    // The advanced settings, the rules' bounds, the outline's switch and the 2 limits of the cover's check, have no
-    // row: the dialog holds 12 rows, one fewer than the 13 that made it 3 px taller than its window.
+    // The advanced settings, the rules' bounds, the base layer's offset and the 2 limits of the cover's check, have
+    // no row: the dialog holds 12 rows, one fewer than the 13 that made it 3 px taller than its window. The
+    // outline's switch has a row (M13.28), and the offset, the base layer's finest adjustment, gave it its place.
     let advanced: Vec<&str> = AutoParams::SPECS.iter().filter(|spec| spec.group == ADVANCED).map(|spec| spec.key).collect();
     assert_eq!(advanced.len(), 10);
     assert!(advanced.contains(&MIN_AREA) && advanced.iter().all(|key| !keys.contains(key)), "{advanced:?}");

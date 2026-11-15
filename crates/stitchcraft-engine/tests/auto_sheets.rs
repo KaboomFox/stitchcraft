@@ -326,8 +326,9 @@ fn ts13_the_jump_threads_that_its_stitches_sew_down() {
     // Digitized, the letters of TS-13B sew as columns with jumps between them.
     // A thread that sews once (REQ-AUTO-037) jumps between its shapes where it changed before, and its jump
     // threads stay: TS-13A's digitized half leaves 18 where it left 15, and changes thread 2 times, not 5.
+    // With an outline after each fill (REQ-AUTO-051) TS-13D's digitized half leaves 17 where it left 15.
     for (id, recorded) in
-        [("TS-13A", [(8, 0), (18, 9)]), ("TS-13B", [(6, 0), (44, 19)]), ("TS-13C", [(9, 4), (13, 5)]), ("TS-13D", [(1, 0), (15, 4)])]
+        [("TS-13A", [(8, 0), (18, 9)]), ("TS-13B", [(6, 0), (44, 19)]), ("TS-13C", [(9, 4), (13, 5)]), ("TS-13D", [(1, 0), (17, 5)])]
     {
         let threads = jump_threads(&sheet(id).1);
         let half = |stops: usize| {

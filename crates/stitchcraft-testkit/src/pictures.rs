@@ -21,7 +21,7 @@ pub use stitchcraft_engine::testsheets::pictures::{Picture, Trace};
 use stitchcraft_engine::testsheets::{find, pictures};
 use stitchcraft_plan::{Rgb, StitchPlan, Thread};
 
-use crate::designs::{BLUE, RED, automatic, fill, in_place, p};
+use crate::designs::{BLUE, RED, fill, in_place, outlined, p};
 
 /// A gold thread.
 pub const GOLD: Thread = Thread::new(Rgb::new(230, 180, 30));
@@ -36,7 +36,7 @@ pub fn all() -> Vec<Picture> {
 pub fn stripes() -> Picture {
     let stripe = |id: &str, x: f64, thread: &Thread| {
         let ring = [(x, 0.0), (x + 15.0, 0.0), (x + 15.0, 40.0), (x, 40.0)];
-        automatic(fill(id, &[&ring], thread, &[]))
+        outlined(fill(id, &[&ring], thread, &[]))
     };
     Picture {
         name: "stripes".into(),

@@ -1,15 +1,15 @@
 $ stitch plan traced-badge.svg --auto -o traced-badge.pes --preview traced-badge.png
 traced-badge.svg
-  file      traced-badge.pes (PES v1, 9481 bytes)
-  sha256    ab4ef754f89a6dee9671edd07ac78693a76d3bb47882320b6d952bd27be9abb1
+  file      traced-badge.pes (PES v1, 9689 bytes)
+  sha256    bd02499ab77b0aa3e8ac19ba8e215467db4643debfdfb54cd7e152f0fc5f17dd
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
-  size      50.0 × 49.6 mm
-  stitches  3998 stitches, 3 jumps, 2 trims, 2 colour changes, 0 stops
+  size      50.0 × 50.0 mm
+  stitches  4102 stitches, 3 jumps, 2 trims, 2 colour changes, 0 stops
   trims     the machine makes none of them: cut the jump threads by hand
   threads   1. unnamed (#ed171f), shown as Brother PEC 5 "Red"
             2. unnamed (#0a55a3), shown as Brother PEC 2 "Blue"
             3. unnamed (#e8a900), shown as Brother PEC 11 "Deep Gold"
-  preview   traced-badge.png (432 × 429 pixels)
+  preview   traced-badge.png (432 × 432 pixels)
 info SC-I0901: 3 shapes are digitized automatically: all sew as tatami fills.
 info SC-I0912 (svg:red:fill): This shape sews by the rule area.
 info SC-I0912 (svg:blue:fill): This shape sews by the rule area.
@@ -20,5 +20,6 @@ info SC-I0908: 2 areas are digitized whole under the areas that fill their holes
 info SC-I0904: 2 areas are cut away under the areas sewn after them, 1 mm inside their edges.
 info SC-I0909: A base layer of 1899.82 mm² in 1 piece sews first under the design, in the thread #ed171f.
   hint: To sew the design without a base layer, turn `auto_base_layer` off.
-warning SC-W0913: The design sews thick. Thread: up to 4.4 fills over one spot, at (4.5, -0.1) mm from the design's centre, where `svg:blue:fill` in #0a55a3 with 2.2, `svg:gold:fill` in #e8a900 with 2.1, `stitchcraft:base` in #ed171f with 0.1 are stacked. At 3 fills or more: 1.3 mm² in 1 place, 0.0 mm² of it at 6 or more. Needle points: up to 12 in a square millimetre, at (-19.9, 14.7) mm from the design's centre. At 15 or more: 0.0 mm² in 0 places, 0.0 mm² of it at 30 or more.
+info SC-I0504: 3 needle points less than the shortest stitch (0.3 mm) from a needle point next to them were left out.
+warning SC-W0913: The design sews thick. Thread: up to 3.8 fills over one spot, at (-9.7, 9.3) mm from the design's centre, where `svg:blue:fill` in #0a55a3 with 1.3, `svg:red:fill` in #ed171f with 1.1, `svg:blue:fill#2` in #0a55a3 with 1.0 and 1 more are stacked. At 3 fills or more: 1.0 mm² in 1 place, 0.0 mm² of it at 6 or more. Needle points: up to 13 in a square millimetre, at (-24.3, -3.9) mm from the design's centre. At 15 or more: 0.0 mm² in 0 places, 0.0 mm² of it at 30 or more.
   hint: The limits are starting values that no sew-out has confirmed: sew a test piece of the thickest part first. `stitch preview --style thickness` draws where the thread is thick.

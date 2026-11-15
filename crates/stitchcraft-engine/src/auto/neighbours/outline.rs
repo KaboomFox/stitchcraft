@@ -16,16 +16,28 @@
 //! - **How.** Each edge is cut into pieces no longer than [`STEP`], and a piece shows when its middle lies in
 //!   none of those shapes. The pieces that show in a row are one line, a ring's when all of it shows, and a
 //!   line shorter than [`SHORTEST`] is left out: it would sew a knot beside its neighbour's edge.
+//! - **Through.** A stretch of the edge under those shapes no longer than [`BRIDGE`] is sewn through: the
+//!   needle goes on along the edge, under the shape that covers it, and the lines on both sides are one, or
+//!   the ring closes. Left out, such a stretch parts 2 lines by a jump, a thread to cut by hand, and leaves
+//!   the outline 2 ends where a ring can start and end anywhere. An edge that shows for less than
+//!   [`SHORTEST`] in all is left as it is, with no outline.
+//! - **Where it ends.** The fill before an outline ends where the outline starts, as every fill ends near the
+//!   element after it. The outline's last line is the one with an end, or a corner when it is a ring, nearest
+//!   where the element sewn next starts, and it ends there ([`ending_near`]). A ring starts and ends at one
+//!   point, so a fill outlined whole is left where it would be left without its outline.
 //! - **Work.** Each area has the budget's work to itself: a unit for each shape it looks past, the work of
 //!   growing those near, and for each piece a unit for each corner of the shapes whose bounds hold its middle.
-//!   An area that needs more sews no outline, and that is said (`SC-I0904`).
+//!   Finding where an outline ends costs a unit for each corner of what the next element offers, for each end
+//!   or corner looked at. An area that needs more sews no outline, and that is said (`SC-I0904`).
 
-use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Meter, Point};
+use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Meter, Point};
 
 use super::{Failed, Kind, Shapes, TOUCHING, envelope, near};
+use crate::generators::Approach;
 use crate::normalize::region::Polygon;
 use crate::normalize::region::geom::{self, Envelope, Location};
 use crate::normalize::strips::Line;
+use crate::normalize::stroke::distance_to_segment;
 
 /// The longest piece an edge is cut into to find where it shows, in millimetres: an outline starts and ends
 /// within this of where a neighbour takes the edge over, a fifth of a running stitch.
@@ -33,6 +45,10 @@ pub(super) const STEP: f64 = 0.5;
 
 /// The shortest line of an outline that sews, in millimetres: 2 running stitches. A shorter one is a knot.
 pub(super) const SHORTEST: f64 = 3.0;
+
+/// The longest stretch of an edge under other shapes that an outline sews through, in millimetres: 10 running
+/// stitches under the shape that covers it, in place of a jump and its thread to cut.
+pub(super) const BRIDGE: f64 = 25.0;
 
 /// For each automatic area of `shapes` whose edge shows somewhere, in the order they sew, its id and the lines
 /// of its outline, each area with `budget`'s work to itself; and `SC-I0904` for each area that needed more,
@@ -93,8 +109,8 @@ fn covered(p: Point, parts: &[(Envelope, &Polygon)], meter: &mut Meter) -> Resul
 }
 
 /// The lines along the closed `ring` that lie outside `parts`: the ring cut into pieces no longer than
-/// [`STEP`], those whose middles `parts` don't hold joined in rows, the ring whole when all of it shows, and
-/// the lines shorter than [`SHORTEST`] left out. A line keeps the ring's corners, and its ends lie where a
+/// [`STEP`], those whose middles `parts` don't hold joined in rows, with the hidden rows between them that
+/// [`through`] shows, the ring whole when all of it shows, and the lines shorter than [`SHORTEST`] left out. A line keeps the ring's corners, and its ends lie where a
 /// piece ends.
 fn uncovered(ring: &[Point], parts: &[(Envelope, &Polygon)], meter: &mut Meter) -> Result<Vec<Line>, Failed> {
     // Each piece: where it ends, whether that is a corner of the ring, and whether it shows.
@@ -111,6 +127,7 @@ fn uncovered(ring: &[Point], parts: &[(Envelope, &Polygon)], meter: &mut Meter) 
             (from, k) = (to, k + 1.0);
         }
     }
+    through(&mut pieces, meter)?;
     let Some(hidden) = pieces.iter().position(|&(_, _, shows)| !shows) else {
         // All of it shows: the ring, by its corners.
         let points: Vec<Point> = pieces.iter().filter(|&&(_, corner, _)| corner).map(|&(to, ..)| to).collect();
@@ -140,6 +157,95 @@ fn uncovered(ring: &[Point], parts: &[(Envelope, &Polygon)], meter: &mut Meter) 
     }
     lines.retain(|line| line.length() >= SHORTEST);
     Ok(lines)
+}
+
+/// Shows each row of hidden `pieces` of a ring that is no longer than [`BRIDGE`], with `meter`'s work: the
+/// lines on both sides of it are one line, or the ring closes. A ring that shows for less than [`SHORTEST`]
+/// in all, or not at all, stays as it is.
+fn through(pieces: &mut [(Point, bool, bool)], meter: &mut Meter) -> Result<(), Failed> {
+    let count = pieces.len();
+    let Some(shown) = pieces.iter().position(|&(_, _, shows)| shows) else { return Ok(()) };
+    // Each hidden row, its pieces and its length, from the piece after one that shows round to that piece
+    // again, so that no row is cut where the pieces start.
+    let (mut rows, mut hidden, mut showing) = (Vec::<(Vec<usize>, f64)>::new(), false, 0.0);
+    for step in 1..=count {
+        meter.charge(1)?;
+        let at = (shown + step) % count;
+        let (Some(&(from, ..)), Some(&(to, _, shows))) = (pieces.get((at + count - 1) % count), pieces.get(at)) else { continue };
+        let length = from.distance(to);
+        if shows {
+            showing += length;
+        } else {
+            if !hidden {
+                rows.push((Vec::new(), 0.0));
+            }
+            if let Some((row, sum)) = rows.last_mut() {
+                row.push(at);
+                *sum += length;
+            }
+        }
+        hidden = !shows;
+    }
+    if showing < SHORTEST {
+        return Ok(());
+    }
+    for at in rows.iter().filter(|(_, length)| *length <= BRIDGE).flat_map(|(row, _)| row) {
+        if let Some(piece) = pieces.get_mut(*at) {
+            piece.2 = true;
+        }
+    }
+    Ok(())
+}
+
+/// `lines`, the outline of the area `id`, with the line that comes nearest `target` last, ending there: what
+/// the element sewn next offers to end near. An open line comes as near as its nearer end, which it ends at,
+/// and a ring as near as its nearest corner, where it starts and ends. Each end or corner looked at costs
+/// `budget` a unit for each corner of `target`. An outline that needs more work is not sewn, and `Err` says so
+/// (`SC-I0904`).
+pub(in crate::auto) fn ending_near(mut lines: Vec<Line>, target: &Approach, budget: &Budget, id: &ElementId) -> Result<Vec<Line>, Diagnostic> {
+    let mut meter = budget.meter();
+    let mut nearest: Option<(f64, usize, usize)> = None;
+    for (at, line) in lines.iter().enumerate() {
+        let last = line.points.len().saturating_sub(1);
+        for (corner, &point) in line.points.iter().enumerate().filter(|(corner, _)| line.closed || [0, last].contains(corner)) {
+            let away = away(point, target, &mut meter).map_err(|_| {
+                let (finding, consequence) = ("where this area's outline ends nearest the shape sewn next", "it sews no outline");
+                Failed::Work.said(Code::AutoUnder, finding, consequence, budget.max_work, id.clone())
+            })?;
+            if nearest.is_none_or(|(least, ..)| away < least) {
+                nearest = Some((away, at, corner));
+            }
+        }
+    }
+    let Some((_, at, corner)) = nearest else { return Ok(lines) };
+    let mut last = lines.remove(at);
+    if last.closed {
+        last.points.rotate_left(corner);
+    } else if corner == 0 {
+        last.points.reverse();
+    }
+    lines.push(last);
+    Ok(lines)
+}
+
+/// How far `p` is from where `target` lets an element start, in millimetres: its point, or the nearest point
+/// of its lines or of its area's rings, with `meter`'s work.
+fn away(p: Point, target: &Approach, meter: &mut Meter) -> Result<f64, Exhausted> {
+    let lines: Vec<&[Point]> = match target {
+        Approach::Point(q) => return Ok(p.distance(*q)),
+        Approach::Shape(lines) => lines.iter().map(Vec::as_slice).collect(),
+        Approach::Area(parts) => parts.iter().flat_map(Polygon::rings).collect(),
+    };
+    let mut least = f64::INFINITY;
+    for line in lines {
+        meter.charge(u64::try_from(line.len()).unwrap_or(u64::MAX))?;
+        for pair in line.windows(2) {
+            if let (Some(&a), Some(&b)) = (pair.first(), pair.last()) {
+                least = least.min(distance_to_segment(p, a, b));
+            }
+        }
+    }
+    Ok(least)
 }
 
 #[cfg(test)]
@@ -180,35 +286,47 @@ mod tests {
         found
     }
 
+    /// 2 opposite corners of a square, in millimetres.
+    type Corners = ((f64, f64), (f64, f64));
+
+    /// The lines of the outline of a square 64 mm across, with a square sewn after it over each of `notches`.
+    fn notched(notches: &[Corners]) -> Vec<Line> {
+        let mut sewn = vec![area("a", square((0.0, 0.0), (64.0, 64.0)), 0)];
+        sewn.extend(notches.iter().enumerate().map(|(at, (from, to))| area(&format!("n{at}"), square(*from, *to), at + 1)));
+        let mut shapes = Shapes::new(sewn, &DesignSettings::default(), &Budget::DEFAULT);
+        let (mut found, said) = outlines(&mut shapes, &Budget::DEFAULT);
+        assert!(said.is_empty() && found[0].0.as_str() == "a", "{said:?}");
+        found.remove(0).1
+    }
+
     fn one(id: &str, length: f64, closed: bool) -> Outlined {
         (id.to_string(), vec![(length, closed)])
     }
 
     #[test]
     fn req_auto_051_an_area_s_outline_runs_round_its_edge_where_no_shape_sewn_after_it_covers_it() {
-        let (left, right) = (square((0.0, 0.0), (10.0, 10.0)), square((10.0, 0.0), (20.0, 10.0)));
+        let left = square((0.0, 0.0), (10.0, 10.0));
         // Alone, a square is outlined whole: its ring, by its 4 corners.
         let mut shapes = Shapes::new(vec![area("a", left.clone(), 0)], &DesignSettings::default(), &Budget::DEFAULT);
         let (found, said) = outlines(&mut shapes, &Budget::DEFAULT);
         let [(id, lines)] = found.as_slice() else { panic!("{found:?}") };
         assert_eq!((id.as_str(), said.len()), ("a", 0));
         assert_eq!(lines, &[Line { points: vec![p(0.0, 10.0), p(10.0, 10.0), p(10.0, 0.0), p(0.0, 0.0)], closed: true }]);
-        // Beside a square sewn after it, it leaves out the edge they share: the later square covers that
-        // edge, and is outlined whole itself.
-        let pair = outlines_of(vec![area("a", left.clone(), 0), area("b", right.clone(), 1)]);
-        assert_eq!(pair, [one("a", 30.0, false), one("b", 40.0, true)]);
+        // Beside a square sewn after it, a square 64 mm across leaves out the edge they share: the later
+        // square covers that edge, and is outlined whole itself.
+        let (large, beside) = (square((0.0, 0.0), (64.0, 64.0)), square((64.0, 0.0), (128.0, 64.0)));
+        let pair = outlines_of(vec![area("a", large.clone(), 0), area("b", beside.clone(), 1)]);
+        assert_eq!(pair, [one("a", 192.0, false), one("b", 256.0, true)]);
         // 2 elements of one shape leave the edge between them out both: the shape goes on across it.
-        let own = outlines_of(vec![area("a", left.clone(), 0), area("b", right, 0)]);
-        assert_eq!(own, [one("a", 30.0, false), one("b", 30.0, false)]);
-        // A line that starts where the ring does isn't cut there: a square that covers 0.8 mm of the first
-        // side's middle hides the 2 pieces of 0.5 mm whose middles it holds, and leaves one line of 39 mm, from
-        // one of its sides round to the other.
-        let notch = square((-1.0, 4.6), (1.0, 5.4));
-        let mut shapes = Shapes::new(vec![area("a", left.clone(), 0), area("n", notch, 1)], &DesignSettings::default(), &Budget::DEFAULT);
-        let (found, _) = outlines(&mut shapes, &Budget::DEFAULT);
-        let line = &found[0].1[0];
-        assert_eq!((found[0].1.len(), line.closed, line.points.first(), line.points.last()), (1, false, Some(&p(0.0, 5.5)), Some(&p(0.0, 4.5))));
-        assert!((line.length() - 39.0).abs() < 1e-9 && line.points.len() == 6, "{line:?}");
+        let own = outlines_of(vec![area("a", large, 0), area("b", beside, 0)]);
+        assert_eq!(own, [one("a", 192.0, false), one("b", 192.0, false)]);
+        // A line that starts where the ring does isn't cut there: a square that covers 25.3 mm of the middle of
+        // the first side hides the 51 pieces of 0.5 mm whose middles it holds, and leaves one line of 230.5 mm,
+        // from one of its sides round to the other.
+        let cut = notched(&[((-1.0, 19.6), (1.0, 44.9))]);
+        let line = &cut[0];
+        assert_eq!((cut.len(), line.closed, line.points.first(), line.points.last()), (1, false, Some(&p(0.0, 45.0)), Some(&p(0.0, 19.5))));
+        assert!((line.length() - 230.5).abs() < 1e-9 && line.points.len() == 6, "{line:?}");
         // A shape far from it covers none of it, and neither does a line digitized from a stroke, which
         // goes over the area.
         let far = square((50.0, 50.0), (60.0, 60.0));
@@ -227,6 +345,107 @@ mod tests {
     }
 
     #[test]
+    fn req_auto_052_an_outline_sews_through_a_stretch_of_25_mm_or_less_under_another_shape() {
+        let lengths =
+            |lines: &[Line]| lines.iter().map(|line| ((line.length() * 1000.0).round(), line.closed, line.points.len())).collect::<Vec<_>>();
+        let whole = [(256_000.0, true, 4)];
+        // The sides of a square 64 mm across are cut into 128 pieces each. A square over 24.8 mm of the first
+        // side hides 50 pieces, 25 mm: the outline sews through under it, all the way round. One piece more,
+        // 25.5 mm, and the outline is a line that leaves the stretch out.
+        assert_eq!(lengths(&notched(&[((-1.0, 19.6), (1.0, 44.4))])), whole);
+        let cut = notched(&[((-1.0, 19.6), (1.0, 44.9))]);
+        assert_eq!(lengths(&cut), [(230_500.0, false, 6)]);
+        // Each stretch is measured alone: a short one that follows a long one is sewn through, and the long one
+        // still parts the line's 2 ends. 2 long ones part 2 lines, and 2 short ones none.
+        assert_eq!(notched(&[((-1.0, 19.6), (1.0, 44.9)), ((30.6, 63.0), (31.4, 65.0))]), cut);
+        assert_eq!(lengths(&notched(&[((-1.0, 19.6), (1.0, 44.9)), ((19.6, 63.0), (44.9, 65.0))])), [(38_500.0, false, 3), (166_500.0, false, 5)]);
+        assert_eq!(lengths(&notched(&[((-1.0, 19.6), (1.0, 20.4)), ((30.6, 63.0), (31.4, 65.0))])), whole);
+        // A square 10 mm across beside one sewn after it is outlined whole, under its neighbour too, and so
+        // are 2 elements of one shape.
+        let (left, right) = (square((0.0, 0.0), (10.0, 10.0)), square((10.0, 0.0), (20.0, 10.0)));
+        assert_eq!(outlines_of(vec![area("a", left.clone(), 0), area("b", right.clone(), 1)]), [one("a", 40.0, true), one("b", 40.0, true)]);
+        assert_eq!(outlines_of(vec![area("a", left, 0), area("b", right, 0)]), [one("a", 40.0, true), one("b", 40.0, true)]);
+        // Pieces of other lengths: 17 mm and 8 mm hidden in a row are 25 mm, each measured from the piece
+        // before it, the first piece from the last. A row that starts the pieces is found from the first
+        // piece that shows.
+        let (s, h) = (true, false);
+        let pieces = [(p(4.0, 0.0), s, s), (p(4.0, 17.0), s, h), (p(-4.0, 17.0), h, h), (p(0.0, 0.0), s, s)];
+        let shows = |pieces: &[(Point, bool, bool)]| {
+            let mut pieces = pieces.to_vec();
+            through(&mut pieces, &mut Budget::DEFAULT.meter()).unwrap();
+            pieces.iter().map(|&(_, _, shows)| shows).collect::<Vec<_>>()
+        };
+        assert_eq!(shows(&pieces), [s, s, s, s]);
+        assert_eq!(shows(&[pieces[1], pieces[2], pieces[3], pieces[0]]), [s, s, s, s]);
+        // A millimetre more, and the row stays hidden.
+        assert_eq!(shows(&[pieces[0], (p(4.0, 18.0), s, h), (p(-4.0, 18.0), h, h), pieces[3]]), [s, h, h, s]);
+        // An edge that shows for 3 mm in all is sewn through, and one that shows for less is not: 2 pieces
+        // of 1.5 mm, then of 1.25 mm, each after a hidden one of 1 mm.
+        let short = |shown: f64| [(p(1.0, 0.0), s, h), (p(1.0 + shown, 0.0), s, s), (p(2.0 + shown, 0.0), s, h), (p(2.0 + 2.0 * shown, 0.0), s, s)];
+        assert_eq!(shows(&short(1.5)), [s, s, s, s]);
+        assert_eq!(shows(&short(1.25)), [h, s, h, s]);
+        // An edge with no piece that shows stays hidden, and one with none hidden shows.
+        assert_eq!(shows(&[pieces[1], pieces[2]]), [h, h]);
+        assert_eq!(shows(&[pieces[0], pieces[3]]), [s, s]);
+        assert_eq!(shows(&[]), [false; 0]);
+    }
+
+    #[test]
+    fn req_auto_052_an_outline_s_last_line_ends_nearest_where_the_next_element_starts() {
+        let id = ElementId::new("a").unwrap();
+        let open = |points: &[(f64, f64)]| Line { points: points.iter().map(|&(x, y)| p(x, y)).collect(), closed: false };
+        let ring = Line { points: vec![p(20.0, 0.0), p(30.0, 0.0), p(30.0, 10.0), p(20.0, 10.0)], closed: true };
+        let (low, high) = (open(&[(0.0, 0.0), (10.0, 0.0)]), open(&[(0.0, 20.0), (5.0, 26.0), (10.0, 20.0)]));
+        let lines = || vec![low.clone(), ring.clone(), high.clone()];
+        let near = |target: Approach| ending_near(lines(), &target, &Budget::DEFAULT, &id).unwrap();
+        // The line with the nearest end goes last, and ends there: as it runs, or turned round.
+        assert_eq!(near(Approach::Point(p(11.0, 20.0))), [low.clone(), ring.clone(), high.clone()]);
+        let turned = open(&[(10.0, 20.0), (5.0, 26.0), (0.0, 20.0)]);
+        assert_eq!(near(Approach::Point(p(-1.0, 20.0))), [low.clone(), ring.clone(), turned]);
+        assert_eq!(near(Approach::Point(p(11.0, 1.0))), [ring.clone(), high.clone(), low.clone()]);
+        // A ring starts and ends at its nearest corner.
+        let from_corner = Line { points: vec![p(30.0, 10.0), p(20.0, 10.0), p(20.0, 0.0), p(30.0, 0.0)], closed: true };
+        assert_eq!(near(Approach::Point(p(31.0, 11.0))), [low.clone(), high.clone(), from_corner]);
+        // An open line ends at an end: the corner in its middle, 1 mm from the point, counts for nothing
+        // beside the ring's corner 5 mm from it.
+        let beside = Line { points: vec![p(20.0, 10.0), p(20.0, 0.0), p(30.0, 0.0), p(30.0, 10.0)], closed: true };
+        assert_eq!(near(Approach::Point(p(5.0, 27.0))).last(), Some(&open(&[(10.0, 20.0), (5.0, 26.0), (0.0, 20.0)])));
+        assert_eq!(near(Approach::Point(p(15.0, 10.0))).last(), Some(&beside));
+        // Of 2 ends as near, the first found is kept: the first line's, and a line's start.
+        let (west, east) = (open(&[(0.0, 0.0), (4.0, 0.0)]), open(&[(10.0, 0.0), (6.0, 0.0)]));
+        let tied = ending_near(vec![west.clone(), east.clone()], &Approach::Point(p(5.0, 0.0)), &Budget::DEFAULT, &id).unwrap();
+        assert_eq!(tied, [east, west]);
+        let across = ending_near(vec![open(&[(4.0, 0.0), (6.0, 0.0)])], &Approach::Point(p(5.0, 0.0)), &Budget::DEFAULT, &id).unwrap();
+        assert_eq!(across, [open(&[(6.0, 0.0), (4.0, 0.0)])]);
+        // No line, and none is made.
+        assert_eq!(ending_near(Vec::new(), &Approach::Point(p(0.0, 0.0)), &Budget::DEFAULT, &id), Ok(Vec::new()));
+        // A satin column offers its rails, and a fill its area: the nearest point of any of their lines, a
+        // hole's ring too.
+        let meter = &mut Budget::DEFAULT.meter();
+        let rails = Approach::Shape(vec![vec![p(0.0, 9.0), p(10.0, 9.0)], vec![p(0.0, 5.0), p(10.0, 5.0)], vec![p(0.0, 7.0), p(10.0, 7.0)]]);
+        assert_eq!(away(p(5.0, 0.0), &rails, meter).unwrap(), 5.0);
+        let hole = vec![p(4.0, 7.0), p(6.0, 7.0), p(6.0, 9.0), p(4.0, 9.0), p(4.0, 7.0)];
+        let holed = Approach::Area(vec![Polygon { holes: vec![hole], ..square((0.0, 0.0), (10.0, 16.0)) }]);
+        assert_eq!(away(p(5.0, 8.0), &holed, meter).unwrap(), 1.0);
+        assert_eq!(away(p(5.0, -3.0), &holed, meter).unwrap(), 3.0);
+        assert_eq!(near(holed.clone()).last(), Some(&open(&[(10.0, 0.0), (0.0, 0.0)])));
+        // Each end or corner looked at costs a unit for each corner of what is offered: 8 of them, 10 units
+        // each here. With less, the outline is not sewn, and that is said of its area.
+        let with = |work: u64| ending_near(lines(), &holed, &Budget { max_work: work, ..Budget::DEFAULT }, &id);
+        assert_eq!(with(80), Ok(near(holed.clone())));
+        let said = with(79).unwrap_err();
+        assert_eq!(said.element.as_ref().map(|id| id.as_str()), Some("a"));
+        assert_eq!(
+            said.to_string(),
+            "info SC-I0904: Finding where this area's outline ends nearest the shape sewn next needed more than the work budget of 79 units, \
+             so it sews no outline."
+        );
+        assert!((0..80).all(|work| with(work).is_err()));
+        // A point costs nothing.
+        assert!(ending_near(lines(), &Approach::Point(p(0.0, 0.0)), &Budget { max_work: 0, ..Budget::DEFAULT }, &id).is_ok());
+    }
+
+    #[test]
     fn req_auto_051_an_outline_shorter_than_2_stitches_is_left_out() {
         // A square 1 mm across has a ring of 4 mm, which sews, and one 0.7 mm across a ring of 2.8 mm, which
         // doesn't: the area has no outline.
@@ -241,10 +460,11 @@ mod tests {
         };
         let small = square((0.0, 0.0), (2.5, 2.5));
         assert_eq!(outlines_of(vec![area("a", small, 0), area("u", u.clone(), 1)]).iter().map(|(id, _)| id.as_str()).collect::<Vec<_>>(), ["u"]);
-        // In a mouth 3 mm wide the side of 3 mm sews.
+        // In a mouth 3 mm wide the side of 3 mm sews, and with it the 3 sides under the U, 8 mm
+        // (`REQ-AUTO-052`).
         let wide = Polygon { outline: u.outline.iter().map(|q| if q.x() == 2.5 { p(3.0, q.y()) } else { *q }).collect(), holes: Vec::new() };
         let found = outlines_of(vec![area("a", square((0.0, 0.0), (3.0, 2.5)), 0), area("u", wide, 1)]);
-        assert_eq!(found[0], one("a", 3.0, false));
+        assert_eq!(found[0], one("a", 11.0, true));
     }
 
     #[test]

@@ -20,7 +20,9 @@ use stitchcraft_engine::generators::passes::BEAN_STITCH_REPEATS;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::generators::tatami::ANGLE;
 use stitchcraft_plan::Role;
-use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, in_place, messages, planned, polylines, rules, rules_said, unbased, widened};
+use stitchcraft_testkit::designs::{
+    BLUE, RED, along, automatic, fill, in_place, messages, outlined, planned, polylines, rules, rules_said, unbased, widened,
+};
 use stitchcraft_testkit::pictures;
 
 /// What the automatic `element` sews as, in a design with the default settings.
@@ -373,7 +375,16 @@ fn req_auto_033_a_nose_is_filled_under_its_nostrils() {
         .filter(|element| element.id.as_str().starts_with("vc:"))
         .map(|element| (element.id.as_str(), kinds(std::slice::from_ref(element))[0], element.shape.path().subpaths.len()))
         .collect();
-    assert_eq!(sewn, [("vc:14:fill", "fill", 1), ("vc:95:fill", "fill", 1), ("vc:96:fill", "fill", 1)]);
+    // Each fill is followed by its outline, one line (`REQ-AUTO-051`).
+    let outlined = [
+        ("vc:14:fill", "fill", 1),
+        ("vc:14:fill#2", "run", 1),
+        ("vc:95:fill", "fill", 1),
+        ("vc:95:fill#2", "run", 1),
+        ("vc:96:fill", "fill", 1),
+        ("vc:96:fill#2", "run", 1),
+    ];
+    assert_eq!(sewn, outlined);
     let rules: Vec<&str> = said.iter().filter(|said| said.code == Code::AutoRule).map(|said| said.message.as_str()).collect();
     assert!(
         matches!(rules.as_slice(), [nose, left, right] if nose.contains("rule uneven") && left.contains("rule compact") && right.contains("rule compact")),
@@ -627,7 +638,7 @@ fn req_auto_030_a_design_s_settings_reach_the_shapes_that_set_none() {
     // A T of a thick and a thin stroke is uneven: filled by default, and 2 columns with `auto_fill_uneven` off.
     let own = shape("own", &at(&thick_and_thin(), (30.0, 0.0)), &[("auto_fill_uneven", "true")]);
     let set = shape("set", &at(&thick_and_thin(), (60.0, 0.0)), &[]);
-    let design = Design::new(vec![automatic(shape("t", &thick_and_thin(), &[])), automatic(own), set], DesignSettings::default()).unwrap();
+    let design = Design::new(vec![outlined(shape("t", &thick_and_thin(), &[])), outlined(own), set], DesignSettings::default()).unwrap();
     let even = [("auto_fill_uneven".to_string(), "false".to_string())];
     let styled = design.clone().automatic_with(&even);
     let params = |design: &Design, id: &str| design.elements().iter().find(|e| e.id.as_str() == id).unwrap().params.iter().count();
