@@ -15,7 +15,7 @@ use stitchcraft_engine::design::{Design, DesignSettings, Element, Shape};
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::normalize::region;
 use stitchcraft_plan::{Rgb, StitchPlan};
-use stitchcraft_testkit::designs::{in_place, messages, planned, rules, unbased};
+use stitchcraft_testkit::designs::{in_place, messages, plain, planned, rules, unbased};
 use stitchcraft_testkit::metrics::edge_coverage;
 use stitchcraft_testkit::pictures::{self, Picture, Trace};
 
@@ -82,9 +82,10 @@ fn req_auto_007_a_stacked_trace_sews_what_an_abutting_one_does() {
     assert!(count(&abutting_drawn) < 0.95 * count(&stacked_drawn), "{} abutting, {} stacked", count(&abutting_drawn), count(&stacked_drawn));
 }
 
-/// The elements `picture` sews, digitized, in the order they sew, and what is said of them.
+/// The elements `picture`'s shapes sew as, digitized, in the order they sew, and what is said of them: without
+/// the base layer and the outlines round the fills, which the design sews besides.
 fn digitized(picture: &Picture) -> (Vec<Element>, Vec<Diagnostic>) {
-    let design = Design::new(unbased(picture.elements.clone()), DesignSettings::default()).unwrap();
+    let design = Design::new(plain(unbased(picture.elements.clone())), DesignSettings::default()).unwrap();
     let (elements, said) = auto::digitized(&design, &Budget::DEFAULT);
     (elements.into_owned(), said)
 }

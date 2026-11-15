@@ -64,12 +64,14 @@ fn req_auto_026_digitized_pictures_lay_no_thread_that_shows_where_it_should_not(
     let (mut shown, mut apart) = (Vec::new(), Vec::new());
     for (name, design, plan) in planned() {
         let astray = fabric::astray(&design, &plan);
-        // The ear's 2 fills of thin, ragged shapes each lay a row astray, as `tests/auto_photos.rs` lists
-        // the whole dogs' stitches until M13.18 merges such shapes into their neighbours. One row bridges a
-        // notch of its own outline 0.2 mm deep, and the stitch between its 2 pieces lies beside the shape
-        // for 1.4 mm. The other lies along a line of another colour, 0.6 mm wide, that its fill reaches
-        // under (REQ-AUTO-007): the line sews as wide as its thread, and the row shows beside it.
-        let listed = name == "ear" && astray.stitches.len() == 2 && astray.longest < 1.5;
+        // The ear's 2 fills of thin, ragged shapes each laid a row astray, as `tests/auto_photos.rs` lists
+        // the whole dogs' stitches until M13.18 merges such shapes into their neighbours. One row bridged a
+        // notch of its own outline 0.2 mm deep, and the stitch between its 2 pieces lay beside the shape
+        // for 1.4 mm. The other lay along a line of another colour, 0.6 mm wide, that its fill reaches
+        // under (REQ-AUTO-007): the line sews as wide as its thread, and the row shows beside it. With an
+        // outline after each fill (REQ-AUTO-051, M13.28) the fills end elsewhere, and one such stitch is
+        // left, 1.2 mm long. Which of the 2 it is was not traced.
+        let listed = name == "ear" && astray.stitches.len() == 1 && astray.longest < 1.5;
         if astray.longest >= ASTRAY && !listed {
             shown.push(format!("{name}: {:?}, the longest {:.3} mm", astray.stitches, astray.longest));
         }
@@ -78,8 +80,10 @@ fn req_auto_026_digitized_pictures_lay_no_thread_that_shows_where_it_should_not(
     assert!(shown.is_empty(), "{shown:#?}");
     // The moves sewn on from one element to the next, and the jump threads that the PE800 leaves, are as the
     // design page records them (image-to-embroidery.md › Sewing order): the button's dots sew on from one to
-    // the next across its yellow, the pear's stem leaves 2 jump threads, and the ear one, between 2 shapes of
-    // a thread that sews once (REQ-AUTO-037).
+    // the next across its yellow, and the pear's stem leaves 2 jump threads. The paw leaves one and the ear 3,
+    // where they left none and one before each fill sewed an outline (REQ-AUTO-051, REQ-AUTO-052): the paw's
+    // fill is 2 parts of one shape, each with an outline of its own, and in the ear 2 such outlines and the
+    // rings of one outline lie apart.
     let recorded = [
         ("stripes", 0, 0),
         ("badge-abutting", 0, 0),
@@ -92,8 +96,8 @@ fn req_auto_026_digitized_pictures_lay_no_thread_that_shows_where_it_should_not(
         ("button-stacked", 6, 0),
         ("strand", 0, 0),
         ("pear", 0, 2),
-        ("paw", 0, 0),
-        ("ear", 1, 1),
+        ("paw", 0, 1),
+        ("ear", 1, 3),
     ];
     assert_eq!(apart, recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps)));
 }

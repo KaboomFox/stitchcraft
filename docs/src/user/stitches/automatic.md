@@ -192,11 +192,13 @@ shape lies from its centre line on both sides, and fills one that lies much fart
 does. A cross with square arms sews a column along each arm, and a letter V keeps its columns: its corner
 lies on one side only.
 
-A fill can sew an outline: a running stitch round its edge in its own thread, sewn after its rows. The outline
-draws the points of a small shape, which the ends of a fill's rows leave blunt. It is off unless you ask,
-since on a traced photo each piece of edge is a jump thread to cut:
-`stitch plan badge.svg --auto -o badge.pes --set auto_fill_outline=true`. It sews only where the edge
-shows, and not where a shape sewn later covers it.
+Each fill sews an outline: a running stitch round its edge in its own thread, sewn after its rows. The outline
+draws the points of a small shape, which the ends of a fill's rows leave blunt, and its stitches are
+shorter where the edge bends, so that the outline of a round shape is round. It sews where the edge shows, and not along
+an edge that a shape sewn later covers. To sew without outlines, turn **Outline round fills** off in the
+Auto effect's dialog, or on the command line:
+`stitch plan badge.svg --auto -o badge.pes --set auto_fill_outline=false`. A traced photo then sews about
+a tenth fewer stitches, and leaves a few jump threads fewer to cut.
 
 ### Stitches by width
 
@@ -296,8 +298,8 @@ shows in it in place of the fabric. The running dog above has none in
 
 To sew without the base layer, turn `auto_base_layer` off. Each fill then sews its own underlay, and
 StitchCraft says that fabric may show between shapes (`SC-I0911`). The
-[settings](../reference/params/auto.md) also set the base layer's stitch length and offset, and whether
-it keeps the design's holes. 2 more are limits that StitchCraft's own checks hold a design to, and
+[settings](../reference/params/auto.md) also set the base layer's stitch length, whether it keeps the
+design's holes, and, among the advanced ones, its offset. 2 more are limits that StitchCraft's own checks hold a design to, and
 nothing sews differently by them: the largest sliver, 0.4 mm², and the most the top thread may leave to
 the base layer, 0.5 % of the design. The reference machine hasn't sewn a base layer yet, and
 [MC-8](../../plan/machine-testing.md) sews the dog on black fabric with it and without.
@@ -344,11 +346,12 @@ of `stitch plan --report`). The settings that change the choice come in 3 tiers:
 - **For a shape**, **Stitch** (`auto_stitch`) names its stitch: a running stitch, satin columns or a tatami
   fill. A part that can't sew so goes by the rules.
 - **For a design**, **Satin or fill** (`auto_prefer`) leans the rules towards satin columns or towards
-  fills, **Fill uneven parts** (`auto_fill_uneven`) turns the filling of ragged patches off, and **Fill
-  angle** (`auto_fill_angle`) turns every fill's rows. In VectorCraft, apply StitchCraft's Auto effect to
+  fills, **Fill uneven parts** (`auto_fill_uneven`) turns the filling of ragged patches off, **Fill
+  angle** (`auto_fill_angle`) turns every fill's rows, and **Outline round fills** (`auto_fill_outline`)
+  turns the outlines off. In VectorCraft, apply StitchCraft's Auto effect to
   the layer or the group, and set them in its dialog.
 - **Advanced**, each rule's bound is a setting too, such as the least slenderness of a column, and so is
-  the switch that sews an outline round each fill (`auto_fill_outline`). No dialog shows these. On the command line, `--set` sets one on every shape digitized automatically:
+  the base layer's offset (`auto_base_offset_mm`). No dialog shows these. On the command line, `--set` sets one on every shape digitized automatically:
   `stitch plan photo.jpg -o photo.pes --set auto_min_slenderness=4`.
 
 A style is a named set of these settings. `stitch plan --style logo` suits flat art drawn in strokes: it

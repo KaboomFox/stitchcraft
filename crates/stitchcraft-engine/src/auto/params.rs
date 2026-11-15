@@ -96,6 +96,14 @@ params! {
         /// it. One angle for the whole design lets a small filled part lie flat beside the fills round it.
         auto_fill_angle: Angle = "0", label "Fill angle",
             origin Origin::StitchCraft, stability Stability::Experimental;
+
+        /// Whether each fill that automatic digitizing makes sews an outline: a running stitch round its
+        /// edge, after its rows, in its own thread. The outline draws the edge of a small shape as one
+        /// line, where the ends of its rows would leave its points blunt. It sews only where the edge
+        /// shows: not where a shape sewn after the fill covers the edge. The design goes by the setting of
+        /// its lowest automatic shape.
+        auto_fill_outline: Toggle = "true", label "Outline round fills",
+            origin Origin::StitchCraft, stability Stability::Experimental;
     }
 
     "Neighbours" {
@@ -136,12 +144,6 @@ params! {
         /// directions, so that its needle points make triangles with sides this long, as the stitches of
         /// Ink/Stitch's Knockdown Fill do. Shorter stitches hide more of the fabric and sew longer.
         auto_base_stitch_length_mm: Length = "3", label "Base layer's stitch length", range (1.0, 6.0),
-            origin Origin::StitchCraft, stability Stability::Experimental;
-
-        /// How far outside the design's outer shape the base layer's edge lies: inside it when negative, so
-        /// that no base stitch shows beside a shape once the thread has pulled the shape's edge in. By
-        /// default it lies as far inside as a satin column's pull compensation reaches outside.
-        auto_base_offset_mm: Length = "-0.4", label "Base layer's offset", range (-3.0, 3.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
         /// Whether the base layer keeps the holes of the design's outer shape. Off, it sews across them.
@@ -203,12 +205,10 @@ params! {
         auto_min_area_mm2: Area = "1", label "Smallest area", range (0.0, 10.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
-        /// Whether each fill that automatic digitizing makes sews an outline: a running stitch round its
-        /// edge, after its rows, in its own thread. The outline draws the edge of a small shape as one
-        /// line, where the ends of its rows would leave its points blunt. It sews only where the edge
-        /// shows: not where a shape sewn after the fill covers the edge. The design goes by the setting of
-        /// its lowest automatic shape.
-        auto_fill_outline: Toggle = "false", label "Outline round fills",
+        /// How far outside the design's outer shape the base layer's edge lies: inside it when negative, so
+        /// that no base stitch shows beside a shape once the thread has pulled the shape's edge in. By
+        /// default it lies as far inside as a satin column's pull compensation reaches outside.
+        auto_base_offset_mm: Length = "-0.4", label "Base layer's offset", range (-3.0, 3.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
         /// The largest gap in the top thread that is left to the base layer: a sliver. Where thin shapes
@@ -242,13 +242,14 @@ mod tests {
     #[test]
     fn each_key_names_a_setting_in_the_order_they_are_declared() {
         let keys: Vec<&str> = AutoParams::SPECS.iter().map(|spec| spec.key).collect();
-        let shape = [STITCH, PREFER, FILL_UNEVEN, FILL_ANGLE];
+        let shape = [STITCH, PREFER, FILL_UNEVEN, FILL_ANGLE, FILL_OUTLINE];
         let neighbours = [OVERLAP, "auto_pull_compensation_mm", IGNORE_BACKGROUND];
-        let base = ["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_offset_mm", "auto_base_keep_holes"];
+        let base = ["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_keep_holes"];
         let bounds = [MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH, MIN_SLENDERNESS, MAX_UNEVENNESS, MAX_REACH, MIN_FILL_WIDTH, MIN_AREA];
-        let cover = [FILL_OUTLINE, "auto_base_sliver_mm2", "auto_base_bare_percent"];
+        let cover = ["auto_base_offset_mm", "auto_base_sliver_mm2", "auto_base_bare_percent"];
         assert_eq!(keys, [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..]].concat());
-        // The bounds, and the 2 limits of the cover's check, are the advanced settings, which no dialog shows.
+        // The bounds, the base layer's offset and the 2 limits of the cover's check are the advanced settings,
+        // which no dialog shows.
         let advanced: Vec<&str> = AutoParams::SPECS.iter().filter(|spec| spec.group == ADVANCED).map(|spec| spec.key).collect();
         assert_eq!(advanced, [&bounds[..], &cover[..]].concat());
     }

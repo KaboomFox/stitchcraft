@@ -1897,6 +1897,20 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.28: the outline round a fill is on by default (`REQ-AUTO-051`, `REQ-AUTO-052`). Shown the badge's
+  stars with and without it, the owner preferred the outlines.
+  - `auto_fill_outline` is on, and the Auto effect's dialog has a row for it, **Outline round fills**.
+    The base layer's offset made room and is an advanced setting now. To sew without outlines, turn the
+    row off, or pass `--set auto_fill_outline=false`.
+  - An outline keeps to its edge within 0.1 mm, so that the outline of a round shape is round. A running
+    stitch's own 0.2 mm outlined the badge's moon, 9.6 mm across, with 12 sides, and it has 18 now.
+  - An outline costs fewer jumps. It sews through a stretch of its edge of 25 mm or less under a later
+    shape, and its last line ends nearest where the next element starts. A traced dog's outlines bring 3
+    to 6 jumps, where they brought 19 to 30. They add about a tenth to its stitches, and no thread change.
+  - Golden files: TS-13A to TS-13D changed, since the digitized half of each sews its fills' outlines.
+    TS-13A is 0.23 mm taller and TS-13C 0.25 mm, by an outline along the lowest edge. TS-13D says
+    `SC-I0504` too, for the needle points left out where an outline starts at its fill's last stitch. The
+    recorded numbers of `tests/auto_fabric.rs` and `tests/auto_photos.rs` moved with the outlines.
 - compat: the plug-ins and the compatibility gate work with VectorCraft 0.24.1, which the gate now pins
   (0.22.0 before). VectorCraft 0.23.0 and 0.24.0 came out in between and never ran through the gate, so
   `compat/supported.toml` has no row for them.

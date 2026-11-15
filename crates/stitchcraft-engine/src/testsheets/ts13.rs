@@ -90,8 +90,10 @@ pub(super) const LINES_AND_PARTS_SAY: [Code; 13] = [
 /// What the engine says of TS-13D, in order: how many shapes it digitized; the white round each emblem, a
 /// square ring along which no satin column can be drawn, filled; the areas that sew only what shows of them
 /// and those digitized whole under their details; the order; the areas that reach under others and those
-/// cut away under their details; and the base layer.
-pub(super) const LAYERS_SAY: [Code; 7] = [AutoDigitized, AutoSatinFilled, AutoSatinFilled, AutoLayers, AutoOrder, AutoUnder, AutoBase];
+/// cut away under their details; the base layer; and the needle points left out where an outline starts at
+/// its fill's last stitch (`REQ-AUTO-051`).
+pub(super) const LAYERS_SAY: [Code; 8] =
+    [AutoDigitized, AutoSatinFilled, AutoSatinFilled, AutoLayers, AutoOrder, AutoUnder, AutoBase, StitchesMerged];
 
 /// The check of every TS-13 sheet that asks where a jump thread is sewn down: the reference machine cuts
 /// none (MC-1), and the sheets sew their pictures as the engine plans any design.
@@ -177,10 +179,10 @@ mod tests {
         // Each sheet's size, its conformance case's to the micrometre, and its stitches: what MC-8 sews, which
         // changes with any change to what a picture sews.
         for (id, size, stitches) in [
-            ("TS-13A", [126.001, 167.75], 25_731),
-            ("TS-13B", [110.597, 148.4], 15_768),
-            ("TS-13C", [111.397, 107.5], 11_323),
-            ("TS-13D", [115.0, 108.386], 27_599),
+            ("TS-13A", [126.001, 167.98], 26_105),
+            ("TS-13B", [110.597, 148.4], 15_935),
+            ("TS-13C", [111.397, 107.75], 11_486),
+            ("TS-13D", [115.0, 108.386], 27_988),
         ] {
             let plan = find(id).unwrap().plan().unwrap();
             let bounds = plan.bounds().unwrap();

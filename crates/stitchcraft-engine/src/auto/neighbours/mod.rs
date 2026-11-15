@@ -61,6 +61,7 @@ mod under;
 
 pub(super) use background::{Background, background, left_out};
 pub(super) use layers::flattened;
+pub(super) use outline::ending_near;
 
 use std::collections::BTreeSet;
 

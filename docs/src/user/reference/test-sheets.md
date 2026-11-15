@@ -315,7 +315,7 @@ After sewing, check:
 
 ## TS-13A — Pictures digitized automatically: neighbours and sewing order
 
-126.0 × 167.8 mm · 25731 stitches, 36 jumps, 35 trims, 19 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+126.0 × 168.0 mm · 26105 stitches, 36 jumps, 35 trims, 19 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -339,7 +339,7 @@ After sewing, check:
 
 ## TS-13B — Pictures digitized automatically: letters and lines traced as areas
 
-110.6 × 148.4 mm · 15768 stitches, 63 jumps, 62 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+110.6 × 148.4 mm · 15935 stitches, 65 jumps, 64 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -352,7 +352,7 @@ Threads: Black, Red, Blue, Deep Gold, Black, Red, Blue, Deep Gold, Black, Red, B
 After sewing, check:
 
 - The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left: the word MATCH in block letters 15, 10, 6 and 4 mm tall, top to bottom, each letter traced as an area. Right: 3 windows, top to bottom, whose black lines, traced as areas, are 0.3, 0.6 and 0.9 mm wide. One line runs down each window, and a branch runs across to its right side from it.
-- The bottom half changes thread 12 times and jumps 16 times, the top half 4 and 47 times. A letter filled sews in one piece, and digitized it is columns and lines with jumps between them. How long does each half take?
+- The bottom half changes thread 12 times and jumps 16 times, the top half 4 and 49 times. A letter filled sews in one piece, and digitized it is columns and lines with jumps between them. How long does each half take?
 - Which is the smallest word that reads, on each half?
 - On the top half, the letters from 6 mm tall sew as satin columns between their own edges, and the 4 mm ones as triple runs along their middles. Do the columns' stitches lie square to their strokes, round the C's bend and the A's hole?
 - Where a column ends under another, 0.4 mm longer, as the T's stem does under its bar, does fabric show there, or a ridge? Does a crossbar sewn as a column of its own, as the H's is, read as one stroke with its stems? The M's and the A's feet should end flat along the baseline, and the C's ends round.
@@ -363,7 +363,7 @@ After sewing, check:
 
 ## TS-13C — Pictures digitized automatically: lines, and shapes in parts
 
-111.4 × 107.6 mm · 11323 stitches, 32 jumps, 31 trims, 9 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+111.4 × 107.8 mm · 11486 stitches, 32 jumps, 31 trims, 9 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -386,7 +386,7 @@ After sewing, check:
 
 ## TS-13D — Pictures digitized automatically: pictures traced in layers
 
-115.0 × 108.4 mm · 27599 stitches, 33 jumps, 32 trims, 20 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+115.0 × 108.4 mm · 27988 stitches, 35 jumps, 34 trims, 20 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -399,7 +399,7 @@ Threads: White, Prussian Blue, Red, Deep Gold, White, Deep Gold, Red, Prussian B
 After sewing, check:
 
 - The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left to right: an emblem traced abutting and the same emblem traced stacked, each 42 mm wide, a navy square with a white disc, a red star on the disc and 3 gold bars, on white; and a button traced abutting above the same button traced stacked, a yellow disc 19 mm across with 7 orange dots, in a black rim.
-- The bottom half changes thread 13 times and jumps 12 times, the top half 6 and 21 times. The base layer's thread and pieces are among the top half's. How long does each half take?
+- The bottom half changes thread 13 times and jumps 12 times, the top half 6 and 23 times. The base layer's thread and pieces are among the top half's. How long does each half take?
 - On the bottom half, the stacked emblem sews each colour whole under the colours drawn over it, the white under everything. How stiff is it beside the abutting one? On the top half, it sews only what shows of each colour: does it sew as the abutting emblem beside it?
 - On the top half, each navy square is one fill under the white disc and the bars, which sew after it, cut away 1 mm inside their edges. The white round each star, narrower than a satin column there, is a satin column round it. On the bottom half, the abutting emblem's navy sews round the disc and between the bars as drawn. Which sews better between the bars? Does fabric or a ridge show round the bars, the disc and the star?
 - On the top half, the gold bars sew as satin columns, 2.1 mm tall as drawn. Do they keep their height, and do their ends stay square?

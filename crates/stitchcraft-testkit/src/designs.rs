@@ -10,7 +10,7 @@
 
 use stitchcraft_core::{Budget, Code, ElementId, Mm, Point};
 use stitchcraft_engine::assemble::{Assembled, assemble};
-use stitchcraft_engine::auto::{self, AutoParams};
+use stitchcraft_engine::auto::{self, AutoParams, FILL_OUTLINE};
 use stitchcraft_engine::design::{Cap, Clip, Design, DesignSettings, Element, FillRule, Hints, Path, Segment, Shape, Subpath};
 use stitchcraft_engine::finalize::{Finalized, finalize};
 use stitchcraft_engine::generate::{approach, generate};
@@ -79,8 +79,20 @@ pub fn clipped(element: Element, parts: &[&[(f64, f64)]]) -> Element {
     Element { clips, ..element }
 }
 
-/// `element` as a shape without settings that StitchCraft digitizes ([`Element::automatic`]).
-pub fn automatic(element: Element) -> Element {
+/// `element` as a shape that StitchCraft digitizes ([`Element::automatic`]), without the outline round its
+/// fills unless it sets `auto_fill_outline` itself (`REQ-AUTO-051`). The cases of the rules for a shape and
+/// its neighbours draw their shapes so, and then read only the elements those shapes sew as. A case of the
+/// outline draws its shapes with [`outlined`].
+pub fn automatic(mut element: Element) -> Element {
+    if element.params.get(FILL_OUTLINE).is_none() {
+        element.params.set(FILL_OUTLINE, "false");
+    }
+    Element { automatic: true, ..element }
+}
+
+/// `element` as a shape without settings that StitchCraft digitizes ([`Element::automatic`]): each rule's
+/// setting at its default, the outline round its fills among them.
+pub fn outlined(element: Element) -> Element {
     Element { automatic: true, ..element }
 }
 
@@ -90,6 +102,16 @@ pub fn automatic(element: Element) -> Element {
 pub fn unbased(mut elements: Vec<Element>) -> Vec<Element> {
     if let Some(lowest) = elements.iter_mut().find(|element| element.automatic) {
         lowest.params.set("auto_base_layer", "false");
+    }
+    elements
+}
+
+/// `elements` as a design that sews no outline round its fills (`REQ-AUTO-051`): the lowest automatic one
+/// turns `auto_fill_outline` off, and the design goes by its settings. The cases that read which stitches a
+/// picture's shapes sew as draw it so.
+pub fn plain(mut elements: Vec<Element>) -> Vec<Element> {
+    if let Some(lowest) = elements.iter_mut().find(|element| element.automatic) {
+        lowest.params.set(FILL_OUTLINE, "false");
     }
     elements
 }

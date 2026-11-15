@@ -173,13 +173,13 @@ fn req_vc_016_the_auto_effect_makes_what_it_reaches_automatic_with_its_settings(
         assert_eq!(common::params(element(&read, "vc:6:fill")), [("auto_overlap_mm", "0.6")]);
     }
     // A line 5 mm wide sews as a satin column, and with the effect's widest satin column of 4 mm it fills,
-    // on a base layer, which is left out here.
+    // with the fill's outline after it (REQ-AUTO-051), on a base layer, which is left out here.
     let wide = |effects: &[(&str, &str)]| {
         let read = read(&document(4, &line(2, "", &effected(&[stroke(5.0, "")], effects))), true);
         let (elements, _) = auto::digitized(&read.design, &Budget::DEFAULT);
         elements.iter().filter(|e| !e.id.as_str().starts_with("stitchcraft:base")).map(|e| matches!(e.shape, Shape::Fill { .. })).collect::<Vec<_>>()
     };
-    assert_eq!((wide(&[]), wide(&[("auto", settings)])), (vec![false], vec![true]));
+    assert_eq!((wide(&[]), wide(&[("auto", settings)])), (vec![false], vec![true, false]));
 }
 
 #[test]

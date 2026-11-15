@@ -33,6 +33,7 @@ use stitchcraft_params::{ParamSet, StitchType};
 use crate::auto::numbered;
 use crate::common::{TRIM_AFTER, UNDERLAYS_FIRST};
 use crate::design::{Element, Hints, Path, Segment, Shape, Subpath};
+use crate::generators::running::TOLERANCE;
 use crate::normalize::satin::SAME_POINT;
 use crate::route::graph::{Graph, Link, Step};
 use crate::route::lines::Stroke;
@@ -45,9 +46,6 @@ pub const RUN_TRIMMED: f64 = 0.75;
 
 /// The key of a stroke's repeats.
 const REPEATS: &str = "repeats";
-
-/// The key of a running stitch's tolerance.
-const TOLERANCE: &str = "running_stitch_tolerance_mm";
 
 /// The key of a stroke's method.
 const STROKE_METHOD: &str = "stroke_method";
