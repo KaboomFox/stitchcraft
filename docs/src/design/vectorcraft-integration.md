@@ -359,10 +359,83 @@ the reference machine sews (VectorCraft 0.16.0 to 0.18.0 alike, 2026-10-29):
 
 A fill's work grows less than its area, and every fill takes some whatever its size: the squares cover half
 the field and take more than twice as much. About 140 fills of that size are as many as an export can
-plan, which few designs for a home machine's hoop reach, and `stitch export` writes the others. The test
+plan, which few drawn designs for a home machine's hoop reach. A traced photo does, and
+[an export that finishes](#an-export-that-finishes) says what exports it. The test
 sheets drawn as designs export within 17 % of what an export may run, once the Test Sheet filter has drawn
 them into a document ([below](#tools-stroke-to-satin-and-test-sheet)). A live effect is given no warnings
-channel, and an exporter no picture: `stitch export --preview` still draws what will sew.
+channel, and VectorCraft asks an exporter for no picture: `stitch export --preview` still draws what will sew.
+
+### An export that finishes
+
+M6.17 (`REQ-VC-025`). M6.15's browser check found that VectorCraft stops the export of a traced photo with
+the Auto effect, in PES and in DST, with `plug-in exceeded its instruction budget`. The numbers below were
+measured on 2026-11-15 with the host of VectorCraft 0.24.1 itself, its `vectorcraft-plugins` crate run
+natively, and the PES exporter CI built from main. Each document is a fixture of `docs/fixtures/` with the
+Auto effect on its traced group.
+
+| Design | Document, bytes | Instructions allowed | Instructions needed | Needed for each allowed |
+|---|---:|---:|---:|---:|
+| The pear | 71,212 | 10.28 billion | about 8.7 billion | 0.8 |
+| Dog on turf, 6 threads | 235,641 | 10.94 billion | about 51 billion | 4.7 |
+| Dog running, 6 threads | 237,117 | 10.95 billion | about 56 billion | 5.1 |
+| Dog on turf, 9 threads | 262,913 | 11.05 billion | about 59 billion | 5.3 |
+| Dog running, 9 threads | 265,074 | 11.06 billion | 64 to 69 billion | 6.2 |
+
+The host stopped each dog after 6 to 7 seconds, and the editor in Chromium after about 27. The desktop
+application uses the same crate with the same limits, so it refuses the export the browser refuses. Level B
+of the compatibility gate has the case: the scenario `traced-photo` traces the dog's cut-out, gives it the
+Auto effect and expects VectorCraft's command line to stop the PES export. When a VectorCraft allows
+enough, the scenario fails, and these pages change.
+
+**The exporter can't be made to fit.** `stitch export` plans the same document in a second, 9.8 billion
+instructions of the processor's own. A profile of that run puts about 65 % of them in arranging the
+regions of the traced shapes, which overlap: cutting them where they cross takes 28 % and finding the
+crossings 11 %. The exporter reads the document once and plans it once, and nothing is done again for
+each shape. With the arranging free of charge the dog would still need 1.7 times what is allowed.
+
+**The exporter can't say so first.** A module of ABI v1 has no imports, so it can't ask the host how many
+instructions are left. It can't count them itself either. The engine's `Budget` counts each element's
+work and doesn't add the elements up, and one unit of it cost between 330 and 5,300 instructions in
+these runs, by the kind of work. A guess would refuse designs that fit. So no coded diagnostic comes
+before the stop, VectorCraft's own error is what the user reads, and the user pages say what to do then.
+The [RFC](rfc-vectorcraft-abi-v2.md#p10-an-export-budget-that-fits-a-traced-photo) asks VectorCraft for
+both: more room, and a way to know it.
+
+**So the work is done where nothing counts instructions.**
+
+- On the desktop, `stitch export FILE.vectorcraft` writes the file from the saved document. It took 0.9
+  to 1.3 seconds for each of the 4 dogs.
+- In the browser demo, the Start here panel has **Export PES**, **Export DST** and **Show the real
+  stitches**. Each runs the exporter plug-in's own module, which the browser compiles and runs without a
+  count.
+
+The panel's code is `web/exports.mjs`. It takes the document in front from the editor through the page's
+documented call: `document.export` with the format `vectorcraft` answers the file the editor saves, in
+base64 (VectorCraft's `docs/control-protocol.md`, the `app.export` row and "In the browser"). It starts a
+Web Worker, `web/engine-worker.mjs`, and the editor goes on answering the visitor meanwhile. Every tenth of
+a second the panel says how long the engine has worked so far. The worker's `web/engine.mjs` instantiates `pes.wasm` or
+`dst.wasm` with no imports and calls `vc_run` with what VectorCraft would pass. Each parameter has its
+manifest's default. The `_context` has the mode and the file's extension and name, and the name is the
+document's title without its extension. Then the panel offers the file as a download with its size and
+the time, and lists what the export said. The JavaScript is glue: every stitch is the module's.
+
+The module was chosen over `stitch` built for WASI for these reasons:
+
+- The modules are on the site already. The demo grows by the 3 scripts alone, 8,639 bytes.
+- Level B already proves that an exporter writes `stitch export`'s file, byte for byte.
+- `stitch` for WASI would need a shim for the system calls it makes, and the shim would be written here
+  or brought in with its licence. Its module would be one more to publish.
+- A module with no imports could be tried in Node on a machine without a wasm toolchain.
+
+The picture needs one addition to the exporter. With `picture` as the `mode` of its `_context`, it
+answers the picture `stitch export --preview` draws of the file read back, a PNG, in the file's place
+(`PICTURE` in `apps/stitchcraft-vc-plugin/src/export.rs`). VectorCraft's own mode is `export`, so File ›
+Export always gets the file. A design whose file isn't written has no picture.
+
+Run in Node 22 before the panel was built, the 2 modules wrote the PES and the DST of the 4 dogs and the
+pear byte for byte as `stitch export` writes them, in 2.4 to 4.0 seconds for a dog with the module's
+compiling, and 1 second for the pear. The [before and after sheet](before-after-sheet.md#the-browsers-checks)
+makes the same comparison in Chromium on every pull request, the picture included.
 
 ### Design settings and machine kept with the document
 
@@ -1059,7 +1132,8 @@ the table of every build, in the step that lists the site's files as stored and 
 | A preview's `demo/` | The plug-ins, the loader, the starter patch | 18,869,636 | 6,291,317 |
 
 The preview of pull request 266, its book with its `demo/` and the 3 pictures, took 40.6 MB of the branch.
-The editor's module is 5 times the size of a preview's `demo/`, and no preview contains it.
+The editor's module is 5 times the size of a preview's `demo/`, and no preview contains it. M6.17's panel
+exports added 3 scripts of 8,639 bytes together, and no module.
 
 ### The starter drawing
 

@@ -41,7 +41,8 @@ fn every_scenario_checks_only_what_its_runs_export() {
             "stroke-to-satin",
             "tartan",
             "testsheets",
-            "trace"
+            "trace",
+            "traced-photo"
         ]
     );
     let requirements = requirement_ids().unwrap();
@@ -196,6 +197,15 @@ fn an_export_that_fails_is_its_run_s_last_step_and_writes_no_file_to_check() {
         "#,
     );
     assert_eq!(problems(&failing, &modules(), &std::collections::BTreeSet::new()), Vec::<String>::new());
+    // An export VectorCraft must stop names what VectorCraft says, and any other text names nothing.
+    let stopped = |fails: &str| {
+        scenario(&format!("description = \"d\"\n[[run]]\nplugins = [\"pes\"]\nsteps = [{{ export = \"a.pes\", fails = \"{fails}\" }}]\n"))
+    };
+    assert_eq!(problems(&stopped(OVER_BUDGET), &modules(), &std::collections::BTreeSet::new()), Vec::<String>::new());
+    assert_eq!(
+        problems(&stopped("its instruction budget"), &modules(), &std::collections::BTreeSet::new()),
+        ["run 1: `fails = \"its instruction budget\"` names no error StitchCraft says"]
+    );
     let args = arguments(&failing.run[0], Path::new("/plugins"), Path::new("/out"), false).unwrap();
     let pes = Path::new("/out").join("a.pes").to_string_lossy().into_owned();
     assert_eq!(args[args.len() - 2..], ["--export".to_string(), pes]);

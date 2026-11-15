@@ -54,8 +54,12 @@ fn data(name: &str) -> Result<Value, String> {
     Ok(Value::String(String::from_utf8(made(name)?).unwrap_or_else(|binary| base64(binary.as_bytes()))))
 }
 
+/// The photo a scenario traces: the owner's dog, cut out of its background.
+const PHOTO: &str = "dog-on-turf-cutout.png";
+
 /// The file StitchCraft makes of `name`, or why it makes none: `palette`, the reference machine's threads as
-/// `stitch palette` writes them, and `badge.png`, the badge drawn flat.
+/// `stitch palette` writes them, `badge.png`, the badge drawn flat, and `dog-on-turf-cutout.png`, the photo
+/// of that name among the repository's fixtures (`docs/fixtures/README.md`).
 pub(super) fn made(name: &str) -> Result<Vec<u8>, String> {
     match name {
         "palette" => Ok(palette::gpl(REFERENCE).into_bytes()),
@@ -63,7 +67,11 @@ pub(super) fn made(name: &str) -> Result<Vec<u8>, String> {
             let badge = pictures::badge((25.0, 25.0), 1.0, Trace::Stacked).map_err(|e| e.to_string())?;
             drawn(&badge, 50.0)
         }
-        other => Err(format!("StitchCraft makes no data called `{other}`: it makes `palette` and `badge.png`")),
+        PHOTO => {
+            let path = crate::util::root().join("docs/fixtures").join(PHOTO);
+            std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))
+        }
+        other => Err(format!("StitchCraft makes no data called `{other}`: it makes `palette`, `badge.png` and `{PHOTO}`")),
     }
 }
 

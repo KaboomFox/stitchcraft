@@ -71,7 +71,7 @@ try {
   const drawn = (await readFile(new URL('./templates/alpine-night.svg', import.meta.url), 'utf8')).match(/ fill="/g).length;
   assert.deepEqual(await shapes(), {count: drawn, stitchcraft: 0, autoOnce: 0}, 'the starter is the plain drawing, each shape without a StitchCraft effect');
   console.log(`The plain drawing, ${drawn} shapes, exports to DST as: ${await stitches()}`);
-  assert.equal(await page.locator('details').evaluate(panel => panel.open), true, 'the panel is open over the plain drawing');
+  assert.equal(await page.locator('body > details').evaluate(panel => panel.open), true, 'the panel is open over the plain drawing');
   await page.screenshot({path: join(screenshots, 'plain-drawing.png')});
   const turn = page.getByRole('button', {name: 'Turn the drawing into stitches', exact: true});
   await turn.click();
@@ -110,6 +110,22 @@ try {
   const finished = await stitches();
   assert.ok(finished > 0, `the finished example exports actual stitches: ${finished}`);
   console.log(`After the button the drawing exports ${sewn} stitches, and the finished example ${finished}`);
+  // The panel's own exports, by StitchCraft's engine in a worker: the button offers the file, and says how
+  // long it took, and the picture of its stitches opens over the editor and closes again.
+  for (const [label, extension, start] of [['Export PES', 'pes', '#PES0001'], ['Export DST', 'dst', 'LA:']]) {
+    const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', {name: label, exact: true}).click()]);
+    assert.match(download.suggestedFilename(), new RegExp(`\\.${extension}$`), `${label} offers a ${extension} file`);
+    const file = await readFile(await download.path());
+    assert.equal(file.subarray(0, start.length).toString(), start, `${label} writes a ${extension} file`);
+    await page.getByText(new RegExp(`\\.${extension}: [0-9,]+ bytes in [0-9.]+ s\\.`)).waitFor();
+    console.log(`${label}: ${download.suggestedFilename()}, ${file.length} bytes`);
+  }
+  await page.getByRole('button', {name: 'Show the real stitches', exact: true}).click();
+  const picture = page.getByAltText('The stitches the machine file sews');
+  await picture.waitFor();
+  assert.ok(await picture.evaluate(image => image.decode().then(() => image.naturalWidth > 100 && image.naturalHeight > 100)), 'the picture of the stitches is drawn');
+  await page.getByRole('button', {name: 'Close the picture', exact: true}).click();
+  await picture.waitFor({state: 'hidden'});
   const exports = await page.evaluate(async () => {
     const api = window.vectorcraft;
     await api.execute('file.new', {width: 100, height: 100});

@@ -1,0 +1,24 @@
+# Level B: a traced photo with the Auto effect is too large for VectorCraft's export, and StitchCraft sews it
+# (docs/src/design/vectorcraft-integration.md › An export that finishes). `stitch plan` traces the dog's
+# cut-out 100 mm tall in 6 threads with the command line under test, as the fixture
+# `traced-dog-on-turf-6.vectorcraft` was made. `stitch plan` must end well, so StitchCraft
+# sews the photo. VectorCraft opens the document it traced, gives the traced group StitchCraft's Auto effect
+# and saves it. Then VectorCraft's own export to PES must be stopped: it needs about 51 billion instructions, and VectorCraft allows an export
+# 10 billion and 4,000 more for each byte of the document. When a VectorCraft allows enough, this export
+# succeeds and the scenario fails there: then the pages that send a desktop user to `stitch export` change.
+description = "StitchCraft sews a traced photo, and VectorCraft stops its own export of it with the Auto effect, for the instructions it runs."
+requirements = ["REQ-VC-025", "REQ-VC-016"]
+
+[[run]]
+files = ["dog-on-turf-cutout.png"]
+stitch = ["plan", "dog-on-turf-cutout.png", "-o", "dog.pes", "--colours", "6", "--size", "100", "--traced", "traced.vectorcraft"]
+
+[[run]]
+open = "traced.vectorcraft"
+plugins = ["auto", "pes"]
+steps = [
+  { cmd = "select.all" },
+  { cmd = "effect.apply", params = { effect = "plugin.dev.stitchcraft.auto" } },
+  { export = "digitized.vectorcraft" },
+  { export = "dog.pes", fails = "exceeded its instruction budget" },
+]
