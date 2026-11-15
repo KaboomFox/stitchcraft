@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="40mm" height="34mm" viewBox="0 0 40 34">
+  <g>
+    <path id="egg" d="M 38.5 17 C 38.5 25.56 30.22 32.5 20 32.5 C 9.78 32.5 1.5 25.56 1.5 17 C 1.5 8.44 9.78 1.5 20 1.5 C 30.22 1.5 38.5 8.44 38.5 17 Z" fill="#0a55a3" stroke="none"/>
+    <path id="guide" d="M 11 13 L 23 20" style="fill:none;stroke:#000000;stroke-width:0.3;marker-start:url(#inkstitch-guide-line-marker)"/>
+    <path id="anchor" d="M 17 16.5 L 38 3.5" style="fill:none;stroke:#000000;stroke-width:0.3;marker-start:url(#inkstitch-anchor-line-marker)"/>
+  </g>
+</svg>

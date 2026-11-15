@@ -723,6 +723,40 @@ panels = [
 ]
 
 [[shot]]
+id = "guided-offset"
+kind = "stitch"
+fixture = "docs/fixtures/guided-fan.svg"
+style = "realistic"
+scale = 10.0
+alt = "A blue fan, a band 20 mm wide between 2 arcs, sewn without underlay as a guided fill along an arc between them, its rows 1 mm apart"
+panels = [
+  { caption = "Copy", params = { fill_method = "guided_fill", fill_underlay = "false", row_spacing_mm = "1" } },
+  { caption = "Parallel offset", params = { fill_method = "guided_fill", fill_underlay = "false", row_spacing_mm = "1", guided_fill_strategy = "1" } },
+]
+
+[[shot]]
+id = "guided-buffer"
+kind = "stitch"
+fixture = "docs/fixtures/guided-egg.svg"
+style = "realistic"
+scale = 10.0
+alt = "A blue egg 37 mm wide sewn without underlay as a guided fill round a short line inside it, its rows rings round the line, 1 mm apart, each joined to the next"
+panels = [
+  { caption = "Buffer", params = { fill_method = "guided_fill", fill_underlay = "false", row_spacing_mm = "1", guided_fill_strategy = "2" } },
+]
+
+[[shot]]
+id = "guided-anchor"
+kind = "stitch"
+fixture = "docs/fixtures/guided-anchor.svg"
+style = "realistic"
+scale = 10.0
+alt = "A blue egg 37 mm wide sewn without underlay as a guided fill round a short line inside it, its rows rings round the line, 1 mm apart, each started where an anchor line from the guide to the egg's top right crosses it"
+panels = [
+  { caption = "Buffer with an anchor line", params = { fill_method = "guided_fill", fill_underlay = "false", row_spacing_mm = "1", guided_fill_strategy = "2" } },
+]
+
+[[shot]]
 id = "guided-stagger"
 kind = "stitch"
 fixture = "docs/fixtures/guided.svg"

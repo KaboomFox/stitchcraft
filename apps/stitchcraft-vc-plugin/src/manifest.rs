@@ -25,8 +25,12 @@
 //! locks, since the dialog doesn't hold that text, and the methods StitchCraft sews as another: Ink/Stitch's
 //! legacy fill, sewn as a tatami fill (`REQ-FILL-005`). `satin_column` is set by the effect itself, by which
 //! family it is ([`SATIN_COLUMN`]). `turn_stitches`, StitchCraft's own switch that automatic digitizing sets on
-//! its fills, is left out ([`TURN_STITCHES`]): the fill's dialog holds the 64 parameters that every VectorCraft
-//! release takes without it, and a fill sewn by its own settings keeps the switch off.
+//! its fills, is left out ([`TURN_STITCHES`]): a fill sewn by its own settings keeps the switch off.
+//!
+//! **How many.** VectorCraft 0.12 and 0.13 take 64 parameters. From 0.14 a manifest holds up to 256, at most
+//! 64 of them outside groups, and every setting here is in its registry group. So a manifest of more than 64
+//! is one that installs from 0.14 anyway, as the fill's does for its text: from M10.10 its dialog holds 65,
+//! the guided fill's strategy among them ([`limits::MAX_PARAMS_BEFORE_0_14`]).
 //!
 //! **Order.** The dialog lists parameters in the manifest's order, which is the registry's within each
 //! group. The group with the family's method comes first, then the groups only the family uses, then
@@ -88,8 +92,13 @@ use crate::{export, preview};
 pub mod limits {
     /// Largest manifest, in bytes.
     pub const MAX_MANIFEST_BYTES: usize = 64 * 1024;
-    /// Most parameters one plug-in may declare.
-    pub const MAX_PARAMS: usize = 64;
+    /// Most parameters one plug-in may declare, from VectorCraft 0.14.
+    pub const MAX_PARAMS: usize = 256;
+    /// Most parameters one plug-in may declare in VectorCraft 0.12 and 0.13. A manifest of more must be one
+    /// those releases refuse anyway: an exporter's, or one with a text.
+    pub const MAX_PARAMS_BEFORE_0_14: usize = 64;
+    /// Most parameters outside groups (from VectorCraft 0.14): a dialog of more is sorted into sections.
+    pub const MAX_UNGROUPED: usize = 64;
     /// Longest id and name, in characters.
     pub const MAX_ID_CHARS: usize = 64;
     /// Longest version string, in bytes.
@@ -583,6 +592,18 @@ pub fn validate(json: &[u8]) -> Result<(), String> {
     let Ordered(params) = serde_json::from_slice::<Declared>(json).map_err(|e| format!("`params` must be an object: {e}"))?.params;
     if params.len() > limits::MAX_PARAMS {
         return Err(format!("{} parameters (limit {})", params.len(), limits::MAX_PARAMS));
+    }
+    let from_0_14 = kind == "exporter" || params.iter().any(|(_, spec)| spec.get("type").and_then(Value::as_str) == Some("string"));
+    if params.len() > limits::MAX_PARAMS_BEFORE_0_14 && !from_0_14 {
+        return Err(format!(
+            "{} parameters (limit {} before VectorCraft 0.14, which takes this manifest)",
+            params.len(),
+            limits::MAX_PARAMS_BEFORE_0_14
+        ));
+    }
+    let ungrouped = params.iter().filter(|(_, spec)| spec.get("group").is_none()).count();
+    if ungrouped > limits::MAX_UNGROUPED {
+        return Err(format!("{ungrouped} parameters outside groups (limit {}): give the others a `group`", limits::MAX_UNGROUPED));
     }
     let declared: Vec<(&String, &Value)> = params.iter().map(|(key, spec)| (key, spec)).collect();
     for (i, (key, spec)) in declared.iter().enumerate() {

@@ -54,7 +54,11 @@ macro_rules! codes {
         ///
         /// The message names the stitch type. Choose one StitchCraft sews, or sew the element with another
         /// tool for now.
-        StitchTypeNotYet = "SC-W0011", Warning, "Stitch type not sewn yet; element skipped";
+        ///
+        /// Retired in M10.10, which sews the guided fill's parallel offset and buffer strategies, the last
+        /// that were skipped: StitchCraft sews every stitch type, and no longer gives this code. Plan the
+        /// file again with this StitchCraft to sew the element.
+        StitchTypeNotYet = "SC-W0011", Warning, "Stitch type not sewn yet; element skipped (retired)";
 
         /// `stitch bug-report --replay` was given a file that is not a bug-report bundle it can replay: not
         /// JSON, not a bundle, a bundle format newer than this StitchCraft, or one that names a profile or a

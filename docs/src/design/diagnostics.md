@@ -95,7 +95,7 @@ another.
 | `SC-E0005` | Error | Preview too large (over 4,096 pixels on a side at the requested scale) | M2 |
 | `SC-E0009` | Error | Internal check failed (a StitchCraft bug; a bug-report bundle is written) | M1 |
 | `SC-E0010` | Error | Nothing to stitch (no embroiderable elements) | M1 |
-| `SC-W0011` | Warning | Stitch type not sewn yet; element skipped | M3 |
+| `SC-W0011` | Warning | Stitch type not sewn yet; element skipped (retired): M10.10 sews the last of them | M3 |
 | `SC-E0012` | Error | Bug-report bundle could not be replayed | M3 |
 | `SC-W0013` | Warning | Element outside its clip paths; left out (wholly outside them or a VectorCraft clipping object, or under clips that don't meet or have no area; Ink/Stitch sews one whose clip path is empty whole) | M8 |
 | `SC-E0101` | Error | Parameter has the wrong type or an unknown choice | M3 |

@@ -28,8 +28,8 @@ stop after it when it asks for one. A fill or a satin column starts near where t
 the needle, and ends near where the next one starts. A design can say where instead, with Ink/Stitch's
 start and end commands in an SVG file or objects named `stitch:start` and `stitch:end` in a VectorCraft
 document ([how](../how-to/embroider-a-vectorcraft-design.md#start-end-origin-and-stop-position-markers)). A shape without settings can have its stitch type chosen by its width
-instead ([automatic digitizing](automatic.md)). An element of a type that is not sewn yet is left out, and
-`SC-W0011` names it. The [roadmap](../../plan/roadmap.md) says what each milestone adds.
+instead ([automatic digitizing](automatic.md)). Every stitch type on this page is sewn. The
+[roadmap](../../plan/roadmap.md) says what each milestone adds.
 
 ## Setting parameters
 
