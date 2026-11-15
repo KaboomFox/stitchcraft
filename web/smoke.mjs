@@ -71,7 +71,7 @@ try {
   const drawn = (await readFile(new URL('./templates/alpine-night.svg', import.meta.url), 'utf8')).match(/ fill="/g).length;
   assert.deepEqual(await shapes(), {count: drawn, stitchcraft: 0, autoOnce: 0}, 'the starter is the plain drawing, each shape without a StitchCraft effect');
   console.log(`The plain drawing, ${drawn} shapes, exports to DST as: ${await stitches()}`);
-  assert.equal(await page.locator('details').evaluate(panel => panel.open), true, 'the panel is open over the plain drawing');
+  assert.equal(await page.locator('body > details').evaluate(panel => panel.open), true, 'the panel is open over the plain drawing');
   await page.screenshot({path: join(screenshots, 'plain-drawing.png')});
   const turn = page.getByRole('button', {name: 'Turn the drawing into stitches', exact: true});
   await turn.click();
