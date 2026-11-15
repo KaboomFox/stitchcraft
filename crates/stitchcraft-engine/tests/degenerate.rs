@@ -10,7 +10,7 @@
 
 use proptest::prelude::*;
 use stitchcraft_core::{Budget, Code, ElementId, Mm, Severity};
-use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Join, Path, Segment, Shape, Subpath};
+use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Guide, Join, Path, Segment, Shape, Subpath};
 use stitchcraft_engine::generate::{FILL_METHODS, STROKE_METHODS};
 use stitchcraft_engine::generators::satin::SATIN_METHODS;
 use stitchcraft_engine::plan;
@@ -21,7 +21,8 @@ use stitchcraft_testkit::degenerate::{FAR, corpus, long, random};
 use stitchcraft_testkit::designs::{RED, p};
 
 /// Each element the engine sews `path` as, with what it is for a failure to name: a fill by each method under
-/// each rule, a stroke by each method 0.5 and 3 mm wide, and a satin column by each method.
+/// each rule, a guided fill by each strategy along the path itself, a stroke by each method 0.5 and 3 mm wide,
+/// and a satin column by each method.
 fn elements(path: &Path) -> Vec<(String, Element)> {
     let element = |shape: Shape, params: &[(&str, &str)]| Element {
         id: ElementId::new("degenerate").unwrap(),
@@ -40,6 +41,16 @@ fn elements(path: &Path) -> Vec<(String, Element)> {
             let shape = Shape::Fill { path: path.clone(), rule, gradient: None };
             all.push((format!("a fill by {} ({rule:?})", method.id), element(shape, &[("fill_method", method.id)])));
         }
+    }
+    // A guided fill by each strategy, with the path itself as its guide line and its anchor line: rows made
+    // from a guide as degenerate as the shape, 1 mm apart.
+    for strategy in ["0", "1", "2"] {
+        let shape = Shape::Fill { path: path.clone(), rule: FillRule::NonZero, gradient: None };
+        let params = [("fill_method", "guided_fill"), ("guided_fill_strategy", strategy), ("row_spacing_mm", "1")];
+        let mut guided = element(shape, &params);
+        guided.hints.guide = Some(Guide { path: path.clone(), width: Mm::ZERO, join: Join::UNSET, params: ParamSet::new() });
+        guided.hints.anchor = Some(path.clone());
+        all.push((format!("a guided fill along itself by strategy {strategy}"), guided));
     }
     for method in STROKE_METHODS {
         for width in [0.5, 3.0] {

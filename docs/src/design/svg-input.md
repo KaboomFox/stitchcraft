@@ -289,8 +289,11 @@ them (`REQ-SVG-003`).
   fill's guide is the first guide line that is no satin column, as Ink/Stitch's fill looks past satin
   guides (`REQ-SVG-015`, [guided fill](algorithms/guided.md#the-guide-line)). The anchor line is the first
   anchor line that isn't a satin column. Each goes to the shape's elements under the transforms above it.
-  The guide keeps its stroke's width and join and its settings, and the anchor line gives the start and the
-  end of its first subpath ([ripple stitch](algorithms/strokes.md#guided-ripples)). A guide line or an
+  The guide keeps its stroke's width and join and its settings, and the anchor line its whole path. A ripple
+  stitch reads the start and the end of the anchor's first subpath
+  ([ripple stitch](algorithms/strokes.md#guided-ripples)), and from M10.10 a guided fill starts its closed
+  rows where any subpath of it crosses them
+  ([guided fill](algorithms/guided.md#rows-that-close-and-the-anchor-line)). A guide line or an
   anchor line in no group steers nothing. Ink/Stitch's pattern helpers aren't applied yet.
 
 `SC-W0802` reports a connector that ties no command, a helper path that isn't applied or steers nothing, an

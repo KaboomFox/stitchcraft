@@ -129,13 +129,13 @@ fn a_fill_s_top_rows_are_laid_as_its_top_stitches_are_without_sewing_it() {
     assert!(path.windows(2).all(|w| w[0].end == w[1].start), "one path");
     assert!(path.iter().all(|s| [s.start, s.end].iter().all(|q| (0.0..=20.0).contains(&q.x()) && (0.0..=20.0).contains(&q.y()))));
     assert_ne!(meander("2").segments, wandered.segments);
-    // Not a fill, a fill not sewn, a method not sewn yet, and a budget spent: no rows, and the same words
-    // as generating it.
+    // Not a fill, a fill not sewn, a method that can't be read, and a budget spent: no rows, and the same
+    // words as generating it.
     let line = Shape::stroke(Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0))], closed: false }] });
     assert_eq!(laid(&line, &[], &Budget::DEFAULT), Rows { segments: None, diagnostics: vec![] });
     assert_eq!(laid(&square, &[("fill", "false")], &Budget::DEFAULT), Rows { segments: None, diagnostics: vec![] });
-    let offset = laid(&square, &[("fill_method", "guided_fill"), ("guided_fill_strategy", "1")], &Budget::DEFAULT);
-    assert_eq!((offset.segments, codes(&offset.diagnostics)), (None, vec![Code::StitchTypeNotYet]));
+    let unread = laid(&square, &[("fill_method", "sparkle_fill")], &Budget::DEFAULT);
+    assert_eq!((unread.segments, codes(&unread.diagnostics)), (None, vec![Code::ParamInvalid]));
     // A guided fill without a guide shows the rows of the tatami fill it sews.
     let unguided = laid(&square, &[("fill_method", "guided_fill")], &Budget::DEFAULT);
     assert_eq!(unguided.segments.map(|segments| segments.len()), Some(40));
@@ -190,11 +190,11 @@ fn a_fill_is_sewn_by_its_method_and_without_a_longest_stitch_is_a_bug() {
     let mut said = Vec::new();
     assert!(sew(&wrong, StitchType::TartanFill, shared(Mm::new(4.0).ok()), &mut said).is_none());
     assert_eq!(codes(&said), [Code::ParamInvalid]);
-    // A guided fill's strategy not sewn yet, whose settings it does not read, wrong as they are here.
+    // A guided fill reads its settings whatever its strategy, and is skipped for one that is wrong.
     let tatami = [("row_spacing_mm", "wide"), ("guided_fill_strategy", "2")].into_iter().collect();
     let sewn = sew(&tatami, StitchType::GuidedFill, shared(Mm::new(4.0).ok()), &mut diagnostics);
-    assert_eq!((sewn.is_none(), codes(&diagnostics)), (true, vec![Code::StitchTypeNotYet]));
-    // Copying its guide, it reads them, and is skipped.
+    assert_eq!((sewn.is_none(), codes(&diagnostics)), (true, vec![Code::ParamInvalid]));
+    // Copying its guide too.
     let wrong = [("row_spacing_mm", "wide")].into_iter().collect();
     let mut said = Vec::new();
     assert!(sew(&wrong, StitchType::GuidedFill, shared(Mm::new(4.0).ok()), &mut said).is_none());
@@ -212,7 +212,8 @@ fn a_fill_is_sewn_by_its_method_and_without_a_longest_stitch_is_a_bug() {
     };
     let mut said = Vec::new();
     assert!(fill_settings(&other, &mut said).is_none());
-    assert_eq!(codes(&said), [Code::StitchTypeNotYet]);
+    assert_eq!(codes(&said), [Code::InternalCheckFailed]);
+    assert!(said[0].message.contains("`guided_fill`, was read as a tatami fill's settings"), "{}", said[0].message);
     // A contour fill without a longest stitch is the same bug as a tatami fill's.
     let mut diagnostics = Vec::new();
     assert!(sew(&ParamSet::new(), StitchType::ContourFill, shared(None), &mut diagnostics).is_none());

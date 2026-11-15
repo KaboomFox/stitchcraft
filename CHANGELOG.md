@@ -5,6 +5,26 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M10.10: guided fill's parallel offset and buffer strategies, and the anchor line (`REQ-FILL-GDD-009` to
+  `REQ-FILL-GDD-013`). A guided fill set to `guided_fill_strategy` `1` or `2` sews as Ink/Stitch sews it,
+  where it was skipped with `SC-W0011`.
+  - Parallel offset's rows are the guide's offset curves, a row spacing apart, which keep their distance
+    round every bend where copies would crowd. A closed guide is offset as a ring.
+  - A buffer's rows are rings round the guide, every subpath of it, half a row spacing out and then a row
+    spacing apart. Its stagger counts each ring's distance from the guide.
+  - A row that closes inside the fill is joined into the rows round it, and on into a row that meets the
+    outline. The fill then sews as one route.
+  - The anchor line, a path with Ink/Stitch's anchor-line marker in the fill's group, or one named
+    `stitch:anchor` in a VectorCraft document, starts each closed row where it crosses it. A design's
+    hints now have the anchor line's whole path (`Hints::anchor`), and a ripple stitch reads the ends of its
+    first subpath from it (`Hints::anchor_ends`).
+  - The fill dialog offers the 3 strategies and holds 65 settings. VectorCraft takes up to 256 in groups
+    from 0.14, where the fill effect installs, and the manifest check follows that rule.
+  - `SC-W0011` is retired: every stitch type is sewn. `SC-W0331` and `SC-W0332` speak of each strategy's
+    rows. New code: `SC-W0333`, for rows the needle finds no way between and jumps to. New deviation:
+    `DEV-FILL-036`.
+  - TS-17B gains a fan in yellow, offset from an arc, and an egg in flesh pink, buffered round a line with
+    an anchor line, beside its leaf. Golden changed: `ts-17b`, for the 2 new samples.
 - M13.27: small pointed shapes, and an outline round a fill (`REQ-AUTO-050`, `REQ-AUTO-051`).
   - A part with arms is filled. One satin column along one of its 2 axes was all that a star of 4 points
     5 mm across sewed, with its other points as bumps. The new rule `arms`, after `uneven` and before

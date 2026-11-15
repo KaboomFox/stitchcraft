@@ -4,4 +4,4 @@ id = "inkstitch-ts17b-guided"
 requirements = ["REQ-FILL-GDD-008"]
 kind = "inkstitch"
 sheet = "TS-17B"
-elements = "ts17b:guided:"
+elements = "ts17b:guided:copied"
