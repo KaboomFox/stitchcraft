@@ -1472,14 +1472,15 @@ area kept wrongly and 3 % lost.
   stop, and how many a later stitch of their colour sews down (`stitchcraft_testkit::stitches`). Digitized,
   the letters sew as columns with a jump between each 2. A thread that sews once jumps between its shapes
   where it changed before M13.22, and the PE800 cuts at a thread change and not at a jump, so the digitized
-  halves of TS-13A, TS-13C and TS-13D leave 3, 1 and 2 jump threads more:
+  halves of TS-13A, TS-13C and TS-13D leave 3, 1 and 2 jump threads more. With an outline after each fill
+  (M13.28) TS-13D's half leaves 2 more again:
 
   | Sheet | As drawn: jump threads | sewn down | Digitized: jump threads | sewn down |
   |---|---:|---:|---:|---:|
   | TS-13A | 8 | 0 | 18 | 9 |
   | TS-13B | 6 | 0 | 44 | 19 |
   | TS-13C | 9 | 4 | 13 | 5 |
-  | TS-13D | 1 | 0 | 15 | 4 |
+  | TS-13D | 1 | 0 | 17 | 5 |
 
 - Ink/Stitch sews the TS-13 sheets too, every night ([conformance](conformance.md#l3--inkstitch-differential-nightly),
   `REQ-AUTO-021`). Ink/Stitch can't choose a picture's stitches, but it can sew what StitchCraft chose:

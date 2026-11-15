@@ -194,7 +194,7 @@ lies on one side only.
 
 Each fill sews an outline: a running stitch round its edge in its own thread, sewn after its rows. The outline
 draws the points of a small shape, which the ends of a fill's rows leave blunt, and its stitches are
-shorter where the edge bends, so that a round edge sews round. It sews where the edge shows, and not along
+shorter where the edge bends, so that the outline of a round shape is round. It sews where the edge shows, and not along
 an edge that a shape sewn later covers. To sew without outlines, turn **Outline round fills** off in the
 Auto effect's dialog, or on the command line:
 `stitch plan badge.svg --auto -o badge.pes --set auto_fill_outline=false`. A traced photo then sews about

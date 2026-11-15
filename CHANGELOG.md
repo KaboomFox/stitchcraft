@@ -1887,8 +1887,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - `auto_fill_outline` is on, and the Auto effect's dialog has a row for it, **Outline round fills**.
     The base layer's offset made room and is an advanced setting now. To sew without outlines, turn the
     row off, or pass `--set auto_fill_outline=false`.
-  - An outline keeps to its edge within 0.1 mm, so that a round edge sews round. A running stitch's own
-    0.2 mm outlined the badge's moon, 9.6 mm across, with 12 sides, and it has 18 now.
+  - An outline keeps to its edge within 0.1 mm, so that the outline of a round shape is round. A running
+    stitch's own 0.2 mm outlined the badge's moon, 9.6 mm across, with 12 sides, and it has 18 now.
   - An outline costs fewer jumps. It sews through a stretch of its edge of 25 mm or less under a later
     shape, and its last line ends nearest where the next element starts. A traced dog's outlines bring 3
     to 6 jumps, where they brought 19 to 30. They add about a tenth to its stitches, and no thread change.
