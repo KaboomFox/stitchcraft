@@ -58,7 +58,9 @@ U²-Net's author publishes its checkpoint on Google Drive and Baidu only, so its
   checkout and the checkpoint against `models.toml`, and exports both files with PyTorch's TorchScript
   exporter.
 - [`models/release.py`](models/release.py) fetches U²-Net-p's file as rembg publishes it, and stops unless
-  each model has its pinned size and SHA-256. Then it assembles the release's folder, the run's artifact:
+  each model has its pinned size and SHA-256. The encoder's sum alone may differ, by the machine that
+  exported it: `models/release/EXPORT.md` says what the build and the publish do then, and
+  [`models/test_release.py`](models/test_release.py) has the cases. Then it assembles the release's folder, the run's artifact:
   the models, the licences and `NOTICE.txt` of `models/release/`, `export.py`, `requirements.txt`,
   `SHA256SUMS.txt`, and the export record, `models/release/EXPORT.md` with the run, its tools and the sums.
 - The `models` job runs the cases that need the models. It takes them from the release when that exists,
