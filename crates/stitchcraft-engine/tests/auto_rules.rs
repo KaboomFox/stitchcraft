@@ -307,7 +307,20 @@ fn req_auto_050_a_small_star_is_filled() {
 fn req_auto_050_a_cross_and_a_sharp_corner_have_no_arms() {
     // A cross of 2 bars 2 mm wide, 6 mm across: its arms end square, so each is a centre line of its own,
     // and it sews as 4 columns.
-    let cross = [(2.0, 0.0), (4.0, 0.0), (4.0, 2.0), (6.0, 2.0), (6.0, 4.0), (4.0, 4.0), (4.0, 6.0), (2.0, 6.0), (2.0, 4.0), (0.0, 4.0), (0.0, 2.0), (2.0, 2.0)];
+    let cross = [
+        (2.0, 0.0),
+        (4.0, 0.0),
+        (4.0, 2.0),
+        (6.0, 2.0),
+        (6.0, 4.0),
+        (4.0, 4.0),
+        (4.0, 6.0),
+        (2.0, 6.0),
+        (2.0, 4.0),
+        (0.0, 4.0),
+        (0.0, 2.0),
+        (2.0, 2.0),
+    ];
     let out = made(&shape("cross", &cross, &[]));
     assert_eq!(kinds(&out.elements), ["satin"; 4]);
     assert!(rule(&out).starts_with("column (") && rule(&out).ends_with("4 centre lines)"), "{}", rule(&out));
