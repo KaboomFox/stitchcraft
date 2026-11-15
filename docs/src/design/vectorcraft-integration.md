@@ -959,8 +959,9 @@ VectorCraft at the recorded commit on 2026-11-15:
   The editor's build doesn't embed a logo.
 - The editor's own text names ArtCraft: the Help menu and the home screen link to its website and its
   community, and the About dialog says "Part of ArtCraft". The build leaves that text in, because it doesn't
-  change the source. The text says who makes VectorCraft. Whether it may stay in a build this project publishes is
-  the owner's reading of the brand licence, to settle before the first push to `main` publishes `/app/`.
+  change the source. The text says who makes VectorCraft. The owner read the brand licence and decided on
+  2026-11-14 that the text stays: the editor is VectorCraft's own, unchanged, and StitchCraft is a plug-in
+  for it.
 - What the build adds says "StitchCraft in VectorCraft" in plain text: the page's title, the panel and the
   book. The panel says that the build is unofficial and made by the StitchCraft project.
 
@@ -971,6 +972,18 @@ A preview doesn't contain the editor. Of VectorCraft it publishes only pictures 
 The editor is published once, at `/app/`, and a preview contains what its pull request can change. The
 Pages branch is one commit. The [docs pipeline](docs-pipeline.md#one-publisher-and-a-branch-of-one-commit)
 says how both are kept.
+
+The first build measured them on 2026-11-15, for VectorCraft v0.24.1. The `web` workflow's build job prints
+the table of every build, in the step that lists the site's files as stored and as sent.
+
+| Folder | What it contains | Bytes | Bytes sent, gzip -6 |
+|---|---|---:|---:|
+| `/app/` | The editor and the plug-ins | 116,987,438 | 40,752,318 |
+| `/app/`, the editor's module alone | `vectorcraft-web-*_bg.wasm` | 97,474,876 | 34,249,458 |
+| A preview's `demo/` | The plug-ins, the loader, the starter patch | 18,869,636 | 6,291,317 |
+
+The preview of pull request 266, its book with its `demo/` and the 3 pictures, took 40.6 MB of the branch.
+The editor's module is 5 times the size of a preview's `demo/`, and no preview contains it.
 
 ### The starter patch
 
