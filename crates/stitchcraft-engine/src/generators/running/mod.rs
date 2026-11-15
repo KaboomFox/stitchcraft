@@ -56,6 +56,9 @@ use crate::generators::{Stitched, TooSmall, made, mm, settled, too_small};
 use crate::normalize::along::Along;
 use crate::normalize::stroke::{self, Piece, distance_to_segment};
 
+/// The key of a running stitch's tolerance.
+pub(crate) const TOLERANCE: &str = "running_stitch_tolerance_mm";
+
 /// The share of the curve tolerance that flattening may use; the stitches have the rest.
 const FLATTEN_SHARE: f64 = 0.1;
 

@@ -89,6 +89,7 @@ pub const stitchcraft_engine::auto::MIN_AREA: &str
 pub const stitchcraft_engine::auto::MIN_FILL_WIDTH: &str
 pub const stitchcraft_engine::auto::MIN_SLENDERNESS: &str
 pub const stitchcraft_engine::auto::MIN_TRIPLE_RUN_WIDTH: &str
+pub const stitchcraft_engine::auto::OUTLINE_TOLERANCE: stitchcraft_core::units::Mm
 pub const stitchcraft_engine::auto::OUTLINE_WIDTH: stitchcraft_core::units::Mm
 pub const stitchcraft_engine::auto::OVERLAP: &str
 pub const stitchcraft_engine::auto::PREFER: &str

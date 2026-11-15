@@ -909,23 +909,28 @@ fn diag_sc_w0906_the_background_is_left_out() {
 }
 
 #[test]
-fn req_auto_051_a_design_that_asks_sews_an_outline_round_each_fill_where_its_edge_shows() {
-    use stitchcraft_engine::auto::OUTLINE_WIDTH;
-    // 2 squares 10 mm across side by side, the red one sewn first and the blue one after it.
+fn req_auto_051_a_design_sews_an_outline_round_each_fill_where_its_edge_shows_unless_it_turns_them_off() {
+    use stitchcraft_engine::auto::{OUTLINE_TOLERANCE, OUTLINE_WIDTH};
+    use stitchcraft_testkit::designs::outlined;
+    // 2 squares 30 mm across side by side, the red one sewn first and the blue one after it. The blue one
+    // asks for no outline, and the design goes by the red one, its lowest shape.
     let squares = |outline: Option<&str>| {
-        let mut red = rect("red", (0.0, 0.0), (10.0, 10.0));
-        if let Some(outline) = outline {
-            red.params.set("auto_fill_outline", outline);
-        }
-        sewn(vec![red, automatic(fill("blue", &[&[(10.0, 0.0), (20.0, 0.0), (20.0, 10.0), (10.0, 10.0)]], &BLUE, &[]))])
+        let red = fill(
+            "red",
+            &[&[(0.0, 0.0), (30.0, 0.0), (30.0, 30.0), (0.0, 30.0)]],
+            &RED,
+            &outline.map(|outline| ("auto_fill_outline", outline)).into_iter().collect::<Vec<_>>(),
+        );
+        sewn(vec![outlined(red), automatic(fill("blue", &[&[(30.0, 0.0), (60.0, 0.0), (60.0, 30.0), (30.0, 30.0)]], &BLUE, &[]))])
     };
-    // Unasked, and asked not to, the design sews its 2 fills alone.
-    for off in [None, Some("false")] {
-        assert_eq!(ids(&squares(off).0), ["red", "blue"]);
-    }
-    // Asked, each fill is followed by its outline, a line a thread wide in the fill's thread.
-    let (elements, said) = squares(Some("true"));
+    // Asked not to, the design sews its 2 fills alone.
+    assert_eq!(ids(&squares(Some("false")).0), ["red", "blue"]);
+    // Unasked, each fill is followed by its outline, as when asked: a line a thread wide in the fill's thread,
+    // which keeps to the edge within 0.1 mm.
+    assert_eq!(ids(&squares(None).0), ids(&squares(Some("true")).0));
+    let (elements, said) = squares(None);
     assert_eq!(ids(&elements), ["red", "red#2", "blue", "blue#2"]);
+    assert_eq!(named(&elements, "red#2").params.get("running_stitch_tolerance_mm"), Some(OUTLINE_TOLERANCE.get().to_string().as_str()));
     let lines = |id: &str| {
         let outline = named(&elements, id);
         let Shape::Stroke { path, width, .. } = &outline.shape else { panic!("{id} is no line") };
@@ -938,9 +943,10 @@ fn req_auto_051_a_design_that_asks_sews_an_outline_round_each_fill_where_its_edg
         (subpaths.collect::<Vec<_>>(), outline.thread.clone())
     };
     // The red square's outline leaves out the edge the blue one covers, by the overlap the red one reaches under
-    // it: 3 sides, 30 mm. The blue square's runs all the way round, its ring's 4 corners closed.
-    assert_eq!(lines("red#2"), (vec![(30.0, false)], RED));
-    assert_eq!(lines("blue#2"), (vec![(30.0, true)], BLUE));
+    // it, which is longer than the 25 mm an outline sews through (REQ-AUTO-052): 3 sides, 90 mm. The blue
+    // square's runs all the way round, its ring's 4 corners closed.
+    assert_eq!(lines("red#2"), (vec![(90.0, false)], RED));
+    assert_eq!(lines("blue#2"), (vec![(90.0, true)], BLUE));
     assert!(said.iter().all(|said| said.severity() == stitchcraft_core::Severity::Info), "{said:?}");
     // It plans without a warning, each outline's stitches after its fill's, and with the one thread change
     // the fills have.

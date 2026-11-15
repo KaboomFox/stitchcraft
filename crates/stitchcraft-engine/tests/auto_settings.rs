@@ -75,10 +75,10 @@ fn messages(said: &[Diagnostic], code: Code) -> Vec<String> {
 fn req_auto_020_the_rules_settings_are_stitchcraft_s_own_and_no_stitch_type_reads_them() {
     assert!(PARAMETERS.contains(&&AutoParams::GROUP) && AutoParams::GROUP.automatic());
     let defaults: Vec<(&str, &str)> = AutoParams::SPECS.iter().map(|spec| (spec.key, spec.default)).collect();
-    let shape = [(STITCH, "auto"), (PREFER, "balanced"), (FILL_UNEVEN, "true"), (FILL_ANGLE, "0")];
+    let shape = [(STITCH, "auto"), (PREFER, "balanced"), (FILL_UNEVEN, "true"), (FILL_ANGLE, "0"), ("auto_fill_outline", "true")];
     let neighbours = [(OVERLAP, "1"), (PULL, "0.4"), (IGNORE_BACKGROUND, "true")];
-    let base = [("auto_base_layer", "true"), ("auto_base_stitch_length_mm", "3"), ("auto_base_offset_mm", "-0.4"), ("auto_base_keep_holes", "true")];
-    // The advanced settings: the rules' bounds, then the outline's switch and the 2 limits of the cover's check.
+    let base = [("auto_base_layer", "true"), ("auto_base_stitch_length_mm", "3"), ("auto_base_keep_holes", "true")];
+    // The advanced settings: the rules' bounds, then the base layer's offset and the 2 limits of the cover's check.
     let bounds = [
         (MAX_SATIN_WIDTH, "7"),
         (MIN_TRIPLE_RUN_WIDTH, "0.5"),
@@ -88,7 +88,7 @@ fn req_auto_020_the_rules_settings_are_stitchcraft_s_own_and_no_stitch_type_read
         (MIN_FILL_WIDTH, "4"),
         (MIN_AREA, "1"),
     ];
-    let cover = [("auto_fill_outline", "false"), ("auto_base_sliver_mm2", "0.4"), ("auto_base_bare_percent", "0.5")];
+    let cover = [("auto_base_offset_mm", "-0.4"), ("auto_base_sliver_mm2", "0.4"), ("auto_base_bare_percent", "0.5")];
     assert_eq!(defaults, [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..]].concat());
     let advanced: Vec<&str> = AutoParams::SPECS.iter().filter(|spec| spec.group == ADVANCED).map(|spec| spec.key).collect();
     assert_eq!(advanced, bounds.iter().chain(&cover).map(|(key, _)| *key).collect::<Vec<_>>());
