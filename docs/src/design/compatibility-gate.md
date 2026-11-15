@@ -41,7 +41,9 @@ checks:
    columns and closed ribbons for fills. When an effect can't show stitches, its last error says why.
    Which level a shape shows, and the geometry of each, the plug-in's native tests check. From VectorCraft
    0.23 `apply` also takes the document, where the host looks up the swatches a painted preview names.
-   StitchCraft's previews are paths alone, so the tests give it none.
+   StitchCraft's previews are paths alone, and the tests give it none. From 0.24 the paints it is given can
+   name the object and the effect's place in its list, by which VectorCraft lists a stage it deferred while
+   a document opened. The tests leave that at its default, which builds against 0.23 too.
 4. Filters run and return valid objects. Exporters run through `vectorcraft_plugins::export::run` on
    documents written for the test, return a file of their format, with the export's warnings, plan for
    the machine their dialog names, and decline with the first error when there is one (`REQ-VC-011`).

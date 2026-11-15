@@ -180,7 +180,7 @@ of the first frame that showed it, and that canvas can still change by a pixel a
 those releases the probe waited until 2 inspections in a row showed the canvas in one place, and then
 fitted the artboard again (View › Fit Artboard in Window) before each start's screenshot. From 0.23
 VectorCraft's opening fit follows the canvas until the view moves or the user acts (its
-`canvas::opening_fit_follows`), so the probe takes each start's screenshot as the window opens. On
+`canvas::opening_fit_follows`). The probe now takes each start's screenshot as the window opens. On
 9 November 2026, under Xvfb and llvmpipe as in CI, 24 starts of 0.23.0 gave one picture above the status
 bar, at a zoom of 4.9883. Taken the same way, 16 starts of 0.22.0 gave 2 pictures: 14 at a zoom of 4.9812
 and 2 at 4.9883. The notice gives each start's time to its
@@ -204,7 +204,7 @@ that `cargo xtask shots --vectorcraft` lists in a job file, in the same desktop.
 person would use the app. AT-SPI's press opens the menu bar's title and each row of the shot's path,
 then the row of the family's effect, and the dialog is the largest element named after the plug-in. The
 window opens the document it starts with. The control channel installs the modules, which a person does
-with file dialogs, all but a module that asks for a heavy budget. From 0.23 VectorCraft's app installs
+with file dialogs, all but a module with a heavy budget. From 0.23 VectorCraft's app installs
 such a module only once a person has chosen OK in its window, which no request can do. So
 `vectorcraft-cli`, started with `--allow-plugin-grants`, installs the module into a profile first: a
 folder that `VECTORCRAFT_CONFIG_DIR` names, for that shot alone. The window starts with the profile, and
