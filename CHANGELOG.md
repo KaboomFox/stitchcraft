@@ -5,6 +5,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.14: the subject cut-out, as ADR-0019 decided (`REQ-CLI-014` to `REQ-CLI-019`). With `--subject`,
+  `stitch plan` and `stitch export` cut a photo's subject out before VectorCraft traces it, and the background
+  is left unsewn. The option is off by default, and every other design sews as before.
+  - U²-Net-p finds the subject's box, and MobileSAM cuts the subject out inside it. `--subject-box`,
+    `--subject-point` and `--not-subject` correct a cut-out, and `--cutout FILE` writes it. `stitch cutout`
+    writes it alone, to place in VectorCraft. On the owner's 2 photos of her dog the cut-out keeps the dog
+    at an IoU of 0.985 and 0.987.
+  - tract runs the 3 models in a new crate, `stitchcraft-cutout`, which only `stitch` depends on. `stitch`
+    fetches them on first use, 49 MB, and checks each against its pinned SHA-256 before each use. GitHub
+    Actions builds the release that publishes them from their authors' own files, and the owner publishes
+    it by starting the `models` workflow by hand.
+  - New diagnostics, `SC-E1201` to `SC-E1205`, `SC-I1206` and `SC-E1207`. A bug-report bundle records the
+    cut-out, and replays without the models.
+  - The cut-out is `stitch`'s `cutout` feature, on by default. The release `stitch` for Linux is 33.3 MB
+    with it and 6.8 MB without it.
+  - A how-to, Cut a photo's subject out, and the models' place in the install page.
 - M13.16: a design digitized automatically covers the fabric, whatever its colour (`REQ-AUTO-027` to
   `REQ-AUTO-029`, `REQ-FILL-TAT-014`, `REQ-RND-003`).
   - One base layer sews first under the whole design: an open fill in 3 directions with the parameters of

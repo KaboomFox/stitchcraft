@@ -164,7 +164,7 @@ fn test_sheets() -> Result<String, String> {
 }
 
 fn diagnostics() -> String {
-    let mut out = header("Diagnostic codes", "the registry in `stitchcraft-core/src/diag.rs`");
+    let mut out = header("Diagnostic codes", "the registry in `stitchcraft-core/src/diag/registry.rs`");
     out.push_str(
         "Every problem StitchCraft reports has a code. `E` codes are errors (nothing is written), `W` codes are \
          warnings (the file is written), `I` codes are information. `stitch explain <code>` prints the same \
