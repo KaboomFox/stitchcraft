@@ -103,6 +103,7 @@
   - [Determinism](design/determinism.md)
   - [Guardrails](design/guardrails.md)
   - [Documentation pipeline](design/docs-pipeline.md)
+  - [The before and after sheet](design/before-after-sheet.md)
   - [Ink/Stitch compatibility contract](design/inkstitch-compat-contract.md)
   - [Decision records](design/adr/README.md)
     - [0001 Licence and clean room](design/adr/0001-license-and-clean-room.md)
@@ -140,4 +141,5 @@
   - [New format](contributing/playbook-new-format.md)
   - [New diagnostic](contributing/playbook-new-diagnostic.md)
   - [Review checklist](contributing/review-checklist.md)
+  - [Reading the before and after sheet](contributing/before-after-sheet.md)
   - [Writing style](contributing/writing-style.md)

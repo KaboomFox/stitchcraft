@@ -61,6 +61,7 @@ class PublishTest(unittest.TestCase):
                 (site / 'index.html').write_text('second')
                 publisher.publish('pr/2', str(site))
                 publisher.publish('app', str(site))
+                publisher.publish('sheet', str(site))
                 publisher.publish('dev', str(site))
                 publisher.publish('site-root', str(site))
                 publisher.publish('v0.1', str(site))
@@ -71,6 +72,7 @@ class PublishTest(unittest.TestCase):
                 self.assertIn('pr/2/index.html', tree)
                 self.assertIn('pr/99/index.html', tree)
                 self.assertIn('app/index.html', tree)
+                self.assertIn('sheet/index.html', tree)
                 self.assertIn('dev/index.html', tree)
                 self.assertIn('v0.1/index.html', tree)
                 # The branch is one commit, whatever was pushed to it before.
@@ -84,11 +86,12 @@ class PublishTest(unittest.TestCase):
                 self.assertEqual(publisher.git('show', 'FETCH_HEAD:pr/99/index.html', cwd=repo).stdout, 'first')
                 # A repeated cleanup is a no-op, and traversal is refused.
                 publisher.publish('pr/1', None)
-                for destination in ('pr/../dev', 'pr/0', 'v1', 'v0.1/x', 'latest', ''):
+                for destination in ('pr/../dev', 'pr/0', 'v1', 'v0.1/x', 'latest', 'sheet/x', 'sheets', ''):
                     with self.assertRaises(ValueError):
                         publisher.publish(destination, str(site))
-                with self.assertRaises(ValueError):
-                    publisher.publish('v0.1', None)
+                for kept in ('v0.1', 'sheet'):
+                    with self.assertRaises(ValueError):
+                        publisher.publish(kept, None)
                 # Publishing what is there already pushes nothing.
                 before = publisher.git('ls-remote', 'origin', 'gh-pages', cwd=repo).stdout
                 publisher.publish('pr/2', str(site))

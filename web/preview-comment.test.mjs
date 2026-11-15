@@ -24,6 +24,15 @@ test('a later step adds a section after the demo\'s, under a rule', () => {
   assert.ok(body.startsWith(comment(url, 'abc123')));
 });
 
+test('the sheet\'s section is the build\'s lines with the sheet\'s address, and nothing else is a section', () => {
+  const lines = ['**Before and after:** {sheet}', '', '10 pictures, see {sheet}'];
+  assert.deepEqual(comment.sheetSection(lines, url), [`**Before and after:** ${url}/sheet/`, '', `10 pictures, see ${url}/sheet/`]);
+  assert.deepEqual(comment.sheetSection(lines, `${url}/`), comment.sheetSection(lines, url));
+  for (const bad of [null, {}, [], 'text', [1], ['x'.repeat(601)], Array(61).fill('line')]) assert.equal(comment.sheetSection(bad, url), null);
+  assert.ok(comment.sheetSection(['x'.repeat(600)], url));
+  assert.ok(comment.sheetSection(Array(60).fill('line'), url));
+});
+
 test('the one comment is rewritten, made when missing, and not made to say nothing was removed', async () => {
   const calls = [];
   const client = comments => ({
