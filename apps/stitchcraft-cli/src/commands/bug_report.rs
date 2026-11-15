@@ -16,7 +16,10 @@
 //! enough to attach to an issue, and leaves the pictures a design was traced from out of it. Of a picture
 //! `stitch plan` traced with VectorCraft's command line, it keeps the document traced, read with `--auto`,
 //! so that a replay needs no VectorCraft. `stitch bug-report` takes that document, which `--traced` writes,
-//! and refuses a picture.
+//! and refuses a picture. Of a picture whose subject `--subject` cut out first, it keeps the models' SHA-256
+//! sums, the box and the points too, and still no picture: the models' results may differ in their last bits
+//! from one processor to another, so the plan is replayed from the traced document, without the models
+//! (`REQ-CLI-018`).
 //!
 //! `stitch plan` writes a bundle by itself when it finds a bug in StitchCraft — a failed plan check
 //! (`SC-E0009`) or a panic, which it catches with the design in hand, and `main` with [`guarded`] before
@@ -74,6 +77,8 @@ pub struct Run<'a> {
     pub source: Source,
     /// How it is read: with `--auto` and `--sort-colours`, or not.
     pub reading: Reading,
+    /// The settings of automatic digitizing's rules set on every automatic shape (`--style`, `--set`).
+    pub rules: &'a [(String, String)],
     /// The design name machines show, which the machine file's label holds ([`design_name`]).
     pub name: &'a str,
     /// The design file's bytes.
@@ -84,6 +89,8 @@ pub struct Run<'a> {
     pub format: FormatId,
     /// What the person reporting says goes wrong.
     pub says: Option<String>,
+    /// How a picture's subject was cut out before it was traced, with `--subject`.
+    pub subject: Option<&'a crate::subject::Record>,
 }
 
 /// Where in `stitch plan` a panic came.
@@ -133,6 +140,16 @@ struct Bundle {
     /// (`--sort-colours`). Bundles of runs without it, and those written before it was recorded, have none.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     sort_colours: bool,
+    /// The settings of automatic digitizing's rules that the run set on every automatic shape (`--style`,
+    /// `--set`), each a key and its value. Bundles of runs without them, and those written before they were
+    /// recorded, have none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    rules: Vec<(String, String)>,
+    /// How a picture's subject was cut out before VectorCraft traced it, with `--subject`: the models'
+    /// sums, the box and the points. Bundles of other runs, and those written before it was recorded, have
+    /// none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    subject: Option<crate::subject::Record>,
     /// The design.
     design: DesignRecord,
     /// What came of it.
@@ -248,8 +265,19 @@ fn after_panic(command: &Command, message: &str) -> Outcome {
     {
         let source = Source::of(&args.design);
         let profile = machine_for(asked, source, &design);
-        let reading = Reading::from(&args.reading);
-        let run = Run { design_path: &args.design, source, reading, name: design_name(&args.design), design: &design, profile, format, says: None };
+        let (reading, rules) = (Reading::from(&args.reading), args.reading.rules());
+        let run = Run {
+            design_path: &args.design,
+            source,
+            reading,
+            rules: &rules,
+            name: design_name(&args.design),
+            design: &design,
+            profile,
+            format,
+            says: None,
+            subject: None,
+        };
         return beside(&args.output, &run, Err((message, Phase::Plan)), stopped);
     }
     Outcome { stderr: said + &format!("Please report it at {ISSUES}, with the command you ran and the files it read.\n"), ..stopped }
@@ -288,10 +316,21 @@ fn make(args: &BugReportArgs, design_path: &Path) -> Outcome {
         }
     };
     let source = Source::of(design_path);
-    let reading = Reading::from(&args.reading);
+    let (reading, rules) = (Reading::from(&args.reading), args.reading.rules());
     let profile = machine_for(asked, source, &design);
     let format = args.format.map_or(profile.format, FormatId::from);
-    let run = Run { design_path, source, reading, name: design_name(design_path), design: &design, profile, format, says: args.says.clone() };
+    let run = Run {
+        design_path,
+        source,
+        reading,
+        rules: &rules,
+        name: design_name(design_path),
+        design: &design,
+        profile,
+        format,
+        says: args.says.clone(),
+        subject: None,
+    };
     let bundle = bundle(&run, borrowed(&guarded_sew(&run, Phase::Plan)));
     if let Err(e) = write(&path, &bundle) {
         return Outcome { stdout: String::new(), stderr: format!("stitch: cannot write {}: {e}\n", path.display()), status: Status::Io };
@@ -318,7 +357,7 @@ fn describe(out: &mut String, record: &Record) {
 /// Plans `run`'s design as `stitch plan` does, and draws its picture too when the run being reproduced got
 /// as far as `phase` [`Phase::Picture`], or the message of the panic that stopped it and where it came.
 fn guarded_sew(run: &Run, phase: Phase) -> Result<Sewn, (String, Phase)> {
-    let sewn = catch_unwind(|| sew(run.source, run.design, run.reading, run.profile, run.format, run.name))
+    let sewn = catch_unwind(|| sew(run.source, run.design, (run.reading, run.rules), run.profile, run.format, run.name))
         .map_err(|payload| (panic_message(payload.as_ref()), Phase::Plan))?;
     if let (Phase::Picture, Some(back)) = (phase, &sewn.back) {
         // What the picture comes to is the run's, which the bundle does not record: only whether it panics.
@@ -355,6 +394,8 @@ fn bundle(run: &Run, sewn: Result<&Sewn, (&str, Phase)>) -> Bundle {
         format: run.format.extension().to_string(),
         auto: run.reading.auto,
         sort_colours: run.reading.sort_colours,
+        rules: run.rules.to_vec(),
+        subject: run.subject.cloned(),
         design: DesignRecord {
             file,
             name: Some(run.name.to_string()),
@@ -430,7 +471,19 @@ fn replay(path: &Path) -> Outcome {
     let design_path = PathBuf::from(&then.design.file);
     let name = then.design.name.clone().unwrap_or_else(|| design_name(&design_path).to_string());
     let reading = Reading { auto: then.auto, sort_colours: then.sort_colours };
-    let run = Run { design_path: &design_path, source, reading, name: &name, design: &design, profile, format, says: then.says.clone() };
+    let subject = then.subject.as_ref();
+    let run = Run {
+        design_path: &design_path,
+        source,
+        reading,
+        rules: &then.rules,
+        name: &name,
+        design: &design,
+        profile,
+        format,
+        says: then.says.clone(),
+        subject,
+    };
     let phase = then.result.phase.unwrap_or(Phase::Plan);
     let now = bundle(&run, borrowed(&guarded_sew(&run, phase)));
     let mut out = String::new();
@@ -445,6 +498,13 @@ fn replay(path: &Path) -> Outcome {
     );
     if phase == Phase::Writing {
         let _ = writeln!(out, "  The panic came while writing the files, which a replay does not do: what came before it is compared.");
+    }
+    if let Some(subject) = &then.subject {
+        let [x0, y0, x1, y1] = subject.subject_box;
+        let _ = writeln!(
+            out,
+            "  subject       cut out of the box {x0},{y0},{x1},{y1} first: the document VectorCraft traced is replayed, without the models"
+        );
     }
     let mut same = compare(&mut out, "design", &then.design.sha256, &now.design.sha256, |sha| format!("{} (sha256 {sha})", now.design.file));
     let plan = |p: &Option<PlanRecord>| p.as_ref().map_or_else(|| "none".to_string(), |p| format!("{} (sha256 {})", p.counts, p.sha256));

@@ -1,6 +1,6 @@
 # Engine pipeline
 
-<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/generate/**, crates/stitchcraft-engine/src/generators/next.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, crates/stitchcraft-engine/src/underlays_first.rs, crates/stitchcraft-engine/src/underlays_first/**, apps/stitchcraft-cli/src/commands/plan.rs -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/generate/**, crates/stitchcraft-engine/src/generators/next.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, crates/stitchcraft-engine/src/underlays_first.rs, crates/stitchcraft-engine/src/underlays_first/**, apps/stitchcraft-cli/src/commands/plan.rs, apps/stitchcraft-cli/src/commands/plan/** -->
 
 From a `Design` to a checked `StitchPlan`. Each stage is a module in `stitchcraft-engine` with its
 own tests; stages communicate only through the types in the [data model](data-model.md).
@@ -14,8 +14,8 @@ Design ──▶ 0 auto ──▶ 1 normalize ──▶ 2 validate ──▶ 3 g
 ## 0. Automatic digitizing
 
 Since M13.1, before anything else, each element the host marked automatic, a shape without settings read
-with `--auto`, becomes the ordinary elements its width calls for, with the settings that say so
-(`stitchcraft_engine::auto::digitized`, [image to embroidery](image-to-embroidery.md#stitch-types-by-width)).
+with `--auto`, becomes the ordinary elements its geometry calls for, with the settings that say so
+(`stitchcraft_engine::auto::digitized`, [image to embroidery](image-to-embroidery.md#which-stitch-a-shape-gets)).
 
 - An area is sewn as it is, apart from its narrow parts: each becomes a running stitch along its centre
   line (M13.4), or, no wider than a satin column, satin columns along its centre lines (M13.5), and the
@@ -176,7 +176,10 @@ Rules every generator follows:
   stitches as lock. The jumps between groups are travel. Previews draw the lock stitches apart. A
   generator hands assembly its needle points without roles, so an element's underlay, and the running
   stitches between its rows, are tagged top as well, until generators tag their own. From M10.15 the
-  stitches of a run's underlays are tagged underlay ([underlays first](#underlays-first)).
+  stitches of a run's underlays are tagged underlay ([underlays first](#underlays-first)). Every stitch
+  of a design's base layer is tagged underlay too, its top rows among them
+  ([covering the fabric](image-to-embroidery.md#one-underlay-under-the-whole-design)). Planning names what
+  a base layer's piece generated `Layer::Base`. Assembly tags that layer underlay.
 
 Generators are listed in [algorithms](algorithms/).
 
@@ -459,4 +462,5 @@ It writes a bug-report bundle that reproduces the failure (`REQ-CLI-002`). The c
 | Preview PNG | `stitchcraft-render`, from the *quantized* plan (`REQ-RND-001`), cut where the profile's machine cuts the thread ([rendering](rendering.md)) |
 | Report JSON | The CLI's, with the counts and size of the machine file read back as a machine reads it, its SHA-256, the threads and the diagnostics |
 | Traced document | Of a picture, the document VectorCraft's command line traced it into, which `stitch plan --traced` writes ([image to embroidery](image-to-embroidery.md#pictures-from-the-command-line)) |
+| Cut-out | Of a picture planned with `--subject`, the picture cropped to its subject on a transparent ground, which `stitch plan --cutout` writes ([image to embroidery](image-to-embroidery.md#subject-cut-out)) |
 | Plug-in preview geometry | `stitchcraft-vc-plugin`, from one element's groups whatever their threads, its top rows or its path, by the preview's level ([integration](vectorcraft-integration.md#live-effect-previews-within-v1-budgets)) |

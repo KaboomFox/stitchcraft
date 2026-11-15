@@ -1,5 +1,6 @@
 //! The `stitch` command line as a library: its grammar ([`cli`]), its subcommands ([`commands`]), safe file
-//! writing ([`files`]), and pictures traced by VectorCraft's command line ([`trace`]).
+//! writing ([`files`]), pictures traced by VectorCraft's command line ([`trace`]), and their subjects cut
+//! out first ([`subject`]).
 //!
 //! The binary (`src/main.rs`) only parses arguments and prints; everything else lives here so the
 //! subcommands are tested without a terminal, and so `cargo xtask docs` can generate the command-line
@@ -12,4 +13,5 @@
 pub mod cli;
 pub mod commands;
 pub mod files;
+pub mod subject;
 pub mod trace;

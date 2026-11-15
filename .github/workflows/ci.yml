@@ -76,6 +76,8 @@ jobs:
           key: wasmtime-v${{ env.WASMTIME_VERSION }}-x86_64-linux-${{ env.WASMTIME_SHA256 }}
       - name: The independent reader for REQ-FMT-005 (pyembroidery, pinned by hash)
         uses: ./.github/actions/oracle
+      - name: Ink/Stitch's fonts for REQ-FONT-008 (pinned by SHA-256)
+        uses: ./.github/actions/fonts
       - name: Vale for `cargo xtask prose`, built from its tagged source (Go's checksum database checks it)
         env:
           GOTOOLCHAIN: auto
@@ -127,6 +129,8 @@ jobs:
       - run: .github/scripts/annotated.sh "perf" cargo xtask perf
       - name: The release build plans as the tests' build does (docs/src/design/guardrails.md)
         run: .github/scripts/annotated.sh "release build" cargo test --release --locked -p stitchcraft-engine --test release
+      - name: The traced dogs' cases, too slow for the tests' debug build (docs/src/design/conformance.md)
+        run: .github/scripts/annotated.sh "traced dogs" cargo test --release --locked -p stitchcraft-engine --test auto_photos
 
   tests:
     name: tests (${{ matrix.os }})

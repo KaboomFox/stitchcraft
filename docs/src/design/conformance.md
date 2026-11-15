@@ -125,6 +125,17 @@ a row in the fixtures index stating its origin and licence (`--check`). Large re
 repositories of their own, as VectorCraft's do, and are never committed. `cargo xtask corpus` fetches
 Ink/Stitch's fonts at a commit and with a SHA-256 this repository pins ([fonts](fonts.md#the-corpus)).
 
+The `font` kind reads one font of that corpus with the font reader and plans each of its glyphs, as the
+glyph differential plans a glyph (`REQ-FONT-008`, `xtask/src/conformance/font.rs`). It names the font's
+folder and the glyphs it has in each direction:
+
+```toml
+{{#include ../../../conformance/cases/fonts/small-font.toml}}
+```
+
+Without the corpus the case is skipped, and says so. In CI every job that runs `cargo xtask ci` fetches the
+corpus first (`.github/actions/fonts`), and the case runs.
+
 The engine's cases build their small designs with `stitchcraft_testkit::designs`. It also reads a plan's
 shape at a glance: `J L4 S5 L4` is a jump, 4 lock stitches, 5 needle points of stitching and 4 more lock
 stitches. Its strokes are as wide as an SVG stroke whose style says nothing, and `widened` gives one a
@@ -228,6 +239,7 @@ Metrics are defined once in `stitchcraft-testkit::metrics` so every case measure
 | Furrows | Longest run of rows whose needle points align within 0.1 mm |
 | Topology | Holes and components of the region vs. of the stitched area |
 | Bare fabric | The design painted at 0.05 mm as a viewer paints it, its background left out: the largest patch the top stitches leave bare, once opened with a disc as wide as the thread (`stitchcraft_testkit::fabric`) |
+| Cover | The same painting, read more strictly: the gaps a thread wide that the top stitches leave inside the design, and the share of the design they leave bare (`stitchcraft_testkit::fabric::cover`, `REQ-AUTO-027`) |
 | Thread astray | The longest stretch of a stitch that shows on another colour or on bare fabric, or of an underlay or travel stitch that shows at all. Moves between elements and jump threads are counted apart |
 
 Coverage is defined since M5.9 and edge coverage since M13.2, and the other metrics arrive with the cases that
@@ -428,6 +440,56 @@ test`, then writes `target/conformance/`:
 It fails when a case fails or an active requirement has no passing case. `--filter <text>` runs only the
 cases whose id, test name or requirements contain the text (and skips the "every active requirement"
 rule, since the run is partial). `cargo xtask ci` runs the whole suite; the docs workflow runs `--check`.
+
+### Cases in the release build
+
+A case may be too slow for the tests' debug build, as the owner's traced dogs are. Each dog is about a
+hundred shapes, and takes some 45 to 70 s there to digitize and measure, against some 6 s in the release
+build. Such a
+case is ignored in the debug build alone, with a reason of a fixed form that says where it runs, and a step
+of CI runs its test file in the release build:
+
+```rust
+#[test]
+#[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
+fn req_auto_025_digitized_dogs_leave_no_patch_of_fabric_bare() { … }
+```
+
+The runner, which runs the debug build, lists such a case as skipped with its reason (⏭ in the report),
+and CI doesn't fail on it as on a missing tool: the release step runs it. A case ignored any other way
+fails, so that no case hides behind `#[ignore]`. `--check` finds each release-only case by its attribute.
+Its file must be a test target of its own, `<package>/tests/<target>.rs`, and a line of
+`.github/workflows/ci.yml` must run `cargo test --release … -p <package> --test <target>`. A case ignored
+as release only in every build fails `--check` too, as the release build would leave it out as well. Each
+requirement still needs a case that runs in the debug build.
+
+### Cases with the models
+
+The subject cut-out's models are 49 MB, which StitchCraft's release `cutout-models-1` publishes
+([image to embroidery](image-to-embroidery.md#subject-cut-out)), so the cases that run them need them
+fetched. Such a case is ignored in every build, with a reason of a fixed form that says where it runs:
+
+```rust
+#[test]
+#[ignore = "models only: the models job runs tests/models.rs"]
+fn req_cli_019_the_cut_out_from_u2netps_box_keeps_each_dog_within_the_bounds() { … }
+```
+
+The models' job, in `.github/workflows/models.yml`, runs each file that holds such cases with `--ignored`,
+with the models in the folder `STITCHCRAFT_MODELS` names. When the release exists, the job leaves that folder
+empty, and the cases fetch the models from the release as `stitch` does. Until the owner has published it,
+the job puts there the files the workflow's build job has just made from the authors' own, and its summary
+says which of the 2 sources it used. From either, a file must match its pin before tract reads it. A build's encoder may have the other of its
+2 sums (ADR-0019, decision 5). The cases then check it against that sum and compare its outputs with the
+fixtures, and the job leaves `stitch plan --subject` end to end out with a warning. The runner lists a
+models-only case as skipped with its reason (⏭ in the report), and CI doesn't fail on it as on a missing
+tool: the models' job runs it. A case ignored for any other reason fails, so that no case hides behind
+`#[ignore]`. `--check` finds each models-only case by its attribute: its file must be a test target of its
+own, `<package>/tests/<target>.rs`, and a line of `models.yml` must run
+`cargo test … -p <package> --test <target>` with `--ignored`. `stitch`'s `tests/picture.rs` has a harness of its own, which prints the same reason
+for its models-only case, so that case has no attribute for `--check` to find. Each requirement still needs a case that runs everywhere. `REQ-CLI-019`'s is
+the cut-out of each photo from the models' outputs saved as fixtures, which the models' job checks tract
+still gives.
 
 `cargo xtask conformance --bless <case>` rewrites a data case's golden files. CI refuses a pull request
 that changes files under `conformance/golden/` unless it carries the `golden-change` label and a line in

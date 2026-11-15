@@ -33,7 +33,8 @@ L1  stitchcraft-plan ◀──────────────────�
       │
 L0  stitchcraft-core ◀── stitchcraft-params
 
-apps:  stitchcraft-cli (bin `stitch`)   stitchcraft-vc-plugin (wasm32 cdylib)
+apps:  stitchcraft-cli (bin `stitch`) ◀── stitchcraft-cutout (its subject cut-out)
+       stitchcraft-vc-plugin (wasm32 cdylib)
 test:  stitchcraft-testkit (dev-dependency only)
 tools: stitchcraft-xtask (`xtask/`, run as `cargo xtask`)
 ```
@@ -46,15 +47,17 @@ tools: stitchcraft-xtask (`xtask/`, run as `cargo xtask`)
 | `stitchcraft-engine` | L2 | `Design`/`Element`/`Shape`, automatic digitizing, normalization, generators, plan assembly, finalizing for the machine, and from M10.4 routing | depend on formats, render or any adapter |
 | `stitchcraft-formats` | L2 | readers/writers (PES/PEC, DST, …), quantization, format limits | depend on engine (it encodes *plans*) |
 | `stitchcraft-render` | L2 | CPU preview images of plans (thread look, simple look, overlays) | depend on engine |
-| `stitchcraft-svg` | L3 | SVG → `Design` (geometry, styles, `inkstitch:*` attributes, commands), plan → SVG | contain stitch logic |
+| `stitchcraft-svg` | L3 | SVG → `Design` (geometry, styles, `inkstitch:*` attributes, commands), plan → SVG, and embroidery fonts in Ink/Stitch's format (`font`, M14.1) | contain stitch logic |
 | `stitchcraft-vectorcraft` | L3 | `.vectorcraft` → `Design` (commands in names included), effect records ↔ `ParamSet`, plug-in JSON objects | contain stitch logic |
 | `stitchcraft-testkit` | test | fixtures, `proptest` strategies (from the registry), invariant assertions | be a normal dependency |
 | `stitchcraft-cli` | app | the `stitch` command; all filesystem access, and the one program StitchCraft starts, VectorCraft's command line, which traces a picture ([ADR-0015](adr/0015-pictures-traced-by-vectorcraft.md)) | contain engine logic |
+| `stitchcraft-cutout` | app library | the subject cut-out that `stitch` runs before a photo is traced. It reads the photo and runs the pinned models with tract ([ADR-0019](adr/0019-subject-cut-out-before-tracing.md)). `image` and `tract-onnx` are allowed here alone | be a dependency of anything but `stitchcraft-cli`; run a model with a random operator |
 | `stitchcraft-vc-plugin` | app | VectorCraft ABI v1 shim + plug-in manifests | contain engine logic; `unsafe` outside `abi.rs` |
 | `stitchcraft-xtask` | tools | gates (`ci`, `layers`, `docs`, `cleanroom`, …), generators, compatibility runs; works from its own folder, on StitchCraft's packages only ([ADR-0011](adr/0011-movable-into-vectorcraft.md)) | ship to users |
 
 Intra-layer edges are allowed only where listed (`stitchcraft-params → stitchcraft-core`). The table
-lives in `xtask/src/layers.rs` and is append-only, like VectorCraft's.
+lives in `xtask/src/layers.rs` and is append-only, like VectorCraft's. An app library (`Class::AppLibrary`
+there) is a library of the apps' layer that only the app it names may depend on.
 
 ### Why this split
 
@@ -79,12 +82,15 @@ GPL/AGPL/LGPL.
 | Deterministic transcendental math | `libm` 0.2 | MIT | core |
 | Errors | `thiserror` 2 | MIT/Apache | all libraries |
 | XML / SVG syntax | `roxmltree`, `svgtypes` | MIT/Apache | svg, and engine for `svgtypes`' path-data parser alone, which reads a custom lock drawn as a path |
+| A font's `font.json`, and its glyph names in Unicode's NFC | `serde_json`, `unicode-normalization` 0.1 | MIT/Apache, and Unicode-3.0 for its tables | svg |
 | `.vectorcraft` documents: JSON, its coordinates read exactly, unpacked from gzip by a Rust backend | `serde`, `serde_json`, `flate2` 1 | MIT/Apache | vectorcraft |
 | Rasterizing previews, and reading VectorCraft's pictures to compare them | `tiny-skia` 0.11 | BSD-3-Clause | render, xtask |
 | JSON reports, and the plug-in's JSON | `serde_json` | MIT/Apache | cli, vc-plugin |
-| Content hashes of bug-report bundles | `sha2` 0.11 | MIT/Apache | cli |
+| Content hashes of bug-report bundles, and of the cut-out's models against their pins | `sha2` 0.11 | MIT/Apache | cli, cutout |
+| A photo read for the subject cut-out and resized for its models, and the cut-out written | `image` 0.25 (jpeg, png) | MIT/Apache | cutout |
+| The cut-out's models run from their ONNX files | `tract-onnx` 0.23, without its default features | MIT/Apache | cutout |
 | CLI parsing | `clap` 4 | MIT/Apache | cli, xtask |
-| Tooling's TOML and JSON | `toml`, `toml_edit`, `serde_json` | MIT/Apache | xtask |
+| Tooling's TOML and JSON, and the pins of the cut-out's models | `toml`, `toml_edit`, `serde_json` | MIT/Apache | xtask, and cutout for `toml` alone |
 | Tests | `proptest`, `insta` | MIT/Apache, Apache | dev only |
 
 The engine's geometry is its own, with no crate for curves, regions, offsets, nearest points or graphs:
@@ -165,6 +171,9 @@ Kept minimal: `stitchcraft-engine/experimental` exposes generators whose status 
 in the registry (they appear in docs with a badge); `stitchcraft-formats/<format>` flags exist only if
 a format pulls a heavy dependency (none planned). No flag may change the output of a stable generator.
 
+`stitchcraft-cli/cutout`, on by default, builds the subject cut-out in through `stitchcraft-cutout/models`.
+[Image to embroidery](image-to-embroidery.md#subject-cut-out) says what a build without it answers.
+
 ## WebAssembly constraints
 
 Everything in layers L0 to L3 must build for `wasm32-unknown-unknown`, which `cargo xtask wasm` checks. That target
@@ -186,6 +195,7 @@ VectorCraft reports the plug-in as failed.
 | A machine profile | `crates/stitchcraft-plan/src/profiles/` (data) | machine-testing record |
 | A diagnostic | the diagnostics registry in `stitchcraft-core` | explanation text + a case that triggers it |
 | SVG/Ink/Stitch parsing | `stitchcraft-svg` | compatibility contract row |
+| An embroidery font in Ink/Stitch's format, its settings and glyphs | `stitchcraft_svg::font`, from M14.1 | the [fonts](fonts.md#the-reader) page, and its key in the reader's table, which the font settings page is written from |
 | VectorCraft document reading | `stitchcraft-vectorcraft` | compatibility gate scenario |
 | A CLI subcommand | `apps/stitchcraft-cli/src/commands/` | `trycmd` example in the docs |
 | A repo check | `xtask/src/` | `cargo xtask ci` step list and the [guardrails](guardrails.md) page |

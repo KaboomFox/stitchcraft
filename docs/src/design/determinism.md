@@ -73,12 +73,16 @@ its arithmetic is the plug-in's.
 Because the same design, profile, format and version give the same plan everywhere, those four are all a
 bug report needs, with the switches the design was read with. `--auto` decides how its shapes without
 settings sew, and `--sort-colours` whether its shapes with settings sew in the order StitchCraft chooses.
+Since M13.21 `--set` and `--style` give the shapes digitized automatically their rules' settings, and the
+file records each setting with its value.
 `stitch bug-report` writes them into one JSON file, with the design itself in place of a path to it, and
 each switch only when it was on. A bundle of a run without them is as it always was. The design is an SVG
 file whole, or the part of a VectorCraft document its reader reads, which
 reads as the whole document does. Of a picture, it is the document VectorCraft's command line traced, read
-with `--auto`: VectorCraft's trace is not StitchCraft's to replay, and the replay doesn't need VectorCraft. The
-file also records what came of them:
+with `--auto`: VectorCraft's trace is not StitchCraft's to replay, and the replay doesn't need VectorCraft. When
+`--subject` cut the picture's subject out first, the bundle records the cut-out as well, and its replay runs
+without the models ([image to embroidery](image-to-embroidery.md#subject-cut-out), under Replays). The file also
+records what came of them:
 
 - a SHA-256 of each entry of the plan, from each coordinate's bits, its kind, role and element, and each
   block's thread

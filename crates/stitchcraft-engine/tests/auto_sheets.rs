@@ -90,9 +90,11 @@ fn req_auto_007_ts13a_where_the_bar_runs_on_apart_from_the_square_the_fabric_bet
     let bar = corners(drawn(design, "ts13a:auto:parted:bar"));
     let (side, gap, half, bottom) = (bar[0].x(), bar[4].x(), bar[4].y(), bar[3].y());
     assert!((gap - side - 0.5).abs() < 1e-9, "{bar:?}");
-    // Below where they meet, clear of the corner by a row or 2.
+    // Below where they meet, clear of the corner by the overlap, which the bar reaches round it, and a row
+    // or 2.
     let beside = |prefix: &str| -> Vec<f64> {
-        needles(plan, prefix).into_iter().filter(|q| q.y() > half + 0.5 && q.y() < bottom - 0.5).map(|q| q.x()).collect()
+        let clear = half + rules().auto_overlap_mm.get() + 0.5;
+        needles(plan, prefix).into_iter().filter(|q| q.y() > clear && q.y() < bottom - 0.5).map(|q| q.x()).collect()
     };
     let square = beside("ts13a:auto:parted:square").into_iter().fold(f64::NEG_INFINITY, f64::max);
     let bar = beside("ts13a:auto:parted:bar").into_iter().fold(f64::INFINITY, f64::min);
@@ -134,15 +136,16 @@ fn sewn_from_to(plan: &StitchPlan) -> BTreeMap<String, (usize, usize)> {
 fn req_auto_010_ts13_no_shape_sews_over_one_drawn_over_it() {
     // Of 2 shapes whose paint overlaps, the lower sews first, or it would cover the upper one. In the stacked
     // badge, flattened (REQ-AUTO-023), the red disc is digitized whole under the blue square and the gold
-    // disc, which fill its hole, and the blue square's ring, as narrow as a satin column, sews after the gold
-    // disc it borders, over its edge. In the emblems, the navy square is digitized whole under the white disc,
+    // disc, which fill its hole. The blue square's ring is as narrow as a satin column, but a column round the
+    // gold disc would sew stitches of 7.3 mm at the square's corners, so it is refused (REQ-AUTO-035) and the
+    // square is filled whole under the gold disc, which sews on it (REQ-AUTO-033). In the emblems, the navy square is digitized whole under the white disc,
     // the star and the bars, and the white disc is narrower than a satin column round the star, which sews
     // after the star's fill it borders; the stacked emblem's white is the white round the square too, which
     // sews where it will. On the face, every line lies on the pink face, the eyes' lines and
     // pupils on the white eyes, each brow on its eye's line, and the hairs on the outline.
     for (id, picture, over) in [
-        ("TS-13A", "ts13a:auto:badge-stacked", &[("red", "blue"), ("red", "gold"), ("gold", "blue")][..]),
-        ("TS-13A", "ts13a:auto:badge-abutting", &[("red", "blue"), ("red", "gold"), ("gold", "blue")][..]),
+        ("TS-13A", "ts13a:auto:badge-stacked", &[("red", "blue"), ("red", "gold"), ("blue", "gold")][..]),
+        ("TS-13A", "ts13a:auto:badge-abutting", &[("red", "blue"), ("red", "gold"), ("blue", "gold")][..]),
         ("TS-13D", "ts13d:auto:emblem-abutting", &[("navy", "disc"), ("navy", "star"), ("navy", "bar-1"), ("star", "disc")][..]),
         ("TS-13D", "ts13d:auto:emblem-stacked", &[("navy", "star"), ("navy", "gold")][..]),
         ("TS-13D", "ts13d:auto:button-abutting", &[("disc", "dot-1"), ("disc", "dot-4"), ("disc", "rim")][..]),
@@ -321,7 +324,8 @@ fn ts13_the_jump_threads_that_its_stitches_sew_down() {
     // For each sheet, as drawn and digitized, how many jump threads it leaves and how many of them a later
     // stitch of their colour sews down, as recorded in the design (`image-to-embroidery.md` › Testing).
     // Digitized, the letters of TS-13B sew as columns with jumps between them.
-    for (id, recorded) in [("TS-13A", [(8, 0), (12, 4)]), ("TS-13B", [(6, 0), (37, 15)]), ("TS-13C", [(9, 4), (6, 1)]), ("TS-13D", [(1, 0), (10, 3)])]
+    for (id, recorded) in
+        [("TS-13A", [(8, 0), (15, 2)]), ("TS-13B", [(6, 0), (44, 19)]), ("TS-13C", [(9, 4), (12, 5)]), ("TS-13D", [(1, 0), (13, 3)])]
     {
         let threads = jump_threads(&sheet(id).1);
         let half = |stops: usize| {

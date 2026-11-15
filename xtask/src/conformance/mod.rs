@@ -22,6 +22,7 @@
 mod cases;
 mod centre_lines;
 mod differential;
+mod font;
 pub mod fonts;
 mod oracle;
 mod report;
@@ -112,6 +113,8 @@ pub fn run(check_only: bool, filter: Option<&str>, bless: Option<&str>, differen
         findings.error(format!("{INKSTITCH}: no [[param]] entries"));
     }
     check_differential(&root, &data, &mut findings)?;
+    check_models_only(&root, &rust, &mut findings)?;
+    check_release_only(&root, &rust, &mut findings)?;
     for fixture in unindexed(&root)? {
         findings.error(format!("{FIXTURES}/{fixture} has no row in {FIXTURES}/README.md, which gives each fixture's origin and licence"));
     }
@@ -181,11 +184,13 @@ pub fn run(check_only: bool, filter: Option<&str>, bless: Option<&str>, differen
     for o in outcomes.iter().filter(|o| o.failed()) {
         findings.error(format!("{} ({}): {}", o.case, o.file, o.failures.join("; ")));
     }
+    // A models-only case runs in the models' job and a release-only case in a step of CI, which `--check`
+    // finds for each, and only the report lists them here.
     for o in &outcomes {
-        if let Some(why) = &o.skipped {
-            let message = format!("{} did not run: {why}", o.case);
-            if util::in_ci() { findings.error(format!("required in CI: {message}")) } else { findings.warn(message) }
-        }
+        let elsewhere = |why: &&str| why.starts_with(cases::MODELS_ONLY) || why.starts_with(cases::RELEASE_ONLY);
+        let Some(why) = o.skipped.as_deref().filter(|why| !elsewhere(why)) else { continue };
+        let message = format!("{} did not run: {why}", o.case);
+        if util::in_ci() { findings.error(format!("required in CI: {message}")) } else { findings.warn(message) }
     }
     // A filtered run is partial: requirements and codes outside the filter are not expected to have run.
     for (r, verdict) in report::verdicts(&requirements, &outcomes).into_iter().filter(|_| filter.is_none()) {
@@ -200,6 +205,95 @@ pub fn run(check_only: bool, filter: Option<&str>, bless: Option<&str>, differen
     }
     let failed = outcomes.iter().filter(|o| o.failed()).count();
     findings.finish("conformance", &format!("{summary}; {} cases run, {failed} failed; report in target/conformance/report.md", outcomes.len()))
+}
+
+/// The models' workflow, a step of which runs each test file that holds models-only cases.
+const MODELS_WORKFLOW: &str = ".github/workflows/models.yml";
+
+/// Checks that each test file holding a case that every build leaves out as models only
+/// (`cases::MODELS_ONLY`) is a test target of its own, `<folder>/<package>/tests/<target>.rs`, which a step of
+/// the models' workflow runs with `--ignored`: `cargo test … -p <package> --test <target> -- --ignored`. So no
+/// such case is left without a job that runs it.
+fn check_models_only(root: &Path, rust: &[cases::RustCase], findings: &mut Findings) -> Result<(), String> {
+    let files: BTreeSet<&str> = rust.iter().filter(|case| case.models_only.is_some()).map(|case| case.file.as_str()).collect();
+    if files.is_empty() {
+        return Ok(());
+    }
+    let workflow = util::read(&root.join(MODELS_WORKFLOW))?;
+    for file in files {
+        match test_target(file) {
+            None => findings.error(format!(
+                "{file}: models-only cases belong in a test file of their own, `<package>/tests/<target>.rs`, which a step of \
+                 {MODELS_WORKFLOW} runs with --ignored"
+            )),
+            Some((package, target)) if !runs_ignored(&workflow, package, target) => findings.error(format!(
+                "{file} holds models-only cases, but no step of {MODELS_WORKFLOW} runs them: `cargo test --locked -p {package} --test {target} -- \
+                 --ignored`"
+            )),
+            Some(_) => {}
+        }
+    }
+    Ok(())
+}
+
+/// CI's workflow, a step of which runs each test file that holds release-only cases.
+const CI_WORKFLOW: &str = ".github/workflows/ci.yml";
+
+/// Checks that each test file holding a case that the tests' debug build leaves out as release only
+/// (`cases::RELEASE_ONLY`) is a test target of its own, `<folder>/<package>/tests/<target>.rs`, which a step of
+/// CI's workflow runs in the release build: `cargo test --release … -p <package> --test <target>`. So no such
+/// case is left without a job that runs it.
+fn check_release_only(root: &Path, rust: &[cases::RustCase], findings: &mut Findings) -> Result<(), String> {
+    let files: BTreeSet<&str> = rust.iter().filter(|case| case.release_only.is_some()).map(|case| case.file.as_str()).collect();
+    if files.is_empty() {
+        return Ok(());
+    }
+    let workflow = util::read(&root.join(CI_WORKFLOW))?;
+    for file in files {
+        match test_target(file) {
+            None => findings.error(format!(
+                "{file}: release-only cases belong in a test file of their own, `<package>/tests/<target>.rs`, which a step of {CI_WORKFLOW} \
+                 runs in the release build"
+            )),
+            Some((package, target)) if !runs_in_release(&workflow, package, target) => findings.error(format!(
+                "{file} holds release-only cases, but no step of {CI_WORKFLOW} runs it in the release build: `cargo test --release --locked -p \
+                 {package} --test {target}`"
+            )),
+            Some(_) => {}
+        }
+    }
+    Ok(())
+}
+
+/// The package and the test target of the integration test `file`, `<folder>/<package>/tests/<target>.rs`, the
+/// package named as its folder is; `None` for any other file.
+fn test_target(file: &str) -> Option<(&str, &str)> {
+    let parts: Vec<&str> = file.split('/').collect();
+    let [_, package, "tests", name] = parts.as_slice() else { return None };
+    Some((package, name.strip_suffix(".rs")?))
+}
+
+/// Whether a line of `workflow` runs `cargo test` on the test target `target` of the package `package`, its
+/// ignored tests included.
+fn runs_ignored(workflow: &str, package: &str, target: &str) -> bool {
+    workflow.lines().any(|line| {
+        let words: Vec<&str> = line.split_whitespace().collect();
+        let given = |flag: &str, value: &str| words.windows(2).any(|pair| pair == [flag, value]);
+        line.contains("cargo test")
+            && given("-p", package)
+            && given("--test", target)
+            && words.iter().any(|w| *w == "--ignored" || *w == "--include-ignored")
+    })
+}
+
+/// Whether a line of `workflow` runs `cargo test` in the release build on the test target `target` of the
+/// package `package`.
+fn runs_in_release(workflow: &str, package: &str, target: &str) -> bool {
+    workflow.lines().any(|line| {
+        let words: Vec<&str> = line.split_whitespace().collect();
+        let given = |flag: &str, value: &str| words.windows(2).any(|pair| pair == [flag, value]);
+        line.contains("cargo test") && words.contains(&"--release") && given("-p", package) && given("--test", target)
+    })
 }
 
 /// Whether `code` is retired: registered still, with "(retired)" at the end of its title, as codes are never
@@ -348,14 +442,15 @@ mod tests {
     fn every_data_case_but_the_oracle_passes_here() {
         // `cargo test` runs on Linux, macOS and Windows in CI (`ci.yml`), so there each test sheet's and plan's
         // machine files are compared with their golden files byte for byte (docs/src/design/determinism.md).
-        // The oracle needs Python and pyembroidery, which only the gates job installs.
+        // The oracle needs Python and pyembroidery, which only the gates job installs, and a font case needs
+        // Ink/Stitch's fonts, which only the jobs that run the whole suite fetch.
         let root = util::root();
         let mut findings = Findings::default();
         let data = cases::load_cases(&root, &mut findings);
         assert!(findings.errors.is_empty() && data.len() > 10, "{:?}", findings.errors);
         let failed: Vec<String> = data
             .iter()
-            .filter(|case| !matches!(case.spec, cases::Spec::Oracle { .. }) && !is_differential(case))
+            .filter(|case| !matches!(case.spec, cases::Spec::Oracle { .. } | cases::Spec::Font { .. }) && !is_differential(case))
             .map(|case| runner::run_data_case(&root, case, false))
             .filter(|outcome| !outcome.passed())
             .map(|outcome| format!("{} ({}): {}", outcome.case, outcome.file, outcome.failures.join("; ")))
@@ -369,8 +464,86 @@ mod tests {
     }
 
     #[test]
+    fn a_models_only_case_is_in_a_test_target_that_a_step_of_the_models_job_runs_with_ignored() {
+        assert_eq!(test_target("apps/stitchcraft-cutout/tests/models.rs"), Some(("stitchcraft-cutout", "models")));
+        for elsewhere in ["apps/stitchcraft-cutout/src/run.rs", "apps/stitchcraft-cutout/tests/common/mod.rs", "tests/x.rs", "a/b/tests/x.txt"] {
+            assert_eq!(test_target(elsewhere), None, "{elsewhere}");
+        }
+        let workflow = "      - run: cargo test --locked -p stitchcraft-cutout --test models -- --ignored --test-threads=1\n      - run: cargo test --locked -p stitchcraft-cli --test picture -- --include-ignored\n      - run: cargo test --locked -p stitchcraft-cutout --test photos\n";
+        assert!(runs_ignored(workflow, "stitchcraft-cutout", "models"));
+        assert!(runs_ignored(workflow, "stitchcraft-cli", "picture"));
+        // Run without its ignored tests, on another package or another target, it isn't run.
+        for (package, target) in [("stitchcraft-cutout", "photos"), ("stitchcraft-cli", "models"), ("stitchcraft-cutout", "run")] {
+            assert!(!runs_ignored(workflow, package, target), "{package} {target}");
+        }
+    }
+
+    #[test]
+    fn each_models_only_case_of_the_workspace_has_its_step_in_the_models_job() {
+        let (root, mut findings) = (util::root(), Findings::default());
+        let rust = cases::discover_rust_cases(&root, &mut findings);
+        assert!(rust.iter().any(|case| case.models_only.is_some()), "the cut-out's models' cases");
+        check_models_only(&root, &rust, &mut findings).unwrap();
+        assert!(findings.errors.is_empty(), "{:?}", findings.errors);
+        // Written elsewhere, or with no step to run it, a models-only case is found out.
+        let case = |file: &str| cases::RustCase {
+            name: "req_cli_019_x".into(),
+            covers: "REQ-CLI-019".into(),
+            file: file.into(),
+            models_only: Some(format!("{}the models job runs it", cases::MODELS_ONLY)),
+            release_only: None,
+        };
+        check_models_only(&root, &[case("apps/stitchcraft-cutout/src/run.rs"), case("apps/stitchcraft-cutout/tests/nowhere.rs")], &mut findings)
+            .unwrap();
+        assert_eq!(findings.errors.len(), 2, "{:?}", findings.errors);
+        assert!(findings.errors[0].contains("belong in a test file of their own"), "{}", findings.errors[0]);
+        assert!(findings.errors[1].contains("--test nowhere"), "{}", findings.errors[1]);
+    }
+
+    #[test]
     fn the_committed_requirements_parse() {
         let ids = requirement_ids().unwrap();
         assert!(ids.contains("REQ-PLAN-001"));
+    }
+
+    #[test]
+    fn a_release_only_case_is_in_a_test_target_that_a_step_of_ci_runs_in_the_release_build() {
+        assert_eq!(test_target("crates/stitchcraft-engine/tests/auto_photos.rs"), Some(("stitchcraft-engine", "auto_photos")));
+        for elsewhere in ["crates/stitchcraft-engine/src/auto/mod.rs", "crates/stitchcraft-engine/tests/auto/mod.rs", "tests/x.rs", "a/b/tests/x.txt"]
+        {
+            assert_eq!(test_target(elsewhere), None, "{elsewhere}");
+        }
+        let workflow = "      - run: cargo test --release --locked -p stitchcraft-engine --test release\n        run: .github/scripts/annotated.sh \"dogs\" cargo test --release --locked -p stitchcraft-engine --test auto_photos\n      - run: cargo test --locked -p stitchcraft-cli --test picture\n";
+        assert!(runs_in_release(workflow, "stitchcraft-engine", "auto_photos"));
+        assert!(runs_in_release(workflow, "stitchcraft-engine", "release"));
+        // Run in the debug build, on another package or another target, it is not run in the release build.
+        for (package, target) in [("stitchcraft-cli", "picture"), ("stitchcraft-cli", "auto_photos"), ("stitchcraft-engine", "auto")] {
+            assert!(!runs_in_release(workflow, package, target), "{package} {target}");
+        }
+    }
+
+    #[test]
+    fn each_release_only_case_of_the_workspace_has_its_step_in_ci() {
+        let (root, mut findings) = (util::root(), Findings::default());
+        let rust = cases::discover_rust_cases(&root, &mut findings);
+        check_release_only(&root, &rust, &mut findings).unwrap();
+        assert!(findings.errors.is_empty(), "{:?}", findings.errors);
+        // Written elsewhere, or with no step to run it, a release-only case is found out.
+        let case = |file: &str| cases::RustCase {
+            name: "req_auto_025_x".into(),
+            covers: "REQ-AUTO-025".into(),
+            file: file.into(),
+            models_only: None,
+            release_only: Some(format!("{}CI's perf job runs it", cases::RELEASE_ONLY)),
+        };
+        check_release_only(
+            &root,
+            &[case("crates/stitchcraft-engine/src/auto/mod.rs"), case("crates/stitchcraft-engine/tests/nowhere.rs")],
+            &mut findings,
+        )
+        .unwrap();
+        assert_eq!(findings.errors.len(), 2, "{:?}", findings.errors);
+        assert!(findings.errors[0].contains("belong in a test file of their own"), "{}", findings.errors[0]);
+        assert!(findings.errors[1].contains("--test nowhere"), "{}", findings.errors[1]);
     }
 }

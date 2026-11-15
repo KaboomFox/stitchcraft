@@ -125,12 +125,12 @@ jobs:
         run: mdbook build docs
         env:
           MDBOOK_OUTPUT__HTML__SITE_URL: /${{ github.event.repository.name }}/${{ steps.dest.outputs.dir }}/
-      - uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/book
-          destination_dir: ${{ steps.dest.outputs.dir }}
-          keep_files: true
+      # The one way to write to the Pages branch, which the browser demo's workflow (web.yml) uses too: it
+      # replaces this folder alone and never loses another run's (docs/src/design/docs-pipeline.md, Publishing).
+      - name: Publish the book to its folder
+        env:
+          DESTINATION: ${{ steps.dest.outputs.dir }}
+        run: python3 -I .github/scripts/publish-web.py "$DESTINATION" docs/book
       # GitHub Pages answers an address it has no file for with the site's 404.html, so a stale link anywhere on
       # the site gets the book's 404 page, with its search and its table of contents.
       - name: The book's 404 page answers for the whole site
@@ -138,8 +138,4 @@ jobs:
         run: cp docs/book/404.html docs/site-root/404.html
       - name: Site root (a page that sends visitors to the docs)
         if: steps.dest.outputs.dir == 'dev'
-        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/site-root
-          keep_files: true
+        run: python3 -I .github/scripts/publish-web.py site-root docs/site-root

@@ -31,7 +31,9 @@ impl stitchcraft_render::raster::Settings
 pub const stitchcraft_render::raster::Settings::DEFAULT_SCALE: f32
 pub const stitchcraft_render::raster::Settings::MAX_SCALE: f32
 pub const stitchcraft_render::raster::Settings::MIN_SCALE: f32
+pub const fn stitchcraft_render::raster::Settings::fabric(self) -> stitchcraft_plan::thread::Rgb
 pub fn stitchcraft_render::raster::Settings::new(stitchcraft_render::raster::Style, f32) -> core::option::Option<stitchcraft_render::raster::Settings>
+pub const fn stitchcraft_render::raster::Settings::on(self, stitchcraft_plan::thread::Rgb) -> stitchcraft_render::raster::Settings
 pub const fn stitchcraft_render::raster::Settings::scale(self) -> f32
 pub const fn stitchcraft_render::raster::Settings::style(self) -> stitchcraft_render::raster::Style
 pub const stitchcraft_render::raster::MARGIN_MM: f32
@@ -115,7 +117,9 @@ impl stitchcraft_render::raster::Settings
 pub const stitchcraft_render::raster::Settings::DEFAULT_SCALE: f32
 pub const stitchcraft_render::raster::Settings::MAX_SCALE: f32
 pub const stitchcraft_render::raster::Settings::MIN_SCALE: f32
+pub const fn stitchcraft_render::raster::Settings::fabric(self) -> stitchcraft_plan::thread::Rgb
 pub fn stitchcraft_render::raster::Settings::new(stitchcraft_render::raster::Style, f32) -> core::option::Option<stitchcraft_render::raster::Settings>
+pub const fn stitchcraft_render::raster::Settings::on(self, stitchcraft_plan::thread::Rgb) -> stitchcraft_render::raster::Settings
 pub const fn stitchcraft_render::raster::Settings::scale(self) -> f32
 pub const fn stitchcraft_render::raster::Settings::style(self) -> stitchcraft_render::raster::Style
 pub const stitchcraft_render::MAX_SIDE: u32

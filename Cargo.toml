@@ -26,6 +26,8 @@ stitchcraft-render = { path = "crates/stitchcraft-render" }
 stitchcraft-svg = { path = "crates/stitchcraft-svg" }
 stitchcraft-vectorcraft = { path = "crates/stitchcraft-vectorcraft" }
 stitchcraft-testkit = { path = "crates/stitchcraft-testkit" }
+# Its `models` feature, the cut-out itself, is `stitchcraft-cli`'s `cutout` feature to turn on.
+stitchcraft-cutout = { path = "apps/stitchcraft-cutout", default-features = false }
 
 # foundation
 # Pure-Rust transcendental functions: identical results on every platform, including wasm32
@@ -43,6 +45,9 @@ tiny-skia = { version = "0.12", default-features = false, features = ["std", "pn
 # lockfile already carries. Matrices and arcs are computed with our own deterministic maths.
 roxmltree = "0.21"
 svgtypes = "0.16"
+# Embroidery fonts in Ink/Stitch's format (stitchcraft-svg's font reader): glyph names in Unicode's NFC, as
+# Ink/Stitch's lettering looks them up. The version VectorCraft's lockfile already carries.
+unicode-normalization = "0.1"
 
 # command line (stitchcraft-cli only; `cargo xtask layers` restricts clap)
 clap = { version = "4.5", features = ["derive"] }
@@ -52,10 +57,17 @@ sha2 = "0.11"
 # Rust backend that builds for wasm32. The versions VectorCraft's lockfile already carries.
 flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
 
+# The subject cut-out (stitchcraft-cutout only; `cargo xtask layers` restricts both, ADR-0019): photos decoded
+# and the cut-out encoded, and the models run from their ONNX files, in Rust. tract-onnx's default feature
+# brings transformer operators, which no model of the cut-out has.
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png"] }
+tract-onnx = { version = "0.23.10", default-features = false }
+
 # tests (stitchcraft-testkit and dev-dependencies only)
 proptest = "1"
 
-# JSON: the VectorCraft adapter's documents, the command line's reports, the plug-in's ABI and tooling
+# JSON: the VectorCraft adapter's documents, a font's settings, the command line's reports, the plug-in's ABI
+# and tooling
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 

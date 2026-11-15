@@ -204,6 +204,10 @@ jobs:
         if: steps.ref.outputs.ref != ''
         with:
           directory: vectorcraft/stitchcraft
+      - uses: ./.github/actions/fonts
+        if: steps.ref.outputs.ref != ''
+        with:
+          directory: vectorcraft/stitchcraft
       - name: "Nested: a VectorCraft crate depends on StitchCraft's engine by path"
         if: steps.ref.outputs.ref != ''
         working-directory: vectorcraft

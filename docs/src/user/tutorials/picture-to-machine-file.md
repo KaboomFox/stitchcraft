@@ -89,7 +89,9 @@ length of its longer side in millimetres, background included. Image Trace keeps
 6 unless you say otherwise. Count the background's colour too: the badge has 3 colours on white, so 4 keeps
 any colour between them out. `--traced` keeps the document VectorCraft traced, which you can open in
 VectorCraft to correct the trace and then digitize as above. When `stitch` can't start VectorCraft's command
-line, it says so with `SC-E0815`, and you trace the picture in VectorCraft instead.
+line, it says so with `SC-E0815`, and you trace the picture in VectorCraft instead. For a photo, `--subject` cuts
+the subject out first, so that the background isn't sewn
+([cut a photo's subject out](../how-to/cut-out-a-photos-subject.md)).
 
 ## 4. Sew it
 
