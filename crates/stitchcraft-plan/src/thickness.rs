@@ -46,7 +46,7 @@ pub const PIXEL: f64 = 0.05;
 pub const CELL: f64 = 4.0 * PIXEL;
 /// How many cells a window is across.
 const ACROSS: usize = 5;
-/// The side of a window, in millimetres.
+/// The side of a window, in millimetres: its area is 1 mm², so a sum over it is a value per mm².
 pub const WINDOW: f64 = 1.0;
 /// The smallest piece over a limit that counts, in square millimetres.
 pub const PIECE: f64 = 1.0;
@@ -307,8 +307,8 @@ impl Thickness {
         let summed = |values: &[f64], scale: f64| -> Vec<f64> {
             (0..cells).map(|at| grid.window(at).filter_map(|cell| values.get(cell)).sum::<f64>() * scale).collect()
         };
-        let area = WINDOW * WINDOW;
-        Ok(Some(Thickness { fills: summed(&thread, ROWS / area), points: summed(&holes, 1.0 / area), grid }))
+        // A window is 1 mm², so its sums are per square millimetre as they are.
+        Ok(Some(Thickness { fills: summed(&thread, ROWS), points: summed(&holes, 1.0), grid }))
     }
 
     /// The values of `measure`, by row then column.
@@ -381,7 +381,6 @@ impl Thickness {
         let Some(middle) = self.grid.holding(at.x(), at.y()) else { return Ok(Vec::new()) };
         let window: Vec<usize> = self.grid.window(middle).collect();
         let mut layers: BTreeMap<(usize, Option<ElementRef>), (f64, f64)> = BTreeMap::new();
-        let scale = ROWS / (WINDOW * WINDOW);
         for stitch in plan.sewn_stitches() {
             meter.charge(1)?;
             let entry = plan.blocks.get(stitch.block).and_then(|block| block.stitches.get(stitch.index));
@@ -390,9 +389,9 @@ impl Thickness {
                 if window.binary_search(&cell).is_ok() {
                     let layer = layers.entry(key).or_default();
                     if stitch.role == Role::Top {
-                        layer.0 += length * scale;
+                        layer.0 += length * ROWS;
                     } else {
-                        layer.1 += length * scale;
+                        layer.1 += length * ROWS;
                     }
                 }
             })?;

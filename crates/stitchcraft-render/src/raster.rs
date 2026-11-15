@@ -484,6 +484,11 @@ mod tests {
         // At 10 pixels per millimetre, with the margin of 2 mm: 5, 15, 25 and 35 mm along the rows, 5 mm down.
         let colours = [70, 170, 270, 370].map(|x| pixel(&image, x, 70));
         assert_eq!(colours, [ORDINARY, DOUBLED, THICK, FAILING]);
+        // The thread reaches half its width before the first hole, into the cell before it, and a window 2
+        // cells of 0.2 mm further. The spot under a pixel's middle decides: the pixels whose middles lie
+        // 0.65 and 0.55 mm before the first hole, along the rows and across them.
+        assert_eq!((pixel(&image, 13, 70), pixel(&image, 14, 70)), (Rgb::new(255, 255, 255), ORDINARY));
+        assert_eq!((pixel(&image, 70, 13), pixel(&image, 70, 14)), (Rgb::new(255, 255, 255), ORDINARY));
         assert_eq!((pixel(&image, 5, 70), pixel(&image, 70, 135)), (Rgb::new(255, 255, 255), Rgb::new(255, 255, 255)));
         // The fabric's colour shows where no thread lies.
         let black = scene(&points).render(settings.on(Rgb::new(0, 0, 0)), &mut Budget::DEFAULT.meter()).unwrap();
