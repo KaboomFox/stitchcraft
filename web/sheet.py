@@ -182,19 +182,26 @@ def browser_lines(browser):
         return ['The browser\'s checks did not run.']
     said = []
     parity = browser.get('parity', [])
-    if parity:
-        names = ', '.join(design['design'] for design in parity)
-        said.append(f'The editor in Chromium and `stitch` wrote the same PES and DST files, byte for byte, of {names}.')
+    same = [design['design'] for design in parity if all((design.get(kind) or {}).get('same') for kind in ('pes', 'dst'))]
+    if same:
+        said.append(f'The editor in Chromium and `stitch` wrote the same PES and DST files, byte for byte, of {", ".join(same)}.')
+    for design in parity:
+        refused = sorted({design[kind]['refused'] for kind in ('pes', 'dst') if (design.get(kind) or {}).get('refused')})
+        if refused:
+            said.append(f'The editor did not export {design["design"]}, so nothing was compared: {"; ".join(refused)}.')
     speed = browser.get('speed')
     if speed and speed.get('runs'):
         turns = sorted(run['turn_ms'] for run in speed['runs'])
-        exports = sorted(run['export_ms'] for run in speed['runs'])
-        middle = len(turns) // 2
+        exports = sorted(run['export_ms'] for run in speed['runs'] if run.get('export_ms') is not None)
         limit = speed.get('limit_ms') or {}
         within = lambda key: f' (limit {seconds(limit[key])})' if limit.get(key) else ''
-        said.append(f'Giving the {speed["shapes"]} shapes of {speed["design"]} the Auto effect took {seconds(turns[middle])}'
-                    f'{within("turn")} until the editor had drawn them, and its PES export {seconds(exports[middle])}'
-                    f'{within("export")}: the middle of {len(turns)} runs in Chromium drawing in software.')
+        left = max(run.get('waiting', 0) for run in speed['runs'])
+        export = (f'its PES export {seconds(exports[len(exports) // 2])}{within("export")}' if exports
+                  else 'its PES export was refused')
+        said.append(f'Giving the {speed["shapes"]} shapes of {speed["design"]} the Auto effect took '
+                    f'{seconds(turns[len(turns) // 2])}{within("turn")} until the editor had drawn them'
+                    f'{f", but for {left} it left undrawn" if left else ""}, and {export}: '
+                    f'the middle of {len(turns)} runs in Chromium drawing in software.')
     return said
 
 
