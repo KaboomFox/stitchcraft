@@ -75,7 +75,7 @@ fn ordered_with(sewn: Vec<Sewn>, painting: &Budget, budget: &Budget) -> (Vec<Str
 fn ordered_under(sewn: Vec<Sewn>, painting: &Budget, budget: &Budget, under: Option<Rgb>) -> (Vec<String>, Vec<Diagnostic>) {
     let settings = DesignSettings::default();
     let shape = |index: usize, sewn: &Sewn| if sewn.shape == usize::MAX { index } else { sewn.shape };
-    let moving: Vec<Moving> = sewn.iter().enumerate().map(|(index, sewn)| Moving { free: sewn.automatic, shape: shape(index, sewn) }).collect();
+    let moving: Vec<Moving> = sewn.iter().enumerate().map(|(index, sewn)| Moving { free: sewn.automatic, made: sewn.automatic, shape: shape(index, sewn) }).collect();
     let mut shapes = Shapes::new(sewn, &settings, painting);
     let mut said = super::ordered(&mut shapes, &moving, budget, under);
     said.append(&mut shapes.said);
@@ -233,8 +233,8 @@ fn a_line_waits_for_no_fill_it_borders_beyond_an_element_kept_in_its_place() {
     // A line, an element kept in its place, and a fill the line borders, each a run of its own: the line
     // sews first, as it is drawn, and doesn't wait for the fill.
     let facts: Vec<Facts> = (0..3).map(|_| Facts { colours: vec![RED.color], stop: false, reach: None }).collect();
-    let moving: Vec<Moving> = (0..3).map(|shape| Moving { free: true, shape }).collect();
-    let mut order = Order { facts: &facts, moving: &moving, graph: Graph::new(3), borders: vec![(2, 0)], wished: Vec::new(), kept: BTreeSet::from([1]), unsought: None };
+    let moving: Vec<Moving> = (0..3).map(|shape| Moving { free: true, made: true, shape }).collect();
+    let mut order = Order { facts: &facts, moving: &moving, graph: Graph::new(3), borders: vec![(2, 0)], wished: Vec::new(), kept: BTreeSet::from([1]), unsought: None, under: None };
     let mut sewing = Sewing::default();
     order.sew(&[vec![0], vec![1], vec![2]], &mut sewing, &Budget::DEFAULT).unwrap();
     assert_eq!(sewing.order, [0, 1, 2]);
@@ -245,12 +245,12 @@ fn req_auto_012_nothing_moves_across_an_element_kept_in_its_place_and_each_sews_
     // 0 overlaps 2 across 1, which keeps its place, and 2 and 3 both overlap 4, drawn after them: placing 0
     // frees 2, which waits for its run all the same, after 1; and 4 waits for 3.
     let facts: Vec<Facts> = [RED, RED, RED, BLUE, RED].iter().map(|thread| Facts { colours: vec![thread.color], stop: false, reach: None }).collect();
-    let moving: Vec<Moving> = (0..5).map(|shape| Moving { free: true, shape }).collect();
+    let moving: Vec<Moving> = (0..5).map(|shape| Moving { free: true, made: true, shape }).collect();
     let mut graph = Graph::new(5);
     for (from, to) in [(0, 2), (2, 4), (3, 4)] {
         graph.add(from, to);
     }
-    let mut order = Order { facts: &facts, moving: &moving, graph, borders: Vec::new(), wished: Vec::new(), kept: BTreeSet::from([1]), unsought: None };
+    let mut order = Order { facts: &facts, moving: &moving, graph, borders: Vec::new(), wished: Vec::new(), kept: BTreeSet::from([1]), unsought: None, under: None };
     let mut sewing = Sewing::default();
     order.sew(&[vec![0], vec![1], vec![2, 3, 4]], &mut sewing, &Budget::DEFAULT).unwrap();
     assert_eq!(sewing.order, [0, 1, 2, 3, 4]);
@@ -261,8 +261,8 @@ fn req_auto_012_nothing_moves_across_an_element_kept_in_its_place_and_each_sews_
 /// order's.
 fn threaded(colours: &[&[Rgb]]) -> (Vec<usize>, usize, usize) {
     let facts: Vec<Facts> = colours.iter().map(|colours| Facts { colours: colours.to_vec(), stop: false, reach: None }).collect();
-    let moving: Vec<Moving> = (0..facts.len()).map(|shape| Moving { free: true, shape }).collect();
-    let mut order = Order { facts: &facts, moving: &moving, graph: Graph::new(facts.len()), borders: Vec::new(), wished: Vec::new(), kept: BTreeSet::new(), unsought: None };
+    let moving: Vec<Moving> = (0..facts.len()).map(|shape| Moving { free: true, made: true, shape }).collect();
+    let mut order = Order { facts: &facts, moving: &moving, graph: Graph::new(facts.len()), borders: Vec::new(), wished: Vec::new(), kept: BTreeSet::new(), unsought: None, under: None };
     let mut sewing = Sewing::default();
     let painted: Vec<usize> = (0..facts.len()).collect();
     order.sew(std::slice::from_ref(&painted), &mut sewing, &Budget::DEFAULT).unwrap();
@@ -410,6 +410,29 @@ fn req_auto_037_the_thread_of_the_base_layer_sews_first() {
     assert_eq!((ids, said.len()), (vec!["r".to_string(), "b".to_string()], 0));
     let (ids, _) = ordered_under(squares(), &Budget::DEFAULT, &Budget::DEFAULT, Some(BLUE.color));
     assert_eq!(ids, ["b", "r"]);
+    // A green square with settings and a stop after it sews first, as a test sheet's half as drawn does. The
+    // base layer sews after the stop, before the first element digitizing made: the blue still sews first.
+    let stopped = || {
+        let mut drawn = square("g", (100.0, 0.0), 10.0, &GREEN);
+        drawn.automatic = false;
+        drawn.element.params.set("stop_after", "true");
+        let mut sewn = vec![drawn];
+        sewn.extend(squares());
+        sewn
+    };
+    let (ids, _) = ordered_under(stopped(), &Budget::DEFAULT, &Budget::DEFAULT, Some(BLUE.color));
+    assert_eq!(ids, ["g", "b", "r"]);
+    // With no base layer, the thread the half as drawn left is sewing, and the first in paint order next.
+    let (ids, _) = ordered_under(stopped(), &Budget::DEFAULT, &Budget::DEFAULT, None);
+    assert_eq!(ids, ["g", "r", "b"]);
+    // A run with no element that digitizing made leaves the base layer's thread for the next: 2 squares
+    // with settings keep their order, whatever is sewing.
+    let set = |mut sewn: Sewn| {
+        sewn.automatic = false;
+        sewn
+    };
+    let (ids, said) = ordered_under(squares().into_iter().map(set).collect(), &Budget::DEFAULT, &Budget::DEFAULT, Some(BLUE.color));
+    assert_eq!((ids, said.len()), (vec!["r".to_string(), "b".to_string()], 0));
 }
 
 #[test]
@@ -445,12 +468,12 @@ fn req_auto_037_a_satin_column_sews_after_the_fill_it_borders_where_that_costs_n
 /// the first element of the run that the search gave up at.
 fn sewn(threads: &[&Thread], runs: &[Vec<usize>], rules: &[(usize, usize)], wished: &[(usize, usize)], budget: &Budget) -> (Result<(), Exhausted>, Vec<usize>, Option<usize>) {
     let facts: Vec<Facts> = threads.iter().map(|thread| Facts { colours: vec![thread.color], stop: false, reach: None }).collect();
-    let moving: Vec<Moving> = (0..facts.len()).map(|shape| Moving { free: true, shape }).collect();
+    let moving: Vec<Moving> = (0..facts.len()).map(|shape| Moving { free: true, made: true, shape }).collect();
     let mut graph = Graph::new(facts.len());
     for &(from, to) in rules {
         graph.add(from, to);
     }
-    let mut order = Order { facts: &facts, moving: &moving, graph, borders: Vec::new(), wished: wished.to_vec(), kept: BTreeSet::new(), unsought: None };
+    let mut order = Order { facts: &facts, moving: &moving, graph, borders: Vec::new(), wished: wished.to_vec(), kept: BTreeSet::new(), unsought: None, under: None };
     let mut sewing = Sewing::default();
     let placed = order.sew(runs, &mut sewing, budget);
     (placed, sewing.order, order.unsought)

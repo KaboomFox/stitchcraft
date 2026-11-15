@@ -18,7 +18,7 @@
 //!    area it shares the longest edge with, or is left out when it shares none (`SC-I0905`).
 //! 4. **The order** ([`order`]). Paint order changes thread far more often than the picture needs. The
 //!    elements are put in an order of their own: what overlaps keeps its paint order, a line sews after the
-//!    fill it borders, and then each thread sews as long as it can, the nearest element next (`SC-I0907`).
+//!    fill it borders, and then the thread changes as seldom as it can, the nearest element next (`SC-I0907`).
 //!    The order comes after the specks, so that a speck merged into an area doesn't count as an element
 //!    of its own, and before the overlaps, which follow it.
 //! 5. **Overlaps** ([`under`]). Thread pulls stitches in from the edges of their shape, so shapes that
@@ -125,14 +125,14 @@ pub(super) struct Sewn {
 /// design has given out, the base layer sews before the first element that automatic digitizing made
 /// (`base`, `REQ-AUTO-028`).
 pub(super) fn beside(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget, sorted: bool, base: Option<(&AutoParams, &mut Labels)>) -> Beside {
-    let moving: Vec<order::Moving> = sewn.iter().map(|sewn| order::Moving { free: sorted || sewn.automatic, shape: sewn.shape }).collect();
+    let moving: Vec<order::Moving> = sewn.iter().map(|sewn| order::Moving { free: sorted || sewn.automatic, made: sewn.automatic, shape: sewn.shape }).collect();
     let made: BTreeSet<ElementId> = sewn.iter().filter(|sewn| sewn.automatic).map(|sewn| sewn.element.id.clone()).collect();
     let mut shapes = Shapes::new(sewn, settings, budget);
     let mut said = specks::merged(&mut shapes, budget);
     // The base layer lies under the shapes as they are once the specks are merged, before any reaches under
     // another.
     let laid = base.map(|(rules, taken)| base::laid(&mut shapes, rules, taken, budget)).unwrap_or_default();
-    // The base layer's thread is sewing when the elements start.
+    // The base layer's thread is sewing when the elements that automatic digitizing made start.
     let under = laid.pieces.first().map(|piece| piece.thread.color);
     said.extend(order::ordered(&mut shapes, &moving, budget, under));
     said.extend(under::reached(&mut shapes, budget));
