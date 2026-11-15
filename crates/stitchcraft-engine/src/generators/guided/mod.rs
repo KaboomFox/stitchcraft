@@ -1,6 +1,6 @@
-//! Guided fill (milestone M10.9): rows that follow a guide line drawn with the fill, copied across each part
-//! of its area, as Ink/Stitch sews its guided fill with its copy strategy
-//! (`docs/src/design/algorithms/guided.md`, `REQ-FILL-GDD-001` to `REQ-FILL-GDD-008`).
+//! Guided fill (milestones M10.9 and M10.10): rows that follow a guide line drawn with the fill, across each
+//! part of its area, as Ink/Stitch sews its guided fill with each of its strategies
+//! (`docs/src/design/algorithms/guided.md`, `REQ-FILL-GDD-001` to `REQ-FILL-GDD-013`).
 //!
 //! **Why.** A tatami fill's rows are straight. A leaf, a flame or a ribbon reads better with rows that bend
 //! with it, along a line the designer draws beside it: the guide.
@@ -12,27 +12,35 @@
 //! 1. **The guide** (the `line` module): its first subpath, flattened as a shape's outline is, made one line
 //!    where it crosses itself and opened where it closes, then lengthened straight on at both ends, along
 //!    the line between its ends, until each end lies as far out as the piece's farthest corner from it.
-//! 2. **Copies** (the `copies` module): the guide moved a row spacing at a time, square to the line between
-//!    its ends or at `guided_fill_angle`, from the copy nearest the piece outward both ways while the copies
-//!    meet the piece's bounds, smoothed by `smoothness_mm`. Those that meet the piece are its rows, in order
-//!    across it.
-//! 3. **Stitches** (the `stitched` module): each row smoothed again, and stitched from a `staggers`-th of a
-//!    stitch further along than the row before, as `stitch_position_method` places its needle points.
+//! 2. **Rows**, as `guided_fill_strategy` says. **Copy** (the `copies` module): the guide moved a row spacing
+//!    at a time, square to the line between its ends or at `guided_fill_angle`, from the copy nearest the
+//!    piece outward both ways while the copies meet the piece's bounds, smoothed by `smoothness_mm`. Those
+//!    that meet the piece are its rows, in order across it. **Parallel offset** (the `offset` module): the
+//!    guide's offset curves, a row spacing apart, which keep their distance round every bend. **Buffer** (the
+//!    `buffer` module): the rings round every subpath of the guide, a row spacing apart. A row of either
+//!    that closes inside the piece is joined into the rows round it (the `join` module).
+//! 3. **Stitches** (the `lines` and `stitched` modules): each row smoothed again, and stitched from a
+//!    `staggers`-th of a stitch further along than the row before, as `stitch_position_method` places its
+//!    needle points. A row that closes starts where the anchor line crosses it, or outside the piece.
 //! 4. **Cut** (the `cut` module): each stitched row is cut where it crosses the piece's rings, and the pieces
 //!    inside are the lines the fill sews, routed as a tatami fill's rows are, the needle travelling under the
 //!    lines not sewn yet (`tatami::sew::lines`). Bean stitch then sews each stitch back and forth, but the
 //!    travel between lines.
 //!
-//! **Without a guide.** A piece no copy leaves a line in sews a tatami fill at the angle of the line between
-//! the guide's ends (`SC-W0332`), as Ink/Stitch falls back to it, and so does a piece no copy meets, where
-//! Ink/Stitch stops with an error (`DEV-FILL-034`). A fill with no guide, or with one that starts and ends
-//! at one point once it is made one line, sews as a tatami fill with its own settings (`SC-W0331`), as
-//! Ink/Stitch sews one without a guide (`DEV-FILL-034`).
+//! **Without a guide.** A piece no row leaves a line in sews a tatami fill at the angle of the line between
+//! the guide's ends (`SC-W0332`), as Ink/Stitch falls back to it, and so does a piece no copy or offset
+//! curve meets, where Ink/Stitch stops with an error (`DEV-FILL-034`). A fill with no guide, or with one of
+//! no length, which for a copied guide is one that starts and ends at one point once it is made one line,
+//! sews as a tatami fill with its own settings (`SC-W0331`), as Ink/Stitch sews one without a guide
+//! (`DEV-FILL-034`).
 
+mod buffer;
 mod closed;
 mod copies;
 mod cut;
+mod join;
 mod line;
+mod lines;
 mod offset;
 mod stitched;
 
@@ -59,29 +67,40 @@ use crate::thin::thin;
 /// The stitch types the guided fill's own settings apply to.
 const GUIDED: &[StitchType] = &[StitchType::GuidedFill];
 
-/// The strategies `guided_fill_strategy` names, by Ink/Stitch's numbers. Copying is sewn. Ink/Stitch's
-/// parallel offset and buffer arrive with M10.10, and a fill set to one is skipped until then (`SC-W0011`).
+/// The strategies `guided_fill_strategy` names, by Ink/Stitch's numbers.
 pub const STRATEGIES: &[ChoiceOption] =
-    &[ChoiceOption::new(COPY, "Copy"), ChoiceOption::kept("1", "Parallel offset"), ChoiceOption::kept("2", "Buffer")];
+    &[ChoiceOption::new(COPY, "Copy"), ChoiceOption::new(OFFSET, "Parallel offset"), ChoiceOption::new(BUFFER, "Buffer")];
 
 /// The strategy that copies the guide, the default.
 pub const COPY: &str = "0";
+/// The strategy that offsets the guide.
+pub const OFFSET: &str = "1";
+/// The strategy that sews rings round the guide.
+pub const BUFFER: &str = "2";
 
-/// The key of the strategy setting, which the generate step reads first: a strategy not sewn yet skips the
-/// element.
-pub const STRATEGY: &str = "guided_fill_strategy";
+/// How a guided fill's rows follow its guide (`guided_fill_strategy`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Strategy {
+    /// Copies of the guide, moved across the fill: `0`, the default.
+    Copy,
+    /// Offset curves of the guide, which keep their distance from it round every bend: `1`.
+    Offset,
+    /// Rings round every subpath of the guide: `2`.
+    Buffer,
+}
 
 params! {
-    /// Guided fill: rows that follow a guide line drawn with the fill, copied across its area. The guide is a
+    /// Guided fill: rows that follow a guide line drawn with the fill, across its area. The guide is a
     /// line grouped with the fill and marked as one: Ink/Stitch's guide-line marker on a stroke in an SVG
     /// file, or a path named `stitch:guide` in a VectorCraft document. A fill without one sews as a tatami
-    /// fill (`SC-W0331`).
+    /// fill (`SC-W0331`). An anchor line, marked with Ink/Stitch's anchor-line marker or named
+    /// `stitch:anchor`, says where the rows that close start.
     pub struct GuidedParams for GUIDED;
 
     "Guided fill" {
         /// How the rows follow the guide. Copy moves copies of the guide across the fill, a row spacing
-        /// apart. Ink/Stitch's parallel offset and buffer arrive in a later version, and until then a fill set
-        /// to one is skipped (`SC-W0011`).
+        /// apart. Parallel offset sews the guide's offset curves, which keep the row spacing round every
+        /// bend. Buffer sews rings round the guide, every subpath of it, like the rings of a tree.
         guided_fill_strategy: Choice = "0", label "Strategy", choices STRATEGIES;
 
         /// The direction the guide's copies move in, in degrees clockwise from horizontal as the drawing shows
@@ -104,6 +123,15 @@ impl GuidedParams {
     pub fn position(&self) -> Position {
         if self.stitch_position_method == "flexible_stagger" { Position::Stagger } else { Position::Flexible }
     }
+
+    /// How the rows follow the guide (`guided_fill_strategy`).
+    pub fn strategy(&self) -> Strategy {
+        match self.guided_fill_strategy {
+            OFFSET => Strategy::Offset,
+            BUFFER => Strategy::Buffer,
+            _ => Strategy::Copy,
+        }
+    }
 }
 
 /// A guided fill as it is sewn.
@@ -111,7 +139,11 @@ impl GuidedParams {
 pub struct Guided {
     /// The path of its design's guide line; `None` without one.
     pub guide: Option<Path>,
-    /// How far apart the copies are, in millimetres: `row_spacing_mm`.
+    /// The path of its design's anchor line, which says where the rows that close start; `None` without one.
+    pub anchor: Option<Path>,
+    /// How the rows follow the guide.
+    pub strategy: Strategy,
+    /// How far apart the rows are, in millimetres: `row_spacing_mm`.
     pub spacing: f64,
     /// The direction the copies move in, in degrees clockwise from the x axis as the drawing shows it;
     /// `None` for square to the line between the guide's ends.
@@ -166,7 +198,7 @@ pub fn guided_fill(
     meter: &mut Meter,
 ) -> Result<Stitched, Exhausted> {
     let Some(guide) = guide_of(guided, meter)? else {
-        let mut warnings = vec![no_guide(guided.guide.is_some())];
+        let mut warnings = vec![no_guide(guided.guide.is_some(), guided.strategy)];
         warnings.extend(guided.plain.said.iter().cloned());
         let Some(plain) = &guided.plain.fill else { return Ok(Stitched { runs: Vec::new(), colours: Vec::new(), warnings }) };
         let mut sewn = tatami_fill(region, plain, needle, next, rng, meter)?;
@@ -229,7 +261,7 @@ pub fn top_path(region: &Region, guided: &Guided, rng: &SplitMix64, meter: &mut 
     for polygon in &region.parts {
         for piece in &pieces(polygon, guided.expand, &mut Vec::new(), meter)?.0 {
             let rings = Rings::new(piece, meter)?;
-            let Some(lines) = rows_of(piece, &rings, guided, &guide, rng, meter)? else {
+            let Some(lines) = rows_of(piece, &rings, guided, &guide, rng, &mut false, meter)? else {
                 let fallback = Fill { top: guide.fallback(guided), expand: 0.0, underlay: Vec::new(), inset: 0.0, force_locks: false, turns: false };
                 segments.extend(top_rows(&Region { parts: vec![piece.clone()] }, &fallback, meter)?);
                 continue;
@@ -242,24 +274,51 @@ pub fn top_path(region: &Region, guided: &Guided, rng: &SplitMix64, meter: &mut 
     Ok(segments)
 }
 
-/// The guide line of `guided` as the rows copy it ([`line::prepared`]), and the angle of the line between
-/// its ends as drawn; `None` when it has none, or one that starts and ends at one point once it is made one
-/// line.
+/// The guide line of `guided` as its strategy takes it, with its anchor line and the angle of the line
+/// between its ends as drawn; `None` when it has none, or one of no length: for a copied guide, one that
+/// starts and ends at one point once it is made one line ([`line::prepared`]).
 fn guide_of(guided: &Guided, meter: &mut Meter) -> Result<Option<Guide>, Exhausted> {
-    let Some(first) = guided.guide.as_ref().and_then(|path| path.subpaths.first()) else { return Ok(None) };
+    let Some(path) = guided.guide.as_ref() else { return Ok(None) };
+    let Some(first) = path.subpaths.first() else { return Ok(None) };
     let drawn = stroke::flattened(first, meter)?;
     let (Some(&start), Some(&end)) = (drawn.first(), drawn.last()) else { return Ok(None) };
-    let Some(line) = line::prepared(&drawn, meter)? else { return Ok(None) };
+    let lines = match guided.strategy {
+        Strategy::Copy => line::prepared(&drawn, meter)?.into_iter().collect(),
+        Strategy::Offset => Some(drawn).filter(|line| has_length(line)).into_iter().collect(),
+        Strategy::Buffer => {
+            let mut subpaths = Vec::with_capacity(path.subpaths.len());
+            for subpath in &path.subpaths {
+                subpaths.push(stroke::flattened(subpath, meter)?);
+            }
+            subpaths.retain(|line| has_length(line));
+            buffer::prepared(subpaths, meter)?
+        }
+    };
+    if lines.is_empty() {
+        return Ok(None);
+    }
+    let mut anchor = Vec::new();
+    for subpath in guided.anchor.iter().flat_map(|path| &path.subpaths) {
+        anchor.push(stroke::flattened(subpath, meter)?);
+    }
     // Ink/Stitch's angles turn counter-clockwise as the drawing shows it, y down.
     let angle = normalized_angle(-to_degrees(atan2(end.y() - start.y(), end.x() - start.x())));
-    Ok(Some(Guide { line, angle }))
+    Ok(Some(Guide { lines, anchor, angle }))
 }
 
-/// A guide line, ready to be copied: its line, which no copy has lengthened yet, and the angle of the line
-/// between the ends of its first subpath as drawn, in degrees counter-clockwise from horizontal as the
-/// drawing shows it, which a tatami fill falls back to.
+/// Whether `line` has 2 points apart.
+fn has_length(line: &[Point]) -> bool {
+    line.first().is_some_and(|first| line.iter().any(|p| p != first))
+}
+
+/// A guide line, ready for its strategy: the lines the rows are made from, its anchor line's subpaths,
+/// flattened, and the angle of the line between the ends of its first subpath as drawn, in degrees
+/// counter-clockwise from horizontal as the drawing shows it, which a tatami fill falls back to. A copied
+/// guide is one line, which no copy has lengthened yet. A guide offset is its first subpath as drawn. A
+/// buffered guide is every subpath, in the order their rings start from ([`buffer::prepared`]).
 struct Guide {
-    line: Vec<Point>,
+    lines: Vec<Vec<Point>>,
+    anchor: Vec<Vec<Point>>,
     angle: f64,
 }
 
@@ -280,34 +339,50 @@ impl Guide {
     }
 }
 
-/// The lines the guide's copies sew over `piece`, whose rings are `rings`: the copies that meet it,
-/// stitched and cut by it, in the order they are taken ([`copies::rows`], [`stitched::row`], [`cut::cut`]).
-/// Each row's random lengths draw from a stream of `rng` that its place keys. `None` when no copy leaves a
-/// line inside the piece.
+/// The lines the guide's rows sew over `piece`, whose rings are `rings`: the rows its strategy gives that
+/// meet it ([`copies::rows`], [`offset::rows`], [`buffer::rows`]), those that close inside it joined
+/// ([`join::joined`]), stitched and cut by it in the order they are taken ([`lines::lines`]). Each row's
+/// random lengths draw from a stream of `rng` that its place keys. `None` when no row leaves a line inside
+/// the piece. `unjoined` is set where a buffer's edges don't join into rings, a bug.
 fn rows_of(
     piece: &Polygon,
     rings: &Rings<'_>,
     guided: &Guided,
     guide: &Guide,
     rng: &SplitMix64,
+    unjoined: &mut bool,
     meter: &mut Meter,
 ) -> Result<Option<Vec<Vec<Point>>>, Exhausted> {
-    let copies = copies::rows(piece, rings, &guide.line, guided, meter)?;
-    let mut lines = Vec::new();
-    for (i, copy) in copies.iter().enumerate() {
-        let row = stitched::row(copy, i, guided, rng, meter)?;
-        lines.extend(cut::cut(&row, rings, meter)?);
-    }
+    let joining = (guided.spacing, guided.stitching.length, guided.skip_last);
+    let first = guide.lines.first().map_or(&[][..], Vec::as_slice);
+    let rows = match guided.strategy {
+        Strategy::Copy => copies::rows(piece, rings, first, guided, meter)?,
+        Strategy::Offset => {
+            let rows = offset::rows(piece, rings, first, guided, meter)?;
+            let mut rows = join::joined(piece, rings, rows, joining, meter)?;
+            copies::sorted(&mut rows, meter)?;
+            rows
+        }
+        Strategy::Buffer => {
+            let rows = buffer::rows(piece, rings, &guide.lines, guided, unjoined, meter)?;
+            join::joined(piece, rings, rows, joining, meter)?
+        }
+    };
+    let with = lines::Lines { guide: &guide.lines, anchor: &guide.anchor };
+    let lines = lines::lines(piece, rings, &rows, guided, &with, rng, meter)?;
     Ok((!lines.is_empty()).then_some(lines))
 }
 
-/// What sewing a guided fill's pieces counted, for its diagnostics: the pieces, those no copy of the guide
-/// meets, and those of them too thin for the tatami fill's rows too.
+/// What sewing a guided fill's pieces counted, for its diagnostics: the pieces, those no row of the guide
+/// leaves a line in, those of them too thin for the tatami fill's rows too, and whether a buffer's edges
+/// failed to join into rings.
 #[derive(Default)]
 struct Tally {
     pieces: usize,
     missed: usize,
     outlined: usize,
+    unjoined: bool,
+    strategy: Option<Strategy>,
 }
 
 impl Tally {
@@ -327,8 +402,9 @@ impl Tally {
         warnings: &mut Vec<Diagnostic>,
     ) -> Result<Vec<Vec<Point>>, Exhausted> {
         self.pieces += 1;
+        self.strategy = Some(guided.strategy);
         let rings = Rings::new(piece, meter)?;
-        let Some(lines) = rows_of(piece, &rings, guided, guide, base, meter)? else {
+        let Some(lines) = rows_of(piece, &rings, guided, guide, base, &mut self.unjoined, meter)? else {
             self.missed += 1;
             let (runs, rowless) = layer_sewn(piece, &guide.fallback(guided), needle, end, rng, meter, warnings)?;
             self.outlined += usize::from(rowless);
@@ -339,26 +415,33 @@ impl Tally {
         runs.into_iter().map(|run| finished(run, guided, meter)).collect()
     }
 
-    /// What the counts say: `SC-W0332` for the pieces no copy of the guide meets, sewn as a tatami fill, and
-    /// `SC-W0305` for those of them too thin for its rows too, sewn round their outline.
+    /// What the counts say: `SC-W0332` for the pieces no row of the guide leaves a line in, sewn as a tatami
+    /// fill, `SC-W0305` for those of them too thin for its rows too, sewn round their outline, and `SC-E0009`
+    /// should a buffer's edges not join into rings.
     fn said(&self) -> impl Iterator<Item = Diagnostic> {
+        let rows = match self.strategy {
+            Some(Strategy::Offset) => "offset curve of this guided fill's guide meets",
+            Some(Strategy::Buffer) => "ring round this guided fill's guide leaves a row in",
+            _ => "copy of this guided fill's guide meets",
+        };
         let missed = match (self.missed, self.pieces) {
             (0, _) => None,
-            (1, 1) => Some(
-                "No copy of this guided fill's guide meets it, so it is sewn as a tatami fill at the angle of the line between the guide's ends."
-                    .to_string(),
-            ),
-            (1, _) => Some(
-                "No copy of this guided fill's guide meets 1 of its parts, so that part is sewn as a tatami fill at the angle of the line between \
-                 the guide's ends."
-                    .to_string(),
-            ),
-            (n, _) => Some(format!(
-                "No copy of this guided fill's guide meets {n} of its parts, so each is sewn as a tatami fill at the angle of the line between the \
-                 guide's ends."
-            )),
+            (1, 1) => Some(format!("No {rows} it, so it is sewn as a tatami fill at the angle of the line between the guide's ends.")),
+            (1, _) => {
+                Some(format!("No {rows} 1 of its parts, so that part is sewn as a tatami fill at the angle of the line between the guide's ends."))
+            }
+            (n, _) => {
+                Some(format!("No {rows} {n} of its parts, so each is sewn as a tatami fill at the angle of the line between the guide's ends."))
+            }
         };
-        missed.map(|message| Diagnostic::new(Code::FillGuidedMissed, message)).into_iter().chain(too_thin(self.outlined, self.pieces))
+        let unjoined = self.unjoined.then(|| {
+            Diagnostic::new(
+                Code::InternalCheckFailed,
+                "The edges of a ring round this guided fill's guide didn't join into rings, so the rows stop there. This is a bug in StitchCraft: \
+                 please report it with the design.",
+            )
+        });
+        missed.map(|message| Diagnostic::new(Code::FillGuidedMissed, message)).into_iter().chain(too_thin(self.outlined, self.pieces)).chain(unjoined)
     }
 }
 
@@ -376,13 +459,16 @@ fn finished(run: Marked, guided: &Guided, meter: &mut Meter) -> Result<Vec<Point
     passes::beaned(&points, &guided.beans, &travel, meter)
 }
 
-/// `SC-W0331`: a guided fill without a guide it can use, sewn as a tatami fill; `drawn` when it has one that
-/// starts and ends at one point once it is made one line (`DEV-FILL-034`).
-fn no_guide(drawn: bool) -> Diagnostic {
-    let message = if drawn {
-        "This guided fill's guide line starts and ends at one point, so the fill is sewn as a tatami fill with its own settings."
-    } else {
-        "This guided fill has no guide line, so it is sewn as a tatami fill with its own settings."
+/// `SC-W0331`: a guided fill without a guide it can use, sewn as a tatami fill; `drawn` when it has one of
+/// no length, which for the copy `strategy` is one that starts and ends at one point once it is made one
+/// line (`DEV-FILL-034`).
+fn no_guide(drawn: bool, strategy: Strategy) -> Diagnostic {
+    let message = match (drawn, strategy) {
+        (false, _) => "This guided fill has no guide line, so it is sewn as a tatami fill with its own settings.",
+        (true, Strategy::Copy) => {
+            "This guided fill's guide line starts and ends at one point, so the fill is sewn as a tatami fill with its own settings."
+        }
+        (true, _) => "This guided fill's guide line has no length, so the fill is sewn as a tatami fill with its own settings.",
     };
     Diagnostic::new(Code::FillGuidedNoGuide, message)
 }

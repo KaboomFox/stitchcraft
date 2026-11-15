@@ -40,7 +40,7 @@
 //! An element's guide line and anchor line are Ink/Stitch's helpers (`REQ-RIP-012` to `REQ-RIP-014`): paths
 //! whose `style` starts them with its guide-line or anchor-line marker, beside the element's path in the
 //! group round it, which both programs look in. The guide keeps its stroke's width and join and its settings,
-//! and the anchor is a line from its first end to its last.
+//! and the anchor keeps its path.
 //!
 //! An element the design's file draws as a clone of another ([`Cloned`], as TS-16's does) is a `<use>` of
 //! that element's path under the clone's transform (`REQ-SVG-012`), in its place. Both programs read it as
@@ -195,13 +195,10 @@ fn helpers(index: usize, element: &Element) -> String {
         let settings: String = guide.params.iter().map(|(key, value)| format!(" inkstitch:{key}=\"{}\"", escaped(value))).collect();
         out.push_str(&format!("  <path id=\"e{index}-guide\" style=\"{}\"{settings} d=\"{}\"/>\n", style.join(";"), data(&guide.path)));
     }
-    if let Some([from, to]) = element.hints.anchor {
+    if let Some(anchor) = &element.hints.anchor {
         out.push_str(&format!(
-            "  <path id=\"e{index}-anchor\" style=\"fill:none;stroke:#000000;stroke-width:0.1;marker-start:url(#inkstitch-anchor-line-marker)\" d=\"M {},{} L {},{}\"/>\n",
-            from.x(),
-            from.y(),
-            to.x(),
-            to.y()
+            "  <path id=\"e{index}-anchor\" style=\"fill:none;stroke:#000000;stroke-width:0.1;marker-start:url(#inkstitch-anchor-line-marker)\" d=\"{}\"/>\n",
+            data(anchor)
         ));
     }
     out

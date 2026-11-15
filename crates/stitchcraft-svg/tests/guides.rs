@@ -46,7 +46,7 @@ type Steered<'s> = (&'s str, Option<Guide>, Option<[Point; 2]>);
 
 /// Each element's id, its guide and its anchor line.
 fn steered(svg: &Svg) -> Vec<Steered<'_>> {
-    svg.design.elements().iter().map(|e| (e.id.as_str(), e.hints.guide.clone(), e.hints.anchor)).collect()
+    svg.design.elements().iter().map(|e| (e.id.as_str(), e.hints.guide.clone(), e.hints.anchor_ends())).collect()
 }
 
 #[test]
