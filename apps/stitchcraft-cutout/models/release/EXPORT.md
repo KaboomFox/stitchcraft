@@ -67,10 +67,11 @@ The decoder's export has the same bytes on every machine that has made it. The e
 | `71268b41f17ab47538384f408a7e1d25c7f7451f4e8f5cba31b34a047aeff7ff` | GitHub's runner image `ubuntu-24.04` at version 20261101.360.1, in 1 run, and at version 20261111.370.1, in 1 run on `main` at commit `ecdaaeb9` | 2026-11-10 and 2026-11-15 |
 
 Each run gave its sum twice. The cause isn't known. On 2026-11-15 the images 20261111.127.1 and 20261111.370.1
-gave different sums, and the runs so far didn't record their processors. The build job
-prints the processor from now on, and the table above names the image and the processor of this build. The
-outputs saved in `conformance/fixtures/cutout/` came from the first row's export, and its sum is the pin.
-Those outputs haven't been compared with the second row's export in any run so far.
+gave different sums. The runs before that day's last didn't record their processors. That last run, on
+image 20261111.370.1 with an AMD EPYC 7763, exported the second row's sum. The build job prints the processor
+from now on, and the table above names the image and the processor of this build. The outputs saved in
+`conformance/fixtures/cutout/` came from the first row's export, and its sum is the pin. That last run's
+models' job compared the second row's export with those outputs, and each was within its bound.
 
 A build can't count on either sum, and the encoder's sum doesn't stop it. The build checks the size of
 each file and the sums of the decoder and of U²-Net-p, and stops when one differs. When the encoder alone has
