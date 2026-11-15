@@ -17,7 +17,9 @@ M6.2 adds what a live effect reads and writes (`src/effect.rs`). It reads paths 
 parameter values (`src/values.rs`) with a document's code, and an object sews alike from a file and in
 its preview. The plug-in's `preview_level` is kept apart from the element's settings, in a file as in a
 live effect (`PREVIEW_LEVEL`). From M6.3 the geometry is written by hand, to a thousandth of a point
-(`src/writer.rs`): stitches as lines or as a fill's ribbons, and any segments as ribbons. From M6.4 a
+(`src/writer.rs`): stitches as lines or as a fill's ribbons, and any segments as ribbons. From M6.16 a
+fill's preview is its shape with a gap along each line shown (`effect_solid`, `REQ-VC-024`), and the
+plug-ins no longer return ribbons. From M6.4 a
 group's or a layer's StitchCraft effects sew each path inside it, as VectorCraft draws them, in the thread
 of the paint it draws over the others, which is how a graphic style applied to a group sews (`REQ-VC-006`).
 From M6.5 Ink/Stitch's commands can be written in an object's or a layer's name. `stitch:ignore` leaves
