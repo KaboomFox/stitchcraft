@@ -18,7 +18,7 @@
 //! **A fill reads as solid** (`REQ-VC-024`). VectorCraft paints what a live effect returns with the
 //! object's own fill, and thread covers a fill whole. So at every level a fill's preview is its own shape,
 //! and what the level shows, each stitch, row or hatch line, is a gap in it as thin as a hair
-//! ([`solid`]): [`GAP_MM`] wide along a stitch or a row, and [`HATCH_GAP_MM`] along a hatch line, which
+//! (`solid`): `GAP_MM` wide along a stitch or a row, and `HATCH_GAP_MM` along a hatch line, which
 //! lie far apart. The shape then covers more than nine tenths of what the stitches cover, where ribbons
 //! along the rows covered eight tenths and the outline's hatch less than one.
 //!
