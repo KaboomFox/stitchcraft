@@ -1,6 +1,6 @@
 // Why this file exists: a pull request's preview is announced in one comment that each push rewrites, and the
-// workflow's publish and cleanup jobs must find the same comment. Its text is made of sections, so a later
-// step adds its pictures as one more section and changes nothing here (web/README.md, The preview's comment).
+// workflow's publish and cleanup jobs must find the same comment. Its text is made of sections: the demo's,
+// and the before and after sheet's, whose lines the build wrote (web/README.md, The preview's comment).
 const MARK = '<!-- stitchcraft-web-preview -->';
 
 // The demo's section: where it opens, and the 3 pictures the browser check took of this build.
@@ -24,6 +24,15 @@ function demoSection(base, sha) {
   ];
 }
 
+// The sheet's section: the lines `web/sheet.py` wrote, with the sheet's address where they say `{sheet}`.
+// The lines come from a file of the build, so anything that is not a short list of short lines is left out.
+function sheetSection(lines, url) {
+  const base = url.endsWith('/') ? url : `${url}/`;
+  if (!Array.isArray(lines) || lines.length === 0 || lines.length > 60) return null;
+  if (!lines.every(line => typeof line === 'string' && line.length <= 600)) return null;
+  return lines.map(line => line.replaceAll('{sheet}', `${base}sheet/`));
+}
+
 // The comment's text: the book's address, then each section under a rule. `sections` are arrays of lines.
 function previewComment(url, sha, sections = []) {
   const base = url.endsWith('/') ? url : `${url}/`;
@@ -44,4 +53,4 @@ async function post({github, context, body, create = true}) {
 // A closed pull request's comment says its preview is gone. One that never had a preview gets no comment.
 const removed = `${MARK}\nThe preview was removed when the pull request closed.`;
 
-module.exports = Object.assign(previewComment, {MARK, post, removed});
+module.exports = Object.assign(previewComment, {MARK, post, removed, sheetSection});

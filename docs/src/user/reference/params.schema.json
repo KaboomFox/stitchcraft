@@ -121,6 +121,18 @@
         "unit": "°"
       }
     },
+    "auto_fill_outline": {
+      "default": false,
+      "description": "Whether each fill that automatic digitizing makes sews an outline: a running stitch round its edge, after its rows, in its own thread. The outline draws the edge of a small shape as one line, where the ends of its rows would leave its points blunt. It sews only where the edge shows: not where a shape sewn after the fill covers the edge. The design goes by the setting of its lowest automatic shape.",
+      "title": "Outline round fills",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "automatic": true,
+        "group": "Advanced",
+        "origin": "stitchcraft",
+        "stability": "experimental"
+      }
+    },
     "auto_fill_uneven": {
       "default": true,
       "description": "Whether a part of several centre lines whose width varies along them is filled. On, such a part is a tatami fill: the ragged patches of a traced photo sew flat. Off, it sews a satin column along each line, as a drawing made of strokes of changing width may want.",
@@ -141,6 +153,20 @@
       "x-stitchcraft": {
         "automatic": true,
         "group": "Neighbours",
+        "origin": "stitchcraft",
+        "stability": "experimental"
+      }
+    },
+    "auto_max_reach": {
+      "default": 1.4,
+      "description": "How far a part reaches from one of its centre lines on both sides of the line, at the most, for it to sew as satin columns: the distance, divided by the radius of the widest circle that fits inside the part centred on its lines. A column's edges lie as far from its line as that circle reaches, so it measures 1, on one side or the other. A star measures 1.6 to 2.6: its centre line runs from one point to another, and its other points lie far from the line on both sides. One column along that line would sew them as bumps, so a part that reaches farther is filled. A sharp corner reaches far on one side only, and stays a column.",
+      "maximum": 20.0,
+      "minimum": 1.0,
+      "title": "Farthest a column reaches from its line",
+      "type": "number",
+      "x-stitchcraft": {
+        "automatic": true,
+        "group": "Advanced",
         "origin": "stitchcraft",
         "stability": "experimental"
       }
@@ -3288,8 +3314,10 @@
           "auto_min_triple_run_width_mm",
           "auto_min_slenderness",
           "auto_max_unevenness",
+          "auto_max_reach",
           "auto_min_fill_width_mm",
           "auto_min_area_mm2",
+          "auto_fill_outline",
           "auto_base_sliver_mm2",
           "auto_base_bare_percent"
         ],

@@ -907,3 +907,45 @@ fn diag_sc_w0906_the_background_is_left_out() {
     let outcome = planned(vec![rect("background", (0.0, 0.0), (30.0, 20.0)), rect("logo", (5.0, 5.0), (15.0, 15.0))]);
     assert!(outcome.plan.is_some(), "{:?}", messages(&outcome));
 }
+
+#[test]
+fn req_auto_051_a_design_that_asks_sews_an_outline_round_each_fill_where_its_edge_shows() {
+    use stitchcraft_engine::auto::OUTLINE_WIDTH;
+    // 2 squares 10 mm across side by side, the red one sewn first and the blue one after it.
+    let squares = |outline: Option<&str>| {
+        let mut red = rect("red", (0.0, 0.0), (10.0, 10.0));
+        if let Some(outline) = outline {
+            red.params.set("auto_fill_outline", outline);
+        }
+        sewn(vec![red, automatic(fill("blue", &[&[(10.0, 0.0), (20.0, 0.0), (20.0, 10.0), (10.0, 10.0)]], &BLUE, &[]))])
+    };
+    // Unasked, and asked not to, the design sews its 2 fills alone.
+    for off in [None, Some("false")] {
+        assert_eq!(ids(&squares(off).0), ["red", "blue"]);
+    }
+    // Asked, each fill is followed by its outline, a line a thread wide in the fill's thread.
+    let (elements, said) = squares(Some("true"));
+    assert_eq!(ids(&elements), ["red", "red#2", "blue", "blue#2"]);
+    let lines = |id: &str| {
+        let outline = named(&elements, id);
+        let Shape::Stroke { path, width, .. } = &outline.shape else { panic!("{id} is no line") };
+        assert_eq!((*width, outline.automatic), (OUTLINE_WIDTH, false), "{id}");
+        let length = |points: &[stitchcraft_core::Point]| points.windows(2).map(|pair| pair[0].distance(pair[1])).sum::<f64>();
+        let subpaths = path.subpaths.iter().map(|subpath| {
+            let points: Vec<_> = std::iter::once(subpath.start).chain(subpath.segments.iter().map(|segment| segment.end())).collect();
+            (length(&points).round(), subpath.closed)
+        });
+        (subpaths.collect::<Vec<_>>(), outline.thread.clone())
+    };
+    // The red square's outline leaves out the edge the blue one covers, by the overlap the red one reaches under
+    // it: 3 sides, 30 mm. The blue square's runs all the way round, its ring's 4 corners closed.
+    assert_eq!(lines("red#2"), (vec![(30.0, false)], RED));
+    assert_eq!(lines("blue#2"), (vec![(30.0, true)], BLUE));
+    assert!(said.iter().all(|said| said.severity() == stitchcraft_core::Severity::Info), "{said:?}");
+    // It plans without a warning, each outline's stitches after its fill's, and with the one thread change
+    // the fills have.
+    let outcome = planned(unbased(elements));
+    assert!(messages(&outcome).iter().all(|said| said.starts_with("info ")), "{:?}", messages(&outcome));
+    let plan = outcome.plan.unwrap();
+    assert_eq!(plan.blocks.len(), 2);
+}

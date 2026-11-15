@@ -10,18 +10,26 @@ fn bounds(set: &[(&str, &str)]) -> Bounds {
     Bounds::of(&rules, Mm::new(1.0).unwrap())
 }
 
-/// A part no wider than a satin column, with these measures.
+/// A part no wider than a satin column, with these measures, that reaches from its lines as far as a column
+/// does.
 fn part(area: f64, width: f64, unevenness: f64, lines: usize) -> Measures {
-    Measures { area, breadth: Breadth::Medium, width, unevenness, lines }
+    Measures { area, breadth: Breadth::Medium, width, unevenness, lines, reach: 1.0 }
+}
+
+/// A part of one centre line, 2 mm wide and slender, that reaches `reach` times as far from its line on both
+/// sides as its widest circle does.
+fn reaching(reach: f64) -> Measures {
+    Measures { reach, ..part(40.0, 2.0, 0.0, 1) }
 }
 
 #[test]
 fn req_auto_030_the_rules_are_tried_in_the_tables_order_and_each_has_a_word_of_its_own() {
     let ids: Vec<RuleId> = RULES.iter().map(|rule| rule.id).collect();
-    let order = [RuleId::Asked, RuleId::Speck, RuleId::Line, RuleId::Area, RuleId::Compact, RuleId::Uneven, RuleId::Column, RuleId::Refused];
+    let order =
+        [RuleId::Asked, RuleId::Speck, RuleId::Line, RuleId::Area, RuleId::Compact, RuleId::Uneven, RuleId::Arms, RuleId::Column, RuleId::Refused];
     assert_eq!(ids, order);
     let keys: Vec<&str> = RULES.iter().map(|rule| rule.id.key()).collect();
-    assert_eq!(keys, ["asked", "speck", "line", "area", "compact", "uneven", "column", "refused"]);
+    assert_eq!(keys, ["asked", "speck", "line", "area", "compact", "uneven", "arms", "column", "refused"]);
     // Every setting a rule names is a setting of the rules, and its texts leave no placeholder unfilled.
     for rule in RULES {
         assert!(rule.bounds.iter().all(|key| AutoParams::SPECS.iter().any(|spec| spec.key == *key)), "{:?}", rule.id);
@@ -63,6 +71,37 @@ fn req_auto_030_every_rule_has_a_case_at_each_bound() {
     assert_eq!(rule(part(40.0, 2.0, 0.9, 1)), RuleId::Column);
     // A compact part is compact however uneven.
     assert_eq!(rule(part(8.0, 2.0, 0.9, 2)), RuleId::Compact);
+}
+
+#[test]
+fn req_auto_050_a_part_that_reaches_far_from_its_line_on_both_sides_has_arms() {
+    let defaults = bounds(&[]);
+    assert_eq!(defaults.max_reach, 1.4);
+    let rule = |measures: Measures| choose(&measures, &defaults);
+    // The farthest reach, 1.4, to its third decimal: a part that reaches exactly that far is a column.
+    assert_eq!([rule(reaching(1.0)), rule(reaching(1.4)), rule(reaching(1.4004))], [RuleId::Column; 3]);
+    assert_eq!([rule(reaching(1.4006)), rule(reaching(2.6))], [RuleId::Arms; 2]);
+    // A part whose columns weren't looked for, and a stroke, reach nowhere.
+    assert_eq!((Measures::of_breadth(9.0, Breadth::Medium).reach, Measures::of_stroke(3.0, &defaults).reach), (0.0, 0.0));
+    // A compact part is compact and an uneven one uneven however far they reach: the rules above decide first.
+    assert_eq!(rule(Measures { reach: 2.6, ..part(8.0, 2.0, 0.0, 1) }), RuleId::Compact);
+    assert_eq!(rule(Measures { reach: 2.6, ..part(40.0, 2.0, 0.4, 2) }), RuleId::Uneven);
+    // The bound is a setting of the shape, which leaning the rules leaves alone, and so does the switch that
+    // fills uneven parts. A shape that asks for satin columns keeps them.
+    assert_eq!(choose(&reaching(2.6), &bounds(&[(MAX_REACH, "3")])), RuleId::Column);
+    for lean in ["satin", "fill"] {
+        assert_eq!(bounds(&[(PREFER, lean)]).max_reach, 1.4, "{lean}");
+    }
+    assert_eq!(choose(&reaching(2.6), &bounds(&[(FILL_UNEVEN, "false")])), RuleId::Arms);
+    assert_eq!(choose(&reaching(2.6), &bounds(&[(STITCH, "satin")])), RuleId::Asked);
+    // It is filled, and says its width and how far it reaches.
+    assert!(fills(RuleId::Arms, &defaults));
+    let said = Fired { rule: RuleId::Arms, measures: Some(Measures { reach: 2.604, ..part(7.1, 0.97, 0.4, 1) }) }.text();
+    assert_eq!(said, "arms (0.97 mm wide, reaching 2.60 times as far as its widest circle)");
+    assert_eq!(
+        filled(RULES[6].is),
+        "reaching from one of its centre lines, on both sides of it, more than 1.4 times as far as the widest circle that fits inside it on its lines"
+    );
 }
 
 #[test]
@@ -143,7 +182,7 @@ fn req_auto_036_a_shape_that_names_its_stitch_sews_so_where_it_can() {
     assert_eq!(choose(&Measures::of_breadth(0.5, Breadth::Narrow), &asked("fill")), RuleId::Speck);
     // What is filled: an area, a compact part, an uneven one, and any part of a shape that asks to be.
     let filled: Vec<bool> = RULES.iter().map(|rule| fills(rule.id, &asked("auto"))).collect();
-    assert_eq!(filled, [false, false, false, true, true, true, false, false]);
+    assert_eq!(filled, [false, false, false, true, true, true, true, false, false]);
     assert_eq!(
         [fills(RuleId::Asked, &asked("fill")), fills(RuleId::Asked, &asked("satin")), fills(RuleId::Asked, &asked("run"))],
         [true, false, false]
@@ -213,5 +252,5 @@ fn diag_sc_i0912_names_each_part_s_rule_and_the_measures_that_decided_it() {
     let mut most = vec![fired(RuleId::Uneven, Some(part(1234.5678, 6.999, 4.999, 12))); 3];
     most.extend(RULES.iter().flat_map(|rule| [fired(rule.id, None); 99]));
     let longest = said(&ElementId::new("a-layer-of-a-long-name:1234:fill").unwrap(), &most).unwrap().one_line();
-    assert!(longest.ends_with(", 99 column, 99 refused.") && longest.chars().count() <= 500, "{}: {longest}", longest.chars().count());
+    assert!(longest.ends_with(", 99 arms, 99 column, 99 refused.") && longest.chars().count() <= 500, "{}: {longest}", longest.chars().count());
 }

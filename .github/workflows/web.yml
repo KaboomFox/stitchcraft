@@ -4,8 +4,11 @@
 # `build` runs for every pull request and every push to main, with read-only credentials. It builds the editor
 # from the release compat/vectorcraft.toml pins and the plug-ins from this revision, runs the demo in Chromium,
 # and keeps 2 folders: the pull request's preview (its book and its demo folder, without the editor) and the app.
+# It also makes the before and after sheet (docs/src/design/before-after-sheet.md): the standard pictures as
+# this revision sews them beside main's, and what the editor in Chromium showed of this revision's plug-ins.
 #
-# `publish` writes to the Pages branch, so it runs only for a push to main, which publishes /app/, and for a
+# `publish` writes to the Pages branch, so it runs only for a push to main, which publishes /app/ and main's
+# own sheet at /sheet/, and for a
 # pull request from a branch of this repository whose author is its owner, a member or a collaborator, which
 # publishes /pr/<number>/ and says so in a comment. A fork's pull request is built and checked, and nothing of
 # it is published. `cleanup` removes a preview when its pull request closes.
@@ -75,6 +78,7 @@ jobs:
           python3 -I web/site.py --base-path "/${GITHUB_REPOSITORY#*/}/${dest}/"
       # The checks run on a copy of the site's layout: the editor at /app/, a preview at /pr/123/.
       - name: The demo in Chromium, on its own and from a preview
+        id: demo
         run: |
           npm ci --prefix web
           (cd web && npx playwright install --with-deps chromium)
@@ -95,6 +99,53 @@ jobs:
           node web/docs-smoke.mjs http://127.0.0.1:8766/pr/123/
           node web/smoke.mjs 'http://127.0.0.1:8766/app/?preview=123' target/site/demo/screenshots
           du -sb target/site target/site/demo target/web/app | tee -a "$GITHUB_STEP_SUMMARY"
+      # The before and after sheet. Its folder is made new outside `target`, as the folder served is.
+      - name: The command line the editor is compared with
+        id: tools
+        run: python3 -I web/sheet.py tools "$RUNNER_TEMP/sheet"
+      - name: The editor against stitch byte for byte, the Auto effect's time and the editor's picture
+        id: browser
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          python3 -I -m http.server 8767 --directory "$RUNNER_TEMP/serve" > "$RUNNER_TEMP/sheet-server.log" 2>&1 &
+          for attempt in {1..30}; do
+            if curl -fsS http://127.0.0.1:8767/app/ -o /dev/null; then break; fi
+            sleep 1
+          done
+          # A pull request's plug-ins run in this run's editor, as its preview's do in the editor main published.
+          if [ -n "$PR_NUMBER" ]; then address='http://127.0.0.1:8767/app/?preview=123'; else address='http://127.0.0.1:8767/app/'; fi
+          node web/sheet.mjs "$address" "$RUNNER_TEMP/sheet"
+      # A file that differs fails the step above, and the numbers are still measured and the sheet still made,
+      # so that one round shows everything. The job fails all the same.
+      - name: The standard pictures, planned and measured by this revision
+        id: measure
+        if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
+        run: python3 -I web/sheet.py measure "$RUNNER_TEMP/sheet"
+      - name: The sheet, beside the one main published
+        if: ${{ !cancelled() && steps.measure.outcome == 'success' }}
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          OWN_COMMITS: ${{ github.event.pull_request.commits }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          if [ -n "$PR_NUMBER" ]; then
+            python3 -I web/sheet.py page "$RUNNER_TEMP/sheet" target/site/sheet --revision "$HEAD_SHA" --ref "pr/$PR_NUMBER" \
+              --main "https://${owner}.github.io/${GITHUB_REPOSITORY#*/}/sheet/" --own-commits "$OWN_COMMITS"
+          else
+            python3 -I web/sheet.py page "$RUNNER_TEMP/sheet" target/site/sheet --revision "$HEAD_SHA" --ref "$GITHUB_REF_NAME"
+          fi
+          du -sb target/site/sheet | tee -a "$GITHUB_STEP_SUMMARY"
+      # What the checks compared and measured, kept when one of them fails too: both programs' machine files,
+      # the times and the numbers.
+      - if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sheet-work
+          path: ${{ runner.temp }}/sheet
+          retention-days: 7
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: preview
@@ -108,9 +159,15 @@ jobs:
           path: target/web/app
           include-hidden-files: true
           retention-days: 7
+      - if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sheet
+          path: target/site/sheet
+          retention-days: 7
 
   publish:
-    name: publish (main → /app/, a trusted pull request → /pr/<number>/)
+    name: publish (main → /app/ and /sheet/, a trusted pull request → /pr/<number>/)
     needs: build
     if: >-
       (github.event_name != 'pull_request' && github.ref == 'refs/heads/main') ||
@@ -137,6 +194,15 @@ jobs:
           python3 -I .github/scripts/publish-web.py "$dest" target/publish
           owner="${GITHUB_REPOSITORY_OWNER,,}"
           echo "url=https://${owner}.github.io/${GITHUB_REPOSITORY#*/}/${dest}/" >> "$GITHUB_OUTPUT"
+      # Main's sheet is what a pull request's sheet is compared with.
+      - if: github.event_name != 'pull_request'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: sheet
+          path: target/publish-sheet
+      - name: Publish main's sheet
+        if: github.event_name != 'pull_request'
+        run: python3 -I .github/scripts/publish-web.py sheet target/publish-sheet
       - name: Say where the preview is, in the pull request's one comment
         if: github.event_name == 'pull_request'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -145,7 +211,10 @@ jobs:
         with:
           script: |
             const comment = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/preview-comment.cjs`);
-            const body = comment(process.env.PREVIEW_URL, context.payload.pull_request.head.sha);
+            const fs = require('fs');
+            const file = `${process.env.GITHUB_WORKSPACE}/target/publish/sheet/comment.json`;
+            const sheet = fs.existsSync(file) ? comment.sheetSection(JSON.parse(fs.readFileSync(file, 'utf8')), process.env.PREVIEW_URL) : null;
+            const body = comment(process.env.PREVIEW_URL, context.payload.pull_request.head.sha, sheet ? [sheet] : []);
             await comment.post({github, context, body});
 
   cleanup:
