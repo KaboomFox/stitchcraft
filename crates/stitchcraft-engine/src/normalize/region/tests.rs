@@ -468,3 +468,56 @@ fn req_fill_cir_001_a_part_s_centroid_is_the_middle_of_its_area_whichever_way_it
     assert_eq!(flat.centroid(meter).unwrap(), p(1.0, 1.0));
     assert!(plain.centroid(&mut Budget { max_stitches: 1, max_work: 4 }.meter()).is_err());
 }
+
+/// An area as a traced photo's background is: 100 by 66 mm with a ragged edge, a corner every 0.15 mm, and
+/// 160 ragged holes some 2 mm across, of 60 corners each, close together in its right half as the
+/// specks of a subject are. About 11,800 corners in all.
+fn ragged_background() -> Polygon {
+    let mut rng = SplitMix64::new(0x5eed_1323);
+    let (width, height, step) = (100.0, 66.0, 0.15);
+    let mut outline = Vec::new();
+    for (from, to) in [((0.0, 0.0), (width, 0.0)), ((width, 0.0), (width, height)), ((width, height), (0.0, height)), ((0.0, height), (0.0, 0.0))] {
+        let (dx, dy): (f64, f64) = (to.0 - from.0, to.1 - from.1);
+        let length = dx.abs() + dy.abs();
+        let count = (length / step).floor();
+        // Each corner a little inside the side, by up to 0.3 mm: the inside is to the left of the way round.
+        let mut k = 0.0;
+        while k < count {
+            let (t, inward) = (k / count, rng.next_in(0.0, 0.3));
+            outline.push(p(from.0 + dx * t - dy / length * inward, from.1 + dy * t + dx / length * inward));
+            k += 1.0;
+        }
+    }
+    let mut rings = vec![outline];
+    for column in 0..16_u32 {
+        for row in 0..10_u32 {
+            let centre = (44.0 + 3.5 * f64::from(column) + rng.next_in(-0.3, 0.3), 6.0 + 6.0 * f64::from(row) + rng.next_in(-0.5, 0.5));
+            let radius = rng.next_in(0.8, 1.2);
+            let hole = (0..60_u32).map(|k| {
+                let (sin, cos) = sin_cos(std::f64::consts::TAU * f64::from(k) / 60.0);
+                let r = radius + rng.next_in(-0.2, 0.2);
+                p(centre.0 + r * cos, centre.1 + r * sin)
+            });
+            rings.push(hole.collect());
+        }
+    }
+    let mut parts = region(&rings, FillRule::EvenOdd).region.parts;
+    assert_eq!(parts.len(), 1);
+    parts.remove(0)
+}
+
+#[test]
+fn req_fill_006_a_traced_background_s_area_is_shrunk_within_a_twentieth_of_the_work_budget() {
+    // Shrunk by half a satin column's width, as automatic digitizing shrinks an area to tell whether a part
+    // of it is that narrow: the raw outline lies many times over itself, some 80,000 corners. Searching
+    // each edge's whole span along x for the corners and edges near it took over 500 million units.
+    let part = ragged_background();
+    assert_eq!(part.holes.len(), 160);
+    assert!((11_000..12_500).contains(&part.rings().map(<[Point]>::len).sum::<usize>()));
+    let mut meter = Budget::DEFAULT.meter();
+    let shrunk = ops::buffered(std::slice::from_ref(&part), -3.5, &mut meter).expect("within the work budget").unwrap();
+    let spent = Budget::DEFAULT.max_work - meter.work_left();
+    assert!(spent < Budget::DEFAULT.max_work / 20, "{spent} units");
+    // What is left lies between the holes: every part of it within the area.
+    assert!(!shrunk.is_empty() && ops::area_of(&shrunk) < part.area() / 2.0, "{} parts, {} mm²", shrunk.len(), ops::area_of(&shrunk));
+}
