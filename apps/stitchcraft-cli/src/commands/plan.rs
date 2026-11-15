@@ -125,8 +125,15 @@ impl Sewn {
 
 /// The design file `design`, of the kind `source`, read as `reading` asks, planned for `profile` and written in
 /// `format`, with `name` as the design name machines show, and the file read back.
-pub fn sew(source: Source, design: &[u8], reading: Reading, profile: &MachineProfile, format: FormatId, name: &str) -> Sewn {
-    let (design, warnings) = match source.read(design, reading) {
+pub fn sew(
+    source: Source,
+    design: &[u8],
+    (reading, rules): (Reading, &[(String, String)]),
+    profile: &MachineProfile,
+    format: FormatId,
+    name: &str,
+) -> Sewn {
+    let (design, warnings) = match source.read(design, reading).map(|(design, warnings)| (design.automatic_with(rules), warnings)) {
         Ok(read) => read,
         Err(unreadable) => return Sewn { diagnostics: vec![unreadable], plan: None, file: None, back: None },
     };
@@ -238,9 +245,20 @@ pub fn run_with(args: &PlanArgs, models: &Provider) -> Outcome {
         (Source::of(&args.design), bytes, reading)
     };
     let profile = machine_for(asked, source, &design);
+    let rules = args.reading.rules();
     let subject = cut.as_ref().map(|cut| &cut.record);
-    let run =
-        Run { design_path: &args.design, source, reading, name: design_name(&args.design), design: &design, profile, format, says: None, subject };
+    let run = Run {
+        design_path: &args.design,
+        source,
+        reading,
+        rules: &rules,
+        name: design_name(&args.design),
+        design: &design,
+        profile,
+        format,
+        says: None,
+        subject,
+    };
     // A panic is a bug in StitchCraft: with the design's bytes in hand, and where it came, a bundle can
     // reproduce it (`REQ-CLI-002`).
     let phase = Cell::new(Phase::Plan);
@@ -268,7 +286,7 @@ fn traced(args: &PlanArgs, profile: &MachineProfile, bytes: &[u8], cut: Option<&
 /// `stitch plan` once the design is read: planned and, unless StitchCraft found a bug in itself, written.
 /// `phase` follows where it is, for a bundle, and `cut` is the subject a picture was cut out to.
 fn planned(args: &PlanArgs, run: &Run, phase: &Cell<Phase>, cut: Option<&Subject>) -> Outcome {
-    let sewn = sew(run.source, run.design, run.reading, run.profile, run.format, run.name);
+    let sewn = sew(run.source, run.design, (run.reading, run.rules), run.profile, run.format, run.name);
     if sewn.found_a_bug() {
         let refused = refuse(args, run.profile, cut, &sewn.diagnostics);
         return bug_report::beside(&args.output, run, Ok(&sewn), refused);

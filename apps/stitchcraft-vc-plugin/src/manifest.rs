@@ -39,7 +39,9 @@
 //!
 //! **The Auto effect** (`REQ-VC-016`). Its manifest declares the settings of automatic digitizing's rules,
 //! the registry's automatic groups, which no stitch type has, in their order, and then `preview_level`
-//! ([`auto`]). Their rows show always: the dialog has no method.
+//! ([`auto`]). Their rows show always: the dialog has no method. The advanced settings, the rules' bounds
+//! and the 2 limits of the cover's check, are left out: with them the dialog was 903 px tall in a window of
+//! 900, and a bound is set for a whole design, on the command line.
 //!
 //! **How the dialog shows them.** Each parameter comes with its label, unit, section, help and help page,
 //! and the values of the parameters before it that show it, which VectorCraft reads from 0.14 and earlier
@@ -61,6 +63,7 @@ use serde::ser::{SerializeMap, Serializer};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use stitchcraft_core::Mm;
+use stitchcraft_engine::auto::ADVANCED;
 use stitchcraft_engine::common::CommonParams;
 use stitchcraft_engine::generate::sewn_as;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
@@ -288,11 +291,12 @@ pub fn auto() -> Manifest {
 }
 
 /// The parameters of `registry` that the Auto effect's manifest declares: the settings of automatic
-/// digitizing, in the registry's order, each as the dialog shows it.
+/// digitizing but for the advanced ones ([`ADVANCED`]), in the registry's order, each as the dialog shows it.
 fn automatic(registry: &[&ParamGroup]) -> Vec<(&'static str, Param)> {
     let mut params: Vec<(&'static str, Param)> = Vec::new();
     for group in registry.iter().filter(|group| group.automatic()) {
-        for spec in group.specs {
+        // The advanced settings are the rules' bounds, which a document or `stitch plan --set` sets.
+        for spec in group.specs.iter().filter(|spec| spec.group != ADVANCED) {
             let Some(schema) = schema(spec, group.specs) else { continue };
             if let Some(ui) = registry_ui(spec, &schema, group, None, &params) {
                 params.push((spec.key, Param { schema, ui }));
