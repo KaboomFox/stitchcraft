@@ -91,8 +91,8 @@ File references below are to the first unless a version is named. The
 
 ### Plug-ins
 
-One `.wasm` per stitch family keeps each dialog relevant. The stroke's and the satin's stay within 64
-parameters, which every VectorCraft release takes, and the fill's holds more from M10.10
+One `.wasm` per stitch family keeps each dialog relevant. The stroke's and the satin's declare at most 64
+parameters, which every VectorCraft release takes, and the fill's declares more from M10.10
 ([the fill dialog's 65 settings](#the-fill-dialogs-65-settings)):
 
 | Plug-in id | Kind | Stitch types | Notes |
@@ -200,7 +200,7 @@ and chose both of the ways open to it (`REQ-VC-021`):
   before it runs the effect. So without this row no preview could sew a sett of its own, whatever wrote it.
   The row also shows the sett an Ink/Stitch file brought, and takes one pasted in. With it the fill dialog
   had 63 parameters, and it is the only text a dialog declares (`manifest::TEXTS`). A text is also why the
-  fill effect installs from VectorCraft 0.14, which lets its dialog hold more than 64 settings
+  fill effect installs from VectorCraft 0.14, where a dialog may declare more than 64 settings
   ([below](#the-fill-dialogs-65-settings)).
 - **StitchCraft Tartan, a light filter**, writes the row from what a person has, a palette code or a
   threadcount in the register's colour letters, with the width of a thread, the sett's turn, its scale, how

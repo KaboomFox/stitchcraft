@@ -13,11 +13,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - A buffer's rows are rings round the guide, every subpath of it, half a row spacing out and then a row
     spacing apart. Its stagger counts each ring's distance from the guide.
   - A row that closes inside the fill is joined into the rows round it, and on into a row that meets the
-    outline, so the fill sews as one route.
+    outline. The fill then sews as one route.
   - The anchor line, a path with Ink/Stitch's anchor-line marker in the fill's group, or one named
-    `stitch:anchor` in a VectorCraft document, starts each closed row where it crosses it. The design keeps
-    the anchor line's whole path (`Hints::anchor`), and a ripple stitch reads the ends of its first subpath
-    from it (`Hints::anchor_ends`).
+    `stitch:anchor` in a VectorCraft document, starts each closed row where it crosses it. A design's
+    hints now have the anchor line's whole path (`Hints::anchor`), and a ripple stitch reads the ends of its
+    first subpath from it (`Hints::anchor_ends`).
   - The fill dialog offers the 3 strategies and holds 65 settings. VectorCraft takes up to 256 in groups
     from 0.14, where the fill effect installs, and the manifest check follows that rule.
   - `SC-W0011` is retired: every stitch type is sewn. `SC-W0331` and `SC-W0332` speak of each strategy's

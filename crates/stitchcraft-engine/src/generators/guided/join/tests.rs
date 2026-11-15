@@ -150,9 +150,9 @@ fn req_fill_gdd_011_a_ring_beside_a_hole_is_joined_on_into_the_next_row() {
     assert!(rows[0].len() > hole.len());
     // A row taken out earlier in the pass is passed over, and a row a hair more than a row spacing away is
     // not near.
-    let mut rows = vec![hole.clone(), inside.clone()];
+    let mut rows = vec![hole.clone(), inside];
     let done = pass(&mut rows, vec![0]);
-    assert_eq!((rows[0].clone(), done.unjoined), (hole.clone(), vec![rows[1].clone()]));
+    assert_eq!((rows[0].clone(), done.unjoined), (hole, vec![rows[1].clone()]));
     assert_eq!(xy(&rows[1]), [(2.8, 0.5), (2.8, 1.5), (3.0, 1.5), (3.0, 2.5), (3.75, 2.5), (3.75, 1.5), (3.5, 1.5), (2.8, 2.0), (2.8, 3.5)]);
     let aside = |x: f64| {
         let mut rows = vec![vec![p(x, -0.5), p(x, 4.5)]];
@@ -189,7 +189,7 @@ fn req_fill_gdd_011_the_rows_are_sorted_out_and_joined() {
     let lost = joined(&piece, &rings, vec![level(0.25), square(1.0, 0.5, 9.0, 3.5), square(4.0, 1.9, 6.0, 2.1)], with, meter).unwrap();
     assert_eq!(lost.len(), 1);
     assert!(lost[0].contains(&p(9.0, 3.5)) && !lost[0].contains(&p(6.0, 2.1)), "{:?}", xy(&lost[0]));
-    assert_eq!(joined(&piece, &rings, vec![level(0.25), ring.clone()], with, meter).unwrap(), [level(0.25)]);
+    assert_eq!(joined(&piece, &rings, vec![level(0.25), ring], with, meter).unwrap(), [level(0.25)]);
     // A row of fewer than 4 points that lies inside is cut into thirds and closed.
     let short = joined(&piece, &rings, vec![level(1.0), vec![p(4.0, 1.25), p(7.0, 1.25)]], with, meter).unwrap();
     assert_eq!(short.len(), 1);
@@ -201,14 +201,27 @@ fn req_fill_gdd_011_without_a_row_that_meets_the_outline_the_piece_s_rings_take_
     let meter = &mut Budget::DEFAULT.meter();
     // 2 holes 0.5 mm apart, and a ring between them, 0.1 mm from each: it goes into the first hole's ring,
     // which meets no outline, so the 2 holes' rings are crossed into 2 rows.
-    let holes = vec![square(4.0, 1.0, 6.0, 3.0), square(6.5, 1.0, 8.5, 3.0)];
+    let holes = [square(4.0, 1.0, 6.0, 3.0), square(6.5, 1.0, 8.5, 3.0)];
     let piece = Polygon { holes: holes.iter().map(|hole| turned(hole)).collect(), ..rectangle(4.0) };
     let rings = Rings::new(&piece, meter).unwrap();
     let ring = square(6.1, 1.5, 6.4, 2.5);
-    let rows = joined(&piece, &rings, vec![ring.clone()], (0.25, 3.0, false), meter).unwrap();
+    let rows = joined(&piece, &rings, vec![ring], (0.25, 3.0, false), meter).unwrap();
     assert_eq!(rows.len(), 3);
     assert_eq!(rows[0], piece.outline);
-    let first = [(4.0, 1.0), (4.0, 3.0), (6.0, 3.0), (6.0, 1.5), (6.1, 1.5), (6.1, 2.5), (6.4, 2.5), (6.5, 2.5), (6.5, 3.0), (8.5, 3.0), (8.5, 1.0), (6.5, 1.0)];
+    let first = [
+        (4.0, 1.0),
+        (4.0, 3.0),
+        (6.0, 3.0),
+        (6.0, 1.5),
+        (6.1, 1.5),
+        (6.1, 2.5),
+        (6.4, 2.5),
+        (6.5, 2.5),
+        (6.5, 3.0),
+        (8.5, 3.0),
+        (8.5, 1.0),
+        (6.5, 1.0),
+    ];
     assert_eq!(xy(&rows[1]), first);
     assert_eq!(xy(&rows[2]), [(4.0, 1.0), (6.0, 1.0), (6.0, 1.25), (6.35, 1.5), (6.4, 1.5), (6.4, 2.25), (6.5, 2.25), (6.5, 1.0)]);
     // A ring within a row spacing of the outline goes into it.

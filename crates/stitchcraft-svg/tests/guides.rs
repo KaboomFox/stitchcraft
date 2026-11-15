@@ -87,6 +87,10 @@ fn req_rip_013_a_satin_guide_comes_before_a_guide_line_and_an_anchor_line_is_nev
     assert_eq!(guide.path, Path { subpaths: vec![line(&[(0.0, 0.0), (20.0, 0.0)]), line(&[(0.0, 4.0), (20.0, 4.0)])] });
     assert_eq!(guide.params.get("satin_column"), Some("True"));
     assert_eq!(*anchor, Some([p(1.0, -1.0), p(1.0, 1.0)]));
+    // The element keeps the anchor line's whole path, both its subpaths, which a guided fill's closed rows
+    // start at (REQ-FILL-GDD-012).
+    let whole = Path { subpaths: vec![line(&[(1.0, -1.0), (1.0, 1.0)]), line(&[(5.0, 5.0), (6.0, 6.0)])] };
+    assert_eq!(file.design.elements()[0].hints.anchor, Some(whole));
     // Without a satin guide, the first guide line.
     let file = svg(drawing(&format!(
         "<g>{}{}{}</g>",
@@ -139,6 +143,8 @@ fn req_rip_012_a_hidden_helper_steers_and_one_without_a_stroke_or_a_usable_path_
     // A helper with no path, or no point, steers nothing.
     let file = svg(drawing(&format!("<g>{}{}</g>", helper("empty", "guide-line", "", "", ""), ripple("ripple"))));
     assert_eq!(steered(&file)[0].1, None);
+    let file = svg(drawing(&format!("<g>{}{}</g>", helper("empty", "anchor-line", "", "", ""), ripple("ripple"))));
+    assert_eq!(file.design.elements()[0].hints.anchor, None);
 }
 
 #[test]

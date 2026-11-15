@@ -347,6 +347,8 @@ fn req_vc_009_guide_and_anchor_markers_steer_the_ripple_stitches_grouped_with_th
     let guide = hints.guide.as_ref().unwrap();
     assert_eq!(guide.path, Path { subpaths: vec![in_mm(&[(0.0, 0.0), (0.0, 72.0)])] });
     let anchor = hints.anchor_ends().unwrap();
+    // The element keeps the anchor's whole path, of 2 sides here, which a guided fill reads.
+    assert_eq!(hints.anchor.as_ref().unwrap().points().count(), 3);
     assert!(anchor[0].distance(in_mm(&[(10.0, 0.0)]).start) < 1e-12 && anchor[1].distance(in_mm(&[(20.0, 36.0)]).start) < 1e-12, "{anchor:?}");
     // The rails alone: a satin guide of 2 subpaths.
     let read = read_ok(&document(

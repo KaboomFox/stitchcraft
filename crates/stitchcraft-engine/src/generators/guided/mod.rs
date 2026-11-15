@@ -101,7 +101,7 @@ params! {
         /// How the rows follow the guide. Copy moves copies of the guide across the fill, a row spacing
         /// apart. Parallel offset sews the guide's offset curves, which keep the row spacing round every
         /// bend. Buffer sews rings round the guide, every subpath of it, like the rings of a tree.
-        guided_fill_strategy: Choice = "0", label "Strategy", choices STRATEGIES;
+        guided_fill_strategy: Choice = "0", label "Guided fill strategy", choices STRATEGIES;
 
         /// The direction the guide's copies move in, in degrees clockwise from horizontal as the drawing shows
         /// it. Empty, they move square to the line between the guide's ends. A direction near the guide's own

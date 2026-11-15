@@ -281,7 +281,9 @@ fn diag_sc_w0332_a_missed_part_s_tatami_rows_run_along_the_line_between_the_guid
 
 #[test]
 fn diag_sc_w0332_says_how_many_parts_no_copy_meets() {
-    let tally = |pieces, missed, outlined| Tally { pieces, missed, outlined, unjoined: false, strategy: Some(Strategy::Copy) }.said().map(|d| (d.code, d.message)).collect::<Vec<_>>();
+    let tally = |pieces, missed, outlined| {
+        Tally { pieces, missed, outlined, unjoined: false, strategy: Some(Strategy::Copy) }.said().map(|d| (d.code, d.message)).collect::<Vec<_>>()
+    };
     assert_eq!(tally(3, 0, 0), []);
     let one = "No copy of this guided fill's guide meets 1 of its parts, so that part is sewn as a tatami fill at the angle of the line \
                between the guide's ends.";
@@ -441,7 +443,7 @@ fn away(q: Point, line: &[(f64, f64)]) -> f64 {
     line.windows(2)
         .map(|side| {
             let (a, b) = (p(side[0].0, side[0].1), p(side[1].0, side[1].1));
-            let t = (((q.x() - a.x()) * (b.x() - a.x()) + (q.y() - a.y()) * (b.y() - a.y())) / a.distance(b).powi(2)).clamp(0.0, 1.0);
+            let t = (((q.x() - a.x()) * (b.x() - a.x()) + (q.y() - a.y()) * (b.y() - a.y())) / (a.distance(b) * a.distance(b))).clamp(0.0, 1.0);
             q.distance(a.lerp(b, t))
         })
         .fold(f64::INFINITY, f64::min)
@@ -523,7 +525,7 @@ fn req_fill_gdd_010_a_buffered_guide_is_every_subpath_with_some_length() {
     let meter = &mut Budget::DEFAULT.meter();
     let line = |from: (f64, f64), to: (f64, f64)| Subpath { start: p(from.0, from.1), segments: vec![Drawn::Line(p(to.0, to.1))], closed: false };
     let two = Path { subpaths: vec![line((6.0, 1.0), (4.0, 1.0)), line((5.0, 5.0), (5.0, 5.0)), line((4.0, 3.0), (6.0, 3.0))] };
-    let buffer = Guided { strategy: Strategy::Buffer, guide: Some(two.clone()), anchor: Some(two.clone()), ..guided(&[(0.0, 0.0)], 0.5) };
+    let buffer = Guided { strategy: Strategy::Buffer, guide: Some(two.clone()), anchor: Some(two), ..guided(&[(0.0, 0.0)], 0.5) };
     // The 2 lines, each from its lesser end and the greater first, without the dot, and the anchor line's
     // subpaths as they are. The angle is the first subpath's, as drawn: right to left.
     let guide = guide_of(&buffer, meter).unwrap().unwrap();
@@ -550,16 +552,16 @@ fn req_fill_gdd_010_a_buffered_guide_is_every_subpath_with_some_length() {
 
 #[test]
 fn the_strategies_read_by_ink_stitch_s_numbers_and_say_what_their_rows_miss() {
-    let read = |id: &str| GuidedParams::from_set_as(&[("guided_fill_strategy", id)].into_iter().collect(), StitchType::GuidedFill).unwrap().params.strategy();
-    assert_eq!((read("0"), read("1"), read("2")), (Strategy::Copy, Strategy::Offset, Strategy::Buffer));
-    assert_eq!(STRATEGIES.iter().map(|option| (option.id, option.label, option.offered)).collect::<Vec<_>>(), [
-        ("0", "Copy", true),
-        ("1", "Parallel offset", true),
-        ("2", "Buffer", true)
-    ]);
-    let said = |strategy, unjoined| {
-        Tally { pieces: 2, missed: 1, outlined: 0, unjoined, strategy }.said().map(|d| (d.code, d.message)).collect::<Vec<_>>()
+    let read = |id: &str| {
+        GuidedParams::from_set_as(&[("guided_fill_strategy", id)].into_iter().collect(), StitchType::GuidedFill).unwrap().params.strategy()
     };
+    assert_eq!((read("0"), read("1"), read("2")), (Strategy::Copy, Strategy::Offset, Strategy::Buffer));
+    assert_eq!(
+        STRATEGIES.iter().map(|option| (option.id, option.label, option.offered)).collect::<Vec<_>>(),
+        [("0", "Copy", true), ("1", "Parallel offset", true), ("2", "Buffer", true)]
+    );
+    let said =
+        |strategy, unjoined| Tally { pieces: 2, missed: 1, outlined: 0, unjoined, strategy }.said().map(|d| (d.code, d.message)).collect::<Vec<_>>();
     let rest = "1 of its parts, so that part is sewn as a tatami fill at the angle of the line between the guide's ends.";
     assert_eq!(said(None, false), [(Code::FillGuidedMissed, format!("No copy of this guided fill's guide meets {rest}"))]);
     assert_eq!(said(Some(Strategy::Offset), false), [(Code::FillGuidedMissed, format!("No offset curve of this guided fill's guide meets {rest}"))]);

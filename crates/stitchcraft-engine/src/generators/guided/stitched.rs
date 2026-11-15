@@ -57,7 +57,14 @@ pub(super) fn smoothed(line: &[Point], guided: &Guided, meter: &mut Meter) -> Re
 /// `(place / staggers) mod 1` of a longest stitch along it to its end, its random lengths, when they vary,
 /// drawn from the stream of `rng` that `key` keys. A row's place is its number in the order the rows are
 /// taken, and a buffer's ring's the row spacings it lies from the guide. Costs as the running stitch does.
-pub(super) fn stitched(line: &[Point], place: f64, key: usize, guided: &Guided, rng: &SplitMix64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+pub(super) fn stitched(
+    line: &[Point],
+    place: f64,
+    key: usize,
+    guided: &Guided,
+    rng: &SplitMix64,
+    meter: &mut Meter,
+) -> Result<Vec<Point>, Exhausted> {
     let Some(&first) = line.first() else { return Ok(Vec::new()) };
     let RowStitching { length, tolerance, jitter, staggers, position } = guided.stitching;
     let staggers = if staggers == 0.0 { 1.0 } else { staggers };

@@ -1157,7 +1157,7 @@
         "1",
         "2"
       ],
-      "title": "Strategy",
+      "title": "Guided fill strategy",
       "type": "string",
       "x-stitchcraft": {
         "applies_to": [

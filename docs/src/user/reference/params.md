@@ -133,7 +133,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`grid_first`](params/ripple.md#grid_first) | Grid first | Ripple parameters |
 | [`grid_size_mm`](params/ripple.md#grid_size_mm) | Grid size | Ripple parameters |
 | [`guided_fill_angle`](params/guided.md#guided_fill_angle) | Copy angle | Guided parameters |
-| [`guided_fill_strategy`](params/guided.md#guided_fill_strategy) | Strategy | Guided parameters |
+| [`guided_fill_strategy`](params/guided.md#guided_fill_strategy) | Guided fill strategy | Guided parameters |
 | [`herringbone_width_mm`](params/tartan.md#herringbone_width_mm) | Herringbone width | Tartan parameters |
 | [`join_style`](params/ripple.md#join_style) | Join style | Ripple parameters |
 | [`join_style`](params/contour.md#join_style) | Join style | Contour parameters |
