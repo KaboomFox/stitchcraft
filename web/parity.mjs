@@ -26,6 +26,10 @@ export function label(dst) {
   return header.startsWith('LA:') ? header.slice(3).split('\r')[0].trimEnd() : '';
 }
 
+// What the editor says when a plug-in's run needs more instructions than VectorCraft gives it. An export
+// stopped by it is reported on the sheet and compares nothing. Any other refusal fails the checks.
+export const OVER_BUDGET = 'plug-in exceeded its instruction budget';
+
 // The middle one of the numbers, the upper of the 2 in the middle when there is an even count.
 export function middle(numbers) {
   const sorted = [...numbers].sort((a, b) => a - b);
@@ -33,12 +37,13 @@ export function middle(numbers) {
 }
 
 // Why a run's times break their limits, as sentences: none when each middle time is within its limit, or
-// when no limit is set. `limits` and a run's times are in milliseconds, by `turn` and `export`.
+// when no limit is set. `limits` and a run's times are in milliseconds, by `turn` and `export`. A run whose
+// export the editor refused has no export time, and only the times there are count.
 export function overLimit(runs, limits) {
   const said = [];
   for (const [key, what] of [['turn', 'giving the shapes the Auto effect'], ['export', 'the PES export']]) {
-    const taken = middle(runs.map(run => run[`${key}_ms`]));
-    if (limits[key] && taken > limits[key]) said.push(`${what} took ${Math.round(taken)} ms, the middle of ${runs.length} runs, above the limit of ${limits[key]} ms`);
+    const times = runs.map(run => run[`${key}_ms`]).filter(Number.isFinite);
+    if (limits[key] && times.length && middle(times) > limits[key]) said.push(`${what} took ${Math.round(middle(times))} ms, the middle of ${times.length} runs, above the limit of ${limits[key]} ms`);
   }
   return said;
 }

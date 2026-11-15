@@ -72,7 +72,8 @@ class StalenessTest(unittest.TestCase):
         self.assertEqual(sheet.staleness({'behind_by': 0, 'ahead_by': 9}, None), [])
 
 
-BROWSER = {'parity': [{'design': 'alpine-night'}, {'design': 'dog-on-turf-6'}], 'editor': 'editor.png',
+SAME = {'pes': {'same': True}, 'dst': {'same': True}}
+BROWSER = {'parity': [{'design': 'alpine-night', **SAME}, {'design': 'dog-on-turf-6', **SAME}], 'editor': 'editor.png',
            'speed': {'design': 'dog-on-turf-6', 'shapes': 97, 'limit_ms': {'turn': 60000, 'export': None},
                      'runs': [{'turn_ms': 9000, 'export_ms': 700}, {'turn_ms': 4000, 'export_ms': 500}, {'turn_ms': 5000, 'export_ms': 900}]}}
 
@@ -97,6 +98,15 @@ class CommentTest(unittest.TestCase):
         self.assertIn('the 97 shapes of dog-on-turf-6 the Auto effect took 5.0 s (limit 60.0 s)', said[1])
         self.assertIn('its PES export 0.7 s:', said[1])
         self.assertEqual(sheet.browser_lines(None), ['The browser\'s checks did not run.'])
+
+    def test_an_export_the_editor_refused_is_said_and_not_counted_as_the_same(self):
+        refused = {'refused': 'plug-in exceeded its instruction budget', 'ms': 9000}
+        runs = [{'turn_ms': 4000, 'export_ms': None, 'waiting': 3}]
+        said = sheet.browser_lines({'parity': [{'design': 'alpine-night', **SAME}, {'design': 'dog', 'pes': refused, 'dst': refused}],
+                                    'speed': {'design': 'dog', 'shapes': 97, 'limit_ms': {}, 'runs': runs}})
+        self.assertIn('byte for byte, of alpine-night.', said[0])
+        self.assertEqual(said[1], 'The editor did not export dog, so nothing was compared: plug-in exceeded its instruction budget.')
+        self.assertIn('took 4.0 s until the editor had drawn them, but for 3 it left undrawn, and its PES export was refused:', said[2])
 
     def test_without_main_s_sheet_the_comment_says_so_and_lists_nothing(self):
         lines = sheet.comment([], 10, None, [], BROWSER)

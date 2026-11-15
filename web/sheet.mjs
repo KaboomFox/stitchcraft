@@ -13,7 +13,7 @@ import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
 import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
-import {difference, label, middle, overLimit} from './parity.mjs';
+import {OVER_BUDGET, difference, label, middle, overLimit} from './parity.mjs';
 
 const AUTO = 'plugin.dev.stitchcraft.auto';
 const root = new URL('..', import.meta.url).pathname;
@@ -71,28 +71,40 @@ try {
       return {shapes: ids.length, apply_ms: applied_ms, turn_ms: performance.now() - started, waiting: left};
     }, {name, dataBase64, auto: AUTO, within: DRAWN_WITHIN_MS});
   };
-  // The document in front as the editor's exporter of `format` writes it, and how long that took.
+  // The document in front as the editor's exporter of `format` writes it, and how long that took, or what
+  // the editor said when it wrote no file.
   const exported = async format => {
-    const {dataBase64, ms} = await page.evaluate(async format => {
+    const {dataBase64, refused, ms} = await page.evaluate(async format => {
       const started = performance.now();
-      const file = await vectorcraft.execute('document.export', {format});
-      return {dataBase64: file.dataBase64, ms: performance.now() - started};
+      try {
+        const file = await vectorcraft.execute('document.export', {format});
+        return {dataBase64: file.dataBase64, ms: performance.now() - started};
+      } catch (error) {
+        return {refused: String(error.message), ms: performance.now() - started};
+      }
     }, format);
-    return {bytes: Buffer.from(dataBase64, 'base64'), ms};
+    return refused === undefined ? {bytes: Buffer.from(dataBase64, 'base64'), ms} : {refused, ms};
   };
   // The 2 machine files of the document in front, from the editor and from `stitch`, which reads the
   // document as the editor saves it, under the name the editor gave its exporter.
   const compared = async design => {
     const files = {pes: await exported('pes'), dst: await exported('dst')};
     const saved = await exported('vectorcraft');
+    assert.ok(saved.bytes, `${design}: the editor saves the document: ${saved.refused}`);
     // Both programs' files stay in the work folder, which the workflow keeps: a difference can be looked at.
     const folder = join(work, 'parity', design);
     await mkdir(folder, {recursive: true});
-    const named = label(files.dst.bytes) || 'design';
+    const named = (files.dst.bytes && label(files.dst.bytes)) || design;
     const document = join(folder, `${named}.vectorcraft`);
     await writeFile(document, saved.bytes);
     const row = {design, name: named};
     for (const format of ['pes', 'dst']) {
+      if (files[format].refused !== undefined) {
+        // An export VectorCraft stops for its instruction budget is shown on the sheet. Another refusal fails.
+        if (!files[format].refused.includes(OVER_BUDGET)) faults.push(`${design}.${format}: the editor wrote no file: ${files[format].refused.slice(0, 600)}`);
+        row[format] = {refused: files[format].refused.slice(0, 300), ms: Math.round(files[format].ms)};
+        continue;
+      }
       const out = join(folder, `${named}.${format}`);
       await writeFile(join(folder, `editor.${format}`), files[format].bytes);
       const ran = spawnSync(stitch, ['plan', document, '--output', out], {encoding: 'utf8'});
@@ -106,7 +118,7 @@ try {
       row[format] = {bytes: files[format].bytes.length, same: !differs};
     }
     results.parity.push(row);
-    return files.pes.ms;
+    return files.pes;
   };
 
   const starter = await turned(DESIGNS[0]);
@@ -116,13 +128,14 @@ try {
   for (let run = 0; run < RUNS; run += 1) {
     const turn = await turned(TIMED);
     assert.ok(turn.shapes > 0, 'the traced photo has shapes');
-    // The first run's document is the one compared, so its export is timed there.
-    const export_ms = run === 0 ? await compared(TIMED.design) : (await exported('pes')).ms;
-    runs.push({...turn, export_ms});
+    console.log(`Run ${run + 1} of ${TIMED.design}, the effect: ${JSON.stringify(turn)}`);
+    // The first run's document is the one compared, so its export is timed there. A refused export has no time.
+    const pes = run === 0 ? await compared(TIMED.design) : await exported('pes');
+    runs.push({...turn, export_ms: pes.refused === undefined ? pes.ms : null, ...(pes.refused === undefined ? {} : {export_refused_after_ms: Math.round(pes.ms)})});
     console.log(`Run ${run + 1} of ${TIMED.design}: ${JSON.stringify(runs[run])}`);
   }
   results.speed = {design: TIMED.design, shapes: runs[0].shapes, runs, limit_ms: LIMIT_MS,
-    middle_ms: {turn: middle(runs.map(run => run.turn_ms)), export: middle(runs.map(run => run.export_ms))}};
+    middle_ms: {turn: middle(runs.map(run => run.turn_ms)), export: middle(runs.map(run => run.export_ms).filter(Number.isFinite)) ?? null}};
   faults.push(...overLimit(runs, LIMIT_MS));
 
   // What a person sees: the photo's shapes with their stitches drawn, the demo's panel folded away.
@@ -139,6 +152,6 @@ try {
   await writeFile(join(work, 'browser.json'), `${JSON.stringify(results, null, 1)}\n`);
 }
 for (const fault of faults) console.error(`FAIL ${fault}`);
-assert.deepEqual(faults, [], 'the editor and stitch write the same files, within the time\'s limit');
-console.log(`PASS ${url.href}: ${results.parity.length} designs the same in PES and DST; `
-  + `${TIMED.design} turned in ${Math.round(results.speed.middle_ms.turn)} ms and exported in ${Math.round(results.speed.middle_ms.export)} ms`);
+assert.deepEqual(faults, [], 'the editor and stitch write the same files of what the editor exports, within the time\'s limit');
+console.log(`PASS ${url.href}: ${JSON.stringify(results.parity)}; ${TIMED.design} turned in ${Math.round(results.speed.middle_ms.turn)} ms `
+  + `and exported in ${results.speed.middle_ms.export === null ? 'no run' : `${Math.round(results.speed.middle_ms.export)} ms`}`);

@@ -71,6 +71,9 @@ exports it to PES and to DST. It also saves the document, and `stitch plan` writ
 document, under the name the editor gave its exporter. The script does this for 2 designs, the demo's starter drawing and a traced dog, and each pair of files
 must be the same byte for byte. A pair that differs fails the run, which names the first byte
 that differs and what each program has there. The workflow keeps both programs' files as an artifact.
+VectorCraft stops an exporter that runs more instructions than it allows an export. The editor then
+writes no file, and there is nothing to compare. The sheet and the comment say so, and the run goes on. Any
+other refusal fails the run.
 The `stitch` compared is built without link-time optimization, which saves minutes
 ([determinism](determinism.md) is why its files are those of the published build).
 

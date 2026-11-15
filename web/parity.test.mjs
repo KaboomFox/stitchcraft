@@ -38,4 +38,7 @@ test('times fail only above a limit that is set', () => {
   assert.deepEqual(overLimit(runs, {turn: 1000, export: 60}), []);
   assert.deepEqual(overLimit(runs, {turn: 999, export: 60}), ['giving the shapes the Auto effect took 1000 ms, the middle of 3 runs, above the limit of 999 ms']);
   assert.deepEqual(overLimit(runs, {turn: 1000, export: 59}), ['the PES export took 60 ms, the middle of 3 runs, above the limit of 59 ms']);
+  const refused = runs.map(run => ({...run, export_ms: null}));
+  assert.deepEqual(overLimit(refused, {turn: 1000, export: 1}), []);
+  assert.deepEqual(overLimit([runs[2], ...refused.slice(1)], {turn: 5000, export: 59}), ['the PES export took 60 ms, the middle of 1 runs, above the limit of 59 ms']);
 });
