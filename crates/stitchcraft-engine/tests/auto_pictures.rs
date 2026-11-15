@@ -15,7 +15,7 @@ use stitchcraft_engine::design::{Design, DesignSettings, Element, Shape};
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::normalize::region;
 use stitchcraft_plan::{Rgb, StitchPlan};
-use stitchcraft_testkit::designs::{messages, planned, rules};
+use stitchcraft_testkit::designs::{messages, planned, rules, unbased};
 use stitchcraft_testkit::metrics::edge_coverage;
 use stitchcraft_testkit::pictures::{self, Picture, Trace};
 
@@ -72,17 +72,19 @@ fn req_auto_010_the_test_pictures_sew_with_fewer_thread_changes_and_jumps_than_i
 #[test]
 fn req_auto_007_a_stacked_trace_sews_what_an_abutting_one_does() {
     let [stacked_drawn, stacked] = plans(&pictures::badge(Trace::Stacked));
-    let [_, abutting] = plans(&pictures::badge(Trace::Abutting));
+    let [abutting_drawn, abutting] = plans(&pictures::badge(Trace::Abutting));
     let count = |plan: &StitchPlan| plan.stitches().count() as f64;
     // Its covered parts cut away, the stacked badge sews as many stitches as the abutting one, give or take
-    // a hundredth, and fewer than as drawn, where its lower colours are sewn twice.
+    // a hundredth. As drawn its lower colours are sewn twice, and the abutting badge as drawn, which sews
+    // each once, has fewer stitches by more than a twentieth. The digitized badges' counts don't compare
+    // with those: they have a base layer, turn stitches and overlaps.
     assert!((count(&stacked) / count(&abutting) - 1.0).abs() < 0.01, "{} and {}", count(&stacked), count(&abutting));
-    assert!(count(&stacked) < 0.96 * count(&stacked_drawn), "{} digitized, {} as drawn", count(&stacked), count(&stacked_drawn));
+    assert!(count(&abutting_drawn) < 0.95 * count(&stacked_drawn), "{} abutting, {} stacked", count(&abutting_drawn), count(&stacked_drawn));
 }
 
 /// The elements `picture` sews, digitized, in the order they sew, and what is said of them.
 fn digitized(picture: &Picture) -> (Vec<Element>, Vec<Diagnostic>) {
-    let design = Design::new(picture.elements.clone(), DesignSettings::default()).unwrap();
+    let design = Design::new(unbased(picture.elements.clone()), DesignSettings::default()).unwrap();
     let (elements, said) = auto::digitized(&design, &Budget::DEFAULT);
     (elements.into_owned(), said)
 }

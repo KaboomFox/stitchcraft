@@ -5,3 +5,4 @@
 # It is recommended to check this file in to source control so that
 # everyone who runs the test benefits from these saved cases.
 cc 4f489b97e56bbe4e6b1d91561d7c7de6d15184e9404f703c2cc43c5122daec0d # shrinks to (name, height, width) = ('T', 14.5, 0.9)
+cc 14df2ddde4a87e83e9df0cdb57d961cf85116349f1e7d9c34655ae2f57e25abd # shrinks to (name, height, width) = ('T', 7.6, 1.3)

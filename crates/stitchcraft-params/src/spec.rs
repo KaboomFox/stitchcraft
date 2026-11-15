@@ -23,6 +23,10 @@ pub enum Kind {
     },
     /// An angle in degrees, normalized to (−180, 180].
     Angle,
+    /// An angle in degrees, normalized to (−180, 180], or empty, when it comes from elsewhere or there is
+    /// none: a guided fill copies its guide square to the line between the guide's ends unless an angle is
+    /// set. 0 is an angle like any other, as in Ink/Stitch.
+    OptionalAngle,
     /// An angle in degrees within `min..=max`, held there as given: not turned by whole turns first, so
     /// 270 lies above a range that ends at 89 and is read as 89, as Ink/Stitch reads a zigzag stroke's
     /// angle.
@@ -369,7 +373,7 @@ impl Kind {
             Kind::Length { .. } | Kind::LengthList { .. } | Kind::LengthPair { .. } => "mm",
             Kind::Area { .. } => "mm²",
             Kind::Percent { .. } | Kind::PercentPair { .. } | Kind::PercentList { .. } => "%",
-            Kind::Angle | Kind::BoundedAngle { .. } | Kind::AngleList { .. } => "°",
+            Kind::Angle | Kind::OptionalAngle | Kind::BoundedAngle { .. } | Kind::AngleList { .. } => "°",
             _ => "",
         }
     }
@@ -387,6 +391,7 @@ impl Kind {
                 format!("a length from {min} to {max} mm{empty}")
             }
             Kind::Angle => "an angle in degrees".to_string(),
+            Kind::OptionalAngle => "an angle in degrees, or empty".to_string(),
             Kind::BoundedAngle { min, max } => format!("an angle from {min} to {max} degrees"),
             Kind::Percent { min, max } => format!("a percentage from {min} to {max}"),
             Kind::Number { min, max } => format!("a number from {min} to {max}"),
@@ -433,6 +438,7 @@ impl Kind {
             Kind::LengthPair { min, max, .. } => Kind::LengthPair { min, max, optional: false },
             Kind::PercentPair { min, max, .. } => Kind::PercentPair { min, max, optional: false },
             Kind::AngleList { .. } => Kind::AngleList { optional: false },
+            Kind::OptionalAngle => Kind::Angle,
             other => other,
         }
     }
@@ -486,13 +492,14 @@ mod tests {
             Kind::PercentPair { min: 0.0, max: 1.0, optional: true },
             Kind::PercentList { min: 0.0, max: 1.0 },
             Kind::Angle,
+            Kind::OptionalAngle,
             Kind::BoundedAngle { min: -1.0, max: 1.0 },
             Kind::AngleList { optional: true },
             Kind::Count { min: 0, max: 1 },
             Kind::Toggle,
             Kind::Area { min: 0.0, max: 1.0 },
         ];
-        assert_eq!(kinds.map(Kind::unit), ["mm", "mm", "mm", "%", "%", "%", "°", "°", "°", "", "", "mm²"]);
+        assert_eq!(kinds.map(Kind::unit), ["mm", "mm", "mm", "%", "%", "%", "°", "°", "°", "°", "", "", "mm²"]);
         assert_eq!(Kind::Area { min: 0.0, max: 10.0 }.describe(), "an area from 0 to 10 mm²");
     }
 
@@ -513,6 +520,7 @@ mod tests {
             Kind::AngleList { optional: true },
             Kind::Length { min: 0.1, max: 1.0, empty: Empty::Never },
             Kind::AngleList { optional: false },
+            Kind::OptionalAngle,
             Kind::Seed,
         ];
         assert_eq!(
@@ -525,6 +533,7 @@ mod tests {
                 Kind::AngleList { optional: false },
                 Kind::Length { min: 0.1, max: 1.0, empty: Empty::Never },
                 Kind::AngleList { optional: false },
+                Kind::Angle,
                 Kind::Seed,
             ]
         );
@@ -552,6 +561,15 @@ mod tests {
     #[test]
     fn a_bounded_angle_says_its_range() {
         assert_eq!(Kind::BoundedAngle { min: -89.0, max: 89.0 }.describe(), "an angle from -89 to 89 degrees");
+    }
+
+    #[test]
+    fn an_optional_angle_says_it_may_be_empty() {
+        assert_eq!(
+            (Kind::Angle.describe(), Kind::OptionalAngle.describe()),
+            ("an angle in degrees".to_string(), "an angle in degrees, or empty".to_string())
+        );
+        assert!(Kind::OptionalAngle.numeric() && !Kind::OptionalAngle.list());
     }
 
     #[test]

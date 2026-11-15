@@ -1,8 +1,9 @@
 //! The settings of automatic digitizing's rules (`REQ-AUTO-020`): StitchCraft's own parameters, registered
 //! as any other (`docs/src/design/params.md`), which no stitch type reads.
 //!
-//! Each rule goes by a value: the widest satin column, the narrowest triple run, the overlap, the smallest
-//! area, and a switch that leaves the background out (`docs/src/design/image-to-embroidery.md` ›
+//! Each rule goes by a value: the widest satin column, the narrowest triple run, the overlap, a column's pull
+//! compensation, the smallest area, a switch that leaves the background out, the base layer's settings, and the 2 limits of what
+//! the top thread may leave to the base layer (`docs/src/design/image-to-embroidery.md` ›
 //! Settings). MC-8 confirms the values on the machine or changes them, and a picture can need others, so
 //! each is a parameter of the shape it digitizes, read when the shape is digitized ([`AutoParams`]). A
 //! shape that sets none takes the defaults, as every shape does with `--auto`, and the requirements give
@@ -60,8 +61,15 @@ params! {
         /// edge of an area, or of a part sewn as a line or a column, that is sewn after it and covers it the
         /// area is cut away. The thread pulls stitches in
         /// from the edges of their shape, and without the overlap fabric shows between shapes that only
-        /// meet. A satin column reaches as far past its rails, by its pull compensation.
-        auto_overlap_mm: Length = "0.4", label "Overlap", range (0.0, 2.0),
+        /// meet. A satin column reaches as far past a rail that a shape sewn after it runs along.
+        auto_overlap_mm: Length = "1", label "Overlap", range (0.0, 2.0),
+            origin Origin::StitchCraft, stability Stability::Experimental;
+
+        /// How far a satin column sews past a rail with no shape sewn after the column beside it: its pull
+        /// compensation there. The thread pulls a column in from its rails, and a column that sews this far
+        /// past them is as wide as drawn. Along a rail where a shape sewn after the column runs for more
+        /// than half the rail's length, the column sews past the rail by the overlap instead.
+        auto_pull_compensation_mm: Length = "0.4", label "Pull compensation", range (0.0, 2.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
         /// The smallest area sewn. An area, or a part of one, smaller than this is a speck, which would sew a
@@ -76,6 +84,46 @@ params! {
         /// still, as a white disc on a badge traced with its colours stacked does. Off, all of it that shows
         /// sews, as of any area.
         auto_ignore_background: Toggle = "true", label "Leave out the background",
+            origin Origin::StitchCraft, stability Stability::Experimental;
+    }
+
+    "Base layer" {
+        /// Whether one base layer sews first under the whole design: an open fill in 3 directions under
+        /// what the automatic shapes paint together, every stitch of it underlay. On fabric of another
+        /// colour than the design, thread of one colour then lies under a slit between 2 shapes. The fills
+        /// on it sew no underlay of their own. Off, each fill sews the underlay of its settings. The design
+        /// goes by the settings its lowest automatic shape has for the base layer.
+        auto_base_layer: Toggle = "true", label "Base layer",
+            origin Origin::StitchCraft, stability Stability::Experimental;
+
+        /// How long the base layer's stitches are. Its rows lie this length times 0.866 apart, in 3
+        /// directions, so that its needle points make triangles with sides this long, as the stitches of
+        /// Ink/Stitch's Knockdown Fill do. Shorter stitches hide more of the fabric and sew longer.
+        auto_base_stitch_length_mm: Length = "3", label "Base layer's stitch length", range (1.0, 6.0),
+            origin Origin::StitchCraft, stability Stability::Experimental;
+
+        /// How far outside the design's outer shape the base layer's edge lies: inside it when negative, so
+        /// that no base stitch shows beside a shape once the thread has pulled the shape's edge in. By
+        /// default it lies as far inside as a satin column's pull compensation reaches outside.
+        auto_base_offset_mm: Length = "-0.4", label "Base layer's offset", range (-3.0, 3.0),
+            origin Origin::StitchCraft, stability Stability::Experimental;
+
+        /// Whether the base layer keeps the holes of the design's outer shape. Off, it sews across them.
+        auto_base_keep_holes: Toggle = "true", label "Base layer keeps holes",
+            origin Origin::StitchCraft, stability Stability::Experimental;
+
+        /// The largest gap in the top thread that is left to the base layer: a sliver. Where thin shapes
+        /// meet, the top thread can leave a place this small bare, and the base layer's thread shows there
+        /// in place of the fabric. Nothing sews differently by this value. It is a limit of the check of a
+        /// design's cover: a larger gap fails the check, and so does a gap with no base layer under it.
+        auto_base_sliver_mm2: Area = "0.4", label "Largest sliver", range (0.0, 2.0),
+            origin Origin::StitchCraft, stability Stability::Experimental;
+
+        /// The most of the design's area that the top thread may leave bare over the base layer, the
+        /// slivers and the places narrower than a thread together. Nothing sews differently by this value.
+        /// It is the other limit of the check of a design's cover. A design without a base layer is held to
+        /// 0.15 % and to no gap at all.
+        auto_base_bare_percent: Percent = "0.5", label "Most left to the base layer", range (0.0, 5.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
     }
 }
@@ -95,6 +143,9 @@ mod tests {
     #[test]
     fn each_key_names_a_setting_in_the_order_they_are_declared() {
         let keys: Vec<&str> = AutoParams::SPECS.iter().map(|spec| spec.key).collect();
-        assert_eq!(keys, [MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH, OVERLAP, MIN_AREA, IGNORE_BACKGROUND]);
+        let cover = ["auto_base_sliver_mm2", "auto_base_bare_percent"];
+        let base = [&["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_offset_mm", "auto_base_keep_holes"], &cover[..]].concat();
+        let neighbours = [OVERLAP, "auto_pull_compensation_mm", MIN_AREA, IGNORE_BACKGROUND];
+        assert_eq!(keys, [&[MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH], &neighbours[..], &base[..]].concat());
     }
 }

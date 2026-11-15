@@ -17,11 +17,18 @@ impl stitchcraft_engine::auto::Stitches
 pub const fn stitchcraft_engine::auto::Stitches::across(self) -> bool
 pub fn stitchcraft_engine::auto::Stitches::of_stroke(stitchcraft_core::units::Mm, &stitchcraft_engine::design::DesignSettings, &stitchcraft_engine::auto::AutoParams) -> stitchcraft_engine::auto::Stitches
 pub struct stitchcraft_engine::auto::AutoParams
+pub stitchcraft_engine::auto::AutoParams::auto_base_bare_percent: <stitchcraft_params::kinds::Percent as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_base_keep_holes: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_base_layer: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_base_offset_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_base_sliver_mm2: <stitchcraft_params::kinds::Area as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_base_stitch_length_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_ignore_background: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_max_satin_width_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_min_area_mm2: <stitchcraft_params::kinds::Area as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_min_triple_run_width_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_overlap_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_pull_compensation_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 impl stitchcraft_engine::auto::AutoParams
 pub const stitchcraft_engine::auto::AutoParams::GROUP: stitchcraft_params::spec::ParamGroup
 pub const stitchcraft_engine::auto::AutoParams::SPECS: &'static [stitchcraft_params::spec::ParamSpec]
@@ -368,6 +375,49 @@ pub mod stitchcraft_engine::generators::gradient
 pub struct stitchcraft_engine::generators::gradient::GradientFill
 pub fn stitchcraft_engine::generators::gradient::gradient_fill(&stitchcraft_engine::normalize::region::Region, &stitchcraft_engine::generators::gradient::GradientFill, core::option::Option<stitchcraft_core::units::Point>, core::option::Option<&stitchcraft_engine::generators::Approach>, &mut stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_engine::generators::gradient::top_path(&stitchcraft_engine::normalize::region::Region, &stitchcraft_engine::generators::gradient::GradientFill, &stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::vec::Vec<stitchcraft_engine::generators::tatami::rows::Segment>, stitchcraft_core::budget::Exhausted>
+pub mod stitchcraft_engine::generators::guided
+pub enum stitchcraft_engine::generators::guided::Position
+pub stitchcraft_engine::generators::guided::Position::Flexible
+pub stitchcraft_engine::generators::guided::Position::Stagger
+pub struct stitchcraft_engine::generators::guided::Guided
+pub stitchcraft_engine::generators::guided::Guided::angle: core::option::Option<f64>
+pub stitchcraft_engine::generators::guided::Guided::beans: alloc::vec::Vec<u32>
+pub stitchcraft_engine::generators::guided::Guided::expand: f64
+pub stitchcraft_engine::generators::guided::Guided::force_locks: bool
+pub stitchcraft_engine::generators::guided::Guided::guide: core::option::Option<stitchcraft_engine::design::Path>
+pub stitchcraft_engine::generators::guided::Guided::inset: f64
+pub stitchcraft_engine::generators::guided::Guided::plain: stitchcraft_engine::generators::guided::Plain
+pub stitchcraft_engine::generators::guided::Guided::skip_last: bool
+pub stitchcraft_engine::generators::guided::Guided::smoothness: f64
+pub stitchcraft_engine::generators::guided::Guided::spacing: f64
+pub stitchcraft_engine::generators::guided::Guided::stitching: stitchcraft_engine::generators::guided::RowStitching
+pub stitchcraft_engine::generators::guided::Guided::travel: stitchcraft_engine::generators::tatami::sew::Travel
+pub stitchcraft_engine::generators::guided::Guided::underlay: alloc::vec::Vec<stitchcraft_engine::generators::tatami::sew::Layer>
+pub struct stitchcraft_engine::generators::guided::GuidedParams
+pub stitchcraft_engine::generators::guided::GuidedParams::guided_fill_angle: <stitchcraft_params::kinds::OptionalAngle as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::generators::guided::GuidedParams::guided_fill_strategy: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::generators::guided::GuidedParams::stitch_position_method: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
+impl stitchcraft_engine::generators::guided::GuidedParams
+pub const stitchcraft_engine::generators::guided::GuidedParams::GROUP: stitchcraft_params::spec::ParamGroup
+pub const stitchcraft_engine::generators::guided::GuidedParams::SPECS: &'static [stitchcraft_params::spec::ParamSpec]
+pub fn stitchcraft_engine::generators::guided::GuidedParams::from_set(&stitchcraft_params::set::ParamSet) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
+pub fn stitchcraft_engine::generators::guided::GuidedParams::from_set_as(&stitchcraft_params::set::ParamSet, stitchcraft_params::stitch_type::StitchType) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
+impl stitchcraft_engine::generators::guided::GuidedParams
+pub fn stitchcraft_engine::generators::guided::GuidedParams::position(&self) -> stitchcraft_engine::generators::guided::Position
+pub struct stitchcraft_engine::generators::guided::Plain
+pub stitchcraft_engine::generators::guided::Plain::fill: core::option::Option<stitchcraft_engine::generators::tatami::sew::Fill>
+pub stitchcraft_engine::generators::guided::Plain::said: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub struct stitchcraft_engine::generators::guided::RowStitching
+pub stitchcraft_engine::generators::guided::RowStitching::jitter: core::option::Option<f64>
+pub stitchcraft_engine::generators::guided::RowStitching::length: f64
+pub stitchcraft_engine::generators::guided::RowStitching::position: stitchcraft_engine::generators::guided::Position
+pub stitchcraft_engine::generators::guided::RowStitching::staggers: f64
+pub stitchcraft_engine::generators::guided::RowStitching::tolerance: f64
+pub const stitchcraft_engine::generators::guided::COPY: &str
+pub const stitchcraft_engine::generators::guided::STRATEGIES: &[stitchcraft_params::spec::ChoiceOption]
+pub const stitchcraft_engine::generators::guided::STRATEGY: &str
+pub fn stitchcraft_engine::generators::guided::guided_fill(&stitchcraft_engine::normalize::region::Region, &stitchcraft_engine::generators::guided::Guided, core::option::Option<stitchcraft_core::units::Point>, core::option::Option<&stitchcraft_engine::generators::Approach>, &mut stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_engine::generators::guided::top_path(&stitchcraft_engine::normalize::region::Region, &stitchcraft_engine::generators::guided::Guided, &stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::vec::Vec<stitchcraft_engine::generators::tatami::rows::Segment>, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::generators::manual
 pub fn stitchcraft_engine::generators::manual::manual_stitch(&stitchcraft_engine::design::Path, core::option::Option<stitchcraft_core::units::Mm>, &stitchcraft_engine::generators::passes::RepeatParams, stitchcraft_core::units::Mm, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::generators::meander
@@ -640,6 +690,7 @@ pub stitchcraft_engine::generators::tatami::sew::Fill::expand: f64
 pub stitchcraft_engine::generators::tatami::sew::Fill::force_locks: bool
 pub stitchcraft_engine::generators::tatami::sew::Fill::inset: f64
 pub stitchcraft_engine::generators::tatami::sew::Fill::top: stitchcraft_engine::generators::tatami::sew::Layer
+pub stitchcraft_engine::generators::tatami::sew::Fill::turns: bool
 pub stitchcraft_engine::generators::tatami::sew::Fill::underlay: alloc::vec::Vec<stitchcraft_engine::generators::tatami::sew::Layer>
 pub struct stitchcraft_engine::generators::tatami::sew::Layer
 pub stitchcraft_engine::generators::tatami::sew::Layer::gap_rows: usize
@@ -679,6 +730,7 @@ pub stitchcraft_engine::generators::tatami::TatamiParams::gap_fill_rows: <stitch
 pub stitchcraft_engine::generators::tatami::TatamiParams::row_spacing_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::tatami::TatamiParams::skip_last: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::tatami::TatamiParams::staggers: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::generators::tatami::TatamiParams::turn_stitches: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::tatami::TatamiParams::underlay_underpath: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::tatami::TatamiParams::underpath: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 impl stitchcraft_engine::generators::tatami::TatamiParams
@@ -692,6 +744,7 @@ pub fn stitchcraft_engine::generators::tatami::TatamiParams::grid(&self) -> stit
 pub fn stitchcraft_engine::generators::tatami::TatamiParams::stitching(&self, stitchcraft_core::units::Mm, &stitchcraft_engine::generators::running::RunningParams) -> stitchcraft_engine::generators::tatami::stitches::Stitching
 pub fn stitchcraft_engine::generators::tatami::TatamiParams::underlay(&self, stitchcraft_core::units::Mm, stitchcraft_engine::generators::tatami::sew::Travel) -> alloc::vec::Vec<stitchcraft_engine::generators::tatami::sew::Layer>
 pub const stitchcraft_engine::generators::tatami::ANGLE: &str
+pub const stitchcraft_engine::generators::tatami::TURN_STITCHES: &str
 pub mod stitchcraft_engine::generators::zigzag
 pub struct stitchcraft_engine::generators::zigzag::ZigzagStrokeParams
 pub stitchcraft_engine::generators::zigzag::ZigzagStrokeParams::stroke_pull_compensation_mm: <stitchcraft_params::kinds::LengthPair as stitchcraft_params::kinds::ParamKind>::Value
@@ -709,6 +762,7 @@ pub stitchcraft_engine::generators::Approach::Area(alloc::vec::Vec<stitchcraft_e
 pub stitchcraft_engine::generators::Approach::Point(stitchcraft_core::units::Point)
 pub stitchcraft_engine::generators::Approach::Shape(alloc::vec::Vec<alloc::vec::Vec<stitchcraft_core::units::Point>>)
 pub enum stitchcraft_engine::generators::Layer
+pub stitchcraft_engine::generators::Layer::Base
 pub stitchcraft_engine::generators::Layer::Top
 pub stitchcraft_engine::generators::Layer::Underlay
 pub stitchcraft_engine::generators::Layer::Whole

@@ -297,7 +297,7 @@ params = ["random_seed"]
 id = "DEV-FILL-005"
 area = "fill/tatami"
 summary = "A tatami fill's route can differ from Ink/Stitch's where the 2 double different stretches of a ring. Each ring's nodes are numbered from its start, and every other stretch between them is doubled from the first. StitchCraft's rings start where the drawing starts them, and Ink/Stitch's where GEOS's overlay starts them. When the 2 starts lie an odd number of nodes apart, the other half of the stretches is doubled, and the walk through the graph takes another route. Every row is still sewn once, back and forth. Where a fill's outlines start, and the order of its parts, which StitchCraft keeps as drawn and Ink/Stitch takes from the same overlay, also decide where a fill ends before another fill whose area holds an outline's start (REQ-GEN-003)."
-reason = "Ink/Stitch's rings come out of GEOS's set_precision, read at d59c9ab (lib/elements/fill_stitch.py), and probing shapely 2.2.0 with random polygons found no simple rule for where it starts them: not the drawn start, and not one fixed corner. StitchCraft's region keeps the drawing's start (REQ-FILL-001), and the routing is Ink/Stitch's from there (lib/stitches/tatami_fill.py)."
+reason = "Ink/Stitch's rings come out of GEOS's set_precision, read at d59c9ab (lib/elements/fill_stitch.py), and probing shapely 2.2.0 with random polygons found no simple rule for where it starts them: not the drawn start, and not one fixed corner. StitchCraft's region keeps the drawing's start (REQ-FILL-001), and the routing is Ink/Stitch's from there (lib/stitches/tatami_fill.py). Barstitch cloudy cuts its guided fills to each letter with a clip path, and in M10.9's run 42 of its 157 glyphs sew more than 1 trim or jump more or fewer than Ink/Stitch, its jumps that go nowhere left out (DEV-FMT-001). Given the rings of the areas Ink/Stitch sews, started where Ink/Stitch starts them, each sews Ink/Stitch's trims and jumps within 1 in StitchCraft."
 requirements = ["REQ-FILL-TAT-001", "REQ-GEN-003"]
 
 [[deviation]]
@@ -312,7 +312,7 @@ id = "DEV-FILL-007"
 area = "fill/tatami"
 summary = "Travel under a tatami fill's rows follows Ink/Stitch's lines and costs, and its way can differ in 4 details. Where 2 ways cost the same, StitchCraft's search goes on from the lower-numbered of 2 nodes as near, where Ink/Stitch's graph library goes on from the one it queued first, so the 2 can take different ways. The rings the costs measure from are simplified within 0.5 mm by StitchCraft's own rule, which keeps the first of 2 points as far from a line. Before the way is smoothed it is cut into points 10 px apart by StitchCraft's running stitch, which puts a point on each corner of the way, where Ink/Stitch's evenly spaced points may cut a corner by up to 4 px. Where no line joins 2 points, as for a hole too small for any line to reach, the needle runs along the rings and rows, where Ink/Stitch goes straight."
 reason = "The search, the simplification and the running stitch are StitchCraft's own, the same on every platform (docs/src/design/determinism.md), and the lines and their costs are Ink/Stitch's. Ink/Stitch travels between 2 rings only from the fill's start to its end, before any row is sewn, but StitchCraft also travels between rings to pair nodes (DEV-FILL-006), after rows are sewn, where a straight way would cross them and show. Ink/Stitch's behaviour was read at d59c9ab (lib/stitches/tatami_fill.py: build_travel_graph, process_travel_edges, build_travel_edges, travel; lib/utils/smoothing.py; lib/utils/clamp_path.py; lib/stitches/running_stitch.py), and networkx's shortest_path at its documented API."
-requirements = ["REQ-FILL-TAT-005"]
+requirements = ["REQ-FILL-TAT-005", "REQ-FILL-GDD-007"]
 
 [[deviation]]
 id = "DEV-FILL-008"
@@ -505,6 +505,27 @@ area = "fill/gradient"
 summary = "Where every stop of a linear gradient fill lies at a row before the fill's first, every row sews in the last stop's colour. Ink/Stitch takes as many rows from the far end back as the last blend's end lies before row 0, sews them in the last colour, and leaves the rest of the fill unsewn."
 reason = "A viewer paints the fill past the gradient's last stop in its colour, and so does StitchCraft (REQ-FILL-GRD-005). Ink/Stitch's rows after the last blend were read at d59c9ab (lib/stitches/linear_gradient_fill.py), a slice from a negative row. Run as a black box (ADR-0001, decision 6) on a square 40 mm a side from x = 10 under a gradient from x = -100 to -60, its stops at 0 and 0.5, it sewed 63 rows in a band 15.4 mm wide and left the rest of the square bare, where StitchCraft sews the square's 161 rows."
 requirements = ["REQ-FILL-GRD-005"]
+
+[[deviation]]
+id = "DEV-FILL-033"
+area = "fill/guided"
+summary = "A guided fill with staggers of 0 counts them as 1, so every row starts at its first point. Ink/Stitch divides by the staggers to place each row's stagger, and stops with a division by zero."
+reason = "A setting a file can hold sews something rather than nothing, and 1 is the count that staggers no row, as 0 asks. Ink/Stitch's own guard sets 1 for 0 and then divides by the setting it read, read at d59c9ab (lib/stitches/guided_fill.py: _apply_stagger)."
+requirements = ["REQ-FILL-GDD-005"]
+
+[[deviation]]
+id = "DEV-FILL-034"
+area = "fill/guided"
+summary = "A guide line that starts and ends at one point once it is made one line sews the fill as a tatami fill with its own settings, with SC-W0331. Ink/Stitch stops with an error on a guide of no length, and on a figure of 8 drawn from its crossing, whose repair gives the line between its ends. It dissolves a guide that runs back along itself into the stretches it covers, and copies those, where StitchCraft takes the line between its ends, which here has no length. A part that no copy of the guide meets sews as a tatami fill at the angle of the guide's ends, with SC-W0332, the fallback Ink/Stitch has for a part its copies leave no line in. Where no copy meets the part at all, Ink/Stitch stops with an error before that: it sorts the rows by a line across the box round their first points, and with no rows the box has no corners."
+reason = "An error loses the whole design, and a tatami fill with the element's settings is what Ink/Stitch sews without a guide. The way a dissolved guide runs is the order GEOS gives its pieces, which no documentation fixes, and that way turns the copies. Ink/Stitch was run as a black box at d59c9ab: a guide from (20, 40) to itself, and a figure of 8 drawn from its crossing, end in an IndexError (lib/stitches/guided_fill.py: extend_line), and a guide drawn from (20, 40) to (30, 40) and back sews rows level with it. A strip 20 mm long and 1 mm high, 2.8 mm below a level guide, with rows 2 mm apart, ends in a FloatingPointError (lib/stitches/guided_fill.py: _sort_segments), as do Barstitch cloudy's Œ, î and ï, each with a part that SC-W0332 names."
+requirements = ["REQ-FILL-GDD-001", "REQ-FILL-GDD-002"]
+
+[[deviation]]
+id = "DEV-FILL-035"
+area = "fill/guided"
+summary = "The guide's lengthened ends lie where its line between its ends takes them. Ink/Stitch moves each by up to 0.01 px along x and y at random, to steer clear of a bug of its geometry library, so its copies' ends differ from run to run by that much."
+reason = "StitchCraft is deterministic (docs/src/design/determinism.md), and the lengthened ends lie outside the part, where no row is sewn: the lines inside it move by far less than a stitch's tolerance. Read at d59c9ab (lib/stitches/guided_fill.py: extend_line)."
+requirements = ["REQ-FILL-GDD-002"]
 
 [[deviation]]
 id = "DEV-SVG-001"
