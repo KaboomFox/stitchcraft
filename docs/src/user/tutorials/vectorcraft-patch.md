@@ -89,7 +89,7 @@ Horizontal Align Center**, then **Vertical Align Center**. The patch is done, an
 stitches the plug-ins preview:
 
 <!-- shot: vectorcraft-patch -->
-![The patch in VectorCraft's canvas, as the plug-ins' previews show it. Rows at 45 degrees fill the blue disc, and a white star of running stitch lies on it, inside a gold satin border.](../../images/generated/vectorcraft-patch.png)
+![The patch in VectorCraft's canvas, as the plug-ins' previews show it. The blue disc is solid, with hairlines at 45 degrees along its rows, and a white star of running stitch lies on it, inside a gold satin border.](../../images/generated/vectorcraft-patch.png)
 <!-- /shot -->
 
 The objects sew in the order they were drawn. The disc sews first and the star next, and the border sews
