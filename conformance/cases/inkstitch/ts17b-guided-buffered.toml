@@ -1,0 +1,9 @@
+# TS-17B's M10.10 egg: a guided fill whose rows are rings round a short line inside it, Ink/Stitch's buffer
+# strategy, each ring joined into the one round it and started where the anchor line crosses it, over the
+# tatami fill's underlay, written with its guide line and its anchor line beside it in its group
+# (REQ-FILL-GDD-013).
+id = "inkstitch-ts17b-guided-buffered"
+requirements = ["REQ-FILL-GDD-013"]
+kind = "inkstitch"
+sheet = "TS-17B"
+elements = "ts17b:guided:buffered"

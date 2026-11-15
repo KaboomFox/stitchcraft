@@ -5,6 +5,25 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M10.10: guided fill's parallel offset and buffer strategies, and the anchor line (`REQ-FILL-GDD-009` to
+  `REQ-FILL-GDD-013`). A guided fill set to `guided_fill_strategy` `1` or `2` sews as Ink/Stitch sews it,
+  where it was skipped with `SC-W0011`.
+  - Parallel offset's rows are the guide's offset curves, a row spacing apart, which keep their distance
+    round every bend where copies would crowd. A closed guide is offset as a ring.
+  - A buffer's rows are rings round the guide, every subpath of it, half a row spacing out and then a row
+    spacing apart. Its stagger counts each ring's distance from the guide.
+  - A row that closes inside the fill is joined into the rows round it, and on into a row that meets the
+    outline, so the fill sews as one route.
+  - The anchor line, a path with Ink/Stitch's anchor-line marker in the fill's group, or one named
+    `stitch:anchor` in a VectorCraft document, starts each closed row where it crosses it. The design keeps
+    the anchor line's whole path (`Hints::anchor`), and a ripple stitch reads the ends of its first subpath
+    from it (`Hints::anchor_ends`).
+  - The fill dialog offers the 3 strategies and holds 65 settings. VectorCraft takes up to 256 in groups
+    from 0.14, where the fill effect installs, and the manifest check follows that rule.
+  - `SC-W0011` is retired: every stitch type is sewn. `SC-W0331` and `SC-W0332` speak of each strategy's
+    rows.
+  - TS-17B gains a fan in yellow, offset from an arc, and an egg in flesh pink, buffered round a line with
+    an anchor line, beside its leaf. Golden changed: `ts-17b`, for the 2 new samples.
 - M6.13: the browser demo and pull-request previews, from crowecawcaw's pull request #260. The project's site
   runs VectorCraft's web editor with StitchCraft's plug-ins at `/app/`. It opens a starter patch, Alpine
   Night, whose shapes have the Auto effect, and exports PES and DST from the page.

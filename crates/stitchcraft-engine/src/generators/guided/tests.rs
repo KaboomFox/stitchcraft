@@ -365,3 +365,73 @@ fn a_guide_s_angle_is_that_of_the_line_between_its_ends_counter_clockwise_as_dra
     // Down the page to the right: -45°.
     assert!((angle(&[(2.0, 3.0), (5.0, 6.0)]) + 45.0).abs() < 1e-9);
 }
+
+/// A guided fill of rings round the line from (4, 2) to (6, 2), half a millimetre apart, with `anchor`.
+fn buffered(anchor: Option<Path>) -> Guided {
+    Guided { strategy: Strategy::Buffer, anchor, ..guided(&[(4.0, 2.0), (6.0, 2.0)], 0.5) }
+}
+
+/// The length of the line through `points`.
+fn length(points: &[Point]) -> f64 {
+    points.windows(2).map(|w| w[0].distance(w[1])).sum()
+}
+
+#[test]
+fn req_fill_gdd_011_rings_inside_a_part_are_joined_into_the_row_round_them() {
+    let meter = &mut Budget::DEFAULT.meter();
+    let piece = rectangle(4.0);
+    let rings = Rings::new(&piece, meter).unwrap();
+    let guided = buffered(None);
+    let guide = guide_of(&guided, meter).unwrap().unwrap();
+    // Rings 0.25, 0.75, 1.25 and 1.75 mm round a level guide along the middle of a part 4 mm high lie inside it,
+    // and the 5 from 2.25 to 4.25 mm cross its long sides.
+    let rows = buffer::rows(&piece, &rings, &guide.lines, &guided, &mut false, meter).unwrap();
+    assert_eq!(rows.len(), 9);
+    let inside = |row: &Vec<Point>| row.iter().all(|q| q.y() > 0.0 && q.y() < 4.0);
+    assert_eq!(rows.iter().map(inside).collect::<Vec<_>>(), [true, true, true, true, false, false, false, false, false]);
+    // Joined, the 4 are part of the first ring that crosses the outline. Each join opens both rings for a row
+    // spacing and adds 2 steps of about that length between them, so the whole is about as long as its rings.
+    let joined = join::joined(&piece, &rings, rows.clone(), (0.5, 3.0, false), meter).unwrap();
+    assert_eq!(joined.len(), 5);
+    assert_eq!(joined[1..], rows[5..]);
+    let whole: f64 = rows[..5].iter().map(|row| length(row)).sum();
+    let spliced = length(&joined[0]);
+    assert!((spliced - whole).abs() < 0.5, "{spliced} of {whole}");
+    for ring in &rows[..4] {
+        // Each ring's points are in the joined row, but those of the row spacing it was opened for.
+        let kept = ring.iter().filter(|q| joined[0].contains(q)).count();
+        assert!(kept + 6 >= ring.len(), "{kept} of {}", ring.len());
+    }
+    // So the fill sews in one go, without a word.
+    let sewn = sew(&piece, &guided);
+    assert_eq!((sewn.runs.len(), codes(&sewn)), (1, vec![]));
+    // Without a row that closes inside, the rows stay as they are.
+    let crossing = rows[4..].to_vec();
+    assert_eq!(join::joined(&piece, &rings, crossing.clone(), (0.5, 3.0, false), meter).unwrap(), crossing);
+}
+
+#[test]
+fn req_fill_gdd_012_a_closed_row_starts_where_the_anchor_line_crosses_it() {
+    let meter = &mut Budget::DEFAULT.meter();
+    let piece = rectangle(4.0);
+    let rings = Rings::new(&piece, meter).unwrap();
+    // The anchor line goes up from the guide's middle, across every ring: where it crosses the 4 rings inside
+    // the part, each starts, so each crossing is a needle point.
+    // The first ring lies a ten-thousandth of a CSS pixel farther out than a quarter of a millimetre.
+    let crossings = [p(5.0, 1.75 - offset::ROW_0), p(5.0, 1.25), p(5.0, 0.75), p(5.0, 0.25)];
+    let needles = |guided: &Guided, meter: &mut Meter| {
+        let guide = guide_of(guided, meter).unwrap().unwrap();
+        let lines = rows_of(&piece, &rings, guided, &guide, &SplitMix64::new(7), &mut false, meter).unwrap().unwrap();
+        crossings.map(|at| lines.iter().flatten().any(|q| q.distance(at) < 1e-9))
+    };
+    assert_eq!(needles(&buffered(Some(path(&[(5.0, 2.0), (5.0, -1.0)]))), meter), [true; 4]);
+    // Without it, each ring starts beside the place it was joined at, and its needle points fall where they may.
+    assert!(needles(&buffered(None), meter).contains(&false));
+    // An anchor line that crosses no ring changes nothing.
+    let aside = buffered(Some(path(&[(20.0, 0.0), (21.0, 0.0)])));
+    let lines = |guided: &Guided, meter: &mut Meter| {
+        let guide = guide_of(guided, meter).unwrap().unwrap();
+        rows_of(&piece, &rings, guided, &guide, &SplitMix64::new(7), &mut false, meter).unwrap().unwrap()
+    };
+    assert_ne!(lines(&aside, meter), lines(&buffered(Some(path(&[(5.0, 2.0), (5.0, -1.0)]))), meter));
+}
