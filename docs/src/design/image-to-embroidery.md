@@ -1140,12 +1140,12 @@ generated from the registry.
 | A design | Satin or fill | `auto_prefer` | leans the least slenderness, the most a width varies and the narrowest piece of a fill together, by half |
 | A design | Fill uneven parts | `auto_fill_uneven` | whether a part of several lines whose width varies is filled |
 | A design | Fill angle | `auto_fill_angle` | the angle of every fill made of the shape |
+| A design | Outline round fills | `auto_fill_outline` | whether each fill sews [an outline](#an-outline-round-a-fill), read of the lowest shape |
 | A design | Overlap | `auto_overlap_mm` | an area reaching under its neighbours and cut away under them, a satin column past a rail that a shape sewn after it runs along |
 | A design | Pull compensation | `auto_pull_compensation_mm` | a satin column past a rail with no shape sewn after it beside it, and its end under another column |
 | A design | Leave out the background | `auto_ignore_background` | the background, read of the lowest shape |
-| A design | Base layer | `auto_base_layer` | whether the design sews one, read of the lowest shape whose settings read, as the 5 below it are |
+| A design | Base layer | `auto_base_layer` | whether the design sews one, read of the lowest shape whose settings read, as its other settings are |
 | A design | Base layer's stitch length | `auto_base_stitch_length_mm` | its rows' stitches and their spacing |
-| A design | Base layer's offset | `auto_base_offset_mm` | how far inside the design's outer shape it lies, and how wide the rim is |
 | A design | Base layer keeps holes | `auto_base_keep_holes` | whether the outer shape keeps its holes |
 | Advanced | Widest satin column | `auto_max_satin_width_mm` | a line's stitches, a part's columns and their longest stitch, the split of a part into its fill and the pieces that leave it. A shape may set it lower, never higher |
 | Advanced | Narrowest triple run | `auto_min_triple_run_width_mm` | a running stitch tripled |
@@ -1154,13 +1154,16 @@ generated from the registry.
 | Advanced | Farthest a column reaches from its line | `auto_max_reach` | a part with arms |
 | Advanced | Narrowest piece of a fill | `auto_min_fill_width_mm` | what leaves the fill of an area |
 | Advanced | Smallest area | `auto_min_area_mm2` | specks, the narrow parts too small to cut from a broad part, and what details may leave of a hole they fill |
-| Advanced | Outline round fills | `auto_fill_outline` | whether each fill sews [an outline](#an-outline-round-a-fill), read of the lowest shape |
+| Advanced | Base layer's offset | `auto_base_offset_mm` | how far inside the design's outer shape it lies, and how wide the rim is |
 | Advanced | Largest sliver | `auto_base_sliver_mm2` | the largest gap in the top thread that is left to the base layer: a limit of the [measure](#the-stricter-measure), by which nothing sews differently |
 | Advanced | Most left to the base layer | `auto_base_bare_percent` | the most of the design that the top thread may leave bare over a base layer, the measure's other limit |
 
 A design's settings are a shape's too: VectorCraft's Auto effect on a group or a layer sets them on every
 path inside it. The Auto effect's dialog held 13 rows after M13.16 and was 903 px tall in a window of 900.
-With the bounds, the outline's switch and the 2 limits of the measure left out it holds 12.
+With the bounds and the 2 limits of the measure left out it holds 12. M13.28 gave the outline's switch a
+row, and the base layer's offset became an advanced setting to make room: it is a fine adjustment, matched
+to the pull compensation, that no picture so far has needed changed, where the base layer's switch, its
+stitch length and its holes each change what one sees.
 
 The defaults are the values on this page, and MC-8 confirms or changes them. A shape that sets none of the
 settings takes the defaults, and an automatic shape with a setting that doesn't read sews nothing
