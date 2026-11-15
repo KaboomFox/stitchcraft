@@ -1820,6 +1820,28 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.22: automatic digitizing sews the elements in the order that changes thread least (`REQ-AUTO-037`,
+  `stitchcraft_engine::auto::neighbours::order`). Each change is a rethread by hand on a machine with one
+  needle.
+  - The elements sew in batches of one thread, and a metered search finds the row of batches with the
+    fewest thread changes of any order that keeps each shape after what it lies on and each running line
+    after the fills it borders. Before, each thread sewed while it lasted and the thread of the first free
+    shape came next, which came back to a thread again and again.
+  - A satin column that automatic digitizing made sews after the fill it borders only where that costs no
+    thread change. Where it sews first, it reaches its overlap, 1 mm, under the fill. Every column sewed
+    after its fill before.
+  - The base layer's thread sews first of the shapes on it.
+  - The owner's traced dogs change thread 8 and 12 times in 6 and in 9 threads, where they changed 12, 22,
+    16 and 28 times. They jump 84, 91, 79 and 108 times, where they jumped 82, 94, 81 and 112 times, and
+    leave 77, 78, 70 and 95 jump threads on the PE800, where they left 71, 73, 64 and 84: the machine cuts
+    the thread at a change and not at a jump. They lay 17 stitches astray, where they laid 21. One sliver
+    is left, where 2 were.
+  - A search that needs more work than the budget allows sews the elements from that run on as before, and
+    `SC-I0907` says so. The dogs' searches keep 87 to 3,584 rows of batches of the 500,000 that the default
+    budget allows.
+  - `SC-I0907` may now say that the order changes thread more often than paint order. In paint order, a
+    trace drawn colour by colour sews its lines before the fills beside them.
+  - No new setting. A design sews in another order than it did: write its machine file again.
 - `cargo xtask docs --check` compares the Ink/Stitch contract with the parameter registry the other way
   too. A registered row of `conformance/inkstitch-params.toml` gives its key to stitch types, and each of
   those that the engine sews must be one that the key's declaration applies to, unless an `[[unapplied]]`
@@ -2884,6 +2906,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13C.pes` and `TS-13D.pes` (M13.22, fewer thread
+  changes). The digitized half of each sews in the order that changes thread least, and starts in the
+  base layer's thread: TS-13A's changes thread 2 times, where it changed 5 times, TS-13C's 4 and TS-13D's
+  6 times, where they changed 5 and 8 times. The plans sew 25,731, 11,323 and 27,599 stitches. The
+  digitized halves leave 18, 13 and 15 jump threads on the PE800, where they left 15, 12 and 13. TS-13B
+  sews as it did.
 - Changed the 4 sheets `conformance/golden/testsheets/TS-13A.pes` to `TS-13D.pes` (M13.16, a design covers
   the fabric). The digitized half of each sews a base layer first, and its neighbours overlap by
   1 mm. Its fills sew without an underlay of their own, and they turn from row to row in a stitch at the

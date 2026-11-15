@@ -209,8 +209,8 @@ The satin stitches that lean along their column (`SC-W0208`), which a fan sews, 
 line sews after the fill it borders ([Sewing order](#sewing-order)), so a design of many small fills sews
 its fills first and its lines after, colour by colour, twice over. With `auto_fill_uneven` off the dogs
 change thread 10, 12, 13 and 19 times and jump 118, 143, 109 and 136 times. The switch trades thread
-changes for jump threads. An order that changes thread less often is a later step's
-([roadmap](../plan/roadmap.md)).
+changes for jump threads. M13.22 searches for the order that changes thread least, and the dogs change
+thread 8, 12, 8 and 12 times ([Sewing order](#sewing-order)).
 
 ## Stitch types by width
 
@@ -864,7 +864,7 @@ rules.
    tolerance between edges drawn as one, and shapes overlap only where their overlap is wider. Where 2 lines
    0.1 mm wide cross, they overlap.
 2. **A line after the fill it borders.** A line that touches a fill without overlapping it sews after the
-   fill and covers its edge. A running stitch is as wide as its thread. It can't reach under the fill, and a
+   fill and covers its edge. Its running stitch is as wide as its thread. It can't reach under the fill, and a
    fill sewn after it lays the ends of its rows on it. Rule 1 comes first. A line that rule 1 already sews
    before the fill, through the shapes it overlaps, keeps its place.
 3. **The fewest thread changes** (`REQ-AUTO-037`, M13.22). Within rules 1 and 2 the elements sew in
@@ -877,14 +877,14 @@ rules.
    (`REQ-THREAD-002`), so 2 colours are one thread to the machine only past the palette's 64 entries. An
    element sewn in several threads (M10.5), as a tartan fill is and a gradient fill will be, moves as one.
    Its colours stay together, in the order its generator sews them. It is a batch of its own, which costs a
-   change when the thread it starts in isn't sewing, and the batch of the thread it ends in follows it
+   change unless the thread it starts in is sewing. The batch of the thread it ends in follows it
    (`REQ-AUTO-024`). Its threads are read before it is generated, from its shape and settings.
 4. **A satin column after the fill it borders, where that costs no thread change.** A satin column that
    automatic digitizing made covers the fill's edge when it sews after the fill. Sewn first, it reaches
    its overlap under the fill ([Neighbours](#neighbours)), so the fabric is covered either way. Of the
    rows with the fewest changes, the search takes the one in which fewer columns sew before a fill they
-   border. A column then waits for a later batch of its thread when the row has one after the fill. A
-   satin column with settings goes by rule 2.
+   border. The column then waits for a later batch of its thread when the row has one after the fill.
+   Satin columns with settings go by rule 2.
 5. **The nearest next.** Of the free elements of a batch, the next is the one whose box lies nearest
    the box of the element sewn last. On a tie it is the one whose box's centre lies nearest, and then the
    one drawn first. Each element then starts and ends at its points nearest its neighbours
@@ -897,7 +897,7 @@ goes on from the row with the fewest changes so far and still needed, one for ea
 elements left. Its first whole row then has the fewest changes of any order. Of 2 rows that sew the same
 elements and leave the same thread sewing, it keeps the one with fewer changes, then the one with fewer
 columns before their fills, then the one found first. It tries the threads of the free elements in paint
-order, so a design sews the same on every run. Each run of elements that nothing moves across is searched
+order. A design then sews the same on every run. Each run of elements that nothing moves across is searched
 on its own, and starts in the thread the run before it left. Where elements with settings of a run sew
 before its first automatic element, the base layer sews between them and it, which the search doesn't
 count. `order/fewest/tests.rs` compares the search with every order of 300 small runs drawn at random.
@@ -934,7 +934,7 @@ more keeps its place in paint order as an element with a stop after it does: not
 An element after it that one before it frees still waits its turn after it, and each element sews once. A
 shape whose paint can't be found within the budget keeps its place beside the shapes near it. Finding the
 rows of batches has the budget once for the whole design. It costs a unit for each element looked at and
-1,000 for each row kept, so the default budget keeps 500,000 rows at most. From the run that needs more
+1,000 for each row kept. The default budget keeps 500,000 rows at most. From the run that needs more
 on, the elements sew as they did before M13.22. Each thread sews while an element of it is free, then the
 thread of the first free element in paint order, and every satin column sews after the fills it borders.
 Placing the elements has the budget once more, and costs a unit for each free element looked at each time
@@ -961,6 +961,35 @@ after another, and the row changes thread twice. Its red discs touch, and the ne
 the next without a jump. The row jumps 7 times instead of 9. `tests/auto_pictures.rs` keeps the numbers
 from falling back.
 
+**Measured on the traced dogs** (M13.22). The fewest thread changes that any order has under each rule,
+found by an exact search outside the engine, beside what the dogs sewed and sew:
+
+| Traced dog | Sewn before M13.22 | Rule 1 alone | Rules 1 and 2 | Every column after its fill too | Sewn |
+|---|---:|---:|---:|---:|---:|
+| On turf, 6 threads | 12 | 5 | 8 | 8 | 8 |
+| On turf, 9 threads | 22 | 8 | 12 | 13 | 12 |
+| Running, 6 threads | 16 | 5 | 8 | 9 | 8 |
+| Running, 9 threads | 28 | 8 | 12 | 14 | 12 |
+
+Rule 1 costs the dogs nothing: with it alone each thread sews once, which is 5 changes in 6 threads and 8
+in 9. Rule 2 costs 3 or 4 changes. A dark line of fur sews after the lighter fills it borders, and the
+dark fills under those sew before them. The dark thread then sews twice. Every column after its fill would
+cost up to 2 more, which rule 4 saves. Taking each thread while it lasted, as the order did before, cost 4
+to 16 changes more than the rules need. With the running lines free to sew before the fills beside them,
+the dogs change thread 5 and 8 times, but lay 29 stitches astray where M13.21 laid 21, and leave 4
+slivers where it left 2: a fill sewn after a line ends its rows on the line. So rule 2 stays a rule.
+A trace drawn colour by colour changes thread less in paint order than as sewn, 5, 9, 7 and 12 times on
+the dogs, because its lines then sew before the fills beside them.
+
+Fewer thread changes leave more jump threads. The machine cuts the thread at a change and not at a jump,
+so a thread that sews once jumps where it changed before. The dogs jump 84, 91, 79 and 108 times, where
+they jumped 82, 94, 81 and 112 times, and leave 77, 78, 70 and 95 jump threads to cut by hand, where they
+left 71, 73, 64 and 84. The traced pear and the test pictures change thread once for each thread after
+the first, as they did. The digitized halves of the TS-13 sheets change thread 2, 4, 4 and 6 times, where
+they changed 5, 4, 5 and 8 times. TS-13B's black sews twice: its base layer and letters first, and the
+lines of its windows after the fills they border. The search keeps 87 to 3,584 rows of batches on the
+dogs, and 12,313 on a traced plant of 972 elements, of the 500,000 the default budget allows.
+
 **What shows** (`REQ-AUTO-025`, `REQ-AUTO-026`). Digitized, a picture's stitches should cover the fabric
 wherever it has a colour, and lay thread only where it has that thread's colour.
 `stitchcraft_testkit::fabric` measures both on any design and its plan, a photo traced into shapes as well
@@ -982,28 +1011,30 @@ leaves are counted apart.
 | Emblem, abutting or stacked | 0 | 0.35 mm | 0 | 2 |
 | Button, abutting or stacked | 0 | 0.40 mm | 6 | 0 |
 | Traced pear | 0 | 0.44 mm | 0 | 2 |
-| Traced dog on turf, 6 threads | 0 | 1.33 mm | 7 | 71 |
-| Traced dog on turf, 9 threads | 0 | 3.15 mm | 8 | 73 |
-| Traced running dog, 6 threads | 0.18 mm² | 2.14 mm | 4 | 64 |
-| Traced running dog, 9 threads | 0 | 1.30 mm | 7 | 84 |
+| Traced dog on turf, 6 threads | 0 | 1.33 mm | 7 | 77 |
+| Traced dog on turf, 9 threads | 0 | 3.15 mm | 11 | 78 |
+| Traced running dog, 6 threads | 0.18 mm² | 2.14 mm | 3 | 70 |
+| Traced running dog, 9 threads | 0 | 1.13 mm | 5 | 95 |
 
 The button's 7 dots sew on from one to the next, each move 2.7 mm long across its yellow. The pear leaves 2
 jump threads, where it left 4: the narrow ends of its olive and dark olive bands are uneven, and sew as
 fills with their bands (M13.21). `tests/auto_fabric.rs` keeps the moves and the jump threads as measured.
 
 The owner's dog, traced from her 2 photos in 6 and in 9 threads (M13.15, `docs/fixtures/README.md` › The
-traced dogs), lays 21 stitches astray: 3 and 6 on the dog on turf in 6 and in 9 threads, and 7 and 5 on the
+traced dogs), lays 17 stitches astray: 2 and 5 on the dog on turf in 6 and in 9 threads, and 7 and 3 on the
 running dog. One is the straight move, 2.25 mm long, between 2 lines of one narrow part, which is a stitch
-because it is shorter than the collapse length. The other 20 are rows of the fills that M13.21 sews where
-columns sewed, each up to 4 mm long, a fill's stitch. Of the 6 that were traced, 5 lie along a line of fur
-of another colour that sews on the fill or that the fill reaches under. The line sews as wide as its
-thread, and the row shows beside it. The sixth lies under the edge of a column sewn after its fill. Before
+because it is shorter than the collapse length. The other 16 are rows of fills, each up to 4 mm long, a
+fill's stitch. M13.21, which fills where columns sewed, brought 20 of them. Of the 6 that were traced
+then, 5 lay along a line of fur of another colour that sews on the fill or that the fill reaches under.
+The line sews as wide as its thread, and the row shows beside it. The sixth lay under the edge of a column
+sewn after its fill. M13.22's order took 8 of the 20 away and brought 4 others, where a fill now reaches
+under another neighbour. Before
 M13.21 the dogs laid 7 stitches astray. 2 of them were satin stitches 7.89 and 4.72 mm long that fanned
 across a shape biting into their column, and M13.21 removed those. `tests/auto_photos.rs` lists each stitch,
 with where it lies and why, and its case fails on any other stitch astray and on any listed one that no
 longer is. Of the [roadmap](../plan/roadmap.md)'s steps, M13.17 removes the move and M13.18 the rows, by
 merging the thin lines into their neighbours. The dogs' moves astray are moves from one element to the next,
-as the button's are. Their jump threads, 64 to 84, are the design's limit as it stands: each thread sews
+as the button's are. Their jump threads, 70 to 95, are the design's limit as it stands: each thread sews
 its shapes one after another and jumps between those that don't touch, and the PE800 cuts no jump. M13.17
 runs the thread under the shapes sewn later instead, which cover it. Each dog takes
 too long to digitize and measure in the tests' debug build, so CI's `perf` job runs these cases in the
