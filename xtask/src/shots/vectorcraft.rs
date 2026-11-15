@@ -19,7 +19,12 @@
 //!   dialog is taken in a taller window (`window::DIALOG_WINDOW`), since it doesn't scroll, and must show a
 //!   row for each parameter of the module's manifest that shows at the defaults, which the plug-in crate
 //!   makes from the parameter registry and gives here (`dialog::shown_at_defaults`): the parameter's
-//!   label, and the control VectorCraft gives its type.
+//!   label, and the control VectorCraft gives its type. The window installs the shot's modules itself,
+//!   over its control channel, all but one that asks for a heavy budget. From 0.23 VectorCraft's app
+//!   installs such a module from a request only once a person has approved it in its window. So
+//!   `vectorcraft-cli` installs it into a profile first, started with the option that lets it, and the
+//!   window starts with that profile, where VectorCraft keeps the module and installs it again
+//!   ([`profile`]).
 //!
 //! **Why a tolerance.** Mesa draws VectorCraft's window in software, and a newer Mesa from Ubuntu's updates
 //! may move an anti-aliased edge. A picture stays while no more than [`PER_THOUSAND`] in a thousand of its
@@ -29,7 +34,7 @@
 //! when VectorCraft or a dialog's contents do.
 
 use std::collections::BTreeSet;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use serde_json::{Value, json};
 use stitchcraft_vc_plugin::manifest::Schema;
@@ -203,7 +208,8 @@ fn make(root: &Path, shots: &[&Shot], check_only: bool, findings: &mut Findings)
         steps.push(Step::exporting(&document));
         steps.push(Step::exporting(if shot.kind == RENDER { &picture } else { CANVAS }));
         let run = Run { plugins: shot.plugins.clone(), steps, scale: shot.scale.map(f64::from), ..Run::default() };
-        if let Err(e) = scenario::draw(&run, &fetched.root.join("bin/vectorcraft-cli"), &modules, &dir) {
+        let cli = fetched.root.join("bin/vectorcraft-cli");
+        if let Err(e) = scenario::draw(&run, &cli, &modules, &dir) {
             findings.error(format!("shot `{}`: {e}", shot.id));
         } else if shot.kind == RENDER {
             keep(root, &shot.id, &util::read_bytes(&dir.join(&picture))?, check_only, findings, Same::Close);
@@ -211,7 +217,10 @@ fn make(root: &Path, shots: &[&Shot], check_only: bool, findings: &mut Findings)
                 keep_document(root, kept, &util::read_bytes(&dir.join(&document))?, check_only, findings);
             }
         } else {
-            ui.push((*shot, job(shot, &dir.join(&document), &modules, &dir.join(&picture))?));
+            match profile(shot, &cli, &modules, &dir) {
+                Ok(profile) => ui.push((*shot, job(shot, &dir.join(&document), &modules, &dir.join(&picture), profile.as_deref())?)),
+                Err(e) => findings.error(format!("shot `{}`: {e}", shot.id)),
+            }
         }
     }
     if ui.is_empty() {
@@ -262,13 +271,33 @@ fn kept(root: &Path, ui: &[(&Shot, Value)], check_only: bool, findings: &mut Fin
     Ok(())
 }
 
+/// The profile VectorCraft's window starts with for `shot`, in `dir`, when a module of the shot's asks for a
+/// heavy budget: the `vectorcraft-cli` at `cli` installs those modules into it first, from `modules`
+/// ([`scenario::install_into`]). The app of VectorCraft 0.23 installs one from a request only once a person
+/// has approved it in its window, and installs again what its profile keeps. A shot without such a module
+/// has no profile, and its window starts without preferences.
+fn profile(shot: &Shot, cli: &Path, modules: &Path, dir: &Path) -> Result<Option<PathBuf>, String> {
+    let heavy: Vec<String> = shot.plugins.iter().filter(|module| compat::heavy(module)).cloned().collect();
+    if heavy.is_empty() {
+        return Ok(None);
+    }
+    let profile = dir.join("profile");
+    scenario::install_into(&profile, &heavy, cli, modules, &dir.join("install"))?;
+    Ok(Some(profile))
+}
+
 /// The window probe's job for the `vectorcraft-ui` shot `shot` (`compat/vc-window/tests/shots.rs`): the
-/// document, how to install the modules (`plugin.install`'s parameters, [`compat::install`]), the menu path, and for a dialog the window's size, the family's row, and
-/// the label and control of each row it shows at the defaults, which its manifest gives; and where the
-/// picture goes.
-fn job(shot: &Shot, document: &Path, modules: &Path, picture: &Path) -> Result<Value, String> {
-    let plugins: Vec<Value> =
-        shot.plugins.iter().map(|module| compat::install(module, &modules.join(format!("{module}.wasm")).to_string_lossy())).collect();
+/// document, how to install the modules the window installs itself (`plugin.install`'s parameters,
+/// [`compat::install`]), the profile it starts with, which holds the others ([`profile`]), the menu path,
+/// and for a dialog the window's size, the family's row, and the label and control of each row it shows at
+/// the defaults, which its manifest gives; and where the picture goes.
+fn job(shot: &Shot, document: &Path, modules: &Path, picture: &Path, profile: Option<&Path>) -> Result<Value, String> {
+    let plugins: Vec<Value> = shot
+        .plugins
+        .iter()
+        .filter(|module| !compat::heavy(module))
+        .map(|module| compat::install(module, &modules.join(format!("{module}.wasm")).to_string_lossy()))
+        .collect();
     let (window, dialog) = match shot.dialog.as_deref() {
         None => (Value::Null, Value::Null),
         Some(name) => {
@@ -287,6 +316,7 @@ fn job(shot: &Shot, document: &Path, modules: &Path, picture: &Path) -> Result<V
         "id": shot.id,
         "document": document.to_string_lossy(),
         "plugins": plugins,
+        "profile": profile.map(Path::to_string_lossy),
         "menu": shot.menu,
         "window": window,
         "dialog": dialog,
