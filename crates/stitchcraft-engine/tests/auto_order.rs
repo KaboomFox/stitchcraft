@@ -1,6 +1,6 @@
 //! The order elements sew in (`REQ-AUTO-010` to `REQ-AUTO-012`): shapes that overlap keep their paint
-//! order, a line sews after the fill it borders, each thread sews as long as it can and the nearest element
-//! next; the elements with settings keep their order unless the design asks for every element ordered
+//! order, a line sews after the fill it borders, the thread changes as seldom as those allow
+//! (`REQ-AUTO-037`) and the nearest element sews next; the elements with settings keep their order unless the design asks for every element ordered
 //! (`--sort-colours`), and nothing moves across a stop.
 //!
 //! The examples show each rule on a design drawn for it. Automatic areas are flattened before they are
@@ -135,15 +135,15 @@ fn req_auto_010_a_line_sews_after_the_fill_it_borders() {
     let (ids, said) = sewn(vec![column, running, square("square", (0.0, 0.0), 10.0, &RED)]);
     assert_eq!(ids, ["square", "running", "column"]);
     assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 1."]);
-    // A line drawn after a square, along its top edge: blue is the thread sewing, after a blue square far
-    // away, but the line waits for the square it borders.
+    // A blue square far away, a red square, and a blue line drawn along the red square's top edge: the line
+    // waits for the square it borders, and so does the blue square, or blue would sew twice.
     let (ids, said) = sewn(vec![
         square("far", (100.0, 0.0), 10.0, &BLUE),
         square("square", (0.0, 0.0), 10.0, &RED),
         line("line", &[(0.0, 10.25), (10.0, 10.25)], 0.5, &BLUE),
     ]);
-    assert_eq!(ids, ["far", "square", "line"]);
-    assert!(said.is_empty(), "{said:?}");
+    assert_eq!(ids, ["square", "line", "far"]);
+    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 2."]);
     // A line drawn first across the square's corner, 3.5 mm from it, has a box that meets the square's, but
     // it borders nothing and keeps its place.
     let (ids, said) = sewn(vec![line("line", &[(20.0, 5.0), (5.0, 20.0)], 0.5, &BLUE), square("square", (0.0, 0.0), 10.0, &RED)]);
@@ -263,35 +263,35 @@ fn diag_sc_i0907_the_elements_are_sewn_in_an_order_of_their_own() {
 #[test]
 fn req_auto_010_an_automatic_element_drawn_over_one_with_settings_sews_after_it() {
     // A red square far away, a blue square with settings, a red square drawn half on it and a blue square
-    // apart: the red square on the blue one waits for it, though red is the thread sewing first.
+    // apart: the red square on the blue one waits for it, and the reds sew after the blues, each thread once.
     let (ids, said) = sewn(vec![
         square("far", (100.0, 0.0), 10.0, &RED),
         set(square("set", (0.0, 0.0), 10.0, &BLUE)),
         square("on", (5.0, 0.0), 10.0, &RED),
         square("apart", (40.0, 0.0), 10.0, &BLUE),
     ]);
-    assert_eq!(ids, ["far", "apart", "set", "on"]);
-    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own, with 2 thread changes where paint order has 3."]);
+    assert_eq!(ids, ["set", "apart", "on", "far"]);
+    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 3."]);
 }
 
 #[test]
 fn req_auto_010_a_part_thinner_than_twice_the_tolerance_overlaps_what_it_crosses() {
     // A red line far away, a blue line 0.1 mm wide, and a red one as wide drawn across it: where they cross,
-    // the red lies on the blue, so the blue sews first, though red is the thread sewing.
+    // the red lies on the blue, so the blue sews first, and both reds after it.
     let (ids, said) = sewn(vec![
         line("far", &[(100.0, 0.0), (110.0, 0.0)], 0.1, &RED),
         line("blue", &[(0.0, 0.0), (20.0, 0.0)], 0.1, &BLUE),
         line("red", &[(10.0, -10.0), (10.0, 10.0)], 0.1, &RED),
     ]);
-    assert_eq!(ids, ["far", "blue", "red"]);
-    assert!(said.is_empty(), "{said:?}");
+    assert_eq!(ids, ["blue", "red", "far"]);
+    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 2."]);
     // A comb drawn over a red line, a tooth 0.1 mm wide reaching across the line: the comb sews after the
-    // line, though blue is the thread sewing.
+    // line, and the blue square far away with the comb.
     let teeth = [(0.0, 5.0), (10.0, 5.0), (10.0, -5.0), (10.1, -5.0), (10.1, 5.0), (20.0, 5.0), (20.0, 15.0), (0.0, 15.0)];
     let comb = automatic(fill("comb", &[&teeth], &BLUE, &[]));
     let (ids, said) = sewn(vec![square("far", (100.0, 0.0), 10.0, &BLUE), line("line", &[(0.0, 0.0), (20.0, 0.0)], 0.8, &RED), comb]);
-    assert_eq!(ids, ["far", "line", "comb"]);
-    assert!(said.is_empty(), "{said:?}");
+    assert_eq!(ids, ["line", "comb", "far"]);
+    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 2."]);
 }
 
 #[test]

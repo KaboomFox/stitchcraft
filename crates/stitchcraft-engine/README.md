@@ -70,7 +70,7 @@ away under the areas and parts that cover it. Regions are combined, grown and sh
 `normalize::region::ops`.
 Since M13.3 the elements sew in an order of their own (`auto::neighbours::order`), chosen between the
 specks and the overlaps. Shapes that overlap keep their paint order, and a line sews after the fill it
-borders. Each thread then sews as long as it can, the nearest element next. Elements with settings keep
+borders. The thread then changes as seldom as those rules allow (M13.22), the nearest element next. Elements with settings keep
 their order unless `--sort-colours` is given (`Design::sort_colours`), and an element with a stop after
 it keeps its place. Since M13.4 a part of an automatic area narrower than the narrowest satin stroke
 everywhere runs along its centre line (`auto::narrow`), which a constrained Delaunay triangulation of the
