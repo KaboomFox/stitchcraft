@@ -1100,7 +1100,7 @@ it (`REQ-VC-006`), so the effect on a traced group previews every path's stitche
 says. A live effect is given its path and its paints alone. Like `stitch export`, it reads the path as an
 area when a fill paints it, and as a line along its topmost stroke. Its preview shows each shape's
 stitches without the overlaps, the merged specks or the order, which `stitch export` adds. VectorCraft
-draws what a live effect returns with every paint of its object. The stitches come back as ribbons that
+draws what a live effect returns with every paint of its object. The stitches come back as gaps in the area that
 the fill fills when a fill paints the object, and as lines that its stroke draws otherwise.
 
 Digitizing is most of a preview's work, from about 1,450 instructions a unit to 2,260 in VectorCraft

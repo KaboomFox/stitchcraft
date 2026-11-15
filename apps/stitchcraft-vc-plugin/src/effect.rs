@@ -179,7 +179,7 @@ mod tests {
             assert!(out.get("error").is_none(), "{family:?}: {out}");
             let subpaths = out["objects"][0]["path"]["subpaths"].as_array().unwrap();
             assert!(!subpaths.is_empty(), "{family:?}");
-            // A fill's stitches are ribbons, closed; a stroke's and a satin's are paths along them, which
+            // A fill's shape and the gaps along its rows are closed; a stroke's and a satin's are paths along them, which
             // leave `closed` out.
             let closed = family == Family::Fill;
             assert!(subpaths.iter().all(|s| s["closed"].as_bool().unwrap_or(false) == closed), "{family:?}");
@@ -252,7 +252,7 @@ mod tests {
             |input: &[u8], set: &[(&str, Value)]| -> Value { serde_json::from_slice(&auto(input, &testing::auto_params(set)).unwrap()).unwrap() };
         // As VectorCraft gives an object up to 0.13, without its paints, which say what automatic digitizing sews.
         assert!(error(&run(&input(&square()), &[])).starts_with("info SC-I0810: Automatic digitizing sews an object by its fill and its stroke"));
-        // A filled square is filled, and its rows are ribbons.
+        // A filled square is filled, and its rows are gaps in it.
         let rows = run(&testing::painted(&square(), true, None), &[]);
         assert!(rows["objects"][0]["path"]["subpaths"].as_array().is_some_and(|ribbons| ribbons.iter().all(|r| r["closed"] == true)), "{rows}");
         // A setting VectorCraft passes is the shape's: a narrower widest satin column fills a line 5 mm wide.

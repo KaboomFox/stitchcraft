@@ -559,7 +559,7 @@ and on `main`:
 | Measured | Value |
 |---|---|
 | Writing the plug-ins' geometry, by hand, to a thousandth of a point | about 16 instructions a byte |
-| One anchor, written by hand | 18 to 20 bytes along a stroke or a satin column, 26 to 27 in a fill's ribbons |
+| One anchor, written by hand | 18 to 20 bytes along a stroke or a satin column, 26 to 27 in a fill's gaps |
 | A unit of the engine's work for a stroke | about 880 instructions |
 | A unit of the engine's work for a satin column | about 4,730 instructions |
 | A unit of the engine's work making a satin column's rails from its centre line (M6.8, VectorCraft 0.16.0) | about 330 instructions |
@@ -575,9 +575,38 @@ share, instead of being stopped (`apps/stitchcraft-vc-plugin/src/preview.rs`):
 
 | Level | Geometry returned | Auto shows it |
 |---|---|---|
-| Exact | The stitch polyline (strokes, satins) or one thin closed ribbon per stitch (fills) | For a stroke or a satin column, within nine tenths of the budget |
-| Rows | One ribbon per row segment of a fill's top rows, or per side of a contour fill's path round its rings (from M7.7), a meander fill's path (from M7.8) or a circular fill's pieces of spiral (from M7.9): where its stitches lie and which way they run | For a fill, within eight tenths |
-| Outline | The object's path as lines for a stroke or a satin column, and as ribbons for a fill, which are hatched every 3 mm in its direction | When the others cost too much |
+| Exact | The stitch polyline (strokes, satins), or the fill's shape with a gap along each stitch (fills) | For a stroke or a satin column, within nine tenths of the budget |
+| Rows | The fill's shape with a gap along each row segment of its top rows, or along each side of a contour fill's path round its rings (from M7.7), a meander fill's path (from M7.8) or a circular fill's pieces of spiral (from M7.9): where its stitches lie and which way they run | For a fill, within eight tenths |
+| Outline | The object's path as lines for a stroke or a satin column, and a fill's shape with a gap along a hatch line every 3 mm in its direction | When the others cost too much |
+
+**A fill reads as solid** (M6.16, `REQ-VC-024`). VectorCraft paints what a live effect returns with the
+object's own fill, and thread covers a fill whole. Until M6.16 a fill came back as thin ribbons, one 0.2 mm
+wide along each stitch, row or hatch line and along its outline, and the fill painted only those. The
+rows' ribbons covered eight tenths of the shape. The outline's covered less than a tenth, so that a large
+fill, which auto shows by its outline, looked emptier with the effect than without. Now a fill comes back
+as its own shape, flattened, and each stitch, row or hatch line is a gap in it
+(`stitchcraft_vectorcraft::effect_solid`). A gap is a ribbon wound against the shape around it, so that
+both fill rules leave it empty. The winding number of the shape at the middle of the line tells which way
+that is. It also tells whether the fill rule fills there. A line outside the shape is left without a gap,
+since the fill would paint a ribbon there. Telling tests every side of the outline for each line, and
+that work is charged to the budget, 64 sides to a unit. A gap along a stitch or a row is 0.01 mm wide,
+and one along a hatch line 0.1 mm, since hatch lines lie far apart. The plug-in's case
+`req_vc_024_a_fill_s_preview_covers_its_shape_at_every_level_auto_picks` measures the share of each
+shape's area that its preview covers, on the browser demo's badge and on squares from 3.5 mm to 903 mm:
+
+| Preview | Covered before M6.16 | Covered from M6.16 |
+|---|---|---|
+| A fill's rows, on squares from 3.5 mm to 564 mm a side | 80 % | 96 % |
+| A fill's outline with its hatch | 6 to 16 % | 96 to 97 % |
+| A fill's outline without its hatch, as auto shows the largest | under 1 % | 100 % |
+| A small fill's every stitch | 80 % or less | 94 to 95 % |
+| The Auto effect on the badge's ridges, which shows their outlines | 10 % | 96 to 97 % |
+| The Auto effect on the badge's sky, border and moon, which shows their outlines without a hatch | 1 to 5 % | 100 % |
+| The Auto effect on the badge's lake, star and snowcap, which shows a satin column's stitches or a fill's rows | 79 to 88 % | 93 to 95 % |
+
+A satin column's stitches end outside the edge of a small shape, as its thread does. Their gaps show there
+as hairlines of the fill, which add less than 3 % of the star's area. A stroke's and a satin column's own
+effects return lines, which the object's stroke draws, and they are unchanged.
 
 The `preview_level` parameter, `auto` by default, lets the user pick a level (VectorCraft reserves the
 name `preview`). A level the user picks gets the whole budget, and when that is not enough, `SC-I0810`
@@ -602,7 +631,7 @@ review upstream) would remove this limitation.
 elements, an area when a fill paints it and a line along its topmost stroke. It digitizes them, then shows
 each element they become as auto shows its family's: a fill's top rows, and a satin column's and a running
 stitch's every stitch. VectorCraft draws what it returns with all of the object's paints. The stitches
-come back as ribbons for the fill when a fill paints the object, and as lines for the stroke otherwise.
+come back as gaps in the object's area for the fill when a fill paints the object, and as lines for the stroke otherwise.
 Digitizing is most of the work. Measured in VectorCraft 0.18.0's host with the contract crate's runs
 (2026-10-31), a unit of it takes about 1,450 instructions for a filled square or an L. Finding the centre
 lines of a line traced as an area takes up to 2,260, as for TS-13B's thinnest window line. The plug-in
@@ -625,7 +654,7 @@ would give these previews room. `req_vc_003_every_preview_level_finishes_within_
 the Auto effect's levels on these shapes and on lines too, and fails if VectorCraft stops one that must
 finish.
 
-Paint caveat: a live effect changes only geometry. A fill preview's ribbons are painted with the object's
+Paint caveat: a live effect changes only geometry. A fill preview's shape is painted with the object's
 own fill, and a stroke preview with its stroke. From 0.14 a stroke or a satin effect reads its stroke's
 style, and still cannot change the paints. Users set the fill/stroke to the thread colour, which they want
 anyway for export. An element sewn in several threads (M10.5), as tartan and linear gradient fills are,

@@ -178,7 +178,7 @@ fn lines(subpaths: &[&[(f64, f64)]]) -> PathData {
 }
 
 /// Each family's live effect sews in VectorCraft's host, with every parameter at its default: a stroke
-/// and a satin column come back as paths of stitches, a fill as one closed ribbon for each stitch. The
+/// and a satin column come back as paths of stitches, a fill as its shape with a closed gap for each row. The
 /// shapes are small, as a preview of all its stitches must be until M6.3's levels.
 #[test]
 fn each_family_sews_an_object_in_vectorcraft() {
