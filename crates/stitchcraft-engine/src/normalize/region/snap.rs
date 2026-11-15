@@ -57,7 +57,7 @@ const ROUNDS: usize = 64;
 /// A point of the grid, counted in half cells from the origin: its coordinates are even. Its cell holds
 /// every point that rounds to it, from 1 below it to just short of 1 above it on each axis, so that the
 /// cell's left and bottom sides and the corner where they meet are its own. Ordered by x, then y.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct Node {
     x: i64,
     y: i64,
@@ -189,14 +189,14 @@ struct Buckets {
 
 impl Buckets {
     /// Over the bounds of `nodes`, `side` buckets each way (1 for none).
-    fn over(nodes: impl Iterator<Item = Node> + Clone, side: usize) -> Buckets {
+    fn over(nodes: impl Iterator<Item = Node>, side: usize) -> Buckets {
         let side = i64::try_from(side).unwrap_or(i64::MAX).max(1);
-        let span = |of: fn(Node) -> i64| {
-            let (least, most) = (nodes.clone().map(of).min().unwrap_or(0), nodes.clone().map(of).max().unwrap_or(0));
-            (least, (most - least) / side + 1)
-        };
-        let ((left, width), (bottom, height)) = (span(|n| n.x), span(|n| n.y));
-        Buckets { least: Node { x: left, y: bottom }, width, height, side }
+        let bounds = nodes.fold(None, |bounds: Option<(Node, Node)>, n| {
+            let (least, most) = bounds.unwrap_or((n, n));
+            Some((Node { x: least.x.min(n.x), y: least.y.min(n.y) }, Node { x: most.x.max(n.x), y: most.y.max(n.y) }))
+        });
+        let (least, most) = bounds.unwrap_or_default();
+        Buckets { least, width: (most.x - least.x) / side + 1, height: (most.y - least.y) / side + 1, side }
     }
 
     /// How many buckets there are.
