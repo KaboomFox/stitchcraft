@@ -5,6 +5,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M6.17: an export that finishes (`REQ-VC-025`). VectorCraft stops the PES and DST export of a traced photo
+  with the Auto effect, "plug-in exceeded its instruction budget", in the browser and on the desktop alike.
+  Such a design needs 51 to 69 billion instructions where an export may run 11 billion, and the exporter
+  can't be made to fit or learn how much is left.
+  - The browser demo's panel has Export PES, Export DST and Show the real stitches. Each runs the exporter
+    plug-in's own module in a Web Worker, where nothing counts instructions. The panel shows how long the
+    engine has worked. The files are the ones `stitch export` writes, byte for byte.
+  - An exporter whose `_context` has the mode `picture` answers the picture `stitch export --preview`
+    draws, in the file's place. VectorCraft never asks for it.
+  - The before and after sheet compares the panel's PES, DST and picture of the starter drawing and the 4
+    traced dogs with `stitch`'s. Level B's scenario `traced-photo` expects VectorCraft to stop its own
+    export of the traced dog.
+  - The user pages say what to do when VectorCraft stops an export: `stitch export FILE.vectorcraft` on
+    the desktop, about a second for a traced photo. The RFC page proposes an export budget that fits
+    (P10). The golden files are unchanged.
 - M10.10: guided fill's parallel offset and buffer strategies, and the anchor line (`REQ-FILL-GDD-009` to
   `REQ-FILL-GDD-013`). A guided fill set to `guided_fill_strategy` `1` or `2` sews as Ink/Stitch sews it,
   where it was skipped with `SC-W0011`.

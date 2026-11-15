@@ -11,6 +11,7 @@ distribution, and the publishing in `docs/src/design/docs-pipeline.md`. The acce
 | `site.py` | puts a pull request's preview together: its book with the demo folder |
 | `start.mjs` | runs on the editor's page and chooses the loader: the app's own, or a preview's |
 | `boot.mjs`, `loader.mjs`, `starter.mjs` | install the plug-ins, open the plain drawing and show the panel whose button turns it into stitches |
+| `exports.mjs`, `engine-worker.mjs`, `engine.mjs` | the panel's Export PES, Export DST and Show the real stitches, which run the exporter's module in a worker on the document the editor saves (the design page, An export that finishes) |
 | `smoke.mjs`, `docs-smoke.mjs` | run the built demo in Chromium |
 | `sheet.py`, `sheet.mjs`, `parity.mjs` | make the before and after sheet, and run its checks in Chromium (`docs/src/design/before-after-sheet.md`) |
 | `generate-template.mjs` | has the demo write the finished example's template again from the SVG |

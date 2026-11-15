@@ -2399,6 +2399,15 @@ milestone = "M6"
 status = "active"
 
 [[req]]
+id = "REQ-VC-025"
+area = "vectorcraft"
+level = "L2"
+statement = "A design that needs more instructions than VectorCraft allows an export is still exported where StitchCraft runs its own engine. The browser demo's panel has Export PES, Export DST and Show the real stitches. Each takes the open document from the editor as the editor saves it, runs the exporter's module in a Web Worker, where nothing counts its instructions, says that it is working and for how long, and then offers the file or shows the picture. The file is the one `stitch export` writes of the saved document, byte for byte, and the picture is the one `stitch export --preview` draws: an exporter whose `_context` has the mode `picture` answers that picture, a PNG, in the file's place, and with VectorCraft's own mode `export`, or none, it answers the file. A design that writes no file has no picture. On the desktop such a design is exported with `stitch export`."
+rationale = "A traced photo with the Auto effect needs 51 to 66 billion instructions in VectorCraft's host, 5 to 6 times what an export may run, and VectorCraft stops it in the browser and on the desktop alike (measured 2026-11-15). The limit is VectorCraft's, and a plug-in can't raise it or learn how much is left, so the work is done where there is no such limit."
+milestone = "M6"
+status = "active"
+
+[[req]]
 id = "REQ-VC-019"
 area = "vectorcraft"
 level = "L2"

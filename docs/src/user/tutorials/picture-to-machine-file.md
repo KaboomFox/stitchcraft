@@ -72,7 +72,9 @@ such as a letter or a ring, shows its outline instead, and the machine file has 
 shows. A filled shape is drawn solid in its own colour either way, as thread will cover it. Zoom in to see
 the hairline gaps that mark its rows or stitches. The document now says it is digitized automatically, so **File › Export › Export As** writes the
 machine file without **Digitize automatically**, as does `stitch export` without `--auto`
-([how](../how-to/embroider-a-vectorcraft-design.md)). Trace again and the group is new, without the
+([how](../how-to/embroider-a-vectorcraft-design.md)). VectorCraft stops the export of a large traced
+picture, a photo for one, and `stitch export` then writes it
+([what to do](../how-to/embroider-a-vectorcraft-design.md#when-vectorcraft-stops-the-export)). Trace again and the group is new, without the
 effect: apply it after the last trace.
 
 ### From the command line
