@@ -26,7 +26,7 @@ use stitchcraft_core::{Budget, Code, Diagnostic};
 use stitchcraft_plan::{MachineProfile, StitchPlan};
 
 use crate::assemble::{Assembled, assemble};
-use crate::auto::{Sewing, sewing};
+use crate::auto::{Sewing, sewing, thick};
 use crate::design::{Design, Element};
 use crate::finalize::{Finalized, finalize};
 use crate::generate::layered::{Layered, underlay};
@@ -49,7 +49,7 @@ pub struct PlanOutcome {
 /// work to itself, and the stitches the elements before it left; assembling and finalizing have the work
 /// once more, and the design `budget`'s stitches.
 pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanOutcome {
-    let Sewing { elements, mut diagnostics, base } = sewing(design, budget);
+    let Sewing { elements, mut diagnostics, base, limits } = sewing(design, budget);
     let candidates: Vec<Candidate> = elements.iter().map(|element| Candidate::of(element, &design.settings)).collect();
     let (steps, lone) = steps(&candidates);
     diagnostics.extend(lone.into_iter().filter_map(|(k, why)| elements.get(k).map(|element| alone(element, why))));
@@ -107,6 +107,8 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
     let plan = match finished {
         Ok(Some(Finalized { plan, diagnostics: said })) => {
             diagnostics.extend(said);
+            // A design digitized automatically is told where it sews thick (`SC-W0913`), and is written.
+            diagnostics.extend(limits.zip(plan.as_ref()).and_then(|(limits, plan)| thick::said(plan, &limits, budget)));
             plan
         }
         Ok(None) => {

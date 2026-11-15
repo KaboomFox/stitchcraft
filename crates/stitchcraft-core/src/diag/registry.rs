@@ -1173,6 +1173,26 @@ macro_rules! codes {
         /// turn `auto_fill_uneven` off, or set a bound itself with `stitch plan --set`.
         AutoRule = "SC-I0912", Info, "Rule that chose a shape's stitches";
 
+        /// A design digitized with `--auto` puts thread on thread: each area reaches under the shapes sewn
+        /// after it, a base layer lies under all of them, and an outline lies on a fill's edge. Where too much
+        /// thread lies over one spot, a needle deflects and the thread shreds or breaks. Planning measures the
+        /// design in 2 ways, in the window of 1 mm² round each spot. The first is the thread, in fills: the
+        /// length of thread over the spot, as a share of what a fill with rows 0.4 mm apart lays. The second is
+        /// the needle points in a square millimetre, the locks left out. The warning is given when a place of
+        /// 1 mm² or more has 3 fills or more (`auto_thick_warn_fills`), or 15 needle points or more to a
+        /// square millimetre (`auto_thick_warn_points`). The message gives the most of each measure and where,
+        /// from the design's centre, the shapes whose thread is stacked there, and the area at each limit
+        /// and at the failing limits, 6 fills (`auto_thick_fail_fills`) and 30 needle points
+        /// (`auto_thick_fail_points`).
+        ///
+        /// The design is written all the same. The limits are starting values for a 75/11 needle and
+        /// 40-weight polyester thread, from the public advice of machine and software makers, and no sew-out
+        /// has confirmed them yet: sew a test piece of the thickest part before the whole design.
+        /// `stitch preview --style thickness` draws where the thread is thick. A design too large to measure,
+        /// or one whose measuring needs more work than the budget allows, gets this warning too, and its
+        /// message says that the design was not measured.
+        AutoThick = "SC-W0913", Warning, "Design sews thick";
+
         /// Routing joins satin columns, and the running stitches among them, into one route, as Ink/Stitch's
         /// Auto-Route Satin Columns does: StitchCraft Auto-Route Satin Columns in VectorCraft, and lettering in a
         /// font whose `auto_satin` is on. It joins running stitches alone as Ink/Stitch's Auto-Route Running
