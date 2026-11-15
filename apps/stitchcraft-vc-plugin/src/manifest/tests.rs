@@ -399,6 +399,23 @@ fn only_a_filter_may_ask_for_a_heavy_budget() {
 }
 
 #[test]
+fn req_vc_023_the_fill_dialog_offers_the_guided_fill_s_3_strategies_by_ink_stitch_s_numbers() {
+    // M10.9 sewed one strategy, and a choice of one option isn't declared. From M10.10 all 3 are sewn, so the
+    // strategy is in the dialog again, its options Ink/Stitch's ids, shown for the guided fill alone.
+    let fill = family(Family::Fill);
+    let (_, strategy) = fill.params.iter().find(|(key, _)| *key == "guided_fill_strategy").unwrap();
+    assert_eq!(strategy.schema, Schema::Choice { options: vec!["0", "1", "2"], default: "0" });
+    // Its label tells it from the contour fill's strategy, a row of the same dialog.
+    assert_eq!((strategy.ui.label, strategy.ui.group), (Some("Guided fill strategy"), Some("Guided fill")));
+    assert_eq!(strategy.ui.visible_when, [("fill_method", vec![Value::from("guided_fill")])]);
+    let help = strategy.ui.help.as_deref().unwrap_or_default();
+    assert!(help.ends_with("One of 0 (Copy), 1 (Parallel offset), 2 (Buffer)."), "{help}");
+    // The stitch positions show for it too, and the copy angle, which may be empty, stays out.
+    let keys: Vec<&str> = fill.params.iter().map(|(key, _)| *key).collect();
+    assert!(keys.contains(&"stitch_position_method") && !keys.contains(&"guided_fill_angle"));
+}
+
+#[test]
 fn parameters_are_an_object_of_valid_ones_up_to_the_most() {
     // A manifest may leave its parameters out, as VectorCraft reads it, but they are an object.
     let mut bare = value(&hello());
@@ -410,7 +427,9 @@ fn parameters_are_an_object_of_valid_ones_up_to_the_most() {
     // 64 parameters in a manifest that VectorCraft 0.12 and 0.13 take, and one more only with a text, which
     // they refuse anyway. Then up to 256, at most 64 of them outside groups.
     let toggles = |count: usize, grouped: usize, text: bool| {
-        let toggle = |i: usize| if i < grouped { json!({"type": "bool", "default": false, "group": "More"}) } else { json!({"type": "bool", "default": false}) };
+        let toggle = |i: usize| {
+            if i < grouped { json!({"type": "bool", "default": false, "group": "More"}) } else { json!({"type": "bool", "default": false}) }
+        };
         let mut all: serde_json::Map<String, Value> = (0..count - usize::from(text)).map(|i| (format!("p{i}"), toggle(i))).collect();
         if text {
             all.insert("text".into(), json!({"type": "string", "group": "More"}));

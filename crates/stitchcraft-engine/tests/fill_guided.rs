@@ -111,12 +111,12 @@ fn req_fill_gdd_001_without_a_guide_line_the_fill_sews_its_own_tatami_fill() {
 
 /// How far `q` lies from the line through `line`.
 fn away(q: Point, line: &[(f64, f64)]) -> f64 {
+    let at = |(x, y): (f64, f64)| Point::new(x, y).unwrap();
     line.windows(2)
         .map(|side| {
-            let (ax, ay, bx, by) = (side[0].0, side[0].1, side[1].0, side[1].1);
-            let along = ((q.x() - ax) * (bx - ax) + (q.y() - ay) * (by - ay)) / ((bx - ax).powi(2) + (by - ay).powi(2));
-            let t = along.clamp(0.0, 1.0);
-            (q.x() - ax - t * (bx - ax)).hypot(q.y() - ay - t * (by - ay))
+            let (a, b) = (at(side[0]), at(side[1]));
+            let along = ((q.x() - a.x()) * (b.x() - a.x()) + (q.y() - a.y()) * (b.y() - a.y())) / (a.distance(b) * a.distance(b));
+            q.distance(a.lerp(b, along.clamp(0.0, 1.0)))
         })
         .fold(f64::INFINITY, f64::min)
 }
@@ -194,4 +194,3 @@ fn req_fill_gdd_010_a_buffer_s_rows_are_rings_half_a_row_spacing_and_whole_ones_
     first_only.hints.guide.as_mut().unwrap().path = polylines(&[&dash, &second]);
     assert_eq!(sewn(&planned(vec![first_only]), Role::Top), one);
 }
-

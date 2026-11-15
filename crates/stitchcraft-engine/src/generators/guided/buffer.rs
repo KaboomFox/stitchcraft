@@ -94,7 +94,10 @@ pub(super) fn rows(
         let by = k as f64 * guided.spacing;
         let by = if by == 0.0 { ROW_0 } else { by } + guided.spacing / 2.0;
         let curves = line_curves(lines, by, meter)?;
-        let Ok(parts) = area(&curves, |w| w <= -1, meter)?.parts else { *unjoined = true; break };
+        let Ok(parts) = area(&curves, |w| w <= -1, meter)?.parts else {
+            *unjoined = true;
+            break;
+        };
         let start = curves.first().and_then(|curve| curve.first()).copied();
         let mut met = false;
         let mut found = Vec::new();

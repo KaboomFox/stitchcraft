@@ -97,7 +97,14 @@ pub(super) fn square_to(along: [f64; 2]) -> [f64; 2] {
 /// The copy the rows start from, by its number: 0 where `lengthened` meets the piece, and otherwise the
 /// whole number of `spacing`s, rounded towards 0, the point of it nearest the piece's centroid lies from the
 /// centroid, negative where `step` points away from the centroid.
-pub(super) fn start(piece: &Polygon, rings: &Rings<'_>, lengthened: &[Point], step: [f64; 2], spacing: f64, meter: &mut Meter) -> Result<i64, Exhausted> {
+pub(super) fn start(
+    piece: &Polygon,
+    rings: &Rings<'_>,
+    lengthened: &[Point],
+    step: [f64; 2],
+    spacing: f64,
+    meter: &mut Meter,
+) -> Result<i64, Exhausted> {
     if meets(lengthened, rings, meter)? {
         return Ok(0);
     }

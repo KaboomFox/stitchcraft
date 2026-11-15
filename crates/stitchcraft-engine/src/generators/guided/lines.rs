@@ -109,7 +109,14 @@ fn place(line: &[Point], i: usize, guided: &Guided, with: &Lines<'_>, meter: &mu
 /// The closed `row`, the `i`-th, stitched from where it crosses or touches the anchor line: started at the
 /// first crossing along it, cut at the others, and each piece stitched from its start, as the module says;
 /// `None` where it doesn't meet the anchor line. Costs as finding the crossings, stitching and measuring do.
-fn anchored(row: &[Point], i: usize, guided: &Guided, with: &Lines<'_>, rng: &SplitMix64, meter: &mut Meter) -> Result<Option<Vec<Point>>, Exhausted> {
+fn anchored(
+    row: &[Point],
+    i: usize,
+    guided: &Guided,
+    with: &Lines<'_>,
+    rng: &SplitMix64,
+    meter: &mut Meter,
+) -> Result<Option<Vec<Point>>, Exhausted> {
     let along = Along::new(row, meter)?;
     let mut crossings = Vec::new();
     for (side, &start) in row.windows(2).zip(&along.at) {
@@ -215,14 +222,14 @@ mod tests {
         // in 2 stitches and each of 5 mm in 2.
         let ring = square(2.0, 1.0, 8.0, 6.0);
         let offset = fill(Strategy::Offset);
-        let outside = sewn(&[ring.clone()], &offset, &[]);
+        let outside = sewn(std::slice::from_ref(&ring), &offset, &[]);
         assert_eq!(outside, [vec![(2.0, 4.0), (2.0, 3.5), (2.0, 1.0), (5.0, 1.0), (8.0, 1.0), (8.0, 3.5), (8.0, 4.0)]]);
         // An anchor line across its top side at x = 4 starts it there: the stitches count from (4, 1), which is
         // there twice, as the row's first point and as its first stitch's start.
         let anchor = [vec![p(4.0, 0.5), p(4.0, 1.5)]];
-        let anchored = sewn(&[ring.clone()], &offset, &anchor);
+        let anchored = sewn(std::slice::from_ref(&ring), &offset, &anchor);
         let from_4 = vec![(2.0, 4.0), (2.0, 3.5), (2.0, 1.0), (4.0, 1.0), (4.0, 1.0), (6.0, 1.0), (8.0, 1.0), (8.0, 3.5), (8.0, 4.0)];
-        assert_eq!(anchored, [from_4.clone()]);
+        assert_eq!(anchored.as_slice(), std::slice::from_ref(&from_4));
         // The next ring's stitches start a quarter of a stitch on from there.
         let next = sewn(&[ring.clone(), ring.clone()], &offset, &anchor);
         assert_eq!(next[0], from_4);
@@ -230,26 +237,30 @@ mod tests {
         // One that crosses it twice cuts it in 2, each stitched from its crossing, and one that only touches
         // it counts too.
         let twice = [vec![p(4.0, 0.5), p(4.0, 1.5)], vec![p(1.5, 2.5), p(2.5, 2.5)]];
-        let cut = sewn(&[ring.clone()], &offset, &twice);
-        let from_both = [(2.0, 4.0), (2.0, 2.5), (2.0, 2.5), (2.0, 2.5), (2.0, 1.0), (4.0, 1.0), (4.0, 1.0), (6.0, 1.0), (8.0, 1.0), (8.0, 3.5), (8.0, 4.0)];
+        let cut = sewn(std::slice::from_ref(&ring), &offset, &twice);
+        let from_both =
+            [(2.0, 4.0), (2.0, 2.5), (2.0, 2.5), (2.0, 2.5), (2.0, 1.0), (4.0, 1.0), (4.0, 1.0), (6.0, 1.0), (8.0, 1.0), (8.0, 3.5), (8.0, 4.0)];
         assert_eq!(cut, [from_both.to_vec()]);
         let touching = [vec![p(4.0, 1.0), p(4.0, 1.5)]];
-        assert_eq!(sewn(&[ring.clone()], &offset, &touching), anchored);
+        assert_eq!(sewn(std::slice::from_ref(&ring), &offset, &touching), anchored);
         // An anchor line that misses the ring leaves it to start outside the piece.
         let aside = [vec![p(20.0, 0.0), p(21.0, 0.0)]];
-        assert_eq!(sewn(&[ring.clone()], &offset, &aside), outside);
+        assert_eq!(sewn(std::slice::from_ref(&ring), &offset, &aside), outside);
         // A ring that starts outside the piece and has no anchor line is stitched from its own start.
         let from_outside = sewn(&[square(2.0, 6.0, 8.0, 1.0)], &offset, &[]);
         assert_eq!(from_outside, [vec![(8.0, 4.0), (8.0, 3.5), (8.0, 1.0), (5.0, 1.0), (2.0, 1.0), (2.0, 3.5), (2.0, 4.0)]]);
         // A ring inside the piece that no anchor line meets has no stretch outside: its own points are its
         // needle points, and with an anchor line it starts there.
         let within = square(3.0, 1.0, 7.0, 3.0);
-        assert_eq!(sewn(&[within.clone()], &offset, &[]), [xy(&within)]);
-        assert_eq!(sewn(&[within.clone()], &offset, &aside), [xy(&within)]);
-        assert_eq!(sewn(&[within.clone()], &offset, &anchor), [vec![(4.0, 1.0), (7.0, 1.0), (7.0, 3.0), (5.0, 3.0), (3.0, 3.0), (3.0, 1.0), (4.0, 1.0)]]);
+        assert_eq!(sewn(std::slice::from_ref(&within), &offset, &[]), [xy(&within)]);
+        assert_eq!(sewn(std::slice::from_ref(&within), &offset, &aside), [xy(&within)]);
+        assert_eq!(
+            sewn(std::slice::from_ref(&within), &offset, &anchor),
+            [vec![(4.0, 1.0), (7.0, 1.0), (7.0, 3.0), (5.0, 3.0), (3.0, 3.0), (3.0, 1.0), (4.0, 1.0)]]
+        );
         // A row that crosses itself is no ring: it is stitched from its start, whatever the anchor line.
         let eight = vec![p(3.0, 1.0), p(7.0, 3.0), p(7.0, 1.0), p(3.0, 3.0), p(3.0, 1.0)];
-        assert_eq!(sewn(&[eight.clone()], &offset, &anchor), sewn(&[eight], &offset, &[]));
+        assert_eq!(sewn(std::slice::from_ref(&eight), &offset, &anchor), sewn(std::slice::from_ref(&eight), &offset, &[]));
     }
 
     #[test]

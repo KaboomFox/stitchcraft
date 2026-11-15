@@ -30,9 +30,9 @@ The guide is a line grouped with the fill and marked as one. It is never sewn.
   VectorCraft runs a live effect on its object alone, without the paths beside it. The preview then sews the
   tatami fill below, and `stitch export` sews the rows.
 
-Draw the guide the way the rows should run. Copies and offset curves follow its first subpath alone. A
-guide that crosses itself is cut where it does, and its loops are left out. A copied guide that closes on
-itself is opened just before its last point. It needn't reach across the fill: each row is lengthened
+Draw the guide the way the rows should run. Copies and offset curves follow its first subpath alone. Where
+the guide crosses itself it is cut, and its loops are left out. A copied guide that closes on itself is
+opened just before its last point. It needn't reach across the fill: each row is lengthened
 straight on at both ends, past the area.
 
 A fill without a guide, or with one of no length, is sewn as a [tatami fill](tatami-fill.md) with its own
@@ -64,8 +64,8 @@ other strategies' rows fall back the same way.
 
 - **Copy** (`0`), the default, moves copies of the guide across the fill, as above. Where the guide runs
   across the way the copies move, the rows come closer together.
-- **Parallel offset** (`1`) sews the guide's offset curves. Each row keeps the row spacing from the one
-  before all along it, so the rows of a band that turns stay even. On the inside of a bend tighter than a
+- **Parallel offset** (`1`) sews the guide's offset curves. Each row lies a row spacing from the one
+  before all along it, which suits a band that turns. On the inside of a bend tighter than a
   row's distance from the guide, the row turns with a corner. `guided_fill_angle` doesn't apply.
 - **Buffer** (`2`) sews rings round the guide, the first half a row spacing from it and the rest a row
   spacing apart, like the rings of a tree. Every subpath of the guide counts, so a guide of 2 short lines
@@ -90,15 +90,15 @@ And the egg of `docs/fixtures/guided-egg.svg`, whose guide is a short line insid
 | ![A blue egg 37 mm wide sewn without underlay as a guided fill round a short line inside it, its rows rings round the line, 1 mm apart, each joined to the next, Buffer](../../images/generated/guided-buffer-1.png) |
 <!-- /shot -->
 
-A ring that closes inside the fill has no end on the outline for the needle to reach it by. Each such ring
+A ring that closes inside the fill has no end on the outline, where one row leads to the next. Each such ring
 is joined into the ring round it, a row spacing along, and the outermost into a row that meets the
 outline. The fill then sews as one route, without a jump from ring to ring.
 
 ### The anchor line
 
-Where a ring starts decides where its needle points lie, and each joined ring starts beside its join. An
+A ring's needle points are counted from where it starts, and each joined ring starts beside its join. An
 anchor line says where the rings start instead: each row that closes starts where the anchor line crosses
-it, so the rings' needle points line up along it. Draw it from the guide outward, across every ring.
+it, and the rings' needle points line up along it. Draw it from the guide outward, across every ring.
 
 - **In an SVG file**, an anchor line is a path that Ink/Stitch's anchor-line marker starts, in the fill's
   group. The fill takes the first that isn't a satin column, and every subpath of it.

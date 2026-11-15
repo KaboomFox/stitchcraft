@@ -47,7 +47,9 @@ After step 2, a guide of no length, or one drawn there and back, starts and ends
 give a line to copy it by, and the fill is sewn as a tatami fill with its own settings, as Ink/Stitch sews a
 guided fill without a guide. `SC-W0331` says why (`DEV-FILL-034`). Ink/Stitch moves
 each lengthened end by up to 0.01 px at random, and StitchCraft doesn't (`DEV-FILL-035`). The other
-strategies say `SC-W0331` for a guide whose points all lie at one place.
+strategies say `SC-W0331` for a guide whose points all lie at one place. Ink/Stitch stops with an error on
+one with its parallel offset strategy (`DEV-FILL-034`), and sews rings round one with its buffer strategy
+(`DEV-FILL-036`).
 
 ## The copies
 
@@ -72,7 +74,7 @@ they were found in. That order counts each row's stagger and keys its random len
 
 ## Parallel offset
 
-A copy of a curved guide lies closer to the guide where the guide runs across the way the copies move, so
+A copy of a curved guide lies closer to the guide where the guide runs across the way the copies move, and
 the rows crowd there. An offset curve stays the same distance from the guide all along it. On the inside of
 a bend tighter than that distance the curve leaves out the loop a copy would make, and the row turns there
 with a corner (`REQ-FILL-GDD-009`).
@@ -84,8 +86,8 @@ crosses itself, step 2. It isn't opened.
 Row `k` is the guide's offset curve at `k` row spacings, with round corners of 16 segments to a quarter
 circle, on the side that copies move to. Row 0 lies a ten-thousandth of a CSS pixel off the guide, so that
 no offset is 0. The rows start from the row a copy would start from, with the centroid measured square to
-the line between the guide's ends, and go outward one way and then the other while they meet the box round
-the part. `guided_fill_angle` moves only copies. A ring's ends are one point, so the line between them has
+the line between the guide's ends. From there they go outward one way and then the other while they meet
+the box round the part. `guided_fill_angle` moves only copies. A ring's ends are one point, so the line between them has
 no direction, and its rows start at row 0 or at the whole row spacings to the centroid, outward.
 
 A ring is offset as shapely offsets one: as a line that ends where it starts. Shrunk, the curve closes where
@@ -99,7 +101,7 @@ taken in the copies' order, by their first points.
 ## Buffer
 
 A guide inside a shape is a middle the rows grow out from: each row runs round the guide at its own
-distance, like the rings of a tree. Every subpath counts, so the rings round 2 short lines grow apart and
+distance, like the rings of a tree. Every subpath counts: the rings round 2 short lines grow apart and
 then join into one (`REQ-FILL-GDD-010`).
 
 Each subpath is flattened and simplified within a ten-thousandth of a CSS pixel, which leaves out only
@@ -115,13 +117,14 @@ second point moved to its left. The rows start at the whole row spacings, rounde
 from the part, 0 where they meet, and go outward only. They stop at the first boundary that misses the box
 round the part. Every ring of a boundary that meets the part is a row, and the rows keep that order.
 
-Should a boundary's edges not join into rings, the rows stop there and `SC-E0009` says so. No design is
-known to do that.
+A subpath whose points all lie at one place is left out, where Ink/Stitch sews rings round the dot
+(`DEV-FILL-036`). Should a boundary's edges not join into rings, the rows stop there and `SC-E0009` says so.
+No design is known to do that.
 
 ## Rows that close inside the part
 
-A row that meets the part's outline has its ends there, and the route reaches it along the outline as it
-reaches a tatami fill's row. A ring round a guide inside the shape has no ends. Sewn as it is, it would be
+A row that meets the part's outline has its ends there, and the needle comes to it along the outline as
+it comes to a tatami fill's row. A ring round a guide inside the shape has no ends. Sewn as it is, it would be
 a stretch of its own that the needle jumps to. So a parallel offset's and a buffer's rings are spliced
 into the rows round them, and the fill sews as one route (`REQ-FILL-GDD-011`).
 
@@ -136,16 +139,16 @@ covers it. Both are turned to run counter-clockwise as shapely reads it, and a w
 ring from its start, a CSS pixel at a time. Each step takes the point there and the point a row spacing on,
 with their nearest points on the outer ring. Where both pairs lie less than 2½ row spacings apart, the
 rings are joined. The outer ring is started at the nearest point of the second pair and loses its last row
-spacing. The inner ring is started at its second point, loses its last row spacing too, and follows the
-outer ring backwards. With `skip_last` the inner ring is first cut into stitches no longer than the longest
-stitch, and its 2 ends are left out. A ring the walk finds no place for isn't sewn, nor are the rings
-already joined into it.
+spacing. The inner ring is started at its second point and loses its last row spacing too. It follows
+the outer ring backwards. With `skip_last` the inner ring is first cut into stitches no longer than the longest
+stitch, and its 2 ends are left out. A ring that the walk doesn't find a place for isn't sewn, and the rings
+already joined into it go with it.
 
 **Ring into row.** Each ring left is joined into the first outline row within a row spacing of it, with a
 thousandth of a CSS pixel to spare. The walk goes along the ring as before and measures to the row's
 stretches inside the part, until both points lie within 1½ row spacings. The row is opened there for a row
-spacing, from the earlier of the 2 nearest points along it. The ring is started at the walk's first point,
-loses its first row spacing, and goes in the gap. Should the joined row cross itself, the ring goes in the
+spacing, from the earlier of the 2 nearest points along it. The ring is started at the walk's first point
+and loses its first row spacing. It goes in the gap. Should the joined row cross itself, the ring goes in the
 other way round.
 
 The ring is done when the row it joined meets the outline ring. A row that only meets a hole's ring isn't
@@ -189,8 +192,8 @@ A row that closes without crossing itself, and starts inside the part or has an 
 elsewhere before it is stitched (`REQ-FILL-GDD-012`):
 
 - **Along the anchor line.** The anchor line is a path grouped with the fill and marked as one, as the
-  guide is: Ink/Stitch's anchor-line marker, the first so marked that isn't a satin column, or a path named
-  `stitch:anchor`. Every subpath of it counts. Where it crosses or touches the row, the row is started at a
+  guide is. It has Ink/Stitch's anchor-line marker, the first so marked that isn't a satin column, or the
+  name `stitch:anchor`. Every subpath of it counts. Where it crosses or touches the row, the row is started at a
   crossing and cut at the others, and each piece is stitched on its own from where it starts. A buffer's
   rings, joined into one row, are so cut back into rings where an anchor line crosses them all, and each
   takes the stagger of its own distance. The needle points then line up along the anchor line, where
@@ -251,7 +254,12 @@ lengths cut the lines where sewing would.
 ## Cost
 
 Each point of the guide, of its rows and of their stitches charges a unit of work. An offset curve and a
-buffer's boundary cost as the offset module's curves and areas do ([offsets](offset.md)). Each step of a
+buffer's boundary cost as the offset module's curves and areas do ([offsets](offset.md)). A parallel offset
+costs far more than a copy, since each of its curves is built as a satin column's rail is, from the edge
+of a stroke round the whole guide. A square of 100 mm with rows 0.25 mm apart along a guide of one curve charged
+133 million units, a quarter of an element's default budget, against 1.6 million for its copies and 23
+million for a buffer's rings. A guide of many more points on a fill that large can spend the budget, and
+the element is then skipped with `SC-E0004`. Each step of a
 walk that joins a ring charges a unit, and each nearest point a unit for each side it measures. Looking for where the
 guide meets itself tests only the sides whose spans along x overlap, a unit for each pair. Testing a copy
 against the part, and cutting a row by it, look only at the sides of the rings near each stitch. Sewing

@@ -181,14 +181,7 @@ fn req_gen_002_an_element_that_cannot_be_sewn_is_skipped_and_the_rest_still_plan
     assert_eq!(shape_of(&outcome), "J L4 S5 L4");
     assert_eq!(outcome.plan.unwrap().elements.iter().map(ElementId::as_str).collect::<Vec<_>>(), ["fine"]);
     let codes: Vec<(Code, Option<&str>)> = outcome.diagnostics.iter().map(|d| (d.code, d.element.as_ref().map(ElementId::as_str))).collect();
-    assert_eq!(
-        codes,
-        [
-            (Code::ParamInvalid, Some("fill")),
-            (Code::ParamInvalid, Some("wrong")),
-            (Code::ParamInvalid, Some("unknown"))
-        ]
-    );
+    assert_eq!(codes, [(Code::ParamInvalid, Some("fill")), (Code::ParamInvalid, Some("wrong")), (Code::ParamInvalid, Some("unknown"))]);
     // Each element has the work budget to itself: a long one runs out, a short one does not.
     let budget = Budget { max_stitches: 1000, max_work: 60 };
     let design =
@@ -258,13 +251,7 @@ fn diag_sc_w0505_a_trim_or_stop_after_an_element_that_sews_nothing_is_named() {
     };
     let guided = Element {
         shape: Shape::Fill { path: square, rule: FillRule::EvenOdd, gradient: None },
-        ..line(
-            "guided",
-            (0.0, 5.0),
-            1.0,
-            &RED,
-            &[("fill_method", "sparkle_fill"), ("trim_after", "true"), ("stop_after", "true")],
-        )
+        ..line("guided", (0.0, 5.0), 1.0, &RED, &[("fill_method", "sparkle_fill"), ("trim_after", "true"), ("stop_after", "true")])
     };
     let stop = line("stop", (0.0, 10.0), 0.1, &RED, &[("stop_after", "true")]);
     let outcome = sewn(vec![tiny, guided, stop, line("ok", (0.0, 15.0), 10.0, &RED, &[])]);

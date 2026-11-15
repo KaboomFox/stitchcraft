@@ -14,7 +14,7 @@ Applies to Guided fill.
 
 ### `guided_fill_strategy`
 
-**Strategy.** How the rows follow the guide. Copy moves copies of the guide across the fill, a row spacing
+**Guided fill strategy.** How the rows follow the guide. Copy moves copies of the guide across the fill, a row spacing
 apart. Parallel offset sews the guide's offset curves, which keep the row spacing round every
 bend. Buffer sews rings round the guide, every subpath of it, like the rings of a tree.
 

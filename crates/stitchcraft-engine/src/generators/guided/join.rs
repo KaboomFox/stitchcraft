@@ -214,7 +214,14 @@ struct Pass {
 impl Pass {
     /// `ring` joined into the first of `rows` within a row spacing of it, and on into a second where the
     /// first doesn't meet the outline ring, as the module says; kept for the next pass where none is near.
-    fn ring_into_rows(&mut self, rings: &Rings<'_>, ring: Vec<Point>, rows: &mut [Vec<Point>], spacing: f64, meter: &mut Meter) -> Result<(), Exhausted> {
+    fn ring_into_rows(
+        &mut self,
+        rings: &Rings<'_>,
+        ring: Vec<Point>,
+        rows: &mut [Vec<Point>],
+        spacing: f64,
+        meter: &mut Meter,
+    ) -> Result<(), Exhausted> {
         let original = ring.clone();
         let (mut ring, mut joined_at) = (ring, None);
         for i in 0..rows.len() {

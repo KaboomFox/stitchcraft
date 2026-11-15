@@ -91,6 +91,13 @@ turns inside out, are followed as the `buffer` module's docs say, and `conforman
 checks the polygons against shapely's: 538 of them, 330 with a tatami fill's corners and 208 with a
 contour fill's.
 
+A guided fill's buffer strategy needs the buffer of lines, not of an area: the rings round its guide
+([guided fill](guided.md#buffer), `REQ-FILL-GDD-010`). The raw curves come from the same code. Round an
+open line it is the ring of step 2, both sides and 2 round caps, which starts at the end of the line's
+first side moved to its left, as GEOS's does. Round a closed line of 4 points or more it is the line's 2
+sides without caps, the inner one left out where it has turned inside out. The buffer is the area those
+curves wind round clockwise at least once, from the region code again. A line of one point doesn't give a curve.
+
 ## Speed
 
 Contour fill shrinks a part again and again, each inset from the last, so the offsetter has a budget of
@@ -132,8 +139,10 @@ within reach of the polygon's bounds, with outlines clockwise and holes counter-
 must add area, and shrinking take it away. Spike M0.7 ran it on 10,000 polygons ([ADR-0005](../adr/0005-geometry-stack.md)),
 and its speed against GEOS's is recorded there.
 
-A closed line, one that ends where it starts, is buffered by GEOS as a ring, with no caps. The engine
-offsets only open lines. A satin column's centre line with its ends together is cut in half first.
+A closed line, one that ends where it starts, is buffered by GEOS as a ring, with no caps. The offset of
+steps 1 to 3 takes any line as an open one. A satin column's centre line with its ends together is cut in
+half first. A guided fill's closed guide is offset as it is, as a line that ends where it starts, which
+is what shapely's `offset_curve` gives for a ring ([guided fill](guided.md#parallel-offset)).
 
 Building the edge costs work in proportion to the square of the ring's length: every piece is checked
 against every other, and its winding against every segment of the ring. A line of 1,000 points takes up

@@ -174,16 +174,12 @@ const GUIDE: [(f64, f64); 2] = [(7.86, 154.42), (32.14, 155.58)];
 /// The fan's arcs as cubic curves (mm), round a middle at (65, 170): its outer side, 30 mm out, from its left
 /// end to its right, and its inner side, 10 mm out, back from right to left. Each is its start and its
 /// curve's 2 control points and end.
-const FAN: [[(f64, f64); 4]; 2] = [
-    [(45.72, 147.02), (56.87, 137.66), (73.13, 137.66), (84.28, 147.02)],
-    [(71.43, 162.34), (67.71, 159.22), (62.29, 159.22), (58.57, 162.34)],
-];
+const FAN: [[(f64, f64); 4]; 2] =
+    [[(45.72, 147.02), (56.87, 137.66), (73.13, 137.66), (84.28, 147.02)], [(71.43, 162.34), (67.71, 159.22), (62.29, 159.22), (58.57, 162.34)]];
 /// The fan's guide: an arc 20 mm out from the same middle, in 2 curves, which starts and ends well past the
 /// fan's ends, so that its rows leave the fan as arcs.
-const FAN_GUIDE: [[(f64, f64); 4]; 2] = [
-    [(46.21, 163.16), (49.08, 155.26), (56.59, 150.0), (65.0, 150.0)],
-    [(65.0, 150.0), (73.41, 150.0), (80.92, 155.26), (83.79, 163.16)],
-];
+const FAN_GUIDE: [[(f64, f64); 4]; 2] =
+    [[(46.21, 163.16), (49.08, 155.26), (56.59, 150.0), (65.0, 150.0)], [(65.0, 150.0), (73.41, 150.0), (80.92, 155.26), (83.79, 163.16)]];
 
 /// The egg's middle and its half width and half height (mm), its guide's ends, off its middle, and its anchor
 /// line, from the guide's middle out past the egg's top right.
