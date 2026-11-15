@@ -290,11 +290,9 @@ impl Near {
         let mut next = starts.clone();
         let mut nodes = vec![Node::default(); hot.0.len()];
         for &node in &hot.0 {
-            if let Some(place) = next.get_mut(buckets.of(node)) {
-                if let Some(slot) = nodes.get_mut(*place) {
-                    *slot = node;
-                }
-                *place += 1;
+            let place = next.get_mut(buckets.of(node)).map(|place| std::mem::replace(place, *place + 1));
+            if let Some(slot) = place.and_then(|place| nodes.get_mut(place)) {
+                *slot = node;
             }
         }
         Ok(Near { buckets, nodes, starts })
