@@ -198,7 +198,7 @@ def browser_lines(browser):
         left = max(run.get('waiting', 0) for run in speed['runs'])
         export = (f'its PES export {seconds(exports[len(exports) // 2])}{within("export")}' if exports
                   else 'its PES export was refused')
-        said.append(f'Giving the {speed["shapes"]} shapes of {speed["design"]} the Auto effect took '
+        said.append(f'Giving {speed["design"]} the Auto effect took '
                     f'{seconds(turns[len(turns) // 2])}{within("turn")} until the editor had drawn them'
                     f'{f", but for {left} it left undrawn" if left else ""}, and {export}: '
                     f'the middle of {len(turns)} runs in Chromium drawing in software.')
