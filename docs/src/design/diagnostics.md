@@ -1,6 +1,6 @@
 # Diagnostics
 
-<!-- implements: crates/stitchcraft-core/src/diag.rs, crates/stitchcraft-core/src/text.rs, apps/stitchcraft-cli/src/commands/explain.rs -->
+<!-- implements: crates/stitchcraft-core/src/diag.rs, crates/stitchcraft-core/src/diag/registry.rs, crates/stitchcraft-core/src/text.rs, apps/stitchcraft-cli/src/commands/explain.rs -->
 
 A diagnostic is a problem with the user's design or input, explained in the user's terms, with a
 stable code. Diagnostics are values: the engine collects them and keeps planning whatever it can.
@@ -43,7 +43,7 @@ Codes are never reused. A retired code keeps its page with "retired in vX".
 
 ## The registry
 
-All codes live in one table in `stitchcraft-core`: the `registry!` block in `src/diag.rs`, which
+All codes live in one table in `stitchcraft-core`: the `registry!` block in `src/diag/registry.rs`, which
 defines the `Code` enum. Each entry is one line — variant, id, severity, title — and its doc comment is
 the long explanation (Markdown: what it means, why it matters for the sew-out, how to fix it), so the
 text users read is also the code's rustdoc. Tests reject an entry whose id is malformed or duplicated,
@@ -146,6 +146,8 @@ another.
 | `SC-W0328` | Warning | Tartan stripe's colour can't be read; left out (as Ink/Stitch leaves it) | M10 |
 | `SC-W0329` | Warning | Linear gradient fill without a linear gradient; its colour fades out | M10 |
 | `SC-W0330` | Warning | Gradient stop within 2 rows of the blend before; passed over | M10 |
+| `SC-W0331` | Warning | Guided fill without a guide line; sewn as a tatami fill (also for a guide that starts and ends at one point, with the fill's own settings, as Ink/Stitch sews one without a guide) | M10 |
+| `SC-W0332` | Warning | Guided fill's copies of its guide meet no part; sewn as a tatami fill (that part, at the angle of the guide's ends, the fallback Ink/Stitch has for a part its copies meet and the cut leaves empty, while it stops with an error where the copies miss the part, `DEV-FILL-034`) | M10 |
 | `SC-W0401` | Warning | Path too small for the shortest stitch; skipped | M3 |
 | `SC-W0402` | Warning | Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest | M3 |
 | `SC-W0403` | Warning | Hand-placed stitch shorter than the shortest stitch; point left out | M3 |
@@ -198,6 +200,9 @@ another.
 | `SC-W0906` | Warning | Background left out (the lowest shape, an automatic area that covers the whole design under the other shapes, unless it switches `auto_ignore_background` off; what shows of it inside the picture is sewn) | M13 |
 | `SC-I0907` | Info | Elements sewn in an order of their own (automatic elements, and with `--sort-colours` every element, sewn in the order StitchCraft chooses, with the thread changes of each order; an element or an order that needs more work than the budget allows keeps paint order) | M13 |
 | `SC-I0908` | Info | Layers flattened (each automatic area sews what shows of it under the automatic areas drawn over it, and an area wider than a satin column somewhere is digitized whole under the areas that fill its holes, which sew after it) | M13 |
+| `SC-I0909` | Info | Base layer sewn under the design (one underlay under the outer shape of the automatic shapes, with its area, pieces and thread) | M13 |
+| `SC-W0910` | Warning | Base layer left out (its shape needs more work than the budget allows, and every fill sews the underlay of its settings) | M13 |
+| `SC-I0911` | Info | Base layer turned off (the design's lowest automatic shape turns `auto_base_layer` off, so nothing lies under a place the top thread leaves bare, and fabric may show there) | M13 |
 | `SC-E1001` | Error | Nothing to route (no element the tool can take among those given, a satin column for Auto-Route Satin Columns or a stroke for Auto-Route Running Stitch: they stay as they were) | M10 |
 | `SC-I1002` | Info | Element left out of the route (a fill, a shape digitized automatically, settings that don't read, rails that can't be made, no length, a stroke whose first subpath ends where it starts, or a satin column among running stitches: kept as it is) | M10 |
 | `SC-W1003` | Warning | Piece of a routed satin column may sew otherwise (read back, it has other rails or pairs other points: it is kept) | M10 |

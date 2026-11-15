@@ -45,7 +45,19 @@ circles that fit inside it along its centre line.
 edge of an area, or of a part sewn as a line or a column, that is sewn after it and covers it the
 area is cut away. The thread pulls stitches in
 from the edges of their shape, and without the overlap fabric shows between shapes that only
-meet. A satin column reaches as far past its rails, by its pull compensation.
+meet. A satin column reaches as far past a rail that a shape sewn after it runs along.
+
+- **Accepts:** a length from 0 to 2 mm
+- **Default:** `1`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_pull_compensation_mm`
+
+**Pull compensation.** How far a satin column sews past a rail with no shape sewn after the column beside it: its pull
+compensation there. The thread pulls a column in from its rails, and a column that sews this far
+past them is as wide as drawn. Along a rail where a shape sewn after the column runs for more
+than half the rail's length, the column sews past the rail by the overlap instead.
 
 - **Accepts:** a length from 0 to 2 mm
 - **Default:** `0.4`
@@ -73,5 +85,75 @@ sews, as of any area.
 
 - **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `true`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+## Base layer
+
+### `auto_base_layer`
+
+**Base layer.** Whether one base layer sews first under the whole design: an open fill in 3 directions under
+what the automatic shapes paint together, every stitch of it underlay. On fabric of another
+colour than the design, thread of one colour then lies under a slit between 2 shapes. The fills
+on it sew no underlay of their own. Off, each fill sews the underlay of its settings. The design
+goes by the settings its lowest automatic shape has for the base layer.
+
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
+- **Default:** `true`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_base_stitch_length_mm`
+
+**Base layer's stitch length.** How long the base layer's stitches are. Its rows lie this length times 0.866 apart, in 3
+directions, so that its needle points make triangles with sides this long, as the stitches of
+Ink/Stitch's Knockdown Fill do. Shorter stitches hide more of the fabric and sew longer.
+
+- **Accepts:** a length from 1 to 6 mm
+- **Default:** `3`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_base_offset_mm`
+
+**Base layer's offset.** How far outside the design's outer shape the base layer's edge lies: inside it when negative, so
+that no base stitch shows beside a shape once the thread has pulled the shape's edge in. By
+default it lies as far inside as a satin column's pull compensation reaches outside.
+
+- **Accepts:** a length from -3 to 3 mm
+- **Default:** `-0.4`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_base_keep_holes`
+
+**Base layer keeps holes.** Whether the base layer keeps the holes of the design's outer shape. Off, it sews across them.
+
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
+- **Default:** `true`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_base_sliver_mm2`
+
+**Largest sliver.** The largest gap in the top thread that is left to the base layer: a sliver. Where thin shapes
+meet, the top thread can leave a place this small bare, and the base layer's thread shows there
+in place of the fabric. Nothing sews differently by this value. It is a limit of the check of a
+design's cover: a larger gap fails the check, and so does a gap with no base layer under it.
+
+- **Accepts:** an area from 0 to 2 mm²
+- **Default:** `0.4`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_base_bare_percent`
+
+**Most left to the base layer.** The most of the design's area that the top thread may leave bare over the base layer, the
+slivers and the places narrower than a thread together. Nothing sews differently by this value.
+It is the other limit of the check of a design's cover. A design without a base layer is held to
+0.15 % and to no gap at all.
+
+- **Accepts:** a percentage from 0 to 5
+- **Default:** `0.5`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version

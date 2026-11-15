@@ -58,24 +58,32 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Satin parameters](params/satin.md) | 34 | Satin column, E-stitch, S-stitch, Zigzag satin |
 | [Pull parameters](params/pull.md) | 2 | Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill |
 | [Fill parameters](params/fill.md) | 2 | Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill |
-| [Tatami parameters](params/tatami.md) | 15 | Tatami fill, Contour fill, Meander fill, Circular fill, Linear gradient fill, Tartan fill |
+| [Tatami parameters](params/tatami.md) | 16 | Tatami fill, Contour fill, Meander fill, Circular fill, Guided fill, Linear gradient fill, Tartan fill |
 | [Contour parameters](params/contour.md) | 4 | Contour fill |
 | [Meander parameters](params/meander.md) | 6 | Meander fill |
 | [Cross parameters](params/cross.md) | 8 | Cross stitch |
+| [Guided parameters](params/guided.md) | 3 | Guided fill |
 | [Tartan parameters](params/tartan.md) | 5 | Tartan fill |
 | [Path fill parameters](params/path-fill.md) | 3 | Contour fill, Meander fill, Circular fill |
-| [Auto parameters](params/auto.md) | 5 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
+| [Auto parameters](params/auto.md) | 12 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
 
 ## Every parameter
 
 | Key | Label | Group |
 |---|---|---|
 | [`angle`](params/tatami.md#angle) | Angle | Tatami parameters |
+| [`auto_base_bare_percent`](params/auto.md#auto_base_bare_percent) | Most left to the base layer | Auto parameters |
+| [`auto_base_keep_holes`](params/auto.md#auto_base_keep_holes) | Base layer keeps holes | Auto parameters |
+| [`auto_base_layer`](params/auto.md#auto_base_layer) | Base layer | Auto parameters |
+| [`auto_base_offset_mm`](params/auto.md#auto_base_offset_mm) | Base layer's offset | Auto parameters |
+| [`auto_base_sliver_mm2`](params/auto.md#auto_base_sliver_mm2) | Largest sliver | Auto parameters |
+| [`auto_base_stitch_length_mm`](params/auto.md#auto_base_stitch_length_mm) | Base layer's stitch length | Auto parameters |
 | [`auto_ignore_background`](params/auto.md#auto_ignore_background) | Leave out the background | Auto parameters |
 | [`auto_max_satin_width_mm`](params/auto.md#auto_max_satin_width_mm) | Widest satin column | Auto parameters |
 | [`auto_min_area_mm2`](params/auto.md#auto_min_area_mm2) | Smallest area | Auto parameters |
 | [`auto_min_triple_run_width_mm`](params/auto.md#auto_min_triple_run_width_mm) | Narrowest triple run | Auto parameters |
 | [`auto_overlap_mm`](params/auto.md#auto_overlap_mm) | Overlap | Auto parameters |
+| [`auto_pull_compensation_mm`](params/auto.md#auto_pull_compensation_mm) | Pull compensation | Auto parameters |
 | [`avoid_self_crossing`](params/contour.md#avoid_self_crossing) | Avoid self-crossing | Contour parameters |
 | [`bean_stitch_repeats`](params/repeat.md#bean_stitch_repeats) | Bean stitch | Repeat parameters |
 | [`bean_stitch_repeats`](params/path-fill.md#bean_stitch_repeats) | Bean stitch | Path fill parameters |
@@ -117,6 +125,8 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`gap_fill_rows`](params/tatami.md#gap_fill_rows) | Gap-filling rows | Tatami parameters |
 | [`grid_first`](params/ripple.md#grid_first) | Grid first | Ripple parameters |
 | [`grid_size_mm`](params/ripple.md#grid_size_mm) | Grid size | Ripple parameters |
+| [`guided_fill_angle`](params/guided.md#guided_fill_angle) | Copy angle | Guided parameters |
+| [`guided_fill_strategy`](params/guided.md#guided_fill_strategy) | Strategy | Guided parameters |
 | [`herringbone_width_mm`](params/tartan.md#herringbone_width_mm) | Herringbone width | Tartan parameters |
 | [`join_style`](params/ripple.md#join_style) | Join style | Ripple parameters |
 | [`join_style`](params/contour.md#join_style) | Join style | Contour parameters |
@@ -178,6 +188,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`staggers`](params/ripple.md#staggers) | Staggers | Ripple parameters |
 | [`staggers`](params/tatami.md#staggers) | Staggers | Tatami parameters |
 | [`start_at_nearest_point`](params/satin.md#start_at_nearest_point) | Start at nearest point | Satin parameters |
+| [`stitch_position_method`](params/guided.md#stitch_position_method) | Stitch positions | Guided parameters |
 | [`stop_after`](params/common.md#stop_after) | Stop after | Common parameters |
 | [`stop_at_ending_point`](params/tartan.md#stop_at_ending_point) | Stop at the end position | Tartan parameters |
 | [`stroke_method`](params/stroke.md#stroke_method) | Method | Stroke parameters |
@@ -188,6 +199,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`tartan_angle`](params/tartan.md#tartan_angle) | Row angle | Tartan parameters |
 | [`ties`](params/common.md#ties) | Lock stitches | Common parameters |
 | [`trim_after`](params/common.md#trim_after) | Trim after | Common parameters |
+| [`turn_stitches`](params/tatami.md#turn_stitches) | Keep turn stitches | Tatami parameters |
 | [`underlay_underpath`](params/tatami.md#underlay_underpath) | Underlay underpath | Tatami parameters |
 | [`underlays_first`](params/common.md#underlays_first) | Underlays first | Common parameters |
 | [`underpath`](params/tatami.md#underpath) | Underpath | Tatami parameters |

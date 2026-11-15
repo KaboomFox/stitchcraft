@@ -17,8 +17,8 @@
 //! default.
 //!
 //! **Why the margin.** A picture's shapes reach its edge, and digitized automatically, a satin column along
-//! the edge sews past it: its stitches reach past its rails by their pull compensation, the overlap
-//! (`auto_overlap_mm`), and a rail may lie as far outside the shape as shapes still meet
+//! the edge sews past it: its stitches reach past its rails by their pull compensation
+//! (`auto_pull_compensation_mm`), and a rail may lie as far outside the shape as shapes still meet
 //! ([`TOUCHING`](stitchcraft_engine::auto::TOUCHING)). A picture fitted to the hoop itself would sew past
 //! the hoop, which refuses it (`SC-E0701`). The margin is that reach, rounded up to a tenth of a
 //! millimetre. A `--size` is the picture's own, as the user asks for it.
@@ -203,9 +203,10 @@ mod tests {
 
     #[test]
     fn req_cli_012_the_hoop_margin_is_as_far_as_an_automatic_satin_column_sews_past_a_pictures_edge() {
-        // The overlap that is a satin column's pull compensation, from rails as far outside the shape as
-        // shapes still meet, rounded up to a tenth of a millimetre.
-        let past = stitchcraft_testkit::designs::rules().auto_overlap_mm.get() + stitchcraft_engine::auto::TOUCHING;
+        // A satin column's pull compensation, from rails as far outside the shape as shapes still meet,
+        // rounded up to a tenth of a millimetre. No shape is sewn after the column beyond the picture's edge,
+        // so the column doesn't sew by the overlap past that rail (REQ-AUTO-029).
+        let past = stitchcraft_testkit::designs::rules().auto_pull_compensation_mm.get() + stitchcraft_engine::auto::TOUCHING;
         assert_eq!(HOOP_MARGIN.get(), (past * 10.0).ceil() / 10.0, "{past}");
     }
 

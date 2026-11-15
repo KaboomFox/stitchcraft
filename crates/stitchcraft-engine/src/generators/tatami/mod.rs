@@ -30,7 +30,7 @@ mod travel;
 mod underpath;
 
 use stitchcraft_core::Mm;
-use stitchcraft_params::{Origin, StitchType, normalized_angle, params};
+use stitchcraft_params::{Origin, Stability, StitchType, normalized_angle, params};
 
 use crate::generators::running::RunningParams;
 use crate::generators::tatami::rows::Grid;
@@ -43,26 +43,35 @@ const TATAMI: &[StitchType] = &[StitchType::TatamiFill];
 /// The key of the angle of a fill's rows ([`TatamiParams::angle`]), which an SVG file's clone turns with it.
 pub const ANGLE: &str = "angle";
 
-/// The stitch types whose rows are routed as a tatami fill's are: its own, and a circular fill's pieces of
-/// spiral, which its end spacing spaces, its `skip_last` shortens and its `underpath` travels under.
+/// The key of the switch that keeps the turns between rows as stitches ([`TatamiParams::turn_stitches`]),
+/// which automatic digitizing sets on its fills and a host's dialog may leave out.
+pub const TURN_STITCHES: &str = "turn_stitches";
+
+/// The stitch types whose rows the end spacing spaces: a tatami fill's own, and a circular fill's circles.
 const ROUTED: &[StitchType] = &[StitchType::TatamiFill, StitchType::CircularFill];
 
-/// The stitch types whose rows `skip_last` shortens: those [`ROUTED`], and a linear gradient fill's rows and a
-/// tartan fill's lines, which are routed as a tatami fill's rows are, though Ink/Stitch's settings window
-/// doesn't show it for a tartan.
-const SKIPPED: &[StitchType] = &[StitchType::TatamiFill, StitchType::CircularFill, StitchType::LinearGradientFill, StitchType::TartanFill];
+/// The stitch types whose needle travels under their rows with `underpath`: a tatami fill's own, and a
+/// circular fill's pieces of spiral and a guided fill's lines, which are routed as a tatami fill's rows are.
+const TRAVELLED: &[StitchType] = &[StitchType::TatamiFill, StitchType::CircularFill, StitchType::GuidedFill];
+
+/// The stitch types whose rows `skip_last` shortens: those [`TRAVELLED`], and a linear gradient fill's rows
+/// and a tartan fill's lines, which are routed as a tatami fill's rows are, though Ink/Stitch's settings
+/// window doesn't show it for a tartan.
+const SKIPPED: &[StitchType] =
+    &[StitchType::TatamiFill, StitchType::CircularFill, StitchType::GuidedFill, StitchType::LinearGradientFill, StitchType::TartanFill];
 
 /// The stitch types its rows, its expand and its underlay apply to: a contour fill takes them as Ink/Stitch's
 /// does, sewing its rings the row spacing apart over the part expanded, after the same underlay, a meander
 /// fill sews its path over the part expanded after the same underlay, a circular fill its spiral, its
-/// circles the row spacing apart, and a linear gradient or tartan fill its rows, staggered as a tatami fill's
-/// are. An element of a run of underlays first sews its underlay apart when it is one of them
-/// (`crate::underlays_first`).
+/// circles the row spacing apart, a guided fill its copies of its guide the row spacing apart, and a linear
+/// gradient or tartan fill its rows, staggered as a tatami fill's are. An element of a run of underlays first
+/// sews its underlay apart when it is one of them (`crate::underlays_first`).
 pub(crate) const UNDERLAID: &[StitchType] = &[
     StitchType::TatamiFill,
     StitchType::ContourFill,
     StitchType::MeanderFill,
     StitchType::CircularFill,
+    StitchType::GuidedFill,
     StitchType::LinearGradientFill,
     StitchType::TartanFill,
 ];
@@ -78,6 +87,7 @@ const EXPANDED: &[StitchType] = &[
     StitchType::ContourFill,
     StitchType::MeanderFill,
     StitchType::CircularFill,
+    StitchType::GuidedFill,
     StitchType::LinearGradientFill,
     StitchType::TartanFill,
     StitchType::CrossStitch,
@@ -135,13 +145,21 @@ params! {
         /// lies close to the start of the next, and leaving it out lowers the stitch count and the density
         /// along the fill's edge.
         skip_last: Toggle = "false", label "Skip last stitch", applies SKIPPED;
+
+        /// Keep the turn between 2 rows as a stitch where the rows lie closer together than the shortest
+        /// stitch: the turn's 2 needle points move apart along it until the stitch between them is the
+        /// shortest stitch. Off, the second of them is left out, as any needle point too near the one before
+        /// it is, and every second row then starts up to a stitch inside the outline, which leaves a notch
+        /// in the fill's edge there. Automatic digitizing turns it on for its fills.
+        turn_stitches: Toggle = "false", label "Keep turn stitches", applies TATAMI,
+            origin Origin::StitchCraft, stability Stability::Experimental;
     }
 
     "Travel" {
         /// Travel between rows, or a circular fill's pieces of spiral, runs inside the fill, under those sewn
         /// after it, which hide it. Off, the needle travels along the fill's outline, where the travel can
         /// show along the edge.
-        underpath: Toggle = "true", label "Underpath", applies ROUTED;
+        underpath: Toggle = "true", label "Underpath", applies TRAVELLED;
     }
 
     "Underlay" {
@@ -203,6 +221,7 @@ impl TatamiParams {
     pub fn fill(&self, longest: Mm, running: &RunningParams, travel: Travel, pull: Pull, force_locks: bool) -> Fill {
         let gap_rows = usize::try_from(self.gap_fill_rows.div_ceil(2) * 2).unwrap_or(usize::MAX);
         Fill {
+            turns: self.turn_stitches,
             top: Layer { stitching: self.stitching(longest, running), travel, pull, gap_rows },
             expand: self.expand_mm.get(),
             underlay: self.underlay(longest, travel),

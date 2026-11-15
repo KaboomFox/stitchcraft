@@ -27,6 +27,9 @@ pub mod stitchcraft_core::diag
 #[non_exhaustive] pub enum stitchcraft_core::diag::Code
 pub stitchcraft_core::diag::Code::AutoAreaTooLarge
 pub stitchcraft_core::diag::Code::AutoBackground
+pub stitchcraft_core::diag::Code::AutoBase
+pub stitchcraft_core::diag::Code::AutoBaseLeftOut
+pub stitchcraft_core::diag::Code::AutoBaseOff
 pub stitchcraft_core::diag::Code::AutoDigitized
 pub stitchcraft_core::diag::Code::AutoLayers
 pub stitchcraft_core::diag::Code::AutoOrder
@@ -54,6 +57,8 @@ pub stitchcraft_core::diag::Code::FillCrossTooFine
 pub stitchcraft_core::diag::Code::FillExpandShrinksAway
 pub stitchcraft_core::diag::Code::FillGradientNone
 pub stitchcraft_core::diag::Code::FillGradientStopPassedOver
+pub stitchcraft_core::diag::Code::FillGuidedMissed
+pub stitchcraft_core::diag::Code::FillGuidedNoGuide
 pub stitchcraft_core::diag::Code::FillLegacyAsTatami
 pub stitchcraft_core::diag::Code::FillMeanderTileNotOurs
 pub stitchcraft_core::diag::Code::FillMeanderTooSmall
@@ -291,6 +296,9 @@ pub fn stitchcraft_core::units::up_to_tenth(f64) -> f64
 #[non_exhaustive] pub enum stitchcraft_core::Code
 pub stitchcraft_core::Code::AutoAreaTooLarge
 pub stitchcraft_core::Code::AutoBackground
+pub stitchcraft_core::Code::AutoBase
+pub stitchcraft_core::Code::AutoBaseLeftOut
+pub stitchcraft_core::Code::AutoBaseOff
 pub stitchcraft_core::Code::AutoDigitized
 pub stitchcraft_core::Code::AutoLayers
 pub stitchcraft_core::Code::AutoOrder
@@ -318,6 +326,8 @@ pub stitchcraft_core::Code::FillCrossTooFine
 pub stitchcraft_core::Code::FillExpandShrinksAway
 pub stitchcraft_core::Code::FillGradientNone
 pub stitchcraft_core::Code::FillGradientStopPassedOver
+pub stitchcraft_core::Code::FillGuidedMissed
+pub stitchcraft_core::Code::FillGuidedNoGuide
 pub stitchcraft_core::Code::FillLegacyAsTatami
 pub stitchcraft_core::Code::FillMeanderTileNotOurs
 pub stitchcraft_core::Code::FillMeanderTooSmall

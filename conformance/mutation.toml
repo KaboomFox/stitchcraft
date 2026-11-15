@@ -445,6 +445,12 @@ line = "if found.iter().zip(&widths).all(|(column, width)| column.walked.length(
 why = "only a part whose every line is at most half as long as it is wide, one exactly half, tells the 2 apart, and no case can aim at that: a line runs through the centres of the part's triangles and the width averages the circles centred on it, so the 2 meet exactly only by a coincidence of rounding. The parts near the bound fall well to either side of it: a disc's or a square's lines are 0.4 times as long as it is wide, and a rectangle's, once its corners don't tie, more than 0.75 times"
 
 [[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/neighbours/under.rs"
+mutant = "replace < with <= in runs_along"
+line = "while at < stretches {"
+why = "at counts 0.5, 1.5 and so on, and stretches is a whole number, so the 2 are never equal and the loop ends at the same place"
+
+[[equivalent]]
 file = "crates/stitchcraft-engine/src/auto/neighbours/layers.rs"
 mutant = "replace > with >= in details"
 line = "if other != index && filling.len() > first {"
@@ -785,6 +791,30 @@ file = "crates/stitchcraft-engine/src/generators/ripple/mod.rs"
 mutant = "replace * with / in finished"
 line = "length: sewing.pattern.first().copied().unwrap_or(2.0 * sewing.min),"
 why = "the sewing's pattern is running::pattern's, never empty, so its first length is always there and the fallback is never used"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/guided/cut.rs"
+mutant = "replace > with >= in held"
+line = "let mut ends: Vec<f64> = along_rings.iter().flat_map(|&[from, to]| [from, to]).filter(|&at| at > a && at < b).collect();"
+why = "an end of a stretch along a ring that lies exactly at a adds a part of no length there, whose middle is that end, on the stretch, so it is passed over as any part along a ring; only the work charged grows"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/guided/cut.rs"
+mutant = "replace < with <= in held"
+line = "let mut ends: Vec<f64> = along_rings.iter().flat_map(|&[from, to]| [from, to]).filter(|&at| at > a && at < b).collect();"
+why = "an end of a stretch along a ring that lies exactly at b adds a part of no length there, whose middle is that end, on the stretch, so it is passed over as any part along a ring; only the work charged grows"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/guided/line.rs"
+mutant = "replace > with >= in meetings"
+line = "let closed = sides > 2 && line.first() == line.last();"
+why = "a line of 2 sides has one pair of sides, which follow each other whether the line counts as closed or not"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/running/mod.rs"
+mutant = "replace < with <= in along_row"
+line = "while let Some(corner) = corners.next_if(|corner| corner.at < at) {"
+why = "a corner exactly a whole number of stitches along is put before the needle point at its place and not after it, and space keeps the corner and leaves the other out in either order: the same needle points, and only the work charged changes, by a unit"
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/generators/tartan/herringbone.rs"

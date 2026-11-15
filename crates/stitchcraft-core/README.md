@@ -13,7 +13,7 @@ Layer **L0**. The foundations every other crate builds on.
 | `diag` | `Diagnostic`, `Severity`, `Fix`, and the **registry**: every `Code` with its title and explanation |
 | `element` | `ElementId`, the host's stable id for one object of the design |
 
-The diagnostics registry is a single `registry!` block in `src/diag.rs`: an entry's doc comment *is* the
+The diagnostics registry is a single `registry!` block in `src/diag/registry.rs`: an entry's doc comment *is* the
 explanation users read (`stitch explain`, the diagnostics index), and tests reject entries without one.
 
 ## Invariants

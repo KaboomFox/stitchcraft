@@ -375,7 +375,8 @@ enum Marker {
     /// The point it aims at: where its ripple stitch shrinks to (`REQ-RIP-002`), or what its circular fill
     /// turns round (`REQ-FILL-CIR-008`).
     Target,
-    /// The line its ripple stitch's copies follow (`REQ-RIP-012`, `REQ-RIP-013`).
+    /// The line its ripple stitch's copies follow (`REQ-RIP-012`, `REQ-RIP-013`), and its guided fill's rows
+    /// (`REQ-VC-023`).
     Guide,
     /// The line across its ripple stitch that sets a satin guide's copies (`REQ-RIP-014`).
     Anchor,
@@ -534,7 +535,7 @@ impl Reader {
             let (what, noun) = match marked {
                 Marker::Start => ("where the shapes grouped with it start", "start"),
                 Marker::Target => ("the point the shapes grouped with it aim at", "target"),
-                Marker::Guide => ("the line the ripple stitches grouped with it follow", "guide"),
+                Marker::Guide => ("the line the ripple stitches and guided fills grouped with it follow", "guide"),
                 Marker::Anchor => ("the line across the ripple stitches grouped with it", "anchor"),
                 Marker::Origin => ("", "origin"),
                 Marker::StopPosition => ("", "stop-position"),
@@ -731,8 +732,9 @@ impl Reader {
     /// (`REQ-VC-009`): the first of each kind that shows and has a point that reads gives where the fills and
     /// satin columns it holds start or end, or the point its ripple stitches and circular fills aim at, the
     /// middle of its anchors ([`geometry::middle`]). A guide gives the line its ripple stitches' copies follow,
-    /// its path, a satin guide where it has several subpaths, and an anchor the start and end of its first
-    /// subpath (`REQ-RIP-012` to `REQ-RIP-014`). Each such marker is used.
+    /// its path, a satin guide where it has several subpaths, and the line its guided fills copy, its first
+    /// subpath, and an anchor the start and end of its first subpath (`REQ-RIP-012` to `REQ-RIP-014`,
+    /// `REQ-VC-023`). Each such marker is used.
     fn markers<'a>(&mut self, kind: &'a Kind) -> Result<(Hints, Vec<&'a Node>), Diagnostic> {
         let (mut hints, mut used) = (Hints::default(), Vec::new());
         for child in &kind.children {

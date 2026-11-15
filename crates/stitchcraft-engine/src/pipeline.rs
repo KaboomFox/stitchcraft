@@ -26,7 +26,7 @@ use stitchcraft_core::{Budget, Code, Diagnostic};
 use stitchcraft_plan::{MachineProfile, StitchPlan};
 
 use crate::assemble::{Assembled, assemble};
-use crate::auto::digitized;
+use crate::auto::{Sewing, sewing};
 use crate::design::{Design, Element};
 use crate::finalize::{Finalized, finalize};
 use crate::generate::layered::{Layered, underlay};
@@ -49,7 +49,7 @@ pub struct PlanOutcome {
 /// work to itself, and the stitches the elements before it left; assembling and finalizing have the work
 /// once more, and the design `budget`'s stitches.
 pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanOutcome {
-    let (elements, mut diagnostics) = digitized(design, budget);
+    let Sewing { elements, mut diagnostics, base } = sewing(design, budget);
     let candidates: Vec<Candidate> = elements.iter().map(|element| Candidate::of(element, &design.settings)).collect();
     let (steps, lone) = steps(&candidates);
     diagnostics.extend(lone.into_iter().filter_map(|(k, why)| elements.get(k).map(|element| alone(element, why))));
@@ -64,7 +64,7 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
         let neighbours = Neighbours { needle, next };
         let mut meter = Budget { max_stitches: left, ..*budget }.meter();
         let generation = match step.layer {
-            Layer::Whole => generate_with(element, &design.settings, profile, &neighbours, budget, &mut meter),
+            Layer::Whole | Layer::Base => generate_with(element, &design.settings, profile, &neighbours, budget, &mut meter),
             Layer::Underlay => underlay(element, &design.settings, profile, &neighbours, budget, meter).map(|(generation, layered)| {
                 held.extend(layered.map(|layered| (step.element, layered)));
                 generation
@@ -92,7 +92,9 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
         left = left.saturating_sub(u32::try_from(made).unwrap_or(u32::MAX));
         diagnostics.extend(said);
         needle = sewn.as_ref().and_then(|sewn| sewn.groups.iter().rev().find_map(|group| group.last().copied())).or(needle);
-        generated.extend(sewn.map(|sewn| (element, sewn)));
+        // Every stitch of the base layer is underlay, its top rows too (`REQ-AUTO-028`).
+        let layer = |sewn: Generated| if base.contains(&element.id) { Generated { layer: Layer::Base, ..sewn } } else { sewn };
+        generated.extend(sewn.map(|sewn| (element, layer(sewn))));
     }
     let mut meter = budget.meter();
     let finished = assemble(&generated, &design.settings, &mut meter).and_then(|assembled| match assembled {

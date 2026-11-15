@@ -37,6 +37,7 @@ traced: `traced-pear.vectorcraft` ([below](#the-traced-pear)) and the owner's do
 | `heart.svg` | A heart 32 mm wide and 29 mm tall | cross stitch: its grid, coverage and threads |
 | `meander.svg` | A square 30 mm a side with rounded corners | the meander fill's tiles, scale, angle and line, and the circular fill's spacing and travel |
 | `tartan.svg` | A square 30 mm a side | the tartan fill's setts, runs and turned setts |
+| `guided.svg` | A leaf 42 mm long, grouped with an S-shaped line along its middle that Ink/Stitch's guide-line marker makes a guide | the guided fill's rows, copy angle and stitch positions |
 | `gradient.svg` | 3 squares 30 mm a side under linear gradients. The first is red to blue across, and the second deep gold through white to emerald green up to the right. The third is tangerine to Prussian blue down through a transparent white | the linear gradient fill's stops and row spacing |
 | `widths.svg` | A line 0.6 mm wide, a letter C 3 mm wide and a disc 16 mm across, each traced as an area | automatic digitizing's stitches by width |
 | `parts.svg` | A lollipop on a stick 2.4 mm wide and a balloon on a string 0.8 mm wide, each one area | automatic digitizing's shapes in parts |

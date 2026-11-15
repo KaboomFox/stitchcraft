@@ -67,7 +67,19 @@ fn req_vc_016_the_auto_effect_s_dialog_holds_the_rules_settings_and_its_preview_
     assert_eq!(validate(&text(&manifest)), Ok(()));
     assert_eq!((manifest.id.as_str(), manifest.kind), ("dev.stitchcraft.auto", "effect"));
     let keys: Vec<&str> = manifest.params.iter().map(|(key, _)| *key).collect();
-    assert_eq!(keys, [MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH, OVERLAP, MIN_AREA, IGNORE_BACKGROUND, PREVIEW_LEVEL]);
+    let (pull, base) = (
+        "auto_pull_compensation_mm",
+        [
+            "auto_base_layer",
+            "auto_base_stitch_length_mm",
+            "auto_base_offset_mm",
+            "auto_base_keep_holes",
+            "auto_base_sliver_mm2",
+            "auto_base_bare_percent",
+        ],
+    );
+    let rules = [MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH, OVERLAP, pull, MIN_AREA, IGNORE_BACKGROUND];
+    assert_eq!(keys, [&rules[..], &base[..], &[PREVIEW_LEVEL]].concat());
     // Each setting's row has the registry's label, unit, section, help and page, and always shows: the
     // dialog has no method.
     for (key, param) in manifest.params.iter().filter(|(key, _)| *key != PREVIEW_LEVEL) {
@@ -162,8 +174,11 @@ fn req_vc_021_the_fill_dialog_holds_a_tartan_s_sett_as_text_after_its_method() {
     let texts = |manifest: &Manifest| manifest.params.iter().filter(|(_, param)| matches!(param.schema, Schema::Text { .. })).count();
     assert_eq!(texts(&fill), 1);
     assert_eq!((texts(&family(Family::Stroke)), texts(&family(Family::Satin))), (0, 0));
-    // 63 of the 64 that every release VectorCraft's gate tests takes.
-    assert!(keys.len() <= limits::MAX_PARAMS, "{}", keys.len());
+    // From M10.9 all 64 that every release VectorCraft's gate tests takes, the guided fill's stitch positions the
+    // last: a setting more needs room made for it. M13.16's `turn_stitches`, which automatic digitizing sets on
+    // its own fills, is the one left out.
+    assert_eq!(keys.len(), limits::MAX_PARAMS);
+    assert!(!keys.contains(&"turn_stitches") && stitchcraft_params::find(PARAMETERS, "turn_stitches").is_some());
     validate(&serde_json::to_vec(&fill).unwrap()).unwrap();
 }
 
@@ -283,11 +298,17 @@ fn each_kind_is_declared_as_one_value_or_left_out() {
     assert_eq!(schema(&spec(Kind::AngleList { optional: true }, ""), &[]), None);
     assert_eq!(schema(&spec(Kind::Seed, ""), &[]), None);
     assert_eq!(schema(&spec(Kind::Text { max_bytes: 9 }, ""), &[]), None);
-    // A choice leaves out an option a text is shown for alone, and is left out when that is its default.
+    // A choice leaves out an option a text is shown for alone, and is left out when that is its default, or
+    // when 1 option is left: there is nothing to choose.
     const OPTIONS: &[ChoiceOption] = &[ChoiceOption::new("half", "Half"), ChoiceOption::new("custom", "Custom")];
     let choice = spec(Kind::Choice { options: OPTIONS }, "half");
     let shape = ParamSpec { key: "shape", visible_when: Some(Condition { key: "p", any_of: &["custom"] }), ..spec(Kind::Text { max_bytes: 9 }, "") };
-    assert_eq!(schema(&choice, &[choice, shape]), Some(Schema::Choice { options: vec!["half"], default: "half" }));
+    assert_eq!(schema(&choice, &[choice, shape]), None);
+    const THREE: &[ChoiceOption] = &[ChoiceOption::new("half", "Half"), ChoiceOption::new("full", "Full"), ChoiceOption::new("custom", "Custom")];
+    let three = spec(Kind::Choice { options: THREE }, "half");
+    assert_eq!(schema(&three, &[three, shape]), Some(Schema::Choice { options: vec!["half", "full"], default: "half" }));
+    const KEPT: &[ChoiceOption] = &[ChoiceOption::new("0", "Copy"), ChoiceOption::kept("1", "Parallel offset")];
+    assert_eq!(schema(&spec(Kind::Choice { options: KEPT }, "0"), &[]), None);
     let both = ParamSpec { visible_when: Some(Condition { key: "p", any_of: &["half", "custom"] }), ..shape };
     assert_eq!(schema(&choice, &[choice, both]), Some(Schema::Choice { options: vec!["half", "custom"], default: "half" }));
     let size = ParamSpec { kind: Kind::Count { min: 1, max: 9 }, ..shape };
