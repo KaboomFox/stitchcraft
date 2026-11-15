@@ -248,6 +248,11 @@ fn height(a: Node, b: Node, x: i64) -> (i64, i64) {
     if run == 0 {
         return (a.y, b.y);
     }
+    // At an end, where most edges are asked for theirs: no division.
+    if x == a.x || x == b.x {
+        let y = if x == a.x { a.y } else { b.y };
+        return (y, y);
+    }
     let rise = (i128::from(b.y) - i128::from(a.y)) * (i128::from(x) - i128::from(a.x));
     // The rise at `x` is no more than the segment's own, so it is a coordinate's size.
     let down = a.y + i64::try_from(rise.div_euclid(run)).unwrap_or(0);
@@ -269,11 +274,11 @@ impl Near {
     fn of(hot: &Hot, side: usize, meter: &mut Meter) -> Result<Near, Exhausted> {
         meter.charge(hot.0.len() as u64)?;
         let buckets = Buckets::over(hot.0.iter().copied(), side);
-        let mut keyed: Vec<(usize, Node)> = hot.0.iter().map(|&node| (buckets.of(node), node)).collect();
-        keyed.sort_unstable();
+        // The points are in order, so put in their buckets one by one they are in order in each: each
+        // bucket's are counted, and each point then put at the next place of its bucket.
         let mut starts = vec![0; buckets.count() + 1];
-        for &(bucket, _) in &keyed {
-            if let Some(start) = starts.get_mut(bucket + 1) {
+        for &node in &hot.0 {
+            if let Some(start) = starts.get_mut(buckets.of(node) + 1) {
                 *start += 1;
             }
         }
@@ -282,7 +287,17 @@ impl Near {
             before += *start;
             *start = before;
         }
-        Ok(Near { buckets, nodes: keyed.into_iter().map(|(_, node)| node).collect(), starts })
+        let mut next = starts.clone();
+        let mut nodes = vec![Node::default(); hot.0.len()];
+        for &node in &hot.0 {
+            if let Some(place) = next.get_mut(buckets.of(node)) {
+                if let Some(slot) = nodes.get_mut(*place) {
+                    *slot = node;
+                }
+                *place += 1;
+            }
+        }
+        Ok(Near { buckets, nodes, starts })
     }
 
     /// The points of the bucket numbered `bucket`.
@@ -297,8 +312,8 @@ fn settle(rings: &[Vec<Node>], rounds: usize, meter: &mut Meter) -> Result<Resul
     let mut hot = Hot::of(rings.iter().flatten().copied());
     let mut paths = rings.to_vec();
     // Each round bends the edges, or, once none can be bent further, makes hot the cells where they cross.
+    let mut near = Near::of(&hot, side_for(hot.0.len()), meter)?;
     for _ in 0..rounds {
-        let near = Near::of(&hot, side_for(hot.0.len()), meter)?;
         let Bent::None(edges) = bend(&mut paths, &near, meter)? else { continue };
         let crossing = crossings(&edges, meter)?;
         if crossing.is_empty() {
@@ -312,6 +327,7 @@ fn settle(rings: &[Vec<Node>], rounds: usize, meter: &mut Meter) -> Result<Resul
             cells.push(cell);
         }
         hot.extend(cells);
+        near = Near::of(&hot, side_for(hot.0.len()), meter)?;
     }
     Ok(Err(Unjoined))
 }
@@ -442,7 +458,8 @@ fn crossings_in(edges: &[(Node, Node)], side: usize, meter: &mut Meter) -> Resul
             return Ok(None);
         }
     }
-    put.sort_unstable();
+    // The edges were put in order, so sorted by their buckets alone they are in order in each.
+    put.sort_by_key(|&(bucket, _)| bucket);
     let mut found = Vec::new();
     for (at, &(bucket, k)) in put.iter().enumerate() {
         let Some(&(a, b)) = edges.get(k) else { continue };

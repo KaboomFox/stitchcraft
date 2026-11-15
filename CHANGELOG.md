@@ -2058,6 +2058,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     A chord that crosses one of the piece's own edges anywhere is now left out (`REQ-AUTO-019`), and the
     piece keeps the arc it had there.
   - The goose now sews 35,637 stitches, the castle 27,142 and the cat 23,627.
+  - The record of `cargo xtask perf` for 300 insets of a region of 1,000 points is raised from 5.46 to
+    6.27 billion instructions. The buckets cost such small rings 15 % more.
 - M13.14: the encoder's export differs by machine, and the models' workflow no longer fails by chance.
   MobileSAM's encoder is exported with its pinned size on every runner and with one of 2 SHA-256 sums:
   the run on `main` at `ecdaaeb9` gave the other one and failed, where the pull request's last run had
