@@ -113,11 +113,22 @@ them. Do they sew as cleanly as the triple runs beside them, and does the M keep
 
 MC-8 also sews one of the owner's traced dogs, `docs/fixtures/traced-dog-running-9.vectorcraft`, 100 mm
 tall: `stitch plan docs/fixtures/traced-dog-running-9.vectorcraft --auto -o dog.pes`. Does the fur read as
-fur, the face and the eyes as hers, and do its 84 jump threads, which the PE800 doesn't cut, take long to
-snip (M13.17)? 5 rows of its fills show beside thin lines of fur of another colour (M13.18): do they show?
+fur, the face and the eyes as hers, and do its 95 jump threads, which the PE800 doesn't cut, take long to
+snip (M13.17)? 3 rows of its fills show beside thin lines of fur of another colour (M13.18): do they show?
 
-M13.21 changed what the digitized halves of TS-13A and TS-13C sew, and what the dog sews: write them again
-before sewing. Automatic digitizing now chooses a part's stitches from its geometry
+M13.22 changed the order that the digitized halves of TS-13A, TS-13C and TS-13D sew in, and the dog's:
+write them again before sewing. The elements now sew in the order that changes thread least
+([sewing order](../design/image-to-embroidery.md#sewing-order)), which MC-8 checks:
+
+- The dog changes thread 12 times, where it changed 28 times. Count the rethreads at the machine: do they
+  match, and is each thread's turn as long as the plan says?
+- Some satin columns now sew before the fill beside them and reach 1 mm under it, where every column sewed
+  after its fill. Along the dog's columns of fur, does the fill's edge show on the column, or fabric
+  between them?
+- A thread that sews once jumps where it changed before. Are the dog's long jump threads, some across the
+  whole design, in the way of the stitches sewn after them, or sewn down by them?
+
+M13.21 changed what the digitized halves of TS-13A and TS-13C sew, and what the dog sews. Automatic digitizing now chooses a part's stitches from its geometry
 ([which stitch a shape gets](../design/image-to-embroidery.md#which-stitch-a-shape-gets)), and its bounds
 are StitchCraft's own values, which MC-8 confirms or changes:
 
@@ -127,8 +138,8 @@ are StitchCraft's own values, which MC-8 confirms or changes:
 - On TS-13C, the fill of the star's middle goes on into each point as far as a disc 4 mm across fits. The
   tips sew as columns. Does a point read as well as it did as one column from its cut 6.6 mm wide?
 - Sew the dog twice, as planned and with **Fill uneven parts** off (`--set auto_fill_uneven=false`), which
-  sews its ragged patches as columns again. As planned it changes thread 28 times and jumps 112 times,
-  and with the switch off 19 and 136 times. Which reads better, and which takes longer at the machine?
+  sews its ragged patches as columns again. As planned it changes thread 12 times and jumps 108 times,
+  and with the switch off 10 and 132 times. Which reads better, and which takes longer at the machine?
 - A blob sews as a small fill, where a column bent into its corners. Compare the dog's nostrils and the
   buttons' dots of TS-13D with a satin dot drawn by hand. Does a fill 1 to 2 mm across sew cleanly without
   an underlay?

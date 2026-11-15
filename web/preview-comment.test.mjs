@@ -13,7 +13,7 @@ test('the comment names the book, the demo and the 3 pictures of the build', () 
   assert.ok(body.includes(`**Docs preview:** ${url}/`));
   assert.ok(body.includes(`**Browser demo:** ${url}/demo/`));
   const pictures = [...body.matchAll(/!\[[^\]]+\]\(([^)]+)\)/g)].map(match => match[1]);
-  assert.deepEqual(pictures, ['starter-patch', 'stitch-settings', 'design-settings'].map(name => `${url}/demo/screenshots/${name}.png?v=abc123`));
+  assert.deepEqual(pictures, ['plain-drawing', 'stitched-drawing', 'stitch-settings'].map(name => `${url}/demo/screenshots/${name}.png?v=abc123`));
   assert.equal(comment(`${url}/`, 'abc123'), body);
   assert.ok(!/ArtCraft/.test(body));
 });

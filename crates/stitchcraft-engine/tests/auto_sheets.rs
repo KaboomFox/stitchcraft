@@ -324,8 +324,10 @@ fn ts13_the_jump_threads_that_its_stitches_sew_down() {
     // For each sheet, as drawn and digitized, how many jump threads it leaves and how many of them a later
     // stitch of their colour sews down, as recorded in the design (`image-to-embroidery.md` › Testing).
     // Digitized, the letters of TS-13B sew as columns with jumps between them.
+    // A thread that sews once (REQ-AUTO-037) jumps between its shapes where it changed before, and its jump
+    // threads stay: TS-13A's digitized half leaves 18 where it left 15, and changes thread 2 times, not 5.
     for (id, recorded) in
-        [("TS-13A", [(8, 0), (15, 2)]), ("TS-13B", [(6, 0), (44, 19)]), ("TS-13C", [(9, 4), (12, 5)]), ("TS-13D", [(1, 0), (13, 3)])]
+        [("TS-13A", [(8, 0), (18, 9)]), ("TS-13B", [(6, 0), (44, 19)]), ("TS-13C", [(9, 4), (13, 5)]), ("TS-13D", [(1, 0), (15, 4)])]
     {
         let threads = jump_threads(&sheet(id).1);
         let half = |stops: usize| {
@@ -334,4 +336,28 @@ fn ts13_the_jump_threads_that_its_stitches_sew_down() {
         };
         assert_eq!([half(0), half(1)], recorded, "{id}");
     }
+}
+
+/// How often the digitized half of each TS-13 sheet changes thread, from the stop after the half as drawn on,
+/// and one less than its threads, which no order betters. TS-13B's base layer and letters are black, and so
+/// are the lines of its windows, which sew after the fills they border: black sews twice. Before M13.22 the
+/// halves changed thread 5, 4, 5 and 8 times.
+const CHANGES: [(&str, usize, usize); 4] = [("TS-13A", 2, 2), ("TS-13B", 4, 3), ("TS-13C", 4, 4), ("TS-13D", 6, 6)];
+
+#[test]
+fn req_auto_037_the_digitized_halves_of_the_ts13_sheets_change_thread_as_seldom_as_their_lines_allow() {
+    let found: Vec<(&str, usize, usize)> = ["TS-13A", "TS-13B", "TS-13C", "TS-13D"]
+        .into_iter()
+        .map(|id| {
+            let plan = &sheet(id).1;
+            // The blocks with a stitch after the stop: the block the stop falls in is sewn by both halves when
+            // it goes on after it.
+            let stop = plan.blocks.iter().position(|block| block.stitches.iter().any(|stitch| stitch.kind == StitchKind::Stop)).unwrap();
+            let after = plan.blocks[stop].stitches.last().is_some_and(|stitch| stitch.kind != StitchKind::Stop);
+            let threads: Vec<_> = plan.blocks.iter().skip(stop + usize::from(!after)).map(|block| block.thread.color).collect();
+            let each: std::collections::BTreeSet<_> = threads.iter().copied().collect();
+            (id, threads.len() - 1, each.len() - 1)
+        })
+        .collect();
+    assert_eq!(found, CHANGES);
 }
