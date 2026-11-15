@@ -260,6 +260,18 @@ why = "the steps are -2, 0 and 2, so taking them from the cell instead of adding
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/normalize/region/snap.rs"
+mutant = "replace || with && in height"
+line = "if x == a.x || x == b.x {"
+why = "the ends have different x here, so with && the short way is never taken, and the division gives an end's own height at its x, rounded down and up alike: only the time taken changes"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/snap.rs"
+mutant = "replace > with >= in crossings"
+line = "while side > 1 {"
+why = "with 1 bucket each edge is put once, which is never more than 4 each, so the search with 1 bucket always gives its pairs: made inside the loop or after it, it is the same search for the same work"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/snap.rs"
 mutant = "replace > with >= in TwiceArea::plus"
 line = "let wraps = match (wrapped, term > 0) {"
 why = "adding a term of 0 never wraps, so the sign is read only for terms that are not 0"
