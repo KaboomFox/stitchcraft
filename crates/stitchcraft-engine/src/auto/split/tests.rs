@@ -366,3 +366,23 @@ fn req_auto_032_an_uneven_part_s_bridge_stays_in_its_fill_and_its_tail_leaves() 
     assert_eq!(tails_of(&blob), split(&blob, 1.0, 1.0, 1.0, &mut Budget::DEFAULT.meter()).unwrap().unwrap());
     assert_eq!(tails_of(&blob).narrow.len(), 1);
 }
+
+#[test]
+fn req_auto_019_a_chord_that_crosses_the_piece_s_outline_a_hair_from_its_end_is_left_out() {
+    // A piece whose arc ends a millionth of a micrometre before a corner of its outline, as a part of a
+    // traced cat's ear did where the opening's arc met the outline: the ring runs on from the arc's end
+    // through that corner and up, and the chord back to the arc's end leaves it between the 2, across the
+    // edge after the corner. Such a piece has no triangulation (`SC-E0009`).
+    let ring = [p(0.0, 0.0), p(1e-9, 0.0), p(0.3, 1.0), p(2.0, 3.0), p(2.6, 1.5)];
+    let part = Polygon { outline: vec![p(-5.0, -5.0), p(-5.0, 5.0), p(5.0, 5.0), p(5.0, -5.0), p(-5.0, -5.0)], holes: Vec::new() };
+    let mut meter = Budget::DEFAULT.meter();
+    assert!(matches!(geom::hit(ring[4], ring[0], ring[1], ring[2]), Hit::Cross(at) if at.distance(ring[0]) < 2e-9));
+    assert!(!crosses_nothing(&ring, &part, &mut meter).unwrap());
+    // From the corner itself, the same chord crosses nothing: it only meets the edges that end there.
+    assert!(crosses_nothing(&ring[1..], &part, &mut meter).unwrap());
+    // An edge of the part that crosses the chord as near its end does not count: the chord's ends lie on the
+    // part's outline, a rounding error to either side of it.
+    let nicked = Polygon { outline: vec![p(0.005, -1.0), p(0.005, 1.0), p(-5.0, 1.0), p(-5.0, -1.0), p(0.005, -1.0)], holes: Vec::new() };
+    assert!(matches!(geom::hit(ring[4], ring[1], nicked.outline[0], nicked.outline[1]), Hit::Cross(_)));
+    assert!(crosses_nothing(&ring[1..], &nicked, &mut meter).unwrap());
+}

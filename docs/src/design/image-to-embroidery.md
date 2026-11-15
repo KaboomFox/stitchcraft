@@ -360,7 +360,10 @@ as a digitizer sews a balloon's string over the balloon:
 - **The cut.** Where a narrow part meets a broad one, the opening leaves an arc, and a column would end
   there in a point at one of its corners. Each narrow part is cut square there instead, at a chord across
   it square to the way its sides run on, from the end of the arc that lies farther along that way. What
-  lies past the chord goes to the fill. A column ends flat along the cut, however long it is, so that a
+  lies past the chord goes to the fill. A chord that would cross the outline of the piece or of the part
+  is left out, and the arc stays. That holds a hair from the chord's end too. Where an arc ended
+  2.5e-10 mm before a corner of a traced cat's ear, the chord crossed the edge after the corner, and the
+  piece had no triangulation (M13.23). A column ends flat along the cut, however long it is, so that a
   star's points end along the star's middle. The triangles that touch the cut are the column's end, and
   its line stops where they start ([centre lines](algorithms/centre-lines.md#columns)).
 - **What sews.** Each narrow part sews as a part of its own. One narrower than

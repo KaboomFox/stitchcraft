@@ -39,8 +39,8 @@ pub(crate) struct Arrangement {
 
 /// `rings` (each open or closed, in the direction drawn) cut where they meet, on the grid; `Unjoined`
 /// should a point lie beyond the grid's reach or the edges not settle, a bug. A ring whose points all round
-/// to one grid point is left out. One unit of `meter` per point, per edge bent and hot point tested against
-/// it, per pair of edges whose spans along x overlap, and per edge.
+/// to one grid point is left out. One unit of `meter` per point and per edge, and what putting the edges on
+/// the grid takes ([`snap::round`]).
 pub(crate) fn cut(rings: &[Vec<Point>], meter: &mut Meter) -> Result<Result<Arrangement, Unjoined>, Exhausted> {
     let mut on_grid: Vec<Vec<Node>> = Vec::new();
     for ring in rings {
@@ -422,12 +422,12 @@ mod tests {
         let arrangement = cut(&rings, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
         assert!(arrangement.faces(&mut Budget { max_stitches: 1, max_work: 3 }.meter()).is_err());
         assert!(arrangement.faces(&mut Budget { max_stitches: 1, max_work: 24 }.meter()).is_err());
-        // A square: 5 points with the first again; its 4 edges, the 2 along x each tested against the 4
-        // corners within its span along x and the 2 upright ones against the 2 on their line; 5 pairs of
-        // edges side by side along x; and the 5 points of the ring cut.
+        // A square: 5 points with the first again; its 4 corners put in 2 buckets each way, 1 in each; its
+        // 4 edges, each looking in 2 buckets and tested against the corner in each; the edges put in the
+        // same 2 buckets each, and the 2 that share each bucket tested; and the 5 points of the ring cut.
         let mut meter = Budget::DEFAULT.meter();
         cut(&[square(0.0, 0.0, 4.0)], &mut meter).unwrap().unwrap();
-        assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 5 + (4 + 2 * 4 + 2 * 2) + 5 + 5);
+        assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 5 + 4 + (4 + 4 * (2 + 2)) + (4 * 2 + 4) + 5);
         // A square with a square hole apart from it: 16 halves; 4 rings traced, of 5 points each with the
         // first again, for their bounds; 2 rings bounding no face, each compared with the 2 faces; and the
         // faces whose bounds cover them located in, the square's for both and the hole's for the hole.

@@ -1428,6 +1428,15 @@ rationale = "Ink/Stitch keeps legacy fill, its first fill method, for its older 
 milestone = "M7"
 status = "active"
 
+[[req]]
+id = "REQ-FILL-006"
+area = "fill"
+level = "L2"
+statement = "Cutting a region's rings where they meet seeks the corners an edge passes and the edges that cross it only near the edge, in a grid of buckets over the rings' bounds, and gives what seeking among all of them gives. An area drawn as a traced photo's background is, 100 by 66 mm with a ragged edge and 160 ragged holes, 11,800 corners in all, is shrunk by 3.5 mm within a twentieth of the work budget of 500 million units."
+rationale = "Automatic digitizing shrinks each area by half a satin column's width to tell its narrow parts, and the raw outline of an area shrunk lies many times over itself. Sought along x alone, the backgrounds of 2 photos took more than the work budget, SC-E0004, and nothing of the pictures was written."
+milestone = "M13"
+status = "active"
+
 # ── Tatami fill ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
