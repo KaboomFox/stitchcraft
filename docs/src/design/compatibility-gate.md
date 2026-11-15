@@ -38,7 +38,7 @@ checks:
 2. `vc_abi_version` is a version the host supports.
 3. Live effects run through `vectorcraft_plugins::effect::apply` on fixture geometry, finish within the
    host's limits, and return the expected preview geometry: paths of stitches for strokes and satin
-   columns and closed ribbons for fills. When an effect can't show stitches, its last error says why.
+   columns and closed paths for fills. When an effect can't show stitches, its last error says why.
    Which level a shape shows, and the geometry of each, the plug-in's native tests check. From VectorCraft
    0.23 `apply` also takes the document, where the host looks up the swatches a painted preview names.
    StitchCraft's previews are paths alone, and the tests give it none. From 0.24 the paints it is given can
