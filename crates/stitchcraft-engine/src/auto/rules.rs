@@ -1,12 +1,12 @@
 //! The rules that choose the stitches of an automatic shape from its geometry, as one table ([`RULES`],
-//! `REQ-AUTO-030`), and the one place a bound is compared ([`choose`]).
+//! `REQ-AUTO-030`), and the one place a bound is compared (`choose`).
 //!
 //! Design: `docs/src/design/image-to-embroidery.md` › Which stitch a shape gets. Width alone chose the
 //! stitch before M13.21: a blob as wide as a satin column sewed as a column bent into its corners, and a
 //! ragged patch of a traced photo as several columns that fan where they meet. The choice was also spread
 //! over the code that sorts a stroke, a part, a part's columns, a part's broad places and its holes, each
-//! with a comparison of its own. Here it is one function of a part's [`Measures`] and its shape's
-//! [`Bounds`], so that the docs, the notice that names the rule a part sewed by (`SC-I0912`) and the tests at
+//! with a comparison of its own. Here it is one function of a part's measures and its shape's
+//! bounds, so that the docs, the notice that names the rule a part sewed by (`SC-I0912`) and the tests at
 //! each bound come from one table, and a rule can't be changed in one place and not in another.
 //!
 //! The rules ask only about geometry: how large a part is, how wide, how long for its width, how evenly
@@ -394,7 +394,7 @@ impl Fired {
 
 /// How many parts `SC-I0912` gives the measures of: a traced shape can have dozens, and the rest are counted
 /// by rule.
-const LISTED: usize = 6;
+const LISTED: usize = 3;
 
 /// `SC-I0912` for the automatic shape `id` whose parts sewed by `fired`, in order: the rule each part sewed
 /// by, with the measures that decided it for the first [`LISTED`], and the rest counted by rule. `None` for

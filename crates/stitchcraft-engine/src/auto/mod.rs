@@ -138,7 +138,7 @@ pub enum Stitches {
 
 impl Stitches {
     /// The stitches of a stroke `width` wide in a design with `settings`, whose settings of the rules are
-    /// `rules`, by the rules' table ([`rules::choose`]): a running stitch no wider than the design's narrowest
+    /// `rules`, by the rules' table (`rules::choose`): a running stitch no wider than the design's narrowest
     /// satin stroke, a satin column no wider than the widest satin column, and a fill wider than both, each
     /// width measured to the micrometre. A stroke that names its stitch (`auto_stitch`) runs or is filled at
     /// any width, and is a satin column at a width a column can have.

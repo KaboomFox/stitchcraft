@@ -95,10 +95,14 @@ fn fired(design: &Design) -> BTreeMap<&'static str, usize> {
     let (_, said) = digitized(design, &Budget::DEFAULT);
     let mut counts = BTreeMap::new();
     for said in said.iter().filter(|said| said.code == Code::AutoRule) {
-        // A rule's word follows "rule " for a shape of one part, and ": " for each part of several.
+        // A rule's word follows "rule " for a shape of one part, and ": " for each part of several that is
+        // listed. The parts after them are counted by rule, as in "and 4 more: 1 speck, 3 column."
+        let (listed, counted) = said.message.split_once(" more: ").unwrap_or((&said.message, ""));
         for rule in RULES {
             let key = rule.id.key();
-            let count = said.message.matches(&format!("rule {key}")).count() + said.message.matches(&format!(": {key}")).count();
+            let more =
+                counted.trim_end_matches('.').split(", ").filter_map(|each| each.strip_suffix(key)?.trim().parse::<usize>().ok()).sum::<usize>();
+            let count = listed.matches(&format!("rule {key}")).count() + listed.matches(&format!(": {key}")).count() + more;
             if count > 0 {
                 *counts.entry(key).or_insert(0) += count;
             }
