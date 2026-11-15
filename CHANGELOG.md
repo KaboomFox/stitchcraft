@@ -5,6 +5,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M6.15: a before and after sheet on every pull request. A page in the preview shows the standard pictures
+  as the pull request sews them beside main's. Its table has the numbers the cases measure, from the
+  stitches and thread changes to the bare share, and each number that got worse is marked. The preview's
+  comment lists the worst and links to the sheet. Main's own sheet is published at `/sheet/`.
+  - The run also checks in Chromium that the editor's exporters write the PES and DST files `stitch` writes
+    of the same document, byte for byte, for the starter drawing and a traced dog.
+  - It times the Auto effect on the traced dog in the editor and takes a picture of the result.
 - M6.14: the browser demo starts from the drawing. An empty session opens Alpine Night as a plain drawing,
   and the panel's first button, **Turn the drawing into stitches**, gives each shape the Auto effect. The
   panel says how to do the same in the menus and how to export, and a lesser button opens the finished

@@ -12,6 +12,7 @@ distribution, and the publishing in `docs/src/design/docs-pipeline.md`. The acce
 | `start.mjs` | runs on the editor's page and chooses the loader: the app's own, or a preview's |
 | `boot.mjs`, `loader.mjs`, `starter.mjs` | install the plug-ins, open the plain drawing and show the panel whose button turns it into stitches |
 | `smoke.mjs`, `docs-smoke.mjs` | run the built demo in Chromium |
+| `sheet.py`, `sheet.mjs`, `parity.mjs` | make the before and after sheet, and run its checks in Chromium (`docs/src/design/before-after-sheet.md`) |
 | `generate-template.mjs` | has the demo write the finished example's template again from the SVG |
 | `templates/` | Alpine Night: the SVG an empty session opens, and the finished example as VectorCraft's template |
 
@@ -58,7 +59,8 @@ The workflow writes one comment on a pull request, which names the preview and s
 `smoke.mjs` took. The first 2 show the drawing as it opens and after the panel's button, and the last shows
 the Auto effect's dialog. `smoke.mjs` makes its folder of pictures new each time it runs. Each picture's
 address ends with the commit, because GitHub keeps a copy of a picture by its address.
-`.github/scripts/preview-comment.cjs` makes the comment from sections.
+`.github/scripts/preview-comment.cjs` makes the comment from sections. The last one is the before and after
+sheet's, whose lines `sheet.py` writes to `sheet/comment.json` in the preview.
 
 ## The Pages site
 
