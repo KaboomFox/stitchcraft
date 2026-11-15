@@ -223,12 +223,13 @@ pub stitchcraft_engine::design::Guide::params: stitchcraft_params::set::ParamSet
 pub stitchcraft_engine::design::Guide::path: stitchcraft_engine::design::Path
 pub stitchcraft_engine::design::Guide::width: stitchcraft_core::units::Mm
 pub struct stitchcraft_engine::design::Hints
-pub stitchcraft_engine::design::Hints::anchor: core::option::Option<[stitchcraft_core::units::Point; 2]>
+pub stitchcraft_engine::design::Hints::anchor: core::option::Option<stitchcraft_engine::design::Path>
 pub stitchcraft_engine::design::Hints::end: core::option::Option<stitchcraft_core::units::Point>
 pub stitchcraft_engine::design::Hints::guide: core::option::Option<stitchcraft_engine::design::Guide>
 pub stitchcraft_engine::design::Hints::start: core::option::Option<stitchcraft_core::units::Point>
 pub stitchcraft_engine::design::Hints::target: core::option::Option<stitchcraft_core::units::Point>
 impl stitchcraft_engine::design::Hints
+pub fn stitchcraft_engine::design::Hints::anchor_ends(&self) -> core::option::Option<[stitchcraft_core::units::Point; 2]>
 pub fn stitchcraft_engine::design::Hints::map<E>(&self, impl core::ops::function::Fn(stitchcraft_core::units::Point) -> core::result::Result<stitchcraft_core::units::Point, E>) -> core::result::Result<stitchcraft_engine::design::Hints, E>
 pub fn stitchcraft_engine::design::Hints::points(&self) -> impl core::iter::traits::iterator::Iterator<Item = stitchcraft_core::units::Point> + '_
 pub struct stitchcraft_engine::design::Path
@@ -429,7 +430,12 @@ pub mod stitchcraft_engine::generators::guided
 pub enum stitchcraft_engine::generators::guided::Position
 pub stitchcraft_engine::generators::guided::Position::Flexible
 pub stitchcraft_engine::generators::guided::Position::Stagger
+pub enum stitchcraft_engine::generators::guided::Strategy
+pub stitchcraft_engine::generators::guided::Strategy::Buffer
+pub stitchcraft_engine::generators::guided::Strategy::Copy
+pub stitchcraft_engine::generators::guided::Strategy::Offset
 pub struct stitchcraft_engine::generators::guided::Guided
+pub stitchcraft_engine::generators::guided::Guided::anchor: core::option::Option<stitchcraft_engine::design::Path>
 pub stitchcraft_engine::generators::guided::Guided::angle: core::option::Option<f64>
 pub stitchcraft_engine::generators::guided::Guided::beans: alloc::vec::Vec<u32>
 pub stitchcraft_engine::generators::guided::Guided::expand: f64
@@ -441,6 +447,7 @@ pub stitchcraft_engine::generators::guided::Guided::skip_last: bool
 pub stitchcraft_engine::generators::guided::Guided::smoothness: f64
 pub stitchcraft_engine::generators::guided::Guided::spacing: f64
 pub stitchcraft_engine::generators::guided::Guided::stitching: stitchcraft_engine::generators::guided::RowStitching
+pub stitchcraft_engine::generators::guided::Guided::strategy: stitchcraft_engine::generators::guided::Strategy
 pub stitchcraft_engine::generators::guided::Guided::travel: stitchcraft_engine::generators::tatami::sew::Travel
 pub stitchcraft_engine::generators::guided::Guided::underlay: alloc::vec::Vec<stitchcraft_engine::generators::tatami::sew::Layer>
 pub struct stitchcraft_engine::generators::guided::GuidedParams
@@ -454,6 +461,7 @@ pub fn stitchcraft_engine::generators::guided::GuidedParams::from_set(&stitchcra
 pub fn stitchcraft_engine::generators::guided::GuidedParams::from_set_as(&stitchcraft_params::set::ParamSet, stitchcraft_params::stitch_type::StitchType) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
 impl stitchcraft_engine::generators::guided::GuidedParams
 pub fn stitchcraft_engine::generators::guided::GuidedParams::position(&self) -> stitchcraft_engine::generators::guided::Position
+pub fn stitchcraft_engine::generators::guided::GuidedParams::strategy(&self) -> stitchcraft_engine::generators::guided::Strategy
 pub struct stitchcraft_engine::generators::guided::Plain
 pub stitchcraft_engine::generators::guided::Plain::fill: core::option::Option<stitchcraft_engine::generators::tatami::sew::Fill>
 pub stitchcraft_engine::generators::guided::Plain::said: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
@@ -463,9 +471,10 @@ pub stitchcraft_engine::generators::guided::RowStitching::length: f64
 pub stitchcraft_engine::generators::guided::RowStitching::position: stitchcraft_engine::generators::guided::Position
 pub stitchcraft_engine::generators::guided::RowStitching::staggers: f64
 pub stitchcraft_engine::generators::guided::RowStitching::tolerance: f64
+pub const stitchcraft_engine::generators::guided::BUFFER: &str
 pub const stitchcraft_engine::generators::guided::COPY: &str
+pub const stitchcraft_engine::generators::guided::OFFSET: &str
 pub const stitchcraft_engine::generators::guided::STRATEGIES: &[stitchcraft_params::spec::ChoiceOption]
-pub const stitchcraft_engine::generators::guided::STRATEGY: &str
 pub fn stitchcraft_engine::generators::guided::guided_fill(&stitchcraft_engine::normalize::region::Region, &stitchcraft_engine::generators::guided::Guided, core::option::Option<stitchcraft_core::units::Point>, core::option::Option<&stitchcraft_engine::generators::Approach>, &mut stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_engine::generators::guided::top_path(&stitchcraft_engine::normalize::region::Region, &stitchcraft_engine::generators::guided::Guided, &stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::vec::Vec<stitchcraft_engine::generators::tatami::rows::Segment>, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::generators::manual

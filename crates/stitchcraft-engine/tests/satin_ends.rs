@@ -423,9 +423,8 @@ fn req_gen_003_elements_see_the_needle_before_and_the_next_element() {
     let outcome = planned(vec![satin("a", 0.0, &RED, &[]), satin("b", 10.0, &BLUE, &[])]);
     assert!(sewn_by(&outcome, 1)[0].distance(p(0.0, 13.0)) < 1e-9);
     // An element that sews nothing leaves the needle where it was, and offers nothing to end near: here a
-    // fill of a method not sewn yet.
-    let fill =
-        as_fill(along("fill", polylines(&[&[(0.0, 30.0), (1.0, 30.0)]]), &RED, &[("fill_method", "guided_fill"), ("guided_fill_strategy", "1")]));
+    // fill of a method that can't be read.
+    let fill = as_fill(along("fill", polylines(&[&[(0.0, 30.0), (1.0, 30.0)]]), &RED, &[("fill_method", "sparkle_fill")]));
     let outcome = planned(vec![satin("a", 0.0, &RED, &[]), fill, satin("b", 10.0, &RED, &[])]);
     let (a, b) = (sewn_by(&outcome, 0), sewn_by(&outcome, 1));
     assert_eq!(a, sewn_satin(&ladder(10.0, 6.0, &[]), &[]).0, "it ends as it does alone");
@@ -469,7 +468,9 @@ fn req_gen_003_what_an_element_offers_comes_from_its_shape_and_settings() {
     assert_eq!(approach(&method("tartan_fill"), &DesignSettings::default(), &Budget::DEFAULT), area);
     assert_eq!(approach(&method("guided_fill"), &DesignSettings::default(), &Budget::DEFAULT), area);
     let offset = Element { params: [("fill_method", "guided_fill"), ("guided_fill_strategy", "1")].into_iter().collect(), ..as_fill(stroke.clone()) };
-    assert_eq!(approach(&offset, &DesignSettings::default(), &Budget::DEFAULT), None);
+    assert_eq!(approach(&offset, &DesignSettings::default(), &Budget::DEFAULT), area);
+    let unread = Element { params: [("fill_method", "sparkle_fill")].into_iter().collect(), ..as_fill(stroke.clone()) };
+    assert_eq!(approach(&unread, &DesignSettings::default(), &Budget::DEFAULT), None);
     // A ripple stitch offers its first point too, as Ink/Stitch's strokes of every method do (ADR 0014), so
     // the element before it ends as it does in Ink/Stitch. So does a stroke whose running stitch settings
     // cannot be read: its offer does not depend on them.

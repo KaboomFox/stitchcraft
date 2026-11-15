@@ -1,0 +1,8 @@
+# TS-17B's M10.10 fan: a guided fill whose rows are the offset curves of an arc, Ink/Stitch's parallel offset
+# strategy, over the tatami fill's underlay, written with its guide line beside it in its group
+# (REQ-FILL-GDD-013).
+id = "inkstitch-ts17b-guided-offset"
+requirements = ["REQ-FILL-GDD-013"]
+kind = "inkstitch"
+sheet = "TS-17B"
+elements = "ts17b:guided:offset"

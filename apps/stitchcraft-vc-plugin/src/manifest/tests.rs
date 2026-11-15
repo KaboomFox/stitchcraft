@@ -180,12 +180,18 @@ fn req_vc_021_the_fill_dialog_holds_a_tartan_s_sett_as_text_after_its_method() {
     let texts = |manifest: &Manifest| manifest.params.iter().filter(|(_, param)| matches!(param.schema, Schema::Text { .. })).count();
     assert_eq!(texts(&fill), 1);
     assert_eq!((texts(&family(Family::Stroke)), texts(&family(Family::Satin))), (0, 0));
-    // From M10.9 all 64 that every release VectorCraft's gate tests takes, the guided fill's stitch positions the
-    // last: a setting more needs room made for it. M13.16's `turn_stitches`, which automatic digitizing sets on
-    // its own fills, is the one left out.
-    assert_eq!(keys.len(), limits::MAX_PARAMS);
+    // From M10.10 the dialog holds 65, the guided fill's strategy among them: more than the 64 that VectorCraft
+    // 0.12 and 0.13 take, which refuse the fill effect for its text anyway. From 0.14 a manifest holds 256, at
+    // most 64 outside groups, and every one of these is in a group. M13.16's `turn_stitches`, which automatic
+    // digitizing sets on its own fills, stays left out.
+    assert_eq!(keys.len(), limits::MAX_PARAMS_BEFORE_0_14 + 1);
+    assert!(fill.params.iter().all(|(_, param)| param.ui.group.is_some()));
     assert!(!keys.contains(&"turn_stitches") && stitchcraft_params::find(PARAMETERS, "turn_stitches").is_some());
     validate(&serde_json::to_vec(&fill).unwrap()).unwrap();
+    // The other families' effects install in 0.12 and 0.13 too, and stay within their 64.
+    for each in [Family::Stroke, Family::Satin] {
+        assert!(family(each).params.len() <= limits::MAX_PARAMS_BEFORE_0_14, "{each:?}");
+    }
 }
 
 #[test]
@@ -396,6 +402,23 @@ fn only_a_filter_may_ask_for_a_heavy_budget() {
 }
 
 #[test]
+fn req_vc_023_the_fill_dialog_offers_the_guided_fill_s_3_strategies_by_ink_stitch_s_numbers() {
+    // M10.9 sewed one strategy, and a choice of one option isn't declared. From M10.10 all 3 are sewn, so the
+    // strategy is in the dialog again, its options Ink/Stitch's ids, shown for the guided fill alone.
+    let fill = family(Family::Fill);
+    let (_, strategy) = fill.params.iter().find(|(key, _)| *key == "guided_fill_strategy").unwrap();
+    assert_eq!(strategy.schema, Schema::Choice { options: vec!["0", "1", "2"], default: "0" });
+    // Its label tells it from the contour fill's strategy, a row of the same dialog.
+    assert_eq!((strategy.ui.label, strategy.ui.group), (Some("Guided fill strategy"), Some("Guided fill")));
+    assert_eq!(strategy.ui.visible_when, [("fill_method", vec![Value::from("guided_fill")])]);
+    let help = strategy.ui.help.as_deref().unwrap_or_default();
+    assert!(help.ends_with("One of 0 (Copy), 1 (Parallel offset), 2 (Buffer)."), "{help}");
+    // The stitch positions show for it too, and the copy angle, which may be empty, stays out.
+    let keys: Vec<&str> = fill.params.iter().map(|(key, _)| *key).collect();
+    assert!(keys.contains(&"stitch_position_method") && !keys.contains(&"guided_fill_angle"));
+}
+
+#[test]
 fn parameters_are_an_object_of_valid_ones_up_to_the_most() {
     // A manifest may leave its parameters out, as VectorCraft reads it, but they are an object.
     let mut bare = value(&hello());
@@ -404,11 +427,30 @@ fn parameters_are_an_object_of_valid_ones_up_to_the_most() {
     let params = |v: Value| with(&hello(), "params", v);
     assert!(validate(&params(json!([]))).is_err_and(|why| why.contains("expected a JSON object")));
     assert!(validate(&params(json!({"preview": {"type": "bool", "default": false}}))).is_err());
-    let too_many: serde_json::Map<String, Value> =
-        (0..=limits::MAX_PARAMS).map(|i| (format!("p{i}"), json!({"type": "bool", "default": false}))).collect();
-    assert!(validate(&params(Value::Object(too_many.clone()))).is_err());
-    let most: serde_json::Map<String, Value> = too_many.into_iter().take(limits::MAX_PARAMS).collect();
-    assert_eq!(validate(&params(Value::Object(most))), Ok(()));
+    // 64 parameters in a manifest that VectorCraft 0.12 and 0.13 take, and one more only with a text, which
+    // they refuse anyway. Then up to 256, at most 64 of them outside groups.
+    let toggles = |count: usize, grouped: usize, text: bool| {
+        let toggle = |i: usize| {
+            if i < grouped { json!({"type": "bool", "default": false, "group": "More"}) } else { json!({"type": "bool", "default": false}) }
+        };
+        let mut all: serde_json::Map<String, Value> = (0..count - usize::from(text)).map(|i| (format!("p{i}"), toggle(i))).collect();
+        if text {
+            all.insert("text".into(), json!({"type": "string", "group": "More"}));
+        }
+        validate(&params(Value::Object(all)))
+    };
+    let early = limits::MAX_PARAMS_BEFORE_0_14;
+    assert_eq!(toggles(early, 0, false), Ok(()));
+    assert!(toggles(early + 1, early + 1, false).is_err_and(|why| why.contains("65 parameters (limit 64 before VectorCraft 0.14")));
+    assert_eq!(toggles(early + 1, 1, true), Ok(()));
+    assert_eq!(toggles(early + 2, 1, true), Ok(()));
+    assert!(toggles(early + 2, 0, true).is_err_and(|why| why.contains("65 parameters outside groups (limit 64)")));
+    // An exporter is from 0.14 too.
+    let grouped: serde_json::Map<String, Value> =
+        (0..=early).map(|i| (format!("p{i}"), json!({"type": "bool", "default": false, "group": "More"}))).collect();
+    assert_eq!(validate(&with(&exporter(FormatId::PesV1), "params", Value::Object(grouped))), Ok(()));
+    assert_eq!(toggles(limits::MAX_PARAMS, limits::MAX_PARAMS - limits::MAX_UNGROUPED, true), Ok(()));
+    assert!(toggles(limits::MAX_PARAMS + 1, limits::MAX_PARAMS, true).is_err_and(|why| why.contains("257 parameters (limit 256)")));
     for bad in [
         json!({"type": "number", "min": 2, "max": 1, "default": 1}),
         json!({"type": "number", "min": 0, "default": 1}),

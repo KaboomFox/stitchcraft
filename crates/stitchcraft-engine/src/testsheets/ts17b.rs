@@ -1,7 +1,7 @@
 //! TS-17B — the new fills, for MC-12 ([`samples`]): the tartans of M10.6 and M10.7 ([`tartans`]), each a
 //! tartan fill 40 mm square with a sett of its own, as Ink/Stitch's tartan editor saves it, the linear
 //! gradients of M10.12 below them ([`gradients`]), and from M10.9 a leaf whose guided fill copies an S-shaped
-//! guide ([`guided`]).
+//! guide ([`guided`]), with M10.10's fan and egg beside it, whose guided fills offset and buffer theirs.
 //!
 //! Drawn as a design from a file (`Drawn::FromFile`). From M10.7 VectorCraft's fill dialog holds a tartan's
 //! sett, and the Test Sheet filter drew the sheet too, each gradient as a gradient paint. From M10.9 the
@@ -22,8 +22,9 @@
 //!   at a slant of its own (M10.12).
 //! - **Fourth row**, from y = 135: the leaf, 48 mm from tip to tip, from its bottom left to its top right
 //!   corner of the 40 mm square from x = 0, its rows copies of a guide that bends one way and then the other
-//!   between the tips (`REQ-FILL-GDD-008`). The rest of the row is for the leaves that M10.10 offsets and
-//!   buffers.
+//!   between the tips (`REQ-FILL-GDD-008`). Beside it a fan from x = 45, a band between 2 arcs whose rows
+//!   are the offset curves of an arc between them, and an egg from x = 90 whose rows are rings round a short
+//!   line inside it, each started where an anchor line from that line crosses it (`REQ-FILL-GDD-013`).
 //!
 //! Every stripe's colour is one of Brother's threads, so that both programs' PES files name each thread as
 //! itself and the differential compares them as they are. A stripe sews in a thread of its colour alone,
@@ -41,7 +42,7 @@ use stitchcraft_plan::Thread;
 
 use super::designed::{Drawing, point, polygon};
 use super::sketch::SheetError;
-use super::{BLACK, BLUE, DEEP_GOLD, EMERALD_GREEN, PRUSSIAN_BLUE, RED, TANGERINE, WHITE, thread};
+use super::{BLACK, BLUE, DEEP_GOLD, EMERALD_GREEN, FLESH_PINK, PRUSSIAN_BLUE, RED, TANGERINE, WHITE, YELLOW, thread};
 use crate::design::{Gradient, GradientStop, Segment, Subpath};
 
 /// The side of each tartan, and how far apart their corners lie (mm).
@@ -118,8 +119,7 @@ const GRADIENTS: [Sample; 3] = [
 ];
 
 /// Draws TS-17B: the tartans 40 mm square, 3 to a row, each trimmed after, the herringbone of M10.7 last in
-/// the second row, the gradients in the third, and the guided leaf in the fourth ([`guided`]). The guided
-/// fills of M10.10 come beside the leaf.
+/// the second row, the gradients in the third, and in the fourth the guided leaf, fan and egg ([`guided`]).
 pub(super) fn samples() -> Result<Drawing, SheetError> {
     let mut d = tartans()?;
     gradients(&mut d)?;
@@ -171,9 +171,30 @@ const TIPS: [(f64, f64); 2] = [(3.0, 172.0), (37.0, 138.0)];
 const SIDES: [[(f64, f64); 2]; 2] = [[(3.72, 155.72), (20.72, 138.72)], [(36.28, 154.28), (19.28, 171.28)]];
 const GUIDE: [(f64, f64); 2] = [(7.86, 154.42), (32.14, 155.58)];
 
+/// The fan's arcs as cubic curves (mm), round a middle at (65, 170): its outer side, 30 mm out, from its left
+/// end to its right, and its inner side, 10 mm out, back from right to left. Each is its start and its
+/// curve's 2 control points and end.
+const FAN: [[(f64, f64); 4]; 2] =
+    [[(45.72, 147.02), (56.87, 137.66), (73.13, 137.66), (84.28, 147.02)], [(71.43, 162.34), (67.71, 159.22), (62.29, 159.22), (58.57, 162.34)]];
+/// The fan's guide: an arc 20 mm out from the same middle, in 2 curves, which starts and ends well past the
+/// fan's ends, so that its rows leave the fan as arcs.
+const FAN_GUIDE: [[(f64, f64); 4]; 2] =
+    [[(46.21, 163.16), (49.08, 155.26), (56.59, 150.0), (65.0, 150.0)], [(65.0, 150.0), (73.41, 150.0), (80.92, 155.26), (83.79, 163.16)]];
+
+/// The egg's middle and its half width and half height (mm), its guide's ends, off its middle, and its anchor
+/// line, from the guide's middle out past the egg's top right.
+const EGG: [(f64, f64); 2] = [(110.0, 155.0), (18.5, 15.5)];
+const EGG_GUIDE: [(f64, f64); 2] = [(101.0, 151.0), (113.0, 158.0)];
+const EGG_ANCHOR: [(f64, f64); 2] = [(107.0, 154.5), (128.0, 141.5)];
+
+/// How far a quarter ellipse's control points lie along its sides, as a share of its half axes.
+const QUARTER: f64 = 0.552_284_749_830_793_4;
+
 /// Draws the guided leaf of M10.9 in emerald green, the colour alone as the stripes' threads are (the module's
 /// docs): a guided fill with its defaults, its copies 0.25 mm apart over the tatami fill's underlay, trimmed
-/// after, and its guide line from tip to tip, which bends with the S of a stem.
+/// after, and its guide line from tip to tip, which bends with the S of a stem. Then M10.10's fills, as the
+/// leaf but for their strategy: a fan in yellow, its rows the offset curves of an arc, and an egg in flesh
+/// pink, its rows rings round a short line, with an anchor line.
 pub(super) fn guided(d: &mut Drawing) -> Result<(), SheetError> {
     let curve = |[a, b]: [(f64, f64); 2], to: (f64, f64)| -> Result<Segment, SheetError> { Ok(Segment::Cubic(point(a)?, point(b)?, point(to)?)) };
     let [bottom, top] = TIPS;
@@ -182,7 +203,31 @@ pub(super) fn guided(d: &mut Drawing) -> Result<(), SheetError> {
     let green = Thread::new(thread(EMERALD_GREEN)?.color);
     d.fill("guided:copied", vec![outline], &green, &[("fill_method", "guided_fill"), ("trim_after", "true")])?;
     let guide = Subpath { start: point(bottom)?, segments: vec![curve(GUIDE, top)?], closed: false };
-    d.guide(vec![guide], 0.3, &[])
+    d.guide(vec![guide], 0.3, &[])?;
+
+    let [outer, inner] = FAN;
+    let arc = |[_, a, b, to]: [(f64, f64); 4]| curve([a, b], to);
+    let fan = Subpath { start: point(outer[0])?, segments: vec![arc(outer)?, Segment::Line(point(inner[0])?), arc(inner)?], closed: true };
+    let yellow = Thread::new(thread(YELLOW)?.color);
+    d.fill("guided:offset", vec![fan], &yellow, &[("fill_method", "guided_fill"), ("guided_fill_strategy", "1"), ("trim_after", "true")])?;
+    let [first, second] = FAN_GUIDE;
+    d.guide(vec![Subpath { start: point(first[0])?, segments: vec![arc(first)?, arc(second)?], closed: false }], 0.3, &[])?;
+
+    let [(cx, cy), (rx, ry)] = EGG;
+    let (kx, ky) = (rx * QUARTER, ry * QUARTER);
+    let quarters = vec![
+        curve([(cx + rx, cy + ky), (cx + kx, cy + ry)], (cx, cy + ry))?,
+        curve([(cx - kx, cy + ry), (cx - rx, cy + ky)], (cx - rx, cy))?,
+        curve([(cx - rx, cy - ky), (cx - kx, cy - ry)], (cx, cy - ry))?,
+        curve([(cx + kx, cy - ry), (cx + rx, cy - ky)], (cx + rx, cy))?,
+    ];
+    let egg = Subpath { start: point((cx + rx, cy))?, segments: quarters, closed: true };
+    let pink = Thread::new(thread(FLESH_PINK)?.color);
+    d.fill("guided:buffered", vec![egg], &pink, &[("fill_method", "guided_fill"), ("guided_fill_strategy", "2"), ("trim_after", "true")])?;
+    let [from, to] = EGG_GUIDE;
+    d.guide(vec![Subpath { start: point(from)?, segments: vec![Segment::Line(point(to)?)], closed: false }], 0.3, &[])?;
+    let [from, to] = EGG_ANCHOR;
+    d.anchor(from, to)
 }
 
 #[cfg(test)]
@@ -200,13 +245,43 @@ mod tests {
         let leaf = design.elements().iter().find(|e| e.id.as_str() == "ts17b:guided:copied").unwrap();
         assert!(leaf.hints.guide.is_some());
         let plan = crate::testsheets::find("TS-17B").unwrap().plan().unwrap();
-        let block = plan.blocks.last().unwrap();
+        let block = &plan.blocks[35];
         let top: Vec<Point> = block.stitches.iter().filter(|s| s.kind == StitchKind::Normal && s.origin.role == Role::Top).map(|s| s.at).collect();
         let slant = |a: Point, b: Point| math::to_degrees(math::atan2(b.y() - a.y(), b.x() - a.x())).rem_euclid(180.0);
         let long: Vec<f64> = top.windows(2).filter(|w| w[0].distance(w[1]) > 1.5).map(|w| slant(w[0], w[1])).collect();
         let spread = |from: f64, to: f64| long.iter().filter(|a| (from..to).contains(*a)).count();
         assert!(long.len() > 500, "{}", long.len());
         assert!(spread(100.0, 125.0) > 50 && spread(145.0, 160.0) > 200, "{} {}", spread(100.0, 125.0), spread(145.0, 160.0));
+    }
+
+    #[test]
+    fn ts17b_s_fan_and_egg_sew_inside_their_shapes_round_their_guides() {
+        let plan = crate::testsheets::find("TS-17B").unwrap().plan().unwrap();
+        let sewn =
+            |block: usize| -> Vec<Point> { plan.blocks[block].stitches.iter().filter(|s| s.kind == StitchKind::Normal).map(|s| s.at).collect() };
+        // The plan lies about the hoop's middle, so each sample is placed by the box round its own stitches.
+        let span = |points: &[Point], of: fn(&Point) -> f64| {
+            points.iter().map(of).fold((f64::INFINITY, f64::NEG_INFINITY), |(least, most), v| (least.min(v), most.max(v)))
+        };
+        // The fan: a band from 10 to 30 mm round a middle 7.66 mm below its lowest corners, 40° to each side
+        // of straight up. Its rows are arcs round that middle, so most stitches keep their distance from it.
+        let fan = sewn(36);
+        let ((left, right), (top, bottom)) = (span(&fan, |q| q.x()), span(&fan, |q| q.y()));
+        assert!((right - left - 38.56).abs() < 0.5 && (bottom - top - 22.34).abs() < 0.5, "{} by {}", right - left, bottom - top);
+        let middle = Point::new((left + right) / 2.0, bottom + 7.66).unwrap();
+        let far = fan.iter().map(|q| q.distance(middle)).fold(0.0, f64::max);
+        let near = fan.iter().map(|q| q.distance(middle)).fold(f64::INFINITY, f64::min);
+        assert!(fan.len() > 800 && near > 9.6 && far < 30.4, "{} from {near} to {far}", fan.len());
+        let round = fan.windows(2).filter(|w| w[0].distance(w[1]) > 1.5 && (w[0].distance(middle) - w[1].distance(middle)).abs() < 0.1).count();
+        assert!(round * 2 > fan.len(), "{round} of {}", fan.len());
+        // The egg: 18.5 mm to each side of its middle and 15.5 mm above and below it, filled to its edge and
+        // no further, as an ellipse is.
+        let egg = sewn(37);
+        let ((left, right), (top, bottom)) = (span(&egg, |q| q.x()), span(&egg, |q| q.y()));
+        assert!((right - left - 37.0).abs() < 0.5 && (bottom - top - 31.0).abs() < 0.5, "{} by {}", right - left, bottom - top);
+        let (cx, cy) = ((left + right) / 2.0, (top + bottom) / 2.0);
+        let out = |q: &Point| ((q.x() - cx) / 18.5) * ((q.x() - cx) / 18.5) + ((q.y() - cy) / 15.5) * ((q.y() - cy) / 15.5);
+        assert!(egg.len() > 1_000 && egg.iter().all(|q| out(q) < 1.03), "{}", egg.len());
     }
 
     #[test]
@@ -263,6 +338,8 @@ mod tests {
             ("clear", "#fe9e32"),
             ("clear", "#0e1f7c"),
             ("guided:copied", "#00673e"),
+            ("guided:offset", "#ffff00"),
+            ("guided:buffered", "#fdd9de"),
         ];
         let found: Vec<(&str, &str)> = blocks.iter().map(|(name, colour)| (name.as_str(), colour.as_str())).collect();
         assert_eq!(found, expected);

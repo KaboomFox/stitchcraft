@@ -92,8 +92,9 @@ File references below are to the first unless a version is named. The
 
 ### Plug-ins
 
-One `.wasm` per stitch family keeps each dialog relevant and under 64 parameters, which every VectorCraft
-release takes:
+One `.wasm` per stitch family keeps each dialog relevant. The stroke's and the satin's declare at most 64
+parameters, which every VectorCraft release takes, and the fill's declares more from M10.10
+([the fill dialog's 65 settings](#the-fill-dialogs-65-settings)):
 
 | Plug-in id | Kind | Stitch types | Notes |
 |---|---|---|---|
@@ -120,8 +121,8 @@ live effect's with `effect_id`, and `effect_name` reads one back. The plug-in cr
 gate use the same functions. A live effect's id ends with its stitch family's
 (`stitchcraft_params::Family::id`).
 Manifests are generated from the [parameter registry](params.md#splitting-for-vectorcraft-abi-v1); a
-test validates each against VectorCraft's manifest rules (id charset, ≤ 64 parameters, names, ranges, and
-from 0.14 the keys that say how the dialog shows a parameter), so a manifest VectorCraft would refuse fails
+test validates each against VectorCraft's manifest rules (id charset, the most parameters, names, ranges,
+and from 0.14 the keys that say how the dialog shows a parameter), so a manifest VectorCraft would refuse fails
 the tests before a release.
 
 **Modules.** The plug-in crate builds one module for each family, chosen by a Cargo feature named after the
@@ -151,13 +152,43 @@ today they are the custom locks' steps, `random_seed`, a fill underlay's angles,
 insets and its shortest random split. A choice leaves out the options that a text spells out, which are the
 custom locks, and `fill_method` leaves out Ink/Stitch's legacy fill, which StitchCraft sews as a tatami fill
 (`REQ-FILL-005`). `satin_column` belongs to the effect, which sets it from its family. `turn_stitches`, the switch that
-automatic digitizing sets on its own fills, is left out of the fill's dialog, which holds 64 parameters
-without it. The Auto effect's dialog leaves out the settings of the registry's Advanced group, which are
+automatic digitizing sets on its own fills, is left out of the fill's dialog. The Auto effect's dialog
+leaves out the settings of the registry's Advanced group, which are
 the bounds of the rules and the 2 limits of the cover's measure (M13.21), and the switch that sews an
 outline round each fill (M13.27). The dialog opens with
 the group that declares the family's method. The groups only the family uses, for its default method, come
 next, then those it shares with the other families, then those of its other methods, such as the zigzag
 stroke's. The settings every element shares come last, as in Ink/Stitch's dialogs.
+
+#### The fill dialog's 65 settings
+
+M10.9's stitch positions made the fill dialog 64 parameters, the most that VectorCraft 0.12 and 0.13 take
+in a manifest. M10.10's strategies need `guided_fill_strategy` in the dialog: VectorCraft keeps only the
+settings a manifest declares, so a strategy the dialog doesn't hold can't be set in a document at all. It
+is the 65th.
+
+VectorCraft's rule from 0.14 is 256 parameters, at most 64 of them outside groups, since a longer dialog is
+sorted into sections (`MAX_PARAMS` and `MAX_UNGROUPED` in its `crates/plugins/src/manifest.rs`, and
+"Parameters" in its `docs/plugins.md`). Every setting of a StitchCraft dialog is in its registry group, a
+section of the dialog, and the fill effect installs only from 0.14 for its sett's text. So the manifest
+check now follows VectorCraft's own rule (`REQ-VC-023`):
+
+- at most 256 parameters, and at most 64 outside groups;
+- more than 64 only in a manifest that VectorCraft 0.12 and 0.13 refuse anyway, an exporter's or one with a
+  text, so that no effect those releases install grows past what they take.
+
+`visibleWhen` hides rows without lowering the count, so it was no way out. The alternatives were weighed
+and turned down:
+
+- **A dialog of its own for the guided fill**, as another effect. A fill could then not change its method
+  in place, and a document would hold 2 kinds of fill effect for one registry.
+- **The strategies left to files**, set in an SVG file and sewn by `stitch export`, with a coded note in
+  VectorCraft. A design drawn in VectorCraft could then never offset or buffer its guide.
+- **Another setting left out to make room.** Each of the 64 is one a fill method needs, and the next
+  setting would ask the same question again.
+
+The compatibility gate installs the fill effect in every supported release from 0.16, so a release that
+took fewer would fail it ([compatibility gate](compatibility-gate.md)).
 
 #### A tartan's sett
 
@@ -171,9 +202,9 @@ and chose both of the ways open to it (`REQ-VC-021`):
   live effect is given only the settings its manifest declares, and VectorCraft drops a record's other keys
   before it runs the effect. So without this row no preview could sew a sett of its own, whatever wrote it.
   The row also shows the sett an Ink/Stitch file brought, and takes one pasted in. With it the fill dialog
-  had 63 parameters, within the 64 its manifest is checked against, and it is the only text a dialog
-  declares (`manifest::TEXTS`). From M10.9 the guided fill's stitch positions make 64. A setting more needs
-  room made for it.
+  had 63 parameters, and it is the only text a dialog declares (`manifest::TEXTS`). A text is also why the
+  fill effect installs from VectorCraft 0.14, where a dialog may declare more than 64 settings
+  ([below](#the-fill-dialogs-65-settings)).
 - **StitchCraft Tartan, a light filter**, writes the row from what a person has, a palette code or a
   threadcount in the register's colour letters, with the width of a thread, the sett's turn, its scale, how
   far it is moved and the width up to which a stripe sews as a run
@@ -691,7 +722,7 @@ note can follow it:
 | `stitch:ignore` | `ignore_object`, `ignore_layer` | Leaves the object or the layer out with everything in it, and lists it with `SC-I0811` |
 | `stitch:start`, `stitch:end` | `starting_point`, `ending_point` | Gives the shapes of the group or layer it is in, and of the groups inside it, their start or end position: the centre of the box round its anchors. Their fills and satin columns start or end there (`REQ-GEN-001`). The marker is left out of the stitches. The first marker of each kind that shows counts, a group's own before those of the groups round it. `SC-W0807` names another, one with no anchor that reads, and the markers of a shape digitized automatically, which places its own. A group or a layer is never a marker: `SC-W0807` names it, and what it holds is read as under any other name |
 | `stitch:target` | `target_point` | From M10.8, gives the shapes of the group or layer it is in, and of the groups inside it, the point they aim at: the centre of the box round its anchors. Their ripple stitches shrink or spiral to it (`REQ-RIP-002`), and their circular fills turn round it (`REQ-FILL-CIR-008`). It is read as the start and end markers are, and `SC-W0807` names the same ones |
-| `stitch:guide`, `stitch:anchor` | Ink/Stitch's guide-line and anchor-line markers, which mark paths rather than tie commands | From M10.11, gives the shapes of the group or layer it is in, and of the groups inside it, the line their ripple stitches' copies follow, or the line across those copies whose ends lie on a satin guide's pairs (`REQ-RIP-012` to `REQ-RIP-014`). The marked path is the guide, and one of several subpaths, or a compound path, is a satin guide, its rails read with a satin column's defaults but for the ripple's `reverse_rails` and `swap_satin_rails`. From M10.9 a guide also gives their guided fills the line their rows copy, its first subpath (`REQ-VC-023`). In Ink/Stitch too, one guide line steers both. Only the start and the end of an anchor's first subpath count. The marker is left out of the stitches. It is read as the start and end markers are, and `SC-W0807` names the same ones |
+| `stitch:guide`, `stitch:anchor` | Ink/Stitch's guide-line and anchor-line markers, which mark paths rather than tie commands | From M10.11, gives the shapes of the group or layer it is in, and of the groups inside it, the line their ripple stitches' copies follow, or the line across those copies whose ends lie on a satin guide's pairs (`REQ-RIP-012` to `REQ-RIP-014`). The marked path is the guide, and one of several subpaths, or a compound path, is a satin guide, its rails read with a satin column's defaults but for the ripple's `reverse_rails` and `swap_satin_rails`. From M10.9 a guide also gives their guided fills the line their rows follow (`REQ-VC-023`), its first subpath, or with the buffer strategy all of them. In Ink/Stitch too, one guide line steers both. A ripple reads the start and the end of an anchor's first subpath. From M10.10 a guided fill reads the anchor's whole path, which starts its rows that close where it crosses them (`REQ-FILL-GDD-012`). The marker is left out of the stitches. It is read as the start and end markers are, and `SC-W0807` names the same ones |
 | `stitch:origin`, `stitch:stop-position` | `origin`, `stop_position` | Gives the design its origin, which goes to the hoop's centre, or the stop position the frame moves to before each stop (`REQ-ASM-005`): the centre of the box round its anchors, wherever the marker is (M8.8). The marker is left out of the stitches. 2 origins, or 2 stop positions in a design with a stop, are an error (`SC-E0819`), as Ink/Stitch doesn't write a file with 2 such commands. `SC-W0807` names a marker with no anchor that reads, which places nothing, and a group or a layer of either name, which is never a marker |
 | `stitch:route-start`, `stitch:route-end` | `autoroute_start`, `autoroute_end` | From M10.4, marks where the routing filters start and end a route, at the centre of the box round its anchors, when it is selected with the paths they route. The filters delete it with the paths ([routing filters](#tools-the-routing-filters)). `stitch export` leaves it out of the stitches. Before M10.4 the reader reads the name as the row below says |
 | Any other word after `stitch:` | | Ignores the name, and `SC-W0807` names the object, in case the word is a misspelt marker |
