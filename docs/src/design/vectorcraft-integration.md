@@ -933,9 +933,9 @@ it. It writes 2 folders. The app is the editor with the plug-ins, and the demo f
 loader and the starter patch without the editor.
 
 `compat/vectorcraft.toml` records the release beside the gate's pins, as a tag and the commit the tag
-names, and the build stops when the tag names another commit. The release is newer than the stable
-track's: the loader calls `uiInspect` and `docInspect`, which VectorCraft's page has from 0.24. A test fails
-when the demo's release is older than the stable track's. Once the stable track pins that release, both name it.
+names, and the build stops when the tag names another commit. The release is the stable track's, from
+0.24 on: the loader calls `uiInspect` and `docInspect`, which VectorCraft's page has from that release. A
+test fails when the demo's release is older than the stable track's.
 
 The loader touches VectorCraft only through the calls its page offers as `window.vectorcraft`. VectorCraft
 documents them in its `docs/control-protocol.md`, under "In the browser". The loader installs each light

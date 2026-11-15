@@ -160,7 +160,7 @@ fn render(supported: &Supported, pins: &toml::Table) -> String {
          release the gate pins in `{PINS}`.\n\n\
          From VectorCraft 0.23, a filter that asks for a heavy budget is installed only once a person allows it. \
          Up to 0.22 a script could allow it too. [Install StitchCraft](../install.md#the-vectorcraft-plug-ins) says \
-         how.\n"
+         how. The gate ran on neither 0.23.0 nor 0.24.0, so the table has no row for them.\n"
     );
     out
 }

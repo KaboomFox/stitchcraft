@@ -63,8 +63,9 @@ file with **File › Open** instead, once each time VectorCraft is opened. [Embr
 design](how-to/embroider-a-vectorcraft-design.md) shows how to use them.
 
 From VectorCraft 0.23, only a person allows those 3 filters. In the app nothing changes for you: VectorCraft
-asks whether to install the filter, "which asks for a heavy budget", and you choose **OK**. A script that
-drives the app can't choose it for you. To install a filter without the app, start VectorCraft's command
+shows a question about installing the filter, "which asks for a heavy budget", and you choose **OK**. From
+0.24.1 the **OK** button is grey for the first half second after the question appears, and a click then
+doesn't install the filter. A script that controls the app can't choose it for you. To install a filter without the app, start VectorCraft's command
 line with `--allow-plugin-grants`:
 
 ```sh
@@ -76,8 +77,8 @@ VectorCraft keeps the filter, and the app installs it again when it starts. The 
 VectorCraft 0.22 has no such option, and installs the filter without it.
 
 When you build a filter again and install the new file, VectorCraft 0.23 asks before it takes the place of
-the one it has. From the command line, add `"replace": true` to the parameters. A filter you allowed in an
-earlier VectorCraft stays installed.
+the one it has. From the command line, add `"replace": true` to the parameters. VectorCraft 0.23 still has a filter
+you allowed in an earlier release.
 
 ## VectorCraft's command line
 
