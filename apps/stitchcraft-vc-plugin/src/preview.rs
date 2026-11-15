@@ -8,13 +8,19 @@
 //! it would write costs more than its share, rather than be stopped.
 //!
 //! **Levels** (`preview_level`, [`Level`]). *Exact* shows every stitch. *Rows* shows a fill's top rows,
-//! one ribbon for each row segment, or a contour fill's path round its rings: where its stitches lie and
-//! which way they run, without the stitches, the underlay or the needle's travel, for a small part of the
-//! work. *Outline* shows the object's path,
-//! as lines for a stroke or a satin column and as ribbons for a fill, hatched in the fill's direction every
-//! few millimetres. *Auto*, the default, shows a stroke or a satin column exactly and a fill by its rows,
+//! or a contour fill's path round its rings: where its stitches lie and which way they run, without the
+//! stitches, the underlay or the needle's travel, for a small part of the work. *Outline* shows the
+//! object's path, as lines for a stroke or a satin column and as the shape itself for a fill, hatched in
+//! the fill's direction every few millimetres. *Auto*, the default, shows a stroke or a satin column exactly and a fill by its rows,
 //! and the outline when that costs too much. A level the user picks gets the whole budget, and when that
 //! is not enough the effect names a cheaper one (`SC-I0810`).
+//!
+//! **A fill reads as solid** (`REQ-VC-024`). VectorCraft paints what a live effect returns with the
+//! object's own fill, and thread covers a fill whole. So at every level a fill's preview is its own shape,
+//! and what the level shows, each stitch, row or hatch line, is a gap in it as thin as a hair
+//! ([`solid`]): [`GAP_MM`] wide along a stitch or a row, and [`HATCH_GAP_MM`] along a hatch line, which
+//! lie far apart. The shape then covers more than nine tenths of what the stitches cover, where ribbons
+//! along the rows covered eight tenths and the outline's hatch less than one.
 //!
 //! **Why auto shows a fill's rows.** A stroke's work costs about 880 instructions a unit and a satin
 //! column's 4,730, on every shape measured, so a budget of units bounds their exact previews. A fill's
@@ -47,16 +53,16 @@
 //! VectorCraft allows, which is when a constant needs measuring again
 //! (`docs/src/design/vectorcraft-integration.md`, live-effect previews).
 
-use stitchcraft_core::{Budget, Code, Diagnostic, Fix, Point};
+use stitchcraft_core::{Budget, Code, Diagnostic, Exhausted, Fix, Meter, Point};
 use stitchcraft_engine::auto::digitize;
-use stitchcraft_engine::design::{DesignSettings, Element, Shape};
+use stitchcraft_engine::design::{DesignSettings, Element, FillRule, Shape};
 use stitchcraft_engine::generate::{Generated, generate, rows, stitch_type_of};
 use stitchcraft_engine::generators::Neighbours;
 use stitchcraft_engine::normalize::satin::{Shape as Column, recognize};
-use stitchcraft_engine::normalize::stroke::{SHAPE_TOLERANCE, flatten};
+use stitchcraft_engine::normalize::stroke::{SHAPE_TOLERANCE, StrokePath, flatten};
 use stitchcraft_params::{Family, StitchType};
 use stitchcraft_plan::profiles::REFERENCE;
-use stitchcraft_vectorcraft::{AutoEffect, Effect, effect_drawn, effect_error, effect_lines, effect_output, effect_ribbons};
+use stitchcraft_vectorcraft::{AutoEffect, Effect, effect_error, effect_lines, effect_output, effect_solid};
 
 use crate::dialog::own;
 use crate::manifest::{Param, Schema};
@@ -80,6 +86,13 @@ const SETUP: u64 = 2_000_000;
 const PER_ANCHOR: u64 = 500;
 /// How far apart the outline's hatch lines lie, in millimetres.
 const HATCH_MM: f64 = 3.0;
+/// How wide the gap along a fill's stitch or row is, in millimetres: a twenty-fifth of the way to the next
+/// row of a fill's default spacing, so that the shape stays more than nine tenths covered under a satin
+/// column's stitches too, which lie closer.
+const GAP_MM: f64 = 0.01;
+/// How wide the gap along one of the outline's hatch lines is, in millimetres: a thirtieth of the way to
+/// the next, and wide enough to see with the whole of a hoop in view.
+const HATCH_GAP_MM: f64 = 0.1;
 
 /// What a preview shows: how much of the stitches.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -88,9 +101,9 @@ pub enum Level {
     Auto,
     /// Every stitch.
     Exact,
-    /// A fill's top rows, one ribbon for each row segment, or a contour fill's path round its rings.
+    /// A fill's top rows, or a contour fill's path round its rings, as gaps in its shape.
     Rows,
-    /// The object's path, hatched across a fill in the fill's direction.
+    /// The object's path, a fill's solid and hatched in the fill's direction.
     Outline,
 }
 
@@ -271,10 +284,57 @@ fn exact(family: Family, element: &Element, spend: Option<Spend>) -> Shown {
         Err(shown) => return shown,
     };
     // A stroke's and a satin column's needle points are an anchor each. Sewing them does not count them.
-    if priced.is_some_and(|(spend, _)| !spend.tenths(1).writes(groups.iter().map(Vec::len).sum(), anchors(family))) {
+    if priced.is_some_and(|(spend, _)| !spend.tenths(1).writes(groups.iter().map(Vec::len).sum(), 1)) {
         return Shown::TooCostly;
     }
-    effect_output(family, &groups).map_or_else(|| Shown::Unsewn(no_stitch(said)), |json| Shown::Drawn(Level::Exact, json))
+    let drawn = match family {
+        // With all that VectorCraft allows, as the stitches have.
+        Family::Fill => solid(element, segments(&groups), GAP_MM, None),
+        Family::Stroke | Family::Satin => effect_output(family, &groups),
+    };
+    drawn.map_or_else(|| Shown::Unsewn(no_stitch(said)), |json| Shown::Drawn(Level::Exact, json))
+}
+
+/// The segments of `runs`, from each point to the next.
+fn segments(runs: &[Vec<Point>]) -> Vec<(Point, Point)> {
+    runs.iter().flat_map(|run| run.windows(2)).filter_map(|w| Some((*w.first()?, *w.get(1)?))).collect()
+}
+
+/// The shape of `element`, a fill, for its fill to paint solid, with a gap `gap` millimetres wide along
+/// each of `lines` (`REQ-VC-024`). Within `spend`, half for flattening its path and telling which way each
+/// gap is wound, and half for writing; or else within all that VectorCraft allows. `None` when it has no
+/// line to show, or when `spend` does not pay for it.
+fn solid(element: &Element, lines: Vec<(Point, Point)>, gap: f64, spend: Option<Spend>) -> Option<Vec<u8>> {
+    if lines.is_empty() {
+        return None;
+    }
+    let mut meter = spend.map_or(Budget::DEFAULT, |spend| spend.tenths(5).work(ROWS_PER_UNIT)).meter();
+    let flat = flatten(element.shape.path(), SHAPE_TOLERANCE, &mut meter).ok()?;
+    if spend.is_some_and(|spend| !spend.tenths(5).writes(anchors_of(&flat, lines.len()), 1)) {
+        return None;
+    }
+    cut(element, &flat, lines, gap, &mut meter).ok()?
+}
+
+/// The anchors a fill's shape `flat` takes to write with `gaps` gaps in it: its points, and a ribbon's
+/// for each gap.
+fn anchors_of(flat: &StrokePath, gaps: usize) -> usize {
+    flat.pieces
+        .iter()
+        .map(|piece| piece.points.len())
+        .sum::<usize>()
+        .saturating_add(gaps.saturating_mul(usize::try_from(RIBBON_ANCHORS).unwrap_or(usize::MAX)))
+}
+
+/// The shape `flat`, `element`'s path flattened, with a gap `gap` millimetres wide along each of `lines`,
+/// as [`effect_solid`] writes it by the element's fill rule, charging `meter`.
+fn cut(element: &Element, flat: &StrokePath, lines: Vec<(Point, Point)>, gap: f64, meter: &mut Meter) -> Result<Option<Vec<u8>>, Exhausted> {
+    let rule = match element.shape {
+        Shape::Fill { rule, .. } => rule,
+        _ => FillRule::NonZero,
+    };
+    let rings: Vec<&[Point]> = flat.pieces.iter().map(|piece| piece.points.as_slice()).collect();
+    effect_solid(&rings, rule, lines, gap, meter)
 }
 
 /// What a step of a preview drew, and what working it out said; or what the preview shows instead.
@@ -298,17 +358,17 @@ fn drawn(generated: Option<Generated>) -> Vec<Vec<Point>> {
     generated.map(|generated| generated.groups).unwrap_or_default()
 }
 
-/// The top rows of `element`, a fill, within `spend`, a ribbon for each segment: nine tenths for laying
-/// them, and a tenth for writing them.
+/// The top rows of `element`, a fill, within `spend`, a gap in its shape along each segment: eight tenths
+/// for laying them, and two for its shape with the gaps ([`solid`]).
 fn fill_rows(element: &Element, spend: Spend) -> Shown {
-    let (segments, said) = match rowed(element, &spend.tenths(9).work(ROWS_PER_UNIT)) {
+    let (segments, said) = match rowed(element, &spend.tenths(8).work(ROWS_PER_UNIT)) {
         Ok(rowed) => rowed,
         Err(shown) => return shown,
     };
-    if !spend.tenths(1).writes(segments.len(), RIBBON_ANCHORS) {
-        return Shown::TooCostly;
+    if segments.is_empty() {
+        return Shown::Unsewn(no_stitch(said));
     }
-    effect_ribbons(segments).map_or_else(|| Shown::Unsewn(no_stitch(said)), |json| Shown::Drawn(Level::Rows, json))
+    solid(element, segments, GAP_MM, Some(spend.tenths(2))).map_or(Shown::TooCostly, |json| Shown::Drawn(Level::Rows, json))
 }
 
 /// The top rows of `element`, a fill, laid within `budget`, as their segments, and what laying them said;
@@ -322,43 +382,42 @@ fn rowed(element: &Element, budget: &Budget) -> Worked<Vec<(Point, Point)>> {
     Ok((segments, laid.diagnostics))
 }
 
-/// The path of `element`, of `family`, within `spend`: a stroke's and a satin column's as lines, a fill's
-/// as ribbons, hatched every [`HATCH_MM`] in the fill's direction when that fits too. Three tenths for
-/// flattening the path, two for writing it, three for laying the hatch and two for writing that.
+/// The path of `element`, of `family`, within `spend`: a stroke's and a satin column's as lines, and a
+/// fill's as its shape, solid, with a gap along a hatch line every [`HATCH_MM`] in the fill's direction
+/// when that fits too. Three tenths for flattening the path, one for writing it, three for laying the hatch,
+/// one for telling which way its gaps are wound and two for writing them.
 fn outline(family: Family, element: &Element, spend: Spend) -> Shown {
     let Ok(flat) = flatten(element.shape.path(), SHAPE_TOLERANCE, &mut spend.tenths(3).work(ROWS_PER_UNIT).meter()) else {
         return Shown::TooCostly;
     };
     let lines = flat.pieces.iter().map(|piece| piece.points.as_slice());
-    if !spend.tenths(2).writes(flat.pieces.iter().map(|piece| piece.points.len()).sum(), anchors(family)) {
+    if !spend.tenths(1).writes(anchors_of(&flat, 0), 1) {
         return Shown::TooCostly;
     }
     let drawn = match family {
         Family::Stroke | Family::Satin => effect_lines(lines),
         Family::Fill => {
-            let edges = lines.flat_map(|line| line.windows(2)).filter_map(|w| Some((*w.first()?, *w.get(1)?)));
-            let mut hatched = element.clone();
-            hatched.params.set(ROW_SPACING, HATCH_MM.to_string());
-            hatched.params.set(END_ROW_SPACING, "");
-            let hatch = rows(&hatched, &DesignSettings::default(), REFERENCE, &spend.tenths(3).work(ROWS_PER_UNIT)).segments.unwrap_or_default();
+            let mut spaced = element.clone();
+            spaced.params.set(ROW_SPACING, HATCH_MM.to_string());
+            spaced.params.set(END_ROW_SPACING, "");
+            let hatch = rows(&spaced, &DesignSettings::default(), REFERENCE, &spend.tenths(3).work(ROWS_PER_UNIT)).segments.unwrap_or_default();
             let hatch = if spend.tenths(2).writes(hatch.len(), RIBBON_ANCHORS) { hatch } else { Vec::new() };
-            effect_ribbons(edges.chain(hatch.iter().map(|segment| (segment.start, segment.end))))
+            let hatch = hatch.iter().map(|segment| (segment.start, segment.end)).collect();
+            hatched(element, &flat, hatch, &mut spend.tenths(1).work(ROWS_PER_UNIT).meter())
         }
     };
     drawn.map_or(Shown::TooCostly, |json| Shown::Drawn(Level::Outline, json))
 }
 
+/// The shape `flat`, `element`'s path flattened, with a gap [`HATCH_GAP_MM`] wide along each line of
+/// `hatch`, charging `meter`; without the hatch when the meter runs out, as when laying or writing the
+/// hatch costs too much.
+fn hatched(element: &Element, flat: &StrokePath, hatch: Vec<(Point, Point)>, meter: &mut Meter) -> Option<Vec<u8>> {
+    cut(element, flat, hatch, HATCH_GAP_MM, meter).or_else(|_| cut(element, flat, Vec::new(), HATCH_GAP_MM, meter)).ok().flatten()
+}
+
 /// The anchors of a ribbon.
 const RIBBON_ANCHORS: u64 = 4;
-
-/// The anchors an outline writes for each point of its path: a ribbon's to a fill's edge, and one for a
-/// stroke's or a satin column's line.
-fn anchors(family: Family) -> u64 {
-    match family {
-        Family::Fill => RIBBON_ANCHORS,
-        Family::Stroke | Family::Satin => 1,
-    }
-}
 
 /// The instructions the engine runs for each unit of work it charges, sewing an element of `family`,
 /// measured in VectorCraft's host with a margin: 880 for a stroke and 4,730 for a satin column, the same
@@ -466,7 +525,7 @@ fn filled(effect: &AutoEffect) -> bool {
 /// The stitches automatic digitizing chooses for `effect`'s object, as auto shows each element it becomes:
 /// a fill's top rows, and a satin column's and a running stitch's every stitch. Within `spend`, digitizing
 /// first, since it is most of the work, then the elements within eight tenths of what it leaves, shared out
-/// equally, and writing them within two. Without, at the exact level, every stitch of each, within all that
+/// equally, and its area's shape or its lines within two. Without, at the exact level, every stitch of each, within all that
 /// VectorCraft allows, which stops a run that needs more.
 fn digitized(effect: &AutoEffect, spend: Option<Spend>) -> Shown {
     let settings = DesignSettings::default();
@@ -497,22 +556,24 @@ fn digitized(effect: &AutoEffect, spend: Option<Spend>) -> Shown {
             Err(shown) => return shown,
         }
     }
-    let ribbons = filled(effect);
-    let (count, anchors) = to_write(&runs, ribbons);
-    if left.is_some_and(|left| !left.tenths(2).writes(count, anchors)) {
-        return Shown::TooCostly;
-    }
     let level = if spend.is_some() { Level::Auto } else { Level::Exact };
-    effect_drawn(&runs, ribbons).map_or_else(|| Shown::Unsewn(no_stitch(said)), |json| Shown::Drawn(level, json))
+    let share = left.map(|left| left.tenths(2));
+    let Some(area) = effect.elements.first().filter(|_| filled(effect)) else {
+        if share.is_some_and(|share| !share.writes(runs.iter().map(Vec::len).sum(), 1)) {
+            return Shown::TooCostly;
+        }
+        let lines = effect_lines(runs.iter().map(Vec::as_slice));
+        return lines.map_or_else(|| Shown::Unsewn(no_stitch(said)), |json| Shown::Drawn(level, json));
+    };
+    // The object's fill paints what is returned: its area, solid, with a gap along each stitch and row.
+    let lines = segments(&runs);
+    if lines.is_empty() {
+        return Shown::Unsewn(no_stitch(said));
+    }
+    solid(area, lines, GAP_MM, share).map_or(Shown::TooCostly, |json| Shown::Drawn(level, json))
 }
 
-/// What [`effect_drawn`] writes of `runs`, as [`Spend::writes`] prices it: with `ribbons`, a ribbon for
-/// each of their segments, of [`RIBBON_ANCHORS`] anchors, and else a point, an anchor, for each point.
-fn to_write(runs: &[Vec<Point>], ribbons: bool) -> (usize, u64) {
-    if ribbons { (runs.iter().map(|run| run.len().saturating_sub(1)).sum(), RIBBON_ANCHORS) } else { (runs.iter().map(Vec::len).sum(), 1) }
-}
-
-/// The outline of `effect`'s object within `spend`, as a fill's when a fill paints it, hatched, and as a
+/// The outline of `effect`'s object within `spend`, as a fill's when a fill paints it, solid and hatched, and as a
 /// stroke's otherwise ([`outline`]).
 fn auto_outline(effect: &AutoEffect, spend: Spend) -> Shown {
     match effect.elements.first() {
@@ -520,6 +581,9 @@ fn auto_outline(effect: &AutoEffect, spend: Spend) -> Shown {
         None => Shown::Unsewn(no_stitch(Vec::new())),
     }
 }
+
+#[cfg(test)]
+mod coverage;
 
 #[cfg(test)]
 mod tests {
@@ -574,14 +638,14 @@ mod tests {
         assert_eq!(level(&shown(Family::Fill, &square(80.0), "outline")), Some(Level::Outline));
         // A fill's exact preview has all VectorCraft allows: natively, all there is.
         assert_eq!(level(&shown(Family::Fill, &square(80.0), "exact")), Some(Level::Exact));
-        // A stroke's outline is its path as lines, a fill's as ribbons, hatched.
+        // A stroke's outline is its path as lines, a fill's its shape with a gap along each hatch line.
         let Shown::Drawn(_, json) = shown(Family::Stroke, &square(80.0), "outline") else { panic!("no outline") };
         let lines: Value = serde_json::from_slice(&json).unwrap();
         assert_eq!(lines["objects"][0]["path"]["subpaths"][0]["anchors"].as_array().map(Vec::len), Some(5));
         let Shown::Drawn(_, json) = shown(Family::Fill, &square(80.0), "outline") else { panic!("no outline") };
-        let ribbons: Value = serde_json::from_slice(&json).unwrap();
-        // 4 sides, and the hatch every 3 mm across the 28 mm square.
-        assert_eq!(ribbons["objects"][0]["path"]["subpaths"].as_array().map(Vec::len), Some(4 + 10));
+        let hatched: Value = serde_json::from_slice(&json).unwrap();
+        // The square, and the hatch every 3 mm across its 28 mm.
+        assert_eq!(hatched["objects"][0]["path"]["subpaths"].as_array().map(Vec::len), Some(1 + 10));
     }
 
     #[test]
@@ -621,7 +685,7 @@ mod tests {
 
     #[test]
     fn req_vc_016_auto_shows_the_stitches_automatic_digitizing_chooses_drawn_with_the_object_s_paints() {
-        // A filled square 14 mm a side is filled: its top rows, as ribbons for its fill to fill.
+        // A filled square 14 mm a side is filled: its shape, for its fill to fill, with a gap along each top row.
         let filled = painted(&square(40.0), true, None);
         let rows = shown_auto(&filled, "auto");
         assert_eq!(level(&rows), Some(Level::Auto));
@@ -631,13 +695,13 @@ mod tests {
         let column = shown_auto(&stroked, "auto");
         assert_eq!(level(&column), Some(Level::Auto));
         assert!(!closed(&column).is_empty() && closed(&column).iter().all(|closed| !closed), "{column:?}");
-        // The same line with a fill too: its stitches as ribbons, which the fill fills, after the area's rows.
+        // The same line with a fill too: its stitches as gaps in the area, which the fill fills, after the area's rows.
         let both = shown_auto(&painted(&line(&[(0.0, 0.0), (100.0, 0.0)]), true, Some(3.0 * 72.0 / 25.4)), "auto");
         assert!(closed(&both).iter().all(|closed| *closed), "{both:?}");
         // Exact shows every stitch, and the outline the object's path, hatched across a fill every 3 mm.
         assert_eq!((level(&shown_auto(&filled, "exact")), level(&shown_auto(&stroked, "exact"))), (Some(Level::Exact), Some(Level::Exact)));
         let outline = shown_auto(&filled, "outline");
-        assert_eq!((level(&outline), closed(&outline).len()), (Some(Level::Outline), 4 + 5));
+        assert_eq!((level(&outline), closed(&outline).len()), (Some(Level::Outline), 1 + 5));
         assert_eq!(closed(&shown_auto(&stroked, "outline")), [false]);
     }
 
@@ -667,19 +731,25 @@ mod tests {
         assert!(Spend(8_000).writes(16, 1) && !Spend(7_999).writes(16, 1));
         assert!(!Spend(u64::MAX - 1).writes(usize::MAX, RIBBON_ANCHORS), "saturating, not wrapping");
         assert_eq!(reading(320_000), Budget { max_work: 10, max_stitches: u32::MAX });
-        assert_eq!((anchors(Family::Fill), anchors(Family::Stroke), anchors(Family::Satin)), (4, 1, 1));
         // The Auto effect's elements share eight tenths of what digitizing leaves equally.
         assert_eq!((spend.shared(4), spend.shared(1), spend.shared(0)), (Spend(6_400), Spend(25_600), Spend(25_600)));
-        // A run of 3 needle points is 2 ribbons, or 3 anchors of a line.
+        // A run of 3 needle points is 2 segments, and a shape of 5 points with 2 gaps takes 13 anchors.
         let run = |n: u32| (0..n).map(|x| Point::new(f64::from(x), 0.0).unwrap()).collect::<Vec<_>>();
-        assert_eq!((to_write(&[run(3), run(1)], true), to_write(&[run(3), run(1)], false)), ((2, RIBBON_ANCHORS), (4, 1)));
+        assert_eq!(segments(&[run(3), run(1)]), [(run(1)[0], run(2)[1]), (run(2)[1], run(3)[2])]);
+        let flat = flatten(
+            read_effect(Family::Fill, &input(&square(10.0)), &params_with(Family::Fill, "auto"), &Budget::DEFAULT).unwrap().element.shape.path(),
+            SHAPE_TOLERANCE,
+            &mut Budget::DEFAULT.meter(),
+        )
+        .unwrap();
+        assert_eq!((anchors_of(&flat, 0), anchors_of(&flat, 2)), (5, 13));
     }
 
     #[test]
     fn a_level_shows_nothing_whose_work_or_writing_its_share_does_not_pay_for() {
         let fill = read_effect(Family::Fill, &input(&square(1600.0)), &params_with(Family::Fill, "rows"), &Budget::DEFAULT).unwrap().element;
-        // Its rows take 11,357 units of work, which nine tenths of 40.4 million instructions pay for, and
-        // writing their 2,258 segments 4.5 million, a tenth of 45.2 million.
+        // Its rows take 11,357 units of work, which eight tenths of 45.4 million instructions pay for, and
+        // writing its shape with their 2,258 gaps 4.5 million, a tenth of 45.2 million.
         assert_eq!(fill_rows(&fill, Spend(43_000_000)), Shown::TooCostly);
         assert_eq!(level(&fill_rows(&fill, Spend(46_000_000))), Some(Level::Rows));
         // An outline that cannot even flatten the path.

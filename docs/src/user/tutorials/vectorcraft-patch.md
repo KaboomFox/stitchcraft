@@ -41,9 +41,10 @@ Set **Angle** to 45, and choose **OK**. If the dialog is taller than your screen
 
 </details>
 
-The circle now shows the rows the fill sews, at 45 degrees. VectorCraft lets a plug-in do only so much
-work for a preview, and a larger fill, such as a disc more than about 30 mm across, shows its outline
-instead of its rows. `stitch export --preview` shows every stitch, whatever the size.
+The circle is still drawn solid, as thread will cover it, and hairline gaps at 45 degrees mark the rows the fill
+sews. Zoom in to see them. VectorCraft lets a plug-in do only so much
+work for a preview, and a larger fill, such as a disc more than about 30 mm across, shows a hatch line
+every 3 mm instead of its rows. `stitch export --preview` shows every stitch, whatever the size.
 
 ## 2. Draw the star
 

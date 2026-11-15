@@ -69,7 +69,8 @@ picture, and a larger **Smallest area** leaves out more specks ([reference](../r
 Each traced shape then shows the stitches StitchCraft chooses for it, as far as VectorCraft lets a live
 effect work them out: a fill's top rows, and a column's or a line's stitches. A shape that needs more,
 such as a letter or a ring, shows its outline instead, and the machine file has every stitch whichever
-shows. The document now says it is digitized automatically, so **File › Export › Export As** writes the
+shows. A filled shape is drawn solid in its own colour either way, as thread will cover it. Zoom in to see
+the hairline gaps that mark its rows or stitches. The document now says it is digitized automatically, so **File › Export › Export As** writes the
 machine file without **Digitize automatically**, as does `stitch export` without `--auto`
 ([how](../how-to/embroider-a-vectorcraft-design.md)). Trace again and the group is new, without the
 effect: apply it after the last trace.
