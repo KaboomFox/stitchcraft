@@ -116,7 +116,7 @@ pub(super) fn traced(bytes: &[u8], threads: &[String], effect: bool) -> Result<(
     if !set.is_empty() || design.elements().is_empty() {
         return Err(format!("{} shapes, and these are not automatic: {set:?}", design.elements().len()));
     }
-    let sewn = sew(Source::VectorCraft, bytes, reading, REFERENCE, FormatId::PesV1, "trace");
+    let sewn = sew(Source::VectorCraft, bytes, (reading, &[]), REFERENCE, FormatId::PesV1, "trace");
     let stopped: Vec<String> = sewn.diagnostics.iter().filter(|d| d.severity() == Severity::Error).map(ToString::to_string).collect();
     let plan = sewn.plan.as_ref().filter(|_| stopped.is_empty()).ok_or(format!("it doesn't sew: {stopped:?}"))?;
     if !sewn.diagnostics.iter().any(|d| d.code == Code::AutoBackground) {

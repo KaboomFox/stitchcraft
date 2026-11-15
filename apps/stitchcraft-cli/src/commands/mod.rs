@@ -305,10 +305,25 @@ pub fn printable(text: &str) -> String {
         .collect()
 }
 
+/// How many shapes say the rule their parts sewed by (`SC-I0912`), each on a line of its own, at the most:
+/// a traced photo has a hundred shapes or more, and they are counted in one line instead.
+const RULES_SHOWN: usize = 3;
+
 /// Diagnostics as people read them: each one's headline ([`Diagnostic::headline`]), then its fix indented.
+/// The rules that more than `RULES_SHOWN` shapes sewed by (`SC-I0912`) are counted in one line, where the
+/// first of them was said: a report lists each.
 pub fn render_diagnostics(diagnostics: &[Diagnostic]) -> String {
+    let rules = diagnostics.iter().filter(|d| d.code == Code::AutoRule).count();
+    let mut counted = rules <= RULES_SHOWN;
     let mut out = String::new();
     for d in diagnostics {
+        if d.code == Code::AutoRule && rules > RULES_SHOWN {
+            if !counted {
+                out.push_str(&format!("info {}: {rules} shapes each say which rule chose their stitches. A report (--report) lists them.\n", d.code));
+            }
+            counted = true;
+            continue;
+        }
         out.push_str(&d.headline());
         out.push('\n');
         if let Some(fix) = &d.fix {
@@ -327,6 +342,30 @@ mod tests {
     use std::path::PathBuf;
 
     use super::*;
+
+    #[test]
+    fn req_auto_036_the_rules_of_many_shapes_are_counted_in_one_line() {
+        let rule = |id: &str| {
+            let element = stitchcraft_core::ElementId::new(id).unwrap();
+            Diagnostic::new(Code::AutoRule, "This shape sews by the rule area.")
+                .with_element(element)
+                .with_fix(Fix::Hint("Set `auto_stitch`.".to_string()))
+        };
+        let digitized = Diagnostic::new(Code::AutoDigitized, "4 shapes are digitized automatically: all sew as tatami fills.");
+        // Up to 3 shapes say their rule each, with its hint.
+        let few = render_diagnostics(&[digitized.clone(), rule("a"), rule("b"), rule("c")]);
+        assert_eq!(few.matches("info SC-I0912 (").count(), 3, "{few}");
+        assert!(few.contains("info SC-I0912 (b): This shape sews by the rule area.\n  hint: Set `auto_stitch`.\n"), "{few}");
+        // More are counted in one line, where the first was said, and what else was said stays.
+        let order = Diagnostic::new(Code::AutoOrder, "The elements are sewn in an order of their own.");
+        let many = render_diagnostics(&[digitized, rule("a"), rule("b"), order, rule("c"), rule("d")]);
+        assert_eq!(
+            many,
+            "info SC-I0901: 4 shapes are digitized automatically: all sew as tatami fills.\n\
+             info SC-I0912: 4 shapes each say which rule chose their stitches. A report (--report) lists them.\n\
+             info SC-I0907: The elements are sewn in an order of their own.\n"
+        );
+    }
 
     #[test]
     fn req_cli_006_a_file_that_cannot_be_written_is_said_after_the_design_and_so_are_those_written() {

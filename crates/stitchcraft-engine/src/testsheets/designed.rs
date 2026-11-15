@@ -274,11 +274,12 @@ impl Drawing {
     }
 
     /// The sheet planned for the reference machine, which says exactly the diagnostics of `codes`, in their
-    /// order; otherwise what the engine said about it.
+    /// order; otherwise what the engine said about it. The rule that each automatic shape sewed by
+    /// (`SC-I0912`) is said of every such shape of every sheet, and isn't among the codes.
     pub fn plan_saying(self, codes: &[Code]) -> Result<StitchPlan, SheetError> {
         let design = self.design()?;
         let outcome = crate::plan(&design, REFERENCE, &Budget::DEFAULT);
-        let said: Vec<Code> = outcome.diagnostics.iter().map(|d| d.code).collect();
+        let said: Vec<Code> = outcome.diagnostics.iter().map(|d| d.code).filter(|code| *code != Code::AutoRule).collect();
         match outcome.plan {
             Some(plan) if said == codes => Ok(plan),
             _ => Err(SheetError::Said(outcome.diagnostics.iter().map(ToString::to_string).collect::<Vec<_>>().join(" "))),

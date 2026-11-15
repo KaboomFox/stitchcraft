@@ -79,11 +79,16 @@ mod columns;
 mod narrow;
 mod neighbours;
 mod params;
+pub mod rules;
 mod split;
 
 pub use neighbours::TOUCHING;
 use neighbours::{Background, Sewn, no_area, parts_of, speck};
-pub use params::{AutoParams, IGNORE_BACKGROUND, MAX_SATIN_WIDTH, MIN_AREA, MIN_TRIPLE_RUN_WIDTH, OVERLAP};
+pub use params::{
+    ADVANCED, AutoParams, FILL_ANGLE, FILL_UNEVEN, IGNORE_BACKGROUND, LONGEST_SATIN_STITCH, MAX_SATIN_WIDTH, MAX_UNEVENNESS, MIN_AREA,
+    MIN_FILL_WIDTH, MIN_SLENDERNESS, MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, STITCH,
+};
+use rules::{Asked, Bounds, Fired, Measures, RuleId};
 
 use std::borrow::Cow;
 
@@ -97,7 +102,7 @@ use crate::generators::pull::PULL_COMPENSATION;
 use crate::generators::satin::{
     self, CENTER_WALK_UNDERLAY, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PUSH_COMPENSATION, SATIN_COLUMN, ZIGZAG_UNDERLAY,
 };
-use crate::generators::tatami::TURN_STITCHES;
+use crate::generators::tatami::{ANGLE, TURN_STITCHES};
 use crate::generators::{TooSmall, mm, too_small};
 use crate::normalize::region::{self, Polygon, Unjoined};
 use crate::normalize::strips::Line;
@@ -133,16 +138,12 @@ pub enum Stitches {
 
 impl Stitches {
     /// The stitches of a stroke `width` wide in a design with `settings`, whose settings of the rules are
-    /// `rules`: a running stitch no wider than the design's narrowest satin stroke, a satin column no wider
-    /// than the widest satin column, and a fill wider than both, each width measured to the micrometre.
+    /// `rules`, by the rules' table (`rules::choose`): a running stitch no wider than the design's narrowest
+    /// satin stroke, a satin column no wider than the widest satin column, and a fill wider than both, each
+    /// width measured to the micrometre. A stroke that names its stitch (`auto_stitch`) runs or is filled at
+    /// any width, and is a satin column at a width a column can have.
     pub fn of_stroke(width: Mm, settings: &DesignSettings, rules: &AutoParams) -> Stitches {
-        if at_most(width, settings.min_satin_stroke_width) {
-            Stitches::Running
-        } else if at_most(width, rules.auto_max_satin_width_mm) {
-            Stitches::Satin
-        } else {
-            Stitches::FilledStroke
-        }
+        of_stroke(width, &Bounds::of(rules, settings.min_satin_stroke_width)).1
     }
 
     /// Whether the stitches cover the stroke's width, as a satin column or a fill does, so that what a host
@@ -151,6 +152,18 @@ impl Stitches {
     pub const fn across(self) -> bool {
         matches!(self, Stitches::Satin | Stitches::FilledStroke)
     }
+}
+
+/// The rule that a stroke `width` wide sews by under `bounds`, and the stitches that gives it.
+fn of_stroke(width: Mm, bounds: &Bounds) -> (Fired, Stitches) {
+    let measures = Measures::of_stroke(width.get(), bounds);
+    let rule = rules::choose(&measures, bounds);
+    let stitches = match (rule, bounds.asked) {
+        (RuleId::Line, _) | (RuleId::Asked, Asked::Run) => Stitches::Running,
+        (RuleId::Column, _) | (RuleId::Asked, Asked::Satin) => Stitches::Satin,
+        _ => Stitches::FilledStroke,
+    };
+    (Fired { rule, measures: Some(measures) }, stitches)
 }
 
 /// Whether `width` is no wider than `bound`, both measured to the micrometre.
@@ -395,15 +408,38 @@ pub fn digitize(element: &Element, settings: &DesignSettings, meter: &mut Meter)
 }
 
 /// The ordinary elements that sew the automatic `element` of a design with `settings` by `rules`, its
-/// settings of the rules, as [`digitize`] makes them.
+/// settings of the rules, as [`digitize`] makes them: each fill at the angle the rules give the design's
+/// fills, and `SC-I0912` last, naming the rule each part of it sewed by, when it sews by the rules.
 fn made_by(element: &Element, settings: &DesignSettings, rules: &AutoParams, meter: &mut Meter) -> Result<Digitized, Exhausted> {
+    let bounds = Bounds::of(rules, settings.min_satin_stroke_width);
+    let (mut made, fired) = match &element.shape {
+        Shape::Stroke { path, width, join, cap } => {
+            let (fired, stitches) = of_stroke(*width, &bounds);
+            (stroke(element, path, Style { width: *width, join: *join, cap: *cap }, stitches, rules, meter)?, vec![fired])
+        }
+        Shape::Fill { .. } => areas(element, &bounds, rules, meter)?,
+    };
+    if made.stitches.is_some() {
+        made.diagnostics.extend(rules::said(&element.id, &fired));
+    }
+    // A fill's own default is the rules' default too, and is left unset.
+    if rules.auto_fill_angle != 0.0 {
+        for fill in made.elements.iter_mut().filter(|made| matches!(made.shape, Shape::Fill { .. })) {
+            fill.params.set(ANGLE, rules.auto_fill_angle.to_string().as_str());
+        }
+    }
+    Ok(made)
+}
+
+/// The ordinary elements that sew `element`, an automatic stroke along `path` drawn with `style`, as
+/// `stitches`, by `rules`, with `meter`'s work: itself when it runs, tripled from the narrowest triple run, a
+/// satin column for each of its subpaths, or the fill of the area it paints.
+fn stroke(element: &Element, path: &Path, style: Style, stitches: Stitches, rules: &AutoParams, meter: &mut Meter) -> Result<Digitized, Exhausted> {
     let as_it_is = |stitches| itself(element, stitches);
-    let Shape::Stroke { path, width, join, cap } = &element.shape else { return areas(element, settings, rules, meter) };
-    let style = Style { width: *width, join: *join, cap: *cap };
-    let made = match Stitches::of_stroke(*width, settings, rules) {
+    let made = match stitches {
         Stitches::Fill | Stitches::Running => {
             let mut made = as_it_is(Some(Stitches::Running));
-            if tripled(width.get(), rules) {
+            if tripled(style.width.get(), rules) {
                 for element in &mut made.elements {
                     element.params.set(BEAN_STITCH_REPEATS, "1");
                 }
@@ -420,14 +456,16 @@ fn made_by(element: &Element, settings: &DesignSettings, rules: &AutoParams, met
     Ok(made)
 }
 
-/// The elements that sew `element`, an automatic area of a design with `settings`, by `rules`, with
-/// `meter`'s work: its parts sorted by their width (`narrow`) and [`sewn`]. An area whose region the region
-/// code can't join, a bug, is itself as it is, and its fill says so.
-fn areas(element: &Element, settings: &DesignSettings, rules: &AutoParams, meter: &mut Meter) -> Result<Digitized, Exhausted> {
+/// The elements that sew `element`, an automatic area held to `bounds`, by `rules`, with `meter`'s work: its
+/// parts sorted by the rules (`narrow`) and [`sewn`], and the rule each part sewed by. An area whose region
+/// the region code can't join, a bug, is itself as it is, and its fill says so.
+fn areas(element: &Element, bounds: &Bounds, rules: &AutoParams, meter: &mut Meter) -> Result<(Digitized, Vec<Fired>), Exhausted> {
     let as_it_is = itself(element, Some(Stitches::Fill));
-    let Shape::Fill { path, rule, .. } = &element.shape else { return Ok(as_it_is) };
-    let Ok(parts) = parts_of(path, *rule, meter)? else { return Ok(as_it_is) };
-    Ok(sewn(element, narrow::sorted(&element.id, parts, settings.min_satin_stroke_width, rules, meter)?, rules))
+    let Shape::Fill { path, rule, .. } = &element.shape else { return Ok((as_it_is, Vec::new())) };
+    let Ok(parts) = parts_of(path, *rule, meter)? else { return Ok((as_it_is, Vec::new())) };
+    let mut sorted = narrow::sorted(&element.id, parts, bounds, rules, meter)?;
+    let fired = std::mem::take(&mut sorted.fired);
+    Ok((sewn(element, sorted, rules), fired))
 }
 
 /// The elements that sew `element`, an automatic area whose parts are `sorted` by their width, by `rules`:
@@ -820,11 +858,11 @@ mod tests {
             clips: Vec::new(),
         };
         let said = vec![Diagnostic::new(Code::InternalCheckFailed, "A part could not be measured.").with_element(area.id.clone())];
-        let filled = narrow::Parts { filled: vec![square.clone()], along: Vec::new(), said: said.clone() };
+        let filled = narrow::Parts { filled: vec![square.clone()], along: Vec::new(), said: said.clone(), fired: Vec::new() };
         assert_eq!(sewn(&area, filled, &AutoParams::defaults()).diagnostics, said);
         let line = Line { points: vec![p(20.3, 0.3), p(29.7, 0.3)], closed: false };
         let thin = narrow::Narrow { part: strip, lines: vec![line], width: Mm::new(0.6).unwrap() };
-        let both = narrow::Parts { filled: vec![square], along: vec![narrow::Along::Narrow(thin)], said: said.clone() };
+        let both = narrow::Parts { filled: vec![square], along: vec![narrow::Along::Narrow(thin)], said: said.clone(), fired: Vec::new() };
         let made = sewn(&area, both, &AutoParams::defaults());
         assert_eq!((made.elements.len(), made.diagnostics), (2, said));
     }

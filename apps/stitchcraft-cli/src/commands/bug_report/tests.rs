@@ -328,6 +328,7 @@ fn pes<'a>(path: &'a Path, name: &'a str, design: &'a [u8]) -> Run<'a> {
         design_path: path,
         source: Source::Svg,
         reading: Reading::default(),
+        rules: &[],
         name,
         design,
         profile: profiles::REFERENCE,

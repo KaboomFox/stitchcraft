@@ -5,6 +5,9 @@ use crate::auto::neighbours::tests::{circle, filled, least_work, square};
 use crate::design::DesignSettings;
 use crate::normalize::fixture::part;
 
+/// The narrowest satin stroke of a design that sets none.
+const NARROWEST: Mm = DesignSettings::MIN_SATIN_STROKE_WIDTH;
+
 #[test]
 fn the_summary_counts_the_areas_flattened_and_those_given_whole() {
     assert!(summary(0, 0).is_none());
@@ -32,7 +35,7 @@ fn an_area_whose_layers_were_not_found_fills_no_hole() {
     let square =
         layer_of(vec![part(&[(0.0, 0.0), (30.0, 0.0), (30.0, 30.0), (0.0, 30.0)], &[&[(10.0, 10.0), (10.0, 20.0), (20.0, 20.0), (20.0, 10.0)]])]);
     let layers = [Some(under), Some(square)];
-    let holes = details(&layers, &boxes(&layers), 1, &mut Budget::DEFAULT.meter()).unwrap();
+    let holes = details(&layers, &boxes(&layers), 1, NARROWEST, &mut Budget::DEFAULT.meter()).unwrap();
     assert!(holes.is_empty(), "{:?}", holes.iter().map(|hole| &hole.details).collect::<Vec<_>>());
 }
 
@@ -87,7 +90,7 @@ fn a_hole_costs_a_unit_for_each_part_far_from_it() {
         parts.extend(far.then(|| circle((100.0, 100.0), 10.0, 2_000)));
         let layers = [Some(layer_of(vec![holed_disc(64)])), Some(layer_of(parts))];
         let mut meter = Budget::DEFAULT.meter();
-        let holes = details(&layers, &boxes(&layers), 0, &mut meter).unwrap();
+        let holes = details(&layers, &boxes(&layers), 0, NARROWEST, &mut meter).unwrap();
         assert_eq!(holes.iter().map(|hole| hole.details.clone()).collect::<Vec<_>>(), [BTreeSet::from([1])]);
         Budget::DEFAULT.max_work - meter.work_left()
     };
@@ -216,7 +219,7 @@ fn a_hole_closes_when_its_details_leave_no_gap_in_it_wider_than_touching() {
     let closes = |gap: f64| {
         let holed = part(&[(0.0, 0.0), (40.0, 0.0), (40.0, 40.0), (0.0, 40.0)], &[&[(10.0, 10.0), (10.0, 30.0), (30.0, 30.0), (30.0, 10.0)]]);
         let layers = [Some(layer_of(vec![holed])), Some(layer_of(vec![square((10.0 + gap, 10.0 + gap), (30.0 - gap, 30.0 - gap))]))];
-        !details(&layers, &boxes(&layers), 0, &mut Budget::DEFAULT.meter()).unwrap().is_empty()
+        !details(&layers, &boxes(&layers), 0, NARROWEST, &mut Budget::DEFAULT.meter()).unwrap().is_empty()
     };
     assert!(closes(0.02));
     assert!(!closes(0.1));

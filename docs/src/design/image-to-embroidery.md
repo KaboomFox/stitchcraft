@@ -100,18 +100,123 @@ Digitizing doesn't add an error of its own (`REQ-AUTO-006`). A part that its wid
 is sewn otherwise, or left out with a warning, and a shape that paints nothing sews as it would without
 the switch. One odd shape among hundreds never keeps a design from being written.
 
+## Which stitch a shape gets
+
+Automatic digitizing chooses the stitches of each part of a shape from the part's geometry alone, by the
+first rule of one table that the part matches (M13.21, `REQ-AUTO-030`). The picture's subject
+is no input of a rule, and a flower and a dog go by the same table. A part is a connected piece of what
+shows of an area, once the layers are flattened and the specks are merged ([Neighbours](#neighbours)).
+
+Width alone chose the stitch before. A blob as wide as a satin column then sewed as a column bent into its
+corners, and a ragged patch of a traced photo as several columns that fan where they meet. On the traced
+running dog, 62 of 107 shapes sewed so.
+
+### The measures
+
+- **Widest.** The diameter of the largest circle that fits inside the part. The rules use one fact about it, whether a
+  circle as wide as a bound fits.
+- **Width.** The diameter of the circles that fit inside the part centred on its centre lines, averaged
+  along them ([width along the line](algorithms/centre-lines.md#width-along-the-line)).
+- **Slenderness.** The part's area divided by its width squared, which says how long it is for its width. A
+  rectangle 3 by 9 mm measures 3, a disc 0.8, and a letter drawn with an even stroke 6 or more.
+- **Unevenness.** How much the width varies along the lines: its standard deviation divided by the width.
+  The letters of a drawn patch measure 0.11 to 0.23, and the ragged patches of 4 traced photos 0.39 to
+  0.52 at the median.
+- **Lines.** How many centre lines the part has. A part of one line has no branch.
+
+### The rules
+
+The [rules' table](../user/reference/auto-rules.md) is generated from the code's own
+(`stitchcraft_engine::auto::rules::RULES`), with each bound's default, so that the table, the notice a
+shape gives and the tests at each bound can't drift apart. The rules are tried in this order. First a shape whose
+setting names a stitch sews so. Then a speck merges into a neighbour and a line runs. Areas are filled next,
+with compact parts and uneven parts after them. Any other part sews as satin columns, unless its columns
+are refused.
+One function compares every bound (`auto::rules::choose`), a length to the micrometre and a ratio to its
+third decimal. A width written in another unit that converts to a bound give or take a rounding error,
+such as 7 mm in CSS pixels, is that bound.
+
+**A compact part is filled** (`REQ-AUTO-031`) because a blob has no way to run. Its centre line is what its
+corners leave of its middle, so a column along that line sews stitches of unlike lengths round a point. A
+fill sews rows across the blob at the design's angle. On a part under 7 mm wide a row is a stitch or 2.
+The fill then looks like a satin column without the fan. A dot is the smallest compact part.
+
+**An uneven part is filled** (`REQ-AUTO-032`) for what its columns would do: a part of several lines sews a column along each, and
+the columns meet at its junctions. Where the strokes are even, as a letter's are, the columns meet cleanly.
+Where the width swells and shrinks, each column fans at its ends and the outline sews scalloped. A part of
+one line isn't held to its evenness: a leaf and a tapering stroke narrow smoothly, and one satin column
+sews each well. A piece of an uneven part that is narrower than the narrowest satin stroke leaves the
+fill, cut as a narrow part of a broad one is ([Shapes in parts](#stitch-types-by-width)), and sews as a line.
+The measure is of the whole part, so a letter of a thick and a thin stroke is uneven too, though each
+stroke is even. A design drawn in such strokes turns the rule off, which the `logo` style does.
+
+**Holes** (`REQ-AUTO-033`). A part that is filled is filled whole under the areas that fill its holes, and
+they sew on it ([Layers](#neighbours)). A dog's nose sews as one fill with the nostrils on it, where it sewed
+as 4 columns round them. A hole that nothing fills is left open, and a part sewn as columns keeps its holes,
+as a ring or a letter's counter does.
+
+**What leaves a fill** (`REQ-AUTO-034`). A piece of an area leaves the fill only where it is narrower than
+the narrowest piece of a fill, and only when the rules make it a line or a column. A balloon's string
+leaves the balloon, and a wing 6 mm wide stays in the fill.
+
+**Refused columns** (`REQ-AUTO-035`). A satin stitch longer than the widest satin column lies loose, and a
+column no wider than that on average still sews one where its rails part, at a corner or round a bend. A
+column's longest stitch lies between the 2 points as far along its rails, as shares of their lengths from
+one rung to the next, at a corner of either rail. A part with a column that would sew a longer one is
+filled, and `SC-I0902` gives the stitch's length. The widest satin column is the longest satin stitch a
+machine sews well, so a shape may set it lower and never higher. It is the same for every machine profile
+so far, and becomes a value of the profile with the step that splits the stitches of a wider column.
+
+### Seeing and changing the choice
+
+`SC-I0912` says, for each part of a shape, which rule it sewed by and the measures that decided it
+(`REQ-AUTO-036`). The settings come in 3 tiers ([Settings](#settings)):
+
+- **A shape** names its stitch with `auto_stitch`. A part that can't sew so goes by the table.
+- **A design** leans the rules towards satin columns or fills with `auto_prefer`, which moves 3 bounds
+  together. `auto_fill_uneven` turns the filling of uneven parts off, and `auto_fill_angle` gives every
+  fill one angle.
+- **The bounds themselves** are advanced settings. No dialog shows them, and `stitch plan --set` sets one
+  on every shape digitized automatically, unless the shape sets it.
+
+A style is a named set of values of these settings, and no rule of its own: `stitch plan --style logo` for
+flat art drawn in strokes, and `--style photo` for a traced photo, which is the defaults.
+
+### The grounds of the bounds
+
+The narrowest and the widest satin column are established: digitizing manuals put the narrowest satin at 1
+to 1.5 mm, and split a satin stitch at 7 mm to keep its look. The least slenderness, the most a width
+varies and the narrowest piece of a fill are StitchCraft's own. Their values come from measurements of 9
+pictures, which are 2 traced dogs, 2 traced photos, a pear, 3 emblems and a lettered patch, whose letters all kept
+their columns.
+Between a slenderness of 2 and 4 the running dog's result moves by 7 shapes of 107. MC-8 confirms the
+defaults or changes them.
+
+### What it costs
+
+Measured on the 4 traced dogs on 2026-11-14, against the step before (`tests/auto_photos.rs` records the
+numbers):
+
+| Traced dog | Shapes sewn as satin columns | As fills | Jumps | Thread changes | Slivers | Bare |
+|---|---:|---:|---:|---:|---:|---:|
+| On turf, 6 threads | 64 to 27 | 4 to 45 | 124 to 82 | 10 to 12 | 4 to 0 | 0.204 to 0.020 % |
+| On turf, 9 threads | 73 to 31 | 3 to 49 | 143 to 94 | 12 to 22 | 10 to 1 | 0.346 to 0.097 % |
+| Running, 6 threads | 59 to 21 | 6 to 47 | 113 to 81 | 12 to 16 | 3 to 1 | 0.107 to 0.026 % |
+| Running, 9 threads | 79 to 29 | 7 to 60 | 135 to 112 | 18 to 28 | 2 to 0 | 0.073 to 0.001 % |
+
+The satin stitches that lean along their column (`SC-W0208`), which a fan sews, fell from 26 to 34 a dog to
+4 to 8. The thread changes rose, and each is a rethread by hand on a machine with one needle. A column or a
+line sews after the fill it borders ([Sewing order](#sewing-order)), so a design of many small fills sews
+its fills first and its lines after, colour by colour, twice over. With `auto_fill_uneven` off the dogs
+change thread 10, 12, 13 and 19 times and jump 118, 143, 109 and 136 times. The switch trades thread
+changes for jump threads. An order that changes thread less often is a later step's
+([roadmap](../plan/roadmap.md)).
+
 ## Stitch types by width
 
-An automatic element is measured at the size it sews, in millimetres, to the micrometre (`REQ-AUTO-002`).
-A width written in another unit that converts to a bound give or take a rounding error, such as 7 mm in
-CSS pixels, is that bound. Its width at a place is the diameter of the largest circle that fits inside it
-there. Its parts sew by their width:
-
-| Width | Sewn as |
-|---|---|
-| Up to the design's `min_satin_stroke_width_mm`, 1 mm unless the design sets it | A running stitch along the centre line, a triple run (bean stitch) from 0.5 mm wide |
-| Wider, up to the widest satin column, 7 mm | Satin columns, whose rails are the outline |
-| Above 7 mm | A tatami fill |
+An automatic element is measured at the size it sews, in millimetres (`REQ-AUTO-002`). Its width at a place
+is the diameter of the largest circle that fits inside it there. This section says how each stitch is
+made once the [rules](#which-stitch-a-shape-gets) have chosen it.
 
 A stroke is a line as wide as it is drawn (M13.1):
 
@@ -524,23 +629,26 @@ As built, measured on 2026-11-14:
 
 | Picture, digitized | Bare | Share bare | Slivers | Of them reaching into the rim | Largest sliver |
 |---|---:|---:|---:|---:|---:|
-| Traced pear | 0.03 mm² | 0.001 % | 0 | 0 | |
-| Traced dog on turf, 6 threads | 3.35 mm² | 0.204 % | 4 | 2 | 0.20 mm² |
-| Traced dog on turf, 9 threads | 5.67 mm² | 0.346 % | 10 | 1 | 0.335 mm² |
-| Traced running dog, 6 threads | 2.08 mm² | 0.107 % | 3 | 0 | 0.26 mm² |
-| Traced running dog, 9 threads | 1.41 mm² | 0.073 % | 2 | 0 | 0.135 mm² |
+| Traced pear | 0 | 0 % | 0 | 0 | |
+| Traced dog on turf, 6 threads | 0.33 mm² | 0.020 % | 0 | 0 | |
+| Traced dog on turf, 9 threads | 1.59 mm² | 0.097 % | 1 | 0 | 0.17 mm² |
+| Traced running dog, 6 threads | 0.51 mm² | 0.026 % | 1 | 0 | 0.26 mm² |
+| Traced running dog, 9 threads | 0.02 mm² | 0.001 % | 0 | 0 | |
 
 No fabric shows on any of them. The test pictures, the stripes among them, and the dogs' pieces don't leave a
 gap. `tests/auto_cover.rs` holds their cases. The whole dogs are cases of `tests/auto_photos.rs`, which
 runs in the release build. That file records each dog's row of this table, and its case fails when a
 number changes. A dog whose slivers grow then shows before it comes to a limit.
 
-The dogs' 19 slivers lie beside thin strands of fur. A strand that sews as a running stitch is as wide as
+These are the numbers since M13.21, which fills the dogs' ragged patches
+([which stitch a shape gets](#which-stitch-a-shape-gets)). The limits were set at M13.16, when the dogs left
+19 slivers and 0.07 to 0.35 % of their designs bare. Those slivers lay beside thin strands of fur. A strand
+that sews as a running stitch is as wide as
 its thread and can't reach under a neighbour, so the overlap can't close the fabric beside it. A thin
 column's end sewn further under its neighbour closed 4 of them and laid 19 more stitches astray, so it
 isn't built ([below](#neighbours-that-overlap)). The owner's decision of 2026-11-14 leaves a gap this small
-to the base layer. 3 slivers reach into the rim, each by no more than 0.42 mm from the outline. Both limits are StitchCraft's own, set from the dogs: their slivers are 0.09 to
-0.335 mm², and the dog on turf in 9 threads leaves the most bare. They are settings
+to the base layer. 3 of the 19 reached into the rim, each by no more than 0.42 mm from the outline. Both limits are StitchCraft's own, set from the dogs: their slivers were 0.09 to
+0.335 mm², and the dog on turf in 9 threads left the most bare. They are settings
 ([Settings](#settings)), and MC-8 confirms them on black fabric or changes them.
 
 ### One underlay under the whole design
@@ -639,15 +747,17 @@ what covers the gaps, and a sliver is what it leaves to the base layer.
 As built, at the default stitch length of 3 mm, against the same picture with the base layer off, whose
 fills sew their own underlays:
 
-| Picture, digitized | Base layer's stitches | Stitches with it | Without it | More | At 600 stitches a minute |
+| Picture, digitized | Base layer's stitches | Stitches with it | Without it | Difference | At 600 stitches a minute |
 |---|---:|---:|---:|---:|---:|
-| Traced pear | 1,156 | 5,156 | 5,236 | 80 fewer, 1.5 % | 0.1 minutes less |
-| Traced dog on turf, 6 threads | 1,201 | 10,850 | 9,823 | 1,027 more, 10.5 % | 1.7 minutes |
-| Traced dog on turf, 9 threads | 1,188 | 11,524 | 10,548 | 976 more, 9.3 % | 1.6 minutes |
-| Traced running dog, 6 threads | 1,322 | 12,217 | 11,408 | 809 more, 7.1 % | 1.3 minutes |
-| Traced running dog, 9 threads | 1,313 | 13,240 | 12,565 | 675 more, 5.4 % | 1.1 minutes |
+| Traced pear | 1,156 | 5,096 | 5,295 | 199 fewer, 3.8 % | 0.3 minutes less |
+| Traced dog on turf, 6 threads | 1,201 | 10,463 | 11,921 | 1,458 fewer, 12.2 % | 2.4 minutes less |
+| Traced dog on turf, 9 threads | 1,188 | 11,185 | 12,850 | 1,665 fewer, 13.0 % | 2.8 minutes less |
+| Traced running dog, 6 threads | 1,322 | 11,297 | 13,015 | 1,718 fewer, 13.2 % | 2.9 minutes less |
+| Traced running dog, 9 threads | 1,313 | 13,071 | 15,183 | 2,112 fewer, 13.9 % | 3.5 minutes less |
 
-The pear's 3 large fills sew fewer stitches on one base layer than with an underlay each.
+Every picture sews fewer stitches on one base layer than with an underlay under each fill. Before M13.21
+the dogs sewed 675 to 1,027 more with it: most of their patches were satin columns then, which sew an underlay
+with or without the base layer.
 
 ### Neighbours that overlap
 
@@ -845,27 +955,29 @@ leaves are counted apart.
 | Badges in a row, abutting or stacked | 0 | 0.40 mm | 0 | 4 |
 | Emblem, abutting or stacked | 0 | 0.35 mm | 0 | 2 |
 | Button, abutting or stacked | 0 | 0.40 mm | 6 | 0 |
-| Traced pear | 0 | 0.95 mm | 0 | 4 |
-| Traced dog on turf, 6 threads | 0.17 mm² | 1.55 mm | 6 | 113 |
-| Traced dog on turf, 9 threads | 0.34 mm² | 1.95 mm | 3 | 130 |
-| Traced running dog, 6 threads | 0.18 mm² | 0.99 mm | 3 | 100 |
-| Traced running dog, 9 threads | 0.12 mm² | 1.39 mm | 10 | 116 |
+| Traced pear | 0 | 0.44 mm | 0 | 2 |
+| Traced dog on turf, 6 threads | 0 | 1.33 mm | 7 | 71 |
+| Traced dog on turf, 9 threads | 0 | 3.15 mm | 8 | 73 |
+| Traced running dog, 6 threads | 0.18 mm² | 2.14 mm | 4 | 64 |
+| Traced running dog, 9 threads | 0 | 1.30 mm | 7 | 84 |
 
-The button's 7 dots sew on from one to the next, each move 2.7 mm long across its yellow. The pear's olive
-and dark olive bands each sew a column at both ends, and each of their threads sews a side of the stem
-between those ends, so its 4 jump threads all run from the stem. `tests/auto_fabric.rs` keeps the moves and
-the jump threads as measured.
+The button's 7 dots sew on from one to the next, each move 2.7 mm long across its yellow. The pear leaves 2
+jump threads, where it left 4: the narrow ends of its olive and dark olive bands are uneven, and sew as
+fills with their bands (M13.21). `tests/auto_fabric.rs` keeps the moves and the jump threads as measured.
 
 The owner's dog, traced from her 2 photos in 6 and in 9 threads (M13.15, `docs/fixtures/README.md` › The
-traced dogs), still lays 7 stitches astray: 3 and 2 on the dog on turf in 6 and in 9 threads, and 2 on
-the running dog in 9. 2 are satin stitches that
-fan round a shape biting into their column's side and cross it. One is the straight move, 2.25 mm
-long, between 2 lines of one narrow part, which is a stitch because it is shorter than the collapse length.
-M13.16 added the other 4. 3 are stitches of a column that sews 1 mm past a rail and shows where the shape
-beside that rail ends, and one is a stitch of the base layer that shows in a sliver. `tests/auto_photos.rs` lists each, with where it lies and why, and its
-case fails on any other stitch astray and on any listed one that no longer is. Of the
-[roadmap](../plan/roadmap.md)'s steps, M13.17 removes the move and M13.18 the others. The dogs' moves astray are moves from one element to the next,
-as the button's are. Their jump threads, 100 to 130, are the design's limit as it stands: each thread sews
+traced dogs), lays 21 stitches astray: 3 and 6 on the dog on turf in 6 and in 9 threads, and 7 and 5 on the
+running dog. One is the straight move, 2.25 mm long, between 2 lines of one narrow part, which is a stitch
+because it is shorter than the collapse length. The other 20 are rows of the fills that M13.21 sews where
+columns sewed, each up to 4 mm long, a fill's stitch. Of the 6 that were traced, 5 lie along a line of fur
+of another colour that sews on the fill or that the fill reaches under. The line sews as wide as its
+thread, and the row shows beside it. The sixth lies under the edge of a column sewn after its fill. Before
+M13.21 the dogs laid 7 stitches astray. 2 of them were satin stitches 7.89 and 4.72 mm long that fanned
+across a shape biting into their column, and M13.21 removed those. `tests/auto_photos.rs` lists each stitch,
+with where it lies and why, and its case fails on any other stitch astray and on any listed one that no
+longer is. Of the [roadmap](../plan/roadmap.md)'s steps, M13.17 removes the move and M13.18 the rows, by
+merging the thin lines into their neighbours. The dogs' moves astray are moves from one element to the next,
+as the button's are. Their jump threads, 64 to 84, are the design's limit as it stands: each thread sews
 its shapes one after another and jumps between those that don't touch, and the PE800 cuts no jump. M13.17
 runs the thread under the shapes sewn later instead, which cover it. Each dog takes
 too long to digitize and measure in the tests' debug build, so CI's `perf` job runs these cases in the
@@ -879,20 +991,36 @@ The rules' values are StitchCraft's own parameters, registered as any other
 ([parameter registry](params.md), [reference](../user/reference/params/auto.md)), since M13.7
 (`REQ-AUTO-020`). Each rule goes by the settings of the shape it digitizes (`stitchcraft_engine::auto::AutoParams`):
 
-| Setting | Key | Default | Rules |
+The settings come in 3 tiers. The Auto effect's dialog shows the first 2, and the third is the rules' bounds,
+which `stitch plan --set KEY=VALUE` sets on every shape digitized automatically, as a document can on one.
+The [rules' reference](../user/reference/auto-rules.md) lists every setting with its default and its tier,
+generated from the registry.
+
+| Tier | Setting | Key | Rules |
 |---|---|---|---|
-| Widest satin column | `auto_max_satin_width_mm` | 7 mm | a line's stitches, a part's columns, the split of a part into broad and narrow parts, an area digitized whole under its details |
-| Narrowest triple run | `auto_min_triple_run_width_mm` | 0.5 mm | a running stitch tripled |
-| Overlap | `auto_overlap_mm` | 1 mm | an area reaching under its neighbours and cut away under them, a satin column past a rail that a shape sewn after it runs along |
-| Pull compensation | `auto_pull_compensation_mm` | 0.4 mm | a satin column past a rail with no shape sewn after it beside it, and its end under another column |
-| Smallest area | `auto_min_area_mm2` | 1 mm² | specks, the narrow parts too small to cut from a broad part, and what details may leave of a hole they fill |
-| Leave out the background | `auto_ignore_background` | on | the background, read of the lowest shape |
-| Base layer | `auto_base_layer` | on | whether the design sews one, read of the lowest shape whose settings read, as the 5 below are |
-| Base layer's stitch length | `auto_base_stitch_length_mm` | 3 mm | its rows' stitches and their spacing |
-| Base layer's offset | `auto_base_offset_mm` | −0.4 mm | how far inside the design's outer shape it lies, and how wide the rim is |
-| Base layer keeps holes | `auto_base_keep_holes` | on | whether the outer shape keeps its holes |
-| Largest sliver | `auto_base_sliver_mm2` | 0.4 mm² | the largest gap in the top thread that is left to the base layer: a limit of the [measure](#the-stricter-measure), by which nothing sews differently |
-| Most left to the base layer | `auto_base_bare_percent` | 0.5 % | the most of the design that the top thread may leave bare over a base layer, the measure's other limit |
+| A shape | Stitch | `auto_stitch` | the stitch the shape sews as, where its parts can: left at `auto`, the rules choose |
+| A design | Satin or fill | `auto_prefer` | leans the least slenderness, the most a width varies and the narrowest piece of a fill together, by half |
+| A design | Fill uneven parts | `auto_fill_uneven` | whether a part of several lines whose width varies is filled |
+| A design | Fill angle | `auto_fill_angle` | the angle of every fill made of the shape |
+| A design | Overlap | `auto_overlap_mm` | an area reaching under its neighbours and cut away under them, a satin column past a rail that a shape sewn after it runs along |
+| A design | Pull compensation | `auto_pull_compensation_mm` | a satin column past a rail with no shape sewn after it beside it, and its end under another column |
+| A design | Leave out the background | `auto_ignore_background` | the background, read of the lowest shape |
+| A design | Base layer | `auto_base_layer` | whether the design sews one, read of the lowest shape whose settings read, as the 5 below it are |
+| A design | Base layer's stitch length | `auto_base_stitch_length_mm` | its rows' stitches and their spacing |
+| A design | Base layer's offset | `auto_base_offset_mm` | how far inside the design's outer shape it lies, and how wide the rim is |
+| A design | Base layer keeps holes | `auto_base_keep_holes` | whether the outer shape keeps its holes |
+| Advanced | Widest satin column | `auto_max_satin_width_mm` | a line's stitches, a part's columns and their longest stitch, the split of a part into its fill and the pieces that leave it. A shape may set it lower, never higher |
+| Advanced | Narrowest triple run | `auto_min_triple_run_width_mm` | a running stitch tripled |
+| Advanced | Least slenderness of a column | `auto_min_slenderness` | a compact part |
+| Advanced | Most a column's width varies | `auto_max_unevenness` | an uneven part |
+| Advanced | Narrowest piece of a fill | `auto_min_fill_width_mm` | what leaves the fill of an area |
+| Advanced | Smallest area | `auto_min_area_mm2` | specks, the narrow parts too small to cut from a broad part, and what details may leave of a hole they fill |
+| Advanced | Largest sliver | `auto_base_sliver_mm2` | the largest gap in the top thread that is left to the base layer: a limit of the [measure](#the-stricter-measure), by which nothing sews differently |
+| Advanced | Most left to the base layer | `auto_base_bare_percent` | the most of the design that the top thread may leave bare over a base layer, the measure's other limit |
+
+A design's settings are a shape's too: VectorCraft's Auto effect on a group or a layer sets them on every
+path inside it. The Auto effect's dialog held 13 rows after M13.16 and was 903 px tall in a window of 900.
+With the bounds and the 2 limits of the measure left out it holds 12.
 
 The defaults are the values on this page, and MC-8 confirms or changes them. A shape that sets none of the
 settings takes the defaults, and an automatic shape with a setting that doesn't read sews nothing
@@ -1174,9 +1302,9 @@ area kept wrongly and 3 % lost.
 
   | Sheet | As drawn: jump threads | sewn down | Digitized: jump threads | sewn down |
   |---|---:|---:|---:|---:|
-  | TS-13A | 8 | 0 | 16 | 4 |
+  | TS-13A | 8 | 0 | 15 | 2 |
   | TS-13B | 6 | 0 | 44 | 19 |
-  | TS-13C | 9 | 4 | 8 | 1 |
+  | TS-13C | 9 | 4 | 12 | 5 |
   | TS-13D | 1 | 0 | 13 | 3 |
 
 - Ink/Stitch sews the TS-13 sheets too, every night ([conformance](conformance.md#l3--inkstitch-differential-nightly),
