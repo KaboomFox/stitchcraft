@@ -207,7 +207,7 @@ mod tests {
         let square = vec![p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0), p(0.0, 0.0)];
         let turned: Vec<Point> = square.iter().rev().copied().collect();
         let count = |lines: &[Vec<Point>], meter: &mut Meter| line_curves(lines, 1.0, meter).unwrap().len();
-        assert_eq!((count(&[open], meter), count(&[square.clone()], meter), count(&[vec![p(5.0, 5.0)]], meter)), (1, 2, 0));
+        assert_eq!((count(&[open], meter), count(std::slice::from_ref(&square), meter), count(&[vec![p(5.0, 5.0)]], meter)), (1, 2, 0));
         // A triangle closes with 4 points, the fewest, and a line there and back with 3 is open.
         assert_eq!(count(&[vec![p(0.0, 0.0), p(4.0, 0.0), p(0.0, 4.0), p(0.0, 0.0)]], meter), 2);
         assert_eq!(count(&[vec![p(0.0, 0.0), p(4.0, 0.0), p(0.0, 0.0)]], meter), 1);
@@ -219,7 +219,7 @@ mod tests {
         assert_eq!(line_curves(&[square], 1.0, meter).unwrap(), curves);
         // A closed line of no area is taken as it runs.
         let flat = vec![p(0.0, 0.0), p(4.0, 0.0), p(2.0, 0.0), p(2.0, 3.0), p(2.0, 0.0), p(0.0, 0.0)];
-        let there = line_curves(&[flat.clone()], 1.0, meter).unwrap();
+        let there = line_curves(std::slice::from_ref(&flat), 1.0, meter).unwrap();
         let back = line_curves(&[flat.iter().rev().copied().collect()], 1.0, meter).unwrap();
         assert_ne!(there.first().map(|curve| xy(curve)), back.first().map(|curve| xy(curve)));
     }
