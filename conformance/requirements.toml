@@ -2336,6 +2336,15 @@ milestone = "M10"
 status = "active"
 
 [[req]]
+id = "REQ-VC-024"
+area = "vectorcraft"
+level = "L2"
+statement = "A fill's live effect, and the Auto effect on an object that a fill paints, return the object's own shape, which its fill paints solid, with a gap along each stitch, row or hatch line that the preview level shows. A gap is a closed ribbon wound against the shape around it, so that the nonzero and the even-odd rule both leave it empty, and a line whose middle the fill rule doesn't fill gets none. At the level auto picks, and at the rows and outline levels, the preview covers at least 90 % of the shape's area, on the browser demo's badge and on square fills from 3.5 mm to 903 mm a side. A level that costs more than ABI v1's budget still leaves the object as it is, with SC-I0810, and an outline whose hatch costs too much is the shape without it."
+rationale = "VectorCraft paints what a live effect returns with the object's own fill, and thread covers a fill whole. Thin ribbons along the stitches left most of the shape empty, so a drawing looked emptier with its stitches than without (the owner's review of the browser demo, 2026-11-15)."
+milestone = "M6"
+status = "active"
+
+[[req]]
 id = "REQ-VC-019"
 area = "vectorcraft"
 level = "L2"
