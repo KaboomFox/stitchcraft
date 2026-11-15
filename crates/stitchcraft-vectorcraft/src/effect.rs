@@ -28,14 +28,16 @@
 //!
 //! **What it gives back.** Geometry only, drawn with the object's own paints. A stroke's or a satin
 //! column's stitches come back as open paths from needle point to needle point, for the object's stroke to
-//! draw. A fill's come back as one thin closed ribbon for each stitch, for its fill to fill, since a path
-//! of stitches would be filled whole. When the object cannot be sewn, or its stitches draw nothing, the
+//! draw. A fill's come back as its own shape, which its fill paints solid as thread covers it, with a gap
+//! as thin as a hair along each stitch, row or hatch line shown, which tells which way the stitches run
+//! ([`effect_solid`], `REQ-VC-024`). A path of stitches would be filled whole, and thin ribbons along them
+//! leave most of the shape empty. When the object cannot be sewn, or its stitches draw nothing, the
 //! effect gives back why, as `{"error": …}`: VectorCraft then draws the object as it is and shows the
 //! message as the plug-in's last error.
 
 use serde::Serialize;
 use serde_json::{Map, Value};
-use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Mm, Point};
+use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Meter, Mm, Point};
 use stitchcraft_engine::design::{Cap, Element, FillRule, Hints, Join, Path, Shape};
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_params::ParamSet;
@@ -223,10 +225,75 @@ pub fn effect_drawn(runs: &[Vec<Point>], ribbons: bool) -> Option<Vec<u8>> {
 /// none has a length.
 pub fn effect_ribbons(segments: impl IntoIterator<Item = (Point, Point)>) -> Option<Vec<u8>> {
     let mut geometry = Geometry::new();
-    for corners in segments.into_iter().filter_map(|(a, b)| ribbon(&a, &b)) {
+    for corners in segments.into_iter().filter_map(|(a, b)| ribbon(&a, &b, RIBBON_MM)) {
         geometry.subpath(&corners, true);
     }
     geometry.finish()
+}
+
+/// What a live effect returns to draw a fill's shape solid with the object's fill (`REQ-VC-024`): `rings`,
+/// the shape's outline in millimetres, each ring closed, and a gap `gap` millimetres wide along each of
+/// `lines` that lies in the shape. A gap is a ribbon wound against the shape around it, so that both fill
+/// rules leave it empty: the winding number at the line's middle tells which way that is, and whether
+/// `rule` fills there at all. A line outside the shape cuts nothing and is left out, since a ribbon there
+/// would be painted. Telling tests every side of the outline for each line, and charges `meter` a unit for
+/// every [`SIDES_PER_UNIT`] sides tested, a line's own work counting as [`LINE_SIDES`] more. `None` when
+/// no ring has 2 points.
+pub fn effect_solid(
+    rings: &[&[Point]],
+    rule: FillRule,
+    lines: impl IntoIterator<Item = (Point, Point)>,
+    gap: f64,
+    meter: &mut Meter,
+) -> Result<Option<Vec<u8>>, Exhausted> {
+    let mut geometry = Geometry::new();
+    let mut sides = 0_u64;
+    for ring in rings {
+        geometry.subpath(ring, true);
+        sides = sides.saturating_add(u64::try_from(ring.len()).unwrap_or(u64::MAX));
+    }
+    let mut tested = 0_u64;
+    for (a, b) in lines {
+        tested = tested.saturating_add(sides).saturating_add(LINE_SIDES);
+        meter.charge(tested / SIDES_PER_UNIT)?;
+        tested %= SIDES_PER_UNIT;
+        let Some(middle) = Point::new(f64::midpoint(a.x(), b.x()), f64::midpoint(a.y(), b.y())).ok() else { continue };
+        let winding = winding(rings, &middle);
+        let filled = match rule {
+            FillRule::NonZero => winding != 0,
+            FillRule::EvenOdd => winding % 2 != 0,
+        };
+        // A ribbon turns clockwise as its corners are listed, which undoes one anticlockwise turn.
+        let ribbon = ribbon(&a, &b, gap).map(|[c0, c1, c2, c3]| if winding.is_positive() { [c0, c1, c2, c3] } else { [c3, c2, c1, c0] });
+        if let Some(corners) = ribbon.filter(|_| filled) {
+            geometry.subpath(&corners, true);
+        }
+    }
+    Ok(geometry.finish())
+}
+
+/// The sides of a shape's outline that [`effect_solid`] tests for one unit of work.
+pub const SIDES_PER_UNIT: u64 = 64;
+
+/// What a line's own work in [`effect_solid`] costs besides testing the outline's sides, in sides.
+pub const LINE_SIDES: u64 = 16;
+
+/// How many times `rings`, each closed, turn anticlockwise around `at`, less the times they turn clockwise,
+/// with x to the right and y up: the number a fill rule fills by.
+fn winding(rings: &[&[Point]], at: &Point) -> i32 {
+    let mut turns = 0;
+    for ring in rings {
+        for (a, b) in ring.iter().zip(ring.iter().cycle().skip(1)) {
+            // Which side of the side from `a` to `b` the point lies on: positive to its left.
+            let side = (b.x() - a.x()) * (at.y() - a.y()) - (at.x() - a.x()) * (b.y() - a.y());
+            if a.y() <= at.y() && at.y() < b.y() && side > 0.0 {
+                turns += 1;
+            } else if b.y() <= at.y() && at.y() < a.y() && side < 0.0 {
+                turns -= 1;
+            }
+        }
+    }
+    turns
 }
 
 /// What a live effect returns to draw `lines`, polylines in millimetres, with the object's stroke: open
@@ -262,15 +329,15 @@ pub(crate) fn refused_plugin(kind: &str, what: &str) -> Diagnostic {
     Diagnostic::new(Code::VcUnreadable, format!("What VectorCraft passed the {kind} does not read as its plug-in ABI v1 says. {what}"))
 }
 
-/// The corners of the stitch from `a` to `b` as a closed ribbon [`RIBBON_MM`] wide; `None` for a stitch
-/// of no length.
-fn ribbon(a: &Point, b: &Point) -> Option<[Point; 4]> {
+/// The corners of the stitch from `a` to `b` as a closed ribbon `width` millimetres wide, from the left of
+/// its start round by its end; `None` for a stitch of no length.
+fn ribbon(a: &Point, b: &Point, width: f64) -> Option<[Point; 4]> {
     let (dx, dy) = (b.x() - a.x(), b.y() - a.y());
     let length = (dx * dx + dy * dy).sqrt();
     if length <= 0.0 {
         return None;
     }
-    let (nx, ny) = (-dy / length * RIBBON_MM / 2.0, dx / length * RIBBON_MM / 2.0);
+    let (nx, ny) = (-dy / length * width / 2.0, dx / length * width / 2.0);
     let corner = |p: &Point, side: f64| Point::new(p.x() + side * nx, p.y() + side * ny).ok();
     Some([corner(a, 1.0)?, corner(b, 1.0)?, corner(b, -1.0)?, corner(a, -1.0)?])
 }
@@ -429,5 +496,96 @@ mod tests {
         // A stitch of no length has no ribbon, and stitches that draw nothing are no output.
         assert_eq!(effect_output(Family::Fill, &[vec![p(1.0, 1.0), p(1.0, 1.0)]]), None);
         assert_eq!(effect_output(Family::Satin, &[vec![p(1.0, 1.0)], vec![]]), None);
+    }
+
+    /// The subpaths [`effect_solid`] writes for `rings` filled by `rule` with a gap 0.2 mm wide along each of
+    /// `lines`, each subpath's corners in tenths of a millimetre, rounded.
+    #[allow(clippy::cast_possible_truncation, reason = "a few hundred tenths of a millimetre")]
+    fn solid(rings: &[&[(f64, f64)]], rule: FillRule, lines: &[[f64; 4]]) -> Vec<Vec<(i32, i32)>> {
+        let p = |x: f64, y: f64| Point::new(x, y).unwrap();
+        let rings: Vec<Vec<Point>> = rings.iter().map(|ring| ring.iter().map(|(x, y)| p(*x, *y)).collect()).collect();
+        let lines = lines.iter().map(|[x0, y0, x1, y1]| (p(*x0, *y0), p(*x1, *y1)));
+        let rings: Vec<&[Point]> = rings.iter().map(Vec::as_slice).collect();
+        let drawn = effect_solid(&rings, rule, lines, 0.2, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        let drawn: Value = serde_json::from_slice(&drawn).unwrap();
+        let tenths = |anchor: &Value, k: usize| (anchor["p"][k].as_f64().unwrap() * MM_PER_POINT * 10.0).round() as i32;
+        let subpaths = drawn["objects"][0]["path"]["subpaths"].as_array().unwrap().iter();
+        subpaths
+            .map(|subpath| {
+                assert_eq!(subpath["closed"].as_bool(), Some(true));
+                subpath["anchors"].as_array().unwrap().iter().map(|anchor| (tenths(anchor, 0), tenths(anchor, 1))).collect()
+            })
+            .collect()
+    }
+
+    #[test]
+    fn req_vc_024_a_fill_comes_back_as_its_shape_with_a_gap_wound_against_it_along_each_line() {
+        const SQUARE: &[(f64, f64)] = &[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)];
+        const BACK: &[(f64, f64)] = &[(0.0, 10.0), (10.0, 10.0), (10.0, 0.0), (0.0, 0.0)];
+        let square = vec![(0, 0), (100, 0), (100, 100), (0, 100)];
+        // A gap from (2, 5) to (8, 5) mm, 0.2 mm wide: its corners from the left of its start round by its
+        // end, which is against a square that turns the other way, and the other way round in one that
+        // turns the same way.
+        let gap = vec![(20, 51), (80, 51), (80, 49), (20, 49)];
+        let reversed: Vec<(i32, i32)> = gap.iter().rev().copied().collect();
+        assert_eq!(solid(&[SQUARE], FillRule::NonZero, &[[2.0, 5.0, 8.0, 5.0]]), [square.clone(), gap.clone()]);
+        assert_eq!(solid(&[BACK], FillRule::NonZero, &[[2.0, 5.0, 8.0, 5.0]])[1], reversed);
+        assert_eq!(solid(&[SQUARE], FillRule::EvenOdd, &[[2.0, 5.0, 8.0, 5.0]])[1], gap);
+        assert_eq!(solid(&[BACK], FillRule::EvenOdd, &[[2.0, 5.0, 8.0, 5.0]])[1], reversed);
+        // A slanted gap, from (2, 2) to (5, 6) mm, lies 0.1 mm to each side, along (-0.8, 0.6).
+        assert_eq!(solid(&[SQUARE], FillRule::NonZero, &[[2.0, 2.0, 5.0, 6.0]])[1], [(19, 21), (49, 61), (51, 59), (21, 19)]);
+        // A line outside the shape cuts nothing, a line of no length neither, and the shape is still drawn.
+        assert_eq!(solid(&[SQUARE], FillRule::NonZero, &[[12.0, 5.0, 18.0, 5.0], [5.0, 5.0, 5.0, 5.0]]), std::slice::from_ref(&square));
+        // Only the line's middle is tested: one that starts outside is cut whole.
+        assert_eq!(solid(&[SQUARE], FillRule::NonZero, &[[-2.0, 5.0, 8.0, 5.0]]).len(), 2);
+        // A side belongs to the shape on its left: a line along the left side is cut, one along the right is not.
+        assert_eq!(solid(&[SQUARE], FillRule::NonZero, &[[0.0, 4.0, 0.0, 6.0]]).len(), 2);
+        assert_eq!(solid(&[SQUARE], FillRule::NonZero, &[[10.0, 4.0, 10.0, 6.0]]).len(), 1);
+        // A square inside another that turns the same way is turned round twice: the nonzero rule fills it,
+        // and the even-odd rule leaves it empty, where a ribbon would be painted.
+        const INNER: &[(f64, f64)] = &[(3.0, 3.0), (7.0, 3.0), (7.0, 7.0), (3.0, 7.0)];
+        let (inside, between) = ([4.0, 5.0, 6.0, 5.0], [1.0, 5.0, 2.0, 5.0]);
+        assert_eq!(solid(&[SQUARE, INNER], FillRule::NonZero, &[inside, between]).len(), 4);
+        assert_eq!(
+            solid(&[SQUARE, INNER], FillRule::EvenOdd, &[inside, between]),
+            [square, vec![(30, 30), (70, 30), (70, 70), (30, 70)], vec![(10, 51), (20, 51), (20, 49), (10, 49)]]
+        );
+        // A side that rises little: the line's middle, at (5.5, 0.25), lies to the left of the side from
+        // (4, 0) to (8, 0.5), which passes it at x = 6.
+        const WEDGE: &[(f64, f64)] = &[(0.0, 0.0), (4.0, 0.0), (8.0, 0.5), (0.0, 0.5)];
+        assert_eq!(solid(&[WEDGE], FillRule::NonZero, &[[5.0, 0.25, 6.0, 0.25]]).len(), 2);
+        // No ring, nothing to draw.
+        assert_eq!(effect_solid(&[], FillRule::NonZero, [], 0.2, &mut Budget::DEFAULT.meter()), Ok(None));
+    }
+
+    #[test]
+    fn req_vc_024_a_side_level_with_the_line_s_middle_counts_once() {
+        // A triangle whose corner is level with the middle of the line, turning either way: the corner's 2
+        // sides count as one crossing, so the even-odd rule cuts the gap too.
+        const AHEAD: &[(f64, f64)] = &[(0.0, 0.0), (10.0, 5.0), (0.0, 10.0)];
+        const BACK: &[(f64, f64)] = &[(0.0, 0.0), (0.0, 10.0), (10.0, 5.0)];
+        let gap = vec![(10, 51), (30, 51), (30, 49), (10, 49)];
+        for rule in [FillRule::NonZero, FillRule::EvenOdd] {
+            assert_eq!(solid(&[AHEAD], rule, &[[1.0, 5.0, 3.0, 5.0]])[1], gap, "{rule:?}");
+            assert_eq!(solid(&[BACK], rule, &[[1.0, 5.0, 3.0, 5.0]])[1], gap.iter().rev().copied().collect::<Vec<_>>(), "{rule:?}");
+        }
+    }
+
+    #[test]
+    fn req_vc_024_telling_which_way_a_gap_is_wound_charges_for_the_sides_it_tests() {
+        let p = |x: f64, y: f64| Point::new(x, y).unwrap();
+        let square = [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0)];
+        let lines = |count: usize| vec![(p(2.0, 5.0), p(8.0, 5.0)); count];
+        let left = |rings: &[&[Point]], count: usize, work: u64| {
+            let mut meter = Budget { max_work: work, max_stitches: 0 }.meter();
+            effect_solid(rings, FillRule::NonZero, lines(count), 0.2, &mut meter).map(|_| meter.work_left())
+        };
+        // A line tests the square's 4 sides and counts for 16 more: 20, of 64 to a unit of work. So 3 lines
+        // are free, the fourth is the first unit, and the seventh the second.
+        assert_eq!((left(&[&square], 3, 0), left(&[&square], 4, 0), left(&[&square], 4, 1)), (Ok(0), Err(Exhausted::Work), Ok(0)));
+        assert_eq!((left(&[&square], 6, 1), left(&[&square], 7, 1), left(&[&square], 7, 5)), (Ok(0), Err(Exhausted::Work), Ok(3)));
+        // The sides of every ring: 24 with a second square, so the third line is the first unit.
+        assert_eq!((left(&[&square, &square], 2, 0), left(&[&square, &square], 3, 0)), (Ok(0), Err(Exhausted::Work)));
+        assert_eq!((SIDES_PER_UNIT, LINE_SIDES), (64, 16));
     }
 }
