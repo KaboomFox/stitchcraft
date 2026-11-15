@@ -62,7 +62,9 @@ pub struct Hints {                   // since M8.4: Ink/Stitch's start, end and 
     pub end: Option<Point>,          // its end position, in place of the next element's offer
     pub target: Option<Point>,       // what a circular fill turns round and a ripple aims at (REQ-FILL-CIR-008, REQ-RIP-002)
     pub guide: Option<Guide>,        // since M10.11: the line a ripple's copies follow (REQ-RIP-012, REQ-RIP-013)
-    pub anchor: Option<[Point; 2]>,  // since M10.11: the ends a satin guide's copies land on (REQ-RIP-014)
+    pub anchor: Option<Path>,        // since M10.11: the anchor line. Its first subpath's ends are where a satin
+                                     // guide's copies land (REQ-RIP-014), and from M10.10 a guided fill's
+                                     // closed rows start where any of it crosses them (REQ-FILL-GDD-012)
 }
 
 pub struct Guide {                   // since M10.11: Ink/Stitch's guide line, VectorCraft's stitch:guide marker
@@ -171,7 +173,7 @@ These other places were weighed and left:
 **Commands.** Ink/Stitch's start, end and target commands, and VectorCraft's start, end and target markers,
 are an element's hints (M8.4, the target marker M10.8), its points checked and moved with the rest. So are
 Ink/Stitch's guide lines and anchor lines, and VectorCraft's `stitch:guide` and `stitch:anchor` markers
-(M10.11), a guide's every point included. Clip
+(M10.11), a guide's and an anchor's every point included. Clip
 paths are an element's clips (M8.5), and so are VectorCraft's clipping objects (M8.7), checked and moved
 with it too, which the engine cuts it to ([engine pipeline](engine-pipeline.md)). A clip's shapes are shared by the elements it cuts, so
 that a clip group of many objects holds its clipping object once. Trims and stops are the element

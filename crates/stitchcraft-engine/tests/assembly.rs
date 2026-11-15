@@ -1,5 +1,5 @@
-//! Plan assembly's conformance cases (`REQ-ASM-001`, `-002`, `-003`, `-005`, `REQ-LCK-001`, `REQ-GEN-002`)
-//! and `SC-W0011`, through the engine's entry point, [`plan`].
+//! Plan assembly's conformance cases (`REQ-ASM-001`, `-002`, `-003`, `-005`, `REQ-LCK-001`, `REQ-GEN-002`),
+//! through the engine's entry point, [`plan`].
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used)]
@@ -172,26 +172,16 @@ fn req_gen_002_an_element_that_cannot_be_sewn_is_skipped_and_the_rest_still_plan
         Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0)), Segment::Line(p(5.0, 5.0))], closed: true }] };
     let fill = Element {
         shape: Shape::Fill { path: square, rule: FillRule::NonZero, gradient: None },
-        ..line("fill", (0.0, 0.0), 1.0, &RED, &[("fill_method", "guided_fill"), ("guided_fill_strategy", "1")])
+        ..line("fill", (0.0, 0.0), 1.0, &RED, &[("fill_method", "sparkle_fill")])
     };
-    let buffered = [("fill_method", "guided_fill"), ("guided_fill_strategy", "2")];
-    let guided = Element { params: buffered.into_iter().collect(), id: ElementId::new("guided").unwrap(), ..fill.clone() };
     let wrong = line("wrong", (0.0, 10.0), 10.0, &RED, &[("running_stitch_length_mm", "long")]);
     let unknown = line("unknown", (0.0, 12.0), 10.0, &RED, &[("stroke_method", "sparkle_stitch")]);
     let fine = line("fine", (0.0, 15.0), 10.0, &RED, &[]);
-    let outcome = sewn(vec![fill, guided, wrong, unknown, fine]);
+    let outcome = sewn(vec![fill, wrong, unknown, fine]);
     assert_eq!(shape_of(&outcome), "J L4 S5 L4");
     assert_eq!(outcome.plan.unwrap().elements.iter().map(ElementId::as_str).collect::<Vec<_>>(), ["fine"]);
     let codes: Vec<(Code, Option<&str>)> = outcome.diagnostics.iter().map(|d| (d.code, d.element.as_ref().map(ElementId::as_str))).collect();
-    assert_eq!(
-        codes,
-        [
-            (Code::StitchTypeNotYet, Some("fill")),
-            (Code::StitchTypeNotYet, Some("guided")),
-            (Code::ParamInvalid, Some("wrong")),
-            (Code::ParamInvalid, Some("unknown"))
-        ]
-    );
+    assert_eq!(codes, [(Code::ParamInvalid, Some("fill")), (Code::ParamInvalid, Some("wrong")), (Code::ParamInvalid, Some("unknown"))]);
     // Each element has the work budget to itself: a long one runs out, a short one does not.
     let budget = Budget { max_stitches: 1000, max_work: 60 };
     let design =
@@ -252,26 +242,8 @@ fn an_element_sews_with_the_longer_of_the_machine_s_shortest_stitch_and_its_own(
 }
 
 #[test]
-fn diag_sc_w0011_a_stitch_type_not_sewn_yet_is_named() {
-    // Every stroke method is sewn: a guided fill's parallel offset is not yet.
-    let square =
-        Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0)), Segment::Line(p(5.0, 5.0))], closed: true }] };
-    let fill = Element {
-        shape: Shape::Fill { path: square, rule: FillRule::EvenOdd, gradient: None },
-        ..line("f", (0.0, 0.0), 1.0, &RED, &[("fill_method", "guided_fill"), ("guided_fill_strategy", "1")])
-    };
-    let outcome = sewn(vec![fill, line("ok", (0.0, 5.0), 10.0, &RED, &[])]);
-    assert_eq!(
-        messages(&outcome),
-        ["warning SC-W0011: This element's fill method, `guided_fill`, with its strategy `1` (parallel offset), is not sewn by this version \
-             of StitchCraft yet, so it is skipped."]
-    );
-    assert_eq!(outcome.diagnostics[0].element.as_ref().map(ElementId::as_str), Some("f"));
-}
-
-#[test]
 fn diag_sc_w0505_a_trim_or_stop_after_an_element_that_sews_nothing_is_named() {
-    // Too small for a stitch, a stitch type not sewn yet, and a stop alone: none of them sews, so their
+    // Too small for a stitch, a fill method that can't be read, and a stop alone: none of them sews, so their
     // trims and stops have nothing to come after.
     let tiny = line("tiny", (0.0, 0.0), 0.1, &RED, &[("trim_after", "true")]);
     let square = Path {
@@ -279,13 +251,7 @@ fn diag_sc_w0505_a_trim_or_stop_after_an_element_that_sews_nothing_is_named() {
     };
     let guided = Element {
         shape: Shape::Fill { path: square, rule: FillRule::EvenOdd, gradient: None },
-        ..line(
-            "guided",
-            (0.0, 5.0),
-            1.0,
-            &RED,
-            &[("fill_method", "guided_fill"), ("guided_fill_strategy", "1"), ("trim_after", "true"), ("stop_after", "true")],
-        )
+        ..line("guided", (0.0, 5.0), 1.0, &RED, &[("fill_method", "sparkle_fill"), ("trim_after", "true"), ("stop_after", "true")])
     };
     let stop = line("stop", (0.0, 10.0), 0.1, &RED, &[("stop_after", "true")]);
     let outcome = sewn(vec![tiny, guided, stop, line("ok", (0.0, 15.0), 10.0, &RED, &[])]);

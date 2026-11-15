@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="42mm" height="26mm" viewBox="0 0 42 26">
+  <g>
+    <path id="fan" d="M 1.72 9.02 C 12.87 -0.34 29.13 -0.34 40.28 9.02 L 27.43 24.34 C 23.71 21.22 18.29 21.22 14.57 24.34 Z" fill="#0a55a3" stroke="none"/>
+    <path id="guide" d="M 2.21 25.16 C 5.08 17.26 12.59 12 21 12 C 29.41 12 36.92 17.26 39.79 25.16" style="fill:none;stroke:#000000;stroke-width:0.3;marker-start:url(#inkstitch-guide-line-marker)"/>
+  </g>
+</svg>

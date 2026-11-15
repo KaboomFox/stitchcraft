@@ -10,7 +10,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0005`](#sc-e0005) | Error | Preview too large |
 | [`SC-E0009`](#sc-e0009) | Error | Internal check failed |
 | [`SC-E0010`](#sc-e0010) | Error | Nothing to stitch |
-| [`SC-W0011`](#sc-w0011) | Warning | Stitch type not sewn yet; element skipped |
+| [`SC-W0011`](#sc-w0011) | Warning | Stitch type not sewn yet, element skipped (retired) |
 | [`SC-E0012`](#sc-e0012) | Error | Bug-report bundle could not be replayed |
 | [`SC-W0013`](#sc-w0013) | Warning | Element outside its clip paths; left out |
 | [`SC-E0101`](#sc-e0101) | Error | Parameter has the wrong type or an unknown choice |
@@ -62,7 +62,8 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0329`](#sc-w0329) | Warning | Linear gradient fill without a linear gradient; its colour fades out |
 | [`SC-W0330`](#sc-w0330) | Warning | Gradient stop within 2 rows of the blend before; passed over |
 | [`SC-W0331`](#sc-w0331) | Warning | Guided fill without a guide line; sewn as a tatami fill |
-| [`SC-W0332`](#sc-w0332) | Warning | Guided fill's copies of its guide meet no part; sewn as a tatami fill |
+| [`SC-W0332`](#sc-w0332) | Warning | Guided fill's rows along its guide meet no part; sewn as a tatami fill |
+| [`SC-W0333`](#sc-w0333) | Warning | Guided fill's rows apart, the needle jumps between them |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
@@ -185,7 +186,7 @@ Add an element with an embroidery stitch type, or fix the errors reported for th
 
 ## SC-W0011
 
-**Warning** — Stitch type not sewn yet; element skipped
+**Warning** — Stitch type not sewn yet, element skipped (retired)
 
 The element's stitch type is one this version of StitchCraft does not sew yet, so the element was
 skipped; the rest of the design is planned. Running and manual stitches are sewn from milestone M3,
@@ -195,6 +196,10 @@ is sewn as a tatami fill (`SC-W0314`).
 
 The message names the stitch type. Choose one StitchCraft sews, or sew the element with another
 tool for now.
+
+Retired in M10.10, which sews the guided fill's parallel offset and buffer strategies, the last
+that were skipped: StitchCraft sews every stitch type, and no longer gives this code. Plan the
+file again with this StitchCraft to sew the element.
 
 ## SC-E0012
 
@@ -771,11 +776,12 @@ The message names the stops. Move them at least 3 row spacings apart.
 
 **Warning** — Guided fill without a guide line; sewn as a tatami fill
 
-A guided fill's rows are copies of its guide line, a line grouped with the fill and marked as one:
+A guided fill's rows follow its guide line, a line grouped with the fill and marked as one:
 a stroke with Ink/Stitch's guide-line marker in an SVG file, or a path named `stitch:guide` in a
-VectorCraft document. This fill has none, or its guide starts and ends at one point once it is made
-one line, so it is sewn as a tatami fill with its own settings, its angle and the rest, as Ink/Stitch
-sews a guided fill without a guide. A satin column marked as a guide guides a ripple stitch, not a
+VectorCraft document. This fill has none, or its guide has no length: a dot, or for the copy
+strategy a guide that starts and ends at one point once it is made one line. So it is sewn as a
+tatami fill with its own settings, its angle and the rest, as Ink/Stitch sews a guided fill without
+a guide. A satin column marked as a guide guides a ripple stitch, not a
 fill. VectorCraft's live preview shows no marker to the fill effect, so it sews the tatami fill, and
 `stitch export` sews the rows.
 
@@ -783,17 +789,31 @@ Group a line marked as a guide with the fill, drawn the way its rows should run.
 
 ## SC-W0332
 
-**Warning** — Guided fill's copies of its guide meet no part; sewn as a tatami fill
+**Warning** — Guided fill's rows along its guide meet no part; sewn as a tatami fill
 
-No copy of this guided fill's guide line meets a part of the fill, so that part is sewn as a tatami
-fill whose rows run at the angle of the line between the guide's ends, as Ink/Stitch falls back to
-one where its copies leave no line in a part. Where no copy meets the part at all, Ink/Stitch stops
-with an error instead. The copies move a row spacing at a time square to that line, or at `guided_fill_angle`, from
+No row of this guided fill's guide line leaves a line in a part of the fill, so that part is sewn as
+a tatami fill whose rows run at the angle of the line between the guide's ends, as Ink/Stitch falls
+back to one where its rows leave no line in a part. Where no copy or offset curve meets the part at
+all, Ink/Stitch stops with an error instead. The message names the strategy's rows: copies, offset
+curves, or the rings of a buffer. The copies move a row spacing at a time square to that line, or at `guided_fill_angle`, from
 the copy nearest the part outward, while they meet the part's bounds. A copy angle near the guide's
 own direction moves them along the guide, past a small part, and a guide far from a part can place
 its nearest copy beyond it.
 
 The message counts the parts. Draw the guide across the fill, or clear `guided_fill_angle`.
+
+## SC-W0333
+
+**Warning** — Guided fill's rows apart, the needle jumps between them
+
+Some rows of this guided fill lie where the needle finds no way to them from the others, along the
+fill's edge or under its rows. Rows that only meet a hole's edge are such, when no other row runs
+from that hole to the outline: a guide drawn as a ring inside a hole, off its middle, gives them.
+The needle jumps to those rows, as Ink/Stitch sews the rows it can't join on their own, with a jump
+between. Rows that run from edge to edge of the fill are always joined.
+
+Draw the guide so that its rows cross the fill from its outline to its holes, or cut the jump
+thread after sewing.
 
 ## SC-W0401
 

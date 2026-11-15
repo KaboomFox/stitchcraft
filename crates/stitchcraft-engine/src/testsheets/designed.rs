@@ -234,10 +234,12 @@ impl Drawing {
     }
 
     /// An anchor line for the last element drawn so far, from `from` to `to`, as Ink/Stitch's anchor-line
-    /// marker gives it: where a satin guide places each copy's ends (`REQ-RIP-014`). None before the first.
+    /// marker gives it: where a satin guide places each copy's ends (`REQ-RIP-014`), and where a guided
+    /// fill's rows that close start (`REQ-FILL-GDD-012`). None before the first.
     pub fn anchor(&mut self, from: (f64, f64), to: (f64, f64)) -> Result<(), SheetError> {
         if let Some(last) = self.elements.last_mut() {
-            last.hints.anchor = Some([point(from)?, point(to)?]);
+            let subpath = Subpath { start: point(from)?, segments: vec![Segment::Line(point(to)?)], closed: false };
+            last.hints.anchor = Some(Path { subpaths: vec![subpath] });
         }
         Ok(())
     }

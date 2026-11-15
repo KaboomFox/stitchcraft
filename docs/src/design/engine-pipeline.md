@@ -129,8 +129,8 @@ with no underlay, the crosses that meet in one run. From M10.2 it sews each of I
 half crosses in rows routed as a tatami fill's ([cross stitch](algorithms/cross-stitch.md)). A ripple
 stitch, sewn from M10.8, sews lines along a column or towards a target point as one running stitch, and
 from M10.11 copies along a guide, a grid across them, and the pieces its clips leave, routed
-([ripple stitch](algorithms/strokes.md#ripple-stitch-m108-m1011)). Every stroke method is then sewn. The
-linear gradient fill is skipped with `SC-W0011` until its milestone. An element whose parameters are
+([ripple stitch](algorithms/strokes.md#ripple-stitch-m108-m1011)). Every stroke method is then sewn. Every
+fill method is sewn too from M10.10, so `SC-W0011`, which named a stitch type not sewn yet, is retired. An element whose parameters are
 wrong (`SC-E0101`) is skipped too, and the rest of the design still plans.
 
 Each element is generated with the shortest stitch for it: the larger of the machine's (the profile's

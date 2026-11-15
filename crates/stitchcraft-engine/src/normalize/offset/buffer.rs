@@ -38,7 +38,8 @@
 use stitchcraft_core::{Exhausted, Meter, Point};
 
 use super::Corners;
-use super::generator::ring_curve;
+use super::generator::{ring, ring_curve};
+use crate::design::Join;
 use crate::normalize::near::{length, to_side};
 use crate::normalize::region::geom::{Envelope, signed_area};
 use crate::normalize::region::{Polygon, SAME, Unjoined, area};
@@ -83,6 +84,42 @@ pub fn buffer_with(polygon: &Polygon, distance: f64, corners: Corners, meter: &m
     // An outline winds clockwise, -1 round what it bounds, and a part's area winds so.
     let area = area(&curves, |w| w <= -1, meter)?;
     Ok(area.parts.map(in_order))
+}
+
+/// The raw curves whose area is the buffer of `lines` at `distance`, as GEOS buffers lines for shapely with
+/// round corners of 16 segments to a quarter circle: for each open line, the ring round it, its left side
+/// forward, a round cap, its right side back and a round cap, which runs clockwise with y up; for each closed
+/// line of 4 points or more, its 2 sides with no caps, the outer side turned to run clockwise round it with y
+/// up and the inner side the other way, unless the inner side has turned inside out
+/// ([`inside_out`]). A line's points repeated in a row count once, and a line of one point gives none. The
+/// buffer is the area the curves wind round clockwise at least once (`REQ-FILL-GDD-010`). One unit of
+/// `meter` for each point walked.
+pub(crate) fn line_curves(lines: &[Vec<Point>], distance: f64, meter: &mut Meter) -> Result<Vec<Vec<Point>>, Exhausted> {
+    let mut curves = Vec::with_capacity(lines.len() * 2);
+    for line in lines {
+        let mut points: Vec<Point> = Vec::with_capacity(line.len());
+        for &p in line {
+            meter.charge(1)?;
+            if points.last() != Some(&p) {
+                points.push(p);
+            }
+        }
+        if points.len() >= 4 && points.first() == points.last() {
+            // Clockwise with y up, its left is its outside.
+            if signed_area(&points) > 0.0 {
+                points.reverse();
+            }
+            curves.push(ring_curve(&points, distance, Corners::ROUND, meter)?);
+            let mut inner = ring_curve(&points, -distance, Corners::ROUND, meter)?;
+            if !inside_out(&points, distance, &inner, meter)? {
+                inner.reverse();
+                curves.push(inner);
+            }
+        } else if points.len() >= 2 {
+            curves.push(ring(&points, distance, Join::Round, meter)?);
+        }
+    }
+    Ok(curves)
 }
 
 /// `parts` in order of their least x, and of their least y among parts level with each other: a run of
