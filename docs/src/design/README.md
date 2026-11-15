@@ -14,7 +14,7 @@ our own words and never carry Ink/Stitch's code ([ADR-0012](adr/0012-read-dont-c
 6. [VectorCraft integration](vectorcraft-integration.md), the [plug-in features RFC](rfc-vectorcraft-abi-v2.md)
    and the [compatibility gate](compatibility-gate.md).
 7. Quality: [conformance](conformance.md), [determinism](determinism.md), [guardrails](guardrails.md),
-   [docs pipeline](docs-pipeline.md).
+   [docs pipeline](docs-pipeline.md) and the [before and after sheet](before-after-sheet.md).
 8. File compatibility: [SVG input](svg-input.md) and the
    [Ink/Stitch compatibility contract](inkstitch-compat-contract.md).
 9. Decisions: [ADRs](adr/).
