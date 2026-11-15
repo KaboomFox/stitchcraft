@@ -25,12 +25,7 @@ const ROUNDS: usize = 4;
 /// The guide line `drawn`, flattened, ready to copy: one line, open; `None` when it has no length, or is
 /// left with its ends at one point.
 pub(super) fn prepared(drawn: &[Point], meter: &mut Meter) -> Result<Option<Vec<Point>>, Exhausted> {
-    let (Some(&first), Some(&last)) = (drawn.first(), drawn.last()) else { return Ok(None) };
-    let line = match meetings(drawn, meter)? {
-        Meetings::None => drawn.to_vec(),
-        Meetings::Points(nodes) => joined(drawn, &nodes, meter)?.unwrap_or_else(|| vec![first, last]),
-        Meetings::Along => vec![first, last],
-    };
+    let line = one_line(drawn, meter)?;
     // A closed line leaves out the end it closes on and the point before it.
     let open = match line.as_slice() {
         [start, .., end] if start == end => line.get(..line.len() - 2).unwrap_or_default().to_vec(),
@@ -40,6 +35,24 @@ pub(super) fn prepared(drawn: &[Point], meter: &mut Meter) -> Result<Option<Vec<
         [start, .., end] if start != end => Some(open),
         _ => None,
     })
+}
+
+/// `drawn` made one line, as the module says: as it is where it doesn't meet itself, its loops left out
+/// and its pieces joined where it does, and otherwise the straight line from its first point to its last.
+/// A closed line that meets itself only where it closes stays closed. Nothing for a line of no points.
+pub(super) fn one_line(drawn: &[Point], meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+    let (Some(&first), Some(&last)) = (drawn.first(), drawn.last()) else { return Ok(Vec::new()) };
+    Ok(match meetings(drawn, meter)? {
+        Meetings::None => drawn.to_vec(),
+        Meetings::Points(nodes) => joined(drawn, &nodes, meter)?.unwrap_or_else(|| vec![first, last]),
+        Meetings::Along => vec![first, last],
+    })
+}
+
+/// Whether `line` is simple: it meets itself nowhere but where its sides follow each other, and where it
+/// closes. Costs as finding where it meets itself does.
+pub(super) fn simple(line: &[Point], meter: &mut Meter) -> Result<bool, Exhausted> {
+    Ok(meetings(line, meter)? == Meetings::None)
 }
 
 /// Where a line meets itself, but where its sides follow each other.

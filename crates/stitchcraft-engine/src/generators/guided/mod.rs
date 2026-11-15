@@ -29,9 +29,11 @@
 //! at one point once it is made one line, sews as a tatami fill with its own settings (`SC-W0331`), as
 //! Ink/Stitch sews one without a guide (`DEV-FILL-034`).
 
+mod closed;
 mod copies;
 mod cut;
 mod line;
+mod offset;
 mod stitched;
 
 use stitchcraft_core::math::{atan2, to_degrees};
