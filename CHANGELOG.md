@@ -10,8 +10,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   stitches and thread changes to the bare share, and each number that got worse is marked. The preview's
   comment lists the worst and links to the sheet. Main's own sheet is published at `/sheet/`.
   - The run also checks in Chromium that the editor's exporters write the PES and DST files `stitch` writes
-    of the same document, byte for byte, for the starter drawing and a traced dog.
+    of the same document, byte for byte, for the starter drawing. A traced dog is tried too, and
+    VectorCraft 0.24.1 stops its export when the plug-in's instruction budget runs out. The sheet
+    reports that, and no dog's files are compared until the export finishes.
   - It times the Auto effect on the traced dog in the editor and takes a picture of the result.
+- M6.16: a fill's preview in VectorCraft reads as solid (`REQ-VC-024`). A live effect's geometry is painted
+  with the object's own fill, and a fill's preview was thin ribbons along its stitches, rows or outline,
+  so a large fill looked emptier with the effect than without. A fill now comes back as its own shape,
+  with a hairline gap along each stitch, row or hatch line, at every level and in the Auto effect. The
+  share of a shape that its preview covers went from 80 % to 96 % for a fill's rows and from under a tenth
+  to 96 % or more for its outline. The stitches and the golden files are unchanged.
 - M6.14: the browser demo starts from the drawing. An empty session opens Alpine Night as a plain drawing,
   and the panel's first button, **Turn the drawing into stitches**, gives each shape the Auto effect. The
   panel says how to do the same in the menus and how to export, and a lesser button opens the finished
