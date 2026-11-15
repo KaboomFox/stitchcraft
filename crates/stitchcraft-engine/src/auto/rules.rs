@@ -10,7 +10,7 @@
 //! each bound come from one table, and a rule can't be changed in one place and not in another.
 //!
 //! The rules ask only about geometry: how large a part is, how wide, how long for its width, how evenly
-//! wide, and how many centre lines it has. None asks what a picture shows, so a flower, a drawing and an
+//! wide, how many centre lines it has, and how far it reaches from them. None asks what a picture shows, so a flower, a drawing and an
 //! animal go by the same table.
 //!
 //! - **The bounds** are the shape's settings ([`AutoParams`]) and the design's narrowest satin stroke. One
@@ -25,7 +25,9 @@
 use stitchcraft_core::{Code, Diagnostic, ElementId, Exhausted, Meter, Mm};
 
 use super::neighbours::speck;
-use super::params::{FILL_UNEVEN, MAX_SATIN_WIDTH, MAX_UNEVENNESS, MIN_AREA, MIN_FILL_WIDTH, MIN_SLENDERNESS, MIN_TRIPLE_RUN_WIDTH, PREFER, STITCH};
+use super::params::{
+    FILL_UNEVEN, MAX_REACH, MAX_SATIN_WIDTH, MAX_UNEVENNESS, MIN_AREA, MIN_FILL_WIDTH, MIN_SLENDERNESS, MIN_TRIPLE_RUN_WIDTH, PREFER, STITCH,
+};
 use super::{AutoParams, micrometres, narrow};
 use crate::design::DesignSettings;
 use crate::generators::mm;
@@ -46,6 +48,8 @@ pub enum RuleId {
     Compact,
     /// The part has several centre lines, and its width varies along them.
     Uneven,
+    /// The part reaches far from one of its centre lines on both sides of it: it has arms that no line follows.
+    Arms,
     /// Any other part: it sews as satin columns.
     Column,
     /// A column that can't be drawn, or that would sew a stitch longer than the widest satin column.
@@ -62,6 +66,7 @@ impl RuleId {
             RuleId::Area => "area",
             RuleId::Compact => "compact",
             RuleId::Uneven => "uneven",
+            RuleId::Arms => "arms",
             RuleId::Column => "column",
             RuleId::Refused => "refused",
         }
@@ -86,7 +91,7 @@ pub struct Rule {
 }
 
 /// The rules, in the order they are tried: the first that a part matches decides.
-pub const RULES: [Rule; 8] = [
+pub const RULES: [Rule; 9] = [
     Rule {
         id: RuleId::Asked,
         label: "Asked",
@@ -128,6 +133,14 @@ pub const RULES: [Rule; 8] = [
         is: "of several centre lines, with a width that varies along them by more than {auto_max_unevenness} of itself",
         sewn: "a tatami fill. A piece of it narrower than the narrowest satin stroke leaves the fill as a line",
         bounds: &[MAX_UNEVENNESS, FILL_UNEVEN, PREFER],
+    },
+    Rule {
+        id: RuleId::Arms,
+        label: "Arms",
+        is: "reaching from one of its centre lines, on both sides of it, more than {auto_max_reach} times as far as the widest circle that fits \
+             inside it on its lines",
+        sewn: "a tatami fill",
+        bounds: &[MAX_REACH],
     },
     Rule { id: RuleId::Column, label: "Column", is: "anything else", sewn: "satin columns along its centre lines", bounds: &[] },
     Rule {
@@ -222,6 +235,9 @@ pub(crate) struct Bounds {
     pub(crate) max_unevenness: f64,
     /// Whether a part more uneven is filled.
     pub(crate) fill_uneven: bool,
+    /// The farthest a part sewn as columns reaches from a centre line on both sides, in radii of its widest
+    /// circle.
+    pub(crate) max_reach: f64,
     /// The smallest area, in square millimetres.
     pub(crate) min_area: f64,
     /// The stitch the shape asks for.
@@ -245,6 +261,7 @@ impl Bounds {
             min_slenderness: rules.auto_min_slenderness * slender,
             max_unevenness: rules.auto_max_unevenness * uneven,
             fill_uneven: rules.auto_fill_uneven,
+            max_reach: rules.auto_max_reach,
             min_area: rules.auto_min_area_mm2,
             asked: Asked::named(rules.auto_stitch),
         }
@@ -306,19 +323,23 @@ pub(crate) struct Measures {
     pub(crate) unevenness: f64,
     /// How many centre lines it has.
     pub(crate) lines: usize,
+    /// How far it reaches from one of its centre lines on both sides of the line, in radii of the widest
+    /// circle that fits inside it on its lines (`auto::narrow::reach`): 1 for a column, whose rails lie as far
+    /// from its line as that circle reaches. 0 for a stroke, and for a part whose columns weren't looked for.
+    pub(crate) reach: f64,
 }
 
 impl Measures {
     /// The measures of a stroke `width` millimetres wide, held to `bounds`: one line of even width, as long
     /// as it likes.
     pub(crate) fn of_stroke(width: f64, bounds: &Bounds) -> Measures {
-        Measures { area: f64::INFINITY, breadth: bounds.breadth(width), width, unevenness: 0.0, lines: 1 }
+        Measures { area: f64::INFINITY, breadth: bounds.breadth(width), width, unevenness: 0.0, lines: 1, reach: 0.0 }
     }
 
     /// The measures of a part of `area` square millimetres that is `breadth` broad, whose centre lines
     /// weren't looked for.
     pub(crate) fn of_breadth(area: f64, breadth: Breadth) -> Measures {
-        Measures { area, breadth, width: 0.0, unevenness: 0.0, lines: 0 }
+        Measures { area, breadth, width: 0.0, unevenness: 0.0, lines: 0, reach: 0.0 }
     }
 
     /// How long it is for its width: its area over its width squared. 0 for a part without a width.
@@ -349,15 +370,16 @@ pub(crate) fn choose(measures: &Measures, bounds: &Bounds) -> RuleId {
         Breadth::Medium if bounds.fill_uneven && measures.lines > 1 && thousandths(measures.unevenness) > thousandths(bounds.max_unevenness) => {
             RuleId::Uneven
         }
+        Breadth::Medium if thousandths(measures.reach) > thousandths(bounds.max_reach) => RuleId::Arms,
         Breadth::Medium => RuleId::Column,
     }
 }
 
-/// Whether a part that sews by `rule` under `bounds` is filled: an area, a compact part, an uneven one, and
-/// any part of a shape that asks to be filled.
+/// Whether a part that sews by `rule` under `bounds` is filled: an area, a compact part, an uneven one, one
+/// with arms, and any part of a shape that asks to be filled.
 pub(crate) fn fills(rule: RuleId, bounds: &Bounds) -> bool {
     match rule {
-        RuleId::Area | RuleId::Compact | RuleId::Uneven => true,
+        RuleId::Area | RuleId::Compact | RuleId::Uneven | RuleId::Arms => true,
         RuleId::Asked => bounds.asked == Asked::Fill,
         RuleId::Speck | RuleId::Line | RuleId::Column | RuleId::Refused => false,
     }
@@ -373,11 +395,13 @@ pub(crate) struct Fired {
 }
 
 impl Fired {
-    /// The rule and the measures that decided it, for `SC-I0912`: the area of a speck, and the width, the
-    /// slenderness, how much the width varies and the lines of a part whose lines were measured.
+    /// The rule and the measures that decided it, for `SC-I0912`: the area of a speck, the width and the reach
+    /// of a part with arms, and the width, the slenderness, how much the width varies and the lines of any other
+    /// part whose lines were measured.
     fn text(&self) -> String {
         let measured = self.measures.and_then(|m| match (self.rule, m.breadth) {
             (RuleId::Speck, _) => Some(format!("{} mm²", mm(m.area))),
+            (RuleId::Arms, _) => Some(format!("{} mm wide, reaching {:.2} times as far as its widest circle", mm(m.width), m.reach)),
             (_, Breadth::Medium) if m.lines > 0 && m.area.is_finite() => {
                 let lines = if m.lines == 1 { "1 centre line".to_string() } else { format!("{} centre lines", m.lines) };
                 Some(format!("{} mm wide, slenderness {:.1}, width varying by {:.2}, {lines}", mm(m.width), m.slenderness(), m.unevenness))
