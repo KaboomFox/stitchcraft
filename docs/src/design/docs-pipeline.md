@@ -317,7 +317,7 @@ starts with `contents: read`, and its publishing and cleanup jobs ask for write 
 ### A pull request's preview
 
 `web/site.py` builds the pull request's book for `/pr/<number>/` and puts the demo folder under its
-`demo/`. That folder contains the plug-ins' modules, the loader's scripts, the starter patch and the pictures
+`demo/`. That folder contains the plug-ins' modules, the loader's scripts, the starter drawing and the pictures
 the browser check took. It doesn't contain the editor. The book's `demo/` page opens the editor at `/app/` and names
 the preview, and the editor runs that folder's loader, which installs that folder's plug-ins. Before the
 first push to `main` publishes `/app/`, the page says that the editor is not there yet.
