@@ -120,12 +120,19 @@ def run(*args, cwd=ROOT, **more):
     return subprocess.run(args, cwd=cwd, check=True, **more)
 
 
+def whole(folder):
+    """Whether `folder` is the top of a git checkout of its own."""
+    top = subprocess.run(('git', 'rev-parse', '--show-toplevel'), cwd=folder, text=True, capture_output=True, check=False)
+    return top.returncode == 0 and Path(top.stdout.strip()).resolve() == folder.resolve()
+
+
 def checkout(folder):
     """VectorCraft's source at the pinned commit, never changed. A tag that names another commit fails."""
     repository, tag, revision = pin()
     # The build cache's cleaning, after a cache of another Cargo.lock is restored, empties every folder under
-    # `target/` of what it doesn't know, this checkout's `.git` included. What is left is no checkout.
-    if folder.exists() and not (folder / '.git').exists():
+    # `target/` of what it doesn't know, this checkout's files and most of its `.git` included. What is left
+    # is no checkout: git then answers for the repository around it.
+    if folder.exists() and not whole(folder):
         shutil.rmtree(folder)
     if not folder.exists():
         run('git', 'clone', '--depth', '1', '--branch', tag, repository, str(folder))
