@@ -1,3 +1,5 @@
+// Why this file exists: an empty editor teaches nothing about embroidery. This module opens the starter
+// patch, whose shapes carry StitchCraft's Auto effect, when the session has no document of its own.
 const version = new URL(import.meta.url).search;
 const {encodeBytes} = await import(`./loader.mjs${version}`);
 

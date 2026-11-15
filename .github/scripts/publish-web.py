@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
-"""Replace one app/preview directory, retrying pushes without losing other publishers' work."""
+"""Publish one folder of the Pages site, and leave every other folder as it is.
+
+Why this file exists: 2 workflows publish to the `gh-pages` branch, the book (docs.yml) and the browser demo
+with its previews (web.yml), and runs of both can end at the same moment. Each one publishes through this
+script, which is the one way to write to the branch (docs/src/design/docs-pipeline.md, Publishing):
+
+- It replaces the one folder it is given on the branch's newest state, and pushes only if the branch is
+  still at that state (`--force-with-lease`). When another run got there first, it starts again from that
+  run's state, so neither loses the other's folder.
+- It writes the branch as one commit without a parent. The editor and each preview's modules are tens of
+  megabytes that change with every push, and a history of them would grow without bound.
+"""
 import os
 from pathlib import Path
 import re
@@ -9,13 +20,17 @@ import sys
 import tempfile
 
 
+# Each attempt starts from the branch's newest state, so 8 lost races in a row mean something else is wrong.
+ATTEMPTS = 8
+
+
 def git(*args, cwd, check=True):
     return subprocess.run(['git', *args], cwd=cwd, check=check, text=True, capture_output=True)
 
 
 def publish(destination, source):
-    if not re.fullmatch(r'app|dev|site-root|pr/[1-9][0-9]*', destination):
-        raise ValueError('Destination must be app, dev, site-root or pr/<positive number>')
+    if not re.fullmatch(r'app|dev|site-root|v[0-9]+\.[0-9]+|pr/[1-9][0-9]*', destination):
+        raise ValueError('Destination must be app, dev, site-root, v<major>.<minor> or pr/<positive number>')
     source = Path(source).resolve() if source else None
     if source and not (source / 'index.html').is_file():
         raise ValueError('The built site must contain index.html')
@@ -37,16 +52,21 @@ def publish(destination, source):
             git('config', '--local', key, value, cwd=work)
         git('config', 'user.name', 'github-actions[bot]', cwd=work)
         git('config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com', cwd=work)
-        for attempt in range(5):
+        refused = ''
+        for attempt in range(ATTEMPTS):
             found = git('ls-remote', '--heads', 'origin', 'gh-pages', cwd=work).stdout.strip()
             if not found and source is None:
                 return  # Closing a PR that never published must not create a Pages branch.
+            # The state this attempt builds on. An empty name means the branch must still not exist.
+            seen = found.split()[0] if found else ''
             if found:
                 git('fetch', '--depth=1', 'origin', 'gh-pages', cwd=work)
-                git('checkout', '-B', 'pages', 'FETCH_HEAD', cwd=work)
+                git('checkout', '--detach', 'FETCH_HEAD', cwd=work)
                 git('clean', '-fdx', cwd=work)
-            elif attempt == 0:
+            else:
                 git('checkout', '--orphan', 'pages', cwd=work)
+                git('rm', '-r', '-q', '--cached', '--ignore-unmatch', '.', cwd=work)
+                git('clean', '-fdx', cwd=work)
             if destination == 'site-root':
                 # Refresh landing files without replacing docs, releases or previews.
                 for path in source.iterdir():
@@ -58,13 +78,17 @@ def publish(destination, source):
                     shutil.copytree(source, target)
             (work / '.nojekyll').touch()
             git('add', '-A', cwd=work)
-            if not git('status', '--porcelain', cwd=work).stdout.strip():
+            tree = git('write-tree', cwd=work).stdout.strip()
+            if found and tree == git('rev-parse', 'FETCH_HEAD^{tree}', cwd=work).stdout.strip():
                 return
-            git('commit', '-m', f'Web: {destination} from {os.environ.get("GITHUB_SHA", "local build")}', cwd=work)
-            pushed = git('push', 'origin', 'HEAD:gh-pages', cwd=work, check=False)
+            message = f'The site, after {destination} from {os.environ.get("GITHUB_SHA", "a local build")}'
+            commit = git('commit-tree', tree, '-m', message, cwd=work).stdout.strip()
+            pushed = git('push', f'--force-with-lease=refs/heads/gh-pages:{seen}', 'origin',
+                         f'{commit}:refs/heads/gh-pages', cwd=work, check=False)
             if pushed.returncode == 0:
                 return
-        raise RuntimeError('Pages push failed after five attempts; check branch permissions and competing publishers')
+            refused = pushed.stderr.strip()
+        raise RuntimeError(f'The push to gh-pages was refused {ATTEMPTS} times. The last answer: {refused}')
 
 
 if __name__ == '__main__':
