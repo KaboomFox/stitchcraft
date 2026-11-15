@@ -1,0 +1,148 @@
+name: Docs and demo
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - run: |
+          rustup toolchain install --profile minimal
+          rustup target add wasm32-unknown-unknown
+      - name: Check out pinned VectorCraft before computing the build cache key
+        run: python3 web/build.py --prepare
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: |
+            . -> target
+            target/vectorcraft-web -> target
+      - name: Install Trunk
+        run: |
+          curl -fsSL https://github.com/trunk-rs/trunk/releases/download/v0.22.1/trunk-x86_64-unknown-linux-gnu.tar.gz -o /tmp/trunk.tar.gz
+          curl -fsSL https://github.com/trunk-rs/trunk/releases/download/v0.22.1/trunk-x86_64-unknown-linux-gnu.tar.gz.sha256 -o /tmp/trunk.sha256
+          cd /tmp
+          echo "$(cut -d ' ' -f1 trunk.sha256)  trunk.tar.gz" | sha256sum --check
+          tar -xzf trunk.tar.gz
+          sudo install trunk /usr/local/bin/trunk
+      - name: Build editor and embroidery plug-ins
+        run: python3 web/build.py
+      - uses: ./.github/actions/tools
+        with:
+          tools: mdbook
+      - name: Browser and docs preview checks
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          npm ci --prefix web
+          cd web && npx playwright install --with-deps chromium && cd ..
+          node --test web/*.test.mjs
+          python3 -m unittest discover -s web -p 'test_*.py'
+          mkdir -p target/serve
+          cp -a target/web/. target/serve/
+          python3 -m http.server 8766 --directory target/serve > /tmp/web-server.log 2>&1 &
+          for attempt in {1..30}; do
+            if curl -fsS http://127.0.0.1:8766/ -o /dev/null; then break; fi
+            sleep 1
+          done
+          node web/smoke.mjs http://127.0.0.1:8766/
+          if [ -n "$PR_NUMBER" ]; then dest="pr/$PR_NUMBER"; else dest=dev; fi
+          python3 web/site.py --base-path "/${GITHUB_REPOSITORY#*/}/${dest}/"
+          mkdir -p target/serve/pr/123
+          cp -a target/site/. target/serve/pr/123/
+          node web/docs-smoke.mjs http://127.0.0.1:8766/pr/123/
+          node web/smoke.mjs http://127.0.0.1:8766/pr/123/demo/ target/site/demo/screenshots
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: site
+          path: target/site
+          retention-days: 7
+
+  publish:
+    needs: build
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association))
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: site
+          path: target/site
+      - name: Publish app or preview
+        id: publish
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if [ -n "$PR_NUMBER" ]; then
+            dest="pr/$PR_NUMBER"
+            source=target/site
+          else
+            dest=app
+            source=target/site/demo
+          fi
+          python3 .github/scripts/publish-web.py "$dest" "$source"
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          echo "url=https://${owner}.github.io/${GITHUB_REPOSITORY#*/}/${dest}/" >> "$GITHUB_OUTPUT"
+      - name: Preview link
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v9
+        env:
+          PREVIEW_URL: ${{ steps.publish.outputs.url }}
+        with:
+          script: |
+            const {owner, repo} = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const render = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/preview-comment.cjs`);
+            const body = render(process.env.PREVIEW_URL, context.payload.pull_request.head.sha);
+            const comments = await github.paginate(github.rest.issues.listComments, {owner, repo, issue_number});
+            const old = comments.find(c => (c.user.type === 'Bot' || c.user.login === owner) && c.body.includes('<!-- stitchcraft-web-preview -->'));
+            if (old) await github.rest.issues.updateComment({owner, repo, comment_id: old.id, body});
+            else await github.rest.issues.createComment({owner, repo, issue_number, body});
+
+  cleanup:
+    if: >-
+      github.event_name == 'pull_request' && github.event.action == 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Remove preview
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: python3 .github/scripts/publish-web.py "pr/$PR_NUMBER"
+      - uses: actions/github-script@v9
+        with:
+          script: |
+            const {owner, repo} = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {owner, repo, issue_number});
+            const old = comments.find(c => (c.user.type === 'Bot' || c.user.login === owner) && c.body.includes('<!-- stitchcraft-web-preview -->'));
+            if (old) await github.rest.issues.updateComment({owner, repo, comment_id: old.id, body: '<!-- stitchcraft-web-preview -->\nPreview removed (PR closed).'});

@@ -2,6 +2,8 @@
 [files]
 extend-exclude = [
   "conformance/golden/", "conformance/fixtures/", "*.svg", "*.pes", "*.dst",
+  # VectorCraft templates contain binary PDF preview streams, not prose.
+  "*.vctemplate",
   # Third-party prose-lint rules, kept as their authors wrote them (vale-ai-tells, MIT).
   ".vale/styles/ai-tells/",
 ]
