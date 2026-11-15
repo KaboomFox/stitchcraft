@@ -72,7 +72,9 @@
 //! with `fails`, such as `SC-E0701` for a design its machine's hoop can't hold. VectorCraft's `run` stops at
 //! the first step that fails and says why, with its exit status a failure (its
 //! `apps/vectorcraft-cli/src/main.rs`), so that export is its run's last step, and no check or later run
-//! names the file it doesn't write.
+//! names the file it doesn't write. An export VectorCraft itself must stop, for the instructions it ran,
+//! names what VectorCraft says then ([`OVER_BUDGET`]) in place of a code: a traced photo's
+//! (`traced-photo.toml`).
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -116,6 +118,9 @@ const NO_PREFS: &str = "VECTORCRAFT_NO_PREFS";
 /// (its `docs/control-protocol.md`).
 pub(crate) const PROFILE: &str = "VECTORCRAFT_CONFIG_DIR";
 const LOOKS: u32 = 12_000;
+/// What VectorCraft says of a plug-in it stopped for running more instructions than it allows the run (its
+/// `docs/plugins.md`, Limits). An export that must be stopped so names it with `fails`.
+pub(crate) const OVER_BUDGET: &str = "exceeded its instruction budget";
 /// The design name the machine files compared are written with, so that only the stitches differ.
 const NAME: &str = "compat";
 
@@ -176,7 +181,8 @@ pub struct Step {
     /// A file to export, by name, in the format its extension names.
     #[serde(default)]
     pub export: Option<String>,
-    /// For an export that must fail, the code of the error it says, such as `SC-E0701`.
+    /// For an export that must fail, the code of the error it says, such as `SC-E0701`, or [`OVER_BUDGET`] for
+    /// one VectorCraft must stop.
     #[serde(default)]
     pub fails: Option<String>,
 }
@@ -307,6 +313,7 @@ impl Step {
         // A parameter written `{ stitchcraft = "…" }` is given the data StitchCraft makes of the name.
         let params = || trace::generated(self.params.clone().map_or_else(|| json!({}), |table| toml_to_json(toml::Value::Table(table))));
         if let Some(code) = &self.fails
+            && code != OVER_BUDGET
             && !Code::ALL.iter().any(|known| known.id() == code && known.severity() == Severity::Error)
         {
             return Err(format!("`fails = \"{code}\"` names no error StitchCraft says"));

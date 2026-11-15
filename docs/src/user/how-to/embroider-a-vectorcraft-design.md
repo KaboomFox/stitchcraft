@@ -2,7 +2,9 @@
 
 Draw the design in VectorCraft, and say how each object sews with the StitchCraft plug-ins, which show
 its stitches as you work. Then write the machine file with VectorCraft's **File › Export › Export As**,
-from VectorCraft 0.14, or with `stitch export` from the saved document. Both write the same file.
+from VectorCraft 0.14, or with `stitch export` from the saved document. Both write the same file. A
+design too large for VectorCraft's export, such as a traced photo, is written by `stitch export`
+([below](#when-vectorcraft-stops-the-export)).
 
 ## Choose each object's stitches
 
@@ -81,8 +83,8 @@ is picked, a dialog shows 2 options:
 
 The design takes the file's name, which machines show. What `stitch export` would say about the design
 shows with the export's warnings, one line for each message. When one of them is an error, nothing is
-written, and VectorCraft says the first. VectorCraft lets an export run for a while, and stops one that
-needs more: `stitch export` writes it.
+written, and VectorCraft says the first. VectorCraft stops an export that needs more work than it allows
+([below](#when-vectorcraft-stops-the-export)).
 
 Or save the document, and run `stitch export` on it. This patch has a fill, a satin border, a curve of
 running stitch and 2 squares in a group that a graphic style's fill effect sews. Its placement line is
@@ -103,6 +105,21 @@ reads an SVG file the same way and takes the same options.
 StitchCraft reads documents of up to 64 MiB. Pictures embedded to trace from can make one larger: place
 them with **Link** checked in VectorCraft's Place dialog, and VectorCraft saves a small preview of each
 in the document instead.
+
+### When VectorCraft stops the export
+
+VectorCraft lets an export do a fixed amount of work. When a design needs more, VectorCraft doesn't write
+the file and says "plug-in exceeded its instruction budget". A picture traced into shapes with the Auto
+effect on it is such a design: it needs 5 to 6 times what VectorCraft allows. VectorCraft doesn't tell the
+exporter how much work is left, so StitchCraft doesn't warn you first. The design is fine, and StitchCraft
+writes it outside VectorCraft:
+
+- On the desktop, save the document and run `stitch export FILE.vectorcraft -o FILE.pes`. A traced photo
+  takes about a second. Add `--preview FILE.png` for the picture of its stitches.
+- In the [browser demo](../../browser-demo.md), press **Export PES** or **Export DST** in the Start here
+  panel.
+
+Both write the file VectorCraft's export would have written.
 
 ## Keep the design's settings and machine with it
 

@@ -5,6 +5,7 @@
 const version = new URL(import.meta.url).search;
 const {installPlugins} = await import(`./loader.mjs${version}`);
 const {openFinished, openStarter, turnIntoStitches} = await import(`./starter.mjs${version}`);
+const {done, make, seconds} = await import(`./exports.mjs${version}`);
 
 const panel = document.createElement('details');
 panel.open = true;
@@ -76,6 +77,54 @@ window.stitchcraftReady = (async () => {
     return 'The finished example is in a new tab of the editor. Each of its shapes has StitchCraft Auto.';
   });
   finished.style.cssText = 'display:block;margin:8px 0;padding:0;border:0;background:none;color:#a9dcff;font:14px system-ui;text-decoration:underline;cursor:pointer';
+  // What the last export said, one line each, folded away under the buttons.
+  const said = document.createElement('details');
+  said.hidden = true;
+  // The picture of the stitches, over the editor until it is closed.
+  const shown = document.createElement('figure');
+  shown.style.cssText = 'position:fixed;inset:24px;z-index:10001;margin:0;padding:12px;border-radius:8px;background:#20242a;box-shadow:0 4px 40px #000c;display:none;flex-direction:column;gap:8px';
+  // Makes `what` with StitchCraft's engine, says how long it has been working, and lists what the export said.
+  const made = async (what, doing) => {
+    said.hidden = true;
+    const out = await make(window.vectorcraft, what, {working: ms => {help.textContent = `${doing}… ${seconds(ms)}`;}});
+    const heading = document.createElement('summary');
+    heading.textContent = 'What the export said';
+    said.replaceChildren(heading, ...out.warnings.map(line));
+    said.hidden = out.warnings.length === 0;
+    return out;
+  };
+  const exporter = (label, what) => {
+    const exports = button(label, async () => {
+      const out = await made(what, 'Planning the stitches');
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(new Blob([out.bytes], {type: 'application/octet-stream'}));
+      link.download = out.name;
+      link.click();
+      return done(out);
+    });
+    exports.style.cssText = 'margin:4px 8px 4px 0;padding:6px 10px;border:1px solid #e6ad49;border-radius:6px;background:none;color:#e6ad49;font:600 14px system-ui;cursor:pointer';
+    return exports;
+  };
+  const picture = button('Show the real stitches', async () => {
+    const out = await made('picture', 'Drawing the stitches');
+    const image = document.createElement('img');
+    image.src = URL.createObjectURL(new Blob([out.bytes], {type: 'image/png'}));
+    image.alt = 'The stitches the machine file sews';
+    image.style.cssText = 'flex:1;min-height:0;object-fit:contain';
+    const close = document.createElement('button');
+    close.textContent = 'Close the picture';
+    close.style.cssText = 'align-self:flex-end';
+    close.onclick = () => {shown.style.display = 'none';};
+    shown.replaceChildren(close, image);
+    shown.style.display = 'flex';
+    return `The picture is what the PES file sews, drawn in ${seconds(out.ms)}.`;
+  });
+  picture.style.cssText = 'margin:4px 8px 4px 0;padding:6px 10px;border:1px solid #a9dcff;border-radius:6px;background:none;color:#a9dcff;font:14px system-ui;cursor:pointer';
+  document.body.append(shown);
+  const makes = document.createElement('div');
+  makes.append(exporter('Export PES', 'pes'), exporter('Export DST', 'dst'), picture);
+  // The checks ask for a file as the buttons make it, without a download.
+  window.stitchcraftMake = what => make(window.vectorcraft, what);
   const download = document.createElement('a');
   download.href = new URL(`./templates/alpine-night.vctemplate${version}`, import.meta.url).href;
   download.download = 'Alpine Night.vctemplate';
@@ -86,7 +135,10 @@ window.stitchcraftReady = (async () => {
     stitch,
     help,
     line('By hand: Select › All, then Effect › Plug-ins › StitchCraft Auto.'),
-    line('File › Export › Export As… writes PES or DST. Save your design before you close this tab.'),
+    line('These buttons write the machine file with StitchCraft\'s own engine, in this page. They also export a traced photo, which the editor\'s File › Export › Export As… stops as too large.'),
+    makes,
+    said,
+    line('Save your design before you close this tab.'),
     finished, download, docs);
   // What `document.open` answered for the drawing, or false when the session had a document. The browser
   // check reads it.
