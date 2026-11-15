@@ -69,7 +69,7 @@ inside the edges it stays.
 As it sews, the thread pulls the fabric in along the rows, and a fill comes out shorter along them than
 drawn. `pull_compensation_mm` lengthens each row past the outline at its ends, and `expand_mm` grows
 every part of the area before its rows are laid. Automatic digitizing makes up for the pull another
-way: each area reaches 0.4 mm under the shapes sewn after it
+way: each area reaches 1 mm under the shapes sewn after it
 ([automatic digitizing](automatic.md#neighbours)).
 
 ## Ink/Stitch's legacy fill
@@ -86,6 +86,8 @@ sew the fill with its underlay.
 The reference gives each setting's range and default:
 
 - [fill](../reference/params/fill.md), which chooses the fill method
-- [tatami fill](../reference/params/tatami.md), its underlay included
+- [tatami fill](../reference/params/tatami.md), its underlay included. One of its settings, `turn_stitches`,
+  keeps the turns between the rows as stitches. It has no row in the Fill effect's dialog in VectorCraft,
+  which holds 64 parameters, the most a dialog can, and automatic digitizing sets it on the fills it makes
 - [pull compensation](../reference/params/pull.md)
 - [the settings every element shares](../reference/params/common.md), the stitch length among them

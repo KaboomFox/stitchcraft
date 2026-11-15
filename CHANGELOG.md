@@ -13,6 +13,44 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     and nothing of it is published.
   - One script now publishes every folder of the Pages site, the book's too, and keeps the branch to one
     commit. The editor is built from VectorCraft 0.24.1, which `compat/vectorcraft.toml` records.
+- M13.21: automatic digitizing chooses the stitches of each part of a shape from the part's geometry, by
+  the first rule of one table that it matches (`REQ-AUTO-030` to `REQ-AUTO-036`,
+  `stitchcraft_engine::auto::rules`). Width alone chose before.
+  - A compact part, short for its width, is filled: one whose area is less than 3 times its width squared.
+    A blob as wide as a satin column sewed as a column bent into its corners. A rectangle 3 mm wide is now a
+    column from 9 mm long, where it was one from 3.5 mm.
+  - An uneven part is filled too: one of several centre lines whose width varies along them by more than
+    0.3 of itself, as a ragged patch of a traced photo does. Its tails narrower than the narrowest satin
+    stroke leave the fill as lines, and a narrow piece that joins 2 parts of the fill stays in it.
+  - A part that is filled is filled whole under the shapes that fill its holes, as only an area wider than
+    7 mm was. A dog's nose sews as one fill with the nostrils on it.
+  - The fill of an area goes on from its broad parts as far as a disc 4 mm across fits. A piece up to 7 mm
+    wide left the fill before, as a satin column.
+  - No satin column of a part sews a stitch longer than 7 mm between its rails. A part whose column would is
+    filled, and `SC-I0902` gives the stitch's length. `auto_max_satin_width_mm` no longer takes a value
+    above 7 mm: a higher one is read as 7 mm, with `SC-W0102`.
+  - `SC-I0912` (new) says, for each automatic shape, which rule each of its parts sewed by and the measures
+    that decided it. `stitch plan` counts them in one line when more than 3 shapes say one, and its report
+    lists each.
+  - New settings, in 3 tiers. A shape names its stitch with `auto_stitch`. For a whole design,
+    `auto_prefer` leans the rules, `auto_fill_uneven` turns the filling of uneven parts off and
+    `auto_fill_angle` turns its fills. The bounds are advanced settings: `auto_min_slenderness`, `auto_max_unevenness` and
+    `auto_min_fill_width_mm`, beside the widest satin column, the narrowest triple run and the smallest
+    area. `stitch plan --set KEY=VALUE` sets a setting on every shape digitized automatically, and
+    `--style logo` or `--style photo` a named set of them. A bug-report bundle records them.
+  - The Auto effect's dialog in VectorCraft shows the first 2 tiers, 12 rows where it had 13 and was 3 px
+    taller than its window. The bounds, and the 2 limits of the cover's measure, have no row.
+  - The page [automatic digitizing's rules](docs/src/user/reference/auto-rules.md) is generated from the
+    table, the styles and the settings.
+  - Golden changed: `TS-13A.pes` and `TS-13C.pes`. On TS-13A the blue squares of the 2 big badges are
+    filled, since their column sewed stitches of 8.05 mm at its corners. On TS-13C a star's points are
+    filled up to their tips.
+  - On the 4 traced dogs, 37 to 50 shapes that sewed as satin columns sew as fills. They jump 82, 94, 81
+    and 112 times where they jumped 124, 143, 113 and 135 times, leave 2 slivers where they left 19, and
+    0.001 to 0.097 % of their designs bare where they left 0.07 to 0.35 %. Their satin stitches that lean
+    along a column (`SC-W0208`) fell from 26 to 34 each to 4 to 8. They change thread 12, 22, 16 and 28
+    times where they changed 10, 12, 12 and 18 times, since a line sews after the fill it borders, and
+    lay 21 stitches astray where they laid 7, the longest 4 mm where it was 7.89 mm.
 - M13.14: the subject cut-out, as ADR-0019 decided (`REQ-CLI-014` to `REQ-CLI-019`). With `--subject`,
   `stitch plan` and `stitch export` cut a photo's subject out before VectorCraft traces it, and the background
   is left unsewn. The option is off by default, and every other design sews as before.

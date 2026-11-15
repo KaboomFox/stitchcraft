@@ -7,7 +7,8 @@
 
 use stitchcraft_core::{Budget, Code, Diagnostic, Mm, Severity};
 use stitchcraft_engine::auto::{
-    AutoParams, Digitized, IGNORE_BACKGROUND, MAX_SATIN_WIDTH, MIN_AREA, MIN_TRIPLE_RUN_WIDTH, OVERLAP, Stitches, digitize, digitized,
+    ADVANCED, AutoParams, Digitized, FILL_ANGLE, FILL_UNEVEN, IGNORE_BACKGROUND, MAX_SATIN_WIDTH, MAX_UNEVENNESS, MIN_AREA, MIN_FILL_WIDTH,
+    MIN_SLENDERNESS, MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, STITCH, Stitches, digitize, digitized,
 };
 use stitchcraft_engine::design::{Design, DesignSettings, Element, Shape};
 use stitchcraft_engine::generators::passes::BEAN_STITCH_REPEATS;
@@ -74,17 +75,22 @@ fn messages(said: &[Diagnostic], code: Code) -> Vec<String> {
 fn req_auto_020_the_rules_settings_are_stitchcraft_s_own_and_no_stitch_type_reads_them() {
     assert!(PARAMETERS.contains(&&AutoParams::GROUP) && AutoParams::GROUP.automatic());
     let defaults: Vec<(&str, &str)> = AutoParams::SPECS.iter().map(|spec| (spec.key, spec.default)).collect();
-    let widths = [(MAX_SATIN_WIDTH, "7"), (MIN_TRIPLE_RUN_WIDTH, "0.5")];
-    let neighbours = [(OVERLAP, "1"), (PULL, "0.4"), (MIN_AREA, "1"), (IGNORE_BACKGROUND, "true")];
-    let base = [
-        ("auto_base_layer", "true"),
-        ("auto_base_stitch_length_mm", "3"),
-        ("auto_base_offset_mm", "-0.4"),
-        ("auto_base_keep_holes", "true"),
-        ("auto_base_sliver_mm2", "0.4"),
-        ("auto_base_bare_percent", "0.5"),
+    let shape = [(STITCH, "auto"), (PREFER, "balanced"), (FILL_UNEVEN, "true"), (FILL_ANGLE, "0")];
+    let neighbours = [(OVERLAP, "1"), (PULL, "0.4"), (IGNORE_BACKGROUND, "true")];
+    let base = [("auto_base_layer", "true"), ("auto_base_stitch_length_mm", "3"), ("auto_base_offset_mm", "-0.4"), ("auto_base_keep_holes", "true")];
+    // The advanced settings: the rules' bounds, then the 2 limits of the cover's check.
+    let bounds = [
+        (MAX_SATIN_WIDTH, "7"),
+        (MIN_TRIPLE_RUN_WIDTH, "0.5"),
+        (MIN_SLENDERNESS, "3"),
+        (MAX_UNEVENNESS, "0.3"),
+        (MIN_FILL_WIDTH, "4"),
+        (MIN_AREA, "1"),
     ];
-    assert_eq!(defaults, [&widths[..], &neighbours[..], &base[..]].concat());
+    let cover = [("auto_base_sliver_mm2", "0.4"), ("auto_base_bare_percent", "0.5")];
+    assert_eq!(defaults, [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..]].concat());
+    let advanced: Vec<&str> = AutoParams::SPECS.iter().filter(|spec| spec.group == ADVANCED).map(|spec| spec.key).collect();
+    assert_eq!(advanced, bounds.iter().chain(&cover).map(|(key, _)| *key).collect::<Vec<_>>());
     for spec in AutoParams::SPECS {
         assert_eq!((spec.origin, spec.stability), (Origin::StitchCraft, Stability::Experimental), "{}", spec.key);
         // Registered, and so known to every host, but no family's settings show it.

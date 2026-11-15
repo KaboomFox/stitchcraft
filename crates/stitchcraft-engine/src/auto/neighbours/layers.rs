@@ -50,7 +50,9 @@ use super::background::{BACKGROUND_MARGIN, inside};
 use super::order::{drawn, overlap};
 use super::under::covered;
 use super::{Failed, TOUCHING, envelope, joined, near, no_area, parts_of, speck};
+use crate::auto::columns::filled;
 use crate::auto::narrow::within;
+use crate::auto::rules::Bounds;
 use crate::auto::{AutoParams, outline};
 use crate::design::{Design, Element, FillRule, Shape};
 use crate::generate::{stops_after, trim_or_stop_left_out};
@@ -125,7 +127,8 @@ pub(in crate::auto) fn flattened<'d>(design: &'d Design, rules: &[Option<AutoPar
     let kept = if background { inner(design, &mut layers) } else { 0 };
     // Each area's holes that its details fill, found from what shows of the areas.
     let boxes = boxes(&layers);
-    let holes: Vec<Result<Vec<Hole>, Failed>> = (0..layers.len()).map(|index| details(&layers, &boxes, index, &mut budget.meter())).collect();
+    let holes: Vec<Result<Vec<Hole>, Failed>> =
+        (0..layers.len()).map(|index| details(&layers, &boxes, index, design.settings.min_satin_stroke_width, &mut budget.meter())).collect();
     for ((index, layer), holes) in layers.iter_mut().enumerate().zip(holes) {
         let Some(layer) = layer.as_mut().filter(|layer| !layer.unfound) else { continue };
         layer.closed = holes.unwrap_or_else(|failed| {
@@ -265,13 +268,13 @@ fn boxes(layers: &[Option<Layer>]) -> Vec<Vec<Envelope>> {
 /// that only specks fill stays open, and the specks merge into the area round them (`specks`), which closes
 /// it as a speck does. An area whose layers weren't found, sewn as drawn in its place, has no holes closed
 /// and fills none.
-fn details(layers: &[Option<Layer>], boxes: &[Vec<Envelope>], index: usize, meter: &mut Meter) -> Result<Vec<Hole>, Failed> {
+fn details(layers: &[Option<Layer>], boxes: &[Vec<Envelope>], index: usize, narrowest: Mm, meter: &mut Meter) -> Result<Vec<Hole>, Failed> {
     let Some(layer) = layers.get(index).and_then(Option::as_ref).filter(|layer| !layer.unfound) else { return Ok(Vec::new()) };
     let mut holes = Vec::new();
     for (p, part) in layer.shown.iter().enumerate() {
-        // A part as narrow as a satin column everywhere, or whose width can't be found (a bug, which its
-        // stitches say), keeps its holes.
-        if part.holes.is_empty() || within(part, layer.rules.auto_max_satin_width_mm, meter)? != Some(false) {
+        // A part that sews along its middle, as lines or as columns, keeps its holes, and so does one whose
+        // width can't be found (a bug, which its stitches say).
+        if part.holes.is_empty() || filled(part, &Bounds::of(&layer.rules, narrowest), meter)?.is_none() {
             continue;
         }
         for (h, ring) in part.holes.iter().enumerate() {

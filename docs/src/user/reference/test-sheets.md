@@ -315,7 +315,7 @@ After sewing, check:
 
 ## TS-13A — Pictures digitized automatically: neighbours and sewing order
 
-126.0 × 167.8 mm · 25969 stitches, 36 jumps, 35 trims, 21 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+126.0 × 167.8 mm · 25878 stitches, 36 jumps, 35 trims, 22 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -323,15 +323,15 @@ Drawn as a design whose shapes StitchCraft digitizes automatically, as `--auto` 
 
 ![TS-13A as it will sew: the same pictures twice, digitized at the top and in paint order at the bottom. Each half has 2 red badges with a blue square and a gold disc on them, a blue disc with specks round it, a row of 3 smaller badges, and a gold square beside a blue bar. At the top the specks are blue bumps on the disc's edge, and at the bottom red knots.](../../images/generated/testsheet-ts-13a.png)
 
-Threads: Red, Blue, Deep Gold, Red, Blue, Deep Gold, Blue, Red, Blue, Deep Gold, Red, Blue, Deep Gold, Red, Blue, Deep Gold, Blue, Blue (stop), Red, Blue, Red, Deep Gold, Blue.
+Threads: Red, Blue, Deep Gold, Red, Blue, Deep Gold, Blue, Red, Blue, Deep Gold, Red, Blue, Deep Gold, Red, Blue, Deep Gold, Blue, Blue (stop), Red, Blue, Red, Blue, Deep Gold, Blue.
 
 After sewing, check:
 
 - The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Top row, left to right: a badge traced abutting and one traced stacked, each 40 mm across, and a blue disc with 7 red specks round it. Bottom row: 3 badges drawn badge by badge, and a gold square with a blue bar beside it.
-- The bottom half changes thread 16 times and jumps 15 times, the top half 4 and 21 times. The base layer's thread and pieces are among the top half's. How long does each half take?
+- The bottom half changes thread 16 times and jumps 15 times, the top half 5 and 21 times. The base layer's thread and pieces are among the top half's. How long does each half take?
 - Does fabric show between colours, on either half? On the top half, each area reaches 1 mm under the next: does that cover the gap, or show as a ridge?
 - On the top half, a base layer sews first under all the shapes, in the red that paints the most of them: an open fill in 3 directions, 0.4 mm inside the shapes' outer edges, and the fills on it sew no underlay of their own. Does it show beside a shape's edge, or through the gold and the blue? Do the fills on it lie as flat as those of the bottom half, which sew their own underlays?
-- On the top half, the stacked badge sews only what shows of each colour, as the abutting badge beside it does: the red disc whole, cut away under the square, and the blue square's ring round the gold disc. Does it sew as flat as the abutting badge? On the bottom half, it sews its lower colours whole, under the upper ones.
+- On the top half, the stacked badge sews only what shows of each colour, as the abutting badge beside it does: the red disc whole, cut away under the square, and the blue square whole, cut away under the gold disc. A satin column round the gold disc would sew stitches of 7.3 mm at the square's corners, longer than a satin stitch may be, so both badges' squares are filled. Does it sew as flat as the abutting badge? On the bottom half, it sews its lower colours whole, under the upper ones.
 - On the bottom half, each speck round the disc sews a red knot. On the top half, the 6 specks that touch the disc are blue, part of it, and the one apart is left out. Does the disc's edge show where they were?
 - The blue bar meets the gold square along the top half of its side, and runs on 0.5 mm from it below. On the top half, the bar, sewn first, reaches under the square only where they meet. Does the fabric that shows below read as a gap drawn there?
 - Does any shape cover one drawn over it? The order must never let that happen.
@@ -363,7 +363,7 @@ After sewing, check:
 
 ## TS-13C — Pictures digitized automatically: lines, and shapes in parts
 
-111.4 × 107.6 mm · 11273 stitches, 28 jumps, 27 trims, 10 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+111.4 × 107.6 mm · 11326 stitches, 32 jumps, 31 trims, 10 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -376,7 +376,7 @@ Threads: Flesh Pink, White, Black, Deep Gold, Red, Red (stop), Flesh Pink, Red, 
 After sewing, check:
 
 - The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left to right: a face drawn with black lines, a star, and a balloon on its string.
-- The bottom half changes thread 4 times and jumps 14 times, the top half 5 and 14 times. The base layer's thread and pieces are among the top half's. How long does each half take?
+- The bottom half changes thread 4 times and jumps 14 times, the top half 5 and 18 times. The base layer's thread and pieces are among the top half's. How long does each half take?
 - The face's outline is 4 mm wide, its eyes' 2 mm and its brows' 1 mm. On the top half, the outlines sew as satin columns and the brows as triple runs. Do the columns cover the edges of the pink and white areas beside them? Do the triple runs look as wide as the brows are drawn?
 - The smile is 2 mm wide with round caps, and on the top half its column ends square, 1 mm past each end of its line, where the round cap ends. How far does its corner show past the round end?
 - The pupils are small rings, and the 3 hairs hairpins, which turn more tightly than they are wide: the top half fills them. How solid do they sew beside the columns round them?

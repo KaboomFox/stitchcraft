@@ -41,6 +41,7 @@ traced: `traced-pear.vectorcraft` ([below](#the-traced-pear)) and the owner's do
 | `guided.svg` | A leaf 42 mm long, grouped with an S-shaped line along its middle that Ink/Stitch's guide-line marker makes a guide | the guided fill's rows, copy angle and stitch positions |
 | `gradient.svg` | 3 squares 30 mm a side under linear gradients. The first is red to blue across, and the second deep gold through white to emerald green up to the right. The third is tangerine to Prussian blue down through a transparent white | the linear gradient fill's stops and row spacing |
 | `widths.svg` | A line 0.6 mm wide, a letter C 3 mm wide and a disc 16 mm across, each traced as an area | automatic digitizing's stitches by width |
+| `rules.svg` | A blob 4.5 by 3 mm, a letter T with a bar 4 mm and a stem 1.5 mm thick, a blob with 2 tails 0.6 mm wide, a nose 7.2 by 5.8 mm with 2 nostrils in its holes, and a leaf 12 mm long, each traced as an area | the rules that choose a shape's stitches |
 | `parts.svg` | A lollipop on a stick 2.4 mm wide and a balloon on a string 0.8 mm wide, each one area | automatic digitizing's shapes in parts |
 | `round-patch.vectorcraft` | The VectorCraft tutorial's patch, as VectorCraft saves the `vectorcraft-patch` shot's steps, which are the tutorial's (`cargo xtask shots --vectorcraft` writes it). A disc and a star have StitchCraft Fill and Stroke, and a border of 2 rails has StitchCraft Satin | the VectorCraft tutorial: the `vectorcraft-patch-sewn` shot and the `export-round-patch` example |
 

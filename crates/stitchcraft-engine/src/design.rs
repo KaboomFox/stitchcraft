@@ -554,6 +554,21 @@ impl Design {
         Design { sort_colours: reading.sort_colours, ..self }
     }
 
+    /// The design with each of `rules`, settings of automatic digitizing's rules by their keys, set on every
+    /// [automatic](Element::automatic) element that doesn't set it itself: what a host's option for the whole
+    /// design asks (`stitch plan --set`, `--style`). A shape's own setting stays, and so does every element
+    /// with settings.
+    pub fn automatic_with(mut self, rules: &[(String, String)]) -> Design {
+        for element in self.elements.iter_mut().filter(|element| element.automatic) {
+            for (key, value) in rules {
+                if element.params.get(key).is_none() {
+                    element.params.set(key.as_str(), value.as_str());
+                }
+            }
+        }
+        self
+    }
+
     /// The elements, in the host's paint order.
     pub fn elements(&self) -> &[Element] {
         &self.elements

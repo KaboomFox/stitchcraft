@@ -146,7 +146,8 @@ fn req_auto_003_a_line_traced_in_vectorcraft_sews_as_wide_and_as_long_as_drawn()
     assert!((left + 1.25).abs() < 0.05 && (right - length - 1.25).abs() < 0.05, "caps included: {left} to {right}");
     assert_eq!(read.warnings.len(), 0, "{:?}", read.warnings);
     let said: Vec<String> = outcome.diagnostics.iter().map(ToString::to_string).collect();
-    assert_eq!(said, ["info SC-I0901: 1 shape is digitized automatically: it sews as a satin column."]);
+    let rule = "info SC-I0912: This shape sews by the rule column (2.5 mm wide).";
+    assert_eq!(said, ["info SC-I0901: 1 shape is digitized automatically: it sews as a satin column.", rule]);
 }
 
 #[test]
