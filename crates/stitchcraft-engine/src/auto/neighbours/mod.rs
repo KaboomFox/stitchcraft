@@ -132,7 +132,9 @@ pub(super) fn beside(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget
     // The base layer lies under the shapes as they are once the specks are merged, before any reaches under
     // another.
     let laid = base.map(|(rules, taken)| base::laid(&mut shapes, rules, taken, budget)).unwrap_or_default();
-    said.extend(order::ordered(&mut shapes, &moving, budget));
+    // The base layer's thread is sewing when the elements start.
+    let under = laid.pieces.first().map(|piece| piece.thread.color);
+    said.extend(order::ordered(&mut shapes, &moving, budget, under));
     said.extend(under::reached(&mut shapes, budget));
     said.append(&mut shapes.said);
     said.extend(shapes.unplaced());

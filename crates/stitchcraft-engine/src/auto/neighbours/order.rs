@@ -10,16 +10,20 @@
 //!    between its rails as they are sewn, and a line the area its stroke paints as drawn. Shapes that only
 //!    meet, as abutting paths do, may sew in either order. Rounding leaves a sliver no wider than
 //!    [`TOUCHING`] between edges drawn as one, and shapes overlap only where their overlap is wider.
-//! 2. **A line after the fill it borders.** A satin column or a line that touches a fill without overlapping
-//!    it sews after the fill and covers its edge, unless shapes that overlap hold it before: rule 1 comes
-//!    first.
-//! 3. **Few thread changes.** The next element has the thread that is sewing, as long as an element of that
-//!    thread is free to sew, every element that must sew before it sewn. Otherwise the thread changes to
-//!    that of the first free element in paint order. Threads are the same when their colours are, as plan
-//!    assembly counts thread changes. An element sewn in several threads moves as one, its colours
-//!    together and in their order: it has the thread it starts in, and leaves the one it ends in sewing
-//!    (`REQ-AUTO-024`).
-//! 4. **The nearest next.** Of the free elements of that thread, the next is the one whose box lies nearest
+//! 2. **A line after the fill it borders.** A line that touches a fill without overlapping it sews after
+//!    the fill, unless shapes that overlap hold it before: rule 1 comes first. A running stitch is as wide
+//!    as its thread and can't reach under the fill, and a fill sewn after it would bury it.
+//! 3. **The fewest thread changes** (`REQ-AUTO-037`). Within rules 1 and 2 the elements sew in batches of
+//!    one thread, in the row of batches that changes thread least of any ([`fewest`]). Threads are the same
+//!    when their colours are, as plan assembly counts thread changes. An element sewn in several threads
+//!    moves as one, its colours together and in their order: it has the thread it starts in, and leaves the
+//!    one it ends in sewing (`REQ-AUTO-024`).
+//! 4. **A satin column after the fill it borders, where that costs no thread change.** A column that
+//!    automatic digitizing made covers the fill's edge when it sews after the fill, and reaches under the
+//!    fill when it sews first (`REQ-AUTO-029`), so the fabric is covered either way. Of the rows with the
+//!    fewest changes, the one that sews more such columns after their fills is taken, and a column waits
+//!    for a later batch of its thread where there is one. Any other satin column goes by rule 2.
+//! 5. **The nearest next.** Of the free elements of a batch, the next is the one whose box lies nearest
 //!    the box of the one sewn last, then the one whose box's centre does, then the one drawn first. Each
 //!    element then starts and ends at its points nearest its neighbours (`REQ-GEN-003`).
 //!
@@ -36,11 +40,13 @@
 //!
 //! **Work.** Each element has the budget's work to itself to find how it lies beside the shapes drawn after
 //! it, and costs a unit for each of them and the work of those near it. One that needs more keeps its place
-//! in paint order as a stop does: nothing moves across it. Choosing the order from what was found has the
-//! budget's work once more. An order that needs more sews the elements not placed by then in paint order,
-//! after the others. Both are said.
+//! in paint order as a stop does: nothing moves across it. Finding the row of batches has the budget's work
+//! once. When it needs more, the elements from that run on sew as they did before M13.22: each thread while
+//! an element of it is free, then the thread of the first free element in paint order, every satin column
+//! after the fills it borders. Placing the elements has the budget's work once more. An order that needs more
+//! sews the elements not placed by then in paint order, after the others. Each is said.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::f64::consts::SQRT_2;
 
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Meter, Point};
@@ -57,6 +63,8 @@ use crate::normalize::region::ops::{area_of, buffered, intersection};
 /// place, as an element with a stop after it does.
 const PLACE: &str = "it keeps its place in paint order: the elements drawn before it sew before it, and those drawn after it after it";
 
+mod fewest;
+
 /// How an element may move round the others.
 #[derive(Clone, Copy, Debug)]
 pub(super) struct Moving {
@@ -70,14 +78,17 @@ pub(super) struct Moving {
 
 /// `shapes` put in the order they sew in, each element moving round the others as `moving` says, and what
 /// is said of it: `SC-I0907` when the order isn't paint order, and for each element left in paint order.
-pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget) -> Vec<Diagnostic> {
+/// `under` is the thread of the base layer, which sews before them and is sewing when they start, if there
+/// is one.
+pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, under: Option<Rgb>) -> Vec<Diagnostic> {
     let live: Vec<usize> = (0..shapes.len()).filter(|&index| !shapes.left_out(index)).collect();
     if !live.iter().any(|&index| moving.get(index).is_some_and(|moving| moving.free)) {
         return Vec::new();
     }
     let reaches: Vec<Option<Envelope>> = (0..shapes.len()).map(|index| reach(shapes, index)).collect();
     let facts: Vec<Facts> = shapes.elements.iter().zip(reaches).map(|(element, reach)| Facts::of(element, reach)).collect();
-    let mut order = Order { facts: &facts, moving, graph: Graph::new(shapes.len()), borders: Vec::new(), kept: BTreeSet::new() };
+    let (graph, kept) = (Graph::new(shapes.len()), BTreeSet::new());
+    let mut order = Order { facts: &facts, moving, graph, borders: Vec::new(), wished: Vec::new(), kept, unsought: None };
     let stop = |index: usize| facts.get(index).is_some_and(|facts| facts.stop);
     let mut said = Vec::new();
     for run in runs(&live, stop) {
@@ -85,11 +96,11 @@ pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget) -
     }
     // Nothing moves across an element whose neighbours needed more work than the budget allows either.
     let runs = runs(&live, |index| stop(index) || order.kept.contains(&index));
-    let mut sewing = Sewing::default();
-    let spent = order.sew(&runs, &mut sewing, &mut budget.meter()).is_err();
+    let mut sewing = Sewing { thread: under, ..Sewing::default() };
+    let spent = order.sew(&runs, &mut sewing, budget).is_err();
+    said.extend(order.unsought.and_then(|index| shapes.id(index)).map(|id| unsought(budget.max_work, id)));
     // What wasn't placed sews in paint order after the rest: what the work left, and so no element is lost.
-    let placed: BTreeSet<usize> = sewing.order.iter().copied().collect();
-    let rest: Vec<usize> = live.iter().copied().filter(|index| !placed.contains(index)).collect();
+    let rest: Vec<usize> = live.iter().copied().filter(|index| !sewing.placed.contains(index)).collect();
     if spent {
         said.extend(rest.first().and_then(|&index| shapes.id(index)).map(|id| unplaced(budget.max_work, id)));
     }
@@ -184,10 +195,17 @@ struct Order<'o> {
     moving: &'o [Moving],
     /// What must sew before what.
     graph: Graph,
-    /// Each line that borders a fill, as the fill and the line, in the order they were found.
+    /// Each line that borders a fill and sews after it, as the fill and the line, in the order they were
+    /// found.
     borders: Vec<(usize, usize)>,
+    /// Each satin column that automatic digitizing made and that borders a fill, as the fill and the column,
+    /// in the order they were found: it sews after the fill where that costs no thread change.
+    wished: Vec<(usize, usize)>,
     /// The elements whose neighbours need more work to find than the budget allows, which keep their place.
     kept: BTreeSet<usize>,
+    /// The first element of the run that finding the fewest thread changes needed more work for than the
+    /// budget allows, if any.
+    unsought: Option<usize>,
 }
 
 /// How a shape lies beside one drawn before it.
@@ -237,6 +255,7 @@ impl Order<'_> {
                     for beside in found {
                         match beside {
                             Beside::After(other) => self.graph.add(index, other),
+                            Beside::Border(fill, line) if shapes.column(line).is_some() => self.wished.push((fill, line)),
                             Beside::Border(fill, line) => self.borders.push((fill, line)),
                         }
                     }
@@ -263,26 +282,82 @@ impl Order<'_> {
         Ok(found)
     }
 
-    /// Puts the elements of `runs` in the order they sew, after those `sewing` holds, with `meter`'s work:
-    /// first each line after the fills it borders, where what overlaps allows it and no element kept in its
-    /// place lies between them, then each run in turn.
-    fn sew(&mut self, runs: &[Vec<usize>], sewing: &mut Sewing, meter: &mut Meter) -> Result<(), Exhausted> {
+    /// Puts the elements of `runs` in the order they sew, after those `sewing` holds. First each line sews
+    /// after the fills it borders, where what overlaps allows it and no element kept in its place lies between
+    /// them. Then each run in turn sews in the batches that change thread least ([`fewest`]), found with
+    /// `budget`'s work once for all the runs, and the columns that those batches let sew after the fills they
+    /// border do. From a run that needs more work on, the columns sew after their fills as the lines do, and
+    /// each thread sews while it lasts ([`Self::run`]). Placing the elements has `budget`'s work once more.
+    fn sew(&mut self, runs: &[Vec<usize>], sewing: &mut Sewing, budget: &Budget) -> Result<(), Exhausted> {
+        let mut placing = budget.meter();
         for (fill, line) in std::mem::take(&mut self.borders) {
-            if self.kept.range(fill.min(line)..=fill.max(line)).next().is_none() && !self.graph.reaches(line, fill, meter)? {
-                self.graph.add(fill, line);
-            }
+            self.border(fill, line, &mut placing)?;
         }
+        let mut seeking = Some(budget.meter());
         for run in runs {
-            self.run(run, sewing, meter)?;
+            let at = |place: usize| run.get(place).copied();
+            match seeking.as_mut().map(|meter| fewest::fewest(&self.sought(run, sewing.thread), meter)) {
+                Some(Ok(found)) => {
+                    for (fill, column) in found.granted.iter().filter_map(|&(fill, column)| at(fill).zip(at(column))) {
+                        self.graph.add(fill, column);
+                    }
+                    for batch in &found.batches {
+                        let batch: Vec<usize> = batch.iter().filter_map(|&place| at(place)).collect();
+                        self.run(&batch, sewing, &mut placing)?;
+                    }
+                }
+                Some(Err(_)) => {
+                    (seeking, self.unsought) = (None, run.first().copied());
+                    // The columns of the runs before are placed, after their fills or not as their batches
+                    // were found.
+                    for (fill, column) in std::mem::take(&mut self.wished) {
+                        if !sewing.placed.contains(&column) {
+                            self.border(fill, column, &mut placing)?;
+                        }
+                    }
+                }
+                None => {}
+            }
+            // The elements that no batch placed: all of them when none were found.
+            let rest: Vec<usize> = run.iter().copied().filter(|index| !sewing.placed.contains(index)).collect();
+            self.run(&rest, sewing, &mut placing)?;
         }
         Ok(())
     }
 
-    /// Puts the elements of `run` after those `sewing` holds, with `meter`'s work: of the elements free to
-    /// sew, those that start in the thread sewing, or else those that start in the first one's thread, and
-    /// of those the one nearest the last sewn, whose last thread is then sewing. An element of a later run
-    /// that one placed here frees waits for its own run, so that none moves across what ends this one, a
-    /// stop or an element kept in its place, and none is placed twice.
+    /// The line `line` sews after the fill `fill` it borders, unless an element kept in its place lies
+    /// between them or what must sew before what already holds the line before the fill; with `meter`'s work.
+    fn border(&mut self, fill: usize, line: usize, meter: &mut Meter) -> Result<(), Exhausted> {
+        if self.kept.range(fill.min(line)..=fill.max(line)).next().is_none() && !self.graph.reaches(line, fill, meter)? {
+            self.graph.add(fill, line);
+        }
+        Ok(())
+    }
+
+    /// `run` as the search for the fewest thread changes takes it ([`fewest::Run`]), `sewing` the thread
+    /// sewing when it starts: each element by its place in the run, with the elements of the run that must
+    /// sew before it, and the wishes whose fill and column are both of the run.
+    fn sought(&self, run: &[usize], sewing: Option<Rgb>) -> fewest::Run {
+        let places: BTreeMap<usize, usize> = run.iter().enumerate().map(|(place, &index)| (index, place)).collect();
+        let threads = |index: &usize| self.facts.get(*index).map_or([None; 2], |facts| [facts.first(), facts.last()]);
+        let mut before = vec![Vec::new(); run.len()];
+        for (place, index) in run.iter().enumerate() {
+            for later in self.graph.after.get(*index).into_iter().flatten().filter_map(|later| places.get(later)) {
+                if let Some(waiting) = before.get_mut(*later) {
+                    waiting.push(place);
+                }
+            }
+        }
+        let place = |index: &usize| places.get(index).copied();
+        let wished = self.wished.iter().filter_map(|(fill, column)| place(fill).zip(place(column))).collect();
+        fewest::Run { threads: run.iter().map(threads).collect(), before, wished, sewing }
+    }
+
+    /// Puts the elements of `run`, a batch or a run, after those `sewing` holds, with `meter`'s work: of the
+    /// elements free to sew, those that start in the thread sewing, or else those that start in the first
+    /// one's thread, and of those the one nearest the last sewn, whose last thread is then sewing. An element
+    /// that isn't of `run` and that one placed here frees waits for its own batch or run, so that none moves
+    /// across what ends a run, a stop or an element kept in its place, and none is placed twice.
     fn run(&mut self, run: &[usize], sewing: &mut Sewing, meter: &mut Meter) -> Result<(), Exhausted> {
         let members: BTreeSet<usize> = run.iter().copied().collect();
         let mut free: BTreeSet<usize> = run.iter().copied().filter(|&index| self.graph.waiting(index) == 0).collect();
@@ -305,6 +380,7 @@ impl Order<'_> {
             free.remove(&next);
             free.extend(self.graph.release(next).into_iter().filter(|index| members.contains(index)));
             sewing.order.push(next);
+            sewing.placed.insert(next);
             sewing.last = Some(next);
             sewing.thread = self.facts.get(next).and_then(Facts::last);
         }
@@ -383,6 +459,8 @@ fn apart(a: &Envelope, b: &Envelope) -> f64 {
 struct Sewing {
     /// The elements placed, in the order they sew.
     order: Vec<usize>,
+    /// The elements placed.
+    placed: BTreeSet<usize>,
     /// The thread sewing: the one the last placed element ends in; `None` before the first.
     thread: Option<Rgb>,
     /// The last placed.
@@ -472,6 +550,17 @@ fn unplaced(work: u64, id: ElementId) -> Diagnostic {
     let message = format!(
         "Choosing the order the elements sew in needed more than the work budget of {work} units, so this element and the others not \
          placed by then sew in paint order, after those placed."
+    );
+    Diagnostic::new(Code::AutoOrder, message).with_element(id)
+}
+
+/// `SC-I0907` for the element `id`, the first of the run that finding the fewest thread changes needed more
+/// than the `work` the budget allows for.
+fn unsought(work: u64, id: ElementId) -> Diagnostic {
+    let message = format!(
+        "Finding the order with the fewest thread changes needed more than the work budget of {work} units, so from this element on each \
+         thread sews while an element of it is free to sew, then the thread of the first free element in paint order, and every satin \
+         column sews after the fills it borders."
     );
     Diagnostic::new(Code::AutoOrder, message).with_element(id)
 }
