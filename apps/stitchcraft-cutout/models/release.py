@@ -6,13 +6,26 @@ Usage, with Python 3.11 or later:
 
     python -I release.py pins                 # what models.toml pins, as NAME=VALUE lines for the workflow
     python -I release.py fetch DIR            # U²-Net-p's file into DIR, with curl, as rembg publishes it
-    python -I release.py assemble DIR NOTES   # DIR holds the models alone: check them, then add the rest
+    python -I release.py assemble DIR NOTES [--encoder-of RUN FILE] [--publish]
+                                              # DIR holds the models alone: check them, then add the rest
 
 `assemble` runs in the virtual environment that exported MobileSAM's files (export.py), whose packages the
 export record names. It compares each model's size and SHA-256 with its pin in models.toml, and stops when one
 differs, after saying both. Only then does it put beside the models the licences and NOTICE.txt (release/),
 export.py, requirements.txt, EXPORT.md (release/EXPORT.md, with this build's run, tools and sums) and
 SHA256SUMS.txt, and write the release's notes to NOTES.
+
+One difference doesn't stop it: the encoder's SHA-256. The encoder's export has its pinned size on every
+machine and one of 2 sums, by the machine that runs it (release/EXPORT.md, The checks). `verdict` decides,
+and test_release.py holds its cases:
+
+- With the pinned sum, the folder is assembled.
+- With another sum, the folder is left as the 3 models, a warning says the sum, the runner's image and its
+  processor, and the models' job compares that export with the saved outputs. With `--publish` it is an error
+  instead, which says what to type: a release holds pinned files alone.
+- With another sum and `--encoder-of RUN FILE`, FILE is the encoder a finished run RUN of the workflow kept
+  in its artifact. When it has the pinned size and sum it takes the place of this build's encoder, and the
+  folder is assembled. When it is absent or differs, that is an error.
 
 The release's tag is the one the models' addresses name, so models.toml stays the one place that says it.
 """
@@ -119,6 +132,52 @@ def fetch(folder: Path) -> None:
     print(f"{target.name}: {size} bytes, SHA-256 {digest}, from {source['address']}")
 
 
+# What `verdict` finds: the folder can be assembled as it is, or with the named run's encoder, or the
+# encoder's sum alone differs, or nothing can be done with these files.
+PINNED, NAMED, DIFFERS, REFUSED = "pinned", "named", "differs", "refused"
+ENCODER = "encoder"
+# The workflow's input that names a run, as the messages call it.
+INPUT = "encoder_run"
+
+
+def verdict(models: dict, found: dict, named: tuple[str, tuple[int, str] | None] | None, publish: bool) -> tuple[str, list[str]]:
+    """What to do with the files `found`, each model's size and SHA-256 by its name in models.toml, and what to
+    say of it. `named` is the run whose encoder may take the place of this build's, with that file's size and
+    SHA-256, or None in their place when the run's artifact has no such file. `publish` says a release is
+    asked for."""
+    wrong = []
+    for name, model in models.items():
+        size, digest = found[name]
+        strict = (size, digest) != (model["size"], model["sha256"]) if name != ENCODER else size != model["size"]
+        if strict:
+            wrong.append(f"{model['file']} is {size} bytes with SHA-256 {digest}, and models.toml pins {model['size']} bytes and {model['sha256']}")
+    if wrong:
+        return REFUSED, wrong
+    pin = models[ENCODER]
+    file, digest = pin["file"], found[ENCODER][1]
+    if digest == pin["sha256"]:
+        return PINNED, []
+    differs = f"{file} has its pinned size and SHA-256 {digest} on this machine, and models.toml pins {pin['sha256']}"
+    if named is None:
+        if publish:
+            return REFUSED, [f"{differs}. Nothing is published. Start the workflow again and type in `{INPUT}` the id of a finished run of it whose build exported the pinned encoder: release/EXPORT.md says how to find one"]
+        return DIFFERS, [f"{differs}. The export has one of 2 sums by the machine that runs it (release/EXPORT.md, The checks). The models' job compares this export with the saved outputs"]
+    run, other = named
+    if other is None:
+        return REFUSED, [f"{differs}, and the artifact of the run {run} has no {file}: the run isn't one of this workflow, or its artifact has expired. Nothing is assembled"]
+    if other != (pin["size"], pin["sha256"]):
+        return REFUSED, [f"{differs}, and the {file} of the run {run} is {other[0]} bytes with SHA-256 {other[1]}, which isn't the pinned file either. Nothing is assembled"]
+    return NAMED, [f"{differs}. The {file} of the run {run} is the pinned file, and takes its place"]
+
+
+def output(name: str, value: str) -> None:
+    """Gives the workflow's later steps and jobs `value` under `name`."""
+    path = os.environ.get("GITHUB_OUTPUT")
+    if path:
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(f"{name}={value}\n")
+
+
 def files_table(rows: list[tuple[str, int, str, str]]) -> str:
     lines = ["| File | Bytes | SHA-256 | Made |", "|---|---:|---|---|"]
     lines += [f"| `{file}` | {size:,} | `{digest}` | {made} |" for file, size, digest, made in rows]
@@ -156,7 +215,14 @@ def stale_texts(toml: dict, tag: str, notice: str, record: str) -> list[str]:
     return stale
 
 
-def assemble(folder: Path, notes: Path) -> None:
+def machine() -> str:
+    """The runner's image, when GitHub's, and the processor: what an encoder's sum may depend on."""
+    env = os.environ
+    image = f"image {env['ImageOS']} {env['ImageVersion']}, " if "ImageOS" in env and "ImageVersion" in env else ""
+    return f"{image}processor {processor()}"
+
+
+def assemble(folder: Path, notes: Path, named: tuple[str, Path] | None = None, publish: bool = False) -> None:
     toml = pinned()
     models = toml["model"]
     repository, tag = release_of(models)
@@ -175,19 +241,35 @@ def assemble(folder: Path, notes: Path) -> None:
     if present != expected:
         sys.exit(f"{folder} holds {present}, and it must hold the models alone: {expected}")
 
-    rows, wrong = [], []
-    for name, model in models.items():
-        path = folder / model["file"]
-        size, digest = path.stat().st_size, sha256(path)
-        rows.append((model["file"], size, digest, MADE[name]))
-        if (size, digest) != (model["size"], model["sha256"]):
-            wrong.append(f"{model['file']} is {size} bytes with SHA-256 {digest}, and models.toml pins {model['size']} bytes and {model['sha256']}")
+    def rows_of() -> list[tuple[str, int, str, str]]:
+        return [(model["file"], (folder / model["file"]).stat().st_size, sha256(folder / model["file"]), MADE[name]) for name, model in models.items()]
+
+    rows = rows_of()
+    found = {name: (size, digest) for name, (_, size, digest, _) in zip(models, rows)}
+    other = None
+    if named is not None:
+        run, file = named
+        other = (run, (file.stat().st_size, sha256(file)) if file.is_file() else None)
+    state, lines = verdict(models, found, other, publish)
+    exported = found[ENCODER][1]
+    output("encoder", state)
+    output("encoder_sha256", exported)
+    where = f"This build ran on {machine()}."
+    if state in (REFUSED, DIFFERS):
+        mark, title = ("error", "The cut-out's models can't be assembled") if state == REFUSED else ("warning", "The encoder's export has another sum than its pin")
+        say(f"### {title}\n\n" + files_table(rows) + "\n\n" + "\n".join(f"- {line}." for line in lines) + f"\n\n{where}")
+        for line in lines:
+            print(f"::{mark}::{line}. {where}")
+        if state == REFUSED:
+            sys.exit("nothing is assembled")
+        return
+    replaced = ""
+    if state == NAMED and named is not None:
+        shutil.copyfile(named[1], folder / models[ENCODER]["file"])
+        rows = rows_of()
+        replaced = f" This build's own export of `{models[ENCODER]['file']}` had the SHA-256 `{exported}`. The file here is the export of the workflow's run {named[0]}, which has the pinned sum."
+        print(f"::notice::{lines[0]}.")
     table = files_table(rows)
-    if wrong:
-        say("### The cut-out's models differ from their pins\n\n" + table + "\n\n" + "\n".join(f"- {line}" for line in wrong))
-        for line in wrong:
-            print(f"::error::{line}")
-        sys.exit(f"{len(wrong)} of the {len(rows)} models differ from their pins: nothing is assembled")
 
     versions = []
     for tool in TOOLS:
@@ -206,6 +288,8 @@ def assemble(folder: Path, notes: Path) -> None:
         built = f"It was built by hand on {today}, outside GitHub Actions."
         builder = "These files were built by hand from their authors' own, and each matched its pin."
     image = f", image {env['ImageOS']} {env['ImageVersion']}" if "ImageOS" in env and "ImageVersion" in env else ""
+    built += replaced
+    builder += replaced
     build = "\n".join(
         [
             f"Release `{tag}` of {GITHUB}{repository}. {built} `NOTICE.txt` names the models' authors and licences.",
@@ -239,7 +323,7 @@ def assemble(folder: Path, notes: Path) -> None:
         f"{builder} The models are their authors' work, under the Apache License 2.0, and StitchCraft didn't train or change them. `NOTICE.txt` names the authors and the licences, with the licence texts beside it. `{RECORD}` records where each file comes from, how the MobileSAM files were exported, what built them and how all {len(rows)} were checked. `{SUMS}` holds the sums of every file here.\n",
         encoding="utf-8",
     )
-    say(f"### The cut-out's models, each as its pin says\n\n{table}\n\nThe folder of the release `{tag}` holds {len(names) + 1} files: " + ", ".join(f"`{name}`" for name in [*names, SUMS]) + ".")
+    say(f"### The cut-out's models, each as its pin says\n\n{table}\n\n{where}{replaced}\n\nThe folder of the release `{tag}` holds {len(names) + 1} files: " + ", ".join(f"`{name}`" for name in [*names, SUMS]) + ".")
 
 
 def main() -> None:
@@ -248,8 +332,17 @@ def main() -> None:
             pins()
         case ["fetch", folder]:
             fetch(Path(folder).resolve())
-        case ["assemble", folder, notes]:
-            assemble(Path(folder).resolve(), Path(notes).resolve())
+        case ["assemble", folder, notes, *options]:
+            named, publish = None, False
+            while options:
+                match options:
+                    case ["--publish", *rest]:
+                        publish, options = True, rest
+                    case ["--encoder-of", run, file, *rest] if run.isdecimal():
+                        named, options = (run, Path(file).resolve()), rest
+                    case _:
+                        sys.exit(__doc__)
+            assemble(Path(folder).resolve(), Path(notes).resolve(), named, publish)
         case _:
             sys.exit(__doc__)
 

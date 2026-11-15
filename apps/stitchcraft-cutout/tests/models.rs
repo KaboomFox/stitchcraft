@@ -27,9 +27,20 @@ use stitchcraft_cutout::run::Tract;
 use stitchcraft_cutout::segment::{self, Frame};
 use stitchcraft_cutout::{CutOut, Marks, Models, Picture, Prompt, cut_out, salient};
 
-/// The models, fetched into the folder `STITCHCRAFT_MODELS` names when they aren't there, and checked.
+/// The variable in which the models' job gives the SHA-256 of a build's encoder that isn't the pinned one. The
+/// encoder's export has one of 2 sums by the machine that runs it (`models/release/EXPORT.md`, The checks).
+const ENCODER_SUM: &str = "STITCHCRAFT_CUTOUT_ENCODER_SHA256";
+
+/// The models, fetched into the folder `STITCHCRAFT_MODELS` names when they aren't there, and checked. An
+/// encoder of the sum [`ENCODER_SUM`] gives is checked against that sum, and its size against the pin. These
+/// cases then say whether it behaves as the pinned one. `stitch` itself runs the pinned file alone.
 fn tract() -> Tract {
-    let ready = ready(&Pins::pinned().unwrap(), folder().as_deref()).unwrap();
+    let mut pins = Pins::pinned().unwrap();
+    if let Some(sum) = std::env::var(ENCODER_SUM).ok().filter(|sum| !sum.is_empty()) {
+        println!("the encoder is checked against {sum}, not its pin {}", pins.encoder.sha256);
+        pins.encoder.sha256 = sum;
+    }
+    let ready = ready(&pins, folder().as_deref()).unwrap();
     Tract::load(&ready, &mut work()).unwrap()
 }
 

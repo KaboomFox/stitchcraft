@@ -63,25 +63,34 @@ The decoder's export has the same bytes on every machine that has made it. The e
 
 | SHA-256 | Where | When |
 |---|---|---|
-| `047b16d8c829fb9f313acb9943bafd4d9f98b7fbd8f3d19149f221cfeefe0327` | The first export, made by hand, and GitHub's runner image `ubuntu-24.04` at version 20261111.127.1 | 2026-11-08 and 2026-11-15 |
-| `71268b41f17ab47538384f408a7e1d25c7f7451f4e8f5cba31b34a047aeff7ff` | GitHub's runner image `ubuntu-24.04` at version 20261101.360.1 | 2026-11-10 |
+| `047b16d8c829fb9f313acb9943bafd4d9f98b7fbd8f3d19149f221cfeefe0327`, the pin | The first export, made by hand. GitHub's runner image `ubuntu-24.04` at version 20261111.127.1, in 4 runs | 2026-11-08 and 2026-11-15 |
+| `71268b41f17ab47538384f408a7e1d25c7f7451f4e8f5cba31b34a047aeff7ff` | GitHub's runner image `ubuntu-24.04` at version 20261101.360.1, in 1 run, and at version 20261111.370.1, in 1 run on `main` at commit `ecdaaeb9` | 2026-11-10 and 2026-11-15 |
 
-Each machine gave its sum twice within a run. Whether the image or the processor made the difference isn't
-known, because the logs don't print the runner's processor. The outputs saved in
-`conformance/fixtures/cutout/` came from the first row's export, and its sum is the pin. Those outputs
-haven't been compared with the second row's export in any run. The table above names the image this build ran on.
+Each run gave its sum twice. The cause isn't known. On 2026-11-15 the images 20261111.127.1 and 20261111.370.1
+gave different sums, and the runs so far didn't record their processors. The build job
+prints the processor from now on, and the table above names the image and the processor of this build. The
+outputs saved in `conformance/fixtures/cutout/` came from the first row's export, and its sum is the pin.
+Those outputs haven't been compared with the second row's export in any run so far.
 
-The build stops when a file differs from its pin, and the publish job runs only after a build that passed.
-When a runner exports other bytes, the publish is refused and nothing is published. If that happens before
-the release exists:
+A build can't count on either sum, and the encoder's sum doesn't stop it. The build checks the size of
+each file and the sums of the decoder and of U²-Net-p, and stops when one differs. When the encoder alone has
+another sum, the build warns with the sum, the image and the processor, and leaves the folder unassembled.
+The models' job then runs tract on that encoder and compares its outputs with the saved ones, each map
+within 0.001 and each logit within 0.01. `stitch` itself runs the pinned file alone. For such an encoder that job leaves
+`stitch plan --subject` end to end out, and warns that it did.
 
-1. Read the build job's summary, which gives the new sum and the runner's image.
-2. Change the pin in a pull request. Its models' job then runs tract on the new export and compares the
-   outputs with the saved ones, each map within 0.001 and each logit within 0.01.
-3. When that job passes, add the new sum and its image to the table above, in the same pull request.
-4. Merge it, and publish again.
+A release contains pinned files alone. The owner publishes with these steps:
 
-Once the release exists its files are fixed, and the pin stays the sum of the released file.
+1. Start the workflow `models` on `main` and type the release's tag in `tag`.
+2. When the run's encoder has the pinned sum, the run publishes the release.
+3. When it has another sum, the run refuses, publishes nothing, and says what to type. Find a finished run
+   of the workflow whose build job's summary is headed "The cut-out's models, each as its pin says".
+4. Start the workflow again with the tag and that run's id in `encoder_run`. The id is the number in the
+   run's address.
+
+The build then takes the encoder from that run's artifact and checks its size and sum against the pin. It
+refuses when the artifact is absent or its encoder isn't the pinned file. The record above then names the
+run the encoder came from. A run keeps its artifact for 14 days, and can be named until then. Once the release exists its files are fixed, and the pin stays the sum of the released file.
 
 The first export was made by hand on 2026-11-08 with this `export.py` and this `requirements.txt`, on Linux
 x86_64 (an Intel Xeon at 2.1 GHz, 2 cores) with CPython 3.13.18. The checks below were made on its files.
