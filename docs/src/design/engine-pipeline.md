@@ -86,6 +86,9 @@ Adapters have already applied transforms and converted units, so normalization n
 - An element with an error diagnostic is skipped; the rest of the design still plans. A design whose
   every element was skipped yields `SC-E0010`. `stitch plan` writes the machine file only when no error
   is said, as Ink/Stitch writes its file only when no element fails (`REQ-CLI-003`).
+- From M14.5, `stitch` replaces the traced letters inside text markers by lettering once a design is read
+  and before it is planned ([text in pictures](image-to-embroidery.md#text-in-pictures)). The engine is
+  given the design that results, without markers.
 
 ## 3. Generate
 

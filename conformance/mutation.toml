@@ -31,6 +31,24 @@ line = "if large_arc && turn < FRAC_PI_2 {"
 why = "a large arc turns at least half way round, so no turn reaching this test is exactly π/2"
 
 [[equivalent]]
+file = "crates/stitchcraft-svg/src/lettering/pictures.rs"
+mutant = "replace + with * in Work<'_>::text"
+line = "let to = from + (wide + height) * step;"
+why = "the baseline only has to go on past the text, and one that goes on further seats every glyph in the same place"
+
+[[equivalent]]
+file = "crates/stitchcraft-svg/src/lettering/pictures.rs"
+mutant = "replace > with >= in Work<'_>::taken"
+line = "if taken.len() > before {"
+why = "the polylines kept for an element that lost no subpath are never asked for: only the elements of taken subpaths are looked up"
+
+[[equivalent]]
+file = "crates/stitchcraft-svg/src/lettering/pictures/frame.rs"
+mutant = "replace += with -= in area"
+line = "twice += from.0 * to.1 - to.0 * from.1;"
+why = "the sum's sign is the way the ring runs, and the area is its absolute value"
+
+[[equivalent]]
 file = "crates/stitchcraft-engine/src/locks/mod.rs"
 mutant = "replace < with <= in Stitching::follow"
 line = "while length < reach {"

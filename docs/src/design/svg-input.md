@@ -468,3 +468,8 @@ page the root's size and viewBox give, which the adapter maps the drawing with t
 `stitchcraft_svg::lettering` sets a text in such a font, each glyph's design placed and scaled into the
 text's design ([lettering](fonts.md#lettering)). Along a path, each glyph's design is turned too
 ([along a path](fonts.md#along-a-path)).
+
+A shape's `inkscape:label` is its element's name. From M14.5, a shape labelled `stitch:text` and a text
+marks text in a traced picture (`REQ-SVG-016`). The reader has no fonts, so it reads the shape as any
+other, and `stitch` sets the lettering once the file is read
+([text in pictures](image-to-embroidery.md#text-in-pictures)).
