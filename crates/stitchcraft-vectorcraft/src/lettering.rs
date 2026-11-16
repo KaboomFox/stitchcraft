@@ -18,6 +18,7 @@ use std::rc::Rc;
 use serde_json::Value;
 use stitchcraft_core::{Budget, Diagnostic};
 use stitchcraft_svg::font::{self, Font};
+use stitchcraft_svg::lettering::pictures::Found;
 
 /// The name of StitchCraft's Lettering effect (`plugin.dev.stitchcraft.lettering`): a text object that has
 /// it sews in the embroidery font its `font` names, set as its other parameters say (`REQ-VC-026`).
@@ -38,6 +39,17 @@ pub trait Fonts {
     /// The font `name` names, read within `budget`: `None` when there is none of that name, and what its
     /// reader said when it doesn't read.
     fn font(&mut self, name: &str, budget: &Budget) -> Option<Result<Rc<Font>, Diagnostic>>;
+}
+
+/// What `fonts` has of the font `name`, read within `budget`, as text in pictures asks for a font
+/// ([`stitchcraft_svg::lettering::pictures::replace`], `REQ-VC-028`): the font, what its reader said, or the
+/// names of the fonts there are.
+pub fn found(fonts: &mut dyn Fonts, name: &str, budget: &Budget) -> Found {
+    match fonts.font(name, budget) {
+        Some(Ok(font)) => Found::Font(font),
+        Some(Err(unread)) => Found::Unread(unread),
+        None => Found::Missing(fonts.names()),
+    }
 }
 
 /// A font's folder, held as bytes: its name, and its files by their paths in it, as the font reader takes
