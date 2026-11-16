@@ -21,3 +21,5 @@ info SC-I0904: 2 areas are cut away under the areas sewn after them, 1 mm inside
 info SC-I0909: A base layer of 1899.82 mm² in 1 piece sews first under the design, in the thread #ed171f.
   hint: To sew the design without a base layer, turn `auto_base_layer` off.
 info SC-I0504: 3 needle points less than the shortest stitch (0.3 mm) from a needle point next to them were left out.
+warning SC-W0913: The design sews thick. Thread: up to 3.6 fills over one spot, at (-10.0, 9.5) mm from the design's centre, where `svg:blue:fill#2` in #0a55a3 with 1.3, `svg:red:fill` in #ed171f with 1.0, `svg:blue:fill` in #0a55a3 with 0.9 and 1 more are stacked. At 3 fills or more: 3.5 mm² in 3 places, 0.0 mm² of it at 6 or more. Needle points: up to 11 in a square millimetre, at (23.0, 9.5) mm from the design's centre. At 15 or more: 0.0 mm² in 0 places, 0.0 mm² of it at 30 or more.
+  hint: The limits are starting values that no sew-out has confirmed: sew a test piece of the thickest part first. `stitch preview --style thickness` draws where the thread is thick.

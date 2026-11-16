@@ -65,7 +65,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Guided parameters](params/guided.md) | 3 | Guided fill |
 | [Tartan parameters](params/tartan.md) | 5 | Tartan fill |
 | [Path fill parameters](params/path-fill.md) | 3 | Contour fill, Meander fill, Circular fill |
-| [Auto parameters](params/auto.md) | 21 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
+| [Auto parameters](params/auto.md) | 25 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
 
 ## Every parameter
 
@@ -93,6 +93,10 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`auto_prefer`](params/auto.md#auto_prefer) | Satin or fill | Auto parameters |
 | [`auto_pull_compensation_mm`](params/auto.md#auto_pull_compensation_mm) | Pull compensation | Auto parameters |
 | [`auto_stitch`](params/auto.md#auto_stitch) | Stitch | Auto parameters |
+| [`auto_thick_fail_fills`](params/auto.md#auto_thick_fail_fills) | Thread that fails, in fills | Auto parameters |
+| [`auto_thick_fail_points`](params/auto.md#auto_thick_fail_points) | Needle points that fail, per mm² | Auto parameters |
+| [`auto_thick_warn_fills`](params/auto.md#auto_thick_warn_fills) | Thread that warns, in fills | Auto parameters |
+| [`auto_thick_warn_points`](params/auto.md#auto_thick_warn_points) | Needle points that warn, per mm² | Auto parameters |
 | [`avoid_self_crossing`](params/contour.md#avoid_self_crossing) | Avoid self-crossing | Contour parameters |
 | [`bean_stitch_repeats`](params/repeat.md#bean_stitch_repeats) | Bean stitch | Repeat parameters |
 | [`bean_stitch_repeats`](params/path-fill.md#bean_stitch_repeats) | Bean stitch | Path fill parameters |

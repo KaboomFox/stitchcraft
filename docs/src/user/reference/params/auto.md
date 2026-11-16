@@ -268,3 +268,49 @@ It is the other limit of the check of a design's cover. A design without a base 
 - **Default:** `0.5`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_thick_warn_fills`
+
+**Thread that warns, in fills.** How many fills of thread over one spot make the design sew thick. A fill is what rows 0.4 mm
+apart lay, the width of the thread. Nothing sews differently by this value: planning warns of a
+place of 1 mm² or more with as much thread. It is a starting value for a 75/11 needle and
+40-weight polyester thread, which a sew-out has to confirm. The design goes by the settings its
+lowest automatic shape has for the 4 limits of its thickness.
+
+- **Accepts:** a number from 0.5 to 50
+- **Default:** `3`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_thick_fail_fills`
+
+**Thread that fails, in fills.** How many fills of thread over one spot fail: the warning gives the area with as much, and the
+heat map draws it in its last colour. A value under the warning's limit reads as that limit.
+
+- **Accepts:** a number from 0.5 to 50
+- **Default:** `6`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_thick_warn_points`
+
+**Needle points that warn, per mm².** How many needle points to a square millimetre make the design sew thick, the locks left out.
+Planning warns of a place of 1 mm² or more with as many. The rows of a fill end at its edge, 5 to
+a square millimetre there, so this is what the edges of 3 fills on each other make. A starting
+value, as the limit of thread.
+
+- **Accepts:** a number from 0.5 to 200
+- **Default:** `15`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_thick_fail_points`
+
+**Needle points that fail, per mm².** How many needle points to a square millimetre fail, what the edges of 6 fills on each other
+make: the warning gives the area with as many. A value under the warning's limit reads as that
+limit.
+
+- **Accepts:** a number from 0.5 to 200
+- **Default:** `30`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
