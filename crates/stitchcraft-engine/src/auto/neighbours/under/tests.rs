@@ -181,6 +181,27 @@ fn req_auto_063_across_a_running_lines_part_the_area_sewn_first_reaches_on_under
     assert_eq!(far(&region(&alone, "left")).0, ((10.6 + TOUCHING) * 1000.0).round() / 1000.0);
 }
 
+#[test]
+fn req_auto_063_a_part_that_a_line_and_a_column_sew_along_is_reached_across_once() {
+    // A strip 0.8 mm wide below the square and twice as long. A running line sews along its left half and a
+    // satin column along its right half, as the 2 bars of an L do that is one part: the strip is the part
+    // of both. The square reaches 1 mm along the strip from its own corner, as under a column, and not 1 mm
+    // more from there, as it would under a shape beyond a line.
+    let strip = || square((0.0, 10.0), (20.0, 10.8));
+    let stroke = |from: f64, to: f64| {
+        let middle = Subpath { start: p(from, 10.4), segments: vec![Segment::Line(p(to, 10.4))], closed: false };
+        Shape::Stroke { path: Path { subpaths: vec![middle] }, width: Mm::new(0.8).unwrap(), join: Join::Round, cap: Cap::Round }
+    };
+    let run = Element { shape: stroke(0.4, 9.6), ..filled("line", &[]) };
+    let line = Sewn { element: run, area: None, automatic: true, reach: None, shape: 1, part: Some(strip()) };
+    let rail = |y: f64| Subpath { start: p(10.4, y), segments: vec![Segment::Line(p(19.6, y))], closed: false };
+    let rails = Shape::stroke(Path { subpaths: vec![rail(10.0), rail(10.8)] });
+    let satin = Element { shape: rails, params: [("satin_column", "true")].into_iter().collect(), ..filled("column", &[]) };
+    let column = Sewn { element: satin, area: None, automatic: true, reach: None, shape: 1, part: Some(strip()) };
+    let first = region(&reached(vec![area("first", (0.0, 0.0), (10.0, 10.0)), line, column], &Budget::DEFAULT).0, "first");
+    assert_eq!(far(&first), (11.0, ((10.8 + TOUCHING) * 1000.0).round() / 1000.0));
+}
+
 /// 3 areas that meet at (10, 10): `a` above `b`, and `c` to the right of both, sewn in that order.
 fn corner() -> Vec<Sewn> {
     vec![area("a", (0.0, 0.0), (10.0, 10.0)), area("b", (0.0, 10.0), (10.0, 20.0)), area("c", (10.0, 0.0), (20.0, 20.0))]

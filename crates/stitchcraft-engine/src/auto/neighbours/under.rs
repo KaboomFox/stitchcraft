@@ -469,9 +469,14 @@ fn beside(shapes: &mut Shapes, index: usize, reach: Reach, split: &mut [Option<S
     let covers = joined(union([wide.as_slice(), narrow.as_slice(), open.as_slice()], meter))?;
     let contact = joined(intersection(&area, &joined(union([covers.as_slice(), lines.as_slice()], meter))?, meter))?;
     // Across a line's part, whose thread doesn't cover it, and on under the shapes beyond it from where it
-    // meets them there: its overlap with them is then whole, whatever the line's width.
+    // meets them there: its overlap with them is then whole, whatever the line's width. A shape beyond the
+    // line lies outside the line's part. What an area sewn after this one already sews of the part is no
+    // such shape, and neither is the part itself where a column sews along it too: the area would reach
+    // across the part and then as far again. So the shapes are taken without the part, and grown to meet it
+    // again.
     let across = joined(intersection(&joined(buffered(&contact, reach.along, meter))?, &lines, meter))?;
-    let beyond = joined(intersection(&across, &covers, meter))?;
+    let outside = joined(buffered(&joined(difference(&covers, &lines, meter))?, 2.0 * TOUCHING, meter))?;
+    let beyond = joined(intersection(&across, &outside, meter))?;
     let from = if beyond.is_empty() { contact } else { joined(union([contact.as_slice(), beyond.as_slice()], meter))? };
     let under_wide = joined(intersection(&reach.grown(&from, meter)?, &wide, meter))?;
     let under_narrow = joined(intersection(&reach.narrow().grown(&from, meter)?, &narrow, meter))?;
