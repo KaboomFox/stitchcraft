@@ -69,6 +69,8 @@ mod tests {
     }
 
     /// A document of one text object, `Hi` at (72, 72) points, with the Lettering effect and its `params`.
+    // A case writes the parameters in place.
+    #[allow(clippy::needless_pass_by_value)]
     fn lettered(params: serde_json::Value) -> Vec<u8> {
         let effect = serde_json::json!({"id": stitchcraft_vectorcraft::effect_id("lettering"), "params": params, "visible": true});
         let kind = serde_json::json!({"type": "text", "kind": {"kind": "point"}, "xf": [1, 0, 0, 1, 72, 72], "runs": [{"text": "Hi"}]});

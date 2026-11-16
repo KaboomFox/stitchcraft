@@ -52,6 +52,7 @@ use super::{
 };
 use crate::cli::{PlanArgs, SubjectArgs};
 use crate::files::{self, Scratch, Unwritten};
+use crate::fonts::FolderFonts;
 use crate::subject::{self, Provider, Stopped, Subject};
 use crate::trace;
 
@@ -93,11 +94,13 @@ impl Source {
     }
 
     /// The design in `bytes`, read as this kind of file as `reading` asks, with what its reader said; or why
-    /// it can't be read.
+    /// it can't be read. A VectorCraft document's texts that have StitchCraft's Lettering effect sew in the fonts of
+    /// the folder `STITCHCRAFT_FONTS` names ([`crate::fonts`], `REQ-VC-026`).
     pub fn read(self, bytes: &[u8], reading: Reading) -> Result<(Design, Vec<Diagnostic>), Diagnostic> {
         match self {
             Source::Svg => stitchcraft_svg::read_with(bytes, &Budget::DEFAULT, reading).map(|svg| (svg.design, svg.warnings)),
-            Source::VectorCraft => stitchcraft_vectorcraft::read_with(bytes, &Budget::DEFAULT, reading).map(|read| (read.design, read.warnings)),
+            Source::VectorCraft => stitchcraft_vectorcraft::read_in(bytes, &Budget::DEFAULT, reading, &mut FolderFonts::from_env())
+                .map(|read| (read.design, read.warnings)),
         }
     }
 }

@@ -19,7 +19,7 @@
 use std::rc::Rc;
 
 use serde_json::Value;
-use stitchcraft_core::{Code, Diagnostic, ElementId, Mm, Point};
+use stitchcraft_core::{Code, Diagnostic, ElementId, Mm, Point, math};
 use stitchcraft_engine::design::Element;
 use stitchcraft_svg::font::Font;
 use stitchcraft_svg::lettering::{self, Lettering, Set};
@@ -149,7 +149,7 @@ impl Reader<'_> {
                 let there =
                     if names.is_empty() { "No embroidery font is here.".to_string() } else { format!("The fonts here are {}.", names.join(", ")) };
                 let message = format!("{who} is not stitched: its Lettering effect names the font {}, which is not here. {there}", quoted(named));
-                let hint = "Choose a font that is here in the effect's dialog, or name the folder of the font to `stitch` with `--fonts`.";
+                let hint = "Choose a font that is here in the effect's dialog. For `stitch`, set `STITCHCRAFT_FONTS` to the folder that holds the font's folder.";
                 self.unlettered(label, message, hint);
                 None
             }
@@ -163,7 +163,7 @@ impl Reader<'_> {
         let number = |index: usize| xf.and_then(|xf| xf.get(index).copied().flatten()).filter(|n| n.is_finite());
         let [a, b, c, d] = [number(0).unwrap_or(1.0), number(1).unwrap_or(0.0), number(2).unwrap_or(0.0), number(3).unwrap_or(1.0)];
         let mm = |points: Option<f64>| points.and_then(|points| Mm::from_points(points).ok()).map_or(0.0, Mm::get);
-        let (along, across) = (a.hypot(b), c.hypot(d));
+        let (along, across) = (math::hypot(a, b), math::hypot(c, d));
         let (cos, sin) = if along > 0.0 && along.is_finite() { (a / along, b / along) } else { (1.0, 0.0) };
         // Upright letters keep their second axis a quarter turn after the first.
         let upright = a * d - b * c > 0.0 && (a * c + b * d).abs() <= 1e-9 * along * across;

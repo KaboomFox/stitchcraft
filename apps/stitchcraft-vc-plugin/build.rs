@@ -10,8 +10,9 @@
 //! The script writes `fonts.rs` into Cargo's output folder, which `src/fonts.rs` includes: a table of the
 //! fonts, each file included from where it lies. No font is copied into the repository.
 
-// A build script speaks to Cargo on standard output.
-#![allow(clippy::print_stdout)]
+// A build script speaks to Cargo on standard output, reads the fonts' folder and the build option that
+// names it, and stops the build when a font is missing.
+#![allow(clippy::print_stdout, clippy::disallowed_methods)]
 
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};

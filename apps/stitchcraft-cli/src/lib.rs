@@ -13,5 +13,6 @@
 pub mod cli;
 pub mod commands;
 pub mod files;
+pub mod fonts;
 pub mod subject;
 pub mod trace;

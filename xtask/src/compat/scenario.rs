@@ -47,6 +47,9 @@
 //!   moves it to its artboard (`REQ-VC-015`).
 //! - `within`: every element of a document sews, and every needle point lies within a box, in the document's
 //!   points, such as a clipping object's, which a clip group's art is cut to (`REQ-VC-017`).
+//! - `lettered`: a document of one text object with the Lettering effect sews as `stitch lettering` sets its
+//!   text in the font, at the scale and the place given (`REQ-VC-026`). The font is one of the folder
+//!   `STITCHCRAFT_FONTS` names, which CI sets. Elsewhere the check is skipped without the font, and says so.
 //!
 //! **Why a heavy module is allowed.** VectorCraft 0.17 installs a filter that asks for a heavy budget only
 //! once the user allows it, with `allowHeavy: true`, which a run passes for each heavy module it installs
@@ -88,13 +91,16 @@ use serde_json::{Value, json};
 use stitchcraft_cli::cli::{Cli, Command as Stitch, PlanArgs};
 use stitchcraft_cli::commands::Status;
 use stitchcraft_cli::commands::plan::{self, Source, machine_for, sew};
+use stitchcraft_cli::fonts::FolderFonts;
 use stitchcraft_core::units::MM_PER_POINT;
-use stitchcraft_core::{Budget, Code, Diagnostic, Point, Rect, Severity};
-use stitchcraft_engine::design::{Reading, Setting, Turn};
+use stitchcraft_core::{Budget, Code, Diagnostic, Mm, Point, Rect, Severity};
+use stitchcraft_engine::design::{Design, Reading, Setting, Turn};
 use stitchcraft_params::Family;
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{FormatId, StitchKind};
+use stitchcraft_svg::lettering::{self, Lettering};
 use stitchcraft_vc_plugin::testsheet;
+use stitchcraft_vectorcraft::lettering::Fonts;
 use stitchcraft_vectorcraft::{EXTENSIONS, effect_id, effect_name, param_text, plugin_id};
 
 use super::{heavy, install, kind};
@@ -221,6 +227,25 @@ pub struct Expect {
     /// Documents, each with the box it sews within.
     #[serde(default)]
     pub within: Vec<Within>,
+    /// Documents of one text object with the Lettering effect, each with the text lettering sets as it sews.
+    #[serde(default)]
+    pub lettered: Vec<Lettered>,
+}
+
+/// A document whose one text object sews as lettering sets a text ([`sews_lettered`]).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Lettered {
+    /// The document.
+    pub file: String,
+    /// The text.
+    pub text: String,
+    /// The font, by its folder's name or its own.
+    pub font: String,
+    /// The scale, in percent of the font's size.
+    pub scale: f64,
+    /// Where the text's first baseline starts, `[x, y]` in points.
+    pub at: [f64; 2],
 }
 
 /// A document and the box every needle point it sews lies within ([`sews_within`]).
@@ -409,6 +434,7 @@ pub fn problems(scenario: &Scenario, modules: &[&str], requirements: &std::colle
     let checked = checked.chain(expect.kept.iter().map(|kept| &kept.file)).chain(expect.differ.iter().flatten());
     let checked = checked.chain(expect.sheets.iter().map(|sheet| &sheet.file)).chain(expect.traced.iter().map(|traced| &traced.file));
     let checked = checked.chain(expect.within.iter().map(|within| &within.file));
+    let checked = checked.chain(expect.lettered.iter().map(|lettered| &lettered.file));
     for file in checked.chain(expect.exported.iter().flatten()) {
         if !exported.contains(&file.as_str()) {
             found.push(format!("it checks `{file}`, which no run exports"));
@@ -854,7 +880,51 @@ fn check(expect: &Expect, out: &Path, ran: &Ran) -> Vec<String> {
             failures.push(format!("{}: {e}", expected.file));
         }
     }
+    for expected in &expect.lettered {
+        if let Err(e) = read(&expected.file).and_then(|bytes| sews_lettered(&bytes, expected, &mut FolderFonts::from_env(), in_ci())) {
+            failures.push(format!("{}: {e}", expected.file));
+        }
+    }
     failures
+}
+
+/// Whether this is a run of CI, which sets `CI` and has the fonts: a check that needs a font fails there
+/// without it, where a run on a contributor's computer skips it and says so.
+fn in_ci() -> bool {
+    std::env::var_os("CI").is_some_and(|value| !value.is_empty())
+}
+
+/// Whether the document `bytes`, of one text object with the Lettering effect, sews as `stitch lettering`
+/// sets the text `expected` gives: each of its elements is one that lettering sets, in order, with its
+/// shape and its settings, moved to where the text's first baseline starts. The font is one of `fonts`,
+/// those `stitch` finds. Without it the check fails when `required`, and is skipped with a line if not.
+fn sews_lettered(bytes: &[u8], expected: &Lettered, fonts: &mut dyn Fonts, required: bool) -> Result<(), String> {
+    let Some(font) = fonts.font(&expected.font, &Budget::DEFAULT) else {
+        let why = format!("the folder {} names has no font `{}`", stitchcraft_cli::fonts::VARIABLE, expected.font);
+        if required {
+            return Err(why);
+        }
+        println!("compat: lettering of `{}` not checked: {why}", expected.file);
+        return Ok(());
+    };
+    let font = font.map_err(|unread| unread.to_string())?;
+    let how = Lettering { scale: expected.scale, ..Lettering::default() };
+    let set = lettering::set(&font, &expected.text, &how, &Budget::DEFAULT).map_err(|unset| unset.to_string())?;
+    let mm = |points: f64| Mm::from_points(points).map(Mm::get).map_err(|e| e.to_string());
+    let set = set.design.moved([mm(expected.at[0])?, mm(expected.at[1])?]).map_err(|far| far.to_string())?;
+    let read = stitchcraft_vectorcraft::read_in(bytes, &Budget::DEFAULT, Reading::default(), fonts).map_err(|unread| unread.to_string())?;
+    let sewn = |design: &Design| design.elements().iter().map(|element| (element.shape.clone(), element.params.clone())).collect::<Vec<_>>();
+    if sewn(&read.design) == sewn(&set) {
+        return Ok(());
+    }
+    let said: Vec<String> = read.warnings.iter().map(ToString::to_string).collect();
+    Err(format!(
+        "it sews {} elements, otherwise than the {} that lettering sets of {:?}: {}",
+        read.design.elements().len(),
+        set.elements().len(),
+        expected.text,
+        said.join("; ")
+    ))
 }
 
 /// Whether every element of the document `bytes` sews, and every needle point it sews lies within `area`,

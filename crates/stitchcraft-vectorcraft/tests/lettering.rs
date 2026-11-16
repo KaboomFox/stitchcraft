@@ -2,8 +2,9 @@
 //! Lettering effect sews as lettering sets its text, in a font drawn in code. No font file of anyone's is
 //! used.
 
-// Test code may unwrap and index (clippy.toml allows it in tests).
-#![allow(clippy::unwrap_used)]
+// Test code may unwrap and index (clippy.toml allows it in tests). Its helpers take the JSON a case writes in
+// place, and round a coordinate that is a few millimetres.
+#![allow(clippy::unwrap_used, clippy::needless_pass_by_value, clippy::cast_possible_truncation)]
 
 use serde_json::{Value, json};
 use stitchcraft_core::{Budget, Code, Diagnostic, Fix};
@@ -183,7 +184,8 @@ fn req_vc_026_a_text_without_the_effect_is_left_out_and_a_setting_that_does_not_
 
 #[test]
 fn diag_sc_w1111_a_text_whose_font_is_not_here_or_that_lettering_does_not_set_is_left_out() {
-    let choose = "[Choose a font that is here in the effect's dialog, or name the folder of the font to `stitch` with `--fonts`.]";
+    let choose =
+        "[Choose a font that is here in the effect's dialog. For `stitch`, set `STITCHCRAFT_FONTS` to the folder that holds the font's folder.]";
     let asked = document(json!([text(7, "ab", 0.0, 0.0, json!({}), json!({"font": " Other "}))]));
     let read = self::read(&asked);
     assert_eq!(
