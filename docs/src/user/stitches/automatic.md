@@ -132,8 +132,9 @@ where they shouldn't: rows of a fill that show beside a thin line of fur of anot
 4 mm long. M13.18 of the [roadmap](../../plan/roadmap.md) removes them, and the like stitches of the other
 traced dogs ([image to embroidery](../../design/image-to-embroidery.md#sewing-order) has their numbers).
 The thin straight lines are jumps between patches of one colour, which the reference machine leaves for you
-to cut by hand, as it leaves the pear's. M13.17 runs the thread under the patches sewn later instead, where
-they cover it. The dog changes thread 28 times in its 9 threads, since a line sews after the fill it
+to cut by hand, as it leaves the pear's: 83 of them. Where patches sewn later cover a way from one patch to
+the next, StitchCraft sews the thread under them instead, in place of 13 of this dog's jumps
+([jump threads](#jump-threads)). The dog changes thread 28 times in its 9 threads, since a line sews after the fill it
 borders: with **Fill uneven parts** off it changes 19 times and jumps more often
 ([what it costs](../../design/image-to-embroidery.md#what-it-costs)).
 
@@ -324,6 +325,28 @@ least. Traced from a photo in 6 threads, a dog changes thread 8 times, and in 9 
 Fewer thread changes leave more jump threads to cut, because the machine cuts the thread at a change and
 not at a jump. `stitch plan` says how often the thread changes, and `SC-I0907` compares the order with
 paint order.
+
+### Jump threads
+
+Between 2 shapes of one thread that don't touch, the needle jumps. A machine with one needle, such as the
+reference machine, leaves the thread of a jump for you to cut. Where shapes sewn later cover a
+way from one shape to the next, StitchCraft sews a run along it instead: stitches 2.5 mm long at most,
+0.4 mm or more inside what covers them, which you won't see once those shapes are sewn. The run goes round
+a place where it would show, as long as that is no farther than twice the jump and 10 mm. A run under the
+outline that follows a fill, in the fill's own thread, lies where the outline will.
+
+What is left are the jumps that nothing sewn later covers:
+
+- the jumps of the thread that sews last, and of the lines that sew after the fills they border
+- a jump across a shape sewn earlier, or across bare fabric
+- a jump whose end lies more than 0.8 mm from the nearest place that a later shape covers
+- the jumps between shapes with settings of their own, which sew as you set them
+
+A traced dog leaves 60 to 83 jump threads where it left 73 to 96. The traced pear keeps its 2, to the
+stem and back over the background, which sews nothing. A stitch shorter than 3 mm from one shape to the next stays a
+stitch, as before. Where it would show on another colour for 1 mm or more, it becomes a run if a way is
+covered. The runs are always on. `SC-I0914` says when a design needs more work than the budget
+allows to look for them, and then sews with its jumps.
 
 ### Settings by width
 

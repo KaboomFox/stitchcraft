@@ -91,6 +91,7 @@ pub use params::{
 use rules::{Asked, Bounds, Fired, Measures, RuleId};
 
 use std::borrow::Cow;
+use std::collections::BTreeSet;
 
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Labels, Meter, Mm, Point};
 use stitchcraft_params::{ParamSet, Validated};
@@ -294,12 +295,16 @@ pub(crate) struct Sewing<'d> {
     /// The ids of the base layer's pieces among the elements (`REQ-AUTO-028`): planning makes every stitch
     /// of theirs underlay.
     pub(crate) base: Vec<ElementId>,
+    /// The ids of the elements that digitizing made, the base layer's pieces and the outlines among them:
+    /// every element but those with settings. Planning runs the thread under later shapes between them
+    /// where it would jump (`REQ-AUTO-053`).
+    pub(crate) made: BTreeSet<ElementId>,
 }
 
 /// [`digitized`], with the ids of the base layer's pieces.
 pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     if !design.sort_colours && !design.elements().iter().any(|element| element.automatic) {
-        return Sewing { elements: Cow::Borrowed(design.elements()), diagnostics: Vec::new(), base: Vec::new() };
+        return Sewing { elements: Cow::Borrowed(design.elements()), diagnostics: Vec::new(), base: Vec::new(), made: BTreeSet::new() };
     }
     let mut diagnostics = Vec::new();
     // Each automatic shape is cut to its clips first, so that what shows of it is digitized and hides others.
@@ -373,7 +378,9 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
         counts.add(stitches);
     }
     diagnostics.splice(0..0, counts.said());
-    Sewing { elements: Cow::Owned(beside.elements), diagnostics, base: beside.base }
+    let set: BTreeSet<&ElementId> = elements.iter().filter(|element| !element.automatic).map(|element| &element.id).collect();
+    let made = beside.elements.iter().filter(|element| !set.contains(&element.id)).map(|element| element.id.clone()).collect();
+    Sewing { elements: Cow::Owned(beside.elements), diagnostics, base: beside.base, made }
 }
 
 /// Adds the outline of the fill `id` among `elements` after it, when it still sews: a running stitch along

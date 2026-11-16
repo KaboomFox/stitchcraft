@@ -36,6 +36,7 @@ use crate::design::{DesignSettings, Element};
 use crate::generate::Generated;
 use crate::generators::Layer;
 use crate::locks::{Lock, tie_in, tie_off};
+use crate::moves::Routing;
 
 /// A design's stitch plan, before finalize, and what assembly says about it.
 #[derive(Clone, Debug, PartialEq)]
@@ -53,6 +54,18 @@ pub struct Assembled {
 /// element has a stitch. An element of a run of underlays first is there twice, its underlay and its top,
 /// each where it sews. Every needle point costs a unit of work and a stitch from `meter`.
 pub fn assemble(elements: &[(&Element, Generated)], settings: &DesignSettings, meter: &mut Meter) -> Result<Option<Assembled>, Exhausted> {
+    assemble_routed(elements, settings, None, meter)
+}
+
+/// [`assemble`], with the moves between the groups that automatic digitizing made looked at by `routing`:
+/// where shapes sewn later cover a way from one group to the next, the needle sews a run along it and
+/// neither ties off nor jumps (`REQ-AUTO-053`).
+pub(crate) fn assemble_routed(
+    elements: &[(&Element, Generated)],
+    settings: &DesignSettings,
+    routing: Option<&mut Routing>,
+    meter: &mut Meter,
+) -> Result<Option<Assembled>, Exhausted> {
     let parts: Vec<(&Element, &Generated, Vec<Threaded>)> = elements
         .iter()
         .map(|(element, generated)| (*element, generated, threaded(element, generated)))
@@ -66,6 +79,8 @@ pub fn assemble(elements: &[(&Element, Generated)], settings: &DesignSettings, m
         settings,
         warnings: Vec::new(),
         settings_said: BTreeSet::new(),
+        routing,
+        place: 0,
     };
     let mut shortest = Vec::with_capacity(parts.len());
     // Each element's reference, which both layers of an element of a run share.
@@ -103,16 +118,16 @@ pub fn assemble(elements: &[(&Element, Generated)], settings: &DesignSettings, m
 
 /// One of an element's groups that sews a stitch, with the thread it is sewn in and whether it ends a
 /// colour block.
-struct Threaded<'a> {
-    stitches: &'a [Point],
-    thread: &'a Thread,
+pub(crate) struct Threaded<'a> {
+    pub(crate) stitches: &'a [Point],
+    pub(crate) thread: &'a Thread,
     ends_block: bool,
 }
 
 /// The groups of `generated`, `element`'s, that sew a stitch, in their order: each in the thread its
 /// generator gives it, or else in the element's, and ending a colour block when its generator says so
 /// (`REQ-ASM-006`).
-fn threaded<'a>(element: &'a Element, generated: &'a Generated) -> Vec<Threaded<'a>> {
+pub(crate) fn threaded<'a>(element: &'a Element, generated: &'a Generated) -> Vec<Threaded<'a>> {
     let colour = |index: usize| generated.colours.get(index);
     let groups = generated.groups.iter().enumerate().filter(|(_, stitches)| !stitches.is_empty());
     groups
@@ -156,7 +171,7 @@ impl Group<'_> {
 }
 
 /// The plan as it is built.
-struct Assembly<'a> {
+struct Assembly<'a, 'r, 'm> {
     builder: PlanBuilder,
     /// The thread of the block being sewn.
     thread: Thread,
@@ -166,21 +181,38 @@ struct Assembly<'a> {
     warnings: Vec<Diagnostic>,
     /// The warnings about locks' settings kept so far, by element.
     settings_said: BTreeSet<(String, String)>,
+    /// What looks at the moves between groups that automatic digitizing made, if it made any.
+    routing: Option<&'r mut Routing<'m>>,
+    /// How many groups are joined: the place of the next.
+    place: usize,
 }
 
-impl<'a> Assembly<'a> {
-    /// Sews `group`: straight on from the open group if nothing separates them, else after a jump.
+impl<'a> Assembly<'a, '_, '_> {
+    /// Sews `group`: straight on from the open group if nothing separates them, else after a jump. Between
+    /// 2 groups of one thread, `routing` may have the needle sew a run in place of the jump or of the stitch
+    /// ([`Routing::run`]).
     fn join(&mut self, group: Group<'a>, meter: &mut Meter) -> Result<(), Exhausted> {
         // Threads are compared by colour, as Ink/Stitch compares them: a name alone changes nothing.
         if group.thread.color != self.thread.color {
             self.tie_off(meter)?;
             self.thread = group.thread.clone();
             self.builder.change_thread(self.thread.clone());
-        } else if let (Some(open), Some(&next)) = (self.open, group.stitches.first())
-            && !open.sews_on(self.builder.needle().distance(next), self.settings)
-        {
-            self.tie_off(meter)?;
+        } else if let (Some(open), Some(&next)) = (self.open, group.stitches.first()) {
+            let needle = self.builder.needle();
+            let sews_on = open.sews_on(needle.distance(next), self.settings);
+            let run = match self.routing.as_mut() {
+                Some(routing) if !open.generated.common.force_lock_stitches => {
+                    routing.run(self.place, [open.element, group.element], [needle, next], group.thread.color, sews_on)
+                }
+                _ => None,
+            };
+            match run {
+                Some(run) => self.stitch(&run, Provenance::new(group.reference, Role::Travel), meter)?,
+                None if sews_on => {}
+                None => self.tie_off(meter)?,
+            }
         }
+        self.place += 1;
         let tie_in = if self.open.is_none() && group.locks().0 {
             self.lock(tie_in(group.stitches, &group.generated.common, meter)?, group)
         } else {

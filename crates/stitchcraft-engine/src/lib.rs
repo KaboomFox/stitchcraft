@@ -23,6 +23,7 @@ pub mod finalize;
 pub mod generate;
 pub mod generators;
 pub mod locks;
+mod moves;
 pub mod normalize;
 mod pipeline;
 pub mod registry;
