@@ -343,7 +343,9 @@ writes of the document:
   VectorCraft's command line and checks that the files are `stitch export`'s, byte for byte.
 - What `stitch export` says, the export says as its warnings, one line each, naming the object and with
   the hint after it. VectorCraft shows 100 of at most 500 characters each, so of more the last says how
-  many more `stitch export` lists.
+  many more `stitch export` lists. It cuts a longer line in the middle of a word. The export ends such a
+  line at its last whole sentence that fits. `SC-W0913` is one: in VectorCraft it keeps its numbers and
+  loses its hint, which `stitch export` prints.
 - When anything said is an error, the exporter declines with the first, after how many there are, and
   VectorCraft doesn't write the file, as `stitch export` doesn't (`REQ-CLI-003`). VectorCraft shows the
   first 300 characters of a decline, after `plug-in failed:`.
