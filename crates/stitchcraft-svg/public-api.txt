@@ -208,6 +208,8 @@ pub stitchcraft_svg::lettering::Lettering::line_height: f64
 pub stitchcraft_svg::lettering::Lettering::scale: f64
 pub stitchcraft_svg::lettering::Lettering::trim: stitchcraft_svg::lettering::Trim
 pub stitchcraft_svg::lettering::Lettering::word_spacing: f64
+impl stitchcraft_svg::lettering::Lettering
+pub fn stitchcraft_svg::lettering::Lettering::take(&mut self, &str, &str) -> bool
 impl core::default::Default for stitchcraft_svg::lettering::Lettering
 pub fn stitchcraft_svg::lettering::Lettering::default() -> Self
 pub struct stitchcraft_svg::lettering::Placed
@@ -239,6 +241,7 @@ pub const stitchcraft_svg::lettering::TEXT_POSITION: stitchcraft_svg::lettering:
 pub const stitchcraft_svg::lettering::TRIM: stitchcraft_svg::lettering::Setting
 pub const stitchcraft_svg::lettering::VERTICAL_TEXT_POSITION: stitchcraft_svg::lettering::Setting
 pub const stitchcraft_svg::lettering::WORD_SPACING: stitchcraft_svg::lettering::Setting
+pub fn stitchcraft_svg::lettering::moved<E>(&stitchcraft_engine::design::Element, impl core::ops::function::Fn(stitchcraft_core::units::Point) -> core::result::Result<stitchcraft_core::units::Point, E>) -> core::result::Result<stitchcraft_engine::design::Element, E>
 pub fn stitchcraft_svg::lettering::set(&stitchcraft_svg::font::Font, &str, &stitchcraft_svg::lettering::Lettering, &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_svg::lettering::Set, stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_svg::lettering::set_along(&stitchcraft_svg::font::Font, &str, &stitchcraft_svg::lettering::Lettering, &stitchcraft_svg::lettering::Along, &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_svg::lettering::Set, stitchcraft_core::diag::Diagnostic>
 pub mod stitchcraft_svg::version

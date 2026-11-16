@@ -1,0 +1,24 @@
+# Level B: a text object with StitchCraft's Lettering effect, exported by StitchCraft's exporters with
+# VectorCraft's command line (docs/src/design/vectorcraft-integration.md, Lettering). VectorCraft keeps the
+# text's characters and the effect's record, the exporters read both, and sew the text in the font built into
+# them, Ink/Stitch Small Font at 150 percent. The saved document sews as `stitch lettering` sets the same
+# text, and each exported file is the one `stitch export` writes of it with the same font in its folder of
+# fonts. Drawing the text runs the effect, which returns the text's outlines as they are and leaves no error.
+# Coordinates are points: the text's first baseline starts an inch right of the origin and 2 inches down.
+description = "A text object with the Lettering effect exports in its embroidery font, as `stitch lettering` sets its text."
+requirements = ["REQ-VC-026", "REQ-VC-027", "REQ-FONT-021"]
+
+[[run]]
+plugins = ["lettering", "pes", "dst"]
+steps = [
+  { cmd = "text.create", params = { x = 72, y = 144, text = "Hi there" } },
+  { cmd = "effect.apply", params = { effect = "plugin.dev.stitchcraft.lettering", params = { font = "small_font", scale = 150 } } },
+  { export = "text.vectorcraft" },
+  { export = "text.png" },
+  { export = "text.pes" },
+  { export = "text.dst" },
+]
+
+[expect]
+lettered = [{ file = "text.vectorcraft", text = "Hi there", font = "small_font", scale = 150, at = [72, 144] }]
+exported = [["text.vectorcraft", "text.pes"], ["text.vectorcraft", "text.dst"]]

@@ -478,6 +478,61 @@ sews without a jump. At large sizes the gaps grow past 3 mm and become jumps, wh
 leaves to cut by hand.
 
 
+## Fonts built into the plug-ins
+
+A plug-in can't read files. The fonts that a VectorCraft document's texts sew in are built into the
+exporters (M14.4, `REQ-FONT-021`, [lettering in VectorCraft](vectorcraft-integration.md#lettering)).
+
+- **The build option.** The plug-in's build script reads `STITCHCRAFT_FONTS_DIR`, which names a folder
+  of fonts: a checkout of the font repository's `fonts` folder, or the corpus's `src`. For each font that
+  `apps/stitchcraft-vc-plugin/built-in-fonts.txt` lists, it includes the font's `font.json`, its glyph
+  files and its licence file from where they lie. A preview picture and a README are left out. Without the option no
+  font is built in, and everything builds, tests and runs. A case that needs a font built in says it is
+  skipped. A font that the list names and the folder lacks stops the build, since a plug-in that silently
+  lacked it would leave texts out.
+- **Only the exporters contain them.** The modules are built from the same code, and the linker leaves out
+  of each what its run doesn't use. Only an exporter's run uses the fonts.
+- **Where `stitch` finds them.** In the folder `STITCHCRAFT_FONTS` names, where each folder that has a
+  `font.json` is a font. A font is found by the same names there, so `stitch export` writes the file the
+  exporter writes. The option `--fonts` and the user's data folder, which
+  [ADR-0020](adr/0020-fonts-from-a-repository-of-their-own.md) plans, aren't built yet.
+- **Where CI finds them.** `fonts.toml` doesn't pin the font repository yet. Until it does, the jobs that
+  build the modules for the compatibility gate and for the browser demo take the fonts from the pinned
+  corpus of Ink/Stitch's fonts, whose files the font repository copies whole (`.github/actions/fonts`, `build-in`).
+
+**Which fonts.** The browser demo publishes the modules, and a published exporter shares the fonts in it.
+So a font is listed only when its licence lets a copy be shared with the licence's text beside it and
+asks for nothing more: the SIL Open Font License, and CC0 or the public domain. One font is listed:
+
+| Font | Folder | Licence | Its files | What it adds to each exporter |
+|---|---|---|---|---|
+| Ink/Stitch Small Font, copyright 2017 Lex Neva | `small_font` | SIL Open Font License 1.1 | `font.json`, `ltr.svg`, `rtl.svg`, `LICENSE` | 829,061 bytes, as stored |
+
+It is the default font: 5.08 mm tall at 100 percent, sewn from 70 to 300 percent, with glyphs for both
+directions. Its lines sew back and forth. Its glyph files are text, which a web server sends
+compressed. With the font, and with the SVG reader and lettering that read it, the demo's PES exporter
+grew from 3.5 to 5.4 MB as stored, and from 1.2 to 1.7 MB as sent.
+
+**What was checked,** on 16 November 2026, for Small Font at `c7e3a05`:
+
+- Its `LICENSE` names the SIL Open Font License 1.1 first, with Lex Neva's copyright, and has the
+  licence's whole text. It doesn't name a Reserved Font Name.
+- The files are built in as they are, so the copy isn't a modified version.
+- The OFL lets the font be bundled and redistributed with any software, when each copy has the copyright
+  notice and the licence. The licence file is built into the module beside the glyph files. The demo's
+  build also copies it to `fonts/small_font/LICENSE` on the site and lists it in `plugins.json`, and it
+  fails for a font without a licence file.
+- The test `req_font_021_…` reads every font built in, and fails for one whose licence file names
+  another licence first.
+
+**CC BY and CC BY-SA fonts** are left to the owner. Either licence requires a credit where a person who
+gets the module can see it. The credit names the author and the licence, with the licence's address, and
+says what was changed. The site would publish it beside the licence file. An export would have to say it
+too, as `stitch lettering` is to print it (ADR-0020). CC BY-SA also requires that an adaptation be shared
+under the same licence. A module with the font's files unchanged in it is a collection by the licence's own
+terms, and a collection is no adaptation, and whether a sewn design is one is for the owner to decide before such a font
+joins. Geneva Rounded, for one, is under CC BY-SA 2.5 and would add 716 KB.
+
 ## Fonts ported by other programs
 
 | Program | With a TrueType or OpenType font | Reported results |
@@ -626,6 +681,18 @@ coverage and stitches. TS-15 sews 3 ported fonts beside the fonts digitized by h
 - **A text longer than its path** (M14.3) is sewn on past the path's end, with a warning. The other choice
   is to refuse it, with no file written. The recommendation, taken, is to sew it: the picture shows by how much
   the text is too long.
+- **Which fonts are built into the plug-ins** (M14.4). The recommendation, taken, is Ink/Stitch Small Font
+  alone, under the OFL ([fonts built into the plug-ins](#fonts-built-into-the-plug-ins)). Each further
+  font adds its glyph files to both exporters. Ink/Stitch Medium Font, also under the OFL, would add 773
+  KB. A line of `built-in-fonts.txt` adds one. Fonts under CC BY or CC BY-SA wait for the owner's word on
+  their credit.
+- **The font's name typed, or chosen from a list** (M14.4). The Lettering effect's dialog takes the font's
+  name as text. The recommendation, taken, is to keep the text field while one font is built in, since a
+  document then sews the same in every build and from `stitch`. A list is easier with many fonts, and
+  needs the same fonts in every build that opens the document.
+- **Pinning the font repository** (M14.4). CI builds Small Font in from the corpus of Ink/Stitch's fonts
+  until `fonts.toml` pins `KaboomFox/stitchcraft-fonts`. The recommendation is to pin it before a second
+  font is built in.
 - **When M15 comes.** The roadmap places it after M14 and before M11 and 1.0. M15.1 and M15.2 can go ahead
   beside M14. Moving M15 after 1.0 brings 1.0 sooner.
 - **Which ported fonts are written.** Text in any installed font can be sewn as a design, as Wilcom and Hatch
@@ -639,7 +706,8 @@ coverage and stitches. TS-15 sews 3 ported fonts beside the fonts digitized by h
   Ink/Stitch's small fonts sew columns about 0.5 mm wide. TS-15 sews both, and MC-10 chooses.
 - **Raising P9.** The RFC's [P9](rfc-vectorcraft-abi-v2.md#p9-type-as-glyph-outlines) proposes that
   VectorCraft give plug-ins type as glyph outlines, which its plans don't cover. Without it, the exporter
-  plug-in can't sew type, since it can't read font files. Whether to raise P9 on VectorCraft's own
+  plug-in can't sew type in the type's own font, since it can't read font files. From M14.4 it sews type in
+  an embroidery font built into it. Whether to raise P9 on VectorCraft's own
   repository, and when, is the owner's choice.
 
 ## Sources

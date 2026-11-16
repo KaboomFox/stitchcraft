@@ -407,6 +407,23 @@ pub fn tartan() -> Manifest {
     }
 }
 
+/// The manifest of the Lettering effect ([`crate::lettering`]): a live effect for text objects, from
+/// VectorCraft 0.14 for its font's text field, whose dialog takes the embroidery font and lettering's settings.
+pub fn lettering() -> Manifest {
+    Manifest {
+        id: plugin_id(stitchcraft_vectorcraft::lettering::LETTERING),
+        name: "StitchCraft Lettering",
+        version: env!("CARGO_PKG_VERSION"),
+        kind: "effect",
+        author: AUTHOR,
+        description: "Sews a text object in an embroidery font, set as Ink/Stitch's lettering sets it. The text keeps its look in \
+                      VectorCraft, and StitchCraft's exporters sew its characters in the font named here. Apply it to point type.",
+        params: crate::lettering::options(),
+        extensions: Vec::new(),
+        budget: BudgetClass::Light,
+    }
+}
+
 /// The manifest of the Test Sheet filter, which draws a test sheet into the document ([`crate::testsheet`]).
 pub fn testsheet() -> Manifest {
     Manifest {

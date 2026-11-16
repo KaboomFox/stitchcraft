@@ -40,6 +40,7 @@ mod effect;
 pub mod filter;
 mod geometry;
 mod gradient;
+pub mod lettering;
 pub mod settings;
 mod values;
 mod wire;
@@ -47,7 +48,7 @@ mod writer;
 
 pub use container::{MAX_BYTES, read_part};
 pub use data::base64;
-pub use document::{RouteMarker, VectorCraft, machine, read, read_with, route_marker};
+pub use document::{RouteMarker, VectorCraft, machine, read, read_in, read_with, route_marker};
 pub use effect::{
     AutoEffect, Effect, LINE_SIDES, RIBBON_MM, SIDES_PER_UNIT, effect_drawn, effect_error, effect_lines, effect_output, effect_ribbons, effect_solid,
     read_auto_effect, read_effect,

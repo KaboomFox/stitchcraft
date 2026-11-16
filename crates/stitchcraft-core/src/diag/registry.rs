@@ -1344,6 +1344,17 @@ macro_rules! codes {
         /// cut it after sewing. Ink/Stitch Small Font and Medium Font sew both ways.
         LetteringSettingNotApplied = "SC-W1110", Warning, "Lettering setting not applied";
 
+        /// A text object of a VectorCraft document has StitchCraft's Lettering effect, and its text wasn't
+        /// sewn. The rest of the document sews. The font the effect names isn't one this build of the
+        /// plug-ins holds or `stitch` finds in its font folders, or the font didn't read. Or the text is
+        /// area type, type on a path or vertical type, which lettering doesn't set yet. Or no character of
+        /// the text is one the font draws.
+        ///
+        /// The message says which, and names the fonts that are there. Choose one of them in the effect's
+        /// dialog, set `STITCHCRAFT_FONTS` to the folder that holds the font's folder for `stitch`, or write
+        /// the text as point type on one line or more.
+        TextNotLettered = "SC-W1111", Warning, "Text not sewn in its embroidery font";
+
         /// `--subject` and `stitch cutout` cut a picture's subject out with 3 models, which `stitch` fetches with
         /// curl on first use into the folder `STITCHCRAFT_MODELS` names, or else `stitchcraft/models` in your
         /// cache folder, and checks before each use. A file couldn't be fetched, or isn't the one pinned. Nothing

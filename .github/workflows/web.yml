@@ -63,6 +63,12 @@ jobs:
       - uses: ./.github/actions/tools
         with:
           tools: trunk,wasm-bindgen,wasm-opt,mdbook
+      # The exporters hold the fonts of apps/stitchcraft-vc-plugin/built-in-fonts.txt, and the site carries each
+      # font's licence beside them (docs/src/design/fonts.md, Fonts built into the plug-ins).
+      - name: Ink/Stitch's fonts, built into the exporters (pinned by SHA-256)
+        uses: ./.github/actions/fonts
+        with:
+          build-in: "true"
       # The editor is built once for each pin, compiler, set of tools and build script, which its key names
       # (web/build.py, `editor_key`), and kept in the Actions cache. A run that finds it builds the plug-ins
       # alone. The step comes after the build cache's, whose cleaning empties folders under `target/`.

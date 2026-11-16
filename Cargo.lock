@@ -1296,6 +1296,7 @@ dependencies = [
  "stitchcraft-params",
  "stitchcraft-plan",
  "stitchcraft-render",
+ "stitchcraft-svg",
  "stitchcraft-vectorcraft",
 ]
 
@@ -1310,6 +1311,7 @@ dependencies = [
  "stitchcraft-engine",
  "stitchcraft-params",
  "stitchcraft-plan",
+ "stitchcraft-svg",
 ]
 
 [[package]]

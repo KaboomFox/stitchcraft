@@ -10,6 +10,12 @@ inputs:
   directory:
     description: Where StitchCraft is checked out (a folder inside VectorCraft in the move rehearsal).
     default: "."
+  build-in:
+    description: >-
+      "true" to build the fonts apps/stitchcraft-vc-plugin/built-in-fonts.txt lists into the plug-ins the job
+      builds after this, and to have `stitch` find them: the job's STITCHCRAFT_FONTS_DIR and STITCHCRAFT_FONTS
+      then name the corpus's folder of fonts (docs/src/design/fonts.md, Fonts built into the plug-ins).
+    default: "false"
 runs:
   using: composite
   steps:
@@ -19,4 +25,15 @@ runs:
         key: inkstitch-fonts-${{ hashFiles('conformance/inkstitch/fonts.toml') }}
     - shell: bash
       working-directory: ${{ inputs.directory }}
-      run: cargo xtask corpus
+      env:
+        BUILD_IN: ${{ inputs.build-in }}
+      run: |
+        said=$(cargo xtask corpus)
+        echo "$said"
+        if [ "$BUILD_IN" = true ]; then
+          # The first line ends with the folder the corpus is unpacked in.
+          fonts="$(echo "$said" | head -n 1 | sed 's/^.* in //')/src"
+          test -f "$fonts/small_font/font.json"
+          echo "STITCHCRAFT_FONTS_DIR=$fonts" >> "$GITHUB_ENV"
+          echo "STITCHCRAFT_FONTS=$fonts" >> "$GITHUB_ENV"
+        fi
