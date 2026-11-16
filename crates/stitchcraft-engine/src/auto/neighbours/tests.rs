@@ -47,8 +47,14 @@ pub(super) fn filled(id: &str, parts: &[Polygon]) -> Element {
 }
 
 /// An automatic area `id`, the square from `(x0, y0)` to `(x1, y1)`.
-fn area(id: &str, from: (f64, f64), to: (f64, f64)) -> Sewn {
-    Sewn { element: filled(id, &[square(from, to)]), area: Some(AutoParams::defaults()), automatic: true, reach: None, shape: 0, part: None }
+pub(super) fn area(id: &str, from: (f64, f64), to: (f64, f64)) -> Sewn {
+    area_with(id, from, to, &[])
+}
+
+/// An automatic area `id`, the square from `(x0, y0)` to `(x1, y1)`, with the settings `params` of the rules.
+pub(super) fn area_with(id: &str, from: (f64, f64), to: (f64, f64), params: &[(&str, &str)]) -> Sewn {
+    let rules = AutoParams::from_set(&params.iter().copied().collect()).unwrap().params;
+    Sewn { element: filled(id, &[square(from, to)]), area: Some(rules), automatic: true, reach: None, shape: 0, part: None }
 }
 
 /// The least work with which `step` says what it says with the default budget, found by halving: with a
@@ -67,7 +73,7 @@ pub(super) fn least_work(step: impl Fn(&Budget) -> Vec<Diagnostic>) -> u64 {
 
 /// `sewn` beside the shapes sewn after each area, each automatic area's region built with the default
 /// budget and its neighbours found with `budget`, and what is said of them.
-fn reached(sewn: Vec<Sewn>, budget: &Budget) -> (Vec<Element>, Vec<Diagnostic>) {
+pub(super) fn reached(sewn: Vec<Sewn>, budget: &Budget) -> (Vec<Element>, Vec<Diagnostic>) {
     let settings = DesignSettings::default();
     let mut shapes = Shapes::new(sewn, &settings, &Budget::DEFAULT);
     let said = under::reached(&mut shapes, budget);
