@@ -64,6 +64,11 @@ pub fn run(check_only: bool) -> Result<(), String> {
         }
         if check_only {
             findings.error(format!("{file} is not the crate's public API any more: run `cargo xtask api` and review the diff"));
+            // The lines that differ, so that a snapshot written by hand, where the tool isn't installed, can be
+            // corrected from a CI log.
+            for line in difference(&current, &listing) {
+                println!("api: {file}: {line}");
+            }
         } else if let Err(e) = std::fs::write(&path, &listing) {
             findings.error(format!("{file}: {e}"));
         } else {
@@ -109,5 +114,36 @@ mod tests {
     #[test]
     fn ci_installs_the_cargo_public_api_the_snapshots_are_made_with() {
         assert_eq!(util::pinned_version("cargo-public-api").as_deref(), Some(TOOL_VERSION), ".github/actions/tools/action.yml");
+    }
+}
+
+/// The most lines of a difference that are printed.
+const SHOWN: usize = 60;
+
+/// The lines of `snapshot` that `listing` lacks, each after `- `, then those of `listing` that `snapshot` lacks,
+/// each after `+ `, in their order: at most [`SHOWN`] of each.
+fn difference(snapshot: &str, listing: &str) -> Vec<String> {
+    let only = |these: &str, those: &str, sign: char| {
+        let those: std::collections::BTreeSet<&str> = those.lines().collect();
+        these.lines().filter(|line| !those.contains(line)).take(SHOWN).map(|line| format!("{sign} {line}")).collect::<Vec<_>>()
+    };
+    let mut lines = only(snapshot, listing, '-');
+    lines.extend(only(listing, snapshot, '+'));
+    lines
+}
+
+#[cfg(test)]
+mod difference_tests {
+    use super::*;
+
+    #[test]
+    fn a_stale_snapshot_s_lines_and_the_listing_s_are_told_apart() {
+        let snapshot = "pub mod a\npub fn a::old() -> u8\npub fn a::kept()\n";
+        let listing = "pub mod a\npub fn a::kept()\npub fn a::new() -> u8\npub fn a::newer()\n";
+        assert_eq!(difference(snapshot, listing), ["- pub fn a::old() -> u8", "+ pub fn a::new() -> u8", "+ pub fn a::newer()"]);
+        assert!(difference(listing, listing).is_empty());
+        let long: String = (0..100).map(|i| format!("pub fn a::f{i}()\n")).collect();
+        assert_eq!(difference(&long, "").len(), SHOWN);
+        assert_eq!(difference("", &long).len(), SHOWN);
     }
 }
