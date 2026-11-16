@@ -109,6 +109,7 @@ parameters, which every VectorCraft release takes, and the fill's declares more 
 | `<ns>.route-satins` | heavy filter (VectorCraft 0.17) | satin, stroke | routes the selected satin columns, as Ink/Stitch's Auto-Route Satin Columns does (M10.4, [below](#tools-the-routing-filters)) |
 | `<ns>.route-runs` | heavy filter (VectorCraft 0.17) | stroke | routes the selected strokes, as Ink/Stitch's Auto-Route Running Stitch does (M10.13, [below](#tools-the-routing-filters)) |
 | `<ns>.tartan` | filter (VectorCraft 0.15) | fill | sets the sett of the selected paths' tartan fills from a code of its stripes (M10.7, [below](#a-tartans-sett)) |
+| `<ns>.lettering` | live effect (VectorCraft 0.14) | a font's own | keeps the embroidery font a text object sews in, and returns its geometry unchanged (M14.4, [below](#lettering)) |
 
 The tools an object filter was to give are VectorCraft's own commands ([tools](#tools-vectorcrafts-own-commands))
 and M6.12's 2 filters ([Stroke to Satin and Test Sheet](#tools-stroke-to-satin-and-test-sheet)). M10.4
@@ -128,6 +129,7 @@ the tests before a release.
 **Modules.** The plug-in crate builds one module for each family, chosen by a Cargo feature named after the
 family: `stroke`, `satin` or `fill`, one for each machine format, by its extension: `pes` or `dst`, and one
 for each filter: `settings`, `stroke-to-satin`, `testsheet`, `route-satins`, `route-runs` and `tartan`.
+The feature `lettering` builds the Lettering effect.
 Without one it builds M0.6's *hello* effect. The modules contain the same code, which the native tests run
 whichever it is, and the feature only picks the manifest and the run that `vc_manifest` and `vc_run` serve.
 `cargo xtask compat contract` builds every module, notes their sizes and loads them into VectorCraft's host.
@@ -839,7 +841,8 @@ alike: points as `{"x", "y"}` or `[x, y]` in any of them. A newer format is read
 MiB of any file (`REQ-CLI-005`), images included. A gzip stream is unpacked only up to the marker, and no
 further than the limit. Nesting deeper than the JSON reader allows (128 levels, about 40 levels of
 groups) refuses the file. VectorCraft itself keeps 32. The JSON is read into the few things the adapter
-uses, and the rest is skipped as it is read: images, previews and text runs are never kept. Every object,
+uses, and the rest is skipped as it is read: images and previews are never kept, and of a text only its
+characters and their fill. Every object,
 appearance item, effect and anchor charges the budget, and so does each element for its copies of the
 object's path, name and settings. An object's name goes into each element made of it, and a group's
 StitchCraft settings into each element of the paths in it. Those copies come to at most 64 MiB, as much
@@ -875,10 +878,12 @@ anchor, leaves that end of the segment straight, and a segment without handles i
 - **A Shaper group's sources** are left out. The group shows the shapes it makes of them, and keeps them
   as its first child, transparent. The Layers panel's Make Clipping Mask (`layer.clippingMask.toggle`)
   puts a Shaper group's clipping object before them.
-- **Text, images and symbols,** and the objects VectorCraft computes as it draws them (blends, envelopes,
+- **Text** with StitchCraft's Lettering effect sews in an embroidery font ([lettering](#lettering)). Without
+  the effect it is left out with `SC-W0807`, whose hint names the effect and Type › Create Outlines.
+- **Images and symbols,** and the objects VectorCraft computes as it draws them (blends, envelopes,
   meshes, repeats, placed documents and VectorCraft's Intertwine objects), are left out with `SC-W0807`.
-  The message names VectorCraft's command that makes paths of them, such as Type › Create Outlines for
-  text. So is a kind of object this version doesn't read.
+  The message names VectorCraft's command that makes paths of them. So is a kind of object this version
+  doesn't read.
 
 **Paints and threads.** An object without StitchCraft's effects is stitched as Ink/Stitch stitches an SVG
 shape. Its visible fills are filled, in the appearance's order, and its visible strokes then have a running
@@ -1035,6 +1040,111 @@ sews as the sheet's design (`apps/stitchcraft-vc-plugin/src/testsheet/tests.rs`)
 the first colour, which would sew the fade of `SC-W0329`. A gradient without its `geom` was rejected too:
 VectorCraft would fit it to the object's bounds at its angle, not where the sheet puts it. The filter draws
 TS-17B, which holds gradients from M10.12, and its draw-every-sheet case sews them as the sheet does.
+
+### Lettering
+
+M14.4 sews a text object in an embroidery font (`REQ-VC-026`, `REQ-VC-027`). [Fonts](fonts.md#lettering)
+describes lettering itself, and [fonts built into the plug-ins](fonts.md#fonts-built-into-the-plug-ins)
+where a plug-in finds a font.
+
+**A text object as a plug-in gets it,** read in VectorCraft v0.24.1 (`docs/plugins.md`,
+`crates/doc/src/text.rs` and `crates/plugins/src/effect.rs` of its source):
+
+| Plug-in | What it is given of text |
+|---|---|
+| Exporter | The whole document. A text object has its runs, with their characters and character styles, and its kind, its transform and its effect records |
+| Filter that lists `inputs: ["type"]`, from API level 2 | The selected text, read only: its runs, its paragraphs' styles and its transform |
+| Live effect | The object's outlines as one path, with its paints. The text is not among them |
+
+No plug-in is given a font's data or a glyph's outlines. An exporter can read the text and can't outline
+it, so M14.4 sets it in a font of StitchCraft's own. A live effect can't even read the text, so
+it can't draw the embroidery font before export
+([RFC](rfc-vectorcraft-abi-v2.md), P6).
+
+**The setting is an effect on the text.** StitchCraft Lettering (`<ns>.lettering`) is a live
+effect that a person applies to a text object. Its record keeps the font's name and lettering's settings,
+and its run returns the geometry it was given, as *hello* does. 2 other ways were weighed:
+
+- A filter that replaces the text by lettering's shapes. The text could no longer be retyped, and the
+  shapes are satin columns that mean nothing as art.
+- A name kept with the document, by the Design Settings filter. One font would serve every text, and a
+  text's settings would lie far from it.
+
+With the effect the text is still a text object. Retyping it changes what sews, the Appearance panel shows the effect
+and opens its dialog, and the exporter finds the record on the object it belongs to.
+
+**The dialog** is generated from lettering's own settings (`stitchcraft_svg::lettering::SETTINGS`), each
+with its default and help, by Ink/Stitch's names. It has 9 rows, which fit VectorCraft's dialog without
+sections:
+
+| Row | Setting | Default |
+|---|---|---|
+| Font | `font`, a text | empty, which is `small_font` |
+| Size | `scale`, in percent of the font's size | 100 |
+| Align | `text_align` | `left` |
+| Letter, word and line spacing | `letter_spacing`, `word_spacing`, `line_height`, in millimetres | 0 |
+| Sew lines back and forth | `back_and_forth` | on |
+| Sort colours | `color_sort` | `off` |
+| Trim | `trim` | `off`, for a machine that cuts no thread |
+
+The 2 settings that place a text along a path are left out, since a text object sews at its own place.
+
+**The font is a text field,** where a list of the fonts built in was the other choice. A font is named by its folder, as
+Ink/Stitch finds it, or by the `name` of its `font.json`, in any case. A list would make the effect's
+manifest differ between a build with fonts and one without, and VectorCraft checks a record's value
+against the manifest installed. A document would then lose its font in a plug-in built with other fonts.
+A name also reads the same from the command line. The dialog's help names the default font, and an
+export that doesn't find a font names those it has.
+
+**What the adapter reads.** A text object's kind holds its runs, its transform `xf` and whether it is
+point type. The adapter joins the runs' characters, in order, and lettering splits the lines at line
+feeds. An inline graphic's character is left out and said (`SC-W0807`).
+
+- **Place.** Point type's origin is the start of its first baseline, and that is the origin of a text
+  lettering sets. The text is turned as `xf` turns the baseline. The size is the effect's `scale`, since
+  an embroidery font sews only within its own heights, so the scale of `xf` and the screen font's size
+  aren't used. A mirrored or slanted text sews turned only (`SC-W0807`).
+- **Thread.** A font that sews in one thread sews in the colour the text's first characters are filled
+  with, and a font of several colours keeps its own.
+- **Clips.** The clips around the object cut the letters, as they cut a path's elements. As a clip
+  group's clipping object a text is left out, as before.
+- **What isn't set.** Area type wraps its lines by the screen font's widths, and type on a path follows
+  its path by them. An embroidery font has other widths, so neither can sew where VectorCraft draws it.
+  Vertical type needs glyphs drawn to sew downwards. Each is left out with `SC-W1111`. M14.3's lettering
+  along a path could take type on a path in a later step.
+- **What is said.** The warnings of lettering and of the font's reader are passed on, a font's once
+  however many texts name it. Their notes for information aren't, since they are said of every glyph.
+  `stitch lettering` prints them. A message that names the fonts found names 8 and counts the others.
+- **Other effects** on the text, and the screen font's attributes, change what VectorCraft draws and
+  nothing that sews.
+
+**Before export** the text looks as VectorCraft draws it, in its screen font. Nothing on the canvas
+shows the embroidery font, its size or its width. The user page says so, and gives the font's height in
+millimetres for a scale. When the text can't sew, the export says `SC-W1111`: the font isn't found, with
+the fonts that are, or the text is of a kind that isn't set. VectorCraft shows a declined export's
+message without its warnings, and a document of one text whose font is missing has nothing to stitch. So
+a declined export says its first `SC-W1111` after its error.
+
+**The layer edge.** The adapter sets the text itself, so that the plug-in and `stitch` share one reader.
+It depends on `stitchcraft-svg`, where lettering and the font reader are, beside it in layer 3. The edge
+is listed in `xtask/src/layers.rs`. The other choice was a second copy of the placing in each app.
+
+**Cost.** The Level A case `req_vc_027_…` measures a lettered document's export in VectorCraft's host
+against the 10 billion instructions it allows, and fails above 85 percent. Measured on 16 November 2026 in
+VectorCraft 0.24.1, in Ink/Stitch Small Font:
+
+| Text | Instructions | Of those allowed |
+|---|---|---|
+| A word of 5 letters | 2.01 billion | 20 % |
+| 4 lines of 2 words | 2.45 billion | 24 % |
+
+Reading the font takes most of it, about 2 billion instructions: both its glyph files are read whole,
+all 187 glyphs, whichever the text uses. The font is read once for a document, however many texts name it. Reading only
+the glyphs a text names would cut that, and is left for a step that needs it.
+
+Each exporter's module grew from 3,525 to 5,304 KiB. The font's files are 810 KiB of that, and the SVG
+reader and lettering, which an exporter didn't contain before, are the other 969 KiB. The modules of the
+effects and filters grew by 2 KiB each.
 
 ### Importing Ink/Stitch SVGs into VectorCraft
 

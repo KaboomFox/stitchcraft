@@ -154,7 +154,7 @@ fn scale_line(font: &Font, scale: f64) -> String {
 
 /// The files of the font in the folder `path`, each by its path in the folder with `/` between its parts:
 /// those directly in it and directly in the folders in it, in the order of their paths.
-fn folder(path: &Path) -> io::Result<Vec<(String, Vec<u8>)>> {
+pub(crate) fn folder(path: &Path) -> io::Result<Vec<(String, Vec<u8>)>> {
     let mut files = Vec::new();
     for entry in std::fs::read_dir(path)? {
         let entry = entry?;

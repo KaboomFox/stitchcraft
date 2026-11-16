@@ -8,7 +8,8 @@
 //! Tartan (VectorCraft 0.15).
 //! Which plug-in a module is is chosen when it is built, by a feature: `stroke`, `satin`, `fill` or `auto`
 //! for a live effect, `pes` or `dst` for an exporter, and `settings`, `stroke-to-satin`, `testsheet`,
-//! `route-satins`, `route-runs` or `tartan` for a filter ([`MODULE`]). Without one it is the M0.6 *hello* effect,
+//! `route-satins`, `route-runs` or `tartan` for a filter, and `lettering` for the effect that keeps a text
+//! object's embroidery font ([`MODULE`]). Without one it is the M0.6 *hello* effect,
 //! which the contract tests measure the host's costs with. Everything a module does is ordinary code,
 //! built into every module and tested natively, whichever it is.
 //!
@@ -28,6 +29,8 @@
 //! - [`route_runs`]: what the Auto-Route Running Stitch filter does: the selected running stitches replaced
 //!   with one route;
 //! - [`tartan`]: what the Tartan filter does: the selected paths' tartan fills given the sett of a code;
+//! - [`lettering`]: the Lettering effect, whose record on a text object names the embroidery font it sews in;
+//! - [`fonts`]: the embroidery fonts built into the exporters, which sew those texts;
 //! - `abi`: the exported functions VectorCraft calls. It is the single place in StitchCraft allowed to use
 //!   `unsafe`, because the ABI passes raw pointers into linear memory. This crate therefore does not carry
 //!   `#![forbid(unsafe_code)]`; the workspace denies `unsafe` and only `abi.rs` opts out, which
@@ -37,6 +40,8 @@
 pub mod dialog;
 pub mod effect;
 pub mod export;
+pub mod fonts;
+pub mod lettering;
 pub mod manifest;
 pub mod preview;
 pub mod route_runs;
@@ -83,11 +88,14 @@ pub enum Module {
     RouteRuns,
     /// The Tartan filter, which sets the sett of the selected paths' tartan fills from a code of its stripes.
     Tartan,
+    /// The Lettering effect, which keeps the embroidery font a text object sews in, and how its text is set
+    /// (`REQ-VC-027`).
+    Lettering,
 }
 
 /// What this build of the module is, by its features: the first of `fill`, `satin`, `stroke`, `auto`, `pes`,
-/// `dst`, `settings`, `stroke-to-satin`, `testsheet`, `route-satins`, `route-runs` and `tartan`, or *hello*
-/// without any.
+/// `dst`, `settings`, `stroke-to-satin`, `testsheet`, `route-satins`, `route-runs`, `tartan` and `lettering`,
+/// or *hello* without any.
 pub const MODULE: Module = if cfg!(feature = "fill") {
     Module::Family(Family::Fill)
 } else if cfg!(feature = "satin") {
@@ -112,6 +120,8 @@ pub const MODULE: Module = if cfg!(feature = "fill") {
     Module::RouteRuns
 } else if cfg!(feature = "tartan") {
     Module::Tartan
+} else if cfg!(feature = "lettering") {
+    Module::Lettering
 } else {
     Module::Hello
 };
@@ -123,7 +133,7 @@ impl Module {
         let families = Family::ALL.iter().map(|family| Module::Family(*family));
         let exporters = FormatId::ALL.iter().map(|format| Module::Exporter(*format));
         let filters = [Module::Settings, Module::StrokeToSatin, Module::TestSheet, Module::RouteSatins, Module::RouteRuns, Module::Tartan];
-        std::iter::once(Module::Hello).chain(families).chain([Module::Auto]).chain(exporters).chain(filters).collect()
+        std::iter::once(Module::Hello).chain(families).chain([Module::Auto]).chain(exporters).chain(filters).chain([Module::Lettering]).collect()
     }
 
     /// The module's name, which is also the feature that builds it ([`MODULE`]): `hello`, the family's id,
@@ -140,6 +150,7 @@ impl Module {
             Module::RouteSatins => route_satins::ROUTE_SATINS,
             Module::RouteRuns => route_runs::ROUTE_RUNS,
             Module::Tartan => tartan::TARTAN,
+            Module::Lettering => stitchcraft_vectorcraft::lettering::LETTERING,
         }
     }
 
@@ -156,6 +167,7 @@ impl Module {
             Module::RouteSatins => manifest::route_satins(),
             Module::RouteRuns => manifest::route_runs(),
             Module::Tartan => manifest::tartan(),
+            Module::Lettering => manifest::lettering(),
         }
     }
 
@@ -174,6 +186,7 @@ impl Module {
             Module::RouteSatins => route_satins::run(input, params),
             Module::RouteRuns => route_runs::run(input, params),
             Module::Tartan => tartan::run(input, params),
+            Module::Lettering => lettering::run(input, params),
         }
     }
 }
@@ -197,7 +210,8 @@ mod tests {
         feature = "testsheet",
         feature = "route-satins",
         feature = "route-runs",
-        feature = "tartan"
+        feature = "tartan",
+        feature = "lettering"
     )))]
     fn without_a_feature_the_module_is_hello() {
         assert_eq!(MODULE, Module::Hello);
@@ -233,7 +247,8 @@ mod tests {
                 "testsheet",
                 "route-satins",
                 "route-runs",
-                "tartan"
+                "tartan",
+                "lettering"
             ]
         );
         // A filter is given the selection: Auto-Route Satin Columns refuses an empty one.

@@ -5,6 +5,26 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M14.4: a text object of a VectorCraft document sews in an embroidery font (`REQ-VC-026`, `REQ-VC-027`,
+  `REQ-FONT-021`).
+  - StitchCraft Lettering is a new live effect for text objects. Its dialog has the font's name and
+    lettering's settings: size, alignment, the 3 spacings, lines back and forth, sorted colours and trims.
+    The text keeps its look in VectorCraft and can still be retyped.
+  - The PES and DST exporters read the text's characters and the effect's record, and sew the text where
+    its first line starts, turned as it is turned. A font of one thread sews in the text's colour.
+  - A plug-in can't read files. The exporters are built with their fonts in them: those
+    `apps/stitchcraft-vc-plugin/built-in-fonts.txt` lists, from the folder the build option
+    `STITCHCRAFT_FONTS_DIR` names. The list has Ink/Stitch Small Font, under the SIL Open Font License.
+    With it and the code that reads it, each exporter's module grows from 3.5 to 5.3 MB, and an export
+    of 4 lines takes a quarter of the instructions VectorCraft allows. The browser demo publishes its licence. No font file is in the
+    repository.
+  - `stitch export` and `stitch plan` sew such texts in the fonts of the folder `STITCHCRAFT_FONTS` names.
+  - `SC-W1111` says when a text with the effect isn't sewn: its font isn't found, or it is area type, type
+    on a path or vertical type. A text without the effect is left out as before, and the hint now names
+    the effect.
+  - VectorCraft can't show the embroidery font before the export, since an effect is given a text's
+    outlines and not its characters.
+  - Every design sews as before, and the golden files are unchanged.
 - M13.29: how thick a design sews (`REQ-AUTO-060` to `REQ-AUTO-062`, `REQ-RND-004`). The owner asked
   whether so many overlaps are too thick for the needle after several colours. StitchCraft had no measure
   of it.

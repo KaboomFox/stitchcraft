@@ -407,13 +407,17 @@ mod tests {
                 "testsheet",
                 "route-satins",
                 "route-runs",
-                "tartan"
+                "tartan",
+                "lettering"
             ]
         );
         let kinds: Vec<&str> = modules().into_iter().map(kind).collect();
         assert_eq!(
             kinds,
-            ["effect", "effect", "effect", "effect", "effect", "exporter", "exporter", "filter", "filter", "filter", "filter", "filter", "filter"]
+            [
+                "effect", "effect", "effect", "effect", "effect", "exporter", "exporter", "filter", "filter", "filter", "filter", "filter", "filter",
+                "effect"
+            ]
         );
         assert_eq!(modules().into_iter().filter(|name| heavy(name)).collect::<Vec<_>>(), ["stroke-to-satin", "route-satins", "route-runs"]);
         let sizes = [("hello", 1024), ("fill", 5000)];

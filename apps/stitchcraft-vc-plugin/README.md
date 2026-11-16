@@ -48,8 +48,9 @@ cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown -
 
 The feature is the family, `stroke`, `satin` or `fill`, `auto` for the Auto effect, the machine format, `pes`
 or `dst`, or the filter, `settings`, `stroke-to-satin`, `testsheet`, `route-satins`, `route-runs` or `tartan`.
+`lettering` is the effect that keeps a text object's embroidery font.
 Without one, the build is *hello*. Each build writes the same file, so copy it before building the next.
-`cargo xtask compat contract --ref <tag>` builds all thirteen into `target/compat/plugins/` and loads them into
+`cargo xtask compat contract --ref <tag>` builds every module into `target/compat/plugins/` and loads them into
 VectorCraft's host.
 
 In VectorCraft: **Object › Plug-ins › Install Plug-in…** (or `File › Open` the `.wasm`), then
@@ -88,9 +89,25 @@ from Install Plug-in…, not from the Additional Plug-ins Folder.
   and Test Sheet's objects sew as the sheet's design does, moved to where they are drawn. Each setting is
   stored in its effect's record as the value its dialog row takes.
 
+## Fonts
+
+A text object with the Lettering effect sews in an embroidery font, and a plug-in can't read files. So the
+exporters are built with their fonts in them: `build.rs` builds in those `built-in-fonts.txt` lists, from the folder the
+build option `STITCHCRAFT_FONTS_DIR` names, and none without it
+([fonts built into the plug-ins](../../docs/src/design/fonts.md#fonts-built-into-the-plug-ins)):
+
+```sh
+STITCHCRAFT_FONTS_DIR=/path/to/fonts cargo build -p stitchcraft-vc-plugin --release \
+  --target wasm32-unknown-unknown --features pes
+```
+
+No font file is in this repository. A font joins the list only under the SIL Open Font License or CC0, and
+whoever publishes a module publishes each font's licence file beside it, as `web/build.py` does.
+
 ## Dependencies
 
 `serde` and `serde_json` (the ABI's JSON), `stitchcraft-params` and `stitchcraft-engine` (the registry, and
 the sewing), `stitchcraft-plan` (the machine profiles and formats), `stitchcraft-core` (diagnostics and the
 budget), `stitchcraft-formats` (the exporters' files) and `stitchcraft-vectorcraft` (`plugin_id`, what a
-live effect reads and writes, and the documents an exporter reads).
+live effect reads and writes, and the documents an exporter reads) and `stitchcraft-svg` (lettering's settings,
+for the Lettering effect's dialog, and the font reader, for the fonts built in).

@@ -16,6 +16,9 @@ stitchcraft-core = { workspace = true }
 stitchcraft-params = { workspace = true }
 stitchcraft-plan = { workspace = true }
 stitchcraft-engine = { workspace = true }
+# Lettering and the reader of embroidery fonts: a text object with the Lettering effect sews as lettering sets
+# its text (`src/lettering.rs`, `xtask/src/layers.rs`).
+stitchcraft-svg = { workspace = true }
 serde = { workspace = true }
 # `raw_value`: coordinates are read from their text, exactly (`src/wire.rs`), and what a filter hands back
 # unchanged is written back as its text (`src/filter.rs`).
