@@ -88,3 +88,33 @@ fn req_auto_062_a_design_without_an_automatic_shape_is_not_measured() {
     assert!(outcome.plan.is_some() && thick(&outcome).is_empty(), "{:?}", thick(&outcome));
     assert!(fabric::thickness(outcome.plan.as_ref().unwrap(), &Limits::DEFAULT).warns());
 }
+
+#[test]
+fn req_auto_063_where_3_areas_meet_the_thread_as_sewn_is_one_overlap_deep() {
+    // 3 areas that meet at (10, 10): 2 squares, one above the other, and a bar to the right of both. The bar
+    // sews first and reaches 1 mm under both squares, across their rows. The upper square sews next, and
+    // reaches 0.4 mm under the lower one, along its rows, but not where the bar already does.
+    let gold = Thread::new(stitchcraft_plan::Rgb::new(200, 160, 0));
+    let shapes = vec![
+        automatic(rect("a", (0.0, 0.0), (10.0, 10.0), &RED, &[])),
+        automatic(rect("b", (0.0, 10.0), (10.0, 10.0), &BLUE, &[])),
+        automatic(rect("c", (10.0, 0.0), (10.0, 20.0), &gold, &[])),
+    ];
+    let plan = in_place(&Design::new(shapes, DesignSettings::default()).unwrap()).plan.unwrap();
+    assert_eq!(plan.elements.iter().map(ToString::to_string).collect::<Vec<_>>(), ["stitchcraft:base", "c", "a", "b"]);
+    let thickness = Thickness::of(&plan, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let at = |x: f64, y: f64| thickness.at(Measure::Fills, Point::new(x, y).unwrap());
+    let halves = |from: i32, to: i32| (from..=to).map(|k| f64::from(k) * 0.5);
+    // Measured on 2026-11-16, as sewn. Along the bar's edge with the upper square, half a millimetre inside
+    // the square: its fill, the bar's overlap under it and the base layer's one layer, 2.1 fills.
+    let seam: Vec<f64> = halves(4, 16).map(|y| at(9.5, y)).collect();
+    assert!(seam.iter().all(|fills| *fills > 1.9 && *fills < 2.3), "{seam:?}");
+    // In the bar beside that edge, where no overlap lies: its fill, the ends of its rows and its outline.
+    let beside: Vec<f64> = halves(6, 14).map(|y| at(10.5, y)).collect();
+    assert!(beside.iter().all(|fills| *fills > 1.3 && *fills < 1.7), "{beside:?}");
+    // At the corner, 3.8 fills at the most: the 2 squares, the bar's overlap under them, the upper square's
+    // 0.4 mm under the lower one beside it, and their 2 outlines. A second whole overlap there would make
+    // it 4.8.
+    let corner = halves(18, 20).flat_map(|x| halves(18, 22).map(move |y| (x, y))).map(|(x, y)| at(x, y)).fold(0.0, f64::max);
+    assert!(corner > 3.5 && corner < 4.1, "{corner}");
+}
