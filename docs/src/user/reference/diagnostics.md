@@ -143,6 +143,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W1115`](#sc-w1115) | Warning | Lettering not the traced letters' size |
 | [`SC-I1116`](#sc-i1116) | Info | Text sewn in an embroidery font |
 | [`SC-W1117`](#sc-w1117) | Warning | Lettering longer than its text's place |
+| [`SC-I1118`](#sc-i1118) | Info | Font chosen by the letters' weight |
 | [`SC-E1201`](#sc-e1201) | Error | Subject cut-out's models not ready |
 | [`SC-E1202`](#sc-e1202) | Error | No subject found to cut out |
 | [`SC-E1203`](#sc-e1203) | Error | Picture could not be read for the cut-out |
@@ -1968,6 +1969,23 @@ still longer, so it reaches past the place of the text, perhaps over a shape bes
 
 The message names the line, its length as sewn, the height and the length of its place. Make the
 text larger or shorter in the drawing, or convert it to paths there.
+
+## SC-I1118
+
+**Info** — Font chosen by the letters' weight
+
+A text marker names no font, so the font was chosen among those the plug-ins hold: the one whose
+strokes are nearest in width to the traced letters', among the fonts that sew at the letters'
+height. A bold font sews bold letters, and a light one light letters.
+
+The message gives the letters' height and how wide their strokes are in heights, and names the font
+with its own width. When the nearest font in weight doesn't sew that small or that large, it says
+so, and from what height that font sews. Nothing needs doing. To choose yourself, name a font with
+`font=NAME` after the text in double quotes.
+
+For a text object under automatic digitizing, which has no traced letters, a bold weight chooses
+the bold font when it sews every line at its size. The message says so, or gives the font size
+from which the bold font sews.
 
 ## SC-E1201
 

@@ -499,8 +499,20 @@ the drawing. They are in the typeface's font file, and StitchCraft doesn't read 
 a plug-in a text's glyphs. So the text is set by [lettering](#lettering), in the host's default embroidery
 font, which is Ink/Stitch Small Font where the fonts are Ink/Stitch's. The word sews cleanly, where the
 drawing has it and about as tall. Its letters have the embroidery font's shapes and widths, not the
-typeface's: a bold display face and a script both come out as Small Font's light upright letters. A note
+typeface's: a display face and a script both come out as Small Font's light upright letters. A note
 says so for each text object (`SC-I1116`). Roadmap step M15.13 sews a text in its own typeface.
+
+**A bold text sews in the bold font** (M14.8, `REQ-AUTO-073`). A text object has no traced letters to
+measure, so its weight comes from what the drawing says of it. It is bold when its first line that shows
+has an SVG `font-weight` of `bold`, `bolder` or 700 and above. In a VectorCraft document it is bold when the
+run's style name says Bold, Black or Heavy, and not Semi Bold or Demi Bold, or when a variable typeface's
+`wght` axis is 700 or more. A bold text sews in the boldest font the host offers, Barstitch Bold, when that
+font sews every line's capitals at 0.7 of its font size: from 17.9 to 46.5 mm of font size, 51 to 131
+points. `SC-I1118` says so. A bold text smaller or larger sews in Small Font, and `SC-I1118` gives the font
+size from which Barstitch Bold sews. A text that isn't bold sews in Small Font, as before. The typeface's
+name chooses nothing: Arial or Georgia names no embroidery font, and matching names would choose by accident.
+`objects::font_of` is the one place a text object's font is chosen, and `letter_among` asks the host for it
+with the text's characters, so that only their glyphs are read.
 
 `stitchcraft_svg::lettering::objects` does it. Each reader gives what it read as a `TextObject`, which is
 lines, and `letter` sets each line with [`set`](#lettering). There is no second layout.
@@ -681,7 +693,15 @@ joins. Geneva Rounded, for one, is under CC BY-SA 2.5 and would add 716 KB.
 
 ### What reading a font costs
 
-COUNTS
+Measured on 2026-11-16 with callgrind, on the native debug build of `stitch`, in instructions:
+
+| What is read | Small Font | Barstitch Bold |
+|---|---|---|
+| The whole font, by `stitch lettering MATCH` | 345 M | 1,468 M |
+| The font for the text MATCH, by `stitch plan` of a marked patch | not measured | 263 M |
+
+So reading Barstitch Bold for one word costs 18 percent of reading it whole. Of the whole read, 64 M is
+its `font.json`, whose kerning table is long: it is read once, when the font is. EXPORT_COUNTS
 
 ## Fonts ported by other programs
 
@@ -847,6 +867,11 @@ coverage and stitches. TS-15 sews 3 ported fonts beside the fonts digitized by h
 - **Pinning the font repository** (M14.4). CI builds Small Font in from the corpus of Ink/Stitch's fonts
   until `fonts.toml` pins `KaboomFox/stitchcraft-fonts`. The recommendation is to pin it before a second
   font is built in.
+- **A bold text object sews in the bold font** (M14.8). A text object has no letters to measure. The
+  decision taken is that its `font-weight`, or its VectorCraft style, chooses Barstitch Bold where it sews
+  at the text's size, and that the typeface's name chooses nothing. The Lettering effect keeps its own font
+  setting, empty for the default, whatever the text's weight, so that documents keep sewing as they did.
+  The other choice is to let the effect's empty font follow the weight too.
 - **Text objects sew in an embroidery font under automatic digitizing** (M14.7), until a typeface's
   outlines can be read (M15.13). The recommendation, taken, is to letter every text object automatic
   digitizing meets, with a note each time. The other choice leaves text out with a warning, as before, and

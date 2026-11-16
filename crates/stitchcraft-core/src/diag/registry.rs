@@ -1423,6 +1423,10 @@ macro_rules! codes {
         /// with its own width. When the nearest font in weight doesn't sew that small or that large, it says
         /// so, and from what height that font sews. Nothing needs doing. To choose yourself, name a font with
         /// `font=NAME` after the text in double quotes.
+        ///
+        /// For a text object under automatic digitizing, which has no traced letters, a bold weight chooses
+        /// the bold font when it sews every line at its size. The message says so, or gives the font size
+        /// from which the bold font sews.
         FontChosenByWeight = "SC-I1118", Info, "Font chosen by the letters' weight";
 
         /// `--subject` and `stitch cutout` cut a picture's subject out with 3 models, which `stitch` fetches with
