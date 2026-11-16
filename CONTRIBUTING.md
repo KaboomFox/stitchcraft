@@ -6,7 +6,8 @@ Thank you for helping. The short version:
    layering, one source of truth).
 2. Pick a step from the [roadmap](docs/src/plan/roadmap.md) or a `good first issue`.
 3. Follow the playbook for your change in [docs/src/contributing/](docs/src/contributing/README.md).
-4. Run `cargo xtask ci` before you push; open a PR titled with the step id.
+4. Run `cargo xtask prepush` before you push, and open a PR titled with the step id. CI runs every gate
+   (`cargo xtask ci`).
 
 Sewing machines welcome too: if you own one, the [machine testing protocol](docs/src/plan/machine-testing.md)
 explains how to sew our test sheets and file a sew-out report.

@@ -36,6 +36,7 @@ mod markdown;
 mod mutants;
 mod param_pages;
 mod perf;
+mod prepush;
 mod prose;
 mod reference_pages;
 mod shots;
@@ -68,6 +69,12 @@ enum Command {
         /// Run the gates of one group alone, as each of CI's jobs does (`--group lint`)
         #[arg(long, value_name = "GROUP")]
         group: Option<String>,
+    },
+    /// Run the checks that most often cost a round of CI, on what the branch changes
+    Prepush {
+        /// The branch or commit the work is compared with
+        #[arg(long, value_name = "REF", default_value = prose::DEFAULT_BASE)]
+        base: String,
     },
     /// Check that crates depend only on lower layers
     Layers,
@@ -277,6 +284,7 @@ pub fn subcommands() -> Vec<String> {
 fn run(command: Command) -> Result<(), String> {
     match command {
         Command::Ci { skip, group } => ci::run(&skip, group.as_deref()),
+        Command::Prepush { base } => prepush::run(&base),
         Command::Layers => layers::run(),
         Command::Docs { pages: Some(Docs::For { hook, paths }), .. } => design_map::run_for(hook, &paths),
         Command::Docs { check, pages: None } => docs::run(check),
@@ -385,6 +393,8 @@ mod tests {
             &["prose", "--base", "origin/main"],
             &["ci", "--skip", "api,prose"],
             &["ci", "--group", "lint"],
+            &["prepush"],
+            &["prepush", "--base", "origin/main"],
             &["wasm", "--goldens"],
         ] {
             assert!(Cli::try_parse_from(std::iter::once("xtask").chain(args.iter().copied())).is_ok(), "{args:?}");
