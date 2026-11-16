@@ -18,7 +18,7 @@ use std::rc::Rc;
 use serde_json::Value;
 use stitchcraft_core::{Budget, Diagnostic};
 use stitchcraft_svg::font::{self, Font};
-use stitchcraft_svg::lettering::pictures::Found;
+use stitchcraft_svg::lettering::pictures::{Choice, Found};
 
 /// The name of StitchCraft's Lettering effect (`plugin.dev.stitchcraft.lettering`): a text object that has
 /// it sews in the embroidery font its `font` names, set as its other parameters say (`REQ-VC-026`).
@@ -31,8 +31,42 @@ pub const FONT: &str = "font";
 /// Font, the first font the plug-ins hold.
 pub const DEFAULT_FONT: &str = "small_font";
 
+/// A font the plug-ins hold, with what a text marker that names no font is given one by (`REQ-AUTO-071`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Held {
+    /// Its folder's name.
+    pub folder: &'static str,
+    /// How bold it is: the width of its capital letters' satin columns in heights of those letters, as
+    /// [`stitchcraft_svg::lettering::pictures::weight::of_font`] measures it.
+    pub weight: f64,
+    /// The least and the greatest height it sews capital letters at, in millimetres: how tall it draws them,
+    /// times its `min_scale` and its `max_scale`.
+    pub heights: (f64, f64),
+}
+
+/// The fonts the plug-ins hold, the default font first: the fonts `built-in-fonts.txt` lists for the build.
+/// The numbers are written here because a plug-in chooses a font before it reads one, and reading a font
+/// to measure it costs most of what reading it to sew costs. The test `req_font_022_…` measures each font
+/// built in and fails when a number here is not the font's.
+pub const HELD: [Held; 2] = [
+    Held { folder: DEFAULT_FONT, weight: 0.125, heights: (3.79, 16.24) },
+    Held { folder: "barstitch_bold", weight: 0.188, heights: (12.51, 32.52) },
+];
+
+/// The fonts of [`HELD`] that `has` says are there, as text in pictures chooses among them.
+pub fn choices(has: impl Fn(&str) -> bool) -> Vec<Choice> {
+    let held = HELD.iter().filter(|held| has(held.folder));
+    held.map(|held| Choice { font: held.folder.to_string(), weight: held.weight, heights: held.heights }).collect()
+}
+
 /// Where the embroidery fonts a document's texts name are found.
 pub trait Fonts {
+    /// The fonts a text marker that names none is set in, the nearest in weight to the letters it
+    /// replaces: those of [`HELD`] that are here ([`choices`]). Of none, such a marker takes the default font.
+    fn choices(&self) -> Vec<Choice> {
+        Vec::new()
+    }
+
     /// The fonts there are, each as a person names it, for a message that says which can be chosen.
     fn names(&self) -> Vec<String>;
 
@@ -79,6 +113,10 @@ impl BuiltIn {
 }
 
 impl Fonts for BuiltIn {
+    fn choices(&self) -> Vec<Choice> {
+        choices(|folder| self.folders.iter().any(|held| held.name == folder))
+    }
+
     fn names(&self) -> Vec<String> {
         self.folders.iter().map(|folder| shown(folder.name, settings_of(folder).as_deref())).collect()
     }

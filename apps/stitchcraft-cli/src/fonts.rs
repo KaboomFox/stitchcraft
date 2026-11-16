@@ -16,7 +16,8 @@ use std::rc::Rc;
 
 use stitchcraft_core::{Budget, Code, Diagnostic};
 use stitchcraft_svg::font::{self, Font};
-use stitchcraft_vectorcraft::lettering::{Fonts, font_name, is_named, shown};
+use stitchcraft_svg::lettering::pictures::Choice;
+use stitchcraft_vectorcraft::lettering::{Fonts, choices, font_name, is_named, shown};
 
 use crate::commands::lettering::folder;
 use crate::files;
@@ -61,6 +62,11 @@ impl FolderFonts {
 }
 
 impl Fonts for FolderFonts {
+    fn choices(&self) -> Vec<Choice> {
+        let listed = self.listed();
+        choices(|folder| listed.iter().any(|(found, _)| found == folder))
+    }
+
     fn names(&self) -> Vec<String> {
         self.listed().iter().map(|(folder, name)| shown(folder, name.as_deref())).collect()
     }

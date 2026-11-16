@@ -68,7 +68,9 @@ pub fn replaced(design: Design, marks: &[&str], fonts: &mut dyn Fonts) -> Result
             Marker { label: format!("text-{}", index + 1), shape, note: note.to_string() }
         })
         .collect();
-    pictures::replace(design, &markers, &mut |name, budget| found(&mut *fonts, name, budget), &mut BTreeSet::new(), &Budget::DEFAULT)
+    let choices = fonts.choices();
+    let mut found = |name: &str, budget: &Budget| found(&mut *fonts, name, budget);
+    pictures::replace_among(design, &markers, &mut found, &choices, &mut BTreeSet::new(), &Budget::DEFAULT)
 }
 
 #[cfg(test)]

@@ -33,6 +33,7 @@
 //! has the budget again, as [`super::set`] says.
 
 mod frame;
+pub mod weight;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
@@ -77,6 +78,39 @@ pub enum Found {
     Unread(Diagnostic),
     /// No font of that name is there: the fonts that are, each as a person names it.
     Missing(Vec<String>),
+}
+
+/// A font that a marker which names none may be set in: one of the fonts a host holds for that, with what
+/// the choice goes by (`REQ-AUTO-071`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Choice {
+    /// The name the host finds the font by: its folder's.
+    pub font: String,
+    /// How bold it is: the width of its strokes in heights of its capital letters ([`weight::of_font`]).
+    pub weight: f64,
+    /// The least and the greatest height it sews at, in millimetres.
+    pub heights: (f64, f64),
+}
+
+impl Choice {
+    /// How far `height` lies outside the heights the font sews at, in millimetres: 0 within them.
+    fn outside(&self, height: f64) -> f64 {
+        (self.heights.0 - height).max(height - self.heights.1).max(0.0)
+    }
+}
+
+/// Which of `choices` letters `height` mm tall are set in, their strokes `weight` heights wide: of the fonts
+/// that sew nearest that height, which is at it when one sews at it, the nearest in weight, and the
+/// earlier of 2 as near. Letters without a weight take the earliest. `None` of no choices.
+pub fn chosen(choices: &[Choice], weight: Option<f64>, height: f64) -> Option<usize> {
+    let mut best: Option<(usize, f64, f64)> = None;
+    for (index, choice) in choices.iter().enumerate() {
+        let (outside, unlike) = (choice.outside(height), weight.map_or(0.0, |weight| (choice.weight - weight).abs()));
+        if best.is_none_or(|(_, least, like)| outside < least || (outside == least && unlike < like)) {
+            best = Some((index, outside, unlike));
+        }
+    }
+    best.map(|(index, ..)| index)
 }
 
 /// An area or a line that marks text in a picture.
@@ -164,6 +198,21 @@ pub fn replace(
     said: &mut BTreeSet<String>,
     budget: &Budget,
 ) -> Result<(Design, Vec<Diagnostic>), Diagnostic> {
+    replace_among(design, more, fonts, &[], said, budget)
+}
+
+/// As [`replace`], a marker that names no font set in the one of `choices` that is nearest in weight to
+/// the letters it replaces, among those that sew at their height ([`chosen`], `REQ-AUTO-071`), with
+/// `SC-I1117` saying which and why. Of no choices, such a marker is set in the host's default font, and
+/// nothing is said of the choice.
+pub fn replace_among(
+    design: Design,
+    more: &[Marker],
+    fonts: &mut dyn FnMut(&str, &Budget) -> Found,
+    choices: &[Choice],
+    said: &mut BTreeSet<String>,
+    budget: &Budget,
+) -> Result<(Design, Vec<Diagnostic>), Diagnostic> {
     let mut meter = budget.meter();
     let mut markers: Vec<Marker> = Vec::new();
     let mut elements = Vec::with_capacity(design.elements().len());
@@ -182,7 +231,7 @@ pub fn replace(
     }
     let mut warnings = Vec::new();
     for marker in &markers {
-        let mut work = Work { fonts: &mut *fonts, said: &mut *said, budget, meter: &mut meter, warnings: &mut warnings };
+        let mut work = Work { fonts: &mut *fonts, choices, said: &mut *said, budget, meter: &mut meter, warnings: &mut warnings };
         match work.text(marker, &mut elements) {
             Ok(()) => {}
             Err(Stop::Unused(why)) => warnings.push(unused(marker, &why)),
@@ -199,6 +248,55 @@ fn unused(marker: &Marker, why: &str) -> Diagnostic {
     let message = format!("The text marker `{}` is not used: {why} What lies inside it sews as it was traced.", marker.label);
     let fix = format!("Name a shape drawn round the letters, or a line drawn through them, `{MARKER}` and the text.");
     Diagnostic::new(Code::TextMarkerNotUsed, message).with_fix(Fix::Hint(fix))
+}
+
+/// `SC-I1117`: the text of `marker` is set in `choice`, chosen among `choices` for letters `height` mm tall
+/// whose strokes are `bold` heights wide, and why.
+fn chose(marker: &Marker, choices: &[Choice], choice: &Choice, bold: Option<f64>, height: f64) -> Diagnostic {
+    let letters = match bold {
+        Some(bold) => format!("its letters are {height:.1} mm tall, with strokes {bold:.2} of their height wide"),
+        None => format!("its letters are {height:.1} mm tall, and their strokes have no width to measure"),
+    };
+    let sews = |font: &Choice| format!("from {:.1} to {:.1} mm", font.heights.0, font.heights.1);
+    // The font nearest in weight whatever it sews at: the one a choice by weight alone would take.
+    let nearest = bold.and_then(|bold| {
+        choices.iter().fold(None, |best: Option<&Choice>, font| match best {
+            Some(best) if (best.weight - bold).abs() <= (font.weight - bold).abs() => Some(best),
+            _ => Some(font),
+        })
+    });
+    let (why, fix) = match nearest.filter(|nearest| nearest.font != choice.font) {
+        _ if choice.outside(height) > 0.0 => (
+            format!("No font here sews at that height. `{}` sews nearest to it, {}, with strokes {:.2} wide.", choice.font, sews(choice), choice.weight),
+            "Draw the picture so that its letters are as tall as a font sews, or name a font with font=NAME after the quoted text.".to_string(),
+        ),
+        Some(bolder) => (
+            format!(
+                "`{}` is the nearest in weight, with strokes {:.2} wide, and sews {}. So the text is set in `{}`, with strokes {:.2} wide, \
+                 which sews at that height, {}.",
+                bolder.font,
+                bolder.weight,
+                sews(bolder),
+                choice.font,
+                choice.weight,
+                sews(choice)
+            ),
+            format!(
+                "Leave the text unmarked to sew the letters as they were traced, which sews well from about 10 mm, or make the picture larger: \
+                 `{}` sews from {:.1} mm.",
+                bolder.font, bolder.heights.0
+            ),
+        ),
+        None => (
+            format!(
+                "The text is set in `{}`, with strokes {:.2} wide: the nearest in weight of the fonts that sew at that height.",
+                choice.font, choice.weight
+            ),
+            "Name another font with font=NAME after the quoted text.".to_string(),
+        ),
+    };
+    let message = format!("The text marker `{}` names no font: {letters}. {why}", marker.label);
+    Diagnostic::new(Code::FontChosenByWeight, message).with_fix(Fix::Hint(fix))
 }
 
 /// A marker's area, and the line its text follows.
@@ -275,6 +373,7 @@ struct Taken {
 /// What setting markers' texts works with.
 struct Work<'a> {
     fonts: &'a mut dyn FnMut(&str, &Budget) -> Found,
+    choices: &'a [Choice],
     said: &'a mut BTreeSet<String>,
     budget: &'a Budget,
     meter: &'a mut Meter,
@@ -303,9 +402,6 @@ impl Work<'_> {
         if taken.is_empty() {
             return Err(Stop::Unused("no shape lies wholly inside it.".to_string()));
         }
-        let font = self.font(&asked.font)?;
-        let trial = set(&font, &asked.text, &asked.how, self.budget).map_err(Self::stopped)?;
-        let ink = self.ink(&trial)?;
         // What was taken out, along and across the line: from its start to its end, and from its bottom to
         // its top.
         let cost = u64::try_from(area.line.segments()).unwrap_or(u64::MAX);
@@ -315,9 +411,15 @@ impl Work<'_> {
             held = bounds(held.iter().flat_map(|&[a0, c0, a1, c1]| [(a0, c0), (a1, c1)]).chain(part.points.iter().map(|&p| area.line.locate(p))));
         }
         let [start, bottom, end, top] = held.unwrap_or_default();
+        let height = top - bottom;
+        let thread = self.thread(&taken, &flats, elements)?;
+        let (named, choice) = self.choice(marker, &asked, &taken, thread.as_ref(), elements, height)?;
+        let font = self.font(&named)?;
+        let trial = set(&font, &asked.text, &asked.how, self.budget).map_err(Self::stopped)?;
+        let ink = self.ink(&trial)?;
         let per = 100.0 / trial.scale;
         let [left, up, right, down] = ink.map(|mm| mm * per);
-        let (height, own) = (top - bottom, down - up);
+        let own = down - up;
         if !(height > 0.0 && own > 0.0) {
             return Err(Stop::Unused("the shapes inside it, or its text in the font, have no height to measure.".to_string()));
         }
@@ -350,7 +452,6 @@ impl Work<'_> {
         let how = Lettering { scale, letter_spacing: spread / factor, word_spacing: spread / factor, ..asked.how };
         let along = Along { path, position: TextPosition::Left, vertical: VerticalPosition::Baseline };
         let lettered = set_along(&font, &asked.text, &how, &along, self.budget).map_err(Self::stopped)?;
-        let thread = self.thread(&taken, &flats, elements)?;
         let one = lettered.design.elements().first().map(|first| first.thread.color);
         let one_thread = lettered.design.elements().iter().all(|element| Some(element.thread.color) == one);
         let mut letters = Vec::with_capacity(lettered.design.elements().len());
@@ -395,6 +496,7 @@ impl Work<'_> {
             font.folder
         );
         self.warnings.push(Diagnostic::new(Code::TextInPictureLettered, message));
+        self.warnings.extend(choice);
         if scale != wanted || (gaps > 0.0 && (room - wide).abs() > FIT * height) {
             let message = format!(
                 "The lettering of the text marker `{}` is {tall:.1} mm tall and {wide:.1} mm wide, where the traced letters are {height:.1} mm \
@@ -448,6 +550,39 @@ impl Work<'_> {
             }
         }
         Ok((taken, flats, crossing))
+    }
+
+    /// The name of the font the text of `marker` is set in, and what is said of a choice: the font `asked`
+    /// names, or else the one of the choices nearest in weight to the letters among those that sew at
+    /// their `height` ([`chosen`]), or else the host's default font. The letters are the subpaths of
+    /// `taken` in `thread`, the thread that painted the most of what was taken out, so the holes they
+    /// leave in the colour round them are not measured.
+    fn choice(
+        &mut self,
+        marker: &Marker,
+        asked: &Asked,
+        taken: &[Taken],
+        thread: Option<&Thread>,
+        elements: &[Element],
+        height: f64,
+    ) -> Result<(String, Option<Diagnostic>), Stop> {
+        if !asked.font.is_empty() || self.choices.is_empty() || !(height > 0.0) {
+            return Ok((asked.font.clone(), None));
+        }
+        let (mut rings, mut widths) = (Vec::new(), Vec::new());
+        for part in taken {
+            let Some(element) = elements.get(part.element).filter(|element| Some(&element.thread) == thread) else { continue };
+            match &element.shape {
+                Shape::Stroke { width, .. } => widths.push((width.get(), frame::length(&part.points))),
+                Shape::Fill { .. } => rings.push(part.points.clone()),
+            }
+        }
+        weight::samples(&rings, self.meter, &mut widths).map_err(|_| self.spent())?;
+        let bold = weight::median(widths).map(|stroke| stroke / height);
+        let Some(choice) = chosen(self.choices, bold, height).and_then(|index| self.choices.get(index)) else {
+            return Ok((asked.font.clone(), None));
+        };
+        Ok((choice.font.clone(), Some(chose(marker, self.choices, choice, bold, height))))
     }
 
     /// The font `asked` names, or why the marker isn't used.
