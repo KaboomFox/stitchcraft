@@ -34,6 +34,7 @@ pub stitchcraft_core::diag::Code::AutoDigitized
 pub stitchcraft_core::diag::Code::AutoLayers
 pub stitchcraft_core::diag::Code::AutoOrder
 pub stitchcraft_core::diag::Code::AutoRule
+pub stitchcraft_core::diag::Code::AutoRunsLeft
 pub stitchcraft_core::diag::Code::AutoSatinFilled
 pub stitchcraft_core::diag::Code::AutoSpeck
 pub stitchcraft_core::diag::Code::AutoUnder
@@ -305,6 +306,7 @@ pub stitchcraft_core::Code::AutoDigitized
 pub stitchcraft_core::Code::AutoLayers
 pub stitchcraft_core::Code::AutoOrder
 pub stitchcraft_core::Code::AutoRule
+pub stitchcraft_core::Code::AutoRunsLeft
 pub stitchcraft_core::Code::AutoSatinFilled
 pub stitchcraft_core::Code::AutoSpeck
 pub stitchcraft_core::Code::AutoUnder

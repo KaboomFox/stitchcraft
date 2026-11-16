@@ -197,6 +197,12 @@ order stage 0 chose), by `stitchcraft_engine::assemble`.
   routing tools write their route into the document, whose paint order is then the route's
   ([routing tools](routing.md)). The elements of a run of underlays first keep this order too, with their
   underlays moved ahead of their top stitches ([below](#underlays-first)).
+- Between 2 groups of one thread that automatic digitizing made, assembly sews a run under the stitches
+  sewn later, where they cover a way from one group to the next. The needle sews straight on into the run
+  and out of it (`REQ-AUTO-053`,
+  [runs in place of jumps](image-to-embroidery.md#runs-in-place-of-jumps)). Planning
+  paints what covers from the generated stitches before assembly starts. Elements with settings are
+  joined as the rules below say.
 - A thread change starts a new colour block (`REQ-ASM-001`). Threads are compared by colour, as
   Ink/Stitch compares them: two names for one colour are one thread, and the block keeps the first. The
   thread changes inside an element too, where its groups' threads change (`REQ-ASM-006`).

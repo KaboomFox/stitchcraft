@@ -120,6 +120,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0910`](#sc-w0910) | Warning | Base layer left out |
 | [`SC-I0911`](#sc-i0911) | Info | Base layer turned off |
 | [`SC-I0912`](#sc-i0912) | Info | Rule that chose a shape's stitches |
+| [`SC-I0914`](#sc-i0914) | Info | Jumps not looked at for a run under later shapes |
 | [`SC-E1001`](#sc-e1001) | Error | Nothing to route |
 | [`SC-I1002`](#sc-i1002) | Info | Element left out of the route |
 | [`SC-W1003`](#sc-w1003) | Warning | Piece of a routed satin column may sew otherwise |
@@ -1643,6 +1644,18 @@ parts gives the measures of its first 3 and counts the rest by rule.
 To sew the shape another way, set `auto_stitch` on it to `run`, `satin` or `fill`: in VectorCraft,
 in the dialog of StitchCraft's Auto effect. For the whole design, lean the rules with `auto_prefer`,
 turn `auto_fill_uneven` off, or set a bound itself with `stitch plan --set`.
+
+## SC-I0914
+
+**Info** — Jumps not looked at for a run under later shapes
+
+Between 2 elements of one thread that `--auto` made, the needle sews a run under the shapes sewn
+later where they cover a way from one to the next, and leaves no jump thread to cut. Finding what
+covers, and the ways, has the work budget once for the whole design. This design needed more, so
+from the element named on its moves are as they were before: sewn on within the collapse length,
+and jumps beyond it. The design sews, with more jump threads than it need have. To have the runs,
+plan it with a larger work budget, or digitize fewer shapes: trace the picture in fewer colours,
+or raise `auto_min_area_mm2`.
 
 ## SC-E1001
 
