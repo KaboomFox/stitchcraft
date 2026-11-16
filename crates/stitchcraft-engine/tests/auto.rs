@@ -9,11 +9,14 @@
 
 use stitchcraft_core::{Budget, Code, Mm, Point, math};
 use stitchcraft_engine::PlanOutcome;
-use stitchcraft_engine::auto::{Stitches, digitize, digitized, underlay};
+use stitchcraft_engine::auto::{CROWDED_CLOSER_THAN, CROWDED_INSETS, Stitches, digitize, digitized, underlay};
+use stitchcraft_engine::common::{LOCK_END, LOCK_END_SCALE, LOCK_START, LOCK_START_SCALE};
 use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Join, Path, Segment, Shape, Subpath};
+use stitchcraft_engine::generators::satin::{SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET};
 use stitchcraft_engine::normalize::region;
 use stitchcraft_engine::normalize::stroke::SHAPE_TOLERANCE;
 use stitchcraft_params::ParamSet;
+use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_testkit::designs::{RED, along, automatic, capped, fill, messages, outlined, p, planned, polylines, rules, unbased, widened};
 
 /// The needle points the design sews, in order.
@@ -42,7 +45,14 @@ fn satin(width: f64) -> Vec<(&'static str, String)> {
     let mut params =
         vec![("satin_column", "true".to_string()), ("pull_compensation_mm", pull().to_string()), ("end_at_nearest_point", "false".to_string())];
     params.extend(underlay(Mm::new(width).unwrap()).iter().map(|&key| (key, "true".to_string())));
+    params.extend([(SHORT_STITCH_DISTANCE, CROWDED_CLOSER_THAN.to_string()), (SHORT_STITCH_INSET, CROWDED_INSETS.to_string())]);
     params
+}
+
+/// `element` with the locks that automatic digitizing gives what it makes as it plans a design (`REQ-AUTO-072`).
+fn locked(element: Element) -> Element {
+    let step = REFERENCE.min_stitch.get().to_string();
+    with(element, &[(LOCK_START, "back_forth"), (LOCK_START_SCALE, step.as_str()), (LOCK_END, "back_forth"), (LOCK_END_SCALE, step.as_str())])
 }
 
 /// `element` with the settings automatic digitizing gives a satin column `width` millimetres wide.
@@ -87,7 +97,7 @@ fn req_auto_002_an_area_fills_and_a_line_up_to_the_narrowest_satin_runs() {
     let ring: &[(f64, f64)] = &[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)];
     let square = fill("square", &[ring], &RED, &[]);
     let turning = fill("square", &[ring], &RED, &[("turn_stitches", "true")]);
-    assert_eq!(needle_points(&planned(unbased(vec![automatic(square.clone())]))), needle_points(&planned(vec![turning])));
+    assert_eq!(needle_points(&planned(unbased(vec![automatic(square.clone())]))), needle_points(&planned(vec![locked(turning)])));
     assert_ne!(needle_points(&planned(vec![automatic(square.clone())])), needle_points(&planned(vec![square.clone()])));
     assert_eq!(made(&square), vec![square]);
     // A line no wider than 1 mm, the narrowest satin stroke unless the design sets it, runs, exactly 1 mm
@@ -96,7 +106,7 @@ fn req_auto_002_an_area_fills_and_a_line_up_to_the_narrowest_satin_runs() {
         let line = drawn("line", &[(0.0, 0.0), (20.0, 0.0), (20.0, 15.0)], width);
         assert_eq!(stitches(width), Stitches::Running, "{width} mm");
         let set = beans.map_or_else(|| line.clone(), |beans| with(line.clone(), &[("bean_stitch_repeats", beans)]));
-        assert_eq!(needle_points(&planned(vec![automatic(line.clone())])), needle_points(&planned(vec![set])), "{width} mm");
+        assert_eq!(needle_points(&planned(vec![automatic(line.clone())])), needle_points(&planned(vec![locked(set)])), "{width} mm");
     }
     // The design's own narrowest satin stroke moves the bound.
     let settings = DesignSettings { min_satin_stroke_width: Mm::new(2.0).unwrap(), ..DesignSettings::default() };
@@ -117,7 +127,7 @@ fn req_auto_003_a_line_up_to_7_mm_is_a_satin_column_as_wide_as_it_is_drawn() {
     let column = as_satin(line.clone(), 3.0);
     assert_eq!(made(&line), vec![column.clone()]);
     let sewn = needle_points(&planned(vec![automatic(line)]));
-    assert_eq!(sewn, needle_points(&planned(vec![column])));
+    assert_eq!(sewn, needle_points(&planned(vec![locked(column)])));
     // As wide as drawn once the thread pulls it in: its stitches cross the line from one edge to the other
     // and reach its pull compensation past each, 1.9 mm each side of it (REQ-AUTO-018).
     let off_the_first_leg = sewn.iter().filter(|q| q.x() < 15.0).map(|q| q.y().abs()).fold(0.0, f64::max);
@@ -135,7 +145,7 @@ fn req_auto_003_a_line_of_several_subpaths_is_a_column_for_each() {
         as_satin(widened(along("two#2", polylines(&[&[(0.0, 10.0), (20.0, 10.0)]]), &RED, &[]), 3.0), 3.0),
     ];
     assert_eq!(columns, apart);
-    assert_eq!(needle_points(&planned(vec![automatic(two)])), needle_points(&planned(apart.to_vec())));
+    assert_eq!(needle_points(&planned(vec![automatic(two)])), needle_points(&planned(apart.iter().cloned().map(locked).collect())));
 }
 
 #[test]

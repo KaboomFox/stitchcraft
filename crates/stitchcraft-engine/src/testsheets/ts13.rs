@@ -194,18 +194,22 @@ mod tests {
     fn ts13_sheets_have_the_sizes_and_stitches_their_cases_and_the_changelog_give() {
         // Each sheet's size, its conformance case's to the micrometre, and its stitches: what MC-8 sews, which
         // changes with any change to what a picture sews.
-        for (id, size, stitches) in [
-            ("TS-13A", [126.001, 167.98], 23_908),
-            ("TS-13B", [110.594, 148.4], 14_640),
+        let recorded = [
+            ("TS-13A", [126.001, 167.98], 23_906),
+            ("TS-13B", [110.594, 148.4], 14_644),
             ("TS-13C", [111.397, 107.75], 10_390),
             ("TS-13D", [89.0, 100.025], 20_259),
             ("TS-13E", [23.999, 108.394], 6_011),
-        ] {
-            let plan = find(id).unwrap().plan().unwrap();
-            let bounds = plan.bounds().unwrap();
-            assert_eq!([bounds.width(), bounds.height()].map(|v| (v * 1e3).round() / 1e3), size, "{id}");
-            assert_eq!(plan.stats().stitches, stitches, "{id}");
-        }
+        ];
+        let found: Vec<(&str, [f64; 2], usize)> = recorded
+            .iter()
+            .map(|&(id, _, _)| {
+                let plan = find(id).unwrap().plan().unwrap();
+                let bounds = plan.bounds().unwrap();
+                (id, [bounds.width(), bounds.height()].map(|v| (v * 1e3).round() / 1e3), plan.stats().stitches)
+            })
+            .collect();
+        assert_eq!(found, recorded);
     }
 
     #[test]

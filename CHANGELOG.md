@@ -1990,6 +1990,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.35: no spot of an automatically digitized design sews above a cap (`REQ-AUTO-071` to `REQ-AUTO-073`).
+  The owner said of the thickest spots M13.30 left, 5.5 to 7 fills, that they won't work. Work in progress.
+  - An automatic satin column moves its crowded needle points in: a point closer than 0.35 mm to the last
+    one left on its rail moves in by 25 % of its stitch, the next by 50 %. A straight column keeps all.
+  - Everything automatic digitizing makes locks in steps of 0.3 mm, the machine's shortest stitch, where the
+    half stitch went up to 1 mm.
+  - Where a shape sets a column's short stitches or a lock, its settings are used.
+  - Public API: `auto::CROWDED_CLOSER_THAN` and `CROWDED_INSETS`, the keys
+    `common::LOCK_START`, `LOCK_END`, `LOCK_START_SCALE` and `LOCK_END_SCALE`, and
+    `generators::satin::SHORT_STITCH_DISTANCE` and `SHORT_STITCH_INSET`, so that the cases import them.
 - M13.30: less thread where a design sews thick (`REQ-AUTO-067`). The owner's first concern on 2026-11-16
   was how thick her traced dogs sew along the edges between their patches, and M13.29 measured that the
   overlaps cause most of it.

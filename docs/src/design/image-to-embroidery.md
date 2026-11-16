@@ -1280,6 +1280,65 @@ twice as far apart. Fills with rows 0.4 mm apart would lower every number of thi
 built and measured both, with the bare-fabric measure checking each change
 ([Less thread where areas overlap](#less-thread-where-areas-overlap)).
 
+### The thickest spot
+
+M13.30 left thickest spots of 5.5 to 7 fills, and the owner read them as what will sew: "5.5 to 7 just
+won't work". She is right to. The area at 3 fills or more says how much of a design is thick, and the
+thickest spot says whether any of it is too thick to sew. A report gives both. M13.35 aims at no spot of
+1 mm above 4 fills on any test design (`REQ-AUTO-073`), and its cases list each design still above that
+with its thickest spot, a list that only shrinks.
+
+Each design's 10 thickest spots were split by element and by kind of thread on 2026-11-16. On the sheets
+and the pear one shape lays 2 to 4 fills by itself at the thickest spot, in 2 out of 3 such spots or more:
+
+- **A satin column fans.** Its stitches keep their spacing on the outside of a corner or a bend, and on the
+  inside they meet. TS-13A's blue strip sews 25 stitches from 5 mm of one rail to 1 mm of the other, 3.6 to
+  4.6 fills by itself. Where 2 columns of one letter join, both sew whole, 2.3 and 1.9 fills in the M.
+- **Lock stitches pile up.** A half stitch lock is 4 stitches of up to 1 mm, about 1 fill where it lies.
+  The pear's stem ties in and off at one end, 1.9 fills of locks, and at TS-13B's thickest spot a fill, its
+  outline and a line lock, 2.75 fills.
+- **A narrow column walks its middle twice.** The centre walk goes there and back, 0.5 fill under the
+  column's 1.25.
+
+On the traced dogs every kind adds a little at the peaks. At their spots of 4 fills or more a column gives 1.0 to 1.6
+fills, the overlap 0.85, a fill's rows 0.45, its turns and travel 0.6 to 0.8, the outline 0.3 to 0.4 and
+the locks 0.2 to 0.45. In a third of those spots 5 elements or more meet, each with 0.3 fill or more.
+
+2 rules for single shapes come first. An automatic column moves its crowded needle points in
+(`REQ-AUTO-071`): a point closer than 0.35 mm to the last one left on its rail moves in by 25 % of its
+stitch, the next by 50 %, as digitizing programs shorten stitches in a sharp turn. A rail's points lie
+0.4 mm apart on a straight column, so no straight column loses any of its width. A larger distance takes
+more thread away only because it thins every column's edges. And everything digitizing makes locks in
+steps as long as the reference machine's shortest stitch, 0.3 mm (`REQ-AUTO-072`), as advised for small
+lettering. Steps of 0.4 mm did nearly as well on the sheets, but where 3 areas meet at a corner the first
+stitch is short, the half stitch there is short too, and 0.4 mm steps made the corner 4.15 fills where it
+was 3.76. Measured with the case's plans:
+
+| Design | Thickest, fills, M13.30 | Now | At 3 fills or more, mm², M13.30 | Now |
+|---|---:|---:|---:|---:|
+| Lettered patch | 5.31 | 5.04 | 107 | 75 |
+| TS-13A, digitized half | 5.56 | 4.28 | 78 | 26 |
+| TS-13B, digitized half | 5.65 | 4.29 | 49 | 20 |
+| TS-13C, digitized half | 5.07 | 4.51 | 145 | 108 |
+| TS-13D, digitized half | 6.46 | 5.17 | 109 | 69 |
+| TS-13E, digitized half | 4.86 | 3.65 | 33 | 15 |
+| Traced pear | 6.45 | 5.01 | 24 | 23 |
+| Traced dog on turf, 6 threads | 5.54 | 5.24 | 178 | 161 |
+| Traced dog on turf, 9 threads | 5.54 | 5.23 | 206 | 188 |
+| Traced running dog, 6 threads | 6.05 | 5.21 | 184 | 170 |
+| Traced running dog, 9 threads | 7.01 | 6.53 | 280 | 275 |
+
+Stitches and jump threads stay as they were. The bare share of the dog on turf in 9 threads grew from
+0.00038 % to 0.00041 %, and one jump thread of TS-13E's digitized half is no longer sewn down, neither traced. The plans here sew each design where it draws its shapes,
+so a spot can differ from `stitch plan --auto`'s by up to 0.8 fill, as the 0.5 mm cells fall.
+
+Alone, the locks took TS-13B from 5.65 to 4.58 fills and the pear to 5.35, and the columns took TS-13A to
+4.73. Walking a narrow column's middle once takes the lettered patch to 4.62 and the pear to 5.00 more,
+but such a column ends where it started, and the order of columns still expects it at its other end: 2
+or 3 jump threads more. No outline round fills halves the dogs' area at 3 fills or more and moves their
+thickest spots little. Neither is built yet.
+
+
 ## Sewing order
 
 Automatic elements sew in an order StitchCraft chooses (`stitchcraft_engine::auto::neighbours::order`,

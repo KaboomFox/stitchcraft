@@ -3219,6 +3219,33 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-AUTO-071"
+area = "auto"
+level = "L2"
+statement = "An automatic satin column moves its crowded needle points in along their stitches: a point closer than 0.35 mm to the last one left in place on its rail moves in by 25 % of its stitch's width, the next such point by 50 %, and so on in turn (`short_stitch_distance_mm` 0.35 and `short_stitch_inset` 25 50). A shape that sets either keeps what it sets, and the other is Ink/Stitch's. A straight column's points lie 0.4 mm apart on each rail, so every one of its stitches spans it."
+rationale = "On the inside of a corner or a bend a column's stitches fan to a point, since their spacing is kept on the outside: TS-13A's blue strip sewed 25 stitches from 5 mm of one rail to 1 mm of the other, up to 4.6 fills by itself, and Ink/Stitch's 0.25 mm and 15 % moved few of them, by little. Digitizing programs shorten some of the stitches in a sharp turn, each by a percentage of its own (Wilcom EmbroideryStudio, Reducing stitch bunching). A distance above the 0.4 mm spacing would move every second point of a straight column too, and thin its edges. Measured with the locks of REQ-AUTO-072 on 2026-11-16, the thickest spot of TS-13A came from 5.56 to 4.29 fills and of TS-13D from 6.46 to 5.45."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-072"
+area = "auto"
+level = "L2"
+statement = "Every element that automatic digitizing makes, the base layer's pieces and the outlines among them, locks at each end in back and forth steps as long as the reference machine's shortest stitch, 0.3 mm (`lock_start` or `lock_end` back_forth, `lock_start_scale_mm` or `lock_end_scale_mm` 0.3), 4 stitches of 0.3 mm, unless its shape sets that end's lock or its step: then the shape's settings stand and that end takes nothing more."
+rationale = "The half stitch locks with 4 stitches of half the first stitch, up to 1 mm, which lays up to 1 fill of thread on a millimetre by itself. Where a short stem ties in and off at one end, or a fill, its outline and a line lock at one spot, the locks alone made 1.9 and 2.75 fills (the pear, TS-13B). For narrow shapes such as small lettering, a shorter tie-off stitch is advised (Wilcom EmbroideryStudio, Tie-offs). Measured on 2026-11-16, steps of 0.4 mm took TS-13B's thickest spot from 5.65 to 4.58 fills and the pear's from 6.45 to 5.35, and steps of 0.5 mm did less. But where the first stitch is short the half stitch is short too: at a corner where 3 areas meet, 0.4 mm steps made 4.15 fills where the half stitch made 3.76. Steps of 0.3 mm make 3.76 there, and with the columns of REQ-AUTO-071 TS-13B 4.29 and the pear 5.01. A step shorter than the machine's shortest stitch is not chosen."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-073"
+area = "auto"
+level = "L2"
+statement = "No spot of a millimetre of a design digitized automatically sews more than 4 fills of thread (REQ-AUTO-060), measured on its plan: each test picture, the traced pear, the lettered patch, the digitized half of each TS-13 sheet and the 4 traced dogs. Until the step is done, the cases list each design still above the cap with its thickest spot as measured, and the list only shrinks."
+rationale = "The owner read the thickest spots M13.30 left, 5.5 to 7 fills, as what will sew, and said that it won't work. Up to 2 fills in one spot is ordinary, Brother's manual names 3 or more overlapping stitches as a fault, and a retailer reports 2 full layers already thump on a PE800 (research of M13.29). An area at 3 fills or more says how much of a design is thick, and the thickest spot whether any of it is too thick to sew."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-AUTO-037"
 area = "auto"
 level = "L2"

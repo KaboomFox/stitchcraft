@@ -277,6 +277,15 @@ At MC-8, look at the edges between 2 fills of the digitized halves and of the tr
 - A small ragged part that sewed as a short bent satin column is a fill now. Does the fur of the traced
   dog read as well without those columns?
 
+M13.35 takes thread away where one shape piles it up by itself
+([the thickest spot](../design/image-to-embroidery.md#the-thickest-spot)). At MC-8, after TS-13F's ladder:
+
+- On the inside of a satin column's bend, half the needle points stop a quarter or half of the column
+  short of the rail. Does the inside of TS-13A's blue strip and of the lettered patch's M still look
+  smooth, or does it look ragged?
+- Locks are 4 stitches of 0.3 mm. Cut the jump threads of the traced pear's stem and of TS-13B's letters
+  by hand. Does an end pull out?
+
 ## Report template
 
 The GitHub issue form *Sew-out report* asks for these fields; this is the same template for notes kept

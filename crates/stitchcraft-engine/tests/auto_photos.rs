@@ -207,9 +207,11 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
 /// largest in hundredths of a square millimetre, and the share of the design left bare in thousandths of a
 /// percent. The case fails when a number changes, so that a dog whose slivers grow shows here before it
 /// reaches a limit, and one that loses a sliver gets its row changed. Most slivers lie beside a line of fur
-/// that sews as a running stitch, which is as wide as its thread and can't reach under a neighbour.
+/// that sews as a running stitch, which is as wide as its thread and can't reach under a neighbour. With the
+/// columns' crowded needle points moved in (REQ-AUTO-071) the dog on turf in 9 threads leaves 41 where it left
+/// 38, not traced.
 const SLIVERS: [(&str, usize, usize, f64, f64); 4] =
-    [("dog-on-turf-6", 0, 0, 0.0, 17.0), ("dog-on-turf-9", 1, 0, 18.0, 38.0), ("dog-running-6", 0, 0, 0.0, 0.0), ("dog-running-9", 0, 0, 0.0, 0.0)];
+    [("dog-on-turf-6", 0, 0, 0.0, 17.0), ("dog-on-turf-9", 1, 0, 18.0, 41.0), ("dog-running-6", 0, 0, 0.0, 0.0), ("dog-running-9", 0, 0, 0.0, 0.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -236,10 +238,11 @@ fn req_auto_027_digitized_dogs_show_no_fabric_and_leave_the_slivers_recorded() {
 
 /// How thick each traced dog sews, as measured: the area with 3 fills of thread or more and the area with 6
 /// or more, in hundredths of a square millimetre (REQ-AUTO-060). Before M13.30 the 4 had 436.0, 480.2, 511.0 and
-/// 629.2 mm² at 3 or more, and 11.8, 11.0, 6.5 and 6.2 mm² at 6 or more. The case fails when a number changes,
+/// 629.2 mm² at 3 or more, and 11.8, 11.0, 6.5 and 6.2 mm² at 6 or more, and after it 177.5, 205.75, 183.5 and
+/// 280.0 mm² at 3 or more, before M13.35's locks and columns (REQ-AUTO-071, REQ-AUTO-072). The case fails when a number changes,
 /// so that a change that piles thread up again shows here.
 const THICK: [(&str, f64, f64); 4] =
-    [("dog-on-turf-6", 17750.0, 0.0), ("dog-on-turf-9", 20575.0, 0.0), ("dog-running-6", 18350.0, 0.0), ("dog-running-9", 28000.0, 0.0)];
+    [("dog-on-turf-6", 16075.0, 0.0), ("dog-on-turf-9", 18825.0, 0.0), ("dog-running-6", 17025.0, 0.0), ("dog-running-9", 27450.0, 0.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -252,6 +255,18 @@ fn req_auto_067_digitized_dogs_sew_thick_on_the_area_recorded() {
         })
         .collect();
     assert_eq!(found, THICK.map(|(name, thick, failing)| (name.to_string(), thick, failing)));
+}
+
+/// The thickest spot of each traced dog, in hundredths of a fill (REQ-AUTO-073): M13.30 left 5.54, 5.54, 6.05
+/// and 7.01. Every dog is still above the cap of 4 fills, where 5 to 8 elements meet.
+const THICKEST: [(&str, f64); 4] = [("dog-on-turf-6", 524.0), ("dog-on-turf-9", 523.0), ("dog-running-6", 521.0), ("dog-running-9", 653.0)];
+
+#[test]
+#[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
+fn req_auto_073_digitized_dogs_sew_their_thickest_spot_as_recorded() {
+    let found: Vec<(String, f64)> =
+        planned().iter().map(|(name, _, plan)| (name.clone(), hundredths(fabric::thickness(plan, &fabric::Limits::DEFAULT).fills.value))).collect();
+    assert_eq!(found, THICKEST.map(|(name, thickest)| (name.to_string(), thickest)));
 }
 
 /// How often each traced dog's thread changes: as sewn, the fewest that any order has in which each shape
