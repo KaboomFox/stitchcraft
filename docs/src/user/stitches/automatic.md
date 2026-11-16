@@ -319,7 +319,7 @@ the shapes stacked there.
 <!-- /shot -->
 
 `stitch preview dog.pes --style thickness -o thick.png` draws this picture of any machine file. Grey is
-thread under 2 fills, yellow is 2 or more, orange 3 or more and red 6 or more. On the dog above, 631 mm²
+thread under 2 fills, yellow is 2 or more, orange 3 or more and red 6 or more. On the dog above, 629 mm²
 of 1,944 mm² is orange or red, mostly where several small patches meet, and its thickest spot has 8.0
 fills.
 

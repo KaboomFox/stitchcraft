@@ -287,10 +287,21 @@ impl Grid {
     }
 }
 
-/// The stitches `plan` sews, each needle point where a machine file puts it (`Point::to_tenths`). A point
-/// too far out for the machine's grid stays where it is.
+/// A coordinate to the nearest millionth of a millimetre. Shapes drawn on round numbers put needle points
+/// half way between 2 points of the machine's grid, and the last digits of a position, which differ from
+/// one platform to another, would decide which of them it is. Rounded so first, such a point is half way on
+/// every platform, and goes to the same side.
+fn settled(coordinate: f64) -> f64 {
+    (coordinate * 1.0e6).round_ties_even() / 1.0e6
+}
+
+/// The stitches `plan` sews, each needle point where a machine file puts it (`Point::to_tenths`), its
+/// coordinates [`settled`] first. A point too far out for the machine's grid stays where it is.
 fn sewn(plan: &StitchPlan) -> Vec<SewnStitch> {
-    let on_grid = |point: Point| point.to_tenths().map_or(point, |(x, y)| Point::from_tenths(x, y));
+    let on_grid = |point: Point| {
+        let near = Point::new(settled(point.x()), settled(point.y())).unwrap_or(point);
+        near.to_tenths().map_or(point, |(x, y)| Point::from_tenths(x, y))
+    };
     plan.sewn_stitches().into_iter().map(|stitch| SewnStitch { from: on_grid(stitch.from), to: on_grid(stitch.to), ..stitch }).collect()
 }
 
