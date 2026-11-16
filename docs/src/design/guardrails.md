@@ -45,6 +45,55 @@ problem a check finds is also an annotation, on the right line of the pull reque
 one, and a failed fuzz run puts the end of its output in one: the reason is visible without opening a
 log.
 
+### The gates in CI
+
+Each gate of `cargo xtask ci` belongs to one group, and `cargo xtask ci --group NAME` runs one group's
+gates. The list of gates and groups is in `xtask/src/ci.rs` and nowhere else.
+
+| Group | Its gates |
+|---|---|
+| `lint` | fmt, clippy, rustdoc, layers, filesize, cleanroom, unsafe-audit, api, deny, typos |
+| `test` | test |
+| `conformance` | conformance, wasm, wasm-goldens |
+| `docs` | docs, shots, prose, book |
+
+`ci.yml` runs each group as a job of its own, side by side. A round then waits for the slowest group
+and not for all gates one after another. One of xtask's tests reads the workflow and fails when its jobs
+and the groups differ. So a gate added to `cargo xtask ci` runs in CI without a change to the workflow, and no
+edit of the workflow can leave a group out. Each job installs the tools its gates need. A gate whose tool
+is missing fails in CI, so a job that lacks a tool can't pass.
+
+The check `gates (cargo xtask ci)`, which `main` requires, waits for the 4 jobs and passes only when
+each of them passed. It runs when one of them failed or was cancelled too, because GitHub counts a
+required check that was skipped as passed.
+
+Each run of `cargo xtask ci` ends with the time every gate took. In GitHub Actions the times are also a
+notice on the job, which the checks API gives without the log.
+
+### Before a push
+
+`cargo xtask prepush` runs, in a few minutes, the checks that most often cost a round of CI. It is no
+gate and replaces none.
+
+- `cargo fmt --check` on every package, and Clippy and rustdoc, warnings denied, on the packages the
+  branch changes. A file belongs to the package whose folder is around it, and the branch is compared
+  with its merge base with `origin/main` (`--base REF` names another), uncommitted files included.
+- The tests that compare output with numbers recorded in the repository, when the branch changes a
+  package or a file they read. `RECORDED` in `xtask/src/prepush.rs` lists them. They hold the sizes and
+  stitch counts of the test sheets and of the Auto effect's sheets, the Auto effect's explanations and
+  the plug-in's manifests.
+- xtask's own tests, which tie the workflows, the roadmap and the recorded files to the code.
+- The scans and checks that take seconds: layers, filesize, cleanroom, unsafe-audit, `docs --check` and
+  `conformance --check`.
+- The API snapshots, typos and the prose lint, each where its tool is installed.
+
+It leaves out what takes long, which CI runs. That is the whole test suite and the run of the
+conformance suite, the pictures of the docs and the WebAssembly builds, coverage and mutation testing.
+
+Where Vale is not installed, the environment variable `STITCHCRAFT_PROSE_STANDIN` may name a program
+that checks the added lines in its place. The command runs it from the repository's root with
+`--base REF`, and the summary says that it is not Vale.
+
 The performance budget counts instructions, because they come out the same on any machine and in any
 run, where milliseconds do not. Its check fails for a change that slows planning, on whichever runner it
 runs. The time is still measured and reported, against the budget the requirement states in milliseconds.

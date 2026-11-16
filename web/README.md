@@ -22,7 +22,8 @@ distribution, and the publishing in `docs/src/design/docs-pipeline.md`. The acce
 The build needs Python 3.11 or newer, the Rust toolchain of `rust-toolchain.toml` with its
 `wasm32-unknown-unknown` target, and the versions of Trunk, wasm-bindgen and wasm-opt that
 `.github/actions/tools/action.yml` names, on the `PATH`. Trunk runs without the network and stops when
-one of them is missing. From the repository's root:
+one of them is missing. The built editor stays in `target/web/editor`, and a later build with the same
+release, compiler, tools and build script builds the plug-ins alone. From the repository's root:
 
 ```sh
 python3 web/build.py                      # target/web/app and target/web/demo

@@ -1095,6 +1095,21 @@ Trunk runs without the network. The workflow installs Trunk and the 2 tools Trun
 wasm-bindgen and wasm-opt, each checked against a checksum kept in the repository
 (`.github/actions/tools/action.yml`).
 
+The editor is built once for each state of what it is built from. `web/build.py` keeps the built editor
+in `target/web/editor` under a key. The key is a SHA-256 of 4 things: the release as
+`compat/vectorcraft.toml` records it, `rust-toolchain.toml`, the tools' versions in
+`.github/actions/tools/action.yml`, and `web/build.py` itself. A build that finds an editor under its key copies it and builds only the plug-ins, which are
+always this revision's. `web.yml` keeps that folder in the Actions cache under the same key, with the
+runner's system before it, and restores no other key. So a pull request that changes the release, the
+compiler, a tool's version or the build script builds the editor, and every other round takes it from the
+cache.
+
+A kept editor is not checked against a checksum, because 2 builds of it don't give the same bytes. What
+protects it is where a cache may come from. GitHub gives a run the caches written on its own branch and on
+`main`, and a run for a pull request writes to that pull request's own scope, a fork's too. So the editor that
+`main` publishes was built by a run on `main`, from code that was merged, and no pull request can put
+another under its key.
+
 ### Licences
 
 VectorCraft's code is licensed MIT OR Apache-2.0, which allows publishing a build of it with its licence

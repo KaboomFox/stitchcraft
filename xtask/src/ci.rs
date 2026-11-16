@@ -24,7 +24,7 @@ use crate::util;
 use crate::{api, book, cleanroom, conformance, docs, filesize, layers, prose, shots, unsafe_audit, wasm};
 
 /// How one step ended.
-enum Outcome {
+pub(crate) enum Outcome {
     Passed,
     Failed(String),
     Skipped(&'static str),
@@ -54,7 +54,7 @@ fn cargo_step(command: &'static str, packages: &util::Packages, rest: &'static [
     })
 }
 
-fn outcome(result: Result<(), String>) -> Outcome {
+pub(crate) fn outcome(result: Result<(), String>) -> Outcome {
     match result {
         Ok(()) => Outcome::Passed,
         Err(e) => Outcome::Failed(e),
@@ -62,7 +62,7 @@ fn outcome(result: Result<(), String>) -> Outcome {
 }
 
 /// A step that needs an optional tool: skipped without it, except in StitchCraft's own CI, which fails.
-fn optional(available: fn() -> bool, missing: &'static str, guest: bool, step: Box<dyn Fn() -> Outcome>) -> Box<dyn Fn() -> Outcome> {
+pub(crate) fn optional(available: fn() -> bool, missing: &'static str, guest: bool, step: Box<dyn Fn() -> Outcome>) -> Box<dyn Fn() -> Outcome> {
     Box::new(move || {
         if available() {
             step()
@@ -166,20 +166,32 @@ pub fn run(skip: &[String], group: Option<&str>) -> Result<(), String> {
     let steps = steps(&packages);
     unknown_gate(skip, &steps.iter().map(|(name, _, _)| *name).collect::<Vec<_>>())?;
     unknown_group(group, &steps)?;
+    let title = group.map_or_else(|| "cargo xtask ci".to_string(), |group| format!("cargo xtask ci --group {group}"));
+    let steps: Vec<Check> =
+        steps.into_iter().filter(|(_, of, _)| group.is_none_or(|group| group == *of)).map(|(name, _, step)| (name, step)).collect();
+    run_checks(&title, &steps, skip)
+}
+
+/// A named check and what it runs.
+pub(crate) type Check = (&'static str, Box<dyn Fn() -> Outcome>);
+
+/// Runs `checks` one after another, all of them even when one fails, without those named in `skip`, and
+/// prints a summary with each one's time. `title` names the command in GitHub's annotations.
+pub(crate) fn run_checks(title: &str, checks: &[Check], skip: &[String]) -> Result<(), String> {
     let mut summary = Vec::new();
-    for (name, _, step) in steps.iter().filter(|(_, of, _)| group.is_none_or(|group| group == *of)) {
+    for (name, step) in checks {
         if skip.iter().any(|gate| gate.as_str() == *name) {
             summary.push((*name, Outcome::Skipped("--skip"), 0));
             continue;
         }
-        eprintln!("\n=== ci: {name} ===");
+        eprintln!("\n=== {name} ===");
         // A gate's time is for the summary alone, and no result depends on it.
         #[allow(clippy::disallowed_types)]
         let started = std::time::Instant::now();
         let result = step();
         summary.push((*name, result, started.elapsed().as_secs()));
     }
-    println!("\nCI summary:");
+    println!("\nSummary of `{title}`:");
     let mut failed = 0;
     for (name, result, seconds) in &summary {
         match result {
@@ -189,14 +201,13 @@ pub fn run(skip: &[String], group: Option<&str>) -> Result<(), String> {
                 failed += 1;
                 println!("  FAIL  {name} ({seconds} s): {e}");
                 if std::env::var_os("GITHUB_ACTIONS").is_some() {
-                    println!("{}", util::annotation("error", "cargo xtask ci", &format!("{name} failed: {e}")));
+                    println!("{}", util::annotation("error", title, &format!("{name} failed: {e}")));
                 }
             }
         }
     }
     if std::env::var_os("GITHUB_ACTIONS").is_some() {
-        let title = group.map_or_else(|| "cargo xtask ci".to_string(), |group| format!("cargo xtask ci --group {group}"));
-        println!("{}", util::annotation("notice", &title, &times(&summary)));
+        println!("{}", util::annotation("notice", title, &times(&summary)));
     }
     if failed == 0 { Ok(()) } else { Err(format!("{failed} of {} gates failed", summary.len())) }
 }
