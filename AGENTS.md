@@ -14,11 +14,10 @@ changes the code — people and AI agents alike. `CLAUDE.md` points here; there 
 3. Work conformance-first: add requirements and failing cases, then the code that makes them pass, then
    the docs. A Rust test named `req_<area>_<nnn>_<what>` is a case for `REQ-<AREA>-<NNN>`, and one named
    `diag_sc_<e|w|i><nnnn>_<what>` is the case that produces diagnostic `SC-<E|W|I><NNNN>`.
-4. Before you push, run the quick checks: `cargo fmt`, `cargo clippy --all-targets -- -D warnings` and the
-   tests of the code you changed, and regenerate what the change touches (`cargo xtask docs`, `shots`,
-   `api`). CI runs every gate (`cargo xtask ci`) on the pull request, side by side on machines of its own,
-   and a pull request merges only once every check passes. Watch the checks, and run a gate locally only
-   to reproduce a failure.
+4. Before you push, run `cargo xtask prepush` and the tests of the code you changed, and regenerate what
+   the change touches (`cargo xtask docs`, `shots`, `api`). CI runs every gate (`cargo xtask ci`) on the
+   pull request, side by side on machines of its own, and a pull request merges only once every check
+   passes. Watch the checks, and run a gate locally only to reproduce a failure.
 
 ## Non-negotiables
 
@@ -60,6 +59,11 @@ cargo xtask ci                     # every gate: fmt, clippy, tests, rustdoc, la
                                    # cleanroom, unsafe-audit, docs --check, shots --check, conformance
                                    # (the whole suite, with its report), wasm, api --check, deny, typos,
                                    # prose, book
+cargo xtask ci --group lint        # one group of the gates, as each of CI's jobs runs: lint, test,
+                                   # conformance or docs
+cargo xtask prepush                # before a push, in minutes: fmt, clippy and rustdoc on the changed
+                                   # packages, the tests with recorded numbers, docs --check,
+                                   # conformance --check, api --check, typos and prose
 cargo xtask layers                 # crate dependency rules
 cargo xtask docs --check           # docs fresh, links, anchors, ids and paths valid, no fact on two pages
 cargo xtask prose                  # Vale on the Markdown lines this branch adds (writing style)
