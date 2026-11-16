@@ -253,6 +253,9 @@ fn joined(parts: Result<Parts, Exhausted>) -> Result<Vec<Polygon>, Failed> {
 /// What an element paints: its kind and region, or `None` for a shape whose region cannot be built.
 type Painted = Option<(Kind, Vec<Polygon>)>;
 
+/// A satin column's 2 rails as they are sewn.
+type Rails = [Vec<Point>; 2];
+
 /// The elements of a design as automatic digitizing sews them, with the regions their neighbours need.
 struct Shapes {
     elements: Vec<Element>,
@@ -276,6 +279,10 @@ struct Shapes {
     bounds: Vec<Option<Option<Envelope>>>,
     /// What each element paints grown by [`TOUCHING`], once found.
     grown: Vec<Option<Vec<Polygon>>>,
+    /// Each satin column's rails as they are sewn, once found, and `None` once found for an element that has
+    /// none. What a column paints lies between them, and where it sews past a rail is looked for along them:
+    /// finding them is most of a column's work here, and both would find them.
+    rails: Vec<Option<Option<Rails>>>,
     /// The stitch type each element is sewn as, `None` when its settings can't be read, which its generator
     /// says.
     stitch_types: Vec<Option<StitchType>>,
@@ -334,6 +341,7 @@ impl Shapes {
             painted,
             bounds: vec![None; count],
             grown: vec![None; count],
+            rails: vec![None; count],
             stitch_types,
             kinds,
             said: Vec::new(),
@@ -394,11 +402,15 @@ impl Shapes {
         self.stitch_types.get(index).copied().flatten().is_some_and(|stitch_type| stitch_type.family() == Family::Satin)
     }
 
-    /// The rails of the satin column `index` as they are sewn, with `meter`'s work; `None` when its settings
-    /// or its rails can't be read.
-    fn rails(&self, index: usize, meter: &mut Meter) -> Result<Option<[Vec<Point>; 2]>, Exhausted> {
-        let (Some(element), Some(&Some(stitch_type))) = (self.elements.get(index), self.stitch_types.get(index)) else { return Ok(None) };
-        rails_of(element, stitch_type, meter)
+    /// The rails of the satin column `index` as they are sewn, as they were found or with `meter`'s work;
+    /// `None` when its settings or its rails can't be read.
+    fn rails(&mut self, index: usize, meter: &mut Meter) -> Result<Option<Rails>, Exhausted> {
+        let (Some(element), Some(&Some(stitch_type)), Some(known)) =
+            (self.elements.get(index), self.stitch_types.get(index), self.rails.get_mut(index))
+        else {
+            return Ok(None);
+        };
+        rails_once(element, stitch_type, known, meter)
     }
 
     /// Makes the satin column `index` sew `overlap` past each of its rails that `under` names, in the order
@@ -469,8 +481,12 @@ impl Shapes {
         if self.area.get(index).is_none_or(Option::is_some) || self.painted.get(index).is_some_and(Option::is_some) {
             return;
         }
-        let (Some(element), Some(&Some(stitch_type))) = (self.elements.get(index), self.stitch_types.get(index)) else { return };
-        let painted = paints(element, stitch_type, &self.budget).unwrap_or_else(|said| {
+        let (Some(element), Some(&Some(stitch_type)), Some(rails)) =
+            (self.elements.get(index), self.stitch_types.get(index), self.rails.get_mut(index))
+        else {
+            return;
+        };
+        let painted = paints(element, stitch_type, rails, &self.budget).unwrap_or_else(|said| {
             self.said.push(said);
             None
         });
@@ -524,6 +540,7 @@ impl Shapes {
         self.painted = permuted(take(&mut self.painted), order);
         self.bounds = permuted(take(&mut self.bounds), order);
         self.grown = permuted(take(&mut self.grown), order);
+        self.rails = permuted(take(&mut self.rails), order);
         self.stitch_types = permuted(take(&mut self.stitch_types), order);
         self.kinds = permuted(take(&mut self.kinds), order);
     }
@@ -567,14 +584,14 @@ impl Shapes {
 /// The area between a column's rails and the area a line's stroke paints are only the neighbours' to find:
 /// when they can't be, what is said of it. The areas sewn before a column then don't reach under it
 /// (`SC-I0904`), and either keeps its place in paint order beside the shapes near it (`SC-I0907`).
-fn paints(element: &Element, stitch_type: StitchType, budget: &Budget) -> Result<Painted, Diagnostic> {
+fn paints(element: &Element, stitch_type: StitchType, rails: &mut Option<Option<Rails>>, budget: &Budget) -> Result<Painted, Diagnostic> {
     let meter = &mut budget.meter();
     let said =
         |failed: Failed, code: Code, finding: &str, consequence: &str| failed.said(code, finding, consequence, budget.max_work, element.id.clone());
     match (&element.shape, Kind::of(&element.shape, stitch_type)) {
         (Shape::Fill { path, rule, .. }, _) => Ok(parts_of(path, *rule, meter).ok().and_then(Result::ok).map(|parts| (Kind::Area, parts))),
         (Shape::Stroke { .. }, Kind::Column) => {
-            let Ok(Some(rails)) = rails_of(element, stitch_type, meter) else { return Ok(None) };
+            let Ok(Some(rails)) = rails_once(element, stitch_type, rails, meter) else { return Ok(None) };
             let unfound = |failed| {
                 let consequence = format!("the areas sewn before it don't reach under it, and {KEPT}");
                 said(failed, Code::AutoUnder, "what this satin column covers", &consequence)
@@ -591,11 +608,23 @@ fn paints(element: &Element, stitch_type: StitchType, budget: &Budget) -> Result
 /// The rails of the satin column `element`, sewn as `stitch_type`, as they are sewn, swapped and turned as
 /// its settings say, with `meter`'s work; `None` for a fill, and for a column whose settings or rails can't
 /// be read.
-fn rails_of(element: &Element, stitch_type: StitchType, meter: &mut Meter) -> Result<Option<[Vec<Point>; 2]>, Exhausted> {
+fn rails_of(element: &Element, stitch_type: StitchType, meter: &mut Meter) -> Result<Option<Rails>, Exhausted> {
     let Shape::Stroke { path, width, join, .. } = &element.shape else { return Ok(None) };
     let Ok(Validated { params, .. }) = SatinParams::from_set_as(&element.params, stitch_type) else { return Ok(None) };
     let Some(column) = satin::rails(path, *width, *join, &mut Vec::new(), meter)? else { return Ok(None) };
     Ok(Some(satin::sewn_rails(&column, &params, meter)?))
+}
+
+/// [`rails_of`] as `known` has them, or found with `meter`'s work and kept there. A column's settings that
+/// its rails go by, which rail is first and which way each runs, stay as they are here: only how far it sews
+/// past each rail changes ([`Shapes::reach_past`]).
+fn rails_once(element: &Element, stitch_type: StitchType, known: &mut Option<Option<Rails>>, meter: &mut Meter) -> Result<Option<Rails>, Exhausted> {
+    if let Some(rails) = known {
+        return Ok(rails.clone());
+    }
+    let rails = rails_of(element, stitch_type, meter)?;
+    *known = Some(rails.clone());
+    Ok(rails)
 }
 
 /// What a line along `path` drawn with `style` paints, with `meter`'s work: the area its stroke paints, or
