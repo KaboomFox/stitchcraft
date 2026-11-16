@@ -1965,10 +1965,20 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - Under a satin column and under the part of a line or a column, an area reaches as it did. Across
     the part of a running line, the area sewn first reaches on under the area beyond, 1 mm from where it
     meets it.
-  - The 4 traced dogs have 17 to 22 % less area with 3 fills of thread or more, and 1 to 3 mm² with 6
-    or more where they had 6 to 12. They cover the fabric as before, by the check of the cover, sew 1 to
-    3 % fewer stitches, and leave 0 to 4 more jump threads. No test sheet has a place with 6 fills or
-    more. No setting is new.
+  - The base layer sews one layer, its rows across the fills' rows, where it sewed 3 layers 60° apart as
+    Ink/Stitch's Knockdown Fill does. The new advanced setting `auto_base_rows` at `lattice` sews the 3
+    layers, for a fabric with pile. 3 in 10 of the base layer's millimetres of thread lay along its own
+    edge, up to 2.3 fills under the ends of the fills' rows.
+  - A part that would sew as one satin column is filled when the column would sew more than 2 mm of one
+    rail to 1 mm of the other, and `SC-I0902` says so (`REQ-AUTO-064`). Such a column laid up to 6.6 fills
+    where its stitches met. A part with a hole and a part of several columns sew as they did.
+  - The 4 traced dogs have 55 to 64 % less area with 3 fills of thread or more, and none with 6 or more
+    where they had 6 to 12 mm². No picture has a place with 6 fills or more. By the check of the cover
+    they cover the fabric as before. They sew 6 to 8 % fewer stitches. 15 to 18 shapes of each dog that
+    sewed as satin columns are fills. The dog on turf in 9 threads changes thread 13 times where it
+    changed 12, and the dog on turf leaves 2 and 1 more jump threads, the running dog 2 and 9 fewer.
+  - Fixed on the way: an area reached across the part of a line and then as far again where a column sews
+    along the part too, or where a later area already sewed it.
   - Measured and left out: an overlap sewn with every other row, which the owner also asked about, half
     the overlap under columns, an overlap of 0.5 mm, and no outline along an edge between 2 areas
     ([design](docs/src/design/image-to-embroidery.md#less-thread-where-areas-overlap)).

@@ -286,7 +286,9 @@ overlap.
 
 You can't choose the colour of the fabric a design is sewn on, and on black fabric every place the thread
 leaves bare is a dark spot. So a design digitized automatically sews one base layer first, under all of
-it: an open fill of stitches 3 mm long in 3 directions, in the thread that the picture has the most of. It
+it: an open fill of stitches 3 mm long, its rows across the rows of the fills on it, in the thread that the
+picture has the most of. For a towel or a fleece, `auto_base_rows` set to `lattice` sews it in 3
+directions, which holds the pile down and lays 3 times the thread. It
 lies 0.4 mm inside the design's outline, so that it doesn't show beside the edge. The fills sewn on it
 sew no underlay of their own (`SC-I0909`).
 
