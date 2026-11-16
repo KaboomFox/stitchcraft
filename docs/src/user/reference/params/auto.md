@@ -115,8 +115,8 @@ sews, as of any area.
 
 ### `auto_base_layer`
 
-**Base layer.** Whether one base layer sews first under the whole design: an open fill in 3 directions under
-what the automatic shapes paint together, every stitch of it underlay. On fabric of another
+**Base layer.** Whether one base layer sews first under the whole design: an open fill under what the
+automatic shapes paint together, every stitch of it underlay. On fabric of another
 colour than the design, thread of one colour then lies under a slit between 2 shapes. The fills
 on it sew no underlay of their own. Off, each fill sews the underlay of its settings. The design
 goes by the settings its lowest automatic shape has for the base layer.
@@ -128,9 +128,9 @@ goes by the settings its lowest automatic shape has for the base layer.
 
 ### `auto_base_stitch_length_mm`
 
-**Base layer's stitch length.** How long the base layer's stitches are. Its rows lie this length times 0.866 apart, in 3
-directions, so that its needle points make triangles with sides this long, as the stitches of
-Ink/Stitch's Knockdown Fill do. Shorter stitches hide more of the fabric and sew longer.
+**Base layer's stitch length.** How long the base layer's stitches are. Its rows lie this length times 0.866 apart, so that
+its needle points make triangles with sides this long, as the stitches of Ink/Stitch's
+Knockdown Fill do. Shorter stitches hide more of the fabric and sew longer.
 
 - **Accepts:** a length from 1 to 6 mm
 - **Default:** `3`
@@ -242,6 +242,18 @@ default it lies as far inside as a satin column's pull compensation reaches outs
 
 - **Accepts:** a length from -3 to 3 mm
 - **Default:** `-0.4`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_base_rows`
+
+**Base layer's rows.** Which way the base layer's rows run. `across` sews one layer, its rows across those of the
+fills on it, `auto_fill_angle` turned by 90°: the underlay a fill is usually given, once under
+the whole design. `lattice` sews 3 layers 60° apart, as Ink/Stitch's Knockdown Fill does. That
+holds down the pile of a towel or a fleece, and lays 3 times the thread under the design.
+
+- **Accepts:** one of `across` (Across the fills' rows), `lattice` (In 3 directions)
+- **Default:** `across`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 

@@ -315,7 +315,7 @@ After sewing, check:
 
 ## TS-13A — Pictures digitized automatically: neighbours and sewing order
 
-126.0 × 168.0 mm · 26105 stitches, 36 jumps, 35 trims, 19 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+126.0 × 168.0 mm · 23908 stitches, 36 jumps, 35 trims, 19 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -339,7 +339,7 @@ After sewing, check:
 
 ## TS-13B — Pictures digitized automatically: letters and lines traced as areas
 
-110.6 × 148.4 mm · 15930 stitches, 64 jumps, 63 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+110.6 × 148.4 mm · 14640 stitches, 64 jumps, 63 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -363,7 +363,7 @@ After sewing, check:
 
 ## TS-13C — Pictures digitized automatically: lines, and shapes in parts
 
-111.4 × 107.8 mm · 11486 stitches, 32 jumps, 31 trims, 9 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+111.4 × 107.8 mm · 10390 stitches, 31 jumps, 30 trims, 9 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -376,7 +376,7 @@ Threads: Flesh Pink, White, Black, Deep Gold, Red, Red (stop), Flesh Pink, White
 After sewing, check:
 
 - The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left to right: a face drawn with black lines, a star, and a balloon on its string.
-- The bottom half changes thread 4 times and jumps 14 times, the top half 4 and 18 times. The base layer's thread and pieces are among the top half's. How long does each half take?
+- The bottom half changes thread 4 times and jumps 14 times, the top half 4 and 17 times. The base layer's thread and pieces are among the top half's. How long does each half take?
 - The face's outline is 4 mm wide, its eyes' 2 mm and its brows' 1 mm. On the top half, the outlines sew as satin columns and the brows as triple runs. Do the columns cover the edges of the pink and white areas beside them? Do the triple runs look as wide as the brows are drawn?
 - The smile is 2 mm wide with round caps, and on the top half its column ends square, 1 mm past each end of its line, where the round cap ends. How far does its corner show past the round end?
 - The pupils are small rings, and the 3 hairs hairpins, which turn more tightly than they are wide: the top half fills them. How solid do they sew beside the columns round them?
@@ -386,7 +386,7 @@ After sewing, check:
 
 ## TS-13D — Pictures digitized automatically: a traced emblem
 
-89.0 × 100.0 mm · 21616 stitches, 23 jumps, 22 trims, 10 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+89.0 × 100.0 mm · 20259 stitches, 22 jumps, 21 trims, 10 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -399,7 +399,7 @@ Threads: White, Prussian Blue, Red, Deep Gold, White, Deep Gold, Red, Prussian B
 After sewing, check:
 
 - The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left to right: an emblem traced abutting and the same emblem traced stacked, each 42 mm wide, a navy square with a white disc, a red star on the disc and 3 gold bars, on white.
-- The bottom half changes thread 7 times and jumps 8 times, the top half 3 and 15 times. The base layer's thread and pieces are among the top half's. How long does each half take?
+- The bottom half changes thread 7 times and jumps 8 times, the top half 3 and 14 times. The base layer's thread and pieces are among the top half's. How long does each half take?
 - On the bottom half, the stacked emblem sews each colour whole under the colours drawn over it, the white under everything. How stiff is it beside the abutting one? On the top half, it sews only what shows of each colour: does it sew as the abutting emblem beside it?
 - On the top half, each navy square is one fill under the white disc and the bars, which sew after it, cut away 1 mm inside their edges. The white round each star, narrower than a satin column there, is a satin column round it. On the bottom half, the abutting emblem's navy sews round the disc and between the bars as drawn. Which sews better between the bars? Does fabric or a ridge show round the bars, the disc and the star?
 - On the top half, the gold bars sew as satin columns, 2.1 mm tall as drawn. Do they keep their height, and do their ends stay square?
@@ -407,7 +407,7 @@ After sewing, check:
 
 ## TS-13E — Pictures digitized automatically: a traced button
 
-24.0 × 108.4 mm · 6380 stitches, 10 jumps, 9 trims, 8 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+24.0 × 108.4 mm · 6011 stitches, 10 jumps, 9 trims, 8 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
