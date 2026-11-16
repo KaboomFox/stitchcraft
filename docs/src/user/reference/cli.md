@@ -13,6 +13,7 @@ Usage: stitch <COMMAND>
 
 Commands:
   plan        Plan a design, an SVG file or a VectorCraft document, for a machine and write the machine file, with a picture and a report if asked. A picture, a PNG or JPEG file, is traced with VectorCraft's command line first [alias: export]
+  lettering   Set a text in an embroidery font, a folder in Ink/Stitch's font format, plan it for a machine and write the machine file, with a picture if asked
   testsheet   Write a machine-checkpoint test sheet (docs/src/plan/machine-testing.md)
   inspect     Read a machine file (PES, PEC or DST) and describe it: size, stitches, threads, stitch lengths
   preview     Draw a machine file (PES, PEC or DST) as a picture of what it will sew (PNG)
@@ -105,6 +106,67 @@ Options:
 
       --cutout <FILE>
           Also write the cut-out (PNG), with the other files, to see what was kept
+
+  -h, --help
+          Print help (see a summary with '-h')
+```
+
+## stitch lettering
+
+```text
+Set a text in an embroidery font, a folder in Ink/Stitch's font format, plan it for a machine and write the machine file, with a picture if asked
+
+Usage: stitch lettering [OPTIONS] --font <FOLDER> --output <OUTPUT> <TEXT>
+
+Arguments:
+  <TEXT>
+          The text. A backslash and n (`\n`) ends a line
+
+Options:
+      --font <FOLDER>
+          The font: a folder in Ink/Stitch's font format, with its font.json and its glyph files
+
+  -o, --output <OUTPUT>
+          The machine file to write
+
+  -p, --profile <PROFILE>
+          The machine profile (see `stitch profiles`); by default the reference machine, which `stitch profiles` lists first
+
+      --format <FORMAT>
+          The file format; by default the output file's extension decides
+
+          Possible values:
+          - pes: Brother PES, version 1
+          - dst: Tajima DST
+
+      --preview <PREVIEW>
+          Also draw a picture of what the file will sew (PNG)
+
+      --scale <PERCENT>
+          The size of the text, in percent of the font's own size. A scale outside the font's `min_scale` to `max_scale` is set at the nearest the font sews at, with a warning
+
+      --height <MM>
+          The height of the text in millimetres, in place of --scale: the scale is the height over the font's size, the height of its reference capital
+
+      --align <left|center|right|block|letterspacing>
+          How the lines are aligned: from the left, centred, to the right, their words spread as wide as the widest line (block), or that with the letters of a one-word line spread too (letterspacing)
+          
+          [default: left]
+
+      --letter-spacing <MM>
+          Millimetres added between the letters of a word, or taken away when negative, at a scale of 100 percent
+          
+          [default: 0]
+
+      --word-spacing <MM>
+          Millimetres added between words, or taken away when negative, at a scale of 100 percent
+          
+          [default: 0]
+
+      --line-height <MM>
+          Millimetres added between lines, or taken away when negative, at a scale of 100 percent
+          
+          [default: 0]
 
   -h, --help
           Print help (see a summary with '-h')
