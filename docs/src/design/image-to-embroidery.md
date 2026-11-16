@@ -1557,7 +1557,7 @@ area kept wrongly and 3 % lost.
   | TS-13A | 8 | 0 | 18 | 9 |
   | TS-13B | 6 | 0 | 43 | 19 |
   | TS-13C | 9 | 4 | 13 | 5 |
-  | TS-13D | 1 | 0 | 11 | 4 |
+  | TS-13D | 1 | 0 | 11 | 3 |
   | TS-13E | 0 | 0 | 4 | 1 |
 
 - Ink/Stitch sews the TS-13 sheets too, every night ([conformance](conformance.md#l3--inkstitch-differential-nightly),
