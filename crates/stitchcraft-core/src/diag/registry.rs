@@ -1355,6 +1355,41 @@ macro_rules! codes {
         /// the text as point type on one line or more.
         TextNotLettered = "SC-W1111", Warning, "Text not sewn in its embroidery font";
 
+        /// A shape or a line named `stitch:text` marks text in a picture, and the traced shapes inside it were
+        /// replaced by lettering of the marker's text, as tall as they were.
+        ///
+        /// The message names the marker, counts the shapes taken out, and gives their height, the text, the
+        /// font and the lettering's height. Nothing needs doing.
+        TextInPictureLettered = "SC-I1112", Info, "Traced letters replaced by lettering";
+
+        /// A shape or a line named `stitch:text` marks text in a picture, and it wasn't used, or one of its
+        /// settings wasn't. A marker that isn't used is not sewn, and what lies inside it sews as it was
+        /// traced. The marker has no text, or encloses no area, or no shape lies wholly inside it. Or its
+        /// font isn't one this build of the plug-ins holds or `stitch` finds in its font folders, or doesn't
+        /// read, or draws none of the text's characters.
+        ///
+        /// The message says which. Draw the marker round every letter, name it `stitch:text` and the text,
+        /// and name a font that is there with `font=NAME` after the text in double quotes.
+        TextMarkerNotUsed = "SC-W1113", Warning, "Text marker not used";
+
+        /// Shapes lie more than half inside a text marker and cross its edge. Only what lies wholly inside a
+        /// marker is replaced, so they sew as they were traced, beside the lettering. They may be letters the
+        /// marker doesn't reach round, or letters the tracing joined to something outside it.
+        ///
+        /// The message counts them. Draw the marker round every letter of the text and round nothing else,
+        /// or part the joined shapes in the drawing first.
+        ShapeCrossesTextMarker = "SC-W1114", Warning, "Shape crosses a text marker's edge";
+
+        /// The lettering that replaced a picture's traced letters isn't their size. The letters are shorter
+        /// or taller than the font sews, and the text is set at the nearest height it does sew. Or the font's
+        /// letters are much narrower or wider than the traced ones, and spreading them by up to half their
+        /// height, or closing them up by a tenth, didn't make the text as wide.
+        ///
+        /// The message gives both heights and both widths. The lettering is centred on the traced letters,
+        /// and may reach past them or leave room. Choose a font that sews at the letters' height, or sew the
+        /// design larger.
+        LetteringUnlikeTracedLetters = "SC-W1115", Warning, "Lettering not the traced letters' size";
+
         /// `--subject` and `stitch cutout` cut a picture's subject out with 3 models, which `stitch` fetches with
         /// curl on first use into the folder `STITCHCRAFT_MODELS` names, or else `stitchcraft/models` in your
         /// cache folder, and checks before each use. A file couldn't be fetched, or isn't the one pinned. Nothing

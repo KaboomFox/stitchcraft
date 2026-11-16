@@ -329,6 +329,13 @@ pub struct ReadingArgs {
     /// style's (docs/src/user/reference/params/auto.md).
     #[arg(long = "set", value_name = "KEY=VALUE", value_parser = rule)]
     pub set: Vec<(String, String)>,
+    /// Sew the traced letters inside an area as lettering in an embroidery font, as tall as they are: the
+    /// area's LEFT,TOP,WIDTH,HEIGHT in percent of the box round the design's shapes, which is a traced
+    /// picture's own box, then a colon and the text, such as 10,40,80,20:MATCH. A font is named after the
+    /// text in double quotes, as "MATCH" font=NAME, and is found in the folder STITCHCRAFT_FONTS names
+    /// (docs/src/user/how-to/letter-a-picture.md). May be given several times.
+    #[arg(long = "text", value_name = "AREA:TEXT", value_parser = crate::text::mark)]
+    pub text: Vec<(String, String)>,
 }
 
 impl ReadingArgs {
@@ -342,6 +349,8 @@ impl ReadingArgs {
                 rules.push((key, value));
             }
         }
+        // The marks of `--text` travel with the rules, every one of them, under the marker's name.
+        rules.extend(self.text.iter().cloned());
         rules
     }
 }

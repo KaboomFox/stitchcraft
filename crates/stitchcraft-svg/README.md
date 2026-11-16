@@ -72,6 +72,11 @@ chooses a glyph for each character and places the glyphs by the font's advances 
 asked for. The scale stays within the heights the font sews at. In a font whose `auto_satin` is on, the
 engine's routing joins the text's satin columns. The result is a design, which hosts plan as any other.
 
+`stitchcraft_svg::lettering::pictures` puts lettering where a picture's traced text is (`src/lettering/pictures.rs`,
+`REQ-AUTO-063` to `REQ-AUTO-066`). In a design read by any reader, what lies wholly inside an element named
+`stitch:text` is taken out, and the text is set there as tall as it was. Nothing is taken out before the
+lettering is set.
+
 Style sheets set properties as in a viewer (`src/sheet.rs`, `REQ-SVG-006`). Their rules with element,
 class and id selectors, the ones Illustrator and CorelDRAW write, are read, in the order of CSS's cascade.
 One `SC-W0802` names the other selectors and the at-rules.

@@ -207,3 +207,66 @@ fn req_font_021_stitch_finds_a_document_s_font_in_the_folder_the_variable_names(
     assert!(!none.status.success());
     assert!(text(&none.stderr).contains("warning SC-W1111") && text(&none.stderr).contains("No embroidery font is here."), "{}", text(&none.stderr));
 }
+
+/// REQ-CLI-020, REQ-SVG-016: `stitch plan --text` and a shape labelled `stitch:text` in an SVG file sew the
+/// letters inside them as lettering in a font of the folder `STITCHCRAFT_FONTS` names, and a bundle replays
+/// the marks.
+#[test]
+fn req_cli_020_stitch_plan_sews_marked_letters_as_lettering() {
+    let dir = folder("text");
+    let glyphs = r##"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" width="100mm" height="100mm" viewBox="0 0 100 100"><sodipodi:namedview id="base"><sodipodi:guide position="0,30" orientation="0,1" inkscape:label="baseline"/></sodipodi:namedview><g inkscape:groupmode="layer" inkscape:label="GlyphLayer-a"><path id="pa" d="M 0,60 L 4,70" style="fill:none;stroke:#000000;stroke-width:0.4"/></g></svg>"##;
+    std::fs::create_dir_all(dir.join("fonts/small_font")).unwrap();
+    std::fs::write(dir.join("fonts/small_font/font.json"), r#"{"name": "Test", "size": 10, "min_scale": 0.5, "max_scale": 4}"#).unwrap();
+    std::fs::write(dir.join("fonts/small_font/ltr.svg"), glyphs).unwrap();
+    let picture = |marker: &str| {
+        format!(
+            r##"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="60mm" height="40mm" viewBox="0 0 60 40"><rect id="field" width="60" height="40" fill="#ffffff"/><rect id="l1" x="10" y="10" width="8" height="20" fill="#ff0000"/>{marker}</svg>"##
+        )
+    };
+    std::fs::write(dir.join("plain.svg"), picture("")).unwrap();
+    std::fs::write(
+        dir.join("marked.svg"),
+        picture(r##"<rect id="m" inkscape:label="stitch:text a" x="5" y="5" width="20" height="30" fill="none" stroke="#0000ff"/>"##),
+    )
+    .unwrap();
+    let run = |args: &[&str]| {
+        Command::new(env!("CARGO_BIN_EXE_stitch")).args(args).current_dir(&dir).env("STITCHCRAFT_FONTS", dir.join("fonts")).output().unwrap()
+    };
+    let said = "replaced by the text \"a\" in the font `small_font`, 20.0 mm tall.";
+    let marked = run(&["plan", "marked.svg", "--auto", "-o", "marked.pes"]);
+    assert!(
+        marked.status.success()
+            && text(&marked.stderr).contains(&format!("info SC-I1112: The text marker `svg:m:stroke`: 1 traced outlines, 20.0 mm tall, are {said}")),
+        "{}",
+        text(&marked.stderr)
+    );
+    let option = run(&["plan", "plain.svg", "--auto", "--text", "0,0,50,100:a", "-o", "option.pes"]);
+    assert!(
+        option.status.success()
+            && text(&option.stderr).contains(&format!("info SC-I1112: The text marker `text-1`: 1 traced outlines, 20.0 mm tall, are {said}")),
+        "{}",
+        text(&option.stderr)
+    );
+    // Marked either way, the picture sews the same stitches.
+    let stitches =
+        |file: &str| text(&run(&["inspect", file]).stdout).lines().filter(|line| line.contains("stitches")).map(str::to_string).collect::<Vec<_>>();
+    assert!(
+        !stitches("marked.pes").is_empty() && stitches("marked.pes") == stitches("option.pes"),
+        "{:?} {:?}",
+        stitches("marked.pes"),
+        stitches("option.pes")
+    );
+    // Without the mark the traced letter sews, as a shape: another count of stitches.
+    assert!(run(&["plan", "plain.svg", "--auto", "-o", "plain.pes"]).status.success());
+    assert_ne!(stitches("plain.pes"), stitches("option.pes"));
+    // A mark that doesn't read is refused before anything is read.
+    let refused = run(&["plan", "plain.svg", "--auto", "--text", "0,0,150,100:a", "-o", "refused.pes"]);
+    assert_eq!(refused.status.code(), Some(2));
+    assert!(text(&refused.stderr).contains("isn't LEFT,TOP,WIDTH,HEIGHT:TEXT") && !dir.join("refused.pes").exists(), "{}", text(&refused.stderr));
+    // A bundle keeps the mark with the rules' settings, and its replay sews the lettering again.
+    let bundled = run(&["bug-report", "plain.svg", "--auto", "--text", "0,0,50,100:a", "-o", "text.bug-report.json"]);
+    assert!(bundled.status.success(), "{}", text(&bundled.stderr));
+    assert!(std::fs::read_to_string(dir.join("text.bug-report.json")).unwrap().contains("0,0,50,100:a"));
+    let replayed = run(&["bug-report", "--replay", "text.bug-report.json"]);
+    assert!(replayed.status.success(), "{} {}", text(&replayed.stdout), text(&replayed.stderr));
+}
