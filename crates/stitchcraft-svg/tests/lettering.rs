@@ -411,12 +411,12 @@ fn req_font_013_auto_satin_routes_the_texts_columns_and_each_piece_sews_with_its
     // The glyphs lie 8 mm apart, and no piece of one reaches the next.
     let glyph_of = |index: usize| {
         let bounds = stitchcraft_core::Rect::around(routed.design.elements()[index].shape.path().points()).unwrap();
-        (bounds.center().x() / 8.0).floor() as usize
+        (bounds.center().x() / 8.0).floor()
     };
-    let glyphs: Vec<usize> = (0..order.len()).map(glyph_of).collect();
+    let glyphs: Vec<f64> = (0..order.len()).map(glyph_of).collect();
     assert!(glyphs.windows(2).all(|pair| pair[0] <= pair[1]), "{glyphs:?}");
-    assert!(fill > 0 && glyphs[fill - 1] == 0 && glyphs[fill] == 1, "{order:?} {glyphs:?}");
-    assert_eq!(*glyphs.last().unwrap(), 2);
+    assert!(fill > 0 && glyphs[fill - 1] == 0.0 && glyphs[fill] == 1.0, "{order:?} {glyphs:?}");
+    assert_eq!(*glyphs.last().unwrap(), 2.0);
     // No trim is added: no element is set to trim that the glyphs don't set.
     assert!(routed.design.elements().iter().chain(drawn.design.elements()).all(|element| element.params.get("trim_after").is_none()));
     // A text without a column stays, and nothing is said of it.

@@ -21,6 +21,7 @@
     - [Route running stitches](user/how-to/route-running-stitches.md)
     - [Sew underlays first](user/how-to/sew-underlays-first.md)
         - [Cut a photo's subject out](user/how-to/cut-out-a-photos-subject.md)
+    - [Set text in an embroidery font](user/how-to/set-text-in-a-font.md)
     - [Report a bug](user/how-to/report-a-bug.md)
   - [Stitch types](user/stitches/README.md)
     - [Running stitch](user/stitches/running.md)
