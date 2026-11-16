@@ -134,6 +134,15 @@ From M14.4, sew a name typed in VectorCraft on the PE800. Type 2 lines as point 
 - Does the text sew where it stands in the document, beside a shape drawn next to it?
 - Is 7.6 mm the height you expected from the dialog, without a picture of the font on the canvas?
 
+From M14.5, sew a lettered patch twice on the PE800. The first has its word traced as shapes. The second
+is the same picture planned with `--text` round the word, in Ink/Stitch Small Font
+([letter a picture](../user/how-to/letter-a-picture.md)).
+
+- Which word reads better at 10 mm, and which at 6 mm and below?
+- Is the field whole under the lettering, with no fabric showing round a letter?
+- Does the lettering stand where the picture has the word, and is it as tall?
+- Are Small Font's strokes too light beside the drawn letters?
+
 MC-8 also sews one of the owner's traced dogs, `docs/fixtures/traced-dog-running-9.vectorcraft`, 100 mm
 tall: `stitch plan docs/fixtures/traced-dog-running-9.vectorcraft --auto -o dog.pes`. Does the fur read as
 fur, the face and the eyes as hers, and do its 83 jump threads, which the PE800 doesn't cut, take long to

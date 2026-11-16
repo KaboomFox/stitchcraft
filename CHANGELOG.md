@@ -5,6 +5,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M14.5: text in a picture sews as lettering (`REQ-AUTO-063` to `REQ-AUTO-066`, `REQ-VC-028`,
+  `REQ-SVG-016`, `REQ-CLI-020`).
+  - A shape named `stitch:text` and a text, in a VectorCraft document or an SVG file, marks the text of a
+    traced picture. The traced outlines inside it are taken out, and the text is set there in an
+    embroidery font, as tall as the letters were and in their thread. The holes the letters left in the
+    background are closed. The background then sews whole under the lettering.
+  - A line named so, drawn through letters on an arc with a stroke that covers them, sets the text along
+    the arc.
+  - `stitch plan` and `stitch export` take `--text LEFT,TOP,WIDTH,HEIGHT:TEXT`, an area in percent of the
+    picture, for a picture traced by the command line.
+  - New diagnostics: `SC-I1112` says what was replaced, `SC-W1113` names a marker that isn't used,
+    `SC-W1114` counts shapes that cross a marker's edge, and `SC-W1115` gives the sizes when the lettering
+    isn't the traced letters' size.
+  - Public API: `stitchcraft_svg::lettering::pictures` is new, `stitchcraft_vectorcraft::lettering::found`
+    asks a host's fonts for a marker's font, and `stitchcraft_core::Code` has the 4 codes.
+  - Golden files stay as they are: a design without a marker reads as before.
 - M14.4: a text object of a VectorCraft document sews in an embroidery font (`REQ-VC-026`, `REQ-VC-027`,
   `REQ-FONT-021`).
   - StitchCraft Lettering is a new live effect for text objects. Its dialog has the font's name and

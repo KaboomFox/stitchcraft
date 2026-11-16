@@ -1,6 +1,6 @@
 # Image to embroidery
 
-<!-- implements: crates/stitchcraft-engine/src/auto/**, crates/stitchcraft-engine/src/moves.rs, crates/stitchcraft-engine/src/moves/**, crates/stitchcraft-plan/src/thickness/**, apps/stitchcraft-cli/src/commands/palette.rs, apps/stitchcraft-cli/src/trace.rs, apps/stitchcraft-cutout/src/**, apps/stitchcraft-cli/src/subject.rs, apps/stitchcraft-cli/src/subject/**, apps/stitchcraft-cli/src/commands/cutout.rs -->
+<!-- implements: crates/stitchcraft-engine/src/auto/**, crates/stitchcraft-engine/src/moves.rs, crates/stitchcraft-engine/src/moves/**, crates/stitchcraft-plan/src/thickness/**, apps/stitchcraft-cli/src/commands/palette.rs, apps/stitchcraft-cli/src/trace.rs, apps/stitchcraft-cutout/src/**, apps/stitchcraft-cli/src/subject.rs, apps/stitchcraft-cli/src/subject/**, apps/stitchcraft-cli/src/commands/cutout.rs, crates/stitchcraft-svg/src/lettering/pictures.rs, crates/stitchcraft-svg/src/lettering/pictures/**, apps/stitchcraft-cli/src/text.rs -->
 
 Automatic digitizing makes a design that sews well from a picture of flat colours, such as a logo, clip
 art or a drawing, once it is traced into shapes. Settings on the shapes are optional. StitchCraft chooses
@@ -1472,11 +1472,166 @@ trace, or use `--auto`, which works without it.
 
 ## Text in pictures
 
-Text traced from a picture is shapes, and the width rules sew its letters' strokes as satin columns and
-running stitches. TS-13 sews block letters from 4 to 15 mm tall to find the smallest that reads well.
-Smaller letters need lettering in an embroidery font, made to sew at small sizes. M14.5 replaces the
-traced letters inside a marked area with lettering of the marker's text, as tall as they were. Spike M14.6
-looks for a way to find and read the text without a marker.
+Text traced from a picture is shapes, and the rules for shapes sew its letters: strokes as satin columns,
+small parts as running stitches. Small letters come out ragged, and neighbours that the tracing joined sew
+as one blob. An embroidery font is drawn for the needle, and lettering sets text in one
+([fonts](fonts.md#lettering)). M14.5 puts lettering where a picture's text is. A person marks the text and
+says what it reads, since nothing here reads a picture. Spike M14.6 looks for a way to find and read the
+text without a marker.
+
+The pass is `stitchcraft_svg::lettering::pictures`. It works on a design once a reader has made it and
+before anything is digitized (`REQ-AUTO-063` to `REQ-AUTO-066`). What is left of the traced shapes is then
+digitized as if the letters had never been traced, with its overlaps and its base layer.
+
+### The marker
+
+A marker is a shape named `stitch:text` and the text, such as `stitch:text SAMPLE PATCH`. The name is an
+object's name in VectorCraft's Layers panel, and an object's label in an SVG file, Inkscape's
+`inkscape:label`. Both readers already give a shape's name to its element, so one pass serves both. The
+marker needs a fill or a stroke, since a reader is given only objects that paint. It is never sewn.
+
+| The marker is | Its area | The text |
+|---|---|---|
+| a closed shape, such as a rectangle | what its outline encloses | lies level across it |
+| an open line with a stroke | what lies within half the stroke's width of the line, between its ends | follows the line, the letters' tops to the left of the way the line is drawn |
+
+A line is for text on an arc, as round a badge. It is drawn through the middle of the letters in the
+direction the text reads, with a stroke wide enough to cover them. The line says which way the letters
+stand, which the letters' shapes alone don't say. A straight line drawn at a slant sets slanted text the
+same way. Finding the arc from the letters without a line was left out: it is a guess where a drawn line
+is not, and M14.6 decides whether text is found without help at all.
+
+A font other than the default, and lettering's trims and sorted colours, follow the text in double quotes:
+`stitch:text "SAMPLE PATCH" font=geneva_simple trim=word`. The font is named by its folder, as a Lettering
+effect names one. It is found where the reader's fonts are
+([lettering in VectorCraft](vectorcraft-integration.md#lettering)). The default is the font built into the
+plug-ins. A setting that doesn't read is named with `SC-W1113`, and the marker is still used. The scale and
+the spacing are found from the traced letters, so a marker doesn't set them.
+
+From the command line, `--text LEFT,TOP,WIDTH,HEIGHT:TEXT` marks a rectangle (`REQ-CLI-020`). The 4 numbers
+are percent of the box round the design's shapes. A traced picture's background is traced too, so that box
+is the picture, and a share of it can be read off the picture whatever size it sews at:
+
+```sh
+stitch plan patch.png -o patch.pes --text '20,35,60,30:MATCH'
+```
+
+The text after the colon is written as a marker's name writes it. An option marks level text only. For
+text on an arc, `--traced` writes the traced document, a line is drawn on it in VectorCraft, and the
+document is planned. A picture with a transparent margin measures from what was traced, not from the
+picture's own edge.
+
+### Which shapes are the letters
+
+Every subpath that lies wholly inside the marker is taken out, of every element. A subpath is one closed
+outline. Image Trace keeps all the areas of one colour in one compound path, so a letter is a subpath of
+its colour's path, not an object, and the hole it leaves in the colour round it is a subpath of that
+colour's path. Taking both out removes the letter and closes the hole. An island of the background's
+colour inside a letter, its counter, goes the same way. What is left of the background is its own outline,
+so it sews whole under the lettering. A picture drawn in layers has no holes to close, and its letters are
+taken out as whole objects.
+
+So the background is told from the letters by reaching outside the marker, and by nothing else. Colours
+are not compared, since a traced edge has specks of other colours along it.
+
+A subpath that crosses the marker's edge stays as it was traced. When more than half of its points lie
+inside, it is probably a letter partly outside the marker, or a letter the tracing joined to something
+outside, and `SC-W1114` counts those. Points are those of the outline flattened within 0.05 mm, which is a
+tenth of the narrowest stroke an embroidery font sews.
+
+### Size and place
+
+What was taken out is measured along and across the line the text follows. A closed marker's line is
+level, so along is across the page and across is up. The text is set once at the font's own size and
+measured the same way. Then:
+
+- **Height.** The scale, to a tenth of a percent, makes the box of what the text sews as tall as the box
+  of what was taken out. The box holds parts that reach below the baseline, so a `p` in the text is
+  measured with its tail.
+- **Baseline.** The text's box is centred on the traced letters' box across the line. The baseline lies
+  as far above the box's bottom as the text's lowest point lies below the baseline.
+- **Width.** Every gap between 2 glyphs, a gap between words too, is widened or narrowed by one amount
+  until the text is as wide as the traced letters. The amount is at most half the letters' height wider
+  and a tenth of it narrower. Past half a height a word reads as separate letters. Closer than a tenth,
+  the strokes of neighbours sew over each other. The text is then centred on the traced letters along
+  the line.
+- **Along an arc.** The baseline is the marker's line moved sideways to the baseline's distance, each
+  corner of it pushed out along the line that halves the corner. Lettering along a path then places each
+  glyph on it and turns it whole ([along a path](fonts.md#along-a-path)).
+
+The scale stays within the heights the font sews at. Letters shorter or taller than that are set at the
+nearest height the font sews, centred on the traced letters, and 2 warnings say so: lettering's own
+`SC-W1106`, with the font's range, and `SC-W1115`, with both heights and both widths in millimetres.
+`SC-W1115` is also said when the text ends up more than a tenth of the letters' height from their width.
+The traced letters are not kept in such a case. Text at a height the font sews well reads better than a
+blob, and the picture shows the difference.
+
+A font that sews in one thread takes the thread that painted the most of what was taken out. A hole
+counts against its thread, so the background, whose holes are as large as the letters, never wins. A font
+of several colours keeps its own. The lettering's elements sew after the last element a subpath was taken
+from, which puts them on the background. `SC-I1112` names each marker with the count of outlines taken
+out, both heights, the text and the font.
+
+### Markers that can't be used
+
+Nothing is taken out before the lettering is set. A marker without text, one that encloses no area, one
+with nothing wholly inside it, and one whose font isn't found, doesn't read or draws none of the text's
+characters are each named by `SC-W1113` with the reason. The traced shapes then sew as they were, so a
+design is never left with a hole and no text.
+
+### What it sews
+
+Measured as `stitch plan --auto` plans each picture, in Ink/Stitch Small Font, which sews from 3.6 to
+15.2 mm. The thickness numbers are M13.29's
+([how thick a design sews](#how-thick-a-design-sews)):
+
+| Picture | Letters | Sewn as | Stitches | Jumps | Thickest spot, fills | At 3 fills or more, mm² |
+|---|---|---|---|---|---|---|
+| The lettered patch | 10 mm | traced | 4,669 | 10 | 5.5 | 150.5 |
+| | | lettering | 4,615 | 6 | 5.1 | 128.5 |
+| TS-13B's 4 words | 15, 10, 6 and 4 mm | traced | 2,941 | 27 | 5.1 | 32.0 |
+| | | lettering | 3,317 | 12 | under 3 | 0 |
+| The sample emblem, 100 mm, traced by VectorCraft 0.22 | 6.3 mm, on 2 arcs | traced | 25,934 | 36 | 7.5 | 681.5 |
+| | | lettering | 25,138 | 24 | 6.4 | 614.2 |
+
+The thickness doesn't get worse. Lettering lies on a whole background where traced letters were stacked
+columns that overlap at their joints. The background has no overlap to reach under a letter any more.
+
+Small Font's strokes are thinner than the bold block letters of TS-13B. At 15 and 10 mm the traced block
+letters sew well as they are, and the lettering looks lighter than the picture. At 6 mm and below, and for
+the emblem's letters, the lettering is the one that reads. A font with bolder strokes would match bold
+letters, and one font is built in today.
+
+### Decisions for the owner
+
+Each has a recommendation, which the step took.
+
+- **A name marks the text.** The marker is a shape or a line with a name, as every other marker in a
+  VectorCraft document is. A dialog of its own would need a filter, and a filter can't keep a shape's
+  settings before VectorCraft 0.15. Recommended: the name.
+- **A line through the letters for an arc.** The other choice is to find the arc from the letters, which
+  can't tell which way they stand. Recommended: the drawn line.
+- **Letters no font sews as tall** are set at the nearest height the font sews, with 2 warnings. The other
+  choice leaves them traced. Recommended: lettering, since small traced letters are the ones that sew
+  worst.
+- **The limits of the spacing**, half a height wider and a tenth narrower, are starting values that no
+  sew-out has confirmed. MC-10 sews a patch both ways.
+- **`--text` in percent of the design's box.** Pixels of the picture are the other choice, and need the
+  picture's size, which `stitch` doesn't read today. Recommended: percent.
+- **A bolder font built in.** Small Font is the one font built into the plug-ins
+  ([fonts](fonts.md#decisions-for-the-owner)), and it is lighter than bold drawn letters. A second font
+  with bolder strokes would serve badges. Recommended: choose one once the sew-out shows how Small Font
+  looks on a patch.
+
+### What isn't built
+
+- The Auto effect's preview in VectorCraft still draws the traced letters. A live effect is given one
+  object and no name ([RFC](rfc-vectorcraft-abi-v2.md), P6). The exported file and its preview picture
+  have the lettering.
+- A marker has one line of text. 2 lines take 2 markers.
+- A font is chosen by the person. No font is matched to the letters' weight or style.
+- The emblem's numbers are from a document traced earlier, kept outside the repository. A case in the
+  repository waits for a traced picture with lettered arcs among the fixtures.
 
 ## Pictures from the command line
 

@@ -119,9 +119,8 @@ impl Line {
             let (qx, qy) = (a.0 + along * ux, a.1 + along * uy);
             let apart = math::hypot(p.0 - qx, p.1 - qy);
             if apart < best.0 {
-                // To the left of the way the segment runs, as a picture shows it.
-                let left = dx * uy - dy * ux;
-                best = (apart, from + along, if left < 0.0 { -apart } else { apart });
+                // To the left of the way the segment runs, as a picture shows it, the distance is positive.
+                best = (apart, from + along, apart.copysign(dx * uy - dy * ux));
             }
         }
         (best.1, best.2)
@@ -229,8 +228,9 @@ mod tests {
         assert!(below.len() == 2 && near(below[0], (-4.0, 1.0)) && near(below[1], (6.0, 1.0)), "{below:?}");
         let past = line.beside(0.0, 12.0, 25.0);
         assert!(past.len() == 2 && near(past[0], (10.0, 2.0)) && near(past[1], (10.0, 15.0)), "{past:?}");
-        // A corner exactly at an end asked for isn't given twice.
+        // A corner exactly at an end asked for isn't given twice, and is the start of the stretch after it.
         assert_eq!(line.beside(0.0, 10.0, 12.0).len(), 2);
+        assert!(near(line.beside(1.0, 10.0, 12.0)[0], (11.0, 0.0)));
         assert_eq!(line.beside(0.0, 5.0, 10.0).len(), 2);
         // A line that turns straight back keeps the later stretch's side.
         let back = Line::of(&[(0.0, 0.0), (10.0, 0.0), (0.0, 0.0)]).unwrap();
