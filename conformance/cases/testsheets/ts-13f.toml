@@ -9,6 +9,6 @@ sheet = "TS-13F"
 profile = "brother-pe800-5x7"
 
 [expect]
-size_mm = [0.0, 0.0]
+size_mm = [112.0, 57.0]
 diagnostics = []
 golden = ["golden/testsheets/TS-13F.pes"]

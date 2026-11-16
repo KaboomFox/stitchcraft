@@ -259,7 +259,11 @@ fn req_auto_063_digitized_dogs_sew_thick_on_the_area_recorded() {
 /// threads, which no order betters. Each change is a rethread by hand on a machine with one needle. Before
 /// M13.22 the dogs changed thread 12, 22, 16 and 28 times. Since M13.30 fills the parts whose one satin
 /// column would crowd its stitches (REQ-AUTO-064), the dog on turf in 9 threads changes thread 13 times
-/// where it changed 12: which of its new fills costs the change was not traced.
+/// where it changed 12. Traced on 2026-11-16 by sewing each of its 19 crowded parts as a column again: with
+/// the parts of the grey shapes `vc:23` and `vc:24` as columns it changes thread 12 times, with 2 parts of a
+/// tan and a pale grey shape too, and with no one part. A line sews after the fill it borders (rule 2 of the
+/// sewing order), and nothing holds a line back for a column, so each new fill makes the lines of other
+/// threads beside it wait for its thread. The search is exact: within the rules, 13 is the fewest.
 const CHANGES: [(&str, usize, usize); 4] = [("dog-on-turf-6", 8, 5), ("dog-on-turf-9", 13, 8), ("dog-running-6", 8, 5), ("dog-running-9", 12, 8)];
 
 #[test]
