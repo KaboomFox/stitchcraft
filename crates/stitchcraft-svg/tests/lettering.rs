@@ -235,6 +235,8 @@ fn req_font_011_lines_align_by_the_width_of_their_glyphs_boxes() {
     // With letter spacing, the 3 glyphs of `aba`, 16.5 mm wide, take 6.25 mm in each gap, and a line of one glyph stays.
     near(&aligned("ab a b\naba\nb", Align::LetterSpacing), &[0.0, 6.0, 15.0, 23.0, 0.0, 12.25, 25.0, 0.0]);
     near(&aligned("ab a b\na a a", Align::LetterSpacing), &[0.0, 6.0, 15.0, 23.0, 0.0, 12.5, 25.0]);
+    // A line of 2 words is a block's, whatever its glyphs number: `ab a`, 19 mm wide, has one gap of 10 mm.
+    near(&aligned("ab a b\nab a", Align::LetterSpacing), &[0.0, 6.0, 15.0, 23.0, 0.0, 6.0, 25.0]);
     // The width is from the leftmost box, which a negative spacing can put after the first glyph.
     let crossed = Lettering { letter_spacing: -10.0, align: Align::Right, ..Lettering::default() };
     near(&lefts(&set(&font, "ab", &crossed)), &[-8.0, -12.0]);
