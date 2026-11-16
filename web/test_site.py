@@ -182,6 +182,10 @@ class BuildTest(unittest.TestCase):
             for name in build.EDITOR_INPUTS:
                 (root / name).parent.mkdir(parents=True, exist_ok=True)
                 (root / name).write_text(name)
+            tools = root / build.TOOLS
+            tools.parent.mkdir(parents=True)
+            listed = '  [mdbook]=0.5.4\n  [trunk]=0.22.1\n  [wasm-bindgen]=0.2.129\n  [wasm-opt]=version_131\n'
+            tools.write_text(listed)
             key = build.editor_key(pins, root)
             self.assertRegex(key, r'^[0-9a-f]{64}$')
             self.assertEqual(build.editor_key(pins, root), key)
@@ -194,9 +198,19 @@ class BuildTest(unittest.TestCase):
                 self.assertNotEqual(build.editor_key(pins, root), key, new)
                 pins.write_text(pins.read_text().replace(new, old))
             self.assertEqual(build.editor_key(pins, root), key)
-        # The compiler, the tools' versions and this script are among the files.
-        self.assertEqual(set(build.EDITOR_INPUTS), {'rust-toolchain.toml', '.github/actions/tools/action.yml', 'web/build.py'})
+            # A version of a tool that builds the editor names another editor, and another tool's doesn't.
+            for old, new in (('0.22.1', '0.22.2'), ('0.2.129', '0.2.130'), ('version_131', 'version_132')):
+                tools.write_text(listed.replace(old, new))
+                self.assertNotEqual(build.editor_key(pins, root), key, new)
+            tools.write_text(listed.replace('0.5.4', '0.5.5') + '  [cargo-nextest]=0.9.151\n')
+            self.assertEqual(build.editor_key(pins, root), key)
+            tools.write_text(listed.replace('  [trunk]=0.22.1\n', ''))
+            with self.assertRaises(KeyError):
+                build.editor_key(pins, root)
+        # The compiler and this script are among the files, and the workflow's action pins each tool.
+        self.assertEqual(set(build.EDITOR_INPUTS), {'rust-toolchain.toml', 'web/build.py'})
         self.assertTrue(all((build.ROOT / name).is_file() for name in build.EDITOR_INPUTS))
+        self.assertRegex(build.editor_key(), r'^[0-9a-f]{64}$')
 
     def test_an_editor_is_kept_whole_under_its_key_and_used_under_no_other(self):
         with tempfile.TemporaryDirectory() as temp:

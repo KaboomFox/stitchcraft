@@ -1097,8 +1097,8 @@ wasm-bindgen and wasm-opt, each checked against a checksum kept in the repositor
 
 The editor is built once for each state of what it is built from. `web/build.py` keeps the built editor
 in `target/web/editor` under a key. The key is a SHA-256 of 4 things: the release as
-`compat/vectorcraft.toml` records it, `rust-toolchain.toml`, the tools' versions in
-`.github/actions/tools/action.yml`, and `web/build.py` itself. A build that finds an editor under its key copies it and builds only the plug-ins, which are
+`compat/vectorcraft.toml` records it, `rust-toolchain.toml`, the versions of Trunk, wasm-bindgen and
+wasm-opt in `.github/actions/tools/action.yml`, and `web/build.py` itself. A build that finds an editor under its key copies it and builds only the plug-ins, which are
 always this revision's. `web.yml` keeps that folder in the Actions cache under the same key, with the
 runner's system before it, and restores no other key. So a pull request that changes the release, the
 compiler, a tool's version or the build script builds the editor, and every other round takes it from the
