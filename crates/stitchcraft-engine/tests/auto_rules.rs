@@ -691,14 +691,16 @@ fn req_auto_030_unlike_subjects_sew_by_the_same_rules() {
         ("the running dog's nose, blaze and fur", fired(&dog)),
         ("the traced pear", fired(&pictures::pear())),
         ("TS-13C's face, star and balloon", fired(&pictures::sheet("TS-13C").0)),
-        ("TS-13D's emblems and buttons", fired(&pictures::sheet("TS-13D").0)),
+        ("TS-13D's emblems", fired(&pictures::sheet("TS-13D").0)),
+        ("TS-13E's buttons", fired(&pictures::sheet("TS-13E").0)),
         ("an ink drawing", fired(&ink_drawing())),
     ];
     let recorded = [
         BTreeMap::from([("area", 2), ("column", 2), ("compact", 2), ("line", 1), ("uneven", 4)]),
         BTreeMap::from([("area", 3), ("column", 3), ("uneven", 2)]),
         BTreeMap::from([("area", 5), ("column", 11), ("line", 1)]),
-        BTreeMap::from([("area", 6), ("column", 10), ("compact", 14), ("refused", 2)]),
+        BTreeMap::from([("area", 4), ("column", 8), ("refused", 2)]),
+        BTreeMap::from([("area", 2), ("column", 2), ("compact", 14)]),
         BTreeMap::from([("area", 1), ("column", 9), ("compact", 1), ("line", 6), ("uneven", 1)]),
     ];
     let found: Vec<(&str, &BTreeMap<&str, usize>)> = subjects.iter().map(|(name, fired)| (*name, fired)).collect();

@@ -470,18 +470,30 @@ pub static SHEETS: &[TestSheet] = &[
     },
     TestSheet {
         id: "TS-13D",
-        title: "Pictures digitized automatically: pictures traced in layers",
+        title: "Pictures digitized automatically: a traced emblem",
         checks: &[
-            "The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left to right: an emblem traced abutting and the same emblem traced stacked, each 42 mm wide, a navy square with a white disc, a red star on the disc and 3 gold bars, on white; and a button traced abutting above the same button traced stacked, a yellow disc 19 mm across with 7 orange dots, in a black rim.",
-            "The bottom half changes thread 13 times and jumps 12 times, the top half 6 and 23 times. The base layer's thread and pieces are among the top half's. How long does each half take?",
+            "The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left to right: an emblem traced abutting and the same emblem traced stacked, each 42 mm wide, a navy square with a white disc, a red star on the disc and 3 gold bars, on white.",
+            "The bottom half changes thread 7 times and jumps 8 times, the top half 3 and 15 times. The base layer's thread and pieces are among the top half's. How long does each half take?",
             "On the bottom half, the stacked emblem sews each colour whole under the colours drawn over it, the white under everything. How stiff is it beside the abutting one? On the top half, it sews only what shows of each colour: does it sew as the abutting emblem beside it?",
             "On the top half, each navy square is one fill under the white disc and the bars, which sew after it, cut away 1 mm inside their edges. The white round each star, narrower than a satin column there, is a satin column round it. On the bottom half, the abutting emblem's navy sews round the disc and between the bars as drawn. Which sews better between the bars? Does fabric or a ridge show round the bars, the disc and the star?",
             "On the top half, the gold bars sew as satin columns, 2.1 mm tall as drawn. Do they keep their height, and do their ends stay square?",
-            "On the top half, each button's yellow is one fill under the dots, which sew after it, and its black rim a satin column round it. On the bottom half, the abutting button's yellow sews round the dots as drawn. Which sews better between the dots? Does the rim cover the yellow's edge?",
             ts13::JUMP_THREADS,
         ],
         profile: REFERENCE,
         drawn: Drawn::Designed(ts13::layers, &ts13::LAYERS_SAY),
+    },
+    TestSheet {
+        id: "TS-13E",
+        title: "Pictures digitized automatically: a traced button",
+        checks: &[
+            "The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. A button traced abutting above the same button traced stacked, a yellow disc 19 mm across with 7 orange dots, in a black rim.",
+            "The bottom half changes thread 5 times and jumps 4 times, the top half 2 and 6 times. The base layer's thread and pieces are among the top half's. How long does each half take?",
+            "On the bottom half, the stacked button sews its yellow whole under the dots and the rim. How stiff is it beside the abutting one? On the top half, it sews only what shows of each colour: does it sew as the abutting button above it?",
+            "On the top half, each button's yellow is one fill under the dots, which sew after it, and its black rim a satin column round it. On the bottom half, the abutting button's yellow sews round the dots as drawn. Which sews better between the dots? Does the rim cover the yellow's edge?",
+            ts13::JUMP_THREADS,
+        ],
+        profile: REFERENCE,
+        drawn: Drawn::Designed(ts13::buttons, &ts13::BUTTONS_SAY),
     },
     TestSheet {
         id: "TS-16",
@@ -590,14 +602,14 @@ mod tests {
             designed,
             [
                 "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-11C", "TS-13A", "TS-13B", "TS-13C",
-                "TS-13D", "TS-16", "TS-17A", "TS-17B", "TS-17C"
+                "TS-13D", "TS-13E", "TS-16", "TS-17A", "TS-17B", "TS-17C"
             ]
         );
         // A host moves each by whole millimetres, but TS-17A by multiples of 6 mm, which keep its crosses' cells.
         assert_eq!(SHEETS.iter().filter(|sheet| sheet.step() != 1.0).map(|sheet| (sheet.id, sheet.step())).collect::<Vec<_>>(), [("TS-17A", 6.0)]);
         // The TS-13 sheets' shapes are digitized automatically, and no other sheet's are.
         let digitized: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.digitized()).map(|sheet| sheet.id).collect();
-        assert_eq!(digitized, ["TS-13A", "TS-13B", "TS-13C", "TS-13D"]);
+        assert_eq!(digitized, ["TS-13A", "TS-13B", "TS-13C", "TS-13D", "TS-13E"]);
         // TS-16 places and clips its elements, as an Ink/Stitch file does, and TS-17B's leaf copies a guide: both
         // are drawn from a file. TS-17C aims a ripple at a target point, and is routed. A host draws none of
         // them. TS-17B's tartans set setts, which VectorCraft's fill dialog holds from M10.7.
@@ -635,7 +647,7 @@ mod tests {
             drawable,
             [
                 "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D",
-                "TS-17A"
+                "TS-13E", "TS-17A"
             ]
         );
     }
@@ -1192,7 +1204,7 @@ mod tests {
     /// The sheets that sew pictures or letters as the engine plans any design, jump threads and all: which jump
     /// threads their shapes sew down is one of their checks, and TS-17C counts them on its letters as drawn
     /// and routed.
-    const SEWN_AS_PLANNED: [&str; 5] = ["TS-13A", "TS-13B", "TS-13C", "TS-13D", "TS-17C"];
+    const SEWN_AS_PLANNED: [&str; 6] = ["TS-13A", "TS-13B", "TS-13C", "TS-13D", "TS-13E", "TS-17C"];
 
     /// How near a needle may come down to a thread on the fabric without catching it (mm): about half a 75/11
     /// needle, 0.75 mm across, and half a 40 wt thread.
