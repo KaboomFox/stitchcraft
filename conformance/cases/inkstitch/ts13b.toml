@@ -7,3 +7,6 @@ sheet = "TS-13B"
 [excused]
 trims = "DEV-FMT-001"
 jumps = "DEV-FMT-001"
+# Since M13.30 more of the sheet sews as fills, whose rows lie nearer than the Brother's shortest stitch: the
+# first needle point of such a row is left out, and Ink/Stitch sews it.
+stitches = "DEV-FIN-001"
