@@ -958,6 +958,12 @@ can't tell 1 layer from 6. So a finished plan is measured for its thickness too
 
 ### The 2 measures
 
+A plan is measured where the machine sews it, each needle point on the machine's grid of 0.1 mm. The
+engine's own positions have digits that no file shows. Measured on those, the warning of VectorCraft's
+export differed from the one `stitch export` gives for the same file (the compatibility gate on
+2026-11-16). The grid is the plan's own: the same stitches moved by half a tenth of a millimetre round
+to other needle points.
+
 Both are sums over a window of 1 mm², on square cells 0.5 mm wide. Each cell is 10 pixels of the grid
 that the bare fabric is measured on, so the 2 pictures can be laid on each other. The measures have a
 value at each spot, a corner of the cells, whose window is the 4 cells that meet there. Spots so lie
@@ -1017,22 +1023,22 @@ The user page shows [the running dog's](../user/stitches/automatic.md#how-thick-
 
 ### What today's designs measure
 
-Measured on 2026-11-15 as `--auto` sews each picture, with the base layer and the outline on. The last
+Measured on 2026-11-16 as `--auto` sews each picture, with the base layer and the outline on. The last
 2 pairs of columns give the thickest spot and the area at 3 fills or more with one of them off.
 
 | Picture | Design, mm² | Thickest, fills | At 3 fills or more, mm² | At 6 or more, mm² | Most needle points | Base layer off | Outline off |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Lettered patch | 1,813 | 5.4 | 146 | 0 | 14 | 5.6, 158 | 5.4, 146 |
+| Lettered patch | 1,813 | 5.8 | 142 | 0 | 14 | 6.0, 156 | 5.8, 142 |
 | Alpine Night, the demo's badge | 1,963 | 6.2 | 161 | 0 | 20 | 7.5, 194 | 5.2, 142 |
-| TS-13A, digitized half | 5,756 | 5.7 | 127 | 0 | 23 | 5.7, 154 | 5.8, 125 |
-| TS-13B, digitized half | 2,610 | 6.4 | 121 | 0 | 22 | 7.9, 98 | 5.6, 109 |
-| TS-13C, digitized half | 2,201 | 6.7 | 341 | 0 | 19 | 7.1, 348 | 6.6, 348 |
-| TS-13D, digitized half | 4,373 | 7.5 | 264 | 1.0 | 14 | 8.3, 371 | 7.5, 260 |
-| Traced pear | 2,252 | 6.1 | 40 | 0 | 17 | 6.1, 77 | 5.7, 26 |
-| Traced dog on turf, 6 threads | 1,639 | 8.3 | 432 | 11.5 | 35 | 10.4, 559 | 7.8, 373 |
-| Traced dog on turf, 9 threads | 1,639 | 8.5 | 481 | 9.2 | 30 | 9.6, 624 | 8.3, 407 |
-| Traced running dog, 6 threads | 1,944 | 8.0 | 501 | 6.5 | 29 | 9.4, 679 | 7.8, 405 |
-| Traced running dog, 9 threads | 1,944 | 8.6 | 620 | 7.8 | 28 | 9.5, 803 | 7.9, 512 |
+| TS-13A, digitized half | 5,756 | 5.7 | 124 | 0 | 22 | 5.8, 163 | 5.5, 115 |
+| TS-13B, digitized half | 2,610 | 6.3 | 120 | 0 | 21 | 7.7, 95 | 5.7, 109 |
+| TS-13C, digitized half | 2,201 | 6.2 | 339 | 0 | 19 | 7.0, 355 | 6.7, 342 |
+| TS-13D, digitized half | 4,373 | 7.5 | 255 | 1.2 | 14 | 8.4, 358 | 7.5, 254 |
+| Traced pear | 2,252 | 6.4 | 39 | 0 | 17 | 6.4, 82 | 6.0, 28 |
+| Traced dog on turf, 6 threads | 1,639 | 8.5 | 433 | 11.5 | 34 | 10.7, 560 | 8.2, 369 |
+| Traced dog on turf, 9 threads | 1,639 | 8.5 | 480 | 12.0 | 31 | 9.4, 630 | 8.6, 403 |
+| Traced running dog, 6 threads | 1,944 | 8.0 | 508 | 6.5 | 29 | 8.9, 678 | 7.9, 399 |
+| Traced running dog, 9 threads | 1,944 | 8.0 | 619 | 8.2 | 28 | 9.3, 803 | 8.0, 509 |
 
 The badge is measured on its PES file, and its area is that of a disc 50 mm across. The lettered patch
 sews no outline, because its letters are satin columns.
@@ -1041,14 +1047,14 @@ Every standard picture is over the warning's limit somewhere, and a quarter to a
 dog is. Each part of the stack has its own share:
 
 - **The 1 mm that areas reach under their neighbours causes most of it.** Without any overlap the running
-  dog in 9 threads has 160 mm² at 3 fills or more where it has 620 mm², and the other dogs 124 to
-  139 mm². Among small patches the overlaps of several neighbours lie on each other.
+  dog in 9 threads has 153 mm² at 3 fills or more where it has 619 mm², and the other dogs 138 to
+  142 mm². Among small patches the overlaps of several neighbours lie on each other.
 - **The base layer makes a design thinner.** It replaces an underlay under each fill, which is more
-  thread: with the base layer off the dogs have 29 to 36 % more area at 3 fills or more.
-- **The outline adds 16 to 24 %** on the dogs. It lies on the edge, where 2 fills already do.
+  thread: with the base layer off the dogs have 29 to 33 % more area at 3 fills or more.
+- **The outline adds 17 to 27 %** on the dogs. It lies on the edge, where 2 fills already do.
 
-At a dog's thickest spot 5 shapes or more lie on each other, each with 0.7 to 2.7 fills: small patches
-whose overlaps cover each other whole. The dogs also have 46 to 100 mm² with 15 needle points or more to
+At a dog's thickest spot 5 layers or more lie on each other, each with 0.3 to 3.2 fills: small patches
+whose overlaps cover each other whole. The dogs also have 44 to 103 mm² with 15 needle points or more to
 a square millimetre, in patches 1 to 2 mm across whose rows are short and whose turns lie beside each
 other.
 
@@ -1060,12 +1066,12 @@ by changing one setting, and the bare share is what the top thread leaves of the
 
 | Change | At 3 fills or more, mm² | Bare, % of the design | Stitches |
 |---|---:|---:|---:|
-| As sewn today | 620 | 0.000 | 14,417 |
-| No outline (`auto_fill_outline` off) | 512 | 0.000 | 13,115 |
-| No overlap (`auto_overlap_mm` 0) | 160 | 0.409 | 12,898 |
+| As sewn today | 619 | 0.000 | 14,417 |
+| No outline (`auto_fill_outline` off) | 509 | 0.000 | 13,115 |
+| No overlap (`auto_overlap_mm` 0) | 153 | 0.409 | 12,898 |
 | Overlap of 0.5 mm | 434 | 0.012 | 13,689 |
-| Smallest area 4 mm² (`auto_min_area_mm2`) | 564 | 0.000 | 13,700 |
-| Smallest area 10 mm² | 318 | 0.138 | 11,324 |
+| Smallest area 4 mm² (`auto_min_area_mm2`) | 562 | 0.000 | 13,700 |
+| Smallest area 10 mm² | 316 | 0.138 | 11,324 |
 
 Halving the overlap takes away 30 % and still covers. Merging patches under 10 mm² takes away 49 %, and
 changes the picture. 2 more ways need code and are not measured. One cuts an area's overlap away

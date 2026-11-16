@@ -7,6 +7,11 @@
 //! the plan, not in the test kit, because the warning that planning gives (`SC-W0913`), the heat map
 //! (`stitchcraft-render`) and the numbers of the before and after sheet must all be this one measure.
 //!
+//! **What is measured** is what the machine sews: each needle point where a machine file puts it, on the
+//! machine's grid of 0.1 mm ([`sewn`]). The engine's own positions have digits that no file shows, and a
+//! needle point on the edge of a cell counts on one side or the other by them: measured on those, the
+//! warning of VectorCraft's export differed from `stitch export`'s for the same file.
+//!
 //! **The grid.** The plan's stitches lie on square cells [`CELL`] wide, 10 pixels of the grid that the bare
 //! fabric is measured on ([`PIXEL`]), with a cell of room round them. A measure has a value at each **spot**,
 //! a corner of the cells: the sum over the 4 cells that meet there, a window [`WINDOW`] across. Spots lie
@@ -282,6 +287,13 @@ impl Grid {
     }
 }
 
+/// The stitches `plan` sews, each needle point where a machine file puts it (`Point::to_tenths`). A point
+/// too far out for the machine's grid stays where it is.
+fn sewn(plan: &StitchPlan) -> Vec<SewnStitch> {
+    let on_grid = |point: Point| point.to_tenths().map_or(point, |(x, y)| Point::from_tenths(x, y));
+    plan.sewn_stitches().into_iter().map(|stitch| SewnStitch { from: on_grid(stitch.from), to: on_grid(stitch.to), ..stitch }).collect()
+}
+
 /// How many steps the thread of a stitch `length` long is followed in: one for each cell's width of it
 /// begun, and one at the least.
 fn steps(length: f64) -> f64 {
@@ -326,11 +338,11 @@ impl Thickness {
     /// step along it, and 3 for each cell. A plan whose grid would have more than [`MAX_CELLS`] is not
     /// measured, as one whose measuring runs out of work.
     pub fn of(plan: &StitchPlan, meter: &mut Meter) -> Result<Option<Thickness>, Exhausted> {
-        Thickness::of_stitches(&plan.sewn_stitches(), meter)
+        Thickness::of_stitches(&sewn(plan), meter)
     }
 
-    /// The thickness of the stitches `sewn`, as [`Thickness::of`] measures a plan's: for a picture of what a
-    /// machine file sews, whose stitches are read from the file.
+    /// The thickness of the stitches `sewn`, as they are: for a picture of what a machine file sews, whose
+    /// stitches are read from the file.
     pub fn of_stitches(sewn: &[SewnStitch], meter: &mut Meter) -> Result<Option<Thickness>, Exhausted> {
         meter.charge(units(sewn.len()))?;
         let Some(bounds) = Rect::around(sewn.iter().flat_map(|stitch| [stitch.from, stitch.to])) else { return Ok(None) };
@@ -425,7 +437,7 @@ impl Thickness {
         let Some(spot) = self.grid.nearest(at.x(), at.y()) else { return Ok(Vec::new()) };
         let (window, middle): (Vec<usize>, Point) = (self.grid.window(spot).collect(), self.grid.spot(spot));
         let mut layers: BTreeMap<(usize, Option<ElementRef>), (f64, f64)> = BTreeMap::new();
-        for stitch in plan.sewn_stitches() {
+        for stitch in sewn(plan) {
             let length = stitch.length();
             let steps = steps(length);
             meter.charge(units(index(steps)).saturating_add(1))?;
