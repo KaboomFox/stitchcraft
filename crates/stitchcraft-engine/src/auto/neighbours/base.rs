@@ -218,6 +218,12 @@ fn sewn_as(rules: &AutoParams) -> ParamSet {
     params
 }
 
+/// What the base layer sews with when no shape sets a rule: test sheet TS-13F lays its squares on it.
+#[cfg(test)]
+pub(crate) fn sewn_by_default() -> ParamSet {
+    sewn_as(&AutoParams::defaults())
+}
+
 /// The angle of rows across rows at `angle` degrees: a quarter turn from it, towards 0.
 fn across(angle: f64) -> f64 {
     if angle > 0.0 { angle - 90.0 } else { angle + 90.0 }

@@ -29,6 +29,7 @@ files = [
     "golden/testsheets/TS-13C.pes",
     "golden/testsheets/TS-13D.pes",
     "golden/testsheets/TS-13E.pes",
+    "golden/testsheets/TS-13F.pes",
     "golden/plans/strokes.pes",
     "golden/plans/strokes.dst",
 ]

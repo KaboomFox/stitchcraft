@@ -33,6 +33,7 @@ mod ts09;
 mod ts10;
 mod ts11;
 mod ts13;
+mod ts13f;
 mod ts16;
 mod ts17;
 mod ts17b;
@@ -496,6 +497,18 @@ pub static SHEETS: &[TestSheet] = &[
         drawn: Drawn::Designed(ts13::buttons, &ts13::BUTTONS_SAY),
     },
     TestSheet {
+        id: "TS-13F",
+        title: "How thick a design may sew: squares of 1 to 6 fills",
+        checks: &[
+            "Top row, left to right: squares 15 mm a side of 1, 2, 3, 4, 5 and 6 fills on each other, each fill's rows turned 30° from those of the fill under it. Middle row: the same squares, each with a satin outline 2 mm wide along its edge. Every square lies on one open layer of rows, as a design digitized automatically does, and no fill has an underlay of its own.",
+            "For each square, count the thread breaks and the places where the thread shreds. Listen for a thumping needle. Which is the first square that breaks thread or thumps, in the top row and in the middle row?",
+            "After sewing, look at the needle for a bend or a burr, and at the fabric round each square for puckers. Bend each square, and measure how thick it is with calipers.",
+            "Bottom row: 3 blocks 12 mm a side, each one fill cut into patches 1.5, 2 and 3 mm across, left to right. Each patch reaches 1 mm under the patch sewn after it in its row and under the one below it, as the areas of a traced photo do. Which block is the stiffest, and does thread break or the needle thump on any of them? Does the base layer show between patches?",
+        ],
+        profile: REFERENCE,
+        drawn: Drawn::Designed(ts13f::drawing, &[Code::StitchesMerged]),
+    },
+    TestSheet {
         id: "TS-16",
         title: "An Ink/Stitch file: start and end commands, clip paths, origin, stop position, turn, a clone and drawn locks",
         checks: &[
@@ -602,7 +615,7 @@ mod tests {
             designed,
             [
                 "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-11C", "TS-13A", "TS-13B", "TS-13C",
-                "TS-13D", "TS-13E", "TS-16", "TS-17A", "TS-17B", "TS-17C"
+                "TS-13D", "TS-13E", "TS-13F", "TS-16", "TS-17A", "TS-17B", "TS-17C"
             ]
         );
         // A host moves each by whole millimetres, but TS-17A by multiples of 6 mm, which keep its crosses' cells.
@@ -647,7 +660,7 @@ mod tests {
             drawable,
             [
                 "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D",
-                "TS-13E", "TS-17A"
+                "TS-13E", "TS-13F", "TS-17A"
             ]
         );
     }
@@ -684,6 +697,10 @@ mod tests {
         assert_eq!(about("TS-07"), [126.2, 126.0, 0.0, 0.0]);
         assert_eq!(about("TS-08"), [100.0, 170.0, 0.0, 0.0]);
         assert_eq!(about("TS-09"), [66.0, 114.0, 0.0, 0.0]);
+        // TS-13F's outlines reach 1 mm past the first and the last square of its middle row, and its rows of
+        // squares and blocks run from 0 to 57 mm down.
+        assert_eq!(about("TS-13F"), [112.0, 57.0, 0.0, 0.0]);
+        assert_eq!(find("TS-13F").unwrap().plan().unwrap().stats().stitches, 18_543);
         // TS-11A runs from x = -1, where the last hook of its 2 mm zigzags ends 1 mm either side of x = 0, to 126,
         // where its first S-stitches end, and from just below y = 3.5, the top of its 1 mm zigzags, which sew a
         // little narrower than drawn, to 148, where its last hook ends.

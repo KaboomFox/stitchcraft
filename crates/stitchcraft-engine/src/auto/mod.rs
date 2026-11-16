@@ -84,6 +84,8 @@ mod split;
 pub(crate) mod thick;
 
 pub use neighbours::TOUCHING;
+#[cfg(test)]
+pub(crate) use neighbours::default_base_layer;
 use neighbours::{Background, Sewn, no_area, parts_of, speck};
 pub use params::{
     ADVANCED, AutoParams, FILL_ANGLE, FILL_OUTLINE, FILL_UNEVEN, IGNORE_BACKGROUND, LONGEST_SATIN_STITCH, MAX_REACH, MAX_SATIN_WIDTH, MAX_UNEVENNESS,

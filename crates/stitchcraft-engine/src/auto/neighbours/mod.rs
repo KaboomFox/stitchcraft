@@ -53,6 +53,8 @@
 mod background;
 mod base;
 pub(super) use base::off as base_off;
+#[cfg(test)]
+pub(crate) use base::sewn_by_default as default_base_layer;
 mod layers;
 mod order;
 mod outline;
