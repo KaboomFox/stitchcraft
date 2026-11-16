@@ -285,6 +285,13 @@ another format than its own (`REQ-PLAN-006`).
 depends on the elements' lock settings, which a plan does not hold. Assembly's cases check it with the
 settings (`REQ-ASM-003`, `REQ-LCK-001`).
 
+### How thick a plan sews
+
+`stitchcraft_plan::thickness` measures a plan's thread, in fills, and its needle points per mm² in the
+square millimetre round each spot. It lives beside the plan, so that the engine's warning and the
+renderer's heat map are one measure, which the test kit reads too. [Image to embroidery](image-to-embroidery.md#how-thick-a-design-sews)
+defines the 2 measures and their limits.
+
 ## Threads and palettes
 
 ```rust,ignore

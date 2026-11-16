@@ -450,6 +450,10 @@ validates the result. A violation is a bug in StitchCraft: `plan` returns no pla
 `SC-E0009 internal check failed` (`REQ-FIN-003`). The command line then does not write a machine file.
 It writes a bug-report bundle that reproduces the failure (`REQ-CLI-002`). The conformance suite has a case for every invariant.
 
+A plan that passes, of a design with an automatic shape, is then measured for its thickness, with the
+budget's work once more. Planning adds `SC-W0913` when the design sews thick and returns the plan all the
+same ([how thick a design sews](image-to-embroidery.md#how-thick-a-design-sews)).
+
 ## 7. Incremental and parallel planning
 
 - **Cache:** a group is keyed by (element shape hash, params hash, neighbours, seed, engine version). The

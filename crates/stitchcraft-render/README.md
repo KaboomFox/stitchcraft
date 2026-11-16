@@ -1,7 +1,8 @@
 # stitchcraft-render
 
 Layer **L2**. Draws stitch plans as PNG images, in a realistic style (thread on fabric) and a simple style
-(lines, needle holes, dashed travel, marks for trims, stops and lock stitches). Used by `stitch preview`,
+(lines, needle holes, dashed travel, marks for trims, stops and lock stitches). A third style, thickness,
+colours each spot by how many fills of thread lie over it (`REQ-RND-004`). Used by `stitch preview`,
 the documentation images and the conformance suite. Design: `docs/src/design/rendering.md`.
 
 ## Invariants

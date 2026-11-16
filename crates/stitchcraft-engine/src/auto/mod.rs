@@ -81,6 +81,7 @@ mod neighbours;
 mod params;
 pub mod rules;
 mod split;
+pub(crate) mod thick;
 
 pub use neighbours::TOUCHING;
 use neighbours::{Background, Sewn, no_area, parts_of, speck};
@@ -295,6 +296,9 @@ pub(crate) struct Sewing<'d> {
     /// The ids of the base layer's pieces among the elements (`REQ-AUTO-028`): planning makes every stitch
     /// of theirs underlay.
     pub(crate) base: Vec<ElementId>,
+    /// The limits of the design's thickness, by its lowest automatic shape's settings (`REQ-AUTO-062`);
+    /// `None` for a design without an automatic shape, which is not measured.
+    pub(crate) limits: Option<stitchcraft_plan::thickness::Limits>,
     /// The ids of the elements that digitizing made, the base layer's pieces and the outlines among them:
     /// every element but those with settings. Planning runs the thread under later shapes between them
     /// where it would jump (`REQ-AUTO-053`).
@@ -304,7 +308,7 @@ pub(crate) struct Sewing<'d> {
 /// [`digitized`], with the ids of the base layer's pieces.
 pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     if !design.sort_colours && !design.elements().iter().any(|element| element.automatic) {
-        return Sewing { elements: Cow::Borrowed(design.elements()), diagnostics: Vec::new(), base: Vec::new(), made: BTreeSet::new() };
+        return Sewing { elements: Cow::Borrowed(design.elements()), diagnostics: Vec::new(), base: Vec::new(), made: BTreeSet::new(), limits: None };
     }
     let mut diagnostics = Vec::new();
     // Each automatic shape is cut to its clips first, so that what shows of it is digitized and hides others.
@@ -367,6 +371,7 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     // A design that turns the base layer off is told that fabric may show (`SC-I0911`).
     diagnostics.extend(lowest.filter(|rules| !rules.auto_base_layer).map(|_| neighbours::base_off()));
     let outlined = lowest.is_some_and(|rules| rules.auto_fill_outline);
+    let limits = lowest.map(thick::limits);
     let mut beside = neighbours::beside(sewn, &design.settings, budget, design.sort_colours, base.map(|rules| (rules, &mut taken)), outlined);
     diagnostics.extend(std::mem::take(&mut beside.said));
     for (id, lines) in std::mem::take(&mut beside.outlines) {
@@ -380,7 +385,7 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     diagnostics.splice(0..0, counts.said());
     let set: BTreeSet<&ElementId> = elements.iter().filter(|element| !element.automatic).map(|element| &element.id).collect();
     let made = beside.elements.iter().filter(|element| !set.contains(&element.id)).map(|element| element.id.clone()).collect();
-    Sewing { elements: Cow::Owned(beside.elements), diagnostics, base: beside.base, made }
+    Sewing { elements: Cow::Owned(beside.elements), diagnostics, base: beside.base, made, limits }
 }
 
 /// Adds the outline of the fill `id` among `elements` after it, when it still sews: a running stitch along
@@ -1028,6 +1033,7 @@ mod tests {
                 &["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_offset_mm", "auto_base_sliver_mm2", "auto_base_bare_percent"],
             ),
             (Code::AutoBaseOff, &["auto_base_layer"]),
+            (Code::AutoThick, &["auto_thick_warn_fills", "auto_thick_fail_fills", "auto_thick_warn_points", "auto_thick_fail_points"]),
         ];
         for (code, keys) in explained {
             let text = code.explanation();

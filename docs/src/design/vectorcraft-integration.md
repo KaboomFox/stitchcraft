@@ -154,7 +154,8 @@ custom locks, and `fill_method` leaves out Ink/Stitch's legacy fill, which Stitc
 (`REQ-FILL-005`). `satin_column` belongs to the effect, which sets it from its family. `turn_stitches`, the switch that
 automatic digitizing sets on its own fills, is left out of the fill's dialog. The Auto effect's dialog
 leaves out the settings of the registry's Advanced group, which are
-the bounds of the rules and the 2 limits of the cover's measure (M13.21), and the base layer's offset.
+the bounds of the rules and the 2 limits of the cover's measure (M13.21), the base layer's offset, and
+the 4 limits of how thick a design sews (M13.29).
 The switch that sews an outline round each fill has a row since M13.28, in the offset's place. The dialog
 opens with
 the group that declares the family's method. The groups only the family uses, for its default method, come
@@ -342,7 +343,9 @@ writes of the document:
   VectorCraft's command line and checks that the files are `stitch export`'s, byte for byte.
 - What `stitch export` says, the export says as its warnings, one line each, naming the object and with
   the hint after it. VectorCraft shows 100 of at most 500 characters each, so of more the last says how
-  many more `stitch export` lists.
+  many more `stitch export` lists. It cuts a longer line in the middle of a word. The export ends such a
+  line at its last whole sentence that fits. `SC-W0913` is one: in VectorCraft it keeps its numbers and
+  loses its hint, which `stitch export` prints.
 - When anything said is an error, the exporter declines with the first, after how many there are, and
   VectorCraft doesn't write the file, as `stitch export` doesn't (`REQ-CLI-003`). VectorCraft shows the
   first 300 characters of a decline, after `plug-in failed:`.

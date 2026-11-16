@@ -18,6 +18,7 @@ pub mod stitchcraft_render::raster
 pub enum stitchcraft_render::raster::Style
 pub stitchcraft_render::raster::Style::Realistic
 pub stitchcraft_render::raster::Style::Simple
+pub stitchcraft_render::raster::Style::Thickness
 impl stitchcraft_render::raster::Style
 pub const stitchcraft_render::raster::Style::ALL: &'static [stitchcraft_render::raster::Style]
 pub fn stitchcraft_render::raster::Style::from_name(&str) -> core::option::Option<stitchcraft_render::raster::Style>
@@ -88,6 +89,7 @@ pub fn stitchcraft_render::error::RenderError::diagnostic(&self) -> stitchcraft_
 pub enum stitchcraft_render::Style
 pub stitchcraft_render::Style::Realistic
 pub stitchcraft_render::Style::Simple
+pub stitchcraft_render::Style::Thickness
 impl stitchcraft_render::raster::Style
 pub const stitchcraft_render::raster::Style::ALL: &'static [stitchcraft_render::raster::Style]
 pub fn stitchcraft_render::raster::Style::from_name(&str) -> core::option::Option<stitchcraft_render::raster::Style>

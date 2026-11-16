@@ -38,8 +38,11 @@ The example computes no number of its own. Each comes from the function a confor
 | Jump threads left to cut, on a machine with one needle that cuts none | `stitchcraft_testkit::fabric::astray` |
 | Stitches astray | `stitchcraft_testkit::fabric::astray` |
 | Slivers, and the share of the design left bare | `stitchcraft_testkit::fabric::cover` |
+| The thickest spot in fills, the area at 3 fills or more, and the most needle points per mm² | `stitchcraft_testkit::fabric::thickness` |
 
-[Image to embroidery](image-to-embroidery.md#covering-the-fabric) defines each one. The example
+[Image to embroidery](image-to-embroidery.md#covering-the-fabric) defines each one, and
+[the thickness](image-to-embroidery.md#how-thick-a-design-sews) beside them, so that thread taken away
+is weighed against fabric shown. The example
 also says of each number whether more of it is worse. More stitches are neither better nor worse, so a
 change in them is shown and not marked.
 
