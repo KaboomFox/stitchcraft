@@ -89,7 +89,7 @@ the background is left out, are each shape's own settings, the defaults when it 
 sew as any stitch type. Since M13.12 a traced picture's layers are flattened before anything is digitized
 (`auto::neighbours::layers`). Each automatic area sews what shows of it, the background only inside the
 picture. An area wider than a satin column somewhere is digitized whole under the areas in its holes, sews
-before them and is cut away under them. TS-13D sews such pictures traced both ways. A part no wider than a
+before them and is cut away under them. TS-13D and TS-13E sew such pictures traced both ways. A part no wider than a
 satin column whose centre lines are each shorter than half its width, a disc or a square, is a dot, which
 stays in the fill (`auto::columns::DOT`).
 Since M6.12 a column drawn as one path can be drawn with its rails and rungs instead, for a host's Stroke
