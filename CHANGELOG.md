@@ -5,6 +5,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M14.2: `stitch lettering` sets a text in an embroidery font (`REQ-FONT-009` to `REQ-FONT-014`).
+  `stitch lettering "Hello" --font FOLDER -o hello.pes` reads a font in Ink/Stitch's format, sets the text
+  and writes the machine file, with a picture if asked.
+  - The glyphs lie by the font's advances and kerning, as Ink/Stitch's lettering places them. `--scale` or
+    `--height` gives the size, and `--letter-spacing`, `--word-spacing`, `--line-height` and `--align` the
+    spacing and the alignment.
+  - A scale outside the heights the font sews at is set at the nearest inside them (`SC-W1106`), and a
+    character the font lacks sews as its default glyph (`SC-W1107`). `SC-E1108` refuses a text of no
+    glyph.
+  - In a font whose `auto_satin` is on, the engine's routing joins the text's satin columns in their order,
+    without trims.
+  - `Hello` and `Stitch Craft` in Ink/Stitch Small Font and Medium Font have the same size, jumps and trims
+    as in Ink/Stitch, and stitch counts within 1.5 percent
+    ([fonts](docs/src/design/fonts.md#lettering)).
+  - `stitchcraft_engine::design::Path::map` is public, for lettering to place a glyph's paths.
 - M6.17: an export that finishes (`REQ-VC-025`). VectorCraft stops the PES and DST export of a traced photo
   with the Auto effect, "plug-in exceeded its instruction budget", in the browser and on the desktop alike.
   Such a design needs 51 to 69 billion instructions where an export may run 11 billion, and the exporter

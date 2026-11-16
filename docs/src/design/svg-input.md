@@ -464,4 +464,6 @@ are read again for each shape the gradient paints ([budgets](data-model.md#budge
 The adapter also reads embroidery fonts in Ink/Stitch's format, folders of a `font.json` and glyph files,
 with `stitchcraft_svg::font` ([the reader](fonts.md#the-reader)). Each glyph's design is read as an SVG file
 is read, within the budget the whole font shares. A glyph's box and its file's baseline are measured on the
-page the root's size and viewBox give, which the adapter maps the drawing with too.
+page the root's size and viewBox give, which the adapter maps the drawing with too. From M14.2,
+`stitchcraft_svg::lettering` sets a text in such a font, each glyph's design placed and scaled into the
+text's design ([lettering](fonts.md#lettering)).

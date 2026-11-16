@@ -40,6 +40,7 @@ pub stitchcraft_core::diag::Code::AutoSpeck
 pub stitchcraft_core::diag::Code::AutoUnder
 pub stitchcraft_core::diag::Code::BudgetExhausted
 pub stitchcraft_core::diag::Code::BundleUnreadable
+pub stitchcraft_core::diag::Code::CharacterNotInFont
 pub stitchcraft_core::diag::Code::ClippedAway
 pub stitchcraft_core::diag::Code::CustomLockUnusable
 pub stitchcraft_core::diag::Code::CutoutLeftOut
@@ -89,6 +90,8 @@ pub stitchcraft_core::diag::Code::HandStitchKeptLong
 pub stitchcraft_core::diag::Code::HandStitchTooShort
 pub stitchcraft_core::diag::Code::InternalCheckFailed
 pub stitchcraft_core::diag::Code::JumpsCutInDst
+pub stitchcraft_core::diag::Code::LetteringScaleOutOfRange
+pub stitchcraft_core::diag::Code::LetteringUnset
 pub stitchcraft_core::diag::Code::LockStitchLengthened
 pub stitchcraft_core::diag::Code::NothingToStitch
 pub stitchcraft_core::diag::Code::OriginOrStopPositionTwice
@@ -312,6 +315,7 @@ pub stitchcraft_core::Code::AutoSpeck
 pub stitchcraft_core::Code::AutoUnder
 pub stitchcraft_core::Code::BudgetExhausted
 pub stitchcraft_core::Code::BundleUnreadable
+pub stitchcraft_core::Code::CharacterNotInFont
 pub stitchcraft_core::Code::ClippedAway
 pub stitchcraft_core::Code::CustomLockUnusable
 pub stitchcraft_core::Code::CutoutLeftOut
@@ -361,6 +365,8 @@ pub stitchcraft_core::Code::HandStitchKeptLong
 pub stitchcraft_core::Code::HandStitchTooShort
 pub stitchcraft_core::Code::InternalCheckFailed
 pub stitchcraft_core::Code::JumpsCutInDst
+pub stitchcraft_core::Code::LetteringScaleOutOfRange
+pub stitchcraft_core::Code::LetteringUnset
 pub stitchcraft_core::Code::LockStitchLengthened
 pub stitchcraft_core::Code::NothingToStitch
 pub stitchcraft_core::Code::OriginOrStopPositionTwice
