@@ -319,9 +319,10 @@ the shapes stacked there.
 <!-- /shot -->
 
 `stitch preview dog.pes --style thickness -o thick.png` draws this picture of any machine file. Grey is
-thread under 2 fills, yellow is 2 or more, orange 3 or more and red 6 or more. On the dog above, 629 mm²
-of 1,944 mm² is orange or red, mostly where several small patches meet, and its thickest spot has 8.0
-fills.
+thread under 2 fills, yellow is 2 or more, orange 3 or more and red 6 or more. On the dog above, 491 mm²
+of 1,944 mm² is orange or red, mostly where several small patches meet, and its thickest spot has 7.0
+fills. Before StitchCraft sewed an area's overlap by the way its rows run, and one overlap alone under a
+shape, 629 mm² was.
 
 The limits are starting values for a 75/11 needle and 40-weight polyester thread. They come from the
 public advice of machine and software makers, who disagree. The reference machine hasn't sewn a design

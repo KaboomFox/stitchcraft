@@ -208,7 +208,18 @@ M13.29 measures how thick a design sews and changes nothing that sews
 ([how thick a design sews](../design/image-to-embroidery.md#how-thick-a-design-sews)). Its limits, 3 and
 6 fills of thread over one spot and 15 and 30 needle points per mm², are starting values from public
 advice, which no sew-out has confirmed. MC-8 confirms them or changes them with a ladder of squares. The ladder is not
-drawn as a test sheet yet: M13.30 draws it, and until then it is drawn in VectorCraft as plain fills.
+drawn as a test sheet yet, and until then it is drawn in VectorCraft as plain fills.
+
+M13.30 changes what sews where areas overlap
+([less thread where areas overlap](../design/image-to-embroidery.md#less-thread-where-areas-overlap)).
+At MC-8, look at the edges between 2 fills of the digitized halves and of the traced dog:
+
+- Along an edge that runs the way the rows do, the lower fill reaches 0.4 mm under the upper one, where
+  it reached 1 mm. Does fabric or the base layer show along such an edge?
+- Where 3 fills meet, one overlap lies under the last fill, where 2 lay. Does a spot of the base layer
+  show at the corner, and is the corner flatter than it was?
+- Under a part of a fill narrower than 3 mm, the fills beside it reach 0.5 mm. Does fabric show beside
+  such a part?
 
 - **Top row:** squares 15 mm a side of 1, 2, 3, 4, 5 and 6 fills on each other, each fill with the default
   rows of 0.25 mm and stitches of 3 mm, its angle turned 30° from the one under it, over one base layer.
