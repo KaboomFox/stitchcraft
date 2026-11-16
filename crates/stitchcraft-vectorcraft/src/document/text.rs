@@ -78,7 +78,7 @@ impl Reader<'_> {
             self.feature(label, format!("An inline graphic of {} is not stitched.", called(node, "text")), None);
         }
         let whole: String = whole.chars().filter(|c| *c != INLINE).collect();
-        let Some(font) = self.font(label, &who, &asked) else { return Ok(()) };
+        let Some(font) = self.font(label, &who, &asked)? else { return Ok(()) };
         let set = match lettering::set(&font, &whole, &how, self.budget) {
             Ok(set) => set,
             Err(unset) if unset.code == Code::BudgetExhausted => return Err(exhausted()),
@@ -135,16 +135,18 @@ impl Reader<'_> {
     }
 
     /// The font `asked` names, with what reading it said, said once for each font. Without it, `SC-W1111`
-    /// says that `who` is not stitched, and names the fonts there are.
-    fn font(&mut self, label: &str, who: &str, asked: &str) -> Option<Rc<Font>> {
+    /// says that `who` is not stitched, and names the fonts there are. A font whose reading needs more work than
+    /// the budget allows stops the document's, as the document's own does.
+    fn font(&mut self, label: &str, who: &str, asked: &str) -> Result<Option<Rc<Font>>, Diagnostic> {
         let named = if asked.trim().is_empty() { crate::lettering::DEFAULT_FONT } else { asked.trim() };
-        match self.fonts.font(asked, self.budget) {
+        Ok(match self.fonts.font(asked, self.budget) {
             Some(Ok(font)) => {
                 if self.lettered.insert(font.folder.clone()) {
                     self.warnings.extend(font.warnings.iter().filter(|said| worth_saying(said)).cloned());
                 }
                 Some(font)
             }
+            Some(Err(unread)) if unread.code == Code::BudgetExhausted => return Err(exhausted()),
             Some(Err(unread)) => {
                 let message = format!("{who} is not stitched: its font {} does not read. {}", quoted(named), unread.message);
                 self.unlettered(label, message, "Choose another font in the Lettering effect's dialog.");
@@ -164,7 +166,7 @@ impl Reader<'_> {
                 self.unlettered(label, message, hint);
                 None
             }
-        }
+        })
     }
 
     /// Where a text whose transform is `xf` sews: at its origin, turned as its baseline is. A transform that

@@ -6,13 +6,16 @@
 // place, and round a coordinate that is a few millimetres.
 #![allow(clippy::unwrap_used, clippy::needless_pass_by_value, clippy::cast_possible_truncation)]
 
+use std::rc::Rc;
+
 use serde_json::{Value, json};
 use stitchcraft_core::{Budget, Code, Diagnostic, Fix};
 use stitchcraft_engine::design::{Reading, Shape};
 use stitchcraft_plan::Rgb;
 use stitchcraft_svg::font;
+use stitchcraft_svg::font::Font;
 use stitchcraft_svg::lettering::{self, Align, Lettering};
-use stitchcraft_vectorcraft::lettering::{BuiltIn, Folder, NoFonts};
+use stitchcraft_vectorcraft::lettering::{BuiltIn, Folder, Fonts};
 use stitchcraft_vectorcraft::{VectorCraft, effect_id, read_in, read_with};
 
 /// A glyph file, 100 mm square with a user unit a millimetre and its baseline 70 mm down. `a` is a stroke
@@ -51,14 +54,51 @@ fn text(id: u64, text: &str, x: f64, y: f64, more: Value, params: Value) -> Valu
     json!({"id": id, "name": "Title", "appearance": {"effects": [{"id": effect_id("lettering"), "params": params, "visible": true}]}, "kind": kind})
 }
 
-/// `bytes` read with the test font, black, and a font of 2 colours.
+/// `values` kept for as long as the tests run, as a plug-in's fonts are kept in it.
+fn kept<T>(values: Vec<T>) -> &'static [T] {
+    Box::leak(values.into_boxed_slice())
+}
+
+/// The folder `name` of a font with the settings `json` and, when it draws any, its glyphs' file `ltr`.
+fn folder(name: &'static str, json: &str, ltr: Option<String>) -> Folder {
+    let mut files: Vec<(&'static str, &'static [u8])> = vec![("font.json", kept(json.as_bytes().to_vec()))];
+    files.extend(ltr.map(|glyphs| ("ltr.svg", kept(glyphs.into_bytes()))));
+    Folder { name, files: kept(files) }
+}
+
+/// The test font, black; a font of 2 colours, one of whose settings doesn't read and another isn't one; and a
+/// font that draws nothing.
+fn fonts() -> BuiltIn {
+    let two = r#"{"name": "Two", "size": "big", "x": 1}"#;
+    BuiltIn::new(kept(vec![
+        folder("test", SETTINGS, Some(glyphs("#000000", "#000000"))),
+        folder("two", two, Some(glyphs("#000000", "#0000ff"))),
+        folder("broken", "{}", None),
+    ]))
+}
+
+/// `bytes` read with [`fonts`].
 fn read(bytes: &[u8]) -> VectorCraft {
-    let (plain, coloured) = (glyphs("#000000", "#000000"), glyphs("#000000", "#0000ff"));
-    let test: [(&str, &[u8]); 2] = [("font.json", SETTINGS.as_bytes()), ("ltr.svg", plain.as_bytes())];
-    let two: [(&str, &[u8]); 2] = [("font.json", b"{\"name\": \"Two\", \"size\": \"big\"}"), ("ltr.svg", coloured.as_bytes())];
-    let broken: [(&str, &[u8]); 1] = [("font.json", b"{}")];
-    let folders = [Folder { name: "test", files: &test }, Folder { name: "two", files: &two }, Folder { name: "broken", files: &broken }];
-    read_in(bytes, &Budget::DEFAULT, Reading::default(), &mut BuiltIn::new(&folders)).unwrap()
+    read_in(bytes, &Budget::DEFAULT, Reading::default(), &mut fonts()).unwrap()
+}
+
+/// The test fonts, read whatever the budget, so that a case meters the document's reader alone.
+struct Unmetered(BuiltIn);
+
+impl Fonts for Unmetered {
+    fn names(&self) -> Vec<String> {
+        self.0.names()
+    }
+
+    fn font(&mut self, name: &str, _budget: &Budget) -> Option<Result<Rc<Font>, Diagnostic>> {
+        self.0.font(name, &Budget::DEFAULT)
+    }
+}
+
+/// The least work `bytes` reads within, with the fonts read whatever the budget.
+fn least_work(bytes: &[u8]) -> u64 {
+    let reads = |work: &u64| read_in(bytes, &Budget { max_work: *work, ..Budget::DEFAULT }, Reading::default(), &mut Unmetered(fonts())).is_ok();
+    (0..2_000).find(reads).unwrap()
 }
 
 /// What `said` says, each with its hint.
@@ -131,6 +171,17 @@ fn req_vc_026_a_text_sews_turned_as_its_baseline_and_in_its_font_s_colours() {
     assert_eq!(said(&turned.warnings), Vec::<String>::new());
     // `a` runs from (0, -10) to (4, 0) as set: turned, from (10, 0) to (0, 4), then an inch right.
     assert_eq!(points(&turned, 0), [(3540, 0), (2540, 400)]);
+    // A sixth of a turn at twice the size, and half a turn: each sews turned, and nothing is said.
+    let (cos, sin) = (0.5_f64, 0.75_f64.sqrt());
+    let sixth =
+        read(&document(json!([text(7, "a", 0.0, 0.0, json!({"xf": [2.0 * cos, 2.0 * sin, -2.0 * sin, 2.0 * cos, 0, 0]}), json!({"font": "test"}))])));
+    assert_eq!(said(&sixth.warnings), Vec::<String>::new());
+    assert_eq!(points(&sixth, 0), [(866, -500), (200, 346)]);
+    let half = read(&document(json!([text(7, "a", 0.0, 0.0, json!({"xf": [-1, 0, 0, -1, 0, 0]}), json!({"font": "test"}))])));
+    assert_eq!((said(&half.warnings), points(&half, 0)), (Vec::new(), vec![(0, 1000), (-400, 0)]));
+    // A thousand times the size, its second axis off square by less than a billionth of the size: upright.
+    let large = read(&document(json!([text(7, "a", 0.0, 0.0, json!({"xf": [1000, 0, 1e-9, 1000, 0, 0]}), json!({"font": "test"}))])));
+    assert_eq!(said(&large.warnings), Vec::<String>::new());
     // Mirrored, it sews turned only, and says so. A transform that holds no number leaves it upright.
     let mirrored = read(&document(json!([text(7, "a", 0.0, 0.0, json!({"xf": [1, 0, 0, -1, 0, 0]}), json!({"font": "test"}))])));
     assert_eq!(
@@ -198,7 +249,7 @@ fn diag_sc_w1111_a_text_whose_font_is_not_here_or_that_lettering_does_not_set_is
     // Read without fonts, as `read_with` reads.
     for none in [
         read_with(&asked, &Budget::DEFAULT, Reading::default()).unwrap(),
-        read_in(&asked, &Budget::DEFAULT, Reading::default(), &mut NoFonts).unwrap(),
+        read_in(&asked, &Budget::DEFAULT, Reading::default(), &mut BuiltIn::new(&[])).unwrap(),
     ] {
         assert_eq!(
             said(&none.warnings),
@@ -244,11 +295,8 @@ fn diag_sc_w1111_a_text_whose_font_is_not_here_or_that_lettering_does_not_set_is
         font::read("two", &[("font.json", b"{\"name\": \"Two\", \"size\": \"big\", \"x\": 1}"), ("ltr.svg", coloured.as_bytes())], &Budget::DEFAULT);
     assert!(alone.unwrap().warnings.iter().any(|said| said.code == Code::FontReadAsInkStitch));
     // A message names at most 8 fonts, and counts the others.
-    let settings: Vec<String> = (0..10).map(|i| format!("{{\"name\": \"Font {i}\"}}")).collect();
-    let names: Vec<String> = (0..10).map(|i| format!("f{i}")).collect();
-    let files: Vec<[(&str, &[u8]); 1]> = settings.iter().map(|json| [("font.json", json.as_bytes())]).collect();
-    let folders: Vec<Folder> = names.iter().zip(&files).map(|(name, files)| Folder { name, files }).collect();
-    let many = read_in(&asked, &Budget::DEFAULT, Reading::default(), &mut BuiltIn::new(&folders)).unwrap();
+    let folders = kept((0..10).map(|i| folder(format!("f{i}").leak(), &format!("{{\"name\": \"Font {i}\"}}"), None)).collect());
+    let many = read_in(&asked, &Budget::DEFAULT, Reading::default(), &mut BuiltIn::new(folders)).unwrap();
     let listed =
         "The fonts here are Font 0 (`f0`), Font 1 (`f1`), Font 2 (`f2`), Font 3 (`f3`), Font 4 (`f4`), Font 5 (`f5`), Font 6 (`f6`), Font 7 (`f7`)";
     assert!(many.warnings[0].message.ends_with(&format!("{listed}, and 2 more.")), "{}", many.warnings[0].message);
@@ -263,15 +311,12 @@ fn req_vc_026_lettering_is_read_within_the_budget_and_cut_by_the_clips_around_it
     let bytes = document(json!([text(7, "ab ab", 0.0, 0.0, json!({}), json!({"font": "test"}))]));
     let whole = read(&bytes);
     assert_eq!(whole.design.elements().len(), 4);
-    let (plain, mut ran_out) = (glyphs("#000000", "#000000"), 0);
-    let test: [(&str, &[u8]); 2] = [("font.json", SETTINGS.as_bytes()), ("ltr.svg", plain.as_bytes())];
-    let folders = [Folder { name: "test", files: &test }];
-    for units in 0..400 {
-        let budget = Budget { max_work: units, ..Budget::DEFAULT };
-        match read_in(&bytes, &budget, Reading::default(), &mut BuiltIn::new(&folders)) {
-            Ok(read) if read.warnings.is_empty() => assert_eq!(read.design, whole.design),
-            // The font's reader ran out: the text is left out, and that is said.
-            Ok(read) => assert!(said(&read.warnings)[0].contains("SC-W1111"), "{:?}", said(&read.warnings)),
+    let mut ran_out = 0;
+    for work in 0..400 {
+        let budget = Budget { max_work: work, ..Budget::DEFAULT };
+        // Out of budget in the document's reader, the font's or lettering, nothing is read: no text is left out.
+        match read_in(&bytes, &budget, Reading::default(), &mut fonts()) {
+            Ok(read) => assert_eq!((said(&read.warnings), &read.design), (Vec::new(), &whole.design)),
             Err(error) => {
                 assert_eq!(error.code, Code::BudgetExhausted);
                 ran_out += 1;
@@ -291,4 +336,26 @@ fn req_vc_026_lettering_is_read_within_the_budget_and_cut_by_the_clips_around_it
     // As a clip group's clipping object, a text is left out, with or without the effect.
     let as_clip = json!({"id": 2, "kind": {"type": "group", "clip": true, "children": [text(7, "a", 0.0, 0.0, json!({}), json!({"font": "test"}))]}});
     assert!(read(&document(json!([as_clip]))).design.elements().is_empty());
+}
+
+#[test]
+fn req_vc_026_a_text_charges_the_budget_for_its_characters_its_elements_and_the_clips_that_cut_them() {
+    // A square the text lies in clips it: 4 segments, which cost each element they cut 5 units.
+    let square = json!({"subpaths": [{"closed": true, "anchors": [{"p": {"x": 0, "y": -40}}, {"p": {"x": 40, "y": -40}}, {"p": {"x": 40, "y": 0}}, {"p": {"x": 0, "y": 0}}]}]});
+    let red = json!({"kind": "fill", "paint": {"type": "solid", "color": {"model": "rgb", "r": 1, "g": 0, "b": 0}}});
+    let before = json!({"id": 9, "appearance": {"items": [red]}, "kind": {"type": "path", "path": square}});
+    // A red square is cut by the clip too, before the text, in the document with the text left out as well.
+    let clipped = |text: Value| {
+        let clip = json!({"id": 3, "kind": {"type": "path", "path": square}});
+        document(json!([{"id": 2, "kind": {"type": "group", "clip": true, "children": [clip, before, text]}}]))
+    };
+    let lettered = |letters: &str| text(7, letters, 0.0, 0.0, json!({}), json!({"font": "test"}));
+    let mut bare = lettered("a");
+    bare["appearance"]["effects"] = json!([]);
+    let without = least_work(&clipped(bare));
+    // Measured: the effect's record and its parameter, the text and its character, the letter's element with its
+    // 2 points, and the clip's 5 for the element. A charge that changes changes the count.
+    assert_eq!(least_work(&clipped(lettered("a"))) - without, 13);
+    // A second letter costs its character 1, its element 1 and its 2 points, and the clip's 5 again.
+    assert_eq!(least_work(&clipped(lettered("ab"))) - without, 22);
 }

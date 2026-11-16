@@ -176,3 +176,34 @@ fn inspect_counts_stitches_in_place_and_those_a_lock_may_explain() {
     let out = inspected(&[1.0]);
     assert!(!out.contains("  lengths "), "{out}");
 }
+
+/// REQ-FONT-021: `stitch` sews a VectorCraft document's lettered text in a font of the folder
+/// `STITCHCRAFT_FONTS` names, and leaves the text out, saying so, when the variable names none.
+#[test]
+fn req_font_021_stitch_finds_a_document_s_font_in_the_folder_the_variable_names() {
+    let dir = folder("fonts");
+    let glyphs = r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="100mm" height="100mm" viewBox="0 0 100 100"><g inkscape:groupmode="layer" inkscape:label="GlyphLayer-a"><path id="pa" d="M 1,60 L 5,70" style="fill:none;stroke:#000000;stroke-width:0.4"/></g></svg>"#;
+    std::fs::create_dir_all(dir.join("fonts/plain")).unwrap();
+    std::fs::write(dir.join("fonts/plain/font.json"), r#"{"name": "Plain Font", "min_scale": 0.5, "max_scale": 2}"#).unwrap();
+    std::fs::write(dir.join("fonts/plain/ltr.svg"), glyphs).unwrap();
+    let document = r#"{"format": "vectorcraft", "version": 4, "document": {"layers": [{"id": 1, "kind": {"type": "layer", "children": [
+        {"id": 2, "appearance": {"effects": [{"id": "plugin.dev.stitchcraft.lettering", "params": {"font": "Plain Font"}, "visible": true}]},
+         "kind": {"type": "text", "kind": {"kind": "point"}, "xf": [1, 0, 0, 1, 72, 72], "runs": [{"text": "aaa"}]}}]}}]}}"#;
+    std::fs::write(dir.join("name.vectorcraft"), document).unwrap();
+    let run = |fonts: &std::ffi::OsStr| {
+        Command::new(env!("CARGO_BIN_EXE_stitch"))
+            .args(["plan", "name.vectorcraft", "-o", "name.pes"])
+            .current_dir(&dir)
+            .env("STITCHCRAFT_FONTS", fonts)
+            .output()
+            .unwrap()
+    };
+    let sewn = run(dir.join("fonts").as_os_str());
+    assert!(sewn.status.success(), "{}", text(&sewn.stderr));
+    assert!(!text(&sewn.stderr).contains("SC-W1111"), "{}", text(&sewn.stderr));
+    assert!(std::fs::read(dir.join("name.pes")).unwrap().starts_with(b"#PES"));
+    // Named by nothing, the variable names no folder: the text is left out, which leaves nothing to stitch.
+    let none = run(std::ffi::OsStr::new(""));
+    assert!(!none.status.success());
+    assert!(text(&none.stderr).contains("warning SC-W1111") && text(&none.stderr).contains("No embroidery font is here."), "{}", text(&none.stderr));
+}

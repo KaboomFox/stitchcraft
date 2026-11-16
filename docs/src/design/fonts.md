@@ -506,11 +506,12 @@ asks for nothing more: the SIL Open Font License, and CC0 or the public domain. 
 
 | Font | Folder | Licence | Its files | What it adds to each exporter |
 |---|---|---|---|---|
-| Ink/Stitch Small Font, copyright 2017 Lex Neva | `small_font` | SIL Open Font License 1.1 | `font.json`, `ltr.svg`, `rtl.svg`, `LICENSE` | 829,061 bytes before the site's compression |
+| Ink/Stitch Small Font, copyright 2017 Lex Neva | `small_font` | SIL Open Font License 1.1 | `font.json`, `ltr.svg`, `rtl.svg`, `LICENSE` | 829,061 bytes, as stored |
 
 It is the default font: 5.08 mm tall at 100 percent, sewn from 70 to 300 percent, with glyphs for both
 directions. Its lines sew back and forth. Its glyph files are text, which a web server sends
-compressed to about a tenth.
+compressed. With the font, and with the SVG reader and lettering that read it, the demo's PES exporter
+grew from 3.5 to 5.4 MB as stored, and from 1.2 to 1.7 MB as sent.
 
 **What was checked,** on 16 November 2026, for Small Font at `c7e3a05`:
 

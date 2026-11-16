@@ -7,41 +7,23 @@
 //!
 //! **Why only some.** A published plug-in shares the fonts in it, so a font is listed only when its licence
 //! lets a copy be shared with the licence's text beside it. Each font's licence file is built in with it, and
-//! [`licences`] gives them to whoever publishes the modules. A font adds its glyph files' size to each
+//! whoever publishes the modules publishes it beside them, as the browser demo's build does. A font adds its glyph files' size to each
 //! exporter: the linker leaves the fonts out of the modules that don't sew a document.
 
-use stitchcraft_vectorcraft::lettering::{BuiltIn, Folder, Fonts};
+use stitchcraft_vectorcraft::lettering::{BuiltIn, Folder};
 
 include!(concat!(env!("OUT_DIR"), "/fonts.rs"));
 
 /// The fonts built in, for a document's reader.
-pub fn built_in() -> BuiltIn<'static> {
+pub fn built_in() -> BuiltIn {
     BuiltIn::new(FONTS)
-}
-
-/// The fonts built in, each as a person names it.
-pub fn names() -> Vec<String> {
-    built_in().names()
-}
-
-/// Each font built in that has a licence file: its folder's name, and the file's name and bytes.
-pub fn licences() -> Vec<(&'static str, &'static str, &'static [u8])> {
-    let licence = |folder: &'static Folder<'static>| {
-        let (path, bytes) = folder.files.iter().find(|(path, _)| stitchcraft_svg::font::licence::is_licence_file(path))?;
-        Some((folder.name, *path, *bytes))
-    };
-    FONTS.iter().filter_map(licence).collect()
-}
-
-/// The bytes the fonts built in take, which is what they add to an exporter's module.
-pub fn bytes() -> usize {
-    FONTS.iter().flat_map(|folder| folder.files).map(|(_, bytes)| bytes.len()).sum()
 }
 
 #[cfg(test)]
 mod tests {
     use stitchcraft_core::Budget;
     use stitchcraft_svg::font::{self, Licence};
+    use stitchcraft_vectorcraft::lettering::Fonts;
 
     use super::*;
 
@@ -49,15 +31,13 @@ mod tests {
     fn req_font_021_each_font_built_in_reads_and_may_be_shared_with_its_licence_beside_it() {
         if FONTS.is_empty() {
             // Built without STITCHCRAFT_FONTS_DIR: no font is built in, and there is nothing to check.
-            assert!(names().is_empty() && licences().is_empty() && bytes() == 0);
+            assert!(built_in().names().is_empty());
             eprintln!("skipped: no font is built in (STITCHCRAFT_FONTS_DIR is not set)");
             return;
         }
         let listed: Vec<&str> =
             include_str!("../built-in-fonts.txt").lines().map(str::trim).filter(|line| !line.is_empty() && !line.starts_with('#')).collect();
         assert_eq!(FONTS.iter().map(|folder| folder.name).collect::<Vec<_>>(), listed);
-        assert_eq!(licences().len(), FONTS.len());
-        assert!(bytes() > 0);
         for folder in FONTS {
             let font = font::read(folder.name, folder.files, &Budget::DEFAULT).unwrap();
             let licence = font.licence.as_ref().map(|file| file.licence);
