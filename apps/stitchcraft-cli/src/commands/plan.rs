@@ -95,14 +95,18 @@ impl Source {
 
     /// The design in `bytes`, read as this kind of file as `reading` asks, with what its reader said; or why
     /// it can't be read. A VectorCraft document's texts that have StitchCraft's Lettering effect sew in the fonts of
-    /// the folder `STITCHCRAFT_FONTS` names ([`crate::fonts`], `REQ-VC-026`).
+    /// the folder `STITCHCRAFT_FONTS` names ([`crate::fonts`], `REQ-VC-026`), and so do the text objects of
+    /// either kind of file that automatic digitizing letters (`REQ-AUTO-069`).
     pub fn read(self, bytes: &[u8], reading: Reading) -> Result<(Design, Vec<Diagnostic>), Diagnostic> {
         match self {
             // An SVG file's reader has no fonts, so its text markers are read here (`REQ-SVG-016`).
             Source::Svg => {
                 let svg = stitchcraft_svg::read_with(bytes, &Budget::DEFAULT, reading)?;
-                let (design, said) = crate::text::replaced(svg.design, &[], &mut FolderFonts::from_env())?;
-                Ok((design, svg.warnings.into_iter().chain(said).collect()))
+                // Nor has it fonts for the text objects automatic digitizing sews as lettering (`REQ-SVG-017`).
+                let mut fonts = FolderFonts::from_env();
+                let (design, lettered) = crate::text::lettered(svg.design, &svg.texts, &mut fonts)?;
+                let (design, said) = crate::text::replaced(design, &[], &mut fonts)?;
+                Ok((design, svg.warnings.into_iter().chain(lettered).chain(said).collect()))
             }
             Source::VectorCraft => stitchcraft_vectorcraft::read_in(bytes, &Budget::DEFAULT, reading, &mut FolderFonts::from_env())
                 .map(|read| (read.design, read.warnings)),

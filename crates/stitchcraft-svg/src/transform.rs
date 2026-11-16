@@ -89,6 +89,12 @@ impl Affine {
         (x - y).abs() <= EVEN * x.max(y) && square <= EVEN * x * y
     }
 
+    /// Whether the map mirrors what it draws: a turn that runs clockwise runs the other way after it. Its
+    /// determinant is negative.
+    pub fn mirrors(self) -> bool {
+        (self.a * self.d - self.b * self.c).is_sign_negative()
+    }
+
     /// Whether the map flattens the plane onto a line or a point: its determinant is 0, so it has no
     /// inverse. A viewer shows nothing that such a map draws (CSS Transforms 1, transform function lists).
     pub fn flattens(self) -> bool {
@@ -230,6 +236,24 @@ mod tests {
 
     fn close(a: (f64, f64), b: (f64, f64)) -> bool {
         (a.0 - b.0).abs() < 1e-9 && (a.1 - b.1).abs() < 1e-9
+    }
+
+    #[test]
+    fn req_svg_017_a_map_mirrors_when_it_turns_a_turn_the_other_way() {
+        for plain in [
+            "scale(2)",
+            "rotate(90)",
+            "rotate(200) translate(5 6)",
+            "matrix(1 1 -1 0 0 0)",
+            "matrix(1 1 0 1 0 0)",
+            "matrix(1 3 0.1 1 0 0)",
+            "skewX(45)",
+        ] {
+            assert!(!parse(plain).unwrap().mirrors(), "{plain}");
+        }
+        for mirrored in ["scale(1 -1)", "scale(-1 1)", "matrix(0 1 1 0 0 0)", "matrix(0 -1 -1 0 0 0)", "matrix(1 1 1 0 0 0)", "matrix(1 2 2 1 5 6)"] {
+            assert!(parse(mirrored).unwrap().mirrors(), "{mirrored}");
+        }
     }
 
     #[test]
