@@ -425,6 +425,25 @@ After sewing, check:
 - On the top half, each button's yellow is one fill under the dots, which sew after it, and its black rim a satin column round it. On the bottom half, the abutting button's yellow sews round the dots as drawn. Which sews better between the dots? Does the rim cover the yellow's edge?
 - The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?
 
+## TS-13F — How thick a design may sew: squares of 1 to 6 fills
+
+112.0 × 57.0 mm · 18543 stitches, 21 jumps, 20 trims, 1 colour change, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
+
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
+Drawn as a design, which VectorCraft's Test Sheet filter draws too.
+
+![TS-13F as it will sew: 3 rows in blue. At the top, 6 squares 15 mm a side, of 1 to 6 fills on each other from left to right. In the middle, the same 6 squares, each with a black satin outline along its edge. At the bottom, 3 blocks 12 mm a side, each a fill cut into square patches 1.5, 2 and 3 mm across.](../../images/generated/testsheet-ts-13f.png)
+
+Threads: Blue, Black.
+
+After sewing, check:
+
+- Top row, left to right: squares 15 mm a side of 1, 2, 3, 4, 5 and 6 fills on each other, each fill's rows turned 30° from those of the fill under it. Middle row: the same squares, each with a satin outline 2 mm wide along its edge. Every square lies on one open layer of rows, as a design digitized automatically does, and no fill has an underlay of its own.
+- For each square, count the thread breaks and the places where the thread shreds. Listen for a thumping needle. Which is the first square that breaks thread or thumps, in the top row and in the middle row?
+- After sewing, look at the needle for a bend or a burr, and at the fabric round each square for puckers. Bend each square, and measure how thick it is with calipers.
+- Bottom row: 3 blocks 12 mm a side, each one fill cut into patches 1.5, 2 and 3 mm across, left to right. Each patch reaches 1 mm under the patch sewn after it in its row and under the one below it, as the areas of a traced photo do. Which block is the stiffest, and does thread break or the needle thump on any of them? Does the base layer show between patches?
+
 ## TS-16 — An Ink/Stitch file: start and end commands, clip paths, origin, stop position, turn, a clone and drawn locks
 
 110.0 × 117.2 mm · 4979 stitches, 9 jumps, 8 trims, 5 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand

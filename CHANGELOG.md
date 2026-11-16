@@ -1975,15 +1975,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 
 ### Changed
 - M13.30: less thread where a design sews thick (`REQ-AUTO-063`). The owner's first concern on 2026-11-16
-  was how thick her traced dogs sew at their seams, and M13.29 measured that the overlaps cause most of it.
-  - An area reaches its overlap, 1 mm, along its rows, and its pull compensation, 0.4 mm, across them:
-    the thread pulls a row in at its ends and not sideways.
-  - Under a part of an area narrower than 3 overlaps, an area reaches half as far, so that the areas on
+  was how thick her traced dogs sew along the edges between their patches, and M13.29 measured that the
+  overlaps cause most of it.
+  - The overlap of an area is 1 mm wide along its rows, and as wide as its pull compensation, 0.4 mm,
+    across them: the thread pulls a row in at its ends and not sideways.
+  - Under a part of an area narrower than 3 overlaps, the overlap is half as wide, so that the areas on
     both sides don't fill a thin part between them. It is the owner's idea.
   - Where 2 areas would both sew under a shape sewn after them, only the area sewn first does. It is the
-    owner's idea too, and a place then holds one overlap at the most.
-  - Under a satin column and under the part of a line or a column, an area reaches as it did. Across
-    the part of a running line, the area sewn first reaches on under the area beyond, 1 mm from where it
+    owner's idea too, and one overlap at the most then lies under a shape at any place.
+  - Under a satin column and under the part of a line or a column, the overlap is as it was. Across
+    the part of a running line, the area sewn first goes on under the area beyond, 1 mm from where it
     meets it.
   - The base layer sews one layer, its rows across the fills' rows, where it sewed 3 layers 60° apart as
     Ink/Stitch's Knockdown Fill does. The new advanced setting `auto_base_rows` at `lattice` sews the 3
@@ -1992,13 +1993,26 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - A part that would sew as one satin column is filled when the column would sew more than 2 mm of one
     rail to 1 mm of the other, and `SC-I0902` says so (`REQ-AUTO-064`). Such a column laid up to 6.6 fills
     where its stitches met. A part with a hole and a part of several columns sew as they did.
-  - The 4 traced dogs have 55 to 64 % less area with 3 fills of thread or more, and none with 6 or more
-    where they had 6 to 12 mm². No picture has a place with 6 fills or more. By the check of the cover
-    they cover the fabric as before. They sew 6 to 8 % fewer stitches. 15 to 18 shapes of each dog that
-    sewed as satin columns are fills. The dog on turf in 9 threads changes thread 13 times where it
-    changed 12, and the dog on turf leaves 2 and 1 more jump threads, the running dog 2 and 9 fewer.
-  - Fixed on the way: an area reached across the part of a line and then as far again where a column sews
-    along the part too, or where a later area already sewed it.
+  - The 4 traced dogs have 55 to 64 % less area with 3 fills of thread or more. No picture has a piece of
+    1 mm² with 6 fills or more, where the dogs had 6 to 12 mm². By the check of the cover they cover the
+    fabric as before. They sew 6 to 8 % fewer stitches. 15 to 18 shapes of each dog that sewed as satin
+    columns are fills. The dog on turf leaves 2 and 1 more jump threads, the running dog 2 and 9 fewer.
+  - Worse: the dog on turf in 9 threads changes thread 13 times where it changed 12. A line sews after a
+    fill it borders, and nothing made it wait for a column. With the new fills, every order within the
+    rules has 13 changes or more. 16 stitches of the dogs show on another colour, where 14 did.
+  - Test sheet TS-13F is the ladder of squares that MC-8 sets the limits of thickness with, 112 × 57 mm
+    and 18,543 stitches. It has squares of 1 to 6 fills on each other, bare and under a satin outline 2 mm
+    wide. Under them 3 fills are cut into patches 1.5, 2 and 3 mm across that overlap by 1 mm. `stitch
+    testsheet TS-13F` writes it, and VectorCraft's Test Sheet filter draws it.
+  - The Test Sheet filter's help gives the first part of a title once, on the first of the sheets that
+    share it: TS-13B to TS-13E are listed without "Pictures digitized automatically". The 17 sheets then
+    fit in the 1,000 characters VectorCraft shows. The reference page has every title whole.
+  - `SC-W0913` is shorter, so that VectorCraft, which shows 500 characters of a warning, shows its hint.
+    It reads "Thread is up to 5.5 fills thick at (x, y) mm from the design's centre", then the 3 shapes
+    with the most thread, each with its colour and its fills, and the areas at the 4 limits. The hint is
+    "Sew a test piece of it first. `stitch preview --style thickness` draws the thick places."
+  - Fixed on the way: the overlap of an area went across the part of a line and then as far again where
+    a column sews along the part too, or where a later area already sewed it.
   - Measured and left out: an overlap sewn with every other row, which the owner also asked about, half
     the overlap under columns, an overlap of 0.5 mm, and no outline along an edge between 2 areas
     ([design](docs/src/design/image-to-embroidery.md#less-thread-where-areas-overlap)).
@@ -3175,6 +3189,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes`, `TS-13C.pes`, `TS-13D.pes` and
+  `TS-13E.pes`, and added `TS-13F.pes` (M13.30, less thread where a design sews thick). The digitized half
+  of each of the 5 sews narrower overlaps across its rows, one overlap under a shape, one base layer where
+  it sewed 3, and fills where a satin column crowded its stitches. The sheets sew 23,908, 14,640, 10,390,
+  20,259 and 6,011 stitches, where they sewed 26,105, 15,930, 11,486, 21,616 and 6,380. TS-13B is
+  110.594 mm wide, 0.002 mm less. The halves in paint order sew as they
+  did. TS-13F is new: the ladder of squares, 112 × 57 mm and 18,543 stitches.
 - Changed `conformance/golden/testsheets/TS-13D.pes` and added `TS-13E.pes` (M13.31, one sheet split in
   2). TS-13D sews its 2 emblems without the 2 buttons, the stacked one 1 mm farther right, and TS-13E sews
   the buttons one above the other. Each half of each sheet is planned alone, so the order and the jumps between the emblems and
