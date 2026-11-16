@@ -1173,6 +1173,15 @@ macro_rules! codes {
         /// turn `auto_fill_uneven` off, or set a bound itself with `stitch plan --set`.
         AutoRule = "SC-I0912", Info, "Rule that chose a shape's stitches";
 
+        /// Between 2 elements of one thread that `--auto` made, the needle sews a run under the shapes sewn
+        /// later where they cover a way from one to the next, and leaves no jump thread to cut. Finding what
+        /// covers, and the ways, has the work budget once for the whole design. This design needed more, so
+        /// from the element named on its moves are as they were before: sewn on within the collapse length,
+        /// and jumps beyond it. The design sews, with more jump threads than it need have. To have the runs,
+        /// plan it with a larger work budget, or digitize fewer shapes: trace the picture in fewer colours,
+        /// or raise `auto_min_area_mm2`.
+        AutoRunsLeft = "SC-I0914", Info, "Jumps not looked at for a run under later shapes";
+
         /// Routing joins satin columns, and the running stitches among them, into one route, as Ink/Stitch's
         /// Auto-Route Satin Columns does: StitchCraft Auto-Route Satin Columns in VectorCraft, and lettering in a
         /// font whose `auto_satin` is on. It joins running stitches alone as Ink/Stitch's Auto-Route Running

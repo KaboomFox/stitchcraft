@@ -68,13 +68,13 @@ struct Astray {
 const ROW: &str = "A row of an automatic fill shows on another colour for 1 mm or more. 6 of the 20 such stitches that M13.21 listed were traced, on the dog on turf in 9 threads and in the running dog's ear in 6. 5 lay along a line of fur of another colour, which sews on the fill or which the fill reaches under (REQ-AUTO-007, REQ-AUTO-033): the line sews as wide as its thread, and the row shows beside it. One lay under the edge of a column sewn after the fill, beyond the shapes as drawn. The order with the fewest thread changes (REQ-AUTO-037) took 8 of the 20 away and brought 4, where a fill now reaches under another neighbour: 16 are left, and those not among the 6 were not each traced.";
 
 /// Why a stitch between 2 lines of one part shows on another colour.
-const LINES: &str = "A narrow part sews 2 lines as one running stitch. The needle goes straight from the end of one to the start of the next, across another colour, and the move, shorter than the 3 mm collapse length, is a stitch.";
+const LINES: &str = "A narrow part sews 2 lines as one running stitch. The needle goes straight from the end of one to the start of the next, across another colour, and the move, shorter than the 3 mm collapse length, is a stitch. M13.17 looked for a run under what is sewn later (REQ-AUTO-053) and found no way that is hidden. A jump there would leave a thread as long as the stitch.";
 
 /// Why a stitch of an outline shows on another colour.
 const OUTLINE: &str = "A stitch of a fill's outline (REQ-AUTO-051) shows on another colour for 1 mm or more. The outline is one ring round its fill, and the stitch lies along it, its ends within 0.15 mm of the ring. The fill is a thin, ragged shape of a traced photo beside others of its kind. What lies beside the ring there was not traced.";
 
 /// Every stitch of the dogs astray today. The case fails when another stitch is astray, and when one of these
-/// no longer is, so the list shrinks as each is fixed: M13.17 and M13.18 empty it. M13.21 fills the dogs'
+/// no longer is, so the list shrinks as each is fixed: M13.18 is to empty it. M13.21 fills the dogs'
 /// ragged patches, which sewed as columns: the 2 satin stitches that fanned across a shape biting into their
 /// column, 7.89 and 4.72 mm long, are gone, and so are the 3 of columns that sewed past a rail and the one
 /// of the base layer in a gap. The rows of those fills that show beside a thin line took their place: 20
@@ -84,7 +84,9 @@ const OUTLINE: &str = "A stitch of a fill's outline (REQ-AUTO-051) shows on anot
 /// a line of fur, and a line's move crosses another, where a row of the running dog in 9 threads no longer shows.
 /// M13.28 sews an outline after each fill (REQ-AUTO-051), so that the fills end elsewhere: 8 rows no longer show
 /// and one other does, 2 rows are sewn the other way, and 2 stitches of outlines show beside their fills: 14
-/// stitches. Which neighbour hid each of the 8 rows was not traced.
+/// stitches. Which neighbour hid each of the 8 rows was not traced. M13.17 runs the thread under later shapes in
+/// place of jumps (REQ-AUTO-053), which moves no stitch of these: the 2 moves between a part's lines have no
+/// way that is hidden, and stay.
 const ASTRAY: [Astray; 14] = [
     Astray { dog: "dog-on-turf-6", element: "vc:71:fill#2", stitch: [(51.96, 22.56), (51.83, 24.9)], length: 2.34, cause: OUTLINE, step: "M13.18" },
     Astray { dog: "dog-on-turf-6", element: "vc:97:fill", stitch: [(39.0, 61.75), (41.96, 61.74)], length: 2.96, cause: ROW, step: "M13.18" },
@@ -92,14 +94,14 @@ const ASTRAY: [Astray; 14] = [
     Astray { dog: "dog-on-turf-9", element: "vc:11:fill", stitch: [(46.0, 43.5), (50.0, 43.5)], length: 4.0, cause: ROW, step: "M13.18" },
     Astray { dog: "dog-on-turf-9", element: "vc:18:fill", stitch: [(49.0, 43.25), (45.36, 43.25)], length: 3.64, cause: ROW, step: "M13.18" },
     Astray { dog: "dog-on-turf-9", element: "vc:110:fill", stitch: [(41.22, 79.5), (39.6, 79.5)], length: 1.61, cause: ROW, step: "M13.18" },
-    Astray { dog: "dog-on-turf-9", element: "vc:83:fill", stitch: [(50.08, 23.05), (48.93, 21.12)], length: 2.25, cause: LINES, step: "M13.17" },
+    Astray { dog: "dog-on-turf-9", element: "vc:83:fill", stitch: [(50.08, 23.05), (48.93, 21.12)], length: 2.25, cause: LINES, step: "M13.18" },
     Astray { dog: "dog-running-6", element: "vc:23:fill", stitch: [(57.0, 71.25), (61.0, 71.25)], length: 4.0, cause: ROW, step: "M13.18" },
     Astray { dog: "dog-running-6", element: "vc:23:fill", stitch: [(60.0, 71.0), (56.0, 71.0)], length: 4.0, cause: ROW, step: "M13.18" },
     Astray { dog: "dog-running-6", element: "vc:26:fill#2", stitch: [(38.98, 4.59), (41.19, 4.89)], length: 2.24, cause: OUTLINE, step: "M13.18" },
     Astray { dog: "dog-running-6", element: "vc:81:fill", stitch: [(45.0, 20.25), (46.47, 20.25)], length: 1.47, cause: ROW, step: "M13.18" },
     Astray { dog: "dog-running-6", element: "vc:89:fill", stitch: [(56.75, 55.5), (54.6, 55.49)], length: 2.15, cause: ROW, step: "M13.18" },
     Astray { dog: "dog-running-9", element: "vc:49:fill", stitch: [(56.75, 55.5), (54.0, 55.5)], length: 2.75, cause: ROW, step: "M13.18" },
-    Astray { dog: "dog-running-9", element: "vc:33:fill#2", stitch: [(55.64, 34.0), (54.3, 32.39)], length: 2.1, cause: LINES, step: "M13.17" },
+    Astray { dog: "dog-running-9", element: "vc:33:fill#2", stitch: [(55.64, 34.0), (54.3, 32.39)], length: 2.1, cause: LINES, step: "M13.18" },
 ];
 
 /// How each traced dog's shapes sew, as `SC-I0901` counts them: as running stitches, as satin columns and as
@@ -174,13 +176,14 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
             (a.dog.to_string(), a.element.to_string(), a.stitch.map(at), hundredths(a.length))
         })
         .collect();
-    assert!(ASTRAY.iter().all(|a| !a.cause.is_empty() && ["M13.17", "M13.18"].contains(&a.step)));
+    assert!(ASTRAY.iter().all(|a| !a.cause.is_empty() && a.step == "M13.18"));
     assert_eq!(found, listed, "the stitches astray, as found and as listed in ASTRAY");
     // The moves sewn on from one element to the next, and the jump threads the PE800 leaves, are as the design
     // page records them (image-to-embroidery.md › Sewing order).
-    // With an outline after each fill (M13.28) the dogs leave 5, 6, 3 and 3 jump threads more than the 71, 78, 70
-    // and 93 they left.
-    let recorded = [("dog-on-turf-6", 5, 76), ("dog-on-turf-9", 10, 84), ("dog-running-6", 3, 73), ("dog-running-9", 7, 96)];
+    // With an outline after each fill (M13.28) the dogs left 76, 84, 73 and 96 jump threads, 5, 6, 3 and 3 more
+    // than before. Where shapes sewn later cover a way, the needle now runs under them (REQ-AUTO-053, M13.17): 7,
+    // 5, 13 and 13 jumps are runs, and so is one move that showed of each dog but the first.
+    let recorded = [("dog-on-turf-6", 5, 69), ("dog-on-turf-9", 9, 79), ("dog-running-6", 2, 60), ("dog-running-9", 6, 83)];
     assert_eq!(apart, recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps)));
 }
 
