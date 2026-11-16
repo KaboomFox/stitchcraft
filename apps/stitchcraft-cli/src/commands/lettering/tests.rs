@@ -6,7 +6,7 @@ use stitchcraft_testkit::temp::TempDir;
 
 use super::*;
 use crate::cli::Format;
-use stitchcraft_svg::lettering::Align;
+use stitchcraft_svg::lettering::{Align, ColourSort, TextPosition, Trim, VerticalPosition};
 
 /// A glyph of one satin column, 2 mm wide and 10 mm tall, standing on the baseline with its left rail at
 /// `left`.
@@ -55,6 +55,12 @@ fn args(text: &str, font: &Path, output: PathBuf) -> LetteringArgs {
         letter_spacing: 0.0,
         word_spacing: 0.0,
         line_height: 0.0,
+        trim: Trim::Off,
+        color_sort: ColourSort::Off,
+        back_and_forth: true,
+        path: None,
+        text_position: TextPosition::Left,
+        vertical_text_position: VerticalPosition::Top,
     }
 }
 
@@ -89,7 +95,7 @@ fn req_font_014_a_word_sews_for_the_pe800_inside_its_hoop() {
     assert!((4.5..6.0).contains(&width) && (9.5..11.0).contains(&height) && stitches > 40, "{width} × {height} mm, {stitches} stitches");
     assert!(width <= profiles::REFERENCE.hoop.width.get() && height <= profiles::REFERENCE.hoop.height.get());
     // `\n` ends a line, 15 mm above the next, and --height gives the scale over the font's size: twice as tall.
-    let tall = run(&LetteringArgs { height: Some(20.0), ..args("H\\ni", &font, output.clone()) });
+    let tall = run(&LetteringArgs { height: Some(20.0), back_and_forth: false, ..args("H\\ni", &font, output.clone()) });
     assert!(tall.status == Status::Done && quiet(&tall.stderr), "{}", tall.stderr);
     assert_eq!(tall.stdout.lines().next(), Some("H\\ni · Test Font (testfont)"));
     assert!(tall.stdout.contains("\n  scale     200 % (20.0 mm tall)\n"), "{}", tall.stdout);
@@ -104,6 +110,7 @@ fn req_font_014_a_word_sews_for_the_pe800_inside_its_hoop() {
         line_height: -5.0,
         align: Align::Right,
         format: Some(Format::Dst),
+        back_and_forth: false,
         ..args("Hi i\\ni", &font, dst.clone())
     };
     let spaced = run(&spaced);
@@ -178,4 +185,80 @@ fn req_font_014_the_options_are_checked_before_the_font_is_read() {
         std::fs::write(folder.join(file), text).unwrap();
     }
     assert_eq!(run(&args("i", &folder, output)).stdout.lines().next(), Some("i · named"));
+}
+
+/// An SVG file `name` in `dir`, 100 mm square, holding `body`.
+fn svg_in(dir: &TempDir, name: &str, body: &str) -> PathBuf {
+    let file = dir.join(name);
+    let root = r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="100mm" height="100mm" viewBox="0 0 100 100">"#;
+    std::fs::write(&file, format!("{root}{body}</svg>")).unwrap();
+    file
+}
+
+#[test]
+fn req_font_020_a_text_is_set_along_a_path_of_an_svg_file() {
+    let dir = TempDir::new("lettering-path");
+    let font = font_in(&dir, r#", "size": 10, "min_scale": 0.5, "max_scale": 3"#);
+    let output = dir.join("out.pes");
+    let line = |id: &str, d: &str, more: &str| format!(r#"<path id="{id}" d="{d}" style="fill:none;stroke:#000000" {more}/>"#);
+    // The path labelled `batch lettering` is the one, wherever it lies in the file: it runs down, and so
+    // does the text, in the path's place on the page.
+    let labelled = [line("across", "M 10,10 L 90,10", ""), line("down", "M 50,20 L 50,90", r#"inkscape:label="batch lettering""#)].concat();
+    let file = svg_in(&dir, "labelled.svg", &labelled);
+    let down = run(&LetteringArgs { path: Some(file.clone()), ..args("HiH", &font, output.clone()) });
+    assert_eq!(down.status, Status::Done, "{}", down.stderr);
+    assert!(down.stdout.contains(&format!("\n  path      the path labelled `batch lettering` of {}\n", file.display())), "{}", down.stdout);
+    let (width, height, _) = sewn(&output);
+    assert!((width - 10.0).abs() < 1.0 && (height - 10.0).abs() < 1.0, "{width} × {height}");
+    // Without a label, the file's first path: the text runs across, from the path's start.
+    let file = svg_in(&dir, "first.svg", &[line("across", "M 10,10 L 90,10", ""), line("down", "M 50,20 L 50,90", "")].concat());
+    let across = run(&LetteringArgs { path: Some(file.clone()), text_position: TextPosition::Stretch, ..args("HiH", &font, output.clone()) });
+    assert_eq!(across.status, Status::Done, "{}", across.stderr);
+    assert!(across.stdout.contains(&format!("\n  path      the first path, `svg:across:stroke` of {}\n", file.display())), "{}", across.stdout);
+    let (width, height, _) = sewn(&output);
+    assert!((width - 80.0).abs() < 1.0 && (height - 10.0).abs() < 1.0, "{width} × {height}");
+    // Hanging from the path, the text is the same size, and what the path's file and the text said is printed.
+    let short = svg_in(&dir, "short.svg", &line("short", "M 10,10 L 12,10", ""));
+    let hung = run(&LetteringArgs { path: Some(short), vertical_text_position: VerticalPosition::Bottom, ..args("HiH", &font, output.clone()) });
+    assert_eq!(hung.status, Status::Done, "{}", hung.stderr);
+    assert!(hung.stderr.contains("warning SC-W1109: A line of the text is 10.0 mm long, and its path is 2.0 mm long."), "{}", hung.stderr);
+    std::fs::remove_file(&output).unwrap();
+    // A file without a path that paints, one that is no SVG file, one that isn't there, and a path without
+    // length: nothing is written.
+    let empty = run(&LetteringArgs { path: Some(svg_in(&dir, "empty.svg", "")), ..args("HiH", &font, output.clone()) });
+    assert_eq!(empty.status, Status::Usage);
+    assert!(empty.stderr.ends_with("empty.svg has no path that paints to set the text along: give one a stroke\n"), "{}", empty.stderr);
+    let bad = dir.join("bad.svg");
+    std::fs::write(&bad, "<svg><path").unwrap();
+    let unread = run(&LetteringArgs { path: Some(bad), ..args("HiH", &font, output.clone()) });
+    assert_eq!(unread.status, Status::DesignErrors);
+    assert!(unread.stderr.starts_with("error SC-E0801") && unread.stderr.ends_with("nothing was written\n"), "{}", unread.stderr);
+    let missing = run(&LetteringArgs { path: Some(dir.join("none.svg")), ..args("HiH", &font, output.clone()) });
+    assert_eq!(missing.status, Status::Io);
+    let still = svg_in(&dir, "still.svg", &line("still", "M 10,10 L 10,10 M 0,0 L 5,5", ""));
+    let unset = run(&LetteringArgs { path: Some(still), ..args("HiH", &font, output.clone()) });
+    assert_eq!(unset.status, Status::DesignErrors);
+    assert!(unset.stderr.contains("error SC-E1108: The path to set the text along has no length"), "{}", unset.stderr);
+    assert!(!output.exists());
+}
+
+#[test]
+fn req_font_020_the_trims_the_sort_and_back_and_forth_are_passed_on() {
+    let dir = TempDir::new("lettering-order");
+    let font = font_in(&dir, r#", "size": 10, "min_scale": 0.5, "max_scale": 3"#);
+    let output = dir.join("out.pes");
+    let trims = |args: &LetteringArgs| {
+        let outcome = run(args);
+        assert_eq!(outcome.status, Status::Done, "{}", outcome.stderr);
+        (stitchcraft_formats::decode(&std::fs::read(&output).unwrap()).unwrap().plan.stats().trims, outcome.stderr)
+    };
+    // The font's letters are joined by the route: a trim after each cuts the joins.
+    let (joined, _) = trims(&args("Hi", &font, output.clone()));
+    let (cut, _) = trims(&LetteringArgs { trim: Trim::Glyph, ..args("Hi", &font, output.clone()) });
+    assert_eq!((joined, cut), (0, 1));
+    // The font sews one way and doesn't sort: asked for both, it says so twice, and not when neither is asked.
+    let (_, said) = trims(&LetteringArgs { color_sort: ColourSort::All, ..args("Hi\\nHi", &font, output.clone()) });
+    assert_eq!(said.matches("warning SC-W1110").count(), 2, "{said}");
+    let (_, said) = trims(&LetteringArgs { back_and_forth: false, ..args("Hi\\nHi", &font, output.clone()) });
+    assert_eq!(said.matches("warning SC-W1110").count(), 0, "{said}");
 }
