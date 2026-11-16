@@ -1,6 +1,6 @@
 # Image to embroidery
 
-<!-- implements: crates/stitchcraft-engine/src/auto/**, crates/stitchcraft-engine/src/moves.rs, crates/stitchcraft-engine/src/moves/**, apps/stitchcraft-cli/src/commands/palette.rs, apps/stitchcraft-cli/src/trace.rs, apps/stitchcraft-cutout/src/**, apps/stitchcraft-cli/src/subject.rs, apps/stitchcraft-cli/src/subject/**, apps/stitchcraft-cli/src/commands/cutout.rs -->
+<!-- implements: crates/stitchcraft-engine/src/auto/**, crates/stitchcraft-engine/src/moves.rs, crates/stitchcraft-engine/src/moves/**, crates/stitchcraft-plan/src/thickness/**, apps/stitchcraft-cli/src/commands/palette.rs, apps/stitchcraft-cli/src/trace.rs, apps/stitchcraft-cutout/src/**, apps/stitchcraft-cli/src/subject.rs, apps/stitchcraft-cli/src/subject/**, apps/stitchcraft-cli/src/commands/cutout.rs -->
 
 Automatic digitizing makes a design that sews well from a picture of flat colours, such as a logo, clip
 art or a drawing, once it is traced into shapes. Settings on the shapes are optional. StitchCraft chooses
@@ -946,6 +946,158 @@ and whether the base layer then shows beside it. MC-8 sews the dog on black fabr
 on and off to see that, and to confirm the defaults
 ([machine testing](../plan/machine-testing.md)). A dark base layer under a white fill may show through
 it, which only a sew-out tells.
+
+## How thick a design sews
+
+The owner asked on 2026-11-15 whether so many overlaps would be too thick for the needle after several
+colours. Her machine is a Brother PE800 with one needle. A design digitized automatically puts thread on
+thread on purpose. Each area reaches 1 mm under the shapes sewn after it, and the base layer lies under
+all of them. An outline, when the design sews one, lies on a fill's edge. The measure of the bare fabric counts covered pixels and
+can't tell 1 layer from 6. So a finished plan is measured for its thickness too
+(`stitchcraft_plan::thickness`, `REQ-AUTO-060` to `REQ-AUTO-062`).
+
+### The 2 measures
+
+A plan is measured where the machine sews it, each needle point on the machine's grid of 0.1 mm. The
+engine's own positions have digits that no file shows. Measured on those, the warning of VectorCraft's
+export differed from the one `stitch export` gives for the same file (the compatibility gate on
+2026-11-16). The grid is the plan's own: the same stitches moved by half a tenth of a millimetre round
+to other needle points. A coordinate is rounded to a millionth of a millimetre first. Shapes drawn on
+round numbers put needle points half way between 2 points of the grid, and without that such a point
+goes to one or the other by the last digits of its position.
+
+Both are sums over a window of 1 mm², on square cells 0.5 mm wide. Each cell is 10 pixels of the grid
+that the bare fabric is measured on, so the 2 pictures can be laid on each other. The measures have a
+value at each spot, a corner of the cells, whose window is the 4 cells that meet there. Spots so lie
+half a window apart. The cells are
+this coarse because planning measures every design. On cells of 0.2 mm the measure took 80 % as long as
+planning a test sheet, and VectorCraft stopped the export of TS-13A for the instructions it ran. On these
+cells it takes 2 to 3 %.
+
+**Thread, in fills.** Every stitch is a ribbon of thread 0.4 mm wide, whatever its role, since the needle
+goes through underlay and travel stitches as it goes through top stitches. A window's thread is the
+length of the ribbons in it, times 0.25 mm, over its area. A fill with rows 0.25 mm apart, which is
+StitchCraft's fill by default, so measures 1, and the number reads as "this many fills deep". A satin
+column measures 1.25, because it lays 2 stitches every 0.4 mm. The base layer measures 0.3.
+
+The sources count objects on each other, and a fill is the object here. Counted in layers of thread, one
+of our fills is 1.6 layers, because its rows lie closer than a thread is wide. The fill that the sources
+call standard has rows 0.38 to 0.4 mm apart, so ours is the denser one. To read a number of this page in
+layers of thread, multiply it by 1.6.
+
+**Needle points per mm².** Each stitch's needle point counts once. A lock's are left out, since every
+design ties its locks on purpose. This measure finds what the first one misses: short stitches and turns
+bunched in a small patch, which cut the fabric and break thread on their own.
+
+A square 15 mm a side that the engine fills 1, 2, 3 and 6 times measures as many fills 2 mm inside its
+edge: 1.03 times the layers on average, since the needle also travels under its rows, and 0.89 to 0.97
+times at the least.
+
+### The limits
+
+| Measure | Warning | Failing | Where the number is from |
+|---|---:|---:|---|
+| Thread, in fills | 3 | 6 | Brother's troubleshooting table names "three or more overlapping stitches" as a fault of the design. Embrilliance's density map turns red at 6 layers |
+| Needle points per mm² | 15 | 30 | Our own. The rows of one fill end 5 to a square millimetre along its edge, so these are the edges of 3 and of 6 fills on each other |
+
+A place counts when 1 mm² of it in one piece is at the limit or over it: 4 spots beside each other, each
+standing for the quarter of a square millimetre round it. 3 rows that cross in a point are no fault.
+
+No source publishes a measured limit for a home machine, and the sources disagree. One vendor wants all
+layers together to be about 1 fill, a retailer finds 2 full designs on each other too much for a PE800,
+Brother says 3 and Embrilliance 6. So the 4 values are starting values for a 75/11 needle and
+40-weight polyester thread. They are settings of the shape, `auto_thick_warn_fills` and the 3 beside
+it. A machine profile's values change only with a sew-out report, and these have none yet.
+[MC-8](../plan/machine-testing.md) sews a ladder of squares to confirm them or change them.
+
+### The warning
+
+Planning measures a design that has an automatic shape, against the limits of its lowest one. When a
+place is at a warning's limit or over it, planning says `SC-W0913` once, and the design is written all
+the same. No design is refused for its thickness until a sew-out shows where one fails. The message gives the most of
+each measure and where, the 3 shapes with the most thread at the thickest spot, and the areas at the 4
+limits. A design drawn by hand is not measured: its author chose every layer.
+
+`stitch preview --style thickness` draws the heat map of a machine file (`REQ-RND-004`). Thread under 2
+fills is grey, and thread of 2 fills or more yellow. From 3 fills it is orange, and from 6 red.
+
+The user page shows [the running dog's](../user/stitches/automatic.md#how-thick-it-sews).
+
+A plan is measured once, and the measure keeps the stitches it went through. What lies at the
+thickest spot is found from those: only a stitch whose box reaches within 1 mm of the spot is followed
+again. A limit above the largest value has nothing over it, and the spots are not searched for it.
+Counted in processor instructions on the sheets TS-13A and TS-13B, the measure takes
+1.9 % of planning. Before these 3 savings it took 2.7 %.
+
+### What today's designs measure
+
+Measured on 2026-11-16 as `--auto` sews each picture, with the base layer and the outline on. The last
+2 pairs of columns give the thickest spot and the area at 3 fills or more with one of them off.
+
+| Picture | Design, mm² | Thickest, fills | At 3 fills or more, mm² | At 6 or more, mm² | Most needle points | Base layer off | Outline off |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Lettered patch | 1,813 | 5.8 | 142 | 0 | 14 | 6.0, 156 | 5.8, 142 |
+| Alpine Night, the demo's badge | 1,963 | 6.2 | 161 | 0 | 20 | 7.5, 194 | 5.2, 142 |
+| TS-13A, digitized half | 5,756 | 5.7 | 124 | 0 | 22 | 5.8, 163 | 5.5, 115 |
+| TS-13B, digitized half | 2,610 | 6.6 | 120 | 0 | 21 | 7.4, 96 | 5.5, 110 |
+| TS-13C, digitized half | 2,201 | 6.2 | 339 | 0 | 19 | 7.0, 355 | 6.7, 343 |
+| TS-13D, digitized half | 3,524 | 7.5 | 229 | 1.0 | 13 | 8.3, 347 | 7.5, 223 |
+| TS-13E, digitized half | 845 | 5.3 | 99 | 0 | 11 | 5.2, 118 | 5.3, 97 |
+| Traced pear | 2,252 | 6.4 | 40 | 0 | 17 | 6.4, 82 | 6.0, 28 |
+| Traced dog on turf, 6 threads | 1,639 | 8.4 | 436 | 11.8 | 34 | 10.7, 560 | 8.2, 369 |
+| Traced dog on turf, 9 threads | 1,639 | 8.5 | 480 | 11.0 | 31 | 9.1, 633 | 8.6, 403 |
+| Traced running dog, 6 threads | 1,944 | 7.9 | 511 | 6.5 | 29 | 8.8, 682 | 7.9, 401 |
+| Traced running dog, 9 threads | 1,944 | 8.0 | 629 | 6.2 | 28 | 9.2, 808 | 8.0, 516 |
+
+The badge is measured on its PES file, and its area is that of a disc 50 mm across. The lettered patch
+sews no outline, because its letters are satin columns.
+
+On TS-13B the letters of one word measure differently, and that is what sews. In the word 15 mm tall
+the base layer has a piece under the M, the A, the T and the H, whose strokes sew as 2 to 4 columns
+each. It has none under the C, which sews as one column with an underlay of its own. The smaller words
+have no base layer, and a letter is thick there where its columns meet: the M has 4 columns and 3
+joins. In the word 4 mm tall the M and the A still sew as columns, and the other letters as lines of
+running stitch.
+
+Every standard picture is over the warning's limit somewhere, and a quarter to a third of each traced
+dog is. Each part of the stack has its own share:
+
+- **The 1 mm that areas reach under their neighbours causes most of it.** Without any overlap the running
+  dog in 9 threads has 155 mm² at 3 fills or more where it has 629 mm², and the other dogs 141 to
+  144 mm². Among small patches the overlaps of several neighbours lie on each other.
+- **The base layer makes a design thinner.** It replaces an underlay under each fill, which is more
+  thread: with the base layer off the dogs have 28 to 34 % more area at 3 fills or more.
+- **The outline adds 18 to 28 %** on the dogs. It lies on the edge, where 2 fills already do.
+
+At a dog's thickest spot 5 layers or more lie on each other, each with 0.3 to 3.2 fills: small patches
+whose overlaps cover each other whole. The dogs also have 46 to 104 mm² with 15 needle points or more to
+a square millimetre, in patches 1 to 2 mm across whose rows are short and whose turns lie beside each
+other.
+
+The [runs in place of jumps](#runs-in-place-of-jumps) lie under later fills and add little: 1 to
+12 mm² at 3 fills or more on a dog, 2 % at the most. Each dog's thickest spot stays within 0.1 of a fill.
+
+### What would take thread away
+
+This step measures and changes nothing that sews. Each row was measured on the running dog in 9 threads
+by changing one setting, and the bare share is what the top thread leaves of the design
+([covering the fabric](#covering-the-fabric)), 0.000 % today:
+
+| Change | At 3 fills or more, mm² | Bare, % of the design | Stitches |
+|---|---:|---:|---:|
+| As sewn today | 629 | 0.000 | 14,380 |
+| No outline (`auto_fill_outline` off) | 516 | 0.000 | 13,076 |
+| No overlap (`auto_overlap_mm` 0) | 155 | 0.409 | 12,849 |
+| Overlap of 0.5 mm | 437 | 0.012 | 13,638 |
+| Smallest area 4 mm² (`auto_min_area_mm2`) | 567 | 0.000 | 13,671 |
+| Smallest area 10 mm² | 323 | 0.138 | 11,321 |
+
+Halving the overlap takes away 30 % and still covers. Merging patches under 10 mm² takes away 49 %, and
+changes the picture. 2 more ways need code and are not measured. One cuts an area's overlap away
+where 2 fills already lie under it, as other embroidery software removes hidden stitching. The other
+sews the overlap with rows twice as far apart. Fills with rows 0.4 mm apart would lower every number of
+this page by 37 %. The step that removes thread is M13.30 ([roadmap](../plan/roadmap.md)), and the
+bare-fabric measure checks each change: one that lowers the thickness and leaves a gap is not taken.
 
 ## Sewing order
 

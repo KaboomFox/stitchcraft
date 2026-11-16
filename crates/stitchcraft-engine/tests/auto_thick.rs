@@ -1,0 +1,90 @@
+//! How thick a design sews (`REQ-AUTO-060` to `REQ-AUTO-062`, `docs/src/design/image-to-embroidery.md` ›
+//! How thick a design sews): the measure on fills that the engine sews, and the warning of a design
+//! digitized automatically (`SC-W0913`). The measure's own cases, on rows laid by hand, are in
+//! `stitchcraft_plan::thickness`.
+
+// Test code may unwrap and index (clippy.toml allows it in tests).
+#![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
+
+use stitchcraft_core::{Budget, Code, Diagnostic, Point};
+use stitchcraft_engine::PlanOutcome;
+use stitchcraft_engine::design::{Design, DesignSettings, Element};
+use stitchcraft_plan::Thread;
+use stitchcraft_testkit::designs::{BLUE, RED, automatic, fill, in_place, planned_with};
+use stitchcraft_testkit::fabric::{self, Limits, Measure, Thickness};
+
+/// A rectangle from (`x`, `y`), `wide` by `tall`, as a fill in `thread` with the settings `params`.
+fn rect(id: &str, (x, y): (f64, f64), (wide, tall): (f64, f64), thread: &Thread, params: &[(&str, &str)]) -> Element {
+    fill(id, &[&[(x, y), (x + wide, y), (x + wide, y + tall), (x, y + tall)]], thread, params)
+}
+
+/// A square 15 mm a side sewn `layers` times, each a fill of its own with a fill's own rows and no
+/// underlay, its angle turned 30° from the one before: the ladder of the machine checkpoint's sheet.
+fn ladder(layers: usize) -> Design {
+    let square = |layer: usize| {
+        let angle = (layer * 30).to_string();
+        rect(&format!("fill-{layer}"), (0.0, 0.0), (15.0, 15.0), &RED, &[("angle", &angle), ("fill_underlay", "false")])
+    };
+    Design::new((0..layers).map(square).collect(), DesignSettings::default()).unwrap()
+}
+
+/// What was said of how thick the design sews.
+fn thick(outcome: &PlanOutcome) -> Vec<&Diagnostic> {
+    outcome.diagnostics.iter().filter(|said| said.code == Code::AutoThick).collect()
+}
+
+#[test]
+fn req_auto_060_a_square_filled_1_2_3_and_6_times_measures_as_many_fills() {
+    for layers in [1, 2, 3, 6] {
+        let plan = in_place(&ladder(layers)).plan.unwrap();
+        let thickness = Thickness::of(&plan, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        // The spots 2 mm and more inside the square.
+        let spots = (0..23).flat_map(|i| (0..23).map(move |j| Point::new(2.0 + f64::from(i) * 0.5, 2.0 + f64::from(j) * 0.5).unwrap()));
+        let fills: Vec<f64> = spots.map(|at| thickness.at(Measure::Fills, at)).collect();
+        let (least, mean) = (fills.iter().copied().fold(f64::INFINITY, f64::min), fills.iter().sum::<f64>() / fills.len() as f64);
+        // Measured on 2026-11-15: the least is 0.89 to 0.97 of the layers and the mean 1.03, since a
+        // fill fits its rows to its shape, and the needle also travels under the rows it has sewn.
+        let layers = layers as f64;
+        assert!(least >= 0.85 * layers && least <= layers, "{layers} layers: the least is {least}");
+        assert!(mean >= 0.98 * layers && mean <= 1.06 * layers, "{layers} layers: the mean is {mean}");
+    }
+}
+
+#[test]
+fn diag_sc_w0913_a_design_digitized_automatically_is_told_where_it_sews_thick_and_is_written() {
+    // 2 areas that meet: the first reaches 1 mm under the second, over the base layer, and each is a fill
+    // with rows 0.25 mm apart, 1.6 fills of thread.
+    let shapes = |params: &[(&str, &str)]| {
+        let left = automatic(rect("left", (0.0, 0.0), (20.0, 15.0), &RED, params));
+        let right = automatic(rect("right", (20.0, 0.0), (20.0, 15.0), &BLUE, &[]));
+        Design::new(vec![left, right], DesignSettings::default()).unwrap()
+    };
+    // The plan is measured as planning leaves it, where a machine file has it: the measure goes by the
+    // machine's grid, which a plan moved back to its shapes meets elsewhere.
+    let planned = |design: &Design| planned_with(design.elements().to_vec(), design.settings);
+    // Planning says what the measure finds. Measured on 2026-11-15: where the second area starts on the
+    // overlap, its lock and its first rows lie on the first area's 1 mm and the base layer, 5.2 fills in
+    // 1.5 mm², so even 2 areas warn there.
+    let outcome = planned(&shapes(&[]));
+    let report = fabric::thickness(outcome.plan.as_ref().unwrap(), &Limits::DEFAULT);
+    assert!(outcome.plan.is_some() && thick(&outcome).len() == usize::from(report.warns()), "{:?}", thick(&outcome));
+    assert!(report.fills.value > 2.0 && report.thick.area < 3.0 && report.dense.pieces == 0, "{report:?}");
+    // Within its limits nothing is said of a design.
+    let raised = planned(&shapes(&[("auto_thick_warn_fills", "9")]));
+    assert!(raised.plan.is_some() && thick(&raised).is_empty(), "{:?}", thick(&raised));
+    // The design goes by the limits of its lowest automatic shape: held to 2 fills, the overlap is thick.
+    let outcome = planned(&shapes(&[("auto_thick_warn_fills", "2")]));
+    let said = thick(&outcome);
+    assert!(outcome.plan.is_some() && said.len() == 1, "{:?}", outcome.diagnostics);
+    assert!(said[0].message.starts_with(&format!("The design sews thick. Thread: up to {:.1} fills", report.fills.value)), "{}", said[0].message);
+    assert!(said[0].message.contains("`left`") && said[0].message.contains("`right`"), "{}", said[0].message);
+    // And held to 2 needle points in a square millimetre, the ends of the rows are.
+    assert_eq!(thick(&planned(&shapes(&[("auto_thick_warn_points", "2")]))).len(), 1);
+}
+
+#[test]
+fn req_auto_062_a_design_without_an_automatic_shape_is_not_measured() {
+    let outcome = in_place(&ladder(6));
+    assert!(outcome.plan.is_some() && thick(&outcome).is_empty(), "{:?}", thick(&outcome));
+    assert!(fabric::thickness(outcome.plan.as_ref().unwrap(), &Limits::DEFAULT).warns());
+}

@@ -5,6 +5,28 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.29: how thick a design sews (`REQ-AUTO-060` to `REQ-AUTO-062`, `REQ-RND-004`). The owner asked
+  whether so many overlaps are too thick for the needle after several colours. StitchCraft had no measure
+  of it.
+  - A finished plan is measured in the square millimetre round each spot, for its thread and for its
+    needle points. The thread is counted in fills, and one fill is what a tatami fill lays by default,
+    rows 0.25 mm apart.
+  - `stitch plan --auto` warns with `SC-W0913` when 1 mm² or more has 3 fills or more, or 15 needle points
+    or more to a square millimetre, and still writes the file. The message names the thickest spot and
+    the shapes stacked there. The 4 limits are advanced settings (`auto_thick_warn_fills` and the 3
+    beside it) and starting values, which MC-8 confirms with a ladder of squares.
+  - `stitch preview --style thickness` draws a heat map of any machine file.
+  - The before and after sheet shows each picture's thickest spot, its area at 3 fills or more and its
+    most needle points.
+  - Measured: every standard picture is over the warning's limit somewhere. The traced dogs have 436 to
+    629 mm² at 3 fills or more, which is a quarter to a third of each. Their thickest spots have 7.9 to
+    8.5 fills.
+    The 1 mm that areas reach under their neighbours causes most of it
+    ([the numbers](docs/src/design/image-to-embroidery.md#what-todays-designs-measure)).
+  - VectorCraft shows 500 characters of an export's warning. A longer one, as `SC-W0913` is, now ends at
+    its last whole sentence that fits.
+  - Every design sews as before, and the golden files are unchanged. TS-13's 5 sheets are told
+    `SC-W0913`.
 - M14.3: lettering follows a path, and the order its letters sew in can be chosen (`REQ-FONT-015` to
   `REQ-FONT-020`).
   - `stitch lettering --path FILE` sets the text along a path of an SVG file: the one labelled

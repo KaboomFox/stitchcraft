@@ -19,12 +19,13 @@
 //! Rust and writes no timestamps. So a scene and its settings give the same bytes everywhere; the golden
 //! PNG files check it on Linux, macOS and Windows (REQ-RND-002).
 
-use stitchcraft_core::Meter;
-use stitchcraft_plan::Rgb;
+use stitchcraft_core::{Meter, Point};
+use stitchcraft_plan::thickness::{Limits, Measure, Step, Thickness};
+use stitchcraft_plan::{Rgb, Role, SewnStitch};
 use tiny_skia::{Color, FillRule, LineCap, Paint, Path, PathBuilder, Pixmap, Rect, Stroke, StrokeDash, Transform};
 
 use crate::error::RenderError;
-use crate::scene::{Arrival, GridPoint, Mark, Scene};
+use crate::scene::{Arrival, GridPoint, Hole, Mark, Scene};
 
 /// The largest preview, in pixels on a side (4096 × 4096 RGBA pixels take 64 MiB).
 pub const MAX_SIDE: u32 = 4096;
@@ -40,17 +41,21 @@ pub enum Style {
     Realistic,
     /// Lines, needle holes and marks, for checking a design.
     Simple,
+    /// How thick the design sews: where thread lies, coloured by how many fills of it lie over each spot
+    /// (`REQ-RND-004`).
+    Thickness,
 }
 
 impl Style {
     /// Every style.
-    pub const ALL: &'static [Style] = &[Style::Realistic, Style::Simple];
+    pub const ALL: &'static [Style] = &[Style::Realistic, Style::Simple, Style::Thickness];
 
     /// The style's name, as the command line and `docs/shots.toml` spell it.
     pub const fn name(self) -> &'static str {
         match self {
             Style::Realistic => "realistic",
             Style::Simple => "simple",
+            Style::Thickness => "thickness",
         }
     }
 
@@ -63,7 +68,7 @@ impl Style {
     const fn background(self) -> Rgb {
         match self {
             Style::Realistic => Rgb::from_hex(0xF4EFE6),
-            Style::Simple => Rgb::from_hex(0xFFFFFF),
+            Style::Simple | Style::Thickness => Rgb::from_hex(0xFFFFFF),
         }
     }
 }
@@ -118,6 +123,13 @@ impl Settings {
     }
 }
 
+/// The colours of the thickness style: thread under 2 fills, 2 fills or more, the warning's limit or more,
+/// and the failing limit or more.
+const ORDINARY: Rgb = Rgb::from_hex(0xBDBDBD);
+const DOUBLED: Rgb = Rgb::from_hex(0xF2CF45);
+const THICK: Rgb = Rgb::from_hex(0xEE7F1E);
+const FAILING: Rgb = Rgb::from_hex(0xC8161D);
+
 /// A drawn preview.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Image {
@@ -140,6 +152,7 @@ impl Scene {
         match settings.style {
             Style::Realistic => canvas.realistic(self)?,
             Style::Simple => canvas.simple(self)?,
+            Style::Thickness => canvas.thickness(self)?,
         }
         let png = canvas.pixmap.encode_png().map_err(|e| internal(&format!("the PNG encoder failed: {e}")))?;
         Ok(Image { width, height, png })
@@ -213,6 +226,39 @@ impl Canvas<'_> {
                 }
             }
             previous = Some(hole.at);
+        }
+        Ok(())
+    }
+
+    /// Colours each pixel by the thread over the spot under its middle (`stitchcraft_plan::thickness`),
+    /// measured on the stitches of `scene`, which lie on the machine's grid, at the spot nearest to it: grey
+    /// under 2 fills, then
+    /// yellow, orange from the warning's limit and red from the failing one, by the default limits. Fabric
+    /// shows where no thread lies. A unit of work for each pixel, beside the measure's.
+    fn thickness(&mut self, scene: &Scene) -> Result<(), RenderError> {
+        let at = |hole: GridPoint| Point::from_tenths(hole.x, hole.y);
+        let stitch = |pair: &[Hole]| match pair {
+            [from, to] if to.arrival == Arrival::Sewn => {
+                Some(SewnStitch { block: 0, index: 0, from: at(from.at), to: at(to.at), role: Role::Top, from_role: Role::Top })
+            }
+            _ => None,
+        };
+        let sewn: Vec<SewnStitch> = scene.holes.windows(2).filter_map(stitch).collect();
+        let Some(measured) = Thickness::of_stitches(&sewn, self.meter)? else { return Ok(()) };
+        let corner = at(self.min);
+        let (width, mm) = (self.pixmap.width() as usize, f64::from(self.mm));
+        self.meter.charge(u64::from(self.pixmap.width()) * u64::from(self.pixmap.height()))?;
+        for (place, pixel) in self.pixmap.pixels_mut().iter_mut().enumerate() {
+            let middle = |k: usize, corner: f64| corner + (k as f64 + 0.5) / mm - f64::from(MARGIN_MM);
+            let spot = Point::new(middle(place % width, corner.x()), middle(place / width, corner.y())).unwrap_or(Point::ORIGIN);
+            let colour = match Limits::DEFAULT.step(measured.at(Measure::Fills, spot)) {
+                Step::Bare => continue,
+                Step::Ordinary => ORDINARY,
+                Step::Doubled => DOUBLED,
+                Step::Thick => THICK,
+                Step::Failing => FAILING,
+            };
+            *pixel = color(colour).premultiply().to_color_u8();
         }
         Ok(())
     }
@@ -352,7 +398,6 @@ mod tests {
     use stitchcraft_core::Budget;
 
     use super::*;
-    use crate::scene::Hole;
 
     fn g(x: i32, y: i32) -> GridPoint {
         GridPoint { x, y }
@@ -417,6 +462,46 @@ mod tests {
         assert_eq!(Scene::default().render(settings, &mut Budget::DEFAULT.meter()), Err(RenderError::Empty));
         let small = Budget { max_stitches: 10, max_work: 50 };
         assert!(matches!(scene(&[(0, 0), (1000, 0)]).render(settings, &mut small.meter()), Err(RenderError::Budget(_))));
+    }
+
+    /// The colour of the pixel in column `x` and row `y` of a picture.
+    fn pixel(image: &Image, x: u32, y: u32) -> Rgb {
+        let colour = Pixmap::decode_png(&image.png).unwrap().pixel(x, y).unwrap();
+        Rgb::new(colour.red(), colour.green(), colour.blue())
+    }
+
+    #[test]
+    fn req_rnd_004_the_thickness_style_colours_the_thread_by_its_fills() {
+        // Rows 0.2 mm apart are 1.25 fills. 40 mm of them, sewn again over the last 30, twice more over the
+        // last 20 and once more over the last 10: 1.25, 2.5, 5 and 6.25 fills.
+        let rows = |from: i32, to: i32| {
+            (0..=50).flat_map(move |row| if row % 2 == 0 { [(from, row * 2), (to, row * 2)] } else { [(to, row * 2), (from, row * 2)] })
+        };
+        let layers = [(0, 400), (100, 400), (200, 400), (200, 400), (300, 400)];
+        let points: Vec<(i32, i32)> = layers.into_iter().flat_map(|(from, to)| rows(from, to)).collect();
+        let settings = Settings::new(Style::Thickness, 10.0).unwrap();
+        let image = scene(&points).render(settings, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!((image.width, image.height), (440, 140));
+        // At 10 pixels per millimetre, with the margin of 2 mm: 5, 15, 25 and 35 mm along the rows, 5 mm down.
+        // 5.5 mm down, where the edges of a spot's window lie between the rows' lanes.
+        let colours = [70, 170, 270, 370].map(|x| pixel(&image, x, 75));
+        assert_eq!(colours, [ORDINARY, DOUBLED, THICK, FAILING]);
+        // The thread reaches a lane before the first hole, into the cell before it, which is in the window
+        // of the spot half a millimetre before the hole. That spot answers for the places up to 0.75 mm
+        // before the hole, and the middle of pixel 12 lies there: the spot under a pixel's middle decides.
+        assert_eq!((pixel(&image, 11, 75), pixel(&image, 12, 75)), (Rgb::new(255, 255, 255), ORDINARY));
+        assert_eq!((pixel(&image, 75, 11), pixel(&image, 75, 12)), (Rgb::new(255, 255, 255), ORDINARY));
+        assert_eq!((pixel(&image, 5, 75), pixel(&image, 70, 135)), (Rgb::new(255, 255, 255), Rgb::new(255, 255, 255)));
+        // The fabric's colour shows where no thread lies.
+        let black = scene(&points).render(settings.on(Rgb::new(0, 0, 0)), &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!((pixel(&black, 5, 75), pixel(&black, 70, 75)), (Rgb::new(0, 0, 0), ORDINARY));
+        // A scene that sews no stitch is its fabric, and the picture needs a unit of work for each pixel.
+        let mut loose = scene(&[(0, 0), (100, 50)]);
+        loose.holes[1].arrival = Arrival::Loose;
+        let image = loose.render(settings, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!((pixel(&image, 70, 45), image.width, image.height), (Rgb::new(255, 255, 255), 140, 90));
+        let short = Budget { max_stitches: 10, max_work: 140 * 90 + 500 };
+        assert!(matches!(scene(&[(0, 0), (100, 50)]).render(settings, &mut short.meter()), Err(RenderError::Budget(_))));
     }
 
     #[test]
