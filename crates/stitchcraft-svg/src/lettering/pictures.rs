@@ -64,9 +64,9 @@ pub const CLOSER: f64 = 0.1;
 /// letters: a half, past which a word reads as separate letters.
 pub const APART: f64 = 0.5;
 
-/// How far the lettering's width may be from the traced letters' before it is said, in millimetres: a
-/// stitch's width.
-const FIT: f64 = 0.05;
+/// How far the lettering's width may be from the traced letters' before it is said, in heights of the
+/// letters: a tenth, which is less than a stroke of a letter is wide.
+pub const FIT: f64 = 0.1;
 
 /// What a host has of a font a marker asks for.
 #[derive(Clone, Debug)]
@@ -189,7 +189,7 @@ pub fn replace(
             Err(Stop::Failed(failed)) => return Err(failed),
         }
     }
-    let mut replaced = Design::new(elements, design.settings.clone())?;
+    let mut replaced = Design::new(elements, design.settings)?;
     replaced.sort_colours = design.sort_colours;
     Ok((replaced, warnings))
 }
@@ -384,14 +384,14 @@ impl Work<'_> {
         self.warnings.extend(ranged);
         self.warnings.extend(lettered.warnings.iter().filter(|said| said.severity() != Severity::Info).cloned());
         let message = format!(
-            "The text marker `{}`: {} traced shapes, {height:.1} mm tall, are replaced by the text \"{}\" in the font `{}`, {tall:.1} mm tall.",
+            "The text marker `{}`: {} traced outlines, {height:.1} mm tall, are replaced by the text \"{}\" in the font `{}`, {tall:.1} mm tall.",
             marker.label,
             taken.len(),
             asked.text,
             font.folder
         );
         self.warnings.push(Diagnostic::new(Code::TextInPictureLettered, message));
-        if scale != wanted || (gaps > 0.0 && (room - wide).abs() > FIT) {
+        if scale != wanted || (gaps > 0.0 && (room - wide).abs() > FIT * height) {
             let message = format!(
                 "The lettering of the text marker `{}` is {tall:.1} mm tall and {wide:.1} mm wide, where the traced letters are {height:.1} mm \
                  tall and {room:.1} mm wide. It is centred on them.",
@@ -483,7 +483,8 @@ impl Work<'_> {
                 Shape::Fill { .. } => {
                     // A subpath inside an odd number of its element's other subpaths is a hole.
                     let first = part.points.first().copied().unwrap_or_default();
-                    let around = rings.iter().enumerate().filter(|(at, ring)| *at != part.subpath && frame::inside(std::slice::from_ref(ring), first));
+                    let around =
+                        rings.iter().enumerate().filter(|(at, ring)| *at != part.subpath && frame::inside(std::slice::from_ref(ring), first));
                     if around.count() % 2 == 1 { -frame::area(&part.points) } else { frame::area(&part.points) }
                 }
             };

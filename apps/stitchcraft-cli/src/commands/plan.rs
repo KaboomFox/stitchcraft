@@ -98,7 +98,12 @@ impl Source {
     /// the folder `STITCHCRAFT_FONTS` names ([`crate::fonts`], `REQ-VC-026`).
     pub fn read(self, bytes: &[u8], reading: Reading) -> Result<(Design, Vec<Diagnostic>), Diagnostic> {
         match self {
-            Source::Svg => stitchcraft_svg::read_with(bytes, &Budget::DEFAULT, reading).map(|svg| (svg.design, svg.warnings)),
+            // An SVG file's reader has no fonts, so its text markers are read here (`REQ-SVG-016`).
+            Source::Svg => {
+                let svg = stitchcraft_svg::read_with(bytes, &Budget::DEFAULT, reading)?;
+                let (design, said) = crate::text::replaced(svg.design, &[], &mut FolderFonts::from_env())?;
+                Ok((design, svg.warnings.into_iter().chain(said).collect()))
+            }
             Source::VectorCraft => stitchcraft_vectorcraft::read_in(bytes, &Budget::DEFAULT, reading, &mut FolderFonts::from_env())
                 .map(|read| (read.design, read.warnings)),
         }
@@ -136,7 +141,17 @@ pub fn sew(
     format: FormatId,
     name: &str,
 ) -> Sewn {
-    let (design, warnings) = match source.read(design, reading).map(|(design, warnings)| (design.automatic_with(rules), warnings)) {
+    // The marks of `--text` came with the rules (`REQ-CLI-020`): their letters are replaced before the
+    // rules' settings are set on what is left.
+    let (marks, rules): (Vec<_>, Vec<_>) = rules.iter().cloned().partition(|(key, _)| key == crate::text::KEY);
+    let marks: Vec<&str> = marks.iter().map(|(_, mark)| mark.as_str()).collect();
+    let read = source.read(design, reading).and_then(|(design, mut warnings)| {
+        let (design, said) =
+            if marks.is_empty() { (design, Vec::new()) } else { crate::text::replaced(design, &marks, &mut FolderFonts::from_env())? };
+        warnings.extend(said);
+        Ok((design.automatic_with(&rules), warnings))
+    });
+    let (design, warnings) = match read {
         Ok(read) => read,
         Err(unreadable) => return Sewn { diagnostics: vec![unreadable], plan: None, file: None, back: None },
     };
