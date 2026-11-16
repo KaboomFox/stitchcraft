@@ -95,6 +95,13 @@ fn req_auto_060_a_plan_is_measured_where_the_machine_sews_it() {
     let stack = |plan: &StitchPlan| measured(plan).stack(plan, p(5.0, 2.5), &mut meter()).unwrap();
     assert_eq!(stack(&before), stack(&after));
     assert!(!stack(&before).is_empty());
+    // A needle point half way between 2 of the grid's, but for its last digits, goes where the point half
+    // way goes: 4.85 mm to 4.8, the even side, from above as from below, and 4.95 mm to 5.
+    assert_eq!((settled(4.85 + 1e-12), settled(4.85 - 1e-12), settled(0.123_456_74)), (4.85, 4.85, 0.123_457));
+    assert_eq!(measured(&plan_at(4.85 + 1e-12)), measured(&plan_at(4.8)));
+    assert_eq!(measured(&plan_at(4.85 - 1e-12)), measured(&plan_at(4.8)));
+    assert_eq!(measured(&plan_at(4.95 - 1e-12)), measured(&plan_at(5.0)));
+    assert!(measured(&plan_at(4.8)) != measured(&plan_at(4.9)) && measured(&plan_at(4.9)) != measured(&plan_at(5.0)));
     // A point beyond the machine's grid is measured where it is, and such a plan is too large.
     assert_eq!(Thickness::of(&plan_at(2.0e7), &mut meter()), Err(Exhausted::Work));
 }

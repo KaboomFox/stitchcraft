@@ -18,8 +18,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - `stitch preview --style thickness` draws a heat map of any machine file.
   - The before and after sheet shows each picture's thickest spot, its area at 3 fills or more and its
     most needle points.
-  - Measured: every standard picture is over the warning's limit somewhere. The traced dogs have 437 to
-    631 mm² at 3 fills or more, which is a quarter to a third of each. Their thickest spots have 8.0 to
+  - Measured: every standard picture is over the warning's limit somewhere. The traced dogs have 436 to
+    629 mm² at 3 fills or more, which is a quarter to a third of each. Their thickest spots have 7.9 to
     8.5 fills.
     The 1 mm that areas reach under their neighbours causes most of it
     ([the numbers](docs/src/design/image-to-embroidery.md#what-todays-designs-measure)).
