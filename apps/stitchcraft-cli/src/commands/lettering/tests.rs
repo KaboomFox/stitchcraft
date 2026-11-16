@@ -1,0 +1,181 @@
+//! `stitch lettering` on fonts drawn in code (`REQ-FONT-014`): no font file of anyone's is used.
+
+use std::path::{Path, PathBuf};
+
+use stitchcraft_testkit::temp::TempDir;
+
+use super::*;
+use crate::cli::Format;
+use stitchcraft_svg::lettering::Align;
+
+/// A glyph of one satin column, 2 mm wide and 10 mm tall, standing on the baseline with its left rail at
+/// `left`.
+fn glyph(label: &str, left: f64) -> String {
+    format!(
+        r#"<g inkscape:groupmode="layer" inkscape:label="GlyphLayer-{label}"><path id="p{label}" d="M {left},60 L {left},70 M {r},60 L {r},70" style="fill:none;stroke:#000000" inkstitch:satin_column="true"/></g>"#,
+        r = left + 2.0
+    )
+}
+
+/// A font folder in `dir` with the glyphs `H` and `i`, each advancing 4 mm, a space 3 and a line 15, with
+/// `settings` more in its `font.json`. Its glyph file lies in a folder `ltr`.
+fn font_in(dir: &TempDir, settings: &str) -> PathBuf {
+    let folder = dir.join("testfont");
+    std::fs::create_dir_all(folder.join("ltr")).unwrap();
+    let px = |mm: f64| mm * 96.0 / 25.4;
+    let json = format!(
+        r#"{{"name": "Test Font", "auto_satin": true, "horiz_adv_x_default": {}, "horiz_adv_x_space": {}, "leading": {}{settings}}}"#,
+        px(4.0),
+        px(3.0),
+        px(15.0)
+    );
+    std::fs::write(folder.join("font.json"), json).unwrap();
+    let file = format!(
+        r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkstitch="http://inkstitch.org/namespace" width="100mm" height="100mm" viewBox="0 0 100 100"><metadata><inkstitch:inkstitch_svg_version>3</inkstitch:inkstitch_svg_version></metadata><sodipodi:namedview id="base"><sodipodi:guide position="0,30" orientation="0,1" inkscape:label="baseline"/></sodipodi:namedview>{}{}</svg>"#,
+        glyph("H", 1.0),
+        glyph("i", 0.0)
+    );
+    std::fs::write(folder.join("ltr").join("glyphs.svg"), file).unwrap();
+    std::fs::write(folder.join("LICENSE"), "SIL Open Font License").unwrap();
+    folder
+}
+
+/// The arguments that set `text` in `font` and write `output`, everything else at its default.
+fn args(text: &str, font: &Path, output: PathBuf) -> LetteringArgs {
+    LetteringArgs {
+        text: text.to_string(),
+        font: font.to_path_buf(),
+        output,
+        profile: None,
+        format: None,
+        preview: None,
+        scale: None,
+        height: None,
+        align: Align::Left,
+        letter_spacing: 0.0,
+        word_spacing: 0.0,
+        line_height: 0.0,
+    }
+}
+
+/// Whether `stderr` has no warning and no error: the planner may note needle points it left out.
+fn quiet(stderr: &str) -> bool {
+    stderr.lines().all(|line| line.starts_with("info ") || line.starts_with("  "))
+}
+
+/// The size of the design in the machine file at `path`, in millimetres, and its stitches.
+fn sewn(path: &Path) -> (f64, f64, usize) {
+    let decoded = stitchcraft_formats::decode(&std::fs::read(path).unwrap()).unwrap();
+    let bounds = decoded.plan.bounds().unwrap();
+    (bounds.width(), bounds.height(), decoded.plan.stats().stitches)
+}
+
+#[test]
+fn req_font_014_a_word_sews_for_the_pe800_inside_its_hoop() {
+    let dir = TempDir::new("lettering");
+    let font = font_in(&dir, r#", "size": 10, "min_scale": 0.5, "max_scale": 3"#);
+    let (output, preview) = (dir.join("hi.pes"), dir.join("hi.png"));
+    let out = run(&LetteringArgs { preview: Some(preview.clone()), ..args("Hi", &font, output.clone()) });
+    assert!(out.status == Status::Done && quiet(&out.stderr), "{}", out.stderr);
+    let lines: Vec<&str> = out.stdout.lines().collect();
+    assert_eq!(lines[0], "Hi · Test Font (testfont)");
+    assert!(lines[1].starts_with(&format!("  file      {} (PES", output.display())), "{}", out.stdout);
+    assert_eq!(lines[3], format!("  profile   {} ({})", profiles::REFERENCE.id, profiles::REFERENCE.name));
+    assert_eq!(lines[4], "  scale     100 % (10.0 mm tall)");
+    assert!(out.stdout.contains(&format!("  preview   {} (", preview.display())), "{}", out.stdout);
+    assert!(std::fs::read(&preview).unwrap().starts_with(b"\x89PNG"));
+    // `H` from 0 to 2 mm and `i` from 3 to 5, 10 mm tall: inside the PE800's 130 × 180 mm, with the satin's pull.
+    let (width, height, stitches) = sewn(&output);
+    assert!((4.5..6.0).contains(&width) && (9.5..11.0).contains(&height) && stitches > 40, "{width} × {height} mm, {stitches} stitches");
+    assert!(width <= profiles::REFERENCE.hoop.width.get() && height <= profiles::REFERENCE.hoop.height.get());
+    // `\n` ends a line, 15 mm above the next, and --height gives the scale over the font's size: twice as tall.
+    let tall = run(&LetteringArgs { height: Some(20.0), ..args("H\\ni", &font, output.clone()) });
+    assert!(tall.status == Status::Done && quiet(&tall.stderr), "{}", tall.stderr);
+    assert_eq!(tall.stdout.lines().next(), Some("H\\ni · Test Font (testfont)"));
+    assert!(tall.stdout.contains("\n  scale     200 % (20.0 mm tall)\n"), "{}", tall.stdout);
+    let (width, height, _) = sewn(&output);
+    assert!((3.5..5.5).contains(&width) && (49.0..51.5).contains(&height), "{width} × {height} mm");
+    // --scale, the spacing and the alignment reach the text, and a DST file is written by its format.
+    let dst = dir.join("hi.bin");
+    let spaced = LetteringArgs {
+        scale: Some(50.0),
+        letter_spacing: 2.0,
+        word_spacing: 1.0,
+        line_height: -5.0,
+        align: Align::Right,
+        format: Some(Format::Dst),
+        ..args("Hi i\\ni", &font, dst.clone())
+    };
+    let spaced = run(&spaced);
+    assert!(spaced.status == Status::Done && quiet(&spaced.stderr), "{}", spaced.stderr);
+    assert!(spaced.stdout.contains("\n  scale     50 % (5.0 mm tall)\n") && spaced.stdout.contains("(DST, "), "{}", spaced.stdout);
+    // `H` 0 to 2, `i` 5 to 7 and, after a 3 + 1 mm space, 13 to 15 mm, at half the size, over 2 lines 10 mm apart.
+    let (width, height, _) = sewn(&dst);
+    assert!((7.0..8.5).contains(&width) && (9.5..11.0).contains(&height), "{width} × {height} mm");
+}
+
+#[test]
+fn req_font_014_what_is_said_is_printed_and_an_error_writes_nothing() {
+    let dir = TempDir::new("lettering");
+    let font = font_in(&dir, r#", "size": 10, "min_scale": 0.5, "max_scale": 3"#);
+    let output = dir.join("out.pes");
+    // A warning of the scale and one of a missing character are printed, and the file is written.
+    let warned = run(&LetteringArgs { scale: Some(400.0), ..args("Hx", &font, output.clone()) });
+    assert_eq!(warned.status, Status::Done);
+    let codes: Vec<&str> = warned.stderr.lines().filter(|line| line.starts_with("warning ")).map(|line| line.split(':').next().unwrap()).collect();
+    assert_eq!(codes, ["warning SC-W1106", "warning SC-W1107"]);
+    assert!(warned.stdout.contains("\n  scale     300 % (30.0 mm tall)\n") && output.exists(), "{}", warned.stdout);
+    std::fs::remove_file(&output).unwrap();
+    // A text wider than the hoop is refused as any design is.
+    let wide = run(&LetteringArgs { letter_spacing: 150.0, ..args("Hi", &font, output.clone()) });
+    assert_eq!(wide.status, Status::DesignErrors);
+    assert!(
+        wide.stderr.contains("error SC-E0701: The design is 155.0 × 10.0 mm") && wide.stderr.ends_with("nothing was written\n"),
+        "{}",
+        wide.stderr
+    );
+    // A text of no glyph, after what reading the font said.
+    let empty = run(&args(" ", &font, output.clone()));
+    assert_eq!(empty.status, Status::DesignErrors);
+    assert!(empty.stderr.starts_with("error SC-E1108: None of the text's characters sews in the font `testfont`"), "{}", empty.stderr);
+    assert!(!output.exists());
+    // A folder that is no font, and one that isn't there.
+    let bare = dir.join("bare");
+    std::fs::create_dir_all(&bare).unwrap();
+    let unread = run(&args("Hi", &bare, output.clone()));
+    assert_eq!(unread.status, Status::DesignErrors);
+    assert!(unread.stderr.starts_with("error SC-E1101: The font `bare` has no `font.json`"), "{}", unread.stderr);
+    let missing = dir.join("missing");
+    let gone = run(&args("Hi", &missing, output.clone()));
+    assert_eq!(gone.status, Status::Io);
+    assert!(gone.stderr.starts_with(&format!("stitch: cannot read {}: ", missing.display())), "{}", gone.stderr);
+    assert!(!output.exists());
+}
+
+#[test]
+fn req_font_014_the_options_are_checked_before_the_font_is_read() {
+    let dir = TempDir::new("lettering");
+    // A font without a size: its scale is named in percent alone, its folder's name when it has no other.
+    let font = font_in(&dir, "");
+    let output = dir.join("out.pes");
+    let plain = run(&args("i", &font, output.clone()));
+    assert_eq!(plain.status, Status::Done, "{}", plain.stderr);
+    assert!(plain.stdout.contains("\n  scale     100 %\n"), "{}", plain.stdout);
+    let tall = run(&LetteringArgs { height: Some(12.0), ..args("i", &font, output.clone()) });
+    assert_eq!(tall.status, Status::Usage);
+    assert_eq!(tall.stderr, "stitch: the font `testfont` gives no size in its font.json, so --height can't be told: use --scale\n");
+    let missing = dir.join("missing");
+    assert_eq!(run(&args("Hi", &missing, dir.join("out.png"))).status, Status::Usage, "a format no file has");
+    assert_eq!(run(&LetteringArgs { profile: Some("no-such-machine".to_string()), ..args("Hi", &missing, output.clone()) }).status, Status::Usage);
+    let same = run(&LetteringArgs { preview: Some(output.clone()), ..args("Hi", &missing, output.clone()) });
+    assert_eq!(same.status, Status::Usage, "{}", same.stderr);
+    // A font named as its folder is named once.
+    let folder = dir.join("named");
+    std::fs::create_dir_all(&folder).unwrap();
+    for file in ["font.json", "ltr/glyphs.svg"] {
+        std::fs::create_dir_all(folder.join(file).parent().unwrap()).unwrap();
+        let text = std::fs::read_to_string(font.join(file)).unwrap().replace("Test Font", "named");
+        std::fs::write(folder.join(file), text).unwrap();
+    }
+    assert_eq!(run(&args("i", &folder, output)).stdout.lines().next(), Some("i · named"));
+}

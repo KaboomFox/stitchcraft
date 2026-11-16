@@ -9,6 +9,7 @@ use stitchcraft_engine::auto::rules::{PRESETS, Preset};
 use stitchcraft_engine::design::Reading;
 use stitchcraft_plan::FormatId;
 use stitchcraft_render::{Settings, Style};
+use stitchcraft_svg::lettering::{self, Align};
 
 /// stitch — StitchCraft machine embroidery.
 #[derive(Debug, Parser)]
@@ -40,6 +41,9 @@ pub enum Command {
     /// command line first.
     #[command(visible_alias = "export")]
     Plan(PlanArgs),
+    /// Set a text in an embroidery font, a folder in Ink/Stitch's font format, plan it for a machine and
+    /// write the machine file, with a picture if asked.
+    Lettering(LetteringArgs),
     /// Write a machine-checkpoint test sheet (docs/src/plan/machine-testing.md).
     Testsheet(TestsheetArgs),
     /// Read a machine file (PES, PEC or DST) and describe it: size, stitches, threads, stitch lengths.
@@ -102,6 +106,59 @@ pub struct PlanArgs {
     /// How a picture's subject is cut out first.
     #[command(flatten)]
     pub subject: SubjectArgs,
+}
+
+/// `stitch lettering`. The help of the options that set the text is the settings' own
+/// ([`stitchcraft_svg::lettering::SETTINGS`]).
+#[derive(Debug, Args)]
+pub struct LetteringArgs {
+    /// The text. A backslash and n (`\n`) ends a line.
+    pub text: String,
+    /// The font: a folder in Ink/Stitch's font format, with its font.json and its glyph files.
+    #[arg(long, value_name = "FOLDER")]
+    pub font: PathBuf,
+    /// The machine file to write.
+    #[arg(long, short)]
+    pub output: PathBuf,
+    /// The machine profile (see `stitch profiles`); by default the reference machine, which `stitch profiles`
+    /// lists first.
+    #[arg(long, short)]
+    pub profile: Option<String>,
+    /// The file format; by default the output file's extension decides.
+    #[arg(long, value_enum)]
+    pub format: Option<Format>,
+    /// Also draw a picture of what the file will sew (PNG).
+    #[arg(long)]
+    pub preview: Option<PathBuf>,
+    #[arg(long, value_name = lettering::SCALE.takes, value_parser = number, conflicts_with = "height", help = lettering::SCALE.does)]
+    #[allow(missing_docs)] // Its help is the setting's own, above.
+    pub scale: Option<f64>,
+    /// The height of the text in millimetres, in place of --scale: the scale is the height over the font's
+    /// size, the height of its reference capital.
+    #[arg(long, value_name = "MM", value_parser = number)]
+    pub height: Option<f64>,
+    #[arg(long, value_name = lettering::TEXT_ALIGN.takes, value_parser = align, default_value = lettering::TEXT_ALIGN.default, help = lettering::TEXT_ALIGN.does)]
+    #[allow(missing_docs)] // Its help is the setting's own, above.
+    pub align: Align,
+    #[arg(long, value_name = lettering::LETTER_SPACING.takes, value_parser = number, default_value = lettering::LETTER_SPACING.default, allow_hyphen_values = true, help = lettering::LETTER_SPACING.does)]
+    #[allow(missing_docs)] // Its help is the setting's own, above.
+    pub letter_spacing: f64,
+    #[arg(long, value_name = lettering::WORD_SPACING.takes, value_parser = number, default_value = lettering::WORD_SPACING.default, allow_hyphen_values = true, help = lettering::WORD_SPACING.does)]
+    #[allow(missing_docs)] // Its help is the setting's own, above.
+    pub word_spacing: f64,
+    #[arg(long, value_name = lettering::LINE_HEIGHT.takes, value_parser = number, default_value = lettering::LINE_HEIGHT.default, allow_hyphen_values = true, help = lettering::LINE_HEIGHT.does)]
+    #[allow(missing_docs)] // Its help is the setting's own, above.
+    pub line_height: f64,
+}
+
+/// A number, as lettering's options take it: one that is finite.
+fn number(text: &str) -> Result<f64, String> {
+    text.parse::<f64>().ok().filter(|number| number.is_finite()).ok_or_else(|| format!("`{text}` isn't a number"))
+}
+
+/// The alignment called `name`, as `--align` takes it.
+fn align(name: &str) -> Result<Align, String> {
+    Align::named(name).ok_or_else(|| format!("`{name}` isn't an alignment: they are {}", Align::ALL.map(Align::id).join(", ")))
 }
 
 /// `--subject` and the options that go with it: a picture's subject cut out before VectorCraft traces it

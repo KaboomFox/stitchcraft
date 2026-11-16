@@ -196,6 +196,7 @@ VectorCraft reports the plug-in as failed.
 | A diagnostic | the diagnostics registry in `stitchcraft-core` | explanation text + a case that triggers it |
 | SVG/Ink/Stitch parsing | `stitchcraft-svg` | compatibility contract row |
 | An embroidery font in Ink/Stitch's format, its settings and glyphs | `stitchcraft_svg::font`, from M14.1 | the [fonts](fonts.md#the-reader) page, and its key in the reader's table, which the font settings page is written from |
+| Setting text in a font: the layout, the scale and the route of its letters | `stitchcraft_svg::lettering`, from M14.2, and `stitch lettering` in `apps/stitchcraft-cli/src/commands/lettering.rs` | the [lettering](fonts.md#lettering) section, and a setting's entry in `lettering::SETTINGS`, which the command's help is written from |
 | VectorCraft document reading | `stitchcraft-vectorcraft` | compatibility gate scenario |
 | A CLI subcommand | `apps/stitchcraft-cli/src/commands/` | `trycmd` example in the docs |
 | A repo check | `xtask/src/` | `cargo xtask ci` step list and the [guardrails](guardrails.md) page |
