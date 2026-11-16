@@ -33,6 +33,20 @@ use crate::design::DesignSettings;
 use crate::generators::mm;
 use crate::normalize::region::Polygon;
 
+/// The most of one rail of a satin column, in millimetres, that its stitches may sew to a millimetre of the
+/// other. A straight column sews 1 mm to 1 mm and lays 1.25 fills of thread, so at 2 mm the shorter rail
+/// has 2.5 fills of the column's own thread, under the 3 that planning warns at (`REQ-AUTO-062`). On the 4
+/// traced dogs, the satin columns of small ragged patches sewed up to 6.6 fills by themselves where their
+/// stitches met at one end of a fan (`docs/src/design/image-to-embroidery.md` › Less thread where a design
+/// sews thick).
+pub const MOST_CROWDING: f64 = 2.0;
+
+/// Whether a satin column that sews `most` millimetres of one rail to a millimetre of the other crowds its
+/// stitches, so that the column is refused: more than [`MOST_CROWDING`], to the micrometre.
+pub(crate) fn crowds(most: f64) -> bool {
+    micrometres(most) > micrometres(MOST_CROWDING)
+}
+
 /// A rule of the table.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum RuleId {
@@ -146,7 +160,8 @@ pub const RULES: [Rule; 9] = [
     Rule {
         id: RuleId::Refused,
         label: "Refused",
-        is: "a column that can't be drawn, or that would sew a stitch longer than {auto_max_satin_width_mm} between its rails",
+        is: "a column that can't be drawn, that would sew a stitch longer than {auto_max_satin_width_mm} between its rails, or that would sew \
+             more than 2 mm of one rail to 1 mm of the other",
         sewn: "a tatami fill",
         bounds: &[MAX_SATIN_WIDTH],
     },

@@ -475,7 +475,8 @@ fn req_auto_034_the_blaze_is_filled_down_to_the_nose() {
         .filter(|element| setting(element, SATIN_COLUMN) == Some("true"))
         .filter_map(|element| if let Shape::Stroke { width, .. } = element.shape { Some(width.get()) } else { None })
         .collect();
-    assert!(!widths.is_empty() && widths.iter().all(|width| *width < 4.0), "{widths:?}");
+    // Its one column left, beside the wing, would crowd its stitches, and is filled too (`REQ-AUTO-064`).
+    assert!(widths.iter().all(|width| *width < 4.0), "{widths:?}");
     assert!(matches!(elements.iter().find(|element| element.id.as_str() == "vc:79:fill").map(|fill| &fill.shape), Some(Shape::Fill { .. })));
 }
 
@@ -696,7 +697,7 @@ fn req_auto_030_unlike_subjects_sew_by_the_same_rules() {
         ("an ink drawing", fired(&ink_drawing())),
     ];
     let recorded = [
-        BTreeMap::from([("area", 2), ("column", 2), ("compact", 2), ("line", 1), ("uneven", 4)]),
+        BTreeMap::from([("area", 2), ("compact", 2), ("line", 1), ("refused", 2), ("uneven", 4)]),
         BTreeMap::from([("area", 3), ("column", 3), ("uneven", 2)]),
         BTreeMap::from([("area", 5), ("column", 11), ("line", 1)]),
         BTreeMap::from([("area", 4), ("column", 8), ("refused", 2)]),

@@ -173,6 +173,10 @@ fn sort(
                 sorted.fired.push(fired(RuleId::Refused, Some(measures)));
                 kept(sorted, part, columns::long(id, stitch, bounds));
             }
+            Made::Crowded(most, measures) => {
+                sorted.fired.push(fired(RuleId::Refused, Some(measures)));
+                kept(sorted, part, columns::piled(id, most));
+            }
             Made::Unmade => {
                 sorted.fired.push(fired(RuleId::Refused, None));
                 kept(sorted, part, columns::unmade(id, bounds));
