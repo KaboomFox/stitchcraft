@@ -32,9 +32,11 @@ fn plan(parts: &[Part]) -> StitchPlan {
     builder.finish()
 }
 
-/// The rows of a fill of the square from (0, 0) to (10, 10), a thread apart from y = 0.05, sewn back and
-/// forth `layers` times over, after a needle point at (0, 0): the cells then start at half millimetres, and
-/// no lane of a row lies on a cell's edge.
+/// The rows of a fill of the square from (0, 0) to (10, 10), a thread apart from y = 0.1, sewn back and
+/// forth `layers` times over, after a needle point at (0, 0): the cells then start at half millimetres. The
+/// rows lie on the machine's grid, where a plan is measured, so their lanes lie 0.2 mm apart from y = 0, and
+/// one in 5 lies on the edge of a cell, at a whole millimetre, where a rounding decides which cell holds
+/// it. The exact cases read spots at whole millimetres of y, whose windows end between 2 lanes.
 fn rows(layers: usize) -> Vec<(f64, f64)> {
     let mut points = vec![(0.0, 0.0)];
     let mut side = 0.0;
@@ -42,7 +44,7 @@ fn rows(layers: usize) -> Vec<(f64, f64)> {
         for row in 0..25 {
             // Up the square and down it again, so that no stitch crosses it from one layer to the next.
             let row = if layer % 2 == 0 { row } else { 24 - row };
-            let y = 0.05 + f64::from(row) * THREAD;
+            let y = 0.1 + f64::from(row) * THREAD;
             points.extend([(side, y), (10.0 - side, y)]);
             side = 10.0 - side;
         }
@@ -67,7 +69,7 @@ fn req_auto_060_a_square_sewn_1_2_3_and_6_times_measures_as_many_fills() {
         // Inside the square, a millimetre and more from its edge, every window holds 2.5 rows' worth of
         // thread, wherever the rows fall in it: the 2 lanes of the rows lie 0.2 mm apart. Rows a thread
         // apart are 0.625 of a fill, whose rows lie 0.25 mm apart.
-        for at in [(5.0, 5.0), (5.2, 4.8), (3.3, 7.7), (1.0, 1.0), (9.0, 8.5)] {
+        for at in [(5.0, 5.0), (5.2, 4.8), (3.3, 7.2), (1.0, 1.0), (9.0, 9.0)] {
             let fills = thickness.at(Measure::Fills, p(at.0, at.1));
             assert!(near(fills, layers as f64 * 0.625), "{layers} layers at {at:?}: {fills}");
         }
@@ -79,8 +81,27 @@ fn req_auto_060_a_square_sewn_1_2_3_and_6_times_measures_as_many_fills() {
 }
 
 #[test]
+fn req_auto_060_a_plan_is_measured_where_the_machine_sews_it() {
+    // Needle points 0.04 mm to either side of the edge of a cell, at 5 mm, are the same point to the
+    // machine, and measure the same: 2 needle points in the cell from 5 mm, and the stack's thread there.
+    // Where they are planned, the stitches between them have other lengths, and the points other cells.
+    let plan_at = |x: f64| plan(&[("a", Role::Top, &[(0.0, 0.0), (x, 2.2), (x, 2.4)])]);
+    let (before, after) = (plan_at(4.96), plan_at(5.04));
+    let planned = |plan: &StitchPlan| Thickness::of_stitches(&plan.sewn_stitches(), &mut meter()).unwrap().unwrap();
+    assert!(planned(&before) != planned(&after) && planned(&before) != measured(&before) && planned(&after) != measured(&after));
+    assert_eq!(measured(&before), measured(&after));
+    assert_eq!(measured(&before), Thickness::of_stitches(&plan_at(5.0).sewn_stitches(), &mut meter()).unwrap().unwrap());
+    assert_eq!((measured(&before).at(Measure::Points, p(5.5, 2.5)), measured(&before).at(Measure::Points, p(4.5, 2.5))), (2.0, 0.0));
+    let stack = |plan: &StitchPlan| measured(plan).stack(plan, p(5.0, 2.5), &mut meter()).unwrap();
+    assert_eq!(stack(&before), stack(&after));
+    assert!(!stack(&before).is_empty());
+    // A point beyond the machine's grid is measured where it is, and such a plan is too large.
+    assert_eq!(Thickness::of(&plan_at(2.0e7), &mut meter()), Err(Exhausted::Work));
+}
+
+#[test]
 fn req_auto_060_every_millimetre_of_thread_is_counted_once_whatever_its_role_and_direction() {
-    let points = [(0.0, 0.0), (7.0, 3.0), (7.0, 3.0), (2.0, 9.5), (2.13, 9.41), (-3.0, 4.0)];
+    let points = [(0.0, 0.0), (7.0, 3.0), (7.0, 3.0), (2.0, 9.5), (2.1, 9.4), (-3.0, 4.0)];
     let plan = plan(&[("a", Role::Underlay, &points[..3]), ("b", Role::Travel, &points[3..])]);
     let thickness = measured(&plan);
     let length: f64 = plan.sewn_stitches().iter().map(SewnStitch::length).sum();
