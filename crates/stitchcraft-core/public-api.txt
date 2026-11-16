@@ -139,6 +139,7 @@ pub stitchcraft_core::diag::Code::SvgInkStitchUpdated
 pub stitchcraft_core::diag::Code::SvgObjectIgnored
 pub stitchcraft_core::diag::Code::SvgUnreadable
 pub stitchcraft_core::diag::Code::TextLongerThanPath
+pub stitchcraft_core::diag::Code::TextNotLettered
 pub stitchcraft_core::diag::Code::ThreadColorsUnknown
 pub stitchcraft_core::diag::Code::ThreadsShareColor
 pub stitchcraft_core::diag::Code::TooLargeForFormat
@@ -417,6 +418,7 @@ pub stitchcraft_core::Code::SvgInkStitchUpdated
 pub stitchcraft_core::Code::SvgObjectIgnored
 pub stitchcraft_core::Code::SvgUnreadable
 pub stitchcraft_core::Code::TextLongerThanPath
+pub stitchcraft_core::Code::TextNotLettered
 pub stitchcraft_core::Code::ThreadColorsUnknown
 pub stitchcraft_core::Code::ThreadsShareColor
 pub stitchcraft_core::Code::TooLargeForFormat

@@ -190,7 +190,7 @@ fn sewn(
     asked: Option<&'static MachineProfile>,
     wanted: Wanted<'_>,
 ) -> Result<(Vec<u8>, Vec<Diagnostic>), Vec<Diagnostic>> {
-    let read = stitchcraft_vectorcraft::read_with(input, &Budget::DEFAULT, reading).map_err(|unread| vec![unread])?;
+    let read = stitchcraft_vectorcraft::read_in(input, &Budget::DEFAULT, reading, &mut crate::fonts::built_in()).map_err(|unread| vec![unread])?;
     let profile = asked.or(read.machine).unwrap_or(REFERENCE);
     // Planned for the format it is written in, whose limits the file then keeps.
     let outcome = stitchcraft_engine::plan(&read.design, &profile.writing(format), &Budget::DEFAULT);
@@ -287,13 +287,17 @@ fn shown(line: String) -> String {
 }
 
 /// The message an export declines with: the first error `said`, after the number of errors when there
-/// are more.
+/// are more. VectorCraft shows a declined export's message alone, without its warnings. So when a text was
+/// left out of its embroidery font (`SC-W1111`), the first such warning follows the error: a document of
+/// one text whose font isn't built in has nothing to stitch, and the warning is what says why.
 fn decline(said: &[Diagnostic]) -> String {
     let errors: Vec<&Diagnostic> = said.iter().filter(|d| is_error(d)).collect();
+    let unlettered = said.iter().find(|d| d.code == Code::TextNotLettered).map(|d| format!(" A text was left out: {}", d.one_line()));
+    let unlettered = unlettered.unwrap_or_default();
     match errors.as_slice() {
         [] => "StitchCraft wrote nothing, and said no error.".to_string(),
-        [one] => one.one_line(),
-        [first, ..] => format!("{} errors stop the export. The first is {}", errors.len(), first.one_line()),
+        [one] => format!("{}{unlettered}", one.one_line()),
+        [first, ..] => format!("{} errors stop the export. The first is {}{unlettered}", errors.len(), first.one_line()),
     }
 }
 
