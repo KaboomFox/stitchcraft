@@ -6,7 +6,8 @@
 # compat/scenarios with VectorCraft's own command line, from the release's Linux archive, or built from the
 # branch. The report job then opens, updates or closes one issue per track, and adopts a new release that
 # passes both levels with a pull request, which pins it and adds it to the generated supported-versions page.
-# Pull requests that touch the plug-in, the gate or the command line, whose `stitch plan` traces a picture
+# Pull requests that touch the plug-in, the library crates it is built from, the gate or the command line,
+# whose `stitch plan` traces a picture
 # with VectorCraft's command line in Level B, test the pinned stable version.
 # The move rehearsal puts this repository into VectorCraft's latest release and `main` as a folder, both
 # ways ADR-0011 describes, and runs StitchCraft's gates there; pull requests that touch manifests or
@@ -23,7 +24,9 @@ on:
     paths:
       - "apps/stitchcraft-vc-plugin/**"
       - "apps/stitchcraft-cli/**"
-      - "crates/stitchcraft-vectorcraft/**"
+      # Every library crate: the plug-ins are built from them, and a change to one changes what an export
+      # costs in VectorCraft (docs/src/design/compatibility-gate.md).
+      - "crates/**"
       - "compat/**"
       - "xtask/**"
       - "**/Cargo.toml"

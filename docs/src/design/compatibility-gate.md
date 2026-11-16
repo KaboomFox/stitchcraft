@@ -7,7 +7,7 @@ before VectorCraft ships it — and keep a public, generated table of which Vect
 
 | Track | What we test against | How it is discovered | When | Effect of a failure |
 |---|---|---|---|---|
-| `stable` | Latest published, non-pre-release VectorCraft release | SemVer tags from `git ls-remote` | Daily, and on every PR touching the plug-in, the adapter or the gate | **Blocks** our release; its issue is labelled `upstream-stable` |
+| `stable` | Latest published, non-pre-release VectorCraft release | SemVer tags from `git ls-remote` | Daily, and on every PR touching the plug-in, a library crate or the gate | **Blocks** our release; its issue is labelled `upstream-stable` |
 | `prerelease` | Latest published alpha/beta/RC (`-alpha`, `-beta`, `-rc` SemVer tags) | SemVer tags from `git ls-remote`, when newer than the latest release | Daily | Its issue is labelled `upstream-prerelease`; does not block |
 | `release-branch` | Head of VectorCraft's `release` branch, which their pipeline builds into the next (still private, draft) release | `git ls-remote … refs/heads/release` | Daily | Its issue is labelled `upstream-canary` |
 | `main` | Head of VectorCraft's `main` | `git ls-remote … refs/heads/main` | Daily | Its issue is labelled `upstream-canary` |
@@ -63,6 +63,21 @@ checks:
    an export of a fill of the reference hoop's whole field finishes within an export's (`REQ-VC-011`).
    Stroke to Satin finishes within a heavy filter's, and Test Sheet within a light one's. Each run prints
    the costs.
+7. Room: a test sheet's export that takes more than 85 % of an export's budget fails. The message names
+   the sheet and gives its count beside the limit (`EXPORT_SHARE` in
+   `compat/vc-contract/tests/contract.rs`). The limit is
+   VectorCraft's own, which the test reads from its host: `export::FUEL` and the host's allowance for each
+   byte of the document. The count is the least budget the export finishes within, found by halving to
+   within 1 %. Level B can't make this check, since `vectorcraft-cli` says only that an export ran out.
+
+**Why 85 %, and why on every library crate.** M13.17 changed the engine, and with it what an export
+costs. Its pull request never ran the gate, because the workflow's paths named the plug-in and not the
+crates it is built from. TS-13D's export went from 10.536 to 10.872 billion instructions of the 10.905
+billion VectorCraft allowed it, and nothing said so. The next step that changed what sews then failed
+with `plug-in exceeded its instruction budget`, for a cost that wasn't its own. M13.31 split the sheet
+in 2, TS-13D and TS-13E, and closed both holes. Pull requests that change anything under `crates/` run
+the gate now, and a sheet past 85 % fails in the pull request that takes it there, with 15 % left to
+act in. On `main` before the split, TS-13A, TS-13B and TS-13C took 75, 74 and 78 %.
 
 `vectorcraft-plugins` depends only on `geom`, `color`, `doc` and `wasmi`, so this builds quickly.
 
