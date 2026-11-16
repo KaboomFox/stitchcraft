@@ -759,6 +759,27 @@ reason = "M14.2 sets text glyph by glyph, by name (REQ-FONT-009), and the shapin
 requirements = ["REQ-FONT-009"]
 
 [[deviation]]
+id = "DEV-FONT-004"
+area = "fonts"
+summary = "A line of text longer than its path goes on straight past the end of an open path, the way the path ends, and before its start when it is centred or ends at the end. On a closed path it goes round again. SC-W1109 names the line's length and the path's. In Ink/Stitch the glyphs past the end are all placed at the path's end, unturned, over each other, and a centred or right-aligned line that would start before the path's start is counted from the path's end instead."
+reason = "Letters sewn over each other at one place make a knot of thread that can break the needle, and nothing says so there. Ink/Stitch's behaviour was measured by running its batch lettering at d59c9ab with `Hello` in Ink/Stitch Small Font at 300 percent on a path 30 mm long: the 3 last glyphs have the same translation. The line set on is what the user sees is too long, and the warning says by how much (REQ-FONT-016)."
+requirements = ["REQ-FONT-016"]
+
+[[deviation]]
+id = "DEV-FONT-005"
+area = "fonts"
+summary = "A text of several lines is set along a path whole: each later line lies leading plus line_height further across the path, at the same places along it, and with top or bottom the whole text stands on the path or hangs from it. The colours of a font that sorts are sorted along a path too. Ink/Stitch's batch lettering writes the first line only, and its lettering along a path switches the colour sort off."
+reason = "Measured by running Ink/Stitch's batch lettering at d59c9ab with a text of 2 lines on a line and on an arc: the SVG file it writes has the first line's 5 glyphs and no other. Its code moves each later line onto a curve parallel to the path (lib/extensions/lettering_along_path.py), which no file showed. StitchCraft pushes each glyph across the path instead, which is the same on a straight path. On a bend the letters of an inner line lie closer together, and the design page says so. Its colour sort is off because sorting breaks the groups that extension walks, which StitchCraft's elements don't have (REQ-FONT-015, REQ-FONT-019)."
+requirements = ["REQ-FONT-015", "REQ-FONT-019"]
+
+[[deviation]]
+id = "DEV-FONT-006"
+area = "fonts"
+summary = "A trim after each word or line follows the last glyph sewn of each word or line, by the words the layout laid. Ink/Stitch counts the glyphs against the characters of the text, so after a ligature its trims fall a glyph early."
+reason = "Ink/Stitch's rule was read at d59c9ab (lib/lettering/font.py: _add_trims): it numbers the glyph groups and looks each number up among the indices of the text's spaces and line feeds, and a ligature is one group for 2 characters. In a text without ligatures both programs trim after the same glyphs, as measured on `Hi yo` and `We` with each choice (REQ-FONT-018)."
+requirements = ["REQ-FONT-018"]
+
+[[deviation]]
 id = "DEV-ROUTE-001"
 area = "routing"
 summary = "A piece of a satin column cut for a route gets a rung only where its rungs alone would not tell its rails from them, across its start or its end, as a column drawn with its rails and rungs does. Ink/Stitch gives every piece a rung 0.3 CSS pixels from its start, and a piece without rungs 2 more, at the middle of its rails and 0.3 CSS pixels from its end."

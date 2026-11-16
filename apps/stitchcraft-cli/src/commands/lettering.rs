@@ -16,9 +16,10 @@ use std::io;
 use std::path::Path;
 
 use stitchcraft_core::{Budget, Severity};
+use stitchcraft_engine::design::Path as Outline;
 use stitchcraft_plan::profiles;
 use stitchcraft_svg::font::{self, Font};
-use stitchcraft_svg::lettering::{self, Lettering};
+use stitchcraft_svg::lettering::{self, Along, Lettering};
 
 use super::plan::{Sewn, design_name, picture, sew_design};
 use super::{Entries, Outcome, Status, asked_profile, describe_file, describe_plan, describe_threads, distinct, output_format};
@@ -53,10 +54,30 @@ pub fn run(args: &LetteringArgs) -> Outcome {
         (Some(height), size) => height / size * 100.0,
         (None, _) => args.scale.unwrap_or(100.0),
     };
-    let how =
-        Lettering { scale, letter_spacing: args.letter_spacing, word_spacing: args.word_spacing, line_height: args.line_height, align: args.align };
+    let how = Lettering {
+        scale,
+        letter_spacing: args.letter_spacing,
+        word_spacing: args.word_spacing,
+        line_height: args.line_height,
+        align: args.align,
+        back_and_forth: args.back_and_forth,
+        trim: args.trim,
+        color_sort: args.color_sort,
+    };
     let mut said = font.warnings.clone();
-    let set = match lettering::set(&font, &args.text.replace("\\n", "\n"), &how, &Budget::DEFAULT) {
+    let along = match args.path.as_deref().map(|file| outline(file, &mut said)).transpose() {
+        Ok(along) => along,
+        Err(outcome) => return outcome,
+    };
+    let text = args.text.replace("\\n", "\n");
+    let set = match &along {
+        Some((_, path)) => {
+            let along = Along { path: path.clone(), position: args.text_position, vertical: args.vertical_text_position };
+            lettering::set_along(&font, &text, &how, &along, &Budget::DEFAULT)
+        }
+        None => lettering::set(&font, &text, &how, &Budget::DEFAULT),
+    };
+    let set = match set {
         Ok(set) => set,
         Err(unset) => {
             said.push(unset);
@@ -84,6 +105,9 @@ pub fn run(args: &LetteringArgs) -> Outcome {
     describe_file(&mut stdout, &args.output, format, &machine_file);
     let _ = writeln!(stdout, "  profile   {} ({})", profile.id, profile.name);
     let _ = writeln!(stdout, "  scale     {}", scale_line(&font, set.scale));
+    if let (Some(file), Some((named, _))) = (&args.path, &along) {
+        let _ = writeln!(stdout, "  path      {named} of {}", file.display());
+    }
     describe_plan(&mut stdout, &back, Some(profile));
     describe_threads(&mut stdout, &plan, format.palette().map(|id| Entries::Written(id.palette())));
     if let Some((path, image)) = &image {
@@ -96,6 +120,24 @@ pub fn run(args: &LetteringArgs) -> Outcome {
         return unwritten;
     }
     Outcome { stdout, stderr: said, status: Status::Done }
+}
+
+/// The label of the path Ink/Stitch's batch lettering sets its text along.
+const BATCH_LETTERING: &str = "batch lettering";
+
+/// The path of the SVG file `file` that a text is set along, with what the summary calls it: the path
+/// labelled `batch lettering`, or else the first that paints. What reading the file said goes to `said`.
+fn outline(file: &Path, said: &mut Vec<stitchcraft_core::Diagnostic>) -> Result<(String, Outline), Outcome> {
+    let bytes = files::read_capped(file).map_err(|error| Outcome::unread(file, &error))?;
+    let svg = stitchcraft_svg::read(&bytes, &Budget::DEFAULT).map_err(|unread| Outcome::refuse(String::new(), &[unread]))?;
+    said.extend(svg.warnings);
+    let elements = svg.design.elements();
+    let labelled = elements.iter().find(|element| element.name.as_deref() == Some(BATCH_LETTERING));
+    let Some(element) = labelled.or_else(|| elements.first()) else {
+        return Err(Outcome::usage(format!("{} has no path that paints to set the text along: give one a stroke", file.display())));
+    };
+    let named = if labelled.is_some() { format!("the path labelled `{BATCH_LETTERING}`") } else { format!("the first path, `{}`", element.id) };
+    Ok((named, element.shape.path().clone()))
 }
 
 /// The font as the summary names it: its name, and its folder when that differs.

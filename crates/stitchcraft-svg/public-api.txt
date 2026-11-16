@@ -160,15 +160,58 @@ impl stitchcraft_svg::lettering::Align
 pub const stitchcraft_svg::lettering::Align::ALL: [stitchcraft_svg::lettering::Align; 5]
 pub const fn stitchcraft_svg::lettering::Align::id(self) -> &'static str
 pub fn stitchcraft_svg::lettering::Align::named(&str) -> core::option::Option<stitchcraft_svg::lettering::Align>
+pub enum stitchcraft_svg::lettering::ColourSort
+pub stitchcraft_svg::lettering::ColourSort::All
+pub stitchcraft_svg::lettering::ColourSort::Line
+pub stitchcraft_svg::lettering::ColourSort::Off
+pub stitchcraft_svg::lettering::ColourSort::Word
+impl stitchcraft_svg::lettering::ColourSort
+pub const stitchcraft_svg::lettering::ColourSort::ALL: [stitchcraft_svg::lettering::ColourSort; 4]
+pub const fn stitchcraft_svg::lettering::ColourSort::id(self) -> &'static str
+pub fn stitchcraft_svg::lettering::ColourSort::named(&str) -> core::option::Option<stitchcraft_svg::lettering::ColourSort>
+pub enum stitchcraft_svg::lettering::TextPosition
+pub stitchcraft_svg::lettering::TextPosition::Centre
+pub stitchcraft_svg::lettering::TextPosition::Left
+pub stitchcraft_svg::lettering::TextPosition::Right
+pub stitchcraft_svg::lettering::TextPosition::Stretch
+impl stitchcraft_svg::lettering::TextPosition
+pub const stitchcraft_svg::lettering::TextPosition::ALL: [stitchcraft_svg::lettering::TextPosition; 4]
+pub const fn stitchcraft_svg::lettering::TextPosition::id(self) -> &'static str
+pub fn stitchcraft_svg::lettering::TextPosition::named(&str) -> core::option::Option<stitchcraft_svg::lettering::TextPosition>
+pub enum stitchcraft_svg::lettering::Trim
+pub stitchcraft_svg::lettering::Trim::Glyph
+pub stitchcraft_svg::lettering::Trim::Line
+pub stitchcraft_svg::lettering::Trim::Off
+pub stitchcraft_svg::lettering::Trim::Word
+impl stitchcraft_svg::lettering::Trim
+pub const stitchcraft_svg::lettering::Trim::ALL: [stitchcraft_svg::lettering::Trim; 4]
+pub const fn stitchcraft_svg::lettering::Trim::id(self) -> &'static str
+pub fn stitchcraft_svg::lettering::Trim::named(&str) -> core::option::Option<stitchcraft_svg::lettering::Trim>
+pub enum stitchcraft_svg::lettering::VerticalPosition
+pub stitchcraft_svg::lettering::VerticalPosition::Baseline
+pub stitchcraft_svg::lettering::VerticalPosition::Bottom
+pub stitchcraft_svg::lettering::VerticalPosition::Top
+impl stitchcraft_svg::lettering::VerticalPosition
+pub const stitchcraft_svg::lettering::VerticalPosition::ALL: [stitchcraft_svg::lettering::VerticalPosition; 3]
+pub const fn stitchcraft_svg::lettering::VerticalPosition::id(self) -> &'static str
+pub fn stitchcraft_svg::lettering::VerticalPosition::named(&str) -> core::option::Option<stitchcraft_svg::lettering::VerticalPosition>
+pub struct stitchcraft_svg::lettering::Along
+pub stitchcraft_svg::lettering::Along::path: stitchcraft_engine::design::Path
+pub stitchcraft_svg::lettering::Along::position: stitchcraft_svg::lettering::TextPosition
+pub stitchcraft_svg::lettering::Along::vertical: stitchcraft_svg::lettering::VerticalPosition
 pub struct stitchcraft_svg::lettering::Lettering
 pub stitchcraft_svg::lettering::Lettering::align: stitchcraft_svg::lettering::Align
+pub stitchcraft_svg::lettering::Lettering::back_and_forth: bool
+pub stitchcraft_svg::lettering::Lettering::color_sort: stitchcraft_svg::lettering::ColourSort
 pub stitchcraft_svg::lettering::Lettering::letter_spacing: f64
 pub stitchcraft_svg::lettering::Lettering::line_height: f64
 pub stitchcraft_svg::lettering::Lettering::scale: f64
+pub stitchcraft_svg::lettering::Lettering::trim: stitchcraft_svg::lettering::Trim
 pub stitchcraft_svg::lettering::Lettering::word_spacing: f64
 impl core::default::Default for stitchcraft_svg::lettering::Lettering
 pub fn stitchcraft_svg::lettering::Lettering::default() -> Self
 pub struct stitchcraft_svg::lettering::Placed
+pub stitchcraft_svg::lettering::Placed::angle: f64
 pub stitchcraft_svg::lettering::Placed::baseline: f64
 pub stitchcraft_svg::lettering::Placed::left: f64
 pub stitchcraft_svg::lettering::Placed::line: usize
@@ -185,13 +228,19 @@ pub stitchcraft_svg::lettering::Setting::default: &'static str
 pub stitchcraft_svg::lettering::Setting::does: &'static str
 pub stitchcraft_svg::lettering::Setting::name: &'static str
 pub stitchcraft_svg::lettering::Setting::takes: &'static str
+pub const stitchcraft_svg::lettering::BACK_AND_FORTH: stitchcraft_svg::lettering::Setting
+pub const stitchcraft_svg::lettering::COLOR_SORT: stitchcraft_svg::lettering::Setting
 pub const stitchcraft_svg::lettering::LETTER_SPACING: stitchcraft_svg::lettering::Setting
 pub const stitchcraft_svg::lettering::LINE_HEIGHT: stitchcraft_svg::lettering::Setting
 pub const stitchcraft_svg::lettering::SCALE: stitchcraft_svg::lettering::Setting
-pub const stitchcraft_svg::lettering::SETTINGS: [stitchcraft_svg::lettering::Setting; 5]
+pub const stitchcraft_svg::lettering::SETTINGS: [stitchcraft_svg::lettering::Setting; 10]
 pub const stitchcraft_svg::lettering::TEXT_ALIGN: stitchcraft_svg::lettering::Setting
+pub const stitchcraft_svg::lettering::TEXT_POSITION: stitchcraft_svg::lettering::Setting
+pub const stitchcraft_svg::lettering::TRIM: stitchcraft_svg::lettering::Setting
+pub const stitchcraft_svg::lettering::VERTICAL_TEXT_POSITION: stitchcraft_svg::lettering::Setting
 pub const stitchcraft_svg::lettering::WORD_SPACING: stitchcraft_svg::lettering::Setting
 pub fn stitchcraft_svg::lettering::set(&stitchcraft_svg::font::Font, &str, &stitchcraft_svg::lettering::Lettering, &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_svg::lettering::Set, stitchcraft_core::diag::Diagnostic>
+pub fn stitchcraft_svg::lettering::set_along(&stitchcraft_svg::font::Font, &str, &stitchcraft_svg::lettering::Lettering, &stitchcraft_svg::lettering::Along, &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_svg::lettering::Set, stitchcraft_core::diag::Diagnostic>
 pub mod stitchcraft_svg::version
 pub const stitchcraft_svg::version::APPLIED: [(&str, &str); 8]
 pub const stitchcraft_svg::version::CURRENT: i64
