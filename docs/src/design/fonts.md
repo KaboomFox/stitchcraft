@@ -502,7 +502,7 @@ drawing has it and about as tall. Its letters have the embroidery font's shapes 
 typeface's: a display face and a script both come out as Small Font's light upright letters. A note
 says so for each text object (`SC-I1116`). Roadmap step M15.13 sews a text in its own typeface.
 
-**A bold text sews in the bold font** (M14.8, `REQ-AUTO-073`). A text object has no traced letters to
+**A bold text sews in the bold font** (M14.8, `REQ-AUTO-082`). A text object has no traced letters to
 measure. Its weight comes from what the drawing says of it. It is bold when its first line that shows
 has an SVG `font-weight` of `bold`, `bolder` or 700 and above. In a VectorCraft document it is bold when the
 run's style name says Bold, Black or Heavy, and not Semi Bold or Demi Bold, or when a variable typeface's

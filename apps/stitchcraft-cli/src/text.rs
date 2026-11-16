@@ -79,7 +79,7 @@ pub fn replaced(design: Design, marks: &[&str], fonts: &mut dyn Fonts) -> Result
 
 /// `design` with each of the text objects `texts` of its SVG file sewn as lettering in the default font of
 /// `fonts`, or a bold text in the bold font where it sews at the text's height, at its place in the stitching
-/// order ([`objects::lettered_among`], `REQ-AUTO-069`, `REQ-AUTO-073`), and what was said.
+/// order ([`objects::lettered_among`], `REQ-AUTO-069`, `REQ-AUTO-082`), and what was said.
 pub fn lettered(design: Design, texts: &[Waiting], fonts: &mut dyn Fonts) -> Result<(Design, Vec<Diagnostic>), Diagnostic> {
     let choices = fonts.choices();
     let mut found = |name: &str, text: &str, budget: &Budget| found_for(&mut *fonts, name, text, budget);

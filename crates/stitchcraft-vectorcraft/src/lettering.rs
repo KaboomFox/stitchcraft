@@ -31,7 +31,7 @@ pub const FONT: &str = "font";
 /// Font, the first font the plug-ins hold.
 pub const DEFAULT_FONT: &str = "small_font";
 
-/// A font the plug-ins hold, with what a text marker that names no font is given one by (`REQ-AUTO-071`).
+/// A font the plug-ins hold, with what a text marker that names no font is given one by (`REQ-AUTO-080`).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Held {
     /// Its folder's name.
@@ -339,7 +339,7 @@ mod tests {
     }
 
     #[test]
-    fn req_auto_072_a_host_offers_the_fonts_it_holds_of_those_the_plug_ins_hold() {
+    fn req_auto_081_a_host_offers_the_fonts_it_holds_of_those_the_plug_ins_hold() {
         assert_eq!(HELD[0].folder, DEFAULT_FONT);
         let all = choices(|_| true);
         assert_eq!(all.len(), HELD.len());

@@ -1,4 +1,4 @@
-//! The font chosen by the letters' weight (roadmap step M14.8, `REQ-AUTO-071` to `REQ-AUTO-073`): a text
+//! The font chosen by the letters' weight (roadmap step M14.8, `REQ-AUTO-080` to `REQ-AUTO-082`): a text
 //! marker that names no font is set in the font nearest in weight to the traced letters it replaces, among
 //! those that sew at their height, and a bold text object sews in the bold font where it sews at its height,
 //! with a note on each. The fonts are drawn in code. No font file of anyone's is used.
@@ -128,7 +128,7 @@ fn hint(said: &Diagnostic) -> &str {
 }
 
 #[test]
-fn req_auto_071_a_font_is_as_bold_as_its_capital_letters_satin_columns_are_wide() {
+fn req_auto_080_a_font_is_as_bold_as_its_capital_letters_satin_columns_are_wide() {
     let satin = r#"inkstitch:satin_column="true""#;
     // `A` is a column 2 mm wide and 10 tall drawn by its rails, `B` one 3 mm wide drawn by its centre line,
     // and `C` one 2 mm wide and 8 tall. `D` is a stroke that is no column, 12 mm tall, and `a` is no capital.
@@ -157,7 +157,7 @@ fn req_auto_071_a_font_is_as_bold_as_its_capital_letters_satin_columns_are_wide(
 }
 
 #[test]
-fn req_auto_071_traced_letters_are_as_bold_as_their_strokes_are_wide_in_their_height() {
+fn req_auto_080_traced_letters_are_as_bold_as_their_strokes_are_wide_in_their_height() {
     // Bars 4 mm wide and 16 tall: strokes a quarter of their height.
     let (_, said) = chosen_for(bars("stitch:text ab", 4.0, 16.0), &choices());
     assert!(said[0].message.contains("its letters are 16.0 mm tall, with strokes 0.25 of their height wide."), "{}", said[0]);
@@ -183,7 +183,7 @@ fn req_auto_071_traced_letters_are_as_bold_as_their_strokes_are_wide_in_their_he
 }
 
 #[test]
-fn req_auto_072_the_font_nearest_in_weight_that_sews_at_the_height_is_chosen() {
+fn req_auto_081_the_font_nearest_in_weight_that_sews_at_the_height_is_chosen() {
     let choices = choices();
     // At a height both sew, the nearer in weight: 0.195 lies halfway, and the earlier font takes a tie.
     assert_eq!(chosen(&choices, Some(0.19), 15.0), Some(0));
@@ -255,7 +255,7 @@ fn diag_sc_i1118_names_the_font_chosen_and_says_why() {
 }
 
 #[test]
-fn req_auto_072_a_named_font_wins_and_no_choice_leaves_the_default() {
+fn req_auto_081_a_named_font_wins_and_no_choice_leaves_the_default() {
     // A marker that names a font is set in it, whatever the letters weigh, and nothing is said of a choice.
     let (asked, said) = chosen_for(bars(r#"stitch:text "ab" font=light"#, 4.0, 16.0), &choices());
     assert_eq!(asked, ["light"]);
@@ -293,7 +293,7 @@ fn req_auto_072_a_named_font_wins_and_no_choice_leaves_the_default() {
 }
 
 #[test]
-fn req_auto_072_choosing_stops_with_the_budget() {
+fn req_auto_081_choosing_stops_with_the_budget() {
     // Every amount of work short of what the pass needs ends with SC-E0004, and never with a panic or a
     // design half changed.
     let mut fonts = |name: &str, _: &str, _: &Budget| Found::Font(plain(name));
@@ -350,7 +350,7 @@ fn text_chosen(text: &TextObject, choices: &[Choice]) -> (Vec<(String, String)>,
 }
 
 #[test]
-fn req_auto_073_a_bold_text_object_sews_in_the_bold_font_where_it_sews_at_its_height() {
+fn req_auto_082_a_bold_text_object_sews_in_the_bold_font_where_it_sews_at_its_height() {
     // 20 mm of font size sew 14 mm tall: within the bold font's 12 to 30 mm.
     let (asked, said) = text_chosen(&text_object(&[("ab", 20.0)], true), &choices());
     assert_eq!(asked, [("bold".to_string(), "ab".to_string())]);
@@ -396,7 +396,7 @@ fn diag_sc_i1118_a_bold_text_too_small_for_the_bold_font_says_from_what_size_it_
 }
 
 #[test]
-fn req_auto_073_a_text_that_is_not_bold_or_has_no_choice_sews_in_the_default_font() {
+fn req_auto_082_a_text_that_is_not_bold_or_has_no_choice_sews_in_the_default_font() {
     for (text, choices) in [(text_object(&[("ab", 20.0)], false), choices()), (text_object(&[("ab", 20.0)], true), choices()[1..].to_vec())] {
         let (asked, said) = text_chosen(&text, &choices);
         assert_eq!(asked, [(String::new(), "ab".to_string())]);
@@ -424,7 +424,7 @@ fn req_auto_073_a_text_that_is_not_bold_or_has_no_choice_sews_in_the_default_fon
 }
 
 #[test]
-fn req_auto_073_what_weights_and_styles_are_bold() {
+fn req_auto_082_what_weights_and_styles_are_bold() {
     for bold in ["bold", "Bolder", " 700 ", "900", "750.5"] {
         assert!(objects::bold_weight(bold), "{bold}");
     }

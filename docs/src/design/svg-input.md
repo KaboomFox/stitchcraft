@@ -467,7 +467,7 @@ the embroidery font doesn't share. The reader takes what doesn't depend on a wid
   `larger`, isn't read. The anchor is `text-anchor`. The colour is the fill's, or the stroke's for a text
   without a fill. The typeface is `font-family`, which the note names.
 - **Weight.** The text is bold when the `font-weight` of its first line that shows is `bold`, `bolder` or
-  700 and above (`REQ-AUTO-073`). A bold text can sew in the bold font
+  700 and above (`REQ-AUTO-082`). A bold text can sew in the bold font
   ([fonts](fonts.md#text-objects-in-automatic-digitizing)).
 - **A stated length.** The `textLength` of a `<text>` element of one line, or of a `<tspan>` that starts
   a line, is the length the line's lettering is fitted to, scaled as the transforms scale along the

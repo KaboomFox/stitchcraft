@@ -1,5 +1,5 @@
 //! How bold letters are (roadmap step M14.8, `docs/src/design/image-to-embroidery.md` › The font chosen by
-//! the letters' weight, `REQ-AUTO-071`): the width of their strokes over their height, measured the same
+//! the letters' weight, `REQ-AUTO-080`): the width of their strokes over their height, measured the same
 //! way on outlines traced from a picture and on the satin columns of an embroidery font.
 //!
 //! **Why.** Lettering that takes the place of bold traced letters looks lighter than the picture when the
@@ -212,7 +212,7 @@ mod tests {
     }
 
     #[test]
-    fn req_auto_071_a_ray_meets_an_edge_in_front_of_it_once() {
+    fn req_auto_080_a_ray_meets_an_edge_in_front_of_it_once() {
         let ray = |c, d| hit((1.0, 1.0), (1.0, 0.0), c, d);
         assert_eq!(ray((3.0, 0.0), (3.0, 4.0)), Some(2.0));
         assert_eq!(ray((3.0, 4.0), (3.0, 0.0)), Some(2.0));
@@ -231,7 +231,7 @@ mod tests {
     }
 
     #[test]
-    fn req_auto_071_a_stroke_is_as_wide_as_the_way_across_its_long_sides() {
+    fn req_auto_080_a_stroke_is_as_wide_as_the_way_across_its_long_sides() {
         // A bar 8 mm wide and 20 tall: 48 places a step of 56 / 48 mm apart, those on its long sides 8 mm
         // from the other side and those on its ends 20.
         let bar = sampled(&[rect(10.0, 30.0, 18.0, 50.0)]);
@@ -256,7 +256,7 @@ mod tests {
     }
 
     #[test]
-    fn req_auto_071_the_median_weighs_each_width_by_its_length() {
+    fn req_auto_080_the_median_weighs_each_width_by_its_length() {
         assert_eq!(median(Vec::new()), None);
         assert_eq!(median(vec![(3.0, 2.0), (1.0, 1.0)]), Some(3.0));
         assert_eq!(median(vec![(3.0, 2.0), (2.0, 1.0), (1.0, 1.0)]), Some(2.0));
@@ -264,7 +264,7 @@ mod tests {
     }
 
     #[test]
-    fn req_auto_071_measuring_stops_with_the_budget() {
+    fn req_auto_080_measuring_stops_with_the_budget() {
         let rings = [rect(0.0, 0.0, 10.0, 10.0), rect(2.0, 2.0, 8.0, 8.0)];
         // The first unit pays for looking at an outline's box, and the next 4 for its edges.
         for allowed in [0, 1, 4] {

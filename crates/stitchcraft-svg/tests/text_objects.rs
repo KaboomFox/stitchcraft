@@ -979,7 +979,7 @@ fn req_svg_017_a_text_beyond_the_designs_reach_is_left_out_and_reading_is_bounde
 }
 
 #[test]
-fn req_auto_073_a_text_is_bold_as_its_first_line_s_font_weight_says() {
+fn req_auto_082_a_text_is_bold_as_its_first_line_s_font_weight_says() {
     let bold = |body: &str| {
         let read = read(body);
         assert_eq!(read.texts.len(), 1, "{:?}", read.warnings);

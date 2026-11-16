@@ -1607,7 +1607,7 @@ and [the font is chosen by the letters' weight](#the-font-chosen-by-the-letters-
 
 The owner asked on 2026-11-16 why lettering that replaces big letters looks lighter than the picture.
 The stitches were right. The one font built in was a light one. M14.8 measures how bold letters are and
-builds in a bold font to choose by that measure (`REQ-AUTO-071`, `REQ-AUTO-072`).
+builds in a bold font to choose by that measure (`REQ-AUTO-080`, `REQ-AUTO-081`).
 
 **The measure** is the width of a stroke over the height of a letter, found the same way on a traced
 outline and on a font's satin columns (`pictures::weight`). Each closed outline is taken at 48 places

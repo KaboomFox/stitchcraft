@@ -81,7 +81,7 @@ pub enum Found {
 }
 
 /// A font that a marker which names none may be set in: one of the fonts a host holds for that, with what
-/// the choice goes by (`REQ-AUTO-071`).
+/// the choice goes by (`REQ-AUTO-080`).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Choice {
     /// The name the host finds the font by: its folder's.
@@ -202,7 +202,7 @@ pub fn replace(
 }
 
 /// As [`replace`], a marker that names no font set in the one of `choices` that is nearest in weight to
-/// the letters it replaces, among those that sew at their height ([`chosen`], `REQ-AUTO-071`), with
+/// the letters it replaces, among those that sew at their height ([`chosen`], `REQ-AUTO-080`), with
 /// `SC-I1118` saying which and why. Of fewer than 2 choices there is nothing to choose: such a marker is set
 /// in the host's default font, and nothing is said of a choice. `fonts` is given the font's name and the marker's text, so that a host can
 /// read a font only as far as the text needs it (`REQ-FONT-023`).

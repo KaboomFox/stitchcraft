@@ -30,7 +30,7 @@
 //!
 //! **Which font.** A drawing's typeface is not an embroidery font, so its name never chooses one: a text
 //! sews in the host's default font. Its weight can. A bold text (`font-weight` bold, or 700 and above) sews
-//! in the boldest font the host offers ([`letter_among`], `REQ-AUTO-073`) when that font sews every line at
+//! in the boldest font the host offers ([`letter_among`], `REQ-AUTO-082`) when that font sews every line at
 //! its height, and `SC-I1118` says so. Where it doesn't, the default font sews, and the note says from what
 //! height the bold font sews. With fewer than 2 fonts offered there is nothing to choose.
 //!
@@ -68,7 +68,7 @@ pub const DEFAULT_FONT: &str = "";
 /// The embroidery font `text` sews in, asked of `fonts` within `budget` with the characters of its lines,
 /// and the note on its choice. Every text object's font is chosen here and nowhere else: the host's
 /// default font, or for a bold text the boldest of `choices` when it sews every line at its height
-/// (`REQ-AUTO-073`). Of fewer than 2 choices there is nothing to choose, and nothing is said.
+/// (`REQ-AUTO-082`). Of fewer than 2 choices there is nothing to choose, and nothing is said.
 fn font_of(
     text: &TextObject,
     fonts: &mut dyn FnMut(&str, &str, &Budget) -> Found,
@@ -265,7 +265,7 @@ pub fn letter(
 }
 
 /// As [`letter`], a bold text sewn in the boldest of `choices` when it sews every line at its height, with
-/// `SC-I1118` saying so, or saying from what height it sews when it doesn't (`REQ-AUTO-073`). `fonts` is
+/// `SC-I1118` saying so, or saying from what height it sews when it doesn't (`REQ-AUTO-082`). `fonts` is
 /// given the font's name and the characters of the text's lines, so that a host can read the font only as
 /// far as they need it (`REQ-FONT-023`).
 pub fn letter_among(
