@@ -120,6 +120,26 @@ impl Default for Lettering {
     }
 }
 
+impl Lettering {
+    /// Takes the setting `name` from `value`, written as [`SETTINGS`] says each is: whether it is one of
+    /// lettering's settings of a text off a path and `value` reads as it. A host that keeps the settings by
+    /// name, as a VectorCraft effect's record does, reads them with it.
+    pub fn take(&mut self, name: &str, value: &str) -> bool {
+        let number = || value.trim().parse::<f64>().ok().filter(|number| number.is_finite());
+        match name {
+            "scale" => number().map(|scale| self.scale = scale).is_some(),
+            "letter_spacing" => number().map(|mm| self.letter_spacing = mm).is_some(),
+            "word_spacing" => number().map(|mm| self.word_spacing = mm).is_some(),
+            "line_height" => number().map(|mm| self.line_height = mm).is_some(),
+            "text_align" => Align::named(value).map(|align| self.align = align).is_some(),
+            "back_and_forth" => value.parse::<bool>().map(|on| self.back_and_forth = on).is_ok(),
+            "trim" => Trim::named(value).map(|trim| self.trim = trim).is_some(),
+            "color_sort" => ColourSort::named(value).map(|sort| self.color_sort = sort).is_some(),
+            _ => false,
+        }
+    }
+}
+
 /// A setting of lettering, as a host's help describes it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Setting {
@@ -486,21 +506,29 @@ fn placed(
         };
         Point::new(x, y).map_err(|_| far())
     };
-    let shape = match &element.shape {
-        Shape::Stroke { path, width, join, cap } => {
-            Shape::Stroke { path: path.map(point)?, width: Mm::new(width.get() * factor).map_err(|_| far())?, join: *join, cap: *cap }
-        }
-        Shape::Fill { path, rule, gradient } => {
-            Shape::Fill { path: path.map(point)?, rule: *rule, gradient: gradient.as_ref().map(|gradient| gradient.map(point)).transpose()? }
-        }
-    };
-    let shapes = |clip: &Clip| {
-        clip.shapes.iter().map(|shape| Ok(ClipShape { path: shape.path.map(point)?, rule: shape.rule })).collect::<Result<_, Option<Diagnostic>>>()
-    };
-    let clips = element.clips.iter().map(|clip| Ok(Clip { shapes: shapes(clip)? })).collect::<Result<_, Option<Diagnostic>>>()?;
     let id = ElementId::new(format!("{at}-{}", element.id))
         .map_err(|_| Some(unset(format!("The id `{}` of an element of the glyph `{}` is too long to number.", element.id, spot.glyph.name))))?;
-    Ok(Element { id, shape, hints: element.hints.map(point)?, clips, ..element.clone() })
+    let mut placed = moved(element, point)?;
+    if let Shape::Stroke { width, .. } = &mut placed.shape {
+        *width = Mm::new(width.get() * factor).map_err(|_| far())?;
+    }
+    Ok(Element { id, ..placed })
+}
+
+/// `element` with each of its points where `point` puts it: those of its path, of a fill's gradient, of its
+/// hints and of the areas it is cut to. Its id, its thread, its settings and a stroke's width stay. A host
+/// places a text set with it, as the VectorCraft adapter turns a text the way its text object is turned.
+pub fn moved<E>(element: &Element, point: impl Fn(Point) -> Result<Point, E>) -> Result<Element, E> {
+    let shape = match &element.shape {
+        Shape::Stroke { path, width, join, cap } => Shape::Stroke { path: path.map(&point)?, width: *width, join: *join, cap: *cap },
+        Shape::Fill { path, rule, gradient } => {
+            Shape::Fill { path: path.map(&point)?, rule: *rule, gradient: gradient.as_ref().map(|gradient| gradient.map(&point)).transpose()? }
+        }
+    };
+    let shapes =
+        |clip: &Clip| clip.shapes.iter().map(|shape| Ok(ClipShape { path: shape.path.map(&point)?, rule: shape.rule })).collect::<Result<_, E>>();
+    let clips = element.clips.iter().map(|clip| Ok(Clip { shapes: shapes(clip)? })).collect::<Result<_, E>>()?;
+    Ok(Element { shape, hints: element.hints.map(&point)?, clips, ..element.clone() })
 }
 
 /// `elements` routed as Ink/Stitch's lettering routes a font whose `auto_satin` is on: its satin columns and

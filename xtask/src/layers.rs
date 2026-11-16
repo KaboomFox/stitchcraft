@@ -47,7 +47,7 @@ pub const TABLE: &[(&str, Class)] = &[
 ];
 
 /// Allowed edges inside one layer: (from, to).
-pub const SAME_LAYER: &[(&str, &str)] = &[("stitchcraft-params", "stitchcraft-core")];
+pub const SAME_LAYER: &[(&str, &str)] = &[("stitchcraft-params", "stitchcraft-core"), ("stitchcraft-vectorcraft", "stitchcraft-svg")];
 
 /// External crates allowed only in the listed packages (normal dependencies). Only the renderer draws with
 /// tiny-skia; xtask reads VectorCraft's pictures with it, to compare them within a tolerance. Only the SVG

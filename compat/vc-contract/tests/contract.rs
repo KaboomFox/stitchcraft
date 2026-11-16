@@ -964,3 +964,49 @@ fn req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcr
     // The limit is VectorCraft's own, read from its host: `export::FUEL` and its allowance for each byte.
     assert!(near.is_empty(), "{}", near.join("; "));
 }
+
+/// StitchCraft Lettering installs as a live effect, from VectorCraft 0.14 for its font's text field, and its
+/// dialog's defaults are lettering's. A document whose text object has the effect is given to the PES
+/// exporter as VectorCraft gives it, as bytes, and the exporter sews its text in the font built into it,
+/// within an export's budget (`REQ-VC-027`). It prints what a word and 4 lines take of what VectorCraft
+/// allows. Built without `STITCHCRAFT_FONTS_DIR` the exporter holds no font: the export is then declined
+/// with `SC-W1111` after its error, and the measure is skipped, which is said.
+#[test]
+fn req_vc_027_the_lettering_effect_installs_and_an_export_sews_a_text_within_its_budget() {
+    let lettering = registry::install_bytes(&module("lettering")).unwrap_or_else(|e| panic!("VectorCraft refuses lettering: {e}"));
+    assert_eq!(lettering.id(), "dev.stitchcraft.lettering");
+    assert!(lettering.manifest().kind == Kind::Effect, "a live effect");
+    let params = lettering.manifest().resolve_params(&json!({"scale": 150})).unwrap();
+    assert_eq!((&params["font"], &params["trim"], &params["back_and_forth"]), (&json!(""), &json!("off"), &json!(true)));
+    let refused = lettering.manifest().resolve_params(&json!({"text_align": "justified"})).unwrap_err().to_string();
+    assert!(refused.contains("text_align"), "{refused}");
+    let text = |text: &str| {
+        let effect = json!({"id": "plugin.dev.stitchcraft.lettering", "params": params, "visible": true});
+        let kind = json!({"type": "text", "kind": {"kind": "point"}, "xf": [1, 0, 0, 1, 72, 144], "runs": [{"text": text}]});
+        document(&[json!({"id": 2, "appearance": {"effects": [effect]}, "kind": kind})])
+    };
+    let pes = Plugin::load(&module("pes"), Limits::default()).unwrap();
+    let target = export::Target { extension: "pes", name: "text" };
+    let built_in = std::env::var_os("STITCHCRAFT_FONTS_DIR").is_some_and(|folder| !folder.is_empty());
+    let mut costs = Vec::new();
+    for (name, words) in [("a word", "Hello"), ("4 lines of 2 words", "Stitch Craft\nsews this\nin a font\nfor needles")] {
+        let input = text(words);
+        let out = match export::run(&pes, &input, &json!({}), target) {
+            Ok(out) => out,
+            Err(declined) if !built_in => {
+                let declined = declined.to_string();
+                assert!(declined.contains("A text was left out: warning SC-W1111") && declined.contains("No embroidery font is here."), "{declined}");
+                println!("::notice title=lettering::skipped: the exporter was built without STITCHCRAFT_FONTS_DIR, and holds no font");
+                return;
+            }
+            Err(declined) => panic!("{name}: {declined}"),
+        };
+        assert!(base64_decoded(&out.data_base64).starts_with(b"#PES0001"), "{name}");
+        assert!(out.warnings.iter().all(|warning| !warning.contains("SC-W1111")), "{name}: {:?}", out.warnings);
+        let allowed = export::FUEL + export::limits(&pes).fuel_per_byte * input.len() as u64;
+        let used = export_fuel(&pes, &input, &export_params(&pes, &json!({}), target));
+        assert!(near_budget(name, used, allowed).is_none(), "{name}: {used} of {allowed}");
+        costs.push(format!("{name}: {used} of {allowed} instructions, {} bytes of PES", base64_decoded(&out.data_base64).len()));
+    }
+    println!("::notice title=lettering::{}", costs.join("; "));
+}

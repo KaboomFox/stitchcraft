@@ -1,7 +1,7 @@
 //! The `.vectorcraft` JSON as the adapter reads it: the few fields it uses, and nothing else.
 //!
 //! **Why typed.** A document can hold megabytes the adapter never needs: images and previews as base64,
-//! text runs, swatches, styles, symbols. Read into these types, they are skipped as the JSON is read and
+//! swatches, styles, symbols, and of a text all but its characters and their fill. Read into these types, they are skipped as the JSON is read and
 //! never kept, where a generic JSON tree would hold all of them.
 //!
 //! **Why lenient.** VectorCraft adds kinds of objects, paints and colours without changing its format
@@ -111,6 +111,71 @@ pub(crate) struct Kind {
     pub printable: bool,
     #[serde(default)]
     pub guide: bool,
+    /// A text object's kind: point type, area type or type on a path.
+    #[serde(rename = "kind", default)]
+    pub text_kind: Maybe<TextKind>,
+    /// Whether a text object is written top to bottom.
+    #[serde(default)]
+    pub vertical: Maybe<bool>,
+    /// A text object's transform, `[a, b, c, d, e, f]`, from text space into the document: point type's
+    /// origin is the start of its first baseline.
+    #[serde(default)]
+    pub xf: Maybe<[Option<f64>; 6]>,
+    /// A text object's runs.
+    #[serde(default)]
+    pub runs: Maybe<Vec<Run>>,
+}
+
+/// A field of a text object, read when it has the shape `T` and passed over when it has another: other
+/// kinds of object, and later versions of VectorCraft, may keep something else under the same name, which
+/// is no reason to refuse the file.
+#[derive(Deserialize)]
+#[serde(untagged)]
+pub(crate) enum Maybe<T> {
+    /// The field as a text object writes it.
+    Is(T),
+    /// Something else, which is not kept.
+    Not(IgnoredAny),
+}
+
+impl<T> Default for Maybe<T> {
+    fn default() -> Self {
+        Maybe::Not(IgnoredAny)
+    }
+}
+
+impl<T> Maybe<T> {
+    /// The field, when it has the shape read.
+    pub fn get(&self) -> Option<&T> {
+        match self {
+            Maybe::Is(value) => Some(value),
+            Maybe::Not(_) => None,
+        }
+    }
+}
+
+/// A text object's kind, by its name: `point`, `area` or `onpath`.
+#[derive(Deserialize)]
+pub(crate) struct TextKind {
+    #[serde(rename = "kind")]
+    pub name: String,
+}
+
+/// A run of a text object: its text, and the fill of its character style. An inline graphic is a run too,
+/// its text the object replacement character.
+#[derive(Deserialize)]
+pub(crate) struct Run {
+    #[serde(default)]
+    pub text: String,
+    #[serde(default)]
+    pub style: Option<RunStyle>,
+}
+
+/// A run's character style: the paint its characters are filled with.
+#[derive(Deserialize)]
+pub(crate) struct RunStyle {
+    #[serde(default)]
+    pub fill: Option<Paint>,
 }
 
 /// How an object paints: its fills and strokes, in paint order, and its effects.
