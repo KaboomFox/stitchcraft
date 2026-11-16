@@ -140,6 +140,13 @@ is the same picture planned with `--text` round the word, in Ink/Stitch Small Fo
 
 - Which word reads better at 10 mm, and which at 6 mm and below?
 - Is the field whole under the lettering, with no fabric showing round a letter?
+
+From M14.7, sew a drawn badge with a word typed on it, as text, on the PE800. Plan the SVG file with
+`--auto` and Ink/Stitch Small Font in the font folder.
+
+- Does the word stand where the drawing has it, and is its height the one the note gave?
+- Is Small Font's word, beside the drawing's typeface, a word you would sew, or would you rather have had
+  the text left out?
 - Does the lettering stand where the picture has the word, and is it as tall?
 - Are Small Font's strokes too light beside the drawn letters?
 

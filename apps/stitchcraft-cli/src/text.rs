@@ -13,11 +13,15 @@
 //! line replays marked.
 //!
 //! The fonts are those of the folder `STITCHCRAFT_FONTS` names ([`crate::fonts`]), as for a document's texts.
+//!
+//! **An SVG file's text objects** are set here too (M14.7, [`lettered`]): its reader has no fonts, and gives
+//! them for `stitch` to letter before the markers are looked for.
 
 use std::collections::BTreeSet;
 
 use stitchcraft_core::{Budget, Diagnostic, Point};
 use stitchcraft_engine::design::{Design, FillRule, Path, Segment, Shape, Subpath};
+use stitchcraft_svg::lettering::objects::{self, Waiting};
 use stitchcraft_svg::lettering::pictures::{self, MARKER, Marker};
 use stitchcraft_vectorcraft::lettering::{Fonts, found_for};
 
@@ -71,6 +75,12 @@ pub fn replaced(design: Design, marks: &[&str], fonts: &mut dyn Fonts) -> Result
     let choices = fonts.choices();
     let mut found = |name: &str, text: &str, budget: &Budget| found_for(&mut *fonts, name, text, budget);
     pictures::replace_among(design, &markers, &mut found, &choices, &mut BTreeSet::new(), &Budget::DEFAULT)
+}
+
+/// `design` with each of the text objects `texts` of its SVG file sewn as lettering in the default font of
+/// `fonts`, at its place in the stitching order ([`objects::lettered`], `REQ-AUTO-069`), and what was said.
+pub fn lettered(design: Design, texts: &[Waiting], fonts: &mut dyn Fonts) -> Result<(Design, Vec<Diagnostic>), Diagnostic> {
+    objects::lettered(design, texts, &mut |name, budget| found(&mut *fonts, name, budget), &mut BTreeSet::new(), &Budget::DEFAULT)
 }
 
 #[cfg(test)]

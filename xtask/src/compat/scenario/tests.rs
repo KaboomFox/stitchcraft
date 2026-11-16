@@ -42,6 +42,7 @@ fn every_scenario_checks_only_what_its_runs_export() {
             "stroke-to-satin",
             "tartan",
             "testsheets",
+            "text-in-auto",
             "trace",
             "traced-photo"
         ]

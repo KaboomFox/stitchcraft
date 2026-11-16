@@ -203,7 +203,7 @@ pub fn replace(
 
 /// As [`replace`], a marker that names no font set in the one of `choices` that is nearest in weight to
 /// the letters it replaces, among those that sew at their height ([`chosen`], `REQ-AUTO-071`), with
-/// `SC-I1117` saying which and why. Of fewer than 2 choices there is nothing to choose: such a marker is set
+/// `SC-I1118` saying which and why. Of fewer than 2 choices there is nothing to choose: such a marker is set
 /// in the host's default font, and nothing is said of a choice. `fonts` is given the font's name and the marker's text, so that a host can
 /// read a font only as far as the text needs it (`REQ-FONT-023`).
 pub fn replace_among(
@@ -251,7 +251,7 @@ fn unused(marker: &Marker, why: &str) -> Diagnostic {
     Diagnostic::new(Code::TextMarkerNotUsed, message).with_fix(Fix::Hint(fix))
 }
 
-/// `SC-I1117`: the text of `marker` is set in `choice`, chosen among `choices` for letters `height` mm tall
+/// `SC-I1118`: the text of `marker` is set in `choice`, chosen among `choices` for letters `height` mm tall
 /// whose strokes are `bold` heights wide, and why.
 fn chose(marker: &Marker, choices: &[Choice], choice: &Choice, bold: Option<f64>, height: f64) -> Diagnostic {
     let letters = match bold {

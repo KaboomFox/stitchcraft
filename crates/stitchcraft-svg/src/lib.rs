@@ -16,7 +16,8 @@
 //! `REQ-SVG-007`). Since M8 it reads every `inkstitch:*` setting of a shape, Ink/Stitch's commands, clip
 //! paths, and clones (`<use>`), which sew what they show where they show it. Since M14.1 [`font`] reads an
 //! embroidery font in Ink/Stitch's format, a folder of a `font.json` and glyph files, each glyph a design of
-//! its own.
+//! its own. Since M14.7 it reads a `<text>` element under automatic digitizing, for [`lettering::objects`]
+//! to sew in an embroidery font.
 //!
 //! Its invariants:
 //!

@@ -78,8 +78,17 @@ doesn't find the font you named, it leaves the text out and says `SC-W1111`, wit
   which the embroidery font doesn't share. Write point type instead. `stitch lettering --path` sets a
   text along a path from the command line.
 - **Vertical type.**
-- **A text without the effect.** It is left out, and the export says so. Type › Create Outlines makes
-  shapes of its letters instead, which sew as any shapes do.
+- **A text without the effect,** unless it is under the Auto effect. It is left out, and the export
+  says so. Type › Create Outlines makes shapes of its letters instead, which sew as any shapes do.
+
+## Text under the Auto effect
+
+A text under StitchCraft's Auto effect sews without the Lettering effect. It sews in Small Font where it
+stands, about as tall as it is typed ([automatic digitizing](../stitches/automatic.md#text)). Put the
+Auto effect on the text, or on the group or the layer it is in. The export says which font stood in
+(`SC-I1116`). The canvas shows the Auto effect's stitches on the outlines of the typed letters, which is
+not what the export sews. Give the text the Lettering effect to choose the font and the size yourself:
+its settings then count, and the Auto effect leaves the text to it.
 
 ## In the browser demo
 
