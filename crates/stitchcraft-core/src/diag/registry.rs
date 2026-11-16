@@ -1276,6 +1276,33 @@ macro_rules! codes {
         /// direction the font has.
         FontReadAsInkStitch = "SC-I1105", Info, "Font read as Ink/Stitch reads it";
 
+        /// Lettering sets text at a scale, in percent of the font's own size. A font in Ink/Stitch's format says
+        /// how small and how large it sews well, with `min_scale` and `max_scale` in its `font.json`: its
+        /// author digitized its columns for those heights. The scale asked for lies outside them, and the text
+        /// is set at the nearest scale within them.
+        ///
+        /// The message names the scale asked for, the font's range in percent and in millimetres, and the scale
+        /// the text is set at. Choose a scale within the range, or a font drawn for the size you want: small
+        /// letters have fonts of their own, such as Ink/Stitch Small Font.
+        LetteringScaleOutOfRange = "SC-W1106", Warning, "Scale outside the font's range";
+
+        /// The text has a character that the font draws no glyph for. The font's default glyph, which
+        /// `default_glyph` names in its `font.json`, sews in its place, as in Ink/Stitch. In a font without that
+        /// glyph, the character is left as a space.
+        ///
+        /// The message names each such character with its Unicode number, and what sews for it. Choose a font
+        /// that has the characters, or write the text without them. The 4 forms of an Arabic letter aren't
+        /// chosen yet, so Arabic text sews as default glyphs.
+        CharacterNotInFont = "SC-W1107", Warning, "Character not in the font";
+
+        /// Lettering couldn't set the text, and nothing was written. No character of the text sews: the text is
+        /// empty or only spaces, or the font has no glyphs. Or a glyph can't be placed: the scale or a spacing
+        /// is no number, or the text is longer than the 10 m a design may span.
+        ///
+        /// The message says which. Give a text with a character the font draws, and spacings of a few
+        /// millimetres.
+        LetteringUnset = "SC-E1108", Error, "Text could not be set";
+
         /// `--subject` and `stitch cutout` cut a picture's subject out with 3 models, which `stitch` fetches with
         /// curl on first use into the folder `STITCHCRAFT_MODELS` names, or else `stitchcraft/models` in your
         /// cache folder, and checks before each use. A file couldn't be fetched, or isn't the one pinned. Nothing
