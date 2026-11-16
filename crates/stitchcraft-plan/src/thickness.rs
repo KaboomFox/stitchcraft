@@ -63,8 +63,8 @@ const PIECE_SPOTS: usize = 4;
 pub const ORDINARY: f64 = 2.0;
 /// How far from a stitch each of its 2 lanes lies, in millimetres: a quarter of the thread's width.
 const LANE: f64 = THREAD / 4.0;
-/// How far from a spot the middle of a stitch may lie, beyond half the stitch's length, for the stitch to
-/// lay thread in the spot's window, in millimetres: more than half the window's diagonal and a lane.
+/// How far from a spot a stitch may lie, along x and along y, to be followed for what it lays in the spot's
+/// window, in millimetres: more than half a window and a lane.
 const NEAR: f64 = 1.0;
 /// The most cells a grid has, 500 mm by 500 mm: a larger plan is not measured.
 pub const MAX_CELLS: usize = 1_000_000;
@@ -302,7 +302,19 @@ fn sewn(plan: &StitchPlan) -> Vec<SewnStitch> {
         let near = Point::new(settled(point.x()), settled(point.y())).unwrap_or(point);
         near.to_tenths().map_or(point, |(x, y)| Point::from_tenths(x, y))
     };
-    plan.sewn_stitches().into_iter().map(|stitch| SewnStitch { from: on_grid(stitch.from), to: on_grid(stitch.to), ..stitch }).collect()
+    let mut sewn = plan.sewn_stitches();
+    for stitch in &mut sewn {
+        (stitch.from, stitch.to) = (on_grid(stitch.from), on_grid(stitch.to));
+    }
+    sewn
+}
+
+/// Whether `stitch` may lay thread in the window of the spot at `middle`: its box reaches within [`NEAR`]
+/// of the spot along x and along y. A lane lies [`LANE`] from its stitch and a window ends half a
+/// millimetre from its spot, so a stitch further away lays none there.
+fn near(stitch: &SewnStitch, middle: Point) -> bool {
+    let far = |from: f64, to: f64, middle: f64| from.min(to) > middle + NEAR || from.max(to) < middle - NEAR;
+    !(far(stitch.from.x(), stitch.to.x(), middle.x()) || far(stitch.from.y(), stitch.to.y(), middle.y()))
 }
 
 /// How many steps the thread of a stitch `length` long is followed in: one for each cell's width of it
@@ -323,8 +335,11 @@ fn laid(grid: &Grid, stitch: &SewnStitch, length: f64, steps: f64, mut lay: impl
     let (x, y) = ((from.x() - grid.corner.0) / CELL, (from.y() - grid.corner.1) / CELL);
     let share = length / steps / 2.0;
     let (columns, rows) = (grid.columns as f64, grid.rows as f64);
-    for step in 0..index(steps) {
-        let along = (step as f64 + 0.5) / steps;
+    // The middle of each step, counted in steps: a whole number and a half, which a float holds exactly.
+    let mut middle = 0.5;
+    for _ in 0..index(steps) {
+        let along = middle / steps;
+        middle += 1.0;
         let (x, y) = (x + across * along, y + down * along);
         for (x, y) in [(x + nx, y + ny), (x - nx, y - ny)] {
             if x >= 0.0 && x < columns && y >= 0.0 && y < rows {
@@ -342,6 +357,9 @@ pub struct Thickness {
     fills: Vec<f64>,
     /// The needle points in each spot's window, per mm².
     points: Vec<f64>,
+    /// The stitches measured, where they were measured: [`Thickness::stack`] follows those near a spot
+    /// again, and the plan is not gone through a second time for them.
+    sewn: Vec<SewnStitch>,
 }
 
 impl Thickness {
@@ -349,19 +367,24 @@ impl Thickness {
     /// step along it, and 3 for each cell. A plan whose grid would have more than [`MAX_CELLS`] is not
     /// measured, as one whose measuring runs out of work.
     pub fn of(plan: &StitchPlan, meter: &mut Meter) -> Result<Option<Thickness>, Exhausted> {
-        Thickness::of_stitches(&sewn(plan), meter)
+        Thickness::measured(sewn(plan), meter)
     }
 
     /// The thickness of the stitches `sewn`, as they are: for a picture of what a machine file sews, whose
     /// stitches are read from the file.
     pub fn of_stitches(sewn: &[SewnStitch], meter: &mut Meter) -> Result<Option<Thickness>, Exhausted> {
+        Thickness::measured(sewn.to_vec(), meter)
+    }
+
+    /// The thickness of the stitches `sewn`, which it keeps.
+    fn measured(sewn: Vec<SewnStitch>, meter: &mut Meter) -> Result<Option<Thickness>, Exhausted> {
         meter.charge(units(sewn.len()))?;
         let Some(bounds) = Rect::around(sewn.iter().flat_map(|stitch| [stitch.from, stitch.to])) else { return Ok(None) };
         let grid = Grid::round(bounds).ok_or(Exhausted::Work)?;
         let cells = grid.columns * grid.rows;
         meter.charge(units(cells).saturating_mul(3))?;
         let (mut thread, mut holes) = (vec![0.0; cells], vec![0.0; cells]);
-        for stitch in sewn {
+        for stitch in &sewn {
             let length = stitch.length();
             let steps = steps(length);
             meter.charge(units(index(steps)))?;
@@ -376,7 +399,7 @@ impl Thickness {
             }
         }
         // A window is 1 mm², so its sums are per square millimetre as they are.
-        Ok(Some(Thickness { fills: grid.windows(&thread, ROWS), points: grid.windows(&holes, 1.0), grid }))
+        Ok(Some(Thickness { fills: grid.windows(&thread, ROWS), points: grid.windows(&holes, 1.0), grid, sewn }))
     }
 
     /// The values of `measure`, by row then column.
@@ -399,15 +422,34 @@ impl Thickness {
 
     /// The largest value of `measure`, and the last spot that has it.
     pub fn most(&self, measure: Measure) -> Spot {
-        let most = self.values(measure).iter().enumerate().max_by(|a, b| a.1.total_cmp(b.1));
-        most.map_or(Spot { value: 0.0, at: Point::ORIGIN }, |(at, value)| Spot { value: *value, at: self.grid.spot(at) })
+        let values = self.values(measure);
+        if values.is_empty() {
+            return Spot { value: 0.0, at: Point::ORIGIN };
+        }
+        // No value is under 0, so the first comparison holds, and an equal value later takes the place.
+        let (mut most, mut value) = (0, 0.0);
+        for (at, next) in values.iter().enumerate() {
+            if *next >= value {
+                (most, value) = (at, *next);
+            }
+        }
+        Spot { value, at: self.grid.spot(most) }
     }
 
     /// What of the plan has `limit` of `measure` or more, in pieces of [`PIECE`] or more. A unit of work for
     /// each spot.
     pub fn over(&self, measure: Measure, limit: f64, meter: &mut Meter) -> Result<Over, Exhausted> {
+        self.over_of(measure, limit, f64::INFINITY, meter)
+    }
+
+    /// [`Thickness::over`], for a caller that knows the largest value of `measure`, `most`: a limit above it
+    /// has nothing over it, and the spots are not gone through for it. The work is the same.
+    fn over_of(&self, measure: Measure, limit: f64, most: f64, meter: &mut Meter) -> Result<Over, Exhausted> {
         let values = self.values(measure);
         meter.charge(units(values.len()))?;
+        if most < limit {
+            return Ok(Over::default());
+        }
         // The spots still to look at: those at the limit or over it that are in no piece yet.
         let mut left: Vec<bool> = values.iter().map(|value| *value >= limit).collect();
         let mut over = Over::default();
@@ -442,22 +484,20 @@ impl Thickness {
     }
 
     /// What of `plan`, the plan this is the thickness of, lies in the window of the spot nearest to `at`:
-    /// each element's thread in each colour block, in sewing order. A unit of work for each stitch and each
-    /// step along it. Only a stitch near the spot is followed.
+    /// each element's thread in each colour block, in sewing order. A unit of work for each stitch, and for
+    /// each step along a stitch [`near`] the spot: only those are followed again.
     pub fn stack(&self, plan: &StitchPlan, at: Point, meter: &mut Meter) -> Result<Vec<Layer>, Exhausted> {
         let Some(spot) = self.grid.nearest(at.x(), at.y()) else { return Ok(Vec::new()) };
         let (window, middle): (Vec<usize>, Point) = (self.grid.window(spot).collect(), self.grid.spot(spot));
         let mut layers: BTreeMap<(usize, Option<ElementRef>), (f64, f64)> = BTreeMap::new();
-        for stitch in sewn(plan) {
+        meter.charge(units(self.sewn.len()))?;
+        for stitch in self.sewn.iter().filter(|stitch| near(stitch, middle)) {
             let length = stitch.length();
             let steps = steps(length);
-            meter.charge(units(index(steps)).saturating_add(1))?;
-            if stitch.from.lerp(stitch.to, 0.5).distance(middle) > length / 2.0 + NEAR {
-                continue;
-            }
+            meter.charge(units(index(steps)))?;
             let entry = plan.blocks.get(stitch.block).and_then(|block| block.stitches.get(stitch.index));
             let key = (stitch.block, entry.and_then(|entry| entry.origin.element));
-            laid(&self.grid, &stitch, length, steps, |cell, length| {
+            laid(&self.grid, stitch, length, steps, |cell, length| {
                 if window.contains(&cell) {
                     let layer = layers.entry(key).or_default();
                     if stitch.role == Role::Top {
@@ -473,14 +513,14 @@ impl Thickness {
 
     /// What `plan`, the plan this is the thickness of, measures against `limits`.
     pub fn report(&self, plan: &StitchPlan, limits: &Limits, meter: &mut Meter) -> Result<Report, Exhausted> {
-        let fills = self.most(Measure::Fills);
+        let (fills, points) = (self.most(Measure::Fills), self.most(Measure::Points));
         Ok(Report {
             fills,
-            points: self.most(Measure::Points),
-            thick: self.over(Measure::Fills, limits.warn_fills, meter)?,
-            failing: self.over(Measure::Fills, limits.fail_fills.max(limits.warn_fills), meter)?,
-            dense: self.over(Measure::Points, limits.warn_points, meter)?,
-            pierced: self.over(Measure::Points, limits.fail_points.max(limits.warn_points), meter)?,
+            points,
+            thick: self.over_of(Measure::Fills, limits.warn_fills, fills.value, meter)?,
+            failing: self.over_of(Measure::Fills, limits.fail_fills.max(limits.warn_fills), fills.value, meter)?,
+            dense: self.over_of(Measure::Points, limits.warn_points, points.value, meter)?,
+            pierced: self.over_of(Measure::Points, limits.fail_points.max(limits.warn_points), points.value, meter)?,
             stack: self.stack(plan, fills.at, meter)?,
         })
     }
