@@ -19,6 +19,8 @@
 //! - **Right to left.** In a font whose `text_direction` is `rtl`, a line's words and each word's glyphs are
 //!   laid in the reverse of their order in the text, and a pair's kerning is looked up with the glyph that
 //!   comes first in the text first.
+//! - **Back and forth.** The lines take their glyphs in turn from 2 directions of the font, which are the
+//!   same one when the text sews one way: a font draws a glyph for each direction it sews in.
 //! - **Lines.** Each line's baseline lies the font's leading plus the line height below the line before.
 //! - **Alignment.** A line's width spans its glyphs' boxes. A centred line moves left by half of it, and a
 //!   right-aligned one by all of it. A block's line moves each of its words right by its place in the line
@@ -32,7 +34,7 @@ use stitchcraft_core::{Exhausted, Meter};
 use unicode_normalization::UnicodeNormalization;
 
 use super::{Align, Lettering};
-use crate::font::{Font, Glyph, LetterCase, TextDirection, Variant};
+use crate::font::{Direction, Font, Glyph, LetterCase, TextDirection, Variant};
 
 /// The endings of the names of an Arabic letter's forms.
 const FORMS: [&str; 4] = ["isol", "init", "medi", "fina"];
@@ -57,22 +59,25 @@ pub(super) struct Spot<'f> {
 pub(super) struct Laid<'f> {
     /// Its glyphs, line by line, in the order they are laid out.
     pub spots: Vec<Spot<'f>>,
-    /// Each line that has glyphs, as the range of its spots.
-    pub lines: Vec<Range<usize>>,
+    /// Each line that has glyphs, as the range of its spots, with the direction its glyphs are drawn to sew
+    /// in.
+    pub lines: Vec<(Range<usize>, Direction)>,
     /// The characters the font has no glyph for.
     pub missing: BTreeSet<char>,
 }
 
-/// `text` laid out in `variant` of `font` as `how` says, charging `meter` a unit for each character and for
-/// each glyph name tried for it.
-pub(super) fn lay<'f>(font: &'f Font, variant: &'f Variant, text: &str, how: &Lettering, meter: &mut Meter) -> Result<Laid<'f>, Exhausted> {
+/// `text` laid out in `font` as `how` says, its lines in turn in the glyphs of the first and of the second of
+/// `variants`, charging `meter` a unit for each character and for each glyph name tried for it.
+pub(super) fn lay<'f>(font: &'f Font, variants: [&'f Variant; 2], text: &str, how: &Lettering, meter: &mut Meter) -> Result<Laid<'f>, Exhausted> {
     let text: String = text.nfc().collect();
     let rtl = font.settings.text_direction == TextDirection::RightToLeft;
-    let default = variant.glyphs.get(&font.settings.default_glyph);
     let mut laid = Laid::default();
-    // Each line's spots, with the number of its words and its width.
-    let mut lines: Vec<(Range<usize>, usize, f64)> = Vec::new();
+    // Each line's spots, with its direction, the number of its words and its width.
+    let mut lines: Vec<(Range<usize>, Direction, usize, f64)> = Vec::new();
     for (number, line) in text.lines().enumerate() {
+        let [even, odd] = variants;
+        let variant = if number % 2 == 1 { odd } else { even };
+        let default = variant.glyphs.get(&font.settings.default_glyph);
         let baseline = number as f64 * (font.leading_mm() + how.line_height);
         let first = laid.spots.len();
         let mut words: Vec<&str> = line.trim().split(' ').collect();
@@ -116,11 +121,11 @@ pub(super) fn lay<'f>(font: &'f Font, variant: &'f Variant, text: &str, how: &Le
         if !spots.is_empty() {
             let left = spots.iter().map(|spot| spot.left).fold(f64::INFINITY, f64::min);
             let right = spots.iter().map(|spot| spot.left + spot.glyph.width).fold(f64::NEG_INFINITY, f64::max);
-            lines.push((first..laid.spots.len(), words.len(), right - left));
+            lines.push((first..laid.spots.len(), variant.direction, words.len(), right - left));
         }
     }
-    let widest = lines.iter().map(|(_, _, width)| *width).fold(0.0, f64::max);
-    for (range, words, width) in &lines {
+    let widest = lines.iter().map(|(.., width)| *width).fold(0.0, f64::max);
+    for (range, _, words, width) in &lines {
         let Some(spots) = laid.spots.get_mut(range.clone()) else { continue };
         let spread = how.align == Align::LetterSpacing && *words == 1;
         let parts = if spread { spots.len() } else { *words };
@@ -136,7 +141,7 @@ pub(super) fn lay<'f>(font: &'f Font, variant: &'f Variant, text: &str, how: &Le
             };
         }
     }
-    laid.lines = lines.into_iter().map(|(range, ..)| range).collect();
+    laid.lines = lines.into_iter().map(|(range, direction, ..)| (range, direction)).collect();
     Ok(laid)
 }
 

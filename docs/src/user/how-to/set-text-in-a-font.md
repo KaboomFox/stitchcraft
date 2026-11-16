@@ -45,6 +45,59 @@ or take them away when negative. They are millimetres at a scale of 100 percent 
 the text. `--align` takes `left`, `center`, `right`, `block` or `letterspacing`. A block spreads the words
 of each line as wide as the widest line.
 
+## Set the text along a path
+
+Draw the path in an SVG file, give it a stroke, and name the file with `--path`:
+
+```sh
+stitch lettering "Hello" --font fonts/small_font --scale 300 --path arc.svg -o arc.pes
+```
+
+The text follows the path from its start, each letter turned the way the path runs under it. The letters
+aren't bent. The text lies where the path lies on the file's page. In a file with several paths, label
+the one to follow `batch lettering`, as Ink/Stitch's batch lettering asks. Without that label the file's
+first path is taken, and the summary names it.
+
+- `--text-position` takes `left`, `center`, `right` or `stretch`. The first 3 put the text at the path's
+  start, at its middle or at its end. Stretched, its letters are spread from the start to the end.
+- `--vertical-text-position` takes `top`, `baseline` or `bottom`. With `top` the text stands on the path,
+  and with `bottom` it hangs from it. With `baseline` the letters' baseline is the path, and a `p` reaches
+  below it.
+
+A text longer than its path goes on straight past the path's end, and `SC-W1109` gives both lengths. Draw
+the path as the text's baseline should run, in the direction the text reads. On a tight bend the letters'
+tops spread apart or touch: look at the picture, and add `--letter-spacing` where they touch.
+
+## Lines, trims and colours
+
+- **Back and forth.** Ink/Stitch Small Font and Medium Font draw every letter twice, to sew from the left
+  and from the right. The second line of a text then sews back from where the first ended, and the thread
+  between the lines is short. This is on unless `--back-and-forth false` turns it off. Most fonts sew one
+  way. In them every line sews from its start, the thread crosses the text between 2 lines, and `SC-W1110`
+  says so.
+- **Trims.** `--trim` takes `off`, `line`, `word` or `glyph`, and adds a trim after each line, each word or
+  each letter. A font's own trims stay.
+- **Colours.** A multicolour font sews each letter in its 2 or 3 threads before the next letter, with a
+  thread change each time. `--color-sort all` sews the whole text's first colour, then its second. `line`
+  and `word` do so for each line or each word. It needs a font that sorts its colours, as its `font.json`
+  says with `sortable`.
+
+## On a machine that doesn't cut the thread
+
+The Brother PE800 cuts no thread between letters. Every jump leaves a thread on the fabric to cut by hand,
+and the summary counts the jumps.
+
+- **Leave `--trim` off.** A trim doesn't cut anything on this machine. It ends the stitching with a knot and
+  jumps, where the letters of Small Font and Medium Font would have been joined by stitches under their
+  columns. `Hello World` in Small Font at 100 percent has 3 jumps without trims and 10 with a trim after
+  each letter.
+- **Keep back and forth on,** and choose a font that sews both ways for a text of several lines. The
+  thread between 2 lines is then as short as the lines are apart.
+- **Sew small.** Up to about 10 mm tall, a word in Small Font sews without a jump. Above that the gaps
+  between letters grow past 3 mm, and each becomes a thread to cut.
+- **Sort the colours** of a multicolour font with `--color-sort all`: each thread change is a stop at the
+  machine, and a sorted text has one for each colour.
+
 ## What to check
 
 - **A character the font lacks** sews as the font's default glyph, and `SC-W1107` names the character.
@@ -56,5 +109,4 @@ of each line as wide as the widest line.
 - **The picture.** Look at it before you sew, since it draws the file's stitches as the machine sews them.
 
 The settings are listed in the [command-line reference](../reference/cli.md#stitch-lettering), and
-[fonts](../../design/fonts.md#lettering) describes how a text is laid out. Lettering along a path, a trim
-after each letter and lines sewn back and forth come with a later step.
+[fonts](../../design/fonts.md#lettering) describes how a text is laid out and how it follows a path.

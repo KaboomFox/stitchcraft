@@ -171,6 +171,36 @@ mod tests {
     }
 
     #[test]
+    fn req_font_020_the_options_of_lettering_along_a_path_and_of_its_order() {
+        use stitchcraft_svg::lettering::{ColourSort, TextPosition, Trim, VerticalPosition};
+        let given = |more: &[&str]| parse(&[["lettering", "Hi", "--font", "f", "-o", "hi.pes"].as_slice(), more].concat());
+        let Command::Lettering(args) = given(&[]).unwrap().command else { panic!("`stitch lettering`") };
+        assert_eq!((args.trim, args.color_sort, args.back_and_forth, args.path), (Trim::Off, ColourSort::Off, true, None));
+        assert_eq!((args.text_position, args.vertical_text_position), (TextPosition::Left, VerticalPosition::Top));
+        let order = ["--trim", "word", "--color-sort", "line", "--back-and-forth", "false"];
+        let path = ["--path", "arc.svg", "--text-position", "stretch", "--vertical-text-position", "baseline"];
+        let Command::Lettering(args) = given(&[order.as_slice(), path.as_slice()].concat()).unwrap().command else { panic!("`stitch lettering`") };
+        assert_eq!((args.trim, args.color_sort, args.back_and_forth), (Trim::Word, ColourSort::Line, false));
+        assert_eq!(args.path, Some(std::path::PathBuf::from("arc.svg")));
+        assert_eq!((args.text_position, args.vertical_text_position), (TextPosition::Stretch, VerticalPosition::Baseline));
+        // A choice that is none names the choices, and a position needs a path.
+        let refused = |more: &[&str]| given(more).unwrap_err().to_string();
+        assert!(refused(&["--trim", "letter"]).contains("`letter` isn't a place to trim: they are off, line, word, glyph"));
+        assert!(refused(&["--color-sort", "on"]).contains("`on` isn't a colour sort: they are off, all, line, word"));
+        assert!(
+            refused(&["--path", "a.svg", "--text-position", "centre"])
+                .contains("`centre` isn't a text position: they are left, center, right, stretch")
+        );
+        assert!(
+            refused(&["--path", "a.svg", "--vertical-text-position", "middle"])
+                .contains("`middle` isn't a vertical text position: they are top, baseline, bottom")
+        );
+        assert!(refused(&["--back-and-forth", "maybe"]).contains("invalid value"));
+        assert!(refused(&["--text-position", "right"]).contains("--path"));
+        assert!(refused(&["--vertical-text-position", "bottom"]).contains("--path"));
+    }
+
+    #[test]
     fn req_vc_008_export_is_another_name_for_plan() {
         let Command::Plan(args) = parse(&["export", "patch.vectorcraft", "-o", "patch.pes"]).unwrap().command else {
             panic!("`stitch export` is `stitch plan`")
