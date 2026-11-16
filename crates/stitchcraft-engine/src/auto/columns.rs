@@ -298,7 +298,9 @@ fn crowding(rails: &[Vec<Point>; 2], rungs: &[[Point; 2]], meter: &mut Meter) ->
         let end = pairs.last().map_or(0.0, |pair| pair.0);
         for &(at, _) in &pairs {
             for start in [at, at - STRETCH] {
-                let start = start.clamp(0.0, (end - STRETCH).max(0.0));
+                // A stretch that runs past the rail's end is cut off there. It pairs with no more than the
+                // rail's last whole stretch does, which ends at the last cut.
+                let start = start.max(0.0);
                 most = most.max(paired(&pairs, (start + STRETCH).min(end), true) - paired(&pairs, start, false));
             }
         }

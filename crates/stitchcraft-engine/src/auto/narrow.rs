@@ -746,6 +746,28 @@ mod tests {
     }
 
     #[test]
+    fn req_auto_064_a_part_whose_column_would_crowd_its_stitches_stays_in_the_fill_and_says_so() {
+        // A band 2.5 mm wide bent three quarters of the way round a point 1 mm inside it: a column along it
+        // would sew 3.5 mm of its outer edge to each millimetre of its inner one.
+        let arc = |radius: f64, from: f64, to: f64| {
+            (0..=48).map(move |i| {
+                let (sin, cos) = sin_cos(from + (to - from) * f64::from(i) / 48.0);
+                (radius * cos, radius * sin)
+            })
+        };
+        let turn = 1.5 * std::f64::consts::PI;
+        let band = outline(&arc(3.5, 0.0, turn).chain(arc(1.0, turn, 0.0)).collect::<Vec<_>>());
+        let area = ElementId::new("area").unwrap();
+        let sorted = sorted(&area, vec![band.clone()], &bounds(1.0), &AutoParams::defaults(), &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!((sorted.filled, sorted.along.len()), (vec![band], 0));
+        let [Fired { rule: RuleId::Refused, measures: Some(measures) }] = sorted.fired.as_slice() else { panic!("{:?}", sorted.fired) };
+        assert_eq!(measures.lines, 1);
+        let [said] = sorted.said.as_slice() else { panic!("{:?}", sorted.said) };
+        assert_eq!((said.code, said.element.as_ref()), (Code::AutoSatinFilled, Some(&area)));
+        assert!(said.message.contains("of one edge to 1 mm of the other, more than 2 mm"), "{said}");
+    }
+
+    #[test]
     fn req_auto_036_a_shape_that_asks_to_run_or_to_be_filled_sorts_every_part_so() {
         // A square 10 mm across, a strip 3 mm wide and a speck, of a shape that asks to run: the strip and the
         // square sew along their centre lines, the square's of no length, so it stays in the fill, and the
