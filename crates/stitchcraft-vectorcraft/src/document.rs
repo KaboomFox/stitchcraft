@@ -63,7 +63,9 @@
 //! in the document, give the design its origin and its stop position (`REQ-ASM-005`), as Ink/Stitch's commands
 //! do in an SVG file, and 2 origins, or 2 stop positions in a design that stops, are an error (`SC-E0819`).
 //! `stitch:route-start` and `stitch:route-end` mark where the routing filters start and end a route
-//! ([`route_marker`], `REQ-VC-019`), and are left out without a word. A group or a layer is never a marker,
+//! ([`route_marker`], `REQ-VC-019`), and are left out without a word. `stitch:text` and a text marks text in
+//! a picture: the path is read with its name, and once the design is read, lettering of the text takes
+//! the place of what lies inside it ([`stitchcraft_svg::lettering::pictures`], `REQ-VC-028`). A group or a layer is never a marker,
 //! and a word
 //! after `stitch:` that names none is ignored: `SC-W0807` names both, in case of a slip. A live effect
 //! is never given a name, so its preview shows what a name leaves out.
@@ -101,6 +103,7 @@ use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_params::stitch_type::Family;
 use stitchcraft_params::{ParamSet, StitchType};
 use stitchcraft_plan::{MachineProfile, Rgb, Thread};
+use stitchcraft_svg::lettering::pictures;
 
 use crate::container::{self, BYTES_PER_UNIT, MAX_BYTES, unreadable};
 
@@ -201,6 +204,11 @@ pub fn read_in(bytes: &[u8], budget: &Budget, reading: Reading, fonts: &mut dyn 
     let mut warnings = reader.warnings;
     warnings.extend(unread);
     let design = Design::new(reader.elements, reader.settings)?.read_as(reading);
+    // Text in pictures: what lies inside each object named `stitch:text` becomes lettering (`REQ-VC-028`).
+    let (fonts, mut lettered) = (reader.fonts, reader.lettered);
+    let (design, said) =
+        pictures::replace(design, &[], &mut |name, budget| crate::lettering::found(&mut *fonts, name, budget), &mut lettered, budget)?;
+    warnings.extend(said);
     Ok(VectorCraft { design, machine: kept.machine, warnings })
 }
 
@@ -400,12 +408,15 @@ enum Marker {
     RouteStart,
     /// Where they end it.
     RouteEnd,
+    /// Text in a picture: what lies inside the object is replaced by lettering of the note after the word
+    /// (`REQ-VC-028`).
+    Text,
     /// No marker StitchCraft reads.
     Unknown,
 }
 
 /// The word after `stitch:` of each marker StitchCraft reads.
-const MARKERS: [(&str, Marker); 10] = [
+const MARKERS: [(&str, Marker); 11] = [
     ("ignore", Marker::Ignore),
     ("start", Marker::Start),
     ("end", Marker::End),
@@ -416,6 +427,7 @@ const MARKERS: [(&str, Marker); 10] = [
     ("stop-position", Marker::StopPosition),
     ("route-start", Marker::RouteStart),
     ("route-end", Marker::RouteEnd),
+    ("text", Marker::Text),
 ];
 
 /// Which end of a route an object marks, as the routing filters read its name (`REQ-VC-019`).
@@ -594,6 +606,16 @@ impl Reader<'_> {
                 (Marker::Origin | Marker::StopPosition | Marker::RouteStart | Marker::RouteEnd, Some(kind)) => {
                     let message = format!("{shown} is named stitch:{noun}, which a {kind} can't be, and the name is ignored.");
                     self.feature(&label, message, Some(&format!("Name a small path stitch:{noun}.")));
+                }
+                // The path is read as any is, with its name: its text is set once the design is read.
+                (Marker::Text, None) => {}
+                (Marker::Text, Some(kind)) => {
+                    let message = format!("{shown} is named as a text marker, which a {kind} can't be, and the name is ignored.");
+                    self.feature(
+                        &label,
+                        message,
+                        Some("Name a shape drawn round the letters, or a line drawn through them, stitch:text and the text."),
+                    );
                 }
                 (Marker::Unknown, _) => {
                     let message = format!("{shown} begins with stitch:, which names no marker StitchCraft reads, and the name is ignored.");

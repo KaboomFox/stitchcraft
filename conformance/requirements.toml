@@ -639,6 +639,15 @@ milestone = "M10"
 status = "active"
 
 [[req]]
+id = "REQ-SVG-016"
+area = "svg"
+level = "L2"
+statement = "A shape of an SVG file whose inkscape:label is `stitch:text` and a note is a text marker (REQ-AUTO-063): the reader gives each element its shape's label as its name, and stitch, which has the fonts, sets the marker's text once the file is read, in the fonts of the folder STITCHCRAFT_FONTS names."
+rationale = "Inkscape's Object Properties name an object with inkscape:label, as VectorCraft's Layers panel names one. The SVG reader has no fonts, as the VectorCraft reader has only those it is given."
+milestone = "M14"
+status = "active"
+
+[[req]]
 id = "REQ-GEN-001"
 area = "generators"
 level = "L2"
@@ -2552,6 +2561,15 @@ milestone = "M14"
 status = "active"
 
 [[req]]
+id = "REQ-VC-028"
+area = "vectorcraft"
+level = "L2"
+statement = "A path or a compound path of a VectorCraft document named `stitch:text` and a note is a text marker (REQ-AUTO-063 to REQ-AUTO-066): it is read as any object is, with its paints, and once the document is read the lettering of its text takes the place of what lies inside it, in the reader's fonts as a text object's are found (REQ-VC-026), the empty font name being the default font. So the PES and DST exporters and stitch sew a marked document alike, each with its fonts. A group or a layer so named is not a marker, and SC-W0807 says so. A reader without fonts leaves the traced shapes and says SC-W1113."
+rationale = "A name is how ABI v1 marks an object for StitchCraft (REQ-VC-009), and the marker needs paint to be an object a reader is given. The exporters hold the built-in font, so a marked picture sews from File › Export as it does from the command line."
+milestone = "M14"
+status = "active"
+
+[[req]]
 id = "REQ-VC-019"
 area = "vectorcraft"
 level = "L2"
@@ -2749,6 +2767,15 @@ level = "L2"
 statement = "On each of the 2 test photos of the owner's dog, the cut-out from U²-Net-p's box keeps the dog with an intersection over union of 0.97 or more against its mask checked by hand, keeps at most 2 % of the dog's area wrongly and loses at most 3 % of it. On the photo of the dog running, a `--not-subject` point on the tyre behind the dog keeps the cut-out within the same bounds."
 rationale = "When M13.13 decided, onnxruntime's cut-outs measured 0.985 and 0.988, with 0.3 % of the dog's area kept wrongly at most, and the salient models alone kept the tyre, 18 to 20 % of the dog's area (ADR-0019). The bounds leave room for another runtime's rounding."
 milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-CLI-020"
+area = "cli"
+level = "L2"
+statement = "`--text LEFT,TOP,WIDTH,HEIGHT:TEXT`, which stitch plan, stitch export and stitch bug-report take any number of times, marks text in the design read (REQ-AUTO-063): a rectangle in percent of the box round the design's shapes, from the box's left and top, and after the colon the note a marker's name has. A mark whose 4 numbers don't read, that reaches outside the box, that has no width or height, or that has no text is refused as a usage error before anything is read. The marks are used after the design's own markers, are named text-1, text-2 and so on in the order given, and are set in the fonts of the folder STITCHCRAFT_FONTS names. A bug-report bundle records them with the settings of automatic digitizing's rules, and its replay uses them."
+rationale = "A picture traced by the command line never opens in an editor where a marker could be drawn. Its background is traced too, so the box round the traced shapes is the picture, and a share of it can be read off the picture whatever size it sews at."
+milestone = "M14"
 status = "active"
 
 [[req]]
@@ -3138,6 +3165,40 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-AUTO-063"
+area = "auto"
+level = "L2"
+statement = "Text in pictures: an element whose name is `stitch:text` and a note, in any case and after any white space, is a text marker, and is never sewn. The note is the text, or the text between its first and last double quotes with settings after it, each name=value: font, trim and color_sort. An object read as 2 elements of one name and one path is one marker. A marker that is a fill, or a stroke whose first subpath is closed, is an area: what its outline encloses by the even-odd rule. Every subpath of every other element that lies wholly inside the marker, as a polyline within 0.05 mm of it, is taken out of its element, and an element left without a subpath is taken out of the design, so the holes that traced letters leave in the colour round them are closed. A subpath with more than half of its points inside and not all of them stays, and SC-W1114 counts those. Markers are used in the design's order, then those given beside it. A design without markers is returned as it is, and a design's settings and its order of colours stay."
+rationale = "Image Trace keeps all the areas of one colour in one compound path (VectorCraft's crates/trace), so traced letters are subpaths, not objects, and the background has a hole under each. Taking whole subpaths out leaves the background's own outline, which then sews whole under the lettering."
+milestone = "M14"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-064"
+area = "auto"
+level = "L2"
+statement = "The text of a marker is set by lettering (REQ-FONT-009, REQ-FONT-015) in the place of what was taken out. What was taken out is measured along and across the line the text follows: for an area, a level line. The text is set at the scale, to a tenth of a percent, that makes the box of what it sews as tall as the box of what was taken out, kept within the heights the font sews at with SC-W1106, and its box is centred on that box across the line, its baseline as far above its bottom as the text reaches below the baseline. Along the line, the gaps between its glyphs, those between words too, are all widened or narrowed by one amount so that it is as wide, by at most half the taken shapes' height wider and a tenth narrower, and it is centred. SC-W1115 gives both heights and widths when the scale was kept within the font's range, or when a text of 2 glyphs or more is over 0.05 mm from the width. The lettering's elements sew after the last element a subpath was taken from, are not automatic, and have no name. A font whose elements all sew in one thread sews in the thread that painted the most of what was taken out: for each thread, the areas of its taken subpaths, less those inside an odd number of their element's other subpaths, and the length times the width of its taken lines, the first of 2 that painted as much. SC-I1112 names the marker, the count of subpaths taken out, the heights, the text and the font. A font's own warnings are said once."
+rationale = "Lettering must look like the picture's text: as tall and where it stood. A font's letters are not as wide as a picture's, so only the gaps give, within what still reads as a word and keeps strokes off each other. A counter of a letter is an island of the background's colour, which must not count as ink."
+milestone = "M14"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-065"
+area = "auto"
+level = "L2"
+statement = "A text marker that is a stroke whose first subpath is open is a line drawn through the letters: its area is what lies no further from the line than half the stroke's width and not past its ends, and its text follows the line. A point is measured by the nearest point of the line, the line's first and last segments going on past its ends, and across the line towards the letters' tops, which is to the left of the way the line is drawn. The text is set along the line that lies beside the marker's line at the baseline's distance, each corner of the marker's line pushed out along the line that halves it, each glyph turned whole as lettering along a path turns it (REQ-FONT-015)."
+rationale = "A word on an arc, as round a badge, has no level box. Measured along and across a line through the letters, its height and width are the same 2 numbers as a level word's, and the person who draws the line says which way the text reads."
+milestone = "M14"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-066"
+area = "auto"
+level = "L2"
+statement = "A text marker is not used, its traced shapes stay and SC-W1113 says why, when its note has no text, when it encloses no area or its line has no length, when no subpath lies wholly inside it, when the font it names is not among the host's fonts or doesn't read, when lettering sets no character of the text, when the shapes inside it or the text have no height, and when its element's id is too long to number the letters by. A setting of the note that doesn't read is left out with SC-W1113 and the marker is used. Nothing is taken out before the lettering is set. Finding and measuring cost a unit of work for each element and, for each flattened point, a unit per segment of the marker it is tested against, and work past the budget ends with SC-E0004."
+rationale = "A design must never be left with a hole and no text, so every way a marker can fail is found before a shape is taken out, and the person is told which."
+milestone = "M14"
+
 id = "REQ-AUTO-067"
 area = "auto"
 level = "L2"

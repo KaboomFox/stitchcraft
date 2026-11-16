@@ -478,6 +478,13 @@ sews without a jump. At large sizes the gaps grow past 3 mm and become jumps, wh
 leaves to cut by hand.
 
 
+## Lettering in the place of a picture's text
+
+From M14.5, `stitchcraft_svg::lettering::pictures` sets a text where a picture's traced letters were, at
+their height and along their line, with [`set`](#lettering) and [`set_along`](#along-a-path) as they are.
+[Text in pictures](image-to-embroidery.md#text-in-pictures) describes it. It asks a host for a font by
+name, as a text object does, and the empty name is the default font.
+
 ## Fonts built into the plug-ins
 
 A plug-in can't read files. The fonts that a VectorCraft document's texts sew in are built into the
