@@ -121,7 +121,8 @@ mod tests {
 const SHOWN: usize = 60;
 
 /// The lines of `snapshot` that `listing` lacks, each after `- `, then those of `listing` that `snapshot` lacks,
-/// each after `+ `, in their order: at most [`SHOWN`] of each.
+/// each after `+ `, in their order: at most [`SHOWN`] of each. When both have the same lines, the first line where
+/// their order differs.
 fn difference(snapshot: &str, listing: &str) -> Vec<String> {
     let only = |these: &str, those: &str, sign: char| {
         let those: std::collections::BTreeSet<&str> = those.lines().collect();
@@ -129,6 +130,12 @@ fn difference(snapshot: &str, listing: &str) -> Vec<String> {
     };
     let mut lines = only(snapshot, listing, '-');
     lines.extend(only(listing, snapshot, '+'));
+    // The same lines in another order: the first place where the order differs.
+    if lines.is_empty()
+        && let Some((at, (ours, theirs))) = snapshot.lines().zip(listing.lines()).enumerate().find(|(_, (ours, theirs))| ours != theirs)
+    {
+        lines.push(format!("line {}: the snapshot has `{ours}` where the listing has `{theirs}`", at + 1));
+    }
     lines
 }
 
@@ -142,6 +149,8 @@ mod difference_tests {
         let listing = "pub mod a\npub fn a::kept()\npub fn a::new() -> u8\npub fn a::newer()\n";
         assert_eq!(difference(snapshot, listing), ["- pub fn a::old() -> u8", "+ pub fn a::new() -> u8", "+ pub fn a::newer()"]);
         assert!(difference(listing, listing).is_empty());
+        let swapped = "pub mod a\npub fn a::new() -> u8\npub fn a::kept()\npub fn a::newer()\n";
+        assert_eq!(difference(swapped, listing), ["line 2: the snapshot has `pub fn a::new() -> u8` where the listing has `pub fn a::kept()`"]);
         let long: String = (0..100).map(|i| format!("pub fn a::f{i}()\n")).collect();
         assert_eq!(difference(&long, "").len(), SHOWN);
         assert_eq!(difference("", &long).len(), SHOWN);
