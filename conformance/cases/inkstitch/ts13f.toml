@@ -2,3 +2,10 @@ id = "inkstitch-ts13f"
 requirements = ["REQ-SVG-008"]
 kind = "inkstitch"
 sheet = "TS-13F"
+# The rows of the sheet's fills lie 0.25 mm apart, nearer than the Brother's shortest stitch, 0.3 mm, so
+# the first needle point of each row whose handover would be shorter is left out (SC-I0504). Ink/Stitch
+# sews them: 21,764 stitches against 18,543, 12 to 15 % more on each square and 39 to 48 % more on the
+# blocks of patches, whose rows are 1.5 to 4 mm long. The 2 files' threads lie on each other for 0.995.
+
+[excused]
+stitches = "DEV-FIN-001"
