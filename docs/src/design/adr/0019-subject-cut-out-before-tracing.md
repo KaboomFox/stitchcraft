@@ -193,7 +193,7 @@ as well as the code:
    the picture out, as every bundle does. A replay runs without the models and without VectorCraft.
 8. **Measuring.** Cases measure a cut-out by its IoU with a mask checked by hand and the shares of the
    subject's area it keeps and loses wrongly. M13.14 commits the 2 photos, as prepared, with their masks,
-   and records them in `conformance/fixtures/README.md` (Louise Fox, MIT licence). The models' outputs for
+   and records them in `conformance/fixtures/README.md` (the owner's, MIT licence). The models' outputs for
    them are fixtures too, so that the cases of the steps after the models run without them. Pictures drawn
    in code, whose masks are exact, test the marks and those steps. The models themselves are checked by a
    job of their own, on the photos and the drawn pictures, against the fixtures and the IoU bounds.

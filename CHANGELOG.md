@@ -301,7 +301,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     (`DEV-FILL-034`). A user page has pictures of guided fills.
   - Golden changed: `TS-17B.pes`, for the guided leaf below M10.12's gradients. With the leaf after it, the
     third gradient's last colour ends on its square's side nearest the leaf, and so starts on the other.
-- M13.15: the owner's dog photos as test pictures (`REQ-AUTO-025`, `REQ-AUTO-026`). Louise Fox's 2 photos of
+- M13.15: the owner's dog photos as test pictures (`REQ-AUTO-025`, `REQ-AUTO-026`). The owner's 2 photos of
   her dog, each cut out by a mask checked by hand, are docs fixtures, with the 4 documents VectorCraft 0.22.0
   traced from them 100 mm tall in 6 and in 9 threads (`docs/fixtures/README.md` › The traced dogs). A test
   keeps each cut-out's hash.

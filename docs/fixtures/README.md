@@ -64,7 +64,7 @@ fails until the new photo is traced the same way and the test keeps its hash.
 
 ## The traced dogs
 
-The 2 photos of a dog are Louise Fox's, of her own dog. She gave them to StitchCraft on 2026-11-08 under the
+The 2 photos of a dog are the repository owner's (GitHub: KaboomFox), of her own dog. She gave them to StitchCraft on 2026-11-08 under the
 MIT licence. Before they reached the repository, each was scaled down from 1536 × 2048 pixels to 1200 pixels
 wide and saved as a JPEG file without metadata. The photo of the dog running first had its left 160 pixels cut
 away, as they held a person. Neither photo is in the repository: only the cut-outs made from them are.
