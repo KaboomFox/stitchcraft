@@ -103,6 +103,34 @@ const READ_PER_BYTE: f64 = 512.0;
 const WRITTEN_PER_BYTE: f64 = 822.0;
 /// How far above them a later host, or a later build of the plug-in, may go before the gate says so.
 const HEADROOM: f64 = 1.25;
+
+/// The most of VectorCraft's budget for an export that a test sheet's export may take, in percent. A step
+/// that takes a sheet past it fails in its own pull request, with room left to act in: without it, M13.17
+/// took TS-13D to 99.7 % unseen, and the next step failed for it (M13.31).
+const EXPORT_SHARE: u64 = 85;
+
+/// What to say of `sheet`, whose export took `used` of the `allowed` instructions: nothing up to
+/// [`EXPORT_SHARE`] % of them, and past that the sheet, both counts and what to do.
+fn near_budget(sheet: &str, used: u64, allowed: u64) -> Option<String> {
+    (u128::from(used) * 100 > u128::from(allowed) * u128::from(EXPORT_SHARE)).then(|| {
+        format!(
+            "{sheet}'s export takes {used} of the {allowed} instructions VectorCraft allows it, more than {EXPORT_SHARE} %: make it \
+             cheaper, or split the sheet"
+        )
+    })
+}
+
+#[test]
+fn req_vc_015_an_export_past_85_percent_of_its_budget_is_named() {
+    // At 85 % exactly an export passes, and one instruction more fails it, by its name and counts.
+    assert_eq!(near_budget("TS-13D", 8_500, 10_000), None);
+    assert_eq!(near_budget("TS-13D", 0, 10_000), None);
+    let said = near_budget("TS-13D", 8_501, 10_000).unwrap();
+    assert!(said.starts_with("TS-13D's export takes 8501 of the 10000 instructions VectorCraft allows it, more than 85 %: "), "{said}");
+    // What M13.17 left of TS-13D, which no check said: 10.872 of 10.905 G.
+    assert!(near_budget("TS-13D", 10_871_635_968, 10_904_844_000).is_some());
+    assert_eq!(near_budget("TS-13C", 7_985_954_816, 10_207_764_000), None);
+}
 /// The 2 sizes of path measured, in anchors. The costs are the differences between them, so that what every
 /// run costs anyway cancels out.
 const ANCHORS: [u32; 2] = [1_000, 4_000];
@@ -910,7 +938,7 @@ fn req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcr
         sheets,
         [
             "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D",
-            "TS-17A"
+            "TS-13E", "TS-17A"
         ]
     );
     // VectorCraft admits StitchCraft's effect records only while their plug-ins are installed: the families',
@@ -919,7 +947,7 @@ fn req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcr
         registry::install_bytes(&module(family)).unwrap();
     }
     let pes = Plugin::load(&module("pes"), Limits::default()).unwrap();
-    let mut costs = Vec::new();
+    let (mut costs, mut near) = (Vec::new(), Vec::new());
     for sheet in &sheets {
         let mut doc = read_document(&[]);
         let (used, allowed) = filtered(&plugin, &mut doc, &[], &json!({ "sheet": sheet }), NodeId(1)).unwrap_or_else(|e| panic!("{sheet}: {e}"));
@@ -930,6 +958,9 @@ fn req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcr
         let exported = export_fuel(&pes, &input, &export_params(&pes, &json!({}), target));
         let export_allowed = export::FUEL + export::limits(&pes).fuel_per_byte * input.len() as u64;
         costs.push(format!("{sheet}: drawn in {used} of {allowed} instructions, exported in {exported} of {export_allowed}"));
+        near.extend(near_budget(sheet, exported, export_allowed));
     }
     println!("::notice title=test sheets::{}", costs.join("; "));
+    // The limit is VectorCraft's own, read from its host: `export::FUEL` and its allowance for each byte.
+    assert!(near.is_empty(), "{}", near.join("; "));
 }
