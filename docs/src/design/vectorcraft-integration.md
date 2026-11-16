@@ -598,6 +598,13 @@ Exporting takes 23 million to 1.6 billion, at most 17 % of an export's, the most
 TS-08 and TS-09. TS-17B joined the sheets drawn in M10.7, after that measure, and left them in M10.9. The
 test prints each sheet's costs.
 
+The TS-13 sheets, digitized automatically, cost far more. On 2026-11-16 TS-13A, TS-13B and TS-13C each
+took 7.9 to 8.0 billion instructions to export, and TS-13D with its 4 pictures 10.872 of the 10.905 billion
+allowed. Drawing TS-13D took 49.5 of a light filter's 50.1 million. M13.31 moved its buttons to TS-13E, and
+the test now fails a sheet whose export leaves too little room
+([compatibility gate](compatibility-gate.md#level-a--abi-contract-fast-minutes)). The filter's help has a
+line for each sheet under "The test sheet to draw:", in the 1,000 characters VectorCraft shows of a help.
+
 ### Tools: the routing filters
 
 From M10.4 and M10.13, 2 filters in Object › Plug-ins route the selection with the engine's routing

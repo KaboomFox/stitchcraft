@@ -92,6 +92,7 @@ pub stitchcraft_core::diag::Code::HandStitchTooShort
 pub stitchcraft_core::diag::Code::InternalCheckFailed
 pub stitchcraft_core::diag::Code::JumpsCutInDst
 pub stitchcraft_core::diag::Code::LetteringScaleOutOfRange
+pub stitchcraft_core::diag::Code::LetteringSettingNotApplied
 pub stitchcraft_core::diag::Code::LetteringUnset
 pub stitchcraft_core::diag::Code::LockStitchLengthened
 pub stitchcraft_core::diag::Code::NothingToStitch
@@ -137,6 +138,7 @@ pub stitchcraft_core::diag::Code::SvgGeometryUnusable
 pub stitchcraft_core::diag::Code::SvgInkStitchUpdated
 pub stitchcraft_core::diag::Code::SvgObjectIgnored
 pub stitchcraft_core::diag::Code::SvgUnreadable
+pub stitchcraft_core::diag::Code::TextLongerThanPath
 pub stitchcraft_core::diag::Code::ThreadColorsUnknown
 pub stitchcraft_core::diag::Code::ThreadsShareColor
 pub stitchcraft_core::diag::Code::TooLargeForFormat
@@ -368,6 +370,7 @@ pub stitchcraft_core::Code::HandStitchTooShort
 pub stitchcraft_core::Code::InternalCheckFailed
 pub stitchcraft_core::Code::JumpsCutInDst
 pub stitchcraft_core::Code::LetteringScaleOutOfRange
+pub stitchcraft_core::Code::LetteringSettingNotApplied
 pub stitchcraft_core::Code::LetteringUnset
 pub stitchcraft_core::Code::LockStitchLengthened
 pub stitchcraft_core::Code::NothingToStitch
@@ -413,6 +416,7 @@ pub stitchcraft_core::Code::SvgGeometryUnusable
 pub stitchcraft_core::Code::SvgInkStitchUpdated
 pub stitchcraft_core::Code::SvgObjectIgnored
 pub stitchcraft_core::Code::SvgUnreadable
+pub stitchcraft_core::Code::TextLongerThanPath
 pub stitchcraft_core::Code::ThreadColorsUnknown
 pub stitchcraft_core::Code::ThreadsShareColor
 pub stitchcraft_core::Code::TooLargeForFormat

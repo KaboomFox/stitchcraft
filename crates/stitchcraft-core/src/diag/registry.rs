@@ -1323,6 +1323,27 @@ macro_rules! codes {
         /// millimetres.
         LetteringUnset = "SC-E1108", Error, "Text could not be set";
 
+        /// A text set along a path has a line longer than the path. Nothing is left out. On an open path the
+        /// line goes on straight past the path's end, the way the path ends, and before its start when the
+        /// line is centred or ends at the path's end. On a closed path it goes round again, over its own
+        /// start. A stretched line has its letters pushed together to fit, and they overlap.
+        ///
+        /// The message gives the line's length and the path's. Draw a longer path, set the text at a smaller
+        /// scale, or write a shorter text.
+        TextLongerThanPath = "SC-W1109", Warning, "Text longer than its path";
+
+        /// A setting of lettering asks for something the font isn't drawn for, and the text sews without it.
+        /// Lines sew back and forth only in a font that draws its glyphs for both directions and whose
+        /// `font.json` doesn't say `reversible` is false: in another font every line sews the same way, and
+        /// the thread jumps from each line's end to the next line's start. Colours are sorted only in a font
+        /// whose `font.json` says it is `sortable`: another font sews each letter's colours before the next
+        /// letter.
+        ///
+        /// The message names the font and the setting. Choose a font drawn for what you ask. Between lines
+        /// that sew the same way, a machine that cuts its threads cuts the long one, and on another machine you
+        /// cut it after sewing. Ink/Stitch Small Font and Medium Font sew both ways.
+        LetteringSettingNotApplied = "SC-W1110", Warning, "Lettering setting not applied";
+
         /// `--subject` and `stitch cutout` cut a picture's subject out with 3 models, which `stitch` fetches with
         /// curl on first use into the folder `STITCHCRAFT_MODELS` names, or else `stitchcraft/models` in your
         /// cache folder, and checks before each use. A file couldn't be fetched, or isn't the one pinned. Nothing
