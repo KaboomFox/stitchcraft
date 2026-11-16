@@ -169,7 +169,8 @@ Each line under the summary names an object by its id in the document, such as `
 was done with it. In the patch, the placement line is left out, as its name asks (`SC-I0811`). The group's own gold fill, which the graphic style put on it, isn't
 sewn as a shape of its own, and gives the squares their thread. Other messages name what isn't sewn as it
 is drawn, with the VectorCraft command that makes it sewable, such as **Type › Create Outlines** for text
-(`SC-W0807`). The [diagnostic codes](../reference/diagnostics.md) page explains each code, as
+(`SC-W0807`). Text sews in an embroidery font once it has StitchCraft's Lettering effect
+([letter in VectorCraft](letter-in-vectorcraft.md)). The [diagnostic codes](../reference/diagnostics.md) page explains each code, as
 `stitch explain SC-W0807` does.
 
 ## Start, end, origin and stop position markers

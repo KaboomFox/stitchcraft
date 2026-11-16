@@ -128,6 +128,12 @@ arc drawn in an SVG file.
 - On the arc, do the letters stand evenly, and do the columns of a turned letter cover as those of an
   upright one?
 
+From M14.4, sew a name typed in VectorCraft on the PE800. Type 2 lines as point type, apply
+**Effect › Plug-ins › StitchCraft Lettering** with Size 150, and export to PES.
+
+- Does the text sew where it stands in the document, beside a shape drawn next to it?
+- Is 7.6 mm the height you expected from the dialog, without a picture of the font on the canvas?
+
 MC-8 also sews one of the owner's traced dogs, `docs/fixtures/traced-dog-running-9.vectorcraft`, 100 mm
 tall: `stitch plan docs/fixtures/traced-dog-running-9.vectorcraft --auto -o dog.pes`. Does the fur read as
 fur, the face and the eyes as hers, and do its 83 jump threads, which the PE800 doesn't cut, take long to
