@@ -1,7 +1,9 @@
 # The tools the gates run, at one version each, so a release of a tool cannot change a gate's verdict
 # between two runs of the same code. mdBook makes the anchor ids `cargo xtask docs --check` reproduces
 # (xtask/src/markdown.rs), and the API snapshots are cargo-public-api's output (xtask/src/api.rs): tests
-# there read the versions below. Every workflow installs these tools through this action.
+# there read the versions below. Every workflow installs these tools through this action. cargo-nextest
+# runs the tests on macOS and Windows (ci.yml), each test in a process of its own and as many at once as the
+# runner has processors.
 #
 # The browser demo's build (web/build.py) runs Trunk without the network, so Trunk finds its 2 helpers here:
 # wasm-bindgen at the version VectorCraft's Cargo.lock names at the release the demo pins
@@ -22,11 +24,13 @@ runs:
       env:
         TOOLS: ${{ inputs.tools }}
       run: |
-        declare -A pinned=(
+        # A list of lines, read with sed: the tests' jobs run this on macOS, whose bash has no `declare -A`.
+        pinned="
           [cargo-deny]=0.20.2
           [cargo-fuzz]=0.13.2
           [cargo-llvm-cov]=0.9.1
           [cargo-mutants]=27.1.0
+          [cargo-nextest]=0.9.151
           [cargo-public-api]=0.52.0
           [lychee]=0.24.2
           [mdbook]=0.5.4
@@ -34,18 +38,19 @@ runs:
           [typos]=1.50.3
           [wasm-bindgen]=0.2.129
           [wasm-opt]=version_131
-        )
+        "
         wanted=()
         for tool in ${TOOLS//,/ }; do
-          if [ -z "${pinned[$tool]:-}" ]; then
+          version=$(printf '%s\n' "$pinned" | sed -n "s/^ *\[$tool\]=//p")
+          if [ -z "$version" ]; then
             echo "::error::No version of $tool is pinned in .github/actions/tools/action.yml."
             exit 1
           fi
           if [ "$tool" = wasm-opt ]; then
-            echo "binaryen=${pinned[$tool]}" >> "$GITHUB_OUTPUT"
+            echo "binaryen=$version" >> "$GITHUB_OUTPUT"
             continue
           fi
-          wanted+=("$tool@${pinned[$tool]}")
+          wanted+=("$tool@$version")
         done
         echo "tools=$(IFS=,; echo "${wanted[*]}")" >> "$GITHUB_OUTPUT"
     - if: steps.pinned.outputs.tools != ''
