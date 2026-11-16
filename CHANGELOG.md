@@ -1914,7 +1914,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ### Changed
 - M13.31: test sheet TS-13D is 2 sheets, and the compatibility gate says when an export nears VectorCraft's
   budget.
-  - TS-13D keeps its 2 emblems (88 × 100 mm, 21,521 stitches), and the new TS-13E has its 2 buttons
+  - TS-13D keeps its 2 emblems, now 5 mm apart (89 × 100 mm, 21,616 stitches), and the new TS-13E has its 2 buttons
     (24 × 108 mm, 6,380 stitches). Together they were 27,988 stitches on one sheet. No rule of the engine
     changed. VectorCraft ends an export after 10 billion instructions and 4,000 more for each byte of the
     document, and the one sheet's export took 10.872 of its 10.905 billion.
@@ -3077,8 +3077,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 
 ### Golden files
 - Changed `conformance/golden/testsheets/TS-13D.pes` and added `TS-13E.pes` (M13.31, one sheet split in
-  2). TS-13D sews its 2 emblems where it sewed them, without the 2 buttons, which TS-13E sews one above
-  the other. Each half of each sheet is planned alone, so the order and the jumps between the emblems and
+  2). TS-13D sews its 2 emblems without the 2 buttons, the stacked one 1 mm farther right, and TS-13E sews
+  the buttons one above the other. Each half of each sheet is planned alone, so the order and the jumps between the emblems and
   the buttons are gone: the digitized halves leave 11 and 4 jump threads, where the one half left 17.
 - Changed `conformance/golden/testsheets/TS-13B.pes` (M13.17, runs in place of jumps). One jump of its
   digitized half is a run under a shape sewn later. The half jumps 48 times, where it jumped 49 times. It

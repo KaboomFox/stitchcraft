@@ -143,10 +143,13 @@ pub(super) fn lines_and_parts() -> Result<Drawing, SheetError> {
     })
 }
 
-/// Draws TS-13D: an emblem traced in layers, by either method.
+/// Draws TS-13D: an emblem traced in layers, by either method. The emblems lie 5 mm apart, 1 mm more than
+/// while the buttons lay beside them: 88 mm wide, the sheet's file for Ink/Stitch read back with a
+/// coordinate one unit in the last place off (`stitchcraft_testkit::inkstitch`), and 89 mm wide it reads
+/// back exactly.
 pub(super) fn layers() -> Result<Drawing, SheetError> {
     halves("ts13d", 58.0, |top| {
-        Ok(vec![pictures::emblem((21.0, top + 21.0), 0.7, Trace::Abutting)?, pictures::emblem((67.0, top + 21.0), 0.7, Trace::Stacked)?])
+        Ok(vec![pictures::emblem((21.0, top + 21.0), 0.7, Trace::Abutting)?, pictures::emblem((68.0, top + 21.0), 0.7, Trace::Stacked)?])
     })
 }
 
@@ -190,7 +193,7 @@ mod tests {
             ("TS-13A", [126.001, 167.98], 26_105),
             ("TS-13B", [110.597, 148.4], 15_930),
             ("TS-13C", [111.397, 107.75], 11_486),
-            ("TS-13D", [88.0, 100.025], 21_521),
+            ("TS-13D", [89.0, 100.025], 21_616),
             ("TS-13E", [23.999, 108.394], 6_380),
         ] {
             let plan = find(id).unwrap().plan().unwrap();

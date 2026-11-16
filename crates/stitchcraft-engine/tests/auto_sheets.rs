@@ -335,7 +335,7 @@ fn ts13_the_jump_threads_that_its_stitches_sew_down() {
         ("TS-13A", [(8, 0), (18, 9)]),
         ("TS-13B", [(6, 0), (43, 19)]),
         ("TS-13C", [(9, 4), (13, 5)]),
-        ("TS-13D", [(1, 0), (11, 4)]),
+        ("TS-13D", [(1, 0), (11, 3)]),
         ("TS-13E", [(0, 0), (4, 1)]),
     ] {
         let threads = jump_threads(&sheet(id).1);
