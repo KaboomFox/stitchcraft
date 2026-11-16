@@ -19,7 +19,7 @@ use std::collections::BTreeSet;
 use stitchcraft_core::{Budget, Diagnostic, Point};
 use stitchcraft_engine::design::{Design, FillRule, Path, Segment, Shape, Subpath};
 use stitchcraft_svg::lettering::pictures::{self, MARKER, Marker};
-use stitchcraft_vectorcraft::lettering::{Fonts, found};
+use stitchcraft_vectorcraft::lettering::{Fonts, found_for};
 
 /// The key a mark of `--text` has among the rules' settings: the marker's name, which is no rule's.
 pub const KEY: &str = MARKER;
@@ -69,7 +69,7 @@ pub fn replaced(design: Design, marks: &[&str], fonts: &mut dyn Fonts) -> Result
         })
         .collect();
     let choices = fonts.choices();
-    let mut found = |name: &str, budget: &Budget| found(&mut *fonts, name, budget);
+    let mut found = |name: &str, text: &str, budget: &Budget| found_for(&mut *fonts, name, text, budget);
     pictures::replace_among(design, &markers, &mut found, &choices, &mut BTreeSet::new(), &Budget::DEFAULT)
 }
 

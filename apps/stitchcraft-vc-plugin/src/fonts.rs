@@ -67,8 +67,8 @@ mod tests {
             let font = font::read(folder.name, folder.files, &Budget::DEFAULT).unwrap();
             let measured = weight::of_font(&font, &Budget::DEFAULT).unwrap().unwrap();
             let (least, most) = (measured.height * font.settings.min_scale, measured.height * font.settings.max_scale);
-            // The table writes the weight to 3 places and the heights to 2.
-            assert!((measured.ratio() - held.weight).abs() <= 0.0005, "{}: {}", held.folder, measured.ratio());
+            // The table writes the weight and the heights to 2 places.
+            assert!((measured.ratio() - held.weight).abs() <= 0.005, "{}: {}", held.folder, measured.ratio());
             assert!((least - held.heights.0).abs() <= 0.005 && (most - held.heights.1).abs() <= 0.005, "{}: {least} to {most}", held.folder);
         }
     }

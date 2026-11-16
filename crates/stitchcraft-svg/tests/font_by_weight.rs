@@ -24,7 +24,10 @@ const ROOT: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="ht
 /// A font named `folder` of the glyph layers `layers`: 10 mm tall, sewn from 5 to 20 mm, every glyph
 /// advancing 5 mm.
 fn font_of(folder: &str, layers: &str) -> Rc<Font> {
-    let json = format!(r#"{{"name": "Test", "size": 10, "min_scale": 0.5, "max_scale": 2, "auto_satin": false, "horiz_adv_x_default": {}}}"#, 5.0 / MM_PER_SVG_PX);
+    let json = format!(
+        r#"{{"name": "Test", "size": 10, "min_scale": 0.5, "max_scale": 2, "auto_satin": false, "horiz_adv_x_default": {}}}"#,
+        5.0 / MM_PER_SVG_PX
+    );
     let file = format!(
         r#"{ROOT}<sodipodi:namedview id="base"><sodipodi:guide position="0,30" orientation="0,1" inkscape:label="baseline"/></sodipodi:namedview>{layers}</svg>"#
     );
@@ -89,7 +92,8 @@ fn marker(name: &str, tall: f64) -> Element {
 /// 2 traced letters in red, bars `tall` mm tall from y 30 whose strokes are `wide` mm wide, the first from
 /// x 10 and the second from x 40, with a marker named `name` round them.
 fn bars(name: &str, wide: f64, tall: f64) -> Design {
-    let letters = [fill("l1", vec![rect(10.0, 30.0, 10.0 + wide, 30.0 + tall)], RED), fill("l2", vec![rect(40.0, 30.0, 40.0 + wide, 30.0 + tall)], RED)];
+    let letters =
+        [fill("l1", vec![rect(10.0, 30.0, 10.0 + wide, 30.0 + tall)], RED), fill("l2", vec![rect(40.0, 30.0, 40.0 + wide, 30.0 + tall)], RED)];
     Design::new(letters.into_iter().chain([marker(name, tall)]).collect(), DesignSettings::default()).unwrap()
 }
 
@@ -106,7 +110,7 @@ fn choices() -> Vec<Choice> {
 /// choice.
 fn chosen_for(design: Design, choices: &[Choice]) -> (Vec<String>, Vec<Diagnostic>) {
     let mut asked = Vec::new();
-    let mut fonts = |name: &str, _: &Budget| {
+    let mut fonts = |name: &str, _: &str, _: &Budget| {
         asked.push(name.to_string());
         Found::Font(plain(if name.is_empty() { "default" } else { name }))
     };
@@ -170,7 +174,8 @@ fn req_auto_071_traced_letters_are_as_bold_as_their_strokes_are_wide_in_their_he
     let (_, said) = chosen_for(traced, &choices());
     assert!(said[0].message.contains("with strokes 0.15 of their height wide."), "{}", said[0]);
     // Letters drawn as lines are as bold as the lines are wide.
-    let drawn = [(10.0, 0.0), (40.0, 0.0)].map(|(x, _)| Subpath { start: at((x, 30.0)), segments: vec![Segment::Line(at((x, 46.0)))], closed: false });
+    let drawn =
+        [(10.0, 0.0), (40.0, 0.0)].map(|(x, _)| Subpath { start: at((x, 30.0)), segments: vec![Segment::Line(at((x, 46.0)))], closed: false });
     let lines = line("l", None, drawn.to_vec(), 3.2, RED);
     let (_, said) = chosen_for(Design::new(vec![lines, marker("stitch:text ab", 16.0)], DesignSettings::default()).unwrap(), &choices());
     assert!(said[0].message.contains("its letters are 16.0 mm tall, with strokes 0.20 of their height wide."), "{}", said[0]);
@@ -216,7 +221,9 @@ fn diag_sc_i1117_names_the_font_chosen_and_says_why() {
     // Light letters at the same height take the light font.
     let (asked, said) = chosen_for(bars("stitch:text ab", 2.0, 16.0), &choices);
     assert_eq!(asked, ["light"]);
-    assert!(said[0].message.ends_with("The text is set in `light`, with strokes 0.14 wide: the nearest in weight of the fonts that sew at that height."));
+    assert!(
+        said[0].message.ends_with("The text is set in `light`, with strokes 0.14 wide: the nearest in weight of the fonts that sew at that height.")
+    );
     // Bold letters shorter than the bold font sews are set in the light one, and the note says from what
     // height the bold one sews and how to keep the traced letters.
     let (asked, said) = chosen_for(bars("stitch:text ab", 2.5, 10.0), &choices);
@@ -256,6 +263,9 @@ fn req_auto_072_a_named_font_wins_and_no_choice_leaves_the_default() {
     let (asked, said) = chosen_for(bars("stitch:text ab", 4.0, 16.0), &[]);
     assert_eq!(asked, [""]);
     assert!(said.is_empty(), "{said:?}");
+    // One font is no choice either.
+    let (asked, said) = chosen_for(bars("stitch:text ab", 4.0, 16.0), &choices()[1..]);
+    assert!(asked == [""] && said.is_empty(), "{asked:?} {said:?}");
     // `replace` is the pass without choices.
     let mut asked = Vec::new();
     let mut fonts = |name: &str, _: &Budget| {
@@ -268,18 +278,24 @@ fn req_auto_072_a_named_font_wins_and_no_choice_leaves_the_default() {
     let design = bars("stitch:text ab", 4.0, 16.0);
     let beside = Marker { label: "text-1".to_string(), shape: marker("", 16.0).shape, note: "ab".to_string() };
     let letters: Vec<Element> = design.elements().iter().filter(|element| element.name.is_none()).cloned().collect();
-    let mut fonts = |name: &str, _: &Budget| Found::Font(plain(name));
+    let mut texts = Vec::new();
+    let mut fonts = |name: &str, text: &str, _: &Budget| {
+        texts.push(text.to_string());
+        Found::Font(plain(name))
+    };
     let alone = Design::new(letters, DesignSettings::default()).unwrap();
     let (after, said) = pictures::replace_among(alone, &[beside], &mut fonts, &choices(), &mut BTreeSet::new(), &Budget::DEFAULT).unwrap();
     assert!(said.iter().any(|said| said.code == Code::FontChosenByWeight && said.message.contains("set in `bold`")));
     assert!(after.elements().iter().all(|element| element.id.to_string().starts_with("text-1:")));
+    // The host is given the marker's text with the font's name, to read the font as far as the text needs.
+    assert_eq!(texts, ["ab"]);
 }
 
 #[test]
 fn req_auto_072_choosing_stops_with_the_budget() {
     // Every amount of work short of what the pass needs ends with SC-E0004, and never with a panic or a
     // design half changed.
-    let mut fonts = |name: &str, _: &Budget| Found::Font(plain(name));
+    let mut fonts = |name: &str, _: &str, _: &Budget| Found::Font(plain(name));
     let mut least = None;
     for allowed in 0..4_000 {
         let budget = Budget { max_work: allowed, ..Budget::DEFAULT };

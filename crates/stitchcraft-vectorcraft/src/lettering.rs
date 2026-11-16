@@ -48,10 +48,8 @@ pub struct Held {
 /// The numbers are written here because a plug-in chooses a font before it reads one, and reading a font
 /// to measure it costs most of what reading it to sew costs. The test `req_font_022_…` measures each font
 /// built in and fails when a number here is not the font's.
-pub const HELD: [Held; 2] = [
-    Held { folder: DEFAULT_FONT, weight: 0.125, heights: (3.79, 16.24) },
-    Held { folder: "barstitch_bold", weight: 0.188, heights: (12.51, 32.52) },
-];
+pub const HELD: [Held; 2] =
+    [Held { folder: DEFAULT_FONT, weight: 0.13, heights: (3.79, 16.24) }, Held { folder: "barstitch_bold", weight: 0.19, heights: (12.51, 32.52) }];
 
 /// The fonts of [`HELD`] that `has` says are there, as text in pictures chooses among them.
 pub fn choices(has: impl Fn(&str) -> bool) -> Vec<Choice> {
@@ -73,13 +71,32 @@ pub trait Fonts {
     /// The font `name` names, read within `budget`: `None` when there is none of that name, and what its
     /// reader said when it doesn't read.
     fn font(&mut self, name: &str, budget: &Budget) -> Option<Result<Rc<Font>, Diagnostic>>;
+
+    /// The font `name` names as far as setting `text` needs it (`REQ-FONT-023`,
+    /// [`stitchcraft_svg::font::read_for`]): a host that reads a font on every run, as a plug-in does, reads
+    /// only the glyphs the text can use. The font must set no other text. Unless a host says otherwise, it is
+    /// the whole font.
+    fn font_for(&mut self, name: &str, text: &str, budget: &Budget) -> Option<Result<Rc<Font>, Diagnostic>> {
+        let _ = text;
+        self.font(name, budget)
+    }
 }
 
 /// What `fonts` has of the font `name`, read within `budget`, as text in pictures asks for a font
 /// ([`stitchcraft_svg::lettering::pictures::replace`], `REQ-VC-028`): the font, what its reader said, or the
 /// names of the fonts there are.
 pub fn found(fonts: &mut dyn Fonts, name: &str, budget: &Budget) -> Found {
-    match fonts.font(name, budget) {
+    found_of(fonts.font(name, budget), fonts)
+}
+
+/// As [`found`], the font read as far as setting `text` needs it ([`Fonts::font_for`]).
+pub fn found_for(fonts: &mut dyn Fonts, name: &str, text: &str, budget: &Budget) -> Found {
+    found_of(fonts.font_for(name, text, budget), fonts)
+}
+
+/// What a host that gave `font` has of it.
+fn found_of(font: Option<Result<Rc<Font>, Diagnostic>>, fonts: &dyn Fonts) -> Found {
+    match font {
         Some(Ok(font)) => Found::Font(font),
         Some(Err(unread)) => Found::Unread(unread),
         None => Found::Missing(fonts.names()),
@@ -96,13 +113,73 @@ pub struct Folder {
     pub files: &'static [(&'static str, &'static [u8])],
 }
 
+/// A font a host has read and keeps: the whole font, or the font as far as the texts so far need it
+/// (`REQ-FONT-023`).
+#[derive(Clone, Debug)]
+pub struct Kept {
+    /// The characters it was read for: `None` for the whole font.
+    text: Option<String>,
+    /// The font.
+    font: Rc<Font>,
+}
+
+impl Kept {
+    /// The font `kept` if it serves `text`, or all texts when `text` is `None`: a whole font serves every
+    /// text, and a font read for some characters serves a text of those. Otherwise what a font that serves
+    /// is read for: `None` for the whole font, or the characters kept so far with the text's.
+    pub fn serving(kept: Option<&Kept>, text: Option<&str>) -> Result<Rc<Font>, Option<String>> {
+        let Some(kept) = kept else { return Err(text.map(str::to_string)) };
+        match (&kept.text, text) {
+            (None, _) => Ok(Rc::clone(&kept.font)),
+            (Some(read), Some(text)) if text.chars().all(|c| read.contains(c)) => Ok(Rc::clone(&kept.font)),
+            (Some(read), Some(text)) => Err(Some(format!("{read}{text}"))),
+            (Some(_), None) => Err(None),
+        }
+    }
+
+    /// The font of the folder `folder`, whose files are `files`, read within `budget` for the characters
+    /// `text`, or whole for `None`, to keep.
+    pub fn read(folder: &str, files: &[(&str, &[u8])], text: Option<String>, budget: &Budget) -> Result<Kept, Diagnostic> {
+        let font = match &text {
+            Some(text) => font::read_for(folder, files, text, budget),
+            None => font::read(folder, files, budget),
+        }?;
+        Ok(Kept { text, font: Rc::new(font) })
+    }
+
+    /// The font.
+    pub fn font(&self) -> Rc<Font> {
+        Rc::clone(&self.font)
+    }
+}
+
 /// The fonts of folders held as bytes for as long as the program runs, as those built into a plug-in are. A
-/// font is read when a text first names it, and kept. Of no folders, it has no fonts: every text that names
-/// one is then left out, with `SC-W1111`.
+/// font is read when a text first names it, as far as the text needs it, and kept. Of no folders, it has no
+/// fonts: every text that names one is then left out, with `SC-W1111`.
 #[derive(Debug)]
 pub struct BuiltIn {
     folders: &'static [Folder],
-    read: BTreeMap<usize, Rc<Font>>,
+    read: BTreeMap<usize, Kept>,
+}
+
+impl BuiltIn {
+    /// The font `name` names, for `text` or whole.
+    fn get(&mut self, name: &str, text: Option<&str>, budget: &Budget) -> Option<Result<Rc<Font>, Diagnostic>> {
+        // A font is found by its folder's name without its `font.json` being read, which for a font with
+        // many kerning pairs is long, and by the name its `font.json` gives only when no folder is so named.
+        let by_folder = self.folders.iter().position(|folder| is_named(name, folder.name, None));
+        let index = by_folder.or_else(|| self.folders.iter().position(|folder| is_named(name, folder.name, settings_of(folder).as_deref())))?;
+        let read_for = match Kept::serving(self.read.get(&index), text) {
+            Ok(font) => return Some(Ok(font)),
+            Err(read_for) => read_for,
+        };
+        let folder = self.folders.get(index)?;
+        Some(Kept::read(folder.name, folder.files, read_for, budget).map(|kept| {
+            let font = kept.font();
+            self.read.insert(index, kept);
+            font
+        }))
+    }
 }
 
 impl BuiltIn {
@@ -122,16 +199,11 @@ impl Fonts for BuiltIn {
     }
 
     fn font(&mut self, name: &str, budget: &Budget) -> Option<Result<Rc<Font>, Diagnostic>> {
-        let index = self.folders.iter().position(|folder| is_named(name, folder.name, settings_of(folder).as_deref()))?;
-        if let Some(font) = self.read.get(&index) {
-            return Some(Ok(Rc::clone(font)));
-        }
-        let folder = self.folders.get(index)?;
-        Some(font::read(folder.name, folder.files, budget).map(|font| {
-            let font = Rc::new(font);
-            self.read.insert(index, Rc::clone(&font));
-            font
-        }))
+        self.get(name, None, budget)
+    }
+
+    fn font_for(&mut self, name: &str, text: &str, budget: &Budget) -> Option<Result<Rc<Font>, Diagnostic>> {
+        self.get(name, Some(text), budget)
     }
 }
 
@@ -214,5 +286,73 @@ mod tests {
         assert_eq!(unread.code, stitchcraft_core::Code::FontUnreadable);
         let mut none = BuiltIn::new(&[]);
         assert!(none.names().is_empty() && none.font("test", &Budget::DEFAULT).is_none());
+    }
+
+    #[test]
+    fn req_font_023_a_font_is_read_as_far_as_the_texts_so_far_need_it() {
+        /// As [`GLYPHS`], with a `b` too.
+        const BOTH: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="100mm" height="100mm" viewBox="0 0 100 100"><g inkscape:groupmode="layer" inkscape:label="GlyphLayer-a"><path id="pa" d="M 1,60 L 5,70" style="fill:none;stroke:#000000;stroke-width:0.4"/></g><g inkscape:groupmode="layer" inkscape:label="GlyphLayer-b"><path id="pb" d="M 1,60 L 5,70" style="fill:none;stroke:#000000;stroke-width:0.4"/></g></svg>"#;
+        const FILES: [(&str, &[u8]); 2] = [("font.json", SETTINGS), ("ltr.svg", BOTH.as_bytes())];
+        // The second folder holds no font: asking for the first by its folder's name never reads it.
+        const FOLDERS: [Folder; 2] = [Folder { name: "test", files: &FILES }, Folder { name: "other", files: &[("font.json", b"{")] }];
+        let glyphs = |font: &Font| font.variants[0].glyphs.keys().cloned().collect::<Vec<_>>();
+        let mut fonts = BuiltIn::new(&FOLDERS);
+        let first = fonts.font_for("test", "a", &Budget::DEFAULT).unwrap().unwrap();
+        assert_eq!(glyphs(&first), ["a"]);
+        // A text of the same characters is served by the font kept, in either order and any number.
+        let again = fonts.font_for("TEST", "aaa", &Budget::DEFAULT).unwrap().unwrap();
+        assert!(Rc::ptr_eq(&first, &again));
+        // A text with another character has the font read again for the characters of both.
+        let wider = fonts.font_for("test", "b", &Budget::DEFAULT).unwrap().unwrap();
+        assert_eq!(glyphs(&wider), ["a", "b"]);
+        assert!(Rc::ptr_eq(&wider, &fonts.font_for("test", "ab", &Budget::DEFAULT).unwrap().unwrap()));
+        assert!(Rc::ptr_eq(&wider, &fonts.font_for("Test Font", "a", &Budget::DEFAULT).unwrap().unwrap()));
+        // Asked for whole, it is read whole, and then serves every text.
+        let whole = fonts.font("test", &Budget::DEFAULT).unwrap().unwrap();
+        assert!(!Rc::ptr_eq(&wider, &whole) && glyphs(&whole) == ["a", "b"]);
+        assert!(Rc::ptr_eq(&whole, &fonts.font_for("test", "c", &Budget::DEFAULT).unwrap().unwrap()));
+        // A font that doesn't read says so each time, and one that isn't there is none.
+        assert_eq!(fonts.font_for("other", "a", &Budget::DEFAULT).unwrap().unwrap_err().code, stitchcraft_core::Code::FontUnreadable);
+        assert!(fonts.font_for("none", "a", &Budget::DEFAULT).is_none());
+        // What a kept font serves.
+        let kept = Kept::read("test", &FILES, Some("a".to_string()), &Budget::DEFAULT).unwrap();
+        assert_eq!(Kept::serving(None, Some("a")).unwrap_err(), Some("a".to_string()));
+        assert_eq!(Kept::serving(None, None).unwrap_err(), None);
+        assert!(Rc::ptr_eq(&Kept::serving(Some(&kept), Some("a")).unwrap(), &kept.font()));
+        assert_eq!(Kept::serving(Some(&kept), Some("ab")).unwrap_err(), Some("aab".to_string()));
+        assert_eq!(Kept::serving(Some(&kept), None).unwrap_err(), None);
+        // A host that doesn't say otherwise gives the whole font for any text.
+        struct Whole(BuiltIn);
+        impl Fonts for Whole {
+            fn names(&self) -> Vec<String> {
+                self.0.names()
+            }
+            fn font(&mut self, name: &str, budget: &Budget) -> Option<Result<Rc<Font>, Diagnostic>> {
+                self.0.font(name, budget)
+            }
+        }
+        let mut plain = Whole(BuiltIn::new(&FOLDERS));
+        assert_eq!(glyphs(&plain.font_for("test", "a", &Budget::DEFAULT).unwrap().unwrap()), ["a", "b"]);
+        assert!(plain.choices().is_empty());
+        assert!(matches!(found_for(&mut plain, "test", "a", &Budget::DEFAULT), Found::Font(font) if glyphs(&font) == ["a", "b"]));
+        assert!(matches!(found_for(&mut plain, "none", "a", &Budget::DEFAULT), Found::Missing(names) if names.len() == 2));
+    }
+
+    #[test]
+    fn req_auto_072_a_host_offers_the_fonts_it_holds_of_those_the_plug_ins_hold() {
+        assert_eq!(HELD[0].folder, DEFAULT_FONT);
+        let all = choices(|_| true);
+        assert_eq!(all.len(), HELD.len());
+        for (choice, held) in all.iter().zip(HELD) {
+            assert_eq!((choice.font.as_str(), choice.weight, choice.heights), (held.folder, held.weight, held.heights));
+            assert!(held.weight > 0.0 && held.heights.0 > 0.0 && held.heights.0 < held.heights.1);
+        }
+        assert_eq!(choices(|folder| folder == "barstitch_bold").iter().map(|choice| choice.font.as_str()).collect::<Vec<_>>(), ["barstitch_bold"]);
+        assert!(choices(|_| false).is_empty());
+        // Fonts held as bytes offer those of them the table names.
+        const FOLDERS: [Folder; 3] =
+            [Folder { name: "barstitch_bold", files: &[] }, Folder { name: "test", files: &[] }, Folder { name: "small_font", files: &[] }];
+        let offered = BuiltIn::new(&FOLDERS).choices();
+        assert_eq!(offered.iter().map(|choice| choice.font.as_str()).collect::<Vec<_>>(), ["small_font", "barstitch_bold"]);
     }
 }

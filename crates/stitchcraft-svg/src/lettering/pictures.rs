@@ -198,17 +198,18 @@ pub fn replace(
     said: &mut BTreeSet<String>,
     budget: &Budget,
 ) -> Result<(Design, Vec<Diagnostic>), Diagnostic> {
-    replace_among(design, more, fonts, &[], said, budget)
+    replace_among(design, more, &mut |name, _, budget| fonts(name, budget), &[], said, budget)
 }
 
 /// As [`replace`], a marker that names no font set in the one of `choices` that is nearest in weight to
 /// the letters it replaces, among those that sew at their height ([`chosen`], `REQ-AUTO-071`), with
-/// `SC-I1117` saying which and why. Of no choices, such a marker is set in the host's default font, and
-/// nothing is said of the choice.
+/// `SC-I1117` saying which and why. Of fewer than 2 choices there is nothing to choose: such a marker is set
+/// in the host's default font, and nothing is said of a choice. `fonts` is given the font's name and the marker's text, so that a host can
+/// read a font only as far as the text needs it (`REQ-FONT-023`).
 pub fn replace_among(
     design: Design,
     more: &[Marker],
-    fonts: &mut dyn FnMut(&str, &Budget) -> Found,
+    fonts: &mut dyn FnMut(&str, &str, &Budget) -> Found,
     choices: &[Choice],
     said: &mut BTreeSet<String>,
     budget: &Budget,
@@ -267,7 +268,12 @@ fn chose(marker: &Marker, choices: &[Choice], choice: &Choice, bold: Option<f64>
     });
     let (why, fix) = match nearest.filter(|nearest| nearest.font != choice.font) {
         _ if choice.outside(height) > 0.0 => (
-            format!("No font here sews at that height. `{}` sews nearest to it, {}, with strokes {:.2} wide.", choice.font, sews(choice), choice.weight),
+            format!(
+                "No font here sews at that height. `{}` sews nearest to it, {}, with strokes {:.2} wide.",
+                choice.font,
+                sews(choice),
+                choice.weight
+            ),
             "Draw the picture so that its letters are as tall as a font sews, or name a font with font=NAME after the quoted text.".to_string(),
         ),
         Some(bolder) => (
@@ -372,7 +378,7 @@ struct Taken {
 
 /// What setting markers' texts works with.
 struct Work<'a> {
-    fonts: &'a mut dyn FnMut(&str, &Budget) -> Found,
+    fonts: &'a mut dyn FnMut(&str, &str, &Budget) -> Found,
     choices: &'a [Choice],
     said: &'a mut BTreeSet<String>,
     budget: &'a Budget,
@@ -414,7 +420,7 @@ impl Work<'_> {
         let height = top - bottom;
         let thread = self.thread(&taken, &flats, elements)?;
         let (named, choice) = self.choice(marker, &asked, &taken, thread.as_ref(), elements, height)?;
-        let font = self.font(&named)?;
+        let font = self.font(&named, &asked.text)?;
         let trial = set(&font, &asked.text, &asked.how, self.budget).map_err(Self::stopped)?;
         let ink = self.ink(&trial)?;
         let per = 100.0 / trial.scale;
@@ -566,7 +572,7 @@ impl Work<'_> {
         elements: &[Element],
         height: f64,
     ) -> Result<(String, Option<Diagnostic>), Stop> {
-        if !asked.font.is_empty() || self.choices.is_empty() || !(height > 0.0) {
+        if !asked.font.is_empty() || self.choices.len() < 2 || !(height > 0.0) {
             return Ok((asked.font.clone(), None));
         }
         let (mut rings, mut widths) = (Vec::new(), Vec::new());
@@ -585,10 +591,10 @@ impl Work<'_> {
         Ok((choice.font.clone(), Some(chose(marker, self.choices, choice, bold, height))))
     }
 
-    /// The font `asked` names, or why the marker isn't used.
-    fn font(&mut self, asked: &str) -> Result<Rc<Font>, Stop> {
+    /// The font `asked` names, as far as setting `text` needs it, or why the marker isn't used.
+    fn font(&mut self, asked: &str, text: &str) -> Result<Rc<Font>, Stop> {
         let named = if asked.is_empty() { "The default embroidery font".to_string() } else { format!("The embroidery font `{asked}`") };
-        match (self.fonts)(asked, self.budget) {
+        match (self.fonts)(asked, text, self.budget) {
             Found::Font(font) => Ok(font),
             Found::Unread(unread) if unread.code == Code::BudgetExhausted => Err(Stop::Failed(unread)),
             Found::Unread(unread) => Err(Stop::Unused(format!("{named} does not read. {}", unread.message))),

@@ -143,6 +143,13 @@ is the same picture planned with `--text` round the word, in Ink/Stitch Small Fo
 - Does the lettering stand where the picture has the word, and is it as tall?
 - Are Small Font's strokes too light beside the drawn letters?
 
+From M14.8, sew the word MATCH 3 times at 15 mm on the PE800: traced as shapes, in Ink/Stitch Small Font
+and in Barstitch Bold. `stitch lettering "MATCH" --font FOLDER --height 15` sets each font.
+
+- Which font's strokes look like the traced letters'?
+- Do Barstitch Bold's wide columns pull the fabric in, or sew too thick where 2 strokes meet?
+- At 10 mm, where only Small Font sews, is the word too light beside the traced one?
+
 MC-8 also sews one of the owner's traced dogs, `docs/fixtures/traced-dog-running-9.vectorcraft`, 100 mm
 tall: `stitch plan docs/fixtures/traced-dog-running-9.vectorcraft --auto -o dog.pes`. Does the fur read as
 fur, the face and the eyes as hers, and do its 83 jump threads, which the PE800 doesn't cut, take long to
