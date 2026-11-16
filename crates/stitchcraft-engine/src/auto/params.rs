@@ -132,17 +132,17 @@ params! {
     }
 
     "Base layer" {
-        /// Whether one base layer sews first under the whole design: an open fill in 3 directions under
-        /// what the automatic shapes paint together, every stitch of it underlay. On fabric of another
+        /// Whether one base layer sews first under the whole design: an open fill under what the
+        /// automatic shapes paint together, every stitch of it underlay. On fabric of another
         /// colour than the design, thread of one colour then lies under a slit between 2 shapes. The fills
         /// on it sew no underlay of their own. Off, each fill sews the underlay of its settings. The design
         /// goes by the settings its lowest automatic shape has for the base layer.
         auto_base_layer: Toggle = "true", label "Base layer",
             origin Origin::StitchCraft, stability Stability::Experimental;
 
-        /// How long the base layer's stitches are. Its rows lie this length times 0.866 apart, in 3
-        /// directions, so that its needle points make triangles with sides this long, as the stitches of
-        /// Ink/Stitch's Knockdown Fill do. Shorter stitches hide more of the fabric and sew longer.
+        /// How long the base layer's stitches are. Its rows lie this length times 0.866 apart, so that
+        /// its needle points make triangles with sides this long, as the stitches of Ink/Stitch's
+        /// Knockdown Fill do. Shorter stitches hide more of the fabric and sew longer.
         auto_base_stitch_length_mm: Length = "3", label "Base layer's stitch length", range (1.0, 6.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
@@ -211,6 +211,14 @@ params! {
         auto_base_offset_mm: Length = "-0.4", label "Base layer's offset", range (-3.0, 3.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
+        /// Which way the base layer's rows run. `across` sews one layer, its rows across those of the
+        /// fills on it, `auto_fill_angle` turned by 90°: the underlay a fill is usually given, once under
+        /// the whole design. `lattice` sews 3 layers 60° apart, as Ink/Stitch's Knockdown Fill does. That
+        /// holds down the pile of a towel or a fleece, and lays 3 times the thread under the design.
+        auto_base_rows: Choice = "across", label "Base layer's rows",
+            options ["across" => "Across the fills' rows", "lattice" => "In 3 directions"],
+            origin Origin::StitchCraft, stability Stability::Experimental;
+
         /// The largest gap in the top thread that is left to the base layer: a sliver. Where thin shapes
         /// meet, the top thread can leave a place this small bare, and the base layer's thread shows there
         /// in place of the fabric. Nothing sews differently by this value. It is a limit of the check of a
@@ -272,10 +280,10 @@ mod tests {
         let neighbours = [OVERLAP, "auto_pull_compensation_mm", IGNORE_BACKGROUND];
         let base = ["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_keep_holes"];
         let bounds = [MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH, MIN_SLENDERNESS, MAX_UNEVENNESS, MAX_REACH, MIN_FILL_WIDTH, MIN_AREA];
-        let cover = ["auto_base_offset_mm", "auto_base_sliver_mm2", "auto_base_bare_percent"];
+        let cover = ["auto_base_offset_mm", "auto_base_rows", "auto_base_sliver_mm2", "auto_base_bare_percent"];
         let thick = ["auto_thick_warn_fills", "auto_thick_fail_fills", "auto_thick_warn_points", "auto_thick_fail_points"];
         assert_eq!(keys, [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..], &thick[..]].concat());
-        // The bounds, the base layer's offset, the 2 limits of the cover's check and the 4 of the thickness are the advanced settings,
+        // The bounds, the base layer's offset and rows, the 2 limits of the cover's check and the 4 of the thickness are the advanced settings,
         // which no dialog shows.
         let advanced: Vec<&str> = AutoParams::SPECS.iter().filter(|spec| spec.group == ADVANCED).map(|spec| spec.key).collect();
         assert_eq!(advanced, [&bounds[..], &cover[..], &thick[..]].concat());
