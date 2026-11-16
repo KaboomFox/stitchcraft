@@ -206,7 +206,8 @@ pub fn read_in(bytes: &[u8], budget: &Budget, reading: Reading, fonts: &mut dyn 
     let design = Design::new(reader.elements, reader.settings)?.read_as(reading);
     // Text in pictures: what lies inside each object named `stitch:text` becomes lettering (`REQ-VC-028`).
     let (fonts, mut lettered) = (reader.fonts, reader.lettered);
-    let (design, said) = pictures::replace(design, &[], &mut |name, budget| crate::lettering::found(&mut *fonts, name, budget), &mut lettered, budget)?;
+    let (design, said) =
+        pictures::replace(design, &[], &mut |name, budget| crate::lettering::found(&mut *fonts, name, budget), &mut lettered, budget)?;
     warnings.extend(said);
     Ok(VectorCraft { design, machine: kept.machine, warnings })
 }
@@ -610,7 +611,11 @@ impl Reader<'_> {
                 (Marker::Text, None) => {}
                 (Marker::Text, Some(kind)) => {
                     let message = format!("{shown} is named as a text marker, which a {kind} can't be, and the name is ignored.");
-                    self.feature(&label, message, Some("Name a shape drawn round the letters, or a line drawn through them, stitch:text and the text."));
+                    self.feature(
+                        &label,
+                        message,
+                        Some("Name a shape drawn round the letters, or a line drawn through them, stitch:text and the text."),
+                    );
                 }
                 (Marker::Unknown, _) => {
                     let message = format!("{shown} begins with stitch:, which names no marker StitchCraft reads, and the name is ignored.");

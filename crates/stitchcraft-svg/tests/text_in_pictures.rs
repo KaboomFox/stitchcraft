@@ -2,8 +2,8 @@
 //! replaced by lettering in a font drawn in code, checked on what is taken out, on where each letter's
 //! points lie, on its thread and on what is said. No font file of anyone's is used.
 
-// Test code may unwrap and index (clippy.toml allows it in tests).
-#![allow(clippy::unwrap_used)]
+// Test code may unwrap, panic and index (clippy.toml allows it in tests, but not in their helpers).
+#![allow(clippy::unwrap_used, clippy::panic)]
 
 use std::collections::BTreeSet;
 use std::rc::Rc;
@@ -11,10 +11,12 @@ use std::rc::Rc;
 use stitchcraft_core::units::{MM_PER_SVG_PX, Mm, Point};
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId};
 use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Hints, Join, Path, Segment, Shape, Subpath};
+use stitchcraft_engine::testsheets::pictures::word;
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::{Rgb, Thread};
 use stitchcraft_svg::font::{self, Font};
-use stitchcraft_svg::lettering::pictures::{self, APART, CLOSER, Found, MARKER, Marker};
+use stitchcraft_svg::lettering::pictures::{self, APART, CLOSER, FIT, Found, MARKER, Marker};
+use stitchcraft_testkit::designs::in_place;
 
 /// A glyph file's root: 100 mm square, a user unit a millimetre.
 const ROOT: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" width="100mm" height="100mm" viewBox="0 0 100 100">"#;
@@ -29,10 +31,15 @@ fn glyph(label: &str, colour: &str, width: f64, top: f64, bottom: f64) -> String
 /// The test font, its glyphs' layers `layers` and `more` keys in its settings: 10 mm tall, sewn from 5 to
 /// 20 mm. Every glyph advances 5 mm and a space 3.
 fn font_of(layers: &str, more: &str) -> Rc<Font> {
+    font_with(layers, 5.0, more)
+}
+
+/// As [`font_of`], every glyph advancing `advance` mm.
+fn font_with(layers: &str, advance: f64, more: &str) -> Rc<Font> {
     let px = |mm: f64| mm / MM_PER_SVG_PX;
     let json = format!(
         r#"{{"name": "Test", "size": 10, "min_scale": 0.5, "max_scale": 2, "auto_satin": false, "horiz_adv_x_default": {}, "horiz_adv_x_space": {}{more}}}"#,
-        px(5.0),
+        px(advance),
         px(3.0)
     );
     let file = format!(
@@ -44,7 +51,12 @@ fn font_of(layers: &str, more: &str) -> Rc<Font> {
 /// The test font: `a` 4 mm wide and `b` 6, each 10 mm tall on the baseline, `p` 4 mm wide from 5 mm above the
 /// baseline to 3 below it, all black, and `c` as `a` in green.
 fn test_font() -> Rc<Font> {
-    let layers = [glyph("a", "#000000", 4.0, 60.0, 70.0), glyph("b", "#000000", 6.0, 60.0, 70.0), glyph("p", "#000000", 4.0, 65.0, 73.0), glyph("c", "#00ff00", 4.0, 60.0, 70.0)];
+    let layers = [
+        glyph("a", "#000000", 4.0, 60.0, 70.0),
+        glyph("b", "#000000", 6.0, 60.0, 70.0),
+        glyph("p", "#000000", 4.0, 65.0, 73.0),
+        glyph("c", "#00ff00", 4.0, 60.0, 70.0),
+    ];
     font_of(&layers.concat(), "")
 }
 
@@ -154,13 +166,18 @@ fn req_auto_063_what_lies_wholly_inside_a_marker_is_taken_out_and_the_background
     near(&points(&after, "star"), &[(40.0, 70.0), (45.0, 70.0), (45.0, 75.0), (40.0, 75.0)]);
     // The red of the letters painted the most of what was taken: the font's black letters sew in it.
     assert!(after.elements()[1..3].iter().all(|letter| letter.thread == Thread::new(RED)));
-    assert_eq!(said, ["info SC-I1112: The text marker `m`: 6 traced shapes, 20.0 mm tall, are replaced by the text \"ab\" in the font `test`, 20.0 mm tall."]);
+    assert_eq!(
+        said,
+        ["info SC-I1112: The text marker `m`: 6 traced outlines, 20.0 mm tall, are replaced by the text \"ab\" in the font `test`, 20.0 mm tall."]
+    );
 }
 
 #[test]
 fn req_auto_063_a_shape_that_crosses_the_markers_edge_stays() {
     // A bar 60 % inside the marker, one 40 % inside, and a field the marker lies on.
-    let bar = |id: &str, from: f64| fill(id, vec![subpath(&[(from, 52.0), (from + 10.0, 52.0), (from + 5.0, 52.0), (from + 10.0, 53.0), (from, 53.0)], true)], RED);
+    let bar = |id: &str, from: f64| {
+        fill(id, vec![subpath(&[(from, 52.0), (from + 10.0, 52.0), (from + 5.0, 52.0), (from + 10.0, 53.0), (from, 53.0)], true)], RED)
+    };
     let field = fill("field", vec![rect(0.0, 0.0, 60.0, 80.0)], WHITE);
     let mut elements = vec![field, bar("most", 34.5), bar("some", 37.5)];
     elements.extend(letters(32.0));
@@ -189,7 +206,11 @@ fn req_auto_063_a_name_marks_text_and_an_object_drawn_twice_is_one_marker() {
     assert_eq!(Marker::of(&fill("l", vec![rect(0.0, 0.0, 1.0, 1.0)], RED)), None);
     assert_eq!(Marker::of(&Element { name: Some("a label".to_string()), ..named.clone() }), None);
     // The fill and the stroke of one object are 2 elements of one name and one path: its text is set once.
-    let filled = Element { id: ElementId::new("m:fill").unwrap(), shape: Shape::Fill { path: named.shape.path().clone(), rule: FillRule::NonZero, gradient: None }, ..named.clone() };
+    let filled = Element {
+        id: ElementId::new("m:fill").unwrap(),
+        shape: Shape::Fill { path: named.shape.path().clone(), rule: FillRule::NonZero, gradient: None },
+        ..named.clone()
+    };
     let mut elements = letters(32.0);
     elements.extend([filled, named]);
     let (after, said) = replaced(design(elements));
@@ -221,7 +242,8 @@ fn req_auto_063_a_design_without_markers_is_as_it_was_and_its_settings_stay() {
     let font = test_font();
     let mut fonts = |_: &str, _: &Budget| Found::Font(Rc::clone(&font));
     let (inside, _) = pictures::replace(marked.clone(), &[], &mut fonts, &mut BTreeSet::new(), &Budget::DEFAULT).unwrap();
-    let (beside, _) = pictures::replace(design(letters(32.0)), std::slice::from_ref(&more), &mut fonts, &mut BTreeSet::new(), &Budget::DEFAULT).unwrap();
+    let (beside, _) =
+        pictures::replace(design(letters(32.0)), std::slice::from_ref(&more), &mut fonts, &mut BTreeSet::new(), &Budget::DEFAULT).unwrap();
     assert!(inside.elements() == beside.elements() && inside.sort_colours && !beside.sort_colours && inside.settings == marked.settings);
     assert_eq!(ids(&inside), [A, B]);
 }
@@ -270,12 +292,12 @@ fn req_auto_064_the_letters_spread_and_close_up_within_limits_and_are_centred() 
     near(&points(&after, B), &[(34.0, 30.0), (46.0, 50.0)]);
     assert_eq!(said.len(), 2, "{said:?}");
     assert!(said[1].contains("is 20.0 mm tall and 32.0 mm wide, where the traced letters are 20.0 mm tall and 40.0 mm wide"), "{said:?}");
-    // Traced 18 mm wide, they close up by the 2 mm allowed, to 20 mm, and reach a millimetre past each side.
-    let mut elements = letters(28.0);
+    // Traced 17.9 mm wide, they close up by the 2 mm allowed, to 20 mm, and reach 1.05 mm past each side.
+    let mut elements = letters(27.9);
     elements.push(marker("stitch:text ab", 40.0));
     let (after, said) = replaced(design(elements));
-    near(&points(&after, A), &[(9.0, 30.0), (17.0, 50.0)]);
-    near(&points(&after, B), &[(17.0, 30.0), (29.0, 50.0)]);
+    near(&points(&after, A), &[(8.95, 30.0), (16.95, 50.0)]);
+    near(&points(&after, B), &[(16.95, 30.0), (28.95, 50.0)]);
     assert!(said.len() == 2 && said[1].starts_with("warning SC-W1115: "), "{said:?}");
     // One letter is never spread, and its width is not said.
     let mut elements = letters(32.0);
@@ -326,7 +348,10 @@ fn req_auto_064_letters_the_font_cannot_sew_as_tall_are_set_at_its_nearest_heigh
     elements.push(marker("stitch:text ab", 40.0));
     let (after, said) = replaced(design(elements));
     near(&points(&after, A)[..1], &[(8.45, 28.5)]);
-    assert!(said[0].starts_with("warning SC-W1106: The scale 20 % is outside") && said[2].contains("is 5.0 mm tall and 5.3 mm wide, where"), "{said:?}");
+    assert!(
+        said[0].starts_with("warning SC-W1106: The scale 20 % is outside") && said[2].contains("is 5.0 mm tall and 5.3 mm wide, where"),
+        "{said:?}"
+    );
     // The scale is found to a tenth of a percent.
     let mut elements = vec![fill("l1", vec![rect(10.0, 30.0, 18.0, 43.337)], RED)];
     elements.push(marker("stitch:text a", 40.0));
@@ -369,21 +394,24 @@ fn req_auto_065_a_line_drawn_through_the_letters_marks_them_and_the_text_follows
     // A line drawn down the page, 30 mm wide. The letters' tops are to its left as it runs, which is to the
     // right on the page: the letters' boxes lie 20 mm across it, from 10 to 32 mm along it.
     let down = |name: &str| line("m", Some(name), vec![subpath(&[(20.0, 0.0), (20.0, 100.0)], false)], 30.0, BLUE);
-    let turned = vec![fill("l1", vec![rect(10.0, 10.0, 30.0, 18.0)], RED), fill("l2", vec![rect(10.0, 22.0, 30.0, 32.0)], RED)];
-    let mut elements = turned.clone();
+    let turned: Vec<Element> = vec![fill("l1", vec![rect(10.0, 10.0, 30.0, 18.0)], RED), fill("l2", vec![rect(10.0, 22.0, 30.0, 32.0)], RED)];
+    let mut elements = turned;
     elements.push(down("stitch:text ab"));
     let (after, said) = replaced(design(elements));
     assert_eq!(ids(&after), [A, B]);
     near(&points(&after, A), &[(30.0, 10.0), (10.0, 18.0)]);
     near(&points(&after, B), &[(30.0, 20.0), (10.0, 32.0)]);
-    assert_eq!(said, ["info SC-I1112: The text marker `m`: 2 traced shapes, 20.0 mm tall, are replaced by the text \"ab\" in the font `test`, 20.0 mm tall."]);
+    assert_eq!(
+        said,
+        ["info SC-I1112: The text marker `m`: 2 traced outlines, 20.0 mm tall, are replaced by the text \"ab\" in the font `test`, 20.0 mm tall."]
+    );
     // What lies further from the line than half its width, or past an end of it, is not inside.
     let wide = fill("wide", vec![rect(4.9, 40.0, 30.0, 42.0)], RED);
     let edge = fill("edge", vec![rect(5.0, 44.0, 35.0, 46.0)], RED);
     let past = fill("past", vec![rect(15.0, 90.0, 25.0, 100.1)], RED);
     let ends = fill("ends", vec![rect(15.0, 0.0, 25.0, 4.0), rect(15.0, 96.0, 25.0, 100.0)], RED);
     let before = fill("before", vec![rect(15.0, -0.1, 25.0, 4.0)], RED);
-    let mut elements = vec![wide, edge.clone(), past, ends.clone(), before];
+    let mut elements = vec![wide, edge, past, ends, before];
     elements.push(down("stitch:text ab"));
     let (after, _) = replaced(design(elements));
     assert_eq!(ids(&after), ["wide", "past", A, B, "before"]);
@@ -409,7 +437,11 @@ fn req_auto_065_on_an_arc_each_letter_is_turned_and_stands_between_the_traced_le
         let inner = (from..=to).rev().map(|degree| on_arc(35.0, f64::from(degree)));
         subpath(&outer.chain(inner).collect::<Vec<_>>(), true)
     };
-    let elements = vec![fill("l1", vec![bent(20, 26)], RED), fill("l2", vec![bent(28, 38)], RED), line("m", Some("stitch:text ab"), vec![subpath(&arc, false)], 12.0, BLUE)];
+    let elements = vec![
+        fill("l1", vec![bent(20, 26)], RED),
+        fill("l2", vec![bent(28, 38)], RED),
+        line("m", Some("stitch:text ab"), vec![subpath(&arc, false)], 12.0, BLUE),
+    ];
     let (after, said) = replaced(design(elements));
     assert_eq!(ids(&after), [A, B]);
     assert_eq!(said.len(), 1, "{said:?}");
@@ -474,12 +506,18 @@ fn diag_sc_w1113_a_marker_that_cannot_be_used_leaves_the_traced_shapes_and_is_no
     let long = "m".repeat(ElementId::MAX_LEN - 3);
     let mut elements = letters(32.0);
     elements.push(Element { id: ElementId::new(long.clone()).unwrap(), ..marker("stitch:text ab", 40.0) });
-    assert_eq!(said_of(elements)[0], format!("warning SC-W1113: The text marker `{long}` is not used: its name is too long to number its letters by. What lies inside it sews as it was traced."));
+    assert_eq!(
+        said_of(elements)[0],
+        format!(
+            "warning SC-W1113: The text marker `{long}` is not used: its name is too long to number its letters by. What lies inside it sews as it was traced."
+        )
+    );
     // The hint says how a marker is made.
     let mut elements = letters(32.0);
     elements.push(marker("stitch:text", 40.0));
     let font = test_font();
-    let (_, said) = pictures::replace(design(elements), &[], &mut |_, _| Found::Font(Rc::clone(&font)), &mut BTreeSet::new(), &Budget::DEFAULT).unwrap();
+    let (_, said) =
+        pictures::replace(design(elements), &[], &mut |_, _| Found::Font(Rc::clone(&font)), &mut BTreeSet::new(), &Budget::DEFAULT).unwrap();
     assert_eq!((said[0].code, said[0].fix.as_ref().map(|fix| fix.describe()).as_deref()), (Code::TextMarkerNotUsed, Some(UNUSED_HINT)));
 }
 
@@ -551,12 +589,13 @@ fn diag_sc_i1112_the_replacement_is_said_once_a_marker() {
     let mut elements = letters(32.0);
     elements.push(marker("stitch:text ab", 40.0));
     let font = test_font();
-    let (_, said) = pictures::replace(design(elements), &[], &mut |_, _| Found::Font(Rc::clone(&font)), &mut BTreeSet::new(), &Budget::DEFAULT).unwrap();
+    let (_, said) =
+        pictures::replace(design(elements), &[], &mut |_, _| Found::Font(Rc::clone(&font)), &mut BTreeSet::new(), &Budget::DEFAULT).unwrap();
     assert_eq!(said.len(), 1);
     assert_eq!((said[0].code, said[0].fix.as_ref()), (Code::TextInPictureLettered, None));
     assert_eq!(
         said[0].to_string(),
-        "info SC-I1112: The text marker `m`: 2 traced shapes, 20.0 mm tall, are replaced by the text \"ab\" in the font `test`, 20.0 mm tall."
+        "info SC-I1112: The text marker `m`: 2 traced outlines, 20.0 mm tall, are replaced by the text \"ab\" in the font `test`, 20.0 mm tall."
     );
 }
 
@@ -566,7 +605,8 @@ fn diag_sc_w1114_shapes_that_cross_a_markers_edge_are_counted() {
     let mut elements = letters(32.0);
     elements.extend([poke("p1", 52.0), poke("p2", 55.0), marker("stitch:text ab", 40.0)]);
     let font = test_font();
-    let (after, said) = pictures::replace(design(elements), &[], &mut |_, _| Found::Font(Rc::clone(&font)), &mut BTreeSet::new(), &Budget::DEFAULT).unwrap();
+    let (after, said) =
+        pictures::replace(design(elements), &[], &mut |_, _| Found::Font(Rc::clone(&font)), &mut BTreeSet::new(), &Budget::DEFAULT).unwrap();
     assert_eq!(ids(&after), [A, B, "p1", "p2"]);
     assert_eq!(said[1].code, Code::ShapeCrossesTextMarker);
     assert_eq!(
@@ -574,7 +614,10 @@ fn diag_sc_w1114_shapes_that_cross_a_markers_edge_are_counted() {
         "warning SC-W1114: 2 shapes lie more than half inside the text marker `m` and cross its edge. They sew as they were traced, beside the \
          lettering."
     );
-    assert_eq!(said[1].fix.as_ref().map(|fix| fix.describe()).as_deref(), Some("Draw the marker round every letter of the text, and round nothing else."));
+    assert_eq!(
+        said[1].fix.as_ref().map(|fix| fix.describe()).as_deref(),
+        Some("Draw the marker round every letter of the text, and round nothing else.")
+    );
 }
 
 #[test]
@@ -582,7 +625,8 @@ fn diag_sc_w1115_lettering_that_is_not_the_traced_letters_size_gives_both() {
     let mut elements = letters(50.0);
     elements.push(marker("stitch:text ab", 55.0));
     let font = test_font();
-    let (_, said) = pictures::replace(design(elements), &[], &mut |_, _| Found::Font(Rc::clone(&font)), &mut BTreeSet::new(), &Budget::DEFAULT).unwrap();
+    let (_, said) =
+        pictures::replace(design(elements), &[], &mut |_, _| Found::Font(Rc::clone(&font)), &mut BTreeSet::new(), &Budget::DEFAULT).unwrap();
     assert_eq!(said[1].code, Code::LetteringUnlikeTracedLetters);
     assert_eq!(
         said[1].to_string(),
@@ -593,8 +637,10 @@ fn diag_sc_w1115_lettering_that_is_not_the_traced_letters_size_gives_both() {
         said[1].fix.as_ref().map(|fix| fix.describe()).as_deref(),
         Some("Choose a font that sews at the letters' height and is about as wide, with font=NAME after the quoted text.")
     );
-    // A width within a stitch's of the traced letters' is not said: 0.05 mm is, just past it.
-    for (right, count) in [(42.05, 1), (42.051, 2)] {
+    // A width within a tenth of the letters' height of the traced letters' is not said: 2 mm here, where
+    // the letters spread to 32 mm at most.
+    assert_eq!(FIT, 0.1);
+    for (right, count) in [(44.0, 1), (44.001, 2), (27.999, 2), (28.0, 1)] {
         let mut elements = letters(right);
         elements.push(marker("stitch:text ab", 55.0));
         assert_eq!(said_of(elements).len(), count, "{right}");
@@ -609,7 +655,10 @@ fn req_auto_066_a_fonts_own_warnings_are_said_once_and_work_is_bounded() {
     let own: Vec<String> = warned.warnings.iter().map(ToString::to_string).collect();
     let two = || {
         let mut elements = letters(32.0);
-        elements.extend([marker("stitch:text a", 20.0), Element { id: ElementId::new("n").unwrap(), ..line("n", Some("stitch:text a"), vec![rect(20.0, 25.0, 40.0, 60.0)], 0.3, BLUE) }]);
+        elements.extend([
+            marker("stitch:text a", 20.0),
+            Element { id: ElementId::new("n").unwrap(), ..line("n", Some("stitch:text a"), vec![rect(20.0, 25.0, 40.0, 60.0)], 0.3, BLUE) },
+        ]);
         design(elements)
     };
     let mut said = BTreeSet::new();
@@ -639,4 +688,113 @@ fn req_auto_066_a_fonts_own_warnings_are_said_once_and_work_is_bounded() {
     let spent = |_: &str, _: &Budget| Found::Unread(Diagnostic::new(Code::BudgetExhausted, "The budget ran out."));
     let stopped = pictures::replace(two(), &[], &mut { spent }, &mut BTreeSet::new(), &Budget::DEFAULT).unwrap_err();
     assert_eq!(stopped.code, Code::BudgetExhausted);
+}
+
+/// A font that draws the letters of MATCH, each a black stroke 8 mm wide and 10 tall that advances 9.5 mm:
+/// 46 mm for the word, where the test sheets' block letters take 48.2 mm at that height.
+fn match_font() -> Rc<Font> {
+    let layers: String = ["M", "A", "T", "C", "H"].iter().map(|letter| glyph(letter, "#000000", 8.0, 60.0, 70.0)).collect();
+    font_with(&layers, 9.5, "")
+}
+
+/// The box round the element `id`: its left, top, right and bottom.
+fn box_of(design: &Design, id: &str) -> [f64; 4] {
+    let points = points(design, id);
+    let fold = |pick: fn(&(f64, f64)) -> f64, start: f64, best: fn(f64, f64) -> f64| points.iter().map(pick).fold(start, best);
+    [
+        fold(|p| p.0, f64::INFINITY, f64::min),
+        fold(|p| p.1, f64::INFINITY, f64::min),
+        fold(|p| p.0, f64::NEG_INFINITY, f64::max),
+        fold(|p| p.1, f64::NEG_INFINITY, f64::max),
+    ]
+}
+
+/// `elements` and a marker round the box of `letters` that says MATCH, its letters replaced in [`match_font`].
+fn lettered(mut elements: Vec<Element>, letters: &Design) -> (Design, Vec<String>) {
+    let bounds = letters.bounds().unwrap();
+    let round = rect(bounds.min().x() - 1.0, bounds.min().y() - 1.0, bounds.max().x() + 1.0, bounds.max().y() + 1.0);
+    elements.push(line("mark", Some("stitch:text MATCH"), vec![round], 0.3, BLUE));
+    let font = match_font();
+    let (after, said) =
+        pictures::replace(design(elements), &[], &mut |_, _| Found::Font(Rc::clone(&font)), &mut BTreeSet::new(), &Budget::DEFAULT).unwrap();
+    (after, said.iter().map(ToString::to_string).collect())
+}
+
+#[test]
+fn req_auto_064_a_marked_word_of_ts_13b_sews_as_lettering_where_its_letters_stood() {
+    // TS-13B's words: MATCH in block letters, each letter a shape, 15, 10 and 6 mm tall.
+    for height in [15.0, 10.0, 6.0] {
+        let traced = word((3.0, 4.0), height).unwrap();
+        let before = design(traced.elements.clone());
+        let (after, said) = lettered(traced.elements.clone(), &before);
+        // No traced letter is left, and each letter of the text stands in its place.
+        let letters: Vec<String> =
+            ["M", "A", "T", "C", "H"].iter().enumerate().map(|(at, letter)| format!("mark:{at}-svg:p{letter}:stroke")).collect();
+        assert_eq!(ids(&after), letters.iter().map(String::as_str).collect::<Vec<_>>());
+        assert_eq!(said.len(), 1, "{height}: {said:?}");
+        for (letter, shape) in letters.iter().zip(&traced.elements) {
+            let [left, top, right, bottom] = box_of(&after, letter);
+            let [was_left, was_top, was_right, was_bottom] = box_of(&before, shape.id.as_str());
+            // As tall as the traced letters, on their baseline, to a thousandth of a millimetre: the scale
+            // is found to a tenth of a percent.
+            assert!((top - was_top).abs() < 0.001 * height && (bottom - was_bottom).abs() < 0.001 * height, "{letter} at {height}: {top} {bottom}");
+            // And over its traced letter: its middle within the traced letter's box. A font's letters are
+            // not as wide as a picture's, so nearer than that isn't asked: the spacing is spread evenly, and
+            // each letter lies off by its own difference in width at most.
+            let middle = (left + right) / 2.0;
+            assert!(was_left < middle && middle < was_right, "{letter} at {height}: {middle} not in {was_left}..{was_right}");
+        }
+        // The text's ends are the traced word's ends, within a tenth of a millimetre.
+        let (first, last) = (box_of(&after, &letters[0]), box_of(&after, &letters[4]));
+        let whole = before.bounds().unwrap();
+        assert!((first[0] - whole.min().x()).abs() < 0.1 && (last[2] - whole.max().x()).abs() < 0.1, "{height}: {first:?} {last:?}");
+    }
+}
+
+#[test]
+fn req_auto_064_the_lettered_patch_sews_its_field_whole_and_the_lettering_on_it() {
+    // The lettered patch of the before and after sheet: the word 10 mm tall on a cream field with a red
+    // border, both with cut corners, each lying whole under what is drawn on it.
+    let traced = word((0.0, 0.0), 10.0).unwrap();
+    let letters = design(traced.elements.clone());
+    let bounds = letters.bounds().unwrap();
+    let plate = |id: &str, margin: f64, colour: Rgb| {
+        let (left, top, right, bottom) = (bounds.min().x() - margin, bounds.min().y() - margin, bounds.max().x() + margin, bounds.max().y() + margin);
+        let cut = margin / 2.0;
+        let ring = [
+            (left + cut, top),
+            (right - cut, top),
+            (right, top + cut),
+            (right, bottom - cut),
+            (right - cut, bottom),
+            (left + cut, bottom),
+            (left, bottom - cut),
+            (left, top + cut),
+        ];
+        fill(id, vec![subpath(&ring, true)], colour)
+    };
+    let (border, field) = (plate("border", 9.0, RED), plate("field", 6.0, WHITE));
+    let mut elements = vec![border.clone(), field.clone()];
+    elements.extend(traced.elements.clone());
+    let (after, said) = lettered(elements, &letters);
+    assert_eq!(said.len(), 1, "{said:?}");
+    assert_eq!(ids(&after)[..2], ["border", "field"]);
+    assert_eq!(after.elements().len(), 7);
+    // The field and the border are as they were, and no traced letter sews.
+    assert!(after.elements()[0] == border && after.elements()[1] == field);
+    assert!(traced.elements.iter().all(|letter| !ids(&after).contains(&letter.id.as_str())));
+    // The word was traced in black, and the lettering keeps it.
+    assert!(after.elements()[2..].iter().all(|letter| letter.thread == traced.elements[0].thread && !letter.automatic));
+    // It plans, and sews in 3 threads: the border, the field and, last, the lettering on them.
+    let plan = in_place(&after).plan.unwrap();
+    let threads: Vec<Rgb> = plan.blocks.iter().map(|block| block.thread.color).collect();
+    assert_eq!(threads.len(), 3, "{threads:?}");
+    assert_eq!(threads.last(), Some(&traced.elements[0].thread.color));
+    // Every stitch of the lettering lies in the traced letters' box, within the millimetre a lock stitch or
+    // a pull compensation may reach past a stroke's end.
+    let last = plan.blocks.last().unwrap();
+    assert!(last.stitches.len() > 20, "{}", last.stitches.len());
+    let inside =
+        |x: f64, y: f64| bounds.min().x() - 1.0 <= x && x <= bounds.max().x() + 1.0 && bounds.min().y() - 1.0 <= y && y <= bounds.max().y() + 1.0;
+    assert!(last.stitches.iter().all(|stitch| inside(stitch.at.x(), stitch.at.y())));
 }

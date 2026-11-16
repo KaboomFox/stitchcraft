@@ -12,9 +12,9 @@ use stitchcraft_core::units::MM_PER_POINT;
 use stitchcraft_core::{Budget, Code};
 use stitchcraft_engine::design::Reading;
 use stitchcraft_plan::{Rgb, Thread};
+use stitchcraft_svg::lettering::pictures::Found;
 use stitchcraft_vectorcraft::lettering::{BuiltIn, Folder, Fonts, found};
 use stitchcraft_vectorcraft::{VectorCraft, read_in, read_with};
-use stitchcraft_svg::lettering::pictures::Found;
 
 /// A blue line 1 pt wide, as an appearance.
 const OUTLINE: &str = r#"{"items": [{"kind": "stroke", "paint": {"type": "solid", "color": {"model": "rgb", "r": 0, "g": 0, "b": 1}}, "width": 1}]}"#;
@@ -68,7 +68,9 @@ fn req_vc_028_what_lies_inside_a_path_named_stitch_text_sews_as_lettering() {
         assert_eq!(read.design.elements()[0].automatic, reading.auto);
         assert_eq!(
             said(&read),
-            ["info SC-I1112: The text marker `vc:4:stroke`: 1 traced shapes, 20.0 mm tall, are replaced by the text \"a\" in the font `small_font`, 20.0 mm tall."]
+            [
+                "info SC-I1112: The text marker `vc:4:stroke`: 1 traced outlines, 20.0 mm tall, are replaced by the text \"a\" in the font `small_font`, 20.0 mm tall."
+            ]
         );
     }
     // The name is read as every marker's: in any case, after white space.
@@ -86,8 +88,10 @@ fn req_vc_028_without_the_font_the_traced_shapes_sew_and_the_marker_never_does()
     assert_eq!(ids(&read), ["vc:2:fill", "vc:3:fill"]);
     assert_eq!(
         said(&read),
-        ["warning SC-W1113: The text marker `vc:4:stroke` is not used: The default embroidery font is not here, and no other is. What lies inside it \
-          sews as it was traced."]
+        [
+            "warning SC-W1113: The text marker `vc:4:stroke` is not used: The default embroidery font is not here, and no other is. What lies inside it \
+          sews as it was traced."
+        ]
     );
     let read = read_in(&marked("stitch:text \"a\" font=other"), &Budget::DEFAULT, Reading::default(), &mut BuiltIn::new(&FOLDERS)).unwrap();
     assert_eq!(ids(&read), ["vc:2:fill", "vc:3:fill"]);
@@ -99,7 +103,10 @@ fn req_vc_028_without_the_font_the_traced_shapes_sew_and_the_marker_never_does()
 
 #[test]
 fn req_vc_028_a_group_is_never_a_text_marker() {
-    let group = format!(r#"{{"id": 5, "name": "stitch:text a", "kind": {{"type": "group", "children": [{}]}}}}"#, boxed(4, None, [5.0, 25.0, 40.0, 60.0], OUTLINE));
+    let group = format!(
+        r#"{{"id": 5, "name": "stitch:text a", "kind": {{"type": "group", "children": [{}]}}}}"#,
+        boxed(4, None, [5.0, 25.0, 40.0, 60.0], OUTLINE)
+    );
     let read = read_in(&picture(&group), &Budget::DEFAULT, Reading::default(), &mut BuiltIn::new(&FOLDERS)).unwrap();
     assert_eq!(ids(&read), ["vc:2:fill", "vc:3:fill", "vc:4:stroke"]);
     assert_eq!(
