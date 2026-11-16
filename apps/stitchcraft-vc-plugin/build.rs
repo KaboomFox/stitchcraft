@@ -84,7 +84,7 @@ fn main() {
         }
     };
     let out = PathBuf::from(std::env::var_os("OUT_DIR").unwrap_or_default()).join("fonts.rs");
-    let code = format!("/// The fonts built in, in the order of `built-in-fonts.txt`.\npub static FONTS: &[Folder<'static>] = &[\n{table}];\n");
+    let code = format!("/// The fonts built in, in the order of `built-in-fonts.txt`.\npub static FONTS: &[Folder] = &[\n{table}];\n");
     if let Err(error) = std::fs::write(&out, code) {
         println!("cargo:warning={}: {error}", out.display());
         std::process::exit(1);

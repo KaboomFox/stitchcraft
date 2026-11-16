@@ -40,46 +40,33 @@ pub trait Fonts {
     fn font(&mut self, name: &str, budget: &Budget) -> Option<Result<Rc<Font>, Diagnostic>>;
 }
 
-/// No fonts: every text that names one is left out, with `SC-W1111`.
-#[derive(Clone, Copy, Debug, Default)]
-pub struct NoFonts;
-
-impl Fonts for NoFonts {
-    fn names(&self) -> Vec<String> {
-        Vec::new()
-    }
-
-    fn font(&mut self, _name: &str, _budget: &Budget) -> Option<Result<Rc<Font>, Diagnostic>> {
-        None
-    }
-}
-
 /// A font's folder, held as bytes: its name, and its files by their paths in it, as the font reader takes
 /// them ([`font::read`]).
 #[derive(Clone, Copy, Debug)]
-pub struct Folder<'a> {
+pub struct Folder {
     /// The folder's name.
-    pub name: &'a str,
+    pub name: &'static str,
     /// Its files, each by its path in the folder with `/` between its parts.
-    pub files: &'a [(&'a str, &'a [u8])],
+    pub files: &'static [(&'static str, &'static [u8])],
 }
 
-/// The fonts of folders held as bytes, such as those built into a plug-in. A font is read when a text first
-/// names it, and kept.
+/// The fonts of folders held as bytes for as long as the program runs, as those built into a plug-in are. A
+/// font is read when a text first names it, and kept. Of no folders, it has no fonts: every text that names
+/// one is then left out, with `SC-W1111`.
 #[derive(Debug)]
-pub struct BuiltIn<'a> {
-    folders: &'a [Folder<'a>],
+pub struct BuiltIn {
+    folders: &'static [Folder],
     read: BTreeMap<usize, Rc<Font>>,
 }
 
-impl<'a> BuiltIn<'a> {
+impl BuiltIn {
     /// The fonts of `folders`.
-    pub fn new(folders: &'a [Folder<'a>]) -> Self {
+    pub fn new(folders: &'static [Folder]) -> Self {
         BuiltIn { folders, read: BTreeMap::new() }
     }
 }
 
-impl Fonts for BuiltIn<'_> {
+impl Fonts for BuiltIn {
     fn names(&self) -> Vec<String> {
         self.folders.iter().map(|folder| shown(folder.name, settings_of(folder).as_deref())).collect()
     }
@@ -162,9 +149,9 @@ mod tests {
 
     #[test]
     fn req_vc_026_fonts_held_as_bytes_are_read_when_asked_for_and_kept() {
-        let files: [(&str, &[u8]); 2] = [("font.json", SETTINGS), ("ltr.svg", GLYPHS.as_bytes())];
-        let folders = [Folder { name: "test", files: &files }, Folder { name: "bare", files: &[] }];
-        let mut fonts = BuiltIn::new(&folders);
+        const FILES: [(&str, &[u8]); 2] = [("font.json", SETTINGS), ("ltr.svg", GLYPHS.as_bytes())];
+        const FOLDERS: [Folder; 2] = [Folder { name: "test", files: &FILES }, Folder { name: "bare", files: &[] }];
+        let mut fonts = BuiltIn::new(&FOLDERS);
         assert_eq!(fonts.names(), ["Test Font (`test`)", "`bare`"]);
         assert!(fonts.font("other", &Budget::DEFAULT).is_none());
         let first = fonts.font("Test Font", &Budget::DEFAULT).unwrap().unwrap();
@@ -175,7 +162,7 @@ mod tests {
         // A folder that holds no font says what its reader says.
         let unread = fonts.font("bare", &Budget::DEFAULT).unwrap().unwrap_err();
         assert_eq!(unread.code, stitchcraft_core::Code::FontUnreadable);
-        assert!(NoFonts.names().is_empty());
-        assert!(NoFonts.font("test", &Budget::DEFAULT).is_none());
+        let mut none = BuiltIn::new(&[]);
+        assert!(none.names().is_empty() && none.font("test", &Budget::DEFAULT).is_none());
     }
 }

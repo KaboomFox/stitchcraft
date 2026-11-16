@@ -112,7 +112,7 @@ mod text;
 pub const HELD_PER_BYTE: usize = 32;
 use crate::geometry::{self, UNUSABLE_HINT};
 use crate::gradient;
-use crate::lettering::{Fonts, NoFonts};
+use crate::lettering::{BuiltIn, Fonts};
 use crate::values::{sews, text};
 use crate::wire::{self, Dash, Effect, Item, Kind, Node, Paint, PathData, Profile, Stop, shows};
 use crate::{AUTO, FORMAT, color, effect_name, settings};
@@ -161,7 +161,7 @@ pub fn read(bytes: &[u8], budget: &Budget) -> Result<VectorCraft, Diagnostic> {
 /// (`REQ-AUTO-001`), as one the Auto effect reaches is without it (`REQ-VC-016`), and with `sort_colours`
 /// every element sews in the order automatic digitizing chooses (`REQ-AUTO-011`). Fails as [`read`] does.
 pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<VectorCraft, Diagnostic> {
-    read_in(bytes, budget, reading, &mut NoFonts)
+    read_in(bytes, budget, reading, &mut BuiltIn::new(&[]))
 }
 
 /// As [`read_with`], with the embroidery fonts of `fonts`: a text object with StitchCraft's Lettering effect

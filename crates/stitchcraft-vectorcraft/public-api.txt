@@ -47,25 +47,24 @@ pub fn stitchcraft_vectorcraft::filter::read(&[u8], &[u8]) -> core::result::Resu
 pub fn stitchcraft_vectorcraft::filter::solid(stitchcraft_plan::thread::Rgb) -> core::result::Result<alloc::boxed::Box<serde_json::raw::RawValue>, serde_json::error::Error>
 pub fn stitchcraft_vectorcraft::filter::stroke(&serde_json::raw::RawValue, stitchcraft_core::units::Mm, stitchcraft_engine::design::Join, stitchcraft_engine::design::Cap) -> core::result::Result<alloc::boxed::Box<serde_json::raw::RawValue>, serde_json::error::Error>
 pub mod stitchcraft_vectorcraft::lettering
-pub struct stitchcraft_vectorcraft::lettering::BuiltIn<'a>
-impl<'a> stitchcraft_vectorcraft::lettering::BuiltIn<'a>
-pub fn stitchcraft_vectorcraft::lettering::BuiltIn<'a>::new(&'a [stitchcraft_vectorcraft::lettering::Folder<'a>]) -> Self
-impl stitchcraft_vectorcraft::lettering::Fonts for stitchcraft_vectorcraft::lettering::BuiltIn<'_>
-pub fn stitchcraft_vectorcraft::lettering::BuiltIn<'_>::font(&mut self, &str, &stitchcraft_core::budget::Budget) -> core::option::Option<core::result::Result<alloc::rc::Rc<stitchcraft_svg::font::Font>, stitchcraft_core::diag::Diagnostic>>
-pub fn stitchcraft_vectorcraft::lettering::BuiltIn<'_>::names(&self) -> alloc::vec::Vec<alloc::string::String>
-pub struct stitchcraft_vectorcraft::lettering::Folder<'a>
-pub stitchcraft_vectorcraft::lettering::Folder::files: &'a [(&'a str, &'a [u8])]
-pub stitchcraft_vectorcraft::lettering::Folder::name: &'a str
-pub struct stitchcraft_vectorcraft::lettering::NoFonts
-impl stitchcraft_vectorcraft::lettering::Fonts for stitchcraft_vectorcraft::lettering::NoFonts
-pub fn stitchcraft_vectorcraft::lettering::NoFonts::font(&mut self, &str, &stitchcraft_core::budget::Budget) -> core::option::Option<core::result::Result<alloc::rc::Rc<stitchcraft_svg::font::Font>, stitchcraft_core::diag::Diagnostic>>
-pub fn stitchcraft_vectorcraft::lettering::NoFonts::names(&self) -> alloc::vec::Vec<alloc::string::String>
+pub struct stitchcraft_vectorcraft::lettering::BuiltIn
+impl stitchcraft_vectorcraft::lettering::BuiltIn
+pub fn stitchcraft_vectorcraft::lettering::BuiltIn::new(&'static [stitchcraft_vectorcraft::lettering::Folder]) -> Self
+impl stitchcraft_vectorcraft::lettering::Fonts for stitchcraft_vectorcraft::lettering::BuiltIn
+pub fn stitchcraft_vectorcraft::lettering::BuiltIn::font(&mut self, &str, &stitchcraft_core::budget::Budget) -> core::option::Option<core::result::Result<alloc::rc::Rc<stitchcraft_svg::font::Font>, stitchcraft_core::diag::Diagnostic>>
+pub fn stitchcraft_vectorcraft::lettering::BuiltIn::names(&self) -> alloc::vec::Vec<alloc::string::String>
+pub struct stitchcraft_vectorcraft::lettering::Folder
+pub stitchcraft_vectorcraft::lettering::Folder::files: &'static [(&'static str, &'static [u8])]
+pub stitchcraft_vectorcraft::lettering::Folder::name: &'static str
 pub const stitchcraft_vectorcraft::lettering::DEFAULT_FONT: &str
 pub const stitchcraft_vectorcraft::lettering::FONT: &str
 pub const stitchcraft_vectorcraft::lettering::LETTERING: &str
 pub trait stitchcraft_vectorcraft::lettering::Fonts
 pub fn stitchcraft_vectorcraft::lettering::Fonts::font(&mut self, &str, &stitchcraft_core::budget::Budget) -> core::option::Option<core::result::Result<alloc::rc::Rc<stitchcraft_svg::font::Font>, stitchcraft_core::diag::Diagnostic>>
 pub fn stitchcraft_vectorcraft::lettering::Fonts::names(&self) -> alloc::vec::Vec<alloc::string::String>
+impl stitchcraft_vectorcraft::lettering::Fonts for stitchcraft_vectorcraft::lettering::BuiltIn
+pub fn stitchcraft_vectorcraft::lettering::BuiltIn::font(&mut self, &str, &stitchcraft_core::budget::Budget) -> core::option::Option<core::result::Result<alloc::rc::Rc<stitchcraft_svg::font::Font>, stitchcraft_core::diag::Diagnostic>>
+pub fn stitchcraft_vectorcraft::lettering::BuiltIn::names(&self) -> alloc::vec::Vec<alloc::string::String>
 pub fn stitchcraft_vectorcraft::lettering::font_name(&[u8]) -> core::option::Option<alloc::string::String>
 pub fn stitchcraft_vectorcraft::lettering::is_named(&str, &str, core::option::Option<&str>) -> bool
 pub fn stitchcraft_vectorcraft::lettering::shown(&str, core::option::Option<&str>) -> alloc::string::String

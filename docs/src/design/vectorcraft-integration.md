@@ -1129,9 +1129,22 @@ a declined export says its first `SC-W1111` after its error.
 It depends on `stitchcraft-svg`, where lettering and the font reader are, beside it in layer 3. The edge
 is listed in `xtask/src/layers.rs`. The other choice was a second copy of the placing in each app.
 
-**Cost.** Reading Ink/Stitch Small Font and setting 2 words takes `stitch` half a second in a debug build.
-The Level A case `req_vc_027_…` measures a lettered document's export in VectorCraft's host against the 10
-billion instructions it allows, and fails above 85 percent.
+**Cost.** The Level A case `req_vc_027_…` measures a lettered document's export in VectorCraft's host
+against the 10 billion instructions it allows, and fails above 85 percent. Measured on 16 November 2026 in
+VectorCraft 0.24.1, in Ink/Stitch Small Font:
+
+| Text | Instructions | Of those allowed |
+|---|---|---|
+| A word of 5 letters | 2.01 billion | 20 % |
+| 4 lines of 2 words | 2.45 billion | 24 % |
+
+Reading the font takes most of it, about 2 billion instructions: both its glyph files are read whole,
+all 187 glyphs, whichever the text uses. The font is read once for a document, however many texts name it. Reading only
+the glyphs a text names would cut that, and is left for a step that needs it.
+
+Each exporter's module grew from 3,525 to 5,304 KiB. The font's files are 810 KiB of that, and the SVG
+reader and lettering, which an exporter didn't contain before, are the other 969 KiB. The modules of the
+effects and filters grew by 2 KiB each.
 
 ### Importing Ink/Stitch SVGs into VectorCraft
 

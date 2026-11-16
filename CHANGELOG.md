@@ -14,8 +14,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     its first line starts, turned as it is turned. A font of one thread sews in the text's colour.
   - A plug-in can't read files. The exporters are built with their fonts in them: those
     `apps/stitchcraft-vc-plugin/built-in-fonts.txt` lists, from the folder the build option
-    `STITCHCRAFT_FONTS_DIR` names. The list has Ink/Stitch Small Font, under the SIL Open Font License,
-    which adds 829 KB to each exporter. The browser demo publishes its licence. No font file is in the
+    `STITCHCRAFT_FONTS_DIR` names. The list has Ink/Stitch Small Font, under the SIL Open Font License.
+    With it and the code that reads it, each exporter's module grows from 3.5 to 5.3 MB, and an export
+    of 4 lines takes a quarter of the instructions VectorCraft allows. The browser demo publishes its licence. No font file is in the
     repository.
   - `stitch export` and `stitch plan` sew such texts in the fonts of the folder `STITCHCRAFT_FONTS` names.
   - `SC-W1111` says when a text with the effect isn't sewn: its font isn't found, or it is area type, type

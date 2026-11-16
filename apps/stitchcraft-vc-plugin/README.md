@@ -102,7 +102,7 @@ STITCHCRAFT_FONTS_DIR=/path/to/fonts cargo build -p stitchcraft-vc-plugin --rele
 ```
 
 No font file is in this repository. A font joins the list only under the SIL Open Font License or CC0, and
-whoever publishes a module publishes each font's licence file beside it (`fonts::licences`).
+whoever publishes a module publishes each font's licence file beside it, as `web/build.py` does.
 
 ## Dependencies
 
