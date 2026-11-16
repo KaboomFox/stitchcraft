@@ -36,9 +36,14 @@ fn font_of(layers: &str, more: &str) -> Rc<Font> {
 
 /// As [`font_of`], every glyph advancing `advance` mm.
 fn font_with(layers: &str, advance: f64, more: &str) -> Rc<Font> {
+    font_sewn(layers, advance, (0.5, 2.0), more)
+}
+
+/// As [`font_with`], sewn from `least` to `most` times its own size.
+fn font_sewn(layers: &str, advance: f64, (least, most): (f64, f64), more: &str) -> Rc<Font> {
     let px = |mm: f64| mm / MM_PER_SVG_PX;
     let json = format!(
-        r#"{{"name": "Test", "size": 10, "min_scale": 0.5, "max_scale": 2, "auto_satin": false, "horiz_adv_x_default": {}, "horiz_adv_x_space": {}{more}}}"#,
+        r#"{{"name": "Test", "size": 10, "min_scale": {least}, "max_scale": {most}, "auto_satin": false, "horiz_adv_x_default": {}, "horiz_adv_x_space": {}{more}}}"#,
         px(advance),
         px(3.0)
     );
@@ -50,13 +55,16 @@ fn font_with(layers: &str, advance: f64, more: &str) -> Rc<Font> {
 
 /// The test font: `a` 4 mm wide and `b` 6, each 10 mm tall on the baseline, `p` 4 mm wide from 5 mm above the
 /// baseline to 3 below it, all black, `c` as `a` in green, `e` a stroke 4 mm long on the baseline, and `i` a
-/// stroke 10 mm tall of no width.
+/// stroke 10 mm tall of no width. `u` is a curve 10 mm tall whose control points lie 4 mm to the left of its
+/// ends, and which itself reaches 3 mm to their left. The path of `c` has a label that reads as a marker's
+/// name.
 fn test_font() -> Rc<Font> {
     let layers = [
         glyph("a", "#000000", 4.0, 60.0, 70.0),
         glyph("b", "#000000", 6.0, 60.0, 70.0),
         glyph("p", "#000000", 4.0, 65.0, 73.0),
-        glyph("c", "#00ff00", 4.0, 60.0, 70.0),
+        glyph("c", "#00ff00", 4.0, 60.0, 70.0).replace("<path ", "<path inkscape:label=\"stitch:text c\" "),
+        glyph("u", "#000000", 4.0, 60.0, 70.0).replace("M 0,60 L 4,70", "M 4,60 C 0,65 0,65 4,70"),
         glyph("e", "#000000", 4.0, 70.0, 70.0),
         glyph("i", "#000000", 0.0, 60.0, 70.0),
     ];
@@ -408,6 +416,29 @@ fn req_auto_064_the_lettering_takes_the_thread_that_painted_the_most_of_what_was
     elements.push(marker("stitch:text ac", 40.0));
     let (after, _) = replaced(design(elements));
     assert_eq!([after.elements()[0].thread.color, after.elements()[1].thread.color], [Rgb::new(0, 0, 0), Rgb::new(0, 255, 0)]);
+    // A name the font gave a glyph's path is not kept: the lettering is never read as a marker.
+    assert!(after.elements().iter().all(|letter| letter.name.is_none()));
+}
+
+#[test]
+fn req_auto_064_the_text_is_measured_by_what_it_sews_at_the_fonts_own_size() {
+    // The curve of `u` sews from 1 mm right of its box's left edge to 4 mm: 3 mm wide, where its box is 4.
+    // At 200 % it is 6 mm wide and centred on the traced letters, whose middle is at x = 21: its ends at 24,
+    // its control points 8 mm to their left.
+    let mut elements = letters(32.0);
+    elements.push(marker("stitch:text u", 40.0));
+    let (after, said) = replaced(design(elements));
+    near(&points(&after, "m:0-svg:pu:stroke"), &[(24.0, 30.0), (16.0, 40.0), (16.0, 40.0), (24.0, 50.0)]);
+    assert_eq!(said.len(), 1, "{said:?}");
+    // A font that sews from twice its own size is measured at twice its size, and set as any other.
+    let large = font_sewn(&[glyph("a", "#000000", 4.0, 60.0, 70.0), glyph("b", "#000000", 6.0, 60.0, 70.0)].concat(), 5.0, (2.0, 4.0), "");
+    let mut elements = letters(32.0);
+    elements.push(marker("stitch:text ab", 40.0));
+    let (after, said) =
+        pictures::replace(design(elements), &[], &mut |_, _| Found::Font(Rc::clone(&large)), &mut BTreeSet::new(), &Budget::DEFAULT).unwrap();
+    near(&points(&after, A), &[(10.0, 30.0), (18.0, 50.0)]);
+    near(&points(&after, B), &[(20.0, 30.0), (32.0, 50.0)]);
+    assert_eq!(said.len(), 1, "{said:?}");
 }
 
 #[test]
@@ -453,11 +484,12 @@ fn req_auto_065_on_an_arc_each_letter_is_turned_and_stands_between_the_traced_le
     let arc: Vec<(f64, f64)> = (0..=30).map(|step| on_arc(40.0, f64::from(step) * 3.0)).collect();
     // 2 traced letters, each a box bent with the arc: from radius 35 to 45, and from 20 to 26 and 28 to 38
     // degrees round, which is 11 mm along their feet, as wide as the text.
-    let bent = |from: u32, to: u32| {
-        let outer = (from..=to).map(|degree| on_arc(45.0, f64::from(degree)));
-        let inner = (from..=to).rev().map(|degree| on_arc(35.0, f64::from(degree)));
-        subpath(&outer.chain(inner).collect::<Vec<_>>(), true)
+    let ring = |inner: f64, from: u32, to: u32| {
+        let outer = (from..=to).map(|degree| on_arc(inner + 10.0, f64::from(degree)));
+        let inside = (from..=to).rev().map(|degree| on_arc(inner, f64::from(degree)));
+        subpath(&outer.chain(inside).collect::<Vec<_>>(), true)
     };
+    let bent = |from: u32, to: u32| ring(35.0, from, to);
     let elements = vec![
         fill("l1", vec![bent(20, 26)], RED),
         fill("l2", vec![bent(28, 38)], RED),
@@ -490,6 +522,14 @@ fn req_auto_065_on_an_arc_each_letter_is_turned_and_stands_between_the_traced_le
     assert!(said.len() == 2 && said[1].starts_with("warning SC-W1115: "), "{said:?}");
     let middle = (round(points(&wide, A)[0]) + round(points(&wide, B)[1])) / 2.0;
     assert!((middle - 45.0).abs() < 0.5, "{middle}");
+    // Letters well inside the line, from radius 22 to 32 under a stroke 40 mm wide: a millimetre of their
+    // baseline is 1.8 mm of the marker's line, and the baseline is as long as the 4 letters need. The foot
+    // of the last one is on it.
+    let inner = vec![fill("l1", vec![ring(22.0, 20, 75)], RED), line("m", Some("stitch:text abab"), vec![subpath(&arc, false)], 40.0, BLUE)];
+    let (tight, said) = replaced(design(inner));
+    assert_eq!(said.len(), 1, "{said:?}");
+    let foot = radius(points(&tight, "m:3-svg:pb:stroke")[1]);
+    assert!((foot - 22.0).abs() < 0.015, "{foot}");
     // The text's ends are the traced letters' ends, within a degree: a glyph stands on the chord under it.
     let (start, end) = (round(points(&after, A)[0]), round(points(&after, B)[1]));
     assert!((start - 20.0).abs() < 1.0 && (end - 38.0).abs() < 1.0, "{start} {end}");

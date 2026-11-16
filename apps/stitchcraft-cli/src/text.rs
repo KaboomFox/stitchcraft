@@ -92,11 +92,11 @@ mod tests {
         FolderFonts::of(Some(dir.join(".")))
     }
 
-    /// A picture 100 mm wide and 50 tall: a white field, and 2 red letters 20 mm tall, at (10, 10) and at
-    /// (60, 20).
+    /// A picture 200 mm wide and 200 tall whose top left corner is at (10, 5): a white field, and 2 red
+    /// letters 20 mm tall, at (20, 15) and at (130, 100).
     fn picture(more: &str) -> Design {
         let svg = format!(
-            r##"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="100mm" height="50mm" viewBox="0 0 100 50"><rect id="field" width="100" height="50" fill="#ffffff"/><rect id="l1" x="10" y="10" width="8" height="20" fill="#ff0000"/><rect id="l2" x="60" y="20" width="8" height="20" fill="#ff0000"/>{more}</svg>"##
+            r##"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="220mm" height="210mm" viewBox="0 0 220 210"><rect id="field" x="10" y="5" width="200" height="200" fill="#ffffff"/><rect id="l1" x="20" y="15" width="8" height="20" fill="#ff0000"/><rect id="l2" x="130" y="100" width="8" height="20" fill="#ff0000"/>{more}</svg>"##
         );
         stitchcraft_svg::read_with(svg.as_bytes(), &Budget::DEFAULT, Reading { auto: true, ..Reading::default() }).unwrap().design
     }
@@ -153,18 +153,18 @@ mod tests {
     #[test]
     fn req_cli_020_the_letters_inside_each_area_marked_sew_as_lettering() {
         let dir = TempDir::new("cli-text");
-        // The left half holds the first letter, and the box from 55 to 75 % across and 30 to 90 % down the
-        // second. A third mark holds nothing.
-        let marks = ["0,0,50,100:a", "55,30,20,60:a", "80,0,20,10:a"];
+        // The top left quarter holds the first letter. The second is in the box from 55 to 65 % across and
+        // 47 to 62 % down, which is from (120, 99) to (140, 129). A third mark holds nothing.
+        let marks = ["0,0,50,50:a", "55,47,10,15:a", "80,0,20,10:a"];
         let (design, said) = replaced(picture(""), &marks, &mut fonts(&dir)).unwrap();
         assert_eq!(ids(&design), ["svg:field:fill", "text-1:0-svg:pa:stroke", "text-2:0-svg:pa:stroke"]);
-        assert_eq!(first_point(&design, "text-1:0-svg:pa:stroke"), (10.0, 10.0));
-        assert_eq!(first_point(&design, "text-2:0-svg:pa:stroke"), (60.0, 20.0));
+        assert_eq!(first_point(&design, "text-1:0-svg:pa:stroke"), (20.0, 15.0));
+        assert_eq!(first_point(&design, "text-2:0-svg:pa:stroke"), (130.0, 100.0));
         let codes: Vec<Code> = said.iter().map(|said| said.code).collect();
         assert_eq!(codes, [Code::TextInPictureLettered, Code::TextInPictureLettered, Code::TextMarkerNotUsed]);
         assert!(said[2].message.starts_with("The text marker `text-3` is not used: no shape lies wholly inside it."), "{}", said[2]);
         // An area that ends short of a letter leaves it, and a design that draws nothing has no box.
-        let (design, said) = replaced(picture(""), &["0,0,17.9,100:a"], &mut fonts(&dir)).unwrap();
+        let (design, said) = replaced(picture(""), &["0,0,8.9,100:a"], &mut fonts(&dir)).unwrap();
         assert_eq!((ids(&design).len(), said[0].code), (3, Code::TextMarkerNotUsed));
         let empty = Design::default();
         let (design, said) = replaced(empty, &["0,0,100,100:a"], &mut fonts(&dir)).unwrap();
@@ -178,14 +178,14 @@ mod tests {
     #[test]
     fn req_svg_016_a_shape_labelled_stitch_text_marks_text_in_an_svg_file() {
         let dir = TempDir::new("cli-text-svg");
-        let marker = r##"<rect id="m" inkscape:label="stitch:text a" x="5" y="5" width="20" height="30" fill="none" stroke="#0000ff"/>"##;
+        let marker = r##"<rect id="m" inkscape:label="stitch:text a" x="15" y="10" width="20" height="30" fill="none" stroke="#0000ff"/>"##;
         let (design, said) = replaced(picture(marker), &[], &mut fonts(&dir)).unwrap();
         assert_eq!(ids(&design), ["svg:field:fill", "svg:m:stroke:0-svg:pa:stroke", "svg:l2:fill"]);
-        assert_eq!(first_point(&design, "svg:m:stroke:0-svg:pa:stroke"), (10.0, 10.0));
+        assert_eq!(first_point(&design, "svg:m:stroke:0-svg:pa:stroke"), (20.0, 15.0));
         assert_eq!(said.len(), 1);
         assert!(said[0].to_string().starts_with("info SC-I1112: The text marker `svg:m:stroke`: 1 traced outlines, 20.0 mm tall,"), "{}", said[0]);
         // A file's own marker and a mark of the command line are both used.
-        let (design, _) = replaced(picture(marker), &["55,30,20,60:a"], &mut fonts(&dir)).unwrap();
+        let (design, _) = replaced(picture(marker), &["55,47,10,15:a"], &mut fonts(&dir)).unwrap();
         assert_eq!(ids(&design), ["svg:field:fill", "svg:m:stroke:0-svg:pa:stroke", "text-1:0-svg:pa:stroke"]);
     }
 }

@@ -181,6 +181,13 @@ mod tests {
         // A point level with a corner is counted once: the edge that ends there doesn't cross its height.
         assert!(inside(&[vec![(0.0, 0.0), (10.0, 5.0), (0.0, 10.0)]], (1.0, 5.0)));
         assert!(!inside(&[vec![(0.0, 0.0), (10.0, 5.0), (0.0, 10.0)]], (10.5, 5.0)));
+        // A slanted edge, from (13, 4) to (3, 14): a point is inside to its left, and not on it.
+        let slanted = [vec![(3.0, 4.0), (13.0, 4.0), (3.0, 14.0)]];
+        for (point, held) in
+            [((10.5, 6.0), true), ((11.5, 6.0), false), ((7.0, 9.0), true), ((9.0, 9.0), false), ((8.0, 9.0), false), ((3.5, 13.0), true)]
+        {
+            assert_eq!(inside(&slanted, point), held, "{point:?}");
+        }
         assert!(!inside(&[Vec::new()], (0.0, 0.0)) && !inside(&[], (0.0, 0.0)));
         assert_eq!(area(&square), 100.0);
         let back: Vec<At> = square.iter().rev().copied().collect();
