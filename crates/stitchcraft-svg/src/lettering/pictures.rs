@@ -337,7 +337,10 @@ impl Work<'_> {
         let wide = natural + spread * gaps;
         // A millimetre along the baseline, in millimetres along the marker's line: 1 on a straight line.
         let step = if room > 0.0 { (end - start) / room } else { 1.0 };
-        let from = start + ((room - wide) / 2.0 - left * factor) * step;
+        // Lettering along a path puts the leftmost glyph's box at the path's start. A box holds every path
+        // of its glyph, sewn or not, so what the text sews may start further in.
+        let boxes = trial.glyphs.iter().map(|glyph| glyph.left).fold(f64::INFINITY, f64::min) * per;
+        let from = start + ((room - wide) / 2.0 - (left - boxes) * factor) * step;
         // The baseline goes on a letter's height past the text, so that it has a length whatever the text.
         let to = from + (wide + height) * step;
         // Every number here is finite, so every point is one, and the line has its 2 ends at least.

@@ -57,7 +57,7 @@ fn font_sewn(layers: &str, advance: f64, (least, most): (f64, f64), more: &str) 
 /// baseline to 3 below it, all black, `c` as `a` in green, `e` a stroke 4 mm long on the baseline, and `i` a
 /// stroke 10 mm tall of no width. `u` is a curve 10 mm tall whose control points lie 4 mm to the left of its
 /// ends, and which itself reaches 3 mm to their left. The path of `c` has a label that reads as a marker's
-/// name.
+/// name. `v` is a stroke from 2 to 6 mm, in a box that starts at 0 with a path that isn't shown.
 fn test_font() -> Rc<Font> {
     let layers = [
         glyph("a", "#000000", 4.0, 60.0, 70.0),
@@ -65,6 +65,9 @@ fn test_font() -> Rc<Font> {
         glyph("p", "#000000", 4.0, 65.0, 73.0),
         glyph("c", "#00ff00", 4.0, 60.0, 70.0).replace("<path ", "<path inkscape:label=\"stitch:text c\" "),
         glyph("u", "#000000", 4.0, 60.0, 70.0).replace("M 0,60 L 4,70", "M 4,60 C 0,65 0,65 4,70"),
+        glyph("v", "#000000", 6.0, 60.0, 70.0)
+            .replace("M 0,60 L 6,70", "M 2,60 L 6,70")
+            .replace("<path ", r#"<path d="M 0,60 L 0,70" style="display:none"/><path "#),
         glyph("e", "#000000", 4.0, 70.0, 70.0),
         glyph("i", "#000000", 0.0, 60.0, 70.0),
     ];
@@ -430,15 +433,39 @@ fn req_auto_064_the_text_is_measured_by_what_it_sews_at_the_fonts_own_size() {
     let (after, said) = replaced(design(elements));
     near(&points(&after, "m:0-svg:pu:stroke"), &[(24.0, 30.0), (16.0, 40.0), (16.0, 40.0), (24.0, 50.0)]);
     assert_eq!(said.len(), 1, "{said:?}");
-    // A font that sews from twice its own size is measured at twice its size, and set as any other.
-    let large = font_sewn(&[glyph("a", "#000000", 4.0, 60.0, 70.0), glyph("b", "#000000", 6.0, 60.0, 70.0)].concat(), 5.0, (2.0, 4.0), "");
+    // The box of `v` starts 2 mm left of what it sews, with a path that isn't shown. What it sews is
+    // centred, 8 mm wide at 200 %: from 17 to 25.
+    let mut elements = letters(32.0);
+    elements.push(marker("stitch:text v", 40.0));
+    let (after, said) = replaced(design(elements));
+    near(&points(&after, "m:0-svg:pv:stroke"), &[(17.0, 30.0), (25.0, 50.0)]);
+    assert_eq!(said.len(), 1, "{said:?}");
+    // Kerning that draws `b` 3 mm to the left of where `a` starts: the text is as wide as what it sews, 7 mm
+    // at the font's size, from its leftmost point. The gap is widened by the 8 mm left at 200 %.
+    let kerned = font_of(
+        &[glyph("a", "#000000", 4.0, 60.0, 70.0), glyph("b", "#000000", 6.0, 60.0, 70.0)].concat(),
+        &format!(r#", "kerning_pairs": {{"a b": {}}}"#, 8.0 / MM_PER_SVG_PX),
+    );
     let mut elements = letters(32.0);
     elements.push(marker("stitch:text ab", 40.0));
     let (after, said) =
-        pictures::replace(design(elements), &[], &mut |_, _| Found::Font(Rc::clone(&large)), &mut BTreeSet::new(), &Budget::DEFAULT).unwrap();
+        pictures::replace(design(elements), &[], &mut |_, _| Found::Font(Rc::clone(&kerned)), &mut BTreeSet::new(), &Budget::DEFAULT).unwrap();
     near(&points(&after, A), &[(10.0, 30.0), (18.0, 50.0)]);
-    near(&points(&after, B), &[(20.0, 30.0), (32.0, 50.0)]);
+    near(&points(&after, B), &[(12.0, 30.0), (24.0, 50.0)]);
     assert_eq!(said.len(), 1, "{said:?}");
+    // A font that sews from twice its own size is measured at twice its size, and set as any other: the
+    // kerned text stands where it stood, and unkerned text where the font's own size puts it.
+    for (kerning, b) in [(8.0, 12.0), (0.0, 20.0)] {
+        let pairs = format!(r#", "kerning_pairs": {{"a b": {}}}"#, kerning / MM_PER_SVG_PX);
+        let large = font_sewn(&[glyph("a", "#000000", 4.0, 60.0, 70.0), glyph("b", "#000000", 6.0, 60.0, 70.0)].concat(), 5.0, (2.0, 4.0), &pairs);
+        let mut elements = letters(32.0);
+        elements.push(marker("stitch:text ab", 40.0));
+        let (after, said) =
+            pictures::replace(design(elements), &[], &mut |_, _| Found::Font(Rc::clone(&large)), &mut BTreeSet::new(), &Budget::DEFAULT).unwrap();
+        near(&points(&after, A), &[(10.0, 30.0), (18.0, 50.0)]);
+        near(&points(&after, B), &[(b, 30.0), (b + 12.0, 50.0)]);
+        assert_eq!(said.len(), 1, "{said:?}");
+    }
 }
 
 #[test]
