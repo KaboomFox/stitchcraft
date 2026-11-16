@@ -382,6 +382,40 @@ fn req_font_012_what_the_reader_said_of_a_glyph_is_said_once() {
     assert_eq!(set(&font, "waw", &Lettering::default()).warnings, glyph.warnings);
 }
 
+#[test]
+fn req_font_012_an_elements_hints_move_and_scale_with_it() {
+    use stitchcraft_core::Point;
+    use stitchcraft_engine::design::{Design, Hints};
+    // The glyph `a`, 1 to 5 mm across on a baseline 70 mm down, its stroke told to start at its top.
+    let mut font = test_font("");
+    let glyph = font.variants[0].glyphs.get_mut("a").unwrap();
+    let mut elements = glyph.design.elements().to_vec();
+    elements[0].hints = Hints { start: Some(Point::new(1.0, 60.0).unwrap()), ..Hints::default() };
+    glyph.design = Design::new(elements, glyph.design.settings).unwrap();
+    let twice = set(&font, "ba", &Lettering { scale: 200.0, ..Lettering::default() });
+    // `a` lies at 6.5 mm, and its top 10 mm above the baseline, at twice the size.
+    assert_eq!(twice.design.elements()[1].hints, Hints { start: Some(Point::new(13.0, -20.0).unwrap()), ..Hints::default() });
+    assert_eq!(twice.design.elements()[0].hints, Hints::default());
+}
+
+/// A font of one glyph, `z`, of 2 satin columns, the right one drawn first.
+fn backwards_font() -> Font {
+    let layers = layer("z", &[column("right", 20.0), column("left", 0.0)].concat());
+    font_of(r#"{"name": "Backwards", "auto_satin": true}"#, "ltr.svg", &layers)
+}
+
+#[test]
+fn req_font_013_auto_satin_keeps_the_order_the_columns_are_drawn_in() {
+    // A route without Preserve order starts at the leftmost end. Lettering's sews the right column first.
+    let routed = set(&backwards_font(), "z", &Lettering::default());
+    let order = ids(&routed);
+    assert!(order.len() > 2, "{order:?}");
+    assert_eq!((order.first().unwrap().as_str(), order.last().unwrap().as_str()), ("0-right", "0-left"));
+    let mut columns = order;
+    columns.dedup();
+    assert_eq!(columns, ["0-right", "0-left"]);
+}
+
 /// A font of satin columns: `s` a column, `m` a fill and a column after it, and `a` a stroke.
 fn satin_font(auto_satin: bool) -> Font {
     let fill = r#"<path id="fill" d="M 0,60 L 1,60 L 1,70 Z" style="fill:#ff0000;stroke:none"/>"#;

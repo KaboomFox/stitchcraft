@@ -160,8 +160,6 @@ impl stitchcraft_svg::lettering::Align
 pub const stitchcraft_svg::lettering::Align::ALL: [stitchcraft_svg::lettering::Align; 5]
 pub const fn stitchcraft_svg::lettering::Align::id(self) -> &'static str
 pub fn stitchcraft_svg::lettering::Align::named(&str) -> core::option::Option<stitchcraft_svg::lettering::Align>
-impl core::default::Default for stitchcraft_svg::lettering::Align
-pub fn stitchcraft_svg::lettering::Align::default() -> stitchcraft_svg::lettering::Align
 pub struct stitchcraft_svg::lettering::Lettering
 pub stitchcraft_svg::lettering::Lettering::align: stitchcraft_svg::lettering::Align
 pub stitchcraft_svg::lettering::Lettering::letter_spacing: f64

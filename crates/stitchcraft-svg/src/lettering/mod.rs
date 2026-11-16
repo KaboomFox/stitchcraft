@@ -9,7 +9,7 @@
 //!
 //! **How** ([`set`]):
 //!
-//! 1. The lines are laid out ([`layout`]): a glyph for each character, or for several where the font draws
+//! 1. The lines are laid out (the module `layout`): a glyph for each character, or for several where the font draws
 //!    them as one, placed by the font's advances and kerning and the spacing asked for, and each line
 //!    aligned.
 //! 2. The scale asked for is kept within the heights the font sews at (`SC-W1106`), and every glyph's
