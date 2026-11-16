@@ -547,7 +547,7 @@ fn a_rail_is_run_along_where_shapes_cover_more_than_half_of_its_length() {
 fn a_columns_rails_are_found_once_for_what_it_paints_and_where_it_sews_past_a_rail() {
     let settings = DesignSettings::default();
     let mut shapes = Shapes::new(vec![column_made(None)], &settings, &Budget::DEFAULT);
-    let mut rails = |shapes: &mut Shapes| {
+    let rails = |shapes: &mut Shapes| {
         let mut meter = Budget::DEFAULT.meter();
         let rails = shapes.rails(0, &mut meter).unwrap();
         (rails, Budget::DEFAULT.max_work - meter.work_left())
