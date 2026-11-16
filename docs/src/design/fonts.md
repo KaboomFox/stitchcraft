@@ -247,8 +247,9 @@ reference machine with a hoop 400 mm a side.
 ## Lettering
 
 `stitchcraft_svg::lettering::set` sets a text in a font the reader read, and `stitch lettering` is its first
-host (M14.2, `REQ-FONT-009` to `REQ-FONT-014`). It follows Ink/Stitch's lettering, read at `d59c9ab`
-(`lib/lettering/font.py`, `font_variant.py` and `lib/extensions/batch_lettering.py`) and run as a black box.
+host (M14.2, `REQ-FONT-009` to `REQ-FONT-014`). `set_along` sets it along a path (M14.3, `REQ-FONT-015` to
+`REQ-FONT-020`). Both follow Ink/Stitch's lettering, read at `d59c9ab` (`lib/lettering/font.py`,
+`font_variant.py`, `lib/extensions/batch_lettering.py` and `lettering_along_path.py`) and run as a black box.
 The text becomes a design, which every host plans as it plans any other.
 
 - **Lines and words.** The text is read in Unicode's NFC, as glyphs are named. A line ends at a line feed
@@ -279,23 +280,97 @@ The text becomes a design, which every host plans as it plans any other.
   element's stitch settings aren't scaled, in either program.
 - **Right to left.** In a font whose `text_direction` is `rtl`, a line's words and each word's glyphs are
   laid in the reverse of their order in the text, and a pair's kerning is looked up with the glyph that
-  comes first in the text first. The glyphs of a font whose default direction is `rtl` are drawn to sew from
-  the right, and each of its lines sews from its last glyph to its first.
-- **Trims.** Lettering doesn't add a trim, which is Ink/Stitch's default. A glyph's own trims stay. The planner
-  then joins or jumps between letters as it does between any 2 elements, for the machine's profile. The
-  trims after each letter, word or line are M14.3's.
+  comes first in the text first. The glyphs of an `rtl` direction are drawn to sew from the right, and a
+  line in them sews from its last glyph to its first.
+- **Back and forth.** A font's author can digitize each glyph twice, to sew from the left and from the
+  right. With `back_and_forth` on, which is the default as in Ink/Stitch, the lines of a text in such a font
+  take their glyphs from the font's default direction and from its reverse, one line from each. The lines are counted
+  from 0, the empty ones too. A line then starts where the line before it ended, and the thread between
+  them is short. The glyphs lie where they lie one way, within the difference between a glyph's 2 drawings.
+  A font needs glyph files for both directions, and its `reversible` must not be off: 12 of the 142 fonts at
+  `c7e3a05` have both. In another font every line sews the default way. Ink/Stitch does that in silence.
+  StitchCraft says it with `SC-W1110` when the text has a line to sew back, since the thread then crosses the
+  text from each line's end to the next line's start. A character that the reverse direction lacks sews
+  as the default glyph, as any missing character does.
+- **Trims.** `trim` chooses where lettering adds a trim, and `off` is the default, as in Ink/Stitch. With
+  `glyph` a trim follows each glyph. With `word` it follows the last glyph sewn of each word, and with `line`
+  of each line, but never the text's last glyph. A trim is the setting `trim_after` on the last element the
+  glyph sews, which the planner reads as it reads any element's. A glyph's own trims stay with every choice.
+  The planner joins or jumps between 2 letters without a trim as it does between any 2 elements, for the
+  machine's profile.
+- **Sorted colours.** A multicolour font sews each letter in several threads, and its author numbers each
+  element's colour with `color_sort_index`. In a font whose `sortable` is on, `color_sort` sews the elements
+  in the order of those numbers, and those of one number in the order they sewed in. `all` sorts the whole
+  text's elements, and `line` and `word` sort each line's or each word's. An element without a number sorts as number 404,
+  after the others, as in Ink/Stitch. The elements of a number that `combine_at_sort_indices` lists become
+  one element, the first, with the subpaths of the others. A tartan or a linear gradient fill made so gets
+  `stop_at_ending_point`, as Ink/Stitch sets it. Sorting moves no glyph. A glyph's colours no longer sew
+  together once sorted, and a trim then follows the last element of each of them. In a font
+  that doesn't sort, the text sews as it is drawn and `SC-W1110` says so. The numbers are lettering's to
+  read, and it takes them off the design's elements, sorted or not: the planner has no setting of that name
+  and would warn of it on every element.
 - **Auto-satin.** In a font whose `auto_satin` is on, when the text has a satin column, the text's satin
-  columns and strokes are routed by `stitchcraft_engine::route` as Auto-Route Satin Columns routes them with
+  columns and strokes are routed before the trims are added and the colours sorted. They are routed by `stitchcraft_engine::route` as Auto-Route Satin Columns routes them with
   Preserve order on and trims off ([routing tools](routing.md)). The route's elements replace them. Each
   sews at the end of the glyph its element was in, after the glyph's fills, where Ink/Stitch puts it at the
   end of the group it was in. A text without a satin column sews as its glyphs draw it. The routing's
   warnings are passed on, and its notes aren't.
-- **Bounded.** Any text and any numbers give a design or `SC-E1108`, never a panic. The layout and the
-  placing charge one meter of the budget, and the routing has the budget again.
+- **Bounded.** Any text, any path and any numbers give a design or `SC-E1108`, never a panic. The layout,
+  the seats on a path, the placing, the trims and the sort charge one meter of the budget, and the routing
+  has the budget again.
 
-**The settings** are named as Ink/Stitch's lettering names them: `scale`, `text_align`, `letter_spacing`,
-`word_spacing` and `line_height`. `lettering::SETTINGS` declares each once with its help, and the options of
-`stitch lettering` take their help from it ([command line](../user/reference/cli.md)).
+**The settings** are named as Ink/Stitch names them. Its batch lettering has `scale`, `color_sort`, `trim`,
+`text_align`, `letter_spacing`, `word_spacing`, `line_height`, `text_position` and `vertical_text_position`,
+and its lettering window has `back_and_forth`. `lettering::SETTINGS` declares each once with its help, and
+the options of `stitch lettering` take their help from it ([command line](../user/reference/cli.md)).
+
+### Along a path
+
+`lettering::set_along` sets a text along a path. Each glyph is moved to a seat on the path and turned, and
+the text lies in the path's millimetres.
+
+- **The path** is the first subpath of the path given, followed within 0.01 mm. Ink/Stitch takes the first
+  subpath too. A closed path is followed from its start, round to its start again.
+- **A glyph is never bent.** It is a small embroidery, with satin columns whose stitches were set
+  square to them, and it is moved and turned as a whole. The point where its box's left edge meets its
+  baseline lies on the path. The glyph is turned about that point, the way the path runs from there to the
+  point its box's width further along. Its baseline is then the chord of the path under it. On a straight
+  stretch the glyph stands on the path. On a bend its ends touch the path, and across a sharp corner it
+  bridges the corner. The glyphs before and after a sharp corner can overlap on the corner's inner side.
+  Both programs leave them so: round the corner, or space the letters.
+- **Along the path** the glyphs of a line keep the distances the layout gives them, measured from the
+  line's leftmost box. `text_position` says where the line starts. With `left` it starts at the path's
+  start. With `center` it is centred on the path's length, and with `right` it ends at the path's end.
+- **Stretched.** With `stretch` the line starts at the path's start, and what the path is longer than the
+  line is shared out equally: one share between 2 glyphs of a word, and 2 between 2 words.
+- **Across the path.** `vertical_text_position` says which part of the text lies on the path. With `top`,
+  the default, the text stands on the path by its lowest point, a descender's end if it has one. With
+  `baseline` the first line's baseline lies on the path. With `bottom` the text hangs from the path by its
+  highest point. The text's lowest and highest points are measured on the points of its glyphs' paths.
+- **Lines.** Each later line lies `leading` plus `line_height` further across the path, at the places along
+  the path it would have as the first line. On a straight path that is a parallel line. On a bend, the
+  letters of a line on the bend's inner side lie closer together and can touch, and those on its outer side
+  lie further apart. Lines sew back and forth along a path as they do off it.
+- **A line longer than its path** is set whole. On an open path it goes on straight past the end, the way
+  the path ends, and before the start when the line is centred or ends at the path's end. On a closed path
+  it goes round again, over its own start. A stretched line has its letters pushed together to fit. Each
+  time `SC-W1109` gives the line's length and the path's.
+- **A path without length** has nothing to follow, and the text is refused with `SC-E1108`.
+- **From the command line** `--path FILE` names an SVG file. The path is the one labelled `batch lettering`,
+  the label Ink/Stitch's batch lettering looks for. In a file without that label it is the first path that
+  paints, and the summary names the path taken. The text lies where the path lies on the file's page.
+
+**How Ink/Stitch does each**, from running its batch lettering at `d59c9ab` on paths drawn for it:
+
+- It seats and turns a glyph the same way, by the chord under its box. A word on an arc, on a line and
+  across a right angle has the same size in both programs to 0.1 mm, in each position
+  ([measured](#measured-against-inkstitchs-lettering-along-a-path)).
+- A line longer than its path has every glyph past the end at the path's end, unturned, one over the other.
+  A centred line that would start before the path's start is counted from the path's end. StitchCraft sets
+  the line on and warns (`DEV-FONT-004`).
+- A text of 2 lines comes out with its first line only. The code moves each later line onto a curve parallel
+  to the path, which no file it wrote showed. Along a path Ink/Stitch sorts no colours (`DEV-FONT-005`).
+- A closed path is followed from its start, as an open one.
 
 **What M14.2 chose.**
 
@@ -307,10 +382,6 @@ The text becomes a design, which every host plans as it plans any other.
   InfiniPicto lie right of Ink/Stitch's (`DEV-SVG-025`), and the layout adds a glyph's left edge for every
   glyph but a word's first. Their words are set wider than in Ink/Stitch by that offset between the first
   2 letters of each word. No lettering case covers them, and the step leaves them so.
-- *One direction.* Every line sews in the font's default direction. For a direction the font has no file
-  for, Ink/Stitch falls back to the default one too. Lines sewn back and forth, which is Ink/Stitch's
-  default for a font with both directions, are M14.3's. Until then the second line of a text in Ink/Stitch
-  Small Font sews left to right here and right to left there.
 - *Arabic forms wait.* A glyph named with `.isol`, `.init`, `.medi` or `.fina` is a form of an Arabic
   letter, which Ink/Stitch chooses by the letter's neighbours. StitchCraft chooses none yet. The letter
   is then a missing character and is named so, which keeps the gap loud.
@@ -342,9 +413,63 @@ for the Brother PE800.
 | Medium Font | 150 % | `Hello` | 87.6 × 23.4 mm, 1,473, 5, 4 | 87.6 × 23.4 mm, 1,459, 5, 4 |
 
 `Stitch Craft` in Small Font at 300 percent is 153.6 mm wide in both programs, wider than the PE800's hoop,
-and `stitch lettering` refuses it with `SC-E0701`. The comparison was run by hand. A case of the nightly
-differential that runs Ink/Stitch's batch lettering isn't built yet, and the 3 differences the step leaves
-are in the ledger (`DEV-FONT-001` to `DEV-FONT-003`).
+and `stitch lettering` refuses it with `SC-E0701`. The comparison was run by hand, and the 3 differences
+the step leaves are in the ledger (`DEV-FONT-001` to `DEV-FONT-003`).
+
+**What M14.3 chose.**
+
+- *Trims by the glyphs' words.* Ink/Stitch finds a word's end by counting the glyphs against the text's
+  characters, and a ligature, one glyph for 2 characters, shifts its trims. StitchCraft goes by the words the
+  layout laid (`DEV-FONT-006`).
+- *Lines across the path.* A later line is pushed across the path glyph by glyph, where Ink/Stitch's code
+  means to follow a parallel curve. The parallel of a path with corners needs its joins and its loops cut,
+  and Ink/Stitch's own batch lettering never showed a second line to compare with.
+- *The warning for one direction.* `back_and_forth` is on by default, as in Ink/Stitch, and most fonts sew
+  one way. A text of several lines in such a font is warned of each time. The thread across the text is
+  what the owner of a machine without a cutter has to cut, and the warning is where she learns of it.
+- *A fill's angle isn't turned.* A glyph's elements keep their settings on a path, as they do when scaled.
+  A fill's `angle` is among them, and its rows keep their direction on the fabric while the glyph turns.
+  Ink/Stitch Small Font and Medium Font have no fills. A font with fills along a bend waits for a later step.
+- *No case in the nightly differential.* The differential runs one Ink/Stitch extension, the one that
+  writes a stitch plan from a design, on files in the repository. Lettering needs another extension and a
+  font, and fonts aren't in this repository (ADR-0020). A case would need the font corpus fetched in that
+  job and a second runner. The comparison stays by hand, with the commands in the hand-off notes.
+
+#### Measured against Ink/Stitch's lettering along a path
+
+On 16 November 2026 both programs set texts in Ink/Stitch Small Font at 300 percent along paths, as in the
+measurement above. The arc is half a circle of radius 50 mm, from its left end over the top. The line is
+100 mm long, and the corner is 30 mm across and then 40 mm down. Each cell gives the file's size, stitches,
+jumps and trims.
+
+| Path | Text | Position | StitchCraft | Ink/Stitch |
+|---|---|---|---|---|
+| arc | `Hello` | left, top | 46.4 × 56.2 mm, 1,121, 5, 4 | 46.4 × 56.2 mm, 1,114, 5, 4 |
+| arc | `Hello` | centre, baseline | 66.8 × 23.4 mm, 1,119, 5, 4 | 66.8 × 23.4 mm, 1,117, 5, 4 |
+| arc | `Hello` | right, bottom | 36.2 × 47.8 mm, 1,122, 5, 4 | 36.2 × 47.8 mm, 1,121, 5, 4 |
+| arc | `He llo` | stretch, top | 129.2 × 62.0 mm, 1,114, 5, 4 | 129.2 × 62.0 mm, 1,119, 5, 4 |
+| line | `Help` | left, top | 51.6 × 19.4 mm, 1,037, 4, 3 | 51.6 × 19.4 mm, 1,041, 4, 3 |
+| line | `Help` | left, bottom | 51.6 × 19.4 mm, 1,037, 4, 3 | 51.6 × 19.4 mm, 1,042, 4, 3 |
+| corner | `Hello` | left, top | 46.0 × 47.0 mm, 1,134, 5, 4 | 46.0 × 47.0 mm, 1,115, 5, 4 |
+
+The other settings were measured off a path. Magnolia bicolor is a font of 2 colours that sorts.
+
+| Font | Scale | Text | Setting | StitchCraft | Ink/Stitch |
+|---|---|---|---|---|---|
+| Small Font | 300 % | `Hello`, `World` | back and forth | 70.4 × 39.4 mm, 2,415, 10, 9 | 70.4 × 39.4 mm, 2,426, 10, 9 |
+| Small Font | 100 % | `Hi yo`, `We` | no trim | 21.4 × 14.0 mm, 625, 4, 3 | 21.4 × 14.0 mm, 628, 4, 3 |
+| Small Font | 100 % | `Hi yo`, `We` | trim after lines | 625, 4, 3 | 628, 4, 3 |
+| Small Font | 100 % | `Hi yo`, `We` | trim after words | 625, 4, 3 | 628, 4, 3 |
+| Small Font | 100 % | `Hi yo`, `We` | trim after letters | 641, 6, 5 | 643, 6, 5 |
+| Magnolia bicolor | 100 % | `Ab cd` | unsorted | 7 colour changes | 7 |
+| Magnolia bicolor | 100 % | `Ab cd` | sorted, all | 1 colour change | 1 |
+| Magnolia bicolor | 100 % | `Ab cd` | sorted by word | 3 colour changes | 3 |
+
+A trim after each line or word changes nothing in that text: its words and lines lie more than 3 mm apart,
+and the planner jumps between them with or without a trim. A trim after each letter cuts the 2 joins
+that auto-satin made inside `Hi` and `yo`. Magnolia bicolor's text is 106.8 × 33.6 mm here and
+107.0 × 34.2 mm in Ink/Stitch, with one jump fewer, sorted or not. The glyphs differ so before any sort,
+as the glyph differential records, and the sort doesn't change it.
 
 **Jumps between letters.** With auto-satin, the letters of a word are joined by the shortest way from one
 to the next. As in Ink/Stitch, a way shorter than the design's `collapse_len`, 3 mm, sews as a stitch on
@@ -494,6 +619,13 @@ coverage and stitches. TS-15 sews 3 ported fonts beside the fonts digitized by h
   keep Ink/Stitch's meaning. Millimetres as sewn are the other choice.
 - **`--height`** (M14.2). `stitch lettering` takes the size as `--scale`, Ink/Stitch's setting, or as
   `--height` in millimetres over the font's `size`. The recommendation, taken, is to keep both.
+- **Back and forth by default** (M14.3). `back_and_forth` is on unless it is turned off, as in Ink/Stitch.
+  A text of several lines in a font drawn for one direction then gets a warning each time. The
+  recommendation, taken, is to keep Ink/Stitch's default and the warning. Off by default is the other choice,
+  with no warning and a long thread between the lines of every font.
+- **A text longer than its path** (M14.3) is sewn on past the path's end, with a warning. The other choice
+  is to refuse it, with no file written. The recommendation, taken, is to sew it: the picture shows by how much
+  the text is too long.
 - **When M15 comes.** The roadmap places it after M14 and before M11 and 1.0. M15.1 and M15.2 can go ahead
   beside M14. Moving M15 after 1.0 brings 1.0 sooner.
 - **Which ported fonts are written.** Text in any installed font can be sewn as a design, as Wilcom and Hatch
