@@ -34,12 +34,15 @@ fn file(layers: &str) -> String {
 }
 
 /// The glyphs of the test font, their ids starting with `prefix`: `a` 4 mm wide and `b` 6, each 10 mm tall on
-/// the baseline, and `p` 4 mm wide, from 5 mm above the baseline to 3 below it.
+/// the baseline, and `p` 4 mm wide, from 5 mm above the baseline to 3 below it. `i` has no width, and `q` is
+/// `a` drawn 2 mm to the right.
 fn glyphs(prefix: &str) -> String {
     [
         layer("a", &stroke(&format!("{prefix}a"), 4.0, 60.0, 70.0, "")),
         layer("b", &stroke(&format!("{prefix}b"), 6.0, 60.0, 70.0, "")),
         layer("p", &stroke(&format!("{prefix}p"), 4.0, 65.0, 73.0, "")),
+        layer("i", &stroke(&format!("{prefix}i"), 0.0, 60.0, 70.0, "")),
+        layer("q", &stroke(&format!("{prefix}q"), 4.0, 60.0, 70.0, "").replace("M 0,60 L 4,70", "M 2,60 L 6,70")),
     ]
     .concat()
 }
@@ -155,6 +158,14 @@ fn req_font_015_a_line_lies_from_the_paths_start_centred_on_it_or_up_to_its_end(
     near(&seats(&twice), &[10.0, 50.0, 0.0, 20.0, 50.0, 0.0]);
     near(&points(&twice), &[10.0, 30.0, 18.0, 50.0, 20.0, 30.0, 32.0, 50.0]);
     near(&twice.glyphs.iter().map(|glyph| glyph.width).collect::<Vec<_>>(), &[8.0, 12.0]);
+    // The line's length is the boxes' at that size: 22 mm, which ends at the path's end.
+    let right = Along { position: TextPosition::Right, ..on(level(100.0)) };
+    near(
+        &seats(&lettering::set_along(&font, "ab", &Lettering { scale: 200.0, ..Lettering::default() }, &right, &Budget::DEFAULT).unwrap()),
+        &[88.0, 50.0, 0.0, 98.0, 50.0, 0.0],
+    );
+    // A glyph drawn away from its file's left edge sits by its box, not by its file.
+    near(&points(&along(&font, "q", &on(level(100.0)))), &[10.0, 40.0, 14.0, 50.0]);
     // An aligned line keeps its glyphs' distances: its leftmost box starts the line.
     let centred = Lettering { align: lettering::Align::Centre, ..Lettering::default() };
     near(&seats(&lettering::set_along(&font, "ab", &centred, &on(level(100.0)), &Budget::DEFAULT).unwrap()), &[10.0, 50.0, 0.0, 15.0, 50.0, 0.0]);
@@ -170,6 +181,16 @@ fn req_font_015_the_text_stands_on_the_path_lies_on_it_by_its_baseline_or_hangs_
     near(&seats(&at("ap", VerticalPosition::Bottom)), &[10.0, 60.0, 0.0, 15.0, 60.0, 0.0]);
     near(&points(&at("ap", VerticalPosition::Top)), &[10.0, 37.0, 14.0, 47.0, 15.0, 42.0, 19.0, 50.0]);
     near(&points(&at("ap", VerticalPosition::Bottom)), &[10.0, 50.0, 14.0, 60.0, 15.0, 55.0, 19.0, 63.0]);
+    // The text stands by its lowest point at its size: twice 3 mm at 200 percent.
+    let twice = lettering::set_along(
+        &font,
+        "ap",
+        &Lettering { scale: 200.0, ..Lettering::default() },
+        &Along { vertical: VerticalPosition::Top, ..on(level(100.0)) },
+        &Budget::DEFAULT,
+    )
+    .unwrap();
+    near(&seats(&twice), &[10.0, 44.0, 0.0, 20.0, 44.0, 0.0]);
     // Without a descender the baseline is the text's lowest line.
     near(&seats(&at("a", VerticalPosition::Top)), &[10.0, 50.0, 0.0]);
     near(&seats(&at("p", VerticalPosition::Bottom)), &[10.0, 55.0, 0.0]);
@@ -194,6 +215,14 @@ fn req_font_015_a_glyph_is_turned_the_way_the_path_runs_under_its_box() {
     // A slope of 3 to 4: `b` starts 5 mm along it.
     let slope = along(&font, "ab", &on(path(&[(0.0, 0.0), (30.0, 40.0)], false)));
     near(&seats(&slope), &[0.0, 0.0, 53.130_102_354_155_98, 3.0, 4.0, 53.130_102_354_155_98]);
+    // A glyph whose box has no width is turned the way the path runs where it sits: down the slope, and
+    // past the corner of a path that turns down.
+    near(&seats(&along(&font, "i", &on(path(&[(0.0, 0.0), (30.0, 40.0)], false)))), &[0.0, 0.0, 53.130_102_354_155_98]);
+    near(&seats(&along(&font, "ai", &on(path(&[(0.0, 0.0), (4.0, 0.0), (4.0, 10.0)], false)))), &[0.0, 0.0, 0.0, 4.0, 1.0, 90.0]);
+    near(
+        &seats(&along(&font, "i", &Along { position: TextPosition::Right, ..on(path(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)], true)) })),
+        &[0.0, 0.0, 0.0],
+    );
     // Across a corner the glyph isn't bent: its baseline is the chord from where its box starts on the path
     // to where it ends, 3 mm along and 1 mm down the far side.
     let corner = along(&font, "ab", &on(path(&[(0.0, 0.0), (3.0, 0.0), (3.0, 10.0)], false)));
@@ -258,6 +287,9 @@ fn diag_sc_w1109_a_line_longer_than_its_path_is_named_and_goes_on() {
     // A line as long as its path isn't named, and one a fiftieth of a millimetre longer is, at either end.
     assert_eq!(said(&at("ab", level(11.0), TextPosition::Left)), Vec::<String>::new());
     assert_eq!(said(&at("ab", level(11.0), TextPosition::Right)), Vec::<String>::new());
+    // A sixty-fourth of a millimetre past either end is within what a curve's length is known to.
+    assert_eq!(said(&at("ab", level(11.0 - 1.0 / 64.0), TextPosition::Left)), Vec::<String>::new());
+    assert_eq!(said(&at("ab", level(11.0 - 1.0 / 64.0), TextPosition::Right)), Vec::<String>::new());
     assert_eq!(said(&at("ab", level(10.98), TextPosition::Left)).len(), 1);
     assert_eq!(said(&at("ab", level(10.98), TextPosition::Right)).len(), 1);
     // The longest such line is the one named, once.
