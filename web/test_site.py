@@ -174,6 +174,69 @@ class BuildTest(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'GitHub refuses'):
                     build.sizes(Path(folder))
 
+    def test_the_kept_editor_has_another_name_when_anything_it_is_built_from_changes(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            pins = root / 'pins.toml'
+            pins.write_text('repository = "r"\n[web]\ntag = "v1.0.0"\nrevision = "abc"\n')
+            for name in build.EDITOR_INPUTS:
+                (root / name).parent.mkdir(parents=True, exist_ok=True)
+                (root / name).write_text(name)
+            key = build.editor_key(pins, root)
+            self.assertRegex(key, r'^[0-9a-f]{64}$')
+            self.assertEqual(build.editor_key(pins, root), key)
+            for name in build.EDITOR_INPUTS:
+                (root / name).write_text(name + ' ')
+                self.assertNotEqual(build.editor_key(pins, root), key, name)
+                (root / name).write_text(name)
+            for old, new in (('"r"', '"s"'), ('v1.0.0', 'v1.0.1'), ('abc', 'abd')):
+                pins.write_text(pins.read_text().replace(old, new))
+                self.assertNotEqual(build.editor_key(pins, root), key, new)
+                pins.write_text(pins.read_text().replace(new, old))
+            self.assertEqual(build.editor_key(pins, root), key)
+        # The compiler, the tools' versions and this script are among the files.
+        self.assertEqual(set(build.EDITOR_INPUTS), {'rust-toolchain.toml', '.github/actions/tools/action.yml', 'web/build.py'})
+        self.assertTrue(all((build.ROOT / name).is_file() for name in build.EDITOR_INPUTS))
+
+    def test_an_editor_is_kept_whole_under_its_key_and_used_under_no_other(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            dist, vectorcraft, kept = root / 'dist', root / 'vectorcraft', root / 'editor'
+            dist.mkdir()
+            vectorcraft.mkdir()
+            (dist / 'index.html').write_text('the page')
+            (dist / '.trunk-lock').write_text('')
+            for name in build.LICENCES:
+                (vectorcraft / name).write_text(f'VectorCraft {name}')
+            self.assertFalse(build.kept_editor(kept, 'k1'))
+            (kept / 'dist').mkdir(parents=True)
+            (kept / 'dist/old.wasm').write_text('an older build')
+            build.keep_editor(kept, 'k1', dist, vectorcraft, 'v1.0.0', 'abc')
+            self.assertTrue(build.kept_editor(kept, 'k1'))
+            self.assertFalse(build.kept_editor(kept, 'k2'))
+            self.assertEqual(build.json.loads((kept / 'built.json').read_text()), {'key': 'k1', 'tag': 'v1.0.0', 'revision': 'abc'})
+            names = sorted(str(path.relative_to(kept)) for path in kept.rglob('*') if path.is_file())
+            self.assertEqual(names, sorted(['built.json', 'dist/index.html', *build.LICENCES]))
+            # A folder that lost a file, or whose key's file is no JSON object, is built again.
+            (kept / 'NOTICE').unlink()
+            self.assertFalse(build.kept_editor(kept, 'k1'))
+            (kept / 'NOTICE').write_text('x')
+            self.assertTrue(build.kept_editor(kept, 'k1'))
+            (kept / 'dist/index.html').unlink()
+            self.assertFalse(build.kept_editor(kept, 'k1'))
+            (kept / 'dist/index.html').write_text('x')
+            for text in ('', '[]', '"k1"'):
+                (kept / 'built.json').write_text(text)
+                self.assertFalse(build.kept_editor(kept, 'k1'), text)
+
+    def test_the_workflow_keeps_the_editor_under_the_scripts_key(self):
+        workflow = (build.ROOT / '.github/workflows/web.yml').read_text()
+        self.assertIn('python3 -I web/build.py --editor-key', workflow)
+        # Restored and saved at the folder the script keeps the editor in, under one key.
+        self.assertEqual(workflow.count('path: target/web/editor\n'), 2)
+        self.assertEqual(workflow.count('key: ${{ steps.editor-key.outputs.key }}\n'), 2)
+        self.assertFalse('restore-keys:' in workflow)
+
 
 if __name__ == '__main__':
     unittest.main()

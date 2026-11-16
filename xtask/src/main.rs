@@ -65,6 +65,9 @@ enum Command {
         /// Leave out these gates, by name (`--skip api,prose`)
         #[arg(long, value_name = "GATE", value_delimiter = ',')]
         skip: Vec<String>,
+        /// Run the gates of one group alone, as each of CI's jobs does (`--group lint`)
+        #[arg(long, value_name = "GROUP")]
+        group: Option<String>,
     },
     /// Check that crates depend only on lower layers
     Layers,
@@ -273,7 +276,7 @@ pub fn subcommands() -> Vec<String> {
 
 fn run(command: Command) -> Result<(), String> {
     match command {
-        Command::Ci { skip } => ci::run(&skip),
+        Command::Ci { skip, group } => ci::run(&skip, group.as_deref()),
         Command::Layers => layers::run(),
         Command::Docs { pages: Some(Docs::For { hook, paths }), .. } => design_map::run_for(hook, &paths),
         Command::Docs { check, pages: None } => docs::run(check),
@@ -381,6 +384,7 @@ mod tests {
             &["mutants", "--changed", "a", "b"],
             &["prose", "--base", "origin/main"],
             &["ci", "--skip", "api,prose"],
+            &["ci", "--group", "lint"],
             &["wasm", "--goldens"],
         ] {
             assert!(Cli::try_parse_from(std::iter::once("xtask").chain(args.iter().copied())).is_ok(), "{args:?}");

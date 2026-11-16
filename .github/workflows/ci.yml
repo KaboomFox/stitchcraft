@@ -1,5 +1,6 @@
-# Every gate on every pull request (docs/src/design/guardrails.md). `gates` runs exactly what
-# contributors run locally — `cargo xtask ci` — with the optional tools installed, so nothing is skipped.
+# Every gate on every pull request (docs/src/design/guardrails.md). The `groups` jobs run exactly what
+# contributors run locally — `cargo xtask ci` — one group of its gates each, side by side, with the optional
+# tools installed, so nothing is skipped. `gates` passes once every group has.
 name: ci
 
 on:
@@ -23,8 +24,15 @@ env:
   RUST_BACKTRACE: "1"
 
 jobs:
-  gates:
-    name: gates (cargo xtask ci)
+  groups:
+    # `cargo xtask ci` names each gate's group (xtask/src/ci.rs), and one job runs each group, side by side.
+    # A test of xtask fails when this list and the groups differ, so every gate has a job. A tool that a
+    # group's gates need and its job lacks fails the gate: in CI no gate is skipped for a missing tool.
+    name: gates, ${{ matrix.group }}
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [lint, test, conformance, docs]
     runs-on: ubuntu-24.04
     env:
       # wasmtime, which runs `stitch` as WebAssembly for `cargo xtask wasm --goldens`: its version, and the
@@ -35,25 +43,36 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # `cargo xtask prose` lints the lines added since the merge base with origin/main.
-          fetch-depth: 0
-      - name: Pinned toolchain (rust-toolchain.toml) and the wasm targets
-        run: |
-          rustup toolchain install --profile minimal
-          rustup target add wasm32-unknown-unknown wasm32-wasip1
+          fetch-depth: ${{ matrix.group == 'docs' && '0' || '1' }}
+      - name: Pinned toolchain (rust-toolchain.toml)
+        run: rustup toolchain install --profile minimal
+      - name: The wasm targets
+        if: matrix.group == 'conformance'
+        run: rustup target add wasm32-unknown-unknown wasm32-wasip1
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
-      - uses: ./.github/actions/tools
         with:
-          tools: cargo-deny,typos,mdbook,cargo-public-api
+          # Each group builds in its own way, and keeps a cache of its own.
+          key: ${{ matrix.group }}
+      - if: matrix.group == 'lint'
+        uses: ./.github/actions/tools
+        with:
+          tools: cargo-deny,typos,cargo-public-api
+      - if: matrix.group == 'docs'
+        uses: ./.github/actions/tools
+        with:
+          tools: mdbook
       # A pull request restores the archive a run on main kept, under its version and SHA-256, so an outage
       # of GitHub's release downloads doesn't fail it. The next step checks the SHA-256 of whatever the cache
       # gives, and fetches the archive again when the sums differ.
       - name: wasmtime's archive, from the Actions cache when a run kept it
+        if: matrix.group == 'conformance'
         id: wasmtime
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/wasmtime-v${{ env.WASMTIME_VERSION }}-x86_64-linux.tar.xz
           key: wasmtime-v${{ env.WASMTIME_VERSION }}-x86_64-linux-${{ env.WASMTIME_SHA256 }}
       - name: wasmtime, which runs `stitch` as WebAssembly for `cargo xtask wasm --goldens` (pinned by hash)
+        if: matrix.group == 'conformance'
         run: |
           archive="wasmtime-v$WASMTIME_VERSION-x86_64-linux"
           file="$RUNNER_TEMP/$archive.tar.xz"
@@ -69,32 +88,52 @@ jobs:
           echo "$RUNNER_TEMP/$archive" >> "$GITHUB_PATH"
       # After the step above, which fails unless the archive's SHA-256 is the pinned one.
       - name: Keep wasmtime's archive in the Actions cache
-        if: steps.wasmtime.outputs.cache-hit != 'true'
+        if: matrix.group == 'conformance' && steps.wasmtime.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/wasmtime-v${{ env.WASMTIME_VERSION }}-x86_64-linux.tar.xz
           key: wasmtime-v${{ env.WASMTIME_VERSION }}-x86_64-linux-${{ env.WASMTIME_SHA256 }}
       - name: The independent reader for REQ-FMT-005 (pyembroidery, pinned by hash)
+        if: matrix.group == 'test' || matrix.group == 'conformance'
         uses: ./.github/actions/oracle
+      # In every group: a case that reads the fonts leaves itself out where they are missing.
       - name: Ink/Stitch's fonts for REQ-FONT-008 (pinned by SHA-256)
         uses: ./.github/actions/fonts
       - name: Vale for `cargo xtask prose`, built from its tagged source (Go's checksum database checks it)
+        if: matrix.group == 'docs'
         env:
           GOTOOLCHAIN: auto
         run: |
           go install github.com/vale-cli/vale/v3/cmd/vale@v3.23.0
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
-      - run: cargo xtask ci
+      - env:
+          GROUP: ${{ matrix.group }}
+        run: cargo xtask ci --group "$GROUP"
       - name: Keep new previews and conformance diffs when something differs
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: differences-gates
+          name: differences-gates-${{ matrix.group }}
           path: |
             target/tmp/*.png
             target/conformance/diffs/
             target/shots/
           if-no-files-found: ignore
+
+  gates:
+    # The check main's ruleset requires, under the name it has always had. It runs whatever became of the
+    # groups, since a job that is skipped counts as passed, and fails unless every group passed.
+    name: gates (cargo xtask ci)
+    needs: groups
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Every group of gates passed
+        env:
+          RESULT: ${{ needs.groups.result }}
+        run: |
+          echo "The groups of gates: $RESULT"
+          test "$RESULT" = success
 
   coverage:
     # The ratchet: no crate's line coverage below its floor in conformance/coverage.toml. The table goes
@@ -143,6 +182,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: rustup toolchain install --profile minimal
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      # Built in a step of its own, so the run's page tells the compiler's time from the tests'.
+      - name: Build the tests
+        run: cargo test --workspace --locked --no-run
       - run: cargo test --workspace --locked
       - name: Keep new previews when one differs from its golden file
         if: failure()
