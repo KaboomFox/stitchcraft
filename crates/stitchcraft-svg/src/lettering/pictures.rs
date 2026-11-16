@@ -207,7 +207,7 @@ struct Area {
     rings: Vec<Vec<At>>,
     /// Half the width of a marker that is a line.
     band: Option<f64>,
-    /// The line the text follows: the marker itself, or a level line across the middle of its area.
+    /// The line the text follows: the marker itself, or a level line along the top of its area.
     line: Line,
 }
 
@@ -222,8 +222,8 @@ impl Area {
         }
         let rings = pieces;
         let Some([left, top, right, bottom]) = bounds(rings.iter().flatten().copied()) else { return Ok(Err("it encloses no area.")) };
-        let middle = (top + bottom) / 2.0;
-        let line = Line::of(&[(left, middle), (right, middle)]).filter(|_| bottom > top);
+        // Any level line serves: what is measured across it is placed across it again.
+        let line = Line::of(&[(left, top), (right, top)]).filter(|_| bottom > top);
         Ok(line.map(|line| Area { rings, band: None, line }).ok_or("it encloses no area."))
     }
 
@@ -336,9 +336,10 @@ impl Work<'_> {
         let spread = if gaps > 0.0 { ((room - natural) / gaps).clamp(-CLOSER * height, APART * height) } else { 0.0 };
         let wide = natural + spread * gaps;
         // A millimetre along the baseline, in millimetres along the marker's line: 1 on a straight line.
-        let step = if room > 0.0 && end > start { (end - start) / room } else { 1.0 };
+        let step = if room > 0.0 { (end - start) / room } else { 1.0 };
         let from = start + ((room - wide) / 2.0 - left * factor) * step;
-        let to = from + (2.0 * (wide + height) + 1.0) * step;
+        // The baseline goes on a letter's height past the text, so that it has a length whatever the text.
+        let to = from + (wide + height) * step;
         // Every number here is finite, so every point is one, and the line has its 2 ends at least.
         let mut track = area.line.beside(base, from, to).into_iter().filter_map(|(x, y)| Point::new(x, y).ok());
         let first = track.next().unwrap_or(Point::from_tenths(0, 0));

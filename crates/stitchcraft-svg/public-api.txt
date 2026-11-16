@@ -150,6 +150,23 @@ pub const stitchcraft_svg::inkstitch::INKSTITCH_NS: &str
 pub const stitchcraft_svg::inkstitch::READ_ATTRIBUTES: &[&str]
 pub const stitchcraft_svg::inkstitch::RENAMED: [(&str, &str); 7]
 pub mod stitchcraft_svg::lettering
+pub mod stitchcraft_svg::lettering::pictures
+pub enum stitchcraft_svg::lettering::pictures::Found
+pub stitchcraft_svg::lettering::pictures::Found::Font(alloc::rc::Rc<stitchcraft_svg::font::Font>)
+pub stitchcraft_svg::lettering::pictures::Found::Missing(alloc::vec::Vec<alloc::string::String>)
+pub stitchcraft_svg::lettering::pictures::Found::Unread(stitchcraft_core::diag::Diagnostic)
+pub struct stitchcraft_svg::lettering::pictures::Marker
+pub stitchcraft_svg::lettering::pictures::Marker::label: alloc::string::String
+pub stitchcraft_svg::lettering::pictures::Marker::note: alloc::string::String
+pub stitchcraft_svg::lettering::pictures::Marker::shape: stitchcraft_engine::design::Shape
+impl stitchcraft_svg::lettering::pictures::Marker
+pub fn stitchcraft_svg::lettering::pictures::Marker::of(&stitchcraft_engine::design::Element) -> core::option::Option<stitchcraft_svg::lettering::pictures::Marker>
+pub const stitchcraft_svg::lettering::pictures::APART: f64
+pub const stitchcraft_svg::lettering::pictures::CLOSER: f64
+pub const stitchcraft_svg::lettering::pictures::FIT: f64
+pub const stitchcraft_svg::lettering::pictures::MARKER: &str
+pub fn stitchcraft_svg::lettering::pictures::note(&str) -> core::option::Option<&str>
+pub fn stitchcraft_svg::lettering::pictures::replace(stitchcraft_engine::design::Design, &[stitchcraft_svg::lettering::pictures::Marker], &mut dyn core::ops::function::FnMut(&str, &stitchcraft_core::budget::Budget) -> stitchcraft_svg::lettering::pictures::Found, &mut alloc::collections::btree::set::BTreeSet<alloc::string::String>, &stitchcraft_core::budget::Budget) -> core::result::Result<(stitchcraft_engine::design::Design, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>), stitchcraft_core::diag::Diagnostic>
 pub enum stitchcraft_svg::lettering::Align
 pub stitchcraft_svg::lettering::Align::Block
 pub stitchcraft_svg::lettering::Align::Centre

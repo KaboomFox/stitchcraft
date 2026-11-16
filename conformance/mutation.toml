@@ -31,6 +31,12 @@ line = "if large_arc && turn < FRAC_PI_2 {"
 why = "a large arc turns at least half way round, so no turn reaching this test is exactly π/2"
 
 [[equivalent]]
+file = "crates/stitchcraft-svg/src/lettering/pictures.rs"
+mutant = "replace + with * in Work<'_>::text"
+line = "let to = from + (wide + height) * step;"
+why = "the baseline only has to go on past the text, and one that goes on further seats every glyph in the same place"
+
+[[equivalent]]
 file = "crates/stitchcraft-engine/src/locks/mod.rs"
 mutant = "replace < with <= in Stitching::follow"
 line = "while length < reach {"

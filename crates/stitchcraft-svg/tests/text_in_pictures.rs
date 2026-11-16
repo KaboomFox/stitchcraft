@@ -49,13 +49,16 @@ fn font_with(layers: &str, advance: f64, more: &str) -> Rc<Font> {
 }
 
 /// The test font: `a` 4 mm wide and `b` 6, each 10 mm tall on the baseline, `p` 4 mm wide from 5 mm above the
-/// baseline to 3 below it, all black, and `c` as `a` in green.
+/// baseline to 3 below it, all black, `c` as `a` in green, `e` a stroke 4 mm long on the baseline, and `i` a
+/// stroke 10 mm tall of no width.
 fn test_font() -> Rc<Font> {
     let layers = [
         glyph("a", "#000000", 4.0, 60.0, 70.0),
         glyph("b", "#000000", 6.0, 60.0, 70.0),
         glyph("p", "#000000", 4.0, 65.0, 73.0),
         glyph("c", "#00ff00", 4.0, 60.0, 70.0),
+        glyph("e", "#000000", 4.0, 70.0, 70.0),
+        glyph("i", "#000000", 0.0, 60.0, 70.0),
     ];
     font_of(&layers.concat(), "")
 }
@@ -160,8 +163,8 @@ fn req_auto_063_what_lies_wholly_inside_a_marker_is_taken_out_and_the_background
     // The letters' element is gone and so is the marker. The lettering sews after the background, where
     // the letters were, and before what was drawn over them.
     assert_eq!(ids(&after), ["ground", A, B, "star"]);
-    // The background's holes are closed: its outline is all that is left.
-    assert_eq!(after.elements()[0].shape.path().subpaths, [rect(0.0, 0.0, 50.0, 80.0)]);
+    // The background's holes are closed: its outline is all that is left, filled as it was.
+    assert_eq!(after.elements()[0], fill("ground", vec![rect(0.0, 0.0, 50.0, 80.0)], WHITE));
     assert!(after.elements()[0].automatic && !after.elements()[1].automatic && after.elements()[1].name.is_none());
     near(&points(&after, "star"), &[(40.0, 70.0), (45.0, 70.0), (45.0, 75.0), (40.0, 75.0)]);
     // The red of the letters painted the most of what was taken: the font's black letters sew in it.
@@ -179,11 +182,18 @@ fn req_auto_063_a_shape_that_crosses_the_markers_edge_stays() {
         fill(id, vec![subpath(&[(from, 52.0), (from + 10.0, 52.0), (from + 5.0, 52.0), (from + 10.0, 53.0), (from, 53.0)], true)], RED)
     };
     let field = fill("field", vec![rect(0.0, 0.0, 60.0, 80.0)], WHITE);
-    let mut elements = vec![field, bar("most", 34.5), bar("some", 37.5)];
+    // A triangle with exactly half of its outline's points inside is not counted either.
+    let half = fill("half", vec![subpath(&[(45.0, 56.0), (39.0, 56.0), (39.0, 58.0)], true)], RED);
+    // A traced line of 2 strokes keeps the one outside, as wide as it was.
+    let strokes = line("strokes", None, vec![subpath(&[(12.0, 40.0), (16.0, 40.0)], false), subpath(&[(50.0, 53.0), (55.0, 53.0)], false)], 1.0, RED);
+    let mut elements = vec![field.clone(), bar("most", 34.5), bar("some", 37.5), half, strokes];
     elements.extend(letters(32.0));
     elements.push(marker("stitch:text ab", 40.0));
     let (after, said) = replaced(design(elements));
-    assert_eq!(ids(&after), ["field", "most", "some", A, B]);
+    assert_eq!(ids(&after), ["field", "most", "some", "half", "strokes", A, B]);
+    assert_eq!(after.elements()[0], field);
+    let kept = line("strokes", None, vec![subpath(&[(50.0, 53.0), (55.0, 53.0)], false)], 1.0, RED);
+    assert_eq!(after.elements()[4], kept);
     assert_eq!(said.len(), 2, "{said:?}");
     assert_eq!(
         said[1],
@@ -299,6 +309,17 @@ fn req_auto_064_the_letters_spread_and_close_up_within_limits_and_are_centred() 
     near(&points(&after, A), &[(8.95, 30.0), (16.95, 50.0)]);
     near(&points(&after, B), &[(16.95, 30.0), (28.95, 50.0)]);
     assert!(said.len() == 2 && said[1].starts_with("warning SC-W1115: "), "{said:?}");
+    // A letter of no width stands in the middle of the traced letters.
+    let mut elements = letters(32.0);
+    elements.push(marker("stitch:text i", 40.0));
+    let (after, said) = replaced(design(elements));
+    near(&points(&after, "m:0-svg:pi:stroke"), &[(21.0, 30.0), (21.0, 50.0)]);
+    assert_eq!(said.len(), 1, "{said:?}");
+    // A single traced stroke has no width either: the letter is centred on it.
+    let stroke = line("s", None, vec![subpath(&[(10.0, 30.0), (10.0, 50.0)], false)], 1.0, RED);
+    let (after, said) = replaced(design(vec![stroke, marker("stitch:text a", 40.0)]));
+    near(&points(&after, "m:0-svg:pa:stroke"), &[(6.0, 30.0), (14.0, 50.0)]);
+    assert_eq!(said.len(), 1, "{said:?}");
     // One letter is never spread, and its width is not said.
     let mut elements = letters(32.0);
     elements.push(marker("stitch:text a", 40.0));
@@ -455,6 +476,20 @@ fn req_auto_065_on_an_arc_each_letter_is_turned_and_stands_between_the_traced_le
         // And between the traced letters' ends round the arc, in reading order.
         assert!(first - 1.0 < round(top) && round(top) < round(foot) && round(foot) < last + 1.0, "{id}: {} {}", round(top), round(foot));
     }
+    // The foot of the last letter is on the baseline to a hundredth of a millimetre: the baseline goes on
+    // past the text, and no glyph stands past its end on a straight line.
+    assert!((radius(points(&after, B)[1]) - 35.0).abs() < 0.015, "{}", radius(points(&after, B)[1]));
+    // Traced letters far apart: the text spreads by the 5 mm allowed and is centred between their ends,
+    // at 45 degrees round, within half a degree.
+    let apart = vec![
+        fill("l1", vec![bent(20, 26)], RED),
+        fill("l2", vec![bent(60, 70)], RED),
+        line("m", Some("stitch:text ab"), vec![subpath(&arc, false)], 12.0, BLUE),
+    ];
+    let (wide, said) = replaced(design(apart));
+    assert!(said.len() == 2 && said[1].starts_with("warning SC-W1115: "), "{said:?}");
+    let middle = (round(points(&wide, A)[0]) + round(points(&wide, B)[1])) / 2.0;
+    assert!((middle - 45.0).abs() < 0.5, "{middle}");
     // The text's ends are the traced letters' ends, within a degree: a glyph stands on the chord under it.
     let (start, end) = (round(points(&after, A)[0]), round(points(&after, B)[1]));
     assert!((start - 20.0).abs() < 1.0 && (end - 38.0).abs() < 1.0, "{start} {end}");
@@ -502,6 +537,8 @@ fn diag_sc_w1113_a_marker_that_cannot_be_used_leaves_the_traced_shapes_and_is_no
     // Shapes of no height: a traced line along the text's line.
     let level = vec![line("l", None, vec![subpath(&[(10.0, 40.0), (30.0, 40.0)], false)], 1.0, RED), marker("stitch:text ab", 40.0)];
     assert_eq!(said_of(level), unused("the shapes inside it, or its text in the font, have no height to measure."));
+    // A text of no height in the font: a letter drawn along the baseline.
+    assert_eq!(with_marker(marker("stitch:text e", 40.0)).1, unused("the shapes inside it, or its text in the font, have no height to measure."));
     // A name too long to number the letters by.
     let long = "m".repeat(ElementId::MAX_LEN - 3);
     let mut elements = letters(32.0);
@@ -573,7 +610,7 @@ fn diag_sc_w1113_a_setting_that_does_not_read_is_named_and_the_others_are_used()
     assert_eq!(after.elements()[0].params.get("trim_after"), Some("true"));
     // A note without quotes is all text, and so is one with a single quote.
     let (left, said) = with_marker(marker("stitch:text ab trim=glyph", 40.0));
-    assert!(left.len() == 3 && said[1].contains("the text \"ab trim=glyph\""), "{left:?} {said:?}");
+    assert!(left.len() == 4 && said[1].contains("the text \"ab trim=glyph\""), "{left:?} {said:?}");
     assert!(with_marker(marker("stitch:text \"ab", 40.0)).1[1].contains("the text \"\"ab\""));
     // Without a trim asked for, none is added.
     let (after, _) = replaced(design({
@@ -673,17 +710,26 @@ fn req_auto_066_a_fonts_own_warnings_are_said_once_and_work_is_bounded() {
     assert_eq!(again.len(), 2);
     // With too little work allowed, the reading stops with the budget's error, whatever was reached.
     let font = test_font();
-    let within = |work: u64| {
-        let budget = Budget { max_work: work, ..Budget::DEFAULT };
-        pictures::replace(two(), &[], &mut |_, _| Found::Font(Rc::clone(&font)), &mut BTreeSet::new(), &budget)
+    let least = |design: &dyn Fn() -> Design| {
+        let mut needed = 0;
+        loop {
+            let budget = Budget { max_work: needed, ..Budget::DEFAULT };
+            match pictures::replace(design(), &[], &mut |_, _| Found::Font(Rc::clone(&font)), &mut BTreeSet::new(), &budget) {
+                Ok(_) => return needed,
+                Err(stopped) => assert_eq!(stopped.code, Code::BudgetExhausted, "at {needed}: {stopped}"),
+            }
+            needed += 1;
+            assert!(needed < 5_000, "the work never fits");
+        }
     };
-    let mut needed = 0;
-    while let Err(stopped) = within(needed) {
-        assert_eq!(stopped.code, Code::BudgetExhausted, "at {needed}: {stopped}");
-        needed += 1;
-        assert!(needed < 2_000, "the work never fits");
-    }
-    assert!(needed > 20, "{needed}");
+    // The work of 2 areas, and of a line of 2 stretches through the letters, to the unit: every point
+    // tested costs a unit per segment it is tested against.
+    let bent = || {
+        let mut elements = letters(32.0);
+        elements.push(line("m", Some("stitch:text ab"), vec![subpath(&[(8.0, 40.0), (20.0, 40.0), (34.0, 40.0)], false)], 24.0, BLUE));
+        design(elements)
+    };
+    assert_eq!((least(&two), least(&bent)), (131, 65));
     // A font whose reader ran out of budget stops the reading too.
     let spent = |_: &str, _: &Budget| Found::Unread(Diagnostic::new(Code::BudgetExhausted, "The budget ran out."));
     let stopped = pictures::replace(two(), &[], &mut { spent }, &mut BTreeSet::new(), &Budget::DEFAULT).unwrap_err();

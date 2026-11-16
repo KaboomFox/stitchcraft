@@ -137,6 +137,10 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W1109`](#sc-w1109) | Warning | Text longer than its path |
 | [`SC-W1110`](#sc-w1110) | Warning | Lettering setting not applied |
 | [`SC-W1111`](#sc-w1111) | Warning | Text not sewn in its embroidery font |
+| [`SC-I1112`](#sc-i1112) | Info | Traced letters replaced by lettering |
+| [`SC-W1113`](#sc-w1113) | Warning | Text marker not used |
+| [`SC-W1114`](#sc-w1114) | Warning | Shape crosses a text marker's edge |
+| [`SC-W1115`](#sc-w1115) | Warning | Lettering not the traced letters' size |
 | [`SC-E1201`](#sc-e1201) | Error | Subject cut-out's models not ready |
 | [`SC-E1202`](#sc-e1202) | Error | No subject found to cut out |
 | [`SC-E1203`](#sc-e1203) | Error | Picture could not be read for the cut-out |
@@ -1884,6 +1888,53 @@ the text is one the font draws.
 The message says which, and names the fonts that are there. Choose one of them in the effect's
 dialog, set `STITCHCRAFT_FONTS` to the folder that holds the font's folder for `stitch`, or write
 the text as point type on one line or more.
+
+## SC-I1112
+
+**Info** — Traced letters replaced by lettering
+
+A shape or a line named `stitch:text` marks text in a picture, and the traced shapes inside it were
+replaced by lettering of the marker's text, as tall as they were.
+
+The message names the marker, counts the shapes taken out, and gives their height, the text, the
+font and the lettering's height. Nothing needs doing.
+
+## SC-W1113
+
+**Warning** — Text marker not used
+
+A shape or a line named `stitch:text` marks text in a picture, and it wasn't used, or one of its
+settings wasn't. A marker that isn't used is not sewn, and what lies inside it sews as it was
+traced. The marker has no text, or encloses no area, or no shape lies wholly inside it. Or its
+font isn't one this build of the plug-ins holds or `stitch` finds in its font folders, or doesn't
+read, or draws none of the text's characters.
+
+The message says which. Draw the marker round every letter, name it `stitch:text` and the text,
+and name a font that is there with `font=NAME` after the text in double quotes.
+
+## SC-W1114
+
+**Warning** — Shape crosses a text marker's edge
+
+Shapes lie more than half inside a text marker and cross its edge. Only what lies wholly inside a
+marker is replaced, so they sew as they were traced, beside the lettering. They may be letters the
+marker doesn't reach round, or letters the tracing joined to something outside it.
+
+The message counts them. Draw the marker round every letter of the text and round nothing else,
+or part the joined shapes in the drawing first.
+
+## SC-W1115
+
+**Warning** — Lettering not the traced letters' size
+
+The lettering that replaced a picture's traced letters isn't their size. The letters are shorter
+or taller than the font sews, and the text is set at the nearest height it does sew. Or the font's
+letters are much narrower or wider than the traced ones, and spreading them by up to half their
+height, or closing them up by a tenth, didn't make the text as wide.
+
+The message gives both heights and both widths. The lettering is centred on the traced letters,
+and may reach past them or leave room. Choose a font that sews at the letters' height, or sew the
+design larger.
 
 ## SC-E1201
 
