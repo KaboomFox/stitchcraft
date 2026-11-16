@@ -18,8 +18,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - `stitch preview --style thickness` draws a heat map of any machine file.
   - The before and after sheet shows each picture's thickest spot, its area at 3 fills or more and its
     most needle points.
-  - Measured: every standard picture is over the warning's limit somewhere. The traced dogs have 433 to
-    619 mm² at 3 fills or more, which is a quarter to a third of each. Their thickest spots have 8.0 to
+  - Measured: every standard picture is over the warning's limit somewhere. The traced dogs have 437 to
+    631 mm² at 3 fills or more, which is a quarter to a third of each. Their thickest spots have 8.0 to
     8.5 fills.
     The 1 mm that areas reach under their neighbours causes most of it
     ([the numbers](docs/src/design/image-to-embroidery.md#what-todays-designs-measure)).
@@ -1917,6 +1917,27 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.17: the jump threads of automatic digitizing (`REQ-AUTO-053`). A machine with one needle cuts no
+  thread at a jump, and a traced photo left scores of jump threads to cut by hand.
+  - Between 2 shapes of one thread that automatic digitizing made, the needle sews a run where the
+    stitches sewn later cover a way from one to the next, and neither ties off nor jumps. The run is
+    travel stitches 2.5 mm long at most, 0.4 mm or more inside the fills and satin columns that cover it,
+    or under stitches of its own colour sewn later, as a fill's outline is. It goes round what would show
+    it, up to twice the move and 10 mm in length.
+  - What covers is read from the stitches themselves, on a grid of 0.2 mm, so a fill with rows far apart
+    covers nothing. A design routes the same on every machine.
+  - The owner's traced dogs leave 69, 79, 60 and 83 jump threads where they left 76, 84, 73 and 96, and
+    sew 18 to 52 stitches fewer, with 28 to 109 mm of thread in runs. The traced pear keeps its 2 jumps and
+    the Alpine Night badge 5 of its 6 in one thread, which nothing sewn later covers. Measured first, every
+    order of the dogs' shapes leaves 43 to 58 or more. Nothing is sewn after the last thread, or
+    after the lines that follow the fills they border.
+  - A move within the collapse length stays a stitch. Where it would show for 1 mm or more on another
+    colour it becomes a run if a way is covered. The roadmap's row had it jump where none is. Measured,
+    that left each dog 5 to 15 jump threads more. Such a move stays a stitch, and `tests/auto_photos.rs`
+    keeps the dogs' 2 listed for M13.18.
+  - Elements with settings keep their jumps, and the Auto effect's dialog has the rows it had.
+  - `SC-I0914` says when a design needs more work than the budget allows to look for runs, and names the
+    element from which its moves are as they were.
 - M13.28: the outline round a fill is on by default (`REQ-AUTO-051`, `REQ-AUTO-052`). Shown the badge's
   stars with and without it, the owner preferred the outlines.
   - `auto_fill_outline` is on, and the Auto effect's dialog has a row for it, **Outline round fills**.
@@ -3048,6 +3069,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13B.pes` (M13.17, runs in place of jumps). One jump of its
+  digitized half is a run under a shape sewn later. The half jumps 48 times, where it jumped 49 times. It
+  leaves 43 jump threads on the PE800, where it left 44. The plan sews 15,930 stitches, 5 fewer, since
+  the needle sews on into the run and out of it without a lock. TS-13A, TS-13C and TS-13D sew as they did.
 - Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13C.pes` and `TS-13D.pes` (M13.22, fewer thread
   changes). The digitized half of each sews in the order that changes thread least, and starts in the
   base layer's thread: TS-13A's changes thread 2 times, where it changed 5 times, TS-13C's 4 and TS-13D's

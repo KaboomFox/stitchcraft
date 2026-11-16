@@ -1,6 +1,6 @@
 # Image to embroidery
 
-<!-- implements: crates/stitchcraft-engine/src/auto/**, crates/stitchcraft-plan/src/thickness/**, apps/stitchcraft-cli/src/commands/palette.rs, apps/stitchcraft-cli/src/trace.rs, apps/stitchcraft-cutout/src/**, apps/stitchcraft-cli/src/subject.rs, apps/stitchcraft-cli/src/subject/**, apps/stitchcraft-cli/src/commands/cutout.rs -->
+<!-- implements: crates/stitchcraft-engine/src/auto/**, crates/stitchcraft-engine/src/moves.rs, crates/stitchcraft-engine/src/moves/**, crates/stitchcraft-plan/src/thickness/**, apps/stitchcraft-cli/src/commands/palette.rs, apps/stitchcraft-cli/src/trace.rs, apps/stitchcraft-cutout/src/**, apps/stitchcraft-cli/src/subject.rs, apps/stitchcraft-cli/src/subject/**, apps/stitchcraft-cli/src/commands/cutout.rs -->
 
 Automatic digitizing makes a design that sews well from a picture of flat colours, such as a logo, clip
 art or a drawing, once it is traced into shapes. Settings on the shapes are optional. StitchCraft chooses
@@ -1031,14 +1031,14 @@ Measured on 2026-11-16 as `--auto` sews each picture, with the base layer and th
 | Lettered patch | 1,813 | 5.8 | 142 | 0 | 14 | 6.0, 156 | 5.8, 142 |
 | Alpine Night, the demo's badge | 1,963 | 6.2 | 161 | 0 | 20 | 7.5, 194 | 5.2, 142 |
 | TS-13A, digitized half | 5,756 | 5.7 | 124 | 0 | 22 | 5.8, 163 | 5.5, 115 |
-| TS-13B, digitized half | 2,610 | 6.3 | 120 | 0 | 21 | 7.7, 95 | 5.7, 109 |
+| TS-13B, digitized half | 2,610 | 6.3 | 119 | 0 | 21 | 7.7, 97 | 5.6, 110 |
 | TS-13C, digitized half | 2,201 | 6.2 | 339 | 0 | 19 | 7.0, 355 | 6.7, 342 |
 | TS-13D, digitized half | 4,373 | 7.5 | 255 | 1.2 | 14 | 8.4, 358 | 7.5, 254 |
 | Traced pear | 2,252 | 6.4 | 39 | 0 | 17 | 6.4, 82 | 6.0, 28 |
-| Traced dog on turf, 6 threads | 1,639 | 8.5 | 433 | 11.5 | 34 | 10.7, 560 | 8.2, 369 |
-| Traced dog on turf, 9 threads | 1,639 | 8.5 | 480 | 12.0 | 31 | 9.4, 630 | 8.6, 403 |
-| Traced running dog, 6 threads | 1,944 | 8.0 | 508 | 6.5 | 29 | 8.9, 678 | 7.9, 399 |
-| Traced running dog, 9 threads | 1,944 | 8.0 | 619 | 8.2 | 28 | 9.3, 803 | 8.0, 509 |
+| Traced dog on turf, 6 threads | 1,639 | 8.4 | 437 | 11.8 | 34 | 10.7, 561 | 8.2, 370 |
+| Traced dog on turf, 9 threads | 1,639 | 8.5 | 480 | 11.0 | 31 | 9.1, 632 | 8.6, 403 |
+| Traced running dog, 6 threads | 1,944 | 8.0 | 512 | 6.5 | 29 | 8.9, 682 | 7.9, 401 |
+| Traced running dog, 9 threads | 1,944 | 8.0 | 631 | 6.2 | 28 | 9.2, 809 | 8.0, 516 |
 
 The badge is measured on its PES file, and its area is that of a disc 50 mm across. The lettered patch
 sews no outline, because its letters are satin columns.
@@ -1047,16 +1047,19 @@ Every standard picture is over the warning's limit somewhere, and a quarter to a
 dog is. Each part of the stack has its own share:
 
 - **The 1 mm that areas reach under their neighbours causes most of it.** Without any overlap the running
-  dog in 9 threads has 153 mm² at 3 fills or more where it has 619 mm², and the other dogs 138 to
-  142 mm². Among small patches the overlaps of several neighbours lie on each other.
+  dog in 9 threads has 156 mm² at 3 fills or more where it has 631 mm², and the other dogs 140 to
+  144 mm². Among small patches the overlaps of several neighbours lie on each other.
 - **The base layer makes a design thinner.** It replaces an underlay under each fill, which is more
-  thread: with the base layer off the dogs have 29 to 33 % more area at 3 fills or more.
-- **The outline adds 17 to 27 %** on the dogs. It lies on the edge, where 2 fills already do.
+  thread: with the base layer off the dogs have 28 to 33 % more area at 3 fills or more.
+- **The outline adds 18 to 28 %** on the dogs. It lies on the edge, where 2 fills already do.
 
 At a dog's thickest spot 5 layers or more lie on each other, each with 0.3 to 3.2 fills: small patches
-whose overlaps cover each other whole. The dogs also have 44 to 103 mm² with 15 needle points or more to
+whose overlaps cover each other whole. The dogs also have 46 to 104 mm² with 15 needle points or more to
 a square millimetre, in patches 1 to 2 mm across whose rows are short and whose turns lie beside each
 other.
+
+The [runs in place of jumps](#runs-in-place-of-jumps) lie under later fills and add little: 1 to
+12 mm² at 3 fills or more on a dog, 2 % at the most. Each dog's thickest spot stays within 0.1 of a fill.
 
 ### What would take thread away
 
@@ -1066,12 +1069,12 @@ by changing one setting, and the bare share is what the top thread leaves of the
 
 | Change | At 3 fills or more, mm² | Bare, % of the design | Stitches |
 |---|---:|---:|---:|
-| As sewn today | 619 | 0.000 | 14,417 |
-| No outline (`auto_fill_outline` off) | 509 | 0.000 | 13,115 |
-| No overlap (`auto_overlap_mm` 0) | 153 | 0.409 | 12,898 |
-| Overlap of 0.5 mm | 434 | 0.012 | 13,689 |
-| Smallest area 4 mm² (`auto_min_area_mm2`) | 562 | 0.000 | 13,700 |
-| Smallest area 10 mm² | 316 | 0.138 | 11,324 |
+| As sewn today | 631 | 0.000 | 14,380 |
+| No outline (`auto_fill_outline` off) | 516 | 0.000 | 13,076 |
+| No overlap (`auto_overlap_mm` 0) | 156 | 0.409 | 12,849 |
+| Overlap of 0.5 mm | 440 | 0.012 | 13,638 |
+| Smallest area 4 mm² (`auto_min_area_mm2`) | 568 | 0.000 | 13,671 |
+| Smallest area 10 mm² | 324 | 0.138 | 11,321 |
 
 Halving the overlap takes away 30 % and still covers. Merging patches under 10 mm² takes away 49 %, and
 changes the picture. 2 more ways need code and are not measured. One cuts an area's overlap away
@@ -1221,7 +1224,8 @@ they jumped 82, 94, 81 and 112 times, and leave 77, 78, 70 and 95 jump threads t
 left 71, 73, 64 and 84. Since M13.27 filled 5 of their blobs they jump 79, 91, 79 and 106 times, and leave
 71, 78, 70 and 93 jump threads. With an outline after each fill (M13.28,
 [an outline round a fill](#an-outline-round-a-fill)) they jump 84, 97, 82 and 109 times, and leave 76, 84,
-73 and 96. The traced pear and the test pictures change thread once for each thread after
+73 and 96. With runs under the shapes sewn later (M13.17, [runs in place of jumps](#runs-in-place-of-jumps))
+they leave 69, 79, 60 and 83. The traced pear and the test pictures change thread once for each thread after
 the first, as they did. The digitized halves of the TS-13 sheets change thread 2, 4, 4 and 6 times, where
 they changed 5, 4, 5 and 8 times. TS-13B's black sews twice: its base layer and letters first, and the
 lines of its windows after the fills they border. The search keeps 87 to 3,584 rows of batches on the
@@ -1248,10 +1252,10 @@ leaves are counted apart.
 | Emblem, abutting or stacked | 0 | 0.35 mm | 0 | 2 |
 | Button, abutting or stacked | 0 | 0.40 mm | 6 | 0 |
 | Traced pear | 0 | 0.44 mm | 0 | 2 |
-| Traced dog on turf, 6 threads | 0 | 1.33 mm | 5 | 76 |
-| Traced dog on turf, 9 threads | 0 | 3.00 mm | 10 | 84 |
-| Traced running dog, 6 threads | 0.18 mm² | 1.95 mm | 3 | 73 |
-| Traced running dog, 9 threads | 0 | 1.86 mm | 7 | 96 |
+| Traced dog on turf, 6 threads | 0 | 1.33 mm | 5 | 69 |
+| Traced dog on turf, 9 threads | 0 | 3.00 mm | 9 | 79 |
+| Traced running dog, 6 threads | 0.18 mm² | 1.95 mm | 2 | 60 |
+| Traced running dog, 9 threads | 0 | 1.86 mm | 6 | 83 |
 
 The button's 7 dots sew on from one to the next, each move 2.7 mm long across its yellow. The pear leaves 2
 jump threads, where it left 4: the narrow ends of its olive and dark olive bands are uneven, and sew as
@@ -1275,15 +1279,91 @@ stitches of outlines came: 14 stitches. Which neighbour hid each of the 8 rows w
 M13.21 the dogs laid 7 stitches astray. 2 of them were satin stitches 7.89 and 4.72 mm long that fanned
 across a shape biting into their column, and M13.21 removed those. `tests/auto_photos.rs` lists each stitch,
 with where it lies and why, and its case fails on any other stitch astray and on any listed one that no
-longer is. Of the [roadmap](../plan/roadmap.md)'s steps, M13.17 removes the move and M13.18 the rows, by
-merging the thin lines into their neighbours. The dogs' moves astray are moves from one element to the next,
-as the button's are. Their jump threads, 73 to 96, are the design's limit as it stands: each thread sews
-its shapes one after another and jumps between those that don't touch, and the PE800 cuts no jump. M13.17
-runs the thread under the shapes sewn later instead, which cover it. Each dog takes
+longer is. Of the [roadmap](../plan/roadmap.md)'s steps, M13.18 removes the rows, by merging the thin
+lines into their neighbours, and the 2 moves with them. M13.17 looked for a hidden way for each of the 2
+and didn't find one ([runs in place of jumps](#runs-in-place-of-jumps)). The dogs' moves astray are moves from one element to
+the next, as the button's are. Their jump threads, 60 to 83, are those that no later shape covers: each
+thread sews its shapes one after another, and the PE800 cuts no jump. Each dog takes
 too long to digitize and measure in the tests' debug build, so CI's `perf` job runs these cases in the
 release build ([conformance](conformance.md#cases-in-the-release-build)). The pieces of the dogs that
 showed fabric before the rules above, the paw of the dog on turf and the running dog's ear, are cases of
 `tests/auto_fabric.rs` too.
+
+### Runs in place of jumps
+
+Between 2 shapes of one thread the needle jumps, and a machine with one needle cuts no thread at a jump:
+each is a thread to cut by hand. Where the stitches sewn later cover a way from one shape to the next, plan
+assembly sews a run along it instead (`REQ-AUTO-053`, M13.17, `stitchcraft_engine::moves`). The needle
+neither ties off nor jumps. The run is a row of travel stitches of the element it leads to, 2.5 mm long at
+most, and the shapes sewn after it hide it. Assembly decides it, because only there is it known where the
+needle is and whether a move is sewn on or jumped (`REQ-ASM-002`). Only moves between elements that
+automatic digitizing made are looked at. Elements with settings keep their jumps, as Ink/Stitch sews them.
+
+**What covers** is read from the stitches as generated, and not from the shapes: a fill with rows far
+apart covers nothing, whatever its outline says. Every stitch of the top layers is painted 0.4 mm wide on
+2 grids of 0.2 mm. One records, for each cell, the last fill or satin column whose thread covers it. The
+other records the last stitches of any kind, whose colour is what shows there. Underlays and the base layer
+are not painted. A cell is hidden from a move when a fill or satin column sewn after the move covers it
+and every cell within 0.4 mm of it. The run then lies as far inside what covers it as an underlay lies
+inside its fill, clear of the ends of the rows, where a fill covers least. A cell is also hidden where the
+stitches that show are of the run's own colour and sewn after the move. The outline that follows a fill
+is such: the run lies under it as the first pass of a double line.
+
+**The ends.** An element ends on its own stitches and starts at its own edge, so a run can't be hidden
+from its first millimetre to its last. Within 0.8 mm of each end, less than the 1 mm at which a stretch of
+thread counts as showing (`REQ-AUTO-026`), it may cross cells of its own colour sewn before, and cells
+covered later without the 0.4 mm to spare.
+
+**The way** is the shortest over the cells a run may cross, found by a search that goes on from the way
+that is cheapest so far with what is still ahead. It steps to the 8 cells round a cell and counts in whole
+tenths of a cell. Equal ways are taken in a fixed order, which gives a design the same runs on every
+machine. A run goes round what would show it, up to twice the move and 10 mm in length. The search stays within
+10 mm of the box of the move's ends. The way is then pulled straight wherever the straight line
+keeps to those cells, and each straight piece is sewn in equal stitches, with a needle point at every
+corner, so that no stitch leaves the way.
+
+**A move that is sewn on**, within the collapse length, stays a stitch unless it would show for 1 mm or
+more on another colour or on bare fabric. Then it becomes a run where a way is hidden. Where none is, it
+stays a stitch. The roadmap's row had it become a jump there. Measured, that left each traced dog 5 to 15
+jump threads more, each no longer than the stitch it replaced and harder to cut than the stitch is to
+live with, so the stitch stays and `tests/auto_photos.rs` goes on counting it.
+
+**Work.** Painting and the searches share the work budget once for the whole design. Each cell of the
+grids costs 100 units. The default budget then allows a design of 450 mm by 450 mm, and a larger design
+gets the same memory at most. A stitch costs a unit for each cell of its box, and a search costs a unit
+for each cell of its box and for each cell it looks at. When the work runs out, the moves from there on are sewn on or jumped as they
+were, and `SC-I0914` names the element where it ran out.
+
+**Measured before it was built** (2026-11-15, main `399f82b7`). The traced dogs left 76, 84, 73 and 96
+jump threads, each a jump between 2 groups of one thread. Of those, 8, 9, 17 and 22 had a way hidden but
+for its ends, and 14 to 23 more had a way that shows only on its own colour. For the others every way
+crosses another colour that nothing later covers. No order of the shapes could leave fewer than 53, 58, 43
+and 50, counted with every shape of a thread's run still to sew and free to start and end anywhere. The
+lines that sew after the fills they border, and the last thread, have nothing sewn after them. The traced
+pear's 2 jumps have no hidden way, and of the 6 of the badge `web/templates/alpine-night.svg` one has.
+
+**Measured as built.**
+
+| Picture | Jump threads before | Now | Thread in runs |
+|---|---:|---:|---:|
+| Traced pear | 2 | 2 | 0 |
+| Dog on turf, 6 threads | 76 | 69 | 64 mm |
+| Dog on turf, 9 threads | 84 | 79 | 28 mm |
+| Running dog, 6 threads | 73 | 60 | 93 mm |
+| Running dog, 9 threads | 96 | 83 | 109 mm |
+| TS-13B, digitized half | 44 | 43 | 7 mm |
+
+The dogs sew 18 to 52 stitches fewer than before, because the needle sews on into a run and out of it
+without a lock. Their thread changes, their slivers and their stitches astray are as they were. TS-13A,
+TS-13C and TS-13D sew as they did: their shapes of one thread lie apart on bare fabric.
+
+**Alternatives measured.** A run on top of stitches of its own colour would replace 14 to 23 more jumps on each dog.
+It would show as a line across the fill, and a travel stitch that shows is astray (`REQ-AUTO-026`). With
+0.2 mm to spare in place of 0.4 mm the dogs left 0 to 5 jump threads fewer, with runs under the very ends
+of a fill's rows. With a limit of 4 times the move and 20 mm, one dog of the 4 lost 2 more jumps, for
+90 mm more thread. An order that sews next the shape with a hidden way to it could come nearer the 43 to
+58 jumps that no order betters. The order is chosen before a stitch is generated, and what covers is read
+from the stitches, so that is a step of its own.
 
 ## Settings
 

@@ -25,13 +25,14 @@ use std::collections::BTreeMap;
 use stitchcraft_core::{Budget, Code, Diagnostic};
 use stitchcraft_plan::{MachineProfile, StitchPlan};
 
-use crate::assemble::{Assembled, assemble};
+use crate::assemble::{Assembled, assemble_routed};
 use crate::auto::{Sewing, sewing, thick};
 use crate::design::{Design, Element};
 use crate::finalize::{Finalized, finalize};
 use crate::generate::layered::{Layered, underlay};
 use crate::generate::{Generated, Generation, approach, generate_with};
 use crate::generators::{Layer, Neighbours};
+use crate::moves::Routing;
 use crate::underlays_first::{Candidate, alone, steps};
 
 /// What planning a design gives.
@@ -49,7 +50,7 @@ pub struct PlanOutcome {
 /// work to itself, and the stitches the elements before it left; assembling and finalizing have the work
 /// once more, and the design `budget`'s stitches.
 pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanOutcome {
-    let Sewing { elements, mut diagnostics, base, limits } = sewing(design, budget);
+    let Sewing { elements, mut diagnostics, base, made, limits } = sewing(design, budget);
     let candidates: Vec<Candidate> = elements.iter().map(|element| Candidate::of(element, &design.settings)).collect();
     let (steps, lone) = steps(&candidates);
     diagnostics.extend(lone.into_iter().filter_map(|(k, why)| elements.get(k).map(|element| alone(element, why))));
@@ -97,13 +98,17 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
         generated.extend(sewn.map(|sewn| (element, layer(sewn))));
     }
     let mut meter = budget.meter();
-    let finished = assemble(&generated, &design.settings, &mut meter).and_then(|assembled| match assembled {
+    // Where shapes sewn later cover the way between 2 elements that digitizing made, the needle runs under
+    // them and leaves no jump thread (`REQ-AUTO-053`).
+    let mut routing = Routing::of(&generated, &made, budget);
+    let finished = assemble_routed(&generated, &design.settings, routing.as_mut(), &mut meter).and_then(|assembled| match assembled {
         Some(Assembled { plan, warnings, shortest }) => {
             diagnostics.extend(warnings);
             finalize(plan, profile, &design.settings, &shortest, &mut meter).map(Some)
         }
         None => Ok(None),
     });
+    diagnostics.extend(routing.and_then(|routing| routing.said(budget)));
     let plan = match finished {
         Ok(Some(Finalized { plan, diagnostics: said })) => {
             diagnostics.extend(said);
