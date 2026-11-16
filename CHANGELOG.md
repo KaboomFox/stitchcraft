@@ -1932,6 +1932,24 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.30: less thread where a design sews thick (`REQ-AUTO-063`). The owner's first concern on 2026-11-16
+  was how thick her traced dogs sew at their seams, and M13.29 measured that the overlaps cause most of it.
+  - An area reaches its overlap, 1 mm, along its rows, and its pull compensation, 0.4 mm, across them:
+    the thread pulls a row in at its ends and not sideways.
+  - Under a part of an area narrower than 3 overlaps, an area reaches half as far, so that the areas on
+    both sides don't fill a thin part between them. It is the owner's idea.
+  - Where 2 areas would both sew under a shape sewn after them, only the area sewn first does. It is the
+    owner's idea too, and a place then holds one overlap at the most.
+  - Under a satin column and under the part of a line or a column, an area reaches as it did. Across
+    the part of a running line, the area sewn first reaches on under the area beyond, 1 mm from where it
+    meets it.
+  - The 4 traced dogs have 17 to 22 % less area with 3 fills of thread or more, and 1 to 3 mm² with 6
+    or more where they had 6 to 12. They cover the fabric as before, by the check of the cover, sew 1 to
+    3 % fewer stitches, and leave 0 to 4 more jump threads. No test sheet has a place with 6 fills or
+    more. No setting is new.
+  - Measured and left out: an overlap sewn with every other row, which the owner also asked about, half
+    the overlap under columns, an overlap of 0.5 mm, and no outline along an edge between 2 areas
+    ([design](docs/src/design/image-to-embroidery.md#less-thread-where-areas-overlap)).
 - M13.17: the jump threads of automatic digitizing (`REQ-AUTO-053`). A machine with one needle cuts no
   thread at a jump, and a traced photo left scores of jump threads to cut by hand.
   - Between 2 shapes of one thread that automatic digitizing made, the needle sews a run where the
