@@ -178,7 +178,7 @@ class BuildTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             pins = root / 'pins.toml'
-            pins.write_text('repository = "r"\n[web]\ntag = "v1.0.0"\nrevision = "abc"\n')
+            pins.write_text('repository = "r"\n[web]\ntag = "v1.0.0"\nrevision = "0a1"\n')
             for name in build.EDITOR_INPUTS:
                 (root / name).parent.mkdir(parents=True, exist_ok=True)
                 (root / name).write_text(name)
@@ -189,7 +189,7 @@ class BuildTest(unittest.TestCase):
                 (root / name).write_text(name + ' ')
                 self.assertNotEqual(build.editor_key(pins, root), key, name)
                 (root / name).write_text(name)
-            for old, new in (('"r"', '"s"'), ('v1.0.0', 'v1.0.1'), ('abc', 'abd')):
+            for old, new in (('"r"', '"s"'), ('v1.0.0', 'v1.0.1'), ('0a1', '0a2')):
                 pins.write_text(pins.read_text().replace(old, new))
                 self.assertNotEqual(build.editor_key(pins, root), key, new)
                 pins.write_text(pins.read_text().replace(new, old))
@@ -211,10 +211,10 @@ class BuildTest(unittest.TestCase):
             self.assertFalse(build.kept_editor(kept, 'k1'))
             (kept / 'dist').mkdir(parents=True)
             (kept / 'dist/old.wasm').write_text('an older build')
-            build.keep_editor(kept, 'k1', dist, vectorcraft, 'v1.0.0', 'abc')
+            build.keep_editor(kept, 'k1', dist, vectorcraft, 'v1.0.0', '0a1')
             self.assertTrue(build.kept_editor(kept, 'k1'))
             self.assertFalse(build.kept_editor(kept, 'k2'))
-            self.assertEqual(build.json.loads((kept / 'built.json').read_text()), {'key': 'k1', 'tag': 'v1.0.0', 'revision': 'abc'})
+            self.assertEqual(build.json.loads((kept / 'built.json').read_text()), {'key': 'k1', 'tag': 'v1.0.0', 'revision': '0a1'})
             names = sorted(str(path.relative_to(kept)) for path in kept.rglob('*') if path.is_file())
             self.assertEqual(names, sorted(['built.json', 'dist/index.html', *build.LICENCES]))
             # A folder that lost a file, or whose key's file is no JSON object, is built again.
