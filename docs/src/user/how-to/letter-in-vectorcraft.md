@@ -62,8 +62,8 @@ A font that sews in one thread sews in the colour the text is filled with.
 ## Which fonts there are
 
 An exporter has the fonts it was built with. The browser demo's exporters have 2, both under the SIL Open
-Font License: Ink/Stitch Small Font, copyright 2017 Lex Neva, and Barstitch Bold, copyright 2017 The
-Barlow Project Authors. Each licence is on the demo's site, at `fonts/small_font/LICENSE` and
+Font License. Ink/Stitch Small Font is copyright 2017 Lex Neva, and
+Barstitch Bold is copyright 2017 The Barlow Project Authors. Each licence is on the demo's site, at `fonts/small_font/LICENSE` and
 `fonts/barstitch_bold/LICENSE` beside the page. Barstitch Bold is 23 mm tall at 100 percent and sews from
 50 to 130 percent. Type `barstitch_bold` in **Font** for it. An empty **Font** is always Small Font: a
 text object's font isn't chosen for you, as a [marked picture's](letter-a-picture.md#which-font-the-text-is-set-in) is. Exporters you build yourself have the fonts of the folder that
