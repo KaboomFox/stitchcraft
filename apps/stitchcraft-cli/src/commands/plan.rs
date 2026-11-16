@@ -137,8 +137,15 @@ pub fn sew(
         Ok(read) => read,
         Err(unreadable) => return Sewn { diagnostics: vec![unreadable], plan: None, file: None, back: None },
     };
+    sew_design(&design, warnings, profile, format, name)
+}
+
+/// `design`, of which `warnings` were said, planned for `profile` and written in `format`, with `name` as the
+/// design name machines show, and the file read back: what [`sew`] does with a design file read, and
+/// `stitch lettering` with a text set.
+pub fn sew_design(design: &Design, warnings: Vec<Diagnostic>, profile: &MachineProfile, format: FormatId, name: &str) -> Sewn {
     // Planned for the format it is written in, whose limits the file then keeps.
-    let outcome = stitchcraft_engine::plan(&design, &profile.writing(format), &Budget::DEFAULT);
+    let outcome = stitchcraft_engine::plan(design, &profile.writing(format), &Budget::DEFAULT);
     let mut diagnostics = warnings;
     diagnostics.extend(outcome.diagnostics);
     let Some(plan) = outcome.plan else { return Sewn { diagnostics, plan: None, file: None, back: None } };

@@ -89,7 +89,7 @@ impl Path {
 
     /// The same path, each of its points moved by `f`, or `f`'s error, as [`Hints::map`] moves positions: a
     /// design moved ([`Design::moved`]), or a test sheet's clone of a fill.
-    pub(crate) fn map<E>(&self, f: impl Fn(Point) -> Result<Point, E>) -> Result<Path, E> {
+    pub fn map<E>(&self, f: impl Fn(Point) -> Result<Point, E>) -> Result<Path, E> {
         let segment = |segment: &Segment| -> Result<Segment, E> {
             Ok(match *segment {
                 Segment::Line(end) => Segment::Line(f(end)?),
