@@ -206,6 +206,7 @@ another.
 | `SC-I0911` | Info | Base layer turned off (the design's lowest automatic shape turns `auto_base_layer` off, so nothing lies under a place the top thread leaves bare, and fabric may show there) | M13 |
 | `SC-I0912` | Info | Rule that chose a shape's stitches (for each part of an automatic shape, the rule of the table it sewed by and the measures that decided it) | M13 |
 | `SC-W0913` | Warning | Design sews thick (a design digitized automatically has 1 mm² or more with 3 fills of thread or more over it, or 15 needle points or more, and is written all the same) | M13 |
+| `SC-I0914` | Info | Jumps not looked at for a run under later shapes (finding the runs that take the place of jumps between automatic elements needed more work than the budget allows, and the moves from the element named on are as they were) | M13 |
 | `SC-E1001` | Error | Nothing to route (no element the tool can take among those given, a satin column for Auto-Route Satin Columns or a stroke for Auto-Route Running Stitch: they stay as they were) | M10 |
 | `SC-I1002` | Info | Element left out of the route (a fill, a shape digitized automatically, settings that don't read, rails that can't be made, no length, a stroke whose first subpath ends where it starts, or a satin column among running stitches: kept as it is) | M10 |
 | `SC-W1003` | Warning | Piece of a routed satin column may sew otherwise (read back, it has other rails or pairs other points: it is kept) | M10 |

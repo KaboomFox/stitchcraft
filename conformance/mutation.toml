@@ -451,6 +451,12 @@ line = "let next = along.partition_point(|length| *length < at).min(rail.len().s
 why = "only a length that is exactly a corner's tells the 2 apart, and it gives that corner either way: the end of the piece before it, or the start of the piece after it"
 
 [[equivalent]]
+file = "crates/stitchcraft-engine/src/moves.rs"
+mutant = "replace + with - in Move<'c>::hidden"
+line = "(-ROOM..=ROOM).all(|across| (-ROOM..=ROOM).all(|down| self.later((column + across, row + down))))"
+why = "the offsets run from minus the room to plus the room, so taking each away names the same cells as adding it"
+
+[[equivalent]]
 file = "crates/stitchcraft-engine/src/auto/neighbours/under.rs"
 mutant = "replace < with <= in runs_along"
 line = "while at < stretches {"
@@ -917,4 +923,3 @@ file = "crates/stitchcraft-plan/src/thickness.rs"
 mutant = "replace > with == in Thickness::stack"
 line = "if stitch.from.lerp(stitch.to, 0.5).distance(middle) > length / 2.0 + NEAR {"
 why = "then every stitch is followed but one whose middle lies exactly that far, and the stitches the test leaves out lay no thread in the window: the stack is the same"
-

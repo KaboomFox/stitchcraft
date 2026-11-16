@@ -80,10 +80,11 @@ fn req_auto_026_digitized_pictures_lay_no_thread_that_shows_where_it_should_not(
     assert!(shown.is_empty(), "{shown:#?}");
     // The moves sewn on from one element to the next, and the jump threads that the PE800 leaves, are as the
     // design page records them (image-to-embroidery.md › Sewing order): the button's dots sew on from one to
-    // the next across its yellow, and the pear's stem leaves 2 jump threads. The paw leaves one and the ear 3,
-    // where they left none and one before each fill sewed an outline (REQ-AUTO-051, REQ-AUTO-052): the paw's
-    // fill is 2 parts of one shape, each with an outline of its own, and in the ear 2 such outlines and the
-    // rings of one outline lie apart.
+    // the next across its yellow, and the pear's stem leaves 2 jump threads, which nothing sewn later covers.
+    // With an outline after each fill (REQ-AUTO-051, REQ-AUTO-052) the paw left one and the ear 3, where they
+    // left none and one: the paw's fill is 2 parts of one shape, each with an outline of its own, and in the
+    // ear 2 such outlines and the rings of one outline lie apart. The needle now runs from one outline to the
+    // next under the part sewn later (REQ-AUTO-053): the paw leaves none and the ear 2.
     let recorded = [
         ("stripes", 0, 0),
         ("badge-abutting", 0, 0),
@@ -96,8 +97,8 @@ fn req_auto_026_digitized_pictures_lay_no_thread_that_shows_where_it_should_not(
         ("button-stacked", 6, 0),
         ("strand", 0, 0),
         ("pear", 0, 2),
-        ("paw", 0, 1),
-        ("ear", 1, 3),
+        ("paw", 0, 0),
+        ("ear", 1, 2),
     ];
     assert_eq!(apart, recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps)));
 }
