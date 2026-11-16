@@ -41,10 +41,9 @@ use stitchcraft_engine::normalize::region::Region;
 use stitchcraft_engine::normalize::stroke::distance_to_segment;
 use stitchcraft_plan::{Role, StitchPlan};
 
-/// The width of a thread, in millimetres.
-pub const THREAD: f64 = 0.4;
-/// The side of a pixel, in millimetres.
-pub const PIXEL: f64 = 0.05;
+// The width of a thread and the side of a pixel, in millimetres: those of the measure of how thick a plan
+// sews, so that the bare fabric and the thickness are measured on one grid.
+pub use stitchcraft_plan::thickness::{PIXEL, THREAD};
 /// Stitches that turn by less than this, in degrees, run straight on, as a row's stitches do: the pull
 /// doesn't move the needle hole between them.
 pub const STRAIGHT_ON: f64 = 10.0;

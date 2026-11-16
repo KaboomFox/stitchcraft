@@ -248,6 +248,15 @@ rationale = "The fabric's colour can't be chosen and may be black. Fabric that s
 milestone = "M13"
 status = "active"
 
+[[req]]
+id = "REQ-RND-004"
+area = "render"
+level = "L2"
+statement = "The thickness style draws how thick a design sews (REQ-AUTO-060): each pixel has the colour of the step that the thread at the spot nearest to its middle belongs to, measured on the stitches as the machine sews them, on its grid. Thread under 2 fills is grey, 2 fills or more yellow, 3 or more orange and 6 or more red, by the default limits. Where no thread lies the fabric shows, in the style's white or the colour the settings name. The picture has the size of the other styles' pictures of the same design at the same scale. `stitch preview --style thickness` draws it of any machine file, and a docs shot names it with `style = \"thickness\"`."
+rationale = "A number says how thick the thickest spot is, and only a picture shows which patches of a traced photo pile up. Drawn at the size of the realistic preview, the 2 can be laid side by side."
+milestone = "M13"
+status = "active"
+
 # ── Parameters ─────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -2411,7 +2420,7 @@ status = "active"
 id = "REQ-VC-011"
 area = "vectorcraft"
 level = "L2"
-statement = "From VectorCraft 0.14, StitchCraft's exporters write PES and DST files from File › Export › Export As. An exporter writes the file `stitch export` writes of the document VectorCraft gives it: read as `stitch export` reads a `.vectorcraft` file, digitized automatically as with `--auto` when its `auto` parameter is on, planned for the machine its `profile` parameter names, and with the file's name as the design name. What `stitch export` says comes back as the export's warnings, one line each, naming its element, and at most 100, the last counting those left out. When anything said is an error, the exporter writes nothing and says the first error, as `stitch export` writes nothing (REQ-CLI-003)."
+statement = "From VectorCraft 0.14, StitchCraft's exporters write PES and DST files from File › Export › Export As. An exporter writes the file `stitch export` writes of the document VectorCraft gives it: read as `stitch export` reads a `.vectorcraft` file, digitized automatically as with `--auto` when its `auto` parameter is on, planned for the machine its `profile` parameter names, and with the file's name as the design name. What `stitch export` says comes back as the export's warnings, one line each, naming its element, and at most 100, the last counting those left out. A line longer than the 500 characters VectorCraft shows ends at its last whole sentence that fits. When anything said is an error, the exporter writes nothing and says the first error, as `stitch export` writes nothing (REQ-CLI-003)."
 rationale = "A VectorCraft user exports the machine file where the design was drawn, without saving it and running the command line (REQ-VC-008). The same reader, engine and format writer, with the same budget, keep the file the same whichever makes it."
 milestone = "M6"
 status = "active"
@@ -3071,6 +3080,33 @@ area = "auto"
 level = "L2"
 statement = "Between 2 groups of stitches of one thread that automatic digitizing made, plan assembly sews a run in place of a jump where the stitches sewn later cover a way from the end of one to the start of the next: the needle neither ties off nor jumps, and the run's stitches are travel stitches of the element it leads to, 2.5 mm long at most, in equal stitches along each straight piece, with a needle point at each corner. What covers is read from the stitches as generated, each 0.4 mm wide, on a grid of 0.2 mm: a place is hidden from a move when a fill or satin column sewn after the move covers it and every place within 0.4 mm of it, or when what shows there is the move's own colour in stitches sewn after the move, as the outline that follows a fill is. Underlays and the base layer cover nothing, and neither does a running stitch of another colour. A run keeps to hidden places. Within 0.8 mm of its 2 ends it may also cross its own colour sewn before, or a place covered later without that room. It is the shortest such way over the grid, no longer than twice the move and 10 mm and no farther than 10 mm outside the box of the move's ends, pulled straight where the straight line keeps to those places. A move within the collapse length is sewn on as before (REQ-ASM-002) unless its stitch would show for 1 mm or more on another colour or on fabric, and then becomes a run where there is one and stays a stitch where there is none. A move with no such way stays a jump. Elements with settings keep their moves, and so does an element whose locks are forced. Painting and the searches share the work budget once for the design. When it runs out, the moves from there on stay as they were, and SC-I0914 names the element where it did. The same design gives the same runs on every machine."
 rationale = "The owner's Brother PE800 has one needle and cuts no thread at a jump, so each jump between 2 shapes of one thread is a thread to cut by hand: 73 to 96 on each of her traced dogs on 2026-11-15, a web across the stitch pictures. A digitizer by hand runs the thread under what is sewn later. Measured before anything was built: of each dog's jumps in one thread, 8 to 22 had a way hidden but for its ends, and no order of the shapes could leave fewer than 43 to 58, because the lines that sew after the fills they border, and the last thread, have nothing sewn after them. Built, the dogs leave 69, 79, 60 and 83 jump threads where they left 76, 84, 73 and 96, for 28 to 109 mm of thread under their shapes and fewer stitches than before, since a run needs no locks. A run on top of stitches of its own colour would replace 14 to 23 more jumps on each dog, but shows as a line across the fill, so it is not sewn. With 0.2 mm of room instead of 0.4 mm the dogs left 0 to 5 fewer jump threads, with runs at the very ends of a fill's rows, where rows cover least. A move sewn on that shows was to become a jump where it has no hidden way (the roadmap's row): measured, that left each dog 5 to 15 more jump threads, each no longer than the stitch it replaced, so such a move stays a stitch. The limit of twice the move and 10 mm costs little: with 4 times and 20 mm one dog of 4 lost 2 more jumps, for 90 mm more thread."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-060"
+area = "auto"
+level = "L1"
+statement = "How thick a plan sews is measured in 2 ways on square cells 0.5 mm wide, each value a sum over the 4 cells that meet at a spot, a corner of the cells: a window of 1 mm² (`stitchcraft_plan::thickness`). Thread, in fills: every stitch of every role is a ribbon 0.4 mm wide, followed in steps of a cell at the most and shared between 2 lanes 0.1 mm to each side of it, and a window's thread is its length times 0.25 mm over the window's area, so that a fill with rows 0.25 mm apart, the default of `row_spacing_mm`, measures 1. Needle points per mm²: each stitch's needle point counts once, but for a lock's. A plan is measured where the machine sews it, each needle point on the machine's grid of 0.1 mm, so that it measures the same on every platform. A square of rows laid by hand a thread apart, sewn 1, 2, 3 and 6 times, measures 0.625 of a fill for each layer, to a nanometre, a millimetre and more inside it. A square 15 mm a side that the engine fills 1, 2, 3 and 6 times, the angle turned 30° each time, measures 0.85 to 1 fill for each layer at the least, and 0.98 to 1.06 on average, 2 mm and more inside it."
+rationale = "The owner's worry of 2026-11-15: after several colours the overlaps may be too thick for the needle of a Brother PE800. Nothing measured thickness: the bare-fabric measure counts covered pixels and can't tell 1 layer from 6. The sources count objects on each other, so the unit is one fill as StitchCraft sews it. In layers of thread such a fill is 1.6, since its rows lie 0.25 mm apart and a thread is 0.4 mm wide. The engine's fills measure up to 6 % more than their rows, because the needle travels under them, and up to 15 % less in a window where the rows are fitted to the shape. The cells are half a millimetre wide because every plan is measured: on cells of 0.2 mm the measure took 80 % as long as planning a test sheet, and VectorCraft stopped the export of TS-13A for its instructions."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-061"
+area = "auto"
+level = "L1"
+statement = "What of a plan is over a limit is the spots whose value is the limit or more, in pieces: spots beside each other, along a side of a cell or across it, are one piece, each stands for 0.25 mm², and a piece counts from 4 spots, 1 mm². The measure gives the count of such pieces, their area together, and the largest with the box round it. The thickest spot is the one with the largest value. The limits are 3 fills of thread for the warning and 6 for failing, and 15 and 30 needle points per mm² (`Limits::DEFAULT`). A failing limit under its warning's reads as the warning's."
+rationale = "3 rows that cross in a point are no fault, so a place has to be 1 mm² to count. 3 fills on each other is what Brother's troubleshooting names as a fault of the design, and 6 layers is where Embrilliance's density map turns red. No source gives a number of needle points: measured on 2026-11-15, the row ends of one fill lie 5 to a square millimetre along its edge, so 15 and 30 are what the edges of 3 and 6 fills on each other make. All 4 are starting values that a sew-out has to confirm (MC-8)."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-062"
+area = "auto"
+level = "L2"
+statement = "A design with an automatic shape is measured once its plan is finished, with the work budget once more, against the limits its lowest automatic shape sets: `auto_thick_warn_fills`, `auto_thick_fail_fills`, `auto_thick_warn_points` and `auto_thick_fail_points`, advanced settings that no dialog shows. When a piece is at a warning's limit or over it, planning says SC-W0913 once and the plan is written all the same. The message gives the most of each measure and where, from the design's centre, the 3 shapes with the most thread in the window of the thickest spot, each with its thread and its fills, and the area at each warning's limit and at each failing limit. 2 fills of rows 0.25 mm apart on each other measure 2 and are never told. A design whose plan is larger than 500 mm, or whose measuring needs more work than the budget allows, is told SC-W0913 with a message that it was not measured. A design without an automatic shape is not measured."
+rationale = "A design over the limits may sew well, and one under them may not: the limits are starting values, so nothing is refused until a sew-out shows where a design fails. The warning has to say where, since a traced photo has hundreds of shapes. A design drawn by hand stacks thread on purpose, and its author chose every layer."
 milestone = "M13"
 status = "active"
 

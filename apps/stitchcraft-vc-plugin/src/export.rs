@@ -19,7 +19,9 @@
 //! **What it says.** Everything said, the reader's warnings first, then the engine's and the format's, is
 //! the export's warnings, one line each ([`Diagnostic::one_line`]), as `stitch export` prints them.
 //! VectorCraft shows at most 100 ([`MAX_WARNINGS`]), so when there are more the last says how many more
-//! `stitch export` lists.
+//! `stitch export` lists. It shows 500 characters of each ([`MAX_WARNING_CHARS`]) and cuts a longer one
+//! in the middle of a word, so a longer line ends at its last whole sentence that fits. `SC-W0913` is such
+//! a line: its numbers stay, and the hint after them goes.
 //!
 //! **Errors.** When anything said is an error, the exporter writes nothing and declines with the first
 //! error, as `stitch export` writes nothing (`REQ-CLI-003`). VectorCraft shows the first 300 characters of
@@ -68,6 +70,9 @@ pub const DOCUMENT: &str = "document";
 pub const PICTURE: &str = "picture";
 /// The most warnings VectorCraft shows of an export (`MAX_WARNINGS` in its `crates/plugins/src/export.rs`).
 pub const MAX_WARNINGS: usize = 100;
+/// The most characters VectorCraft shows of one warning (`MAX_WARNING_CHARS` in the same file). It cuts a
+/// longer one there, in the middle of a word.
+pub const MAX_WARNING_CHARS: usize = 500;
 
 /// An exporter's dialog: [`AUTO`], then the machine's [`PROFILE`]: [`DOCUMENT`], by default, or one of the
 /// built-in profiles.
@@ -252,14 +257,33 @@ fn is_error(d: &Diagnostic) -> bool {
 }
 
 /// What an export says, one line each: everything `said`, or when it is more than VectorCraft shows, all
-/// but the last that fit and then how many more there are.
+/// but the last that fit and then how many more there are. Each line is as long as VectorCraft shows at
+/// most (`shown`).
 pub fn warnings(said: &[Diagnostic]) -> Vec<String> {
+    let line = |d: &Diagnostic| shown(d.one_line());
     if said.len() <= MAX_WARNINGS {
-        return said.iter().map(Diagnostic::one_line).collect();
+        return said.iter().map(line).collect();
     }
-    let shown = MAX_WARNINGS - 1;
-    let more = format!("{} more, which `stitch export` lists.", said.len() - shown);
-    said.iter().take(shown).map(Diagnostic::one_line).chain([more]).collect()
+    let fit = MAX_WARNINGS - 1;
+    let more = format!("{} more, which `stitch export` lists.", said.len() - fit);
+    said.iter().take(fit).map(line).chain([more]).collect()
+}
+
+/// `line` as VectorCraft shows it whole: itself when it has [`MAX_WARNING_CHARS`] characters or fewer, and
+/// else its sentences that fit, a sentence ending at a full stop before a space. A line whose first
+/// sentence doesn't fit is cut one character short and ends with an ellipsis.
+fn shown(line: String) -> String {
+    // Where the character after the last one shown starts, if there is one.
+    let Some((end, _)) = line.char_indices().nth(MAX_WARNING_CHARS) else {
+        return line;
+    };
+    let fits = line.get(..end).unwrap_or(&line);
+    // The full stop of a sentence's end is shown, and the space after it may be the first character cut.
+    let stop = line.match_indices(". ").map(|(at, _)| at + 1).take_while(|at| *at <= end).last();
+    match stop {
+        Some(stop) => line.get(..stop).unwrap_or(fits).to_string(),
+        None => fits.chars().take(MAX_WARNING_CHARS - 1).chain(['…']).collect(),
+    }
 }
 
 /// The message an export declines with: the first error `said`, after the number of errors when there
@@ -474,6 +498,28 @@ mod tests {
         // Each on one line, its hint after it.
         let hinted = Diagnostic::new(Code::FillPartsApart, "In parts.").with_fix(Fix::Hint("Break it apart.".into()));
         assert_eq!(warnings(&[hinted]), ["warning SC-W0307: In parts. Break it apart."]);
+    }
+
+    #[test]
+    fn req_vc_011_a_warning_longer_than_vectorcraft_shows_ends_at_a_whole_sentence() {
+        let one = |message: String| warnings(&[Diagnostic::new(Code::FillPartsApart, message)]).pop().unwrap();
+        let head = "warning SC-W0307: ";
+        // As long as VectorCraft shows, a line is whole. One character more, and its last sentence goes.
+        let fits = format!("{}. {}.", "a".repeat(300), "b".repeat(MAX_WARNING_CHARS - head.len() - 303));
+        assert_eq!(one(fits.clone()).chars().count(), MAX_WARNING_CHARS);
+        assert_eq!(one(fits.clone()), format!("{head}{fits}"));
+        let longer = format!("{}. {}.", "a".repeat(300), "b".repeat(MAX_WARNING_CHARS - head.len() - 302));
+        assert_eq!(one(longer), format!("{head}{}.", "a".repeat(300)));
+        // A full stop inside a number ends no sentence, and characters are counted, not bytes.
+        let squares = format!("At (0.5, 36.3) mm: {}. {}.", "²".repeat(400), "b".repeat(100));
+        assert_eq!(one(squares), format!("{head}At (0.5, 36.3) mm: {}.", "²".repeat(400)));
+        // The sentence that ends where the line may: it stays.
+        let ends = format!("{}. more", "a".repeat(MAX_WARNING_CHARS - head.len() - 1));
+        assert_eq!(one(ends), format!("{head}{}.", "a".repeat(MAX_WARNING_CHARS - head.len() - 1)));
+        // Without a sentence that fits, the line is cut and says so with an ellipsis.
+        let unbroken = one("c".repeat(600));
+        assert_eq!(unbroken, format!("{head}{}…", "c".repeat(MAX_WARNING_CHARS - head.len() - 1)));
+        assert_eq!(unbroken.chars().count(), MAX_WARNING_CHARS);
     }
 
     #[test]
