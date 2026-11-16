@@ -55,7 +55,9 @@ tools: stitchcraft-xtask (`xtask/`, run as `cargo xtask`)
 | `stitchcraft-vc-plugin` | app | VectorCraft ABI v1 shim + plug-in manifests | contain engine logic; `unsafe` outside `abi.rs` |
 | `stitchcraft-xtask` | tools | gates (`ci`, `layers`, `docs`, `cleanroom`, …), generators, compatibility runs; works from its own folder, on StitchCraft's packages only ([ADR-0011](adr/0011-movable-into-vectorcraft.md)) | ship to users |
 
-Intra-layer edges are allowed only where listed (`stitchcraft-params → stitchcraft-core`). The table
+Intra-layer edges are allowed only where listed: `stitchcraft-params → stitchcraft-core`, and
+`stitchcraft-vectorcraft → stitchcraft-svg` for the lettering of a document's text
+([lettering](vectorcraft-integration.md#lettering)). The table
 lives in `xtask/src/layers.rs` and is append-only, like VectorCraft's. An app library (`Class::AppLibrary`
 there) is a library of the apps' layer that only the app it names may depend on.
 

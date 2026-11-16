@@ -221,6 +221,7 @@ another.
 | `SC-E1108` | Error | Text could not be set (a text none of whose characters sews, or one with a glyph that can't be placed. Along a path, also a path without length) | M14 |
 | `SC-W1109` | Warning | Text longer than its path (the line goes on straight past an open path's end, round a closed path again, or is pushed together when stretched) | M14 |
 | `SC-W1110` | Warning | Lettering setting not applied (lines asked to sew back and forth in a font drawn for one direction, or colours asked to be sorted in a font that doesn't sort) | M14 |
+| `SC-W1111` | Warning | Text not sewn in its embroidery font (a VectorCraft text object with the Lettering effect whose font isn't found or doesn't read, or that is area type, type on a path or vertical type) | M14 |
 | `SC-E1201` | Error | Subject cut-out's models not ready (a model that couldn't be fetched, or isn't the file pinned: the message names every file and the folder they belong in) | M13 |
 | `SC-E1202` | Error | No subject found to cut out (no part of U²-Net-p's map reaches a half and no box is given, or MobileSAM didn't keep a pixel) | M13 |
 | `SC-E1203` | Error | Picture could not be read for the cut-out (not a PNG or JPEG file it reads, or larger than its limits) | M13 |
