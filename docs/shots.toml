@@ -202,7 +202,15 @@ kind = "stitch"
 sheet = "TS-13D"
 style = "realistic"
 scale = 3.0
-alt = "TS-13D as it will sew: 2 emblems, a navy square in a white frame with a red star on a white disc and 3 gold bars, traced abutting and stacked, and 2 buttons, a yellow disc with 7 orange dots in a black rim, twice. At the top, digitized, both emblems sew alike: one navy fill under the disc and the bars, the bars satin columns, and the white round each star a satin column. Each button's rim is a satin column round one yellow fill under its dots. At the bottom, in paint order, every shape is a fill."
+alt = "TS-13D as it will sew: 2 emblems, a navy square in a white frame with a red star on a white disc and 3 gold bars, traced abutting and stacked, twice. At the top, digitized, both emblems sew alike: one navy fill under the disc and the bars, the bars satin columns, and the white round each star a satin column. At the bottom, in paint order, every shape is a fill."
+
+[[shot]]
+id = "testsheet-ts-13e"
+kind = "stitch"
+sheet = "TS-13E"
+style = "realistic"
+scale = 3.0
+alt = "TS-13E as it will sew: 2 buttons, a yellow disc with 7 orange dots in a black rim, one above the other, twice. At the top, digitized, each button's rim is a satin column round one yellow fill under its dots. At the bottom, in paint order, every shape is a fill."
 
 [[shot]]
 id = "testsheet-ts-17c"

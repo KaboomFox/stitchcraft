@@ -24,8 +24,9 @@ use stitchcraft_testkit::stitches::{jump_threads, rungs, top_runs};
 
 /// The TS-13 sheet `id`, as `pictures::sheet` plans it, planned once for every case.
 fn sheet(id: &str) -> &'static (Design, StitchPlan) {
-    static SHEETS: [OnceLock<(Design, StitchPlan)>; 4] = [OnceLock::new(), OnceLock::new(), OnceLock::new(), OnceLock::new()];
-    let index = ["TS-13A", "TS-13B", "TS-13C", "TS-13D"].iter().position(|&sheet| sheet == id).unwrap_or_else(|| panic!("{id} is no TS-13 sheet"));
+    static SHEETS: [OnceLock<(Design, StitchPlan)>; 5] = [const { OnceLock::new() }; 5];
+    let index =
+        ["TS-13A", "TS-13B", "TS-13C", "TS-13D", "TS-13E"].iter().position(|&sheet| sheet == id).unwrap_or_else(|| panic!("{id} is no TS-13 sheet"));
     SHEETS[index].get_or_init(|| pictures::sheet(id))
 }
 
@@ -68,7 +69,7 @@ fn towards(from: Point, to: Point) -> (f64, f64) {
 #[test]
 fn ts13_sheets_sew_where_they_are_drawn_the_stitches_of_their_machine_files() {
     // The plan the cases measure is the sheet's own, every entry moved by the same amount.
-    for id in ["TS-13A", "TS-13B", "TS-13C", "TS-13D"] {
+    for id in ["TS-13A", "TS-13B", "TS-13C", "TS-13D", "TS-13E"] {
         let entries =
             |plan: &StitchPlan| -> Vec<(StitchKind, Point)> { plan.blocks.iter().flat_map(|b| &b.stitches).map(|s| (s.kind, s.at)).collect() };
         let (filed, drawn) = (entries(&find(id).unwrap().plan().unwrap()), entries(&sheet(id).1));
@@ -148,8 +149,8 @@ fn req_auto_010_ts13_no_shape_sews_over_one_drawn_over_it() {
         ("TS-13A", "ts13a:auto:badge-abutting", &[("red", "blue"), ("red", "gold"), ("blue", "gold")][..]),
         ("TS-13D", "ts13d:auto:emblem-abutting", &[("navy", "disc"), ("navy", "star"), ("navy", "bar-1"), ("star", "disc")][..]),
         ("TS-13D", "ts13d:auto:emblem-stacked", &[("navy", "star"), ("navy", "gold")][..]),
-        ("TS-13D", "ts13d:auto:button-abutting", &[("disc", "dot-1"), ("disc", "dot-4"), ("disc", "rim")][..]),
-        ("TS-13D", "ts13d:auto:button-stacked", &[("disc", "dot-1"), ("disc", "dot-4"), ("disc", "rim")][..]),
+        ("TS-13E", "ts13e:auto:button-abutting", &[("disc", "dot-1"), ("disc", "dot-4"), ("disc", "rim")][..]),
+        ("TS-13E", "ts13e:auto:button-stacked", &[("disc", "dot-1"), ("disc", "dot-4"), ("disc", "rim")][..]),
         (
             "TS-13C",
             "ts13c:auto:face",
@@ -326,12 +327,17 @@ fn ts13_the_jump_threads_that_its_stitches_sew_down() {
     // Digitized, the letters of TS-13B sew as columns with jumps between them.
     // A thread that sews once (REQ-AUTO-037) jumps between its shapes where it changed before, and its jump
     // threads stay: TS-13A's digitized half leaves 18 where it left 15, and changes thread 2 times, not 5.
-    // With an outline after each fill (REQ-AUTO-051) TS-13D's digitized half leaves 17 where it left 15.
+    // With an outline after each fill (REQ-AUTO-051) TS-13D's digitized half left 17 where it left 15, while
+    // it held TS-13E's buttons. Apart (M13.31), the halves leave 11 and 4.
     // One of TS-13B's jumps is a run under a shape sewn later (REQ-AUTO-053): its digitized half leaves 43
     // where it left 44.
-    for (id, recorded) in
-        [("TS-13A", [(8, 0), (18, 9)]), ("TS-13B", [(6, 0), (43, 19)]), ("TS-13C", [(9, 4), (13, 5)]), ("TS-13D", [(1, 0), (17, 5)])]
-    {
+    for (id, recorded) in [
+        ("TS-13A", [(8, 0), (18, 9)]),
+        ("TS-13B", [(6, 0), (43, 19)]),
+        ("TS-13C", [(9, 4), (13, 5)]),
+        ("TS-13D", [(1, 0), (11, 4)]),
+        ("TS-13E", [(0, 0), (4, 1)]),
+    ] {
         let threads = jump_threads(&sheet(id).1);
         let half = |stops: usize| {
             let left: Vec<_> = threads.iter().filter(|thread| thread.after_stops == stops).collect();
@@ -344,12 +350,13 @@ fn ts13_the_jump_threads_that_its_stitches_sew_down() {
 /// How often the digitized half of each TS-13 sheet changes thread, from the stop after the half as drawn on,
 /// and one less than its threads, which no order betters. TS-13B's base layer and letters are black, and so
 /// are the lines of its windows, which sew after the fills they border: black sews twice. Before M13.22 the
-/// halves changed thread 5, 4, 5 and 8 times.
-const CHANGES: [(&str, usize, usize); 4] = [("TS-13A", 2, 2), ("TS-13B", 4, 3), ("TS-13C", 4, 4), ("TS-13D", 6, 6)];
+/// halves of TS-13A to TS-13C changed thread 5, 4 and 5 times, and that of TS-13D, which had TS-13E's buttons
+/// until M13.31, 8 times.
+const CHANGES: [(&str, usize, usize); 5] = [("TS-13A", 2, 2), ("TS-13B", 4, 3), ("TS-13C", 4, 4), ("TS-13D", 3, 3), ("TS-13E", 2, 2)];
 
 #[test]
 fn req_auto_037_the_digitized_halves_of_the_ts13_sheets_change_thread_as_seldom_as_their_lines_allow() {
-    let found: Vec<(&str, usize, usize)> = ["TS-13A", "TS-13B", "TS-13C", "TS-13D"]
+    let found: Vec<(&str, usize, usize)> = ["TS-13A", "TS-13B", "TS-13C", "TS-13D", "TS-13E"]
         .into_iter()
         .map(|id| {
             let plan = &sheet(id).1;
