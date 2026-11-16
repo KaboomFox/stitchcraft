@@ -1,0 +1,30 @@
+# Level B: a text object under StitchCraft's Auto effect, exported by StitchCraft's exporters with
+# VectorCraft's command line (docs/src/design/vectorcraft-integration.md, Text without the Lettering
+# effect). VectorCraft keeps the text's characters, and the exporters read them and sew the text as lettering
+# in the font built into them, Ink/Stitch Small Font, at the text's size. Each exported file is the one
+# `stitch export` writes of the saved document with the same font in its folder of fonts. Drawing the text
+# runs the Auto effect on its outlines, which leaves no error. The square beside the text is digitized as a
+# shape, so the file sews more than the square alone. Coordinates are points: the text's first baseline
+# starts an inch right of the origin and 2 inches down.
+description = "A text object under the Auto effect exports as lettering in the built-in embroidery font, as `stitch export` sews it."
+requirements = ["REQ-VC-029", "REQ-AUTO-069"]
+
+[[run]]
+plugins = ["auto", "pes", "dst"]
+steps = [
+  { cmd = "shape.rectangle", params = { x = 72, y = 180, width = 72, height = 72 } },
+  { cmd = "paint.setFill", params = { color = "#c00000" } },
+  { cmd = "effect.apply", params = { effect = "plugin.dev.stitchcraft.auto" } },
+  { export = "square.vectorcraft" },
+  { export = "square.pes" },
+  { cmd = "text.create", params = { x = 72, y = 144, text = "Hi there" } },
+  { cmd = "effect.apply", params = { effect = "plugin.dev.stitchcraft.auto" } },
+  { export = "text.vectorcraft" },
+  { export = "text.png" },
+  { export = "text.pes" },
+  { export = "text.dst" },
+]
+
+[expect]
+exported = [["text.vectorcraft", "text.pes"], ["text.vectorcraft", "text.dst"], ["square.vectorcraft", "square.pes"]]
+differ = [["text.pes", "square.pes"]]
