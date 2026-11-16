@@ -152,6 +152,37 @@ class BuildTest(unittest.TestCase):
             table = build.sizes(app)
             self.assertIn('| **all files** |', table)
 
+    def test_a_font_built_into_the_exporters_is_published_with_its_licence(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            built, out, fonts, listed = root / 'built', root / 'demo', root / 'fonts', root / 'list.txt'
+            built.mkdir()
+            light, heavy = build.modules()
+            for name in light + heavy:
+                (built / f'{name}.wasm').write_bytes(name.encode())
+            for name, licence in (('plain', 'LICENSE'), ('other', 'licence.txt'), ('bare', None)):
+                (fonts / name).mkdir(parents=True)
+                (fonts / name / 'font.json').write_text('{}')
+                if licence:
+                    (fonts / name / licence).write_text(f'the licence of {name}')
+            listed.write_text('# The fonts built in.\nplain\n\nother\n')
+            # Without a folder of fonts none is built in, and the folder is as it was before fonts.
+            self.assertEqual(build.fonts(None, listed), [])
+            self.assertEqual(build.fonts('', listed), [])
+            found = build.fonts(fonts, listed)
+            self.assertEqual(found, [('plain', fonts / 'plain/LICENSE'), ('other', fonts / 'other/licence.txt')])
+            build.demo(out, built, 'v9.9.9', 'f' * 40, found)
+            self.assertEqual((out / 'fonts/plain/LICENSE').read_text(), 'the licence of plain')
+            self.assertEqual((out / 'fonts/other/licence.txt').read_text(), 'the licence of other')
+            self.assertEqual(build.json.loads((out / 'plugins.json').read_text())['fonts'], [
+                {'folder': 'plain', 'licence': 'fonts/plain/LICENSE'}, {'folder': 'other', 'licence': 'fonts/other/licence.txt'}])
+            # A font without a licence file is never published.
+            listed.write_text('bare\n')
+            with self.assertRaisesRegex(ValueError, 'the font bare has no licence file'):
+                build.fonts(fonts, listed)
+            # The plug-in's own list names fonts, the default first.
+            self.assertEqual(build.FONTS.read_text().splitlines()[-1], 'small_font')
+
     def test_a_change_to_the_drawing_or_its_finished_example_names_another_build(self):
         hashed = [*build.SCRIPTS, 'start.mjs', 'templates/alpine-night.svg', 'templates/alpine-night.vctemplate']
         with tempfile.TemporaryDirectory() as temp:

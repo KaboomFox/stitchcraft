@@ -565,6 +565,15 @@ milestone = "M14"
 status = "active"
 
 [[req]]
+id = "REQ-FONT-021"
+area = "fonts"
+level = "L2"
+statement = "The plug-in's build embeds the fonts that apps/stitchcraft-vc-plugin/built-in-fonts.txt lists, from the folder the build option STITCHCRAFT_FONTS_DIR names: each font's font.json, its glyph files and its licence file, and nothing else. Without the option no font is built in, everything builds and tests, and a case that needs a font built in says it is skipped. A font that the list names and the folder lacks stops the build. Each font built in reads, has a licence file, and is under the SIL Open Font License or CC0, whose text may be shared beside a copy. The first listed is the default font. No font file is in the repository. stitch finds a document's fonts in the folder STITCHCRAFT_FONTS names, each folder in it with a font.json being a font, by the same names."
+rationale = "A plug-in reads no file, so its fonts are built in, as VectorCraft builds in craft-fonts (ADR-0020). The browser demo publishes the plug-ins' modules, which shares the fonts in them, so only fonts whose licence allows a shared copy with its text beside it are listed."
+milestone = "M14"
+status = "active"
+
+[[req]]
 id = "REQ-SVG-009"
 area = "svg"
 level = "L2"
@@ -2522,6 +2531,24 @@ level = "L2"
 statement = "A design that needs more instructions than VectorCraft allows an export is still exported where StitchCraft runs its own engine. The browser demo's panel has Export PES, Export DST and Show the real stitches. Each takes the open document from the editor as the editor saves it, runs the exporter's module in a Web Worker, where nothing counts its instructions, says that it is working and for how long, and then offers the file or shows the picture. The file is the one `stitch export` writes of the saved document, byte for byte, and the picture is the one `stitch export --preview` draws: an exporter whose `_context` has the mode `picture` answers that picture, a PNG, in the file's place, and with VectorCraft's own mode `export`, or none, it answers the file. A design that writes no file has no picture. On the desktop such a design is exported with `stitch export`."
 rationale = "A traced photo with the Auto effect needs 51 to 66 billion instructions in VectorCraft's host, 5 to 6 times what an export may run, and VectorCraft stops it in the browser and on the desktop alike (measured 2026-11-15). The limit is VectorCraft's, and a plug-in can't raise it or learn how much is left, so the work is done where there is no such limit."
 milestone = "M6"
+status = "active"
+
+[[req]]
+id = "REQ-VC-026"
+area = "vectorcraft"
+level = "L2"
+statement = "A text object of a VectorCraft document that has StitchCraft's Lettering effect among its own visible effects sews as lettering sets its text (REQ-FONT-009 to REQ-FONT-019): the characters of its runs, in order, a line ending at each line feed, in the embroidery font the effect's `font` names, by the font's folder or by the name of its font.json, in any case, an empty name being the default font `small_font`. The effect's other parameters are lettering's settings by their names, and a value that doesn't read keeps its default with SC-W0807. The text's origin, the start of its first baseline, is the origin of the text set, which is turned as the object's transform turns its baseline. The transform's scale isn't used, and a mirrored or slanted text sews turned only, with SC-W0807. Each element is named as its object, a font that sews in one thread sews in the colour the text's first characters are filled with, and the clips around the object cut it. A text without the effect, and one that is a clip group's clipping object, is left out with SC-W0807, whose hint names the effect. The text is left out with SC-W1111 when the reader's fonts hold none of that name, when the font doesn't read, when it is area type, type on a path or vertical type, and when lettering sets no character of it. The fonts are whoever reads the document's: those built into a plug-in, or those of the folder STITCHCRAFT_FONTS names for stitch, read when a text first names them."
+rationale = "A document keeps a text object's characters and never its outlines, and an exporter is given the whole document (VectorCraft's docs/plugins.md at v0.24.1). An embroidery font is digitized for the needle, where a screen font's outlines are not, so the effect names the font and the text gives the characters and the place (docs/src/design/vectorcraft-integration.md › Lettering)."
+milestone = "M14"
+status = "active"
+
+[[req]]
+id = "REQ-VC-027"
+area = "vectorcraft"
+level = "L2"
+statement = "StitchCraft Lettering is a live effect, installed from VectorCraft 0.14, whose dialog holds the font as text and 8 of lettering's settings by Ink/Stitch's names, each with lettering's own default and help (stitchcraft_svg::lettering::SETTINGS): scale, text_align, letter_spacing, word_spacing, line_height, back_and_forth, color_sort and trim, which is off by default. It returns the geometry it is given unchanged, so a text keeps its look in VectorCraft. The PES and DST exporters sew a document's lettered texts in the fonts built into them, and write the file stitch export writes of the document with the same fonts. An export that is declined says the first SC-W1111 after its error. In VectorCraft's command line, a text created with text.create and given the effect is saved with its characters and the effect's record, drawing it leaves no error, the saved document sews as lettering sets the same text at the text's place, and each exported file is the one stitch export writes."
+rationale = "A live effect is given its object's outlines and paints alone, not the text (the RFC's P6), so it can't draw the embroidery font, and the export is where the text is read. VectorCraft shows a declined export's message without its warnings, and a document of one text whose font is missing has nothing else to stitch."
+milestone = "M14"
 status = "active"
 
 [[req]]

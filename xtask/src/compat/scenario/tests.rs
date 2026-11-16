@@ -33,6 +33,7 @@ fn every_scenario_checks_only_what_its_runs_export() {
             "export",
             "graphic-style",
             "install-and-list",
+            "lettering",
             "missing-plugin",
             "picture",
             "route-runs",
@@ -735,4 +736,49 @@ fn req_vc_014_a_heavy_module_is_installed_into_a_profile_the_app_starts_with() {
     assert!(read("args").starts_with("run --allow-plugin-grants --cmd plugin.install "), "{}", read("args"));
     // What the command line said is kept beside the profile, for whoever reads a shot's failure.
     assert!(dir.join("install/run-1.out").is_file());
+}
+
+/// A document of one text object, `text` at (72, 144) points, with the Lettering effect and its `params`.
+// A case writes the parameters in place.
+#[allow(clippy::needless_pass_by_value)]
+fn text_document(text: &str, params: Value) -> Vec<u8> {
+    let effect = json!({"id": effect_id("lettering"), "params": params, "visible": true});
+    let kind = json!({"type": "text", "kind": {"kind": "point"}, "xf": [1, 0, 0, 1, 72, 144], "runs": [{"text": text}]});
+    let layer = json!({"id": 1, "kind": {"type": "layer", "children": [{"id": 2, "appearance": {"effects": [effect]}, "kind": kind}]}});
+    serde_json::to_vec(&json!({"format": "vectorcraft", "version": 4, "document": {"layers": [layer]}})).unwrap()
+}
+
+#[test]
+fn req_vc_026_a_lettered_document_is_checked_against_lettering_with_the_fonts_stitch_finds() {
+    let glyphs = r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="100mm" height="100mm" viewBox="0 0 100 100"><g inkscape:groupmode="layer" inkscape:label="GlyphLayer-a"><path id="pa" d="M 1,60 L 5,70" style="fill:none;stroke:#000000;stroke-width:0.4"/></g><g inkscape:groupmode="layer" inkscape:label="GlyphLayer-b"><path id="pb" d="M 2,60 L 8,70" style="fill:none;stroke:#000000;stroke-width:0.4"/></g></svg>"#;
+    let dir = stitchcraft_testkit::temp::TempDir::new("compat-lettered");
+    std::fs::create_dir_all(dir.join("test")).unwrap();
+    std::fs::write(dir.join("test/font.json"), r#"{"name": "Test Font", "min_scale": 0.5, "max_scale": 2}"#).unwrap();
+    std::fs::write(dir.join("test/ltr.svg"), glyphs).unwrap();
+    let fonts = || FolderFonts::of(Some(dir.join(".")));
+    let expected = |text: &str, font: &str, scale: f64, at: [f64; 2]| Lettered {
+        file: "text.vectorcraft".to_string(),
+        text: text.to_string(),
+        font: font.to_string(),
+        scale,
+        at,
+    };
+    let document = text_document("ab", json!({"font": "Test Font", "scale": 150}));
+    assert_eq!(sews_lettered(&document, &expected("ab", "test", 150.0, [72.0, 144.0]), &mut fonts(), true), Ok(()));
+    // Another text, another scale and another place are each found.
+    for other in
+        [expected("ba", "test", 150.0, [72.0, 144.0]), expected("ab", "test", 100.0, [72.0, 144.0]), expected("ab", "test", 150.0, [72.0, 72.0])]
+    {
+        let found = sews_lettered(&document, &other, &mut fonts(), true).unwrap_err();
+        assert!(found.starts_with("it sews 2 elements, otherwise than the 2 that lettering sets of "), "{found}");
+    }
+    // A document whose text names a font that isn't there sews nothing, and the failure says why.
+    let unlettered = text_document("ab", json!({"font": "other"}));
+    let found = sews_lettered(&unlettered, &expected("ab", "test", 100.0, [72.0, 144.0]), &mut fonts(), true).unwrap_err();
+    assert!(found.starts_with("it sews 0 elements") && found.contains("SC-W1111"), "{found}");
+    // Without the font the check fails where it is required, in CI, and is skipped elsewhere.
+    let missing = expected("ab", "missing", 100.0, [72.0, 144.0]);
+    assert_eq!(sews_lettered(&document, &missing, &mut fonts(), true), Err("the folder STITCHCRAFT_FONTS names has no font `missing`".to_string()));
+    assert_eq!(sews_lettered(&document, &missing, &mut fonts(), false), Ok(()));
+    assert!(sews_lettered(b"no document", &expected("ab", "test", 150.0, [72.0, 144.0]), &mut fonts(), true).is_err());
 }

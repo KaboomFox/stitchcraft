@@ -1351,8 +1351,8 @@ macro_rules! codes {
         /// the text is one the font draws.
         ///
         /// The message says which, and names the fonts that are there. Choose one of them in the effect's
-        /// dialog, give `stitch` the folder that holds the font with `--fonts`, or write the text as point
-        /// type on one line or more.
+        /// dialog, set `STITCHCRAFT_FONTS` to the folder that holds the font's folder for `stitch`, or write
+        /// the text as point type on one line or more.
         TextNotLettered = "SC-W1111", Warning, "Text not sewn in its embroidery font";
 
         /// `--subject` and `stitch cutout` cut a picture's subject out with 3 models, which `stitch` fetches with

@@ -35,6 +35,8 @@ SCRIPTS = ('boot.mjs', 'loader.mjs', 'starter.mjs', 'exports.mjs', 'engine.mjs',
 TITLE = 'StitchCraft in VectorCraft'
 # GitHub refuses a push that holds a file of 100 MB or more, so the publisher could never publish one.
 LARGEST_FILE = 100 * 1000 * 1000
+# The fonts the exporters hold when STITCHCRAFT_FONTS_DIR names a folder of fonts for their build.
+FONTS = ROOT / 'apps/stitchcraft-vc-plugin/built-in-fonts.txt'
 
 
 def pin(pins=PINS):
@@ -70,8 +72,25 @@ def page(html, start_version):
     return html
 
 
-def demo(out, built, tag, revision):
-    """Write the folder a preview publishes, from the modules built in `built`."""
+def fonts(folder, listed=FONTS):
+    """The embroidery fonts built into the exporters, each with its licence file: those the plug-in's list
+    names, in `folder`, the one STITCHCRAFT_FONTS_DIR names for the build. Without a folder none is built in."""
+    if not folder:
+        return []
+    names = [line.strip() for line in listed.read_text().splitlines() if line.strip() and not line.startswith('#')]
+    found = []
+    for name in names:
+        licences = sorted(path for path in (Path(folder) / name).iterdir() if path.is_file()
+                          and path.stem.lower() in ('license', 'licence') and path.suffix.lower() in ('', '.txt', '.md'))
+        if not licences:
+            raise ValueError(f'the font {name} has no licence file, so the site cannot publish a module that holds it')
+        found.append((name, licences[0]))
+    return found
+
+
+def demo(out, built, tag, revision, built_in=()):
+    """Write the folder a preview publishes, from the modules built in `built`, with the licence of each font
+    in `built_in`, which the exporters' modules hold a copy of."""
     light, heavy = modules()
     shutil.rmtree(out, ignore_errors=True)
     (out / 'plugins').mkdir(parents=True)
@@ -82,9 +101,14 @@ def demo(out, built, tag, revision):
     shutil.copytree(WEB / 'templates', out / 'templates')
     for name in ('LICENSE-MIT', 'LICENSE-APACHE', 'NOTICE'):
         shutil.copyfile(ROOT / name, out / f'StitchCraft-{name}.txt')
-    (out / 'plugins.json').write_text(json.dumps({
-        'plugins': light, 'optionalPlugins': heavy, 'version': version(WEB),
-        'vectorcraft': {'tag': tag, 'revision': revision}}, indent=1) + '\n')
+    listed = {'plugins': light, 'optionalPlugins': heavy, 'version': version(WEB),
+              'vectorcraft': {'tag': tag, 'revision': revision}}
+    # A font's licence asks that its text go with every copy (the OFL's condition 2).
+    for name, licence in built_in:
+        (out / 'fonts' / name).mkdir(parents=True)
+        shutil.copyfile(licence, out / 'fonts' / name / licence.name)
+        listed.setdefault('fonts', []).append({'folder': name, 'licence': f'fonts/{name}/{licence.name}'})
+    (out / 'plugins.json').write_text(json.dumps(listed, indent=1) + '\n')
 
 
 def app(out, editor, demo_folder, vectorcraft):
@@ -169,7 +193,7 @@ def main():
         run('cargo', 'build', '--locked', '--release', '--target', 'wasm32-unknown-unknown',
             '-p', 'stitchcraft-vc-plugin', '--no-default-features', '--features', name)
         shutil.copyfile(target / 'wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm', built / f'{name}.wasm')
-    demo(OUT / 'demo', built, tag, revision)
+    demo(OUT / 'demo', built, tag, revision, fonts(os.environ.get('STITCHCRAFT_FONTS_DIR')))
     app(OUT / 'app', vectorcraft / 'dist/web', OUT / 'demo', vectorcraft)
     print(f'Built {OUT / "app"} and {OUT / "demo"}')
 
