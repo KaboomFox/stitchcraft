@@ -509,14 +509,21 @@ exporters (M14.4, `REQ-FONT-021`, [lettering in VectorCraft](vectorcraft-integra
 
 **Which fonts.** The browser demo publishes the modules, and a published exporter shares the fonts in it.
 So a font is listed only when its licence lets a copy be shared with the licence's text beside it and
-asks for nothing more: the SIL Open Font License, and CC0 or the public domain. One font is listed:
+asks for nothing more: the SIL Open Font License, and CC0 or the public domain. 2 fonts are listed
+(`REQ-FONT-022`):
 
-| Font | Folder | Licence | Its files | What it adds to each exporter |
-|---|---|---|---|---|
-| Ink/Stitch Small Font, copyright 2017 Lex Neva | `small_font` | SIL Open Font License 1.1 | `font.json`, `ltr.svg`, `rtl.svg`, `LICENSE` | 829,061 bytes, as stored |
+| Font | Folder | Licence | Its files | What it adds to each exporter, as stored | Compressed with gzip |
+|---|---|---|---|---|---|
+| Ink/Stitch Small Font, copyright 2017 Lex Neva | `small_font` | SIL Open Font License 1.1 | `font.json`, `ltr.svg`, `rtl.svg`, `LICENSE` | 829,061 bytes | 78,486 bytes |
+| Barstitch Bold, copyright 2017 The Barlow Project Authors | `barstitch_bold` | SIL Open Font License 1.1 | `font.json`, `ltr.svg`, `LICENSE` | 1,432,433 bytes | 175,882 bytes |
 
-It is the default font: 5.08 mm tall at 100 percent, sewn from 70 to 300 percent, with glyphs for both
-directions. Its lines sew back and forth. Its glyph files are text, which a web server sends
+Small Font is the default font: 5.08 mm tall at 100 percent, sewn from 70 to 300 percent, with glyphs for both
+directions. Its lines sew back and forth. Barstitch Bold is the bold font (M14.8): block letters with
+strokes half again as wide for their height, 23 mm at 100 percent and sewn from 50 to 130 percent, with
+157 glyphs for one direction. A third of its bytes are the kerning pairs of its `font.json`. A text
+marker that names no font is set in the one of the 2 that is nearest in weight to the letters it replaces
+([the font chosen by the letters' weight](image-to-embroidery.md#the-font-chosen-by-the-letters-weight)).
+The glyph files are text, which a web server sends
 compressed. With the font, and with the SVG reader and lettering that read it, the demo's PES exporter
 grew from 3.5 to 5.4 MB as stored, and from 1.2 to 1.7 MB as sent.
 
@@ -532,6 +539,34 @@ grew from 3.5 to 5.4 MB as stored, and from 1.2 to 1.7 MB as sent.
 - The test `req_font_021_…` reads every font built in, and fails for one whose licence file names
   another licence first.
 
+The same was checked for Barstitch Bold at `c7e3a05`, on the same day:
+
+- Its `LICENSE` says the font was adapted for Ink/Stitch from Barlow and is under the SIL Open Font
+  License 1.1. It has Barlow's copyright line, "Copyright 2017 The Barlow Project Authors
+  (https://github.com/jpt/barlow)", and the licence's whole text. It declares no Reserved Font Name: the
+  words stand only in the licence's own text.
+- Its 3 files are built in as the corpus has them, so the copy isn't a modified version.
+
+**Only what a text needs is read** (M14.8, `REQ-FONT-023`). An exporter reads its fonts on every run,
+within the instructions VectorCraft allows an export. A font was already read only when a text named it.
+Reading it cut every glyph out of its glyph file and read each as a design, which was most of the cost,
+and a text uses a few glyphs of a hundred or more. So:
+
+- `font::read_for` reads a font for a text. It keeps the glyphs whose names are made of the text's
+  characters, as written and in Unicode's NFC, in upper and in lower case, since a font's `letter_case` may
+  turn them. It keeps the font's `default_glyph` too. A ligature is kept when the text has all its
+  characters. A glyph named with a form after a dot goes by what stands before the dot. Every other glyph
+  is passed over before it is measured, cut out or read, and nothing is said of it.
+- A host keeps each font as far as the texts so far need it (`lettering::Kept`). A text whose characters
+  the kept font was read for is served by it. Another has the font read again for the characters of both.
+  `Fonts::font_for` asks so, and a text object's effect and a text marker both ask with their text.
+- A font built in is found by its folder's name without any `font.json` being read. The `name` in a
+  `font.json` is looked for only when no folder is so named. Barstitch Bold's `font.json` is 517 KB.
+- `stitch` reads its fonts the same way, so it says of a document what an exporter says.
+
+The glyph file itself is still read whole as XML, once for each direction, to find the glyphs in it. A
+font that no text names costs nothing. [The counts](#what-reading-a-font-costs) are below.
+
 **CC BY and CC BY-SA fonts** are left to the owner. Either licence requires a credit where a person who
 gets the module can see it. The credit names the author and the licence, with the licence's address, and
 says what was changed. The site would publish it beside the licence file. An export would have to say it
@@ -539,6 +574,10 @@ too, as `stitch lettering` is to print it (ADR-0020). CC BY-SA also requires tha
 under the same licence. A module with the font's files unchanged in it is a collection by the licence's own
 terms, and a collection is no adaptation, and whether a sewn design is one is for the owner to decide before such a font
 joins. Geneva Rounded, for one, is under CC BY-SA 2.5 and would add 716 KB.
+
+### What reading a font costs
+
+COUNTS
 
 ## Fonts ported by other programs
 
@@ -688,11 +727,15 @@ coverage and stitches. TS-15 sews 3 ported fonts beside the fonts digitized by h
 - **A text longer than its path** (M14.3) is sewn on past the path's end, with a warning. The other choice
   is to refuse it, with no file written. The recommendation, taken, is to sew it: the picture shows by how much
   the text is too long.
-- **Which fonts are built into the plug-ins** (M14.4). The recommendation, taken, is Ink/Stitch Small Font
-  alone, under the OFL ([fonts built into the plug-ins](#fonts-built-into-the-plug-ins)). Each further
-  font adds its glyph files to both exporters. Ink/Stitch Medium Font, also under the OFL, would add 773
-  KB. A line of `built-in-fonts.txt` adds one. Fonts under CC BY or CC BY-SA wait for the owner's word on
-  their credit.
+- **Which fonts are built into the plug-ins** (M14.4, M14.8). Ink/Stitch Small Font was the one font, under
+  the OFL ([fonts built into the plug-ins](#fonts-built-into-the-plug-ins)). The owner asked for a bolder
+  one on 2026-11-16, and Barstitch Bold joined. Each further font adds its files to both exporters, and a
+  line of `built-in-fonts.txt` and of `lettering::HELD` adds one. Fonts under CC BY or CC BY-SA wait for
+  the owner's word on their credit.
+- **A third font, for bold letters under 12.5 mm** (M14.8). Barstitch Bold sews capital letters from 12.5
+  mm, and Small Font is the only font below that
+  ([the gap](image-to-embroidery.md#the-font-chosen-by-the-letters-weight)). The recommendation is to wait
+  for the sew-out of both fonts at 10 and 15 mm, and then to choose among the fonts the table there names.
 - **The font's name typed, or chosen from a list** (M14.4). The Lettering effect's dialog takes the font's
   name as text. The recommendation, taken, is to keep the text field while one font is built in, since a
   document then sews the same in every build and from `stitch`. A list is easier with many fonts, and

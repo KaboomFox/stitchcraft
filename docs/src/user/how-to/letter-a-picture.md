@@ -6,7 +6,8 @@ by one for the needle. You mark where the text is and type what it says. StitchC
 letters out and closes the holes they left in the background. It sets your text where they were, as tall
 as they were and in their colour.
 
-The font is Ink/Stitch Small Font unless you name another. It sews letters from 3.6 to 15.2 mm tall.
+The exporters hold 2 fonts, and StitchCraft chooses between them unless you name one
+([which font](#which-font-the-text-is-set-in)). Ink/Stitch Small Font is light. Barstitch Bold is bold.
 [Set text in an embroidery font](set-text-in-a-font.md) describes the fonts.
 
 ## Mark the text in VectorCraft
@@ -74,7 +75,7 @@ stitch:text "MATCH" font=geneva_simple trim=word
 
 | Setting | What it does |
 |---|---|
-| `font` | The font, by its folder's name. The plug-ins hold Ink/Stitch Small Font, and `stitch` has the fonts of its folder |
+| `font` | The font, by its folder's name. The plug-ins hold `small_font` and `barstitch_bold`, and `stitch` has the fonts of its folder. Left out, the font is chosen by the letters' weight |
 | `trim` | A trim after each `line`, `word` or `glyph`, or `off` |
 | `color_sort` | In a font of several colours, sorts them over `all` the text, each `line` or each `word`, or `off` |
 
@@ -88,17 +89,36 @@ The size and the spacing are found from the traced letters, so a marker doesn't 
 | `SC-W1113` | A marker wasn't used, and why. The traced letters then sew as before |
 | `SC-W1114` | Shapes cross the marker's edge. They sew as traced, beside the lettering. Make the marker larger to take them in |
 | `SC-W1115` | The lettering isn't the traced letters' size, with both sizes |
+| `SC-I1117` | The font was chosen for you. The message gives the letters' height, how bold they are, and the font |
 
-Letters smaller than the font sews are set at the font's smallest height, 3.6 mm in Small Font, centred
-where they were. They may then reach past the traced letters' place. Sew the design larger, or name a font
-that sews smaller. Letters taller than 15.2 mm are set at 15.2 mm.
+Letters smaller than the font sews are set at the font's smallest height, centred where they were. They
+may then reach past the traced letters' place. Sew the design larger, or name a font that sews smaller.
+Letters taller than the font sews are set at its greatest height.
 
 The letters of an embroidery font are not as wide as a picture's. The gaps between them are widened or
 narrowed so that the text is as wide as the traced text, by up to half the letters' height wider and a
 tenth narrower. Beyond that the text is centred, and `SC-W1115` gives the 2 widths.
 
+## Which font the text is set in
+
+A marker with `font=NAME` is set in that font. Without it, StitchCraft measures the traced letters: how
+tall they are, and how wide their strokes are for that height. It then takes the font whose strokes are
+nearest, among the fonts that sew letters that tall:
+
+| Font | Folder | Its strokes, in heights of a capital letter | Sews capital letters |
+|---|---|---|---|
+| Ink/Stitch Small Font | `small_font` | 0.13 | from 3.8 to 16.2 mm |
+| Barstitch Bold | `barstitch_bold` | 0.19 | from 12.5 to 32.5 mm |
+
+So bold letters 15 mm tall are set in Barstitch Bold, and thin ones in Small Font. `SC-I1117` says which
+font was taken and why. Bold letters under 12.5 mm are set in Small Font, since Barstitch Bold doesn't
+sew that small, and the message says so. They look lighter than the picture.
+
+`stitch` chooses the same way when its folder of fonts has both fonts. With one of them, or neither, the
+text is set in `small_font`.
+
 ## When to leave the letters traced
 
-Small Font's strokes are light. Bold block letters 10 mm tall and more sew well as traced shapes, and
-keep the look of the picture. Lettering helps most with letters under about 8 mm, with letters on an arc,
-and wherever the tracing joined neighbours.
+Bold block letters 10 mm tall and more sew well as traced shapes, and keep the look of the picture. From
+10 to 12.5 mm that is the bolder choice, since only the light font sews there. Lettering helps most with
+letters under about 8 mm, with letters on an arc, and wherever the tracing joined neighbours.

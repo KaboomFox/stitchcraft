@@ -1599,8 +1599,114 @@ columns that overlap at their joints. The background has no overlap to reach und
 
 Small Font's strokes are thinner than the bold block letters of TS-13B. At 15 and 10 mm the traced block
 letters sew well as they are, and the lettering looks lighter than the picture. At 6 mm and below, and for
-the emblem's letters, the lettering is the one that reads. A font with bolder strokes would match bold
-letters, and one font is built in today.
+the emblem's letters, the lettering is the one that reads. From M14.8 a second, bolder font is built in,
+and [the font is chosen by the letters' weight](#the-font-chosen-by-the-letters-weight).
+
+### The font chosen by the letters' weight
+
+The owner asked on 2026-11-16 why lettering that replaces big letters looks lighter than the picture.
+Nothing sews wrong: the one font built in was a light one. M14.8 measures how bold letters are, builds in
+a bold font, and chooses between the 2 (`REQ-AUTO-071`, `REQ-AUTO-072`).
+
+**The measure** is the width of a stroke over the height of a letter, found the same way on a traced
+outline and on a font's satin columns (`pictures::weight`). Each closed outline is taken at 48 places
+evenly spaced along it. From each a ray goes straight into the shape, as far as the next edge. The side
+that is in is the one where the ray meets the outlines an odd number of times. The stroke's width is the
+median of those distances. The long sides of a stroke outweigh its ends and its joints, whose rays run
+along the stroke and find its length. So an I and an O of one pen measure alike, which the area over the
+outline's length doesn't give.
+
+- **Traced letters** are the subpaths taken out of the thread that painted the most of them. The holes
+  the letters leave in the colour round them belong to another thread and aren't measured. A letter drawn
+  as a line is as wide as the line. The height is the one the lettering is fitted to.
+- **A font** is measured on its capital letters A to Z. Each satin column's 2 rails are closed into an
+  outline. The height is the median height of what each letter draws. Both are as drawn: a column's pull
+  compensation and the thread's own width add to what sews, for traced letters as for a font's.
+
+Measured so, at the fonts' own sizes, for the fonts of Ink/Stitch's library at `c7e3a05` that came into
+question:
+
+| Font | Licence | Stroke over height | Capital letters sew from, mm | To, mm |
+|---|---|---|---|---|
+| Barstitch regular | OFL | 0.096 | 12.2 | 36.5 |
+| Ink/Stitch Small Font, built in | OFL | 0.125 | 3.8 | 16.2 |
+| Ink/Stitch Medium Font | OFL | 0.126 | 12.1 | 24.2 |
+| Geneva Simple Sans | CC BY-SA | 0.150 | 10.0 | 19.9 |
+| Кирилиця, from Roboto | OFL | 0.175 | 7.9 | 28.8 |
+| TT Directors | OFL | 0.186 | 9.3 | 25.9 |
+| **Barstitch Bold, built in** | OFL | 0.188 | 12.5 | 32.5 |
+| Glacial Tiny 60 AGS | OFL | 0.215 | 2.8 | 8.4 |
+| Manga Impact | OFL | 0.244 | 8.6 | 43.2 |
+| TT Masters | OFL | 0.271 | 9.0 | 27.1 |
+| Ink/Stitch Masego | OFL | 0.275 | 13.9 | 20.9 |
+
+And the traced letters:
+
+| Picture | Letters | Stroke over height |
+|---|---|---|
+| The lettered patch, MATCH | 10 mm | 0.18 |
+| TS-13B's 4 words | 15, 10, 6 and 4 mm | 0.18 |
+| The sample emblem's 2 arcs, traced by VectorCraft 0.22 | 6.3 mm | 0.24 and 0.23 |
+
+The block letters are drawn with strokes 18 percent of their height wide
+(`testsheets::pictures::word`), and the measure finds that. Small Font is a third lighter than they
+are. Barstitch Bold is within a twentieth of them.
+
+**Why Barstitch Bold.** It is the nearest in weight to the block letters among the clean faces. It has
+capital and small letters and 157 glyphs. Its licence file has a copyright line and no reserved name
+([what was checked](fonts.md#fonts-built-into-the-plug-ins)). 2 fonts as bold sew smaller, and neither was
+taken:
+
+- TT Directors sews from 9.3 mm, which would hold the patch's 10 mm letters. It has capital letters only.
+  Its licence file names a designer and no copyright holder, and says the font comes from a demo of a
+  typeface that is sold. The OFL's notice needs a copyright line to carry.
+- Кирилиця, drawn from Roboto, sews from 7.9 mm and has a copyright line. Its files are 3.4 MB, more than
+  twice Barstitch Bold's, and every export that uses it would read a glyph file of 2.5 MB.
+
+Manga Impact and Masego are display faces, and bolder than the block letters by as much as Small Font is
+lighter.
+
+**The choice** (`pictures::chosen`). A marker that names a font is set in it. A marker that names none is
+given one of the fonts the reader's host offers, which are the fonts built in that the host holds
+([in VectorCraft](vectorcraft-integration.md#lettering)):
+
+1. The fonts whose heights hold the letters' height come first. When none holds it, the fonts that sew
+   nearest to it take their place.
+2. Of those, the font nearest in weight to the letters is chosen, and the earlier in the list when 2 are
+   as near. Letters without a width to measure take the earliest.
+
+The height comes before the weight because a font sews only at the heights it was drawn for. Bold
+letters set taller than the picture's would run into their neighbours and past the marker. A font's
+heights are those of its capital letters: how tall it draws them, times its least and its greatest scale.
+
+`SC-I1117` names the marker, the letters' height and weight, and the font with its weight, and says which
+of 3 things happened. It gives weights to 2 places, as the fonts' are written down: 0.13 and 0.19.
+
+| The letters | Set in | The note says |
+|---|---|---|
+| 15 mm, strokes 0.18 | Barstitch Bold | it is the nearest in weight of the fonts that sew at that height |
+| 15 mm, strokes 0.14 | Small Font | the same |
+| 10 mm, strokes 0.18 | Small Font | Barstitch Bold is the nearest in weight and sews from 12.5 mm, and leaving the text unmarked sews the traced letters |
+| 40 mm, any | Barstitch Bold | no font here sews at that height, and this one sews nearest to it |
+
+The fonts' numbers are written in `stitchcraft_vectorcraft::lettering::HELD`, since a plug-in chooses a
+font before it reads one. A build that has the fonts measures them again (`REQ-FONT-022`). With fewer
+than 2 fonts offered there is nothing to choose, and the marker is set in the default font without a
+note.
+
+**Bold letters from 6 to 12.5 mm** are the gap. Barstitch Bold doesn't sew that small, so they are set
+in Small Font at their own height, and look lighter than the picture, as before this step. The note
+says from what height the bold font sews. Traced block letters sew well as shapes from about 10 mm, so
+from 10 to 12.5 mm the person can leave the text unmarked. Below 10 mm the lettering is the one that
+reads, light as it is.
+
+**A text object** has no traced letters. Its Lettering effect sews in the font it names, or in the
+default font. A bold `font-weight` doesn't choose the bold font: type set at 12 points is 3 mm tall, far
+under what the bold font sews, and a document made before this step would sew otherwise than it did.
+
+**Not built.** An embolden setting that widens a font's satin columns would close the gap without a
+third font. It can close the counters of A, B and 8, and waits for a sew-out. The effect's dialog has
+no list of fonts.
 
 ### Decisions for the owner
 
@@ -1618,10 +1724,16 @@ Each has a recommendation, which the step took.
   sew-out has confirmed. MC-10 sews a patch both ways.
 - **`--text` in percent of the design's box.** Pixels of the picture are the other choice, and need the
   picture's size, which `stitch` doesn't read today. Recommended: percent.
-- **A bolder font built in.** Small Font is the one font built into the plug-ins
-  ([fonts](fonts.md#decisions-for-the-owner)), and it is lighter than bold drawn letters. A second font
-  with bolder strokes would serve badges. Recommended: choose one once the sew-out shows how Small Font
-  looks on a patch.
+- **A bolder font built in.** Decided on 2026-11-16: the owner asked for one, and M14.8 built in
+  Barstitch Bold.
+- **Bold letters from 6 to 12.5 mm**, which the bold font doesn't sew, are set in Small Font at their own
+  height, with a note. The other choices are to leave them traced, which sews badly under 10 mm, and to
+  set them in the bold font at 12.5 mm, taller than the picture has them. Recommended, and taken: Small
+  Font and the note.
+- **A third font for that gap**, or an embolden setting, waits for the sew-out of both fonts
+  ([fonts](fonts.md#decisions-for-the-owner)).
+- **A text object's bold `font-weight` doesn't choose the bold font.** Recommended, and taken: the effect
+  sews in the font it names or in the default, so documents sew as they did.
 
 ### What isn't built
 
@@ -1629,7 +1741,7 @@ Each has a recommendation, which the step took.
   object and no name ([RFC](rfc-vectorcraft-abi-v2.md), P6). The exported file and its preview picture
   have the lettering.
 - A marker has one line of text. 2 lines take 2 markers.
-- A font is chosen by the person. No font is matched to the letters' weight or style.
+- A font is matched to the letters' weight, among 2 fonts. Nothing matches a font to their style.
 - The emblem's numbers are from a document traced earlier, kept outside the repository. A case in the
   repository waits for a traced picture with lettered arcs among the fixtures.
 

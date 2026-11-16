@@ -34,7 +34,8 @@ font's own, and `--height` gives it in millimetres, measured on the font's refer
 stitch lettering "Hello" --font fonts/small_font --height 8 -o hello.pes
 ```
 
-Ink/Stitch Small Font sews from 3.6 to 15.2 mm tall, and Ink/Stitch Medium Font from 11.4 to 22.9 mm. A
+Ink/Stitch Small Font sews from 3.6 to 15.2 mm tall, Ink/Stitch Medium Font from 11.4 to 22.9 mm, and
+Barstitch Bold, whose strokes are half again as wide, from 11.5 to 29.9 mm. A
 size outside a font's range is set at the nearest size inside it, and `SC-W1106` names the range. For
 smaller or larger letters, choose a font drawn for them.
 

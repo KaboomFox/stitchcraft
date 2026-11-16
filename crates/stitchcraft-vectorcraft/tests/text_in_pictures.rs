@@ -102,6 +102,38 @@ fn req_vc_028_without_the_font_the_traced_shapes_sew_and_the_marker_never_does()
 }
 
 #[test]
+fn req_vc_030_a_marker_without_a_font_sews_in_the_font_held_that_is_nearest_in_weight() {
+    // The bold font's folder holds the test font, and the default font's holds nothing that reads: a
+    // document that letters in one font never reads the other.
+    const HELD: [Folder; 2] = [Folder { name: "small_font", files: &[("font.json", b"{")] }, Folder { name: "barstitch_bold", files: &FILES }];
+    // The letter is 8 mm wide and 20 tall: bolder than either font, and taller than the default font sews.
+    let read = read_in(&marked("stitch:text a"), &Budget::DEFAULT, Reading::default(), &mut BuiltIn::new(&HELD)).unwrap();
+    assert_eq!(ids(&read), ["vc:2:fill", "vc:4:stroke:0-svg:pa:stroke"]);
+    let said = said(&read);
+    assert!(said.iter().any(|said| said.contains("in the font `barstitch_bold`")), "{said:?}");
+    let chosen: Vec<&String> = said.iter().filter(|said| said.starts_with("info SC-I1117: ")).collect();
+    assert_eq!(chosen.len(), 1, "{said:?}");
+    assert!(
+        chosen[0].contains("its letters are 20.0 mm tall, with strokes 0.40 of their height wide. The text is set in `barstitch_bold`"),
+        "{}",
+        chosen[0]
+    );
+    // A marker that names the font sews in it without a word of a choice, and one that names the default
+    // font is told that it doesn't read.
+    let named = read_in(&marked(r#"stitch:text "a" font=barstitch_bold"#), &Budget::DEFAULT, Reading::default(), &mut BuiltIn::new(&HELD)).unwrap();
+    assert_eq!(ids(&named), ids(&read));
+    assert!(self::said(&named).iter().all(|said| !said.contains("SC-I1117")));
+    let unread = read_in(&marked(r#"stitch:text "a" font=small_font"#), &Budget::DEFAULT, Reading::default(), &mut BuiltIn::new(&HELD)).unwrap();
+    assert!(
+        self::said(&unread)[0]
+            .starts_with("warning SC-W1113: The text marker `vc:4:stroke` is not used: The embroidery font `small_font` does not read.")
+    );
+    // With one font held there is nothing to choose, and nothing is said of a choice.
+    let one = read_in(&marked("stitch:text a"), &Budget::DEFAULT, Reading::default(), &mut BuiltIn::new(&FOLDERS)).unwrap();
+    assert!(self::said(&one).iter().all(|said| !said.contains("SC-I1117")));
+}
+
+#[test]
 fn req_vc_028_a_group_is_never_a_text_marker() {
     let group = format!(
         r#"{{"id": 5, "name": "stitch:text a", "kind": {{"type": "group", "children": [{}]}}}}"#,
