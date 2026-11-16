@@ -56,6 +56,11 @@ fn measured(plan: &StitchPlan) -> Thickness {
     Thickness::of(plan, &mut meter()).unwrap().unwrap()
 }
 
+/// The least work that `work` succeeds with.
+fn least(work: &dyn Fn(&mut Meter) -> bool) -> u64 {
+    (0..1_000_000u64).find(|max_work| work(&mut Budget { max_work: *max_work, ..Budget::DEFAULT }.meter())).unwrap()
+}
+
 /// One stitch from `from` to `to`.
 fn stitch(from: (f64, f64), to: (f64, f64)) -> SewnStitch {
     SewnStitch { block: 0, index: 1, from: p(from.0, from.1), to: p(to.0, to.1), role: Role::Top, from_role: Role::Top }
@@ -216,7 +221,7 @@ fn drawn(over: &[usize]) -> Thickness {
         fills[*at] = 3.0;
     }
     let points = fills.iter().map(|fills| if *fills == 3.0 { 4.0 } else { 0.0 }).collect();
-    Thickness { grid: Grid { corner: (1.0, 2.0), columns: 11, rows: 11 }, fills, points }
+    Thickness { grid: Grid { corner: (1.0, 2.0), columns: 11, rows: 11 }, fills, points, sewn: Vec::new() }
 }
 
 /// The spots of the block of `across` by `down` spots whose first is in `column` and `row`, of 12 columns.
@@ -313,8 +318,13 @@ fn req_auto_061_the_thickest_spot_is_a_corner_of_the_cells() {
     let window = |at: usize| grid.window(at).collect::<Vec<usize>>();
     assert_eq!((window(13), window(0), window(11), window(143)), (vec![0, 1, 11, 12], vec![0], vec![10], vec![120]));
     assert_eq!(grid.windows(&(0..121).map(f64::from).collect::<Vec<f64>>(), 2.0).get(13..15), Some(&[48.0, 56.0][..]));
-    let none = Thickness { grid: Grid { corner: (0.0, 0.0), columns: 0, rows: 0 }, fills: Vec::new(), points: Vec::new() };
+    let none = Thickness { grid: Grid { corner: (0.0, 0.0), columns: 0, rows: 0 }, fills: Vec::new(), points: Vec::new(), sewn: Vec::new() };
     assert_eq!(none.most(Measure::Fills), Spot { value: 0.0, at: Point::ORIGIN });
+    // Of spots with the same value, the last is the one named.
+    let equal = drawn(&block(3, 3, 2, 2));
+    assert_eq!(equal.most(Measure::Fills), Spot { value: 3.0, at: equal.grid.spot(4 * 12 + 4) });
+    assert_eq!(drawn(&[]).most(Measure::Fills), Spot { value: 0.5, at: grid.spot(143) });
+    assert_eq!(drawn(&[]).most(Measure::Points), Spot { value: 0.0, at: grid.spot(143) });
 }
 
 #[test]
@@ -352,6 +362,53 @@ fn req_auto_062_the_stack_names_each_elements_thread_in_the_window() {
     }
     // Outside the grid nothing lies.
     assert_eq!(thickness.stack(&plan, p(500.0, 0.0), &mut meter()).unwrap(), Vec::new());
+}
+
+#[test]
+fn req_auto_062_only_the_stitches_near_a_spot_are_followed_for_its_stack() {
+    // A stitch is near a spot at (5, 5) when its box reaches within a millimetre of it along x and along y.
+    let near_to = |from: (f64, f64), to: (f64, f64)| super::near(&stitch(from, to), p(5.0, 5.0));
+    assert!(near_to((5.0, 5.0), (5.0, 5.0)) && near_to((0.0, 0.0), (9.0, 9.0)) && near_to((9.0, 5.5), (5.5, 9.0)));
+    // A millimetre away to each side is near, and a tenth more is not, whichever end is the nearer.
+    for (edge, beyond) in [(6.0, 6.1), (4.0, 3.9)] {
+        let out = edge + (edge - 5.0) * 3.0;
+        assert!(near_to((edge, 5.0), (out, 5.0)) && near_to((out, 5.0), (edge, 5.0)), "{edge}");
+        assert!(near_to((5.0, edge), (5.0, out)) && near_to((5.0, out), (5.0, edge)), "{edge}");
+        assert!(!near_to((beyond, 5.0), (out, 5.0)) && !near_to((out, 5.0), (beyond, 5.0)), "{beyond}");
+        assert!(!near_to((5.0, beyond), (5.0, out)) && !near_to((5.0, out), (5.0, beyond)), "{beyond}");
+        // Far along one of the 2 is far.
+        assert!(!near_to((beyond, 0.0), (out, 9.0)) && !near_to((0.0, beyond), (9.0, out)), "{beyond}");
+    }
+    // The stack's work is a unit for each stitch, and the steps of the near ones: of 3 rows 10 mm long,
+    // 3 mm apart, with the turns between them, only the middle row is near a spot on its middle: the turns
+    // lie 5 mm away along x.
+    let plan = plan(&[("a", Role::Top, &[(0.0, 0.0), (10.0, 0.0), (10.0, 3.0), (0.0, 3.0), (0.0, 6.0), (10.0, 6.0)])]);
+    let thickness = measured(&plan);
+    let work = |at: Point| least(&|meter| thickness.stack(&plan, at, meter).is_ok());
+    assert_eq!(thickness.stack(&plan, p(5.0, 3.0), &mut meter()).unwrap().len(), 1);
+    assert_eq!(work(p(5.0, 3.0)), 5 + 20);
+    // Between 2 rows, near no stitch, the stack is empty and no step is followed.
+    assert_eq!(thickness.stack(&plan, p(5.0, 1.5), &mut meter()).unwrap(), Vec::new());
+    assert_eq!(work(p(5.0, 1.5)), 5);
+}
+
+#[test]
+fn req_auto_061_a_piece_just_at_the_largest_value_is_found_from_a_report() {
+    // 4 spots of 3 fills and 4 needle points, the most of the plan: at limits of just that, both pieces
+    // are found, and above it nothing is, for the same work.
+    let thickness = drawn(&block(3, 3, 2, 2));
+    let limits = |fills, points| Limits { warn_fills: fills, fail_fills: fills, warn_points: points, fail_points: points };
+    let report = |limits: Limits| thickness.report(&StitchPlan::default(), &limits, &mut meter()).unwrap();
+    let at = report(limits(3.0, 4.0));
+    assert_eq!((at.thick.pieces, at.failing.pieces, at.dense.pieces, at.pierced.pieces), (1, 1, 1, 1));
+    assert_eq!((at.thick.area, at.dense.area), (1.0, 1.0));
+    let above = report(limits(3.5, 4.5));
+    assert_eq!((above.thick, above.failing, above.dense, above.pierced), (Over::default(), Over::default(), Over::default(), Over::default()));
+    let below = report(limits(2.5, 3.5));
+    assert_eq!((below.thick, below.dense), (at.thick, at.dense));
+    let work = |limits: Limits| least(&|meter| thickness.report(&StitchPlan::default(), &limits, meter).is_ok());
+    assert_eq!(work(limits(3.0, 4.0)), work(limits(3.5, 4.5)));
+    assert_eq!(work(limits(3.0, 4.0)), 4 * 144);
 }
 
 #[test]
@@ -422,6 +479,8 @@ fn measuring_stops_when_the_work_runs_out() {
     let thickness = measured(&plan);
     assert_eq!(thickness.size(), (24, 6));
     assert_eq!(needed(&|meter| thickness.over(Measure::Fills, 1.0, meter).is_ok()), spots);
-    assert_eq!(needed(&|meter| thickness.stack(&plan, p(5.0, 0.5), meter).is_ok()), 7 + steps);
-    assert_eq!(needed(&|meter| thickness.report(&plan, &Limits::DEFAULT, meter).is_ok()), 4 * spots + 7 + steps);
+    // The 3 turns lie 5 mm from the spot, and are not followed.
+    assert_eq!(needed(&|meter| thickness.stack(&plan, p(5.0, 0.5), meter).is_ok()), 7 + steps - 3);
+    // The thickest spot lies where the rows turn: 3 rows and 2 turns are near it.
+    assert_eq!(needed(&|meter| thickness.report(&plan, &Limits::DEFAULT, meter).is_ok()), 4 * spots + 7 + 3 * 20 + 2);
 }

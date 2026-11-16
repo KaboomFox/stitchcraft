@@ -1023,6 +1023,12 @@ fills is grey, and thread of 2 fills or more yellow. From 3 fills it is orange, 
 
 The user page shows [the running dog's](../user/stitches/automatic.md#how-thick-it-sews).
 
+A plan is measured once, and the measure keeps the stitches it went through. What lies at the
+thickest spot is found from those: only a stitch whose box reaches within 1 mm of the spot is followed
+again. A limit above the largest value has nothing over it, and the spots are not searched for it.
+Counted in processor instructions on the sheets TS-13A and TS-13B, the measure takes
+1.9 % of planning. Before these 3 savings it took 2.7 %.
+
 ### What today's designs measure
 
 Measured on 2026-11-16 as `--auto` sews each picture, with the base layer and the outline on. The last
@@ -1044,6 +1050,13 @@ Measured on 2026-11-16 as `--auto` sews each picture, with the base layer and th
 
 The badge is measured on its PES file, and its area is that of a disc 50 mm across. The lettered patch
 sews no outline, because its letters are satin columns.
+
+On TS-13B the letters of one word measure differently, and that is what sews. In the word 15 mm tall
+the base layer has a piece under the M, the A, the T and the H, whose strokes sew as 2 to 4 columns
+each. It has none under the C, which sews as one column with an underlay of its own. The smaller words
+have no base layer, and a letter is thick there where its columns meet: the M has 4 columns and 3
+joins. In the word 4 mm tall the M and the A still sew as columns, and the other letters as lines of
+running stitch.
 
 Every standard picture is over the warning's limit somewhere, and a quarter to a third of each traced
 dog is. Each part of the stack has its own share:
