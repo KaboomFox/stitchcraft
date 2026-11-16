@@ -133,6 +133,8 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W1106`](#sc-w1106) | Warning | Scale outside the font's range |
 | [`SC-W1107`](#sc-w1107) | Warning | Character not in the font |
 | [`SC-E1108`](#sc-e1108) | Error | Text could not be set |
+| [`SC-W1109`](#sc-w1109) | Warning | Text longer than its path |
+| [`SC-W1110`](#sc-w1110) | Warning | Lettering setting not applied |
 | [`SC-E1201`](#sc-e1201) | Error | Subject cut-out's models not ready |
 | [`SC-E1202`](#sc-e1202) | Error | No subject found to cut out |
 | [`SC-E1203`](#sc-e1203) | Error | Picture could not be read for the cut-out |
@@ -1816,6 +1818,33 @@ is no number, or the text is longer than the 10 m a design may span.
 
 The message says which. Give a text with a character the font draws, and spacings of a few
 millimetres.
+
+## SC-W1109
+
+**Warning** — Text longer than its path
+
+A text set along a path has a line longer than the path. Nothing is left out. On an open path the
+line goes on straight past the path's end, the way the path ends, and before its start when the
+line is centred or ends at the path's end. On a closed path it goes round again, over its own
+start. A stretched line has its letters pushed together to fit, and they overlap.
+
+The message gives the line's length and the path's. Draw a longer path, set the text at a smaller
+scale, or write a shorter text.
+
+## SC-W1110
+
+**Warning** — Lettering setting not applied
+
+A setting of lettering asks for something the font isn't drawn for, and the text sews without it.
+Lines sew back and forth only in a font that draws its glyphs for both directions and whose
+`font.json` doesn't say `reversible` is false: in another font every line sews the same way, and
+the thread jumps from each line's end to the next line's start. Colours are sorted only in a font
+whose `font.json` says it is `sortable`: another font sews each letter's colours before the next
+letter.
+
+The message names the font and the setting. Choose a font drawn for what you ask. Between lines
+that sew the same way, a machine that cuts its threads cuts the long one, and on another machine you
+cut it after sewing. Ink/Stitch Small Font and Medium Font sew both ways.
 
 ## SC-E1201
 
