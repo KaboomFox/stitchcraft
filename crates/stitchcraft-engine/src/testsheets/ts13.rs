@@ -12,8 +12,10 @@
 //! - **TS-13C**, lines and shapes in parts (M13.1, M13.6): a cartoon face drawn with lines 1, 2 and 4 mm
 //!   wide, with round caps, small rings and hairpins, and a star and a balloon on its string, broad in places
 //!   and narrow in others.
-//! - **TS-13D**, pictures traced in layers (M13.12): an emblem and a button, each traced abutting and traced
-//!   stacked, as VectorCraft's Image Trace traces them by either method.
+//! - **TS-13D** and **TS-13E**, pictures traced in layers (M13.12): an emblem on TS-13D and a button on
+//!   TS-13E, each traced abutting and traced stacked, as VectorCraft's Image Trace traces them by either
+//!   method. They were one sheet until M13.31: VectorCraft ends an export after a count of instructions, and
+//!   the 4 pictures together took 99.7 % of it (`docs/src/design/compatibility-gate.md`).
 //!
 //! The half in paint order is drawn first, and its last shape stops the machine: nothing moves across a
 //! stop, so the digitized half sews after it in the order automatic digitizing chooses for it alone, and
@@ -95,6 +97,10 @@ pub(super) const LINES_AND_PARTS_SAY: [Code; 13] = [
 pub(super) const LAYERS_SAY: [Code; 8] =
     [AutoDigitized, AutoSatinFilled, AutoSatinFilled, AutoLayers, AutoOrder, AutoUnder, AutoBase, StitchesMerged];
 
+/// What the engine says of TS-13E, in order: as of TS-13D, without a satin column that can't be made. A
+/// button's rim is a ring a column follows.
+pub(super) const BUTTONS_SAY: [Code; 6] = [AutoDigitized, AutoLayers, AutoOrder, AutoUnder, AutoBase, StitchesMerged];
+
 /// The check of every TS-13 sheet that asks where a jump thread is sewn down: the reference machine cuts
 /// none (MC-1), and the sheets sew their pictures as the engine plans any design.
 pub(super) const JUMP_THREADS: &str = "The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?";
@@ -137,15 +143,17 @@ pub(super) fn lines_and_parts() -> Result<Drawing, SheetError> {
     })
 }
 
-/// Draws TS-13D: pictures traced in layers, each by either method.
+/// Draws TS-13D: an emblem traced in layers, by either method.
 pub(super) fn layers() -> Result<Drawing, SheetError> {
     halves("ts13d", 58.0, |top| {
-        Ok(vec![
-            pictures::emblem((21.0, top + 21.0), 0.7, Trace::Abutting)?,
-            pictures::emblem((67.0, top + 21.0), 0.7, Trace::Stacked)?,
-            pictures::button((103.0, top + 11.6), 0.8, Trace::Abutting)?,
-            pictures::button((103.0, top + 38.4), 0.8, Trace::Stacked)?,
-        ])
+        Ok(vec![pictures::emblem((21.0, top + 21.0), 0.7, Trace::Abutting)?, pictures::emblem((67.0, top + 21.0), 0.7, Trace::Stacked)?])
+    })
+}
+
+/// Draws TS-13E: a button traced in layers, by either method.
+pub(super) fn buttons() -> Result<Drawing, SheetError> {
+    halves("ts13e", 58.0, |top| {
+        Ok(vec![pictures::button((12.0, top + 11.6), 0.8, Trace::Abutting)?, pictures::button((12.0, top + 38.4), 0.8, Trace::Stacked)?])
     })
 }
 
@@ -172,7 +180,7 @@ mod tests {
     use crate::common::STOP_AFTER;
 
     /// The TS-13 sheets.
-    const SHEETS: [&str; 4] = ["TS-13A", "TS-13B", "TS-13C", "TS-13D"];
+    const SHEETS: [&str; 5] = ["TS-13A", "TS-13B", "TS-13C", "TS-13D", "TS-13E"];
 
     #[test]
     fn ts13_sheets_have_the_sizes_and_stitches_their_cases_and_the_changelog_give() {
@@ -182,7 +190,8 @@ mod tests {
             ("TS-13A", [126.001, 167.98], 26_105),
             ("TS-13B", [110.597, 148.4], 15_930),
             ("TS-13C", [111.397, 107.75], 11_486),
-            ("TS-13D", [115.0, 108.386], 27_988),
+            ("TS-13D", [88.0, 100.025], 21_521),
+            ("TS-13E", [23.999, 108.394], 6_380),
         ] {
             let plan = find(id).unwrap().plan().unwrap();
             let bounds = plan.bounds().unwrap();
