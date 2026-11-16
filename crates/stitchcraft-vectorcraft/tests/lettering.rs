@@ -237,7 +237,25 @@ fn diag_sc_w1111_a_text_whose_font_is_not_here_or_that_lettering_does_not_set_is
     assert_eq!(twice.design.elements().len(), 2);
     let once = self::read(&document(json!([text(7, "a", 0.0, 0.0, json!({}), json!({"font": "two"}))])));
     assert_eq!(twice.warnings, once.warnings);
-    assert!(!once.warnings.is_empty());
+    assert_eq!(once.warnings.iter().map(|said| said.code).collect::<Vec<_>>(), [Code::FontSettingDefault]);
+    // What the reader notes for information isn't passed on: the font read alone says more.
+    let coloured = glyphs("#000000", "#0000ff");
+    let alone =
+        font::read("two", &[("font.json", b"{\"name\": \"Two\", \"size\": \"big\", \"x\": 1}"), ("ltr.svg", coloured.as_bytes())], &Budget::DEFAULT);
+    assert!(alone.unwrap().warnings.iter().any(|said| said.code == Code::FontReadAsInkStitch));
+    // A message names at most 8 fonts, and counts the others.
+    let settings: Vec<String> = (0..10).map(|i| format!("{{\"name\": \"Font {i}\"}}")).collect();
+    let names: Vec<String> = (0..10).map(|i| format!("f{i}")).collect();
+    let files: Vec<[(&str, &[u8]); 1]> = settings.iter().map(|json| [("font.json", json.as_bytes())]).collect();
+    let folders: Vec<Folder> = names.iter().zip(&files).map(|(name, files)| Folder { name, files }).collect();
+    let many = read_in(&asked, &Budget::DEFAULT, Reading::default(), &mut BuiltIn::new(&folders)).unwrap();
+    let listed =
+        "The fonts here are Font 0 (`f0`), Font 1 (`f1`), Font 2 (`f2`), Font 3 (`f3`), Font 4 (`f4`), Font 5 (`f5`), Font 6 (`f6`), Font 7 (`f7`)";
+    assert!(many.warnings[0].message.ends_with(&format!("{listed}, and 2 more.")), "{}", many.warnings[0].message);
+    let nine = read_in(&asked, &Budget::DEFAULT, Reading::default(), &mut BuiltIn::new(&folders[..9])).unwrap();
+    assert!(nine.warnings[0].message.ends_with(&format!("{listed}, and 1 more.")), "{}", nine.warnings[0].message);
+    let eight = read_in(&asked, &Budget::DEFAULT, Reading::default(), &mut BuiltIn::new(&folders[..8])).unwrap();
+    assert!(eight.warnings[0].message.ends_with(&format!("{listed}.")), "{}", eight.warnings[0].message);
 }
 
 #[test]
