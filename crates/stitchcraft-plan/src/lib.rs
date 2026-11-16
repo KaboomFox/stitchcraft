@@ -18,6 +18,7 @@ pub mod palette;
 pub mod plan;
 pub mod profile;
 pub mod profiles;
+pub mod thickness;
 pub mod thread;
 
 pub use builder::{PlanBuilder, PlanError};

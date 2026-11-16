@@ -975,7 +975,10 @@ fn written_as_exported(document: &[u8], machine: &str, bytes: &[u8], warnings: &
         ));
     }
     if said != warnings {
-        return Err(format!("the export warned {warnings:?}, and `stitch export` says {said:?}"));
+        // Only what one says and the other doesn't: a log cuts a long line, and the lists are long.
+        let only = |these: &[String], those: &[String]| these.iter().filter(|line| !those.contains(line)).cloned().collect::<Vec<_>>();
+        let (warned, said) = (only(warnings, &said), only(&said, warnings));
+        return Err(format!("the export warned {warned:?}, and `stitch export` says {said:?}, where they differ"));
     }
     Ok(())
 }

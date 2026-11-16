@@ -267,7 +267,7 @@ fn fabric(colour: &str) -> Result<Rgb, String> {
 /// The PNG files of a `stitch` shot, one per image it makes ([`Shot::images`]).
 pub fn stitch(root: &Path, shot: &Shot) -> Result<Vec<Vec<u8>>, String> {
     let name = shot.style.as_deref().unwrap_or(Style::Realistic.name());
-    let style = Style::from_name(name).ok_or_else(|| format!("unknown style `{name}` (known: realistic, simple)"))?;
+    let style = Style::from_name(name).ok_or_else(|| format!("unknown style `{name}` (known: realistic, simple, thickness)"))?;
     let scale = shot.scale.unwrap_or(Settings::DEFAULT_SCALE);
     let settings = Settings::new(style, scale)
         .ok_or_else(|| format!("scale {scale} is outside {} to {} pixels per millimetre", Settings::MIN_SCALE, Settings::MAX_SCALE))?;
