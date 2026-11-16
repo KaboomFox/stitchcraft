@@ -88,7 +88,7 @@
 //! for each, and an object of 6 paints on its most compact path still reads.
 
 use std::cell::OnceCell;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 
 use serde_json::Value;
@@ -105,12 +105,14 @@ use stitchcraft_plan::{MachineProfile, Rgb, Thread};
 use crate::container::{self, BYTES_PER_UNIT, MAX_BYTES, unreadable};
 
 mod clip;
+mod text;
 
 /// The bytes the elements' copies of their objects' paths may take, in all, for each byte of JSON read
 /// ([the module](self)).
 pub const HELD_PER_BYTE: usize = 32;
 use crate::geometry::{self, UNUSABLE_HINT};
 use crate::gradient;
+use crate::lettering::{Fonts, NoFonts};
 use crate::values::{sews, text};
 use crate::wire::{self, Dash, Effect, Item, Kind, Node, Paint, PathData, Profile, Stop, shows};
 use crate::{AUTO, FORMAT, color, effect_name, settings};
@@ -159,6 +161,13 @@ pub fn read(bytes: &[u8], budget: &Budget) -> Result<VectorCraft, Diagnostic> {
 /// (`REQ-AUTO-001`), as one the Auto effect reaches is without it (`REQ-VC-016`), and with `sort_colours`
 /// every element sews in the order automatic digitizing chooses (`REQ-AUTO-011`). Fails as [`read`] does.
 pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<VectorCraft, Diagnostic> {
+    read_in(bytes, budget, reading, &mut NoFonts)
+}
+
+/// As [`read_with`], with the embroidery fonts of `fonts`: a text object with StitchCraft's Lettering effect
+/// sews as lettering sets its text in the font the effect names (`REQ-VC-026`). A text whose font `fonts`
+/// doesn't have is left out with `SC-W1111`, as every such text is by [`read_with`], which has no fonts.
+pub fn read_in(bytes: &[u8], budget: &Budget, reading: Reading, fonts: &mut dyn Fonts) -> Result<VectorCraft, Diagnostic> {
     let mut meter = budget.meter();
     let json = container::json(bytes, &mut meter)?;
     let file: wire::File = serde_json::from_slice(&json).map_err(|e| unreadable(&format!("Its JSON does not read: {e}.")))?;
@@ -166,6 +175,8 @@ pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<Vect
     let (labels, read) = (Labels::default(), json.len());
     let mut reader = Reader {
         meter,
+        budget,
+        fonts,
         labels,
         objects: 0,
         elements: Vec::new(),
@@ -176,6 +187,7 @@ pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<Vect
         read,
         held: 0,
         places: Vec::new(),
+        lettered: BTreeSet::new(),
     };
     reader.header(file.format.as_deref(), file.version.as_ref())?;
     let document = file.document.ok_or_else(|| unreadable("It holds no document."))?;
@@ -443,8 +455,12 @@ fn markers_read() -> String {
     names.split_last().map(|(last, rest)| format!("{} and {last}", rest.join(", "))).unwrap_or_default()
 }
 
-struct Reader {
+struct Reader<'f> {
     meter: Meter,
+    /// The budget the document is read within, which setting a text has again, as a routing filter has.
+    budget: &'f Budget,
+    /// Where the fonts are that the texts with the Lettering effect name ([`crate::lettering`]).
+    fonts: &'f mut dyn Fonts,
     labels: Labels,
     /// How many objects the walk has met: the number of an object without an id.
     objects: u64,
@@ -463,9 +479,11 @@ struct Reader {
     held: usize,
     /// The origin and stop position markers met, in order, each with its label and its place, if it reads.
     places: Vec<(Marker, String, Option<Point>)>,
+    /// The folders of the fonts whose reader's words were passed on, each once.
+    lettered: BTreeSet<String>,
 }
 
-impl Reader {
+impl Reader<'_> {
     /// Checks the file's format and its version, which may be newer than the adapter reads.
     fn header(&mut self, format: Option<&str>, version: Option<&Value>) -> Result<(), Diagnostic> {
         match format {
@@ -607,10 +625,7 @@ impl Reader {
             }
             "path" => self.shape(node, &label, &kind.path.iter().collect::<Vec<_>>(), kind.rule.as_deref(), around)?,
             "compound" => self.compound(node, kind, &label, around)?,
-            "text" => {
-                let message = format!("{} is not stitched.", called(node, "Text"));
-                self.feature(&label, message, Some("Make paths of it with Type › Create Outlines."));
-            }
+            "text" => self.text(node, kind, &label, around)?,
             "image" => {
                 let message = format!("{} is not stitched.", called(node, "An image"));
                 self.feature(&label, message, Some("Trace it, or draw over it, to stitch it."));
