@@ -6,8 +6,8 @@ description = "VectorCraft installs each of StitchCraft's modules, and lists eac
 requirements = ["REQ-VC-002", "REQ-VC-011", "REQ-VC-013", "REQ-VC-014", "REQ-VC-015", "REQ-VC-016", "REQ-VC-018", "REQ-VC-020", "REQ-VC-021"]
 
 [[run]]
-plugins = ["stroke", "satin", "fill", "auto", "pes", "dst", "settings", "stroke-to-satin", "testsheet", "route-satins", "route-runs", "tartan"]
+plugins = ["stroke", "satin", "fill", "auto", "pes", "dst", "settings", "stroke-to-satin", "testsheet", "route-satins", "route-runs", "tartan", "lettering"]
 steps = [{ cmd = "plugin.list" }]
 
 [expect]
-listed = ["stroke", "satin", "fill", "auto", "pes", "dst", "settings", "stroke-to-satin", "testsheet", "route-satins", "route-runs", "tartan"]
+listed = ["stroke", "satin", "fill", "auto", "pes", "dst", "settings", "stroke-to-satin", "testsheet", "route-satins", "route-runs", "tartan", "lettering"]

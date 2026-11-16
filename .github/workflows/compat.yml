@@ -111,6 +111,16 @@ jobs:
         id: archive
         if: matrix.track == 'stable'
         uses: ./.github/actions/vectorcraft-archive
+      # The exporters hold Ink/Stitch Small Font, which the lettering scenario sews in, and `stitch` finds the
+      # same font: both from the pinned corpus (docs/src/design/fonts.md, Fonts built into the plug-ins).
+      - name: Ink/Stitch's fonts, built into the exporters (pinned by SHA-256)
+        if: steps.ref.outputs.ref != ''
+        uses: ./.github/actions/fonts
+        with:
+          build-in: "true"
+      - name: The fonts built in read, and may be shared with their licences (REQ-FONT-021)
+        if: steps.ref.outputs.ref != ''
+        run: cargo test --locked -p stitchcraft-vc-plugin --lib fonts
       # Builds the plug-in's modules for wasm32, hello and one for each stitch family, notes their sizes, and
       # writes the track's result in target/compat/results for the report.
       - name: Both levels against VectorCraft ${{ steps.ref.outputs.ref }}

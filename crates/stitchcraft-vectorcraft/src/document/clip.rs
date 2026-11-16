@@ -62,7 +62,7 @@ use crate::wire::{Kind, Node, PathData};
 /// How to clip to the shape of an image, a placed document or a mesh, which StitchCraft doesn't read.
 const DRAW_A_PATH: &str = "Draw a path round it, and make the clipping mask with that.";
 
-impl Reader {
+impl Reader<'_> {
     /// The clip of the clip group or the clipping layer `label`, `who`, whose kind is `kind`, with the number
     /// of its segments: the area of its first object. `None` when it doesn't clip, or holds nothing.
     pub(super) fn clip(&mut self, kind: &Kind, label: &str, who: &str) -> Result<Option<(Clip, u64)>, Diagnostic> {

@@ -136,6 +136,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E1108`](#sc-e1108) | Error | Text could not be set |
 | [`SC-W1109`](#sc-w1109) | Warning | Text longer than its path |
 | [`SC-W1110`](#sc-w1110) | Warning | Lettering setting not applied |
+| [`SC-W1111`](#sc-w1111) | Warning | Text not sewn in its embroidery font |
 | [`SC-E1201`](#sc-e1201) | Error | Subject cut-out's models not ready |
 | [`SC-E1202`](#sc-e1202) | Error | No subject found to cut out |
 | [`SC-E1203`](#sc-e1203) | Error | Picture could not be read for the cut-out |
@@ -1869,6 +1870,20 @@ letter.
 The message names the font and the setting. Choose a font drawn for what you ask. Between lines
 that sew the same way, a machine that cuts its threads cuts the long one, and on another machine you
 cut it after sewing. Ink/Stitch Small Font and Medium Font sew both ways.
+
+## SC-W1111
+
+**Warning** — Text not sewn in its embroidery font
+
+A text object of a VectorCraft document has StitchCraft's Lettering effect, and its text wasn't
+sewn. The rest of the document sews. The font the effect names isn't one this build of the
+plug-ins holds or `stitch` finds in its font folders, or the font didn't read. Or the text is
+area type, type on a path or vertical type, which lettering doesn't set yet. Or no character of
+the text is one the font draws.
+
+The message says which, and names the fonts that are there. Choose one of them in the effect's
+dialog, set `STITCHCRAFT_FONTS` to the folder that holds the font's folder for `stitch`, or write
+the text as point type on one line or more.
 
 ## SC-E1201
 

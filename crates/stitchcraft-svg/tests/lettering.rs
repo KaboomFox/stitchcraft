@@ -491,3 +491,52 @@ proptest! {
         }
     }
 }
+
+#[test]
+fn req_vc_026_a_setting_is_taken_by_its_name_from_its_value_as_text() {
+    let mut how = Lettering::default();
+    for (name, value) in [
+        ("scale", " 150 "),
+        ("letter_spacing", "1.5"),
+        ("word_spacing", "-2"),
+        ("line_height", "3"),
+        ("text_align", "center"),
+        ("back_and_forth", "false"),
+        ("trim", "word"),
+        ("color_sort", "line"),
+    ] {
+        assert!(how.take(name, value), "{name}");
+    }
+    let taken = Lettering {
+        scale: 150.0,
+        letter_spacing: 1.5,
+        word_spacing: -2.0,
+        line_height: 3.0,
+        align: Align::Centre,
+        back_and_forth: false,
+        trim: Trim::Word,
+        color_sort: ColourSort::Line,
+    };
+    assert_eq!(how, taken);
+    // A value that doesn't read, a setting of a text along a path and a name that is none change nothing.
+    for (name, value) in [
+        ("scale", "large"),
+        ("scale", "inf"),
+        ("letter_spacing", ""),
+        ("word_spacing", "NaN"),
+        ("line_height", "1 mm"),
+        ("text_align", "middle"),
+        ("back_and_forth", "yes"),
+        ("trim", "letter"),
+        ("color_sort", "true"),
+        ("text_position", "left"),
+        ("font", "small_font"),
+    ] {
+        assert!(!how.take(name, value), "{name}: {value}");
+    }
+    assert_eq!(how, taken);
+    // The names are those of the settings lettering lists.
+    for name in ["scale", "letter_spacing", "word_spacing", "line_height", "text_align", "back_and_forth", "trim", "color_sort"] {
+        assert!(SETTINGS.iter().any(|setting| setting.name == name), "{name}");
+    }
+}
