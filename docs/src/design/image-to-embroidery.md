@@ -997,8 +997,7 @@ running dog left 0.184 % bare once pulled in. With both areas keeping the line's
 before and the dogs had only 11 to 16 % less thick area.
 
 **The base layer has one layer.** The overlaps were not all of it. The base layer sewed as Ink/Stitch's
-knockdown fill does, in 3 layers 60° apart. Each layer travels along the piece's edge between the ends of
-its rows, so 3 in 10 of the base layer's millimetres of thread lay along its own edge: 894 of 2,995 mm on
+knockdown fill does, in 3 layers 60° apart. Each layer sews along the piece's edge from the end of one row to the next, so 3 in 10 of the base layer's millimetres of thread lay along its own edge: 894 of 2,995 mm on
 the running dog in 9 threads. There it measured 1.2 to 1.5 fills, and 2.3 at its worst, under the ends of
 the fills' rows and under the outline. It measured 1 fill or more on 106 mm² of that dog's 1,841. Every
 automatic fill has the rows of one angle, `auto_fill_angle`. So the base layer now sews one layer, its rows
@@ -1006,11 +1005,9 @@ across the fills' rows: the underlay a fill is usually given, once under the who
 `auto_base_rows` at `lattice` sews the 3 layers as before, for a fabric with pile.
 
 Measured and left out: the base layer cut away under the overlaps, which leaves 43 to 58 % more thick area,
-since each layer of each piece then travels along its new edges, beside every seam. The base layer cut
-away under satin columns leaves 2 to 5 % more and a gap with nothing under it. Travel inside the base layer
-in place of travel along its edge leaves 1 to 2 % more. 2 layers leave 10 to 17 % less than 3, and one
-layer 22 to 29 % less, whichever way its rows run. The check of the cover passes all of them alike: it
-knows where the base layer's shape lies, and not where its thread does.
+since each layer of each piece then sews along its new edges, beside each edge between 2 fills. The base layer cut
+away under satin columns leaves 2 to 5 % more and a gap with nothing under it. With `underpath` on, the needle moves from row to row inside the base layer and not along its edge, which leaves 1 to 2 % more. 2 layers leave 10 to 17 % less than 3, and one
+layer 22 to 29 % less, whichever way its rows run. The check of the cover gives each of these the same result: it knows where the base layer's shape lies, and not where its thread does.
 
 **A part whose one satin column would crowd its stitches is filled** (`REQ-AUTO-064`). What was left at 6
 fills or more was no overlap and no fill. A fill's own thread reaches 2.5 fills nowhere on the dogs. A
@@ -1045,9 +1042,7 @@ layers and the rest as it is now, they have 268, 320, 292 and 400.
 
 The step's aims were no place at 6 fills or more and half the area at 3 or more on each dog, with the
 cover as it was. No picture has a place at 6 fills or more, and the dogs have 55 to 64 % less area at 3
-or more. The cover holds by its check: no gap that the base layer isn't under, the bare share lower or as
-it was, and one sliver of 0.18 mm² on the dog on turf in 9 threads, where the running dog in 6 lost its
-one. What is worse:
+or more. The cover is as it was by its check. No gap lies where the base layer isn't under it, and the bare share is lower or as it was. The dog on turf in 9 threads has one sliver of 0.18 mm², and the running dog in 6 lost its one. What is worse:
 
 - The dog on turf in 9 threads changes thread 13 times where it changed 12. Which of its new fills costs
   the change was not traced.
@@ -1061,14 +1056,12 @@ one. What is worse:
   now that an end moved by up to 1 mm.
 - Once the thread is pulled in by 0.4 mm at every turn, 3 of the dogs leave 0.1 to 0.7 mm² more of their
   area with no thread at all on it, of 1,640 to 1,940 mm², and one 0.15 mm² less.
-- A fill's base is thinner. Whether one layer holds a fill flat on the fabric is for MC-8 to sew: nothing
+- A fill's base is thinner. Whether a fill lies flat on the fabric over one layer is for MC-8 to sew: nothing
   here measures it.
 
 A straight edge between 2 fills that crosses their rows still measures about 2.9 fills by itself: the
 upper fill 1.0, the ends of its rows 0.25, the overlap 1.0, the ends of its rows 0.25, the base layer 0.1
-and the outline 0.25. That is why the dogs keep 178 to 280 mm² at 3 fills or more: an edge with a column
-or a third shape beside it is over the line. The parts that could still go are the outline along an edge
-between 2 areas, which the owner chose, and the overlap itself, which costs cover. The demo's badge was
+and the outline 0.25. The 178 to 280 mm² that the dogs keep at 3 fills or more are such edges with a column or a third shape beside them. 2 parts could still go. One is the outline along an edge between 2 areas, which the owner chose. The other is the overlap itself, which costs cover. The demo's badge was
 not measured again.
 
 ### On black fabric
