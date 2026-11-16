@@ -231,7 +231,8 @@ impl Canvas<'_> {
     }
 
     /// Colours each pixel by the thread over the spot under its middle (`stitchcraft_plan::thickness`),
-    /// measured on the stitches of `scene`, which lie on the machine's grid: grey under 2 fills, then
+    /// measured on the stitches of `scene`, which lie on the machine's grid, at the spot nearest to it: grey
+    /// under 2 fills, then
     /// yellow, orange from the warning's limit and red from the failing one, by the default limits. Fabric
     /// shows where no thread lies. A unit of work for each pixel, beside the measure's.
     fn thickness(&mut self, scene: &Scene) -> Result<(), RenderError> {
@@ -482,23 +483,24 @@ mod tests {
         let image = scene(&points).render(settings, &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!((image.width, image.height), (440, 140));
         // At 10 pixels per millimetre, with the margin of 2 mm: 5, 15, 25 and 35 mm along the rows, 5 mm down.
-        let colours = [70, 170, 270, 370].map(|x| pixel(&image, x, 70));
+        // 5.5 mm down, where the edges of a spot's window lie between the rows' lanes.
+        let colours = [70, 170, 270, 370].map(|x| pixel(&image, x, 75));
         assert_eq!(colours, [ORDINARY, DOUBLED, THICK, FAILING]);
-        // The thread reaches half its width before the first hole, into the cell before it, and a window 2
-        // cells of 0.2 mm further. The spot under a pixel's middle decides: the pixels whose middles lie
-        // 0.65 and 0.55 mm before the first hole, along the rows and across them.
-        assert_eq!((pixel(&image, 13, 70), pixel(&image, 14, 70)), (Rgb::new(255, 255, 255), ORDINARY));
-        assert_eq!((pixel(&image, 70, 13), pixel(&image, 70, 14)), (Rgb::new(255, 255, 255), ORDINARY));
-        assert_eq!((pixel(&image, 5, 70), pixel(&image, 70, 135)), (Rgb::new(255, 255, 255), Rgb::new(255, 255, 255)));
+        // The thread reaches a lane before the first hole, into the cell before it, which is in the window
+        // of the spot half a millimetre before the hole. That spot answers for the places up to 0.75 mm
+        // before the hole, and the middle of pixel 12 lies there: the spot under a pixel's middle decides.
+        assert_eq!((pixel(&image, 11, 75), pixel(&image, 12, 75)), (Rgb::new(255, 255, 255), ORDINARY));
+        assert_eq!((pixel(&image, 75, 11), pixel(&image, 75, 12)), (Rgb::new(255, 255, 255), ORDINARY));
+        assert_eq!((pixel(&image, 5, 75), pixel(&image, 70, 135)), (Rgb::new(255, 255, 255), Rgb::new(255, 255, 255)));
         // The fabric's colour shows where no thread lies.
         let black = scene(&points).render(settings.on(Rgb::new(0, 0, 0)), &mut Budget::DEFAULT.meter()).unwrap();
-        assert_eq!((pixel(&black, 5, 70), pixel(&black, 70, 70)), (Rgb::new(0, 0, 0), ORDINARY));
+        assert_eq!((pixel(&black, 5, 75), pixel(&black, 70, 75)), (Rgb::new(0, 0, 0), ORDINARY));
         // A scene that sews no stitch is its fabric, and the picture needs a unit of work for each pixel.
         let mut loose = scene(&[(0, 0), (100, 50)]);
         loose.holes[1].arrival = Arrival::Loose;
         let image = loose.render(settings, &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!((pixel(&image, 70, 45), image.width, image.height), (Rgb::new(255, 255, 255), 140, 90));
-        let short = Budget { max_stitches: 10, max_work: 140 * 90 + 2_000 };
+        let short = Budget { max_stitches: 10, max_work: 140 * 90 + 500 };
         assert!(matches!(scene(&[(0, 0), (100, 50)]).render(settings, &mut short.meter()), Err(RenderError::Budget(_))));
     }
 

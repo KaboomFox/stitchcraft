@@ -318,8 +318,8 @@ the shapes stacked there.
 <!-- /shot -->
 
 `stitch preview dog.pes --style thickness -o thick.png` draws this picture of any machine file. Grey is
-thread under 2 fills, yellow is 2 or more, orange 3 or more and red 6 or more. On the dog above, 614 mm²
-of 1,944 mm² is orange or red, mostly where several small patches meet, and its thickest spot has 8.0
+thread under 2 fills, yellow is 2 or more, orange 3 or more and red 6 or more. On the dog above, 620 mm²
+of 1,944 mm² is orange or red, mostly where several small patches meet, and its thickest spot has 8.6
 fills.
 
 The limits are starting values for a 75/11 needle and 40-weight polyester thread. They come from the

@@ -7,27 +7,31 @@
 //! the plan, not in the test kit, because the warning that planning gives (`SC-W0913`), the heat map
 //! (`stitchcraft-render`) and the numbers of the before and after sheet must all be this one measure.
 //!
-//! **The grid.** The plan's stitches lie on square cells [`CELL`] wide, 4 pixels of the grid that the bare
-//! fabric is measured on ([`PIXEL`]), with [`MARGIN`] cells of room round them. Each measure is a sum over
-//! the window of 5 by 5 cells round a cell, [`WINDOW`] across, so that it has a value at every cell.
+//! **The grid.** The plan's stitches lie on square cells [`CELL`] wide, 10 pixels of the grid that the bare
+//! fabric is measured on ([`PIXEL`]), with a cell of room round them. A measure has a value at each **spot**,
+//! a corner of the cells: the sum over the 4 cells that meet there, a window [`WINDOW`] across. Spots lie
+//! half a window apart, so every square millimetre of the plan is the window of one and part of 8 others.
+//! The cells are this coarse because planning measures every design: on cells of 0.2 mm the measure took
+//! 80 % as long as planning a test sheet, which VectorCraft's export has no instructions to spare for.
 //!
 //! **Thread, in fills.** Each stitch is a ribbon of thread [`THREAD`] wide. Its length is followed in steps
-//! of half a cell, and each step's length is shared among 4 lanes across the ribbon's width, each lane
-//! adding to the cell under it. A window's thread is its length times [`ROWS`] over the window's area: 1.0
-//! under a fill with the rows of StitchCraft's own fill, 0.25 mm apart, and so "how many fills deep". A
-//! satin column, 2 stitches to 0.4 mm, measures 1.25, and the open base layer 0.3. Every role counts,
-//! since the needle goes through underlay and travel stitches too. The sources count in objects on each
-//! other, and one fill is the object here. In layers of thread, a fill is 1.6: multiply by
-//! [`THREAD`] over [`ROWS`]. Sharing a ribbon among lanes keeps a fill from reading more or less by where
-//! its rows fall in the window.
+//! of a cell at the most, and each step's length is shared between 2 lanes, a quarter of the thread's width
+//! to each side of the stitch, each lane adding to the cell under it. A window's thread is its length times
+//! [`ROWS`] over the window's area: 1.0 under a fill with the rows of StitchCraft's own fill, 0.25 mm
+//! apart, and so "how many fills deep". A satin column, 2 stitches to 0.4 mm, measures 1.25, and the open
+//! base layer 0.3. Every role counts, since the needle goes through underlay and travel stitches too. The
+//! sources count in objects on each other, and one fill is the object here. In layers of thread, a fill
+//! is 1.6: multiply by [`THREAD`] over [`ROWS`]. The 2 lanes keep rows a thread apart from reading 0.8 or
+//! 1.2 of what they lay by where they fall in the window.
 //!
 //! **Needle points per mm².** Each stitch's needle point adds 1 to its cell, but for a lock's: a lock ties
 //! 3 or more short stitches in one place on purpose, in every design. This measure finds what the first
 //! misses, short stitches and turns bunched in a small patch.
 //!
-//! **Over a limit** ([`Thickness::over`]) are the cells whose value is the limit or more, in pieces: cells
-//! that touch at a side or a corner are one piece, and only a piece of [`PIECE`] mm² or more counts, since
-//! 3 rows that cross in one point are no fault.
+//! **Over a limit** ([`Thickness::over`]) are the spots whose value is the limit or more, in pieces: spots
+//! beside each other, along a side of a cell or across it, are one piece, and each stands for the quarter
+//! of a square millimetre round it. Only a piece of [`PIECE`] mm² or more counts, 4 spots, since 3 rows that
+//! cross in one point are no fault.
 
 use std::collections::BTreeMap;
 
@@ -42,24 +46,23 @@ pub const THREAD: f64 = 0.4;
 pub const ROWS: f64 = 0.25;
 /// The side of a pixel of the grid that the bare fabric is measured on, in millimetres.
 pub const PIXEL: f64 = 0.05;
-/// The side of a cell, in millimetres: 4 pixels.
-pub const CELL: f64 = 4.0 * PIXEL;
-/// How many cells a window is across.
-const ACROSS: usize = 5;
-/// The side of a window, in millimetres: its area is 1 mm², so a sum over it is a value per mm².
+/// The side of a cell, in millimetres: 10 pixels, half a window.
+pub const CELL: f64 = 10.0 * PIXEL;
+/// The side of a window, in millimetres, 2 cells: its area is 1 mm², so a sum over it is a value per mm².
 pub const WINDOW: f64 = 1.0;
 /// The smallest piece over a limit that counts, in square millimetres.
 pub const PIECE: f64 = 1.0;
-/// How many cells make [`PIECE`].
-const PIECE_CELLS: usize = 25;
+/// How many spots make [`PIECE`].
+const PIECE_SPOTS: usize = 4;
 /// How many fills lie over a spot in a design that is sewn as meant: every overlap of 2 neighbours makes 2.
 pub const ORDINARY: f64 = 2.0;
-/// How many lanes a ribbon of thread is shared among across its width.
-const LANES: u32 = 4;
-/// How many cells of room lie round the stitches: a window half a millimetre from a stitch still holds it.
-pub const MARGIN: usize = 4;
+/// How far from a stitch each of its 2 lanes lies, in millimetres: a quarter of the thread's width.
+const LANE: f64 = THREAD / 4.0;
+/// How far from a spot the middle of a stitch may lie, beyond half the stitch's length, for the stitch to
+/// lay thread in the spot's window, in millimetres: more than half the window's diagonal and a lane.
+const NEAR: f64 = 1.0;
 /// The most cells a grid has, 500 mm by 500 mm: a larger plan is not measured.
-pub const MAX_CELLS: usize = 6_250_000;
+pub const MAX_CELLS: usize = 1_000_000;
 
 /// The limits a plan is held to. They are starting values, which a sew-out has to confirm.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -123,7 +126,7 @@ pub enum Measure {
     Points,
 }
 
-/// The largest value of a measure and the middle of the first cell that has it.
+/// The largest value of a measure and the spot that has it.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Spot {
     /// The value.
@@ -141,7 +144,7 @@ pub struct Over {
     pub area: f64,
     /// The largest piece's area, in square millimetres: 0 when there is none.
     pub largest: f64,
-    /// The box round the middles of the largest piece's cells; `None` when there is no piece.
+    /// The box round the largest piece's spots; `None` when there is no piece.
     pub at: Option<Rect>,
 }
 
@@ -195,97 +198,133 @@ fn units(count: usize) -> u64 {
     u64::try_from(count).unwrap_or(u64::MAX)
 }
 
-/// The cells round a plan's stitches, by row then column.
+/// The cells round a plan's stitches, by row then column, and the spots at their corners, likewise.
 #[derive(Clone, Debug, PartialEq)]
 struct Grid {
-    /// The corner of the first cell where x and y are least.
+    /// The corner of the first cell where x and y are least: the first spot.
     corner: (f64, f64),
+    /// How many columns of cells there are: one fewer than columns of spots.
     columns: usize,
+    /// How many rows of cells there are.
     rows: usize,
 }
 
 impl Grid {
-    /// The grid round `bounds`; `None` when it would have more than [`MAX_CELLS`].
+    /// The grid round `bounds`, with a cell of room on each side; `None` when it would have more than
+    /// [`MAX_CELLS`].
     fn round(bounds: Rect) -> Option<Grid> {
-        let room = MARGIN as f64 * CELL;
-        let count = |extent: f64| index((extent / CELL).floor()) + 1 + 2 * MARGIN;
+        let count = |extent: f64| index((extent / CELL).floor()) + 3;
         let (columns, rows) = (count(bounds.width()), count(bounds.height()));
         let cells = columns.checked_mul(rows)?;
-        (cells <= MAX_CELLS).then_some(Grid { corner: (bounds.min().x() - room, bounds.min().y() - room), columns, rows })
+        (cells <= MAX_CELLS).then_some(Grid { corner: (bounds.min().x() - CELL, bounds.min().y() - CELL), columns, rows })
     }
 
-    /// The column and the row of the cell that holds (`x`, `y`); `None` outside the grid, and for a
-    /// coordinate that is no number.
-    fn place(&self, x: f64, y: f64) -> Option<(usize, usize)> {
+    /// The cell that holds (`x`, `y`); `None` outside the grid, and for a coordinate that is no number.
+    fn holding(&self, x: f64, y: f64) -> Option<usize> {
         let along = |value: f64, corner: f64, count: usize| {
             let k = ((value - corner) / CELL).floor();
             (k >= 0.0 && k < count as f64).then(|| index(k))
         };
-        Some((along(x, self.corner.0, self.columns)?, along(y, self.corner.1, self.rows)?))
+        Some(along(y, self.corner.1, self.rows)? * self.columns + along(x, self.corner.0, self.columns)?)
     }
 
-    /// The cell that holds (`x`, `y`).
-    fn holding(&self, x: f64, y: f64) -> Option<usize> {
-        self.place(x, y).map(|(column, row)| row * self.columns + column)
+    /// How many spots lie in a row: one more than cells.
+    fn across(&self) -> usize {
+        self.columns + 1
     }
 
-    /// The middle of cell `at`.
-    fn centre(&self, at: usize) -> Point {
-        let (column, row) = (at % self.columns, at / self.columns);
-        let middle = |corner: f64, k: usize| corner + (k as f64 + 0.5) * CELL;
-        Point::new(middle(self.corner.0, column), middle(self.corner.1, row)).unwrap_or(Point::ORIGIN)
+    /// The spot nearest to (`x`, `y`), the further along on a tie; `None` when it is not one of the grid's.
+    fn nearest(&self, x: f64, y: f64) -> Option<usize> {
+        let along = |value: f64, corner: f64, count: usize| {
+            let k = ((value - corner) / CELL + 0.5).floor();
+            (k >= 0.0 && k <= count as f64).then(|| index(k))
+        };
+        Some(along(y, self.corner.1, self.rows)? * self.across() + along(x, self.corner.0, self.columns)?)
     }
 
-    /// The cells of the window round cell `at`.
+    /// Where spot `at` lies.
+    fn spot(&self, at: usize) -> Point {
+        let (column, row) = (at % self.across(), at / self.across());
+        Point::new(self.corner.0 + column as f64 * CELL, self.corner.1 + row as f64 * CELL).unwrap_or(Point::ORIGIN)
+    }
+
+    /// The cells of the window of spot `at`: the 4 that meet there, or as many as the grid has of them.
     fn window(&self, at: usize) -> impl Iterator<Item = usize> + '_ {
-        self.within(at, ACROSS / 2)
+        let (column, row) = (at % self.across(), at / self.across());
+        let cells = move |last: usize, count: usize| last.saturating_sub(1)..(last + 1).min(count);
+        cells(row, self.rows).flat_map(move |row| cells(column, self.columns).map(move |column| row * self.columns + column))
     }
 
-    /// The cells no further than `reach` columns and rows from cell `at`, itself among them, in rising order.
-    fn within(&self, at: usize, reach: usize) -> impl Iterator<Item = usize> + '_ {
-        let (column, row) = (at % self.columns, at / self.columns);
-        let columns = column.saturating_sub(reach)..(column + reach + 1).min(self.columns);
-        let rows = row.saturating_sub(reach)..(row + reach + 1).min(self.rows);
-        rows.flat_map(move |row| columns.clone().map(move |column| row * self.columns + column))
+    /// The sum of `values`, a value for each cell, over each spot's window, times `scale`: each cell adds to
+    /// the 4 spots at its corners.
+    fn windows(&self, values: &[f64], scale: f64) -> Vec<f64> {
+        let across = self.across();
+        let mut sums = vec![0.0; across * (self.rows + 1)];
+        for (row, cells) in values.chunks(self.columns.max(1)).enumerate() {
+            // Most cells of a design's box are empty, and add nothing.
+            for (column, value) in cells.iter().enumerate().filter(|(_, value)| **value != 0.0) {
+                let first = row * across + column;
+                for spot in [first, first + 1, first + across, first + across + 1] {
+                    if let Some(sum) = sums.get_mut(spot) {
+                        *sum += value * scale;
+                    }
+                }
+            }
+        }
+        sums
+    }
+
+    /// The spots beside spot `at`, itself among them: those a column and a row away at the most.
+    fn beside(&self, at: usize) -> impl Iterator<Item = usize> + '_ {
+        let (column, row) = (at % self.across(), at / self.across());
+        let spots = move |middle: usize, count: usize| middle.saturating_sub(1)..(middle + 2).min(count);
+        spots(row, self.rows + 1).flat_map(move |row| spots(column, self.across()).map(move |column| row * self.across() + column))
     }
 }
 
-/// Lays the thread of `stitch` on `grid`: `lay` is given a cell and the length of thread to add to it, in
-/// millimetres. A unit of work for each step. A stitch of no length lays none: its direction is no number,
-/// and no cell holds such a place.
-fn laid(grid: &Grid, stitch: &SewnStitch, meter: &mut Meter, mut lay: impl FnMut(usize, f64)) -> Result<(), Exhausted> {
+/// How many steps the thread of a stitch `length` long is followed in: one for each cell's width of it
+/// begun, and one at the least.
+fn steps(length: f64) -> f64 {
+    (length / CELL).ceil().max(1.0)
+}
+
+/// Lays the thread of `stitch`, `length` long, on `grid` in `steps` steps: `lay` is given a cell and the length of thread
+/// to add to it, in millimetres. The places are worked out in cells from the grid's corner, so that a
+/// step costs a few additions. A stitch of no length lays none: its direction is no number, and no cell
+/// holds such a place.
+fn laid(grid: &Grid, stitch: &SewnStitch, length: f64, steps: f64, mut lay: impl FnMut(usize, f64)) {
     let (from, to) = (stitch.from, stitch.to);
-    let length = from.distance(to);
-    let steps = (length / (CELL / 2.0)).ceil().max(1.0);
-    meter.charge(units(index(steps)))?;
-    let (ax, ay) = ((to.x() - from.x()) / length, (to.y() - from.y()) / length);
-    let share = length / steps / f64::from(LANES);
+    let (across, down) = ((to.x() - from.x()) / CELL, (to.y() - from.y()) / CELL);
+    // A lane's distance across the stitch, in cells.
+    let (nx, ny) = (-down / length * LANE, across / length * LANE);
+    let (x, y) = ((from.x() - grid.corner.0) / CELL, (from.y() - grid.corner.1) / CELL);
+    let share = length / steps / 2.0;
+    let (columns, rows) = (grid.columns as f64, grid.rows as f64);
     for step in 0..index(steps) {
-        let along = (step as f64 + 0.5) / steps * length;
-        for lane in 0..LANES {
-            let across = (f64::from(lane) + 0.5) / f64::from(LANES) * THREAD - THREAD / 2.0;
-            if let Some(at) = grid.holding(from.x() + ax * along - ay * across, from.y() + ay * along + ax * across) {
-                lay(at, share);
+        let along = (step as f64 + 0.5) / steps;
+        let (x, y) = (x + across * along, y + down * along);
+        for (x, y) in [(x + nx, y + ny), (x - nx, y - ny)] {
+            if x >= 0.0 && x < columns && y >= 0.0 && y < rows {
+                lay(index(y) * grid.columns + index(x), share);
             }
         }
     }
-    Ok(())
 }
 
-/// How thick a plan sews, cell by cell (see the module's docs).
+/// How thick a plan sews, spot by spot (see the module's docs).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Thickness {
     grid: Grid,
-    /// The thread in each cell's window, in fills.
+    /// The thread in each spot's window, in fills.
     fills: Vec<f64>,
-    /// The needle points in each cell's window, per mm².
+    /// The needle points in each spot's window, per mm².
     points: Vec<f64>,
 }
 
 impl Thickness {
     /// The thickness of `plan`; `None` for a plan that sews no stitch. A unit of work for each stitch, each
-    /// step of half a cell along it, and 3 for each cell. A plan whose grid would have more than
-    /// [`MAX_CELLS`] is not measured, as one whose measuring runs out of work.
+    /// step along it, and 3 for each cell. A plan whose grid would have more than [`MAX_CELLS`] is not
+    /// measured, as one whose measuring runs out of work.
     pub fn of(plan: &StitchPlan, meter: &mut Meter) -> Result<Option<Thickness>, Exhausted> {
         Thickness::of_stitches(&plan.sewn_stitches(), meter)
     }
@@ -300,15 +339,21 @@ impl Thickness {
         meter.charge(units(cells).saturating_mul(3))?;
         let (mut thread, mut holes) = (vec![0.0; cells], vec![0.0; cells]);
         for stitch in sewn {
-            laid(&grid, stitch, meter, |at, length| thread.iter_mut().skip(at).take(1).for_each(|cell| *cell += length))?;
+            let length = stitch.length();
+            let steps = steps(length);
+            meter.charge(units(index(steps)))?;
+            laid(&grid, stitch, length, steps, |at, length| {
+                if let Some(cell) = thread.get_mut(at) {
+                    *cell += length;
+                }
+            });
             let hole = grid.holding(stitch.to.x(), stitch.to.y()).filter(|_| !stitch.is_lock());
-            holes.iter_mut().skip(hole.unwrap_or(cells)).take(1).for_each(|cell| *cell += 1.0);
+            if let Some(cell) = hole.and_then(|at| holes.get_mut(at)) {
+                *cell += 1.0;
+            }
         }
-        let summed = |values: &[f64], scale: f64| -> Vec<f64> {
-            (0..cells).map(|at| grid.window(at).filter_map(|cell| values.get(cell)).sum::<f64>() * scale).collect()
-        };
         // A window is 1 mm², so its sums are per square millimetre as they are.
-        Ok(Some(Thickness { fills: summed(&thread, ROWS), points: summed(&holes, 1.0), grid }))
+        Ok(Some(Thickness { fills: grid.windows(&thread, ROWS), points: grid.windows(&holes, 1.0), grid }))
     }
 
     /// The values of `measure`, by row then column.
@@ -319,28 +364,28 @@ impl Thickness {
         }
     }
 
-    /// How many columns and rows of cells there are.
+    /// How many columns and rows of spots there are.
     pub fn size(&self) -> (usize, usize) {
-        (self.grid.columns, self.grid.rows)
+        (self.grid.across(), self.grid.rows + 1)
     }
 
-    /// The value of `measure` in the window round the cell that holds `at`: 0 outside the grid.
+    /// The value of `measure` at the spot nearest to `at`: 0 outside the grid.
     pub fn at(&self, measure: Measure, at: Point) -> f64 {
-        self.grid.holding(at.x(), at.y()).and_then(|cell| self.values(measure).get(cell)).copied().unwrap_or(0.0)
+        self.grid.nearest(at.x(), at.y()).and_then(|spot| self.values(measure).get(spot)).copied().unwrap_or(0.0)
     }
 
-    /// The largest value of `measure`, and the middle of the last cell that has it.
+    /// The largest value of `measure`, and the last spot that has it.
     pub fn most(&self, measure: Measure) -> Spot {
         let most = self.values(measure).iter().enumerate().max_by(|a, b| a.1.total_cmp(b.1));
-        most.map_or(Spot { value: 0.0, at: Point::ORIGIN }, |(at, value)| Spot { value: *value, at: self.grid.centre(at) })
+        most.map_or(Spot { value: 0.0, at: Point::ORIGIN }, |(at, value)| Spot { value: *value, at: self.grid.spot(at) })
     }
 
     /// What of the plan has `limit` of `measure` or more, in pieces of [`PIECE`] or more. A unit of work for
-    /// each cell.
+    /// each spot.
     pub fn over(&self, measure: Measure, limit: f64, meter: &mut Meter) -> Result<Over, Exhausted> {
         let values = self.values(measure);
         meter.charge(units(values.len()))?;
-        // The cells still to look at: those at the limit or over it that are in no piece yet.
+        // The spots still to look at: those at the limit or over it that are in no piece yet.
         let mut left: Vec<bool> = values.iter().map(|value| *value >= limit).collect();
         let mut over = Over::default();
         for start in 0..left.len() {
@@ -348,19 +393,18 @@ impl Thickness {
                 continue;
             }
             let mut piece = vec![start];
-            left.iter_mut().skip(start).take(1).for_each(|cell| *cell = false);
+            left.iter_mut().skip(start).take(1).for_each(|spot| *spot = false);
             let mut next = 0;
             while let Some(&at) = piece.get(next) {
                 next += 1;
-                // The cells that touch it, at a side or a corner.
-                for beside in self.grid.within(at, 1) {
-                    if let Some(cell) = left.get_mut(beside).filter(|cell| **cell) {
-                        *cell = false;
+                for beside in self.grid.beside(at) {
+                    if let Some(spot) = left.get_mut(beside).filter(|spot| **spot) {
+                        *spot = false;
                         piece.push(beside);
                     }
                 }
             }
-            if piece.len() < PIECE_CELLS {
+            if piece.len() < PIECE_SPOTS {
                 continue;
             }
             let area = piece.len() as f64 * CELL * CELL;
@@ -368,25 +412,30 @@ impl Thickness {
             over.area += area;
             if area > over.largest {
                 over.largest = area;
-                over.at = Rect::around(piece.iter().map(|&at| self.grid.centre(at)));
+                over.at = Rect::around(piece.iter().map(|&at| self.grid.spot(at)));
             }
         }
         Ok(over)
     }
 
-    /// What of `plan`, the plan this is the thickness of, lies in the window round the cell that holds `at`:
+    /// What of `plan`, the plan this is the thickness of, lies in the window of the spot nearest to `at`:
     /// each element's thread in each colour block, in sewing order. A unit of work for each stitch and each
-    /// step along it.
+    /// step along it. Only a stitch near the spot is followed.
     pub fn stack(&self, plan: &StitchPlan, at: Point, meter: &mut Meter) -> Result<Vec<Layer>, Exhausted> {
-        let Some(middle) = self.grid.holding(at.x(), at.y()) else { return Ok(Vec::new()) };
-        let window: Vec<usize> = self.grid.window(middle).collect();
+        let Some(spot) = self.grid.nearest(at.x(), at.y()) else { return Ok(Vec::new()) };
+        let (window, middle): (Vec<usize>, Point) = (self.grid.window(spot).collect(), self.grid.spot(spot));
         let mut layers: BTreeMap<(usize, Option<ElementRef>), (f64, f64)> = BTreeMap::new();
         for stitch in plan.sewn_stitches() {
-            meter.charge(1)?;
+            let length = stitch.length();
+            let steps = steps(length);
+            meter.charge(units(index(steps)).saturating_add(1))?;
+            if stitch.from.lerp(stitch.to, 0.5).distance(middle) > length / 2.0 + NEAR {
+                continue;
+            }
             let entry = plan.blocks.get(stitch.block).and_then(|block| block.stitches.get(stitch.index));
             let key = (stitch.block, entry.and_then(|entry| entry.origin.element));
-            laid(&self.grid, &stitch, meter, |cell, length| {
-                if window.binary_search(&cell).is_ok() {
+            laid(&self.grid, &stitch, length, steps, |cell, length| {
+                if window.contains(&cell) {
                     let layer = layers.entry(key).or_default();
                     if stitch.role == Role::Top {
                         layer.0 += length * ROWS;
@@ -394,7 +443,7 @@ impl Thickness {
                         layer.1 += length * ROWS;
                     }
                 }
-            })?;
+            });
         }
         Ok(layers.into_iter().map(|((block, element), (top, under))| Layer { block, element, top, under }).collect())
     }
