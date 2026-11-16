@@ -111,6 +111,14 @@ and made an open column's rail cut across the outline's slivers narrower than a 
 4 mm tall then sews the outer legs of its M as satin columns, 1.05 mm wide where the M's middle strokes meet
 them. Do they sew as cleanly as the triple runs beside them, and does the M keep its shape?
 
+Lettering sews from M14.2, before TS-14 is drawn. Until then, sew a word in Ink/Stitch Small Font at the
+ends of its range on the PE800, from a copy of Ink/Stitch's font folder:
+`stitch lettering "Stitch" --font small_font --scale 70 -o small.pes` for its least height, 3.6 mm, and
+`--scale 300` for its greatest, 15.2 mm.
+
+- At 3.6 mm, does every letter read, and do the stitches that join the letters on the fabric show?
+- At 15.2 mm, do the satin columns cover, and how long do the jump threads between the letters take to cut?
+
 MC-8 also sews one of the owner's traced dogs, `docs/fixtures/traced-dog-running-9.vectorcraft`, 100 mm
 tall: `stitch plan docs/fixtures/traced-dog-running-9.vectorcraft --auto -o dog.pes`. Does the fur read as
 fur, the face and the eyes as hers, and do its 83 jump threads, which the PE800 doesn't cut, take long to

@@ -239,6 +239,7 @@ pub fn stitchcraft_engine::design::Hints::points(&self) -> impl core::iter::trai
 pub struct stitchcraft_engine::design::Path
 pub stitchcraft_engine::design::Path::subpaths: alloc::vec::Vec<stitchcraft_engine::design::Subpath>
 impl stitchcraft_engine::design::Path
+pub fn stitchcraft_engine::design::Path::map<E>(&self, impl core::ops::function::Fn(stitchcraft_core::units::Point) -> core::result::Result<stitchcraft_core::units::Point, E>) -> core::result::Result<stitchcraft_engine::design::Path, E>
 pub fn stitchcraft_engine::design::Path::points(&self) -> impl core::iter::traits::iterator::Iterator<Item = stitchcraft_core::units::Point> + '_
 pub struct stitchcraft_engine::design::Reading
 pub stitchcraft_engine::design::Reading::auto: bool

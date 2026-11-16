@@ -67,6 +67,11 @@ One meter of the budget counts the whole font. `SC-E1101` refuses a font it can'
 `SC-I1105` name what it reads otherwise than written, as Ink/Stitch's lettering reads it. The glyph
 differential cuts its glyphs with the same code (`font::each_glyph`).
 
+`stitchcraft_svg::lettering` sets a text in such a font (`src/lettering/`, `REQ-FONT-009` to `REQ-FONT-013`). It
+chooses a glyph for each character and places the glyphs by the font's advances and kerning and the spacing
+asked for. The scale stays within the heights the font sews at. In a font whose `auto_satin` is on, the
+engine's routing joins the text's satin columns. The result is a design, which hosts plan as any other.
+
 Style sheets set properties as in a viewer (`src/sheet.rs`, `REQ-SVG-006`). Their rules with element,
 class and id selectors, the ones Illustrator and CorelDRAW write, are read, in the order of CSS's cascade.
 One `SC-W0802` names the other selectors and the at-rules.

@@ -6,6 +6,7 @@ pub mod convert;
 pub mod cutout;
 pub mod explain;
 pub mod inspect;
+pub mod lettering;
 pub mod palette;
 pub mod plan;
 pub mod preview;
