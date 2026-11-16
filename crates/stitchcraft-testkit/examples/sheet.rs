@@ -5,7 +5,8 @@
 //!
 //! Why it is an example of the testkit: the sheet's numbers must be the ones the cases assert
 //! (`tests/auto_photos.rs`, `tests/auto_fabric.rs`), so they come from the same functions, [`fabric::astray`],
-//! [`fabric::cover`] and the plan's own counts, and no script measures a plan a second way.
+//! [`fabric::cover`], [`fabric::thickness`] and the plan's own counts, and no script measures a plan a second
+//! way.
 //!
 //! The pictures are the traced photos the cases measure ([`pictures::dogs`], [`pictures::pear`]), a lettered
 //! patch drawn here ([`patch`]), and the digitized half of every test sheet that has one. A picture that
@@ -26,7 +27,7 @@ use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{Rgb, StitchPlan, Thread};
 use stitchcraft_render::{Settings, Style};
 use stitchcraft_testkit::designs::{automatic, fill, in_place, rules};
-use stitchcraft_testkit::fabric::{self, GAP};
+use stitchcraft_testkit::fabric::{self, GAP, Limits};
 use stitchcraft_testkit::pictures;
 
 /// The pictures' scale, in pixels per millimetre: a design 100 mm tall is 500 pixels tall, which shows its
@@ -35,7 +36,7 @@ const SCALE: f32 = 5.0;
 
 /// What the sheet's table shows of a picture, in its order: the key in `numbers.json`, the column's heading,
 /// and whether more of it is worse. More stitches are neither better nor worse.
-const MEASURES: [(&str, &str, bool); 7] = [
+const MEASURES: [(&str, &str, bool); 10] = [
     ("stitches", "Stitches", false),
     ("thread_changes", "Thread changes", true),
     ("jumps", "Jumps", true),
@@ -43,6 +44,9 @@ const MEASURES: [(&str, &str, bool); 7] = [
     ("astray", "Stitches astray", true),
     ("slivers", "Slivers", true),
     ("bare_percent", "Bare, % of the design", true),
+    ("thickest_fills", "Thickest spot, fills", true),
+    ("thick_mm2", "At 3 fills or more, mm²", true),
+    ("needle_points", "Most needle points per mm²", true),
 ];
 
 /// What `fault` says, for a picture's reason.
@@ -119,10 +123,11 @@ fn planned(design: &Design) -> Result<StitchPlan, String> {
 }
 
 /// The numbers of `plan`, by the keys of [`MEASURES`] and in their order, as the cases measure them.
-fn measured(design: &Design, plan: &StitchPlan) -> [f64; 7] {
+fn measured(design: &Design, plan: &StitchPlan) -> [f64; 10] {
     let stats = plan.stats();
     let astray = fabric::astray(design, plan);
     let cover = fabric::cover(design, plan, GAP);
+    let thickness = fabric::thickness(plan, &Limits::DEFAULT);
     let count = |count: usize| count as f64;
     [
         count(stats.stitches),
@@ -132,6 +137,9 @@ fn measured(design: &Design, plan: &StitchPlan) -> [f64; 7] {
         count(astray.stitches.len()),
         count(cover.slivers(&rules()).len()),
         cover.bare_share() * 100.0,
+        thickness.fills.value,
+        thickness.thick.area,
+        thickness.points.value,
     ]
 }
 
