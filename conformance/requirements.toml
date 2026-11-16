@@ -3198,7 +3198,9 @@ level = "L2"
 statement = "A text marker is not used, its traced shapes stay and SC-W1113 says why, when its note has no text, when it encloses no area or its line has no length, when no subpath lies wholly inside it, when the font it names is not among the host's fonts or doesn't read, when lettering sets no character of the text, when the shapes inside it or the text have no height, and when its element's id is too long to number the letters by. A setting of the note that doesn't read is left out with SC-W1113 and the marker is used. Nothing is taken out before the lettering is set. Finding and measuring cost a unit of work for each element and, for each flattened point, a unit per segment of the marker it is tested against, and work past the budget ends with SC-E0004."
 rationale = "A design must never be left with a hole and no text, so every way a marker can fail is found before a shape is taken out, and the person is told which."
 milestone = "M14"
+status = "active"
 
+[[req]]
 id = "REQ-AUTO-067"
 area = "auto"
 level = "L2"
