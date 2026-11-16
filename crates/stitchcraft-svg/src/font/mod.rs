@@ -268,7 +268,7 @@ fn read_glyphs(folder: &str, files: &[(&str, &[u8])], only: Option<&str>, budget
         let mut variant = Variant { direction, files: Vec::new(), glyphs: BTreeMap::new() };
         for path in paths {
             let bytes = files.get(path).copied().unwrap_or_default();
-            read_glyph_file(folder, path, bytes, &wanted, budget, &mut meter, &mut variant, &mut warnings)?;
+            read_glyph_file(folder, path, bytes, &wanted, (budget, &mut meter), &mut variant, &mut warnings)?;
             variant.files.push(path.to_string());
         }
         variants.push(variant);
@@ -365,8 +365,7 @@ fn read_glyph_file(
     path: &str,
     bytes: &[u8],
     wanted: &dyn Fn(&str) -> bool,
-    budget: &Budget,
-    meter: &mut Meter,
+    (budget, meter): (&Budget, &mut Meter),
     variant: &mut Variant,
     warnings: &mut Vec<Diagnostic>,
 ) -> Result<(), Diagnostic> {

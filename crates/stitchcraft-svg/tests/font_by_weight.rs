@@ -1,7 +1,7 @@
-//! The font chosen by the letters' weight (roadmap step M14.8, `REQ-AUTO-071` and `REQ-AUTO-072`): a text
+//! The font chosen by the letters' weight (roadmap step M14.8, `REQ-AUTO-071` to `REQ-AUTO-073`): a text
 //! marker that names no font is set in the font nearest in weight to the traced letters it replaces, among
-//! those that sew at their height, and a note says which and why. The fonts are drawn in code. No font file
-//! of anyone's is used.
+//! those that sew at their height, and a bold text object sews in the bold font where it sews at its height,
+//! with a note on each. The fonts are drawn in code. No font file of anyone's is used.
 
 // Test code may unwrap, panic and index (clippy.toml allows it in tests, but not in their helpers).
 #![allow(clippy::unwrap_used, clippy::panic)]
@@ -16,6 +16,7 @@ use stitchcraft_engine::testsheets::pictures::word;
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::{Rgb, Thread};
 use stitchcraft_svg::font::{self, Font};
+use stitchcraft_svg::lettering::objects::{self, Anchor, Line, TextObject, Waiting};
 use stitchcraft_svg::lettering::pictures::{self, Choice, Found, Marker, chosen, weight};
 
 /// A glyph file's root: 100 mm square, a user unit a millimetre.
@@ -308,4 +309,132 @@ fn req_auto_072_choosing_stops_with_the_budget() {
         }
     }
     assert!(least.is_some_and(|least| least > 100), "{least:?}");
+}
+
+/// A text object of `lines`, each its text and its font size in millimetres, bold or not.
+fn text_object(lines: &[(&str, f64)], bold: bool) -> TextObject {
+    let lines = lines
+        .iter()
+        .enumerate()
+        .map(|(index, (text, size))| Line {
+            text: (*text).to_string(),
+            at: at((10.0, 20.0 + 30.0 * index as f64)),
+            anchor: Anchor::Start,
+            size: *size,
+            thread: Some(Thread::new(RED)),
+            length: None,
+        })
+        .collect();
+    TextObject {
+        label: "svg:t".to_string(),
+        name: None,
+        typeface: Some("Lakeside Sans".to_string()),
+        bold,
+        lines,
+        turn: (1.0, 0.0),
+        clips: Vec::new(),
+    }
+}
+
+/// What `text` sews among `choices`: the names and the characters the fonts were asked for, and the notes
+/// on the choice.
+fn text_chosen(text: &TextObject, choices: &[Choice]) -> (Vec<(String, String)>, Vec<Diagnostic>) {
+    let mut asked = Vec::new();
+    let mut fonts = |name: &str, characters: &str, _: &Budget| {
+        asked.push((name.to_string(), characters.to_string()));
+        Found::Font(plain(if name.is_empty() { "default" } else { name }))
+    };
+    let (elements, said) = objects::letter_among(text, &mut fonts, choices, &mut BTreeSet::new(), &Budget::DEFAULT).unwrap();
+    assert!(!elements.is_empty());
+    (asked, said.into_iter().filter(|said| said.code == Code::FontChosenByWeight).collect())
+}
+
+#[test]
+fn req_auto_073_a_bold_text_object_sews_in_the_bold_font_where_it_sews_at_its_height() {
+    // 20 mm of font size sew 14 mm tall: within the bold font's 12 to 30 mm.
+    let (asked, said) = text_chosen(&text_object(&[("ab", 20.0)], true), &choices());
+    assert_eq!(asked, [("bold".to_string(), "ab".to_string())]);
+    assert_eq!(said.len(), 1);
+    assert_eq!(said[0].element.as_ref().map(ElementId::as_str), Some("svg:t"));
+    assert_eq!(
+        said[0].message,
+        "The text `svg:t` is bold, so it is sewn in the bold embroidery font `bold`, with strokes 0.25 of its height wide: its letters sew 14.0 mm \
+         tall, and `bold` sews capital letters from 12.0 to 30.0 mm."
+    );
+    assert!(said[0].fix.is_none());
+    // The boldest font is the bold one wherever it is listed, and the earlier of 2 as bold.
+    let reversed: Vec<Choice> = choices().into_iter().rev().collect();
+    assert_eq!(text_chosen(&text_object(&[("ab", 20.0)], true), &reversed).0[0].0, "bold");
+    let twins = [Choice { font: "first".to_string(), ..choices()[1].clone() }, Choice { font: "second".to_string(), ..choices()[1].clone() }];
+    assert_eq!(text_chosen(&text_object(&[("ab", 20.0)], true), &twins).0[0].0, "first");
+    // At the bold font's least and greatest height it still sews; a little past either, it doesn't.
+    let at_size = |least: f64, most: f64| [choices()[0].clone(), Choice { heights: (least, most), ..choices()[1].clone() }];
+    let tall = objects::CAPITALS * 20.0;
+    assert_eq!(text_chosen(&text_object(&[("ab", 20.0)], true), &at_size(tall, tall)).0[0].0, "bold");
+    assert_eq!(text_chosen(&text_object(&[("ab", 20.0)], true), &at_size(tall + 1e-9, 30.0)).0[0].0, "");
+    assert_eq!(text_chosen(&text_object(&[("ab", 20.0)], true), &at_size(5.0, tall - 1e-9)).0[0].0, "");
+}
+
+#[test]
+fn diag_sc_i1118_a_bold_text_too_small_for_the_bold_font_says_from_what_size_it_sews() {
+    // 10 mm of font size sew 7 mm tall, under the bold font's 12 mm: 12 / 0.7 is 17.1 mm, 48.6 points.
+    let (asked, said) = text_chosen(&text_object(&[("ab", 10.0)], true), &choices());
+    assert_eq!(asked, [(String::new(), "ab".to_string())]);
+    assert_eq!(
+        said[0].message,
+        "The text `svg:t` is bold, but its letters sew 7.0 mm tall and `bold` sews capital letters from 12.0 to 30.0 mm: it is sewn in the default \
+         embroidery font, whose letters are lighter."
+    );
+    assert_eq!(hint(&said[0]), "To sew it in `bold`, make its font size at least 17.1 mm (49 pt) in the drawing.");
+    // Every line must fit: one of 2 too small, and the text is sewn in the default font. The font is asked
+    // for with the characters of all its lines.
+    let (asked, said) = text_chosen(&text_object(&[("ab", 20.0), ("ba", 10.0)], true), &choices());
+    assert_eq!(asked, [(String::new(), "abba".to_string())]);
+    assert!(said[0].message.contains("its letters sew 7.0 to 14.0 mm tall"), "{}", said[0].message);
+    // Too tall for it, too.
+    assert!(text_chosen(&text_object(&[("ab", 50.0)], true), &choices()).1[0].message.contains("sew 35.0 mm tall and"));
+}
+
+#[test]
+fn req_auto_073_a_text_that_is_not_bold_or_has_no_choice_sews_in_the_default_font() {
+    for (text, choices) in [(text_object(&[("ab", 20.0)], false), choices()), (text_object(&[("ab", 20.0)], true), choices()[1..].to_vec())] {
+        let (asked, said) = text_chosen(&text, &choices);
+        assert_eq!(asked, [(String::new(), "ab".to_string())]);
+        assert!(said.is_empty(), "{said:?}");
+    }
+    // `letter` and `lettered` are the passes without choices.
+    let bold = text_object(&[("ab", 20.0)], true);
+    let mut asked = Vec::new();
+    let (_, said) = objects::letter(
+        &bold,
+        &mut |name, _| {
+            asked.push(name.to_string());
+            Found::Font(plain("default"))
+        },
+        &mut BTreeSet::new(),
+        &Budget::DEFAULT,
+    )
+    .unwrap();
+    assert!(asked == [""] && said.iter().all(|said| said.code != Code::FontChosenByWeight));
+    let waiting = [Waiting { after: 0, text: bold }];
+    let mut fonts = |name: &str, _: &str, _: &Budget| Found::Font(plain(if name.is_empty() { "default" } else { name }));
+    let empty = Design::new(Vec::new(), DesignSettings::default()).unwrap();
+    let (design, said) = objects::lettered_among(empty, &waiting, &mut fonts, &choices(), &mut BTreeSet::new(), &Budget::DEFAULT).unwrap();
+    assert!(!design.elements().is_empty() && said.iter().any(|said| said.code == Code::FontChosenByWeight));
+}
+
+#[test]
+fn req_auto_073_what_weights_and_styles_are_bold() {
+    for bold in ["bold", "Bolder", " 700 ", "900", "750.5"] {
+        assert!(objects::bold_weight(bold), "{bold}");
+    }
+    for light in ["normal", "lighter", "699", "650", "", "heavy"] {
+        assert!(!objects::bold_weight(light), "{light}");
+    }
+    for bold in ["Bold", "Bold Italic", "ExtraBold", "Extra-Bold", "Black", "Heavy Oblique", "UltraBold"] {
+        assert!(objects::bold_style(bold), "{bold}");
+    }
+    for light in ["Regular", "SemiBold", "Semi Bold", "DemiBold", "Demi-Bold Italic", "Light", "Medium", ""] {
+        assert!(!objects::bold_style(light), "{light}");
+    }
 }

@@ -28,7 +28,7 @@
 use std::rc::Rc;
 
 use serde_json::Value;
-use stitchcraft_core::{Code, Diagnostic, ElementId, Mm, Point, Severity, math};
+use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Mm, Point, Severity, math};
 use stitchcraft_engine::design::Element;
 use stitchcraft_svg::font::Font;
 use stitchcraft_svg::lettering::objects::{self, Anchor, Line, TextObject};
@@ -36,7 +36,7 @@ use stitchcraft_svg::lettering::{self, Lettering, Set};
 
 use super::{Around, Ours, Reader, called, exhausted, ours, quoted};
 use crate::effect_name;
-use crate::lettering::{FONT, LETTERING, found};
+use crate::lettering::{FONT, LETTERING, found_for};
 use crate::values::{sews, text};
 use crate::wire::{Kind, Node, Run};
 
@@ -195,10 +195,23 @@ impl Reader<'_> {
             }
         }
         let typeface = style.and_then(|style| style.font_family.get()).map(|family| family.trim().to_string()).filter(|family| !family.is_empty());
+        // Bold as its style names it, or as a variable typeface's weight sets it.
+        let styled = style.and_then(|style| style.font_style.get()).is_some_and(|named| objects::bold_style(named));
+        let weighed = style.and_then(|style| style.font_axes.get()).and_then(|axes| axes.get("wght")).is_some_and(|weight| *weight >= 700.0);
         let clips = around.clips.list.to_vec();
-        let text = TextObject { label: format!("vc:{label}"), name: node.name.clone(), typeface, lines, turn: (place.cos, place.sin), clips };
+        let text = TextObject {
+            label: format!("vc:{label}"),
+            name: node.name.clone(),
+            typeface,
+            bold: styled || weighed,
+            lines,
+            turn: (place.cos, place.sin),
+            clips,
+        };
         let fonts = &mut *self.fonts;
-        let (letters, said) = objects::letter(&text, &mut |name, budget| found(&mut *fonts, name, budget), &mut self.lettered, self.budget)?;
+        let choices = fonts.choices();
+        let mut found = |name: &str, text: &str, budget: &Budget| found_for(&mut *fonts, name, text, budget);
+        let (letters, said) = objects::letter_among(&text, &mut found, &choices, &mut self.lettered, self.budget)?;
         self.charge((letters.len() as u64).saturating_mul(around.clips.cost))?;
         self.elements.extend(letters);
         self.warnings.extend(said);

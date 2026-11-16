@@ -572,7 +572,7 @@ impl Work<'_> {
         elements: &[Element],
         height: f64,
     ) -> Result<(String, Option<Diagnostic>), Stop> {
-        if !asked.font.is_empty() || self.choices.len() < 2 || !(height > 0.0) {
+        if !asked.font.is_empty() || self.choices.len() < 2 || height.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) {
             return Ok((asked.font.clone(), None));
         }
         let (mut rings, mut widths) = (Vec::new(), Vec::new());
