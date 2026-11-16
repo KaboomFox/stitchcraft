@@ -324,6 +324,25 @@ fn req_vc_026_lettering_is_read_within_the_budget_and_cut_by_the_clips_around_it
         }
     }
     assert!(ran_out > 10, "{ran_out}");
+    // A long word costs lettering more than the document's reader, which counts a character and its element
+    // where lettering also lays the character out and orders its element. Out of budget in lettering alone,
+    // with the fonts read whatever the budget, nothing is read either.
+    let long = document(json!([text(7, &"a".repeat(300), 0.0, 0.0, json!({}), json!({"font": "test"}))]));
+    let (mut ran_out, mut sewn) = (0, 0);
+    for work in (1_000..4_000).step_by(7) {
+        let budget = Budget { max_work: work, ..Budget::DEFAULT };
+        match read_in(&long, &budget, Reading::default(), &mut Unmetered(fonts())) {
+            Ok(lettered) => {
+                assert_eq!((said(&lettered.warnings), lettered.design.elements().len()), (Vec::new(), 300));
+                sewn += 1;
+            }
+            Err(error) => {
+                assert_eq!(error.code, Code::BudgetExhausted);
+                ran_out += 1;
+            }
+        }
+    }
+    assert!(ran_out > 0 && sewn > 0, "{ran_out}, {sewn}");
     // In a clip group, the letters are cut by the clipping object, as a path's elements are.
     let square = json!({"subpaths": [{"closed": true, "anchors": [{"p": {"x": 0, "y": -40}}, {"p": {"x": 40, "y": -40}}, {"p": {"x": 40, "y": 0}}, {"p": {"x": 0, "y": 0}}]}]});
     let clip = json!({"id": 3, "kind": {"type": "path", "path": square}});

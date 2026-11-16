@@ -106,6 +106,9 @@ mod tests {
                 Schema::Int { .. } => panic!("{name}"),
             }
         }
+        // Back and forth is a toggle, the dialog's one, where a choice of `true` and `false` would read the same.
+        let toggles: Vec<&str> = rows.iter().filter(|(_, param)| matches!(param.schema, Schema::Bool { .. })).map(|(name, _)| *name).collect();
+        assert_eq!(toggles, ["back_and_forth"]);
         let units: Vec<Option<&str>> = rows.iter().map(|(_, param)| param.ui.unit).collect();
         assert_eq!(units, [None, Some("%"), None, Some("mm"), Some("mm"), Some("mm"), None, None, None]);
         // Trims stay off unless asked for, for a machine that cuts no thread.
