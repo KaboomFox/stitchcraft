@@ -258,7 +258,7 @@ fn is_error(d: &Diagnostic) -> bool {
 
 /// What an export says, one line each: everything `said`, or when it is more than VectorCraft shows, all
 /// but the last that fit and then how many more there are. Each line is as long as VectorCraft shows at
-/// most ([`shown`]).
+/// most (`shown`).
 pub fn warnings(said: &[Diagnostic]) -> Vec<String> {
     let line = |d: &Diagnostic| shown(d.one_line());
     if said.len() <= MAX_WARNINGS {
