@@ -250,7 +250,8 @@ mod tests {
         groups.dedup();
         assert_eq!(groups, [CONFORMANCE, DOCS, LINT, TEST]);
         // The workflow's matrix names each group once and no other, and its job runs that group's gates.
-        let workflow = util::read(&util::root().join(".github/workflows/ci.yml")).unwrap();
+        // Windows may check the file out with its own line ends.
+        let workflow = util::read(&util::root().join(".github/workflows/ci.yml")).unwrap().replace("\r\n", "\n");
         let mut jobs = workflow_groups(&workflow);
         jobs.sort_unstable();
         assert_eq!(jobs, groups, "ci.yml's matrix of groups");

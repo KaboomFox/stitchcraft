@@ -67,6 +67,10 @@ The check `gates (cargo xtask ci)`, which `main` requires, waits for the 4 jobs 
 each of them passed. It runs when one of them failed or was cancelled too, because GitHub counts a
 required check that was skipped as passed.
 
+On macOS and Windows the `tests` jobs run the same tests with cargo-nextest, as many at once as the
+runner has processors, and the doc tests with `cargo test --doc`. Most of those jobs' time was the run
+of the tests, one test binary after another.
+
 Each run of `cargo xtask ci` ends with the time every gate took. In GitHub Actions the times are also a
 notice on the job, which the checks API gives without the log.
 

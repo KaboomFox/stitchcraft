@@ -1918,6 +1918,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     ([the editor and its release](docs/src/design/vectorcraft-integration.md#the-editor-and-its-release)).
   - The gates of `cargo xtask ci` run in CI as 4 jobs side by side, one for each group. A test fails when
     a group has no job. `cargo xtask ci --group NAME` runs a group, and the summary gives each gate's time.
+  - The tests on macOS and Windows run with cargo-nextest, and their doc tests with `cargo test --doc`.
   - `cargo xtask prepush` runs, before a push, the checks that most often cost a round of CI
     ([guardrails](docs/src/design/guardrails.md#before-a-push)).
 - M13.17: the jump threads of automatic digitizing (`REQ-AUTO-053`). A machine with one needle cuts no
