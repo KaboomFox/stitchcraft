@@ -74,8 +74,17 @@ pub fn sheets() -> impl Iterator<Item = &'static TestSheet> {
 pub(crate) fn options() -> Vec<(&'static str, Param)> {
     let ids: Vec<&'static str> = sheets().map(|sheet| sheet.id).collect();
     let default = ids.first().copied().unwrap_or_default();
-    let tests: Vec<String> = sheets().map(|sheet| format!("- {}: {}", sheet.id, sheet.title)).collect();
-    // VectorCraft shows 1,000 characters of help (`limits::MAX_HELP`), which a line for each sheet nearly fills.
+    // VectorCraft shows 1,000 characters of help (`limits::MAX_HELP`), which a line for each sheet with its
+    // whole title overfills. A title's first part, up to its colon, is left out when the sheet before has the
+    // same one, as TS-13B to TS-13E have TS-13A's. The page the help links to has every title whole.
+    let mut group = "";
+    let mut tests = Vec::new();
+    for sheet in sheets() {
+        let (first, rest) = sheet.title.split_once(": ").unwrap_or((sheet.title, ""));
+        let title = if first == group && !rest.is_empty() { rest } else { sheet.title };
+        group = first;
+        tests.push(format!("- {}: {title}", sheet.id));
+    }
     let help = format!("The test sheet to draw:\n\n{}", tests.join("\n"));
     vec![(SHEET, own(Schema::Choice { options: ids, default }, "Sheet", &help, PAGE))]
 }

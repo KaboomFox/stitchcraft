@@ -18,6 +18,10 @@ use super::AutoParams;
 /// How many of the shapes stacked at the thickest spot the warning names: those with the most thread.
 const NAMED: usize = 3;
 
+/// What to do about the warning. VectorCraft shows 500 characters of an export's warning, so the message
+/// and this are kept short enough to be shown whole, the advice first.
+const HINT: &str = "Sew a test piece of it first. `stitch preview --style thickness` draws the thick places.";
+
 /// The limits that `rules` set.
 pub(crate) fn limits(rules: &AutoParams) -> Limits {
     Limits {
@@ -41,28 +45,27 @@ pub(crate) fn said(plan: &StitchPlan, limits: &Limits, budget: &Budget) -> Optio
         Err(_) => "How thick the design sews was not measured: it is larger than 500 mm, or measuring it needs more work than the budget allows."
             .to_string(),
     };
-    let hint = "The limits are starting values that no sew-out has confirmed: sew a test piece of the thickest part first. `stitch preview --style thickness` draws where the thread is thick.";
+    let hint = HINT;
     Some(Diagnostic::new(Code::AutoThick, message).with_fix(Fix::Hint(hint.to_string())))
 }
 
 /// The warning's message for `report` of `plan`. A place is given from the design's centre, x to the right
 /// and y down, as the plan has it.
 fn message(plan: &StitchPlan, report: &Report, limits: &Limits) -> String {
-    let place = |spot: &Spot| format!("({:.1}, {:.1}) mm from the design's centre", spot.at.x(), spot.at.y());
-    let areas =
-        |over: &Over, failing: &Over| format!("{:.1} mm² in {}", over.area, places(over.pieces)) + &format!(", {:.1} mm² of it", failing.area);
+    let place = |spot: &Spot| format!("({:.1}, {:.1})", spot.at.x(), spot.at.y());
+    let areas = |over: &Over, failing: &Over| (format!("{:.1} mm² in {}", over.area, places(over.pieces)), format!("{:.1} mm² of it", failing.area));
+    let (thick, failing) = areas(&report.thick, &report.failing);
+    let (dense, pierced) = areas(&report.dense, &report.pierced);
     format!(
-        "The design sews thick. Thread: up to {:.1} fills over one spot, at {}, where {} are stacked. At {} fills or more: {} at {} or more. Needle points: up to {:.0} in a square millimetre, at {}. At {} or more: {} at {} or more.",
+        "Thread is up to {:.1} fills thick at {} mm from the design's centre: {}. {thick} has {} fills or more, {failing} {} or more. Needle points: up to {:.0} per mm² at {}, {dense} at {} or more, {pierced} at {} or more.",
         report.fills.value,
         place(&report.fills),
         stacked(plan, &report.stack),
         limits.warn_fills,
-        areas(&report.thick, &report.failing),
         limits.fail_fills.max(limits.warn_fills),
         report.points.value,
         place(&report.points),
         limits.warn_points,
-        areas(&report.dense, &report.pierced),
         limits.fail_points.max(limits.warn_points),
     )
 }
@@ -83,7 +86,7 @@ fn stacked(plan: &StitchPlan, stack: &[Layer]) -> String {
             .and_then(|element| plan.elements.get(element.index()))
             .map_or_else(|| "stitches of no shape".to_string(), |id| format!("`{id}`"));
         let thread = plan.blocks.get(layer.block).map(|block| block.thread.color.to_string()).unwrap_or_default();
-        format!("{id} in {thread} with {:.1}", layer.top + layer.under)
+        format!("{id} {thread} {:.1}", layer.top + layer.under)
     };
     let named: Vec<String> = layers.iter().take(NAMED).map(name).collect();
     let others = layers.len().saturating_sub(NAMED);
@@ -147,10 +150,19 @@ mod tests {
         let limits = Limits { fail_fills: 4.5, warn_points: 12.0, fail_points: 16.0, ..Limits::DEFAULT };
         let warned = said(&plan(4, 1), &limits, &Budget::DEFAULT).unwrap();
         assert_eq!(warned.message, EXPECTED, "{}", warned.message);
+        // VectorCraft shows 500 characters of a warning. With ids as long as a traced picture's shapes have,
+        // coordinates and areas of 5 figures and the hint, the line has fewer.
+        let long = EXPECTED
+            .replace("`s1`", "`vc:1234:fill#2~2`")
+            .replace("`s2`", "`vc:1234:fill#2~3`")
+            .replace("stitches of no shape", "`vc:1234:fill#2~4`");
+        let long = long.replace("(9.5, 9.5)", "(-123.4, -123.4)").replace("(10.5, 9.5)", "(-123.4, -123.4)").replace("2 more", "12 more");
+        let line = Diagnostic { message: long, ..warned }.one_line();
+        assert!(line.ends_with(HINT) && line.chars().count() <= 500, "{}: {line}", line.chars().count());
     }
 
     /// The message of 4 squares on a layer of no shape: a corner where the rows turn is thickest.
-    const EXPECTED: &str = "The design sews thick. Thread: up to 5.3 fills over one spot, at (9.5, 9.5) mm from the design's centre, where stitches of no shape in #000000 with 1.1, `s1` in #010000 with 1.1, `s2` in #020000 with 1.1 and 2 more are stacked. At 3 fills or more: 109.2 mm² in 1 place, 90.2 mm² of it at 4.5 or more. Needle points: up to 20 in a square millimetre, at (10.5, 9.5) mm from the design's centre. At 12 or more: 20.0 mm² in 2 places, 18.5 mm² of it at 16 or more.";
+    const EXPECTED: &str = "Thread is up to 5.3 fills thick at (9.5, 9.5) mm from the design's centre: stitches of no shape #000000 1.1, `s1` #010000 1.1, `s2` #020000 1.1 and 2 more. 109.2 mm² in 1 place has 3 fills or more, 90.2 mm² of it 4.5 or more. Needle points: up to 20 per mm² at (10.5, 9.5), 20.0 mm² in 2 places at 12 or more, 18.5 mm² of it at 16 or more.";
 
     #[test]
     fn diag_sc_w0913_says_when_the_design_was_not_measured() {
@@ -175,10 +187,10 @@ mod tests {
         let plan = plan(2, 0);
         let layer = |block, element, top, under| Layer { block, element: stitchcraft_plan::ElementRef::from_index(element), top, under };
         let stack = [layer(0, 0, 0.5, 0.25), layer(1, 1, 1.5, 0.0), layer(1, 0, 0.0, 1.0), layer(7, 9, 0.25, 0.0)];
-        assert_eq!(stacked(&plan, &stack[..1]), "`s0` in #000000 with 0.8");
-        assert_eq!(stacked(&plan, &stack[..3]), "`s1` in #010000 with 1.5, `s0` in #010000 with 1.0, `s0` in #000000 with 0.8");
-        assert_eq!(stacked(&plan, &stack), "`s1` in #010000 with 1.5, `s0` in #010000 with 1.0, `s0` in #000000 with 0.8 and 1 more");
-        assert_eq!(stacked(&plan, &stack[3..]), "stitches of no shape in  with 0.2");
+        assert_eq!(stacked(&plan, &stack[..1]), "`s0` #000000 0.8");
+        assert_eq!(stacked(&plan, &stack[..3]), "`s1` #010000 1.5, `s0` #010000 1.0, `s0` #000000 0.8");
+        assert_eq!(stacked(&plan, &stack), "`s1` #010000 1.5, `s0` #010000 1.0, `s0` #000000 0.8 and 1 more");
+        assert_eq!(stacked(&plan, &stack[3..]), "stitches of no shape  0.2");
         assert_eq!((places(0), places(1), places(2)), ("0 places".to_string(), "1 place".to_string(), "2 places".to_string()));
     }
 }
