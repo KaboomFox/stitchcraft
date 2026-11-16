@@ -296,3 +296,130 @@ fn a_design_without_a_stitch_has_grids_of_no_cells() {
     assert_eq!((cover.columns, cover.rows, cover.later.len()), (0, 0, 0));
     assert_eq!(cover.at(&cover.later, (0, 0)), 0);
 }
+
+/// Grids of `columns` by `rows` cells from the origin, drawn by hand: the cells that `open` holds show red
+/// stitches of the group with place 2, so a red run to the group with place 1 may cross them, and no others
+/// but the cells of its ends.
+fn drawn(columns: i64, rows: i64, open: impl Fn(Cell) -> bool) -> Cover {
+    let top: Vec<u32> = (0..rows).flat_map(|row| (0..columns).map(move |column| (column, row))).map(|cell| if open(cell) { 2 } else { 0 }).collect();
+    Cover { min: (0.0, 0.0), columns, rows, later: vec![0; top.len()], top, colours: vec![RED, RED] }
+}
+
+/// The red move over `cover` from the centre of one of `cells` to the centre of the other.
+fn between(cover: &Cover, cells: [Cell; 2]) -> Move<'_> {
+    let centre = |cell: Cell| p(cover.centre(cell).0, cover.centre(cell).1);
+    Move::new(cover, cells.map(centre), 1, RED)
+}
+
+/// The work of the default budget that `meter` has charged.
+fn charged(meter: &Meter) -> u64 {
+    Budget::DEFAULT.max_work - meter.work_left()
+}
+
+#[test]
+fn req_auto_053_the_way_steps_straight_to_each_of_the_8_cells_round_a_cell() {
+    let cover = drawn(70, 70, |_| true);
+    for (across, down) in [(1, 0), (0, 1), (-1, 0), (0, -1), (1, 1), (-1, 1), (-1, -1), (1, -1)] {
+        let way: Vec<Cell> = (0..=3).map(|k| (30 + k * across, 30 + k * down)).collect();
+        let mut meter = Budget::DEFAULT.meter();
+        assert_eq!(between(&cover, [way[0], way[3]]).cells_between(&mut meter).unwrap().as_ref(), Some(&way), "{across} {down}");
+        // The box searched is that of the 2 cells with 50 cells to spare on every side, and the search looks
+        // at the 4 cells of the way and at no other.
+        let searched = (3 * across.abs() + 101) * (3 * down.abs() + 101);
+        assert_eq!(charged(&meter), u64::try_from(searched).unwrap() + 4, "{across} {down}");
+    }
+    // A move within one cell has a way of that cell, in a box of 101 cells by 101.
+    let mut meter = Budget::DEFAULT.meter();
+    assert_eq!(between(&cover, [(2, 3), (2, 3)]).cells_between(&mut meter).unwrap(), Some(vec![(2, 3)]));
+    assert_eq!(charged(&meter), 101 * 101 + 1);
+}
+
+/// Grids on which the only way from the cell (5, 55) to the cell `side` cells to its right goes `depth`
+/// cells up, across and down again; `turned`, the same with columns for rows. And the 2 cells.
+fn way_round(side: i64, depth: i64, turned: bool) -> (Cover, [Cell; 2]) {
+    let turn = move |(column, row): Cell| if turned { (row, column) } else { (column, row) };
+    let open = move |cell: Cell| {
+        let (column, row) = turn(cell);
+        let between = |low: i64, value: i64, high: i64| (low..=high).contains(&value);
+        (between(55 - depth, row, 55) && (column == 5 || column == 5 + side)) || (row == 55 - depth && between(5, column, 5 + side))
+    };
+    (drawn(70, 70, open), [turn((5, 55)), turn((5 + side, 55))])
+}
+
+#[test]
+fn req_auto_053_the_way_keeps_within_10_mm_of_the_box_of_the_ends() {
+    for turned in [false, true] {
+        // 50 cells off is the last row, or column, of the box searched. The way cuts its 2 corners.
+        let (cover, cells) = way_round(60, 50, turned);
+        let way = between(&cover, cells).cells_between(&mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        assert_eq!((way.len(), way[0], way[158]), (159, cells[0], cells[1]), "{turned}");
+        assert!(way.contains(&if turned { (5, 35) } else { (35, 5) }), "{turned}");
+        // 51 cells off is beside the box, though the way is no longer than twice the move and 10 mm.
+        let (cover, cells) = way_round(60, 51, turned);
+        assert_eq!(between(&cover, cells).cells_between(&mut Budget::DEFAULT.meter()).unwrap(), None, "{turned}");
+    }
+}
+
+#[test]
+fn req_auto_053_a_way_of_exactly_twice_the_move_and_10_mm_is_taken() {
+    // A move of 3.885 mm between cells 20 apart allows a way of 17.77 mm: 888 tenths of a cell. The way
+    // round 35 cells off is 34 cells up, 18 across, 34 down and 2 corners cut: 888 tenths.
+    let ends = [p(1.15, 11.1), p(5.035, 11.1)];
+    let (cover, cells) = way_round(20, 35, false);
+    let moved = Move::new(&cover, ends, 1, RED);
+    assert_eq!((moved.cells, longest(3.885)), (cells, 17.77));
+    assert_eq!(moved.cells_between(&mut Budget::DEFAULT.meter()).unwrap().map(|way| way.len()), Some(89));
+    // One cell farther off the way is 908 tenths.
+    let (cover, _) = way_round(20, 36, false);
+    assert_eq!(Move::new(&cover, ends, 1, RED).cells_between(&mut Budget::DEFAULT.meter()).unwrap(), None);
+}
+
+#[test]
+fn req_auto_053_a_run_is_pulled_straight_only_where_the_straight_line_keeps_to_the_way() {
+    // 3 cells corner to corner. The straight line from the first end, in the right of its cell, to the far
+    // end crosses a cell beside the way, and so does the line to the cell between: the corner stays.
+    let cover = drawn(12, 12, |cell| [(5, 5), (4, 6), (3, 7)].contains(&cell));
+    let corner = p(cover.centre((4, 6)).0, cover.centre((4, 6)).1);
+    let moved = Move::new(&cover, [p(1.19, 1.14), p(0.7, 1.5)], 1, RED);
+    assert_eq!(moved.cells, [(5, 5), (3, 7)]);
+    let mut meter = Budget { max_work: 100_000, ..Budget::DEFAULT }.meter();
+    assert_eq!(moved.run(&mut meter).unwrap(), Some(vec![corner]));
+    // From the middle of the first cell the line keeps to the 3 cells: one stitch, no needle point between.
+    let moved = between(&cover, [(5, 5), (3, 7)]);
+    assert_eq!(moved.run(&mut meter).unwrap(), Some(Vec::new()));
+}
+
+#[test]
+fn req_auto_053_a_stitch_covers_the_cells_whose_centres_lie_within_half_a_thread_of_it() {
+    let mut cover = drawn(50, 30, |_| false);
+    let mut meter = Budget::DEFAULT.meter();
+    // The box of this stitch with 0.2 mm to spare, from (2.9, 1.9) to (4.3, 2.7), is 8 cells by 5.
+    cover.paint([p(3.1, 2.1), p(4.1, 2.5)], 1, true, &mut meter).unwrap();
+    assert_eq!(charged(&meter), 40);
+    // A stitch of no length at (0.5, 0.3). The centre of the cell (2, 2), at (0.5, 0.5), lies exactly 0.2 mm
+    // from it and is covered. The cell below is not.
+    let stitch = [p(0.5, 0.3); 2];
+    let reach = THREAD.get() / 2.0;
+    assert_eq!((cover.centre((2, 2)), apart(cover.centre((2, 2)), stitch)), ((0.5, 0.5), reach * reach));
+    cover.paint(stitch, 7, true, &mut meter).unwrap();
+    assert_eq!([(2, 1), (2, 2), (2, 3)].map(|cell| (cover.at(&cover.later, cell), cover.at(&cover.top, cell))), [(7, 7), (7, 7), (0, 0)]);
+    // A stitch that is not of a fill or satin column is only what shows.
+    cover.paint(stitch, 9, false, &mut meter).unwrap();
+    assert_eq!((cover.at(&cover.later, (2, 2)), cover.at(&cover.top, (2, 2))), (7, 9));
+    // The grids hold their cells row by row, and a cell beside them on any side is none of theirs.
+    assert_eq!([(3, 2), (50, 2), (-1, 2), (3, 30), (3, -1)].map(|cell| cover.index(cell)), [Some(103), None, None, None, None]);
+}
+
+#[test]
+fn req_auto_053_a_move_shows_as_far_as_its_straight_stitch_lies_on_another_colour_or_on_none() {
+    // The stitch is looked at every 0.1 mm, half a cell, at the middle of each step.
+    assert_eq!(Move::steps(p(0.0, 0.0), p(2.0, 0.0)), (20, 0.1));
+    // Red shows up to 4.2 mm, and the move goes on to 5 mm over bare fabric: 0.8 mm show, at its very end.
+    let cover = drawn(40, 10, |(column, _)| column <= 20);
+    let ends = [p(3.0, 1.1), p(5.0, 1.1)];
+    let shows = Move::new(&cover, ends, 1, RED).showing();
+    assert!((shows - 0.8).abs() < 1e-9, "{shows}");
+    // In blue all of it shows.
+    let shows = Move::new(&cover, ends, 1, BLUE).showing();
+    assert!((shows - 2.0).abs() < 1e-9, "{shows}");
+}

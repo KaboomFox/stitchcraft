@@ -68,6 +68,19 @@ fn req_auto_053_the_needle_runs_from_one_shape_to_the_next_under_a_shape_sewn_la
 }
 
 #[test]
+fn req_auto_053_an_element_that_forces_lock_stitches_keeps_its_jump() {
+    // The left square ties off whatever follows it (`force_lock_stitches`), and so does the outline made of
+    // it: the thread jumps from the fill to its outline and from there to the right square, 2 jumps more
+    // than the design has without the setting, and no run is sewn in place of either.
+    let design = squares(true);
+    let mut elements = design.elements().to_vec();
+    elements[0].params.set("force_lock_stitches", "true");
+    let forced = Design::new(elements, design.settings).unwrap();
+    let (with, without) = (in_place(&forced).plan.unwrap(), in_place(&design).plan.unwrap());
+    assert_eq!((runs(&with).len(), with.stats().jumps, without.stats().jumps), (0, 4, 2));
+}
+
+#[test]
 fn diag_sc_i0914_a_design_whose_runs_need_more_work_than_the_budget_sews_with_its_jumps() {
     // The grids of this design cost 1.26 million units of work, more than this budget's million, which each
     // element has to itself and needs less of.

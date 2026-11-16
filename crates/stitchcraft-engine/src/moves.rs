@@ -12,15 +12,15 @@
 //! layers, its thread [`THREAD`] wide, on 2 grids of [`CELL`]: the last group of a fill or satin column that
 //! covers each cell, and the last group of any kind, whose colour is what shows there. A cell is hidden from
 //! a move when it and the cells within [`ROOM`] of it are covered by groups sewn after the move: the run then
-//! lies 0.4 mm inside what covers it, as an underlay does. A run keeps to hidden cells, and to cells where stitches of its own colour sewn later
-//! are what shows: the outline that follows a fill lies on the run as a second pass does. Within [`STUB`] of
-//! its 2 ends it may also cross cells of its own colour sewn before, or covered later without that room: an
-//! element ends on its own stitches, and starts on its edge.
+//! lies 0.4 mm inside what covers it, as an underlay does. A run keeps to hidden cells, and to cells where
+//! stitches of its own colour sewn later are what shows: the outline that follows a fill lies on the run as
+//! a second pass does. Within [`STUB`] of its 2 ends it may also cross cells of its own colour sewn before,
+//! or covered later without that room: an element ends on its own stitches, and starts on its edge.
 //!
 //! **The way** is the shortest over the cells, found from the cheapest row first (A*), no longer than
 //! [`longest`] allows, then pulled straight wherever the straight line keeps to the cells, and sewn with
-//! stitches of [`STITCH`] at most, a needle point at each corner left. Everything is whole-number arithmetic on cells but the sampling of lines,
-//! so a design routes the same on every machine.
+//! stitches of [`STITCH`] at most, a needle point at each corner left. Everything is whole-number arithmetic
+//! on cells but the sampling of lines, so a design routes the same on every machine.
 //!
 //! **A move that is sewn on**, within the collapse length, and shows on another colour for [`SHOWS`] or
 //! more becomes a run where one is hidden. Where none is, it stays a stitch: a jump there would leave a
@@ -286,7 +286,7 @@ impl<'c> Move<'c> {
         // Pulled straight: from each corner kept, on to the last corner in a row that a clear line reaches.
         let mut pulled = vec![from];
         let mut at = 0;
-        while let (Some(&anchor), true) = (corners.get(at), at + 1 < corners.len()) {
+        while let Some(&anchor) = corners.get(at) {
             let mut next = at + 1;
             while let Some(&farther) = corners.get(next + 1) {
                 if !self.clear(anchor, farther, meter)? {
