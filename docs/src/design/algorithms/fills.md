@@ -81,7 +81,10 @@ The cuts cost the most where a region is shrunk again and again ([offset curves]
 hot points, the corners and the points where edges cross, are kept in a sorted list. For each round they
 are also put in a grid of buckets over their bounds, as many each way as the square root of their number.
 A segment seeks the cells it passes through among the points of the buckets within a half cell of it,
-and the edges that may cross it among those put in the same buckets (`REQ-FILL-006`). When the
+and the edges that may cross it among those put in the same buckets (`REQ-FILL-006`). A bucket keeps its points
+in order of x, and 2 binary searches find the points between a segment's ends along x: only those are tested.
+2 edges in a bucket are tested for an exact crossing only when their bounds along y meet. Since M13.30
+these searches find the same points with less work: TS-13B, run natively, takes 0.37 G fewer instructions. When the
 edges together would fill more than 4 buckets each, the buckets are made larger. The memory used
 then grows only as fast as the number of edges. Before M13.23 both searches went through everything within a segment's span along x. The raw
 outline of a traced photo's background shrunk by 3.5 mm is some 85,000 short edges that lie many times
