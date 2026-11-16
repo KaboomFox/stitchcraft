@@ -1,4 +1,4 @@
-//! Less thread where areas overlap (`REQ-AUTO-063`): how far an area reaches along its rows and across
+//! Less thread where areas overlap (`REQ-AUTO-067`): how far an area reaches along its rows and across
 //! them, under wide and narrow shapes and under a running line's part, and which of 2 areas sews under a
 //! shape sewn after both. The cases of `tests/auto_thick.rs` measure what that takes off a design.
 
@@ -62,7 +62,7 @@ fn reaches(params: &[(&str, &str)]) -> (f64, f64) {
 }
 
 #[test]
-fn req_auto_063_an_area_reaches_its_overlap_along_its_rows_and_its_pull_compensation_across_them() {
+fn req_auto_067_an_area_reaches_its_overlap_along_its_rows_and_its_pull_compensation_across_them() {
     // By default 1 mm where its rows end at the edge, and 0.4 mm where they run along it.
     assert_eq!(reaches(&[]), (1.0, 0.4));
     // The reach turns with the rows.
@@ -77,7 +77,7 @@ fn req_auto_063_an_area_reaches_its_overlap_along_its_rows_and_its_pull_compensa
 }
 
 #[test]
-fn req_auto_063_rows_at_any_angle_reach_as_far_along_them() {
+fn req_auto_067_rows_at_any_angle_reach_as_far_along_them() {
     // At 45° the reach is the same to the right and downwards: the ellipse's half width there, for half
     // axes of 1 and 0.4 mm.
     let (right, down) = reaches(&[("auto_fill_angle", "45")]);
@@ -104,7 +104,7 @@ fn under(second: Sewn) -> f64 {
 }
 
 #[test]
-fn req_auto_063_an_area_reaches_half_as_far_under_a_narrow_shape() {
+fn req_auto_067_an_area_reaches_half_as_far_under_a_narrow_shape() {
     assert_eq!((WIDE, UNDER_NARROW), (3.0, 0.5));
     let narrow = Reach { along: 1.0, across: 0.4, angle: 30.0 }.narrow();
     assert_eq!(narrow, Reach { along: 0.5, across: 0.4, angle: 30.0 });
@@ -126,7 +126,7 @@ fn req_auto_063_an_area_reaches_half_as_far_under_a_narrow_shape() {
 }
 
 #[test]
-fn req_auto_063_an_area_reaches_its_whole_overlap_under_a_satin_column_whichever_way_its_rows_run() {
+fn req_auto_067_an_area_reaches_its_whole_overlap_under_a_satin_column_whichever_way_its_rows_run() {
     // A satin column 2 mm wide, its rails along the square's side or under it: the column's stitches don't
     // cover its ends and bends as a fill covers its area, so the square reaches 1 mm under it either way,
     // though the column is narrow and the square's rows run along the lower one.
@@ -145,7 +145,7 @@ fn req_auto_063_an_area_reaches_its_whole_overlap_under_a_satin_column_whichever
 }
 
 #[test]
-fn req_auto_063_an_area_reaches_its_whole_overlap_under_the_part_of_a_running_line() {
+fn req_auto_067_an_area_reaches_its_whole_overlap_under_the_part_of_a_running_line() {
     // A strip 0.8 mm wide below the square, sewn as a running stitch along its middle: the thread doesn't
     // cover the strip, so the square reaches across it, though its rows run along it, as far as the strip
     // goes. Under an area there it would reach 0.4 mm.
@@ -158,7 +158,7 @@ fn req_auto_063_an_area_reaches_its_whole_overlap_under_the_part_of_a_running_li
 }
 
 #[test]
-fn req_auto_063_across_a_running_lines_part_the_area_sewn_first_reaches_on_under_the_area_beyond() {
+fn req_auto_067_across_a_running_lines_part_the_area_sewn_first_reaches_on_under_the_area_beyond() {
     // 2 squares with a strip 0.6 mm wide between them, which sews as a running stitch after both. The left
     // square, sewn first, reaches across the strip and its whole overlap under the right square from there,
     // and the right square gives the strip up: their overlap is 1 mm, whatever the strip's width.
@@ -182,7 +182,7 @@ fn req_auto_063_across_a_running_lines_part_the_area_sewn_first_reaches_on_under
 }
 
 #[test]
-fn req_auto_063_a_part_that_a_line_and_a_column_sew_along_is_reached_across_once() {
+fn req_auto_067_a_part_that_a_line_and_a_column_sew_along_is_reached_across_once() {
     // A strip 0.8 mm wide below the square and twice as long. A running line sews along its left half and a
     // satin column along its right half, as the 2 bars of an L do that is one part: the strip is the part
     // of both. The square reaches 1 mm along the strip from its own corner, as under a column, and not 1 mm
@@ -208,7 +208,7 @@ fn corner() -> Vec<Sewn> {
 }
 
 #[test]
-fn req_auto_063_under_a_shape_sewn_after_2_areas_only_the_one_sewn_first_sews() {
+fn req_auto_067_under_a_shape_sewn_after_2_areas_only_the_one_sewn_first_sews() {
     let (elements, said) = reached(corner(), &Budget::DEFAULT);
     assert_eq!(
         said.iter().map(|said| said.message.as_str()).collect::<Vec<_>>(),
@@ -233,7 +233,7 @@ fn rim(under: &[Polygon]) -> Rim {
 }
 
 #[test]
-fn req_auto_063_an_area_gives_up_what_an_area_sewn_before_it_sews_under_a_later_shape() {
+fn req_auto_067_an_area_gives_up_what_an_area_sewn_before_it_sews_under_a_later_shape() {
     let meter = || Budget::DEFAULT.meter();
     let whole = [square((10.0, 0.0), (11.0, 10.0))];
     let other = |under: &[Polygon]| Some(Rim { shown: vec![square((0.0, 10.0), (10.0, 20.0))], under: under.to_vec() });
@@ -261,7 +261,7 @@ fn req_auto_063_an_area_gives_up_what_an_area_sewn_before_it_sews_under_a_later_
 }
 
 #[test]
-fn req_auto_063_an_area_whose_overlap_needs_more_work_to_part_sews_it_whole_and_is_said_to() {
+fn req_auto_067_an_area_whose_overlap_needs_more_work_to_part_sews_it_whole_and_is_said_to() {
     // The corner's `b` gives up a part of its overlap with the work that takes, and with any less it keeps
     // its region, which is said.
     let parted = |work: u64| {
@@ -294,7 +294,7 @@ fn req_auto_063_an_area_whose_overlap_needs_more_work_to_part_sews_it_whole_and_
 }
 
 #[test]
-fn req_auto_063_an_area_that_needs_more_work_for_its_reach_keeps_its_region_at_every_step() {
+fn req_auto_067_an_area_that_needs_more_work_for_its_reach_keeps_its_region_at_every_step() {
     // A square beside a broad area with a narrow arm and above the part of a running line, its rows turned:
     // every kind of reach. With any less work than it needs, the square is sewn as drawn, and that is said.
     let sewn = || {
@@ -324,7 +324,7 @@ fn req_auto_063_an_area_that_needs_more_work_for_its_reach_keeps_its_region_at_e
 }
 
 #[test]
-fn req_auto_063_a_shape_is_split_once_for_the_areas_sewn_before_it_that_share_a_width() {
+fn req_auto_067_a_shape_is_split_once_for_the_areas_sewn_before_it_that_share_a_width() {
     // 2 squares on the left of a broad area with a narrow arm, far from each other: the one taken second
     // finds the area split, and costs less than it does alone.
     let arm = || Polygon {

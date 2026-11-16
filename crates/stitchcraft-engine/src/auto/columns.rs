@@ -825,7 +825,7 @@ mod tests {
     }
 
     #[test]
-    fn req_auto_064_a_column_s_stitches_crowd_by_the_most_of_one_rail_that_sews_to_a_millimetre_of_the_other() {
+    fn req_auto_068_a_column_s_stitches_crowd_by_the_most_of_one_rail_that_sews_to_a_millimetre_of_the_other() {
         let p = |x: f64, y: f64| Point::new(x, y).unwrap();
         // 2 straight rails 1 mm apart, the first `first` millimetres long and the second `second`, with rungs
         // from so far along the first to so far along the second.
@@ -868,7 +868,7 @@ mod tests {
     }
 
     #[test]
-    fn req_auto_064_a_part_whose_column_would_crowd_its_stitches_is_filled_and_says_how_far() {
+    fn req_auto_068_a_part_whose_column_would_crowd_its_stitches_is_filled_and_says_how_far() {
         let made = |part: &Polygon, set: &[(&str, &str)]| {
             let rules = AutoParams::from_set(&set.iter().copied().collect()).unwrap().params;
             columns(part, &Bounds::of(&rules, Mm::new(1.0).unwrap()), &rules, &[], &mut Budget::DEFAULT.meter()).unwrap()

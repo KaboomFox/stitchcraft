@@ -145,7 +145,7 @@ fn req_auto_013_the_areas_sewn_before_a_narrow_part_reach_under_it() {
     // 2 red squares, and a blue strip 0.6 mm wide between them, as a trace whose colours abut draws them. The
     // strip runs, after both squares, which it borders. The left square, sewn first, reaches across the strip
     // and its whole overlap under the right square beyond it, and the right square gives the strip up
-    // (REQ-AUTO-063).
+    // (REQ-AUTO-067).
     let red = |id: &str, from: (f64, f64), to: (f64, f64)| automatic(shape(id, &[rectangle(from, to)], &[]));
     let blue = automatic(fill("strip", &[&rectangle((10.0, 0.0), (10.6, 10.0))], &BLUE, &[]));
     let (out, said) = sewn(vec![red("left", (0.0, 0.0), (10.0, 10.0)), blue, red("right", (10.6, 0.0), (20.6, 10.0))]);

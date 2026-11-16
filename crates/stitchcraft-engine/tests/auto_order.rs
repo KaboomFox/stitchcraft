@@ -522,7 +522,7 @@ proptest! {
             let within = [x0 + overlap, y0 + overlap, x1 - overlap, y1 - overlap];
             // Where a square drawn after the upper one covers it, the upper one shows nothing, and the lower
             // one may reach there: across the part of a line that the upper one sews as, and its overlap
-            // under the square beyond (`REQ-AUTO-063`). That square's own edge is checked in its turn.
+            // under the square beyond (`REQ-AUTO-067`). That square's own edge is checked in its turn.
             let hidden: Vec<[f64; 4]> = (upper + 1..shapes.len())
                 .filter(|&later| shapes[later].square)
                 .map(|later| shapes[later].paints)

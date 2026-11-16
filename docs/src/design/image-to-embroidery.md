@@ -907,7 +907,7 @@ the running dog in 6 threads was new, 2.0 mm² at (40.9, 42.4): the skewed end o
 
 An overlap is thread under thread. M13.29 measured that the overlaps cause most of the thread where a
 traced picture sews thick ([How thick a design sews](#how-thick-a-design-sews)), and the owner's first
-concern on 2026-11-16 was that thickness. `REQ-AUTO-063` (M13.30) takes away the part of an overlap that
+concern on 2026-11-16 was that thickness. `REQ-AUTO-067` (M13.30) takes away the part of an overlap that
 the pull doesn't ask for (`auto::neighbours::under`):
 
 1. **The overlap follows the rows.** The thread pulls a row in at its ends and not sideways. So an area
@@ -1008,7 +1008,7 @@ since each layer of each piece then sews along its new edges, beside each edge b
 away under satin columns leaves 2 to 5 % more and a gap with nothing under it. With `underpath` on, the needle moves from row to row inside the base layer and not along its edge, which leaves 1 to 2 % more. 2 layers leave 10 to 17 % less than 3, and one
 layer 22 to 29 % less, whichever way its rows run. The check of the cover gives each of these the same result: it knows where the base layer's shape lies, and not where its thread does.
 
-**A part whose one satin column would crowd its stitches is filled** (`REQ-AUTO-064`). What was left at 6
+**A part whose one satin column would crowd its stitches is filled** (`REQ-AUTO-068`). What was left at 6
 fills or more was no overlap and no fill. A fill's own thread reaches 2.5 fills nowhere on the dogs. A
 satin column of a small ragged part does: a column lays 1.25 fills where it runs straight, and each dog had
 34 to 40 mm² where one column alone laid 2.5 or more, up to 6.6. A column sews as many needle points on one

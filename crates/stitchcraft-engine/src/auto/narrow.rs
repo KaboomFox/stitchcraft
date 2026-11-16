@@ -746,7 +746,7 @@ mod tests {
     }
 
     #[test]
-    fn req_auto_064_a_part_whose_column_would_crowd_its_stitches_stays_in_the_fill_and_says_so() {
+    fn req_auto_068_a_part_whose_column_would_crowd_its_stitches_stays_in_the_fill_and_says_so() {
         // A band 2.5 mm wide bent three quarters of the way round a point 1 mm inside it: a column along it
         // would sew 3.5 mm of its outer edge to each millimetre of its inner one.
         let arc = |radius: f64, from: f64, to: f64| {

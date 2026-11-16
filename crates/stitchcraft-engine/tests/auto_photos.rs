@@ -68,7 +68,7 @@ struct Astray {
 const LINES: &str = "A narrow part sews 2 lines as one running stitch. The needle goes straight from the end of one to the start of the next, across another colour, and the move, shorter than the 3 mm collapse length, is a stitch. M13.17 looked for a run under what is sewn later (REQ-AUTO-053) and found no way that is hidden. A jump there would leave a thread as long as the stitch.";
 
 /// Why a row of a fill shows on another colour beside a line.
-const ACROSS: &str = "A row of an automatic fill shows on another colour for 1 mm or more, since M13.30. Where 2 areas lie beside a line of fur, the one sewn first now sews the line's part alone, and the area beyond the line gives it up (REQ-AUTO-063). A row along that part then shows beside the line, where a row of the area beyond covered it before. Each such row was traced: its middle or an end lies on the part of a running line 0.5 to 0.8 mm wide, whose thread is 0.4 mm wide.";
+const ACROSS: &str = "A row of an automatic fill shows on another colour for 1 mm or more, since M13.30. Where 2 areas lie beside a line of fur, the one sewn first now sews the line's part alone, and the area beyond the line gives it up (REQ-AUTO-067). A row along that part then shows beside the line, where a row of the area beyond covered it before. Each such row was traced: its middle or an end lies on the part of a running line 0.5 to 0.8 mm wide, whose thread is 0.4 mm wide.";
 
 /// Why a stitch of an outline shows on another colour.
 const OUTLINE: &str = "A stitch of a fill's outline (REQ-AUTO-051) shows on another colour for 1 mm or more. The outline is one ring round its fill, and the stitch lies along it, its ends within 0.15 mm of the ring. The fill is a thin, ragged shape of a traced photo beside others of its kind. What lies beside the ring there was not traced.";
@@ -86,9 +86,9 @@ const OUTLINE: &str = "A stitch of a fill's outline (REQ-AUTO-051) shows on anot
 /// and one other does, 2 rows are sewn the other way, and 2 stitches of outlines show beside their fills: 14
 /// stitches. Which neighbour hid each of the 8 rows was not traced. M13.17 runs the thread under later shapes in
 /// place of jumps (REQ-AUTO-053), which moves no stitch of these: the 2 moves between a part's lines have no
-/// way that is hidden, and stay. M13.30 lets one area alone sew under a shape (REQ-AUTO-063): 8 of the 14
+/// way that is hidden, and stay. M13.30 lets one area alone sew under a shape (REQ-AUTO-067): 8 of the 14
 /// no longer showed, and 13 others did, 12 of them rows of a fill ([`ACROSS`]) and one a stitch of an outline: 19
-/// stitches. It then fills the parts whose one satin column would crowd its stitches (REQ-AUTO-064), which
+/// stitches. It then fills the parts whose one satin column would crowd its stitches (REQ-AUTO-068), which
 /// sew as fills in another place of the order: 7 of the 19 no longer show, and 4 others do, 3 rows on a
 /// line's part and a stitch of an outline: 16 stitches.
 const ASTRAY: [Astray; 16] = [
@@ -114,7 +114,7 @@ const ASTRAY: [Astray; 16] = [
 /// tatami fills. Before M13.21, width alone chose, and the dogs sewed 64, 73, 59 and 79 shapes as satin
 /// columns and 4, 3, 6 and 7 as fills. M13.27 fills 2 shapes with arms of the dog on turf in 6 threads, and one of
 /// the running dog in 9. M13.30 fills the parts whose one satin column would crowd its stitches
-/// (REQ-AUTO-064): 15, 18, 15 and 17 shapes that sewed as satin columns, when they were 25, 31, 21 and 28.
+/// (REQ-AUTO-068): 15, 18, 15 and 17 shapes that sewed as satin columns, when they were 25, 31, 21 and 28.
 const SEWN: [(&str, [usize; 3]); 4] =
     [("dog-on-turf-6", [25, 10, 62]), ("dog-on-turf-9", [34, 13, 68]), ("dog-running-6", [15, 6, 62]), ("dog-running-9", [18, 11, 78])];
 
@@ -151,7 +151,7 @@ fn req_auto_032_a_traced_animal_sews_mostly_as_fills_and_no_satin_stitch_too_lon
     }
     assert_eq!(found, SEWN);
     // The columns left are the slender ones: with the parts filled whose column would crowd its stitches
-    // (REQ-AUTO-064), each dog's longest satin stitch is 2.8 to 3.8 mm.
+    // (REQ-AUTO-068), each dog's longest satin stitch is 2.8 to 3.8 mm.
     assert!(longest.iter().all(|(_, length)| *length > 2.0 && *length <= limit), "{longest:?}");
 }
 
@@ -192,10 +192,10 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
     // With an outline after each fill (M13.28) the dogs left 76, 84, 73 and 96 jump threads, 5, 6, 3 and 3 more
     // than before. Where shapes sewn later cover a way, the needle now runs under them (REQ-AUTO-053, M13.17): 7,
     // 5, 13 and 13 jumps are runs, and so is one move that showed of each dog but the first.
-    // With one overlap under a shape (REQ-AUTO-063, M13.30) a fill ends further from the shape sewn next in a
+    // With one overlap under a shape (REQ-AUTO-067, M13.30) a fill ends further from the shape sewn next in a
     // few places, and the dogs leave 4, 1 and 1 more jump threads and the same. The moves that show were 5, 9,
     // 2 and 6.
-    // With the parts filled whose one column would crowd its stitches (REQ-AUTO-064), the dogs leave 71, 80,
+    // With the parts filled whose one column would crowd its stitches (REQ-AUTO-068), the dogs leave 71, 80,
     // 58 and 74: 2 and 1 more than before M13.30, and 2 and 9 fewer.
     let recorded = [("dog-on-turf-6", 6, 71), ("dog-on-turf-9", 5, 80), ("dog-running-6", 5, 58), ("dog-running-9", 8, 74)];
     let recorded = recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps));
@@ -243,7 +243,7 @@ const THICK: [(&str, f64, f64); 4] =
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
-fn req_auto_063_digitized_dogs_sew_thick_on_the_area_recorded() {
+fn req_auto_067_digitized_dogs_sew_thick_on_the_area_recorded() {
     let found: Vec<(String, f64, f64)> = planned()
         .iter()
         .map(|(name, _, plan)| {
@@ -258,7 +258,7 @@ fn req_auto_063_digitized_dogs_sew_thick_on_the_area_recorded() {
 /// sews after what it lies on and each running line after the fills it borders, and one less than its
 /// threads, which no order betters. Each change is a rethread by hand on a machine with one needle. Before
 /// M13.22 the dogs changed thread 12, 22, 16 and 28 times. Since M13.30 fills the parts whose one satin
-/// column would crowd its stitches (REQ-AUTO-064), the dog on turf in 9 threads changes thread 13 times
+/// column would crowd its stitches (REQ-AUTO-068), the dog on turf in 9 threads changes thread 13 times
 /// where it changed 12. Traced on 2026-11-16 by sewing each of its 19 crowded parts as a column again: with
 /// the parts of the grey shapes `vc:23` and `vc:24` as columns it changes thread 12 times, with 2 parts of a
 /// tan and a pale grey shape too, and with no one part. A line sews after the fill it borders (rule 2 of the

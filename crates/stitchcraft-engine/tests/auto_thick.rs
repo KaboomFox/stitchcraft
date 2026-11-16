@@ -90,7 +90,7 @@ fn req_auto_062_a_design_without_an_automatic_shape_is_not_measured() {
 }
 
 #[test]
-fn req_auto_063_where_3_areas_meet_the_thread_as_sewn_is_one_overlap_deep() {
+fn req_auto_067_where_3_areas_meet_the_thread_as_sewn_is_one_overlap_deep() {
     // 3 areas that meet at (10, 10): 2 squares, one above the other, and a bar to the right of both. The bar
     // sews first and reaches 1 mm under both squares, across their rows. The upper square sews next, and
     // reaches 0.4 mm under the lower one, along its rows, but not where the bar already does.

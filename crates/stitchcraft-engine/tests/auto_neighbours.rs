@@ -87,7 +87,7 @@ const PAST_ENDS: f64 = 2.0 * (OVERLAP + TOUCHING) * TOUCHING;
 const OVERLAP: f64 = 1.0;
 
 /// How far an automatic area reaches under an area across its rows by default, in millimetres: its pull
-/// compensation (`REQ-AUTO-063`). The rows of these cases run along x.
+/// compensation (`REQ-AUTO-067`). The rows of these cases run along x.
 const ACROSS: f64 = 0.4;
 
 #[test]
@@ -114,7 +114,7 @@ fn req_auto_007_areas_reach_under_the_shape_sewn_after_them_both() {
     // upper one, along whose edge its rows run, and under the bar, where they end, and the upper square
     // under the bar. Where the squares meet beside the bar, each would reach round its corner under the bar,
     // a quarter of an ellipse: the lower square, sewn first, does, and the upper one gives up what it sewed
-    // there and its own quarter beside it (REQ-AUTO-063).
+    // there and its own quarter beside it (REQ-AUTO-067).
     let (out, diagnostics) =
         sewn(vec![rect("low", (0.0, 0.0), (10.0, 10.0)), rect("high", (0.0, 10.0), (10.0, 20.0)), rect("bar", (10.0, 0.0), (20.0, 20.0))]);
     let corner = std::f64::consts::PI * OVERLAP * ACROSS / 4.0;
@@ -636,7 +636,7 @@ fn req_auto_023_an_area_drawn_under_others_sews_what_shows_of_it() {
     // A bar along the bottom, a square drawn over its middle: what shows of the bar is its 2 ends, which sew
     // first and reach 1 mm under the square along the edges they share with it, and round the corners at
     // their ends, a quarter of an ellipse each, the overlap long and the pull compensation high
-    // (REQ-AUTO-007, REQ-AUTO-063).
+    // (REQ-AUTO-007, REQ-AUTO-067).
     let (out, diagnostics) =
         sewn(vec![rect("bar", (0.0, 0.0), (30.0, 10.0)), rect("square", (10.0, -5.0), (20.0, 15.0)), rect("far", (40.0, 0.0), (45.0, 5.0))]);
     let bar = named(&out, "bar");
