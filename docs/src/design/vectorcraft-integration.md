@@ -880,8 +880,9 @@ anchor, leaves that end of the segment straight, and a segment without handles i
   as its first child, transparent. The Layers panel's Make Clipping Mask (`layer.clippingMask.toggle`)
   puts a Shaper group's clipping object before them.
 - **Text** with StitchCraft's Lettering effect sews in an embroidery font ([lettering](#lettering)). Without
-  the effect, text under automatic digitizing sews in the default embroidery font
-  ([below](#text-without-the-lettering-effect)). Other text is left out with `SC-W0807`, whose hint names
+  the effect, text under automatic digitizing sews in the default embroidery font, or a bold text in the
+  bold font where it sews at the text's size ([below](#text-without-the-lettering-effect),
+  [fonts](fonts.md#text-objects-in-automatic-digitizing)). Other text is left out with `SC-W0807`, whose hint names
   the effect and Type › Create Outlines.
 - **Images and symbols,** and the objects VectorCraft computes as it draws them (blends, envelopes,
   meshes, repeats, placed documents and VectorCraft's Intertwine objects), are left out with `SC-W0807`.

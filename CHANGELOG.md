@@ -6,7 +6,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 
 ### Added
 - M14.8: a bold font built in, and the font chosen by the letters' weight (`REQ-AUTO-071`, `REQ-AUTO-072`,
-  `REQ-FONT-022`, `REQ-FONT-023`, `REQ-VC-030`).
+  `REQ-AUTO-073`, `REQ-FONT-022`, `REQ-FONT-023`, `REQ-VC-030`).
   - Barstitch Bold, under the SIL Open Font License, is built into the PES and DST exporters beside
     Ink/Stitch Small Font. Its strokes are half again as wide for its height, and it sews capital letters
     from 12.5 to 32.5 mm. Its licence goes with the published demo.
@@ -14,9 +14,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     replaces, among the fonts that sew at their height. `SC-I1118` names the font and says why. A marker
     with `font=NAME` keeps its font. Bold letters under 12.5 mm are set in Small Font, and the note says
     from what height the bold font sews.
+  - A bold text object under automatic digitizing (`font-weight` bold or 700 and above, or a bold
+    VectorCraft style) sews in Barstitch Bold when its font size is 51 points or more (`REQ-AUTO-073`).
+    `SC-I1118` says so, or says from what size it would. The typeface's name chooses no font.
   - An export reads only the font a text names, and of that font only the glyphs the text can use.
   - Public API: `stitchcraft_svg::lettering::pictures` has `replace_among`, `Choice`, `chosen` and the
     module `weight`. `stitchcraft_svg::font::read_for` reads a font for a text.
+    `stitchcraft_svg::lettering::objects` has `letter_among`, `lettered_among`, `bold_weight`, `bold_style`
+    and `TextObject::bold`.
     `stitchcraft_vectorcraft::lettering` has `HELD`, `Held`, `Kept`, `choices`, `found_for`, and
     `Fonts::choices` and `Fonts::font_for`. `stitchcraft_core::Code` has `FontChosenByWeight`.
   - Golden files stay as they are: no case of the suite has a text marker without a font and 2 fonts.
