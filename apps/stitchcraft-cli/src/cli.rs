@@ -9,7 +9,7 @@ use stitchcraft_engine::auto::rules::{PRESETS, Preset};
 use stitchcraft_engine::design::Reading;
 use stitchcraft_plan::FormatId;
 use stitchcraft_render::{Settings, Style};
-use stitchcraft_svg::lettering::{self, Align};
+use stitchcraft_svg::lettering::{self, Align, ColourSort, TextPosition, Trim, VerticalPosition};
 
 /// stitch — StitchCraft machine embroidery.
 #[derive(Debug, Parser)]
@@ -149,6 +149,52 @@ pub struct LetteringArgs {
     #[arg(long, value_name = lettering::LINE_HEIGHT.takes, value_parser = number, default_value = lettering::LINE_HEIGHT.default, allow_hyphen_values = true, help = lettering::LINE_HEIGHT.does)]
     #[allow(missing_docs)] // Its help is the setting's own, above.
     pub line_height: f64,
+    #[arg(long, value_name = lettering::TRIM.takes, value_parser = trim, default_value = lettering::TRIM.default, help = lettering::TRIM.does)]
+    #[allow(missing_docs)] // Its help is the setting's own, above.
+    pub trim: Trim,
+    #[arg(long, value_name = lettering::COLOR_SORT.takes, value_parser = colour_sort, default_value = lettering::COLOR_SORT.default, help = lettering::COLOR_SORT.does)]
+    #[allow(missing_docs)] // Its help is the setting's own, above.
+    pub color_sort: ColourSort,
+    #[arg(long, value_name = lettering::BACK_AND_FORTH.takes, action = clap::ArgAction::Set, default_value = lettering::BACK_AND_FORTH.default, help = lettering::BACK_AND_FORTH.does)]
+    #[allow(missing_docs)] // Its help is the setting's own, above.
+    pub back_and_forth: bool,
+    /// Set the text along a path of this SVG file, in the file's place on its page: the path labelled
+    /// `batch lettering`, as Ink/Stitch's batch lettering takes it, or else the file's first path that
+    /// paints. The text follows the path's first subpath.
+    #[arg(long, value_name = "FILE")]
+    pub path: Option<PathBuf>,
+    #[arg(long, value_name = lettering::TEXT_POSITION.takes, value_parser = text_position, default_value = lettering::TEXT_POSITION.default, requires = "path", help = lettering::TEXT_POSITION.does)]
+    #[allow(missing_docs)] // Its help is the setting's own, above.
+    pub text_position: TextPosition,
+    #[arg(long, value_name = lettering::VERTICAL_TEXT_POSITION.takes, value_parser = vertical_text_position, default_value = lettering::VERTICAL_TEXT_POSITION.default, requires = "path", help = lettering::VERTICAL_TEXT_POSITION.does)]
+    #[allow(missing_docs)] // Its help is the setting's own, above.
+    pub vertical_text_position: VerticalPosition,
+}
+
+/// The value `name` of the option `what`, one of `all` by its id.
+fn choice<T: Copy>(what: &str, name: &str, all: &[T], id: fn(T) -> &'static str) -> Result<T, String> {
+    let ids: Vec<&str> = all.iter().map(|one| id(*one)).collect();
+    all.iter().copied().find(|one| id(*one) == name).ok_or_else(|| format!("`{name}` isn't {what}: they are {}", ids.join(", ")))
+}
+
+/// Where trims go, as `--trim` takes it.
+fn trim(name: &str) -> Result<Trim, String> {
+    choice("a place to trim", name, &Trim::ALL, Trim::id)
+}
+
+/// What is sorted by colour, as `--color-sort` takes it.
+fn colour_sort(name: &str) -> Result<ColourSort, String> {
+    choice("a colour sort", name, &ColourSort::ALL, ColourSort::id)
+}
+
+/// Where the text lies along its path, as `--text-position` takes it.
+fn text_position(name: &str) -> Result<TextPosition, String> {
+    choice("a text position", name, &TextPosition::ALL, TextPosition::id)
+}
+
+/// Which part of the text lies on its path, as `--vertical-text-position` takes it.
+fn vertical_text_position(name: &str) -> Result<VerticalPosition, String> {
+    choice("a vertical text position", name, &VerticalPosition::ALL, VerticalPosition::id)
 }
 
 /// A number, as lettering's options take it: one that is finite.

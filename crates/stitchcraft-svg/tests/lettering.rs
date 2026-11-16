@@ -9,7 +9,7 @@ use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Budget, Code, Diagnostic, Fix};
 use stitchcraft_engine::design::Shape;
 use stitchcraft_svg::font::{self, Font};
-use stitchcraft_svg::lettering::{self, Align, Lettering, Placed, SETTINGS, Set};
+use stitchcraft_svg::lettering::{self, Align, ColourSort, Lettering, Placed, SETTINGS, Set, Trim};
 
 /// A glyph file's root: 100 mm square, a user unit a millimetre.
 const ROOT: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkstitch="http://inkstitch.org/namespace" width="100mm" height="100mm" viewBox="0 0 100 100">"#;
@@ -249,8 +249,9 @@ fn req_font_011_lines_align_by_the_width_of_their_glyphs_boxes() {
     );
     assert_eq!(Align::default(), Align::Left);
     let settings: Vec<(&str, &str, &str)> = SETTINGS.iter().map(|setting| (setting.name, setting.takes, setting.default)).collect();
+    assert_eq!(settings.len(), 10);
     assert_eq!(
-        settings,
+        [settings[0], settings[3], settings[4], settings[5], settings[6]],
         [
             ("scale", "PERCENT", "100"),
             ("text_align", "left|center|right|block|letterspacing", "left"),
@@ -260,20 +261,30 @@ fn req_font_011_lines_align_by_the_width_of_their_glyphs_boxes() {
         ]
     );
     assert!(SETTINGS.iter().all(|setting| !setting.does.is_empty() && !setting.does.ends_with('.')));
-    assert_eq!(Lettering::default(), Lettering { scale: 100.0, letter_spacing: 0.0, word_spacing: 0.0, line_height: 0.0, align: Align::Left });
+    let plain = Lettering {
+        scale: 100.0,
+        letter_spacing: 0.0,
+        word_spacing: 0.0,
+        line_height: 0.0,
+        align: Align::Left,
+        back_and_forth: true,
+        trim: Trim::Off,
+        color_sort: ColourSort::Off,
+    };
+    assert_eq!(Lettering::default(), plain);
 }
 
 #[test]
 fn req_font_012_every_element_is_placed_and_scaled_about_the_first_lines_start() {
     let fill = r#"<path id="fill" d="M 3,60 L 7,60 L 7,70 Z" style="fill:#ff0000;stroke:none"/>"#;
     let font = font_of(&json(""), "ltr.svg", &[glyphs(), layer("o", fill)].concat());
-    let twice = set(&font, "ab\no", &Lettering { scale: 200.0, ..Lettering::default() });
+    let twice = set(&font, "ab\no", &Lettering { scale: 200.0, back_and_forth: false, ..Lettering::default() });
     assert_eq!(twice.scale, 200.0);
     assert_eq!(said(&twice), Vec::<String>::new());
     let expected = [
-        Placed { name: "a".to_string(), line: 0, word: 0, left: 0.0, width: 8.0, baseline: 0.0 },
-        Placed { name: "b".to_string(), line: 0, word: 0, left: 12.0, width: 12.0, baseline: 0.0 },
-        Placed { name: "o".to_string(), line: 1, word: 0, left: 0.0, width: 8.0, baseline: 40.0 },
+        Placed { name: "a".to_string(), line: 0, word: 0, left: 0.0, width: 8.0, baseline: 0.0, angle: 0.0 },
+        Placed { name: "b".to_string(), line: 0, word: 0, left: 12.0, width: 12.0, baseline: 0.0, angle: 0.0 },
+        Placed { name: "o".to_string(), line: 1, word: 0, left: 0.0, width: 8.0, baseline: 40.0, angle: 0.0 },
     ];
     assert_eq!(twice.glyphs, expected);
     let points = |index: usize| -> Vec<(f64, f64)> { twice.design.elements()[index].shape.path().points().map(|p| (p.x(), p.y())).collect() };
@@ -364,13 +375,14 @@ fn diag_sc_e1108_a_text_that_cannot_be_set_is_refused() {
 fn req_font_012_setting_charges_the_budget_for_each_character_name_and_point() {
     let font = test_font("");
     let within = |work: u64| lettering::set(&font, "ab", &Lettering::default(), &Budget { max_work: work, ..Budget::DEFAULT });
-    // `a`: a character and a name. `b`: a character and 2 names. Each glyph: an element of 2 points.
-    for work in 0..11 {
+    // `a`: a character and a name. `b`: a character and 2 names. Each glyph: an element of 2 points. Each
+    // element once more for the trims and once for the colour sort.
+    for work in 0..15 {
         assert_eq!(within(work).unwrap_err().code, Code::BudgetExhausted, "{work}");
     }
     assert_eq!(within(10).unwrap_err().to_string(), "error SC-E0004: Setting the text needed more than the work budget of 10 units.");
-    assert_eq!(within(10).unwrap_err().fix, Some(Fix::Hint("Set a shorter text, or set it with a larger budget.".to_string())));
-    assert_eq!(names(&within(11).unwrap()), ["a", "b"]);
+    assert_eq!(within(14).unwrap_err().fix, Some(Fix::Hint("Set a shorter text, or set it with a larger budget.".to_string())));
+    assert_eq!(names(&within(15).unwrap()), ["a", "b"]);
 }
 
 #[test]
@@ -472,7 +484,7 @@ proptest! {
     ) {
         let font = test_font(if rtl { r#", "text_direction": "rtl""# } else { "" });
         let [scale, letter_spacing, word_spacing, line_height] = numbers;
-        let how = Lettering { scale, letter_spacing, word_spacing, line_height, align: Align::ALL[align] };
+        let how = Lettering { scale, letter_spacing, word_spacing, line_height, align: Align::ALL[align], ..Lettering::default() };
         match lettering::set(&font, &text, &how, &Budget::DEFAULT) {
             Ok(set) => prop_assert!(!set.glyphs.is_empty() && set.design.elements().len() == set.glyphs.len()),
             Err(refusal) => prop_assert_eq!(refusal.code, Code::LetteringUnset),

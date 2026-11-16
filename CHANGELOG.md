@@ -5,6 +5,26 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M14.3: lettering follows a path, and the order its letters sew in can be chosen (`REQ-FONT-015` to
+  `REQ-FONT-020`).
+  - `stitch lettering --path FILE` sets the text along a path of an SVG file: the one labelled
+    `batch lettering`, or else the first. Each glyph is placed on the path by its box's left edge and turned
+    whole, the way the path runs under its box. `--text-position` takes `left`, `center`, `right` or
+    `stretch`, and `--vertical-text-position` takes `top`, `baseline` or `bottom`, as Ink/Stitch's lettering
+    along a path names them. A word in Ink/Stitch Small Font on an arc, a line and a corner has Ink/Stitch's
+    size to 0.1 mm in each position. A line longer than its path goes on straight and is named
+    (`SC-W1109`), where Ink/Stitch piles its last letters up at the path's end.
+  - The lines of a text sew back and forth in a font that draws its glyphs for both directions, as
+    Ink/Stitch Small Font and Medium Font do: the second line sews from where the first ended.
+    `--back-and-forth false` turns it off. In a font drawn for one direction every line sews the same way,
+    and `SC-W1110` says so.
+  - `--trim` adds a trim after each line, word or letter, and `--color-sort` sews the colours of a
+    multicolour font that sorts one after another, for the whole text, each line or each word. The trims
+    and the thread changes are Ink/Stitch's with each choice, on Small Font and on Magnolia bicolor.
+  - The user's page says what to choose for a machine that cuts no thread, as the Brother PE800.
+  - `stitchcraft_svg::lettering` gained `set_along`, `Along`, `TextPosition`, `VerticalPosition`, `Trim` and
+    `ColourSort`. `Lettering` has 3 more settings and `Placed` an angle. 2 warnings are new in the core's
+    registry.
 - M14.2: `stitch lettering` sets a text in an embroidery font (`REQ-FONT-009` to `REQ-FONT-014`).
   `stitch lettering "Hello" --font FOLDER -o hello.pes` reads a font in Ink/Stitch's format, sets the text
   and writes the machine file, with a picture if asked.
