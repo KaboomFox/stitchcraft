@@ -912,3 +912,9 @@ mutant = "replace / with * in Thickness::stack"
 line = "if stitch.from.lerp(stitch.to, 0.5).distance(middle) > length / 2.0 + NEAR {"
 why = "twice the length is further than half of it, so more stitches are followed, and those the test left out lay no thread in the window: the stack is the same"
 
+[[equivalent]]
+file = "crates/stitchcraft-plan/src/thickness.rs"
+mutant = "replace > with == in Thickness::stack"
+line = "if stitch.from.lerp(stitch.to, 0.5).distance(middle) > length / 2.0 + NEAR {"
+why = "then every stitch is followed but one whose middle lies exactly that far, and the stitches the test leaves out lay no thread in the window: the stack is the same"
+

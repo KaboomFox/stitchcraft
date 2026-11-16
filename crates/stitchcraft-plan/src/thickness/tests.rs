@@ -159,6 +159,30 @@ fn req_auto_060_a_ribbon_is_followed_in_steps_of_a_cell_in_2_lanes() {
 }
 
 #[test]
+fn req_auto_060_thread_outside_the_grid_is_laid_in_no_cell() {
+    // A grid of 2 by 2 cells from (0, 0). The grid round a plan has a cell of room, so no lane of its
+    // stitches lies outside: a stitch that does is laid by hand.
+    let grid = Grid { corner: (0.0, 0.0), columns: 2, rows: 2 };
+    let lay = |from: (f64, f64), to: (f64, f64)| {
+        let (stitch, mut cells) = (stitch(from, to), Vec::new());
+        laid(&grid, &stitch, stitch.length(), steps(stitch.length()), |at, _| cells.push(at));
+        cells
+    };
+    // Inside, each lane of a stitch of one step lies in a cell: along x at y = 0.5 in both rows, and down
+    // y at x = 0.5 in both columns.
+    assert_eq!(lay((0.1, 0.5), (0.4, 0.5)), [2, 0]);
+    assert_eq!(lay((0.5, 0.1), (0.5, 0.4)), [0, 1]);
+    // To each side of the grid, with the other coordinate inside it, nothing is laid.
+    for (from, to) in [((-0.4, 0.5), (-0.1, 0.5)), ((1.1, 0.5), (1.4, 0.5)), ((0.5, -0.4), (0.5, -0.1)), ((0.5, 1.1), (0.5, 1.4))] {
+        assert_eq!(lay(from, to), Vec::<usize>::new(), "{from:?} to {to:?}");
+    }
+    // The grid ends before its last edge: a step whose middle lies on it, 2 cells from the corner, is
+    // outside.
+    assert_eq!(lay((0.75, 0.5), (1.25, 0.5)), Vec::<usize>::new());
+    assert_eq!(lay((0.5, 0.75), (0.5, 1.25)), Vec::<usize>::new());
+}
+
+#[test]
 fn req_auto_060_needle_points_are_counted_per_square_millimetre_without_the_locks() {
     let top = [(0.0, 0.0), (5.1, 0.1), (5.2, 0.2), (5.3, 0.1), (12.1, 0.1)];
     let lock = [(12.2, 0.1), (12.3, 0.1), (12.2, 0.1)];

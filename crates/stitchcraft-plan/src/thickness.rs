@@ -8,7 +8,7 @@
 //! (`stitchcraft-render`) and the numbers of the before and after sheet must all be this one measure.
 //!
 //! **What is measured** is what the machine sews: each needle point where a machine file puts it, on the
-//! machine's grid of 0.1 mm ([`sewn`]). The engine's own positions have digits that no file shows, and a
+//! machine's grid of 0.1 mm. The engine's own positions have digits that no file shows, and a
 //! needle point on the edge of a cell counts on one side or the other by them: measured on those, the
 //! warning of VectorCraft's export differed from `stitch export`'s for the same file.
 //!
