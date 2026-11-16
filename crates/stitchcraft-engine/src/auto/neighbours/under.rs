@@ -378,8 +378,11 @@ fn widened(shapes: &mut Shapes, index: usize, overlap: f64, meter: &mut Meter) -
 
 /// Whether the shapes `beside` cover more than half the length of `rail`, with `meter`'s work: the rail is
 /// looked at in the middle of each stretch of it no longer than [`RAIL_STEP`], for a unit of work and one for
-/// each shape.
+/// each shape. Each shape's bounds are found first, for a unit of work each: a shape is asked only about a
+/// place within its bounds, since it covers none beyond them and asking walks its whole outline.
 pub(super) fn runs_along(rail: &[Point], beside: &[Polygon], meter: &mut Meter) -> Result<bool, Exhausted> {
+    meter.charge(beside.len() as u64)?;
+    let bounds: Vec<Envelope> = beside.iter().map(|shape| Envelope::of(&shape.outline)).collect();
     let (mut within, mut whole) = (0.0, 0.0);
     for pair in rail.windows(2) {
         let [from, to] = pair else { continue };
@@ -388,7 +391,8 @@ pub(super) fn runs_along(rail: &[Point], beside: &[Polygon], meter: &mut Meter) 
         let mut at = 0.5;
         while at < stretches {
             meter.charge(1 + beside.len() as u64)?;
-            if beside.iter().any(|shape| shape.covers(from.lerp(*to, at / stretches))) {
+            let place = from.lerp(*to, at / stretches);
+            if beside.iter().zip(&bounds).any(|(shape, bounds)| bounds.holds(place) && shape.covers(place)) {
                 within += length / stretches;
             }
             at += 1.0;
