@@ -21,8 +21,9 @@ use stitchcraft_engine::normalize::stroke::flatten;
 /// How close the polyline keeps to the path, in millimetres.
 pub(super) const FLATNESS: f64 = 0.01;
 
-/// A length under which 2 points are one, in millimetres.
-const SAME: f64 = 1e-9;
+/// How far a line may reach past an end of its path before it is said to be longer, in millimetres: more
+/// than the polyline's length can differ from the path's.
+const SLACK: f64 = 1.0 / 64.0;
 
 /// Where a text lies along its path: Ink/Stitch's `text-position`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -129,7 +130,7 @@ impl Track {
             far.push(length);
             before = Some(*point);
         }
-        Ok((points.len() >= 2 && length > SAME).then_some(Track { points, far, closed: first.closed }))
+        Ok((length > 0.0).then_some(Track { points, far, closed: first.closed }))
     }
 
     /// Its length.
@@ -228,10 +229,10 @@ pub(super) fn seats(track: &Track, position: TextPosition, glyphs: &[Boxed]) -> 
         before = Some(glyph.word);
         let from = start + glyph.left + share * shares;
         let to = from + glyph.width;
-        past |= from < -FLATNESS || to > length + FLATNESS;
+        past |= from < -SLACK || to > length + SLACK;
         let (a, b) = (track.point(from), track.point(to));
         let chord = math::hypot(b.0 - a.0, b.1 - a.1);
-        let runs = if chord > SAME { ((b.0 - a.0) / chord, (b.1 - a.1) / chord) } else { track.direction(from) };
+        let runs = if chord > 0.0 { ((b.0 - a.0) / chord, (b.1 - a.1) / chord) } else { track.direction(from) };
         seats.push(Seat { at: a, runs });
     }
     (seats, past)

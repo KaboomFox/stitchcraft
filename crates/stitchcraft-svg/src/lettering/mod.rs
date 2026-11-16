@@ -370,9 +370,9 @@ fn seated(
         }
     }
     let lift = match along.vertical {
-        VerticalPosition::Top if bottom.is_finite() => bottom,
-        VerticalPosition::Bottom if top.is_finite() => top,
-        VerticalPosition::Top | VerticalPosition::Baseline | VerticalPosition::Bottom => 0.0,
+        VerticalPosition::Top => bottom,
+        VerticalPosition::Baseline => 0.0,
+        VerticalPosition::Bottom => top,
     };
     let mut seats = Vec::with_capacity(laid.spots.len());
     let mut longest: Option<f64> = None;
