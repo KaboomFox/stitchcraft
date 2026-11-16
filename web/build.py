@@ -23,6 +23,7 @@ import gzip
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -42,8 +43,12 @@ TITLE = 'StitchCraft in VectorCraft'
 # GitHub refuses a push that holds a file of 100 MB or more, so the publisher could never publish one.
 LARGEST_FILE = 100 * 1000 * 1000
 # The files whose every byte the built editor depends on, besides VectorCraft's source at the pinned commit:
-# the compiler's pin, the versions of Trunk, wasm-bindgen and wasm-opt, and this script.
-EDITOR_INPUTS = ('rust-toolchain.toml', '.github/actions/tools/action.yml', 'web/build.py')
+# the compiler's pin and this script.
+EDITOR_INPUTS = ('rust-toolchain.toml', 'web/build.py')
+# The tools that build the editor, whose versions `TOOLS` pins in lines such as `[trunk]=0.22.1`. Another
+# tool's version there changes nothing in the editor.
+EDITOR_TOOLS = ('trunk', 'wasm-bindgen', 'wasm-opt')
+TOOLS = '.github/actions/tools/action.yml'
 # VectorCraft's texts that a copy of the editor carries.
 LICENCES = ('LICENSE-MIT', 'LICENSE-APACHE', 'NOTICE')
 
@@ -57,6 +62,10 @@ def pin(pins=PINS):
 def editor_key(pins=PINS, root=ROOT):
     """A name for the built editor: one for each pin of its source and each state of the files it is built with."""
     digest = hashlib.sha256('\n'.join(pin(pins)).encode())
+    pinned = dict(re.findall(r'^\s*\[([\w-]+)\]=(\S+)\s*$', (root / TOOLS).read_text(), re.MULTILINE))
+    for name in EDITOR_TOOLS:
+        # A tool without a version stops the build here, as the workflow's install step would.
+        digest.update(f'\n{name} {pinned[name]}'.encode())
     for name in EDITOR_INPUTS:
         data = (root / name).read_bytes()
         digest.update(f'\n{name} {len(data)}\n'.encode())
