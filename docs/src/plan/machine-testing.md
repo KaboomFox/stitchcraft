@@ -213,7 +213,7 @@ drawn as a test sheet yet: M13.30 draws it, and until then it is drawn in Vector
   needle. Look at the needle for a bend or a burr, and at the fabric round the square for puckers. Bend
   the square, and measure how thick it is with calipers.
 - The first square that breaks thread or thumps sets the failing limit, and the square before it, less
-  one, sets the warning. Then sew the running dog in 9 threads, whose thickest spot has 8.0 fills, and
+  one, sets the warning. Then sew the running dog in 9 threads, whose thickest spot has 8.6 fills, and
   compare where it gives trouble with its heat map (`stitch preview --style thickness`).
 
 ## Report template

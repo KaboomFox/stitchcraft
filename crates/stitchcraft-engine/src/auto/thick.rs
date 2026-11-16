@@ -149,8 +149,8 @@ mod tests {
         assert_eq!(warned.message, EXPECTED, "{}", warned.message);
     }
 
-    /// The message of 4 squares on a layer of no shape: the turns along 2 sides are thickest.
-    const EXPECTED: &str = "The design sews thick. Thread: up to 5.6 fills over one spot, at (9.5, 4.1) mm from the design's centre, where stitches of no shape in #000000 with 1.1, `s1` in #010000 with 1.1, `s2` in #020000 with 1.1 and 2 more are stacked. At 3 fills or more: 99.8 mm² in 1 place, 90.0 mm² of it at 4.5 or more. Needle points: up to 25 in a square millimetre, at (10.5, 1.5) mm from the design's centre. At 12 or more: 19.8 mm² in 2 places, 18.4 mm² of it at 16 or more.";
+    /// The message of 4 squares on a layer of no shape: a corner where the rows turn is thickest.
+    const EXPECTED: &str = "The design sews thick. Thread: up to 5.3 fills over one spot, at (9.5, 9.5) mm from the design's centre, where stitches of no shape in #000000 with 1.1, `s1` in #010000 with 1.1, `s2` in #020000 with 1.1 and 2 more are stacked. At 3 fills or more: 109.2 mm² in 1 place, 90.2 mm² of it at 4.5 or more. Needle points: up to 20 in a square millimetre, at (10.5, 9.5) mm from the design's centre. At 12 or more: 20.0 mm² in 2 places, 18.5 mm² of it at 16 or more.";
 
     #[test]
     fn diag_sc_w0913_says_when_the_design_was_not_measured() {

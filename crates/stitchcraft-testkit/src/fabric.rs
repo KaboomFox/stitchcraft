@@ -33,6 +33,11 @@
 //! nearer than its collapse length rather than jump (`REQ-ASM-002`). Moves astray are counted apart from the
 //! elements' own stitches, and so are the jump threads that a machine cutting no jump leaves
 //! ([`jump_threads`]).
+//!
+//! **How thick a plan sews** ([`thickness`]) is the plan's own measure (`stitchcraft_plan::thickness`),
+//! which planning warns by (`SC-W0913`): thread in fills and needle points per mm², on cells of 10 of these
+//! pixels. The cases and the before and after sheet read it here, beside the bare fabric, so that thread
+//! taken away is weighed against fabric shown.
 
 use stitchcraft_core::{Budget, Code, Point, Rect};
 use stitchcraft_engine::auto;
