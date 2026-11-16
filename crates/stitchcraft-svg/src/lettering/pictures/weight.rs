@@ -6,9 +6,9 @@
 //! font's strokes are thinner than the letters'. So the font is chosen by a number that says how bold
 //! each is, and the number has to mean the same for both.
 //!
-//! **The measure** ([`samples`]). A stroke is as wide as the way across it. From the middle of each piece of
+//! **The measure** (`samples`). A stroke is as wide as the way across it. From the middle of each piece of
 //! an outline a ray goes straight in, as far as the outline's next edge. The widths found are weighed by
-//! the length of the piece each was measured from, and the stroke's width is their median ([`median`]). The
+//! the length of the piece each was measured from, and the stroke's width is their median (`median`). The
 //! long sides of a stroke outweigh its ends and its joints, whose rays run along a stroke and find its
 //! length, so the median is the width of the strokes and not of what joins them.
 //!

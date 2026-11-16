@@ -1606,8 +1606,8 @@ and [the font is chosen by the letters' weight](#the-font-chosen-by-the-letters-
 ### The font chosen by the letters' weight
 
 The owner asked on 2026-11-16 why lettering that replaces big letters looks lighter than the picture.
-Nothing sews wrong: the one font built in was a light one. M14.8 measures how bold letters are, builds in
-a bold font, and chooses between the 2 (`REQ-AUTO-071`, `REQ-AUTO-072`).
+The stitches were right. The one font built in was a light one. M14.8 measures how bold letters are and
+builds in a bold font to choose by that measure (`REQ-AUTO-071`, `REQ-AUTO-072`).
 
 **The measure** is the width of a stroke over the height of a letter, found the same way on a traced
 outline and on a font's satin columns (`pictures::weight`). Each closed outline is taken at 48 places
@@ -1662,13 +1662,13 @@ taken:
   Its licence file names a designer and no copyright holder, and says the font comes from a demo of a
   typeface that is sold. The OFL's notice needs a copyright line to carry.
 - Кирилиця, drawn from Roboto, sews from 7.9 mm and has a copyright line. Its files are 3.4 MB, more than
-  twice Barstitch Bold's, and every export that uses it would read a glyph file of 2.5 MB.
+  twice Barstitch Bold's, and an export that letters in it would read a glyph file of 2.5 MB.
 
 Manga Impact and Masego are display faces, and bolder than the block letters by as much as Small Font is
 lighter.
 
-**The choice** (`pictures::chosen`). A marker that names a font is set in it. A marker that names none is
-given one of the fonts the reader's host offers, which are the fonts built in that the host holds
+**The choice** (`pictures::chosen`). A marker that names a font is set in it. Without a font name, it is
+given one of the fonts the reader's host offers, which are the fonts built in that the host has
 ([in VectorCraft](vectorcraft-integration.md#lettering)):
 
 1. The fonts whose heights hold the letters' height come first. When none holds it, the fonts that sew
@@ -1695,8 +1695,8 @@ font before it reads one. A build that has the fonts measures them again (`REQ-F
 than 2 fonts offered there is nothing to choose, and the marker is set in the default font without a
 note.
 
-**Bold letters from 6 to 12.5 mm** are the gap. Barstitch Bold doesn't sew that small, so they are set
-in Small Font at their own height, and look lighter than the picture, as before this step. The note
+**Bold letters from 6 to 12.5 mm** are the gap. Barstitch Bold doesn't sew that small, so Small Font
+sets them at their own height. They look lighter than the picture, as before this step. The note
 says from what height the bold font sews. Traced block letters sew well as shapes from about 10 mm, so
 from 10 to 12.5 mm the person can leave the text unmarked. Below 10 mm the lettering is the one that
 reads, light as it is.
@@ -1705,8 +1705,8 @@ reads, light as it is.
 default font. A bold `font-weight` doesn't choose the bold font: type set at 12 points is 3 mm tall, far
 under what the bold font sews, and a document made before this step would sew otherwise than it did.
 
-**Not built.** An embolden setting that widens a font's satin columns would close the gap without a
-third font. It can close the counters of A, B and 8, and waits for a sew-out. The effect's dialog has
+**Left for later.** An embolden setting that widens a font's satin columns would sew bold letters under
+12.5 mm without a third font. It can close the counters of letters such as A and B, so it waits for a sew-out. The effect's dialog has
 no list of fonts.
 
 ### Decisions for the owner
@@ -1729,8 +1729,8 @@ Each has a recommendation, which the step took.
   Barstitch Bold.
 - **Bold letters from 6 to 12.5 mm**, which the bold font doesn't sew, are set in Small Font at their own
   height, with a note. The other choices are to leave them traced, which sews badly under 10 mm, and to
-  set them in the bold font at 12.5 mm, taller than the picture has them. Recommended, and taken: Small
-  Font and the note.
+  set them in the bold font at 12.5 mm, taller than the picture has them. Recommended, and taken: the light
+  font and the note.
 - **A third font for that gap**, or an embolden setting, waits for the sew-out of both fonts
   ([fonts](fonts.md#decisions-for-the-owner)).
 - **A text object's bold `font-weight` doesn't choose the bold font.** Recommended, and taken: the effect
@@ -1742,7 +1742,7 @@ Each has a recommendation, which the step took.
   object and no name ([RFC](rfc-vectorcraft-abi-v2.md), P6). The exported file and its preview picture
   have the lettering.
 - A marker has one line of text. 2 lines take 2 markers.
-- A font is matched to the letters' weight, among 2 fonts. Nothing matches a font to their style.
+- A font is matched to the letters' weight, among 2 fonts. The letters' style, such as italic or script, doesn't choose a font yet.
 - The emblem's numbers are from a document traced earlier, kept outside the repository. A case in the
   repository waits for a traced picture with lettered arcs among the fixtures.
 

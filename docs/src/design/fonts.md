@@ -503,14 +503,14 @@ typeface's: a display face and a script both come out as Small Font's light upri
 says so for each text object (`SC-I1116`). Roadmap step M15.13 sews a text in its own typeface.
 
 **A bold text sews in the bold font** (M14.8, `REQ-AUTO-073`). A text object has no traced letters to
-measure, so its weight comes from what the drawing says of it. It is bold when its first line that shows
+measure. Its weight comes from what the drawing says of it. It is bold when its first line that shows
 has an SVG `font-weight` of `bold`, `bolder` or 700 and above. In a VectorCraft document it is bold when the
 run's style name says Bold, Black or Heavy, and not Semi Bold or Demi Bold, or when a variable typeface's
 `wght` axis is 700 or more. A bold text sews in the boldest font the host offers, Barstitch Bold, when that
 font sews every line's capitals at 0.7 of its font size: from 17.9 to 46.5 mm of font size, 51 to 131
 points. `SC-I1118` says so. A bold text smaller or larger sews in Small Font, and `SC-I1118` gives the font
 size from which Barstitch Bold sews. A text that isn't bold sews in Small Font, as before. The typeface's
-name chooses nothing: Arial or Georgia names no embroidery font, and matching names would choose by accident.
+name doesn't choose one. Arial or Georgia isn't the name of an embroidery font, and matching names would choose by accident.
 `objects::font_of` is the one place a text object's font is chosen, and `letter_among` asks the host for it
 with the text's characters, so that only their glyphs are read.
 
@@ -637,7 +637,7 @@ Small Font is the default font: 5.08 mm tall at 100 percent, sewn from 70 to 300
 directions. Its lines sew back and forth. Barstitch Bold is the bold font (M14.8): block letters with
 strokes half again as wide for their height, 23 mm at 100 percent and sewn from 50 to 130 percent, with
 157 glyphs for one direction. A third of its bytes are the kerning pairs of its `font.json`. A text
-marker that names no font is set in the one of the 2 that is nearest in weight to the letters it replaces
+marker without a font name is set in the one of the 2 that is nearest in weight to the letters it replaces
 ([the font chosen by the letters' weight](image-to-embroidery.md#the-font-chosen-by-the-letters-weight)).
 The glyph files are text, which a web server sends
 compressed. With the font, and with the SVG reader and lettering that read it, the demo's PES exporter
@@ -659,12 +659,12 @@ The same was checked for Barstitch Bold at `c7e3a05`, on the same day:
 
 - Its `LICENSE` says the font was adapted for Ink/Stitch from Barlow and is under the SIL Open Font
   License 1.1. It has Barlow's copyright line, "Copyright 2017 The Barlow Project Authors
-  (https://github.com/jpt/barlow)", and the licence's whole text. It declares no Reserved Font Name: the
+  (https://github.com/jpt/barlow)", and the licence's whole text. It doesn't declare a Reserved Font Name. The
   words stand only in the licence's own text.
 - Its 3 files are built in as the corpus has them, so the copy isn't a modified version.
 
 **Only what a text needs is read** (M14.8, `REQ-FONT-023`). An exporter reads its fonts on every run,
-within the instructions VectorCraft allows an export. A font was already read only when a text named it.
+within the instructions VectorCraft allows an export. Before this step, a font was read only when a text named it.
 Reading it cut every glyph out of its glyph file and read each as a design, which was most of the cost,
 and a text uses a few glyphs of a hundred or more. So:
 
@@ -681,7 +681,7 @@ and a text uses a few glyphs of a hundred or more. So:
 - `stitch` reads its fonts the same way, so it says of a document what an exporter says.
 
 The glyph file itself is still read whole as XML, once for each direction, to find the glyphs in it. A
-font that no text names costs nothing. [The counts](#what-reading-a-font-costs) are below.
+font that no text names isn't read at all. [The counts](#what-reading-a-font-costs) are below.
 
 **CC BY and CC BY-SA fonts** are left to the owner. Either licence requires a credit where a person who
 gets the module can see it. The credit names the author and the licence, with the licence's address, and
@@ -869,8 +869,9 @@ coverage and stitches. TS-15 sews 3 ported fonts beside the fonts digitized by h
   font is built in.
 - **A bold text object sews in the bold font** (M14.8). A text object has no letters to measure. The
   decision taken is that its `font-weight`, or its VectorCraft style, chooses Barstitch Bold where it sews
-  at the text's size, and that the typeface's name chooses nothing. The Lettering effect keeps its own font
-  setting, empty for the default, whatever the text's weight, so that documents keep sewing as they did.
+  at the text's size, and that the typeface's name doesn't choose one. For a text with the Lettering effect,
+  the effect's font setting decides, empty for the default, whatever the text's weight, so that documents
+  keep sewing as they did.
   The other choice is to let the effect's empty font follow the weight too.
 - **Text objects sew in an embroidery font under automatic digitizing** (M14.7), until a typeface's
   outlines can be read (M15.13). The recommendation, taken, is to letter every text object automatic

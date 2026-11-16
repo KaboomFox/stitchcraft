@@ -10,7 +10,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - Barstitch Bold, under the SIL Open Font License, is built into the PES and DST exporters beside
     Ink/Stitch Small Font. Its strokes are half again as wide for its height, and it sews capital letters
     from 12.5 to 32.5 mm. Its licence goes with the published demo.
-  - A text marker that names no font is set in the font nearest in weight to the traced letters it
+  - A text marker without a font name is set in the font nearest in weight to the traced letters it
     replaces, among the fonts that sew at their height. `SC-I1118` names the font and says why. A marker
     with `font=NAME` keeps its font. Bold letters under 12.5 mm are set in Small Font, and the note says
     from what height the bold font sews.
