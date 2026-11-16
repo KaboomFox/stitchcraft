@@ -93,6 +93,7 @@ pub stitchcraft_core::diag::Code::InternalCheckFailed
 pub stitchcraft_core::diag::Code::JumpsCutInDst
 pub stitchcraft_core::diag::Code::LetteringScaleOutOfRange
 pub stitchcraft_core::diag::Code::LetteringSettingNotApplied
+pub stitchcraft_core::diag::Code::LetteringUnlikeTracedLetters
 pub stitchcraft_core::diag::Code::LetteringUnset
 pub stitchcraft_core::diag::Code::LockStitchLengthened
 pub stitchcraft_core::diag::Code::NothingToStitch
@@ -128,6 +129,7 @@ pub stitchcraft_core::diag::Code::SatinSubpathPoint
 pub stitchcraft_core::diag::Code::SatinTooNarrow
 pub stitchcraft_core::diag::Code::SatinTooSmall
 pub stitchcraft_core::diag::Code::SatinWithoutRails
+pub stitchcraft_core::diag::Code::ShapeCrossesTextMarker
 pub stitchcraft_core::diag::Code::StitchLengthRaised
 pub stitchcraft_core::diag::Code::StitchTypeNotYet
 pub stitchcraft_core::diag::Code::StitchesMerged
@@ -138,7 +140,9 @@ pub stitchcraft_core::diag::Code::SvgGeometryUnusable
 pub stitchcraft_core::diag::Code::SvgInkStitchUpdated
 pub stitchcraft_core::diag::Code::SvgObjectIgnored
 pub stitchcraft_core::diag::Code::SvgUnreadable
+pub stitchcraft_core::diag::Code::TextInPictureLettered
 pub stitchcraft_core::diag::Code::TextLongerThanPath
+pub stitchcraft_core::diag::Code::TextMarkerNotUsed
 pub stitchcraft_core::diag::Code::TextNotLettered
 pub stitchcraft_core::diag::Code::ThreadColorsUnknown
 pub stitchcraft_core::diag::Code::ThreadsShareColor
@@ -372,6 +376,7 @@ pub stitchcraft_core::Code::InternalCheckFailed
 pub stitchcraft_core::Code::JumpsCutInDst
 pub stitchcraft_core::Code::LetteringScaleOutOfRange
 pub stitchcraft_core::Code::LetteringSettingNotApplied
+pub stitchcraft_core::Code::LetteringUnlikeTracedLetters
 pub stitchcraft_core::Code::LetteringUnset
 pub stitchcraft_core::Code::LockStitchLengthened
 pub stitchcraft_core::Code::NothingToStitch
@@ -407,6 +412,7 @@ pub stitchcraft_core::Code::SatinSubpathPoint
 pub stitchcraft_core::Code::SatinTooNarrow
 pub stitchcraft_core::Code::SatinTooSmall
 pub stitchcraft_core::Code::SatinWithoutRails
+pub stitchcraft_core::Code::ShapeCrossesTextMarker
 pub stitchcraft_core::Code::StitchLengthRaised
 pub stitchcraft_core::Code::StitchTypeNotYet
 pub stitchcraft_core::Code::StitchesMerged
@@ -417,7 +423,9 @@ pub stitchcraft_core::Code::SvgGeometryUnusable
 pub stitchcraft_core::Code::SvgInkStitchUpdated
 pub stitchcraft_core::Code::SvgObjectIgnored
 pub stitchcraft_core::Code::SvgUnreadable
+pub stitchcraft_core::Code::TextInPictureLettered
 pub stitchcraft_core::Code::TextLongerThanPath
+pub stitchcraft_core::Code::TextMarkerNotUsed
 pub stitchcraft_core::Code::TextNotLettered
 pub stitchcraft_core::Code::ThreadColorsUnknown
 pub stitchcraft_core::Code::ThreadsShareColor

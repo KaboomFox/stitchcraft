@@ -32,6 +32,7 @@
 mod along;
 mod layout;
 mod order;
+pub mod pictures;
 
 use std::collections::{BTreeMap, BTreeSet};
 

@@ -84,7 +84,7 @@ The VectorCraft versions it reads are proven by `docs/src/design/compatibility-g
 ## Dependencies
 
 `stitchcraft-core`, `stitchcraft-params`, `stitchcraft-plan`, `stitchcraft-engine`, and `stitchcraft-svg`
-for lettering and the font reader, which set a text object that has the Lettering effect
-(`src/lettering.rs`, an edge inside layer 3 that `xtask/src/layers.rs` lists); `serde` and
+for lettering and the font reader, which set a text object that has the Lettering effect and the text
+of a path named `stitch:text` (`src/lettering.rs`, an edge inside layer 3 that `xtask/src/layers.rs` lists); `serde` and
 `serde_json` (the document's JSON) and `flate2` with its Rust backend (compressed files), which builds
 for `wasm32-unknown-unknown`. `cargo xtask layers` keeps `flate2` here and in the test kit.

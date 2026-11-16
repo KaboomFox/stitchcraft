@@ -80,6 +80,9 @@ Options:
       --set <KEY=VALUE>
           Set a setting of automatic digitizing's rules, as KEY=VALUE, on every shape digitized automatically that doesn't set it itself, such as auto_min_slenderness=4. A setting given here goes before the style's (docs/src/user/reference/params/auto.md)
 
+      --text <AREA:TEXT>
+          Sew the traced letters inside an area as lettering in an embroidery font, as tall as they are: the area's LEFT,TOP,WIDTH,HEIGHT in percent of the box round the design's shapes, which is a traced picture's own box, then a colon and the text, such as 10,40,80,20:MATCH. A font is named after the text in double quotes, as "MATCH" font=NAME, and is found in the folder STITCHCRAFT_FONTS names (docs/src/user/how-to/letter-a-picture.md). May be given several times
+
       --vectorcraft-cli <PROGRAM>
           VectorCraft's command line, which traces a picture; by default `vectorcraft-cli` on the PATH
 
@@ -433,6 +436,9 @@ Options:
 
       --set <KEY=VALUE>
           Set a setting of automatic digitizing's rules, as KEY=VALUE, on every shape digitized automatically that doesn't set it itself, such as auto_min_slenderness=4. A setting given here goes before the style's (docs/src/user/reference/params/auto.md)
+
+      --text <AREA:TEXT>
+          Sew the traced letters inside an area as lettering in an embroidery font, as tall as they are: the area's LEFT,TOP,WIDTH,HEIGHT in percent of the box round the design's shapes, which is a traced picture's own box, then a colon and the text, such as 10,40,80,20:MATCH. A font is named after the text in double quotes, as "MATCH" font=NAME, and is found in the folder STITCHCRAFT_FONTS names (docs/src/user/how-to/letter-a-picture.md). May be given several times
 
   -h, --help
           Print help (see a summary with '-h')
