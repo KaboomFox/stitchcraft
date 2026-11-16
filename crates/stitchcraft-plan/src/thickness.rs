@@ -485,7 +485,7 @@ impl Thickness {
 
     /// What of `plan`, the plan this is the thickness of, lies in the window of the spot nearest to `at`:
     /// each element's thread in each colour block, in sewing order. A unit of work for each stitch, and for
-    /// each step along a stitch [`near`] the spot: only those are followed again.
+    /// each step along a stitch near the spot: only those are followed again.
     pub fn stack(&self, plan: &StitchPlan, at: Point, meter: &mut Meter) -> Result<Vec<Layer>, Exhausted> {
         let Some(spot) = self.grid.nearest(at.x(), at.y()) else { return Ok(Vec::new()) };
         let (window, middle): (Vec<usize>, Point) = (self.grid.window(spot).collect(), self.grid.spot(spot));

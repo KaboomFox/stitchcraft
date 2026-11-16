@@ -738,6 +738,27 @@ reason = "The SVG reader takes the drawing as a viewer shows it (docs/src/design
 requirements = ["REQ-SVG-014"]
 
 [[deviation]]
+id = "DEV-FONT-001"
+area = "fonts"
+summary = "Lettering looks a glyph's advance and kerning up by its whole label. Ink/Stitch's lettering takes a label longer than 11 characters from its 12th character on, so a glyph with such a label advances as another name's glyph does, or by the default."
+reason = "A glyph's advance is the one font.json gives for its label (REQ-FONT-006). Ink/Stitch's rule was read at d59c9ab (lib/lettering/glyph.py) and is an accident of how it cuts the GlyphLayer- prefix from a label: it looks the advance of Allegria 55's glyph Inkscape_logo up as go. Glyphs with such labels are pictures and ligatures that a text names seldom."
+requirements = ["REQ-FONT-006", "REQ-FONT-010"]
+
+[[deviation]]
+id = "DEV-FONT-002"
+area = "fonts"
+summary = "Every line of a text sews in the font's default direction. Ink/Stitch's lettering sews the lines of a font with glyphs for both directions back and forth by default: every second line in the glyphs of the other direction, from its other end. The second line of a text in Ink/Stitch Small Font sews left to right in StitchCraft and right to left in Ink/Stitch."
+reason = "Lines sewn back and forth are roadmap step M14.3's, with the trims between lines that they save (docs/src/plan/roadmap.md). Ink/Stitch's rule was read at d59c9ab (lib/lettering/font.py: render_text) and run as a black box. A line's glyphs lie in the same places either way, and the entry closes with M14.3."
+requirements = ["REQ-FONT-010"]
+
+[[deviation]]
+id = "DEV-FONT-003"
+area = "fonts"
+summary = "The forms of an Arabic letter aren't chosen: a glyph named with .isol, .init, .medi or .fina never sews, and its letter is named as missing and sews as the font's default glyph (SC-W1107). Ink/Stitch's lettering chooses the form by the letters before and after."
+reason = "M14.2 sets text glyph by glyph, by name (REQ-FONT-009), and the shaping of Arabic text waits for a later step of M14. Ink/Stitch's rule was read at d59c9ab (lib/lettering/font_variant.py: get_next_glyph). The warning names every such letter, so the text is never sewn wrong in silence."
+requirements = ["REQ-FONT-009"]
+
+[[deviation]]
 id = "DEV-ROUTE-001"
 area = "routing"
 summary = "A piece of a satin column cut for a route gets a rung only where its rungs alone would not tell its rails from them, across its start or its end, as a column drawn with its rails and rungs does. Ink/Stitch gives every piece a rung 0.3 CSS pixels from its start, and a piece without rungs 2 more, at the middle of its rails and 0.3 CSS pixels from its end."

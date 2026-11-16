@@ -24,6 +24,7 @@ use stitchcraft_cli::commands::{self, Outcome, Status};
 fn run(cli: &Cli) -> Outcome {
     match &cli.command {
         Command::Plan(args) => commands::plan::run(args),
+        Command::Lettering(args) => commands::lettering::run(args),
         Command::Testsheet(args) => commands::testsheet::run(args),
         Command::Inspect(args) => commands::inspect::run(args),
         Command::Preview(args) => commands::preview::run(args),
@@ -136,6 +137,37 @@ mod tests {
         assert!(!coloured(false, None, None), "a pipe or a file");
         assert!(!coloured(true, Some(OsStr::new("1")), None));
         assert!(!coloured(true, None, Some(OsStr::new("dumb"))));
+    }
+
+    #[test]
+    fn req_font_014_the_options_of_lettering_take_the_settings_names_and_numbers() {
+        use stitchcraft_svg::lettering::{Align, SETTINGS};
+        let Command::Lettering(args) = parse(&["lettering", "Hi", "--font", "fonts/small_font", "-o", "hi.pes"]).unwrap().command else {
+            panic!("`stitch lettering`")
+        };
+        assert_eq!((args.text.as_str(), args.scale, args.height, args.align), ("Hi", None, None, Align::Left));
+        assert_eq!((args.letter_spacing, args.word_spacing, args.line_height), (0.0, 0.0, 0.0));
+        let given = ["lettering", "Hi", "--font", "f", "-o", "hi.pes", "--scale", "150", "--align", "letterspacing"];
+        let spaced = ["--letter-spacing", "-0.5", "--word-spacing", "2", "--line-height", "-1.25"];
+        let Command::Lettering(args) = parse(&[given.as_slice(), spaced.as_slice()].concat()).unwrap().command else { panic!("`stitch lettering`") };
+        assert_eq!((args.scale, args.align), (Some(150.0), Align::LetterSpacing));
+        assert_eq!((args.letter_spacing, args.word_spacing, args.line_height), (-0.5, 2.0, -1.25));
+        let Command::Lettering(args) = parse(&["lettering", "Hi", "--font", "f", "-o", "hi.pes", "--height", "8"]).unwrap().command else {
+            panic!("`stitch lettering`")
+        };
+        assert_eq!(args.height, Some(8.0));
+        // A number that is none, an alignment that is none, and a size given twice.
+        let refused = |more: &[&str]| parse(&[["lettering", "Hi", "--font", "f", "-o", "hi.pes"].as_slice(), more].concat()).unwrap_err().to_string();
+        assert!(refused(&["--scale", "inf"]).contains("`inf` isn't a number"));
+        assert!(refused(&["--letter-spacing", "wide"]).contains("`wide` isn't a number"));
+        assert!(refused(&["--align", "centre"]).contains("`centre` isn't an alignment: they are left, center, right, block, letterspacing"));
+        assert!(refused(&["--scale", "100", "--height", "8"]).contains("cannot be used with"));
+        // The help of each setting's option is the setting's own.
+        let help = parse(&["lettering", "--help"]).unwrap_err().to_string();
+        let one_line = help.split_whitespace().collect::<Vec<_>>().join(" ");
+        for setting in SETTINGS {
+            assert!(one_line.contains(&setting.does.split_whitespace().collect::<Vec<_>>().join(" ")), "{}: {help}", setting.name);
+        }
     }
 
     #[test]

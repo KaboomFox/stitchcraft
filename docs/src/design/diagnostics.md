@@ -216,6 +216,9 @@ another.
 | `SC-W1103` | Warning | Font file not read (a glyph file compressed with xz, as in Ink/Stitch's packages: its glyphs are left out) | M14 |
 | `SC-W1104` | Warning | Glyph left out (a glyph whose paths give it no box, or every glyph of a file whose baseline guide doesn't give a place, as Ink/Stitch's lettering leaves them out) | M14 |
 | `SC-I1105` | Info | Font read as Ink/Stitch reads it (a key the format doesn't have, a glyph drawn twice in a direction, of which the later counts, a file without a baseline guide, or a font without glyphs for its `default_variant`, which sews its first direction) | M14 |
+| `SC-W1106` | Warning | Scale outside the font's range (lettering sets the text at the nearest scale between the font's `min_scale` and `max_scale`, and names the range in percent and in millimetres) | M14 |
+| `SC-W1107` | Warning | Character not in the font (it sews as the font's default glyph, or is left as a space in a font without that glyph) | M14 |
+| `SC-E1108` | Error | Text could not be set (a text none of whose characters sews, or one with a glyph that can't be placed) | M14 |
 | `SC-E1201` | Error | Subject cut-out's models not ready (a model that couldn't be fetched, or isn't the file pinned: the message names every file and the folder they belong in) | M13 |
 | `SC-E1202` | Error | No subject found to cut out (no part of U²-Net-p's map reaches a half and no box is given, or MobileSAM didn't keep a pixel) | M13 |
 | `SC-E1203` | Error | Picture could not be read for the cut-out (not a PNG or JPEG file it reads, or larger than its limits) | M13 |

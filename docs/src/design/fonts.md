@@ -1,6 +1,6 @@
 # Fonts
 
-<!-- implements: crates/stitchcraft-svg/src/font/** -->
+<!-- implements: crates/stitchcraft-svg/src/font/**, crates/stitchcraft-svg/src/lettering/**, apps/stitchcraft-cli/src/commands/lettering.rs, apps/stitchcraft-cli/src/commands/lettering/** -->
 
 Lettering sews text in a font. M14 sets text in embroidery fonts, digitized glyph by glyph in Ink/Stitch's
 font format. M15 ports an ordinary TrueType or OpenType font automatically. It reads each glyph's outline at
@@ -244,12 +244,114 @@ Ink/Stitch Small Font, under the OFL, is the corpus's case of a real font (`REQ-
 left-to-right and 89 right-to-left glyphs read with nothing said, and plan in 17,890 stitches for the
 reference machine with a hoop 400 mm a side.
 
-**For M14.2.** Ink/Stitch's lettering looks a glyph's advance and kerning up by its label, and takes a label
-longer than 11 characters from its 12th character on, so it looks the advance of Allegria 55's glyph
-`Inkscape_logo` up as `go`. In a word, it adds each glyph's left edge to the place it sets the glyph at, but
-the first glyph's. So the centring of the 3 fonts above moves their words, and not only their glyphs. For a
-direction the font has no file for, Ink/Stitch finds a direction without glyphs, where `Font::variant` finds
-none. M14.2 chooses how StitchCraft's lettering sets these.
+## Lettering
+
+`stitchcraft_svg::lettering::set` sets a text in a font the reader read, and `stitch lettering` is its first
+host (M14.2, `REQ-FONT-009` to `REQ-FONT-014`). It follows Ink/Stitch's lettering, read at `d59c9ab`
+(`lib/lettering/font.py`, `font_variant.py` and `lib/extensions/batch_lettering.py`) and run as a black box.
+The text becomes a design, which every host plans as it plans any other.
+
+- **Lines and words.** The text is read in Unicode's NFC, as glyphs are named. A line ends at a line feed
+  and loses the spaces at its ends. Its words lie between its spaces, and between 2 spaces in a row lies an
+  empty word. A word is set in the case `letter_case` forces.
+- **Glyphs.** At each character of a word, the glyph with the longest name that the rest of the word starts
+  with sews, and the text goes on after that name. A ligature's glyph, named by its letters, sews for them.
+- **A missing character** sews as the glyph `default_glyph` names, and `SC-W1107` names the character. In a
+  font without that glyph the pen moves on by a space, and the warning says that instead.
+- **Places.** A word's first glyph has its box's left edge at the pen, which starts each line at 0. Each
+  later glyph's origin lies its predecessor's advance after that glyph's origin. The pair's kerning is
+  taken from that distance and the letter spacing added to it. Its box lies its own left edge after its origin. After a word the pen lies the
+  last glyph's advance after its origin, plus a space's advance and the word spacing. Ink/Stitch adds a
+  glyph's left edge to its place for every glyph but a word's first, which is the same rule told from the
+  pen.
+- **Lines.** Each line's baseline lies `leading` plus the line height below the line before. An empty line
+  takes its height too.
+- **Alignment.** A line's width spans its glyphs' boxes. Left-aligned lines stay. Centred, a line moves left by
+  half its width, and right-aligned by all of it. The first line's start is then the text's centre or its
+  right edge. A block moves each word of a line right by its place in the line times an equal share of
+  what the line lacks to the widest line. Ink/Stitch's `letterspacing` does the same to the glyphs of a line
+  of one word.
+- **The scale.** The text is set at `scale` percent of the font's size, kept within `min_scale` and
+  `max_scale`, as Ink/Stitch's batch lettering keeps it. Outside them the text is set at the nearer end, and
+  `SC-W1106` names the range in percent and in millimetres of height. The elements are scaled about the first
+  line's start on its baseline, each with its stroke's width. The spacings are scaled with the text, as
+  Ink/Stitch scales the group it sets the text in: 1 mm of letter spacing at 50 percent is 0.5 mm. An
+  element's stitch settings aren't scaled, in either program.
+- **Right to left.** In a font whose `text_direction` is `rtl`, a line's words and each word's glyphs are
+  laid in the reverse of their order in the text, and a pair's kerning is looked up with the glyph that
+  comes first in the text first. The glyphs of a font whose default direction is `rtl` are drawn to sew from
+  the right, and each of its lines sews from its last glyph to its first.
+- **Trims.** Lettering doesn't add a trim, which is Ink/Stitch's default. A glyph's own trims stay. The planner
+  then joins or jumps between letters as it does between any 2 elements, for the machine's profile. The
+  trims after each letter, word or line are M14.3's.
+- **Auto-satin.** In a font whose `auto_satin` is on, when the text has a satin column, the text's satin
+  columns and strokes are routed by `stitchcraft_engine::route` as Auto-Route Satin Columns routes them with
+  Preserve order on and trims off ([routing tools](routing.md)). The route's elements replace them. Each
+  sews at the end of the glyph its element was in, after the glyph's fills, where Ink/Stitch puts it at the
+  end of the group it was in. A text without a satin column sews as its glyphs draw it. The routing's
+  warnings are passed on, and its notes aren't.
+- **Bounded.** Any text and any numbers give a design or `SC-E1108`, never a panic. The layout and the
+  placing charge one meter of the budget, and the routing has the budget again.
+
+**The settings** are named as Ink/Stitch's lettering names them: `scale`, `text_align`, `letter_spacing`,
+`word_spacing` and `line_height`. `lettering::SETTINGS` declares each once with its help, and the options of
+`stitch lettering` take their help from it ([command line](../user/reference/cli.md)).
+
+**What M14.2 chose.**
+
+- *Advances and kerning by the whole label.* Ink/Stitch's lettering looks a glyph's advance and kerning up
+  by its label, and takes a label longer than 11 characters from its 12th character on. It looks the advance
+  of Allegria 55's glyph `Inkscape_logo` up as `go`. StitchCraft looks it up by the whole label
+  (`DEV-FONT-001`).
+- *The 3 fonts whose glyph files are centred.* The reader's boxes of Califragilistic, Cooper Marif and
+  InfiniPicto lie right of Ink/Stitch's (`DEV-SVG-025`), and the layout adds a glyph's left edge for every
+  glyph but a word's first. Their words are set wider than in Ink/Stitch by that offset between the first
+  2 letters of each word. No lettering case covers them, and the step leaves them so.
+- *One direction.* Every line sews in the font's default direction. For a direction the font has no file
+  for, Ink/Stitch falls back to the default one too. Lines sewn back and forth, which is Ink/Stitch's
+  default for a font with both directions, are M14.3's. Until then the second line of a text in Ink/Stitch
+  Small Font sews left to right here and right to left there.
+- *Arabic forms wait.* A glyph named with `.isol`, `.init`, `.medi` or `.fina` is a form of an Arabic
+  letter, which Ink/Stitch chooses by the letter's neighbours. StitchCraft chooses none yet. The letter
+  is then a missing character and is named so, which keeps the gap loud.
+- *Where the code lies.* The layout is in `stitchcraft-svg` beside the reader, since it needs the reader's
+  fonts and the engine's routing and nothing else. `Path::map` of the engine became public for it.
+- *Design settings.* The text's design has the default design settings, as Ink/Stitch's batch lettering
+  sets a text in an empty document. A glyph file's own settings aren't the text's.
+
+**Measured against Ink/Stitch's lettering.** On 16 November 2026 both programs set words in Ink/Stitch
+Small Font and Medium Font. Ink/Stitch at `d59c9ab` ran as a black box. Its batch lettering runs without
+a window and wrote each text as an SVG file and as a PES file. StitchCraft wrote its PES file with `stitch lettering`
+for the Brother PE800.
+
+- *Places.* The 11 glyphs of `Stitch Craft` lie at the same places in both fonts within 0.0001 mm, the last
+  digit Ink/Stitch writes. Ink/Stitch's places are the translations of its glyph groups. A tolerance of
+  0.001 mm is a hundredth of a machine file's unit.
+- *Stitches.* The table gives each file's size, stitches, jumps and trims, read back from the PES file.
+  The sizes agree to the file's 0.1 mm, and the jumps and trims are the same. The stitch counts differ by
+  1.5 percent at most. Each program leaves out needle points closer than the shortest stitch in its own
+  way, which the glyph differential records for single glyphs.
+
+| Font | Scale | Text | StitchCraft | Ink/Stitch |
+|---|---|---|---|---|
+| Small Font | 70 % | `Hello` | 14.2 × 3.8 mm, 297 stitches, 1 jump, 0 trims | 14.2 × 3.8 mm, 293, 1, 0 |
+| Small Font | 100 % | `Hello` | 20.2 × 5.4 mm, 401, 1, 0 | 20.2 × 5.4 mm, 407, 1, 0 |
+| Small Font | 300 % | `Hello` | 59.8 × 15.6 mm, 1,113, 5, 4 | 59.8 × 15.6 mm, 1,116, 5, 4 |
+| Small Font | 100 % | `Stitch Craft` | 51.4 × 6.2 mm, 875, 4, 3 | 51.4 × 6.2 mm, 874, 4, 3 |
+| Medium Font | 75 % | `Hello` | 44.0 × 11.8 mm, 792, 5, 4 | 44.0 × 11.8 mm, 800, 5, 4 |
+| Medium Font | 150 % | `Hello` | 87.6 × 23.4 mm, 1,473, 5, 4 | 87.6 × 23.4 mm, 1,459, 5, 4 |
+
+`Stitch Craft` in Small Font at 300 percent is 153.6 mm wide in both programs, wider than the PE800's hoop,
+and `stitch lettering` refuses it with `SC-E0701`. The comparison was run by hand. A case of the nightly
+differential that runs Ink/Stitch's batch lettering isn't built yet, and the 3 differences the step leaves
+are in the ledger (`DEV-FONT-001` to `DEV-FONT-003`).
+
+**Jumps between letters.** With auto-satin, the letters of a word are joined by the shortest way from one
+to the next. As in Ink/Stitch, a way shorter than the design's `collapse_len`, 3 mm, sews as a stitch on
+the fabric between the letters. Small Font is drawn for that, and at its small sizes a word
+sews without a jump. At large sizes the gaps grow past 3 mm and become jumps, whose threads the PE800
+leaves to cut by hand.
+
 
 ## Fonts ported by other programs
 
@@ -387,6 +489,11 @@ coverage and stitches. TS-15 sews 3 ported fonts beside the fonts digitized by h
   [ADR-0020](adr/0020-fonts-from-a-repository-of-their-own.md) on 2026-11-08, as it was written. The owner creates
   `KaboomFox/stitchcraft-fonts` before M14.2 pins it, and reads the licence files of the 10 fonts the ADR
   names before they join.
+- **Spacing in millimetres of the text or of the font** (M14.2). `--letter-spacing 1` at a scale of 50
+  percent adds 0.5 mm, as in Ink/Stitch, whose documents M14.4 will read. The recommendation, taken, is to
+  keep Ink/Stitch's meaning. Millimetres as sewn are the other choice.
+- **`--height`** (M14.2). `stitch lettering` takes the size as `--scale`, Ink/Stitch's setting, or as
+  `--height` in millimetres over the font's `size`. The recommendation, taken, is to keep both.
 - **When M15 comes.** The roadmap places it after M14 and before M11 and 1.0. M15.1 and M15.2 can go ahead
   beside M14. Moving M15 after 1.0 brings 1.0 sooner.
 - **Which ported fonts are written.** Text in any installed font can be sewn as a design, as Wilcom and Hatch

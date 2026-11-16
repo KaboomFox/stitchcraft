@@ -33,6 +33,7 @@
 mod document;
 pub mod font;
 pub mod inkstitch;
+pub mod lettering;
 mod path;
 mod settings;
 mod sheet;

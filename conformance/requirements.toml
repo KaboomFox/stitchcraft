@@ -457,6 +457,60 @@ milestone = "M14"
 status = "active"
 
 [[req]]
+id = "REQ-FONT-009"
+area = "fonts"
+level = "L2"
+statement = "Lettering reads a text in Unicode's NFC. A line ends at a line feed and loses the spaces at its ends, and its words lie between its spaces. A word is in the case letter_case forces. At each character of a word, the glyph of the font's default direction with the longest name that the rest of the word starts with sews, and the text goes on after that name. A name that ends in .isol, .init, .medi or .fina is never chosen. A character without a glyph sews as the glyph default_glyph names, or, in a font without that glyph, moves the pen on by a space's advance, and SC-W1107 names each such character once, with what sews for it. A text none of whose characters sews is refused with SC-E1108."
+rationale = "Ink/Stitch's lettering finds glyphs so, read at d59c9ab (lib/lettering/font.py: render_text, _get_word_glyphs; font_variant.py: get_next_glyph): a ligature's glyph is named by its letters. It chooses the forms of an Arabic letter by the letter's neighbours, which waits for a later step, so Arabic text names its letters as missing. A missing character that sewed as nothing, unsaid, would be a silent fallback."
+milestone = "M14"
+status = "active"
+
+[[req]]
+id = "REQ-FONT-010"
+area = "fonts"
+level = "L2"
+statement = "A word's first glyph has its box's left edge at the pen, which starts each line at 0. Each later glyph's origin lies the advance of the glyph before it after that glyph's origin, less the pair's kerning, plus letter_spacing, and its box's left edge lies the glyph's own left edge after its origin. After a word, the pen lies the last glyph's advance after its origin, plus a space's advance and word_spacing. A glyph left as a space starts the word's places again. Each line's baseline lies leading plus line_height below the line before, an empty line's too. In a font whose text_direction is rtl, a line's words and each word's glyphs are laid in the reverse of their order in the text, and a pair's kerning is looked up with the glyph that comes first in the text first. The glyphs sew in the order they are laid out, and each line of a font whose default direction is rtl sews from its last glyph to its first."
+rationale = "Ink/Stitch's lettering places glyphs so, read at d59c9ab (lib/lettering/font.py: _render_line, _render_glyph) and run as a black box, so a text takes the room in StitchCraft that it takes in Ink/Stitch. Lines sewn back and forth are M14.3's."
+milestone = "M14"
+status = "active"
+
+[[req]]
+id = "REQ-FONT-011"
+area = "fonts"
+level = "L2"
+statement = "A line's width spans its glyphs' boxes, from the leftmost left edge to the rightmost right edge. With text_align left, a line stays. Centred, it moves left by half its width, and right-aligned by its whole width. With block, each word of a line of several words moves right by its place in the line times an equal share of what the line's width lacks to the widest line's, a share for each gap between words. With letterspacing, a line of one word moves its glyphs so, a share for each gap between glyphs, and other lines are a block's."
+rationale = "Ink/Stitch's lettering aligns lines so, read at d59c9ab (lib/lettering/font.py: render_text). It measures a line by the box of its paths, which the glyphs' boxes span."
+milestone = "M14"
+status = "active"
+
+[[req]]
+id = "REQ-FONT-012"
+area = "fonts"
+level = "L2"
+statement = "The text is set at scale percent of the font's size, kept within min_scale and max_scale. A scale outside them is set at the nearer of the 2, and SC-W1106 names the scale asked for, the range in percent and in millimetres of height, and the scale set. Each element of each glyph is placed with its glyph's box and baseline where the layout puts them and scaled about the first line's start on its baseline: its path, its hints, its clips, its gradient and its stroke's width. The spacings scale with it. Its settings and thread stay, and its id is its place among the glyphs sewn, a hyphen and its id in the glyph. The result reports each glyph's name, line, word, left edge, width and baseline, in millimetres at the scale set, with what the SVG reader said of each glyph used. Setting charges one meter of the budget, a unit per character, per glyph name tried and per element and point placed, and a text that needs more is refused with SC-E0004. A glyph that can't be placed, as with a scale or a spacing that is no number or a text longer than 10 m, is refused with SC-E1108. No text and no setting panics."
+rationale = "A font's author digitized its columns for the heights between size times min_scale and size times max_scale, and Ink/Stitch's batch lettering keeps the scale within them (lib/extensions/batch_lettering.py at d59c9ab), scaling the text's group as a whole. Text is untrusted input, as a font is."
+milestone = "M14"
+status = "active"
+
+[[req]]
+id = "REQ-FONT-013"
+area = "fonts"
+level = "L2"
+statement = "In a font whose auto_satin is on, when the text has a satin column, the engine's routing (REQ-ROUTE-001) routes the text's satin columns and strokes as Auto-Route Satin Columns does with Preserve order on and trims off, and the route's elements replace them: each sews at the end of the glyph its element was in, after that glyph's elements that weren't routed. A text without a satin column, and a font whose auto_satin is off, sew their elements as the glyphs draw them. The routing's warnings and errors are reported, but that it found nothing to route, and its notes aren't. Lettering adds no trim: a glyph's own trims stay."
+rationale = "Ink/Stitch's lettering routes such a font's text so, before it adds trims (lib/lettering/font.py: _apply_auto_satin at d59c9ab). Ink/Stitch Small Font and Medium Font are drawn for it: their letters join by running stitches under the columns. Ink/Stitch adds no trim by default, and the trims after letters, words and lines are M14.3's."
+milestone = "M14"
+status = "active"
+
+[[req]]
+id = "REQ-FONT-014"
+area = "fonts"
+level = "L2"
+statement = "stitch lettering TEXT --font FOLDER -o FILE reads the font in the folder, sets the text in it with --scale or --height, --letter-spacing, --word-spacing, --line-height and --align, whose help is the settings' own (stitchcraft_svg::lettering::SETTINGS), plans it for the profile and writes the machine file, and a picture with --preview, as stitch plan writes them. A backslash and n in the text ends a line. --height gives the scale as a height in millimetres over the font's size, and is refused for a font without a size. What reading the font and setting the text said is printed, the summary names the font, the scale and the height set, and nothing is written when anything said is an error: a text wider than the machine's hoop gets SC-E0701, as any design does. A word in a font drawn in code sews for the Brother PE800 inside its hoop."
+rationale = "The command line is the first host of lettering (M14.2), and the owner sews its text on a Brother PE800. The settings are named and described once, in the library, which M14.4's plug-in reads too."
+milestone = "M14"
+status = "active"
+
+[[req]]
 id = "REQ-SVG-009"
 area = "svg"
 level = "L2"
