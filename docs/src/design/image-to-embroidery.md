@@ -1664,6 +1664,9 @@ taken:
 - Кирилиця, drawn from Roboto, sews from 7.9 mm and has a copyright line. Its files are 3.4 MB, more than
   twice Barstitch Bold's, and an export that letters in it would read a glyph file of 2.5 MB.
 
+TT Masters, from the same designer, sews from 9.0 mm, and its licence file is the same as TT Directors':
+a demo of a typeface that is sold, and no copyright line.
+
 Manga Impact and Masego are display faces, and bolder than the block letters by as much as Small Font is
 lighter.
 
