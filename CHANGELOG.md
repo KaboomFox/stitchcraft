@@ -1973,6 +1973,15 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M0.11: CI rounds are faster, and every gate still runs on every pull request.
+  - `web.yml` builds VectorCraft's editor once for each release, compiler, set of tools and build script,
+    and keeps it in the Actions cache. Other rounds build the plug-ins alone
+    ([the editor and its release](docs/src/design/vectorcraft-integration.md#the-editor-and-its-release)).
+  - The gates of `cargo xtask ci` run in CI as 4 jobs side by side, one for each group. A test fails when
+    a group has no job. `cargo xtask ci --group NAME` runs a group, and the summary gives each gate's time.
+  - The tests on macOS and Windows run with cargo-nextest, and their doc tests with `cargo test --doc`.
+  - `cargo xtask prepush` runs, before a push, the checks that most often cost a round of CI
+    ([guardrails](docs/src/design/guardrails.md#before-a-push)).
 - M13.31: test sheet TS-13D is 2 sheets, and the compatibility gate says when an export nears VectorCraft's
   budget.
   - TS-13D keeps its 2 emblems, now 5 mm apart (89 × 100 mm, 21,616 stitches), and the new TS-13E has its 2 buttons
