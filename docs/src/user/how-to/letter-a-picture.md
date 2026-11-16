@@ -89,7 +89,7 @@ The size and the spacing are found from the traced letters, so a marker doesn't 
 | `SC-W1113` | A marker wasn't used, and why. The traced letters then sew as before |
 | `SC-W1114` | Shapes cross the marker's edge. They sew as traced, beside the lettering. Make the marker larger to take them in |
 | `SC-W1115` | The lettering isn't the traced letters' size, with both sizes |
-| `SC-I1117` | The font was chosen for you. The message gives the letters' height, how bold they are, and the font |
+| `SC-I1118` | The font was chosen for you. The message gives the letters' height, how bold they are, and the font |
 
 Letters smaller than the font sews are set at the font's smallest height, centred where they were. They
 may then reach past the traced letters' place. Sew the design larger, or name a font that sews smaller.
@@ -110,12 +110,18 @@ nearest, among the fonts that sew letters that tall:
 | Ink/Stitch Small Font | `small_font` | 0.13 | from 3.8 to 16.2 mm |
 | Barstitch Bold | `barstitch_bold` | 0.19 | from 12.5 to 32.5 mm |
 
-So bold letters 15 mm tall are set in Barstitch Bold, and thin ones in Small Font. `SC-I1117` says which
+So bold letters 15 mm tall are set in Barstitch Bold, and thin ones in Small Font. `SC-I1118` says which
 font was taken and why. Bold letters under 12.5 mm are set in Small Font, since Barstitch Bold doesn't
 sew that small, and the message says so. They look lighter than the picture.
 
 `stitch` chooses the same way when its folder of fonts has both fonts. With one of them, or neither, the
 text is set in `small_font`.
+
+## Text that is still text
+
+A marker is for letters that are shapes, traced from a picture or made into paths. Text that is still
+a text object in the drawing sews without one, because automatic digitizing letters it by itself
+([automatic digitizing](../stitches/automatic.md#text)).
 
 ## When to leave the letters traced
 

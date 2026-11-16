@@ -77,6 +77,11 @@ engine's routing joins the text's satin columns. The result is a design, which h
 `stitch:text` is taken out, and the text is set there as tall as it was. Nothing is taken out before the
 lettering is set.
 
+`stitchcraft_svg::lettering::objects` sews a text object under automatic digitizing (`src/lettering/objects.rs`,
+`REQ-AUTO-069`, `REQ-AUTO-070`): each line in the host's default embroidery font, 0.7 of its font size tall,
+at its anchor. With `auto`, the reader gives a file's `<text>` elements as text objects for a host with
+fonts to set (`src/document/typed.rs`, `REQ-SVG-017`). A text object sews every line or none.
+
 Style sheets set properties as in a viewer (`src/sheet.rs`, `REQ-SVG-006`). Their rules with element,
 class and id selectors, the ones Illustrator and CorelDRAW write, are read, in the order of CSS's cascade.
 One `SC-W0802` names the other selectors and the at-rules.

@@ -207,14 +207,14 @@ fn req_auto_072_the_font_nearest_in_weight_that_sews_at_the_height_is_chosen() {
 }
 
 #[test]
-fn diag_sc_i1117_names_the_font_chosen_and_says_why() {
+fn diag_sc_i1118_names_the_font_chosen_and_says_why() {
     let choices = choices();
     // Bold letters at a height the bold font sews: it is asked for by its name.
     let (asked, said) = chosen_for(bars("stitch:text ab", 4.0, 16.0), &choices);
     assert_eq!(asked, ["bold"]);
     assert_eq!(
         said.iter().map(ToString::to_string).collect::<Vec<_>>(),
-        ["info SC-I1117: The text marker `marker` names no font: its letters are 16.0 mm tall, with strokes 0.25 of their height wide. The text is \
+        ["info SC-I1118: The text marker `marker` names no font: its letters are 16.0 mm tall, with strokes 0.25 of their height wide. The text is \
           set in `bold`, with strokes 0.25 wide: the nearest in weight of the fonts that sew at that height."]
     );
     assert_eq!(hint(&said[0]), "Name another font with font=NAME after the quoted text.");

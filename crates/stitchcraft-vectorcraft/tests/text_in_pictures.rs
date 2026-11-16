@@ -111,7 +111,7 @@ fn req_vc_030_a_marker_without_a_font_sews_in_the_font_held_that_is_nearest_in_w
     assert_eq!(ids(&read), ["vc:2:fill", "vc:4:stroke:0-svg:pa:stroke"]);
     let said = said(&read);
     assert!(said.iter().any(|said| said.contains("in the font `barstitch_bold`")), "{said:?}");
-    let chosen: Vec<&String> = said.iter().filter(|said| said.starts_with("info SC-I1117: ")).collect();
+    let chosen: Vec<&String> = said.iter().filter(|said| said.starts_with("info SC-I1118: ")).collect();
     assert_eq!(chosen.len(), 1, "{said:?}");
     assert!(
         chosen[0].contains("its letters are 20.0 mm tall, with strokes 0.40 of their height wide. The text is set in `barstitch_bold`"),
@@ -122,7 +122,7 @@ fn req_vc_030_a_marker_without_a_font_sews_in_the_font_held_that_is_nearest_in_w
     // font is told that it doesn't read.
     let named = read_in(&marked(r#"stitch:text "a" font=barstitch_bold"#), &Budget::DEFAULT, Reading::default(), &mut BuiltIn::new(&HELD)).unwrap();
     assert_eq!(ids(&named), ids(&read));
-    assert!(self::said(&named).iter().all(|said| !said.contains("SC-I1117")));
+    assert!(self::said(&named).iter().all(|said| !said.contains("SC-I1118")));
     let unread = read_in(&marked(r#"stitch:text "a" font=small_font"#), &Budget::DEFAULT, Reading::default(), &mut BuiltIn::new(&HELD)).unwrap();
     assert!(
         self::said(&unread)[0]
@@ -130,7 +130,7 @@ fn req_vc_030_a_marker_without_a_font_sews_in_the_font_held_that_is_nearest_in_w
     );
     // With one font held there is nothing to choose, and nothing is said of a choice.
     let one = read_in(&marked("stitch:text a"), &Budget::DEFAULT, Reading::default(), &mut BuiltIn::new(&FOLDERS)).unwrap();
-    assert!(self::said(&one).iter().all(|said| !said.contains("SC-I1117")));
+    assert!(self::said(&one).iter().all(|said| !said.contains("SC-I1118")));
 }
 
 #[test]

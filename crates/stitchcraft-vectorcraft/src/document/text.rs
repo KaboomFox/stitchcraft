@@ -1,5 +1,6 @@
-//! A text object: left out, or sewn in an embroidery font when it has StitchCraft's Lettering effect
-//! (roadmap step M14.4, `REQ-VC-026`, `docs/src/design/vectorcraft-integration.md` › Lettering).
+//! A text object: sewn in an embroidery font when it has StitchCraft's Lettering effect (roadmap step
+//! M14.4, `REQ-VC-026`, `docs/src/design/vectorcraft-integration.md` › Lettering) or when automatic
+//! digitizing reaches it (M14.7, `REQ-VC-029`), and left out if not.
 //!
 //! **Why the text, not its outlines.** A document keeps a text object's characters, never the outlines of
 //! its glyphs, and an embroidery font is digitized by hand for the needle, where the outlines of a screen
@@ -15,6 +16,11 @@
 //! **What is said.** What lettering and the font's reader warn of is passed on, a font's once however many
 //! texts name it. What they note for information isn't: it is said of every glyph.
 //!
+//! **Without the effect.** A text the Auto effect or `--auto` reaches has no font and no size chosen for
+//! it, so it sews in the default font at its own size, a line at a time, each where the document has it
+//! ([`stitchcraft_svg::lettering::objects`]). There the transform's scale is used: it is part of how large
+//! the text is drawn. A person who gave the text the Lettering effect chose, and keeps what they chose.
+//!
 //! **What isn't set.** Area type wraps its lines in a frame and type on a path follows the path, by the
 //! screen font's widths, which an embroidery font doesn't share. Vertical type needs glyphs drawn to sew
 //! downwards. Each is left out with `SC-W1111`, as is a text whose font isn't found.
@@ -25,19 +31,26 @@ use serde_json::Value;
 use stitchcraft_core::{Code, Diagnostic, ElementId, Mm, Point, Severity, math};
 use stitchcraft_engine::design::Element;
 use stitchcraft_svg::font::Font;
+use stitchcraft_svg::lettering::objects::{self, Anchor, Line, TextObject};
 use stitchcraft_svg::lettering::{self, Lettering, Set};
 
-use super::{Around, Reader, called, exhausted, quoted};
+use super::{Around, Ours, Reader, called, exhausted, ours, quoted};
 use crate::effect_name;
-use crate::lettering::{FONT, LETTERING};
+use crate::lettering::{FONT, LETTERING, found};
 use crate::values::{sews, text};
-use crate::wire::{Kind, Node};
+use crate::wire::{Kind, Node, Run};
 
 /// How a text object without the Lettering effect is stitched.
 const WITHOUT: &str = "Give it StitchCraft's Lettering effect to sew it in an embroidery font, or make paths of it with Type › Create Outlines.";
 
 /// How a text that lettering doesn't set is stitched.
 const AS_POINT_TYPE: &str = "Write it as point type, a line at a time, or make paths of it with Type › Create Outlines.";
+
+/// The size of a text whose size doesn't read, in points: VectorCraft's own for new type.
+const DEFAULT_POINTS: f64 = 12.0;
+
+/// The distance between the lines of a text that sets none, in its sizes: VectorCraft's automatic leading.
+const AUTO_LEADING: f64 = 1.2;
 
 /// The most fonts a message names: a folder of fonts can hold hundreds.
 const NAMED: usize = 8;
@@ -52,32 +65,20 @@ impl Reader<'_> {
     pub(super) fn text(&mut self, node: &Node, kind: &Kind, label: &str, around: &Around) -> Result<(), Diagnostic> {
         let effect = node.appearance.effects.iter().filter(|effect| effect.visible).find(|effect| effect_name(&effect.id) == Some(LETTERING));
         let Some(effect) = effect.filter(|_| !around.clipping) else {
+            if !around.clipping && self.automatic(node, around) {
+                return self.stood_in(node, kind, label, around);
+            }
             let message = format!("{} is not stitched.", called(node, "Text"));
             self.feature(label, message, Some(WITHOUT));
             return Ok(());
         };
         let who = called(node, "Text");
         let (asked, how) = self.lettering(label, &effect.params)?;
-        let kind_name = kind.text_kind.get().map_or("point", |kind| kind.name.as_str());
-        let vertical = kind.vertical.get().copied().unwrap_or(false);
-        if kind_name != "point" || vertical {
-            let what = match (kind_name, vertical) {
-                (_, true) => "vertical type".to_string(),
-                ("area", _) => "area type".to_string(),
-                ("onpath", _) => "type on a path".to_string(),
-                (other, _) => format!("type of the kind {}", quoted(other)),
-            };
-            self.unlettered(label, format!("{who} is {what}, which lettering doesn't set, and is not stitched."), AS_POINT_TYPE);
+        if !self.point_type(label, &who, kind) {
             return Ok(());
         }
         let runs = kind.runs.get().map_or(&[][..], Vec::as_slice);
-        let bytes: usize = runs.iter().map(|run| run.text.len()).sum();
-        self.charge(1 + bytes as u64)?;
-        let whole: String = runs.iter().map(|run| run.text.as_str()).collect();
-        if whole.contains(INLINE) {
-            self.feature(label, format!("An inline graphic of {} is not stitched.", called(node, "text")), None);
-        }
-        let whole: String = whole.chars().filter(|c| *c != INLINE).collect();
+        let whole = self.characters(node, label, runs)?;
         let Some(font) = self.font(label, &who, &asked)? else { return Ok(()) };
         let set = match lettering::set(&font, &whole, &how, self.budget) {
             Ok(set) => set,
@@ -107,6 +108,100 @@ impl Reader<'_> {
         for element in self.elements.iter_mut().skip(made) {
             element.clips.extend(around.clips.list.iter().cloned());
         }
+        Ok(())
+    }
+
+    /// Whether the text object `who` is horizontal point type, the kind lettering sets. Another kind is left
+    /// out with `SC-W1111`.
+    fn point_type(&mut self, label: &str, who: &str, kind: &Kind) -> bool {
+        let kind_name = kind.text_kind.get().map_or("point", |kind| kind.name.as_str());
+        let vertical = kind.vertical.get().copied().unwrap_or(false);
+        if kind_name == "point" && !vertical {
+            return true;
+        }
+        let what = match (kind_name, vertical) {
+            (_, true) => "vertical type".to_string(),
+            ("area", _) => "area type".to_string(),
+            ("onpath", _) => "type on a path".to_string(),
+            (other, _) => format!("type of the kind {}", quoted(other)),
+        };
+        self.unlettered(label, format!("{who} is {what}, which lettering doesn't set, and is not stitched."), AS_POINT_TYPE);
+        false
+    }
+
+    /// The characters of the text object `node`, whose runs are `runs`, without its inline graphics, which
+    /// are said. A unit of work, and one for each byte.
+    fn characters(&mut self, node: &Node, label: &str, runs: &[Run]) -> Result<String, Diagnostic> {
+        let bytes: usize = runs.iter().map(|run| run.text.len()).sum();
+        self.charge(1 + bytes as u64)?;
+        let whole: String = runs.iter().map(|run| run.text.as_str()).collect();
+        if whole.contains(INLINE) {
+            self.feature(label, format!("An inline graphic of {} is not stitched.", called(node, "text")), None);
+        }
+        Ok(whole.chars().filter(|c| *c != INLINE).collect())
+    }
+
+    /// Whether automatic digitizing reaches the text object `node`, which has no Lettering effect: it has
+    /// the Auto effect, or it has no StitchCraft effect, no stitch effect reaches it from `around` it, and
+    /// an Auto effect does or the document is read with `auto` (`REQ-VC-029`).
+    fn automatic(&self, node: &Node, around: &Around) -> bool {
+        let mut own = node.appearance.effects.iter().filter(|effect| effect.visible).filter_map(ours).peekable();
+        if own.peek().is_some() {
+            return own.any(|effect| matches!(effect, Ours::Auto(_)));
+        }
+        around.effects.is_empty() && (self.auto || around.auto.is_some())
+    }
+
+    /// A text object automatic digitizing reaches: point type sews as lettering in the default embroidery
+    /// font, a line at a time, at its size and place ([`objects::letter`], `REQ-VC-029`). Its size, the
+    /// distance between its lines, its fill and its typeface's name are those of its first run that has
+    /// characters. Another kind of type is left out with `SC-W1111`.
+    fn stood_in(&mut self, node: &Node, kind: &Kind, label: &str, around: &Around) -> Result<(), Diagnostic> {
+        let who = called(node, "Text");
+        if !self.point_type(label, &who, kind) {
+            return Ok(());
+        }
+        let runs = kind.runs.get().map_or(&[][..], Vec::as_slice);
+        let whole = self.characters(node, label, runs)?;
+        let style = runs.iter().find(|run| !run.text.is_empty()).and_then(|run| run.style.as_ref());
+        let positive = |points: Option<&f64>| points.copied().filter(|points| points.is_finite() && *points > 0.0);
+        let points = positive(style.and_then(|style| style.size.get())).unwrap_or_else(|| {
+            self.feature(label, format!("The size of {} does not read, and {DEFAULT_POINTS} points is used.", called(node, "text")), None);
+            DEFAULT_POINTS
+        });
+        let leading = positive(style.and_then(|style| style.leading.get())).unwrap_or(AUTO_LEADING * points);
+        let place = self.place(label, &who, kind.xf.get());
+        let mm = |points: f64| Mm::from_points(points * place.across).map_or(0.0, Mm::get);
+        let thread = self.thread(label, style.and_then(|style| style.fill.as_ref()));
+        let anchor = match kind.para.get().and_then(|para| para.justify.get()).map(String::as_str) {
+            Some("Center") => Anchor::Middle,
+            Some("Right") => Anchor::End,
+            _ => Anchor::Start,
+        };
+        let mut lines = Vec::new();
+        for (index, text) in whole.split('\n').enumerate() {
+            self.charge(1)?;
+            let text = text.trim();
+            let at = Point::new(0.0, index as f64 * mm(leading)).ok().and_then(|down| place.of(down));
+            match at {
+                Some(at) if !text.is_empty() => {
+                    lines.push(Line { text: text.to_string(), at, anchor, size: mm(points), thread: thread.clone(), length: None });
+                }
+                Some(_) => {}
+                None => {
+                    self.unlettered(label, format!("{who} is not stitched: it lies beyond the design's reach."), "Move it onto the artboard.");
+                    return Ok(());
+                }
+            }
+        }
+        let typeface = style.and_then(|style| style.font_family.get()).map(|family| family.trim().to_string()).filter(|family| !family.is_empty());
+        let clips = around.clips.list.to_vec();
+        let text = TextObject { label: format!("vc:{label}"), name: node.name.clone(), typeface, lines, turn: (place.cos, place.sin), clips };
+        let fonts = &mut *self.fonts;
+        let (letters, said) = objects::letter(&text, &mut |name, budget| found(&mut *fonts, name, budget), &mut self.lettered, self.budget)?;
+        self.charge((letters.len() as u64).saturating_mul(around.clips.cost))?;
+        self.elements.extend(letters);
+        self.warnings.extend(said);
         Ok(())
     }
 
@@ -184,7 +279,8 @@ impl Reader<'_> {
             let message = format!("{who} is mirrored or slanted, which lettering doesn't follow: it is sewn turned as its baseline is.");
             self.feature(label, message, None);
         }
-        Place { cos, sin, dx: mm(number(4)), dy: mm(number(5)) }
+        let across = if across > 0.0 && across.is_finite() { across } else { 1.0 };
+        Place { cos, sin, across, dx: mm(number(4)), dy: mm(number(5)) }
     }
 
     /// `SC-W1111` about the object `label`.
@@ -197,6 +293,9 @@ impl Reader<'_> {
 struct Place {
     cos: f64,
     sin: f64,
+    /// How much the transform scales across the baseline: what a text's size and the distance between its
+    /// lines are multiplied by.
+    across: f64,
     dx: f64,
     dy: f64,
 }

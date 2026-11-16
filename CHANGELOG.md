@@ -11,7 +11,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     Ink/Stitch Small Font. Its strokes are half again as wide for its height, and it sews capital letters
     from 12.5 to 32.5 mm. Its licence goes with the published demo.
   - A text marker that names no font is set in the font nearest in weight to the traced letters it
-    replaces, among the fonts that sew at their height. `SC-I1117` names the font and says why. A marker
+    replaces, among the fonts that sew at their height. `SC-I1118` names the font and says why. A marker
     with `font=NAME` keeps its font. Bold letters under 12.5 mm are set in Small Font, and the note says
     from what height the bold font sews.
   - An export reads only the font a text names, and of that font only the glyphs the text can use.
@@ -20,6 +20,23 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     `stitchcraft_vectorcraft::lettering` has `HELD`, `Held`, `Kept`, `choices`, `found_for`, and
     `Fonts::choices` and `Fonts::font_for`. `stitchcraft_core::Code` has `FontChosenByWeight`.
   - Golden files stay as they are: no case of the suite has a text marker without a font and 2 fonts.
+- M14.7: a text object sews as lettering under automatic digitizing (`REQ-AUTO-069`, `REQ-AUTO-070`,
+  `REQ-SVG-017`, `REQ-VC-029`).
+  - An SVG file's `<text>` and a VectorCraft document's point type were left out with a warning. With
+    `--auto`, or under the Auto effect, each now sews in the default embroidery font: on its baseline, from
+    its anchor, 0.7 of its font size tall and in its fill's colour.
+  - A line is fitted to the length its text most likely had, which is an SVG file's `textLength` or half
+    the font size for each character. Its gaps are narrowed, then it sews smaller, so that a wide
+    embroidery font doesn't run a word over the shapes beside it. `SC-W1117` names a line that is still
+    longer at the font's smallest height.
+  - The letters are the embroidery font's, not the typeface's. `SC-I1116` says so for each text, with its
+    height and why, and `SC-W1111` names a text that couldn't be sewn. A text with the Lettering effect keeps its settings.
+  - Text on a path, vertical text and area type are left out with a warning. So is what places letters
+    one by one in an SVG file.
+  - Sewing a text in its own typeface, from its outlines, is roadmap step M15.13.
+  - Public API: `stitchcraft_svg::lettering::objects` is new, `stitchcraft_svg::Svg` has `texts`, and
+    `stitchcraft_core::Code` has `TextSewnInEmbroideryFont` and `LetteringLongerThanTextsPlace`.
+  - Golden files stay as they are: no conformance case draws a text object.
 - M14.5: text in a picture sews as lettering (`REQ-AUTO-063` to `REQ-AUTO-066`, `REQ-VC-028`,
   `REQ-SVG-016`, `REQ-CLI-020`).
   - A shape named `stitch:text` and a text, in a VectorCraft document or an SVG file, marks the text of a

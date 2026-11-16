@@ -91,6 +91,7 @@ pub stitchcraft_core::diag::Code::HandStitchKeptLong
 pub stitchcraft_core::diag::Code::HandStitchTooShort
 pub stitchcraft_core::diag::Code::InternalCheckFailed
 pub stitchcraft_core::diag::Code::JumpsCutInDst
+pub stitchcraft_core::diag::Code::LetteringLongerThanTextsPlace
 pub stitchcraft_core::diag::Code::LetteringScaleOutOfRange
 pub stitchcraft_core::diag::Code::LetteringSettingNotApplied
 pub stitchcraft_core::diag::Code::LetteringUnlikeTracedLetters
@@ -144,6 +145,7 @@ pub stitchcraft_core::diag::Code::TextInPictureLettered
 pub stitchcraft_core::diag::Code::TextLongerThanPath
 pub stitchcraft_core::diag::Code::TextMarkerNotUsed
 pub stitchcraft_core::diag::Code::TextNotLettered
+pub stitchcraft_core::diag::Code::TextSewnInEmbroideryFont
 pub stitchcraft_core::diag::Code::ThreadColorsUnknown
 pub stitchcraft_core::diag::Code::ThreadsShareColor
 pub stitchcraft_core::diag::Code::TooLargeForFormat
@@ -374,6 +376,7 @@ pub stitchcraft_core::Code::HandStitchKeptLong
 pub stitchcraft_core::Code::HandStitchTooShort
 pub stitchcraft_core::Code::InternalCheckFailed
 pub stitchcraft_core::Code::JumpsCutInDst
+pub stitchcraft_core::Code::LetteringLongerThanTextsPlace
 pub stitchcraft_core::Code::LetteringScaleOutOfRange
 pub stitchcraft_core::Code::LetteringSettingNotApplied
 pub stitchcraft_core::Code::LetteringUnlikeTracedLetters
@@ -427,6 +430,7 @@ pub stitchcraft_core::Code::TextInPictureLettered
 pub stitchcraft_core::Code::TextLongerThanPath
 pub stitchcraft_core::Code::TextMarkerNotUsed
 pub stitchcraft_core::Code::TextNotLettered
+pub stitchcraft_core::Code::TextSewnInEmbroideryFont
 pub stitchcraft_core::Code::ThreadColorsUnknown
 pub stitchcraft_core::Code::ThreadsShareColor
 pub stitchcraft_core::Code::TooLargeForFormat

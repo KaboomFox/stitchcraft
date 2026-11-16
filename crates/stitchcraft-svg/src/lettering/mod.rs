@@ -31,6 +31,7 @@
 
 mod along;
 mod layout;
+pub mod objects;
 mod order;
 pub mod pictures;
 

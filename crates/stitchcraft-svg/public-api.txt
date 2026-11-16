@@ -150,6 +150,33 @@ pub const stitchcraft_svg::inkstitch::INKSTITCH_NS: &str
 pub const stitchcraft_svg::inkstitch::READ_ATTRIBUTES: &[&str]
 pub const stitchcraft_svg::inkstitch::RENAMED: [(&str, &str); 7]
 pub mod stitchcraft_svg::lettering
+pub mod stitchcraft_svg::lettering::objects
+pub enum stitchcraft_svg::lettering::objects::Anchor
+pub stitchcraft_svg::lettering::objects::Anchor::End
+pub stitchcraft_svg::lettering::objects::Anchor::Middle
+pub stitchcraft_svg::lettering::objects::Anchor::Start
+pub struct stitchcraft_svg::lettering::objects::Line
+pub stitchcraft_svg::lettering::objects::Line::anchor: stitchcraft_svg::lettering::objects::Anchor
+pub stitchcraft_svg::lettering::objects::Line::at: stitchcraft_core::units::Point
+pub stitchcraft_svg::lettering::objects::Line::length: core::option::Option<f64>
+pub stitchcraft_svg::lettering::objects::Line::size: f64
+pub stitchcraft_svg::lettering::objects::Line::text: alloc::string::String
+pub stitchcraft_svg::lettering::objects::Line::thread: core::option::Option<stitchcraft_plan::thread::Thread>
+pub struct stitchcraft_svg::lettering::objects::TextObject
+pub stitchcraft_svg::lettering::objects::TextObject::clips: alloc::vec::Vec<stitchcraft_engine::design::Clip>
+pub stitchcraft_svg::lettering::objects::TextObject::label: alloc::string::String
+pub stitchcraft_svg::lettering::objects::TextObject::lines: alloc::vec::Vec<stitchcraft_svg::lettering::objects::Line>
+pub stitchcraft_svg::lettering::objects::TextObject::name: core::option::Option<alloc::string::String>
+pub stitchcraft_svg::lettering::objects::TextObject::turn: (f64, f64)
+pub stitchcraft_svg::lettering::objects::TextObject::typeface: core::option::Option<alloc::string::String>
+pub struct stitchcraft_svg::lettering::objects::Waiting
+pub stitchcraft_svg::lettering::objects::Waiting::after: usize
+pub stitchcraft_svg::lettering::objects::Waiting::text: stitchcraft_svg::lettering::objects::TextObject
+pub const stitchcraft_svg::lettering::objects::CAPITALS: f64
+pub const stitchcraft_svg::lettering::objects::DEFAULT_FONT: &str
+pub const stitchcraft_svg::lettering::objects::WIDTH: f64
+pub fn stitchcraft_svg::lettering::objects::letter(&stitchcraft_svg::lettering::objects::TextObject, &mut dyn core::ops::function::FnMut(&str, &stitchcraft_core::budget::Budget) -> stitchcraft_svg::lettering::pictures::Found, &mut alloc::collections::btree::set::BTreeSet<alloc::string::String>, &stitchcraft_core::budget::Budget) -> core::result::Result<(alloc::vec::Vec<stitchcraft_engine::design::Element>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>), stitchcraft_core::diag::Diagnostic>
+pub fn stitchcraft_svg::lettering::objects::lettered(stitchcraft_engine::design::Design, &[stitchcraft_svg::lettering::objects::Waiting], &mut dyn core::ops::function::FnMut(&str, &stitchcraft_core::budget::Budget) -> stitchcraft_svg::lettering::pictures::Found, &mut alloc::collections::btree::set::BTreeSet<alloc::string::String>, &stitchcraft_core::budget::Budget) -> core::result::Result<(stitchcraft_engine::design::Design, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>), stitchcraft_core::diag::Diagnostic>
 pub mod stitchcraft_svg::lettering::pictures
 pub enum stitchcraft_svg::lettering::pictures::Found
 pub stitchcraft_svg::lettering::pictures::Found::Font(alloc::rc::Rc<stitchcraft_svg::font::Font>)
@@ -266,6 +293,7 @@ pub const stitchcraft_svg::version::APPLIED: [(&str, &str); 8]
 pub const stitchcraft_svg::version::CURRENT: i64
 pub struct stitchcraft_svg::Svg
 pub stitchcraft_svg::Svg::design: stitchcraft_engine::design::Design
+pub stitchcraft_svg::Svg::texts: alloc::vec::Vec<stitchcraft_svg::lettering::objects::Waiting>
 pub stitchcraft_svg::Svg::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
 pub const stitchcraft_svg::MAX_BYTES: usize
 pub fn stitchcraft_svg::read(&[u8], &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_svg::Svg, stitchcraft_core::diag::Diagnostic>
