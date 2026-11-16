@@ -97,6 +97,12 @@ The letters of an embroidery font are not as wide as a picture's. The gaps betwe
 narrowed so that the text is as wide as the traced text, by up to half the letters' height wider and a
 tenth narrower. Beyond that the text is centred, and `SC-W1115` gives the 2 widths.
 
+## Text that is still text
+
+A marker is for letters that are shapes, traced from a picture or made into paths. Text that is still
+a text object in the drawing sews without one, because automatic digitizing letters it by itself
+([automatic digitizing](../stitches/automatic.md#text)).
+
 ## When to leave the letters traced
 
 Small Font's strokes are light. Bold block letters 10 mm tall and more sew well as traced shapes, and
