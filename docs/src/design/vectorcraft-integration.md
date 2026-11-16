@@ -343,7 +343,9 @@ writes of the document:
   VectorCraft's command line and checks that the files are `stitch export`'s, byte for byte.
 - What `stitch export` says, the export says as its warnings, one line each, naming the object and with
   the hint after it. VectorCraft shows 100 of at most 500 characters each, so of more the last says how
-  many more `stitch export` lists.
+  many more `stitch export` lists. It cuts a longer line in the middle of a word. The export ends such a
+  line at its last whole sentence that fits. `SC-W0913` is one: in VectorCraft it keeps its numbers and
+  loses its hint, which `stitch export` prints.
 - When anything said is an error, the exporter declines with the first, after how many there are, and
   VectorCraft doesn't write the file, as `stitch export` doesn't (`REQ-CLI-003`). VectorCraft shows the
   first 300 characters of a decline, after `plug-in failed:`.
@@ -597,6 +599,13 @@ the PES exporter (2026-10-29). Drawing takes 14 to 25 million instructions, at m
 Exporting takes 23 million to 1.6 billion, at most 17 % of an export's, the most for the fills of TS-07,
 TS-08 and TS-09. TS-17B joined the sheets drawn in M10.7, after that measure, and left them in M10.9. The
 test prints each sheet's costs.
+
+The TS-13 sheets, digitized automatically, cost far more. On 2026-11-16 TS-13A, TS-13B and TS-13C each
+took 7.9 to 8.0 billion instructions to export, and TS-13D with its 4 pictures 10.872 of the 10.905 billion
+allowed. Drawing TS-13D took 49.5 of a light filter's 50.1 million. M13.31 moved its buttons to TS-13E, and
+the test now fails a sheet whose export leaves too little room
+([compatibility gate](compatibility-gate.md#level-a--abi-contract-fast-minutes)). The filter's help has a
+line for each sheet under "The test sheet to draw:", in the 1,000 characters VectorCraft shows of a help.
 
 ### Tools: the routing filters
 

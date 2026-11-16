@@ -75,7 +75,8 @@ pub(crate) fn options() -> Vec<(&'static str, Param)> {
     let ids: Vec<&'static str> = sheets().map(|sheet| sheet.id).collect();
     let default = ids.first().copied().unwrap_or_default();
     let tests: Vec<String> = sheets().map(|sheet| format!("- {}: {}", sheet.id, sheet.title)).collect();
-    let help = format!("The test sheet to draw, as the machine tests name it:\n\n{}", tests.join("\n"));
+    // VectorCraft shows 1,000 characters of help (`limits::MAX_HELP`), which a line for each sheet nearly fills.
+    let help = format!("The test sheet to draw:\n\n{}", tests.join("\n"));
     vec![(SHEET, own(Schema::Choice { options: ids, default }, "Sheet", &help, PAGE))]
 }
 

@@ -168,6 +168,35 @@ Options:
           
           [default: 0]
 
+      --trim <off|line|word|glyph>
+          Where the thread is trimmed: nowhere but where the font's glyphs trim it (off), after each line, after each word, or after            each letter (glyph)
+          
+          [default: off]
+
+      --color-sort <off|all|line|word>
+          Which letters of a multicolour font sew one colour after another, in the order the font's author numbered its colours:            none (off), the whole text's, each line's or each word's. A font that doesn't sort its colours sews as it is, with a warning
+          
+          [default: off]
+
+      --back-and-forth <true|false>
+          Whether every other line sews in the direction back, so that a line starts where the line before it ended. It needs a font            that draws its glyphs for both directions, and a text in another font sews every line the same way, with a warning
+          
+          [default: true]
+          [possible values: true, false]
+
+      --path <FILE>
+          Set the text along a path of this SVG file, in the file's place on its page: the path labelled `batch lettering`, as Ink/Stitch's batch lettering takes it, or else the file's first path that paints. The text follows the path's first subpath
+
+      --text-position <left|center|right|stretch>
+          Where the text lies along its path: from the path's start (left), centred on it, up to its end (right), or spread from its            start to its end (stretch)
+          
+          [default: left]
+
+      --vertical-text-position <top|baseline|bottom>
+          Which part of the text lies on its path: its lowest point, so that it stands on the path (top), its first line's baseline,            or its highest point, so that it hangs from the path (bottom)
+          
+          [default: top]
+
   -h, --help
           Print help (see a summary with '-h')
 ```
