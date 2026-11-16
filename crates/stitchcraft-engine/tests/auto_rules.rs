@@ -475,7 +475,7 @@ fn req_auto_034_the_blaze_is_filled_down_to_the_nose() {
         .filter(|element| setting(element, SATIN_COLUMN) == Some("true"))
         .filter_map(|element| if let Shape::Stroke { width, .. } = element.shape { Some(width.get()) } else { None })
         .collect();
-    // Its one column left, beside the wing, would crowd its stitches, and is filled too (`REQ-AUTO-064`).
+    // Its one column left, beside the wing, would crowd its stitches, and is filled too (`REQ-AUTO-068`).
     assert!(widths.iter().all(|width| *width < 4.0), "{widths:?}");
     assert!(matches!(elements.iter().find(|element| element.id.as_str() == "vc:79:fill").map(|fill| &fill.shape), Some(Shape::Fill { .. })));
 }

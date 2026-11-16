@@ -1974,7 +1974,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
-- M13.30: less thread where a design sews thick (`REQ-AUTO-063`). The owner's first concern on 2026-11-16
+- M13.30: less thread where a design sews thick (`REQ-AUTO-067`). The owner's first concern on 2026-11-16
   was how thick her traced dogs sew along the edges between their patches, and M13.29 measured that the
   overlaps cause most of it.
   - The overlap of an area is 1 mm wide along its rows, and as wide as its pull compensation, 0.4 mm,
@@ -1991,7 +1991,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     layers, for a fabric with pile. 3 in 10 of the base layer's millimetres of thread lay along its own
     edge, up to 2.3 fills under the ends of the fills' rows.
   - A part that would sew as one satin column is filled when the column would sew more than 2 mm of one
-    rail to 1 mm of the other, and `SC-I0902` says so (`REQ-AUTO-064`). Such a column laid up to 6.6 fills
+    rail to 1 mm of the other, and `SC-I0902` says so (`REQ-AUTO-068`). Such a column laid up to 6.6 fills
     where its stitches met. A part with a hole and a part of several columns sew as they did.
   - The 4 traced dogs have 55 to 64 % less area with 3 fills of thread or more. No picture has a piece of
     1 mm² with 6 fills or more, where the dogs had 6 to 12 mm². By the check of the cover they cover the

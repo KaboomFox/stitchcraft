@@ -11,7 +11,7 @@
 //! Each area's overlap is its own setting, `auto_overlap_mm` (`REQ-AUTO-020`).
 //!
 //! The overlap is thread under thread, and where several lie on each other a design sews thick
-//! (`REQ-AUTO-063`, `docs/src/design/image-to-embroidery.md` › Less thread where areas overlap). So an area
+//! (`REQ-AUTO-067`, `docs/src/design/image-to-embroidery.md` › Less thread where areas overlap). So an area
 //! reaches no further than the thread pulls ([`Reach`]): the whole overlap along its rows, whose ends the
 //! thread pulls in, and its pull compensation across them. Under a part of an area narrower than [`WIDE`]
 //! overlaps it reaches [`UNDER_NARROW`] of that, so that the areas on both sides of a thin part don't fill
@@ -320,7 +320,7 @@ struct Rim {
 
 /// Takes from `rim` what the areas sewn before its area sew under the shapes sewn after them, `before`,
 /// with `meter`'s work: a unit for each of them, and the work of those near. Under a shape sewn after 2
-/// areas only the one sewn first sews, so that 2 overlaps never lie on each other (`REQ-AUTO-063`). The
+/// areas only the one sewn first sews, so that 2 overlaps never lie on each other (`REQ-AUTO-067`). The
 /// area sewn first keeps its overlap whole: its rows then cross every edge it has with the shape, and an
 /// edge that only the later area's overlap covered would open where the thread pulls both away from it. A
 /// piece of the overlap that this cuts off from what shows of the area is left out. Returns the area's
