@@ -143,17 +143,19 @@ fn req_auto_013_broad_parts_and_specks_stay_filled_and_the_narrow_ones_run_after
 #[test]
 fn req_auto_013_the_areas_sewn_before_a_narrow_part_reach_under_it() {
     // 2 red squares, and a blue strip 0.6 mm wide between them, as a trace whose colours abut draws them. The
-    // strip runs, after both squares, which it borders, and each square reaches under it as far as it is wide, less than the overlap.
+    // strip runs, after both squares, which it borders. The left square, sewn first, reaches across the strip
+    // and its whole overlap under the right square beyond it, and the right square gives the strip up
+    // (REQ-AUTO-063).
     let red = |id: &str, from: (f64, f64), to: (f64, f64)| automatic(shape(id, &[rectangle(from, to)], &[]));
     let blue = automatic(fill("strip", &[&rectangle((10.0, 0.0), (10.6, 10.0))], &BLUE, &[]));
     let (out, said) = sewn(vec![red("left", (0.0, 0.0), (10.0, 10.0)), blue, red("right", (10.6, 0.0), (20.6, 10.0))]);
     let ids: Vec<&str> = out.iter().map(|e| e.id.as_str()).collect();
     assert_eq!(ids, ["left", "right", "strip"]);
     assert!(matches!(out[2].shape, Shape::Stroke { .. }));
-    // Each reaches into the strip grown by twice the shapes' tolerance, which adds a little past its ends.
-    // The right square reaches across the strip, 0.6 mm, and the left square 1 mm under the right square as
-    // it is sewn, which lies over the strip.
-    assert!((area(&out[0]) - 110.0).abs() < 0.3 && (area(&out[1]) - 106.5).abs() < 0.3, "{} {}", area(&out[0]), area(&out[1]));
+    // The left square reaches into the strip grown by twice the shapes' tolerance, which adds a little past
+    // its ends: 0.6 mm across the strip, and 1 mm under the right square from there. The right square sews
+    // as drawn.
+    assert!((area(&out[0]) - 116.5).abs() < 0.4 && (area(&out[1]) - 100.0).abs() < 1e-6, "{} {}", area(&out[0]), area(&out[1]));
     let said: Vec<String> = said.iter().map(ToString::to_string).collect();
     assert!(said.contains(&"info SC-I0904: 2 areas reach 1 mm under the shapes sewn after them that they touch.".to_string()), "{said:?}");
 }

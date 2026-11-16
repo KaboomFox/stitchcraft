@@ -381,11 +381,15 @@ impl Shapes {
     /// The overlap of element `index` when it is a satin column that automatic digitizing made and that
     /// sews.
     fn column(&self, index: usize) -> Option<f64> {
-        let satin = self.stitch_types.get(index).copied().flatten().is_some_and(|stitch_type| stitch_type.family() == Family::Satin);
-        if self.left_out(index) || !satin {
+        if self.left_out(index) || !self.satin(index) {
             return None;
         }
         *self.reach.get(index)?
+    }
+
+    /// Whether element `index` sews as a satin column.
+    fn satin(&self, index: usize) -> bool {
+        self.stitch_types.get(index).copied().flatten().is_some_and(|stitch_type| stitch_type.family() == Family::Satin)
     }
 
     /// The rails of the satin column `index` as they are sewn, with `meter`'s work; `None` when its settings
