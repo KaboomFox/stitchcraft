@@ -12,15 +12,22 @@ one build, or a preview's plug-ins would not be the ones its checks ran
 Nothing here is downloaded but VectorCraft's source, at the commit `compat/vectorcraft.toml` records. Trunk
 runs with `--offline`, so it uses the wasm-bindgen and wasm-opt the workflow installed by checksum
 (`.github/actions/tools/action.yml`) and stops when one is missing.
+
+The editor changes only when its pin, its compiler, its tools or this script change, and Trunk takes a
+quarter of an hour to build it. So the built editor is kept in `target/web/editor` under a key made of all of
+these (`editor_key`), and a later run with the same key builds the plug-ins alone. CI keeps that folder in
+the Actions cache between runs (`.github/workflows/web.yml`).
 """
 import argparse
 import gzip
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
+import time
 import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -35,14 +42,57 @@ SCRIPTS = ('boot.mjs', 'loader.mjs', 'starter.mjs', 'exports.mjs', 'engine.mjs',
 TITLE = 'StitchCraft in VectorCraft'
 # GitHub refuses a push that holds a file of 100 MB or more, so the publisher could never publish one.
 LARGEST_FILE = 100 * 1000 * 1000
-# The fonts the exporters hold when STITCHCRAFT_FONTS_DIR names a folder of fonts for their build.
+# The fonts built into the exporters when STITCHCRAFT_FONTS_DIR names a folder of fonts for their build.
 FONTS = ROOT / 'apps/stitchcraft-vc-plugin/built-in-fonts.txt'
+# The files whose every byte the built editor depends on, besides VectorCraft's source at the pinned commit:
+# the compiler's pin and this script.
+EDITOR_INPUTS = ('rust-toolchain.toml', 'web/build.py')
+# The tools that build the editor, whose versions `TOOLS` pins in lines such as `[trunk]=0.22.1`. Another
+# tool's version there changes nothing in the editor.
+EDITOR_TOOLS = ('trunk', 'wasm-bindgen', 'wasm-opt')
+TOOLS = '.github/actions/tools/action.yml'
+# VectorCraft's texts that a copy of the editor carries.
+LICENCES = ('LICENSE-MIT', 'LICENSE-APACHE', 'NOTICE')
 
 
 def pin(pins=PINS):
     """The editor's source: the repository, the release's tag and the commit the tag must name."""
     table = tomllib.loads(pins.read_text())
     return table['repository'], table['web']['tag'], table['web']['revision']
+
+
+def editor_key(pins=PINS, root=ROOT):
+    """A name for the built editor: one for each pin of its source and each state of the files it is built with."""
+    digest = hashlib.sha256('\n'.join(pin(pins)).encode())
+    pinned = dict(re.findall(r'^\s*\[([\w-]+)\]=(\S+)\s*$', (root / TOOLS).read_text(), re.MULTILINE))
+    for name in EDITOR_TOOLS:
+        # A tool without a version stops the build here, as the workflow's install step would.
+        digest.update(f'\n{name} {pinned[name]}'.encode())
+    for name in EDITOR_INPUTS:
+        data = (root / name).read_bytes()
+        digest.update(f'\n{name} {len(data)}\n'.encode())
+        digest.update(data)
+    return digest.hexdigest()
+
+
+def kept_editor(folder, key):
+    """Whether `folder` holds an editor built under `key`, whole: its page and VectorCraft's texts are there."""
+    try:
+        built = json.loads((folder / 'built.json').read_text())
+    except (OSError, ValueError):
+        return False
+    names = ['dist/index.html', *LICENCES]
+    return isinstance(built, dict) and built.get('key') == key and all((folder / name).is_file() for name in names)
+
+
+def keep_editor(folder, key, dist, vectorcraft, tag, revision):
+    """Keep the editor Trunk built in `dist`, with VectorCraft's texts, under `key`. The key's file is written last."""
+    shutil.rmtree(folder, ignore_errors=True)
+    shutil.copytree(dist, folder / 'dist')
+    (folder / 'dist/.trunk-lock').unlink(missing_ok=True)
+    for name in LICENCES:
+        shutil.copyfile(vectorcraft / name, folder / name)
+    (folder / 'built.json').write_text(json.dumps({'key': key, 'tag': tag, 'revision': revision}, indent=1) + '\n')
 
 
 def modules(manifest=ROOT / 'apps/stitchcraft-vc-plugin/Cargo.toml'):
@@ -99,7 +149,7 @@ def demo(out, built, tag, revision, built_in=()):
     for name in SCRIPTS:
         shutil.copyfile(WEB / name, out / name)
     shutil.copytree(WEB / 'templates', out / 'templates')
-    for name in ('LICENSE-MIT', 'LICENSE-APACHE', 'NOTICE'):
+    for name in LICENCES:
         shutil.copyfile(ROOT / name, out / f'StitchCraft-{name}.txt')
     listed = {'plugins': light, 'optionalPlugins': heavy, 'version': version(WEB),
               'vectorcraft': {'tag': tag, 'revision': revision}}
@@ -112,7 +162,9 @@ def demo(out, built, tag, revision, built_in=()):
 
 
 def app(out, editor, demo_folder, vectorcraft):
-    """Write the folder main publishes: the editor Trunk built, our page, and the demo folder's files."""
+    """Write the folder main publishes: the editor Trunk built, our page, and the demo folder's files.
+
+    `editor` is Trunk's output and `vectorcraft` the folder with VectorCraft's licence texts."""
     shutil.rmtree(out, ignore_errors=True)
     shutil.copytree(editor, out)
     (out / '.trunk-lock').unlink(missing_ok=True)
@@ -121,7 +173,7 @@ def app(out, editor, demo_folder, vectorcraft):
     start_version = hashlib.sha256((WEB / 'start.mjs').read_bytes()).hexdigest()[:16]
     (out / 'index.html').write_text(page((out / 'index.html').read_text(), start_version))
     # VectorCraft's licence asks that copies carry its texts and notice (MIT, Apache-2.0 section 4).
-    for name in ('LICENSE-MIT', 'LICENSE-APACHE', 'NOTICE'):
+    for name in LICENCES:
         shutil.copyfile(vectorcraft / name, out / f'VectorCraft-{name}.txt')
 
 
@@ -170,19 +222,31 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument('--prepare', action='store_true', help='fetch the pinned editor source, and build nothing')
     parser.add_argument('--sizes', action='store_true', help='print the sizes of what an earlier run built')
+    parser.add_argument('--editor-key', action='store_true', help='print the name the built editor is kept under')
     args = parser.parse_args()
+    if args.editor_key:
+        print(editor_key())
+        return
     if args.sizes:
         print('\n\n'.join(sizes(OUT / name) for name in ('app', 'demo')))
         return
     # VectorCraft has no toolchain file: its build uses StitchCraft's pinned compiler.
     os.environ['RUSTUP_TOOLCHAIN'] = tomllib.loads((ROOT / 'rust-toolchain.toml').read_text())['toolchain']['channel']
     vectorcraft = Path(os.environ.get('VECTORCRAFT_DIR', ROOT / 'target/vectorcraft-web'))
-    tag, revision = checkout(vectorcraft)
     if args.prepare:
+        checkout(vectorcraft)
         return
-    # Trunk passes --offline on to Cargo, so the crates are fetched first.
-    run('cargo', 'fetch', '--locked', cwd=vectorcraft)
-    run('trunk', 'build', '--release', '--locked', '--offline', cwd=vectorcraft / 'apps/vectorcraft-web')
+    _, tag, revision = pin()
+    key, editor = editor_key(), OUT / 'editor'
+    started = time.monotonic()
+    kept = kept_editor(editor, key)
+    if not kept:
+        checkout(vectorcraft)
+        # Trunk passes --offline on to Cargo, so the crates are fetched first.
+        run('cargo', 'fetch', '--locked', cwd=vectorcraft)
+        run('trunk', 'build', '--release', '--locked', '--offline', cwd=vectorcraft / 'apps/vectorcraft-web')
+        keep_editor(editor, key, vectorcraft / 'dist/web', vectorcraft, tag, revision)
+    editor_done = time.monotonic()
     # Cargo says where it builds: inside a VectorCraft checkout that is not this folder's target/ (ADR-0011).
     metadata = run('cargo', 'metadata', '--no-deps', '--format-version', '1', text=True, capture_output=True)
     target = Path(json.loads(metadata.stdout)['target_directory'])
@@ -194,8 +258,13 @@ def main():
             '-p', 'stitchcraft-vc-plugin', '--no-default-features', '--features', name)
         shutil.copyfile(target / 'wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm', built / f'{name}.wasm')
     demo(OUT / 'demo', built, tag, revision, fonts(os.environ.get('STITCHCRAFT_FONTS_DIR')))
-    app(OUT / 'app', vectorcraft / 'dist/web', OUT / 'demo', vectorcraft)
-    print(f'Built {OUT / "app"} and {OUT / "demo"}')
+    app(OUT / 'app', editor / 'dist', OUT / 'demo', editor)
+    took = (f'the editor {"kept from an earlier build" if kept else "built"} under {key[:16]} in {editor_done - started:.0f} s, '
+            f'the {len(light) + len(heavy)} plug-in modules in {time.monotonic() - editor_done:.0f} s')
+    print(f'Built {OUT / "app"} and {OUT / "demo"}: {took}')
+    if os.environ.get('GITHUB_ACTIONS'):
+        # A notice shows on the run's page and through the checks API, where a log does not.
+        print(f'::notice title=web build::{took}')
 
 
 if __name__ == '__main__':

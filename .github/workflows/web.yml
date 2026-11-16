@@ -41,7 +41,8 @@ jobs:
     name: build (the editor, the plug-ins, the demo in Chromium)
     if: github.event.action != 'closed'
     runs-on: ubuntu-24.04
-    # The editor's first build takes most of an hour, and later ones start from the cache.
+    # The editor's first build takes most of an hour. Later builds start from the build cache, and a run that
+    # finds the built editor in the Actions cache doesn't build it.
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -68,8 +69,30 @@ jobs:
         uses: ./.github/actions/fonts
         with:
           build-in: "true"
-      - name: Build the editor and the plug-ins
+      # The editor is built once for each pin, compiler, set of tools and build script, which its key names
+      # (web/build.py, `editor_key`), and kept in the Actions cache. A run that finds it builds the plug-ins
+      # alone. The step comes after the build cache's, whose cleaning empties folders under `target/`.
+      # No `restore-keys`: an editor under another key is another editor. GitHub gives a run the caches of its
+      # own branch and of main only, and a pull request's run saves to the pull request's own scope, so what
+      # a pull request saves, a fork's too, is never what main or another pull request restores.
+      - name: The key of the built editor
+        id: editor-key
+        run: echo "key=editor-$RUNNER_OS-$RUNNER_ARCH-$(python3 -I web/build.py --editor-key)" >> "$GITHUB_OUTPUT"
+      - name: The built editor, from the Actions cache when a run kept it under this key
+        id: editor
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: target/web/editor
+          key: ${{ steps.editor-key.outputs.key }}
+      - name: Build the editor, unless it is kept, and the plug-ins
         run: python3 -I web/build.py
+      # After the step above succeeded, so only an editor that was built whole is kept.
+      - name: Keep the built editor in the Actions cache
+        if: steps.editor.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: target/web/editor
+          key: ${{ steps.editor-key.outputs.key }}
       - name: What the site would hold, as stored and as sent
         run: python3 -I web/build.py --sizes | tee -a "$GITHUB_STEP_SUMMARY"
       - name: The scripts' and the publisher's own tests
