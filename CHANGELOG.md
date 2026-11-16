@@ -1912,6 +1912,18 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.31: test sheet TS-13D is 2 sheets, and the compatibility gate says when an export nears VectorCraft's
+  budget.
+  - TS-13D keeps its 2 emblems (88 × 100 mm, 21,521 stitches), and the new TS-13E has its 2 buttons
+    (24 × 108 mm, 6,380 stitches). Together they were 27,988 stitches on one sheet. No rule of the engine
+    changed. VectorCraft ends an export after 10 billion instructions and 4,000 more for each byte of the
+    document, and the one sheet's export took 10.872 of its 10.905 billion.
+  - The gate's contract test fails a test sheet whose export takes more than 85 % of that budget. Its
+    message names the sheet and gives its count beside the limit (`REQ-VC-015`).
+  - `compat.yml` runs on pull requests that change a library crate. M13.17 changed what an export costs,
+    and the gate didn't run on its pull request.
+  - The Test Sheet filter's help starts "The test sheet to draw:", and the titles of TS-13D and TS-13E
+    are short, so that a line for each sheet fits in the 1,000 characters VectorCraft shows.
 - M13.17: the jump threads of automatic digitizing (`REQ-AUTO-053`). A machine with one needle cuts no
   thread at a jump, and a traced photo left scores of jump threads to cut by hand.
   - Between 2 shapes of one thread that automatic digitizing made, the needle sews a run where the
@@ -3064,6 +3076,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13D.pes` and added `TS-13E.pes` (M13.31, one sheet split in
+  2). TS-13D sews its 2 emblems where it sewed them, without the 2 buttons, which TS-13E sews one above
+  the other. Each half of each sheet is planned alone, so the order and the jumps between the emblems and
+  the buttons are gone: the digitized halves leave 11 and 4 jump threads, where the one half left 17.
 - Changed `conformance/golden/testsheets/TS-13B.pes` (M13.17, runs in place of jumps). One jump of its
   digitized half is a run under a shape sewn later. The half jumps 48 times, where it jumped 49 times. It
   leaves 43 jump threads on the PE800, where it left 44. The plan sews 15,930 stitches, 5 fewer, since

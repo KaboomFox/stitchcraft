@@ -42,7 +42,7 @@ column, 7 mm, sews as satin columns along its centre lines, between its own outl
 corner or a junction ends under the one that runs on, 0.4 mm longer, and every automatic satin column has the
 underlay of its width and a pull compensation of 0.4 mm (M13.5). A part wider than a satin column in places
 sews in parts. Its broad parts are filled, and its narrow parts, cut square where they meet them, sew over
-the fill as lines and columns (M13.6). TS-13A to TS-13D sew the test pictures, each digitized beside the
+the fill as lines and columns (M13.6). TS-13A to TS-13E sew the test pictures, each digitized beside the
 same shapes in paint order, for MC-8. In VectorCraft (M13.7), `stitch palette` writes the machine's threads
 for Image Trace, each rule's value is a setting of the shape it digitizes, and StitchCraft's Auto effect on
 a traced group digitizes it automatically, with those settings in its dialog. It previews each path's
@@ -54,7 +54,7 @@ one (M13.11). The offsetter shrinks a region 150 mm across 300 times in under 20
 fill (M7.6). Before a traced picture is digitized, its layers are flattened (M13.12). Each area sews only
 what shows of it, and a broad area is filled whole under the details on it, so a picture traced with its
 colours stacked sews as one traced with them abutting. A disc or a square no wider than a satin column is a
-dot, which stays in the fill. TS-13D sews an emblem and a button traced both ways. The owner's dog, cut out
+dot, which stays in the fill. TS-13D sews an emblem and TS-13E a button, each traced both ways. The owner's dog, cut out
 of her 2 photos and traced, is a test picture whose cases CI runs in the release build, and the 3 stitches it
 still lays astray are listed for M13.17 and M13.18 and its jump threads for M13.17 (M13.15). A design digitized automatically covers fabric of any colour (M13.16). One base layer sews first under all of it, and neighbours overlap by 1 mm. What the top thread still leaves bare is slivers of at most 0.4 mm², with the base layer under them. The stitches of each part of a shape are chosen from its geometry by one table of rules, which fills a blob and a ragged patch where width alone sewed columns, and each shape says which rule chose them (M13.21). The elements sew in the order that changes thread least: the owner's traced dog changes thread 8 times in 6 threads and 12 times in 9, where it changed 12 to 28 times (M13.22). Where shapes sewn later cover a way between 2 shapes of one thread, the needle runs under them instead of jumping: the dog leaves 60 to 83 jump threads where it left 73 to 96 (M13.17). A traced photo whose background is one area of thousands of corners plans within the work budget, where 2 photos stopped with `SC-E0004` (M13.23). Contour fills are sewn
 as Ink/Stitch sews them, inner to outer or in a spiral or double spiral, and TS-11B samples them for MC-6

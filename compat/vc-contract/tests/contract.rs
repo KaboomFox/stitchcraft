@@ -104,29 +104,29 @@ const WRITTEN_PER_BYTE: f64 = 822.0;
 /// How far above them a later host, or a later build of the plug-in, may go before the gate says so.
 const HEADROOM: f64 = 1.25;
 
-/// The most of VectorCraft's budget for an export that a test sheet's export may take, in hundredths. A step
+/// The most of VectorCraft's budget for an export that a test sheet's export may take, in percent. A step
 /// that takes a sheet past it fails in its own pull request, with room left to act in: without it, M13.17
-/// took TS-13D to 99.7 hundredths unseen, and the next step failed for it (M13.31).
+/// took TS-13D to 99.7 % unseen, and the next step failed for it (M13.31).
 const EXPORT_SHARE: u64 = 85;
 
 /// What to say of `sheet`, whose export took `used` of the `allowed` instructions: nothing up to
-/// [`EXPORT_SHARE`] hundredths of them, and past that the sheet, both counts and what to do.
+/// [`EXPORT_SHARE`] % of them, and past that the sheet, both counts and what to do.
 fn near_budget(sheet: &str, used: u64, allowed: u64) -> Option<String> {
     (u128::from(used) * 100 > u128::from(allowed) * u128::from(EXPORT_SHARE)).then(|| {
         format!(
-            "{sheet}'s export takes {used} of the {allowed} instructions VectorCraft allows it, more than {EXPORT_SHARE} hundredths: make it \
+            "{sheet}'s export takes {used} of the {allowed} instructions VectorCraft allows it, more than {EXPORT_SHARE} %: make it \
              cheaper, or split the sheet"
         )
     })
 }
 
 #[test]
-fn req_vc_015_an_export_past_85_hundredths_of_its_budget_is_named() {
-    // At 85 hundredths exactly an export passes, and one instruction more fails it, by its name and counts.
+fn req_vc_015_an_export_past_85_percent_of_its_budget_is_named() {
+    // At 85 % exactly an export passes, and one instruction more fails it, by its name and counts.
     assert_eq!(near_budget("TS-13D", 8_500, 10_000), None);
     assert_eq!(near_budget("TS-13D", 0, 10_000), None);
     let said = near_budget("TS-13D", 8_501, 10_000).unwrap();
-    assert!(said.starts_with("TS-13D's export takes 8501 of the 10000 instructions VectorCraft allows it, more than 85 hundredths"), "{said}");
+    assert!(said.starts_with("TS-13D's export takes 8501 of the 10000 instructions VectorCraft allows it, more than 85 %: "), "{said}");
     // What M13.17 left of TS-13D, which no check said: 10.872 of 10.905 G.
     assert!(near_budget("TS-13D", 10_871_635_968, 10_904_844_000).is_some());
     assert_eq!(near_budget("TS-13C", 7_985_954_816, 10_207_764_000), None);
