@@ -386,7 +386,7 @@ After sewing, check:
 
 ## TS-13D — Pictures digitized automatically: a traced emblem
 
-88.0 × 100.0 mm · 21521 stitches, 23 jumps, 22 trims, 10 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+89.0 × 100.0 mm · 21616 stitches, 23 jumps, 22 trims, 10 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
