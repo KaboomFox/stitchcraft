@@ -12,6 +12,9 @@
 //! effect's, so the transform's scale isn't used, and a mirrored or slanted text sews turned only, which is
 //! said.
 //!
+//! **What is said.** What lettering and the font's reader warn of is passed on, a font's once however many
+//! texts name it. What they note for information isn't: it is said of every glyph.
+//!
 //! **What isn't set.** Area type wraps its lines in a frame and type on a path follows the path, by the
 //! screen font's widths, which an embroidery font doesn't share. Vertical type needs glyphs drawn to sew
 //! downwards. Each is left out with `SC-W1111`, as is a text whose font isn't found.
@@ -19,7 +22,7 @@
 use std::rc::Rc;
 
 use serde_json::Value;
-use stitchcraft_core::{Code, Diagnostic, ElementId, Mm, Point, math};
+use stitchcraft_core::{Code, Diagnostic, ElementId, Mm, Point, Severity, math};
 use stitchcraft_engine::design::Element;
 use stitchcraft_svg::font::Font;
 use stitchcraft_svg::lettering::{self, Lettering, Set};
@@ -35,6 +38,9 @@ const WITHOUT: &str = "Give it StitchCraft's Lettering effect to sew it in an em
 
 /// How a text that lettering doesn't set is stitched.
 const AS_POINT_TYPE: &str = "Write it as point type, a line at a time, or make paths of it with Type › Create Outlines.";
+
+/// The most fonts a message names: a folder of fonts can hold hundreds.
+const NAMED: usize = 8;
 
 /// The object replacement character, which is the text of a run that is an inline graphic.
 const INLINE: char = '\u{FFFC}';
@@ -81,7 +87,7 @@ impl Reader<'_> {
                 return Ok(());
             }
         };
-        self.warnings.extend(set.warnings.iter().cloned());
+        self.warnings.extend(set.warnings.iter().filter(|said| worth_saying(said)).cloned());
         let fill = runs.iter().find(|run| !run.text.is_empty()).and_then(|run| run.style.as_ref()).and_then(|style| style.fill.as_ref());
         let thread = if one_thread(&set) { self.thread(label, fill) } else { None };
         let place = self.place(label, &who, kind.xf.get());
@@ -135,7 +141,7 @@ impl Reader<'_> {
         match self.fonts.font(asked, self.budget) {
             Some(Ok(font)) => {
                 if self.lettered.insert(font.folder.clone()) {
-                    self.warnings.extend(font.warnings.iter().cloned());
+                    self.warnings.extend(font.warnings.iter().filter(|said| worth_saying(said)).cloned());
                 }
                 Some(font)
             }
@@ -146,8 +152,13 @@ impl Reader<'_> {
             }
             None => {
                 let names = self.fonts.names();
-                let there =
-                    if names.is_empty() { "No embroidery font is here.".to_string() } else { format!("The fonts here are {}.", names.join(", ")) };
+                let more = names.len().saturating_sub(NAMED);
+                let listed = names.iter().take(NAMED).cloned().collect::<Vec<_>>().join(", ");
+                let there = match (names.is_empty(), more) {
+                    (true, _) => "No embroidery font is here.".to_string(),
+                    (false, 0) => format!("The fonts here are {listed}."),
+                    (false, more) => format!("The fonts here are {listed}, and {more} more."),
+                };
                 let message = format!("{who} is not stitched: its Lettering effect names the font {}, which is not here. {there}", quoted(named));
                 let hint = "Choose a font that is here in the effect's dialog. For `stitch`, set `STITCHCRAFT_FONTS` to the folder that holds the font's folder.";
                 self.unlettered(label, message, hint);
@@ -193,6 +204,13 @@ impl Place {
     fn of(&self, p: Point) -> Option<Point> {
         Point::new(self.cos * p.x() - self.sin * p.y() + self.dx, self.sin * p.x() + self.cos * p.y() + self.dy).ok()
     }
+}
+
+/// Whether what a font's reader or lettering `said` is passed on with a document: a warning or an error.
+/// What they note for information, such as a glyph file read as an older Ink/Stitch wrote it, is said of
+/// every glyph, and `stitch lettering` prints it for whoever looks at a font.
+fn worth_saying(said: &Diagnostic) -> bool {
+    said.severity() != Severity::Info
 }
 
 /// Whether every element of `set` sews in one thread, as a font of one colour's do: the text's own colour

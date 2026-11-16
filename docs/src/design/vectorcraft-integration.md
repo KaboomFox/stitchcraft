@@ -1112,6 +1112,9 @@ feeds. An inline graphic's character is left out and said (`SC-W0807`).
   its path by them. An embroidery font has other widths, so neither can sew where VectorCraft draws it.
   Vertical type needs glyphs drawn to sew downwards. Each is left out with `SC-W1111`. M14.3's lettering
   along a path could take type on a path in a later step.
+- **What is said.** The warnings of lettering and of the font's reader are passed on, a font's once
+  however many texts name it. Their notes for information aren't, since they are said of every glyph.
+  `stitch lettering` prints them. A message that names the fonts found names 8 and counts the others.
 - **Other effects** on the text, and the screen font's attributes, change what VectorCraft draws and
   nothing that sews.
 
