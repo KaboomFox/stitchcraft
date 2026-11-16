@@ -124,6 +124,17 @@ pub(crate) struct Kind {
     /// A text object's runs.
     #[serde(default)]
     pub runs: Maybe<Vec<Run>>,
+    /// A text object's paragraph style.
+    #[serde(default)]
+    pub para: Maybe<Para>,
+}
+
+/// A text object's paragraph style: how its lines are aligned, `Left`, `Center`, `Right` or a justified
+/// kind.
+#[derive(Deserialize)]
+pub(crate) struct Para {
+    #[serde(default)]
+    pub justify: Maybe<String>,
 }
 
 /// A field of a text object, read when it has the shape `T` and passed over when it has another: other
@@ -171,11 +182,19 @@ pub(crate) struct Run {
     pub style: Option<RunStyle>,
 }
 
-/// A run's character style: the paint its characters are filled with.
+/// A run's character style: the paint its characters are filled with, their size and the distance between
+/// their lines in points, and the typeface's family.
 #[derive(Deserialize)]
 pub(crate) struct RunStyle {
     #[serde(default)]
     pub fill: Option<Paint>,
+    #[serde(default)]
+    pub size: Maybe<f64>,
+    /// Without one, lines are 1.2 times the size apart.
+    #[serde(default)]
+    pub leading: Maybe<f64>,
+    #[serde(default)]
+    pub font_family: Maybe<String>,
 }
 
 /// How an object paints: its fills and strokes, in paint order, and its effects.

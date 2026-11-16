@@ -485,6 +485,110 @@ their height and along their line, with [`set`](#lettering) and [`set_along`](#a
 [Text in pictures](image-to-embroidery.md#text-in-pictures) describes it. It asks a host for a font by
 name, as a text object does, and the empty name is the default font.
 
+## Text objects in automatic digitizing
+
+M14.7 sews a text object that automatic digitizing meets (`REQ-AUTO-069`, `REQ-AUTO-070`). A text object
+is what a drawing keeps of a text someone typed. It has the text's characters and the name of its
+typeface, with its size and its place. An SVG file's `<text>` element is one, and so is a VectorCraft document's point type. Until
+M14.7 automatic digitizing left both out with a warning. Text that was made into paths before it reached
+StitchCraft is shapes, and [text in pictures](image-to-embroidery.md#text-in-pictures) handles those.
+
+**An embroidery font is used in the typeface's place.** The outlines of a text object's letters aren't in
+the drawing. They are in the typeface's font file, and StitchCraft doesn't read font files before
+[M15.2](../plan/roadmap.md#m15--fonts-ported-automatically), nor does VectorCraft give
+a plug-in a text's glyphs. So the text is set by [lettering](#lettering), in the host's default embroidery
+font, which is Ink/Stitch Small Font where the fonts are Ink/Stitch's. The word sews cleanly, where the
+drawing has it and about as tall. Its letters have the embroidery font's shapes and widths, not the
+typeface's: a bold display face and a script both come out as Small Font's light upright letters. A note
+says so for each text object (`SC-I1116`). Roadmap step M15.13 sews a text in its own typeface.
+
+`stitchcraft_svg::lettering::objects` does it. Each reader gives what it read as a `TextObject`, which is
+lines, and `letter` sets each line with [`set`](#lettering). There is no second layout.
+
+**How tall.** A font size is the height of the box a typeface is drawn in, and no letter is that tall. An
+embroidery font's `size` is the height of its letters. How tall a typeface draws its capitals is written
+in its font file, which isn't read. In the 7 fonts measured below it is between 0.64 and 0.73 of the font size. So a line is set so
+that the embroidery font's letters are 0.7 of its font size tall (`objects::CAPITALS`), to a tenth of a
+percent. For those fonts the lettering is within 0.06 of the font size of the capitals it replaces,
+which is 1.2 mm for a text 20 mm in size, unless its line is fitted to a shorter place. The scale stays within the heights the font sews at, and
+outside them `SC-W1106` gives the height the text is set at. Small Font sews from 3.6 to 15.2 mm, so text
+from 5.1 to 21.7 mm in font size, 14.6 to 61.5 points, sews at its height.
+
+**Where.** These hold exactly:
+
+- A line's baseline is the text's, and the lines are turned as the text's baseline is.
+- A line starts, is centred or ends at its anchor, as the drawing aligns it.
+- Each line of a text of several lines is placed on its own, where the drawing has it.
+
+The note gives the height each text sewed at and why: 0.7 of its font size, or made smaller to fit a
+length, which it names as stated or estimated. It also gives the longest line's length as sewn.
+
+**How long.** The embroidery font's letters are as wide as it draws them, and Small Font is a wide font.
+On a badge drawn for the step, a title of 8 characters at a font size of 18 mm was 98.7 mm long
+at 12.6 mm tall, which is 0.69 of the font size for each character. The badge left the line 73 mm, and
+the lettering ran over the badge's border. A design sewn so is wrong, and worse than one without its text.
+So a line is fitted to the length its text most likely had in the drawing (`objects::fit`):
+
+1. **That length** is the one the drawing states, where it states one, as an SVG file's `textLength`
+   does. A VectorCraft document states none. VectorCraft measures a text object's box and doesn't save it:
+   `cached_bounds` is marked `#[serde(skip)]` in `crates/doc/src/text.rs`, read at v0.24.1. Without
+   a stated length it is estimated at half the font size for each character of the line, spaces included
+   (`objects::WIDTH`).
+2. **A line that is no longer than that** is left as it is. It isn't stretched.
+3. **A longer line has its gaps narrowed first,** each by up to a tenth of the letters' height, the limit
+   by which [lettering closes up to traced letters](image-to-embroidery.md#text-in-pictures).
+4. **Then it is set smaller,** with its gaps as narrow for its height, at the scale that makes it as long
+   as its place, cut to a tenth of a percent.
+5. **It is never set smaller than the font sews.** A line that is still longer at the font's smallest
+   height is set at that height, and `SC-W1117` gives its length and its place's.
+
+The anchor and the baseline are the same through all of it, and a centred line is centred on its anchor
+still. On the badge, "Camp
+Fox" now sews 10.0 mm tall and 72.0 mm long, inside the badge.
+
+The estimate is for the proportional typefaces text is commonly set in. It was measured on 7 fonts
+installed on the build machine, with their own advances and kerning, as a line's length over its font size
+and its count of characters. None of the fonts is in the repository.
+
+| Font | Capitals' height | 4 lines of small letters | A line of capitals |
+|---|---|---|---|
+| FreeSans, with Helvetica's widths | 0.73 | 0.44 to 0.56 | 0.61 |
+| FreeSerif, with Times's widths | 0.66 | 0.41 to 0.52 | 0.61 |
+| Carlito, with Calibri's widths | 0.64 | 0.42 to 0.49 | 0.50 |
+| Caladea, with Cambria's widths | 0.67 | 0.42 to 0.50 | 0.54 |
+| DejaVu Sans | 0.73 | 0.52 to 0.62 | 0.61 |
+| DejaVu Serif | 0.73 | 0.53 to 0.63 | 0.68 |
+| Inter | 0.73 | 0.49 to 0.59 | 0.62 |
+
+The lines were 4 short lines of 2 or 3 words and a pangram, and
+the capitals "HAPPY BIRTHDAY". Half the font size lies in the middle of the small letters' range. It is
+short for capitals and for wide faces, where a line comes out up to a quarter shorter than it was drawn,
+and smaller with it. A line too short is inside its place, and a line too long is over its neighbours, so
+the estimate errs short. The same fonts' capitals are 0.64 to 0.73 of the font size tall.
+
+**The thread** is the text's fill colour when the font sews in one thread, as it is for a text with the
+Lettering effect. A font of several threads keeps its own.
+
+**What sews.** The letters keep the settings the font's author gave them. They aren't automatic elements,
+so the rules for shapes don't touch them, and they sew at the text's place in the stitching order, cut to
+the clips around it.
+
+**What each reader reads.** [The SVG adapter](svg-input.md#text-objects) reads a `<text>` element, and
+[the VectorCraft adapter](vectorcraft-integration.md#text-without-the-lettering-effect) reads point type.
+Each page says what its reader leaves out.
+
+**All or nothing.** A text object sews every line or none. It sews nothing when the host has no default
+font, when the font doesn't read, when a line can't be set, or when its letters would lie beyond the
+design's reach. `SC-W1111` then says why, and names the fonts the host has. A text object without a
+visible character sews nothing and nothing is said, since a viewer doesn't show it either.
+
+**No setting turns it off.** A design sews without its text when the text is hidden or deleted in the
+drawing, as any shape is left out. A setting would be one more row in the Auto effect's dialog for
+something the drawing already says.
+
+**A text with the Lettering effect** (M14.4) keeps the font and the settings a person chose for it.
+Automatic digitizing doesn't set it again, and `SC-I1116` isn't said of it.
+
 ## Fonts built into the plug-ins
 
 A plug-in can't read files. The fonts that a VectorCraft document's texts sew in are built into the
@@ -700,6 +804,23 @@ coverage and stitches. TS-15 sews 3 ported fonts beside the fonts digitized by h
 - **Pinning the font repository** (M14.4). CI builds Small Font in from the corpus of Ink/Stitch's fonts
   until `fonts.toml` pins `KaboomFox/stitchcraft-fonts`. The recommendation is to pin it before a second
   font is built in.
+- **Text objects sew in an embroidery font under automatic digitizing** (M14.7), until a typeface's
+  outlines can be read (M15.13). The recommendation, taken, is to letter every text object automatic
+  digitizing meets, with a note each time. The other choice leaves text out with a warning, as before, and
+  a design then sews without its words.
+- **How tall a text object's lettering is** (M14.7). The recommendation, taken, is 0.7 of the font size,
+  about the capitals' height in most typefaces
+  ([text objects in automatic digitizing](#text-objects-in-automatic-digitizing)). Small letters then come
+  out a little taller than the drawing's, since an embroidery font's small letters are tall for its
+  capitals. The other choice sets the whole font size as the letters' height, which sews every text about
+  4 tenths larger than it is drawn.
+- **Lettering longer than the drawn line** (M14.7): decided on 2026-11-16. A line is fitted to the length
+  its text most likely had, a stated length or half the font size for each character
+  ([text objects in automatic digitizing](#text-objects-in-automatic-digitizing)). Sewing every line at
+  its full height, with its length in the note, was the other choice, and it sewed the badge's title over a
+  badge's border. The estimate sews some lines smaller than they need be. M15.13 reads the real widths.
+- **No setting turns text off in automatic digitizing** (M14.7). The recommendation, taken, is none: hiding
+  the text in the drawing leaves it out. An `auto_text` setting is the other choice.
 - **When M15 comes.** The roadmap places it after M14 and before M11 and 1.0. M15.1 and M15.2 can go ahead
   beside M14. Moving M15 after 1.0 brings 1.0 sooner.
 - **Which ported fonts are written.** Text in any installed font can be sewn as a design, as Wilcom and Hatch

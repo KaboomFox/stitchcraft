@@ -79,6 +79,7 @@ use crate::inkstitch::{
     self, Does, Global, Helper, IGNORE_OBJECT, INKSCAPE_NS, INKSTITCH_NS, Objects, Place, READ_ATTRIBUTES, STOP_AFTER, STROKE_FIRST, TRIM_AFTER,
     place,
 };
+use crate::lettering::objects::Waiting;
 use crate::path::{self, Seg, Sub};
 use crate::settings;
 use crate::sheet::{self, Sheet};
@@ -92,6 +93,7 @@ mod clone;
 mod gradient;
 mod guides;
 pub(crate) mod root;
+mod typed;
 
 use clip::Link;
 use clone::{Applied, Frame};
@@ -122,6 +124,10 @@ pub struct Svg {
     pub design: Design,
     /// What was left out or simplified, in document order.
     pub warnings: Vec<Diagnostic>,
+    /// With `auto`, the `<text>` elements a viewer shows, each with its place in the stitching order: a
+    /// host with embroidery fonts sews them as lettering ([`crate::lettering::objects::lettered`],
+    /// `REQ-SVG-017`). The reader has no fonts. Without `auto` there are none, and each is a warning.
+    pub texts: Vec<Waiting>,
 }
 
 /// The design in the SVG file `bytes`, read within `budget`. Fails with `SC-E0801` when the file cannot
@@ -148,8 +154,8 @@ pub(crate) fn read_text(text: &str, budget: &Budget, meter: &mut Meter, reading:
     reader.meter = meter.clone();
     let read = reader.read(&doc);
     *meter = reader.meter;
-    let Svg { design, warnings } = read?;
-    Ok(Svg { design: design.read_as(reading), warnings })
+    let Svg { design, warnings, texts } = read?;
+    Ok(Svg { design: design.read_as(reading), warnings, texts })
 }
 
 /// The XML tree of the SVG text `text`, within the reader's node limit. A DTD (`<!DOCTYPE svg PUBLIC …>`,
@@ -183,9 +189,15 @@ enum Kind {
     /// A `<use>`: a command's symbol, or a clone of what it names.
     Use,
     Shape(Geometry),
+    /// A `<text>` element: lettering under automatic digitizing (`typed`), and not stitched without it.
+    Text,
     /// Drawn by a viewer but not stitched: what it is, and how to make it stitchable.
     Unsupported(&'static str, Option<&'static str>),
 }
+
+/// What is said of text that is not stitched, and how to make it stitchable.
+const IS_TEXT: &str = "is text, which is not stitched";
+const TEXT_TO_PATHS: &str = "Convert the text to paths first (in Inkscape: Path › Object to Path).";
 
 /// The basic shapes and paths.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -211,9 +223,8 @@ impl Kind {
             "line" => Kind::Shape(Geometry::Line),
             "polyline" => Kind::Shape(Geometry::Polyline),
             "polygon" => Kind::Shape(Geometry::Polygon),
-            "text" | "flowRoot" => {
-                Kind::Unsupported("is text, which is not stitched", Some("Convert the text to paths first (in Inkscape: Path › Object to Path)."))
-            }
+            "text" => Kind::Text,
+            "flowRoot" => Kind::Unsupported(IS_TEXT, Some(TEXT_TO_PATHS)),
             "image" => {
                 Kind::Unsupported("is a raster image, which is not stitched", Some("Trace it into paths first (in Inkscape: Path › Trace Bitmap)."))
             }
@@ -244,6 +255,8 @@ struct Reader<'b, 'a, 'input> {
     /// The map from the root's user units to millimetres, which places Ink/Stitch's commands.
     root: Affine,
     elements: Vec<Element>,
+    /// The text objects automatic digitizing sews as lettering, each with its place among the elements.
+    texts: Vec<Waiting>,
     warnings: Vec<Diagnostic>,
     /// The labels given out.
     claimed: Labels,
@@ -287,6 +300,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             viewport: (0.0, 0.0),
             root: Affine::IDENTITY,
             elements: Vec::new(),
+            texts: Vec::new(),
             warnings: Vec::new(),
             claimed: Labels::default(),
             ids: BTreeMap::new(),
@@ -352,7 +366,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             self.warnings.insert(0, self.diagnostic(Code::SvgInkStitchUpdated, None, message, None));
         }
         let design = Design::new(std::mem::take(&mut self.elements), self.settings.settings)?;
-        Ok(Svg { design, warnings: std::mem::take(&mut self.warnings) })
+        Ok(Svg { design, warnings: std::mem::take(&mut self.warnings), texts: std::mem::take(&mut self.texts) })
     }
 
     /// Draws `nodes` in document order, the elements under the one `top` names, which are drawn in `context`:
@@ -589,6 +603,16 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                     effects(self, &label);
                     let label = self.claim(label, tag, n)?;
                     self.shape(node, geometry, &label, (map, clipped, group), (&style, &declared), &commands)?;
+                }
+                Ok(Context::Hidden)
+            }
+            Kind::Text => {
+                if style.shown() && self.auto {
+                    effects(self, &label);
+                    let label = self.claim(label, tag, n)?;
+                    self.text(node, &label, map, &style, clipped)?;
+                } else if style.shown() {
+                    self.note(Some(&label), format!("`{label}` {IS_TEXT}; it is left out."), Some(TEXT_TO_PATHS));
                 }
                 Ok(Context::Hidden)
             }
