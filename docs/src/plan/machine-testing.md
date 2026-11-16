@@ -119,6 +119,15 @@ ends of its range on the PE800, from a copy of Ink/Stitch's font folder:
 - At 3.6 mm, does every letter read, and do the stitches that join the letters on the fabric show?
 - At 15.2 mm, do the satin columns cover, and how long do the jump threads between the letters take to cut?
 
+From M14.3, sew 2 more on the PE800. `stitch lettering "Hello\nWorld" --font small_font --scale 200 -o lines.pes`
+sews its second line back from where the first ended. With `--path arc.svg --scale 300`, `Hello` follows an
+arc drawn in an SVG file.
+
+- Between the 2 lines, is the thread as short as the picture draws it, and does the second line, sewn from
+  the right, look like the first?
+- On the arc, do the letters stand evenly, and do the columns of a turned letter cover as those of an
+  upright one?
+
 MC-8 also sews one of the owner's traced dogs, `docs/fixtures/traced-dog-running-9.vectorcraft`, 100 mm
 tall: `stitch plan docs/fixtures/traced-dog-running-9.vectorcraft --auto -o dog.pes`. Does the fur read as
 fur, the face and the eyes as hers, and do its 83 jump threads, which the PE800 doesn't cut, take long to
