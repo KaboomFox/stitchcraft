@@ -458,6 +458,12 @@ why = "the offsets run from minus the room to plus the room, so taking each away
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/auto/neighbours/under.rs"
+mutant = "delete field width from struct Split expression in split_of"
+line = "let mut split = Split { width, ..Split::default() };"
+why = "the width only says which split a kept one is: without it a shape's split is never found again and is made again from the same shape, the same split, for more work"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/neighbours/under.rs"
 mutant = "replace < with <= in runs_along"
 line = "while at < stretches {"
 why = "at counts 0.5, 1.5 and so on, and stretches is a whole number, so the 2 are never equal and the loop ends at the same place"

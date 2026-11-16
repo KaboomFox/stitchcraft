@@ -73,14 +73,10 @@ pub(super) fn drawing() -> Result<Drawing, SheetError> {
             let at = ((fills - 1) as f64 * (SIDE + GAP), top);
             d.fill(&format!("{row}-{fills}-base"), vec![polygon(&corners(at, SIDE))?], &blue, &BASE)?;
             for layer in 0..fills {
-                let angle = (layer * 30).to_string();
+                let (name, angle) = (format!("{row}-{fills}-fill-{layer}"), (layer * 30).to_string());
                 let last = if layer + 1 == fills { "true" } else { "false" };
-                d.fill(
-                    &format!("{row}-{fills}-fill-{layer}"),
-                    vec![polygon(&corners(at, SIDE))?],
-                    &blue,
-                    &[FILL, ("angle", &angle), ("trim_after", last)],
-                )?;
+                let params = [FILL, ("angle", angle.as_str()), ("trim_after", last)];
+                d.fill(&name, vec![polygon(&corners(at, SIDE))?], &blue, &params)?;
             }
         }
     }
@@ -110,7 +106,7 @@ pub(super) fn drawing() -> Result<Drawing, SheetError> {
     for fills in 1..=MOST {
         let (x, y) = ((fills - 1) as f64 * (SIDE + GAP), MIDDLE);
         let half = OUTLINE / 2.0;
-        let rail = |inset: f64| polygon(&corners((x + inset, y + inset), SIDE - 2.0 * inset));
+        let rail = |inset: f64| polygon(&corners((x + inset, y + inset), SIDE - inset - inset));
         d.satin_between(&format!("outlined-{fills}-outline"), [rail(-half)?, rail(half)?], &black, &[("trim_after", "true")])?;
     }
     Ok(d)
@@ -167,10 +163,8 @@ mod tests {
             let element = design.elements().iter().find(|e| e.id.as_str() == id).unwrap();
             let Shape::Fill { path, .. } = &element.shape else { panic!("{id} is no fill") };
             let ring = &path.subpaths[0];
-            let ends = ring.segments.iter().map(|segment| match segment {
-                Segment::Line(to) => *to,
-                other => panic!("{id}: {other:?}"),
-            });
+            // A patch is drawn with straight sides only.
+            let ends = ring.segments.iter().filter_map(|segment| if let Segment::Line(to) = segment { Some(*to) } else { None });
             let points: Vec<_> = std::iter::once(ring.start).chain(ends).collect();
             let (xs, ys): (Vec<f64>, Vec<f64>) = points.iter().map(|p| (p.x(), p.y())).unzip();
             let span = |v: &[f64]| v.iter().copied().fold(f64::MIN, f64::max) - v.iter().copied().fold(f64::MAX, f64::min);

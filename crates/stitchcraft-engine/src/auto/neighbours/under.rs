@@ -162,24 +162,20 @@ fn hidden(shapes: &mut Shapes, index: usize, budget: &Budget) -> Option<Diagnost
 fn covered_whole(shapes: &mut Shapes, index: usize, meter: &mut Meter) -> Result<bool, Failed> {
     let Some(part) = shapes.paint(index).map(|(_, parts)| parts.to_vec()) else { return Ok(false) };
     let Some(bounds) = envelope(&part) else { return Ok(false) };
-    let (covering, _) = later(shapes, index, &bounds, false, meter)?;
+    let covering = later(shapes, index, &bounds, meter)?;
     Ok(!covering.is_empty() && no_area(area_of(&uncovered(&part, &covering, meter)?)))
 }
 
-/// The areas and the parts' lines and columns sewn after element `index` of `shapes` that come within
-/// [`TOUCHING`] of `bounds`, what they paint, and when `grown`, every area, column and part's line or column
-/// that does, grown to meet it, with `meter`'s work: a unit for each shape looked at, and the work of growing
-/// those near. A part's line or column covers no element of its own shape: each column of a part paints the
-/// whole part, and the fill of the area's broad parts only meets it.
-fn later(shapes: &mut Shapes, index: usize, bounds: &Envelope, grown: bool, meter: &mut Meter) -> Result<(Vec<Polygon>, Vec<Polygon>), Failed> {
-    let (mut covering, mut touching) = (Vec::new(), Vec::new());
+/// What the areas and the parts' lines and columns sewn after element `index` of `shapes` that come within
+/// [`TOUCHING`] of `bounds` paint, with `meter`'s work: a unit for each shape looked at. A part's line or
+/// column covers no element of its own shape: each column of a part paints the whole part, and the fill of
+/// the area's broad parts only meets it.
+fn later(shapes: &mut Shapes, index: usize, bounds: &Envelope, meter: &mut Meter) -> Result<Vec<Polygon>, Failed> {
+    let mut covering = Vec::new();
     for later in near_later(shapes, index, bounds, meter)? {
         covering.extend_from_slice(covers(shapes, index, later));
-        if grown {
-            touching.extend(shapes.grown(later, meter)?.into_iter().flatten());
-        }
     }
-    Ok((covering, touching))
+    Ok(covering)
 }
 
 /// The shapes sewn after element `index` of `shapes` that come within [`TOUCHING`] of `bounds`, but the
@@ -234,18 +230,19 @@ fn split_of(shapes: &mut Shapes, later: usize, width: f64, found: &mut [Option<S
         return Ok(Some(known.clone()));
     }
     let Some(grown) = shapes.grown(later, meter)? else { return Ok(None) };
-    let split = match shapes.kind(later) {
-        Some(Kind::Part) if !shapes.satin(later) => Split { width, lines: grown, ..Split::default() },
-        Some(Kind::Column | Kind::Part) => Split { width, open: grown, ..Split::default() },
+    // The width is what a split found once is found again by: without it the split is made again, the same.
+    let mut split = Split { width, ..Split::default() };
+    match shapes.kind(later) {
+        Some(Kind::Part) if !shapes.satin(later) => split.lines = grown,
+        Some(Kind::Column | Kind::Part) => split.open = grown,
         _ => {
             // Grown, the shape is wider by [`TOUCHING`] on each side.
             let half = width / 2.0 + TOUCHING;
             let core = joined(buffered(&grown, -half, meter))?;
-            let wide = joined(intersection(&joined(buffered(&core, half, meter))?, &grown, meter))?;
-            let narrow = joined(difference(&grown, &wide, meter))?;
-            Split { width, wide, narrow, ..Split::default() }
+            split.wide = joined(intersection(&joined(buffered(&core, half, meter))?, &grown, meter))?;
+            split.narrow = joined(difference(&grown, &split.wide, meter))?;
         }
-    };
+    }
     if let Some(slot) = found.get_mut(later) {
         *slot = Some(split.clone());
     }
@@ -288,7 +285,7 @@ impl Reach {
     /// squeezed along the rows until the ellipse is a circle, the parts are grown by its radius there, and
     /// the plane is stretched back.
     fn grown(self, parts: &[Polygon], meter: &mut Meter) -> Result<Vec<Polygon>, Failed> {
-        if self.across >= self.along || parts.is_empty() {
+        if self.across >= self.along {
             return joined(buffered(parts, self.along, meter));
         }
         // No reach across the rows would squeeze the plane flat: a hundredth of a millimetre is the least.
@@ -474,13 +471,21 @@ fn beside(shapes: &mut Shapes, index: usize, reach: Reach, split: &mut [Option<S
     // such shape, and neither is the part itself where a column sews along it too: the area would reach
     // across the part and then as far again. So the shapes are taken without the part, and grown to meet it
     // again.
-    let across = joined(intersection(&joined(buffered(&contact, reach.along, meter))?, &lines, meter))?;
-    let outside = joined(buffered(&joined(difference(&covers, &lines, meter))?, 2.0 * TOUCHING, meter))?;
-    let beyond = joined(intersection(&across, &outside, meter))?;
+    //
+    // Growing a region is most of an area's work here, and a design of many areas does it for each. So
+    // nothing is grown to meet shapes that aren't there: an area with no line's part beside it goes across
+    // none, and one with no wide part, narrow part or column beside it reaches under none of that kind.
+    let across = if lines.is_empty() { Vec::new() } else { joined(intersection(&joined(buffered(&contact, reach.along, meter))?, &lines, meter))? };
+    let beyond = if across.is_empty() {
+        Vec::new()
+    } else {
+        let outside = joined(buffered(&joined(difference(&covers, &lines, meter))?, 2.0 * TOUCHING, meter))?;
+        joined(intersection(&across, &outside, meter))?
+    };
     let from = if beyond.is_empty() { contact } else { joined(union([contact.as_slice(), beyond.as_slice()], meter))? };
-    let under_wide = joined(intersection(&reach.grown(&from, meter)?, &wide, meter))?;
-    let under_narrow = joined(intersection(&reach.narrow().grown(&from, meter)?, &narrow, meter))?;
-    let under_open = joined(intersection(&joined(buffered(&from, reach.along, meter))?, &open, meter))?;
+    let under_wide = if wide.is_empty() { Vec::new() } else { joined(intersection(&reach.grown(&from, meter)?, &wide, meter))? };
+    let under_narrow = if narrow.is_empty() { Vec::new() } else { joined(intersection(&reach.narrow().grown(&from, meter)?, &narrow, meter))? };
+    let under_open = if open.is_empty() { Vec::new() } else { joined(intersection(&joined(buffered(&from, reach.along, meter))?, &open, meter))? };
     let reached = joined(union([across.as_slice(), under_wide.as_slice(), under_narrow.as_slice(), under_open.as_slice()], meter))?;
     let under = joined(difference(&joined(difference(&reached, &area, meter))?, &cut_zone, meter))?;
     let parts =
