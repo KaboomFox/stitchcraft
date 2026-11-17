@@ -563,6 +563,35 @@ fn req_auto_074_the_hottest_spot_of_a_stitch_is_the_most_of_the_spots_it_lays_th
 }
 
 #[test]
+fn req_auto_074_the_hottest_spot_of_a_stitch_is_a_corner_of_its_cell() {
+    // A short stitch sewn 100 times in the middle of a cell, 4 mm along and 2 mm up from the first needle
+    // point, and another in the cell below it: the corners the 2 cells share are the thickest spots, and the
+    // hottest of the upper stitch, which lays thread in its cell's 4 corners.
+    let upper = knot_at((4.2, 2.25), (4.3, 2.25));
+    let lower = knot_at((4.2, 2.75), (4.3, 2.75));
+    let points: Vec<(f64, f64)> = [vec![(0.0, 0.0)], upper, lower, vec![(10.0, 10.0)]].concat();
+    let thickness = measured(&plan(&[("a", Role::Top, &points)]));
+    let most = thickness.most(Measure::Fills);
+    assert!(most.value > 5.0 && near(most.at.y(), 2.5), "{most:?}");
+    let through = placed(&thickness, stitch((4.2, 2.25), (4.3, 2.25)));
+    assert!(near(thickness.hottest(&through, &mut meter()).unwrap(), most.value));
+}
+
+/// A stitch from `a` to `b` sewn back and forth 100 times.
+fn knot_at(a: (f64, f64), b: (f64, f64)) -> Vec<(f64, f64)> {
+    (0..=100).map(|k| if k % 2 == 0 { a } else { b }).collect()
+}
+
+#[test]
+fn req_auto_074_stitches_measured_alone_lie_from_their_first_needle_point() {
+    let sewn = [stitch((1.5, 2.5), (3.0, 4.5)), stitch((3.0, 4.5), (1.0, 4.0))];
+    let thickness = Thickness::of_stitches(&sewn, &mut meter()).unwrap().unwrap();
+    let kept: Vec<[(f64, f64); 2]> = thickness.sewn().iter().map(|s| [(s.from.x(), s.from.y()), (s.to.x(), s.to.y())]).collect();
+    assert_eq!(kept, [[(0.0, 0.0), (1.5, 2.0)], [(1.5, 2.0), (-0.5, 1.5)]]);
+    assert_eq!(thickness.point(p(0.0, 0.0)), p(1.5, 2.5));
+}
+
+#[test]
 fn req_auto_074_a_zone_is_the_cells_within_reach_of_a_spot_over_its_limit() {
     let thickness = measured(&knot());
     let Spot { value, at } = thickness.most(Measure::Fills);

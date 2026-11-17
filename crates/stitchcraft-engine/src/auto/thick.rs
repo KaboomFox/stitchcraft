@@ -251,6 +251,36 @@ mod tests {
         }
     }
 
+    #[test]
+    fn req_auto_074_a_pass_that_takes_nothing_says_nothing_and_one_out_of_work_says_so() {
+        let held = Held { limits: Limits::DEFAULT, overlap: 1.0 };
+        let profile = stitchcraft_plan::profiles::REFERENCE;
+        // 5 squares of rows of no shape, which no shape hides: the pass looks and takes nothing, and only
+        // SC-W0913 is said.
+        let sewn = plan(0, 5);
+        let mut kept = sewn.clone();
+        let codes = |said: &[Diagnostic]| said.iter().map(|said| said.code).collect::<Vec<_>>();
+        assert_eq!(codes(&finished(&mut kept, &held, &[], profile, &Budget::DEFAULT)), [Code::AutoThick]);
+        assert_eq!(kept, sewn);
+        // With the work to measure it and not to thin it, the plan stays as it is, and SC-I1119 says so.
+        let used = |work: &dyn Fn(&mut Meter) -> bool| {
+            let mut meter = Budget::DEFAULT.meter();
+            assert!(work(&mut meter));
+            Budget::DEFAULT.max_work - meter.work_left()
+        };
+        let measure = used(&|meter| Thickness::of(&sewn, meter).is_ok());
+        let thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        let base = BTreeSet::new();
+        let rules = thin::Rules { base: &base, overlap: 1.0, shortest: 0.3, longest: 12.1 };
+        let pass = used(&|meter| thin::thinned(&mut sewn.clone(), &mut thickness.clone(), &rules, meter).is_ok());
+        assert!(pass > measure, "{pass} {measure}");
+        let budget = Budget { max_work: measure, ..Budget::DEFAULT };
+        let mut kept = sewn.clone();
+        let said = finished(&mut kept, &held, &[], profile, &budget);
+        assert_eq!(said.first().map(|said| (said.code, said.message.as_str())), Some((Code::AutoThinned, NOT_THINNED)), "{said:?}");
+        assert_eq!(kept, sewn);
+    }
+
     /// A plan of one stitch 600 mm long and another across it.
     fn wide() -> StitchPlan {
         let mut builder = PlanBuilder::new(Thread::new(Rgb::new(0, 0, 0)));

@@ -219,3 +219,68 @@ fn req_auto_074_the_pass_stops_when_the_work_runs_out() {
         assert!((0..enough).all(|work| !run(work)), "{enough}");
     }
 }
+
+#[test]
+fn req_auto_074_a_way_back_a_lane_off_goes_and_one_further_off_stays() {
+    // The way comes back 0.1 mm from where it was 2 needle points before, a lane: it went out and back.
+    let way = |back: f64| plan(&[thick(), ("way", Role::Top, vec![(0.1, -3.0)]), ("way", Role::Travel, vec![(0.1, 0.4), (back, -3.0), (3.0, -3.0)])]);
+    assert_eq!(thin(&mut way(0.2), &rules(NONE)).0.unwrap().times, [1, 0, 0, 0]);
+    assert_eq!(thin(&mut way(0.3), &rules(NONE)).0.unwrap().times, [0; 4]);
+}
+
+#[test]
+fn req_auto_074_rows_of_2_shapes_in_turn_keep_their_ends() {
+    // The rows of the seam, every other one another shape's in the same role: a turn between 2 shapes is
+    // no row's end.
+    let points = rows(0.0, 6.0, 13, 0.25);
+    let mut parts: Vec<Part> = points.chunks(3).enumerate().map(|(k, row)| (if k % 2 == 0 { "a" } else { "b" }, Role::Top, row.to_vec())).collect();
+    parts.push(("over", Role::Top, columns(4.0, 4.0)));
+    parts.push(("thick", Role::Underlay, knot((5.0, 1.5), (6.0, 1.5), 16)));
+    let mut sewn = plan(&parts);
+    assert_eq!(thin(&mut sewn, &rules(NONE)).0.unwrap().times, [0; 4]);
+}
+
+#[test]
+fn req_auto_074_a_row_s_end_moves_by_what_its_last_stitch_leaves_of_the_shortest_and_no_less_than_a_step() {
+    // Rows whose last stitch to the right is 1.5 mm and whose next row's first is 3 mm: with a shortest
+    // stitch of 0.9 mm, the end moves back by 0.6 mm, what the shorter leaves.
+    let mut points = Vec::new();
+    for row in 0..13 {
+        let y = f64::from(row) * 0.25;
+        points.extend(if row % 2 == 0 { [(0.0, y), (4.5, y), (6.0, y)] } else { [(6.0, y), (3.0, y), (0.0, y)] });
+    }
+    let sewn = || {
+        plan(&[
+            ("under", Role::Top, points.clone()),
+            ("over", Role::Top, columns(4.0, 4.0)),
+            ("thick", Role::Underlay, knot((5.0, 1.5), (6.0, 1.5), 16)),
+        ])
+    };
+    let mut moved = sewn();
+    thin(&mut moved, &Rules { shortest: 0.9, ..rules(NONE) });
+    let ends = right_ends(&moved, Role::Top);
+    assert!(ends.iter().any(|x| (x - 5.4).abs() < 1e-9) && ends.iter().all(|x| (x - 5.4).abs() < 1e-9 || *x == 6.0), "{ends:?}");
+    // A move shorter than a step of the grid, 0.03 mm, is not made, and not counted.
+    let mut kept = seam(Role::Top, 0.25, true);
+    assert_eq!(thin(&mut kept, &Rules { shortest: 2.97, ..rules(NONE) }).0.unwrap().times, [0; 4]);
+}
+
+#[test]
+fn a_run_ends_at_its_block_s_first_entry_and_a_jump_and_a_top_stitch_after_a_jump_covers_nothing() {
+    let mut sewn = plan(&[thick(), ("over", Role::Top, vec![(0.5, 3.0), (0.5, 6.0)])]);
+    let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let rules = rules(NONE);
+    let pass = Pass { plan: &mut sewn, thickness: &mut thickness, rules: &rules, gone: BTreeSet::new(), taken: [0.0; 4], times: [0; 4] };
+    let mut meter = Budget::DEFAULT.meter();
+    // Entry 0 is the jump to the first stitch, entry 1 that stitch: nothing is before them.
+    assert_eq!(pass.beside((0, 0), false, &mut meter).unwrap(), None);
+    assert_eq!(pass.beside((0, 1), false, &mut meter).unwrap(), None);
+    assert_eq!(pass.beside((0, 1), true, &mut meter).unwrap(), Some(2));
+    // The top stitch after the jump to `over` lays no thread of its own.
+    let over = pass.plan.blocks[0].stitches.iter().position(|stitch| stitch.at == p(0.5, 3.0) && stitch.kind == StitchKind::Normal).unwrap();
+    let mut cover = pass.thickness.blank();
+    pass.covering(&mut cover, &[(0, over)], &mut meter).unwrap();
+    assert_eq!(cover.most(Measure::Fills).value, 0.0);
+    pass.covering(&mut cover, &[(0, over + 1)], &mut meter).unwrap();
+    assert!(cover.most(Measure::Fills).value > 0.0);
+}

@@ -339,7 +339,7 @@ After sewing, check:
 
 ## TS-13B — Pictures digitized automatically: letters and lines traced as areas
 
-110.6 × 148.4 mm · 14616 stitches, 64 jumps, 63 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+110.6 × 148.4 mm · 14524 stitches, 63 jumps, 62 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -352,7 +352,7 @@ Threads: Black, Red, Blue, Deep Gold, Black, Red, Blue, Deep Gold, Black, Red, B
 After sewing, check:
 
 - The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left: the word MATCH in block letters 15, 10, 6 and 4 mm tall, top to bottom, each letter traced as an area. Right: 3 windows, top to bottom, whose black lines, traced as areas, are 0.3, 0.6 and 0.9 mm wide. One line runs down each window, and a branch runs across to its right side from it.
-- The bottom half changes thread 12 times and jumps 16 times, the top half 4 and 48 times. A letter filled sews in one piece, and digitized it is columns and lines with jumps between them. How long does each half take?
+- The bottom half changes thread 12 times and jumps 16 times, the top half 4 and 47 times. A letter filled sews in one piece, and digitized it is columns and lines with jumps between them. How long does each half take?
 - Which is the smallest word that reads, on each half?
 - On the top half, the letters from 6 mm tall sew as satin columns between their own edges, and the 4 mm ones as triple runs along their middles. Do the columns' stitches lie square to their strokes, round the C's bend and the A's hole?
 - Where a column ends under another, 0.4 mm longer, as the T's stem does under its bar, does fabric show there, or a ridge? Does a crossbar sewn as a column of its own, as the H's is, read as one stroke with its stems? The M's and the A's feet should end flat along the baseline, and the C's ends round.
@@ -363,7 +363,7 @@ After sewing, check:
 
 ## TS-13C — Pictures digitized automatically: lines, and shapes in parts
 
-111.4 × 107.8 mm · 10362 stitches, 31 jumps, 30 trims, 9 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+111.4 × 107.8 mm · 10350 stitches, 31 jumps, 30 trims, 9 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -407,7 +407,7 @@ After sewing, check:
 
 ## TS-13E — Pictures digitized automatically: a traced button
 
-24.0 × 108.4 mm · 6007 stitches, 10 jumps, 9 trims, 8 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+24.0 × 108.4 mm · 5961 stitches, 10 jumps, 9 trims, 8 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 

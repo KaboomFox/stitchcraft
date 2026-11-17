@@ -215,6 +215,11 @@ impl Pass<'_, '_> {
         Some(SewnStitch { block, index: to, from: start, to: end, role, from_role })
     }
 
+    /// The 3 stitches between the needle points of the entries `at` of `block`, in turn, as they are measured.
+    fn three(&self, block: usize, [a, b, c, d]: [usize; 4]) -> Option<[SewnStitch; 3]> {
+        Some([self.sewn(block, a, b)?, self.sewn(block, b, c)?, self.sewn(block, c, d)?])
+    }
+
     /// Takes `removed` out of the measure and puts `added` in, unless that would make a spot that `added`
     /// lays thread in thicker than both the cap and what it was: then the measure stays as it was, and
     /// `false` is returned.
@@ -274,10 +279,7 @@ impl Pass<'_, '_> {
             let Some(before) = self.beside((block, here), false, meter)? else { continue };
             let Some(back) = self.beside((block, here), true, meter)? else { continue };
             let Some(on) = self.beside((block, back), true, meter)? else { continue };
-            let (Some(out), Some(turn), Some(next)) = (self.sewn(block, before, here), self.sewn(block, here, back), self.sewn(block, back, on))
-            else {
-                continue;
-            };
+            let Some([out, turn, next]) = self.three(block, [before, here, back, on]) else { continue };
             let same = self.stitch((block, back)).is_some_and(|(_, other, _)| other == role);
             if !same || out.from.distance(turn.to) > BACK || (kind == Kind::Locks && self.locks((block, here), meter)? < 4) {
                 continue;
@@ -372,9 +374,7 @@ impl Pass<'_, '_> {
         let Some(start) = self.beside((block, at), true, meter)? else { return Ok(()) };
         let Some(to) = self.beside((block, start), true, meter)? else { return Ok(()) };
         let same = [from, start, to].iter().all(|&entry| self.stitch((block, entry)).is_some_and(|(_, r, e)| r == role && e == element));
-        let (Some(row), Some(turn), Some(next)) = (self.sewn(block, from, at), self.sewn(block, at, start), self.sewn(block, start, to)) else {
-            return Ok(());
-        };
+        let Some([row, turn, next]) = self.three(block, [from, at, start, to]) else { return Ok(()) };
         let (into, out) = (row.length(), next.length());
         let opposite = |a: &SewnStitch, b: &SewnStitch| {
             let dot = (a.to.x() - a.from.x()) * (b.to.x() - b.from.x()) + (a.to.y() - a.from.y()) * (b.to.y() - b.from.y());
