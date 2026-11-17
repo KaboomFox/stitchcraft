@@ -3309,6 +3309,15 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-AUTO-076"
+area = "auto"
+level = "L2"
+statement = "An outline round a fill (REQ-AUTO-051) sews through a hidden stretch of its edge (REQ-AUTO-052) that a fill sewn after the area hides in part or whole only when the stretch is 12 mm or shorter. Other hidden stretches are sewn through up to 25 mm, as before. The parts of the edge that show are outlined as before."
+rationale = "The owner chose, on 2026-11-16, that an outline's thread may be left out only where a fill sewn later covers it, so that what shows doesn't change. A stretch sewn through under a later fill runs along the seam where that fill's rows end over the area's overlap, beside the fill's own outline, and the traced dogs' seams are where their thread piles up. Measured on the 4 traced dogs on 2026-11-17, leaving out every such stretch took their area at 3 fills or more down by 12 to 19 % for 3 to 11 jump threads more each, and raised the dog on turf's thickest spot from 4.53 to 5.09, since the last pass could no longer take row ends that the stretch had hidden. Leaving out those longer than 12 mm took the area down by 6 to 12 % for 1 to 3 jump threads more, and the running dogs' thickest spots from 5.15 and 6.00 to 5.07 and 5.89. A short stretch carries little thread and costs a jump all the same."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-AUTO-069"
 area = "auto"
 level = "L2"
