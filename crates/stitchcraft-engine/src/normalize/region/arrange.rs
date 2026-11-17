@@ -16,10 +16,12 @@
 //! smaller, is then worked out exactly, however thin the ring, and sides are decided exactly too
 //! ([`stitchcraft_core::exact::side`]).
 
+use std::cell::OnceCell;
+
 use stitchcraft_core::{Exhausted, Meter, Point};
 
 use super::assemble::Unjoined;
-use super::geom::{Envelope, Location, closed, compare_angle, locate_in_ring};
+use super::geom::{Envelope, Location, closed, closed_of, compare_angle, locate_in_ring};
 use super::snap::{self, Node, TwiceArea};
 
 /// The rings cut where they meet: points, and edges between them.
@@ -35,6 +37,17 @@ pub(crate) struct Arrangement {
     /// For each edge, the rings that run along it from its first point to its second, less those that run
     /// the other way.
     pub(crate) count: Vec<i64>,
+    /// The halves leaving each point in order round it, once found ([`Arrangement::stars`]).
+    star: OnceCell<Star>,
+}
+
+/// The halves leaving each point of an arrangement, side by side in order of the points: those of the point
+/// `p` are `leaving[offsets[p]..offsets[p + 1]]`, counter-clockwise round it from the positive x axis, and
+/// in order of their numbers where 2 leave the same way.
+#[derive(Clone, Debug, Default, PartialEq)]
+struct Star {
+    offsets: Vec<usize>,
+    leaving: Vec<usize>,
 }
 
 /// `rings` (each open or closed, in the direction drawn) cut where they meet, on the grid; `Unjoined`
@@ -66,7 +79,7 @@ pub(crate) fn cut(rings: &[Vec<Point>], meter: &mut Meter) -> Result<Result<Arra
     // point to the next, in the order the paths run.
     let corners: usize = on_grid.iter().map(Vec::len).sum();
     let mut at = if unbent { 0 } else { corners };
-    let mut steps: Vec<(usize, usize)> = Vec::new();
+    let mut steps: Vec<(usize, usize)> = Vec::with_capacity(paths.iter().map(Vec::len).sum());
     for path in &paths {
         meter.charge(u64::try_from(path.len()).unwrap_or(u64::MAX))?;
         let numbers = number.get(at..at + path.len()).unwrap_or_default();
@@ -75,7 +88,7 @@ pub(crate) fn cut(rings: &[Vec<Point>], meter: &mut Meter) -> Result<Result<Arra
     }
     let (edges, count) = edges(&steps, nodes.len());
     let points = nodes.iter().map(|node| node.point()).collect();
-    Ok(Ok(Arrangement { points, nodes, edges, count }))
+    Ok(Ok(Arrangement { points, nodes, edges, count, star: OnceCell::new() }))
 }
 
 /// The edges the paths' `steps` run along, between points numbered below `points`, and for each, the steps
@@ -189,30 +202,42 @@ impl Arrangement {
 
     /// Twice the area of the closed ring through the points numbered in `ring`, exactly.
     pub(crate) fn twice_area(&self, ring: &[usize]) -> TwiceArea {
-        TwiceArea::of(&ring.iter().filter_map(|&i| self.nodes.get(i).copied()).collect::<Vec<_>>())
+        TwiceArea::along(ring.iter().filter_map(|&i| self.nodes.get(i).copied()))
     }
 
     /// For each half edge, the next half edge counter-clockwise round its start, among the halves `keep`
-    /// lets through.
+    /// lets through; a half it keeps out is its own. The faces and the parts each ask for these, with
+    /// different halves kept, and the order round each point is found once for both: the order of the halves
+    /// kept is the order of all of them, with the others left out.
     pub(crate) fn stars(&self, keep: impl Fn(usize) -> bool) -> Vec<usize> {
+        let star = self.star.get_or_init(|| self.star());
+        let mut next: Vec<usize> = (0..2 * self.edges.len()).collect();
+        let mut kept = Vec::new();
+        for span in star.offsets.windows(2) {
+            let &[from, to] = span else { continue };
+            kept.clear();
+            kept.extend(star.leaving.get(from..to).unwrap_or_default().iter().copied().filter(|&h| keep(h)));
+            for (k, &h) in kept.iter().enumerate() {
+                if let (Some(slot), Some(&n)) = (next.get_mut(h), kept.get((k + 1) % kept.len())) {
+                    *slot = n;
+                }
+            }
+        }
+        next
+    }
+
+    /// The halves leaving each point, in order round it ([`Star`]).
+    fn star(&self) -> Star {
         let halves = 2 * self.edges.len();
-        // The halves kept leaving each point, side by side in order of the points, each point's in order.
-        let starts = (0..halves).map(|h| if keep(h) { self.ends(h).map(|(from, _)| from) } else { None });
-        let (offsets, mut leaving) = grouped(starts, self.points.len());
-        let mut next: Vec<usize> = (0..halves).collect();
+        let (offsets, mut leaving) = grouped((0..halves).map(|h| self.ends(h).map(|(from, _)| from)), self.points.len());
         for (point, span) in offsets.windows(2).enumerate() {
             let &[from, to] = span else { continue };
             let Some(star) = leaving.get_mut(from..to) else { continue };
             let origin = self.point(point);
             let toward = |h: usize| self.ends(h).map_or(origin, |(_, to)| self.point(to));
             star.sort_by(|&a, &b| compare_angle(origin, toward(a), toward(b)).then(a.cmp(&b)));
-            for (k, &h) in star.iter().enumerate() {
-                if let (Some(slot), Some(&n)) = (next.get_mut(h), star.get((k + 1) % star.len())) {
-                    *slot = n;
-                }
-            }
         }
-        next
+        Star { offsets, leaving }
     }
 
     /// The faces and their winding numbers. One unit of `meter` per half edge, per point of the rings
@@ -224,26 +249,27 @@ impl Arrangement {
         let next_ccw = self.stars(|_| true);
         // Trace the rings: after each half, the half leaving its end just counter-clockwise of the way back.
         let mut ring_of: Vec<Option<usize>> = vec![None; halves];
-        let mut rings: Vec<Vec<usize>> = Vec::new();
+        // Each ring as the points its halves start at, all of them in one list.
+        let (mut points, mut bounds): (Vec<usize>, Vec<usize>) = (Vec::with_capacity(halves), vec![0]);
         for start in 0..halves {
             if ring_of.get(start).copied().flatten().is_some() {
                 continue;
             }
-            let id = rings.len();
-            let mut ring = Vec::new();
+            let id = bounds.len() - 1;
             let mut half = start;
             while let Some(slot) = ring_of.get_mut(half) {
                 if slot.is_some() {
                     break;
                 }
                 *slot = Some(id);
-                ring.push(half);
+                points.extend(self.ends(half).map(|(from, _)| from));
                 half = next_ccw.get(half ^ 1).copied().unwrap_or(half);
             }
-            rings.push(ring);
+            bounds.push(points.len());
         }
-        let starts: Vec<Vec<usize>> = rings.iter().map(|ring| ring.iter().filter_map(|&h| self.ends(h)).map(|(from, _)| from).collect()).collect();
-        let polylines: Vec<Vec<Point>> = starts.iter().map(|ring| closed(&ring.iter().map(|&i| self.point(i)).collect::<Vec<_>>())).collect();
+        let starts: Vec<&[usize]> =
+            bounds.windows(2).map(|span| span.first().zip(span.get(1)).and_then(|(&from, &to)| points.get(from..to)).unwrap_or_default()).collect();
+        let polylines: Vec<Vec<Point>> = starts.iter().map(|ring| closed_of(ring.iter().map(|&i| self.point(i)), ring.len())).collect();
         let areas: Vec<TwiceArea> = starts.iter().map(|ring| self.twice_area(ring)).collect();
         // Each ring's bounds, once: a ring is compared with every face, and a face with every ring.
         let mut envelopes: Vec<Envelope> = Vec::with_capacity(polylines.len());
@@ -252,7 +278,7 @@ impl Arrangement {
             envelopes.push(Envelope::of(polyline));
         }
         // Clockwise rings bound faces, numbered in order; the others lie in the smallest face around them.
-        let mut face_of_ring: Vec<Option<usize>> = vec![None; rings.len()];
+        let mut face_of_ring: Vec<Option<usize>> = vec![None; starts.len()];
         let mut bounds: Vec<usize> = Vec::new();
         for (r, area) in areas.iter().enumerate() {
             if area.clockwise() {

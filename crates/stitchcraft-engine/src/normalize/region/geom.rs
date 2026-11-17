@@ -22,8 +22,15 @@ pub(crate) enum Location {
 
 /// `ring` with its first point repeated at its end, unless it ends there already.
 pub(crate) fn closed(ring: &[Point]) -> Vec<Point> {
-    let mut out = ring.to_vec();
-    if let (Some(&first), Some(&last)) = (ring.first(), ring.last())
+    closed_of(ring.iter().copied(), ring.len())
+}
+
+/// [`closed`] of the `len` points of `ring`, given one by one: made once at its size, its first point
+/// again at its end when it isn't there.
+pub(crate) fn closed_of(ring: impl Iterator<Item = Point>, len: usize) -> Vec<Point> {
+    let mut out = Vec::with_capacity(len + 1);
+    out.extend(ring);
+    if let (Some(&first), Some(&last)) = (out.first(), out.last())
         && first != last
     {
         out.push(first);

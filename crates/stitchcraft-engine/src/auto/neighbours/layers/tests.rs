@@ -143,22 +143,23 @@ fn an_area_whose_holes_need_more_work_than_its_budget_allows_keeps_them() {
 #[test]
 fn an_area_whose_move_needs_more_work_than_its_budget_allows_keeps_its_place_and_its_holes() {
     // A square drawn after the square that fills its hole, with discs of many points far from both drawn
-    // between them: moving back, it looks at each disc, the most work of any step. With a unit less, it keeps
-    // its place, which is said, and its hole, whose detail sews before it.
+    // between them: moving back, it looks at each disc, the most work of any step once there are many
+    // discs, since each is only found to lie apart. With a unit less, it keeps its place, which is said, and
+    // its hole, whose detail sews before it.
     let mut elements = vec![automatic("detail", &[small()])];
-    elements.extend((0..12_u32).map(|k| automatic(&format!("disc-{k}"), &[circle((100.0 + 10.0 * f64::from(k), 100.0), 3.0, 400)])));
+    elements.extend((0..60_u32).map(|k| automatic(&format!("disc-{k}"), &[circle((100.0 + 10.0 * f64::from(k), 100.0), 3.0, 400)])));
     elements.push(automatic(
         "square",
         &[part(&[(0.0, 0.0), (40.0, 0.0), (40.0, 40.0), (0.0, 40.0)], &[&[(18.0, 18.0), (22.0, 18.0), (22.0, 22.0), (18.0, 22.0)]])],
     ));
     let design = Design::new(elements, DesignSettings::default()).unwrap();
-    assert_eq!(flattened_with(&design, &Budget::DEFAULT).elements.first().map(|(index, _)| *index), Some(13), "moved first");
+    assert_eq!(flattened_with(&design, &Budget::DEFAULT).elements.first().map(|(index, _)| *index), Some(61), "moved first");
     let least = least_work(|budget| flattened_with(&design, budget).said);
     let flat = flattened_with(&design, &Budget { max_work: least - 1, ..Budget::DEFAULT });
     let [said] = flat.said.as_slice() else { panic!("{:?}", flat.said) };
     assert_eq!((said.code, said.element.as_ref().map(ElementId::as_str)), (Code::AutoLayers, Some("square")));
     assert_eq!(said.message, format!("Finding where this area sews needed more than the work budget of {} units, so it keeps its place.", least - 1));
-    assert!(matches!(flat.elements.last(), Some((13, Cow::Borrowed(_)))));
+    assert!(matches!(flat.elements.last(), Some((61, Cow::Borrowed(_)))));
 }
 
 #[test]

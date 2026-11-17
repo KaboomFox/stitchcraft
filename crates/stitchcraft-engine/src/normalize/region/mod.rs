@@ -293,7 +293,7 @@ pub(crate) fn area(rings: &[Vec<Point>], filled: impl Fn(i64) -> bool, meter: &m
     let faces = arrangement.faces(meter)?;
     let inside = |half: usize| faces.right_of.get(half).and_then(|&f| faces.winding.get(f)).is_some_and(|&w| filled(w));
     let kept: Vec<bool> = (0..2 * arrangement.edges.len()).map(|h| inside(h) && !inside(h ^ 1)).collect();
-    let ring = |points: &[usize]| geom::closed(&points.iter().map(|&i| arrangement.point(i)).collect::<Vec<_>>());
+    let ring = |points: &[usize]| geom::closed_of(points.iter().map(|&i| arrangement.point(i)), points.len());
     let parts = assemble::parts(&arrangement, &kept, meter)?.map(|parts| {
         parts.iter().map(|part| Polygon { outline: ring(&part.outline), holes: part.holes.iter().map(|hole| ring(hole)).collect() }).collect()
     });
