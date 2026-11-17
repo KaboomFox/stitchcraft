@@ -5,7 +5,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
-- M13.32: where automatic digitizing spends its work (`REQ-AUTO-083`, `REQ-VC-031`).
+- M13.32: where automatic digitizing spends its work (`REQ-AUTO-083`, `REQ-VC-015`).
   - `cargo xtask perf` counts the instructions `stitch` takes to write each traced dog and the pear with
     the Auto effect, and each TS-13 sheet, records each count in `conformance/perf.toml` and fails a count
     more than 2 % above its record. The job summary splits each count into the stages of automatic

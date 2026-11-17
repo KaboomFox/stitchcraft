@@ -49,6 +49,8 @@ stitchcraft-svg = { workspace = true }
 stitchcraft-vectorcraft = { workspace = true }
 
 [dev-dependencies]
+# The pictures `cargo xtask perf` counts are read from conformance/perf.toml (tests/pictures.rs).
+toml = { workspace = true }
 # The cut-out's tests draw pictures and read the cut-outs back.
 image = { workspace = true }
 stitchcraft-testkit = { workspace = true }

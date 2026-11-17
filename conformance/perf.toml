@@ -20,18 +20,57 @@ budget_ms = 200.0
 # says why.
 instructions = 6690000000
 
-[pictures]
-# The instructions `stitch` takes to write each picture, built with the `profiling` profile and counted by
-# valgrind's callgrind (xtask/src/pictures.rs). More than this plus 2 % fails. `--record` lowers a count
-# and never raises it: raise it by hand, in a pull request that says why.
-dog-on-turf-6 = 26608000000
-dog-on-turf-9 = 30792000000
-dog-running-6 = 28557000000
-dog-running-9 = 33680000000
-pear = 2640000000
-TS-13A = 1982000000
-TS-13B = 1730000000
-TS-13C = 1886000000
-TS-13D = 1539000000
-TS-13E = 1117000000
-TS-13F = 662000000
+# The pictures of automatic digitizing (xtask/src/pictures.rs): `stitch` run with each one's `args` and
+# `-o FILE`, built with the `profiling` profile, writes the `golden` file when it has one. `instructions` is
+# what the run takes, counted by valgrind's callgrind, and more than it plus 2 % fails. `--record` lowers a
+# count and never raises it: raise it by hand, in a pull request that says why.
+
+[pictures.TS-13A]
+args = ["testsheet", "TS-13A"]
+golden = "conformance/golden/testsheets/TS-13A.pes"
+instructions = 1982000000
+
+[pictures.TS-13B]
+args = ["testsheet", "TS-13B"]
+golden = "conformance/golden/testsheets/TS-13B.pes"
+instructions = 1730000000
+
+[pictures.TS-13C]
+args = ["testsheet", "TS-13C"]
+golden = "conformance/golden/testsheets/TS-13C.pes"
+instructions = 1886000000
+
+[pictures.TS-13D]
+args = ["testsheet", "TS-13D"]
+golden = "conformance/golden/testsheets/TS-13D.pes"
+instructions = 1539000000
+
+[pictures.TS-13E]
+args = ["testsheet", "TS-13E"]
+golden = "conformance/golden/testsheets/TS-13E.pes"
+instructions = 1117000000
+
+[pictures.TS-13F]
+args = ["testsheet", "TS-13F"]
+golden = "conformance/golden/testsheets/TS-13F.pes"
+instructions = 662000000
+
+[pictures.dog-on-turf-6]
+args = ["export", "docs/fixtures/traced-dog-on-turf-6.vectorcraft", "--auto"]
+instructions = 26608000000
+
+[pictures.dog-on-turf-9]
+args = ["export", "docs/fixtures/traced-dog-on-turf-9.vectorcraft", "--auto"]
+instructions = 30792000000
+
+[pictures.dog-running-6]
+args = ["export", "docs/fixtures/traced-dog-running-6.vectorcraft", "--auto"]
+instructions = 28557000000
+
+[pictures.dog-running-9]
+args = ["export", "docs/fixtures/traced-dog-running-9.vectorcraft", "--auto"]
+instructions = 33680000000
+
+[pictures.pear]
+args = ["export", "docs/fixtures/traced-pear.vectorcraft", "--auto"]
+instructions = 2640000000

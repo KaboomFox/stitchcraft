@@ -109,7 +109,7 @@ const HEADROOM: f64 = 1.25;
 /// took TS-13D to 99.7 % unseen, and the next step failed for it (M13.31).
 const EXPORT_SHARE: u64 = 85;
 
-/// The most of a light filter's budget that drawing a test sheet may take, in percent (`REQ-VC-031`). Drawing
+/// The most of a light filter's budget that drawing a test sheet may take, in percent (`REQ-VC-015`). Drawing
 /// digitizes nothing, so only a change to a sheet's shapes moves the count, and less room is left than for an
 /// export: TS-13F's drawing took 86 % when M13.32 added the check.
 const DRAW_SHARE: u64 = 90;
@@ -150,7 +150,7 @@ fn req_vc_015_an_export_past_85_percent_of_its_budget_is_named() {
 }
 
 #[test]
-fn req_vc_031_a_drawing_past_90_percent_of_its_budget_is_named() {
+fn req_vc_015_a_drawing_past_90_percent_of_its_budget_is_named() {
     // At 90 % exactly a drawing passes, and one instruction more fails it, by its name and counts.
     assert_eq!(near_draw_budget("TS-13F", 9_000, 10_000), None);
     assert_eq!(near_draw_budget("TS-13F", 0, 10_000), None);

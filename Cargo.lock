@@ -1175,6 +1175,7 @@ dependencies = [
  "stitchcraft-svg",
  "stitchcraft-testkit",
  "stitchcraft-vectorcraft",
+ "toml",
 ]
 
 [[package]]

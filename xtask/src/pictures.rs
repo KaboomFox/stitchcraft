@@ -4,9 +4,11 @@
 //! **Why pictures.** VectorCraft ends an export after about 11 billion instructions, and a traced dog's
 //! export takes several times that. The benchmarks of [`crate::perf`] time one fill and one offset, and
 //! nothing counted the work of a whole picture until the compatibility gate failed a test sheet's export. So
-//! each picture here is `stitch` writing a machine file as VectorCraft's exporter writes it ([`PICTURES`]):
+//! each picture here is `stitch` writing a machine file as VectorCraft's exporter writes it ([`Picture`]):
 //! the 4 traced dogs and the pear with the Auto effect (`--auto`, since the fixtures carry no effect), and
-//! the 6 TS-13 sheets, whose shapes are digitized automatically. TS-13B's word stands for lettering.
+//! the 6 TS-13 sheets, whose shapes are digitized automatically. TS-13B's word stands for lettering. Each
+//! picture's arguments are kept with its record in `conformance/perf.toml`, where `stitch`'s own tests
+//! check that it reads them (`apps/stitchcraft-cli/tests/pictures.rs`).
 //!
 //! **The build.** The `profiling` profile of the root `Cargo.toml`: the release build without link-time
 //! optimization and with line tables. Link-time optimization inlines the stages into each other, and then
@@ -25,43 +27,25 @@
 //! **What sews doesn't change.** Each sheet's file is compared with its golden file, byte for byte, so the
 //! counted build is checked to sew as the tests' build does.
 
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-/// A picture `cargo xtask perf` counts: what `stitch` is given to write its machine file.
+use serde::Deserialize;
+
+/// A picture `cargo xtask perf` counts, its table under `[pictures]` in `conformance/perf.toml`: what
+/// `stitch` is given to write its machine file, and its record.
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct Picture {
-    /// Its name in the record, `conformance/perf.toml`.
-    pub name: &'static str,
     /// `stitch`'s arguments, before `-o FILE`; paths from the repository root.
-    pub args: &'static [&'static str],
+    pub args: Vec<String>,
     /// The golden file the machine file must equal, when the picture has one.
-    pub golden: Option<&'static str>,
+    #[serde(default)]
+    pub golden: Option<String>,
+    /// The instructions the run takes, as recorded.
+    pub instructions: u64,
 }
-
-/// A dog or the pear exported with the Auto effect.
-const fn traced(name: &'static str, args: &'static [&'static str]) -> Picture {
-    Picture { name, args, golden: None }
-}
-
-/// A TS-13 sheet written by `stitch testsheet`, against its golden file.
-const fn sheet(name: &'static str, args: &'static [&'static str], golden: &'static str) -> Picture {
-    Picture { name, args, golden: Some(golden) }
-}
-
-/// The pictures, in the order the record and the report list them.
-pub const PICTURES: [Picture; 11] = [
-    traced("dog-on-turf-6", &["export", "docs/fixtures/traced-dog-on-turf-6.vectorcraft", "--auto"]),
-    traced("dog-on-turf-9", &["export", "docs/fixtures/traced-dog-on-turf-9.vectorcraft", "--auto"]),
-    traced("dog-running-6", &["export", "docs/fixtures/traced-dog-running-6.vectorcraft", "--auto"]),
-    traced("dog-running-9", &["export", "docs/fixtures/traced-dog-running-9.vectorcraft", "--auto"]),
-    traced("pear", &["export", "docs/fixtures/traced-pear.vectorcraft", "--auto"]),
-    sheet("TS-13A", &["testsheet", "TS-13A"], "conformance/golden/testsheets/TS-13A.pes"),
-    sheet("TS-13B", &["testsheet", "TS-13B"], "conformance/golden/testsheets/TS-13B.pes"),
-    sheet("TS-13C", &["testsheet", "TS-13C"], "conformance/golden/testsheets/TS-13C.pes"),
-    sheet("TS-13D", &["testsheet", "TS-13D"], "conformance/golden/testsheets/TS-13D.pes"),
-    sheet("TS-13E", &["testsheet", "TS-13E"], "conformance/golden/testsheets/TS-13E.pes"),
-    sheet("TS-13F", &["testsheet", "TS-13F"], "conformance/golden/testsheets/TS-13F.pes"),
-];
 
 /// Part of a stage: a function as callgrind names it, and, for the code of another file inlined into it,
 /// the end of that file's path. Callgrind counts a function's instructions on the lines of each file apart,
@@ -112,10 +96,7 @@ const fn stage(name: &'static str, parts: &'static [Part]) -> Stage {
 /// The stages, in the order a picture goes through them (`docs/src/design/guardrails.md`). None of their
 /// parts calls another's, but for those in a stage's `within`.
 pub const STAGES: [Stage; 16] = [
-    stage(
-        "reading the shapes",
-        &[whole("<stitchcraft_cli::commands::plan::Source>::read"), whole("<stitchcraft_engine::testsheets::TestSheet>::design")],
-    ),
+    stage("reading the shapes", &[whole("<stitchcraft_cli::commands::plan::Source>::read")]),
     stage("flattening the layers", &[whole("stitchcraft_engine::auto::neighbours::layers::flattened")]),
     stage("the split into parts by the rules", &[whole("stitchcraft_engine::auto::made_by")]),
     stage(SPECKS, &[lines(BESIDE, "auto/neighbours/specks.rs")]),
@@ -157,9 +138,18 @@ pub struct Staged {
 /// `total`'s instructions by stage, from what `callgrind_annotate --inclusive=yes` prints of the run.
 pub fn staged(annotated: &str, total: u64) -> Staged {
     let rows = inclusive(annotated);
+    // A function's rows overlap: the row of its own file has all its work, the code inlined from other
+    // files included, and each other file's row has that file's part. So each function counts its largest
+    // row that a part takes, and the functions of a stage add up.
     let counted = |stage: &Stage| {
-        let rows = rows.iter().filter(|(file, function, _)| stage.parts.iter().any(|part| part.counts(file, function)));
-        rows.map(|(_, _, n)| *n).fold(0, u64::saturating_add)
+        let mut largest: BTreeMap<&str, u64> = BTreeMap::new();
+        for (file, function, n) in &rows {
+            if stage.parts.iter().any(|part| part.counts(file, function)) {
+                let kept = largest.entry(function.as_str()).or_insert(0);
+                *kept = (*kept).max(*n);
+            }
+        }
+        largest.values().copied().fold(0, u64::saturating_add)
     };
     let own: Vec<u64> = STAGES.iter().map(counted).collect();
     let stages: Vec<(&'static str, u64)> = STAGES
@@ -190,9 +180,10 @@ fn is(name: &str, function: &str) -> bool {
     name == function || name.strip_prefix(function).is_some_and(|rest| rest.starts_with("::<") || rest.starts_with("::{"))
 }
 
-/// Each row `callgrind_annotate --inclusive=yes` lists: the file, the function and the instructions of the
-/// function's code on that file's lines, with all it calls. A line of it is the count, its share, then
-/// `file:function`, and the program in brackets.
+/// Each row `callgrind_annotate --inclusive=yes --auto=no` lists: the file, the function and the
+/// instructions of the function's code on that file's lines, with all it calls. A line of it is the count,
+/// its share, then `file:function`, and the program in brackets. A line of a call, `=> file:function`,
+/// is a call's count, which the function's own row has.
 fn inclusive(annotated: &str) -> Vec<(String, String, u64)> {
     annotated
         .lines()
@@ -202,6 +193,9 @@ fn inclusive(annotated: &str) -> Vec<(String, String, u64)> {
             let count: u64 = count.replace(',', "").parse().ok()?;
             let rest = rest.trim_start();
             let rest = rest.strip_prefix('(').and_then(|r| r.split_once(')')).map_or(rest, |(_, after)| after).trim_start();
+            if rest.starts_with("=>") {
+                return None;
+            }
             let rest = rest.split_once(" [").map_or(rest, |(name, _)| name);
             let (file, function) = located(rest);
             Some((file.to_string(), function.to_string(), count))
@@ -246,18 +240,20 @@ mod tests {
     use super::*;
 
     /// What callgrind_annotate prints of a run, cut down: the neighbours' work with the overlaps and an
-    /// outline's inlined lines inside it, a generic instance, a recursive call and a function of no stage.
+    /// outline's inlined lines inside it, a generic instance, a recursive call, a call's line and a
+    /// function of no stage.
     const PRINTED: &str = "\
 --------------------------------------------------------------------------------
 Ir                      file:function
 --------------------------------------------------------------------------------
 1,000,000 (100.0%)  ???:main [/target/profiling/stitch]
-  800,000 (80.0%)  /src/crates/stitchcraft-engine/src/auto/neighbours/mod.rs:stitchcraft_engine::auto::neighbours::beside [/t/stitch]
+  900,000 (90.0%)  /src/crates/stitchcraft-engine/src/auto/neighbours/mod.rs:stitchcraft_engine::auto::neighbours::beside [/t/stitch]
   100,000 (10.0%)  /src/crates/stitchcraft-engine/src/auto/neighbours/outline.rs:stitchcraft_engine::auto::neighbours::beside [/t/stitch]
   700,000 (70.0%)  /src/x.rs:stitchcraft_engine::auto::neighbours::under::reached [/t/stitch]
   500,000 (50.0%)  /src/x.rs:stitchcraft_engine::auto::neighbours::under::reached'2 [/t/stitch]
    20,000 ( 2.0%)  /src/crates/stitchcraft-engine/src/auto/neighbours/outline.rs:stitchcraft_engine::auto::sewing [/t/stitch]
    60,000 ( 6.0%)  ???:<stitchcraft_engine::generate::FillMethod>::sew [/t/stitch]
+   60,000 ( 6.0%)  => ???:<stitchcraft_engine::generate::FillMethod>::sew (1x)
    40,000 ( 4.0%)  ???:stitchcraft_formats::pes::encode::<alloc::vec::Vec<u8>> [/t/stitch]
    30,000 ( 3.0%)  ???:stitchcraft_formats::pes::encoded [/t/stitch]
 ";
@@ -270,8 +266,10 @@ Ir                      file:function
         // the neighbours' work, and not those inlined elsewhere.
         assert_eq!(of(OVERLAPS), 700_000);
         assert_eq!(of(OUTLINE), 100_000);
-        // The neighbours' own work is theirs, on every file's lines, less the stages within it.
-        assert_eq!(of("the rest of the neighbours' work"), 800_000 + 100_000 - 700_000 - 100_000);
+        // The neighbours' own work is the row of their own file, which has the outline's lines too, less the
+        // stages within it.
+        assert_eq!(of("the rest of the neighbours' work"), 900_000 - 700_000 - 100_000);
+        // A call's line doesn't count again.
         assert_eq!(of("the stitches of each fill"), 60_000);
         // A generic instance counts, and a function whose name only starts like it doesn't.
         assert_eq!(of("the machine file"), 40_000);
@@ -322,13 +320,7 @@ Ir                      file:function
     }
 
     #[test]
-    fn each_picture_s_files_are_in_the_repository() {
-        let root = crate::util::root();
-        for picture in &PICTURES {
-            for path in picture.args.iter().filter(|arg| arg.contains('/')).chain(picture.golden.iter()) {
-                assert!(root.join(path).is_file(), "{}: {path}", picture.name);
-            }
-        }
+    fn the_profiling_build_is_where_cargo_puts_it() {
         assert_eq!(binary(Path::new("/t")), Path::new(&format!("/t/profiling/stitch{}", std::env::consts::EXE_SUFFIX)));
     }
 }

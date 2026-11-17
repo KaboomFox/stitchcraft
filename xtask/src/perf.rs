@@ -39,7 +39,7 @@ use std::process::Command;
 
 use serde::Deserialize;
 
-use crate::pictures;
+use crate::pictures::{self, Picture};
 use crate::util::{self, Findings};
 
 const RECORD: &str = "conformance/perf.toml";
@@ -97,9 +97,9 @@ impl Bench {
 /// `conformance/perf.toml`: each benchmark's table, by its name, and each picture's count.
 #[derive(Debug, Deserialize, PartialEq)]
 struct Records {
-    /// The pictures' records ([`crate::pictures::PICTURES`]), by name.
+    /// The pictures and their records, by name.
     #[serde(default)]
-    pictures: BTreeMap<String, u64>,
+    pictures: BTreeMap<String, Picture>,
     /// The benchmarks' tables, by name.
     #[serde(flatten)]
     benches: BTreeMap<String, Record>,
@@ -236,32 +236,37 @@ struct Counted<'a> {
 }
 
 impl Counted<'_> {
-    /// Counts each picture with callgrind, by stage when `callgrind_annotate` is installed, against its
-    /// record in `kept`, and checks a sheet's file against its golden file.
-    fn pictures(&mut self, target: &Path, kept: &mut BTreeMap<String, u64>) -> Result<(), String> {
+    /// Counts each picture of `kept` with callgrind, by stage when `callgrind_annotate` is installed, against
+    /// its record, and checks a sheet's file against its golden file.
+    fn pictures(&mut self, target: &Path, kept: &mut BTreeMap<String, Picture>) -> Result<(), String> {
         let stitch = pictures::binary(target);
         let folder = target.join("perf");
         std::fs::create_dir_all(&folder).map_err(|e| format!("{}: {e}", folder.display()))?;
         // callgrind_annotate prints its version and exits with 255, so it is found by starting it.
         let annotating = Command::new("callgrind_annotate").arg("--version").output().is_ok();
         let mut seen = vec![false; pictures::STAGES.len()];
-        for picture in &pictures::PICTURES {
-            let written = folder.join(format!("{}.pes", picture.name));
+        if kept.is_empty() {
+            self.findings.error(format!("{RECORD} has no pictures"));
+        }
+        for (name, picture) in kept.iter_mut() {
+            let written = folder.join(format!("{name}.pes"));
+            // The time is for the report alone, and no result depends on it.
+            #[allow(clippy::disallowed_types)]
             let started = std::time::Instant::now();
-            output(Command::new(&stitch).args(picture.args).arg("-o").arg(&written), picture.name)?;
+            output(Command::new(&stitch).args(&picture.args).arg("-o").arg(&written), name)?;
             let seconds = started.elapsed().as_secs_f64();
-            if let Some(golden) = picture.golden {
-                if util::read_bytes(&written)? != util::read_bytes(&util::root().join(golden))? {
-                    self.findings.error(format!("the profiling build's {} is not {golden}: it sews otherwise than the tests' build", picture.name));
-                }
+            if let Some(golden) = &picture.golden
+                && util::read_bytes(&written)? != util::read_bytes(&util::root().join(golden))?
+            {
+                self.findings.error(format!("the profiling build's {name} is not {golden}: it sews otherwise than the tests' build"));
             }
-            let profile = folder.join(format!("{}.callgrind", picture.name));
+            let profile = folder.join(format!("{name}.callgrind"));
             let mut callgrind = Command::new("valgrind");
             callgrind
                 .arg("--tool=callgrind")
                 .arg(format!("--callgrind-out-file={}", profile.display()))
                 .arg(&stitch)
-                .args(picture.args)
+                .args(&picture.args)
                 .arg("-o")
                 .arg(&written);
             let counted = errors_of(&mut callgrind, "valgrind --tool=callgrind")?;
@@ -269,21 +274,18 @@ impl Counted<'_> {
             // Instruction counts are far below 2^53, so the conversion is exact.
             #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
             let instructions = instructions as u64;
-            let Some(record) = kept.get_mut(picture.name) else {
-                self.findings.error(format!("{RECORD} has no record for the picture `{}` in its `[pictures]` table", picture.name));
-                continue;
-            };
+            let record = picture.instructions;
             self.report
                 .push(format!("`stitch {}` takes {instructions} instructions and {seconds:.2} s; the record is {record}", picture.args.join(" ")));
-            self.judge(picture.name, record, instructions);
+            self.judge(name, &mut picture.instructions, instructions);
             if annotating {
                 let mut annotate = Command::new("callgrind_annotate");
-                annotate.args(["--inclusive=yes", "--threshold=100"]).arg(&profile);
+                annotate.args(["--inclusive=yes", "--threshold=100", "--auto=no"]).arg(&profile);
                 let staged = pictures::staged(&output(&mut annotate, "callgrind_annotate")?, instructions);
                 for (seen, (_, n)) in seen.iter_mut().zip(&staged.stages) {
                     *seen |= *n > 0;
                 }
-                self.tables.push(pictures::table(picture.name, &staged, instructions));
+                self.tables.push(pictures::table(name, &staged, instructions));
             }
         }
         for (stage, _) in pictures::STAGES.iter().zip(&seen).filter(|(_, seen)| !**seen).filter(|_| annotating) {
@@ -346,8 +348,8 @@ fn judged(kept: u64, instructions: u64, record: bool) -> Judged {
     }
 }
 
-/// `conformance/perf.toml` with `records` in it, each benchmark's table in the order of [`BENCHES`], then the
-/// pictures' in the order of [`pictures::PICTURES`].
+/// `conformance/perf.toml` with `records` in it, each benchmark's table in the order of [`BENCHES`], then each
+/// picture's, by name.
 fn render(records: &Records) -> String {
     let mut out = String::from(
         "# The performance budget (`cargo xtask perf`, docs/src/design/guardrails.md): planning the reference hoop's\n\
@@ -371,15 +373,19 @@ fn render(records: &Records) -> String {
         ));
     }
     out.push_str(
-        "\n[pictures]\n\
-         # The instructions `stitch` takes to write each picture, built with the `profiling` profile and counted by\n\
-         # valgrind's callgrind (xtask/src/pictures.rs). More than this plus 2 % fails. `--record` lowers a count\n\
-         # and never raises it: raise it by hand, in a pull request that says why.\n",
+        "\n# The pictures of automatic digitizing (xtask/src/pictures.rs): `stitch` run with each one's `args` and\n\
+         # `-o FILE`, built with the `profiling` profile, writes the `golden` file when it has one. `instructions` is\n\
+         # what the run takes, counted by valgrind's callgrind, and more than it plus 2 % fails. `--record` lowers a\n\
+         # count and never raises it: raise it by hand, in a pull request that says why.\n",
     );
-    for picture in &pictures::PICTURES {
-        if let Some(kept) = records.pictures.get(picture.name) {
-            out.push_str(&format!("{} = {kept}\n", toml_key(picture.name)));
+    for (name, picture) in &records.pictures {
+        out.push_str(&format!("\n[pictures.{}]\n", toml_key(name)));
+        let args: Vec<String> = picture.args.iter().map(|arg| format!("{arg:?}")).collect();
+        out.push_str(&format!("args = [{}]\n", args.join(", ")));
+        if let Some(golden) = &picture.golden {
+            out.push_str(&format!("golden = {golden:?}\n"));
         }
+        out.push_str(&format!("instructions = {}\n", picture.instructions));
     }
     out
 }
@@ -491,7 +497,9 @@ mod tests {
     #[test]
     fn the_record_reads_back_as_it_is_written() {
         let benches = BENCHES.iter().map(|bench| (bench.name.to_string(), Record { budget_ms: 50.0, instructions: KEPT })).collect();
-        let records = Records { benches, pictures: pictures::PICTURES.iter().map(|picture| (picture.name.to_string(), KEPT)).collect() };
+        let sheet = Picture { args: vec!["testsheet".into(), "TS-13A".into()], golden: Some("g/TS-13A.pes".into()), instructions: KEPT };
+        let dog = Picture { args: vec!["export".into(), "a dog.vectorcraft".into(), "--auto".into()], golden: None, instructions: 1 };
+        let records = Records { benches, pictures: [("TS-13A".to_string(), sheet), ("a dog".to_string(), dog)].into() };
         assert_eq!(toml::from_str::<Records>(&render(&records)).unwrap(), records);
         // The committed file is as recording writes it, so that recording changes only the numbers, and it
         // has a table for each benchmark. Git can check it out with Windows line endings.
@@ -503,10 +511,11 @@ mod tests {
             names.sort_unstable();
             names
         });
-        // Each picture has its record, and nothing else is recorded.
-        let mut names: Vec<&str> = pictures::PICTURES.iter().map(|picture| picture.name).collect();
-        names.sort_unstable();
-        assert_eq!(committed.pictures.keys().map(String::as_str).collect::<Vec<_>>(), names);
+        // The traced dogs, the pear and the TS-13 sheets, each sheet against its golden file.
+        assert_eq!(committed.pictures.len(), 11);
+        for (name, picture) in &committed.pictures {
+            assert_eq!(picture.golden.is_some(), name.starts_with("TS-13"), "{name}");
+        }
         assert_eq!(toml_key("TS-13A"), "TS-13A");
         assert_eq!(toml_key("a dog"), "\"a dog\"");
         assert_eq!(toml_key(""), "\"\"");

@@ -70,7 +70,7 @@ checks:
    byte of the document. The count is the least budget the export finishes within, found by halving to
    within 1 %. Level B can't make this check, since `vectorcraft-cli` says only that an export ran out.
    A sheet whose drawing by the Test Sheet filter takes more than 90 % of a light filter's budget fails
-   the same way (`DRAW_SHARE`, `REQ-VC-031`).
+   the same way (`DRAW_SHARE`).
 
 **Why 85 %, and why on every library crate.** M13.17 changed the engine, and with it what an export
 costs. Its pull request never ran the gate, because the workflow's paths named the plug-in and not the
