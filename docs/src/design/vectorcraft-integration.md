@@ -397,7 +397,9 @@ enough, the scenario fails, and these pages change.
 instructions of the processor's own. A profile of that run puts about 65 % of them in arranging the
 regions of the traced shapes, which overlap: cutting them where they cross takes 28 % and finding the
 crossings 11 %. The exporter reads the document once and plans it once, and nothing is done again for
-each shape. With the arranging free of charge the dog would still need 1.7 times what is allowed.
+each shape. With the arranging free of charge the dog would still need 1.7 times what is allowed. Since M13.30
+the dog on turf takes 26.6 billion natively, and [where automatic digitizing spends its
+work](#where-automatic-digitizing-spends-its-work) gives each stage's share.
 
 **The exporter can't say so first.** A module of ABI v1 has no imports, so it can't ask the host how many
 instructions are left. It can't count them itself either. The engine's `Budget` counts each element's
@@ -442,6 +444,86 @@ Run in Node 22 before the panel was built, the 2 modules wrote the PES and the D
 pear byte for byte as `stitch export` writes them, in 2.4 to 4.0 seconds for a dog with the module's
 compiling, and 1 second for the pear. The [before and after sheet](before-after-sheet.md#the-browsers-checks)
 makes the same comparison in Chromium on every pull request, the picture included.
+
+### Where automatic digitizing spends its work
+
+M13.32 (`REQ-AUTO-083`). `cargo xtask perf` counts the instructions `stitch` takes to write 11 pictures:
+the traced dogs and the pear with the Auto effect, and the TS-13 sheets. Its report splits each count into
+the stages of automatic digitizing ([guardrails](guardrails.md)). The numbers below were measured on 2026-11-17 on main
+`8a59600d`, natively, by callgrind, in the `profiling` build at opt-level 2 with Rust 1.97. Rust 1.97 gets
+opt-level 3 wrong. CI's build uses Rust 1.99 at opt-level 3, and its counts differ from these by 1 to
+4 %: the dog on turf's whole run is 26,891 million there. The records in `conformance/perf.toml` are CI's
+counts. A WebAssembly module runs 3.6 to 3.7 times the native count on
+the TS-13 sheets (M13.31), so a dog would need about 100 to 125 billion in VectorCraft, an estimate.
+VectorCraft allows it about 11 billion.
+
+Millions of instructions for each stage, and the time the command takes:
+
+| Stage | Dog on turf, 6 threads | Dog running, 9 threads | Pear | TS-13A | TS-13F |
+|---|---:|---:|---:|---:|---:|
+| Reading the shapes | 14 | 16 | 8 | 0 | 0 |
+| Flattening the layers | 385 | 566 | 38 | 68 | 0 |
+| The split into parts by the rules | 1,686 | 1,885 | 571 | 111 | 0 |
+| The specks | 0 | 0 | 0 | 6 | 0 |
+| The base layer | 99 | 76 | 17 | 66 | 0 |
+| The search for the sewing order | 1,122 | 1,321 | 108 | 25 | 0 |
+| The outline | 142 | 200 | 141 | 8 | 0 |
+| The neighbours' overlaps | 21,692 | 27,753 | 1,338 | 245 | 0 |
+| The rest of the neighbours' work | 28 | 35 | 8 | 6 | 0 |
+| The stitches of each fill | 1,086 | 1,326 | 329 | 1,178 | 588 |
+| The stitches of each column | 4 | 7 | 2 | 5 | 8 |
+| The stitches of each line | 12 | 15 | 2 | 2 | 0 |
+| The travel to and from each shape | 207 | 247 | 33 | 43 | 19 |
+| The runs in place of jumps | 21 | 63 | 8 | 67 | 0 |
+| The thickness measure | 13 | 17 | 8 | 41 | 0 |
+| The machine file | 9 | 11 | 4 | 18 | 15 |
+| The rest of the run | 86 | 142 | 24 | 91 | 31 |
+| **The whole run** | **26,607** | **33,679** | **2,640** | **1,982** | **662** |
+| Seconds on the command line | 2.2 | 2.9 | 0.2 | 0.2 | 0.1 |
+
+The other pictures fall between these: the dog on turf in 9 threads takes 30,791 million and the running
+dog in 6 threads 28,557. TS-13B to TS-13E take 1,730, 1,886, 1,539 and 1,116. TS-13F's ladder of squares
+has no shape digitized automatically. A sheet's shapes are drawn in code, and that work is in the rest of
+its run. The last pass of M13.35 gets a row of its own when it is merged. Each stage's functions are listed in
+`xtask/src/pictures.rs`, and the CI job's summary gives the table for all 11 pictures.
+
+**The overlaps cost most, and M13.30 made them 4 times dearer.** On the dog on turf, finding where each
+area reaches under its neighbours takes 82 % of the run. It does about 1,800 operations on regions:
+growing a shape (298 calls, 5.9 billion), cutting one from another (565 calls, 3.8 billion), the parts 2
+shapes share (306 calls, 3.6 billion) and joining shapes (2.7 billion or more). Growing the strip an
+area reaches under its neighbour takes 1.5 billion more. Each operation arranges the edges of its regions where they cross, and that arranging takes
+17.9 billion of the run's 26.6. Sorting the arrangement's points takes 8.5 billion of it. Built the same
+way, the commit before M13.30 was merged (`265fa8af`) took 9.7 billion for the whole export and 4.9 billion
+for the overlaps, where [an export that finishes](#an-export-that-finishes) measured 9.8 billion. M13.30
+is the only change to the overlaps or to the regions between the 2 commits, and its overlaps, which follow
+the rows and lie on no other overlap, added 16.8 billion.
+
+**How the counts grow.** On the same dog in 6 and in 9 threads, the overlaps grow with the number of
+shapes: from 104 to 120 shapes the dog on turf's grew 1.16 times, and from 99 to 121 the running dog's
+grew 1.19 times. A dog's overlaps take 210 to 235 million instructions a shape. The pear's take 167
+million, though its 8 shapes have 74 corners each and a dog's 18 on average. So the work goes with how many
+neighbours a shape has more than with its corners. The fills grow with their stitches, at 70,000 to
+100,000 instructions a stitch in the pictures and 30,000 to 50,000 on the sheets, whose squares are
+simpler. The machine file and the thickness measure take about 1,000 instructions a stitch each.
+
+**What M13.33 can bring down.** The 3 largest costs, in order:
+
+1. The overlaps' region operations, 82 % of a dog. The dog on turf's 104 shapes are grown 298 times,
+   and each operation costs 6 to 20 million instructions. Growing a shape once for all the overlaps
+   that need it, and operating only on the shapes whose boxes meet, could take out much of the growing
+   and of the cutting after it. The target is the 4.9 billion they took before M13.30, with the same
+   stitches.
+2. The arranging under every region operation, 67 % of a dog, half of it a sort. A sort of points that
+   are nearly in order already, or points sorted once for the operations that share a region, would cost
+   less. This brings down the split and the sewing order too, which use the same operations.
+3. The split into parts by the rules and the search for the sewing order, 6 % and 4 % of a dog, and the
+   fills, 4 %. In the release build, finding a part's tails (`split::tails`) took 1.0 billion of the
+   split's 1.6, and the parts 2 shapes share took 0.7 billion of the sewing order's 1.1.
+
+A live preview and the drawing of a test sheet have smaller budgets, 50 million for a light filter. A
+live preview spends what its budget of units allows and shows less when that runs out, and the
+contract tests check each level (`REQ-VC-003`). The Test Sheet filter digitizes nothing. TS-13F's drawing
+took 86 % of its budget, and the compatibility gate fails a sheet's drawing above 90 % (`REQ-VC-015`).
 
 ### Design settings and machine kept with the document
 

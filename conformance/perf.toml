@@ -1,6 +1,7 @@
 # The performance budget (`cargo xtask perf`, docs/src/design/guardrails.md): planning the reference hoop's
 # whole field, a 130 × 180 mm tatami fill at 0.4 mm (REQ-FILL-TAT-009, NFR-PERF-1), and shrinking a region
-# 150 mm across, of 1,000 points, 300 times, as contour fill will (NFR-PERF-3).
+# 150 mm across, of 1,000 points, 300 times, as contour fill will (NFR-PERF-3). And the pictures of
+# automatic digitizing (REQ-AUTO-083).
 
 [field]
 # The most the median of 21 plans may take natively, in milliseconds (NFR-PERF-1). Over it is a warning.
@@ -18,3 +19,58 @@ budget_ms = 200.0
 # `cargo xtask perf --record` lowers it and never raises it: raise it by hand, in a pull request that
 # says why.
 instructions = 6690000000
+
+# The pictures of automatic digitizing (xtask/src/pictures.rs): `stitch` run with each one's `args` and
+# `-o FILE`, built with the `profiling` profile, writes the `golden` file when it has one. `instructions` is
+# what the run takes, counted by valgrind's callgrind, and more than it plus 2 % fails. `--record` lowers a
+# count and never raises it: raise it by hand, in a pull request that says why.
+
+[pictures.TS-13A]
+args = ["testsheet", "TS-13A"]
+golden = "conformance/golden/testsheets/TS-13A.pes"
+instructions = 1908000000
+
+[pictures.TS-13B]
+args = ["testsheet", "TS-13B"]
+golden = "conformance/golden/testsheets/TS-13B.pes"
+instructions = 1687000000
+
+[pictures.TS-13C]
+args = ["testsheet", "TS-13C"]
+golden = "conformance/golden/testsheets/TS-13C.pes"
+instructions = 1829000000
+
+[pictures.TS-13D]
+args = ["testsheet", "TS-13D"]
+golden = "conformance/golden/testsheets/TS-13D.pes"
+instructions = 1489000000
+
+[pictures.TS-13E]
+args = ["testsheet", "TS-13E"]
+golden = "conformance/golden/testsheets/TS-13E.pes"
+instructions = 1081000000
+
+[pictures.TS-13F]
+args = ["testsheet", "TS-13F"]
+golden = "conformance/golden/testsheets/TS-13F.pes"
+instructions = 640000000
+
+[pictures.dog-on-turf-6]
+args = ["export", "docs/fixtures/traced-dog-on-turf-6.vectorcraft", "--auto"]
+instructions = 26891000000
+
+[pictures.dog-on-turf-9]
+args = ["export", "docs/fixtures/traced-dog-on-turf-9.vectorcraft", "--auto"]
+instructions = 31126000000
+
+[pictures.dog-running-6]
+args = ["export", "docs/fixtures/traced-dog-running-6.vectorcraft", "--auto"]
+instructions = 28878000000
+
+[pictures.dog-running-9]
+args = ["export", "docs/fixtures/traced-dog-running-9.vectorcraft", "--auto"]
+instructions = 34033000000
+
+[pictures.pear]
+args = ["export", "docs/fixtures/traced-pear.vectorcraft", "--auto"]
+instructions = 2654000000

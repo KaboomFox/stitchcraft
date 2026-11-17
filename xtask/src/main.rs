@@ -36,6 +36,7 @@ mod markdown;
 mod mutants;
 mod param_pages;
 mod perf;
+mod pictures;
 mod prepush;
 mod prose;
 mod reference_pages;
@@ -176,11 +177,14 @@ enum Command {
         #[arg(required = true)]
         dirs: Vec<PathBuf>,
     },
-    /// Plan the hoop's whole field: instructions against conformance/perf.toml, time against NFR-PERF-1
+    /// Plan the hoop's whole field and digitize the pictures: instructions against conformance/perf.toml
     Perf {
         /// Lower the record to today's count
         #[arg(long)]
         record: bool,
+        /// Count the pictures of automatic digitizing alone, without the benchmarks
+        #[arg(long)]
+        pictures: bool,
     },
     /// Fetch Ink/Stitch's fonts at the pinned commit into the cache, check them, and list the fonts taken
     Corpus,
@@ -312,7 +316,7 @@ fn run(command: Command) -> Result<(), String> {
         Command::Api { check } => api::run(check),
         Command::Coverage { record } => coverage::run(record),
         Command::Mutants { record, changed, dirs } => mutants::run(record, changed, &dirs),
-        Command::Perf { record } => perf::run(record),
+        Command::Perf { record, pictures } => perf::run(record, pictures),
         Command::Corpus => corpus::run(),
     }
 }
