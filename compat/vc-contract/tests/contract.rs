@@ -109,13 +109,30 @@ const HEADROOM: f64 = 1.25;
 /// took TS-13D to 99.7 % unseen, and the next step failed for it (M13.31).
 const EXPORT_SHARE: u64 = 85;
 
+/// The most of a light filter's budget that drawing a test sheet may take, in percent (`REQ-VC-015`). Drawing
+/// digitizes nothing, so only a change to a sheet's shapes moves the count, and less room is left than for an
+/// export: TS-13F's drawing took 86 % when M13.32 added the check.
+const DRAW_SHARE: u64 = 90;
+
 /// What to say of `sheet`, whose export took `used` of the `allowed` instructions: nothing up to
 /// [`EXPORT_SHARE`] % of them, and past that the sheet, both counts and what to do.
 fn near_budget(sheet: &str, used: u64, allowed: u64) -> Option<String> {
-    (u128::from(used) * 100 > u128::from(allowed) * u128::from(EXPORT_SHARE)).then(|| {
+    past_share(sheet, "export", EXPORT_SHARE, used, allowed)
+}
+
+/// What to say of `sheet`, whose drawing took `used` of the `allowed` instructions: nothing up to
+/// [`DRAW_SHARE`] % of them, and past that the sheet, both counts and what to do.
+fn near_draw_budget(sheet: &str, used: u64, allowed: u64) -> Option<String> {
+    past_share(sheet, "drawing", DRAW_SHARE, used, allowed)
+}
+
+/// What to say of `sheet`, whose `run` took `used` of the `allowed` instructions: nothing up to `share` % of
+/// them, and past that the sheet, both counts and what to do.
+fn past_share(sheet: &str, run: &str, share: u64, used: u64, allowed: u64) -> Option<String> {
+    (u128::from(used) * 100 > u128::from(allowed) * u128::from(share)).then(|| {
         format!(
-            "{sheet}'s export takes {used} of the {allowed} instructions VectorCraft allows it, more than {EXPORT_SHARE} %: make it \
-             cheaper, or split the sheet"
+            "{sheet}'s {run} takes {used} of the {allowed} instructions VectorCraft allows it, more than {share} %: make it cheaper, \
+             or split the sheet"
         )
     })
 }
@@ -130,6 +147,21 @@ fn req_vc_015_an_export_past_85_percent_of_its_budget_is_named() {
     // What M13.17 left of TS-13D, which no check said: 10.872 of 10.905 G.
     assert!(near_budget("TS-13D", 10_871_635_968, 10_904_844_000).is_some());
     assert_eq!(near_budget("TS-13C", 7_985_954_816, 10_207_764_000), None);
+}
+
+#[test]
+fn req_vc_015_a_drawing_past_90_percent_of_its_budget_is_named() {
+    // At 90 % exactly a drawing passes, and one instruction more fails it, by its name and counts.
+    assert_eq!(near_draw_budget("TS-13F", 9_000, 10_000), None);
+    assert_eq!(near_draw_budget("TS-13F", 0, 10_000), None);
+    let said = near_draw_budget("TS-13F", 9_001, 10_000).unwrap();
+    assert_eq!(
+        said,
+        "TS-13F's drawing takes 9001 of the 10000 instructions VectorCraft allows it, more than 90 %: make it cheaper, or split the sheet"
+    );
+    // TS-13F's drawing when the check was added, and the same past 90 %.
+    assert_eq!(near_draw_budget("TS-13F", 43_253_760, 50_056_000), None);
+    assert!(near_draw_budget("TS-13F", 45_050_401, 50_056_000).is_some());
 }
 /// The 2 sizes of path measured, in anchors. The costs are the differences between them, so that what every
 /// run costs anyway cancels out.
@@ -959,6 +991,7 @@ fn req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcr
         let export_allowed = export::FUEL + export::limits(&pes).fuel_per_byte * input.len() as u64;
         costs.push(format!("{sheet}: drawn in {used} of {allowed} instructions, exported in {exported} of {export_allowed}"));
         near.extend(near_budget(sheet, exported, export_allowed));
+        near.extend(near_draw_budget(sheet, used, allowed));
     }
     println!("::notice title=test sheets::{}", costs.join("; "));
     // The limit is VectorCraft's own, read from its host: `export::FUEL` and its allowance for each byte.

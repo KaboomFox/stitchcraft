@@ -153,8 +153,10 @@ jobs:
       - run: .github/scripts/annotated.sh "coverage" cargo xtask coverage
 
   perf:
-    # The performance budget: one plan of the reference hoop's whole field, and 300 insets of a region 150 mm
-    # across, take no more instructions than conformance/perf.toml records, counted by valgrind's callgrind;
+    # The performance budget: one plan of the reference hoop's whole field, 300 insets of a region 150 mm
+    # across, and `stitch` writing each picture of automatic digitizing (the traced dogs, the pear and the
+    # TS-13 sheets, by stage in the job summary) take no more instructions than conformance/perf.toml
+    # records, counted by valgrind's callgrind;
     # their times go to the job summary. The job keeps its name, a check main's ruleset requires.
     name: perf (the hoop's whole field within its record)
     runs-on: ubuntu-24.04

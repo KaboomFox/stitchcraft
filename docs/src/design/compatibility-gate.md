@@ -69,6 +69,8 @@ checks:
    VectorCraft's own, which the test reads from its host: `export::FUEL` and the host's allowance for each
    byte of the document. The count is the least budget the export finishes within, found by halving to
    within 1 %. Level B can't make this check, since `vectorcraft-cli` says only that an export ran out.
+   The Test Sheet filter's drawing of a sheet fails in the same way when it passes 90 % of a light
+   filter's budget (`DRAW_SHARE`).
 
 **Why 85 %, and why on every library crate.** M13.17 changed the engine, and with it what an export
 costs. Its pull request never ran the gate, because the workflow's paths named the plug-in and not the
@@ -78,6 +80,11 @@ with `plug-in exceeded its instruction budget`, for a cost that wasn't its own. 
 in 2, TS-13D and TS-13E, and closed both holes. Pull requests that change anything under `crates/` run
 the gate now, and a sheet past 85 % fails in the pull request that takes it there, with 15 % left to
 act in. On `main` before the split, TS-13A, TS-13B and TS-13C took 75, 74 and 78 %.
+
+**Why 90 % for a drawing.** The filter draws a sheet's objects and digitizes none of them, so a change to
+what sews leaves its count as it is. A change to a sheet's shapes moves it. TS-13F's drawing took
+43.3 million of the 50.1 million instructions, 86 %, when M13.32 added the check. The others took 15 to
+55 %.
 
 `vectorcraft-plugins` depends only on `geom`, `color`, `doc` and `wasmi`, so this builds quickly.
 

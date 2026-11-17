@@ -5,6 +5,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.32: where automatic digitizing spends its work (`REQ-AUTO-083`, `REQ-VC-015`).
+  - `cargo xtask perf` counts the instructions `stitch` takes to write each traced dog and the pear with
+    the Auto effect, and each TS-13 sheet, records each count in `conformance/perf.toml` and fails a count
+    more than 2 % above its record. The job summary splits each count into the stages of automatic
+    digitizing. `--pictures` counts the pictures alone. They are built with the new `profiling` profile.
+  - The compatibility gate also fails a test sheet when the Test Sheet filter's drawing of it passes 90 %
+    of a light filter's budget, where TS-13F's takes 86 %.
+  - The golden files stay as they are, byte for byte.
 - M14.8: a bold font built in, and the font chosen by the letters' weight (`REQ-AUTO-080`, `REQ-AUTO-081`,
   `REQ-AUTO-082`, `REQ-FONT-022`, `REQ-FONT-023`, `REQ-VC-030`).
   - Barstitch Bold, under the SIL Open Font License, is built into the PES and DST exporters beside
