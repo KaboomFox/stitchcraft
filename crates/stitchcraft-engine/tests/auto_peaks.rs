@@ -94,15 +94,8 @@ fn hundredths(value: f64) -> f64 {
 /// only shrinks: a design that comes under the cap leaves it. Since the measure's grid is laid from the
 /// plan's first needle point (`REQ-AUTO-074`), the badges measure 4.40, where they measured 4.20 on the
 /// machine file's grid: a needle point on a cell's edge counts on the other side.
-const ABOVE: [(&str, f64); 7] = [
-    ("badges-abutting", 4.4),
-    ("badges-stacked", 4.4),
-    ("pear", 4.55),
-    ("lettered-patch", 4.33),
-    ("ts-13a", 4.28),
-    ("ts-13c", 4.49),
-    ("ts-13d", 4.17),
-];
+const ABOVE: [(&str, f64); 7] =
+    [("badges-abutting", 4.4), ("badges-stacked", 4.4), ("pear", 4.2), ("lettered-patch", 4.2), ("ts-13a", 4.28), ("ts-13c", 4.49), ("ts-13d", 4.17)];
 
 #[test]
 fn req_auto_073_no_spot_of_a_digitized_picture_sews_above_the_cap_but_as_listed() {

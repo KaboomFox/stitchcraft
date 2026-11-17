@@ -309,6 +309,20 @@ M13.35 takes thread away where one shape piles it up by itself
   dogs, cut the jump threads this leaves. Does the edge of each outline still look whole where it meets
   the next patch?
 
+M13.36 keeps a traced letter's counters open and its edges whole
+([holes and edges of columns](../design/image-to-embroidery.md#holes-and-edges-of-columns)). At MC-8, on
+the traced lettered patch (kit item 14) beside the patch with its word as text (item 15):
+
+- The A's counter has no pull compensation along it. Does the cream field show through it as a
+  triangle, as on item 15? Measure it across at its base, and say whether the A reads as an A from a
+  metre away.
+- A straight column moves a crowded point no farther than its edge and a quarter of a thread. Run a
+  finger along the M's stems and the A's legs: are their edges smooth, without the notches of MC-8's
+  first sew-out?
+- Where the A's legs meet its crossbar, and the M's stems meet its diagonals, does fabric or field show
+  between the columns?
+- TS-13B's 6 mm word has 2 more jump threads. Cut them by hand. Does an end pull out?
+
 M13.18 merges the thin lines of a traced photo into the patches beside them
 ([neighbours](../design/image-to-embroidery.md#neighbours)). It changes what the traced dogs sew, and no
 test sheet. At MC-8, sew the running dog in 9 threads from `main` before M13.18 and from after it, side by
@@ -317,8 +331,8 @@ side:
 - A ragged strand of fur narrower than 1 mm now sews as part of the patch beside it, in that patch's
   thread. Does the dog still read as the photo does, its eyes, nose and the white blaze on its face clear?
   Which version looks more like fur?
-- The dogs leave a fifth to a third fewer jump threads. Count the ones you cut on each.
-- The dog on turf sews 0.29 fills more at its thickest spot, 4.8 fills, where a satin column or a fill lies
+- The dogs leave 15 to 32 % fewer jump threads. Count the ones you cut on each.
+- The dog on turf in 9 threads sews 0.31 fills more at its thickest spot, 4.8 fills, where a satin column or a fill lies
   over 3 or 4 other fills. Does the needle thump there, or the thread fray?
 
 ## Report template

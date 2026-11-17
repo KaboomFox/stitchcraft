@@ -38,11 +38,11 @@
 //!
 //! Every step costs a unit of work, a part's columns being part of the work of digitizing its area.
 
-use stitchcraft_core::{Code, Diagnostic, ElementId, Exhausted, Fix, Meter, Mm, Point};
+use stitchcraft_core::{Code, Diagnostic, ElementId, Exhausted, Fix, Meter, Mm, Point, Rect};
 
-use super::narrow::{Edges, farthest, piece, reach, spread, widest, width};
+use super::narrow::{Edges, farthest, piece, reach, spread, widest, width, within};
 use super::rules::{Bounds, Breadth, MOST_CROWDING, Measures, RuleId, choose, crowds, fills};
-use super::{AutoParams, at_most};
+use super::{AutoParams, Open, at_most};
 use crate::design::Path;
 use crate::generators::mm;
 use crate::generators::satin::drawn;
@@ -62,9 +62,10 @@ pub(super) struct Columns {
 /// A column of a part as it is sewn.
 #[derive(Clone, Debug, PartialEq)]
 pub(super) enum Sewn {
-    /// A satin column: the path that draws its rails and rungs, its width, and how much shorter it is made at
-    /// its start, then its end (negative: longer).
-    Satin { path: Path, width: Mm, push: [f64; 2] },
+    /// A satin column: the path that draws its rails and rungs, its width, how much shorter it is made at
+    /// its start, then its end (negative: longer), whether its rails pair evenly ([`EVEN`]), and for each
+    /// rail whether it runs along a hole kept open (`REQ-AUTO-084`).
+    Satin { path: Path, width: Mm, push: [f64; 2], even: bool, holes: [bool; 2] },
     /// A running stitch along the column's centre line, too narrow for satin, and the column's width.
     Running { line: Line, width: Mm },
 }
@@ -171,7 +172,14 @@ fn crowded(part: &Polygon, found: &[Column], rule: RuleId, meter: &mut Meter) ->
 /// The columns of `part`, an area's held to `bounds` whose settings of the rules are `rules`, cut from a
 /// broad part along `cuts` (`auto::split`), with `meter`'s work: none when the rules fill it, as a compact
 /// or an uneven part, or refuse its columns.
-pub(super) fn columns(part: &Polygon, bounds: &Bounds, rules: &AutoParams, cuts: &[[Point; 2]], meter: &mut Meter) -> Result<Made, Exhausted> {
+pub(super) fn columns(
+    part: &Polygon,
+    bounds: &Bounds,
+    rules: &AutoParams,
+    cuts: &[[Point; 2]],
+    open: &Open<'_>,
+    meter: &mut Meter,
+) -> Result<Made, Exhausted> {
     let narrowest = bounds.narrowest;
     let found = match strips::columns(part, piece(part), cuts, narrowest.get(), meter)? {
         Err(_) => return Ok(Made::Broken),
@@ -201,6 +209,14 @@ pub(super) fn columns(part: &Polygon, bounds: &Bounds, rules: &AutoParams, cuts:
         let own = Edges::of(&outline, piece(part), meter)?;
         widths.push(Width { average, widest: widest(&own, &column.line, meter)?, farthest: farthest(&column.line, &outline, meter)? });
     }
+    // The holes wide enough to read that no shape drawn later meets, which a column along them keeps open
+    // (`REQ-AUTO-084`).
+    let mut kept = Vec::new();
+    for (hole, bounds) in open_holes(part, meter)? {
+        if open(bounds, meter)? {
+            kept.push((hole, bounds));
+        }
+    }
     // A satin column that walks its middle once ends where it started (`REQ-AUTO-075`).
     let once: Vec<bool> = widths.iter().map(|measured| !runs(*measured, narrowest) && super::walks_once(measured.average)).collect();
     let mut sewn = Vec::with_capacity(found.len());
@@ -215,11 +231,63 @@ pub(super) fn columns(part: &Polygon, bounds: &Bounds, rules: &AutoParams, cuts:
         // on by 1 mm, a column skews its last stitch across what lies beside the other column (`REQ-AUTO-029`).
         let reach = rules.auto_pull_compensation_mm.get();
         let push = column.under.map(|under| if under.is_some() { -reach } else { 0.0 });
+        let holes = [along(&column.rails[0], &kept, meter)?, along(&column.rails[1], &kept, meter)?];
+        let even = crowding(&column.rails, &column.rungs, meter)? <= EVEN;
         let Ok(drawn) = drawn::from_rails(column.rails, column.rungs, push, meter)? else { return Ok(Made::Unmade) };
-        sewn.push(Sewn::Satin { path: drawn.path(), width, push });
+        sewn.push(Sewn::Satin { path: drawn.path(), width, push, even, holes });
     }
     Ok(Made::Columns { sewn, rule, measures })
 }
+
+/// The most of one rail, in millimetres, that a stretch of a millimetre of the other pairs with ([`crowding`])
+/// for a column whose rails pair evenly (`REQ-AUTO-085`). Such a column crowds its needle points only a
+/// little, as a straight stem does beside a junction, whose other rail runs round the junction's corner: the
+/// points lie 0.3 mm apart there where they lie 0.4 mm apart on a straight column. Moving every other one
+/// in by a quarter of the column cuts a notch into its edge, and takes little thread from a spot. A column
+/// that pairs more fans, as at a bend or where it ends on the slant under another column, and there its
+/// points pile up their thread.
+pub(super) const EVEN: f64 = 1.5;
+
+/// The holes of `part` that a disc [`super::OPEN_HOLE`] across fits in, each as its ring and the box round
+/// it, with `meter`'s work: a hole smaller than that closes under its own threads' width whatever sews round
+/// it. A unit of work for each hole, and the work of shrinking it.
+fn open_holes<'p>(part: &'p Polygon, meter: &mut Meter) -> Result<Vec<(&'p [Point], Rect)>, Exhausted> {
+    let mut open = Vec::new();
+    for hole in &part.holes {
+        meter.charge(1)?;
+        // A hole runs the other way round from an outline.
+        let inside = Polygon { outline: hole.iter().rev().copied().collect(), holes: Vec::new() };
+        if within(&inside, super::OPEN_HOLE, meter)? == Some(false) {
+            open.extend(Rect::around(hole.iter().copied()).map(|bounds| (hole.as_slice(), bounds)));
+        }
+    }
+    Ok(open)
+}
+
+/// Whether `rail` runs along a hole of `open` ([`open_holes`]) for a stretch, with `meter`'s work. A stretch of the rail runs along a hole when both its
+/// ends and its middle lie on the hole's ring, to within [`ON_RING`]. A unit of work for each stretch and
+/// each side of a hole it is tried against.
+fn along(rail: &[Point], open: &[(&[Point], Rect)], meter: &mut Meter) -> Result<bool, Exhausted> {
+    for &(ring, _) in open {
+        let sides = u64::try_from(ring.len()).unwrap_or(u64::MAX);
+        let on = |p: Point| ring.windows(2).any(|side| matches!(side, [a, b] if distance_to_segment(p, *a, *b) <= ON_RING));
+        for stretch in rail.windows(2) {
+            meter.charge(sides.saturating_mul(3))?;
+            if let [a, b] = stretch
+                && on(*a)
+                && on(*b)
+                && on(a.lerp(*b, 0.5))
+            {
+                return Ok(true);
+            }
+        }
+    }
+    Ok(false)
+}
+
+/// How far from a hole's ring, in millimetres, a rail's point lies on it: the points of a part's edges are
+/// those of its rings, or points added along a side, which lie on it to within the region's grid.
+const ON_RING: f64 = 1e-6;
 
 /// The longest stitch a satin column with these `rails`, both from its start, and `rungs`, each the point it
 /// pairs on the first rail and then on the second, sews between its rails, in millimetres, with `meter`'s
@@ -561,7 +629,9 @@ mod tests {
     fn req_auto_016_a_column_no_wider_than_the_narrowest_satin_stroke_runs() {
         // A band 1.5 mm wide is one column: a satin column where the narrowest satin stroke is 1 mm, and a
         // running stitch along its line, as wide as the band, where it is 2 mm.
-        let made = |narrowest: f64| columns(&band(1.5), &bounds(narrowest), &AutoParams::defaults(), &[], &mut Budget::DEFAULT.meter()).unwrap();
+        let made = |narrowest: f64| {
+            columns(&band(1.5), &bounds(narrowest), &AutoParams::defaults(), &[], &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap()
+        };
         let Made::Columns { sewn, .. } = made(1.0) else { panic!("no columns") };
         let [Sewn::Satin { width, push, .. }] = sewn.as_slice() else { panic!("{sewn:?}") };
         assert!((width.get() - 1.5).abs() < 1e-6 && *push == [0.0, 0.0], "{width:?} {push:?}");
@@ -577,7 +647,9 @@ mod tests {
         // head's sides bare. Where the narrowest satin stroke is 1 mm, it is one satin column, and where that
         // stroke is 2 mm, it runs.
         let strand = part(&[(0.0, -0.3), (6.0, -0.3), (7.0, -0.7), (10.0, -0.7), (10.0, 0.7), (7.0, 0.7), (6.0, 0.3), (0.0, 0.3)], &[]);
-        let made = |narrowest: f64| columns(&strand, &bounds(narrowest), &AutoParams::defaults(), &[], &mut Budget::DEFAULT.meter()).unwrap();
+        let made = |narrowest: f64| {
+            columns(&strand, &bounds(narrowest), &AutoParams::defaults(), &[], &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap()
+        };
         let Made::Columns { sewn, .. } = made(1.0) else { panic!("no columns") };
         let [Sewn::Satin { width, .. }] = sewn.as_slice() else { panic!("{sewn:?}") };
         assert!(width.get() < 1.0, "{width:?}");
@@ -607,7 +679,7 @@ mod tests {
                 &[(0.0, 0.0), (8.0, 0.0), (8.0, 0.9), (4.45, 0.9), (4.45, 14.5), (3.55, 14.5), (3.55, 0.9), (0.0, 0.9)].map(|(x, y)| (flip * x, y)),
                 &[],
             );
-            let made = columns(&t, &bounds(1.0), &AutoParams::defaults(), &[], &mut Budget::DEFAULT.meter()).unwrap();
+            let made = columns(&t, &bounds(1.0), &AutoParams::defaults(), &[], &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap();
             let Made::Columns { sewn, .. } = made else { panic!("no columns") };
             assert!(sewn.len() == 2 && sewn.iter().all(|s| matches!(s, Sewn::Running { .. })), "{flip}: {sewn:?}");
         }
@@ -713,7 +785,7 @@ mod tests {
             &[],
         );
         let made = |narrowest: f64| {
-            let made = columns(&h, &bounds(narrowest), &AutoParams::defaults(), &[], &mut Budget::DEFAULT.meter()).unwrap();
+            let made = columns(&h, &bounds(narrowest), &AutoParams::defaults(), &[], &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap();
             let Made::Columns { sewn, .. } = made else { panic!("no columns") };
             sewn
         };
@@ -972,7 +1044,7 @@ mod tests {
     fn req_auto_068_a_part_whose_column_would_crowd_its_stitches_is_filled_and_says_how_far() {
         let made = |part: &Polygon, set: &[(&str, &str)]| {
             let rules = AutoParams::from_set(&set.iter().copied().collect()).unwrap().params;
-            columns(part, &Bounds::of(&rules, Mm::new(1.0).unwrap()), &rules, &[], &mut Budget::DEFAULT.meter()).unwrap()
+            columns(part, &Bounds::of(&rules, Mm::new(1.0).unwrap()), &rules, &[], &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap()
         };
         let filled = |part: &Polygon, set: &[(&str, &str)]| {
             let rules = AutoParams::from_set(&set.iter().copied().collect()).unwrap().params;
@@ -1010,7 +1082,9 @@ mod tests {
         // Finding it is the part's work: with too little, it stops.
         let rules = AutoParams::defaults();
         let bounds = Bounds::of(&rules, Mm::new(1.0).unwrap());
-        let with = |work: u64| columns(&tight, &bounds, &rules, &[], &mut Budget { max_work: work, ..Budget::DEFAULT }.meter()).map(|_| ());
+        let with = |work: u64| {
+            columns(&tight, &bounds, &rules, &[], &|_, _| Ok(true), &mut Budget { max_work: work, ..Budget::DEFAULT }.meter()).map(|_| ())
+        };
         let asking = |work: u64| super::filled(&tight, &bounds, &mut Budget { max_work: work, ..Budget::DEFAULT }.meter()).map(|_| ());
         // The crowding is measured last, so the work that just falls short falls short there.
         let least = |enough: &dyn Fn(u64) -> bool| {
@@ -1061,7 +1135,7 @@ mod tests {
     fn req_auto_031_a_part_s_columns_say_which_rule_it_sews_by_and_what_was_measured() {
         let made = |part: &Polygon, set: &[(&str, &str)]| {
             let rules = AutoParams::from_set(&set.iter().copied().collect()).unwrap().params;
-            columns(part, &Bounds::of(&rules, Mm::new(1.0).unwrap()), &rules, &[], &mut Budget::DEFAULT.meter()).unwrap()
+            columns(part, &Bounds::of(&rules, Mm::new(1.0).unwrap()), &rules, &[], &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap()
         };
         // A band 3 by 20 mm: a column, 3 mm wide, of one line, 6.7 times its width squared.
         let Made::Columns { sewn, rule, measures } = made(&band(3.0), &[]) else { panic!("no columns") };
@@ -1114,7 +1188,7 @@ mod tests {
     fn req_auto_050_a_star_is_filled_and_not_sewn_as_one_column() {
         let made = |part: &Polygon, set: &[(&str, &str)]| {
             let rules = AutoParams::from_set(&set.iter().copied().collect()).unwrap().params;
-            columns(part, &Bounds::of(&rules, Mm::new(1.0).unwrap()), &rules, &[], &mut Budget::DEFAULT.meter()).unwrap()
+            columns(part, &Bounds::of(&rules, Mm::new(1.0).unwrap()), &rules, &[], &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap()
         };
         // The star of the browser demo's badge, 5.33 mm across with 4 points. Its centre lines keep one of
         // its 2 axes, and the other axis' points are left out of them as bumps: it has arms, and is filled.
