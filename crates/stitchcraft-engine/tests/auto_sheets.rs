@@ -333,14 +333,15 @@ fn ts13_the_jump_threads_that_its_stitches_sew_down() {
     // where it left 44. With the locks and columns of M13.35 (REQ-AUTO-071, REQ-AUTO-072) no later stitch of
     // TS-13E's digitized half sews down the one jump thread that one did. Why was not traced. With narrow
     // columns that walk once (REQ-AUTO-075), TS-13B's leaves 42, 20 of them sewn down, where it left 43, 19.
-    // Such a column starts at its start (REQ-AUTO-086), not where the needle is, and TS-13B's leaves 44: the
-    // 6 mm word's A and T start at the end of a column away from the needle and jump there.
+    // Such a column starts at its start (REQ-AUTO-086), not where the needle is: TS-13B's leaves 44, the 6 mm
+    // word's A and T starting at the end of a column away from the needle, TS-13C's sews down 1 of its 13
+    // where it sewed down 5, and TS-13E's 1 of its 4.
     for (id, recorded) in [
         ("TS-13A", [(8, 0), (18, 9)]),
         ("TS-13B", [(6, 0), (44, 20)]),
-        ("TS-13C", [(9, 4), (13, 5)]),
+        ("TS-13C", [(9, 4), (13, 1)]),
         ("TS-13D", [(1, 0), (11, 3)]),
-        ("TS-13E", [(0, 0), (4, 0)]),
+        ("TS-13E", [(0, 0), (4, 1)]),
     ] {
         let threads = jump_threads(&sheet(id).1);
         let half = |stops: usize| {
