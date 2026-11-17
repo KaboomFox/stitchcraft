@@ -125,12 +125,17 @@ pub(crate) fn thinned(plan: &mut StitchPlan, thickness: &mut Thickness, rules: &
     }
     let above = thickness.over(Measure::Fills, CAP, meter)?;
     let mut pass = Pass { plan, thickness, rules, gone: BTreeSet::new(), taken: [0.0; 4], times: [0; 4] };
-    pass.doubled_back(meter)?;
+    // The stitches near a spot above the cap are found once: the pass only lowers spots, so those of the
+    // spots above it later are among them.
+    let near = pass.near(meter)?;
+    pass.doubled_back(&near, meter)?;
     for kind in [Kind::Base, Kind::Rims] {
-        pass.row_ends(kind, meter)?;
+        pass.row_ends(kind, &near, meter)?;
     }
     let Pass { plan, thickness, gone, taken, times, .. } = pass;
-    for (block, stitches) in plan.blocks.iter_mut().enumerate() {
+    // Only the blocks that lost a stitch are gone through again.
+    let blocks: BTreeSet<usize> = gone.iter().map(|(block, _)| *block).collect();
+    for (block, stitches) in plan.blocks.iter_mut().enumerate().filter(|(block, _)| blocks.contains(block)) {
         let mut index = 0;
         stitches.stitches.retain(|_| {
             index += 1;
@@ -257,8 +262,8 @@ impl Pass<'_, '_> {
     /// Takes travel that goes out and back on itself, and lock stitches beyond one back and forth, where they
     /// lay thread in a spot above the cap: the 2 needle points of the way out and back go, and the stitch
     /// before them runs on to the one after, when that is as long as the machine's shortest stitch.
-    fn doubled_back(&mut self, meter: &mut Meter) -> Result<(), Exhausted> {
-        for stitch in self.near(meter)? {
+    fn doubled_back(&mut self, near: &[SewnStitch], meter: &mut Meter) -> Result<(), Exhausted> {
+        for &stitch in near {
             let (block, here) = (stitch.block, stitch.index);
             let Some((_, role, _)) = self.stitch((block, here)) else { continue };
             let kind = match role {
@@ -318,8 +323,7 @@ impl Pass<'_, '_> {
     /// lie under later shapes and lay thread in a spot above the cap. The plan is gone through from its end:
     /// the later shapes' top stitches, as the pass leaves them, are measured on a blank of the measure as it
     /// goes, and an element's own are added once its stitches are passed.
-    fn row_ends(&mut self, kind: Kind, meter: &mut Meter) -> Result<(), Exhausted> {
-        let near = self.near(meter)?;
+    fn row_ends(&mut self, kind: Kind, near: &[SewnStitch], meter: &mut Meter) -> Result<(), Exhausted> {
         let mut cover = self.thickness.blank();
         let mut run: Vec<Entry> = Vec::new();
         let mut owner = None;
