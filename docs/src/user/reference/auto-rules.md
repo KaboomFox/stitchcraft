@@ -24,8 +24,8 @@ Automatic digitizing chooses the stitches of each part of a shape by the first o
 
 | Style | For | Sets |
 |---|---|---|
-| `logo` | Flat art drawn in strokes, such as a logo, lettering or an ink drawing: more parts sew as satin columns, and a part of several strokes keeps its columns though its width varies. | [`auto_prefer`](params/auto.md#auto_prefer) to `satin`, [`auto_fill_uneven`](params/auto.md#auto_fill_uneven) to `false` |
-| `photo` | A traced photo, whose shapes are patches and not strokes: the rules as they are by default, which fill a ragged patch. | [`auto_prefer`](params/auto.md#auto_prefer) to `balanced`, [`auto_fill_uneven`](params/auto.md#auto_fill_uneven) to `true` |
+| `logo` | Flat art drawn in strokes, such as a logo, lettering or an ink drawing: more parts sew as satin columns, a part of several strokes keeps its columns though its width varies, and a thin line sews as a line. | [`auto_prefer`](params/auto.md#auto_prefer) to `satin`, [`auto_fill_uneven`](params/auto.md#auto_fill_uneven) to `false` |
+| `photo` | A traced photo, whose shapes are patches and not strokes: the rules as they are by default, which fill a ragged patch and merge a ragged thin line into the patch beside it. | [`auto_prefer`](params/auto.md#auto_prefer) to `balanced`, [`auto_fill_uneven`](params/auto.md#auto_fill_uneven) to `true` |
 
 ## Where each setting is set
 
@@ -48,6 +48,7 @@ A shape's settings are those of VectorCraft's Auto effect on it, or on the group
 | [`auto_min_triple_run_width_mm`](params/auto.md#auto_min_triple_run_width_mm) | 0.5 mm | no: advanced |
 | [`auto_min_slenderness`](params/auto.md#auto_min_slenderness) | 3 | no: advanced |
 | [`auto_max_unevenness`](params/auto.md#auto_max_unevenness) | 0.3 | no: advanced |
+| [`auto_min_line_unevenness`](params/auto.md#auto_min_line_unevenness) | 0.05 | no: advanced |
 | [`auto_max_reach`](params/auto.md#auto_max_reach) | 1.4 | no: advanced |
 | [`auto_min_fill_width_mm`](params/auto.md#auto_min_fill_width_mm) | 4 mm | no: advanced |
 | [`auto_min_area_mm2`](params/auto.md#auto_min_area_mm2) | 1 mm² | no: advanced |

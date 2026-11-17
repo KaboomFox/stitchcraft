@@ -1,6 +1,6 @@
 # Diagnostics
 
-<!-- implements: crates/stitchcraft-core/src/diag.rs, crates/stitchcraft-core/src/diag/registry.rs, crates/stitchcraft-core/src/text.rs, apps/stitchcraft-cli/src/commands/explain.rs -->
+<!-- implements: crates/stitchcraft-core/src/diag.rs, crates/stitchcraft-core/src/diag/registry.rs, crates/stitchcraft-core/src/diag/registry/auto.rs, crates/stitchcraft-core/src/text.rs, apps/stitchcraft-cli/src/commands/explain.rs -->
 
 A diagnostic is a problem with the user's design or input, explained in the user's terms, with a
 stable code. Diagnostics are values: the engine collects them and keeps planning whatever it can.
@@ -44,7 +44,9 @@ Codes are never reused. A retired code keeps its page with "retired in vX".
 ## The registry
 
 The codes are one table in `stitchcraft-core`, the `registry!` block in `src/diag/registry.rs`, which
-defines the `Code` enum. Each entry is one line — variant, id, severity, title — and its doc comment is
+defines the `Code` enum. Automatic digitizing's codes, `SC-x09xx`, are written in `src/diag/registry/auto.rs`,
+which keeps the table's file under the size limit. `Code` lists them in the order of their codes.
+Each entry is one line (variant, id, severity, title), and its doc comment is
 the long explanation (Markdown: what it means, why it matters for the sew-out, how to fix it), so the
 text users read is also the code's rustdoc. Tests reject an entry whose id is malformed or duplicated,
 whose letter disagrees with its severity, or whose explanation is missing. From that table:
@@ -207,6 +209,7 @@ another.
 | `SC-I0912` | Info | Rule that chose a shape's stitches (for each part of an automatic shape, the rule of the table it sewed by and the measures that decided it) | M13 |
 | `SC-W0913` | Warning | Design sews thick (a design digitized automatically has 1 mm² or more with 3 fills of thread or more over it, or 15 needle points or more, and is written all the same) | M13 |
 | `SC-I0914` | Info | Jumps not looked at for a run under later shapes (finding the runs that take the place of jumps between automatic elements needed more work than the budget allows, and the moves from the element named on are as they were) | M13 |
+| `SC-I0915` | Info | Thin line merged into a neighbour (a ragged part of an automatic area narrower than the narrowest satin stroke merges into the automatic area it shares the longest edge with, or keeps its lines when finding them needs more work than the budget allows) | M13 |
 | `SC-E1001` | Error | Nothing to route (no element the tool can take among those given, a satin column for Auto-Route Satin Columns or a stroke for Auto-Route Running Stitch: they stay as they were) | M10 |
 | `SC-I1002` | Info | Element left out of the route (a fill, a shape digitized automatically, settings that don't read, rails that can't be made, no length, a stroke whose first subpath ends where it starts, or a satin column among running stitches: kept as it is) | M10 |
 | `SC-W1003` | Warning | Piece of a routed satin column may sew otherwise (read back, it has other rails or pairs other points: it is kept) | M10 |

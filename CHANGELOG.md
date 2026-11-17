@@ -5,6 +5,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.18: thin lines merged into their neighbours (`REQ-AUTO-090`, `SC-I0915`).
+  - A part of an automatic area narrower than the narrowest satin stroke everywhere, whose width varies by
+    0.05 of itself or more, merges into the automatic area it shares the longest edge with, and sews as
+    part of its fill. A line drawn with an even pen sews as a line. Turning `auto_fill_uneven` off turns
+    merging off too, as the `logo` style does, and `auto_min_line_unevenness` is its bound.
+  - The traced dogs sew 3, 4, 1 and 3 shapes as running stitches where they sewed 25, 34, 15 and 18. They
+    leave 57, 58, 49 and 64 jump threads where they left 74, 85, 61 and 75, and 12 of their 18 stitches
+    astray. The dogs on turf sew 4.69 and 4.80 fills at their thickest spots, where they sewed 4.53 and
+    4.49, and the running dogs 4.62 and 5.63, where they sewed 5.07 and 5.63.
+  - The testkit's measure of thread astray paints each merged line in its neighbour's colour.
+  - Public API: `stitchcraft_engine::auto::as_merged`, `MIN_LINE_UNEVENNESS` and its field of
+    `AutoParams`, and `Code::AutoLineMerged`.
+  - The golden files stay as they are, since no test sheet has a ragged thin line.
 - M13.32: where automatic digitizing spends its work (`REQ-AUTO-083`, `REQ-VC-015`).
   - `cargo xtask perf` counts the instructions `stitch` takes to write each traced dog and the pear with
     the Auto effect, and each TS-13 sheet, records each count in `conformance/perf.toml` and fails a count

@@ -114,7 +114,7 @@ each out, as `--subject` will from M13.14.
 **Digitized**
 
 <!-- shot: auto-dog -->
-![The traced running dog digitized automatically. Its patches sew as tatami fills, the broad and the ragged alike, and its thin strands of fur as satin columns and triple runs between them, in black, greys, white, tan and dark brown. Thin threads run straight between patches of one colour, jumps that the machine doesn't cut.](../../images/generated/auto-dog.png)
+![The traced running dog digitized automatically. Its patches sew as tatami fills, the broad and the ragged alike, its thin, ragged strands of fur as part of the patches beside them, and its narrow even parts as satin columns and triple runs, in black, greys, white, tan and dark brown. Thin threads run straight between patches of one colour, jumps that the machine doesn't cut.](../../images/generated/auto-dog.png)
 <!-- /shot -->
 
 **Digitized, on black fabric**
@@ -126,16 +126,16 @@ each out, as `--subject` will from M13.14.
 `stitch plan` traced the cut-out 100 mm tall with VectorCraft 0.22.0, into
 `docs/fixtures/traced-dog-running-9.vectorcraft`. The fur's shading became flat patches in 9 threads, which
 digitize as fills, satin columns and triple runs by their shape ([stitches by shape](#stitches-by-shape)).
-Its ragged patches sew as flat fills, and its nose as one fill with the nostrils on it. The fabric is covered where the dog has a
-colour, on black fabric as on cream ([covering the fabric](#covering-the-fabric)). 5 stitches still lie
-where they shouldn't: rows of a fill that show beside a thin line of fur of another colour, each 1.3 to
-4 mm long. M13.18 of the [roadmap](../../plan/roadmap.md) removes them, and the like stitches of the other
-traced dogs ([image to embroidery](../../design/image-to-embroidery.md#sewing-order) has their numbers).
-The thin straight lines are jumps between patches of one colour, which the reference machine leaves for you
-to cut by hand, as it leaves the pear's: 83 of them. Where patches sewn later cover a way from one patch to
-the next, StitchCraft sews the thread under them instead, in place of 13 of this dog's jumps
-([jump threads](#jump-threads)). The dog changes thread 28 times in its 9 threads, since a line sews after the fill it
-borders: with **Fill uneven parts** off it changes 19 times and jumps more often
+Its ragged patches sew as flat fills, and its nose as one fill with the nostrils on it. Its thin, ragged
+strands of fur sew as part of the patches beside them ([thin lines](#neighbours)). The fabric is covered
+where the dog has a colour, on black fabric as on cream ([covering the fabric](#covering-the-fabric)). 4
+stitches still lie where they shouldn't, beside thin pieces of fur. They are 1.8 to
+4 mm long. M13.38 of the [roadmap](../../plan/roadmap.md) is to remove them, and the like stitches of the
+other traced dogs. The thin straight lines are jumps between patches of one colour, which the reference
+machine leaves for you to cut by hand, as it leaves the pear's: 64 of them. Where patches sewn later cover a
+way from one patch to the next, StitchCraft sews the thread under them instead ([jump threads](#jump-threads)).
+The dog changes thread 11 times in its 9 threads, since a line sews after the fill it borders: with **Fill
+uneven parts** off it changes thread less often and jumps more often
 ([what it costs](../../design/image-to-embroidery.md#what-it-costs)).
 
 ## How it chooses the stitches
@@ -250,7 +250,7 @@ balloon on a string 0.8 mm wide, each one area.
 ### Neighbours
 
 The shapes of a traced picture meet, and sewn without `--auto` they sew badly there. Digitizing mends that
-in 5 steps:
+in 6 steps:
 
 1. **The background.** The lowest shape, when it covers the whole picture with the other shapes drawn
    on it, is the background, the fabric's own colour, and is left out (`SC-W0906`, and
@@ -262,14 +262,19 @@ in 5 steps:
    such as dots on a flower's middle, is filled whole. It sews first, and its details sew on top. Outlines
    and letters, no wider than a satin column (`auto_max_satin_width_mm`), keep their holes, and the shapes
    inside them sew beside them (`SC-I0908`).
-3. **Specks.** A shape or a part of one smaller than 1 mm² would sew a knot. It is merged into the shape
+3. **Thin lines.** A photo traces soft shading and the strands of fur as thin, ragged lines between
+   patches. Each would sew as a running stitch that the fills beside it end their rows on. So a part
+   narrower than a satin column can be, whose width varies along it, sews as part of the fill of the shape
+   it shares the longest edge with (`SC-I0915`). A line of even width, as a pen draws it, sews as a
+   line. Turn **Fill uneven parts** off (`auto_fill_uneven`) to keep every line, as the `logo` style does.
+4. **Specks.** A shape or a part of one smaller than 1 mm² would sew a knot. It is merged into the shape
    it shares the longest edge with (`SC-I0905`, `auto_min_area_mm2`).
-4. **Overlaps.** The thread pulls stitches in from the edges of their shape, so shapes that only meet show
+5. **Overlaps.** The thread pulls stitches in from the edges of their shape, so shapes that only meet show
    fabric between them once sewn. Each area reaches 1 mm under the shapes sewn after it that it
    touches (`SC-I0904`, `auto_overlap_mm`). An area filled whole under its details is cut away under them,
    1 mm inside their edges, so that each place sews once. A satin column sews 1 mm past a side that a
    shape sewn after it runs along, and 0.4 mm past any other side (`auto_pull_compensation_mm`).
-5. **The base layer.** One open underlay sews first under the whole design
+6. **The base layer.** One open underlay sews first under the whole design
    ([covering the fabric](#covering-the-fabric)).
 
 The pictures are drawn from `docs/fixtures/traced-badge.svg`, a badge traced on white with its colours
@@ -445,7 +450,7 @@ of `stitch plan --report`). The settings that change the choice come in 3 tiers:
   `stitch plan photo.jpg -o photo.pes --set auto_min_slenderness=4`.
 
 A style is a named set of these settings. `stitch plan --style logo` suits flat art drawn in strokes: it
-prefers satin columns and fills no uneven part. `--style photo` is the defaults. The
+prefers satin columns, and fills no uneven part and merges no thin line. `--style photo` is the defaults. The
 [rules' reference](../reference/auto-rules.md) lists what each style sets, and every setting with its tier.
 
 ### Settings

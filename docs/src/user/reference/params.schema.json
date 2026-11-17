@@ -151,7 +151,7 @@
     },
     "auto_fill_uneven": {
       "default": true,
-      "description": "Whether a part of several centre lines whose width varies along them is filled. On, such a part is a tatami fill: the ragged patches of a traced photo sew flat. Off, it sews a satin column along each line, as a drawing made of strokes of changing width may want.",
+      "description": "Whether a part of several centre lines whose width varies along them is filled. On, such a part is a tatami fill: the ragged patches of a traced photo sew flat, and a ragged thin line merges into the area beside it. Off, it sews a satin column along each line, and a thin line runs along its middle, as a drawing made of strokes of changing width may want.",
       "title": "Fill uneven parts",
       "type": "boolean",
       "x-stitchcraft": {
@@ -244,6 +244,20 @@
         "origin": "stitchcraft",
         "stability": "experimental",
         "unit": "mm"
+      }
+    },
+    "auto_min_line_unevenness": {
+      "default": 0.05,
+      "description": "How much the width of a thin line varies along it, at the least, for it to merge into the shape beside it (`auto_fill_uneven`): the standard deviation of its width divided by its width. A thin line is a part narrower than the narrowest satin stroke everywhere. The ragged strands that soft shading and fur trace into vary by 0.09 to 0.46, and merge. A line drawn with an even pen varies by less, and sews as a line.",
+      "maximum": 5.0,
+      "minimum": 0.0,
+      "title": "Least a merged line's width varies",
+      "type": "number",
+      "x-stitchcraft": {
+        "automatic": true,
+        "group": "Advanced",
+        "origin": "stitchcraft",
+        "stability": "experimental"
       }
     },
     "auto_min_slenderness": {
@@ -3386,6 +3400,7 @@
           "auto_min_triple_run_width_mm",
           "auto_min_slenderness",
           "auto_max_unevenness",
+          "auto_min_line_unevenness",
           "auto_max_reach",
           "auto_min_fill_width_mm",
           "auto_min_area_mm2",
