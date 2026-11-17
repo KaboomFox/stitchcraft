@@ -691,6 +691,59 @@ mod tests {
     }
 
     #[test]
+    fn req_auto_075_the_satin_columns_of_a_part_that_walk_once_are_sewn_from_where_the_last_started_and_its_lines_from_where_it_ended() {
+        // The H of 1.5 mm, as satin columns where the narrowest satin stroke is 1 mm, and as running stitches
+        // where it is 2 mm. Its crossbar sews first, from one bar to the other: the next bar is the one where
+        // it started when it is a column, and the one where it ended when it runs.
+        let h = part(
+            &[
+                (0.0, 0.0),
+                (1.5, 0.0),
+                (1.5, 4.0),
+                (10.0, 4.0),
+                (10.0, 0.0),
+                (11.5, 0.0),
+                (11.5, 20.0),
+                (10.0, 20.0),
+                (10.0, 5.5),
+                (1.5, 5.5),
+                (1.5, 20.0),
+                (0.0, 20.0),
+            ],
+            &[],
+        );
+        let made = |narrowest: f64| {
+            let Made::Columns { sewn, .. } = columns(&h, &bounds(narrowest), &AutoParams::defaults(), &[], &mut Budget::DEFAULT.meter()).unwrap()
+            else {
+                panic!("no columns")
+            };
+            sewn
+        };
+        // Where each sewn column starts and ends along x, and where it lies.
+        let span = |sewn: &Sewn| -> (f64, f64, f64) {
+            match sewn {
+                Sewn::Satin { path, .. } => {
+                    // Its rails and rungs start on it.
+                    let middle = path.subpaths.iter().map(|subpath| subpath.start.x()).sum::<f64>() / path.subpaths.len() as f64;
+                    (path.subpaths[0].start.x(), f64::NAN, middle)
+                }
+                Sewn::Running { line, .. } => {
+                    let (first, last) = (line.points[0], *line.points.last().unwrap());
+                    (first.x(), last.x(), (first.x() + last.x()) / 2.0)
+                }
+            }
+        };
+        let satin = made(1.0);
+        assert!(satin.iter().all(|sewn| matches!(sewn, Sewn::Satin { .. })) && satin.len() == 3, "{satin:?}");
+        let (start, _, _) = span(&satin[0]);
+        assert!((span(&satin[1]).2 - start).abs() < 2.0, "{satin:?}");
+        let running = made(2.0);
+        assert!(running.iter().all(|sewn| matches!(sewn, Sewn::Running { .. })) && running.len() == 3, "{running:?}");
+        let (_, end, _) = span(&running[0]);
+        assert!((span(&running[1]).2 - end).abs() < 2.0, "{running:?}");
+    }
+
+    #[test]
     fn a_column_is_as_far_as_its_nearer_end_and_a_ring_as_its_nearest_point() {
         let [column] = sewn(&band(3.0)).0.try_into().unwrap();
         let (start, end) = ends(&column);
