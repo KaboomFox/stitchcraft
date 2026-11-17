@@ -21,6 +21,11 @@
 //! iterated form). Every edge then runs from grid point to grid point and meets the others only at its
 //! ends, so the faces' winding numbers add up.
 //!
+//! **What is looked at again.** An edge that passed no hot point passes none until it or the hot points
+//! change, and 2 edges that didn't cross don't until one of them changes. So after the first round an edge
+//! is looked at only among the hot points added since it was, and the crossings are looked for only
+//! between the new edges and the rest ([`Look`]). The points come out the same, for less work.
+//!
 //! **What is searched.** Bending an edge needs the hot points near it, and the check needs the edges that
 //! may cross it. Both are sought in [`Buckets`]: the rings' bounds cut into about as many boxes as there
 //! are points, each edge looking only in the boxes it passes. An area shrunk or grown is cut from a raw
@@ -373,8 +378,11 @@ fn settle(rings: &[Vec<Node>], rounds: usize, meter: &mut Meter) -> Result<Resul
     for _ in 0..rounds {
         let Bent::None(edges, fresh) = bend(&mut paths, &mut look, &hot, &grids, meter)? else { continue };
         // Most edges are not new from the second check on, and only the new ones can cross.
-        let crossing =
-            if 2 * fresh.iter().filter(|&&new| new).count() > edges.len() { crossings(&edges, meter)? } else { crossings_of_new(&edges, &fresh, meter)? };
+        let crossing = if 2 * fresh.iter().filter(|&&new| new).count() > edges.len() {
+            crossings(&edges, meter)?
+        } else {
+            crossings_of_new(&edges, &fresh, meter)?
+        };
         look.unchecked.iter_mut().flatten().for_each(|unchecked| *unchecked = false);
         if crossing.is_empty() {
             let paths = paths.iter().map(|path| path.iter().map(|&place| hot.at(place)).collect()).collect();
@@ -1213,7 +1221,8 @@ mod tests {
         let mut rng = stitchcraft_core::SplitMix64::new(0x5eed_0033);
         let mut found = 0;
         for round in 0..20 {
-            let mut drawn: Vec<((Node, Node), bool)> = (0..30).map(|k| ((n(even(&mut rng, 40), 4 * k), n(even(&mut rng, 40), 4 * k)), false)).collect();
+            let mut drawn: Vec<((Node, Node), bool)> =
+                (0..30).map(|k| ((n(even(&mut rng, 40), 4 * k), n(even(&mut rng, 40), 4 * k)), false)).collect();
             drawn.extend((0..1 + round % 5).map(|_| ((n(even(&mut rng, 40), even(&mut rng, 70)), n(even(&mut rng, 40), even(&mut rng, 70))), true)));
             let mut drawn: Vec<((Node, Node), bool)> = drawn.into_iter().map(|((a, b), new)| ((a.min(b), a.max(b)), new)).collect();
             drawn.sort();

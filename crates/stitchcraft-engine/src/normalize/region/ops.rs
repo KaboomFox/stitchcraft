@@ -76,6 +76,9 @@ pub(crate) fn difference(a: &[Polygon], b: &[Polygon], meter: &mut Meter) -> Res
 /// point within a cell of it.
 const APART: f64 = 1.0 / 1_048_576.0;
 
+/// The parts of 2 regions that an operation on both needs ([`kept`]), or `None`.
+type Kept<'p> = Option<(Vec<&'p Polygon>, Vec<&'p Polygon>)>;
+
 /// The parts of `a` and of `b` that an operation on both needs, each in its order: the parts are taken in
 /// groups, a part's bounds within [`APART`] of another's of its group, and a group is kept when `keep`, told
 /// whether it holds a part of `a` and a part of `b`, says so; `None` should a part left out have a point
@@ -85,8 +88,6 @@ const APART: f64 = 1.0 / 1_048_576.0;
 /// same order, and so are its parts. A group left out is one whose faces the operation keeps none of. One
 /// unit of `meter` for each part and each point of its rings, and for each 2 parts whose bounds are
 /// compared.
-type Kept<'p> = Option<(Vec<&'p Polygon>, Vec<&'p Polygon>)>;
-
 fn kept<'p>(a: &'p [Polygon], b: &'p [Polygon], keep: impl Fn(bool, bool) -> bool, meter: &mut Meter) -> Result<Kept<'p>, Exhausted> {
     let parts: Vec<&Polygon> = a.iter().chain(b).collect();
     let bounds = bounds_of(&parts, meter)?;
@@ -137,7 +138,12 @@ pub(crate) fn buffered_near(parts: &[Polygon], distance: f64, near: &[Polygon], 
     let reach = distance + APART;
     let mut meets = vec![false; parts.len()];
     for (k, at) in bounds.iter().enumerate() {
-        if around.is_some_and(|around| at.min_x - reach <= around.max_x && around.min_x <= at.max_x + reach && at.min_y - reach <= around.max_y && around.min_y <= at.max_y + reach) {
+        if around.is_some_and(|around| {
+            at.min_x - reach <= around.max_x
+                && around.min_x <= at.max_x + reach
+                && at.min_y - reach <= around.max_y
+                && around.min_y <= at.max_y + reach
+        }) {
             let root = top(&mut group, k);
             meets.get_mut(root).into_iter().for_each(|slot| *slot = true);
         }
@@ -172,7 +178,12 @@ fn bounds_of(parts: &[&Polygon], meter: &mut Meter) -> Result<Vec<Envelope>, Exh
         let mut envelope = Envelope::of(&part.outline);
         for hole in &part.holes {
             let of = Envelope::of(hole);
-            envelope = Envelope { min_x: envelope.min_x.min(of.min_x), min_y: envelope.min_y.min(of.min_y), max_x: envelope.max_x.max(of.max_x), max_y: envelope.max_y.max(of.max_y) };
+            envelope = Envelope {
+                min_x: envelope.min_x.min(of.min_x),
+                min_y: envelope.min_y.min(of.min_y),
+                max_x: envelope.max_x.max(of.max_x),
+                max_y: envelope.max_y.max(of.max_y),
+            };
         }
         bounds.push(envelope);
     }

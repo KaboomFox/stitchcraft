@@ -267,7 +267,8 @@ impl Arrangement {
             }
             bounds.push(points.len());
         }
-        let starts: Vec<&[usize]> = bounds.windows(2).map(|span| span.first().zip(span.get(1)).and_then(|(&from, &to)| points.get(from..to)).unwrap_or_default()).collect();
+        let starts: Vec<&[usize]> =
+            bounds.windows(2).map(|span| span.first().zip(span.get(1)).and_then(|(&from, &to)| points.get(from..to)).unwrap_or_default()).collect();
         let polylines: Vec<Vec<Point>> = starts.iter().map(|ring| closed_of(ring.iter().map(|&i| self.point(i)), ring.len())).collect();
         let areas: Vec<TwiceArea> = starts.iter().map(|ring| self.twice_area(ring)).collect();
         // Each ring's bounds, once: a ring is compared with every face, and a face with every ring.
