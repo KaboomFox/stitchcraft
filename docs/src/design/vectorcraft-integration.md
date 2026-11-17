@@ -581,9 +581,7 @@ the canvas's grids of 2 and 3 mm (`TestSheet::step`). The turned square's grid s
 corner, and moves with it. Each element is an object named by its id, with its path and its thread as
 the paint its family sews with, a linear gradient fill's gradient as its fill ([below](#a-gradients-geometry)).
 Its settings are its family's effect record, each the
-value its dialog row takes, which reads back as the setting it was. A record is made once for the settings
-it holds, and a solid paint once for its thread: objects that share them share the one made. TS-13F's 179
-objects have 15 records and 2 paints, and making them for each object took it past a light filter's run. The objects selected are given back as
+value its dialog row takes, which reads back as the setting it was. The objects selected are given back as
 they are, and the sheet goes above them. The document sews as the sheet's design moved. A fill's rows lie where the design's
 origin puts them, so moved they may fall elsewhere across a shape, and the sheet looks the same. The
 threads lose their names in the Brother palette, since VectorCraft unlinks the swatch of a paint a filter
@@ -596,6 +594,9 @@ meander fills wander as their elements' ids draw, and the objects drawn would ha
 the filter doesn't draw it either (`TestSheet::drawable`). The TS-13 sheets are designs whose shapes
 StitchCraft digitizes automatically (`TestSheet::digitized`): each such shape has the Auto effect's
 record (M13.7, `REQ-VC-016`), and StitchCraft Auto must be installed for VectorCraft to keep it.
+A record is made once for each set of settings, and a solid paint once for each thread: objects that share
+them share the one made. TS-13F's 179 objects have 15 records and 2 paints, and making them for each
+object took it past a light filter's run.
 
 The contract test `req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcraft_s_limits`
 draws each sheet into a new document in VectorCraft 0.17.0's and 0.18.0's hosts alike, and exports it with
