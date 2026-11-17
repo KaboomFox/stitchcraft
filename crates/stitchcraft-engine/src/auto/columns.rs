@@ -246,7 +246,7 @@ pub(super) fn columns(
 /// in by a quarter of the column cuts a notch into its edge, and takes little thread from a spot. A column
 /// that pairs more fans, as at a bend or where it ends on the slant under another column, and there its
 /// points pile up their thread.
-pub const EVEN: f64 = 1.5;
+pub(super) const EVEN: f64 = 1.5;
 
 /// The holes of `part` that a disc [`super::OPEN_HOLE`] across fits in, each as its ring and the box round
 /// it, with `meter`'s work: a hole smaller than that closes under its own threads' width whatever sews round
