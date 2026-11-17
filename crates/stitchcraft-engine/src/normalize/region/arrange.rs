@@ -242,8 +242,7 @@ impl Arrangement {
 
     /// The faces and their winding numbers. One unit of `meter` per half edge, per point of the rings
     /// traced (for their bounds), per pair of a ring bounding no face and a face compared, and per point of
-    /// each face whose bounds cover such a ring and that the ring is then located in, the smallest first
-    /// until one holds it.
+    /// each face whose bounds cover such a ring and that the ring is then located in.
     pub(crate) fn faces(&self, meter: &mut Meter) -> Result<Faces, Exhausted> {
         let halves = 2 * self.edges.len();
         meter.charge(u64::try_from(halves).unwrap_or(u64::MAX))?;
@@ -293,23 +292,21 @@ impl Arrangement {
             }
             meter.charge(u64::try_from(bounds.len()).unwrap_or(u64::MAX))?;
             let probe = polyline.first().copied().unwrap_or(Point::ORIGIN);
-            // The faces around it are those whose bounds cover its bounds and inside which its first point
-            // lies, and it lies in the smallest: the one whose clockwise ring's area is nearest 0, and the
-            // last of those as small. So the faces whose bounds cover its own are looked at in that order,
-            // until one holds the point.
-            let mut covering: Vec<(usize, usize)> =
-                bounds.iter().enumerate().filter(|&(_, &b)| envelopes.get(b).is_some_and(|face| face.covers(env))).map(|(f, &b)| (f, b)).collect();
-            covering.sort_by(|&(f, b), &(g, c)| areas.get(c).cmp(&areas.get(b)).then(g.cmp(&f)));
-            let mut smallest = outside;
-            for &(f, b) in &covering {
-                let Some(face) = polylines.get(b) else { continue };
-                meter.charge(u64::try_from(face.len()).unwrap_or(u64::MAX))?;
-                if locate_in_ring(probe, face) == Location::Interior {
-                    smallest = f;
-                    break;
+            // The faces around it: those whose bounds cover its bounds, and inside which its first point lies.
+            let mut around: Vec<(usize, usize)> = Vec::new();
+            for (f, &b) in bounds.iter().enumerate() {
+                if let (Some(face), Some(face_env)) = (polylines.get(b), envelopes.get(b))
+                    && face_env.covers(env)
+                {
+                    meter.charge(u64::try_from(face.len()).unwrap_or(u64::MAX))?;
+                    if locate_in_ring(probe, face) == Location::Interior {
+                        around.push((f, b));
+                    }
                 }
             }
-            face_of_ring[r] = Some(smallest);
+            // Of the faces around it, the smallest: the one whose clockwise ring's area is nearest 0.
+            let smallest = around.iter().max_by_key(|&&(_, b)| areas.get(b).copied());
+            face_of_ring[r] = Some(smallest.map_or(outside, |&(f, _)| f));
         }
         let right_of: Vec<usize> = ring_of.iter().map(|r| r.and_then(|r| face_of_ring.get(r).copied().flatten()).unwrap_or(outside)).collect();
         // Winding numbers, from outside everything inwards: crossing a half from its right to its left adds
