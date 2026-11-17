@@ -293,8 +293,8 @@ M13.35 takes thread away where one shape piles it up by itself
 - Locks are 4 stitches of 0.3 mm. Cut the jump threads of the traced pear's stem and of TS-13B's letters
   by hand. Does an end pull out?
 - At a spot still above 4 fills, the last pass keeps one back and forth of a lock, and moves row ends
-  back under the shapes sewn after them. Where TS-13D's white ring meets the star and on the traced
-  dogs' seams, does fabric show between 2 shapes, or does a row's end show beyond its neighbour's edge?
+  back under the shapes sewn after them. Look where TS-13D's white ring meets the star, and at the traced
+  dogs' seams. Is fabric showing between 2 shapes there? Is a row's end showing past its neighbour?
 
 ## Report template
 
