@@ -98,9 +98,18 @@ pub(super) fn sorted(
 ) -> Result<Parts, Exhausted> {
     let mut sorted = Parts::default();
     for part in parts {
-        sort(id, part, bounds, rules, Sorting::Part, open, &mut sorted, meter)?;
+        sort(id, part, bounds, By { rules, open }, Sorting::Part, &mut sorted, meter)?;
     }
     Ok(sorted)
+}
+
+/// What a part is sorted by: its shape's settings of the rules, and whether a hole of it may be kept open.
+#[derive(Clone, Copy)]
+struct By<'b> {
+    /// The shape's settings of the rules.
+    rules: &'b AutoParams,
+    /// Whether a hole may be kept open (`REQ-AUTO-084`).
+    open: &'b Open<'b>,
 }
 
 /// What is sorted.
@@ -136,9 +145,8 @@ fn sort(
     id: &ElementId,
     part: Polygon,
     bounds: &Bounds,
-    rules: &AutoParams,
+    by: By<'_>,
     sorting: Sorting,
-    open: &Open<'_>,
     sorted: &mut Parts,
     meter: &mut Meter,
 ) -> Result<(), Exhausted> {
@@ -159,7 +167,7 @@ fn sort(
                 }
             }
         }
-        Found::Columns => match columns::columns(&part, bounds, rules, sorting.cuts(), open, meter)? {
+        Found::Columns => match columns::columns(&part, bounds, by.rules, sorting.cuts(), by.open, meter)? {
             Made::Columns { sewn, rule, measures } => {
                 sorted.fired.push(fired(rule, Some(measures)));
                 sorted.along.push(Along::Columns(Columns { part, sewn }));
@@ -170,7 +178,7 @@ fn sort(
                 let Some(split) = split::tails(&part, bounds.narrowest.get(), bounds.min_area, meter)? else { return unsplit(sorted, part, id) };
                 sorted.filled.extend(split.fill);
                 for tail in split.narrow {
-                    sort(id, tail.part, bounds, rules, Sorting::Tail(&tail.cuts), open, sorted, meter)?;
+                    sort(id, tail.part, bounds, by, Sorting::Tail(&tail.cuts), sorted, meter)?;
                 }
             }
             Made::Filled(rule, measures) => {
@@ -197,7 +205,7 @@ fn sort(
             let Some(split) = split::split(&part, broad, keep, bounds.min_area, meter)? else { return unsplit(sorted, part, id) };
             sorted.filled.extend(split.fill);
             for piece in split.narrow {
-                sort(id, piece.part, bounds, rules, Sorting::Piece(&piece.cuts), open, sorted, meter)?;
+                sort(id, piece.part, bounds, by, Sorting::Piece(&piece.cuts), sorted, meter)?;
             }
         }
         Found::Broad(measures) => {
@@ -650,7 +658,16 @@ mod tests {
         let part = sorted(&area, vec![tabbed.clone()], &narrowest, &rules, &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap();
         assert!(matches!(part.along.as_slice(), [Along::Columns(_)]), "{:?}", part.along);
         let mut piece = Parts::default();
-        sort(&area, tabbed.clone(), &narrowest, &rules, Sorting::Piece(&[]), &|_, _| Ok(true), &mut piece, &mut Budget::DEFAULT.meter()).unwrap();
+        sort(
+            &area,
+            tabbed.clone(),
+            &narrowest,
+            By { rules: &rules, open: &|_, _| Ok(true) },
+            Sorting::Piece(&[]),
+            &mut piece,
+            &mut Budget::DEFAULT.meter(),
+        )
+        .unwrap();
         let area = Measures::of_breadth(tabbed.area(), Breadth::Broad);
         assert_eq!(piece, Parts { fired: vec![Fired { rule: RuleId::Area, measures: Some(area) }], filled: vec![tabbed], ..Parts::default() });
     }
@@ -739,9 +756,8 @@ mod tests {
             &area,
             blob.clone(),
             &bounds(1.0),
-            &AutoParams::defaults(),
+            By { rules: &AutoParams::defaults(), open: &|_, _| Ok(true) },
             Sorting::Tail(&[]),
-            &|_, _| Ok(true),
             &mut tail,
             &mut Budget::DEFAULT.meter(),
         )

@@ -2038,9 +2038,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - M13.36: a traced letter keeps its counters open, and its columns meet without gaps (`REQ-AUTO-084` to
   `REQ-AUTO-086`). The owner said of MC-8's traced lettered patch that the A has no white space and the
   letters have new gaps.
-  - A hole of an automatic area that a disc 0.8 mm across fits in, and whose box no shape drawn later
-    meets, keeps the satin columns round it on its edge: a rail along it has no pull compensation on that
-    side. The patch's A shows 62 % of its counter, where it showed 7 %.
+  - Round a hole of an automatic area that a disc 0.8 mm across fits in, and whose box no shape drawn
+    later meets, a satin column's rail has no pull compensation on the hole's side, and its stitches end
+    on the hole's edge. The patch's A shows 62 % of its counter, where it showed 7 %.
   - A satin column whose rails pair evenly, and one along such a hole, moves its first crowded needle
     point no farther than its edge and 0.1 mm. The notches along the M's stems are gone.
   - A satin column that walks its middle once starts at its start, not at the point nearest the needle.

@@ -457,10 +457,10 @@ across it. Fills keep the tatami fill's defaults, underlay included.
 ### Holes and edges of columns
 
 A letter traced as an area is cut into columns, and the reader has to see its counters and straight
-edges. On MC-8's traced lettered patch the owner saw neither (2026-11-17): the A had no white space, and
-the letters had notches along their edges. 2 rules keep them (M13.36):
+edges. On MC-8's traced lettered patch (2026-11-17) the owner found the A black all over, and notches
+along the letters' edges. 2 rules keep them (M13.36):
 
-- **A hole stays open** (`REQ-AUTO-084`). A column's pull compensation reaches 0.4 mm past each rail, and
+- **A hole shows what lies under it** (`REQ-AUTO-084`). A column's pull compensation reaches 0.4 mm past each rail, and
   the 3 columns round the A's counter, a triangle 1.4 mm across inside, sewed over all but 7 % of it. It
   was no better at M13.30 or at M14.5's merge, 3 %. A hole that a disc 0.8 mm across fits in, and whose
   box no shape drawn after the area meets, keeps its columns' stitches on its edge: a rail along it has no
@@ -1440,9 +1440,9 @@ to 3.79 fills, and changed the dogs by 0.01 or less. The thread pulls such an en
 which opens the join. The joins are left as they were.
 
 A column that walks once starts at its start (`REQ-AUTO-086`, `start_at_nearest_point` off). Started at the
-point of it nearest the needle, it first ran along its middle under itself to its start, then walked its
-middle, and its top stitches came back to where it began, so the run, the walk, the lock and its last
-stitches met at one spot. That spot moved with the shape sewn before: the lettered patch's M measured 4.32
+point of it nearest the needle, it ran along its middle under itself to its start before its walk, and
+its top stitches came back to where it began. The run, the walk, the lock and its last stitches met at
+one spot there. That spot moved with the shape sewn before: the lettered patch's M measured 4.32
 fills at its V, and 4.48 when the A before it ended 0.4 mm further left (M13.36). Starting at its start,
 the patch's thickest spot is 4.20 fills and the traced pear's 4.20, where they were 4.33 and 4.55. It costs
 jumps: TS-13B's digitized half leaves 44 jump threads where it left 42, the 6 mm word's A and T jumping to
