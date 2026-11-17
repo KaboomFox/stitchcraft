@@ -78,6 +78,7 @@ fn object(lines: Vec<Line>) -> TextObject {
         label: "svg:t".to_string(),
         name: Some("Title".to_string()),
         typeface: Some("Georgia".to_string()),
+        bold: false,
         lines,
         turn: (1.0, 0.0),
         clips: Vec::new(),
@@ -689,6 +690,7 @@ fn req_svg_017_a_text_element_is_read_under_auto_and_is_a_warning_without_it() {
         label: "svg:t".to_string(),
         name: Some("Title".to_string()),
         typeface: Some("Georgia".to_string()),
+        bold: false,
         lines: vec![line("Hi there", 10.0, 20.0, 10.0)],
         turn: (1.0, 0.0),
         clips: Vec::new(),
@@ -974,4 +976,24 @@ fn req_svg_017_a_text_beyond_the_designs_reach_is_left_out_and_reading_is_bounde
         needed += 1;
     }
     assert!(needed > 20, "{needed}");
+}
+
+#[test]
+fn req_auto_082_a_text_is_bold_as_its_first_line_s_font_weight_says() {
+    let bold = |body: &str| {
+        let read = read(body);
+        assert_eq!(read.texts.len(), 1, "{:?}", read.warnings);
+        read.texts[0].text.bold
+    };
+    assert!(bold(r#"<text x="10" y="50" font-size="20" font-weight="bold" fill="red">ab</text>"#));
+    assert!(bold(r#"<g style="font-weight:700"><text x="10" y="50" font-size="20" fill="red">ab</text></g>"#));
+    assert!(!bold(r#"<text x="10" y="50" font-size="20" font-weight="600" fill="red">ab</text>"#));
+    assert!(!bold(r#"<text x="10" y="50" font-size="20" fill="red">ab</text>"#));
+    // The first line that shows decides, as it does the typeface.
+    assert!(!bold(
+        r#"<text x="10" y="50" font-size="20" fill="red"><tspan x="10" y="50">ab</tspan><tspan x="10" y="80" font-weight="bold">ab</tspan></text>"#
+    ));
+    assert!(bold(
+        r#"<text x="10" y="50" font-size="20" fill="red"><tspan x="10" y="50" font-size="0">ab</tspan><tspan x="10" y="80" font-weight="bold">ab</tspan></text>"#
+    ));
 }

@@ -3,5 +3,8 @@
 # A build with STITCHCRAFT_FONTS_DIR set to a folder of fonts builds these in, and a build without it
 # builds in none. No font file is in this repository. A font joins this list only when its licence lets
 # a copy be shared with the licence's text beside it, which the published demo then carries: the SIL Open
-# Font License or CC0. The test `req_font_021_…` checks each font built in.
+# Font License or CC0. The test `req_font_021_…` checks each font built in. A text marker that names no font
+# is set in the one nearest in weight to the letters it replaces: `stitchcraft_vectorcraft::lettering::HELD`
+# holds each font's weight and heights for that, and `req_font_022_…` checks them against the fonts.
 small_font
+barstitch_bold

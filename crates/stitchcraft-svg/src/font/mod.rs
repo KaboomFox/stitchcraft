@@ -33,7 +33,7 @@ mod glyphs;
 pub mod licence;
 mod settings;
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Budget, Code, Diagnostic, Fix, Meter};
@@ -221,6 +221,29 @@ impl Font {
 /// reads as an object, no glyph file it can read, or a glyph file the SVG reader refuses; and with
 /// `SC-E0004` when reading it needs more work than `budget` allows.
 pub fn read(folder: &str, files: &[(&str, &[u8])], budget: &Budget) -> Result<Font, Diagnostic> {
+    read_glyphs(folder, files, None, budget)
+}
+
+/// As [`read`], with only the glyphs that setting `text` can use (`REQ-FONT-023`): those whose names are made
+/// of the text's characters, in either case, and the font's `default_glyph`. A glyph named with a form after
+/// a dot, such as `a.alt`, goes by what stands before the dot. The other glyphs are not cut out of their
+/// files, measured or read, which is most of what reading a font costs, and nothing is said of them. The
+/// font sets `text`, and any text of those characters, as the whole font does. It must not set another.
+pub fn read_for(folder: &str, files: &[(&str, &[u8])], text: &str, budget: &Budget) -> Result<Font, Diagnostic> {
+    read_glyphs(folder, files, Some(text), budget)
+}
+
+/// Whether setting a text of the characters `used` can use the glyph named `name`.
+fn needed(name: &str, used: &BTreeSet<char>) -> bool {
+    let stem = match name.split_once('.') {
+        Some((stem, _)) if !stem.is_empty() => stem,
+        _ => name,
+    };
+    stem.chars().all(|c| used.contains(&c))
+}
+
+/// [`read`], or [`read_for`] the text `only`.
+fn read_glyphs(folder: &str, files: &[(&str, &[u8])], only: Option<&str>, budget: &Budget) -> Result<Font, Diagnostic> {
     let files: BTreeMap<&str, &[u8]> = files.iter().copied().collect();
     let mut meter = budget.meter();
     let mut warnings = Vec::new();
@@ -229,6 +252,13 @@ pub fn read(folder: &str, files: &[(&str, &[u8])], budget: &Budget) -> Result<Fo
         let text = String::from_utf8_lossy(bytes).into_owned();
         LicenceFile { path: (*path).to_string(), licence: Licence::of(&text), text }
     });
+    // The characters a text can ask glyphs for: its own as written and in Unicode's NFC, in upper and in
+    // lower case, as a font's `letter_case` may turn them.
+    let used: Option<BTreeSet<char>> = only.map(|text| {
+        let written = text.chars().chain(text.nfc());
+        written.flat_map(|c| std::iter::once(c).chain(c.to_uppercase()).chain(c.to_lowercase())).collect()
+    });
+    let wanted = |name: &str| used.as_ref().is_none_or(|used| name == settings.default_glyph || needed(name, used));
     let mut variants = Vec::new();
     for direction in Direction::ALL {
         let paths = glyph_files(direction, &files, &mut warnings);
@@ -238,7 +268,7 @@ pub fn read(folder: &str, files: &[(&str, &[u8])], budget: &Budget) -> Result<Fo
         let mut variant = Variant { direction, files: Vec::new(), glyphs: BTreeMap::new() };
         for path in paths {
             let bytes = files.get(path).copied().unwrap_or_default();
-            read_glyph_file(folder, path, bytes, budget, &mut meter, &mut variant, &mut warnings)?;
+            read_glyph_file(folder, path, bytes, &wanted, (budget, &mut meter), &mut variant, &mut warnings)?;
             variant.files.push(path.to_string());
         }
         variants.push(variant);
@@ -334,8 +364,8 @@ fn read_glyph_file(
     folder: &str,
     path: &str,
     bytes: &[u8],
-    budget: &Budget,
-    meter: &mut Meter,
+    wanted: &dyn Fn(&str) -> bool,
+    (budget, meter): (&Budget, &mut Meter),
     variant: &mut Variant,
     warnings: &mut Vec<Diagnostic>,
 ) -> Result<(), Diagnostic> {
@@ -377,6 +407,9 @@ fn read_glyph_file(
     for (group, label) in glyphs::groups(&doc) {
         meter.charge(1).map_err(|_| exhausted(budget, "the font"))?;
         let name: String = label.nfc().collect();
+        if !wanted(&name) {
+            continue;
+        }
         let (left, right) = match glyphs::extent(group, &page, meter).map_err(|_| exhausted(budget, "the font"))? {
             Ok(extent) => extent,
             Err(why) => {

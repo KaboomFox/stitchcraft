@@ -113,7 +113,7 @@ fn line(text: &str, x: f64, y: f64, size: f64) -> Line {
 /// What the text object `vc:7` of `lines`, turned by `turn`, sews in the test font.
 fn expected(lines: Vec<Line>, turn: (f64, f64)) -> Vec<Element> {
     let font: Rc<Font> = fonts().font("", &Budget::DEFAULT).unwrap().unwrap();
-    let text = TextObject { label: "vc:7".to_string(), name: Some("Title".to_string()), typeface: None, lines, turn, clips: Vec::new() };
+    let text = TextObject { label: "vc:7".to_string(), name: Some("Title".to_string()), typeface: None, bold: false, lines, turn, clips: Vec::new() };
     objects::letter(&text, &mut |_, _| Found::Font(Rc::clone(&font)), &mut BTreeSet::new(), &Budget::DEFAULT).unwrap().0
 }
 
@@ -373,4 +373,31 @@ fn req_vc_029_reading_a_text_is_bounded() {
     // Inside a clip, each letter is charged what holding the clip costs.
     let (clipped, sewn) = with(json!([group(3, &[], json!({"clip": true}), json!([clipping, text(7, "a\na", 72.0, 144.0, json!({}), &[])]))]));
     assert!(clipped > two && sewn == 2, "{clipped} {two}");
+}
+
+#[test]
+fn req_vc_030_bold_point_type_sews_in_the_bold_font_held_where_it_sews_at_its_size() {
+    // Both folders hold the test font. The table says the bold font sews from 12.51 mm: 36 points sew 8.89 mm
+    // tall, and 72 points 17.78 mm.
+    let files: Vec<(&'static str, &'static [u8])> = vec![("font.json", kept(SETTINGS.as_bytes().to_vec())), ("ltr.svg", kept(glyphs().into_bytes()))];
+    let files = kept(files);
+    let both = || BuiltIn::new(kept(vec![Folder { name: "small_font", files }, Folder { name: "barstitch_bold", files }]));
+    let styled = |points: f64, style: Value| {
+        let mut object = text(7, "ab", 72.0, 144.0, json!({}), &[]);
+        object["kind"]["runs"][0]["style"]["size"] = json!(points);
+        for (key, value) in style.as_object().unwrap() {
+            object["kind"]["runs"][0]["style"][key] = value.clone();
+        }
+        let read = read_in(&document(json!([object])), &Budget::DEFAULT, AUTO, &mut both()).unwrap();
+        said(&read.warnings).into_iter().filter(|said| said.contains("SC-I1118")).collect::<Vec<_>>()
+    };
+    let chosen = styled(72.0, json!({"font_style": "Bold"}));
+    assert_eq!(chosen.len(), 1, "{chosen:?}");
+    assert!(chosen[0].contains("is sewn in the bold embroidery font `barstitch_bold`"), "{}", chosen[0]);
+    assert!(styled(72.0, json!({"fontAxes": {"wght": 700}}))[0].contains("`barstitch_bold`, with strokes 0.19"));
+    let small = styled(36.0, json!({"font_style": "Bold Italic"}));
+    assert!(small[0].contains("its letters sew 8.9 mm tall and `barstitch_bold` sews capital letters from 12.5 to 32.5 mm"), "{}", small[0]);
+    assert!(styled(72.0, json!({"font_style": "SemiBold"})).is_empty());
+    assert!(styled(72.0, json!({"fontAxes": {"wght": 699}})).is_empty());
+    assert!(styled(72.0, json!({})).is_empty());
 }

@@ -124,6 +124,7 @@ pub const stitchcraft_svg::font::PREFIX: &str
 pub const stitchcraft_svg::font::SETTINGS: &str
 pub fn stitchcraft_svg::font::each_glyph(&[u8], &stitchcraft_core::budget::Budget, &dyn core::ops::function::Fn(usize) -> bool, &mut dyn core::ops::function::FnMut(usize, stitchcraft_svg::font::Cut)) -> core::result::Result<(), stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_svg::font::read(&str, &[(&str, &[u8])], &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_svg::font::Font, stitchcraft_core::diag::Diagnostic>
+pub fn stitchcraft_svg::font::read_for(&str, &[(&str, &[u8])], &str, &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_svg::font::Font, stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_svg::font::shown(&serde_json::value::Value) -> alloc::string::String
 pub mod stitchcraft_svg::inkstitch
 pub enum stitchcraft_svg::inkstitch::Does
@@ -163,6 +164,7 @@ pub stitchcraft_svg::lettering::objects::Line::size: f64
 pub stitchcraft_svg::lettering::objects::Line::text: alloc::string::String
 pub stitchcraft_svg::lettering::objects::Line::thread: core::option::Option<stitchcraft_plan::thread::Thread>
 pub struct stitchcraft_svg::lettering::objects::TextObject
+pub stitchcraft_svg::lettering::objects::TextObject::bold: bool
 pub stitchcraft_svg::lettering::objects::TextObject::clips: alloc::vec::Vec<stitchcraft_engine::design::Clip>
 pub stitchcraft_svg::lettering::objects::TextObject::label: alloc::string::String
 pub stitchcraft_svg::lettering::objects::TextObject::lines: alloc::vec::Vec<stitchcraft_svg::lettering::objects::Line>
@@ -175,13 +177,28 @@ pub stitchcraft_svg::lettering::objects::Waiting::text: stitchcraft_svg::letteri
 pub const stitchcraft_svg::lettering::objects::CAPITALS: f64
 pub const stitchcraft_svg::lettering::objects::DEFAULT_FONT: &str
 pub const stitchcraft_svg::lettering::objects::WIDTH: f64
+pub fn stitchcraft_svg::lettering::objects::bold_style(&str) -> bool
+pub fn stitchcraft_svg::lettering::objects::bold_weight(&str) -> bool
 pub fn stitchcraft_svg::lettering::objects::letter(&stitchcraft_svg::lettering::objects::TextObject, &mut dyn core::ops::function::FnMut(&str, &stitchcraft_core::budget::Budget) -> stitchcraft_svg::lettering::pictures::Found, &mut alloc::collections::btree::set::BTreeSet<alloc::string::String>, &stitchcraft_core::budget::Budget) -> core::result::Result<(alloc::vec::Vec<stitchcraft_engine::design::Element>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>), stitchcraft_core::diag::Diagnostic>
+pub fn stitchcraft_svg::lettering::objects::letter_among(&stitchcraft_svg::lettering::objects::TextObject, &mut dyn core::ops::function::FnMut(&str, &str, &stitchcraft_core::budget::Budget) -> stitchcraft_svg::lettering::pictures::Found, &[stitchcraft_svg::lettering::pictures::Choice], &mut alloc::collections::btree::set::BTreeSet<alloc::string::String>, &stitchcraft_core::budget::Budget) -> core::result::Result<(alloc::vec::Vec<stitchcraft_engine::design::Element>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>), stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_svg::lettering::objects::lettered(stitchcraft_engine::design::Design, &[stitchcraft_svg::lettering::objects::Waiting], &mut dyn core::ops::function::FnMut(&str, &stitchcraft_core::budget::Budget) -> stitchcraft_svg::lettering::pictures::Found, &mut alloc::collections::btree::set::BTreeSet<alloc::string::String>, &stitchcraft_core::budget::Budget) -> core::result::Result<(stitchcraft_engine::design::Design, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>), stitchcraft_core::diag::Diagnostic>
+pub fn stitchcraft_svg::lettering::objects::lettered_among(stitchcraft_engine::design::Design, &[stitchcraft_svg::lettering::objects::Waiting], &mut dyn core::ops::function::FnMut(&str, &str, &stitchcraft_core::budget::Budget) -> stitchcraft_svg::lettering::pictures::Found, &[stitchcraft_svg::lettering::pictures::Choice], &mut alloc::collections::btree::set::BTreeSet<alloc::string::String>, &stitchcraft_core::budget::Budget) -> core::result::Result<(stitchcraft_engine::design::Design, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>), stitchcraft_core::diag::Diagnostic>
 pub mod stitchcraft_svg::lettering::pictures
+pub mod stitchcraft_svg::lettering::pictures::weight
+pub struct stitchcraft_svg::lettering::pictures::weight::Weight
+pub stitchcraft_svg::lettering::pictures::weight::Weight::height: f64
+pub stitchcraft_svg::lettering::pictures::weight::Weight::stroke: f64
+impl stitchcraft_svg::lettering::pictures::weight::Weight
+pub fn stitchcraft_svg::lettering::pictures::weight::Weight::ratio(&self) -> f64
+pub fn stitchcraft_svg::lettering::pictures::weight::of_font(&stitchcraft_svg::font::Font, &stitchcraft_core::budget::Budget) -> core::result::Result<core::option::Option<stitchcraft_svg::lettering::pictures::weight::Weight>, stitchcraft_core::diag::Diagnostic>
 pub enum stitchcraft_svg::lettering::pictures::Found
 pub stitchcraft_svg::lettering::pictures::Found::Font(alloc::rc::Rc<stitchcraft_svg::font::Font>)
 pub stitchcraft_svg::lettering::pictures::Found::Missing(alloc::vec::Vec<alloc::string::String>)
 pub stitchcraft_svg::lettering::pictures::Found::Unread(stitchcraft_core::diag::Diagnostic)
+pub struct stitchcraft_svg::lettering::pictures::Choice
+pub stitchcraft_svg::lettering::pictures::Choice::font: alloc::string::String
+pub stitchcraft_svg::lettering::pictures::Choice::heights: (f64, f64)
+pub stitchcraft_svg::lettering::pictures::Choice::weight: f64
 pub struct stitchcraft_svg::lettering::pictures::Marker
 pub stitchcraft_svg::lettering::pictures::Marker::label: alloc::string::String
 pub stitchcraft_svg::lettering::pictures::Marker::note: alloc::string::String
@@ -192,8 +209,10 @@ pub const stitchcraft_svg::lettering::pictures::APART: f64
 pub const stitchcraft_svg::lettering::pictures::CLOSER: f64
 pub const stitchcraft_svg::lettering::pictures::FIT: f64
 pub const stitchcraft_svg::lettering::pictures::MARKER: &str
+pub fn stitchcraft_svg::lettering::pictures::chosen(&[stitchcraft_svg::lettering::pictures::Choice], core::option::Option<f64>, f64) -> core::option::Option<usize>
 pub fn stitchcraft_svg::lettering::pictures::note(&str) -> core::option::Option<&str>
 pub fn stitchcraft_svg::lettering::pictures::replace(stitchcraft_engine::design::Design, &[stitchcraft_svg::lettering::pictures::Marker], &mut dyn core::ops::function::FnMut(&str, &stitchcraft_core::budget::Budget) -> stitchcraft_svg::lettering::pictures::Found, &mut alloc::collections::btree::set::BTreeSet<alloc::string::String>, &stitchcraft_core::budget::Budget) -> core::result::Result<(stitchcraft_engine::design::Design, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>), stitchcraft_core::diag::Diagnostic>
+pub fn stitchcraft_svg::lettering::pictures::replace_among(stitchcraft_engine::design::Design, &[stitchcraft_svg::lettering::pictures::Marker], &mut dyn core::ops::function::FnMut(&str, &str, &stitchcraft_core::budget::Budget) -> stitchcraft_svg::lettering::pictures::Found, &[stitchcraft_svg::lettering::pictures::Choice], &mut alloc::collections::btree::set::BTreeSet<alloc::string::String>, &stitchcraft_core::budget::Budget) -> core::result::Result<(stitchcraft_engine::design::Design, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>), stitchcraft_core::diag::Diagnostic>
 pub enum stitchcraft_svg::lettering::Align
 pub stitchcraft_svg::lettering::Align::Block
 pub stitchcraft_svg::lettering::Align::Centre

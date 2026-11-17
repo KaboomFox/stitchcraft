@@ -28,6 +28,12 @@
 //! first, then it is set smaller, and never smaller than the font sews: there `SC-W1117` says that it is
 //! still longer. A line that is shorter than its place isn't stretched.
 //!
+//! **Which font.** A drawing's typeface is not an embroidery font, so its name never chooses one: a text
+//! sews in the host's default font. Its weight can. A bold text (`font-weight` bold, or 700 and above) sews
+//! in the boldest font the host offers ([`letter_among`], `REQ-AUTO-082`) when that font sews every line at
+//! its height, and `SC-I1118` says so. Where it doesn't, the default font sews, and the note says from what
+//! height the bold font sews. With fewer than 2 fonts offered there is nothing to choose.
+//!
 //! **All or nothing.** A text object whose font isn't there or doesn't read, or one of whose lines can't
 //! be set, sews nothing, and `SC-W1111` says why. Nothing is left out without a word.
 //!
@@ -42,7 +48,7 @@ use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Mete
 use stitchcraft_engine::design::{Clip, Design, Element, within_working_limit};
 use stitchcraft_plan::Thread;
 
-use super::pictures::{CLOSER, Found};
+use super::pictures::{CLOSER, Choice, Found};
 use super::{Align, Lettering, Set, exhausted, moved, scaled, set};
 use crate::font::Font;
 
@@ -59,10 +65,60 @@ pub const WIDTH: f64 = 0.5;
 /// The name that asks a host for its default embroidery font.
 pub const DEFAULT_FONT: &str = "";
 
-/// The embroidery font `text` sews in, asked of `fonts` within `budget`: the host's default font. Every
-/// text object's font is chosen here and nowhere else.
-fn font_of(_text: &TextObject, fonts: &mut dyn FnMut(&str, &Budget) -> Found, budget: &Budget) -> Found {
-    fonts(DEFAULT_FONT, budget)
+/// The embroidery font `text` sews in, asked of `fonts` within `budget` with the characters of its lines,
+/// and the note on its choice. Every text object's font is chosen here and nowhere else: the host's
+/// default font, or for a bold text the boldest of `choices` when it sews every line at its height
+/// (`REQ-AUTO-082`). Of fewer than 2 choices there is nothing to choose, and nothing is said.
+fn font_of(
+    text: &TextObject,
+    fonts: &mut dyn FnMut(&str, &str, &Budget) -> Found,
+    choices: &[Choice],
+    budget: &Budget,
+) -> (Found, Option<Diagnostic>) {
+    let characters: String = text.lines.iter().map(|line| line.text.as_str()).collect();
+    let boldest = choices.iter().fold(None, |best: Option<&Choice>, choice| match best {
+        Some(best) if best.weight >= choice.weight => Some(best),
+        _ => Some(choice),
+    });
+    let Some(bold) = boldest.filter(|_| text.bold && choices.len() >= 2) else { return (fonts(DEFAULT_FONT, &characters, budget), None) };
+    let tall = |line: &Line| CAPITALS * line.size;
+    let (least, most) = text.lines.iter().fold((f64::INFINITY, 0.0_f64), |(least, most), line| (least.min(tall(line)), most.max(tall(line))));
+    let holds = least >= bold.heights.0 && most <= bold.heights.1;
+    let height = if most > least { format!("{least:.1} to {most:.1} mm") } else { format!("{most:.1} mm") };
+    let sews = format!("`{}` sews capital letters from {:.1} to {:.1} mm", bold.font, bold.heights.0, bold.heights.1);
+    if holds {
+        let message = format!(
+            "The text `{}` is bold, so it is sewn in the bold embroidery font `{}`, with strokes {:.2} of its height wide: its letters sew {height} tall, and {sews}.",
+            text.label, bold.font, bold.weight
+        );
+        return (fonts(&bold.font, &characters, budget), Some(about(text, Diagnostic::new(Code::FontChosenByWeight, message))));
+    }
+    let message = format!(
+        "The text `{}` is bold, but its letters sew {height} tall and {sews}: it is sewn in the default embroidery font, whose letters are lighter.",
+        text.label
+    );
+    let size = bold.heights.0 / CAPITALS;
+    let fix =
+        format!("To sew it in `{}`, make its font size at least {size:.1} mm ({:.0} pt) in the drawing.", bold.font, (size / MM_PER_POINT).ceil());
+    (fonts(DEFAULT_FONT, &characters, budget), Some(about(text, Diagnostic::new(Code::FontChosenByWeight, message).with_fix(Fix::Hint(fix)))))
+}
+
+/// Millimetres in a point, for the hint of how large a text must be.
+const MM_PER_POINT: f64 = 25.4 / 72.0;
+
+/// Whether a CSS `font-weight` names a bold weight: `bold`, `bolder`, or a number of 700 and above. A
+/// `bolder` text is bold over the normal weight a drawing's text has by default.
+pub fn bold_weight(value: &str) -> bool {
+    let value = value.trim();
+    value.eq_ignore_ascii_case("bold") || value.eq_ignore_ascii_case("bolder") || value.parse::<f64>().is_ok_and(|weight| weight >= 700.0)
+}
+
+/// Whether a typeface's style name, such as `Bold Italic` or `ExtraBold`, names a weight of 700 and above:
+/// it says bold, black or heavy, and not semi-bold or demi-bold, which are 600.
+pub fn bold_style(style: &str) -> bool {
+    let style: String = style.chars().filter(|c| c.is_alphanumeric()).flat_map(char::to_lowercase).collect();
+    let bold = style.contains("bold") && !style.contains("semibold") && !style.contains("demibold");
+    bold || style.contains("black") || style.contains("heavy")
 }
 
 /// The most fonts a message names: a folder of fonts can hold hundreds.
@@ -124,6 +180,8 @@ pub struct TextObject {
     pub name: Option<String>,
     /// The typeface the drawing names for it, for the note.
     pub typeface: Option<String>,
+    /// Whether the drawing sets it bold ([`bold_weight`], [`bold_style`]), which can choose the bold font.
+    pub bold: bool,
     /// Its lines, in the order they sew.
     pub lines: Vec<Line>,
     /// The cosine and the sine of the angle its baselines are turned by, clockwise as a picture shows it.
@@ -153,6 +211,19 @@ pub fn lettered(
     said: &mut BTreeSet<String>,
     budget: &Budget,
 ) -> Result<(Design, Vec<Diagnostic>), Diagnostic> {
+    lettered_among(design, texts, &mut |name, _, budget| fonts(name, budget), &[], said, budget)
+}
+
+/// As [`lettered`], each text set as [`letter_among`] sets it: a bold text in the boldest of `choices` where
+/// it sews at the text's height, with `fonts` given the font's name and the text's characters.
+pub fn lettered_among(
+    design: Design,
+    texts: &[Waiting],
+    fonts: &mut dyn FnMut(&str, &str, &Budget) -> Found,
+    choices: &[Choice],
+    said: &mut BTreeSet<String>,
+    budget: &Budget,
+) -> Result<(Design, Vec<Diagnostic>), Diagnostic> {
     if texts.is_empty() {
         return Ok((design, Vec::new()));
     }
@@ -163,14 +234,14 @@ pub fn lettered(
     for (index, element) in design.elements().iter().enumerate() {
         meter.charge(1).map_err(|_| exhausted(budget))?;
         while let Some(next) = waiting.next_if(|next| next.after <= index) {
-            let (letters, notes) = letter(&next.text, fonts, said, budget)?;
+            let (letters, notes) = letter_among(&next.text, fonts, choices, said, budget)?;
             elements.extend(letters);
             warnings.extend(notes);
         }
         elements.push(element.clone());
     }
     for next in waiting {
-        let (letters, notes) = letter(&next.text, fonts, said, budget)?;
+        let (letters, notes) = letter_among(&next.text, fonts, choices, said, budget)?;
         elements.extend(letters);
         warnings.extend(notes);
     }
@@ -190,12 +261,27 @@ pub fn letter(
     said: &mut BTreeSet<String>,
     budget: &Budget,
 ) -> Result<(Vec<Element>, Vec<Diagnostic>), Diagnostic> {
+    letter_among(text, &mut |name, _, budget| fonts(name, budget), &[], said, budget)
+}
+
+/// As [`letter`], a bold text sewn in the boldest of `choices` when it sews every line at its height, with
+/// `SC-I1118` saying so, or saying from what height it sews when it doesn't (`REQ-AUTO-082`). `fonts` is
+/// given the font's name and the characters of the text's lines, so that a host can read the font only as
+/// far as they need it (`REQ-FONT-023`).
+pub fn letter_among(
+    text: &TextObject,
+    fonts: &mut dyn FnMut(&str, &str, &Budget) -> Found,
+    choices: &[Choice],
+    said: &mut BTreeSet<String>,
+    budget: &Budget,
+) -> Result<(Vec<Element>, Vec<Diagnostic>), Diagnostic> {
     let mut meter = budget.meter();
     meter.charge(1).map_err(|_| exhausted(budget))?;
     if text.lines.is_empty() {
         return Ok((Vec::new(), Vec::new()));
     }
-    let font = match font_of(text, fonts, budget) {
+    let (found, chosen) = font_of(text, fonts, choices, budget);
+    let font = match found {
         Found::Font(font) => font,
         Found::Unread(unread) if unread.code == Code::BudgetExhausted => return Err(unread),
         Found::Unread(unread) => {
@@ -204,7 +290,7 @@ pub fn letter(
         }
         Found::Missing(names) => return Ok((Vec::new(), vec![unsewn(text, &missing(&names), FONTS_FOLDER)])),
     };
-    let mut warnings: Vec<Diagnostic> = Vec::new();
+    let mut warnings: Vec<Diagnostic> = chosen.into_iter().collect();
     if said.insert(font.folder.clone()) {
         warnings.extend(font.warnings.iter().filter(|said| said.severity() != Severity::Info).cloned());
     }

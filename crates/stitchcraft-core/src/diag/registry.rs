@@ -1415,6 +1415,20 @@ macro_rules! codes {
         /// text larger or shorter in the drawing, or convert it to paths there.
         LetteringLongerThanTextsPlace = "SC-W1117", Warning, "Lettering longer than its text's place";
 
+        /// A text marker names no font, so the font was chosen among those the plug-ins hold: the one whose
+        /// strokes are nearest in width to the traced letters', among the fonts that sew at the letters'
+        /// height. A bold font sews bold letters, and a light one light letters.
+        ///
+        /// The message gives the letters' height and how wide their strokes are in heights, and names the font
+        /// with its own width. When the nearest font in weight doesn't sew that small or that large, it says
+        /// so, and from what height that font sews. Nothing needs doing. To choose yourself, name a font with
+        /// `font=NAME` after the text in double quotes.
+        ///
+        /// For a text object under automatic digitizing, which has no traced letters, a bold weight chooses
+        /// the bold font when it sews every line at its size. The message says so, or gives the font size
+        /// from which the bold font sews.
+        FontChosenByWeight = "SC-I1118", Info, "Font chosen by the letters' weight";
+
         /// `--subject` and `stitch cutout` cut a picture's subject out with 3 models, which `stitch` fetches with
         /// curl on first use into the folder `STITCHCRAFT_MODELS` names, or else `stitchcraft/models` in your
         /// cache folder, and checks before each use. A file couldn't be fetched, or isn't the one pinned. Nothing
