@@ -350,7 +350,7 @@ fn req_auto_074_2_rows_run_opposite_ways_within_about_25_degrees() {
 
 /// The seam's rows, every other one running back from x = 6 turned by `tilt` degrees from straight back.
 fn tilted(tilt: f64) -> StitchPlan {
-    let (dx, dy) = (tilt.to_radians().cos(), tilt.to_radians().sin());
+    let (dx, dy) = (stitchcraft_core::math::cos(tilt.to_radians()), stitchcraft_core::math::sin(tilt.to_radians()));
     let mut points = Vec::new();
     for row in 0..13 {
         let y = f64::from(row) * 0.25;
