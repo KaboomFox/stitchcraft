@@ -31,6 +31,7 @@ use crate::auto::numbered;
 use crate::common::{MIN_JUMP_STITCH_LENGTH, TRIM_AFTER, UNDERLAYS_FIRST};
 use crate::design::{Element, Hints, Path, Segment, Shape, Subpath};
 use crate::generators::passes::BEAN_STITCH_REPEATS;
+use crate::generators::satin::CENTER_WALK_UNDERLAY_REPEATS;
 use crate::normalize::satin::SAME_POINT;
 use crate::route::graph::{Graph, Link, Step};
 use crate::route::read::{Kind, Routable};
@@ -42,9 +43,6 @@ pub(super) const RUN_LENGTH: &str = "running_stitch_length_mm";
 
 /// The keys of the lengths a run under a column takes its stitch length from, the first the column sets.
 const RUN_LENGTHS: [&str; 3] = [RUN_LENGTH, "center_walk_underlay_stitch_length_mm", "contour_underlay_stitch_length_mm"];
-
-/// The key of a satin column's centre walk repeats.
-const CENTRE_WALK_REPEATS: &str = "center_walk_underlay_repeats";
 
 /// What a route does next.
 #[derive(Clone, Debug, PartialEq)]
@@ -196,7 +194,7 @@ fn satin(
     let mut params = element.params.clone();
     let repeats = satin.center_walk_underlay_repeats;
     if repeats % 2 == 1 {
-        params.set(CENTRE_WALK_REPEATS, repeats.saturating_sub(1).max(2).to_string());
+        params.set(CENTER_WALK_UNDERLAY_REPEATS, repeats.saturating_sub(1).max(2).to_string());
     }
     let shape = Shape::Stroke { path: cut.path, width: *width, join: *join, cap: *cap };
     let piece = Element { id, name: None, shape, params, automatic: false, hints: Hints::default(), ..element.clone() };

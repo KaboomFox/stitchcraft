@@ -21,12 +21,12 @@ use std::path::Path;
 use std::process::ExitCode;
 
 use stitchcraft_core::Budget;
-use stitchcraft_engine::design::{Design, DesignSettings, Element};
-use stitchcraft_engine::testsheets::{self, SHEETS, TestSheet};
+use stitchcraft_engine::design::{Design, Element};
+use stitchcraft_engine::testsheets::{SHEETS, TestSheet};
+use stitchcraft_plan::StitchPlan;
 use stitchcraft_plan::profiles::REFERENCE;
-use stitchcraft_plan::{Rgb, StitchPlan, Thread};
 use stitchcraft_render::{Settings, Style};
-use stitchcraft_testkit::designs::{automatic, fill, in_place, rules};
+use stitchcraft_testkit::designs::{in_place, rules};
 use stitchcraft_testkit::fabric::{self, GAP, Limits};
 use stitchcraft_testkit::pictures;
 
@@ -62,36 +62,6 @@ fn caught<T>(work: impl FnOnce() -> T) -> Result<T, String> {
     })
 }
 
-/// A lettered patch drawn in code: the word MATCH in block letters 10 mm tall, each a shape of its own
-/// (`testsheets::pictures::word`), on a cream field with a red border, both with cut corners. Every shape is
-/// automatic, and the field and the border lie whole under what is drawn on them, as a patch drawn in an
-/// editor has them.
-fn patch() -> Result<Design, String> {
-    let word = testsheets::pictures::word((0.0, 0.0), 10.0).map_err(|fault| said(&fault))?;
-    let letters = Design::new(word.elements.clone(), DesignSettings::default()).map_err(|fault| said(&fault))?;
-    let bounds = letters.bounds().ok_or("the word has no shapes")?;
-    let plate = |id: &str, margin: f64, thread: &Thread| {
-        let (left, top) = (bounds.min().x() - margin, bounds.min().y() - margin);
-        let (right, bottom) = (bounds.max().x() + margin, bounds.max().y() + margin);
-        let cut = margin / 2.0;
-        let ring = [
-            (left + cut, top),
-            (right - cut, top),
-            (right, top + cut),
-            (right, bottom - cut),
-            (right - cut, bottom),
-            (left + cut, bottom),
-            (left, bottom - cut),
-            (left, top + cut),
-        ];
-        automatic(fill(id, &[&ring], thread, &[]))
-    };
-    let border = plate("patch-border", 9.0, &Thread::new(Rgb::new(200, 0, 0)));
-    let field = plate("patch-field", 6.0, &Thread::new(Rgb::new(236, 226, 198)));
-    let shapes: Vec<Element> = [border, field].into_iter().chain(word.elements).collect();
-    Design::new(shapes, DesignSettings::default()).map_err(|fault| said(&fault))
-}
-
 /// The digitized half of `sheet`: its automatic shapes alone, in their paint order, with its settings.
 fn digitized(sheet: &TestSheet) -> Result<Design, String> {
     let design = sheet.design().ok_or("the sheet is not drawn as a design")?.map_err(|fault| said(&fault))?;
@@ -107,7 +77,7 @@ fn standard() -> Vec<(String, Result<Design, String>)> {
         Err(why) => all.push(("dogs".to_string(), Err(why))),
     }
     all.push(("pear".to_string(), caught(pictures::pear)));
-    all.push(("lettered-patch".to_string(), patch()));
+    all.push(("lettered-patch".to_string(), caught(pictures::lettered_patch)));
     for sheet in SHEETS.iter().filter(|sheet| sheet.digitized()) {
         let name = format!("{}-digitized", sheet.id.to_lowercase());
         all.push((name, digitized(sheet)));

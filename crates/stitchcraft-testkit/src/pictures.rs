@@ -16,12 +16,12 @@
 //! into shapes, whose ragged edges no picture drawn in code has.
 
 use stitchcraft_core::Budget;
-use stitchcraft_engine::design::{Design, Reading};
+use stitchcraft_engine::design::{Design, DesignSettings, Element, Reading};
 pub use stitchcraft_engine::testsheets::pictures::{Picture, Trace};
 use stitchcraft_engine::testsheets::{find, pictures};
 use stitchcraft_plan::{Rgb, StitchPlan, Thread};
 
-use crate::designs::{BLUE, RED, fill, in_place, outlined, p};
+use crate::designs::{BLUE, RED, automatic, fill, in_place, outlined, p};
 
 /// A gold thread.
 pub const GOLD: Thread = Thread::new(Rgb::new(230, 180, 30));
@@ -81,6 +81,36 @@ pub fn sheet(id: &str) -> (Design, StitchPlan) {
 /// background, and on it the pear in 3 greens, read as `--auto` reads it, every shape automatic.
 pub fn pear() -> Design {
     traced("traced-pear.vectorcraft")
+}
+
+/// A lettered patch drawn in code: the word MATCH in block letters 10 mm tall, each a shape of its own
+/// (`testsheets::pictures::word`), on a cream field with a red border, both with cut corners. Every shape is
+/// automatic, and the field and the border lie whole under what is drawn on them, as a patch drawn in an
+/// editor has them.
+pub fn lettered_patch() -> Design {
+    let word = pictures::word((0.0, 0.0), 10.0).unwrap();
+    let letters = Design::new(word.elements.clone(), DesignSettings::default()).unwrap();
+    let bounds = letters.bounds().unwrap();
+    let plate = |id: &str, margin: f64, thread: &Thread| {
+        let (left, top) = (bounds.min().x() - margin, bounds.min().y() - margin);
+        let (right, bottom) = (bounds.max().x() + margin, bounds.max().y() + margin);
+        let cut = margin / 2.0;
+        let ring = [
+            (left + cut, top),
+            (right - cut, top),
+            (right, top + cut),
+            (right, bottom - cut),
+            (right - cut, bottom),
+            (left + cut, bottom),
+            (left, bottom - cut),
+            (left, top + cut),
+        ];
+        automatic(fill(id, &[&ring], thread, &[]))
+    };
+    let border = plate("patch-border", 9.0, &Thread::new(Rgb::new(200, 0, 0)));
+    let field = plate("patch-field", 6.0, &Thread::new(Rgb::new(236, 226, 198)));
+    let shapes: Vec<Element> = [border, field].into_iter().chain(word.elements).collect();
+    Design::new(shapes, DesignSettings::default()).unwrap()
 }
 
 /// The owner's 2 photos of her dog, each cut out by a mask checked by hand and traced 100 mm tall by

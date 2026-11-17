@@ -3264,6 +3264,60 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-AUTO-071"
+area = "auto"
+level = "L2"
+statement = "An automatic satin column moves its crowded needle points in along their stitches: a point closer than 0.35 mm to the last one left in place on its rail moves in by 25 % of its stitch's width, the next such point by 50 %, and so on in turn (`short_stitch_distance_mm` 0.35 and `short_stitch_inset` 25 50). A shape that sets either keeps what it sets, and the other is Ink/Stitch's. A straight column's points lie 0.4 mm apart on each rail, so every one of its stitches spans it."
+rationale = "On the inside of a corner or a bend a column's stitches fan to a point, since their spacing is kept on the outside: TS-13A's blue strip sewed 25 stitches from 5 mm of one rail to 1 mm of the other, up to 4.6 fills by itself, and Ink/Stitch's 0.25 mm and 15 % moved few of them, by little. Digitizing programs shorten some of the stitches in a sharp turn, each by a percentage of its own (Wilcom EmbroideryStudio, Reducing stitch bunching). A distance above the 0.4 mm spacing would move every second point of a straight column too, and thin its edges. Measured with the locks of REQ-AUTO-072 on 2026-11-16, the thickest spot of TS-13A came from 5.56 to 4.29 fills and of TS-13D from 6.46 to 5.45."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-072"
+area = "auto"
+level = "L2"
+statement = "Every element that automatic digitizing makes, the base layer's pieces and the outlines among them, locks at each end in back and forth steps as long as the reference machine's shortest stitch, 0.3 mm (`lock_start` or `lock_end` back_forth, `lock_start_scale_mm` or `lock_end_scale_mm` 0.3), 4 stitches of 0.3 mm, unless its shape sets that end's lock or its step: then the shape's settings stand and that end takes nothing more."
+rationale = "The half stitch locks with 4 stitches of half the first stitch, up to 1 mm, which lays up to 1 fill of thread on a millimetre by itself. Where a short stem ties in and off at one end, or a fill, its outline and a line lock at one spot, the locks alone made 1.9 and 2.75 fills (the pear, TS-13B). For narrow shapes such as small lettering, a shorter tie-off stitch is advised (Wilcom EmbroideryStudio, Tie-offs). Measured on 2026-11-16, steps of 0.4 mm took TS-13B's thickest spot from 5.65 to 4.58 fills and the pear's from 6.45 to 5.35, and steps of 0.5 mm did less. But where the first stitch is short the half stitch is short too: at a corner where 3 areas meet, 0.4 mm steps made 4.15 fills where the half stitch made 3.76. Steps of 0.3 mm make 3.76 there, and with the columns of REQ-AUTO-071 TS-13B 4.29 and the pear 5.01. A step shorter than the machine's shortest stitch is not chosen."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-073"
+area = "auto"
+level = "L2"
+statement = "No spot of a millimetre of a design digitized automatically sews more than 4 fills of thread (REQ-AUTO-060), measured on its plan: each test picture, the traced pear, the lettered patch, the digitized half of each TS-13 sheet and the 4 traced dogs. Until the step is done, the cases list each design still above the cap with its thickest spot as measured, and the list only shrinks."
+rationale = "The owner read the thickest spots M13.30 left, 5.5 to 7 fills, as what will sew, and said that it won't work. Up to 2 fills in one spot is ordinary, Brother's manual names 3 or more overlapping stitches as a fault, and a retailer reports 2 full layers already thump on a PE800 (research of M13.29). An area at 3 fills or more says how much of a design is thick, and the thickest spot whether any of it is too thick to sew."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-074"
+area = "auto"
+level = "L2"
+statement = "Once a design digitized automatically is planned, a last pass takes thread where a spot of a millimetre still sews more than 4 fills, of the stitches that lay thread within 2 mm of such a spot, in this order. Travel that goes out and back on itself, coming back within 0.1 mm of where it was 2 needle points before, loses its 2 points of the way out and back. A lock of 4 stitches or more loses its stitches beyond one back and forth. Then a row's end whose turn to the next row is 1 mm or shorter, the 2 rows running nearly opposite ways, moves back along its row with the next row's start, by the overlap of areas (`auto_overlap_mm`) or else half of it, while each stitch stays as long as the machine's shortest: the base layer's rows first, then the other shapes' top rows. A row's end moves only where the top stitches of the elements sewn after it lay 1 fill or more at its old and new points and its turn's, measured as the plan is, from the plan's end, so that thread taken from a later shape no longer hides. No change is made that would leave a spot its stitches lay thread in thicker than both the cap and what it was. The pass takes no top stitch that shows, cuts no run and makes no jump thread. SC-I1119 says how much it took of each kind in how many places, the area above 4 fills before and after, and the thickest spot left. The pass has the work budget once: when it runs out, the plan is kept as planned, and SC-I1119 says so."
+rationale = "The rules for single shapes (REQ-AUTO-071, REQ-AUTO-072) left the traced dogs at 5.2 to 6.5 fills where 5 to 8 elements meet at one spot, each laying a little, and no rule of one shape knows the sum. Only the finished plan does. Taking a needle point out of a run takes no thread, and cutting a run leaves a jump thread: thread leaves a spot only where the stitching doubles back or an end can move. Measured on 2026-11-17, the pass took the dogs' area above 4 fills from 25, 26, 22 and 48 mm² to 11, 13, 13 and 30, their thickest spots by 0.15 to 0.3 fills, TS-13D's from 5.17 to 4.18 and the pear's from 5.01 to 4.71, with 2 to 90 stitches fewer and no jump thread more. Embroidery programs remove hidden stitching where shapes overlap (M13.30). The measure is kept up to date stitch by stitch and handed to SC-W0913, so that a design is measured once, since VectorCraft's export has few instructions to spare."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-075"
+area = "auto"
+level = "L2"
+statement = "An automatic satin column narrower than 2 mm to the micrometre, which has a centre walk and no other underlay (REQ-AUTO-018), walks its middle once (`center_walk_underlay_repeats` 1) unless its shape sets the repeats: the walk ends at the column's end, and its top stitches sew back to its start, where it ends. Of a part's columns, the one sewn after such a column is the one with an end nearest that column's start, sewn from that end."
+rationale = "After the last pass (REQ-AUTO-074) the thickest spots left were mostly satin columns, a column's zigzag of 1.3 to 2.8 fills and its underlay of 0.6 to 0.8, and the pass can't take a centre walk's way back without turning the column. A centre run alone is the underlay digitizing guides give a narrow column (Wilcom EmbroideryStudio, Stabilizing; ColDesi, Underlay 101), and Ink/Stitch's centre walk may be all a thin column needs (Ink/Stitch, Satin column). Measured on 2026-11-17, walking once took the lettered patch's thickest spot from 4.73 to 4.33 fills, the pear's from 4.78 to 4.55, the dogs' from 4.91, 4.75 and 6.27 to 4.53, 4.51 and 6.00, and TS-13B's from 4.02 to 3.99, under the cap. Without the order knowing where such a column ends, the lettered patch and TS-13B jumped 2 or 3 times more."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-076"
+area = "auto"
+level = "L2"
+statement = "An outline round a fill (REQ-AUTO-051) sews through a hidden stretch of its edge (REQ-AUTO-052) that a fill sewn after the area hides in part or whole only when the stretch is 12 mm or shorter. Other hidden stretches are sewn through up to 25 mm, as before. The parts of the edge that show are outlined as before."
+rationale = "The owner chose, on 2026-11-16, that an outline's thread may be left out only where a fill sewn later covers it, so that what shows doesn't change. A stretch sewn through under a later fill runs along the seam where that fill's rows end over the area's overlap, beside the fill's own outline, and the traced dogs' seams are where their thread piles up. Measured on the 4 traced dogs on 2026-11-17, leaving out every such stretch took their area at 3 fills or more down by 12 to 19 % for 3 to 11 jump threads more each, and raised the dog on turf's thickest spot from 4.53 to 5.09, since the last pass could no longer take row ends that the stretch had hidden. Leaving out those longer than 12 mm took the area down by 6 to 12 % for 1 to 3 jump threads more, and the running dogs' thickest spots from 5.15 and 6.00 to 5.07 and 5.89. A short stretch carries little thread and costs a jump all the same."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-AUTO-069"
 area = "auto"
 level = "L2"

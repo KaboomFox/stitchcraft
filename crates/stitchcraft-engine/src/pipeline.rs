@@ -110,10 +110,13 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
     });
     diagnostics.extend(routing.and_then(|routing| routing.said(budget)));
     let plan = match finished {
-        Ok(Some(Finalized { plan, diagnostics: said })) => {
+        Ok(Some(Finalized { mut plan, diagnostics: said })) => {
             diagnostics.extend(said);
-            // A design digitized automatically is told where it sews thick (`SC-W0913`), and is written.
-            diagnostics.extend(limits.zip(plan.as_ref()).and_then(|(limits, plan)| thick::said(plan, &limits, budget)));
+            // A design digitized automatically is thinned where a spot sews above the cap (`REQ-AUTO-074`),
+            // told where it sews thick (`SC-W0913`), and is written.
+            if let (Some(held), Some(plan)) = (limits, plan.as_mut()) {
+                diagnostics.extend(thick::finished(plan, &held, &base, profile, budget));
+            }
             plan
         }
         Ok(None) => {

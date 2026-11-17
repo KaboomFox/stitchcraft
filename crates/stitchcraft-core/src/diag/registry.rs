@@ -1429,6 +1429,16 @@ macro_rules! codes {
         /// from which the bold font sews.
         FontChosenByWeight = "SC-I1118", Info, "Font chosen by the letters' weight";
 
+        /// A design digitized automatically still sewed more than 4 fills of thread on a spot of a millimetre once it was planned, and a last pass
+        /// took thread there that is hidden or does no visible work: travel that went out and back on itself, lock stitches beyond one back and
+        /// forth, and row ends that lie under shapes sewn later, moved back along their rows, the base layer's first. It took no top stitch that
+        /// shows, and made no jump thread.
+        ///
+        /// The message gives the area that was above 4 fills, how much thread of each kind was taken in how many places, the area still above, and
+        /// the thickest spot left. Nothing needs doing. A spot still above 4 fills is one where no more thread is hidden: `SC-W0913` names what is
+        /// stacked there. If the pass needs more work than the budget allows, it takes nothing, and the message says so.
+        AutoThinned = "SC-I1119", Info, "Thread taken from thick spots";
+
         /// `--subject` and `stitch cutout` cut a picture's subject out with 3 models, which `stitch` fetches with
         /// curl on first use into the folder `STITCHCRAFT_MODELS` names, or else `stitchcraft/models` in your
         /// cache folder, and checks before each use. A file couldn't be fetched, or isn't the one pinned. Nothing
