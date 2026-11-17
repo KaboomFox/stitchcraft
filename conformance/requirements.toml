@@ -2615,6 +2615,15 @@ milestone = "M14"
 status = "active"
 
 [[req]]
+id = "REQ-VC-031"
+area = "vectorcraft"
+level = "L2"
+statement = "The compatibility gate fails a test sheet whose drawing by the Test Sheet filter takes more than 90 % of a light filter's budget in VectorCraft's host, naming the sheet, both counts and what to do, as it fails an export past 85 % of its budget (REQ-VC-015)."
+rationale = "The filter draws a sheet within a light filter's 50 million instructions, and TS-13F's drawing took 86 % of them with nothing to check it. Drawing a sheet digitizes nothing, so only a change to the sheet's shapes moves its count, and the gate leaves less room than for an export."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-VC-019"
 area = "vectorcraft"
 level = "L2"
@@ -3306,6 +3315,15 @@ level = "L2"
 statement = "A text object (REQ-AUTO-069) is bold when its first line that shows is set in a CSS font-weight of bold, bolder or 700 and above, or in a VectorCraft style whose name says bold, black or heavy and not semi-bold or demi-bold, or at a wght axis of 700 and above. objects::letter_among sews a bold text in the boldest of the fonts the host offers, the earlier of 2 as bold, when that font sews every line's capital letters at 0.7 of its font size, and SC-I1118 names the text, the font, its weight and its heights. When a line is shorter or taller than the bold font sews, the text sews in the default font, and SC-I1118 says so, with the heights, and a hint that gives the font size from which the bold font sews. A text that is not bold, and any text when fewer than 2 fonts are offered, sews in the default font, and nothing is said of a choice. The typeface a drawing names never chooses an embroidery font. The host is given the font's name with the characters of the text's lines (REQ-FONT-023)."
 rationale = "A text object has no traced letters to measure, but a drawing that sets a word bold asks for heavy letters, and the bold font gives them. A typeface's name, such as Arial, names no embroidery font, and matching it to one by its name would choose by accident. A line that the bold font can't sew at its height keeps the default font, and the note says from what size the bold font sews, since lettering set taller than the drawing has it would run over its neighbours."
 milestone = "M14"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-083"
+area = "auto"
+level = "L2"
+statement = "`cargo xtask perf` counts, with valgrind's callgrind, the instructions the release build of stitch takes to write each picture of automatic digitizing as VectorCraft's exporter writes it: the 4 traced dogs and the pear exported with the Auto effect, and the 6 TS-13 sheets written by `stitch testsheet`. Each count has its record in conformance/perf.toml, and a count above its record by more than 2 % fails, as a benchmark's does. The report gives each picture's count by stage of automatic digitizing, each stage the instructions of the functions that do it with all they call, and the rest of the run as one more row, and the time the command takes. Counting changes no stitch: each picture's file is written as its golden file has it."
+rationale = "A traced dog's export needs several times what VectorCraft allows it, and a step that makes digitizing dearer goes unseen until the compatibility gate fails a test sheet. The counts by stage say where the work goes, and the records hold each change to account, as they hold the fill and the insets."
+milestone = "M13"
 status = "active"
 
 [[req]]

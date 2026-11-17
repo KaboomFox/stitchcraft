@@ -8,6 +8,9 @@
 //! - **`insets`** shrinks a region 150 mm across, of 1,000 points, 300 times, each inset from the last, as
 //!   contour fill will. It does so for 4 regions: round or with 7 waves, by 0.25 mm and by 0.4 mm.
 //!   NFR-PERF-3, the third criterion of ADR-0005, gives each 200 ms, which the offsetter meets since M7.6.
+//! - **The pictures** of automatic digitizing, each a run of `stitch` that writes a traced dog, the pear or
+//!   a TS-13 sheet, counted whole and by stage (`REQ-AUTO-083`, [`crate::pictures`]). They have no time
+//!   budget, and their records are the `[pictures]` table. `--pictures` counts them alone.
 //!
 //! Each is measured 2 ways:
 //!
@@ -36,6 +39,7 @@ use std::process::Command;
 
 use serde::Deserialize;
 
+use crate::pictures;
 use crate::util::{self, Findings};
 
 const RECORD: &str = "conformance/perf.toml";
@@ -90,6 +94,17 @@ impl Bench {
     }
 }
 
+/// `conformance/perf.toml`: each benchmark's table, by its name, and each picture's count.
+#[derive(Debug, Deserialize, PartialEq)]
+struct Records {
+    /// The pictures' records ([`crate::pictures::PICTURES`]), by name.
+    #[serde(default)]
+    pictures: BTreeMap<String, u64>,
+    /// The benchmarks' tables, by name.
+    #[serde(flatten)]
+    benches: BTreeMap<String, Record>,
+}
+
 /// A benchmark's budget and its record: its table in `conformance/perf.toml`.
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
 struct Record {
@@ -106,24 +121,28 @@ fn target_dir(root: &Path, set: Option<OsString>) -> PathBuf {
     set.filter(|dir| !dir.is_empty()).map_or_else(|| root.join("target"), |dir| root.join(dir))
 }
 
-/// `cargo xtask perf`.
-pub fn run(record: bool) -> Result<(), String> {
+/// `cargo xtask perf`: the benchmarks and the pictures, or the pictures alone.
+pub fn run(record: bool, pictures_only: bool) -> Result<(), String> {
     let root = util::root();
-    let mut build = util::cargo();
-    build.args(["build", "--release", "--locked", "--package", "stitchcraft-engine"]);
-    for bench in &BENCHES {
-        build.args(["--example", bench.name]);
+    if !pictures_only {
+        let mut build = util::cargo();
+        build.args(["build", "--release", "--locked", "--package", "stitchcraft-engine"]);
+        for bench in &BENCHES {
+            build.args(["--example", bench.name]);
+        }
+        util::run(build, "cargo build --release of the benchmarks")?;
     }
-    util::run(build, "cargo build --release of the benchmarks")?;
+    util::run(pictures::build(), "cargo build --profile profiling of stitch")?;
     let path = root.join(RECORD);
-    let mut records = toml::from_str::<BTreeMap<String, Record>>(&util::read(&path)?).map_err(|e| format!("{RECORD}: {e}"))?;
+    let mut records = toml::from_str::<Records>(&util::read(&path)?).map_err(|e| format!("{RECORD}: {e}"))?;
     let target = target_dir(&root, std::env::var_os("CARGO_TARGET_DIR"));
     let counting = util::tool_available("valgrind", &["--version"]);
     let mut findings = Findings::default();
     let mut report = Vec::new();
+    let mut tables = Vec::new();
     let mut lowered = false;
-    for bench in &BENCHES {
-        let Some(kept) = records.get_mut(bench.name) else {
+    for bench in BENCHES.iter().filter(|_| !pictures_only) {
+        let Some(kept) = records.benches.get_mut(bench.name) else {
             findings.error(format!("{RECORD} has no `[{}]` table", bench.name));
             continue;
         };
@@ -149,7 +168,7 @@ pub fn run(record: bool) -> Result<(), String> {
         #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
         let instructions = instructions as u64;
         report.push(format!("one run of `{}` takes {instructions} instructions; the record is {}", bench.name, kept.instructions));
-        match judged(*kept, instructions, record) {
+        match judged(kept.instructions, instructions, record) {
             Judged::Within => {}
             Judged::Over(limit) => findings.error(format!(
                 "one run of `{}` takes {instructions} instructions, more than the {limit} the record in {RECORD} allows: make it \
@@ -171,6 +190,10 @@ pub fn run(record: bool) -> Result<(), String> {
             )),
         }
     }
+    if counting {
+        let mut counted = Counted { record, findings: &mut findings, report: &mut report, tables: &mut tables, lowered: &mut lowered };
+        counted.pictures(&target, &mut records.pictures)?;
+    }
     if lowered {
         std::fs::write(&path, render(&records)).map_err(|e| format!("{RECORD}: {e}"))?;
     }
@@ -190,10 +213,110 @@ pub fn run(record: bool) -> Result<(), String> {
         if let Some(summary) = std::env::var_os("GITHUB_STEP_SUMMARY") {
             let mut text = std::fs::read_to_string(&summary).unwrap_or_default();
             text.push_str(&format!("## Performance budget\n\n{}\n", report.iter().map(|line| format!("- {line}\n")).collect::<String>()));
+            for table in &tables {
+                text.push_str(&format!("{table}\n"));
+            }
             let _ = std::fs::write(&summary, text);
         }
     }
-    findings.finish("perf", "the benchmarks run within their records")
+    for table in &tables {
+        println!("\n{table}");
+    }
+    findings.finish("perf", "the benchmarks and the pictures run within their records")
+}
+
+/// What counting the pictures adds to: whether it records, the findings, the report's lines and tables, and
+/// whether a record was lowered.
+struct Counted<'a> {
+    record: bool,
+    findings: &'a mut Findings,
+    report: &'a mut Vec<String>,
+    tables: &'a mut Vec<String>,
+    lowered: &'a mut bool,
+}
+
+impl Counted<'_> {
+    /// Counts each picture with callgrind, by stage when `callgrind_annotate` is installed, against its
+    /// record in `kept`, and checks a sheet's file against its golden file.
+    fn pictures(&mut self, target: &Path, kept: &mut BTreeMap<String, u64>) -> Result<(), String> {
+        let stitch = pictures::binary(target);
+        let folder = target.join("perf");
+        std::fs::create_dir_all(&folder).map_err(|e| format!("{}: {e}", folder.display()))?;
+        // callgrind_annotate prints its version and exits with 255, so it is found by starting it.
+        let annotating = Command::new("callgrind_annotate").arg("--version").output().is_ok();
+        let mut seen = vec![false; pictures::STAGES.len()];
+        for picture in &pictures::PICTURES {
+            let written = folder.join(format!("{}.pes", picture.name));
+            let started = std::time::Instant::now();
+            output(Command::new(&stitch).args(picture.args).arg("-o").arg(&written), picture.name)?;
+            let seconds = started.elapsed().as_secs_f64();
+            if let Some(golden) = picture.golden {
+                if util::read_bytes(&written)? != util::read_bytes(&util::root().join(golden))? {
+                    self.findings.error(format!("the profiling build's {} is not {golden}: it sews otherwise than the tests' build", picture.name));
+                }
+            }
+            let profile = folder.join(format!("{}.callgrind", picture.name));
+            let mut callgrind = Command::new("valgrind");
+            callgrind
+                .arg("--tool=callgrind")
+                .arg(format!("--callgrind-out-file={}", profile.display()))
+                .arg(&stitch)
+                .args(picture.args)
+                .arg("-o")
+                .arg(&written);
+            let counted = errors_of(&mut callgrind, "valgrind --tool=callgrind")?;
+            let instructions = number_after(&counted, "Collected : ").ok_or(format!("callgrind counted nothing: {counted}"))?;
+            // Instruction counts are far below 2^53, so the conversion is exact.
+            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+            let instructions = instructions as u64;
+            let Some(record) = kept.get_mut(picture.name) else {
+                self.findings.error(format!("{RECORD} has no record for the picture `{}` in its `[pictures]` table", picture.name));
+                continue;
+            };
+            self.report
+                .push(format!("`stitch {}` takes {instructions} instructions and {seconds:.2} s; the record is {record}", picture.args.join(" ")));
+            self.judge(picture.name, record, instructions);
+            if annotating {
+                let mut annotate = Command::new("callgrind_annotate");
+                annotate.args(["--inclusive=yes", "--threshold=100"]).arg(&profile);
+                let staged = pictures::staged(&output(&mut annotate, "callgrind_annotate")?, instructions);
+                for (seen, (_, n)) in seen.iter_mut().zip(&staged.stages) {
+                    *seen |= *n > 0;
+                }
+                self.tables.push(pictures::table(picture.name, &staged, instructions));
+            }
+        }
+        for (stage, _) in pictures::STAGES.iter().zip(&seen).filter(|(_, seen)| !**seen).filter(|_| annotating) {
+            self.findings.warn(format!(
+                "no picture has work in the stage `{}`: its functions were renamed or inlined, so change xtask/src/pictures.rs with them",
+                stage.name
+            ));
+        }
+        if !annotating {
+            self.findings.warn("callgrind_annotate is not installed, so the pictures' counts are not split into stages (skipped)");
+        }
+        Ok(())
+    }
+
+    /// `instructions` of the picture `name` against its `record`, lowered when recording.
+    fn judge(&mut self, name: &str, record: &mut u64, instructions: u64) {
+        match judged(*record, instructions, self.record) {
+            Judged::Within => {}
+            Judged::Over(limit) => self.findings.error(format!(
+                "the picture `{name}` takes {instructions} instructions, more than the {limit} its record in {RECORD} allows: make it \
+                 cheaper, or raise the record by hand, saying why in the pull request"
+            )),
+            Judged::Lowered(today) => {
+                *record = today;
+                *self.lowered = true;
+                self.report.push(format!("recorded {today} for {name} in {RECORD}"));
+            }
+            Judged::Lost => self.findings.error(format!(
+                "the picture `{name}` takes {instructions} instructions, less than half the {record} recorded in {RECORD}: if the \
+                 work really got this much cheaper, lower the record by hand, saying why in the pull request"
+            )),
+        }
+    }
 }
 
 /// What a count says against the record.
@@ -209,29 +332,31 @@ enum Judged {
     Lost,
 }
 
-/// `instructions` against `kept`'s record, recording when `record` is set.
-fn judged(kept: Record, instructions: u64, record: bool) -> Judged {
-    if instructions < kept.instructions / 2 {
+/// `instructions` against the `kept` record, recording when `record` is set.
+fn judged(kept: u64, instructions: u64, record: bool) -> Judged {
+    if instructions < kept / 2 {
         return Judged::Lost;
     }
     let today = instructions.div_ceil(MILLION).saturating_mul(MILLION);
-    let limit = kept.instructions.saturating_add(kept.instructions * SLACK_PERCENT / 100);
-    match (record, today < kept.instructions, instructions > limit) {
+    let limit = kept.saturating_add(kept * SLACK_PERCENT / 100);
+    match (record, today < kept, instructions > limit) {
         (true, true, _) => Judged::Lowered(today),
         (false, _, true) => Judged::Over(limit),
         _ => Judged::Within,
     }
 }
 
-/// `conformance/perf.toml` with `records` in it, each benchmark's table in the order of [`BENCHES`].
-fn render(records: &BTreeMap<String, Record>) -> String {
+/// `conformance/perf.toml` with `records` in it, each benchmark's table in the order of [`BENCHES`], then the
+/// pictures' in the order of [`pictures::PICTURES`].
+fn render(records: &Records) -> String {
     let mut out = String::from(
         "# The performance budget (`cargo xtask perf`, docs/src/design/guardrails.md): planning the reference hoop's\n\
          # whole field, a 130 × 180 mm tatami fill at 0.4 mm (REQ-FILL-TAT-009, NFR-PERF-1), and shrinking a region\n\
-         # 150 mm across, of 1,000 points, 300 times, as contour fill will (NFR-PERF-3).\n",
+         # 150 mm across, of 1,000 points, 300 times, as contour fill will (NFR-PERF-3). And the pictures of\n\
+         # automatic digitizing (REQ-AUTO-083).\n",
     );
     for bench in &BENCHES {
-        let Some(kept) = records.get(bench.name) else { continue };
+        let Some(kept) = records.benches.get(bench.name) else { continue };
         out.push_str(&format!("\n[{}]\n", bench.name));
         for line in bench.budget {
             out.push_str(&format!("# {line}\n"));
@@ -245,7 +370,23 @@ fn render(records: &BTreeMap<String, Record>) -> String {
             kept.budget_ms, kept.instructions
         ));
     }
+    out.push_str(
+        "\n[pictures]\n\
+         # The instructions `stitch` takes to write each picture, built with the `profiling` profile and counted by\n\
+         # valgrind's callgrind (xtask/src/pictures.rs). More than this plus 2 % fails. `--record` lowers a count\n\
+         # and never raises it: raise it by hand, in a pull request that says why.\n",
+    );
+    for picture in &pictures::PICTURES {
+        if let Some(kept) = records.pictures.get(picture.name) {
+            out.push_str(&format!("{} = {kept}\n", toml_key(picture.name)));
+        }
+    }
     out
+}
+
+/// `name` as a key of a TOML table: bare when it is made of letters, digits, `-` and `_`, else quoted.
+fn toml_key(name: &str) -> String {
+    if !name.is_empty() && name.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_')) { name.to_string() } else { format!("{name:?}") }
 }
 
 /// Every number written after `median ` in `text`: the medians an example prints, one for each thing it
@@ -283,7 +424,7 @@ fn errors_of(cmd: &mut Command, what: &str) -> Result<String, String> {
 mod tests {
     use super::*;
 
-    const KEPT: Record = Record { budget_ms: 50.0, instructions: 280_000_000 };
+    const KEPT: u64 = 280_000_000;
 
     #[test]
     fn a_count_within_2_percent_of_the_record_passes_and_above_fails() {
@@ -349,17 +490,25 @@ mod tests {
 
     #[test]
     fn the_record_reads_back_as_it_is_written() {
-        let records: BTreeMap<String, Record> = BENCHES.iter().map(|bench| (bench.name.to_string(), KEPT)).collect();
-        assert_eq!(toml::from_str::<BTreeMap<String, Record>>(&render(&records)).unwrap(), records);
+        let benches = BENCHES.iter().map(|bench| (bench.name.to_string(), Record { budget_ms: 50.0, instructions: KEPT })).collect();
+        let records = Records { benches, pictures: pictures::PICTURES.iter().map(|picture| (picture.name.to_string(), KEPT)).collect() };
+        assert_eq!(toml::from_str::<Records>(&render(&records)).unwrap(), records);
         // The committed file is as recording writes it, so that recording changes only the numbers, and it
         // has a table for each benchmark. Git can check it out with Windows line endings.
         let text = util::read(&util::root().join(RECORD)).unwrap().replace("\r\n", "\n");
-        let committed = toml::from_str::<BTreeMap<String, Record>>(&text).unwrap();
+        let committed = toml::from_str::<Records>(&text).unwrap();
         assert_eq!(render(&committed), text);
-        assert_eq!(committed.keys().map(String::as_str).collect::<Vec<_>>(), {
+        assert_eq!(committed.benches.keys().map(String::as_str).collect::<Vec<_>>(), {
             let mut names: Vec<&str> = BENCHES.iter().map(|bench| bench.name).collect();
             names.sort_unstable();
             names
         });
+        // Each picture has its record, and nothing else is recorded.
+        let mut names: Vec<&str> = pictures::PICTURES.iter().map(|picture| picture.name).collect();
+        names.sort_unstable();
+        assert_eq!(committed.pictures.keys().map(String::as_str).collect::<Vec<_>>(), names);
+        assert_eq!(toml_key("TS-13A"), "TS-13A");
+        assert_eq!(toml_key("a dog"), "\"a dog\"");
+        assert_eq!(toml_key(""), "\"\"");
     }
 }

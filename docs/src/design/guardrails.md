@@ -32,7 +32,7 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 | API docs | Rustdoc builds without warnings: no broken, ambiguous or private intra-doc links | `cargo xtask ci` (`RUSTDOCFLAGS=-D warnings`) | `cargo xtask ci` · CI |
 | **Public API review** | Changes to a library crate's public API show in the PR diff, as a change to its `public-api.txt` | `xtask/src/api.rs` (cargo-public-api, pinned) | `cargo xtask api --check` · CI |
 | **Coverage ratchet** | No crate's line coverage drops below its floor, and floors only go up. A crate below its floor has its untested lines named on the pull request, those only another build of a function or a closure on the line runs included | `conformance/coverage.toml`, `xtask/src/coverage.rs` (cargo-llvm-cov) | `cargo xtask coverage` · CI job |
-| **Performance budget** | Planning the reference hoop's whole field (`REQ-FILL-TAT-009`) takes at most 2 % more instructions than recorded, and so does shrinking a region 150 mm across 300 times, as contour fill will. Records only go down. A count below half the record fails too: the counted function was lost. The times are reported against NFR-PERF-1's 50 ms and NFR-PERF-3's 200 ms, with a warning above them | `conformance/perf.toml`, `xtask/src/perf.rs` (valgrind's callgrind), the engine's `field` and `insets` examples | `cargo xtask perf` · CI job |
+| **Performance budget** | Planning the reference hoop's whole field (`REQ-FILL-TAT-009`) takes at most 2 % more instructions than recorded, and so does shrinking a region 150 mm across 300 times, as contour fill will. So does `stitch` writing each picture of automatic digitizing, the traced dogs, the pear and the TS-13 sheets, whose count the report splits into stages (`REQ-AUTO-083`). Records only go down. A count below half the record fails too: the counted function was lost. The times are reported against NFR-PERF-1's 50 ms and NFR-PERF-3's 200 ms, with a warning above them | `conformance/perf.toml`, `xtask/src/perf.rs` and `xtask/src/pictures.rs` (valgrind's callgrind), the engine's `field` and `insets` examples, the `profiling` profile | `cargo xtask perf` · CI job |
 | **Release build** | The build `stitch` and the plug-ins are published as plans as the tests' debug build does: the engine's release tests pass in it too. A release build is compiled more aggressively, and Rust 1.97.0 got one wrong there | `crates/stitchcraft-engine/tests/release.rs`, `rust-toolchain.toml` | `perf` CI job |
 | **Mutation testing** | Tests notice changed behaviour: every mutant in the lines a pull request changes is noticed or a listed equivalent; no crate gets more mutants no test notices than recorded, and records only go down. A weekly part whose unmutated tree failed its tests, or a recorded crate with no mutant tried, fails | `.cargo/mutants.toml`, `conformance/mutation.toml`, `xtask/src/mutants.rs` | `mutants.yml` · changed lines every PR, in 16 parts · everything weekly |
 | **Fuzzing** | Readers never panic, respect their caps and terminate; anything read round-trips and previews | `fuzz/`, `stitchcraft-testkit::fuzz` ([conformance](conformance.md#fuzzing)) | bodies every PR · an hour nightly |
@@ -101,6 +101,13 @@ that checks the added lines in its place. The command runs it from the repositor
 The performance budget counts instructions, because they come out the same on any machine and in any
 run, where milliseconds do not. Its check fails for a change that slows planning, on whichever runner it
 runs. The time is still measured and reported, against the budget the requirement states in milliseconds.
+
+The pictures are counted in the `profiling` profile of the root `Cargo.toml`: the release build without
+link-time optimization, which would inline the stages into each other, and with line tables, so that
+callgrind can name each function and the files of the code inlined into it. Each picture's count is the
+whole run of `stitch`, and each stage's is that of its functions. The table of stages, and what they found
+the first time, is in [where automatic digitizing spends its work](vectorcraft-integration.md#where-automatic-digitizing-spends-its-work).
+A TS-13 sheet that the profiling build writes otherwise than its golden file fails the check.
 
 Coverage counts each build of a function apart and takes the build that runs the most lines. The unit
 tests and the integration tests use separate builds, a generic function has one per type it is used with,

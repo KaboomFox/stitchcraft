@@ -116,3 +116,11 @@ opt-level = 2
 [profile.release]
 lto = "thin"
 codegen-units = 1
+
+# The build `cargo xtask perf` counts the pictures of automatic digitizing with: the release build without
+# link-time optimization, which inlines the stages into each other, and with line tables, so that callgrind
+# names each function (docs/src/design/guardrails.md).
+[profile.profiling]
+inherits = "release"
+lto = false
+debug = "line-tables-only"

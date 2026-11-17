@@ -1,6 +1,7 @@
 # The performance budget (`cargo xtask perf`, docs/src/design/guardrails.md): planning the reference hoop's
 # whole field, a 130 × 180 mm tatami fill at 0.4 mm (REQ-FILL-TAT-009, NFR-PERF-1), and shrinking a region
-# 150 mm across, of 1,000 points, 300 times, as contour fill will (NFR-PERF-3).
+# 150 mm across, of 1,000 points, 300 times, as contour fill will (NFR-PERF-3). And the pictures of
+# automatic digitizing (REQ-AUTO-083).
 
 [field]
 # The most the median of 21 plans may take natively, in milliseconds (NFR-PERF-1). Over it is a warning.
@@ -18,3 +19,19 @@ budget_ms = 200.0
 # `cargo xtask perf --record` lowers it and never raises it: raise it by hand, in a pull request that
 # says why.
 instructions = 6690000000
+
+[pictures]
+# The instructions `stitch` takes to write each picture, built with the `profiling` profile and counted by
+# valgrind's callgrind (xtask/src/pictures.rs). More than this plus 2 % fails. `--record` lowers a count
+# and never raises it: raise it by hand, in a pull request that says why.
+dog-on-turf-6 = 26608000000
+dog-on-turf-9 = 30792000000
+dog-running-6 = 28557000000
+dog-running-9 = 33680000000
+pear = 2640000000
+TS-13A = 1982000000
+TS-13B = 1730000000
+TS-13C = 1886000000
+TS-13D = 1539000000
+TS-13E = 1117000000
+TS-13F = 662000000
