@@ -110,7 +110,7 @@ use crate::generators::pull::PULL_COMPENSATION;
 use crate::generators::running::TOLERANCE;
 use crate::generators::satin::{
     self, CENTER_WALK_UNDERLAY, CENTER_WALK_UNDERLAY_REPEATS, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PUSH_COMPENSATION, SATIN_COLUMN,
-    SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET, ZIGZAG_UNDERLAY,
+    SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET, START_AT_NEAREST_POINT, ZIGZAG_UNDERLAY,
 };
 use crate::generators::tatami::{ANGLE, TURN_STITCHES};
 use crate::generators::{TooSmall, mm, too_small};
@@ -272,7 +272,10 @@ pub(crate) fn walks_once(width: Mm) -> bool {
 
 /// The settings of an automatic satin column `width` wide whose shape's settings of the rules are `rules`:
 /// `params`, the column's, with `satin_column` on, the underlay of its width, pull compensation of the
-/// overlap and `end_at_nearest_point` off. The thread pulls a
+/// overlap and `end_at_nearest_point` off, and `start_at_nearest_point` off for one that walks its middle
+/// once (`REQ-AUTO-086`). Started at the point nearest the needle, such a column first runs along its
+/// middle under itself to its start, then walks it, and its top stitches come back to where it began: the
+/// run, the walk, the lock and the column's last stitches piled up there. The thread pulls a
 /// column in from its rails as it pulls an area in from its edges, by the overlap an area reaches under its
 /// neighbours with, and a column whose stitches reach that far past its rails sews as wide as drawn: it meets
 /// the shapes beside it, columns too, with no fabric between. The order starts the next element near the
@@ -290,6 +293,10 @@ fn satin_params(params: &ParamSet, width: Mm, rules: &AutoParams) -> ParamSet {
     if walks_once(width) && column.get(CENTER_WALK_UNDERLAY_REPEATS).is_none() {
         column.set(CENTER_WALK_UNDERLAY_REPEATS, "1");
     }
+    // It starts at its end, where it also ends, unless its shape says where (`REQ-AUTO-086`).
+    if walks_once(width) && column.get(START_AT_NEAREST_POINT).is_none() {
+        column.set(START_AT_NEAREST_POINT, "false");
+    }
     // Its crowded needle points move in, unless its shape says how (`REQ-AUTO-071`).
     if column.get(SHORT_STITCH_DISTANCE).is_none() && column.get(SHORT_STITCH_INSET).is_none() {
         column.set(SHORT_STITCH_DISTANCE, CROWDED_CLOSER_THAN.to_string().as_str());
@@ -305,8 +312,6 @@ fn satin_params(params: &ParamSet, width: Mm, rules: &AutoParams) -> ParamSet {
 /// moves in no farther than [`EDGE_REACH`] past the column's edge as drawn (`REQ-AUTO-085`), unless its
 /// shape sets how its points move in. The other insets stay.
 fn edges(params: &mut ParamSet, shape: &ParamSet, width: Mm, rules: &AutoParams, even: bool, open: [bool; 2]) {
-    let open = if std::env::var("EXP_NOHOLE").is_ok() { [false, false] } else { open };
-    let even = even && std::env::var("EXP_NOEDGE").is_err();
     let reach = rules.auto_pull_compensation_mm.get();
     let pull = open.map(|open| if open { 0.0 } else { reach });
     if open.contains(&true) {
