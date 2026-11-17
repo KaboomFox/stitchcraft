@@ -7,7 +7,7 @@
 //! word's heights from the letter's top-left corner, so that what is measured doesn't depend on what is
 //! measured with.
 
-use stitchcraft_core::Point;
+use stitchcraft_core::{Point, math};
 use stitchcraft_plan::{Role, StitchKind, StitchPlan};
 
 /// A stroke of a letter: the 2 ends of its middle line and half its width, in heights from the letter's
@@ -58,24 +58,24 @@ pub fn placed(strokes: &[Stroke], origin: (f64, f64), height: f64, left: f64) ->
 /// How far a stitch from `a` to `b` lies from square to `stroke`, in degrees: 0 across it, 90 along it.
 pub fn lean(stroke: &Stroke, a: Point, b: Point) -> f64 {
     let [(x0, y0), (x1, y1)] = stroke.ends;
-    let length = (x1 - x0).hypot(y1 - y0);
+    let length = math::hypot(x1 - x0, y1 - y0);
     let (ux, uy) = ((x1 - x0) / length, (y1 - y0) / length);
     let (sx, sy) = (b.x() - a.x(), b.y() - a.y());
     let (along, across) = ((sx * ux + sy * uy).abs(), (sx * uy - sy * ux).abs());
-    along.atan2(across).to_degrees()
+    math::to_degrees(math::atan2(along, across))
 }
 
 /// How far `p` lies outside `stroke`'s band, in millimetres: 0 inside it. The band is the stroke's middle
 /// line between its ends, widened by half its width to each side.
 pub fn outside(stroke: &Stroke, p: Point) -> f64 {
     let [(x0, y0), (x1, y1)] = stroke.ends;
-    let length = (x1 - x0).hypot(y1 - y0);
+    let length = math::hypot(x1 - x0, y1 - y0);
     let (ux, uy) = ((x1 - x0) / length, (y1 - y0) / length);
     let (dx, dy) = (p.x() - x0, p.y() - y0);
     let along = dx * ux + dy * uy;
     let across = (dx * uy - dy * ux).abs();
     let beyond = if along < 0.0 { -along } else { (along - length).max(0.0) };
-    (across - stroke.half).max(0.0).hypot(beyond)
+    math::hypot((across - stroke.half).max(0.0), beyond)
 }
 
 /// Each satin stitch of the letter `id` in `plan` at least `shortest` millimetres long: where its middle lies

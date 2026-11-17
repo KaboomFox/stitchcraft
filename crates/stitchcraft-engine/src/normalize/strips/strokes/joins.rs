@@ -8,6 +8,9 @@ use stitchcraft_core::{Exhausted, Meter, Point};
 use super::{APEX, Band, CROSSING, Cut, Joined, SLIVER, TIE, Way, cosine, polygon, sine, unit_of};
 use crate::normalize::region::{Polygon, ops};
 
+/// The cuts of a join: each the stroke, its cut, and the end it ends under the other with and that other.
+pub(super) type Cuts = Vec<(usize, Cut, Option<(f64, usize)>)>;
+
 /// What becomes of each of `bands` where they meet in `part` (`REQ-AUTO-088`), the stroke that stops
 /// reaching `reach` past the other along its line, with `meter`'s work; `None` when 2 strokes lie along each
 /// other or a region can't be measured.
@@ -47,13 +50,7 @@ pub(super) fn meeting(part: &Polygon, one: &Band, other: &Band, meter: &mut Mete
 
 /// The cuts where the strokes `one` (`i`) and `other` (`j`) of `part` meet at `meeting`'s points, each the
 /// stroke, its cut and the end it ends under the other with; `None` when one lies along the other.
-pub(super) fn join(
-    part: &Polygon,
-    (i, one): (usize, &Band),
-    (j, other): (usize, &Band),
-    meeting: &[Point],
-    reach: f64,
-) -> Option<Vec<(usize, Cut, Option<(f64, usize)>)>> {
+pub(super) fn join(part: &Polygon, (i, one): (usize, &Band), (j, other): (usize, &Band), meeting: &[Point], reach: f64) -> Option<Cuts> {
     let through = |band: &Band| {
         let (lo, hi) = span(band, meeting);
         lo - band.from >= band.width() / 2.0 && band.to - hi >= band.width() / 2.0
@@ -158,7 +155,7 @@ pub(super) fn leaves(part: &Polygon, from: Point, way: Way) -> Option<f64> {
 
 /// The cuts of a join of `one` and `other` along the line that halves the angle between them, through the
 /// point where their lines cross, each reaching half of `reach` past it along its own line.
-pub(super) fn halved((i, one): (usize, &Band), (j, other): (usize, &Band), reach: f64) -> Option<Vec<(usize, Cut, Option<(f64, usize)>)>> {
+pub(super) fn halved((i, one): (usize, &Band), (j, other): (usize, &Band), reach: f64) -> Option<Cuts> {
     let crossing = crossed(one, other)?;
     let towards = |band: &Band| -> Option<Way> {
         let middle = band.middle()?;

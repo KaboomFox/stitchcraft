@@ -1,7 +1,7 @@
 //! Cases of a part read as strokes (`REQ-AUTO-087`, `REQ-AUTO-088`): the traced word's M and A, a T, an L,
 //! a cross, and the parts that keep their centre lines' columns, with the bounds of each measure.
 
-use stitchcraft_core::Budget;
+use stitchcraft_core::{Budget, math};
 
 use super::joins::{crossed, halved, join, leaves, meeting, square, stops};
 use super::*;
@@ -123,7 +123,7 @@ fn bands_of(part: &Polygon) -> Vec<Band> {
 fn lean(band: &Band, [a, b]: [Point; 2]) -> f64 {
     let along = (band.along(b) - band.along(a)).abs();
     let across = (band.across(b) - band.across(a)).abs();
-    along.atan2(across).to_degrees()
+    math::to_degrees(math::atan2(along, across))
 }
 
 /// Whether every rung of `column` lies square to one of `bands` within `most` degrees.
@@ -273,7 +273,7 @@ fn a_ring_is_cut_into_its_straight_runs_from_its_sharpest_corner() {
 fn two_sides_are_a_strokes_within_each_of_its_bounds() {
     let one = side((0.0, 0.0), (5.5, 0.0));
     let at = |degrees: f64| {
-        let (sin, cos) = degrees.to_radians().sin_cos();
+        let (sin, cos) = math::sin_cos(math::to_radians(degrees));
         Side { a: p(5.5, 5.0), b: p(5.5 - 5.5 * cos, 5.0 + 5.5 * sin) }
     };
     let (band, overlap) = paired(one, at(0.0), LIMITS).unwrap();
@@ -327,9 +327,9 @@ fn bands_on_the_same_2_lines_are_one_stroke() {
     assert!(same(&kept, &Band { lo: 0.09, hi: 1.09, ..later }));
     assert!(!same(&kept, &Band { lo: 0.11, hi: 1.0, ..later }));
     assert!(!same(&kept, &Band { lo: 0.0, hi: 0.89, ..later }));
-    let (sin, cos) = 2.5_f64.to_radians().sin_cos();
+    let (sin, cos) = math::sin_cos(math::to_radians(2.5));
     assert!(!same(&kept, &Band { u: (cos, sin), n: (-sin, cos), ..later }));
-    let (sin, cos) = 1.5_f64.to_radians().sin_cos();
+    let (sin, cos) = math::sin_cos(math::to_radians(1.5));
     assert!(same(&kept, &Band { o: p(0.0, 0.0), u: (cos, sin), n: (-sin, cos), from: 0.0, to: 2.0, ..kept }));
     let mut merged = kept;
     merge(&mut merged, &later);
@@ -382,7 +382,7 @@ fn a_stroke_stops_its_reach_past_the_other_along_its_own_line() {
     let above = Band { o: p(2.5, 6.0), lo: -1.0, hi: 0.0, ..below };
     assert_eq!(stops(&above, &running, REACH), Some(Cut::Keep { p: p(0.0, 6.0 - REACH), m: (0.0, 1.0) }));
     // At 60°, its stitches reach half of it: the cut lies 0.2 mm into the other.
-    let (sin, cos) = 60.0_f64.to_radians().sin_cos();
+    let (sin, cos) = math::sin_cos(math::to_radians(60.0));
     let slanted = Band { u: (cos, sin), n: (-sin, cos), ..below };
     let Some(Cut::Keep { p: at, m }) = stops(&slanted, &running, REACH) else { panic!() };
     assert!((at.y() - 5.2).abs() < 1e-9 && m == (0.0, -1.0), "{at:?}");
@@ -393,7 +393,7 @@ fn a_stroke_stops_its_reach_past_the_other_along_its_own_line() {
 
 #[test]
 fn a_halving_line_cuts_2_strokes_at_the_point_their_lines_cross() {
-    let (sin, cos) = 60.0_f64.to_radians().sin_cos();
+    let (sin, cos) = math::sin_cos(math::to_radians(60.0));
     // A V: 2 strokes from (0, 0) up at 60° each way.
     let left = Band { o: p(0.0, 0.0), u: (-cos, sin), n: (-sin, -cos), lo: -0.5, hi: 0.5, from: 0.0, to: 5.0 };
     let right = Band { o: p(0.0, 0.0), u: (cos, sin), n: (-sin, cos), lo: -0.5, hi: 0.5, from: 0.0, to: 5.0 };

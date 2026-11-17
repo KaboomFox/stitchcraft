@@ -198,10 +198,10 @@ pub(super) fn columns(
     let reach = rules.auto_pull_compensation_mm.get();
     let stroked = if cuts.is_empty() { strips::strokes(part, &found, reach, (narrowest.get(), bounds.max_satin.get()), meter)? } else { None };
     let mut chosen = None;
-    if let Some(strokes) = stroked {
-        if let Some(widths) = widths_of(part, &strokes, &edges, meter)?.filter(|widths| widths.iter().all(|measured| !runs(*measured, narrowest))) {
-            chosen = Some((strokes, widths, false));
-        }
+    if let Some(strokes) = stroked
+        && let Some(widths) = widths_of(part, &strokes, &edges, meter)?.filter(|widths| widths.iter().all(|measured| !runs(*measured, narrowest)))
+    {
+        chosen = Some((strokes, widths, false));
     }
     let (found, widths, pushed) = match chosen {
         Some(chosen) => chosen,
