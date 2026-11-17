@@ -3320,6 +3320,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13B.pes` and `TS-13D.pes` (M13.37, traced letters sewn as
+  strokes). In the digitized half of each, a part drawn in straight strokes sews a column along each
+  stroke. TS-13B's letters and TS-13D's white frames now sew so. The sheets sew 14,543 and 19,458 stitches,
+  where they sewed 14,509 and 20,233. TS-13B's digitized half jumps 51 times, where it jumped 49 times.
+  TS-13D measures 89.8 × 100.4 mm, where it measured 89.0 × 100.0 mm: its white frames, sewn as columns,
+  reach farther out than their fills did. TS-13B's size and both bottom
+  halves are as they were.
 - Changed `conformance/golden/testsheets/TS-13B.pes`, `TS-13C.pes` and `TS-13E.pes` (M13.36, a traced
   letter's counters and edges). In the digitized half of each, a column along a hole kept open has no pull
   compensation on that side, an even column moves its first crowded point no farther than its edge and
