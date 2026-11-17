@@ -98,11 +98,10 @@ place in that list, and groups the steps the rings take by their lower point. Th
 points, either way round, then lie side by side in a group, and are one edge.
 From M13.33 the rings are kept as the places of their points in that list while they are bent. The
 edges of a round are then sorted by grouping them by their lower place, which costs a step for each
-edge where a sort of the points compared each many times. An edge is looked at again only where it may
-now pass a hot point. An edge made by bending is looked at among all the hot points. After a round of
-crossings every other edge is looked at only among the cells that round made hot, and only when its
-bounds meet theirs, since it passed none of the others when it was last looked at. The points don't
-change, and neither do the edges, but less work is charged for them. The order of the edges round each
+edge where a sort of the points compared each many times. Bending checks an edge again only where it
+may now pass a hot point. A new edge, made by bending, may pass any of them. An older one passed none
+when it was last checked, so after a round of crossings the search for it covers the cells that round
+made hot, if its bounds meet theirs. The points come out the same, for less work charged. The order of the edges round each
 point is sorted once, for the faces and for the rings of the parts: the order of those kept is the
 order of all with the others left out.
 Property tests draw random rings on a grid, and random rings with float coordinates beside near-copies of
@@ -125,8 +124,8 @@ The parts are taken in groups, each part's bounds within 2⁻²⁰ mm of another
 cells of the grid. The rings of 2 groups then neither meet nor bend each other's edges, and their points
 are numbered in the same order with the others there or not. So each group's faces, rings and parts come
 out the same, and a group whose faces the operation keeps none of can be left out. Growing a region for
-its intersection with another (`buffered_near`) grows only the groups that can reach it, each part's
-bounds grown by the distance as well.
+its intersection with another (`buffered_near`) grows only the groups whose bounds, grown by the
+distance, come within 2⁻²⁰ mm of the other's.
 
 ## Tatami fill
 
