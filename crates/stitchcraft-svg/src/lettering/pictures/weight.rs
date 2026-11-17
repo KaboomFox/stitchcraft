@@ -222,6 +222,7 @@ mod tests {
         assert_eq!(ray((2.0, 1.0), (5.0, 1.0)), None);
         assert_eq!(ray((1.0, 0.0), (1.0, 4.0)), None);
         assert_eq!(ray((1.0 + CLEAR / 2.0, 0.0), (1.0 + CLEAR / 2.0, 4.0)), None);
+        assert_eq!(hit((0.0, 0.0), (1.0, 0.0), (CLEAR, -1.0), (CLEAR, 1.0)), None);
         assert!(ray((1.0 + 2.0 * CLEAR, 0.0), (1.0 + 2.0 * CLEAR, 4.0)).is_some_and(|far| (far - 2.0 * CLEAR).abs() < 1e-12));
         // A corner belongs to the edge that starts at it.
         assert_eq!(ray((3.0, 1.0), (3.0, 4.0)), Some(2.0));
@@ -251,6 +252,11 @@ mod tests {
         let two = sampled(&[rect(0.0, 0.0, 1.0, 10.0), rect(3.0, 0.0, 6.0, 10.0)]);
         assert_eq!(two.len(), 96);
         assert!(two.iter().all(|sample| [1.0, 3.0, 10.0].iter().any(|width| (sample.0 - width).abs() < 1e-9)), "{two:?}");
+        // A bar 1 mm wide and 47 tall has 2 corners at a place, 2 mm steps from half a step on. A place on a
+        // corner belongs to the edge that starts there, and its rays run along the bar's sides: 46 places of 48
+        // add a width, all 1 mm.
+        let thin = sampled(&[rect(0.0, 0.0, 1.0, 47.0)]);
+        assert_eq!((thin.len(), thin.iter().filter(|sample| (sample.0 - 1.0).abs() < 1e-9).count()), (46, 46));
         // An outline of no length, and none at all, have no width.
         assert!(sampled(&[vec![(1.0, 1.0), (1.0, 1.0)], Vec::new()]).is_empty());
     }
@@ -270,6 +276,8 @@ mod tests {
         let small = Outline::of(&rect(7.5, -6.5, 8.5, -5.5)).unwrap();
         assert!(small.missed((0.0, 0.0), (0.8, 0.6)));
         assert!(!small.missed((0.0, 0.0), (0.8, -0.6)));
+        // A box behind a slanted ray whose corners lie on both sides of the line it runs along.
+        assert!(Outline::of(&rect(-4.0, -6.0, 3.0, -3.0)).unwrap().missed((0.0, 0.0), (0.6, 0.8)));
     }
 
     #[test]
