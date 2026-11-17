@@ -21,7 +21,7 @@ use std::cell::OnceCell;
 use stitchcraft_core::{Exhausted, Meter, Point};
 
 use super::assemble::Unjoined;
-use super::geom::{Envelope, Location, closed, compare_angle, locate_in_ring};
+use super::geom::{Envelope, Location, closed, closed_of, compare_angle, locate_in_ring};
 use super::snap::{self, Node, TwiceArea};
 
 /// The rings cut where they meet: points, and edges between them.
@@ -79,7 +79,7 @@ pub(crate) fn cut(rings: &[Vec<Point>], meter: &mut Meter) -> Result<Result<Arra
     // point to the next, in the order the paths run.
     let corners: usize = on_grid.iter().map(Vec::len).sum();
     let mut at = if unbent { 0 } else { corners };
-    let mut steps: Vec<(usize, usize)> = Vec::new();
+    let mut steps: Vec<(usize, usize)> = Vec::with_capacity(paths.iter().map(Vec::len).sum());
     for path in &paths {
         meter.charge(u64::try_from(path.len()).unwrap_or(u64::MAX))?;
         let numbers = number.get(at..at + path.len()).unwrap_or_default();
@@ -202,7 +202,7 @@ impl Arrangement {
 
     /// Twice the area of the closed ring through the points numbered in `ring`, exactly.
     pub(crate) fn twice_area(&self, ring: &[usize]) -> TwiceArea {
-        TwiceArea::of(&ring.iter().filter_map(|&i| self.nodes.get(i).copied()).collect::<Vec<_>>())
+        TwiceArea::along(ring.iter().filter_map(|&i| self.nodes.get(i).copied()))
     }
 
     /// For each half edge, the next half edge counter-clockwise round its start, among the halves `keep`
@@ -242,33 +242,34 @@ impl Arrangement {
 
     /// The faces and their winding numbers. One unit of `meter` per half edge, per point of the rings
     /// traced (for their bounds), per pair of a ring bounding no face and a face compared, and per point of
-    /// each face whose bounds cover such a ring and that the ring is then located in.
+    /// each face whose bounds cover such a ring and that the ring is then located in, the smallest first
+    /// until one holds it.
     pub(crate) fn faces(&self, meter: &mut Meter) -> Result<Faces, Exhausted> {
         let halves = 2 * self.edges.len();
         meter.charge(u64::try_from(halves).unwrap_or(u64::MAX))?;
         let next_ccw = self.stars(|_| true);
         // Trace the rings: after each half, the half leaving its end just counter-clockwise of the way back.
         let mut ring_of: Vec<Option<usize>> = vec![None; halves];
-        let mut rings: Vec<Vec<usize>> = Vec::new();
+        // Each ring as the points its halves start at, all of them in one list.
+        let (mut points, mut bounds): (Vec<usize>, Vec<usize>) = (Vec::with_capacity(halves), vec![0]);
         for start in 0..halves {
             if ring_of.get(start).copied().flatten().is_some() {
                 continue;
             }
-            let id = rings.len();
-            let mut ring = Vec::new();
+            let id = bounds.len() - 1;
             let mut half = start;
             while let Some(slot) = ring_of.get_mut(half) {
                 if slot.is_some() {
                     break;
                 }
                 *slot = Some(id);
-                ring.push(half);
+                points.extend(self.ends(half).map(|(from, _)| from));
                 half = next_ccw.get(half ^ 1).copied().unwrap_or(half);
             }
-            rings.push(ring);
+            bounds.push(points.len());
         }
-        let starts: Vec<Vec<usize>> = rings.iter().map(|ring| ring.iter().filter_map(|&h| self.ends(h)).map(|(from, _)| from).collect()).collect();
-        let polylines: Vec<Vec<Point>> = starts.iter().map(|ring| closed(&ring.iter().map(|&i| self.point(i)).collect::<Vec<_>>())).collect();
+        let starts: Vec<&[usize]> = bounds.windows(2).map(|span| span.first().zip(span.get(1)).and_then(|(&from, &to)| points.get(from..to)).unwrap_or_default()).collect();
+        let polylines: Vec<Vec<Point>> = starts.iter().map(|ring| closed_of(ring.iter().map(|&i| self.point(i)), ring.len())).collect();
         let areas: Vec<TwiceArea> = starts.iter().map(|ring| self.twice_area(ring)).collect();
         // Each ring's bounds, once: a ring is compared with every face, and a face with every ring.
         let mut envelopes: Vec<Envelope> = Vec::with_capacity(polylines.len());
@@ -277,7 +278,7 @@ impl Arrangement {
             envelopes.push(Envelope::of(polyline));
         }
         // Clockwise rings bound faces, numbered in order; the others lie in the smallest face around them.
-        let mut face_of_ring: Vec<Option<usize>> = vec![None; rings.len()];
+        let mut face_of_ring: Vec<Option<usize>> = vec![None; starts.len()];
         let mut bounds: Vec<usize> = Vec::new();
         for (r, area) in areas.iter().enumerate() {
             if area.clockwise() {
@@ -292,21 +293,23 @@ impl Arrangement {
             }
             meter.charge(u64::try_from(bounds.len()).unwrap_or(u64::MAX))?;
             let probe = polyline.first().copied().unwrap_or(Point::ORIGIN);
-            // The faces around it: those whose bounds cover its bounds, and inside which its first point lies.
-            let mut around: Vec<(usize, usize)> = Vec::new();
-            for (f, &b) in bounds.iter().enumerate() {
-                if let (Some(face), Some(face_env)) = (polylines.get(b), envelopes.get(b))
-                    && face_env.covers(env)
-                {
-                    meter.charge(u64::try_from(face.len()).unwrap_or(u64::MAX))?;
-                    if locate_in_ring(probe, face) == Location::Interior {
-                        around.push((f, b));
-                    }
+            // The faces around it are those whose bounds cover its bounds and inside which its first point
+            // lies, and it lies in the smallest: the one whose clockwise ring's area is nearest 0, and the
+            // last of those as small. So the faces whose bounds cover its own are looked at in that order,
+            // until one holds the point.
+            let mut covering: Vec<(usize, usize)> =
+                bounds.iter().enumerate().filter(|&(_, &b)| envelopes.get(b).is_some_and(|face| face.covers(env))).map(|(f, &b)| (f, b)).collect();
+            covering.sort_by(|&(f, b), &(g, c)| areas.get(c).cmp(&areas.get(b)).then(g.cmp(&f)));
+            let mut smallest = outside;
+            for &(f, b) in &covering {
+                let Some(face) = polylines.get(b) else { continue };
+                meter.charge(u64::try_from(face.len()).unwrap_or(u64::MAX))?;
+                if locate_in_ring(probe, face) == Location::Interior {
+                    smallest = f;
+                    break;
                 }
             }
-            // Of the faces around it, the smallest: the one whose clockwise ring's area is nearest 0.
-            let smallest = around.iter().max_by_key(|&&(_, b)| areas.get(b).copied());
-            face_of_ring[r] = Some(smallest.map_or(outside, |&(f, _)| f));
+            face_of_ring[r] = Some(smallest);
         }
         let right_of: Vec<usize> = ring_of.iter().map(|r| r.and_then(|r| face_of_ring.get(r).copied().flatten()).unwrap_or(outside)).collect();
         // Winding numbers, from outside everything inwards: crossing a half from its right to its left adds

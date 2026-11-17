@@ -47,7 +47,7 @@ const HALF: f64 = GRID / 2.0;
 /// How far from the origin a point can be put on the grid, in millimetres: 2^16 mm, about 65 m. Within it
 /// a node's coordinates stay below 2^53 half cells, and every product taken of them fits in 128 bits. A
 /// design lies within 10 m of the origin (`design::WORKING_LIMIT_MM`), and a part grows by 10 mm at most.
-const REACH: f64 = 65_536.0;
+pub(crate) const REACH: f64 = 65_536.0;
 
 /// How many rounds, each bending edges or else making hot the cells where they cross, before the rings are
 /// given up as a bug. Every drawing tried settles within 6: up to 4 rounds of bending, 1 of crossings, and
@@ -581,7 +581,7 @@ fn crossings(edges: &[(Node, Node)], meter: &mut Meter) -> Result<Vec<[Node; 4]>
 fn crossings_in(edges: &[(Node, Node)], side: usize, meter: &mut Meter) -> Result<Option<Vec<[Node; 4]>>, Exhausted> {
     let buckets = Buckets::over(edges.iter().flat_map(|&(a, b)| [a, b]), side);
     let most = 4 * edges.len();
-    let mut put: Vec<(usize, usize)> = Vec::new();
+    let mut put: Vec<(usize, usize)> = Vec::with_capacity(2 * edges.len());
     for (k, &(a, b)) in edges.iter().enumerate().filter(|(_, (a, b))| a != b) {
         buckets.along(a, b, |bucket| {
             put.push((bucket, k));
@@ -646,10 +646,11 @@ impl TwiceArea {
     /// None.
     const ZERO: TwiceArea = TwiceArea { wraps: 0, rest: 0 };
 
-    /// Of the closed ring through `ring`'s points (the first need not be repeated at the end).
-    pub(crate) fn of(ring: &[Node]) -> TwiceArea {
-        let next = ring.iter().skip(1).chain(ring.first());
-        ring.iter().zip(next).fold(TwiceArea::ZERO, |area, (a, b)| area.plus(i128::from(a.x) * i128::from(b.y) - i128::from(b.x) * i128::from(a.y)))
+    /// Of the closed ring through the points `nodes` gives one by one (the first need not be repeated at
+    /// the end).
+    pub(crate) fn along(nodes: impl Iterator<Item = Node> + Clone) -> TwiceArea {
+        let next = nodes.clone().skip(1).chain(nodes.clone().take(1));
+        nodes.zip(next).fold(TwiceArea::ZERO, |area, (a, b)| area.plus(i128::from(a.x) * i128::from(b.y) - i128::from(b.x) * i128::from(a.y)))
     }
 
     /// This and `term`, which is less than 2^127 in size.
@@ -1163,14 +1164,14 @@ mod tests {
     #[test]
     fn areas_are_exact_and_ordered() {
         let square = [n(0, 0), n(2, 0), n(2, 2), n(0, 2)];
-        assert_eq!(TwiceArea::of(&square), TwiceArea { wraps: 0, rest: 8 });
-        assert!(TwiceArea::of(&square).counter_clockwise());
+        assert_eq!(TwiceArea::along(square.iter().copied()), TwiceArea { wraps: 0, rest: 8 });
+        assert!(TwiceArea::along(square.iter().copied()).counter_clockwise());
         let turned: Vec<Node> = square.iter().rev().copied().collect();
-        assert!(TwiceArea::of(&turned).clockwise());
+        assert!(TwiceArea::along(turned.iter().copied()).clockwise());
         // A sliver a half cell wide and 2^52 half cells long: no float would say which way it turns.
         let far = 1_i64 << 52;
         let sliver = [n(-far, 0), n(far, 0), n(far, 2), n(-far + 2, 2)];
-        assert!(TwiceArea::of(&sliver).counter_clockwise());
+        assert!(TwiceArea::along(sliver.iter().copied()).counter_clockwise());
         // Sums past 2^127 wrap, and still compare as the numbers they stand for.
         let top = TwiceArea { wraps: 0, rest: i128::MAX };
         assert_eq!(top.plus(1), TwiceArea { wraps: 1, rest: i128::MIN });

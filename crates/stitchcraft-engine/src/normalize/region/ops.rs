@@ -17,10 +17,14 @@
 //! and the grown parts joined, since parts grown apart may overlap.
 //!
 //! Work goes only where a result needs it: with an empty region on either side, the result is known, and a
-//! part grown alone or parts shrunk, which stay apart, are not joined again.
+//! part grown alone or parts shrunk, which stay apart, are not joined again. Nor do parts far from the
+//! other region take part in an intersection or a difference ([`kept`]): an area's neighbours lie all
+//! round it, and most of each is far from the strip where it meets them.
 
 use stitchcraft_core::{Exhausted, Meter, Point};
 
+use super::geom::Envelope;
+use super::snap::REACH;
 use super::{Polygon, Unjoined, area};
 use crate::normalize::offset::{Corners, buffer_with};
 
@@ -36,26 +40,187 @@ pub(crate) fn union<'r>(regions: impl IntoIterator<Item = &'r [Polygon]>, meter:
     Ok(area(&rings, |w| w != 0, meter)?.parts)
 }
 
-/// The part of `a` inside `b`.
+/// The part of `a` inside `b`. The parts of either that no part of the other comes near are left out
+/// ([`kept`]): their parts don't overlap, so only a part of each covers a point of the result. One unit of
+/// `meter` for the work of [`kept`] and of [`area`].
 pub(crate) fn intersection(a: &[Polygon], b: &[Polygon], meter: &mut Meter) -> Result<Parts, Exhausted> {
     if a.is_empty() || b.is_empty() {
         return Ok(Ok(Vec::new()));
     }
+    let Some((a, b)) = kept(a, b, |of_a, of_b| of_a && of_b, meter)? else { return Ok(Err(Unjoined)) };
     let rings: Vec<Vec<Point>> = rings_of(a).chain(rings_of(b)).collect();
+    if rings.is_empty() {
+        return Ok(Ok(Vec::new()));
+    }
     Ok(area(&rings, |w| w == -2, meter)?.parts)
 }
 
-/// The part of `a` outside `b`.
+/// The part of `a` outside `b`. The parts of `b` that no part of `a` comes near are left out ([`kept`]).
+/// One unit of `meter` for the work of [`kept`] and of [`area`].
 pub(crate) fn difference(a: &[Polygon], b: &[Polygon], meter: &mut Meter) -> Result<Parts, Exhausted> {
     if a.is_empty() || b.is_empty() {
         return Ok(Ok(a.to_vec()));
     }
+    let Some((a, b)) = kept(a, b, |of_a, _| of_a, meter)? else { return Ok(Err(Unjoined)) };
     let reversed = rings_of(b).map(|mut ring| {
         ring.reverse();
         ring
     });
     let rings: Vec<Vec<Point>> = rings_of(a).chain(reversed).collect();
     Ok(area(&rings, |w| w == -1, meter)?.parts)
+}
+
+/// How far apart, in millimetres, the bounds of 2 groups of parts lie at the least for [`kept`] to take
+/// them apart: 2^-20 mm, about a millionth of a millimetre, or 32,768 cells of the grid points are rounded
+/// to ([`super::snap::GRID`]). Rounding moves a point by less than a cell, and bends an edge only through a
+/// point within a cell of it.
+const APART: f64 = 1.0 / 1_048_576.0;
+
+/// The parts of `a` and of `b` that an operation on both needs, each in its order: the parts are taken in
+/// groups, a part's bounds within [`APART`] of another's of its group, and a group is kept when `keep`, told
+/// whether it holds a part of `a` and a part of `b`, says so; `None` should a part left out have a point
+/// beyond the grid's reach, as the whole operation would fail (a bug). The groups' bounds lie apart, so
+/// their rings neither meet nor bend each other's edges when they are cut, and each group's faces, rings
+/// and parts are those it would have with the others there: the points of every group are numbered in the
+/// same order, and so are its parts. A group left out is one whose faces the operation keeps none of. One
+/// unit of `meter` for each part and each point of its rings, and for each 2 parts whose bounds are
+/// compared.
+type Kept<'p> = Option<(Vec<&'p Polygon>, Vec<&'p Polygon>)>;
+
+fn kept<'p>(a: &'p [Polygon], b: &'p [Polygon], keep: impl Fn(bool, bool) -> bool, meter: &mut Meter) -> Result<Kept<'p>, Exhausted> {
+    let parts: Vec<&Polygon> = a.iter().chain(b).collect();
+    let bounds = bounds_of(&parts, meter)?;
+    let mut group = groups(&bounds, APART, meter)?;
+    // Whether each group holds a part of `a`, and a part of `b`.
+    let mut holds = vec![(false, false); parts.len()];
+    for k in 0..parts.len() {
+        let root = top(&mut group, k);
+        if let Some(slot) = holds.get_mut(root) {
+            *slot = if k < a.len() { (true, slot.1) } else { (slot.0, true) };
+        }
+    }
+    let (mut kept_a, mut kept_b) = (Vec::new(), Vec::new());
+    for (k, part) in parts.into_iter().enumerate() {
+        let root = top(&mut group, k);
+        let (of_a, of_b) = holds.get(root).copied().unwrap_or((true, true));
+        if keep(of_a, of_b) {
+            if k < a.len() { kept_a.push(part) } else { kept_b.push(part) }
+        } else if beyond(part, 0.0) {
+            return Ok(None);
+        }
+    }
+    Ok(Some((kept_a, kept_b)))
+}
+
+/// `parts`, a region, grown by `distance` as [`buffered`] grows it, but for the parts whose growth can't
+/// come within [`APART`] of `near`: what it leaves out of the growth, an intersection with `near` leaves
+/// out too ([`kept`]). The parts are taken in groups, each part's bounds grown by `distance` and [`APART`]
+/// meeting another's of its group: the growths of 2 groups lie apart, and are joined apart, so the growth
+/// of the groups kept is that part of the whole growth, its parts in the same order. They are joined
+/// whenever the whole growth would be, from 2 parts. One unit of `meter` for the work of [`buffered`] on
+/// the parts kept, for each part and each point of its rings, and for each 2 parts whose bounds are
+/// compared.
+pub(crate) fn buffered_near(parts: &[Polygon], distance: f64, near: &[Polygon], meter: &mut Meter) -> Result<Parts, Exhausted> {
+    if distance <= 0.0 || parts.len() < 2 || near.is_empty() {
+        return buffered(parts, distance, meter);
+    }
+    let all: Vec<&Polygon> = parts.iter().collect();
+    let bounds = bounds_of(&all, meter)?;
+    let mut group = groups(&bounds, distance + APART, meter)?;
+    let near: Vec<&Polygon> = near.iter().collect();
+    let around = bounds_of(&near, meter)?.into_iter().reduce(|a, b| Envelope {
+        min_x: a.min_x.min(b.min_x),
+        min_y: a.min_y.min(b.min_y),
+        max_x: a.max_x.max(b.max_x),
+        max_y: a.max_y.max(b.max_y),
+    });
+    let reach = distance + APART;
+    let mut meets = vec![false; parts.len()];
+    for (k, at) in bounds.iter().enumerate() {
+        if around.is_some_and(|around| at.min_x - reach <= around.max_x && around.min_x <= at.max_x + reach && at.min_y - reach <= around.max_y && around.min_y <= at.max_y + reach) {
+            let root = top(&mut group, k);
+            meets.get_mut(root).into_iter().for_each(|slot| *slot = true);
+        }
+    }
+    let mut moved = Vec::new();
+    for (k, part) in parts.iter().enumerate() {
+        let root = top(&mut group, k);
+        if meets.get(root).copied().unwrap_or(true) {
+            let Ok(polygons) = buffer_with(part, distance, Corners::ROUND, meter)? else { return Ok(Err(Unjoined)) };
+            moved.extend(polygons);
+        } else if beyond(part, distance) {
+            return buffered(parts, distance, meter);
+        }
+    }
+    if moved.is_empty() {
+        return Ok(Ok(moved));
+    }
+    union([moved.as_slice()], meter)
+}
+
+/// Whether a point of `part`, grown by `distance`, may lie beyond the grid's reach, where cutting it would
+/// fail (a bug).
+fn beyond(part: &Polygon, distance: f64) -> bool {
+    part.rings().flatten().any(|p| p.x().abs().max(p.y().abs()) + distance + APART >= REACH)
+}
+
+/// The bounds of each of `parts`. One unit of `meter` for each part and each point of its rings.
+fn bounds_of(parts: &[&Polygon], meter: &mut Meter) -> Result<Vec<Envelope>, Exhausted> {
+    let mut bounds = Vec::with_capacity(parts.len());
+    for part in parts {
+        meter.charge(1 + part.rings().map(|ring| ring.len() as u64).sum::<u64>())?;
+        let mut envelope = Envelope::of(&part.outline);
+        for hole in &part.holes {
+            let of = Envelope::of(hole);
+            envelope = Envelope { min_x: envelope.min_x.min(of.min_x), min_y: envelope.min_y.min(of.min_y), max_x: envelope.max_x.max(of.max_x), max_y: envelope.max_y.max(of.max_y) };
+        }
+        bounds.push(envelope);
+    }
+    Ok(bounds)
+}
+
+/// The groups of `bounds`, each grown by `by` and meeting another of its group: for each, one of its group
+/// ([`top`] finds the group's own). A sweep along x compares each with those before it that reach it. One
+/// unit of `meter` for each 2 compared.
+fn groups(bounds: &[Envelope], by: f64, meter: &mut Meter) -> Result<Vec<usize>, Exhausted> {
+    let mut order: Vec<usize> = (0..bounds.len()).collect();
+    let least = |i: usize| bounds.get(i).map_or(0.0, |e| e.min_x);
+    order.sort_by(|&i, &j| least(i).total_cmp(&least(j)).then(i.cmp(&j)));
+    let mut group: Vec<usize> = (0..bounds.len()).collect();
+    let mut open: Vec<usize> = Vec::new();
+    for &i in &order {
+        let Some(&at) = bounds.get(i) else { continue };
+        open.retain(|&j| bounds.get(j).is_some_and(|other| other.max_x + 2.0 * by >= at.min_x));
+        for &j in &open {
+            meter.charge(1)?;
+            if bounds.get(j).is_some_and(|other| other.min_y - 2.0 * by <= at.max_y && at.min_y - 2.0 * by <= other.max_y) {
+                join(&mut group, i, j);
+            }
+        }
+        open.push(i);
+    }
+    Ok(group)
+}
+
+/// The group `k` is in: the first of its chain in `group`, which then leads there at once.
+fn top(group: &mut [usize], k: usize) -> usize {
+    let mut root = k;
+    while let Some(&up) = group.get(root).filter(|&&up| up != root) {
+        root = up;
+    }
+    let mut at = k;
+    while let Some(slot) = group.get_mut(at).filter(|slot| **slot != root) {
+        at = std::mem::replace(slot, root);
+    }
+    root
+}
+
+/// Puts the groups of `i` and of `j` together.
+fn join(group: &mut [usize], i: usize, j: usize) {
+    let (i, j) = (top(group, i), top(group, j));
+    if let Some(slot) = group.get_mut(i.max(j)) {
+        *slot = i.min(j);
+    }
 }
 
 /// `parts`, a region, grown by `distance`, or shrunk by a negative distance, with round corners: each part
@@ -84,8 +249,8 @@ pub(crate) fn area_of(parts: &[Polygon]) -> f64 {
 }
 
 /// The rings of `parts`: each part's outline, then its holes.
-fn rings_of(parts: &[Polygon]) -> impl Iterator<Item = Vec<Point>> + '_ {
-    parts.iter().flat_map(Polygon::rings).map(<[Point]>::to_vec)
+fn rings_of<'p>(parts: impl IntoIterator<Item = &'p Polygon>) -> impl Iterator<Item = Vec<Point>> {
+    parts.into_iter().flat_map(Polygon::rings).map(<[Point]>::to_vec)
 }
 
 #[cfg(test)]
@@ -182,6 +347,94 @@ mod tests {
         // 3 parts grown into each other are one.
         let three = [square((0.0, 0.0), (10.0, 10.0)), square((10.5, 0.0), (20.0, 10.0)), square((20.5, 0.0), (30.0, 10.0))];
         assert_eq!(buffered(&three, 0.4, &mut meter()).unwrap().unwrap().len(), 1);
+    }
+
+    /// What an operation on `a` and `b` gives with every part of both cut together: `filled` keeps the faces
+    /// by their winding, `b`'s rings reversed when `reverse`.
+    fn whole(a: &[Polygon], b: &[Polygon], reverse: bool, filled: impl Fn(i64) -> bool) -> Parts {
+        let b = rings_of(b).map(|mut ring| {
+            if reverse {
+                ring.reverse();
+            }
+            ring
+        });
+        let rings: Vec<Vec<Point>> = rings_of(a).chain(b).collect();
+        area(&rings, filled, &mut meter()).unwrap().parts
+    }
+
+    #[test]
+    fn parts_far_from_the_other_region_are_left_out_and_the_result_is_the_same() {
+        let a = [square((0.0, 0.0), (10.0, 10.0)), square((40.0, 0.0), (50.0, 10.0))];
+        let b = [square((5.0, 0.0), (15.0, 10.0)), square((100.0, 0.0), (110.0, 10.0)), square((5.0, 20.0), (8.0, 24.0))];
+        assert_eq!(intersection(&a, &b, &mut meter()).unwrap(), whole(&a, &b, false, |w| w == -2));
+        assert_eq!(difference(&a, &b, &mut meter()).unwrap(), whole(&a, &b, true, |w| w == -1));
+        assert_eq!(difference(&b, &a, &mut meter()).unwrap(), whole(&b, &a, true, |w| w == -1));
+        // Parts of `b` all far from `a` are left out, and `a` is still cut on its own, as it would be.
+        let far = [square((100.0, 0.0), (110.0, 10.0))];
+        assert_eq!(difference(&a, &far, &mut meter()).unwrap(), whole(&a, &far, true, |w| w == -1));
+        // Regions far apart share nothing, and finding so costs their bounds alone: a part and each of its 5
+        // points, for each of the 2.
+        let mut spent = meter();
+        assert!(intersection(&a[..1], &far, &mut spent).unwrap().unwrap().is_empty());
+        assert_eq!(Budget::DEFAULT.max_work - spent.work_left(), 12);
+        // A part left out with a point beyond the grid's reach fails as the whole operation would.
+        let beyond = [square((70_000.0, 0.0), (70_001.0, 1.0))];
+        assert!(intersection(&a, &beyond, &mut meter()).unwrap().is_err());
+        assert!(whole(&a, &beyond, false, |w| w == -2).is_err());
+    }
+
+    #[test]
+    fn bounds_within_twice_the_distance_of_each_other_are_one_group() {
+        let at = |min_x: f64, min_y: f64, max_x: f64, max_y: f64| Envelope { min_x, min_y, max_x, max_y };
+        let together = |a: Envelope, b: Envelope| {
+            let mut spent = meter();
+            let mut group = groups(&[a, b], 0.5, &mut spent).unwrap();
+            (top(&mut group, 0) == top(&mut group, 1), Budget::DEFAULT.max_work - spent.work_left())
+        };
+        // 1 apart along x, each grown by 0.5: they meet, and the 2 are compared once.
+        assert_eq!(together(at(0.0, 0.0, 1.0, 1.0), at(2.0, 0.0, 3.0, 1.0)), (true, 1));
+        assert_eq!(together(at(2.0, 0.0, 3.0, 1.0), at(0.0, 0.0, 1.0, 1.0)), (true, 1));
+        // Further apart along x, they aren't compared.
+        assert_eq!(together(at(0.0, 0.0, 1.0, 1.0), at(2.25, 0.0, 3.0, 1.0)), (false, 0));
+        // Level along x, 1 apart along y they meet, either way round, and further apart they don't.
+        assert_eq!(together(at(0.0, 0.0, 1.0, 1.0), at(0.0, 2.0, 1.0, 3.0)), (true, 1));
+        assert_eq!(together(at(0.0, 2.0, 1.0, 3.0), at(0.0, 0.0, 1.0, 1.0)), (true, 1));
+        assert_eq!(together(at(0.0, 0.0, 1.0, 1.0), at(0.0, 2.25, 1.0, 3.0)), (false, 1));
+        assert_eq!(together(at(0.0, 2.25, 1.0, 3.0), at(0.0, 0.0, 1.0, 1.0)), (false, 1));
+        // A chain of 3, the first and the last apart, is one group.
+        let mut group = groups(&[at(0.0, 0.0, 1.0, 1.0), at(4.0, 0.0, 5.0, 1.0), at(2.0, 0.0, 3.0, 1.0)], 0.5, &mut meter()).unwrap();
+        assert!((0..3).all(|k| top(&mut group, k) == top(&mut group, 0)));
+    }
+
+    #[test]
+    fn a_region_grown_near_another_keeps_the_growth_that_reaches_it() {
+        let parts = [square((0.0, 0.0), (1.0, 1.0)), square((1.5, 0.0), (2.5, 1.0)), square((50.0, 0.0), (51.0, 1.0))];
+        let near = [square((0.5, 0.5), (2.0, 2.0))];
+        let all = buffered(&parts, 0.4, &mut meter()).unwrap().unwrap();
+        assert_eq!(all.len(), 2, "the first 2 grow into one");
+        // The growth of the part far away is left out, and the rest is the same.
+        let kept = buffered_near(&parts, 0.4, &near, &mut meter()).unwrap().unwrap();
+        assert_eq!(kept, all[..1]);
+        assert_eq!(intersection(&near, &kept, &mut meter()).unwrap(), intersection(&near, &all, &mut meter()).unwrap());
+        // A part kept alone is joined, as the whole growth is.
+        let one = [square((0.0, 0.0), (1.0, 1.0)), square((50.0, 0.0), (51.0, 1.0))];
+        let whole_growth = buffered(&one, 0.4, &mut meter()).unwrap().unwrap();
+        assert_eq!(buffered_near(&one, 0.4, &near, &mut meter()).unwrap().unwrap(), whole_growth[..1]);
+        // Near nothing, nothing is grown.
+        let mut spent = meter();
+        let none = buffered_near(&parts, 0.4, &[square((20.0, 20.0), (21.0, 21.0))], &mut spent).unwrap().unwrap();
+        assert!(none.is_empty());
+        // The 3 parts' bounds and the one they are near, 6 units each, and the first 2 compared.
+        assert_eq!(Budget::DEFAULT.max_work - spent.work_left(), 4 * 6 + 1);
+        // Shrunk, alone, or near no region, the whole is grown.
+        for (parts, distance, near) in [(&parts[..], -0.2, &near[..]), (&parts[..1], 0.4, &near[..]), (&parts[..], 0.4, &[][..])] {
+            assert_eq!(buffered_near(parts, distance, near, &mut meter()).unwrap(), buffered(parts, distance, &mut meter()).unwrap());
+        }
+        // A part left out whose growth may pass the grid's reach is grown with the rest, and fails as the
+        // whole growth does.
+        let beyond = [square((0.0, 0.0), (1.0, 1.0)), square((65_535.5, 0.0), (65_535.8, 1.0))];
+        assert!(buffered_near(&beyond, 0.4, &near, &mut meter()).unwrap().is_err());
+        assert!(buffered(&beyond, 0.4, &mut meter()).unwrap().is_err());
     }
 
     #[test]

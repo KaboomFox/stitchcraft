@@ -51,7 +51,7 @@ use crate::generators::mm;
 use crate::generators::tatami::rows::axes;
 use crate::normalize::region::Polygon;
 use crate::normalize::region::geom::Envelope;
-use crate::normalize::region::ops::{area_of, buffered, difference, intersection, union};
+use crate::normalize::region::ops::{area_of, buffered, buffered_near, difference, intersection, union};
 
 /// The automatic areas of `shapes` reaching under the shapes sewn after them and cut away under the areas
 /// that cover them, and `SC-I0904` for each area cut away whole, for each that needed more work than the
@@ -483,7 +483,8 @@ fn beside(shapes: &mut Shapes, index: usize, reach: Reach, split: &mut [Option<S
     let beyond = if across.is_empty() {
         Vec::new()
     } else {
-        let outside = joined(buffered(&joined(difference(&covers, &lines, meter))?, 2.0 * TOUCHING, meter))?;
+        // Only the shapes' parts whose growth reaches the line's part are grown ([`buffered_near`]).
+        let outside = joined(buffered_near(&joined(difference(&covers, &lines, meter))?, 2.0 * TOUCHING, &across, meter))?;
         joined(intersection(&across, &outside, meter))?
     };
     let from = if beyond.is_empty() { contact } else { joined(union([contact.as_slice(), beyond.as_slice()], meter))? };
