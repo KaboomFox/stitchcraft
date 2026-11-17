@@ -451,8 +451,9 @@ M13.32 (`REQ-AUTO-083`). `cargo xtask perf` counts the instructions `stitch` tak
 the traced dogs and the pear with the Auto effect, and the TS-13 sheets. Its report splits each count into
 the stages of automatic digitizing ([guardrails](guardrails.md)). The numbers below were measured on 2026-11-17 on main
 `8a59600d`, natively, by callgrind, in the `profiling` build at opt-level 2 with Rust 1.97. Rust 1.97 gets
-opt-level 3 wrong. CI's build uses Rust 1.99 at opt-level 3 and counts a little differently. The records in
-`conformance/perf.toml` are CI's counts. A WebAssembly module runs 3.6 to 3.7 times the native count on
+opt-level 3 wrong. CI's build uses Rust 1.99 at opt-level 3, and its counts differ from these by 1 to
+4 %: the dog on turf's whole run is 26,891 million there. The records in `conformance/perf.toml` are CI's
+counts. A WebAssembly module runs 3.6 to 3.7 times the native count on
 the TS-13 sheets (M13.31), so a dog would need about 100 to 125 billion in VectorCraft, an estimate.
 VectorCraft allows it about 11 billion.
 
