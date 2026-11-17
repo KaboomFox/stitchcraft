@@ -1990,12 +1990,17 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
-- M13.35: no spot of an automatically digitized design sews above a cap (`REQ-AUTO-071` to `REQ-AUTO-073`).
+- M13.35: no spot of an automatically digitized design sews above a cap (`REQ-AUTO-071` to `REQ-AUTO-074`).
   The owner said of the thickest spots M13.30 left, 5.5 to 7 fills, that they won't work. Work in progress.
   - An automatic satin column moves its crowded needle points in: a point closer than 0.35 mm to the last
     one left on its rail moves in by 25 % of its stitch, the next by 50 %. A straight column keeps all.
   - Everything automatic digitizing makes locks in steps of 0.3 mm, the machine's shortest stitch, where the
     half stitch went up to 1 mm.
+  - Where a spot of a planned design digitized automatically still sews above 4 fills, a last pass takes
+    thread there that is hidden or that the design doesn't need: travel that goes out and back, lock
+    stitches beyond one back and forth, the base layer's row ends under shapes sewn later and then other
+    shapes' row ends there, moved back along their rows. It keeps every top stitch that shows, and it
+    doesn't make a jump thread. `SC-I1119` says what it took.
   - Where a shape sets a column's short stitches or a lock, its settings are used.
   - Public API: `auto::CROWDED_CLOSER_THAN` and `CROWDED_INSETS`, the keys
     `common::LOCK_START`, `LOCK_END`, `LOCK_START_SCALE` and `LOCK_END_SCALE`, and

@@ -90,8 +90,9 @@ const OUTLINE: &str = "A stitch of a fill's outline (REQ-AUTO-051) shows on anot
 /// no longer showed, and 13 others did, 12 of them rows of a fill ([`ACROSS`]) and one a stitch of an outline: 19
 /// stitches. It then fills the parts whose one satin column would crowd its stitches (REQ-AUTO-068), which
 /// sew as fills in another place of the order: 7 of the 19 no longer show, and 4 others do, 3 rows on a
-/// line's part and a stitch of an outline: 16 stitches.
-const ASTRAY: [Astray; 16] = [
+/// line's part and a stitch of an outline: 16 stitches. M13.35's last pass moves row ends back under later
+/// shapes (REQ-AUTO-074), and a row of `vc:17:fill` on the dog on turf in 9 threads no longer shows: 15.
+const ASTRAY: [Astray; 15] = [
     Astray { dog: "dog-on-turf-6", element: "vc:15:fill", stitch: [(47.0, 43.75), (50.42, 43.77)], length: 3.42, cause: ACROSS, step: "M13.18" },
     Astray { dog: "dog-on-turf-6", element: "vc:68:fill", stitch: [(43.22, 74.73), (46.51, 74.76)], length: 3.29, cause: ACROSS, step: "M13.18" },
     Astray { dog: "dog-on-turf-6", element: "vc:81:fill#2", stitch: [(49.08, 80.85), (49.52, 82.56)], length: 1.76, cause: OUTLINE, step: "M13.18" },
@@ -101,7 +102,6 @@ const ASTRAY: [Astray; 16] = [
     Astray { dog: "dog-on-turf-9", element: "vc:11:fill", stitch: [(50.0, 43.5), (46.0, 43.5)], length: 4.0, cause: ACROSS, step: "M13.18" },
     Astray { dog: "dog-on-turf-9", element: "vc:6:fill", stitch: [(53.0, 44.25), (55.14, 44.25)], length: 2.14, cause: ACROSS, step: "M13.18" },
     Astray { dog: "dog-on-turf-9", element: "vc:6:fill", stitch: [(56.0, 44.0), (52.0, 44.0)], length: 4.0, cause: ACROSS, step: "M13.18" },
-    Astray { dog: "dog-on-turf-9", element: "vc:17:fill", stitch: [(49.0, 74.25), (46.88, 74.23)], length: 2.12, cause: ACROSS, step: "M13.18" },
     Astray { dog: "dog-on-turf-9", element: "vc:78:fill", stitch: [(46.68, 74.75), (43.23, 74.77)], length: 3.45, cause: ACROSS, step: "M13.18" },
     Astray { dog: "dog-on-turf-9", element: "vc:100:fill", stitch: [(44.53, 19.5), (46.0, 19.5)], length: 1.47, cause: ACROSS, step: "M13.18" },
     Astray { dog: "dog-on-turf-9", element: "vc:83:fill", stitch: [(50.08, 23.05), (48.93, 21.12)], length: 2.25, cause: LINES, step: "M13.18" },
@@ -209,9 +209,9 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
 /// reaches a limit, and one that loses a sliver gets its row changed. Most slivers lie beside a line of fur
 /// that sews as a running stitch, which is as wide as its thread and can't reach under a neighbour. With the
 /// columns' crowded needle points moved in (REQ-AUTO-071) the dog on turf in 9 threads leaves 41 where it left
-/// 38, not traced.
+/// 38, and 45 with the last pass's row ends moved back (REQ-AUTO-074), not traced.
 const SLIVERS: [(&str, usize, usize, f64, f64); 4] =
-    [("dog-on-turf-6", 0, 0, 0.0, 17.0), ("dog-on-turf-9", 1, 0, 18.0, 41.0), ("dog-running-6", 0, 0, 0.0, 0.0), ("dog-running-9", 0, 0, 0.0, 0.0)];
+    [("dog-on-turf-6", 0, 0, 0.0, 17.0), ("dog-on-turf-9", 1, 0, 18.0, 45.0), ("dog-running-6", 0, 0, 0.0, 0.0), ("dog-running-9", 0, 0, 0.0, 0.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -242,7 +242,7 @@ fn req_auto_027_digitized_dogs_show_no_fabric_and_leave_the_slivers_recorded() {
 /// 280.0 mm² at 3 or more, before M13.35's locks and columns (REQ-AUTO-071, REQ-AUTO-072). The case fails when a number changes,
 /// so that a change that piles thread up again shows here.
 const THICK: [(&str, f64, f64); 4] =
-    [("dog-on-turf-6", 16075.0, 0.0), ("dog-on-turf-9", 18825.0, 0.0), ("dog-running-6", 17025.0, 0.0), ("dog-running-9", 27450.0, 0.0)];
+    [("dog-on-turf-6", 14925.0, 0.0), ("dog-on-turf-9", 17725.0, 0.0), ("dog-running-6", 16025.0, 0.0), ("dog-running-9", 25050.0, 0.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -259,7 +259,7 @@ fn req_auto_067_digitized_dogs_sew_thick_on_the_area_recorded() {
 
 /// The thickest spot of each traced dog, in hundredths of a fill (REQ-AUTO-073): M13.30 left 5.54, 5.54, 6.05
 /// and 7.01. Every dog is still above the cap of 4 fills, where 5 to 8 elements meet.
-const THICKEST: [(&str, f64); 4] = [("dog-on-turf-6", 524.0), ("dog-on-turf-9", 523.0), ("dog-running-6", 521.0), ("dog-running-9", 653.0)];
+const THICKEST: [(&str, f64); 4] = [("dog-on-turf-6", 491.0), ("dog-on-turf-9", 475.0), ("dog-running-6", 515.0), ("dog-running-9", 627.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]

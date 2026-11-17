@@ -1,4 +1,4 @@
-//! No spot of a design digitized automatically sews above a cap (`REQ-AUTO-071` to `REQ-AUTO-073`,
+//! No spot of a design digitized automatically sews above a cap (`REQ-AUTO-071` to `REQ-AUTO-074`,
 //! `docs/src/design/image-to-embroidery.md` › The thickest spot): what a single shape piles up by itself, its
 //! columns' crowded needle points (`tests/auto_columns.rs`) and its lock stitches, and the thickest spot of
 //! each test picture, the traced pear, the lettered patch and the TS-13 sheets' digitized halves, each
@@ -91,16 +91,18 @@ fn hundredths(value: f64) -> f64 {
 }
 
 /// The thickest spot of each design still above the cap, in fills to the hundredth, as measured. The list
-/// only shrinks: a design that comes under the cap leaves it.
+/// only shrinks: a design that comes under the cap leaves it. Since the measure's grid is laid from the
+/// plan's first needle point (`REQ-AUTO-074`), the badges measure 4.40, where they measured 4.20 on the
+/// machine file's grid: a needle point on a cell's edge counts on the other side.
 const ABOVE: [(&str, f64); 8] = [
-    ("badges-abutting", 4.36),
-    ("badges-stacked", 4.36),
-    ("pear", 5.01),
-    ("lettered-patch", 5.04),
+    ("badges-abutting", 4.4),
+    ("badges-stacked", 4.4),
+    ("pear", 4.78),
+    ("lettered-patch", 4.73),
     ("ts-13a", 4.28),
-    ("ts-13b", 4.29),
-    ("ts-13c", 4.51),
-    ("ts-13d", 5.17),
+    ("ts-13b", 4.02),
+    ("ts-13c", 4.49),
+    ("ts-13d", 4.17),
 ];
 
 #[test]

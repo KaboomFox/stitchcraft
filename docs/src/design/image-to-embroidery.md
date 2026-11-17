@@ -1138,8 +1138,9 @@ can't tell 1 layer from 6. So a finished plan is measured for its thickness too
 A plan is measured where the machine sews it, each needle point on the machine's grid of 0.1 mm. The
 engine's own positions have digits that no file shows. Measured on those, the warning of VectorCraft's
 export differed from the one `stitch export` gives for the same file (the compatibility gate on
-2026-11-16). The grid is the plan's own: the same stitches moved by half a tenth of a millimetre round
-to other needle points. A coordinate is rounded to a millionth of a millimetre first. Shapes drawn on
+2026-11-16). The grid is laid from the plan's first needle point (M13.35). The same stitches measure
+the same wherever they lie. On the machine's own grid, a test sheet drawn on a page measured otherwise
+than its machine file, and the last pass ([The last pass](#the-last-pass)) changed the two otherwise. A coordinate is rounded to a millionth of a millimetre first. Shapes drawn on
 round numbers put needle points half way between 2 points of the grid, and without that such a point
 goes to one or the other by the last digits of its position.
 
@@ -1338,6 +1339,33 @@ but such a column ends where it started, and the order of columns still expects 
 or 3 jump threads more. No outline round fills halves the dogs' area at 3 fills or more and moves their
 thickest spots little. Neither is built yet.
 
+#### The last pass
+
+The rules of single shapes can't bring the dogs to the cap: 5 to 8 elements meet at their thickest spots,
+each with a little thread, and no rule of one shape knows the sum: the finished plan does. So a plan of a design digitized
+automatically is measured once, and where a spot sews above 4 fills a last pass takes thread
+(`REQ-AUTO-074`, `auto/thin.rs`). Taking a needle point out of a run takes no thread away, since its 2
+stitches become one as long, and cutting a run leaves a jump thread. Thread leaves a spot only where the
+stitching doubles back on itself, or where the end of a row can move. The pass looks at the stitches
+within 2 mm of a spot above the cap and takes, in this order:
+
+1. travel that goes out and comes back within 0.1 mm of where it was 2 needle points before: those 2
+   points go, and the stitch before them runs on to the one after;
+2. a lock's stitches beyond one back and forth, where it has 4 or more;
+3. the base layer's row ends, where a row turns to the next within 1 mm and the 2 rows run nearly
+   opposite ways: the end and the next row's start move back along their rows by the overlap
+   (`auto_overlap_mm`), or by half of it;
+4. the other shapes' top row ends, moved the same way.
+
+A row's end moves only where it is hidden at both places: the top stitches of the elements sewn after it
+lay 1 fill or more at its old and new points. The pass measures them from the plan's end, so that thread
+taken from a later shape no longer hides an earlier one. The pass skips a change that would leave
+a spot it lays thread in thicker than both the cap and what it was. It skips one that would make a stitch
+shorter than the machine's shortest (a lock's 0.2 mm into or out of a lock point) or than the turn it
+replaces, or longer than the machine's longest. It keeps every top stitch that shows, and it doesn't make
+a jump thread. It keeps the measure up to date stitch by stitch (`Thickness::add` and `remove`) and hands
+it to `SC-W0913`, so that the design is measured once. `SC-I1119` says what it took.
+
 
 ## Sewing order
 
@@ -1520,7 +1548,8 @@ fills with their bands (M13.21). `tests/auto_fabric.rs` keeps the moves and the 
 
 The owner's dog, traced from her 2 photos in 6 and in 9 threads (M13.15, `docs/fixtures/README.md` › The
 traced dogs), lays 16 stitches astray: 5 and 8 on the dog on turf in 6 and in 9 threads, and 1 and 2 on the
-running dog. 2 are straight moves, 2.25 and 2.1 mm long, each between 2 lines of one narrow part, which is
+running dog (15 since M13.35's last pass moved a row of the dog on turf in 9 threads back under its
+neighbour). 2 are straight moves, 2.25 and 2.1 mm long, each between 2 lines of one narrow part, which is
 a stitch because it is shorter than the collapse length. 3 are stitches of outlines, 1.76 to 2.34 mm
 long, each along the edge of a thin, ragged fill. The other 11 are rows of fills, each up to 4 mm
 long, a fill's stitch. Before M13.30 the dogs laid 14, which the rest of this paragraph counts up to. M13.21, which fills where columns sewed, brought 20 of them. Of the 6 that were traced

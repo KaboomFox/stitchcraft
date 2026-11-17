@@ -226,6 +226,7 @@ another.
 | `SC-W1113` | Warning | Text marker not used (without text, without an area, with every shape partly outside it, or with a font that is missing or unreadable), or one of its settings left unread | M14 |
 | `SC-W1114` | Warning | Shape crosses a text marker's edge (more than half inside it, and sewn as traced beside the lettering) | M14 |
 | `SC-W1115` | Warning | Lettering not the traced letters' size (set at the nearest height the font sews, or over a tenth of their height from their width) | M14 |
+| `SC-I1119` | Info | Thread taken from thick spots (by the last pass over a design digitized automatically, where a spot still sewed above 4 fills: how much of each kind, and what is left) | M13 |
 | `SC-E1201` | Error | Subject cut-out's models not ready (a model that couldn't be fetched, or isn't the file pinned: the message names every file and the folder they belong in) | M13 |
 | `SC-E1202` | Error | No subject found to cut out (no part of U²-Net-p's map reaches a half and no box is given, or MobileSAM didn't keep a pixel) | M13 |
 | `SC-E1203` | Error | Picture could not be read for the cut-out (not a PNG or JPEG file it reads, or larger than its limits) | M13 |

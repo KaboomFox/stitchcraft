@@ -82,6 +82,7 @@ mod params;
 pub mod rules;
 mod split;
 pub(crate) mod thick;
+mod thin;
 
 pub use neighbours::TOUCHING;
 #[cfg(test)]
@@ -336,7 +337,7 @@ pub(crate) struct Sewing<'d> {
     pub(crate) base: Vec<ElementId>,
     /// The limits of the design's thickness, by its lowest automatic shape's settings (`REQ-AUTO-062`);
     /// `None` for a design without an automatic shape, which is not measured.
-    pub(crate) limits: Option<stitchcraft_plan::thickness::Limits>,
+    pub(crate) limits: Option<thick::Held>,
     /// The ids of the elements that digitizing made, the base layer's pieces and the outlines among them:
     /// every element but those with settings. Planning runs the thread under later shapes between them
     /// where it would jump (`REQ-AUTO-053`).
@@ -409,7 +410,7 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     // A design that turns the base layer off is told that fabric may show (`SC-I0911`).
     diagnostics.extend(lowest.filter(|rules| !rules.auto_base_layer).map(|_| neighbours::base_off()));
     let outlined = lowest.is_some_and(|rules| rules.auto_fill_outline);
-    let limits = lowest.map(thick::limits);
+    let limits = lowest.map(thick::held);
     let mut beside = neighbours::beside(sewn, &design.settings, budget, design.sort_colours, base.map(|rules| (rules, &mut taken)), outlined);
     diagnostics.extend(std::mem::take(&mut beside.said));
     for (id, lines) in std::mem::take(&mut beside.outlines) {

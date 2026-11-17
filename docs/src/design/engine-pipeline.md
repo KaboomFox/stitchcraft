@@ -454,7 +454,10 @@ validates the result. A violation is a bug in StitchCraft: `plan` returns no pla
 It writes a bug-report bundle that reproduces the failure (`REQ-CLI-002`). The conformance suite has a case for every invariant.
 
 A plan that passes, of a design with an automatic shape, is then measured for its thickness, with the
-budget's work once more. Planning adds `SC-W0913` when the design sews thick and returns the plan all the
+budget's work once more. Where a spot sews above 4 fills, a last pass takes thread there that is hidden or
+that the design doesn't need, with the budget's work once more, keeping to the profile's shortest and longest
+stitch, and keeps the measure up to date (`SC-I1119`, [the thickest spot](image-to-embroidery.md#the-thickest-spot)).
+Planning adds `SC-W0913` when the design sews thick and returns the plan all the
 same ([how thick a design sews](image-to-embroidery.md#how-thick-a-design-sews)).
 
 ## 7. Incremental and parallel planning

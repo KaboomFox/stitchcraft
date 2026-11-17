@@ -3246,6 +3246,15 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-AUTO-074"
+area = "auto"
+level = "L2"
+statement = "Once a design digitized automatically is planned, a last pass takes thread where a spot of a millimetre still sews more than 4 fills, of the stitches that lay thread within 2 mm of such a spot, in this order. Travel that goes out and back on itself, coming back within 0.1 mm of where it was 2 needle points before, loses its 2 points of the way out and back. A lock of 4 stitches or more loses its stitches beyond one back and forth. Then a row's end whose turn to the next row is 1 mm or shorter, the 2 rows running nearly opposite ways, moves back along its row with the next row's start, by the overlap of areas (`auto_overlap_mm`) or else half of it, while each stitch stays as long as the machine's shortest: the base layer's rows first, then the other shapes' top rows. A row's end moves only where the top stitches of the elements sewn after it lay 1 fill or more at its old and new points and its turn's, measured as the plan is, from the plan's end, so that thread taken from a later shape no longer hides. No change is made that would leave a spot its stitches lay thread in thicker than both the cap and what it was. The pass takes no top stitch that shows, cuts no run and makes no jump thread. SC-I1119 says how much it took of each kind in how many places, the area above 4 fills before and after, and the thickest spot left. The pass has the work budget once: when it runs out, the plan is kept as planned, and SC-I1119 says so."
+rationale = "The rules for single shapes (REQ-AUTO-071, REQ-AUTO-072) left the traced dogs at 5.2 to 6.5 fills where 5 to 8 elements meet at one spot, each laying a little, and no rule of one shape knows the sum. Only the finished plan does. Taking a needle point out of a run takes no thread, and cutting a run leaves a jump thread: thread leaves a spot only where the stitching doubles back or an end can move. Measured on 2026-11-17, the pass took the dogs' area above 4 fills from 25, 26, 22 and 48 mm² to 11, 13, 13 and 30, their thickest spots by 0.15 to 0.3 fills, TS-13D's from 5.17 to 4.18 and the pear's from 5.01 to 4.71, with 2 to 90 stitches fewer and no jump thread more. Embroidery programs remove hidden stitching where shapes overlap (M13.30). The measure is kept up to date stitch by stitch and handed to SC-W0913, so that a design is measured once, since VectorCraft's export has few instructions to spare."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-AUTO-037"
 area = "auto"
 level = "L2"

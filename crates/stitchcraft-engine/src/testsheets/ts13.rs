@@ -24,8 +24,8 @@
 //! its pictures: which shapes it digitized, what it did with the specks and the stacked badge, and so on.
 
 use stitchcraft_core::Code::{
-    self, AutoBase, AutoDigitized, AutoLayers, AutoOrder, AutoSatinFilled, AutoSpeck, AutoThick, AutoUnder, FillPartsApart, SatinStitchesLean,
-    StitchesMerged,
+    self, AutoBase, AutoDigitized, AutoLayers, AutoOrder, AutoSatinFilled, AutoSpeck, AutoThick, AutoThinned, AutoUnder, FillPartsApart,
+    SatinStitchesLean, StitchesMerged,
 };
 
 use super::designed::Drawing;
@@ -36,9 +36,9 @@ use super::sketch::SheetError;
 /// which sews what shows of it, and the badges' red discs, digitized whole under the shapes in their holes;
 /// each speck round the disc, 6 merged into it and 1 left out; the order; the areas that reach under others
 /// and the red discs cut away under the shapes on them; the base layer; the specks in paint order, sewn in parts; and the
-/// needle points left out where rows end close together; and where the design sews thick (`SC-W0913`), which
-/// each sheet is told last.
-pub(super) const NEIGHBOURS_SAY: [Code; 15] = [
+/// needle points left out where rows end close together; the thread a last pass took where a spot sewed above
+/// 4 fills (`SC-I1119`); and where the design sews thick (`SC-W0913`), which each sheet is told last.
+pub(super) const NEIGHBOURS_SAY: [Code; 16] = [
     AutoDigitized,
     AutoLayers,
     AutoSpeck,
@@ -53,13 +53,14 @@ pub(super) const NEIGHBOURS_SAY: [Code; 15] = [
     AutoBase,
     FillPartsApart,
     StitchesMerged,
+    AutoThinned,
     AutoThick,
 ];
 
 /// What the engine says of TS-13B, in order: how many shapes it digitized, the order, the areas that reach
 /// under others, the base layer, the stitches that lean where the M's strokes meet at sharp angles, and the needle points
 /// left out.
-pub(super) const LETTERS_SAY: [Code; 12] = [
+pub(super) const LETTERS_SAY: [Code; 13] = [
     AutoDigitized,
     AutoOrder,
     AutoUnder,
@@ -71,13 +72,14 @@ pub(super) const LETTERS_SAY: [Code; 12] = [
     SatinStitchesLean,
     SatinStitchesLean,
     StitchesMerged,
+    AutoThinned,
     AutoThick,
 ];
 
 /// What the engine says of TS-13C, in order: how many shapes it digitized, the pupils and hairs that no
 /// satin column can follow, filled; the face, digitized whole under the eyes in its holes; the order; the
 /// areas that reach under others; the base layer; the eyes, sewn in parts in both halves; and the needle points left out.
-pub(super) const LINES_AND_PARTS_SAY: [Code; 14] = [
+pub(super) const LINES_AND_PARTS_SAY: [Code; 15] = [
     AutoDigitized,
     AutoSatinFilled,
     AutoSatinFilled,
@@ -91,6 +93,7 @@ pub(super) const LINES_AND_PARTS_SAY: [Code; 14] = [
     FillPartsApart,
     FillPartsApart,
     StitchesMerged,
+    AutoThinned,
     AutoThick,
 ];
 
@@ -99,12 +102,12 @@ pub(super) const LINES_AND_PARTS_SAY: [Code; 14] = [
 /// and those digitized whole under their details; the order; the areas that reach under others and those
 /// cut away under their details; the base layer; the needle points left out where an outline starts at
 /// its fill's last stitch (`REQ-AUTO-051`); and where the design sews thick.
-pub(super) const LAYERS_SAY: [Code; 9] =
-    [AutoDigitized, AutoSatinFilled, AutoSatinFilled, AutoLayers, AutoOrder, AutoUnder, AutoBase, StitchesMerged, AutoThick];
+pub(super) const LAYERS_SAY: [Code; 10] =
+    [AutoDigitized, AutoSatinFilled, AutoSatinFilled, AutoLayers, AutoOrder, AutoUnder, AutoBase, StitchesMerged, AutoThinned, AutoThick];
 
 /// What the engine says of TS-13E, in order: as of TS-13D, without a satin column that can't be made. A
 /// button's rim is a ring a column follows.
-pub(super) const BUTTONS_SAY: [Code; 7] = [AutoDigitized, AutoLayers, AutoOrder, AutoUnder, AutoBase, StitchesMerged, AutoThick];
+pub(super) const BUTTONS_SAY: [Code; 8] = [AutoDigitized, AutoLayers, AutoOrder, AutoUnder, AutoBase, StitchesMerged, AutoThinned, AutoThick];
 
 /// The check of every TS-13 sheet that asks where a jump thread is sewn down: the reference machine cuts
 /// none (MC-1), and the sheets sew their pictures as the engine plans any design.
@@ -195,11 +198,11 @@ mod tests {
         // Each sheet's size, its conformance case's to the micrometre, and its stitches: what MC-8 sews, which
         // changes with any change to what a picture sews.
         let recorded = [
-            ("TS-13A", [126.001, 167.98], 23_906),
-            ("TS-13B", [110.594, 148.4], 14_644),
-            ("TS-13C", [111.397, 107.75], 10_390),
-            ("TS-13D", [89.0, 100.025], 20_259),
-            ("TS-13E", [23.999, 108.394], 6_011),
+            ("TS-13A", [126.001, 167.98], 23_896),
+            ("TS-13B", [110.594, 148.4], 14_616),
+            ("TS-13C", [111.397, 107.75], 10_362),
+            ("TS-13D", [89.0, 100.025], 20_233),
+            ("TS-13E", [23.999, 108.394], 6_007),
         ];
         let found: Vec<(&str, [f64; 2], usize)> = recorded
             .iter()
