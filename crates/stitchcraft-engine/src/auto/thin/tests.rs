@@ -284,3 +284,113 @@ fn a_run_ends_at_its_block_s_first_entry_and_a_jump_and_a_top_stitch_after_a_jum
     pass.covering(&mut cover, &[(0, over + 1)], &mut meter).unwrap();
     assert!(cover.most(Measure::Fills).value > 0.0);
 }
+
+/// Whether `kept`, the measure the pass kept up to date, measures as `measured`, the plan's measured again,
+/// at every half millimetre round the origin.
+fn measures_as(kept: &Thickness, measured: &Thickness) -> bool {
+    (-12..=12).all(|x| {
+        (-12..=12).all(|y| {
+            let place = p(f64::from(x) * 0.5, f64::from(y) * 0.5);
+            [Measure::Fills, Measure::Points].into_iter().all(|measure| (kept.at(measure, place) - measured.at(measure, place)).abs() < 1e-9)
+        })
+    })
+}
+
+#[test]
+fn req_auto_074_a_lock_after_a_top_stitch_joins_it_with_a_lock_s_shortest_stitch() {
+    // The lock's first point comes back to the top stitch before it, 0.1 mm off, and the stitch that would
+    // join them, 0.32 mm, is shorter than the machine's shortest, 0.35 mm, but no shorter than a lock's.
+    let tied = || {
+        let lock = vec![(0.8, 0.5), (0.5, 0.6), (0.8, 0.6), (0.5, 0.5)];
+        plan(&[thick(), ("tied", Role::Top, vec![(0.5, 0.5)]), ("tied", Role::Lock, lock), ("tied", Role::Top, vec![(0.5, 3.0)])])
+    };
+    let mut sewn = tied();
+    let (thinned, kept, measured) = thin(&mut sewn, &Rules { shortest: 0.35, ..rules(NONE) });
+    assert_eq!(thinned.unwrap().times, [0, 1, 0, 0]);
+    assert_eq!(of(&sewn, Role::Lock), [(0.8, 0.6), (0.5, 0.5)]);
+    assert!(measures_as(&kept, &measured));
+}
+
+#[test]
+fn req_auto_074_travel_out_and_back_after_a_lock_measures_as_the_plan_does() {
+    // The way out and back starts at a lock's last point: the stitch that joins it to the next top stitch
+    // comes out of a lock, and no needle point is counted for it, as the plan's measure counts none.
+    let mut sewn = plan(&[
+        thick(),
+        ("tied", Role::Top, vec![(0.5, 2.0)]),
+        ("tied", Role::Lock, knot((0.5, 0.5), (0.8, 0.5), 2)),
+        ("tied", Role::Travel, vec![(0.5, -3.0), (0.5, 0.4)]),
+        ("tied", Role::Top, vec![(0.5, 1.0), (0.5, 4.0)]),
+    ]);
+    let (thinned, kept, measured) = thin(&mut sewn, &rules(NONE));
+    assert_eq!(thinned.unwrap().times, [1, 0, 0, 0]);
+    assert!(of(&sewn, Role::Travel).is_empty());
+    assert!(measures_as(&kept, &measured));
+}
+
+#[test]
+fn req_auto_074_2_rows_run_opposite_ways_within_about_25_degrees() {
+    let stitch = |(x0, y0): (f64, f64), (x1, y1): (f64, f64)| SewnStitch {
+        block: 0,
+        index: 1,
+        from: p(x0, y0),
+        to: p(x1, y1),
+        role: Role::Top,
+        from_role: Role::Top,
+    };
+    // The cosine of the angle between them is -0.9 or less: turned 20 or 24 degrees from straight back, they
+    // run opposite ways, and turned 26 or 30 degrees they don't.
+    let a = stitch((1.0, 2.0), (4.0, 6.0));
+    assert!(opposite(&a, &stitch((3.0, -1.0), (2.4196, -2.9139))));
+    assert!(!opposite(&a, &stitch((3.0, -1.0), (2.7608, -2.9856))));
+    let b = stitch((-2.0, 4.0), (2.3301, 1.5));
+    assert!(opposite(&b, &stitch((5.0, 6.0), (-1.9617, 6.7317))));
+    assert!(!opposite(&b, &stitch((5.0, 6.0), (-1.9829, 6.4883))));
+}
+
+/// The seam's rows, every other one running back from x = 6 turned by `tilt` degrees from straight back.
+fn tilted(tilt: f64) -> StitchPlan {
+    let (dx, dy) = (tilt.to_radians().cos(), tilt.to_radians().sin());
+    let mut points = Vec::new();
+    for row in 0..13 {
+        let y = f64::from(row) * 0.25;
+        points.extend(if row % 2 == 0 {
+            [(0.0, y), (3.0, y), (6.0, y)]
+        } else {
+            [(6.0, y), (6.0 - 3.0 * dx, y + 3.0 * dy), (6.0 - 6.0 * dx, y + 6.0 * dy)]
+        });
+    }
+    plan(&[("under", Role::Top, points), ("over", Role::Top, columns(4.0, 4.0)), ("thick", Role::Underlay, knot((5.0, 1.5), (6.0, 1.5), 16))])
+}
+
+#[test]
+fn req_auto_074_a_row_s_end_moves_where_its_turn_is_1_mm_or_shorter_and_the_rows_run_opposite_ways() {
+    let moves = |sewn: &mut StitchPlan, rules: &Rules| thin(sewn, rules).0.unwrap().times[3];
+    // Rows 1 mm apart turn by 1 mm, and their ends move where the thick place lies on their first turn; 1.1
+    // mm apart they don't.
+    let apart = |apart: f64| {
+        let thick = ("thick", Role::Underlay, knot((5.0, apart / 2.0), (6.0, apart / 2.0), 16));
+        plan(&[("under", Role::Top, rows(0.0, 6.0, 4, apart)), ("over", Role::Top, columns(4.0, 4.0)), thick])
+    };
+    assert!(moves(&mut apart(1.0), &rules(NONE)) > 0);
+    assert_eq!(moves(&mut apart(1.1), &rules(NONE)), 0);
+    // Rows that run back turned by 20 degrees move, and by 30 degrees they don't.
+    assert!(moves(&mut tilted(20.0), &rules(NONE)) > 0);
+    assert_eq!(moves(&mut tilted(30.0), &rules(NONE)), 0);
+    // A move as long as a step of the grid, 0.1 mm, is made.
+    assert!(moves(&mut seam(Role::Top, 0.25, true), &Rules { overlap: 0.1, ..rules(NONE) }) > 0);
+}
+
+#[test]
+fn a_stitch_is_a_normal_entry_not_taken_out_and_the_next_one_passes_those_taken_out() {
+    let mut sewn = plan(&[thick()]);
+    let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let rules = rules(NONE);
+    let gone: BTreeSet<Entry> = [(0, 2)].into_iter().collect();
+    let pass = Pass { plan: &mut sewn, thickness: &mut thickness, rules: &rules, gone, taken: [0.0; 4], times: [0; 4] };
+    let mut meter = Budget::DEFAULT.meter();
+    // Entry 0 is a jump, and entry 2 is taken out.
+    assert!(pass.stitch((0, 0)).is_none() && pass.stitch((0, 2)).is_none() && pass.stitch((0, 1)).is_some());
+    assert_eq!(pass.beside((0, 1), true, &mut meter).unwrap(), Some(3));
+    assert_eq!(pass.beside((0, 3), false, &mut meter).unwrap(), Some(1));
+}

@@ -643,7 +643,8 @@ An outline is sewn with as few jumps as its lines allow (`REQ-AUTO-052`). A trac
 wherever a neighbour sewn later touches it, often for a few millimetres, and each hidden stretch parted 2
 lines by a jump. The outline now sews through a hidden stretch of `BRIDGE`, 25 mm, or less, along the edge
 and under the shape that covers it, at a stitch for each 2.5 mm. The longest hidden stretch of a ring stays
-out, because sewing it would join nothing. Of an outline's lines, the one with an end nearest where the
+out, because sewing it would join nothing. Under a fill sewn after the area the limit is 12 mm
+([the outline under a later fill](#the-outline-under-a-later-fill)). Of an outline's lines, the one with an end nearest where the
 next element starts sews last and ends there. An open line is turned round for that if need be, and a ring
 starts at its corner nearest that place.
 
@@ -1396,6 +1397,41 @@ compensation, 0.4 mm, past the chord between them. Ending it at the chord took T
 to 3.79 fills, and changed the dogs by 0.01 or less. The thread pulls such an end back by about as much,
 which opens the join. The joins are left as they were.
 
+#### The outline under a later fill
+
+An outline sews through a hidden stretch of its edge up to 25 mm ([an outline round a fill](#an-outline-round-a-fill)),
+under the shape that hides it. Where a fill sewn later hides the stretch, the run lies along the edge where
+that fill's rows end over the area's overlap, beside the fill's own outline. The dogs' thread piles up
+along those edges between 2 patches. The owner chose on 2026-11-16 that an outline's thread may be left out only where
+a fill sewn later covers it, so that what shows doesn't change. So a stretch that a later fill hides, in
+part or whole, is sewn through only when it is 12 mm or shorter (`REQ-AUTO-076`, `FILL_BRIDGE` in
+`auto/neighbours/outline.rs`). Each stretch left out costs a jump, and a short one lays little thread.
+Measured with the probe's plans on 2026-11-17:
+
+| Dog | Thickest, fills, walked once | Now | At 3 fills or more, mm² | Now | Jump threads | Now |
+|---|---:|---:|---:|---:|---:|---:|
+| On turf, 6 threads | 4.53 | 4.53 | 164 | 154 | 73 | 74 |
+| On turf, 9 threads | 4.51 | 4.51 | 192 | 181 | 81 | 84 |
+| Running, 6 threads | 5.15 | 5.07 | 184 | 174 | 58 | 61 |
+| Running, 9 threads | 6.00 | 5.89 | 265 | 234 | 72 | 74 |
+
+The sheets, the pear and the lettered patch don't change. Leaving out every stretch under a later fill
+took the dogs' area at 3 fills or more down by 12 to 19 %, for 3 to 11 jump threads more each, and took
+the dog on turf's thickest spot up to 5.09: the last pass could no longer move row ends that the stretch
+had hidden. With no outline at all, which would change what shows, the dogs' thickest spots are still
+4.50 to 5.62.
+
+#### The thickest spots left
+
+The cap of 4 fills isn't met. TS-13B and TS-13E's digitized halves are under it, at 3.99 and 3.42. The
+other sheets, the pear and the lettered patch sew 4.17 to 4.55 fills at their thickest spots, where 2
+satin columns of one shape join, where a column wider than 2 mm lies over a fill's rows, or, on TS-13C,
+where 7 elements meet. The traced dogs sew
+4.51 to 5.89. At their thickest spots 5 to 9 elements meet, each with 0.3 to 2 fills: columns that join,
+the rows of the fills under them (the rims), the turns and travel of small fills, and the base layer. No
+rule tried here takes enough of that without opening fabric or showing less of an outline. The lowest
+honest cap now is about 4.5 fills on the sheets, the pear and the lettered patch, and 6 on the dogs.
+
 
 ## Sewing order
 
@@ -1542,7 +1578,8 @@ left 71, 73, 64 and 84. Since M13.27 filled 5 of their blobs they jump 79, 91, 7
 they leave 69, 79, 60 and 83. Since M13.30
 ([less thread where areas overlap](#less-thread-where-areas-overlap)) they leave 71, 80, 58 and 74, and
 since narrow columns walk once (M13.35, [a narrow column walks once](#a-narrow-column-walks-once)) 73,
-81, 58 and 72. The traced pear and the test pictures change thread once for each thread after
+81, 58 and 72. Since an outline sews through no more than 12 mm under a later fill
+([the outline under a later fill](#the-outline-under-a-later-fill)) they leave 74, 84, 61 and 74. The traced pear and the test pictures change thread once for each thread after
 the first, as they did. The digitized halves of the TS-13 sheets change thread 2, 4, 4 and 6 times, where
 they changed 5, 4, 5 and 8 times. TS-13B's black sews twice: its base layer and letters first, and the
 lines of its windows after the fills they border. The search keeps 87 to 3,584 rows of batches on the

@@ -621,6 +621,20 @@ fn req_auto_074_a_zone_is_the_cells_within_reach_of_a_spot_over_its_limit() {
 }
 
 #[test]
+fn req_auto_074_a_zone_lies_round_its_spot_by_column_and_row() {
+    // A knot round (7, 3) in a grid 10 mm across: the zone round it touches it, and not the place across the
+    // grid's diagonal from it.
+    let mut points: Vec<(f64, f64)> = (0..200).map(|k| if k % 2 == 0 { (6.6, 2.6) } else { (7.4, 3.4) }).collect();
+    points.extend([(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)]);
+    let thickness = measured(&plan(&[("a", Role::Top, &points)]));
+    let Spot { value, at } = thickness.most(Measure::Fills);
+    assert_eq!(at, p(7.0, 3.0));
+    let zone = thickness.near(value - 1e-6, 0.5, &mut meter()).unwrap();
+    let short = |x: f64, y: f64| placed(&thickness, stitch((x, y), (x + 0.05, y + 0.05)));
+    assert!(zone.touches(&short(7.0, 3.0)) && !zone.touches(&short(3.0, 7.0)));
+}
+
+#[test]
 fn req_auto_074_the_pass_s_measures_stop_when_the_work_runs_out() {
     let plan = knot();
     let thickness = measured(&plan);

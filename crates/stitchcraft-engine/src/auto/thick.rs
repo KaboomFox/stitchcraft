@@ -262,6 +262,10 @@ mod tests {
         let codes = |said: &[Diagnostic]| said.iter().map(|said| said.code).collect::<Vec<_>>();
         assert_eq!(codes(&finished(&mut kept, &held, &[], profile, &Budget::DEFAULT)), [Code::AutoThick]);
         assert_eq!(kept, sewn);
+        // A plan within the cap is not gone through, and 2 fills say nothing.
+        let (within, mut kept) = (plan(0, 2), plan(0, 2));
+        assert!(finished(&mut kept, &held, &[], profile, &Budget::DEFAULT).is_empty());
+        assert_eq!(kept, within);
         // With the work to measure it and not to thin it, the plan stays as it is, and SC-I1119 says so.
         let used = |work: &dyn Fn(&mut Meter) -> bool| {
             let mut meter = Budget::DEFAULT.meter();

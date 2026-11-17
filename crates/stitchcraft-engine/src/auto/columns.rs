@@ -713,10 +713,8 @@ mod tests {
             &[],
         );
         let made = |narrowest: f64| {
-            let Made::Columns { sewn, .. } = columns(&h, &bounds(narrowest), &AutoParams::defaults(), &[], &mut Budget::DEFAULT.meter()).unwrap()
-            else {
-                panic!("no columns")
-            };
+            let made = columns(&h, &bounds(narrowest), &AutoParams::defaults(), &[], &mut Budget::DEFAULT.meter()).unwrap();
+            let Made::Columns { sewn, .. } = made else { panic!("no columns") };
             sewn
         };
         // Where each sewn column starts and ends along x, and where it lies.

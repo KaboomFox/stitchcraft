@@ -263,6 +263,13 @@ impl Grid {
         cells(row, self.rows).flat_map(move |row| cells(column, self.columns).map(move |column| row * self.columns + column))
     }
 
+    /// The 4 spots at the corners of `cell`, a cell's index by row then column.
+    fn corners(&self, cell: usize) -> [usize; 4] {
+        let (columns, across) = (self.columns.max(1), self.across());
+        let first = cell / columns * across + cell % columns;
+        [first, first + 1, first + across, first + across + 1]
+    }
+
     /// The sum of `values`, a value for each cell, over each spot's window, times `scale`: each cell adds to
     /// the 4 spots at its corners.
     fn windows(&self, values: &[f64], scale: f64) -> Vec<f64> {
@@ -612,19 +619,15 @@ impl Thickness {
         let steps = steps(length);
         meter.charge(units(index(steps)))?;
         let (grid, fills, points) = (&self.grid, &mut self.fills, &mut self.points);
-        let corners = |cell: usize| {
-            let first = cell / grid.columns.max(1) * grid.across() + cell % grid.columns.max(1);
-            [first, first + 1, first + grid.across(), first + grid.across() + 1]
-        };
         laid(grid, stitch, length, steps, |cell, length| {
-            for spot in corners(cell) {
+            for spot in grid.corners(cell) {
                 if let Some(sum) = fills.get_mut(spot) {
                     *sum += times * length * ROWS;
                 }
             }
         });
         let hole = grid.holding(stitch.to.x(), stitch.to.y()).filter(|_| !stitch.is_lock());
-        for spot in hole.map(corners).into_iter().flatten() {
+        for spot in hole.map(|cell| grid.corners(cell)).into_iter().flatten() {
             if let Some(sum) = points.get_mut(spot) {
                 *sum += times;
             }
@@ -639,10 +642,8 @@ impl Thickness {
         let steps = steps(length);
         meter.charge(units(index(steps)))?;
         let mut most: f64 = 0.0;
-        let across = self.grid.across();
         laid(&self.grid, stitch, length, steps, |cell, _| {
-            let first = cell / self.grid.columns.max(1) * across + cell % self.grid.columns.max(1);
-            for spot in [first, first + 1, first + across, first + across + 1] {
+            for spot in self.grid.corners(cell) {
                 most = most.max(self.fills.get(spot).copied().unwrap_or(0.0));
             }
         });

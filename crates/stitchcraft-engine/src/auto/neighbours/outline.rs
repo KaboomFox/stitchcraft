@@ -56,7 +56,7 @@ pub(super) const BRIDGE: f64 = 25.0;
 
 /// The longest stretch of an edge under a fill sewn after the area that an outline sews through, in
 /// millimetres (`REQ-AUTO-076`). Such a stretch lies along the seam where the fill's rows end over the area,
-/// and its thread thickens the seam, so it is left out where that costs little: a short stretch carries little
+/// and its thread thickens the seam, so it is left out where that costs little: a short stretch lays little
 /// thread and would cost a jump all the same. Measured on the 4 traced dogs on 2026-11-17, leaving out every
 /// stretch under a later fill took their area at 3 fills or more down by 12 to 19 % for 3 to 11 jump threads
 /// more each, and leaving out those longer than 12 mm by 6 to 12 % for 1 to 3 more.

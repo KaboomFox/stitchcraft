@@ -376,12 +376,9 @@ impl Pass<'_, '_> {
         let same = [from, start, to].iter().all(|&entry| self.stitch((block, entry)).is_some_and(|(_, r, e)| r == role && e == element));
         let Some([row, turn, next]) = self.three(block, [from, at, start, to]) else { return Ok(()) };
         let (into, out) = (row.length(), next.length());
-        let opposite = |a: &SewnStitch, b: &SewnStitch| {
-            let dot = (a.to.x() - a.from.x()) * (b.to.x() - b.from.x()) + (a.to.y() - a.from.y()) * (b.to.y() - b.from.y());
-            dot <= OPPOSITE * a.length() * b.length()
-        };
+        // A row of no length leaves no reach, so no move divides by its length.
         let reach = self.rules.overlap.min(into - self.rules.shortest).min(out - self.rules.shortest);
-        if !same || turn.length() > TURN || into == 0.0 || out == 0.0 || !opposite(&row, &next) || reach < LEAST_MOVE {
+        if !same || turn.length() > TURN || !opposite(&row, &next) || reach < LEAST_MOVE {
             return Ok(());
         }
         if self.thickness.hottest(&turn, meter)? <= CAP {
@@ -413,6 +410,13 @@ impl Pass<'_, '_> {
         }
         Ok(())
     }
+}
+
+/// Whether stitches `a` and `b` run nearly opposite ways: the cosine of the angle between them is
+/// [`OPPOSITE`] or less. A stitch of no length runs every way.
+fn opposite(a: &SewnStitch, b: &SewnStitch) -> bool {
+    let dot = (a.to.x() - a.from.x()) * (b.to.x() - b.from.x()) + (a.to.y() - a.from.y()) * (b.to.y() - b.from.y());
+    dot <= OPPOSITE * a.length() * b.length()
 }
 
 /// Every kind's thread taken, in words, for the note: those of none are left out.

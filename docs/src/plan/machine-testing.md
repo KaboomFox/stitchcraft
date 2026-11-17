@@ -305,6 +305,9 @@ M13.35 takes thread away where one shape piles it up by itself
 - A satin column narrower than 2 mm walks its middle once, where it walked there and back. Do the
   lettered patch's letters and TS-13B's 6 mm and 10 mm words still stand up off the fabric, with sharp
   edges?
+- An outline no longer sews through a stretch longer than 12 mm under a fill sewn after it. On the traced
+  dogs, cut the jump threads this leaves. Does the edge of each outline still look whole where it meets
+  the next patch?
 
 ## Report template
 

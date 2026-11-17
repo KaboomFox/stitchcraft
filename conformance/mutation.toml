@@ -121,6 +121,12 @@ line = "if left == 0.0 && right == 0.0 {"
 why = "the test is reached only within the error bound, where one product is 0 only if the other is too: were one 0 and the other not, the plain determinant would be the other, far beyond its own bound. So however the test is turned or joined, it holds where the original does, or fails where the exact sum then gives the same 0"
 
 [[equivalent]]
+file = "crates/stitchcraft-plan/src/thickness.rs"
+mutant = "replace < with <= in Zone::touches"
+line = "(last >= 0.0 && first < count as f64).then(|| (index(first), index(last).min(count.saturating_sub(1))))"
+why = "a box that starts at the cell just past the grid spans first = count and last cut to count - 1, so its 4 corner counts cancel and it touches nothing, as when it is left out"
+
+[[equivalent]]
 file = "crates/stitchcraft-core/src/exact.rs"
 mutant = "replace && with || in side"
 line = "if left == 0.0 && right == 0.0 {"

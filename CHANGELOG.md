@@ -2027,8 +2027,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
-- M13.35: no spot of an automatically digitized design sews above a cap (`REQ-AUTO-071` to `REQ-AUTO-075`).
-  The owner said of the thickest spots M13.30 left, 5.5 to 7 fills, that they won't work. Work in progress.
+- M13.35: no spot of an automatically digitized design sews above a cap (`REQ-AUTO-071` to `REQ-AUTO-076`).
+  The owner said of the thickest spots M13.30 left, 5.5 to 7 fills, that they won't work. The cap of 4 fills
+  isn't met yet: the traced dogs sew 4.5 to 5.9 fills at their thickest spots, the other designs up to 4.55.
   - An automatic satin column moves its crowded needle points in: a point closer than 0.35 mm to the last
     one left on its rail moves in by 25 % of its stitch, the next by 50 %. A straight column keeps all.
   - An automatic satin column narrower than 2 mm walks its middle once, not there and back, and sews its
@@ -2040,6 +2041,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     stitches beyond one back and forth, the base layer's row ends under shapes sewn later and then other
     shapes' row ends there, moved back along their rows. It keeps every top stitch that shows, and it
     doesn't make a jump thread. `SC-I1119` says what it took.
+  - An outline round a fill sews through a stretch of its edge under a fill sewn after it only when the
+    stretch is 12 mm or shorter. Each longer stretch is left out, and costs a jump.
   - Where a shape sets a column's short stitches or a lock, its settings are used.
   - Public API: `auto::CROWDED_CLOSER_THAN` and `CROWDED_INSETS`, the keys
     `common::LOCK_START`, `LOCK_END`, `LOCK_START_SCALE` and `LOCK_END_SCALE`, and
