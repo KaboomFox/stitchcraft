@@ -1444,9 +1444,12 @@ point of it nearest the needle, it ran along its middle under itself to its star
 its top stitches came back to where it began. The run, the walk, the lock and its last stitches met at
 one spot there. That spot moved with the shape sewn before: the lettered patch's M measured 4.32
 fills at its V, and 4.48 when the A before it ended 0.4 mm further left (M13.36). Starting at its start,
-the patch's thickest spot is 4.20 fills and the traced pear's 4.20, where they were 4.33 and 4.55. It costs
-jumps: TS-13B's digitized half leaves 44 jump threads where it left 42, the 6 mm word's A and T jumping to
-the far end of a column, and of TS-13C's 13 one is sewn down where 5 were.
+the patch's thickest spot is 4.20 fills and the traced pear's 4.20, where they were 4.33 and 4.55. With the
+rules of [holes and edges](#holes-and-edges-of-columns) too, the traced dogs' are 4.53, 4.49, 5.07 and 5.63 fills, where they were 4.53, 4.51, 5.07 and 5.89, and their area
+at 3 fills or more is 130.5, 156.5, 142.0 and 207.75 mm², where it was 132.25, 160.0, 146.25 and 209.75. It
+costs jumps. The dogs in 9 threads leave one jump thread more each. TS-13B's digitized half leaves 44 where
+it left 42, as the 6 mm word's A and T jump to the far end of a column, and of TS-13C's 13 one is sewn down
+where 5 were.
 
 #### The outline under a later fill
 

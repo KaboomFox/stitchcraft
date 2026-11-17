@@ -1012,6 +1012,46 @@ mod tests {
     use super::*;
 
     #[test]
+    fn req_auto_084_a_hole_is_clear_of_the_shapes_whose_painted_boxes_it_does_not_meet() {
+        let p = |x: f64, y: f64| Point::new(x, y).unwrap();
+        // A line 1 mm wide from (0, 0) to (10, 2) paints the box from (-0.5, -0.5) to (10.5, 2.5).
+        let line = Element {
+            id: ElementId::new("line").unwrap(),
+            name: None,
+            shape: Shape::Stroke {
+                path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(10.0, 2.0))], closed: false }] },
+                width: Mm::new(1.0).unwrap(),
+                join: Join::Round,
+                cap: Cap::Round,
+            },
+            thread: stitchcraft_plan::Thread::new(stitchcraft_plan::Rgb::new(0, 0, 0)),
+            params: ParamSet::default(),
+            automatic: false,
+            hints: Hints::default(),
+            clips: Vec::new(),
+        };
+        let clear = |(x0, y0): (f64, f64), (x1, y1): (f64, f64)| {
+            clear(std::slice::from_ref(&line), Rect::around([p(x0, y0), p(x1, y1)]).unwrap(), &mut Budget::DEFAULT.meter()).unwrap()
+        };
+        // Touching each side of the painted box, and a micrometre clear of it.
+        for (touching, apart) in [
+            (((10.5, 0.0), (11.0, 1.0)), ((10.501, 0.0), (11.0, 1.0))),
+            (((-1.0, 0.0), (-0.5, 1.0)), ((-1.0, 0.0), (-0.501, 1.0))),
+            (((2.0, 2.5), (3.0, 3.0)), ((2.0, 2.501), (3.0, 3.0))),
+            (((2.0, -1.0), (3.0, -0.5)), ((2.0, -1.0), (3.0, -0.501))),
+        ] {
+            assert!(!clear(touching.0, touching.1), "{touching:?}");
+            assert!(clear(apart.0, apart.1), "{apart:?}");
+        }
+        assert!(
+            clear((0.0, 0.0), (1.0, 1.0)) == false && super::clear(&[], Rect::around([p(0.0, 0.0)]).unwrap(), &mut Budget::DEFAULT.meter()).unwrap()
+        );
+        // A unit of work for each point.
+        let tight = Budget { max_work: 1, ..Budget::DEFAULT };
+        assert!(super::clear(std::slice::from_ref(&line), Rect::around([p(20.0, 20.0)]).unwrap(), &mut tight.meter()).is_err());
+    }
+
+    #[test]
     fn an_id_numbered_for_a_column_fits_with_room_for_a_clash() {
         // As long as an id can be, it is shortened just enough to leave the room, and never within a
         // character.
