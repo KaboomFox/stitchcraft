@@ -97,9 +97,10 @@ use rules::{Asked, Bounds, Fired, Measures, RuleId};
 use std::borrow::Cow;
 use std::collections::BTreeSet;
 
-use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Labels, Meter, Mm, Point};
+use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Labels, Meter, Mm, Point, Rect};
 use stitchcraft_params::{ParamSet, Validated};
 use stitchcraft_plan::profiles::REFERENCE;
+use stitchcraft_plan::thickness::THREAD;
 
 use crate::common::{LOCK_END, LOCK_END_SCALE, LOCK_START, LOCK_START_SCALE, STOP_AFTER, TRIM_AFTER};
 use crate::design::{Cap, Design, DesignSettings, Element, FillRule, Hints, Join, Path, Segment, Shape, Subpath, within_working_limit};
@@ -143,6 +144,19 @@ pub const CROWDED_CLOSER_THAN: f64 = 0.35;
 /// percent of their stitch's width, taking turns (`REQ-AUTO-071`): a quarter and a half, so that of 3
 /// stitches that fan to one point one reaches it, one ends a quarter of the column short of it and one half.
 pub const CROWDED_INSETS: &str = "25 50";
+
+/// How far past its rail as drawn a crowded needle point of an automatic satin column whose rails pair evenly
+/// (`columns::EVEN`) may move in, in millimetres (`REQ-AUTO-085`): a quarter of a thread. Its first inset is
+/// held to the column's pull compensation and this, so that the point's thread, half a thread wide on each
+/// side, still covers the column's edge, and no notch opens in it.
+pub const EDGE_REACH: f64 = THREAD / 4.0;
+
+/// How wide a hole of an automatic area must be for the satin columns along it to keep it open, in
+/// millimetres (`REQ-AUTO-084`): a disc twice a thread across fits in it. A column's rail along such a hole
+/// has no pull compensation on that side, so its stitches end on the hole's edge, and each edge's thread
+/// spreads half a thread into it: a thread's width of what lies under the hole shows between them. A hole
+/// that a shape drawn later meets is no such hole, and the column reaches under that shape as before.
+pub const OPEN_HOLE: Mm = Mm::from_tenths(8);
 
 /// The lock that automatic digitizing gives what it makes (`REQ-AUTO-072`): back and forth twice, each step
 /// as long as the reference machine's shortest stitch, 0.3 mm. The half stitch goes up to 1 mm, and lays its
@@ -284,6 +298,36 @@ fn satin_params(params: &ParamSet, width: Mm, rules: &AutoParams) -> ParamSet {
     column
 }
 
+/// `params`, an automatic satin column's `width` wide whose shape's settings are `shape` and settings of the
+/// rules `rules`, with what keeps its edges: no pull compensation on the side of a rail along a hole kept
+/// open (`open`, `REQ-AUTO-084`), so that its stitches end on the hole's edge, and, when its rails pair
+/// evenly (`even`) or it has such a side, a first inset of its crowded needle points held so that a point
+/// moves in no farther than [`EDGE_REACH`] past the column's edge as drawn (`REQ-AUTO-085`), unless its
+/// shape sets how its points move in. The other insets stay.
+fn edges(params: &mut ParamSet, shape: &ParamSet, width: Mm, rules: &AutoParams, even: bool, open: [bool; 2]) {
+    let open = if std::env::var("EXP_NOHOLE").is_ok() { [false, false] } else { open };
+    let even = even && std::env::var("EXP_NOEDGE").is_err();
+    let reach = rules.auto_pull_compensation_mm.get();
+    let pull = open.map(|open| if open { 0.0 } else { reach });
+    if open.contains(&true) {
+        params.set(PULL_COMPENSATION, format!("{} {}", pull[0], pull[1]).as_str());
+    }
+    if !(even || open.contains(&true)) || shape.get(SHORT_STITCH_DISTANCE).is_some() || shape.get(SHORT_STITCH_INSET).is_some() {
+        return;
+    }
+    // A stitch is the column's width and its pull compensation on both sides wide, and an inset is a share of
+    // that: the first is held to the smaller compensation and the reach.
+    let across = width.get() + pull[0] + pull[1];
+    let held = 100.0 * (pull[0].min(pull[1]) + EDGE_REACH) / across;
+    let insets: Vec<String> = CROWDED_INSETS
+        .split_whitespace()
+        .filter_map(|inset| inset.parse::<f64>().ok())
+        .enumerate()
+        .map(|(k, inset)| if k == 0 { inset.min(held) } else { inset }.to_string())
+        .collect();
+    params.set(SHORT_STITCH_INSET, insets.join(" ").as_str());
+}
+
 /// `params`, an element's that automatic digitizing made, with the locks of [`LOCK_SHAPE`] at each end whose
 /// lock its shape doesn't set, neither its shape nor its step (`REQ-AUTO-072`).
 fn small_locks(params: &mut ParamSet) {
@@ -355,6 +399,28 @@ pub(crate) struct Sewing<'d> {
     pub(crate) made: BTreeSet<ElementId>,
 }
 
+/// The box round what each of `elements` paints, by its place: its path's points, and half a stroke's width
+/// round them, with `meter`'s work, a unit for each point. `None` for an element without a point.
+fn boxes(elements: &[Element], meter: &mut Meter) -> Result<Vec<Option<Rect>>, Exhausted> {
+    let mut painted = Vec::with_capacity(elements.len());
+    for element in elements {
+        let path = element.shape.path();
+        meter.charge(u64::try_from(path.points().count()).unwrap_or(u64::MAX))?;
+        let half = match &element.shape {
+            Shape::Stroke { width, .. } => width.get() / 2.0,
+            Shape::Fill { .. } => 0.0,
+        };
+        let grown = |p: Point, by: f64| Point::new(p.x() + by, p.y() + by).ok();
+        painted.push(Rect::around(path.points()).and_then(|bounds| Rect::around([grown(bounds.min(), -half)?, grown(bounds.max(), half)?])));
+    }
+    Ok(painted)
+}
+
+/// Whether the boxes `a` and `b` meet, touching included.
+fn meets(a: Rect, b: Rect) -> bool {
+    a.min().x() <= b.max().x() && b.min().x() <= a.max().x() && a.min().y() <= b.max().y() && b.min().y() <= a.max().y()
+}
+
 /// [`digitized`], with the ids of the base layer's pieces.
 pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     if !design.sort_colours && !design.elements().iter().any(|element| element.automatic) {
@@ -379,6 +445,15 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     // the layers are flattened: what shows of the background inside the picture is sewn.
     let background = neighbours::background(design, rules.first().and_then(Option::as_ref), budget);
     let layers = neighbours::flattened(design, &rules, matches!(background, Some(Background::Found)), budget);
+    // Where each shape paints, by its place in the design: a hole of an area that a shape drawn later meets is
+    // not kept open (`REQ-AUTO-084`). Without them, no hole is.
+    let painted = match boxes(elements, &mut budget.meter()) {
+        Ok(painted) => Some(painted),
+        Err(exhausted) => {
+            diagnostics.push(exhausted.diagnostic(budget, None));
+            None
+        }
+    };
     // How each shape digitized sews, by its place in the design.
     let mut digitized = Vec::new();
     let mut sewn = Vec::with_capacity(layers.elements.len());
@@ -390,7 +465,8 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
         // An automatic element with a setting that doesn't read sews nothing, as `SC-E0101` said.
         let Some(rules) = rules.get(index).and_then(Option::as_ref) else { continue };
         let mut meter = budget.meter();
-        let made = match made_by(&element, &design.settings, rules, &mut meter).and_then(|made| named(made, &element, &mut taken, &mut meter)) {
+        let open = |hole: Rect| painted.as_ref().is_some_and(|painted| painted.iter().skip(index + 1).flatten().all(|shape| !meets(*shape, hole)));
+        let made = match made_by(&element, &design.settings, rules, &open, &mut meter).and_then(|made| named(made, &element, &mut taken, &mut meter)) {
             Ok(made) => made,
             Err(exhausted) => {
                 diagnostics.push(exhausted.diagnostic(budget, Some(element.id.clone())));
@@ -523,7 +599,8 @@ fn named(made: Digitized, element: &Element, taken: &mut Labels, meter: &mut Met
 pub fn digitize(element: &Element, settings: &DesignSettings, meter: &mut Meter) -> Result<Digitized, Exhausted> {
     let mut said = Vec::new();
     let Some(rules) = read(element, &mut said) else { return Ok(Digitized { diagnostics: said, ..Digitized::default() }) };
-    let mut made = made_by(element, settings, &rules, meter)?;
+    // Alone, an element has no shape drawn after it, and each of its holes wide enough to read is open.
+    let mut made = made_by(element, settings, &rules, &|_| true, meter)?;
     made.diagnostics.splice(0..0, said);
     Ok(made)
 }
@@ -531,14 +608,14 @@ pub fn digitize(element: &Element, settings: &DesignSettings, meter: &mut Meter)
 /// The ordinary elements that sew the automatic `element` of a design with `settings` by `rules`, its
 /// settings of the rules, as [`digitize`] makes them: each fill at the angle the rules give the design's
 /// fills, and `SC-I0912` last, naming the rule each part of it sewed by, when it sews by the rules.
-fn made_by(element: &Element, settings: &DesignSettings, rules: &AutoParams, meter: &mut Meter) -> Result<Digitized, Exhausted> {
+fn made_by(element: &Element, settings: &DesignSettings, rules: &AutoParams, open: &dyn Fn(Rect) -> bool, meter: &mut Meter) -> Result<Digitized, Exhausted> {
     let bounds = Bounds::of(rules, settings.min_satin_stroke_width);
     let (mut made, fired) = match &element.shape {
         Shape::Stroke { path, width, join, cap } => {
             let (fired, stitches) = of_stroke(*width, &bounds);
             (stroke(element, path, Style { width: *width, join: *join, cap: *cap }, stitches, rules, meter)?, vec![fired])
         }
-        Shape::Fill { .. } => areas(element, &bounds, rules, meter)?,
+        Shape::Fill { .. } => areas(element, &bounds, rules, open, meter)?,
     };
     if made.stitches.is_some() {
         made.diagnostics.extend(rules::said(&element.id, &fired));
@@ -580,11 +657,11 @@ fn stroke(element: &Element, path: &Path, style: Style, stitches: Stitches, rule
 /// The elements that sew `element`, an automatic area held to `bounds`, by `rules`, with `meter`'s work: its
 /// parts sorted by the rules (`narrow`) and [`sewn`], and the rule each part sewed by. An area whose region
 /// the region code can't join, a bug, is itself as it is, and its fill says so.
-fn areas(element: &Element, bounds: &Bounds, rules: &AutoParams, meter: &mut Meter) -> Result<(Digitized, Vec<Fired>), Exhausted> {
+fn areas(element: &Element, bounds: &Bounds, rules: &AutoParams, open: &dyn Fn(Rect) -> bool, meter: &mut Meter) -> Result<(Digitized, Vec<Fired>), Exhausted> {
     let as_it_is = itself(element, Some(Stitches::Fill));
     let Shape::Fill { path, rule, .. } = &element.shape else { return Ok((as_it_is, Vec::new())) };
     let Ok(parts) = parts_of(path, *rule, meter)? else { return Ok((as_it_is, Vec::new())) };
-    let mut sorted = narrow::sorted(&element.id, parts, bounds, rules, meter)?;
+    let mut sorted = narrow::sorted(&element.id, parts, bounds, rules, open, meter)?;
     let fired = std::mem::take(&mut sorted.fired);
     Ok((sewn(element, sorted, rules), fired))
 }
@@ -614,9 +691,10 @@ fn sewn(element: &Element, sorted: narrow::Parts, rules: &AutoParams) -> Digitiz
             }
             narrow::Along::Columns(found) => {
                 let pieces = found.sewn.into_iter().map(|sewn| match sewn {
-                    columns::Sewn::Satin { path, width, push } => {
+                    columns::Sewn::Satin { path, width, push, even, holes } => {
                         satin = true;
                         let mut params = satin_params(&rest, width, rules);
+                        edges(&mut params, &rest, width, rules, even, holes);
                         if push != [0.0, 0.0] {
                             params.set(PUSH_COMPENSATION, format!("{} {}", push[0], push[1]).as_str());
                         }

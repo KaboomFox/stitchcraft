@@ -50,7 +50,9 @@ pub use crate::metrics::{PIXEL, THREAD};
 use crate::stitches::{JumpThread, jump_threads};
 
 mod cover;
+mod shown;
 pub use cover::{BARE, Cover, FAR, GAP, cover, painted};
+pub use shown::{Shown, shown};
 pub use stitchcraft_plan::thickness::{Limits, Measure, Report, Thickness};
 
 /// How thick `plan` sews against `limits`, with the default budget's work.
