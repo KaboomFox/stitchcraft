@@ -641,7 +641,8 @@ marker without a font name is set in the one of the 2 that is nearest in weight 
 ([the font chosen by the letters' weight](image-to-embroidery.md#the-font-chosen-by-the-letters-weight)).
 The glyph files are text, which a web server sends
 compressed. With the font, and with the SVG reader and lettering that read it, the demo's PES exporter
-grew from 3.5 to 5.4 MB as stored, and from 1.2 to 1.7 MB as sent.
+grew from 3.5 to 5.4 MB as stored, and from 1.2 to 1.7 MB as sent. Barstitch Bold made it 7,027,008 bytes
+as stored, from 5,581,963, and 1,901,059 bytes as sent, from 1,713,566 (CI's web build of 2026-11-16).
 
 **What was checked,** on 16 November 2026, for Small Font at `c7e3a05`:
 
@@ -701,7 +702,10 @@ Measured on 2026-11-16 with callgrind, on the native debug build of `stitch`, in
 | The font for the text MATCH, by `stitch plan` of a marked patch | not measured | 263 M |
 
 So reading Barstitch Bold for one word costs 18 percent of reading it whole. Of the whole read, 64 M is
-its `font.json`, whose kerning table is long: it is read once, when the font is. EXPORT_COUNTS
+its `font.json`, whose kerning table is long: it is read once, when the font is. In the compatibility gate's `lettering` scenario, with both fonts built
+in, an export of one word ran 2,013 M of the 10,002 M instructions VectorCraft allows, as it did with Small Font
+alone (2.01 G, M14.4), and one of 4 lines of 2 words ran 2,449 M. The second font costs an export nothing until a
+text is set in it.
 
 ## Fonts ported by other programs
 
