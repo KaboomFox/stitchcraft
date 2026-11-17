@@ -139,6 +139,11 @@ impl Band {
         self.at((self.from + self.to) / 2.0, (self.lo + self.hi) / 2.0)
     }
 
+    /// The corners of the band between `from` and `to` along it.
+    fn quad(&self, from: f64, to: f64) -> Option<Vec<Point>> {
+        Some(vec![self.at(from, self.lo)?, self.at(to, self.lo)?, self.at(to, self.hi)?, self.at(from, self.hi)?])
+    }
+
     /// The band as a polygon, a width longer at each end and [`EDGE`] wider on each side.
     fn reach(&self) -> Option<Vec<Point>> {
         let (from, to) = (self.from - self.width(), self.to + self.width());
@@ -252,10 +257,9 @@ fn bands(part: &Polygon, runs: &[Side], limits: (f64, f64), meter: &mut Meter) -
         for other in runs.iter().skip(i + 1) {
             meter.charge(1)?;
             let Some((band, overlap)) = paired(*one, *other, limits) else { continue };
-            match held(part, &band, overlap, meter)? {
-                None => return Ok(None),
-                Some(false) => continue,
-                Some(true) => {}
+            let Some(inside) = held(part, &band, overlap, meter)? else { return Ok(None) };
+            if !inside {
+                continue;
             }
             match found.iter_mut().find(|kept| same(kept, &band)) {
                 Some(kept) => merge(kept, &band),
@@ -298,9 +302,7 @@ fn paired(one: Side, other: Side, (narrowest, widest): (f64, f64)) -> Option<(Ba
 /// Whether the part holds `band` between its sides where they overlap, from and to as `overlap` says, but for
 /// [`OUTSIDE`] of it, with `meter`'s work; `None` when the region can't be measured (a bug).
 fn held(part: &Polygon, band: &Band, (from, to): (f64, f64), meter: &mut Meter) -> Result<Option<bool>, Exhausted> {
-    let Some(quad) = (|| Some(vec![band.at(from, band.lo)?, band.at(to, band.lo)?, band.at(to, band.hi)?, band.at(from, band.hi)?]))() else {
-        return Ok(Some(false));
-    };
+    let Some(quad) = band.quad(from, to) else { return Ok(Some(false)) };
     let quad = polygon(quad);
     let Ok(outside) = ops::difference(std::slice::from_ref(&quad), std::slice::from_ref(part), meter)? else { return Ok(None) };
     Ok(Some(ops::area_of(&outside) <= OUTSIDE * ops::area_of(std::slice::from_ref(&quad))))

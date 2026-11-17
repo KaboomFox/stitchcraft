@@ -236,7 +236,8 @@ fn a_corner_filled_in_by_less_than_a_hundredth_of_the_part_still_sews_as_strokes
 
 #[test]
 fn every_case_runs_out_of_work_at_every_charge_on_its_way() {
-    for part in [t(), l(0.0), cross()] {
+    // The T reaches every charge: a cross or an L only takes other branches between them.
+    for part in [t()] {
         let found = twice(&part);
         let meter = &mut Budget::DEFAULT.meter();
         assert!(strokes(&part, &found, REACH, LIMITS, meter).unwrap().is_some());
@@ -539,4 +540,74 @@ fn a_stroke_wider_than_its_reach_over_tan_20_degrees_stops_at_the_others_side() 
         stem.rails.iter().flatten().map(|q| q.y()).fold(f64::NEG_INFINITY, f64::max)
     };
     assert!((high(&t()) - 5.0 - REACH).abs() < 1e-6, "{}", high(&t()));
+}
+
+#[test]
+fn a_stroke_runs_through_when_the_part_goes_on_past_the_join_by_half_its_width() {
+    // A stem 1 mm wide whose left side runs on, and an arm 6 mm long off its right side, 0.7 mm above the
+    // stem's foot: the stem goes on past the join by 0.7 mm, more than half its width, and runs through.
+    // Had it not, the 2 would end alike there, and the arm, the longer, would run through.
+    // Drawn the other way up too, so that the stub lies at the stem's either end.
+    let ring = [(3.0, 2.3), (4.0, 2.3), (4.0, 3.0), (10.0, 3.0), (10.0, 4.0), (4.0, 4.0), (4.0, 7.0), (3.0, 7.0)];
+    let flipped: Vec<(f64, f64)> = ring.iter().map(|&(x, y)| (x, 9.3 - y)).collect();
+    for part in [part(&ring, &[]), part(&flipped, &[])] {
+        let bands = bands_of(&part);
+        assert_eq!(bands.len(), 2, "{bands:?}");
+        let stem = bands.iter().position(|band| band.u.0.abs() < 1e-9).unwrap();
+        let columns = sewn(&part).unwrap();
+        assert_eq!(columns[stem].under, [None, None]);
+        assert!(columns[1 - stem].under.contains(&Some(stem)), "{:?}", columns[1 - stem].under);
+    }
+}
+
+#[test]
+fn of_2_strokes_that_cross_either_way_round_the_longer_runs_through() {
+    let part = cross();
+    let bands = bands_of(&part);
+    let meter = &mut Budget::DEFAULT.meter();
+    let met = meeting(&part, &bands[0], &bands[1], meter).unwrap().unwrap().unwrap();
+    let long = usize::from(bands[1].to - bands[1].from > bands[0].to - bands[0].from);
+    for (a, b) in [(0, 1), (1, 0)] {
+        let cuts = join(&part, (a, &bands[a]), (b, &bands[b]), &met, REACH).unwrap();
+        assert_eq!(cuts.len(), 1);
+        assert_eq!(cuts[0].0, 1 - long);
+        assert!(matches!(cuts[0].1, Cut::Crossed { of, .. } if of == long), "{cuts:?}");
+    }
+}
+
+#[test]
+fn a_stroke_cut_away_whole_or_left_without_its_middle_keeps_the_centre_lines() {
+    let meter = &mut Budget::DEFAULT.meter();
+    let bar = part(&[(0.0, 0.0), (10.0, 0.0), (10.0, 1.0), (0.0, 1.0)], &[]);
+    let band = Band { o: p(0.0, 0.0), u: (1.0, 0.0), n: (0.0, 1.0), lo: 0.0, hi: 1.0, from: 0.0, to: 10.0 };
+    // A cut that keeps nothing of the band.
+    let gone = Joined { cuts: vec![Cut::Keep { p: p(20.0, 0.0), m: (1.0, 0.0) }], under: Vec::new() };
+    assert_eq!(pieces(&bar, &[band], &[gone], meter).unwrap(), None);
+    // A stroke that crosses all of it.
+    let crossed = Joined { cuts: vec![Cut::Crossed { of: 1, by: 0.0 }], under: Vec::new() };
+    let over = Band { lo: -1.0, hi: 2.0, ..band };
+    assert_eq!(pieces(&bar, &[band, over], &[crossed, Joined::default()], meter).unwrap(), None);
+}
+
+#[test]
+fn bands_lie_on_the_same_lines_within_a_tenth_of_their_own_width() {
+    let kept = Band { o: p(0.0, 0.0), u: (1.0, 0.0), n: (0.0, 1.0), lo: 0.0, hi: 2.0, from: 0.0, to: 2.0 };
+    assert!(same(&kept, &Band { lo: 0.19, hi: 2.19, from: 4.0, to: 6.0, ..kept }));
+    assert!(!same(&kept, &Band { lo: 0.21, hi: 2.0, from: 4.0, to: 6.0, ..kept }));
+}
+
+#[test]
+fn a_rung_is_left_out_when_either_of_its_points_lies_near_a_rails_end() {
+    let meter = &mut Budget::DEFAULT.meter();
+    let band = Band { o: p(0.0, 0.0), u: (1.0, 0.0), n: (0.0, 1.0), lo: 0.0, hi: 1.0, from: 0.0, to: 6.0 };
+    // The rung at 4 mm, from the other rail's corner, meets the first rail 0.02 mm from its end.
+    let short = [p(0.0, 0.0), p(4.02, 0.0)];
+    let long = [p(0.0, 1.0), p(4.0, 1.0), p(6.0, 1.0)];
+    // The ends' rung, past the short rail's end on the slant, is the only one left.
+    let at_4 = |found: Vec<[Point; 2]>| found.iter().any(|rung| rung.iter().any(|q| (q.x() - 4.0).abs() < 0.1));
+    assert!(!at_4(rungs(&short, &long, &band, meter).unwrap()));
+    assert!(!at_4(rungs(&long, &short, &band, meter).unwrap()));
+    // Farther from the end, it is kept.
+    let longer = [p(0.0, 0.0), p(4.2, 0.0)];
+    assert!(at_4(rungs(&longer, &long, &band, meter).unwrap()));
 }
