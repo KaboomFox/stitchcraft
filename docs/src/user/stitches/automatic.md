@@ -387,6 +387,39 @@ Each satin column digitizing makes has the underlay of its width, and 0.4 mm of 
 Fills keep a tatami fill's defaults, but sew no underlay of their own on the base layer, and turn from row to row in a stitch at the outline. These are starting values, which the next
 sew-out at the machine checkpoint confirms or changes.
 
+### Text
+
+A text that is still text in the drawing sews as lettering in an embroidery font, whose letters were
+digitized one by one for the needle. An SVG file's text is such a text, and so is point type in a
+VectorCraft document. The word stands where the drawing has it, on its baseline and about as tall, in the
+text's colour.
+
+Its letters are not those of the drawing's typeface. StitchCraft can't read a typeface's letter shapes yet,
+so every text comes out in the embroidery font's letters, which are light and upright in Ink/Stitch Small
+Font. Small Font's letters are wider than most typefaces', so a line at the text's height would often run past
+the shape it is drawn on. StitchCraft keeps each line to the length the text most likely had in the
+drawing: half the font size for each character, or the length an SVG file states with `textLength`. It
+closes the letters up a little, then sews the line smaller. The report says for each text which font was
+used, how tall it sewed and why, and how long its longest line is (`SC-I1116`):
+
+```sh
+STITCHCRAFT_FONTS=~/embroidery-fonts stitch plan badge.svg --auto -o badge.pes
+```
+
+`stitch` finds the font in the folder `STITCHCRAFT_FONTS` names, and VectorCraft's exporters have Small
+Font built in. Without a font the text is left out, and `SC-W1111` says so.
+
+- **To keep the typeface's look**, make paths of the text in the drawing program, with Path › Object to Path
+  in Inkscape or Type › Create Outlines in VectorCraft. The letters then sew as shapes.
+- **To choose the embroidery font and its size** in VectorCraft, give the text StitchCraft's Lettering
+  effect ([letter in VectorCraft](../how-to/letter-in-vectorcraft.md)).
+- **To sew the design without the text**, hide or delete the text in the drawing.
+
+Small Font sews letters from 3.6 to 15.2 mm tall, which is text from about 15 to 61 points. Smaller and
+larger text sews at the nearest of those heights, and `SC-W1106` says so. A line that is still too long
+at 3.6 mm sews at 3.6 mm, and `SC-W1117` says by how much it is longer than the text's place. Text on a path, vertical text and
+VectorCraft's area type are left out with a warning.
+
 ### Changing the choice
 
 Each shape says which rule chose its stitches, with the numbers that decided it (`SC-I0912`, in the report

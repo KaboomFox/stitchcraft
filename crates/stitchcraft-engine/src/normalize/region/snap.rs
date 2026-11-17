@@ -120,6 +120,13 @@ fn crosses(a: Node, b: Node, c: Node, d: Node) -> bool {
     apart(turn(a, b, c), turn(a, b, d)) && apart(turn(c, d, a), turn(c, d, b))
 }
 
+/// Whether the segments from `a` to `b` and from `c` to `d` share a height: the bounds of one along y reach
+/// those of the other. Segments that share none don't cross, and this says so with 2 comparisons, before
+/// [`crosses`] multiplies 8 times in 128 bits.
+fn level(a: Node, b: Node, c: Node, d: Node) -> bool {
+    c.y.max(d.y) >= a.y.min(b.y) && c.y.min(d.y) <= a.y.max(b.y)
+}
+
 /// The rings, each a closed list of grid points (its first repeated at its end), bent through every hot
 /// point whose cell they pass through until no 2 of their edges cross: each ring's points in the order it
 /// runs through them, its own corners among them. `Unjoined` should the edges not settle in [`ROUNDS`]
@@ -274,27 +281,8 @@ impl Near {
     fn of(hot: &Hot, side: usize, meter: &mut Meter) -> Result<Near, Exhausted> {
         meter.charge(hot.0.len() as u64)?;
         let buckets = Buckets::over(hot.0.iter().copied(), side);
-        // The points are in order, so put in their buckets one by one they are in order in each: each
-        // bucket's are counted, and each point then put at the next place of its bucket.
-        let mut starts = vec![0; buckets.count() + 1];
-        for &node in &hot.0 {
-            if let Some(start) = starts.get_mut(buckets.of(node) + 1) {
-                *start += 1;
-            }
-        }
-        let mut before = 0;
-        for start in &mut starts {
-            before += *start;
-            *start = before;
-        }
-        let mut next = starts.clone();
-        let mut nodes = vec![Node::default(); hot.0.len()];
-        for &node in &hot.0 {
-            let place = next.get_mut(buckets.of(node)).map(|place| std::mem::replace(place, *place + 1));
-            if let Some(slot) = place.and_then(|place| nodes.get_mut(place)) {
-                *slot = node;
-            }
-        }
+        // The points are in order, so put in their buckets one by one they are in order in each.
+        let (nodes, starts) = grouped(hot.0.iter().map(|&node| (buckets.of(node), node)), buckets.count());
         Ok(Near { buckets, nodes, starts })
     }
 
@@ -303,6 +291,33 @@ impl Near {
         let ends = self.starts.get(bucket).zip(self.starts.get(bucket + 1));
         ends.and_then(|(&start, &end)| self.nodes.get(start..end)).unwrap_or_default()
     }
+}
+
+/// `items`, each given with the number of its bucket, of `count` buckets: the items in order of their
+/// buckets, those of one bucket in the order they came, and where each bucket's start among them, and after
+/// the last where they end. Each bucket's items are counted, and each item is then put at the next place of
+/// its bucket: sorting them by their buckets would compare each many times over.
+fn grouped<T: Copy + Default>(items: impl Iterator<Item = (usize, T)> + Clone, count: usize) -> (Vec<T>, Vec<usize>) {
+    let mut starts = vec![0; count + 1];
+    for (bucket, _) in items.clone() {
+        if let Some(start) = starts.get_mut(bucket + 1) {
+            *start += 1;
+        }
+    }
+    let mut before = 0;
+    for start in &mut starts {
+        before += *start;
+        *start = before;
+    }
+    let mut next = starts.clone();
+    let mut held = vec![T::default(); before];
+    for (bucket, item) in items {
+        let place = next.get_mut(bucket).map(|place| std::mem::replace(place, *place + 1));
+        if let Some(slot) = place.and_then(|place| held.get_mut(place)) {
+            *slot = item;
+        }
+    }
+    (held, starts)
 }
 
 /// [`round`], with the edges given up as `Unjoined` should they not settle in `rounds` rounds.
@@ -409,14 +424,18 @@ fn bend(paths: &mut [Vec<Node>], near: &Near, meter: &mut Meter) -> Result<Bent,
 /// ends along the segment, each cell further along than the one before, so the order of their distances
 /// along it is the order the segment runs through them. A cell can meet the segment only when its point
 /// lies within the segment's bounds, its sides being a half cell from it and the segment's ends grid
-/// points. One unit of `meter` for each bucket looked in and each hot point tested.
+/// points. A bucket's points are in order of x, so those within the segment's bounds along x lie together
+/// there, and only they are tested: a bucket of a shape's outline holds many points, and a short edge has
+/// few between its ends. One unit of `meter` for each bucket looked in and each hot point tested.
 fn through(a: Node, b: Node, near: &Near, meter: &mut Meter, points: &mut Vec<Node>) -> Result<(), Exhausted> {
     let (bottom, top) = (a.y.min(b.y), a.y.max(b.y));
+    let (left, right) = (a.x.min(b.x), a.x.max(b.x));
     let start = points.len();
     near.buckets.along(a, b, |bucket| {
         let held = near.held(bucket);
-        meter.charge(1 + held.len() as u64)?;
-        points.extend(held.iter().copied().filter(|&c| c != a && c != b && (bottom..=top).contains(&c.y) && touches(a, b, c)));
+        let within = held.get(held.partition_point(|c| c.x < left)..held.partition_point(|c| c.x <= right)).unwrap_or_default();
+        meter.charge(1 + within.len() as u64)?;
+        points.extend(within.iter().copied().filter(|&c| c != a && c != b && (bottom..=top).contains(&c.y) && touches(a, b, c)));
         Ok(())
     })?;
     points.get_mut(start..).into_iter().for_each(|found| found.sort_by_key(|&c| (along(a, b, c), c)));
@@ -442,7 +461,8 @@ fn crossings(edges: &[(Node, Node)], meter: &mut Meter) -> Result<Vec<[Node; 4]>
 
 /// [`crossings`] with `side` buckets each way: `None` should the edges be put in more than 4 buckets each,
 /// taken together. In a bucket the edges lie in their order, so an edge is tested against those after it
-/// that start before it ends along x, as all the edges are in 1 bucket.
+/// that start before it ends along x, as all the edges are in 1 bucket: first for a height they share
+/// ([`level`]), and then for a crossing.
 fn crossings_in(edges: &[(Node, Node)], side: usize, meter: &mut Meter) -> Result<Option<Vec<[Node; 4]>>, Exhausted> {
     let buckets = Buckets::over(edges.iter().flat_map(|&(a, b)| [a, b]), side);
     let most = 4 * edges.len();
@@ -456,19 +476,23 @@ fn crossings_in(edges: &[(Node, Node)], side: usize, meter: &mut Meter) -> Resul
             return Ok(None);
         }
     }
-    // The edges were put in order, so sorted by their buckets alone they are in order in each.
-    put.sort_by_key(|&(bucket, _)| bucket);
+    // The edges were put in order, so taken by their buckets alone they are in order in each.
+    let (held, starts) = grouped(put.iter().copied(), buckets.count());
     let mut found = Vec::new();
-    for (at, &(bucket, k)) in put.iter().enumerate() {
-        let Some(&(a, b)) = edges.get(k) else { continue };
-        for &(other, later) in put.iter().skip(at + 1) {
-            let Some(&(c, d)) = edges.get(later) else { continue };
-            if other != bucket || c.x > b.x {
-                break;
-            }
-            meter.charge(1)?;
-            if crosses(a, b, c, d) {
-                found.push([a, b, c, d]);
+    for ends in starts.windows(2) {
+        let &[start, end] = ends else { continue };
+        let together = held.get(start..end).unwrap_or_default();
+        for (at, &k) in together.iter().enumerate() {
+            let Some(&(a, b)) = edges.get(k) else { continue };
+            for &later in together.iter().skip(at + 1) {
+                let Some(&(c, d)) = edges.get(later) else { continue };
+                if c.x > b.x {
+                    break;
+                }
+                meter.charge(1)?;
+                if level(a, b, c, d) && crosses(a, b, c, d) {
+                    found.push([a, b, c, d]);
+                }
             }
         }
     }
@@ -718,6 +742,48 @@ mod tests {
         assert!(near.held(4).is_empty(), "past the last bucket");
         // Out of work before the first point.
         assert_eq!(Near::of(&hot, 2, &mut Budget { max_work: 5, ..Budget::DEFAULT }.meter()).unwrap_err(), Exhausted::Work);
+    }
+
+    #[test]
+    fn items_are_grouped_by_their_buckets_in_the_order_they_came() {
+        let items = [(2, 'a'), (0, 'b'), (2, 'c'), (1, 'd'), (2, 'e')];
+        let (held, starts) = grouped(items.iter().copied(), 4);
+        assert_eq!(held, ['b', 'd', 'a', 'c', 'e']);
+        assert_eq!(starts, [0, 1, 2, 5, 5], "where each bucket's start, and after the last where they end");
+        let (held, starts) = grouped(std::iter::empty::<(usize, char)>(), 2);
+        assert!(held.is_empty());
+        assert_eq!(starts, [0, 0, 0]);
+    }
+
+    #[test]
+    fn an_edge_tests_only_the_hot_points_between_its_ends_along_x() {
+        let found = |a, b, hot: &Hot| {
+            spent(|meter| {
+                let mut points = Vec::new();
+                through(a, b, &near(hot, 1), meter, &mut points).unwrap();
+                points
+            })
+        };
+        // 7 points on a level line, 4 half cells apart, in 1 bucket. The edge from (8, 0) to (16, 0) tests the
+        // 3 from its one end to its other, for the bucket's unit and 3 more, and is bent through the one
+        // between its ends. Drawn the other way: the same.
+        let hot = Hot::of((0..7).map(|k| n(4 * k, 0)));
+        assert_eq!(found(n(8, 0), n(16, 0), &hot), (vec![n(12, 0)], 1 + 3));
+        assert_eq!(found(n(16, 0), n(8, 0), &hot), (vec![n(12, 0)], 1 + 3));
+        // An upright edge tests the points at its own x.
+        let hot = Hot::of([n(0, 4), n(4, 0), n(4, 4), n(4, 8), n(8, 4)]);
+        assert_eq!(found(n(4, 0), n(4, 8), &hot), (vec![n(4, 4)], 1 + 3));
+    }
+
+    #[test]
+    fn segments_share_a_height_where_their_bounds_along_y_meet() {
+        let (a, b) = (n(0, 4), n(8, 8));
+        // One over the other, and one that ends at the height the other starts at, above it or below it,
+        // drawn either way.
+        assert!(level(a, b, n(2, 6), n(4, 20)) && level(a, b, n(2, 8), n(4, 12)) && level(a, b, n(2, 0), n(4, 4)));
+        assert!(level(b, a, n(4, 12), n(2, 8)) && level(b, a, n(4, 4), n(2, 0)));
+        // One wholly above the other, or below it.
+        assert!(!level(a, b, n(2, 10), n(4, 12)) && !level(a, b, n(2, 0), n(4, 2)) && !level(b, a, n(4, 2), n(2, 0)));
     }
 
     #[test]

@@ -524,15 +524,57 @@ fn a_rail_is_run_along_where_shapes_cover_more_than_half_of_its_length() {
     assert!(under::runs_along(&rail, &[band(0.0, 8.9), band(19.1, 26.9)], &mut meter()).unwrap());
     // 18 and 12 places are 15 mm, half the rail and not more.
     assert!(!under::runs_along(&rail, &[band(0.0, 8.9), band(19.1, 25.1)], &mut meter()).unwrap());
+    // A shape whose bounds hold the whole rail covers only what it covers: an L whose foot crosses the rail's
+    // first millimetre, and whose upright stands beside it, 1 mm away.
+    let corner = [p(-2.0, 0.0), p(-2.0, 30.0), p(-1.0, 30.0), p(-1.0, 1.0), p(2.0, 1.0), p(2.0, 0.0), p(-2.0, 0.0)];
+    assert!(!under::runs_along(&rail, &[Polygon { outline: corner.to_vec(), holes: Vec::new() }], &mut meter()).unwrap());
     assert!(!under::runs_along(&[p(0.0, 0.0), p(0.0, 2.0)], &[band(-1.0, 1.0)], &mut meter()).unwrap());
     // No shape runs along a rail with none beside it, and none along a rail of no length.
     assert!(!under::runs_along(&rail, &[], &mut meter()).unwrap());
     assert!(!under::runs_along(&[p(0.0, 0.0), p(0.0, 0.0)], &[band(-1.0, 1.0)], &mut meter()).unwrap());
-    // A rail 1 mm long is looked at in 2 places, each for a unit of work and one for each shape.
+    // A rail 1 mm long is looked at in 2 places, each for a unit of work and one for each shape, after a unit
+    // for each shape's bounds.
     let least = |shapes: &[Polygon]| {
         let enough =
             |work: &u64| under::runs_along(&[p(0.0, 0.0), p(0.0, 1.0)], shapes, &mut Budget { max_work: *work, ..Budget::DEFAULT }.meter()).is_ok();
         (0..20).find(enough)
     };
-    assert_eq!((least(&[]), least(&[band(0.0, 1.0)]), least(&[band(0.0, 1.0), band(5.0, 6.0)])), (Some(2), Some(4), Some(6)));
+    assert_eq!((least(&[]), least(&[band(0.0, 1.0)]), least(&[band(0.0, 1.0), band(5.0, 6.0)])), (Some(2), Some(5), Some(8)));
+    // A shape is asked only about a place within its bounds: of the 2 places, 0.25 and 0.75 mm along, a band
+    // that ends between them is asked about the first. Its 5 points are looked at for its bounds, and once more.
+    geom::looked_at::take();
+    assert!(!under::runs_along(&[p(0.0, 0.0), p(0.0, 1.0)], &[band(0.0, 0.4)], &mut meter()).unwrap());
+    assert_eq!(geom::looked_at::take(), 5 + 5);
+}
+
+#[test]
+fn a_columns_rails_are_found_once_for_what_it_paints_and_where_it_sews_past_a_rail() {
+    let settings = DesignSettings::default();
+    let mut shapes = Shapes::new(vec![column_made(None)], &settings, &Budget::DEFAULT);
+    let rails = |shapes: &mut Shapes| {
+        let mut meter = Budget::DEFAULT.meter();
+        let rails = shapes.rails(0, &mut meter).unwrap();
+        (rails, Budget::DEFAULT.max_work - meter.work_left())
+    };
+    let (first, work) = rails(&mut shapes);
+    assert!(first.is_some() && work > 0, "{first:?}, {work}");
+    // Asked for again, they are the same for no work, also once the column sews past a rail.
+    shapes.reach_past(0, [true, false], 1.0);
+    assert_eq!(rails(&mut shapes), (first.clone(), 0));
+    assert_eq!(rails_of(&shapes.elements[0], shapes.stitch_types[0].unwrap(), &mut Budget::DEFAULT.meter()).unwrap(), first);
+    // What the column paints lies between them: with its rails known it is found with less work, the same.
+    let painted = |work: u64, known: bool| {
+        let mut shapes = Shapes::new(vec![column_made(None)], &settings, &Budget { max_work: work, ..Budget::DEFAULT });
+        if known {
+            shapes.rails(0, &mut Budget::DEFAULT.meter()).unwrap();
+        }
+        shapes.find(0);
+        shapes.paint(0).map(|(_, parts)| parts.to_vec())
+    };
+    let least = |known: bool| (0..Budget::DEFAULT.max_work).find(|&work| painted(work, known).is_some()).unwrap();
+    assert!(least(true) < least(false), "{} and {}", least(true), least(false));
+    assert_eq!(painted(least(true), true), painted(Budget::DEFAULT.max_work, false));
+    // An element with no rails has none, found once too.
+    let mut shapes = Shapes::new(vec![area("square", (0.0, 0.0), (10.0, 10.0))], &settings, &Budget::DEFAULT);
+    assert_eq!(rails(&mut shapes), (None, 0));
 }

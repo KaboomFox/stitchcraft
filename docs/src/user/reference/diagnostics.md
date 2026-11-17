@@ -141,6 +141,8 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W1113`](#sc-w1113) | Warning | Text marker not used |
 | [`SC-W1114`](#sc-w1114) | Warning | Shape crosses a text marker's edge |
 | [`SC-W1115`](#sc-w1115) | Warning | Lettering not the traced letters' size |
+| [`SC-I1116`](#sc-i1116) | Info | Text sewn in an embroidery font |
+| [`SC-W1117`](#sc-w1117) | Warning | Lettering longer than its text's place |
 | [`SC-I1119`](#sc-i1119) | Info | Thread taken from thick spots |
 | [`SC-E1201`](#sc-e1201) | Error | Subject cut-out's models not ready |
 | [`SC-E1202`](#sc-e1202) | Error | No subject found to cut out |
@@ -1880,8 +1882,9 @@ cut it after sewing. Ink/Stitch Small Font and Medium Font sew both ways.
 
 **Warning** — Text not sewn in its embroidery font
 
-A text object of a VectorCraft document has StitchCraft's Lettering effect, and its text wasn't
-sewn. The rest of the document sews. The font the effect names isn't one this build of the
+A text object wasn't sewn: one of a VectorCraft document that has StitchCraft's Lettering effect,
+or one that automatic digitizing sews as lettering (`SC-I1116`), an SVG file's too. Of the second
+kind, the default embroidery font isn't there, or a line of the text can't be set. The rest of the document sews. The font the effect names isn't one this build of the
 plug-ins holds or `stitch` finds in its font folders, or the font didn't read. Or the text is
 area type, type on a path or vertical type, which lettering doesn't set yet. Or no character of
 the text is one the font draws.
@@ -1936,6 +1939,36 @@ height, or closing them up by a tenth, didn't make the text as wide.
 The message gives both heights and both widths. The lettering is centred on the traced letters,
 and may reach past them or leave room. Choose a font that sews at the letters' height, or sew the
 design larger.
+
+## SC-I1116
+
+**Info** — Text sewn in an embroidery font
+
+Automatic digitizing sewed a text object, an SVG file's `<text>` or a VectorCraft document's point
+type, as lettering in an embroidery font. A drawing keeps a text's characters and names its
+typeface, and StitchCraft reads no typeface's file yet, so the embroidery font's letters stand in:
+the word sews where the drawing has it, and doesn't look like the drawing's typeface. Each line
+sews 0.7 of its font size tall, which is about how tall a typeface draws its capitals, within the
+heights the embroidery font sews at. A line that would then be longer than its text most likely was
+in the drawing is set smaller to fit: an embroidery font's letters are wider than most typefaces'.
+
+The message names the text, the embroidery font, the height and why, and the longest line's length.
+Nothing needs doing. For the
+typeface's own letter shapes, convert the text to paths in the drawing program. In VectorCraft,
+StitchCraft's Lettering effect on the text chooses the embroidery font and its size.
+
+## SC-W1117
+
+**Warning** — Lettering longer than its text's place
+
+A line of a text object that automatic digitizing sewed as lettering (`SC-I1116`) is longer than
+its text's place in the drawing. The lettering is fitted to the length the text most likely had:
+the one the drawing states, or half the font size for each character. Its gaps are narrowed and
+then it is set smaller. Here it reached the smallest height the embroidery font sews at and is
+still longer, so it reaches past the place of the text, perhaps over a shape beside it.
+
+The message names the line, its length as sewn, the height and the length of its place. Make the
+text larger or shorter in the drawing, or convert it to paths there.
 
 ## SC-I1119
 

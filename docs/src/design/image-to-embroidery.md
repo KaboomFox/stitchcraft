@@ -1749,7 +1749,8 @@ small parts as running stitches. Small letters come out ragged, and neighbours t
 as one blob. An embroidery font is drawn for the needle, and lettering sets text in one
 ([fonts](fonts.md#lettering)). M14.5 puts lettering where a picture's text is. A person marks the text and
 says what it reads, since nothing here reads a picture. Spike M14.6 looks for a way to find and read the
-text without a marker.
+text without a marker. A drawing's text that is still a text object sews without a marker: from M14.7 automatic
+digitizing letters it ([text objects in automatic digitizing](fonts.md#text-objects-in-automatic-digitizing)).
 
 The pass is `stitchcraft_svg::lettering::pictures`. It works on a design once a reader has made it and
 before anything is digitized (`REQ-AUTO-063` to `REQ-AUTO-066`). What is left of the traced shapes is then

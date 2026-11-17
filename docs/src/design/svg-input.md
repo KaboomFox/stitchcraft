@@ -420,7 +420,7 @@ that applies them.
 
 ## Reports
 
-- `SC-W0802` reports a feature that is not stitched. Text, images, nested `<svg>` elements and the style
+- `SC-W0802` reports a feature that is not stitched. Text read without `auto`, images, nested `<svg>` elements and the style
   sheet rules that are not read are such features. So are masks, filters and markers, a group's
   Ink/Stitch settings, the settings of Ink/Stitch's early versions (`embroider_` attributes), what is not
   applied of a clip path ([Clip paths](#clip-paths)) and what is not applied of a clone
@@ -441,6 +441,51 @@ that applies them.
   whose size cannot be used too: a root `width`, `height` or `viewBox` that does not read, a size of 0
   or less, a viewBox with no area, or a size so large that the viewBox scales to no number, however
   `preserveAspectRatio` fits it.
+
+## Text objects
+
+Without `auto` a `<text>` element is left out with `SC-W0802`. With `auto` it is read as a text object
+(M14.7, `REQ-SVG-017`), which sews as lettering in an embroidery font
+([text objects in automatic digitizing](fonts.md#text-objects-in-automatic-digitizing)). The reader has
+no fonts. It gives each text object with its place among the design's elements (`Svg::texts`), and
+`stitch` sets them once the file is read, as it sets the text of a marker.
+
+A viewer lays a text's characters out with the widths of its typeface, which the reader doesn't have and
+the embroidery font doesn't share. The reader takes what doesn't depend on a width:
+
+- **Lines.** The `<text>` element starts a line at its `x` and `y`, or at the origin without them. A
+  `<tspan>` with an `x` or a `y` starts a new line, as editors write the lines of a text. A `dx` or a `dy`
+  written where a line starts moves its start. A `y` alone keeps the `x` of the line before, though a
+  viewer goes on where that line's last letter ended. A `<tspan>` or a link (`<a>`) without a place goes on in
+  its line.
+- **Characters.** White space is collapsed and trimmed, unless `xml:space="preserve"` keeps it. Characters
+  that a viewer doesn't show are not read: those with `display: none`, with `visibility: hidden`, or
+  with neither a fill nor a stroke.
+- **Size, anchor, colour and typeface** are those of the element a line's first visible character is in.
+  The size is the nearest `font-size` that is a length, times the shares nearer to the character: `em`,
+  `ex` as half an `em`, and percent. Without one it is CSS's 16 pixels. A size that is a word, such as
+  `larger`, isn't read. The anchor is `text-anchor`. The colour is the fill's, or the stroke's for a text
+  without a fill. The typeface is `font-family`, which the note names.
+- **A stated length.** The `textLength` of a `<text>` element of one line, or of a `<tspan>` that starts
+  a line, is the length the line's lettering is fitted to, scaled as the transforms scale along the
+  baseline. Without one the length is estimated.
+- **Transforms** place each line's anchor. They scale the font size as they scale across the baseline, and
+  they turn the text as they turn the baseline.
+- **Clips** of the groups around the element cut the lettering.
+
+`SC-W0802` says what isn't followed, once for each element:
+
+| Left out | What sews |
+|---|---|
+| Text on a path (`<textPath>`) | The rest of the element. `stitch lettering --path` sets a text along a path |
+| A place for each letter: a list of numbers in `x`, `y`, `dx` or `dy`, a `dx` or `dy` inside a line, `rotate`, a `textLength` inside a line or of a text of several lines | The line, its letters spaced as the embroidery font spaces them, from the first place of a list |
+| A transform that stretches, mirrors or slants the text | The text upright, as tall as it is drawn, turned as its baseline is |
+| The element's own `clip-path` | The lettering uncut |
+
+Vertical text (`writing-mode`) is not stitched, and `SC-W1111` says so: an embroidery font's glyphs are
+drawn to sew along a line. Text that an editor flows into a shape (`<flowRoot>`) is left out with
+`SC-W0802` as before, and so is text inside a clip path. `direction` isn't read: an embroidery font sets a
+right-to-left script in its own direction.
 
 ## Text and limits
 

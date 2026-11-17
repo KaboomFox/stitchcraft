@@ -221,11 +221,13 @@ another.
 | `SC-E1108` | Error | Text could not be set (a text none of whose characters sews, or one with a glyph that can't be placed. Along a path, also a path without length) | M14 |
 | `SC-W1109` | Warning | Text longer than its path (the line goes on straight past an open path's end, round a closed path again, or is pushed together when stretched) | M14 |
 | `SC-W1110` | Warning | Lettering setting not applied (lines asked to sew back and forth in a font drawn for one direction, or colours asked to be sorted in a font that doesn't sort) | M14 |
-| `SC-W1111` | Warning | Text not sewn in its embroidery font (a VectorCraft text object with the Lettering effect whose font isn't found or doesn't read, or that is area type, type on a path or vertical type) | M14 |
+| `SC-W1111` | Warning | Text not sewn in its embroidery font (a VectorCraft text object with the Lettering effect whose font isn't found or doesn't read, or that is area type, type on a path or vertical type, and a text object under automatic digitizing without a font or with a line that can't be set) | M14 |
 | `SC-I1112` | Info | Traced letters replaced by lettering (what lay inside a text marker of a picture, with both heights, the text and the font) | M14 |
 | `SC-W1113` | Warning | Text marker not used (without text, without an area, with every shape partly outside it, or with a font that is missing or unreadable), or one of its settings left unread | M14 |
 | `SC-W1114` | Warning | Shape crosses a text marker's edge (more than half inside it, and sewn as traced beside the lettering) | M14 |
 | `SC-W1115` | Warning | Lettering not the traced letters' size (set at the nearest height the font sews, or over a tenth of their height from their width) | M14 |
+| `SC-I1116` | Info | Text sewn in an embroidery font (a text object under automatic digitizing, whose own typeface can't be read. The message has the font used, the height with its reason, and the longest line's length) | M14 |
+| `SC-W1117` | Warning | Lettering longer than its text's place (a line of a text object under automatic digitizing that is longer than the length its text most likely had, at the smallest height the font sews at) | M14 |
 | `SC-I1119` | Info | Thread taken from thick spots (by the last pass over a design digitized automatically, where a spot still sewed above 4 fills: how much of each kind, and what is left) | M13 |
 | `SC-E1201` | Error | Subject cut-out's models not ready (a model that couldn't be fetched, or isn't the file pinned: the message names every file and the folder they belong in) | M13 |
 | `SC-E1202` | Error | No subject found to cut out (no part of U²-Net-p's map reaches a half and no box is given, or MobileSAM didn't keep a pixel) | M13 |

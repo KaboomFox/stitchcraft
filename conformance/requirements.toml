@@ -648,6 +648,15 @@ milestone = "M14"
 status = "active"
 
 [[req]]
+id = "REQ-SVG-017"
+area = "svg"
+level = "L2"
+statement = "With auto, a `<text>` element a viewer shows is read as a text object (REQ-AUTO-069), which stitch, which has the fonts, sets once the file is read. The element starts a line at its x and y, and a `<tspan>` with an x or a y starts a new one, each moved by a dx or dy written there. Of a list of numbers the first counts. A `<tspan>` or a link without a place goes on in its line. White space is collapsed unless xml:space preserves it. A line has the font size, the text-anchor, the fill's colour (its stroke's without a fill) and the font-family of the element its first visible character is in. The font size is the nearest font-size that is a length, times the shares nearer (em, ex as half of one, percent), and 16 pixels with none. The textLength of an element of one line, or of a `<tspan>` that starts a line, is the length its line states, scaled as the transforms scale along the baseline, and one that is no positive length states nothing. The element's transforms place each line's anchor, scale its font size as they scale across the baseline, and turn the text as they turn the baseline. The lettering is cut to the clips around the element. SC-W0802 says what is left out: text on a path, what places letters one by one (a list of places, a dx or dy inside a line, rotate, a textLength inside a line or of several lines), a stretch, a mirror or a slant, and the element's own clip path. Vertical text is not stitched, and SC-W1111 says so. Characters a viewer doesn't show, and a line without a size or without paint, are not read. Without auto, and for `<flowRoot>`, the element is left out with SC-W0802 as before. Reading costs a unit of work for each node inside the element and for each element looked at for a property, and work past the budget ends with SC-E0004."
+rationale = "An SVG file keeps a text's characters and names its typeface, and a viewer lays them out with the typeface's widths, which the reader doesn't have and the embroidery font doesn't share. What doesn't depend on a width is read: where a line starts, how it is anchored, its size, its colour and how it is turned. Editors write each line of a text as a tspan with its own x and y."
+milestone = "M14"
+status = "active"
+
+[[req]]
 id = "REQ-GEN-001"
 area = "generators"
 level = "L2"
@@ -2570,6 +2579,15 @@ milestone = "M14"
 status = "active"
 
 [[req]]
+id = "REQ-VC-029"
+area = "vectorcraft"
+level = "L2"
+statement = "A text object of a VectorCraft document without the Lettering effect that automatic digitizing reaches is a text object of REQ-AUTO-069, sewn in the reader's default font as a text's font is found (REQ-VC-026). Automatic digitizing reaches it when it has the Auto effect, or when it has no StitchCraft effect, no stitch effect reaches it from a group or a layer around it, and an Auto effect does or the document is read with auto. Horizontal point type is read: its lines are those of its characters, each at the object's origin moved down by the lines before it, a leading apart, which is 1.2 times the size when the style sets none. The size, the leading, the fill and the typeface's name are those of the first run that has characters, and the paragraph's alignment anchors each line at its start, its middle or its end. The transform places the origin, turns the lines as it turns the baseline, and scales the size and the leading as it scales across the baseline. A size that doesn't read is 12 points, and SC-W0807 says so. The lettering is cut to the clips around the object. Area type, type on a path and vertical type are left out with SC-W1111. A text with the Lettering effect keeps its settings (REQ-VC-026) and is lettered once. A text automatic digitizing doesn't reach is left out with SC-W0807 as before. Only a reader that is given the document's text does this: the exporters and stitch, not the Auto effect's own run on the canvas."
+rationale = "VectorCraft gives a plug-in a text object's characters, transform and style, and no outline of a glyph, and only an exporter gets them with the whole document. The Auto effect means that StitchCraft chooses how the object sews, and for a text the choice it has today is an embroidery font. A person who chose a font with the Lettering effect keeps it."
+milestone = "M14"
+status = "active"
+
+[[req]]
 id = "REQ-VC-019"
 area = "vectorcraft"
 level = "L2"
@@ -3252,6 +3270,24 @@ level = "L2"
 statement = "Once a design digitized automatically is planned, a last pass takes thread where a spot of a millimetre still sews more than 4 fills, of the stitches that lay thread within 2 mm of such a spot, in this order. Travel that goes out and back on itself, coming back within 0.1 mm of where it was 2 needle points before, loses its 2 points of the way out and back. A lock of 4 stitches or more loses its stitches beyond one back and forth. Then a row's end whose turn to the next row is 1 mm or shorter, the 2 rows running nearly opposite ways, moves back along its row with the next row's start, by the overlap of areas (`auto_overlap_mm`) or else half of it, while each stitch stays as long as the machine's shortest: the base layer's rows first, then the other shapes' top rows. A row's end moves only where the top stitches of the elements sewn after it lay 1 fill or more at its old and new points and its turn's, measured as the plan is, from the plan's end, so that thread taken from a later shape no longer hides. No change is made that would leave a spot its stitches lay thread in thicker than both the cap and what it was. The pass takes no top stitch that shows, cuts no run and makes no jump thread. SC-I1119 says how much it took of each kind in how many places, the area above 4 fills before and after, and the thickest spot left. The pass has the work budget once: when it runs out, the plan is kept as planned, and SC-I1119 says so."
 rationale = "The rules for single shapes (REQ-AUTO-071, REQ-AUTO-072) left the traced dogs at 5.2 to 6.5 fills where 5 to 8 elements meet at one spot, each laying a little, and no rule of one shape knows the sum. Only the finished plan does. Taking a needle point out of a run takes no thread, and cutting a run leaves a jump thread: thread leaves a spot only where the stitching doubles back or an end can move. Measured on 2026-11-17, the pass took the dogs' area above 4 fills from 25, 26, 22 and 48 mm² to 11, 13, 13 and 30, their thickest spots by 0.15 to 0.3 fills, TS-13D's from 5.17 to 4.18 and the pear's from 5.01 to 4.71, with 2 to 90 stitches fewer and no jump thread more. Embroidery programs remove hidden stitching where shapes overlap (M13.30). The measure is kept up to date stitch by stitch and handed to SC-W0913, so that a design is measured once, since VectorCraft's export has few instructions to spare."
 milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-069"
+area = "auto"
+level = "L2"
+statement = "Under automatic digitizing a text object, which keeps its characters and not their outlines, sews as lettering (REQ-FONT-009) in the host's default embroidery font, a line at a time. Each line is set at the scale that makes the font's letters 0.7 of the line's font size tall, to a tenth of a percent, within the heights the font sews at (SC-W1106 outside them, said once for lines that say the same). A line that is then longer than its place is fitted to it. Its place is the length the line states, or else half its font size for each of its characters. The gaps between its letters and its words are narrowed first, each by up to a tenth of the letters' height. If it is still longer it is set at the scale that makes it as long with its gaps so narrowed, cut to a tenth of a percent, and no smaller than the font sews, where SC-W1117 gives its length and its place's. A line no longer than its place is not changed. It starts, is centred or ends at its anchor on its baseline as the line says, fitted or not, and the lines are turned as the object's baseline is. A font of one thread sews in the thread of the line's fill, and a font of several keeps its own. The letters keep the settings the font gives them and are not automatic elements, take the object's name, are cut to its clips, and sew at the object's place in the stitching order. SC-I1116 says for each text object which font stands in, how tall it sews and whether that is 0.7 of its font size or less to fit a stated or an estimated length, how long its longest line is, and that its own typeface can't be read yet. A font whose settings give no size is set as it is drawn, and the note says so. A text object without a line sews nothing, and nothing is said. A text object with a lettering setting of its own (REQ-VC-026) is not one of these."
+rationale = "The owner asked on 2026-11-14 that text in a design be known as text and treated differently. A drawing names a typeface and holds no outline, and StitchCraft reads no typeface's file yet, so the letters of an embroidery font, which are drawn for the needle, stand in until it does. A font size is the height of the box a typeface is drawn in, and capitals are about 0.7 of it in most typefaces (0.66 to 0.74 in the common ones), where an embroidery font's size is its letters' height. An embroidery font is wider than most typefaces: at the text's height a word ran over the border of the badge drawn for the step, which is worse than a skipped text, so a line is kept to the length its text most likely had."
+milestone = "M14"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-070"
+area = "auto"
+level = "L2"
+statement = "A text object under automatic digitizing sews all of its lines or nothing. It sews nothing, and SC-W1111 says why, when the host has no default embroidery font, in which case the fonts it has are named, when the font doesn't read, when lettering sets no character of a line, when a letter would lie beyond the design's reach, and when the object's label is too long to number its letters by. Setting a text object costs a unit of work for the object, one for each line and for each byte of it, and one for each element and each point each time a line is measured and when it is placed, and among a design's elements a unit for each element. Work past the budget ends with SC-E0004, as does a font whose reading ran out of budget."
+rationale = "No silent fallback and no silent skip: a word missing from a sewn design is found after the thread is spent, so a text that can't be sewn is said before. Half a text is worse than none, because it reads as a mistake in the design."
+milestone = "M14"
 status = "active"
 
 [[req]]

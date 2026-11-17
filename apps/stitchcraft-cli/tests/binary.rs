@@ -270,3 +270,53 @@ fn req_cli_020_stitch_plan_sews_marked_letters_as_lettering() {
     let replayed = run(&["bug-report", "--replay", "text.bug-report.json"]);
     assert!(replayed.status.success(), "{} {}", text(&replayed.stdout), text(&replayed.stderr));
 }
+
+/// `REQ-AUTO-069`, `REQ-SVG-017`: `stitch plan --auto` sews the text of a drawn SVG design as lettering in the
+/// default font of the folder `STITCHCRAFT_FONTS` names, where the text stands, and says which font stands in.
+/// Without `--auto`, and without a font, the text is left out and that is said.
+#[test]
+fn req_auto_069_stitch_plan_sews_a_drawn_designs_text_as_lettering() {
+    let dir = folder("text-objects");
+    let glyphs = r##"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" width="100mm" height="100mm" viewBox="0 0 100 100"><sodipodi:namedview id="base"><sodipodi:guide position="0,30" orientation="0,1" inkscape:label="baseline"/></sodipodi:namedview><g inkscape:groupmode="layer" inkscape:label="GlyphLayer-a"><path id="pa" d="M 0,60 L 4,70" style="fill:none;stroke:#000000;stroke-width:0.4"/></g></svg>"##;
+    std::fs::create_dir_all(dir.join("fonts/small_font")).unwrap();
+    std::fs::write(dir.join("fonts/small_font/font.json"), r#"{"name": "Test", "size": 10, "min_scale": 0.5, "max_scale": 4}"#).unwrap();
+    std::fs::write(dir.join("fonts/small_font/ltr.svg"), glyphs).unwrap();
+    // A badge with a word on it, and a star beside it: the word 20 mm in font size, so 14 mm tall as lettering.
+    let badge = |word: &str| {
+        format!(
+            r##"<svg xmlns="http://www.w3.org/2000/svg" width="60mm" height="40mm" viewBox="0 0 60 40"><rect id="field" width="50" height="40" fill="#ffffff"/><rect id="star" x="54" y="2" width="4" height="4" fill="#0000c0"/>{word}</svg>"##
+        )
+    };
+    std::fs::write(dir.join("word.svg"), badge(r##"<text id="word" x="10" y="30" font-size="20" font-family="Georgia" fill="#c00000">aaa</text>"##))
+        .unwrap();
+    std::fs::write(dir.join("blank.svg"), badge("")).unwrap();
+    let run_in = |fonts: &str, args: &[&str]| {
+        Command::new(env!("CARGO_BIN_EXE_stitch")).args(args).current_dir(&dir).env("STITCHCRAFT_FONTS", dir.join(fonts)).output().unwrap()
+    };
+    let run = |args: &[&str]| run_in("fonts", args);
+    let lettered = run(&["plan", "word.svg", "--auto", "-o", "word.pes"]);
+    let note = "info SC-I1116 (svg:word): The text `svg:word` is sewn in the embroidery font `small_font`, 14.0 mm tall: 0.7 of its font size";
+    assert!(lettered.status.success() && text(&lettered.stderr).contains(note), "{}", text(&lettered.stderr));
+    assert!(text(&lettered.stderr).contains("Its own typeface, Georgia, can't be read yet"), "{}", text(&lettered.stderr));
+    // The word sews: more stitches than the badge without it, in one more thread.
+    let line = |file: &str, what: &str| {
+        text(&run(&["inspect", file]).stdout).lines().find(|line| line.contains(what)).map(str::to_string).unwrap_or_default()
+    };
+    assert!(run(&["plan", "blank.svg", "--auto", "-o", "blank.pes"]).status.success());
+    assert_ne!(line("word.pes", "stitches"), line("blank.pes", "stitches"));
+    // Without `--auto` the text is left out with the warning it had, and the badge sews as without it.
+    let plain = run(&["plan", "word.svg", "-o", "plain.pes"]);
+    assert!(
+        plain.status.success() && text(&plain.stderr).contains("SC-W0802 (svg:word): `word` is text, which is not stitched; it is left out."),
+        "{}",
+        text(&plain.stderr)
+    );
+    assert!(!text(&plain.stderr).contains("SC-I1116"));
+    // Without a font the text is left out, which is said, and the rest sews.
+    std::fs::create_dir_all(dir.join("none")).unwrap();
+    let unlettered = run_in("none", &["plan", "word.svg", "--auto", "-o", "unlettered.pes"]);
+    assert!(unlettered.status.success(), "{}", text(&unlettered.stderr));
+    let why = "warning SC-W1111 (svg:word): The text `svg:word` is not stitched: no embroidery font is here to sew it in.";
+    assert!(text(&unlettered.stderr).contains(why), "{}", text(&unlettered.stderr));
+    assert_eq!(line("unlettered.pes", "stitches"), line("blank.pes", "stitches"));
+}

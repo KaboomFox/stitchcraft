@@ -98,7 +98,7 @@ fn req_vc_015_the_objects_selected_stay_as_they_are_and_the_sheet_goes_above_the
 
 #[test]
 fn req_vc_015_a_record_holds_each_setting_as_its_dialog_row_takes_it() {
-    let schemas = |family: Family| declared().into_iter().find(|(each, _)| *each == Module::Family(family)).unwrap().1;
+    let schemas = |family: Family| declared_of(Module::Family(family));
     let set = |pairs: &[(&str, &str)]| pairs.iter().copied().collect::<ParamSet>();
     let held = record_params(
         Module::Family(Family::Stroke),
@@ -129,7 +129,7 @@ fn req_vc_015_a_record_holds_each_setting_as_its_dialog_row_takes_it() {
         Err("its setting `bean_stitch_repeats = 2.5` doesn't read back from its stroke effect's record".to_string())
     );
     // An automatic shape's settings of the rules are the Auto effect's, which declares no stitch's.
-    let auto = declared().into_iter().find(|(each, _)| *each == Module::Auto).unwrap().1;
+    let auto = declared_of(Module::Auto);
     let rules = record_params(Module::Auto, &set(&[("auto_overlap_mm", "0.5"), ("auto_ignore_background", "false")]), &auto).unwrap();
     assert_eq!(Value::Object(rules), json!({"auto_ignore_background": false, "auto_overlap_mm": 0.5}));
     // A bound of the rules has no row in the dialog, so a sheet cannot record it.
@@ -241,7 +241,28 @@ fn req_vc_015_a_linear_gradient_fill_is_drawn_with_its_gradient_and_sews_as_it()
     }
     element.params.set("fill_method", "linear_gradient_fill");
     let one = Design::new(vec![element.clone()], settings).unwrap();
-    let out = serde_json::to_value(object(sheet, &element, &one, &declared()).unwrap()).unwrap();
+    let out = serde_json::to_value(object(sheet, &element, &one, &mut Made::default()).unwrap()).unwrap();
     assert_eq!((out["fills"][0]["type"].as_str(), out["fills"][0]["gradient"]["kind"].as_str()), (Some("gradient"), Some("Linear")));
     assert_eq!(sewn(&document(&[kept(&out, 10)])), planned(&one));
+}
+
+#[test]
+fn req_vc_015_a_record_and_a_paint_are_made_once_for_the_settings_and_thread_they_hold() {
+    let mut made = Made::default();
+    let (none, trims) = (ParamSet::default(), [("trim_after", "true")].into_iter().collect::<ParamSet>());
+    let mut record = |effect: Module, params: &ParamSet| format!("{:?}", made.record(effect, params).unwrap());
+    let fill = record(Module::Family(Family::Fill), &none);
+    // The same settings make another effect's record, and other settings another record of the same effect.
+    let auto = record(Module::Auto, &none);
+    let trimmed = record(Module::Family(Family::Fill), &trims);
+    assert!(fill.contains("plugin.dev.stitchcraft.fill") && auto.contains("plugin.dev.stitchcraft.auto"), "{fill} {auto}");
+    assert!(trimmed.contains("trim_after") && !fill.contains("trim_after"), "{trimmed} {fill}");
+    assert_eq!(record(Module::Family(Family::Fill), &none), fill);
+    assert_eq!((made.records.len(), made.declared.len()), (3, 2));
+    let (red, blue) = (Rgb::new(237, 23, 31), Rgb::new(10, 85, 163));
+    let paint = |made: &mut Made, color: Rgb| made.solid(color).unwrap().get().to_string();
+    let first = paint(&mut made, red);
+    assert_eq!(first, solid(red).unwrap().get());
+    assert_eq!(paint(&mut made, blue), solid(blue).unwrap().get());
+    assert_eq!((paint(&mut made, red), made.paints.len()), (first, 2));
 }

@@ -5,6 +5,23 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M14.7: a text object sews as lettering under automatic digitizing (`REQ-AUTO-069`, `REQ-AUTO-070`,
+  `REQ-SVG-017`, `REQ-VC-029`).
+  - An SVG file's `<text>` and a VectorCraft document's point type were left out with a warning. With
+    `--auto`, or under the Auto effect, each now sews in the default embroidery font: on its baseline, from
+    its anchor, 0.7 of its font size tall and in its fill's colour.
+  - A line is fitted to the length its text most likely had, which is an SVG file's `textLength` or half
+    the font size for each character. Its gaps are narrowed, then it sews smaller, so that a wide
+    embroidery font doesn't run a word over the shapes beside it. `SC-W1117` names a line that is still
+    longer at the font's smallest height.
+  - The letters are the embroidery font's, not the typeface's. `SC-I1116` says so for each text, with its
+    height and why, and `SC-W1111` names a text that couldn't be sewn. A text with the Lettering effect keeps its settings.
+  - Text on a path, vertical text and area type are left out with a warning. So is what places letters
+    one by one in an SVG file.
+  - Sewing a text in its own typeface, from its outlines, is roadmap step M15.13.
+  - Public API: `stitchcraft_svg::lettering::objects` is new, `stitchcraft_svg::Svg` has `texts`, and
+    `stitchcraft_core::Code` has `TextSewnInEmbroideryFont` and `LetteringLongerThanTextsPlace`.
+  - Golden files stay as they are: no conformance case draws a text object.
 - M14.5: text in a picture sews as lettering (`REQ-AUTO-063` to `REQ-AUTO-066`, `REQ-VC-028`,
   `REQ-SVG-016`, `REQ-CLI-020`).
   - A shape named `stitch:text` and a text, in a VectorCraft document or an SVG file, marks the text of a
@@ -284,7 +301,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     (`DEV-FILL-034`). A user page has pictures of guided fills.
   - Golden changed: `TS-17B.pes`, for the guided leaf below M10.12's gradients. With the leaf after it, the
     third gradient's last colour ends on its square's side nearest the leaf, and so starts on the other.
-- M13.15: the owner's dog photos as test pictures (`REQ-AUTO-025`, `REQ-AUTO-026`). KaboomFox's 2 photos of
+- M13.15: the owner's dog photos as test pictures (`REQ-AUTO-025`, `REQ-AUTO-026`). The owner's 2 photos of
   her dog, each cut out by a mask checked by hand, are docs fixtures, with the 4 documents VectorCraft 0.22.0
   traced from them 100 mm tall in 6 and in 9 threads (`docs/fixtures/README.md` › The traced dogs). A test
   keeps each cut-out's hash.
@@ -3220,6 +3237,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes`, `TS-13C.pes`, `TS-13D.pes` and
+  `TS-13E.pes` (M13.35, no spot above the cap). The digitized half of each moves a satin column's crowded
+  needle points in, locks in steps of 0.3 mm, and has thread taken at spots above 4 fills by the last
+  pass. The sheets sew 23,896, 14,616, 10,362, 20,233 and 6,007 stitches, where they sewed 23,908,
+  14,640, 10,390, 20,259 and 6,011. Their sizes and the halves in paint order are as they were.
 - Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes`, `TS-13C.pes`, `TS-13D.pes` and
   `TS-13E.pes`, and added `TS-13F.pes` (M13.30, less thread where a design sews thick). The digitized half
   of each of the 5 sews narrower overlaps across its rows, one overlap under a shape, one base layer where

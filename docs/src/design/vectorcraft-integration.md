@@ -594,6 +594,9 @@ meander fills wander as their elements' ids draw, and the objects drawn would ha
 the filter doesn't draw it either (`TestSheet::drawable`). The TS-13 sheets are designs whose shapes
 StitchCraft digitizes automatically (`TestSheet::digitized`): each such shape has the Auto effect's
 record (M13.7, `REQ-VC-016`), and StitchCraft Auto must be installed for VectorCraft to keep it.
+A record is made once for each set of settings, and a solid paint once for each thread: objects that share
+them share the one made. TS-13F's 179 objects have 15 records and 2 paints, and making them for each
+object took it past a light filter's run.
 
 The contract test `req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcraft_s_limits`
 draws each sheet into a new document in VectorCraft 0.17.0's and 0.18.0's hosts alike, and exports it with
@@ -880,7 +883,9 @@ anchor, leaves that end of the segment straight, and a segment without handles i
   as its first child, transparent. The Layers panel's Make Clipping Mask (`layer.clippingMask.toggle`)
   puts a Shaper group's clipping object before them.
 - **Text** with StitchCraft's Lettering effect sews in an embroidery font ([lettering](#lettering)). Without
-  the effect it is left out with `SC-W0807`, whose hint names the effect and Type › Create Outlines.
+  the effect, text under automatic digitizing sews in the default embroidery font
+  ([below](#text-without-the-lettering-effect)). Other text is left out with `SC-W0807`, whose hint names
+  the effect and Type › Create Outlines.
 - **Images and symbols,** and the objects VectorCraft computes as it draws them (blends, envelopes,
   meshes, repeats, placed documents and VectorCraft's Intertwine objects), are left out with `SC-W0807`.
   The message names VectorCraft's command that makes paths of them. So is a kind of object this version
@@ -1096,6 +1101,40 @@ manifest differ between a build with fonts and one without, and VectorCraft chec
 against the manifest installed. A document would then lose its font in a plug-in built with other fonts.
 A name also reads the same from the command line. The dialog's help names the default font, and an
 export that doesn't find a font names those it has.
+
+#### Text without the Lettering effect
+
+From M14.7 a text object under automatic digitizing sews without the effect too (`REQ-VC-029`), as
+[a text object in automatic digitizing](fonts.md#text-objects-in-automatic-digitizing) does. A text is
+under automatic digitizing in the cases a path is:
+
+- The text has the Auto effect.
+- The text has no StitchCraft effect of its own, and the nearest group or layer around it that has
+  StitchCraft effects has the Auto effect and no stitch effect.
+- The document is read with `--auto`, and neither the text nor a group or a layer around it has a
+  StitchCraft effect.
+
+A stitch effect says how a path sews and means nothing for a text. A text with one, its own or a group's
+around it, is left out as before.
+
+The adapter reads horizontal point type. Its lines are the lines of its characters. The first starts at
+the origin of `xf`, and each next line lies a leading further down. The leading is the character style's
+`leading`, or 1.2 times its `size` when it sets none, which is VectorCraft's automatic leading. The size,
+the leading, the fill and the typeface's name are those of the first run that has characters, so a text of
+several sizes sews at its first. The paragraph's `justify` anchors each line at its start, its middle or
+its end, and a justified paragraph is anchored at its start. `xf` turns the lines as it turns the
+baseline, and scales the size and the leading as it scales across the baseline. A size that doesn't read
+is 12 points, and `SC-W0807` says so. The document states no length for a line, so each is fitted to an
+estimated one. Area type, type on a path and vertical type are left out with
+`SC-W1111`, as they are with the Lettering effect.
+
+Only a plug-in that is given the text can do this:
+
+| Where | A text automatic digitizing reaches |
+|---|---|
+| File › Export to PES or DST, and the browser demo | Sews in the font built into the exporters |
+| `stitch export` and `stitch plan` | Sews in the default font of the folder `STITCHCRAFT_FONTS` names |
+| The Auto effect's own run, which draws the stitches on the canvas | Is given the text's outline as one path, and digitizes that as a shape. So the canvas doesn't show what the export sews |
 
 **What the adapter reads.** A text object's kind holds its runs, its transform `xf` and whether it is
 point type. The adapter joins the runs' characters, in order, and lettering splits the lines at line
