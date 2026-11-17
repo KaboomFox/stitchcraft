@@ -335,6 +335,16 @@ side:
 - The dog on turf in 9 threads sews 0.31 fills more at its thickest spot, 4.8 fills, where a satin column or a fill lies
   over 3 or 4 other fills. Does the needle thump there, or the thread fray?
 
+M13.38 merges the thin tails of broader patches too, the strands of fur a patch was traced with
+([neighbours](../design/image-to-embroidery.md#neighbours)). It changes what the traced dogs sew, and no
+test sheet. At the next checkpoint, sew the dog on turf in 6 threads from `main` before M13.38 and from
+after it, side by side:
+
+- Its thickest spot sews 5.30 fills, where it sewed 4.69, at about (41.7, 77.2) mm from the design's top
+  left, where 2 parts of a satin column lie over 2 fills. The owner accepted it on 2026-11-17. Does the needle
+  thump there or the thread fray? Does the spot stand up from the fabric?
+- It leaves 46 jump threads where it left 57. Count the ones you cut on each.
+
 ## Report template
 
 The GitHub issue form *Sew-out report* asks for these fields; this is the same template for notes kept

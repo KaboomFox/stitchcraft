@@ -1244,7 +1244,13 @@ mod tests {
         assert_eq!(sewn(&area, filled, &AutoParams::defaults()).diagnostics, said);
         let line = Line { points: vec![p(20.3, 0.3), p(29.7, 0.3)], closed: false };
         let thin = narrow::Narrow { part: strip, lines: vec![line], width: Mm::new(0.6).unwrap() };
-        let both = narrow::Parts { filled: vec![square], along: vec![narrow::Along::Narrow(thin)], said: said.clone(), fired: Vec::new(), judged: Vec::new() };
+        let both = narrow::Parts {
+            filled: vec![square],
+            along: vec![narrow::Along::Narrow(thin)],
+            said: said.clone(),
+            fired: Vec::new(),
+            judged: Vec::new(),
+        };
         let made = sewn(&area, both, &AutoParams::defaults());
         assert_eq!((made.elements.len(), made.diagnostics), (2, said));
     }

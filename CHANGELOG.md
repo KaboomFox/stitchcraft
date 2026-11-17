@@ -5,6 +5,18 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.38: thin pieces merged into their neighbours (`REQ-AUTO-091`, `REQ-AUTO-092`).
+  - A thin, ragged piece of a broader part of an automatic area would sew as a running stitch along its
+    middle. Now it merges into the automatic area it shares the longest edge with, as a thin line has since
+    M13.18. `SC-I0915` names each piece merged into another area.
+  - An area that only gives pieces away sews as it was sorted, so what is left of it doesn't split into new
+    tails, and `SC-I0912` no longer names the rules of the pieces that left it.
+  - The traced dogs sew 2, 1, 0 and 0 shapes as running stitches where they sewed 3, 4, 1 and 3, and leave
+    46, 42, 33 and 42 jump threads where they left 57, 58, 49 and 64. Their 12 stitches astray are 6, each
+    a stitch of an outline that cuts across a curved or cornered edge, for M13.43.
+  - Worse, accepted by the owner: the dogs sew 5.30, 5.27 and 4.81 fills at their thickest spots where they
+    sewed 4.69, 4.80 and 4.62, and the running dog in 9 threads 4.97 where it sewed 5.63. The traced goose
+    sews 6.26 where it sewed 5.56, and the castle 5.01 where it sewed 5.88.
 - M13.18: thin lines merged into their neighbours (`REQ-AUTO-090`, `SC-I0915`).
   - A part of an automatic area narrower than the narrowest satin stroke everywhere, whose width varies by
     0.05 of itself or more, merges into the automatic area it shares the longest edge with, and sews as

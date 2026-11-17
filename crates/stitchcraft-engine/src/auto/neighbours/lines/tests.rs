@@ -260,7 +260,15 @@ fn req_auto_092_an_area_that_takes_no_line_in_sews_as_it_was_sorted() {
     let Merged { sorted, .. } = merged(flattened, &[], &rules, NARROWEST, &Budget::DEFAULT);
     assert_eq!(sorted.keys().copied().collect::<Vec<_>>(), [0]);
     let bounds = Bounds::of(&AutoParams::defaults(), NARROWEST);
-    let again = narrow::sorted(&ElementId::new("plain").unwrap(), vec![square((50.0, 0.0), (60.0, 10.0))], &bounds, &AutoParams::defaults(), &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap();
+    let again = narrow::sorted(
+        &ElementId::new("plain").unwrap(),
+        vec![square((50.0, 0.0), (60.0, 10.0))],
+        &bounds,
+        &AutoParams::defaults(),
+        &|_, _| Ok(true),
+        &mut Budget::DEFAULT.meter(),
+    )
+    .unwrap();
     assert_eq!(sorted.get(&0), Some(&again));
 }
 

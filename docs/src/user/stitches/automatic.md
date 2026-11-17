@@ -128,13 +128,13 @@ each out, as `--subject` will from M13.14.
 digitize as fills, satin columns and triple runs by their shape ([stitches by shape](#stitches-by-shape)).
 Its ragged patches sew as flat fills, and its nose as one fill with the nostrils on it. Its thin, ragged
 strands of fur sew as part of the patches beside them ([thin lines](#neighbours)). The fabric is covered
-where the dog has a colour, on black fabric as on cream ([covering the fabric](#covering-the-fabric)). 4
-stitches still lie where they shouldn't, beside thin pieces of fur. They are 1.8 to
-4 mm long. M13.38 of the [roadmap](../../plan/roadmap.md) is to remove them, and the like stitches of the
+where the dog has a colour, on black fabric as on cream ([covering the fabric](#covering-the-fabric)). One
+stitch still lies where it shouldn't, 2 mm long: a stitch of a patch's outline that cuts across the
+patch's corner. M13.43 of the [roadmap](../../plan/roadmap.md) is to remove it, and the like stitches of the
 other traced dogs. The thin straight lines are jumps between patches of one colour, which the reference
-machine leaves for you to cut by hand, as it leaves the pear's: 64 of them. Where patches sewn later cover a
+machine leaves for you to cut by hand, as it leaves the pear's: 42 of them. Where patches sewn later cover a
 way from one patch to the next, StitchCraft sews the thread under them instead ([jump threads](#jump-threads)).
-The dog changes thread 11 times in its 9 threads, since a line sews after the fill it borders: with **Fill
+The dog changes thread 12 times in its 9 threads, since a line sews after the fill it borders: with **Fill
 uneven parts** off it changes thread less often and jumps more often
 ([what it costs](../../design/image-to-embroidery.md#what-it-costs)).
 
@@ -265,7 +265,8 @@ in 6 steps:
 3. **Thin lines.** A photo traces soft shading and the strands of fur as thin, ragged lines between
    patches. Each would sew as a running stitch that the fills beside it end their rows on. So a part
    narrower than a satin column can be, whose width varies along it, sews as part of the fill of the shape
-   it shares the longest edge with (`SC-I0915`). A line of even width, as a pen draws it, sews as a
+   it shares the longest edge with (`SC-I0915`). So does a thin, ragged tail of a broader patch, a strand
+   of fur that the patch was traced with. A line of even width, as a pen draws it, sews as a
    line. Turn **Fill uneven parts** off (`auto_fill_uneven`) to keep every line, as the `logo` style does.
 4. **Specks.** A shape or a part of one smaller than 1 mm² would sew a knot. It is merged into the shape
    it shares the longest edge with (`SC-I0905`, `auto_min_area_mm2`).

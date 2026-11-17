@@ -1,4 +1,4 @@
-//! Thin lines merged into their neighbours (`REQ-AUTO-090`), each said with `SC-I0915`. Design:
+//! Thin lines merged into their neighbours (`REQ-AUTO-090`, `REQ-AUTO-091`), each said with `SC-I0915`. Design:
 //! `docs/src/design/image-to-embroidery.md` › Neighbours.
 //!
 //! A trace of a photo draws soft shading and the strands of fur as thin lines of one colour between patches
@@ -9,7 +9,10 @@
 //! flattened and before anything is digitized, each part of an automatic area narrower than the design's
 //! narrowest satin stroke everywhere ([`within`]), a part the rules would sew as a line, is merged into the
 //! automatic area it shares the longest edge with, which may be the rest of its own area. It then sews as
-//! part of that area's fill. The rule goes by the line's width alone, never by what the picture shows.
+//! part of that area's fill. A trace also draws a strand as a thin tail of a patch, which sorting cuts off
+//! the patch and sews as a running stitch: such a piece, ragged as a line is, merges too (`REQ-AUTO-091`).
+//! A piece that goes back to the rest of its own area is said of nowhere. The rule goes by the line's width
+//! and how it varies, never by what the picture shows.
 //!
 //! The edge 2 shapes share is measured as a speck's is (`specks::shared`): how much of the area's rings lies
 //! within [`TOUCHING`] of the line. Every area gives up its thin parts first, so a line goes into what its
@@ -18,10 +21,11 @@
 //! (`REQ-AUTO-008`), and an area that turns `auto_fill_uneven` off, or names its stitch with `auto_stitch`,
 //! keeps its lines.
 //!
-//! **Sorting kept.** Each area's parts are sorted as digitizing sorts them (`narrow::sorted`) to find its
-//! lines, with the holes digitizing keeps open. An area that takes nothing in sews as it was sorted then,
-//! less the lines it gave up: sorted again, what is left of a part that gave up a piece would split into
-//! new tails, which sew as lines where the piece left one. An area that takes a line in is sorted again.
+//! **Sorting kept** (`REQ-AUTO-092`). Each area's parts are sorted as digitizing sorts them (`narrow::sorted`)
+//! to find its lines, with the holes digitizing keeps open. An area that takes nothing in sews as it was
+//! sorted then, less the lines it gave up and their rules, which `SC-I0912` no longer names: sorted again,
+//! what is left of a part that gave up a piece would split into new tails, which sew as lines where the
+//! piece left one. An area that takes a line in is sorted again.
 //!
 //! **Work.** Each area has the budget's work to itself to find its thin parts, and each line to find where
 //! it goes. It costs the work of the rings near it and a unit for each area it looks past. An area whose

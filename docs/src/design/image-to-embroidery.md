@@ -601,6 +601,23 @@ mends it in 5 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
    work budget to itself to find its thin lines, and each line to find where it goes. One that needs more
    keeps its lines, and `SC-I0915` says so. The measure of thread astray paints the picture with each line
    merged in its neighbour's colour (`auto::as_merged`), since the neighbour's thread covers it by the rule.
+
+   *Thin pieces* (`REQ-AUTO-091`, M13.38). A trace often draws a strand of fur as a thin tail of a patch,
+   not as a shape of its own. Sorting cuts it off the patch, as a tail of an uneven part or as a narrow
+   piece of a broad part, and it sewed as a running stitch between 2 fills. A part whose columns are all too
+   narrow for satin runs so too. So each area's parts are sorted as digitizing sorts them, with the holes
+   digitizing keeps open, and each piece or part that would sew as a running stitch along its middle is a
+   thin line when it is ragged by the same bound. It merges as a thin line does. A piece whose longest edge
+   is with the rest of its own area stays there and sews as it was sorted. Nothing is said of it. `SC-I0915` names
+   each piece merged into another area, by its area. On the traced dogs these pieces lay under 8 of the 12
+   stitches M13.18 left astray.
+
+   *Sorting kept* (`REQ-AUTO-092`). An area that takes no line in sews its parts as they were sorted when
+   its lines were found, less the lines that left it. Sorted again, what is left of a part that gave up a
+   tail is a new shape whose own uneven ends split into new tails, which sew as lines where the piece left
+   one, and the dogs sewed 5.30, 5.47, 5.00 and 5.01 fills at their thickest spots. Kept sorted, they sew
+   5.30, 5.27, 4.81 and 4.97. `SC-I0912` names the rules of the parts the area still sews, and not the rule
+   of a piece that left it. An area that takes in a line, even a whole part of its own, is sorted again.
 4. **Specks** (`REQ-AUTO-008`). An automatic area, or a part of one, smaller than 1 mm² is too small to sew:
    it would sew a knot. It is merged into the automatic area it shares the longest edge with, which may be
    its own. A speck that fills a hole goes into the area around it, and no hole shows where it was. One that
@@ -1510,7 +1527,12 @@ honest cap now is about 4.5 fills on the sheets, the pear and the lettered patch
 With the ragged thin lines merged into their neighbours (M13.18, [Neighbours](#neighbours)), the traced dogs
 sew 4.69, 4.80, 4.62 and 5.63 fills at their thickest spots, and 141.5, 153.25, 130.5 and 187.5 mm² at 3
 fills or more. The dogs on turf sew thicker, at new spots where a satin column or a fill lies over 3 or 4
-other fills.
+other fills. With their thin pieces merged too (M13.38), they sew 5.30, 5.27, 4.81 and 4.97 fills at their
+thickest spots, and 102.75, 135, 121.75 and 187 mm² at 3 fills or more. The owner accepted on 2026-11-17 the
+3 spots that rose, for 11 to 22 fewer jump threads on each dog. A guard that kept a piece out of a
+neighbour where 3 fills would meet was measured and dropped. Which fill lies under a thick spot follows the
+sewing order, which is chosen later for the whole design. Skipping one piece moved the thickest spot by -0.7
+to +0.3 fills, often far from the piece.
 
 
 ## Sewing order
