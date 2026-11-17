@@ -159,18 +159,58 @@ impl Hot {
         Hot(points)
     }
 
-    /// Adds `points`, those not hot already. Put after the list, which is sorted, they are sorted on their
-    /// own, and the stable sort that merges them in is fast on 2 sorted runs one after the other, as its
-    /// docs say. Inserting them one by one would move the list's tail for each, and a drawing whose edges
-    /// cross many times would take time the work budget never charges.
-    fn extend(&mut self, points: impl IntoIterator<Item = Node>) {
-        let start = self.0.len();
-        self.0.extend(points);
-        if let Some(new) = self.0.get_mut(start..) {
-            new.sort_unstable();
+    /// The points of `rings`, each once, and each ring as the places of its points among them. Sorted with
+    /// where each comes from, the points are numbered as they are put in order.
+    fn ranked(rings: &[Vec<Node>]) -> (Hot, Vec<Vec<usize>>) {
+        let mut all: Vec<(Node, usize)> = rings.iter().flatten().copied().zip(0..).collect();
+        all.sort_unstable();
+        let mut points: Vec<Node> = Vec::with_capacity(all.len());
+        let mut places = vec![0; all.len()];
+        for (node, at) in all {
+            if points.last() != Some(&node) {
+                points.push(node);
+            }
+            if let Some(slot) = places.get_mut(at) {
+                *slot = points.len() - 1;
+            }
         }
-        self.0.sort();
-        self.0.dedup();
+        let mut places = places.into_iter();
+        let paths = rings.iter().map(|ring| places.by_ref().take(ring.len()).collect()).collect();
+        (Hot(points), paths)
+    }
+
+    /// Adds `points`, those not hot already, and gives the place each point hot before has now. Sorted on
+    /// their own, they are merged into the list, which is sorted. Inserting them one by one would move the
+    /// list's tail for each, and a drawing whose edges cross many times would take time the work budget
+    /// never charges.
+    fn extend(&mut self, points: impl IntoIterator<Item = Node>) -> Vec<usize> {
+        let mut new: Vec<Node> = points.into_iter().collect();
+        new.sort_unstable();
+        new.dedup();
+        let mut merged = Vec::with_capacity(self.0.len() + new.len());
+        let mut moved = Vec::with_capacity(self.0.len());
+        let mut new = new.into_iter().peekable();
+        for &old in &self.0 {
+            while let Some(added) = new.next_if(|&added| added < old) {
+                merged.push(added);
+            }
+            new.next_if_eq(&old);
+            moved.push(merged.len());
+            merged.push(old);
+        }
+        merged.extend(new);
+        self.0 = merged;
+        moved
+    }
+
+    /// The point at `place`.
+    fn at(&self, place: usize) -> Node {
+        self.0.get(place).copied().unwrap_or_default()
+    }
+
+    /// The place of `node`, which is hot.
+    fn place(&self, node: Node) -> usize {
+        self.0.partition_point(|&h| h < node)
     }
 }
 
@@ -322,14 +362,18 @@ fn grouped<T: Copy + Default>(items: impl Iterator<Item = (usize, T)> + Clone, c
 
 /// [`round`], with the edges given up as `Unjoined` should they not settle in `rounds` rounds.
 fn settle(rings: &[Vec<Node>], rounds: usize, meter: &mut Meter) -> Result<Result<Rounded, Unjoined>, Exhausted> {
-    let mut hot = Hot::of(rings.iter().flatten().copied());
-    let mut paths = rings.to_vec();
+    // The paths are the places of their points among the hot points, which every point of theirs is.
+    let (mut hot, mut paths) = Hot::ranked(rings);
     // Each round bends the edges, or, once none can be bent further, makes hot the cells where they cross.
+    // An edge is looked at again only where it may now pass a hot point: one made by bending is looked at
+    // among them all, and after a round of crossings every edge among the cells made hot.
     let mut near = Near::of(&hot, side_for(hot.0.len()), meter)?;
+    let mut look = Look { new: paths.iter().map(|path| vec![true; path.len().saturating_sub(1)]).collect(), added: None };
     for _ in 0..rounds {
-        let Bent::None(edges) = bend(&mut paths, &near, meter)? else { continue };
+        let Bent::None(edges) = bend(&mut paths, &mut look, &hot, &near, meter)? else { continue };
         let crossing = crossings(&edges, meter)?;
         if crossing.is_empty() {
+            let paths = paths.iter().map(|path| path.iter().map(|&place| hot.at(place)).collect()).collect();
             return Ok(Ok(Rounded { paths, hot: hot.0 }));
         }
         // Each cell is new: an edge that passes through a hot cell has been bent through its point.
@@ -339,10 +383,50 @@ fn settle(rings: &[Vec<Node>], rounds: usize, meter: &mut Meter) -> Result<Resul
             let Some(cell) = meeting(a, b, c, d, at) else { return Ok(Err(Unjoined)) };
             cells.push(cell);
         }
-        hot.extend(cells);
+        let added = Hot::of(cells.iter().copied());
+        let moved = hot.extend(cells);
+        paths.iter_mut().flatten().for_each(|place| *place = moved.get(*place).copied().unwrap_or(*place));
         near = Near::of(&hot, side_for(hot.0.len()), meter)?;
+        look.added = Some(Added::of(&added, meter)?);
     }
     Ok(Err(Unjoined))
+}
+
+/// Which edges [`bend`] looks at, those that may pass through the cell of a hot point other than their ends.
+#[derive(Debug)]
+struct Look {
+    /// For each edge of each path, whether it is new since the hot points last changed, and is looked at
+    /// among them all.
+    new: Vec<Vec<bool>>,
+    /// The hot points the last round of crossings made, which the other edges are looked at among. With
+    /// none, an edge that isn't new passes none: it passed none when it was looked at, and neither it nor
+    /// the hot points have changed since.
+    added: Option<Added>,
+}
+
+/// The hot points a round of crossings made, and their bounds: an edge can pass only through the cell of a
+/// point within its own bounds ([`through`]).
+#[derive(Debug)]
+struct Added {
+    near: Near,
+    least: Node,
+    most: Node,
+}
+
+impl Added {
+    /// The points of `added`, at least one, in a grid of their own. One unit of `meter` for each point.
+    fn of(added: &Hot, meter: &mut Meter) -> Result<Added, Exhausted> {
+        let near = Near::of(added, side_for(added.0.len()), meter)?;
+        let (least, most) = added.0.iter().fold((Node { x: i64::MAX, y: i64::MAX }, Node { x: i64::MIN, y: i64::MIN }), |(least, most), n| {
+            (Node { x: least.x.min(n.x), y: least.y.min(n.y) }, Node { x: most.x.max(n.x), y: most.y.max(n.y) })
+        });
+        Ok(Added { near, least, most })
+    }
+
+    /// Whether a point of these may lie within the bounds of the segment from `a` to `b`.
+    fn within(&self, a: Node, b: Node) -> bool {
+        a.x.min(b.x) <= self.most.x && self.least.x <= a.x.max(b.x) && a.y.min(b.y) <= self.most.y && self.least.y <= a.y.max(b.y)
+    }
 }
 
 /// What [`bend`] did.
@@ -355,37 +439,60 @@ enum Bent {
     None(Vec<(Node, Node)>),
 }
 
-/// Bends each edge of `paths` that passes through the cell of a hot point other than its ends through
-/// that point, the points in order along the edge: `near` holds the hot points. One unit of `meter` for
-/// each edge, each bucket it looks in and each hot point tested against it.
-fn bend(paths: &mut [Vec<Node>], near: &Near, meter: &mut Meter) -> Result<Bent, Exhausted> {
+/// Bends each edge of `paths`, each a list of places among the points of `hot`, that passes through the
+/// cell of a hot point other than its ends through that point, the points in order along the edge: `near`
+/// holds the hot points, and `look` says which edges may pass one, which it then keeps. One unit of `meter`
+/// for each edge, and for each bucket an edge looked at looks in and each hot point tested against it.
+fn bend(paths: &mut [Vec<usize>], look: &mut Look, hot: &Hot, near: &Near, meter: &mut Meter) -> Result<Bent, Exhausted> {
     // Each edge, from its least end, with where it is drawn: an edge drawn several times, either way, is
-    // worked out once. Sorted, the edges drawn alike lie side by side.
-    let mut edges: Vec<((Node, Node), usize, usize)> = Vec::with_capacity(paths.iter().map(Vec::len).sum());
+    // worked out once. The hot points are in order, so the edges in order of their ends' places are in
+    // order of their ends. Put by their least end's place, those of a place in the order the paths draw
+    // them, and those of a place by their other end's, which keeps that order among the edges drawn alike,
+    // they are sorted, and the edges drawn alike lie side by side. A place has few edges, and sorting all of
+    // them compared each many times.
+    let mut edges: Vec<(usize, usize, usize, usize)> = Vec::with_capacity(paths.iter().map(Vec::len).sum());
     for (p, path) in paths.iter().enumerate() {
         for (i, pair) in path.windows(2).enumerate() {
             if let &[a, b] = pair {
-                edges.push(((a.min(b), a.max(b)), p, i));
+                edges.push((a.min(b), a.max(b), p, i));
             }
         }
     }
-    edges.sort_unstable();
-    // The points each edge is bent through, from its least end: a stretch of `points` for each edge drawn.
-    let mut points: Vec<Node> = Vec::new();
-    let mut bends: Vec<(usize, usize, usize, usize)> = Vec::new();
-    let mut edge = 0;
-    while let Some(&(key, ..)) = edges.get(edge) {
-        meter.charge(1)?;
-        let start = points.len();
-        through(key.0, key.1, near, meter, &mut points)?;
-        let alike = edges.get(edge..).map_or(0, |rest| rest.iter().take_while(|(k, ..)| *k == key).count());
-        if points.len() > start {
-            bends.extend(edges.get(edge..edge + alike).into_iter().flatten().map(|&(_, p, i)| (p, i, start, points.len())));
+    let (mut sorted, starts) = grouped(edges.iter().enumerate().map(|(k, &(least, ..))| (least, k)), hot.0.len());
+    for span in starts.windows(2) {
+        let &[start, end] = span else { continue };
+        if let Some(group) = sorted.get_mut(start..end).filter(|group| group.len() > 1) {
+            group.sort_by_key(|&k| edges.get(k).map(|&(_, most, ..)| most));
         }
-        edge += alike.max(1);
     }
+    let key = |k: usize| edges.get(k).map(|&(least, most, ..)| (least, most));
+    // The points each edge is bent through, from its least end: a stretch of `points` for each edge drawn.
+    let (mut points, mut found): (Vec<usize>, Vec<Node>) = (Vec::new(), Vec::new());
+    let mut bends: Vec<(usize, usize, usize, usize)> = Vec::new();
+    let mut at = 0;
+    while let Some(&k) = sorted.get(at) {
+        meter.charge(1)?;
+        let (least, most) = key(k).unwrap_or_default();
+        let start = points.len();
+        let alike = sorted.get(at..).map_or(0, |rest| rest.iter().take_while(|&&j| key(j) == Some((least, most))).count());
+        let drawn = sorted.get(at..at + alike).unwrap_or_default();
+        let (a, b) = (hot.at(least), hot.at(most));
+        if drawn.iter().filter_map(|&j| edges.get(j)).any(|&(_, _, p, i)| look.new.get(p).and_then(|new| new.get(i)) == Some(&true)) {
+            through(a, b, near, meter, &mut found)?;
+        } else if let Some(added) = look.added.as_ref().filter(|added| added.within(a, b)) {
+            through(a, b, &added.near, meter, &mut found)?;
+        }
+        points.extend(found.drain(..).map(|node| hot.place(node)));
+        if points.len() > start {
+            let drawn = sorted.get(at..at + alike).into_iter().flatten().filter_map(|&j| edges.get(j));
+            bends.extend(drawn.map(|&(_, _, p, i)| (p, i, start, points.len())));
+        }
+        at += alike.max(1);
+    }
+    look.added = None;
+    look.new.iter_mut().flatten().for_each(|new| *new = false);
     if bends.is_empty() {
-        let mut once: Vec<(Node, Node)> = edges.into_iter().map(|(key, ..)| key).collect();
+        let mut once: Vec<(Node, Node)> = sorted.iter().filter_map(|&k| key(k)).map(|(least, most)| (hot.at(least), hot.at(most))).collect();
         once.dedup();
         return Ok(Bent::None(once));
     }
@@ -397,6 +504,8 @@ fn bend(paths: &mut [Vec<Node>], near: &Near, meter: &mut Meter) -> Result<Bent,
         let Some(path_bends) = bends.get(next..next + mine).filter(|bent| !bent.is_empty()) else { continue };
         next += mine;
         let mut out = Vec::with_capacity(path.len() + path_bends.iter().map(|&(_, _, from, to)| to - from).sum::<usize>());
+        // The edges an edge is bent into are new, and the others not.
+        let mut new = Vec::with_capacity(out.capacity());
         let mut pending = path_bends.iter().peekable();
         for (i, pair) in path.windows(2).enumerate() {
             let &[a, b] = pair else { continue };
@@ -411,10 +520,16 @@ fn bend(paths: &mut [Vec<Node>], near: &Near, meter: &mut Meter) -> Result<Bent,
                 } else {
                     out.extend(between.iter().rev().copied());
                 }
+                new.extend(std::iter::repeat_n(true, between.len() + 1));
+            } else {
+                new.push(false);
             }
         }
         out.extend(path.last().copied());
         *path = out;
+        if let Some(slot) = look.new.get_mut(p) {
+            *slot = new;
+        }
     }
     Ok(Bent::Some)
 }
@@ -644,6 +759,15 @@ mod tests {
         Near::of(hot, side, &mut Budget::DEFAULT.meter()).unwrap()
     }
 
+    /// `paths` bent as [`bend`] bends them, as places among the points of `hot`, in `side` buckets each way.
+    fn bent(paths: &mut Vec<Vec<Node>>, hot: &Hot, side: usize, meter: &mut Meter) -> Bent {
+        let mut places: Vec<Vec<usize>> = paths.iter().map(|path| path.iter().map(|&node| hot.place(node)).collect()).collect();
+        let mut look = Look { new: places.iter().map(|path| vec![true; path.len().saturating_sub(1)]).collect(), added: None };
+        let bent = bend(&mut places, &mut look, hot, &near(hot, side), meter).unwrap();
+        *paths = places.iter().map(|path| path.iter().map(|&place| hot.at(place)).collect()).collect();
+        bent
+    }
+
     /// The work `run` spends.
     fn spent<T>(run: impl FnOnce(&mut Meter) -> T) -> (T, u64) {
         let mut meter = Budget::DEFAULT.meter();
@@ -822,9 +946,9 @@ mod tests {
         assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 4 + 7);
         // Out and back: bent the same both ways.
         let mut paths = vec![vec![n(0, 0), n(20, 10), n(0, 0)]];
-        assert_eq!(bend(&mut paths, &near(&hot, 2), &mut meter).unwrap(), Bent::Some);
+        assert_eq!(bent(&mut paths, &hot, 2, &mut meter), Bent::Some);
         assert_eq!(paths[0], [n(0, 0), n(6, 2), n(10, 4), n(10, 6), n(20, 10), n(10, 6), n(10, 4), n(6, 2), n(0, 0)]);
-        assert!(matches!(bend(&mut paths, &near(&hot, 2), &mut meter).unwrap(), Bent::None(_)), "bent through every one already");
+        assert!(matches!(bent(&mut paths, &hot, 2, &mut meter), Bent::None(_)), "bent through every one already");
         // The same turned upside down and moved: running downhill, the edge reaches (-10, 26) before
         // (-10, 24), the other way round from the points' own order.
         let hot = Hot::of([n(-20, 30), n(0, 20), n(-10, 24), n(-14, 28), n(-14, 24), n(-6, 26), n(-10, 26)]);
@@ -838,7 +962,7 @@ mod tests {
         let mut paths = vec![vec![n(0, 0), n(8, 0), n(8, 8), n(0, 8), n(0, 0)], vec![n(8, 0), n(16, 0), n(16, 8), n(8, 8), n(8, 0)]];
         let hot = Hot::of(paths.iter().flatten().copied().chain([n(8, 4), n(4, 0)]));
         let mut meter = Budget::DEFAULT.meter();
-        assert_eq!(bend(&mut paths, &near(&hot, 3), &mut meter).unwrap(), Bent::Some);
+        assert_eq!(bent(&mut paths, &hot, 3, &mut meter), Bent::Some);
         assert_eq!(paths[0], [n(0, 0), n(4, 0), n(8, 0), n(8, 4), n(8, 8), n(0, 8), n(0, 0)]);
         assert_eq!(paths[1], [n(8, 0), n(16, 0), n(16, 8), n(8, 8), n(8, 4), n(8, 0)]);
     }

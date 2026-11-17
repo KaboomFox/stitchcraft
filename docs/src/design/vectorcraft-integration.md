@@ -520,6 +520,24 @@ simpler. The machine file and the thickness measure take about 1,000 instruction
    fills, 4 %. In the release build, finding a part's tails (`split::tails`) took 1.0 billion of the
    split's 1.6, and the parts 2 shapes share took 0.7 billion of the sewing order's 1.1.
 
+### The costs brought down
+
+M13.33 makes those stages cheaper and sews the same: every golden file stays as it is, byte for byte,
+and so does what each traced dog exports. The targets were set before the work, in millions of
+instructions on the dog on turf in 6 threads, natively, as above:
+
+| Stage | M13.32 | Target |
+|---|---:|---:|
+| The neighbours' overlaps | 21,692 | 9,000 |
+| The arranging under every region operation | 17,890 | 8,000 |
+| The split into parts by the rules | 1,686 | 1,200 |
+| The search for the sewing order | 1,122 | 800 |
+| **The whole run** | **26,607** | **13,300** |
+
+The whole run's target is the step's: half of M13.32's count, for each traced dog. The overlaps can't
+go back to the 4.9 billion they took before M13.30 with the same stitches, since M13.30's overlaps are
+work that the stitches need. So their target is what the rest of the run leaves of the half.
+
 A live preview and the drawing of a test sheet have smaller budgets, 50 million for a light filter. A
 live preview spends what its budget of units allows and shows less when that runs out, and the
 contract tests check each level (`REQ-VC-003`). The Test Sheet filter digitizes nothing. TS-13F's drawing
