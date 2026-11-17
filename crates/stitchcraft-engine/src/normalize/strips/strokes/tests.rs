@@ -332,6 +332,9 @@ fn bands_on_the_same_2_lines_are_one_stroke() {
     assert!(!same(&kept, &Band { u: (cos, sin), n: (-sin, cos), ..later }));
     let (sin, cos) = math::sin_cos(math::to_radians(1.5));
     assert!(same(&kept, &Band { o: p(0.0, 0.0), u: (cos, sin), n: (-sin, cos), from: 0.0, to: 2.0, ..kept }));
+    // Turned 3° about its middle, a band lies on the lines but runs another way.
+    let (sin, cos) = math::sin_cos(math::to_radians(3.0));
+    assert!(!same(&kept, &Band { o: p(1.0, 0.0), u: (cos, sin), n: (-sin, cos), from: -1.0, to: 1.0, ..kept }));
     let mut merged = kept;
     merge(&mut merged, &later);
     assert_eq!((merged.from, merged.to), (0.0, 6.0));
@@ -350,6 +353,15 @@ fn strokes_that_do_not_meet_have_no_join() {
     // Bands that meet in less than a sliver: 0.009 mm², under 0.02 w² = 0.02.
     let corner = Band { o: p(10.99, -5.0), u: (0.0, 1.0), n: (-1.0, 0.0), lo: 0.0, hi: 1.0, from: 0.0, to: 4.9 };
     assert!(meeting(&bar, &one, &corner, meter).unwrap().unwrap().is_none());
+    // Bands 2 and 3 mm wide meet in a sliver under 0.02 × 2 × 3 = 0.12 mm²: 0.1 mm².
+    let wide = part(&[(0.0, 0.0), (10.0, 0.0), (10.0, 2.0), (0.0, 2.0)], &[]);
+    let two = Band { hi: 2.0, ..one };
+    let three = Band { o: p(12.95, -5.0), u: (0.0, 1.0), n: (-1.0, 0.0), lo: 0.0, hi: 3.0, from: 0.0, to: 4.9 };
+    assert!(meeting(&wide, &two, &three, meter).unwrap().unwrap().is_none());
+    let more = Band { o: p(13.0, -5.0), ..three };
+    assert!(meeting(&wide, &two, &more, meter).unwrap().unwrap().is_none());
+    let past = Band { o: p(12.9, -5.0), ..three };
+    assert!(meeting(&wide, &two, &past, meter).unwrap().unwrap().is_some());
 }
 
 #[test]
@@ -610,4 +622,19 @@ fn a_rung_is_left_out_when_either_of_its_points_lies_near_a_rails_end() {
     // Farther from the end, it is kept.
     let longer = [p(0.0, 0.0), p(4.2, 0.0)];
     assert!(at_4(rungs(&longer, &long, &band, meter).unwrap()));
+}
+
+#[test]
+fn of_2_strokes_that_end_alike_at_a_blunt_corner_either_way_round_the_longer_runs_through() {
+    let part = l(0.0);
+    let bands = bands_of(&part);
+    let meter = &mut Budget::DEFAULT.meter();
+    let met = meeting(&part, &bands[0], &bands[1], meter).unwrap().unwrap().unwrap();
+    let long = usize::from(bands[1].to - bands[1].from > bands[0].to - bands[0].from);
+    for (a, b) in [(0, 1), (1, 0)] {
+        let cuts = join(&part, (a, &bands[a]), (b, &bands[b]), &met, REACH).unwrap();
+        assert_eq!(cuts.len(), 1);
+        assert_eq!(cuts[0].0, 1 - long);
+        assert_eq!(cuts[0].2.map(|(_, under)| under), Some(long));
+    }
 }

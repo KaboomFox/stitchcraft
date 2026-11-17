@@ -347,9 +347,6 @@ fn pieces(part: &Polygon, bands: &[Band], joined: &[Joined], meter: &mut Meter) 
                 Cut::Crossed { of, by } => crossed.extend(bands.get(of).and_then(|other| narrowed(other, by))),
             }
         }
-        if kept.len() < 3 {
-            return Ok(None);
-        }
         let Ok(inside) = ops::intersection(std::slice::from_ref(part), &[polygon(kept)], meter)? else { return Ok(None) };
         let Ok(inside) = ops::difference(&inside, &crossed, meter)? else { return Ok(None) };
         let mine: Vec<Polygon> =
