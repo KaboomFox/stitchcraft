@@ -296,8 +296,8 @@ M13.35 takes thread away where one shape piles it up by itself
   back under the shapes sewn after them. Look where TS-13D's white ring meets the star, and at the traced
   dogs' seams. Is fabric showing between 2 shapes there? Is a row's end showing past its neighbour?
 - A satin column narrower than 2 mm walks its middle once, where it walked there and back. Do the
-  lettered patch's letters and TS-13B's 6 mm and 10 mm words still stand up off the fabric, and do their
-  edges stay sharp?
+  lettered patch's letters and TS-13B's 6 mm and 10 mm words still stand up off the fabric, with sharp
+  edges?
 
 ## Report template
 

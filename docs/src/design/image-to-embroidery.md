@@ -1370,7 +1370,7 @@ What the last pass left at the thickest spots was mostly satin columns: a column
 fills and its underlay of 0.6 to 0.8, over a fill's rows that run on under it. The pass can't take a
 centre walk's way back without turning the column. So a column narrower than 2 mm, which has only a
 centre walk under it, walks its middle once (`REQ-AUTO-075`, `center_walk_underlay_repeats` 1), as
-digitizing guides give a narrow column a single run down its middle. The walk then ends at the column's
+digitizing guides give a narrow column one run down its middle. The walk then ends at the column's
 far end, and the top stitches sew back to where it started. The order of a part's columns knows that: the
 next column is the one with an end nearest the start of such a column. A shape that sets the repeats
 keeps them. Measured with the cases' plans on 2026-11-17, the last pass in both columns:
@@ -1394,7 +1394,7 @@ its start, so a dog has 2 more or 2 fewer. The lettered patch has one more, and 
 stitch sews down. Where 2 columns of one shape join, the one that ends under the other reaches its pull
 compensation, 0.4 mm, past the chord between them. Ending it at the chord took TS-13A to 4.15 and TS-13B
 to 3.79 fills, and changed the dogs by 0.01 or less. The thread pulls such an end back by about as much,
-which opens the join, so the joins stay as they are.
+which opens the join. The joins are left as they were.
 
 
 ## Sewing order

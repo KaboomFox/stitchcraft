@@ -3241,9 +3241,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 
 ### Golden files
 - Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes`, `TS-13C.pes`, `TS-13D.pes` and
-  `TS-13E.pes` (M13.35, the cap on the thickest spot). The digitized half of each moves a satin column's crowded
-  needle points in, walks the middle of a column narrower than 2 mm once, locks in steps of 0.3 mm, and
-  has thread taken at spots above 4 fills by the last pass. The sheets sew 23,896, 14,524, 10,350, 20,233
+  `TS-13E.pes` (M13.35, the cap on the thickest spot). In the digitized half of each, a satin column moves
+  its crowded needle points in and one narrower than 2 mm walks its middle once. Everything locks in steps
+  of 0.3 mm, and the last pass takes thread at spots above 4 fills. The sheets sew 23,896, 14,524, 10,350, 20,233
   and 5,961 stitches, where they sewed 23,908, 14,640, 10,390, 20,259 and 6,011. TS-13B's digitized half
   jumps 47 times, where it jumped 48 times. Their sizes and the halves in paint order are as they were.
 - Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes`, `TS-13C.pes`, `TS-13D.pes` and
