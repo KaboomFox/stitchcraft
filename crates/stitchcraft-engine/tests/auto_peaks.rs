@@ -97,8 +97,8 @@ fn hundredths(value: f64) -> f64 {
 const ABOVE: [(&str, f64); 7] = [
     ("badges-abutting", 4.4),
     ("badges-stacked", 4.4),
-    ("pear", 4.55),
-    ("lettered-patch", 4.33),
+    ("pear", 4.2),
+    ("lettered-patch", 4.2),
     ("ts-13a", 4.28),
     ("ts-13c", 4.49),
     ("ts-13d", 4.17),

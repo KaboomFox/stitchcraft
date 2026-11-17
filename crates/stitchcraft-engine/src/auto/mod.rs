@@ -323,7 +323,7 @@ fn edges(params: &mut ParamSet, shape: &ParamSet, width: Mm, rules: &AutoParams,
     // A stitch is the column's width and its pull compensation on both sides wide, and an inset is a share of
     // that: the first is held to the smaller compensation and the reach.
     let across = width.get() + pull[0] + pull[1];
-    let held = 100.0 * (pull[0].min(pull[1]) + EDGE_REACH) / across;
+    let held = (1000.0 * (pull[0].min(pull[1]) + EDGE_REACH) / across).round() / 10.0;
     let insets: Vec<String> = CROWDED_INSETS
         .split_whitespace()
         .filter_map(|inset| inset.parse::<f64>().ok())
@@ -404,10 +404,13 @@ pub(crate) struct Sewing<'d> {
     pub(crate) made: BTreeSet<ElementId>,
 }
 
-/// The box round what each of `elements` paints, by its place: its path's points, and half a stroke's width
-/// round them, with `meter`'s work, a unit for each point. `None` for an element without a point.
-fn boxes(elements: &[Element], meter: &mut Meter) -> Result<Vec<Option<Rect>>, Exhausted> {
-    let mut painted = Vec::with_capacity(elements.len());
+/// Whether a hole of an area may be kept open ([`OPEN_HOLE`]), given the box round it and `meter` to charge.
+pub(crate) type Open<'o> = dyn Fn(Rect, &mut Meter) -> Result<bool, Exhausted> + 'o;
+
+/// Whether none of `elements` meets `hole`, the box round a hole, with `meter`'s work: the box round an
+/// element's path's points, and half a stroke's width round them, doesn't meet it. A unit of work for each
+/// point.
+fn clear(elements: &[Element], hole: Rect, meter: &mut Meter) -> Result<bool, Exhausted> {
     for element in elements {
         let path = element.shape.path();
         meter.charge(u64::try_from(path.points().count()).unwrap_or(u64::MAX))?;
@@ -416,9 +419,12 @@ fn boxes(elements: &[Element], meter: &mut Meter) -> Result<Vec<Option<Rect>>, E
             Shape::Fill { .. } => 0.0,
         };
         let grown = |p: Point, by: f64| Point::new(p.x() + by, p.y() + by).ok();
-        painted.push(Rect::around(path.points()).and_then(|bounds| Rect::around([grown(bounds.min(), -half)?, grown(bounds.max(), half)?])));
+        let painted = Rect::around(path.points()).and_then(|bounds| Rect::around([grown(bounds.min(), -half)?, grown(bounds.max(), half)?]));
+        if painted.is_some_and(|painted| meets(painted, hole)) {
+            return Ok(false);
+        }
     }
-    Ok(painted)
+    Ok(true)
 }
 
 /// Whether the boxes `a` and `b` meet, touching included.
@@ -450,15 +456,6 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     // the layers are flattened: what shows of the background inside the picture is sewn.
     let background = neighbours::background(design, rules.first().and_then(Option::as_ref), budget);
     let layers = neighbours::flattened(design, &rules, matches!(background, Some(Background::Found)), budget);
-    // Where each shape paints, by its place in the design: a hole of an area that a shape drawn later meets is
-    // not kept open (`REQ-AUTO-084`). Without them, no hole is.
-    let painted = match boxes(elements, &mut budget.meter()) {
-        Ok(painted) => Some(painted),
-        Err(exhausted) => {
-            diagnostics.push(exhausted.diagnostic(budget, None));
-            None
-        }
-    };
     // How each shape digitized sews, by its place in the design.
     let mut digitized = Vec::new();
     let mut sewn = Vec::with_capacity(layers.elements.len());
@@ -470,7 +467,9 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
         // An automatic element with a setting that doesn't read sews nothing, as `SC-E0101` said.
         let Some(rules) = rules.get(index).and_then(Option::as_ref) else { continue };
         let mut meter = budget.meter();
-        let open = |hole: Rect| painted.as_ref().is_some_and(|painted| painted.iter().skip(index + 1).flatten().all(|shape| !meets(*shape, hole)));
+        // A hole of an area that a shape drawn later meets is not kept open (`REQ-AUTO-084`).
+        let later = elements.get(index + 1..).unwrap_or_default();
+        let open = |hole: Rect, meter: &mut Meter| clear(later, hole, meter);
         let made = match made_by(&element, &design.settings, rules, &open, &mut meter).and_then(|made| named(made, &element, &mut taken, &mut meter)) {
             Ok(made) => made,
             Err(exhausted) => {
@@ -605,7 +604,7 @@ pub fn digitize(element: &Element, settings: &DesignSettings, meter: &mut Meter)
     let mut said = Vec::new();
     let Some(rules) = read(element, &mut said) else { return Ok(Digitized { diagnostics: said, ..Digitized::default() }) };
     // Alone, an element has no shape drawn after it, and each of its holes wide enough to read is open.
-    let mut made = made_by(element, settings, &rules, &|_| true, meter)?;
+    let mut made = made_by(element, settings, &rules, &|_, _| Ok(true), meter)?;
     made.diagnostics.splice(0..0, said);
     Ok(made)
 }
@@ -613,7 +612,7 @@ pub fn digitize(element: &Element, settings: &DesignSettings, meter: &mut Meter)
 /// The ordinary elements that sew the automatic `element` of a design with `settings` by `rules`, its
 /// settings of the rules, as [`digitize`] makes them: each fill at the angle the rules give the design's
 /// fills, and `SC-I0912` last, naming the rule each part of it sewed by, when it sews by the rules.
-fn made_by(element: &Element, settings: &DesignSettings, rules: &AutoParams, open: &dyn Fn(Rect) -> bool, meter: &mut Meter) -> Result<Digitized, Exhausted> {
+fn made_by(element: &Element, settings: &DesignSettings, rules: &AutoParams, open: &Open<'_>, meter: &mut Meter) -> Result<Digitized, Exhausted> {
     let bounds = Bounds::of(rules, settings.min_satin_stroke_width);
     let (mut made, fired) = match &element.shape {
         Shape::Stroke { path, width, join, cap } => {
@@ -662,7 +661,7 @@ fn stroke(element: &Element, path: &Path, style: Style, stitches: Stitches, rule
 /// The elements that sew `element`, an automatic area held to `bounds`, by `rules`, with `meter`'s work: its
 /// parts sorted by the rules (`narrow`) and [`sewn`], and the rule each part sewed by. An area whose region
 /// the region code can't join, a bug, is itself as it is, and its fill says so.
-fn areas(element: &Element, bounds: &Bounds, rules: &AutoParams, open: &dyn Fn(Rect) -> bool, meter: &mut Meter) -> Result<(Digitized, Vec<Fired>), Exhausted> {
+fn areas(element: &Element, bounds: &Bounds, rules: &AutoParams, open: &Open<'_>, meter: &mut Meter) -> Result<(Digitized, Vec<Fired>), Exhausted> {
     let as_it_is = itself(element, Some(Stitches::Fill));
     let Shape::Fill { path, rule, .. } = &element.shape else { return Ok((as_it_is, Vec::new())) };
     let Ok(parts) = parts_of(path, *rule, meter)? else { return Ok((as_it_is, Vec::new())) };

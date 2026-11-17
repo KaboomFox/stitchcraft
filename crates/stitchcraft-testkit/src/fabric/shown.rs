@@ -13,8 +13,10 @@
 //!
 //! **A gap** of an area is a place inside its outline where its own thread doesn't show, and a disc
 //! [`super::GAP`] across fits on such pixels: a strip of another colour as wide as a thread, as
-//! [`super::cover`] finds a gap. Places that touch at a side or a corner are one gap. Pixels the area owns
-//! in the picture count, so that a shape drawn over the area isn't a gap of it.
+//! [`super::cover`] finds a gap. **A notch** is such a place that a disc [`NOTCH`] across fits on: a pit in
+//! a satin column's edge, where a needle point moved in leaves the thread short of the outline between 2
+//! points left on it. Places that touch at a side or a corner are one gap or notch. Pixels the area owns in
+//! the picture count, so that a shape drawn over the area isn't a gap of it.
 
 use stitchcraft_core::Rect;
 use stitchcraft_engine::design::{Design, Shape};
@@ -22,6 +24,12 @@ use stitchcraft_engine::normalize::region;
 use stitchcraft_plan::{Rgb, Role, StitchPlan};
 
 use super::{GAP, PIXEL, Painted, groups, opened_with};
+
+/// How wide a notch is at least, in millimetres ([`shown`]): 3 pixels, the narrowest place a disc of more
+/// than one pixel fits in. Measured on the lettered patch of `main` at M13.35, the needle points moved in
+/// along the M's stems left notches of 0.02 to 0.06 mm² that a disc this wide fits in, 0.65 mm apart, and
+/// none that a disc 0.2 mm across fits in.
+pub const NOTCH: f64 = 0.15;
 use crate::metrics::spans;
 
 /// What shows of one area's own shape ([`shown`]).
@@ -34,6 +42,8 @@ pub struct Shown {
     /// Each gap inside the area's outline: the box round its pixels' centres and its area in square
     /// millimetres, the largest first.
     pub gaps: Vec<(Rect, f64)>,
+    /// Each notch inside the area's outline, as the gaps are given.
+    pub notches: Vec<(Rect, f64)>,
     /// What of the area's own pixels shows another thread or the fabric, in square millimetres.
     pub other: f64,
     /// The area's own pixels, in square millimetres.
@@ -94,15 +104,19 @@ pub fn shown(design: &Design, plan: &StitchPlan) -> Vec<Shown> {
         }
         let own: Vec<bool> = picture.owner.iter().map(|owner| *owner == Some(place)).collect();
         let other: Vec<bool> = own.iter().zip(&shows).map(|(own, shows)| *own && *shows != Some(colour)).collect();
-        let mut gaps: Vec<(Rect, f64)> = groups(&opened_with(&other, columns, rows, GAP, false), columns)
-            .into_iter()
-            .filter_map(|group| Some((Rect::around(group.iter().map(|&at| picture.centre(at)))?, area(group.len()))))
-            .collect();
-        gaps.sort_by(|a, b| b.1.total_cmp(&a.1));
+        let places = |across: f64| {
+            let mut places: Vec<(Rect, f64)> = groups(&opened_with(&other, columns, rows, across, false), columns)
+                .into_iter()
+                .filter_map(|group| Some((Rect::around(group.iter().map(|&at| picture.centre(at)))?, area(group.len()))))
+                .collect();
+            places.sort_by(|a, b| b.1.total_cmp(&a.1));
+            places
+        };
         all.push(Shown {
             id: element.id.to_string(),
             holes,
-            gaps,
+            gaps: places(GAP),
+            notches: places(NOTCH),
             other: area(other.iter().filter(|other| **other).count()),
             area: area(own.iter().filter(|own| **own).count()),
         });

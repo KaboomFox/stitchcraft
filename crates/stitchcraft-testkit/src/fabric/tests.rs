@@ -339,3 +339,36 @@ fn a_cover_faults_each_gap_that_is_no_sliver_and_a_bare_share_over_its_limit() {
     // A design that paints nothing has no share bare.
     assert_eq!(Cover { design: 0.0, ..cover(&[], 0.0, 0.0) }.faults(&rules), Vec::<String>::new());
 }
+
+#[test]
+fn a_hole_sewn_round_stays_open_and_one_sewn_over_shows_its_shapes_thread() {
+    // A red square 10 mm wide with a hole 4 mm wide in its middle, on a blue field drawn first.
+    let hole = [(3.0, 3.0), (3.0, 7.0), (7.0, 7.0), (7.0, 3.0)];
+    let field = square("field", (-2.0, -2.0), 14.0, &BLUE);
+    let ring = fill("ring", &[&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)], &hole], &RED, &[]);
+    let picture = design(vec![field, ring]);
+    // The field's rows everywhere, then the ring's round the hole: the hole shows the field but for half a
+    // thread along each edge, where the ring's thread spreads into it.
+    let mut ring_rows = rows(0.0, 10.0, 0.0, 2.75);
+    ring_rows.push(None);
+    ring_rows.extend(rows(0.0, 3.0, 3.0, 7.0));
+    ring_rows.push(None);
+    ring_rows.extend(rows(7.0, 10.0, 3.0, 7.0));
+    ring_rows.push(None);
+    ring_rows.extend(rows(0.0, 10.0, 7.25, 10.0));
+    let open = shown(&picture, &plan(&[(&BLUE, rows(-2.0, 12.0, -2.0, 12.0)), (&RED, ring_rows)]));
+    let [field, ring] = open.as_slice() else { panic!("{open:?}") };
+    assert!(field.holes.is_empty() && (field.open_share() - 1.0).abs() < 1e-12 && field.largest_gap() == 0.0, "{field:?}");
+    let [(drawn, shows)] = ring.holes.as_slice() else { panic!("{ring:?}") };
+    assert!((drawn - 16.0).abs() < 0.3 && *shows > 0.8 * drawn && *shows < *drawn, "{ring:?}");
+    assert!(ring.gaps.is_empty() && ring.notches.is_empty() && ring.other < 0.5 && (ring.area - 84.0).abs() < 0.5, "{ring:?}");
+    // The ring's rows across the hole close it: its thread shows there, not the field's.
+    let closed = shown(&picture, &plan(&[(&BLUE, rows(-2.0, 12.0, -2.0, 12.0)), (&RED, rows(0.0, 10.0, 0.0, 10.0))]));
+    assert!(closed[1].open_share() < 0.01, "{closed:?}");
+    // Rows of the ring that stop 1 mm short of its right edge leave a gap and a notch inside its outline.
+    let cut = shown(&picture, &plan(&[(&BLUE, rows(-2.0, 12.0, -2.0, 12.0)), (&RED, rows(0.0, 9.0, 0.0, 10.0))]));
+    let ring = &cut[1];
+    assert!(ring.gaps.len() == 1 && ring.largest_gap() > 7.0 && ring.notches.len() == 1 && ring.other > 7.0, "{ring:?}");
+    let at = ring.gaps[0].0;
+    assert!(at.min().x() > 9.0 && at.max().x() < 10.0, "{at:?}");
+}
