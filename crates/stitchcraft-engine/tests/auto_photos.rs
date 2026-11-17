@@ -214,7 +214,9 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
     // elsewhere: the dogs leave 73, 81, 58 and 72, and the running dog in 9 threads shows 10 moves.
     // With outlines that sew through no more than 12 mm under a later fill (REQ-AUTO-076), 74, 84, 61 and 74,
     // and the 2 dogs in 6 threads show 6 and 3 moves.
-    let recorded = [("dog-on-turf-6", 6, 74), ("dog-on-turf-9", 6, 84), ("dog-running-6", 3, 61), ("dog-running-9", 10, 74)];
+    // With narrow columns that start at their start (REQ-AUTO-086, M13.36), the dogs in 9 threads leave one
+    // jump thread more each, 85 and 75, and the running one shows 9 moves.
+    let recorded = [("dog-on-turf-6", 6, 74), ("dog-on-turf-9", 6, 85), ("dog-running-6", 3, 61), ("dog-running-9", 9, 75)];
     let recorded = recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps));
     assert_eq!((found, apart), (listed, recorded.to_vec()), "the stitches astray, as found and as listed in ASTRAY, and the moves and jumps");
 }
@@ -259,10 +261,11 @@ fn req_auto_027_digitized_dogs_show_no_fabric_and_leave_the_slivers_recorded() {
 /// 629.2 mm² at 3 or more, and 11.8, 11.0, 6.5 and 6.2 mm² at 6 or more, and after it 177.5, 205.75, 183.5 and
 /// 280.0 mm² at 3 or more, before M13.35's locks, columns, last pass and narrow columns walked once
 /// (REQ-AUTO-071 to REQ-AUTO-075) and outlines no longer sewn through more than 12 mm under a later fill
-/// (REQ-AUTO-076). The case fails when a number changes,
+/// (REQ-AUTO-076), and 132.25, 160.0, 146.25 and 209.75 mm² before M13.36's holes, edges and narrow columns
+/// started at their start (REQ-AUTO-084 to REQ-AUTO-086). The case fails when a number changes,
 /// so that a change that piles thread up again shows here.
 const THICK: [(&str, f64, f64); 4] =
-    [("dog-on-turf-6", 13225.0, 0.0), ("dog-on-turf-9", 16000.0, 0.0), ("dog-running-6", 14625.0, 0.0), ("dog-running-9", 20975.0, 0.0)];
+    [("dog-on-turf-6", 13050.0, 0.0), ("dog-on-turf-9", 15650.0, 0.0), ("dog-running-6", 14200.0, 0.0), ("dog-running-9", 20775.0, 0.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -278,8 +281,9 @@ fn req_auto_067_digitized_dogs_sew_thick_on_the_area_recorded() {
 }
 
 /// The thickest spot of each traced dog, in hundredths of a fill (REQ-AUTO-073): M13.30 left 5.54, 5.54, 6.05
-/// and 7.01. Every dog is still above the cap of 4 fills, where 5 to 8 elements meet.
-const THICKEST: [(&str, f64); 4] = [("dog-on-turf-6", 453.0), ("dog-on-turf-9", 451.0), ("dog-running-6", 507.0), ("dog-running-9", 589.0)];
+/// and 7.01, and M13.35 4.53, 4.51, 5.07 and 5.89. Every dog is still above the cap of 4 fills, where 5 to 8
+/// elements meet.
+const THICKEST: [(&str, f64); 4] = [("dog-on-turf-6", 453.0), ("dog-on-turf-9", 449.0), ("dog-running-6", 507.0), ("dog-running-9", 563.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]

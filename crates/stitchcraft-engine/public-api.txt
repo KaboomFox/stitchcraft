@@ -85,6 +85,7 @@ pub const stitchcraft_engine::auto::ADVANCED: &str
 pub const stitchcraft_engine::auto::CONTOUR_FROM: stitchcraft_core::units::Mm
 pub const stitchcraft_engine::auto::CROWDED_CLOSER_THAN: f64
 pub const stitchcraft_engine::auto::CROWDED_INSETS: &str
+pub const stitchcraft_engine::auto::EDGE_REACH: f64
 pub const stitchcraft_engine::auto::FILL_ANGLE: &str
 pub const stitchcraft_engine::auto::FILL_OUTLINE: &str
 pub const stitchcraft_engine::auto::FILL_UNEVEN: &str
@@ -97,6 +98,7 @@ pub const stitchcraft_engine::auto::MIN_AREA: &str
 pub const stitchcraft_engine::auto::MIN_FILL_WIDTH: &str
 pub const stitchcraft_engine::auto::MIN_SLENDERNESS: &str
 pub const stitchcraft_engine::auto::MIN_TRIPLE_RUN_WIDTH: &str
+pub const stitchcraft_engine::auto::OPEN_HOLE: stitchcraft_core::units::Mm
 pub const stitchcraft_engine::auto::OUTLINE_TOLERANCE: stitchcraft_core::units::Mm
 pub const stitchcraft_engine::auto::OUTLINE_WIDTH: stitchcraft_core::units::Mm
 pub const stitchcraft_engine::auto::OVERLAP: &str

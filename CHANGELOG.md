@@ -2035,6 +2035,20 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.36: a traced letter keeps its counters open, and its columns meet without gaps (`REQ-AUTO-084` to
+  `REQ-AUTO-086`). The owner said of MC-8's traced lettered patch that the A has no white space and the
+  letters have new gaps.
+  - Round a hole of an automatic area that a disc 0.8 mm across fits in, and whose box no shape drawn
+    later meets, a satin column's rail has no pull compensation on the hole's side, and its stitches end
+    on the hole's edge. The patch's A shows 62 % of its counter, where it showed 7 %.
+  - A satin column whose rails pair evenly, and one along such a hole, moves its first crowded needle
+    point no farther than its edge and 0.1 mm. The notches along the M's stems are gone.
+  - A satin column that walks its middle once starts at its start, not at the point nearest the needle.
+    The patch's thickest spot is 4.20 fills and the traced pear's 4.20, where they were 4.33 and 4.55.
+    TS-13B's digitized half leaves 44 jump threads where it left 42, and TS-13C's sews down 1 of its 13
+    where it sewed down 5.
+  - Public API: `auto::EDGE_REACH` and `auto::OPEN_HOLE`, so that the cases import them. The testkit
+    measures what shows of each area's own shape (`fabric::shown`).
 - M13.33: the largest costs of automatic digitizing brought down, with the same stitches. Every golden
   file and every traced dog's export is the same, byte for byte.
   - Snap rounding keeps the rings as places among the hot points and looks at an edge again only where it
@@ -3278,6 +3292,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13B.pes`, `TS-13C.pes` and `TS-13E.pes` (M13.36, a traced
+  letter's counters and edges). In the digitized half of each, a column along a hole kept open has no pull
+  compensation on that side, an even column moves its first crowded point no farther than its edge and
+  0.1 mm, and a column that walks once starts at its start. The sheets sew 14,509, 10,334 and 5,939
+  stitches, where they sewed 14,524, 10,350 and 5,961. TS-13B's digitized half jumps 49 times, where it
+  jumped 47 times. Their sizes and the halves in paint order are as they were.
 - Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes`, `TS-13C.pes`, `TS-13D.pes` and
   `TS-13E.pes` (M13.35, the cap on the thickest spot). In the digitized half of each, a satin column moves
   its crowded needle points in and one narrower than 2 mm walks its middle once. Everything locks in steps

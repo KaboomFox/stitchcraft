@@ -8,13 +8,15 @@
 
 use stitchcraft_core::math::{self, sin_cos};
 use stitchcraft_core::{Budget, Mm, Point};
-use stitchcraft_engine::auto::{CONTOUR_FROM, CROWDED_CLOSER_THAN, CROWDED_INSETS, Digitized, Stitches, ZIGZAG_ABOVE, digitize};
-use stitchcraft_engine::design::{DesignSettings, Element, Shape};
+use stitchcraft_engine::auto::{
+    CONTOUR_FROM, CROWDED_CLOSER_THAN, CROWDED_INSETS, Digitized, EDGE_REACH, OPEN_HOLE, Stitches, ZIGZAG_ABOVE, digitize, digitized,
+};
+use stitchcraft_engine::design::{Design, DesignSettings, Element, Shape};
 use stitchcraft_engine::generators::passes::BEAN_STITCH_REPEATS;
 use stitchcraft_engine::generators::pull::PULL_COMPENSATION;
 use stitchcraft_engine::generators::satin::{
     CENTER_WALK_UNDERLAY, CENTER_WALK_UNDERLAY_REPEATS, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PUSH_COMPENSATION, SATIN_COLUMN,
-    SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET, ZIGZAG_UNDERLAY,
+    SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET, START_AT_NEAREST_POINT, ZIGZAG_UNDERLAY,
 };
 use stitchcraft_engine::normalize::region;
 use stitchcraft_engine::normalize::satin::{Pairing, Shape as Read, recognize};
@@ -283,7 +285,8 @@ fn req_auto_071_a_column_moves_its_crowded_needle_points_in_unless_its_shape_say
     let distance = CROWDED_CLOSER_THAN.to_string();
     let set =
         |column: &Element| [setting(column, SHORT_STITCH_DISTANCE).map(str::to_string), setting(column, SHORT_STITCH_INSET).map(str::to_string)];
-    assert_eq!(set(&column(&[])), [Some(distance), Some(CROWDED_INSETS.to_string())]);
+    // A straight band's rails pair evenly: its first inset is held to its edge (`REQ-AUTO-085`).
+    assert_eq!(set(&column(&[])), [Some(distance), Some("13.2 50".to_string())]);
     // A shape that sets either keeps it, and the other is Ink/Stitch's.
     assert_eq!(set(&column(&[(SHORT_STITCH_DISTANCE, "0.1")])), [Some("0.1".to_string()), None]);
     assert_eq!(set(&column(&[(SHORT_STITCH_INSET, "10")])), [None, Some("10".to_string())]);
@@ -344,6 +347,94 @@ fn req_auto_075_a_narrow_column_walks_its_middle_once_and_ends_where_it_started(
     let sewn: Vec<Point> = plan.stitches().filter(|s| s.kind == StitchKind::Normal).map(|s| s.at).collect();
     let (first, last) = (sewn[0], *sewn.last().unwrap());
     assert!(first.distance(last) < 2.0, "{first:?} {last:?}");
+}
+
+/// An O traced as an area centred on (`x`, `y`): a ring `side` millimetres across outside, round a round
+/// hole `hole` millimetres across, each with 48 sides.
+fn ring(id: &str, (x, y): (f64, f64), side: f64, hole: f64) -> Element {
+    let circle = |across: f64, turn: f64| -> Vec<(f64, f64)> {
+        (0..48)
+            .map(|i| {
+                let (sin, cos) = sin_cos(turn * std::f64::consts::TAU * f64::from(i) / 48.0);
+                (x + across / 2.0 * cos, y + across / 2.0 * sin)
+            })
+            .collect()
+    };
+    fill(id, &[&circle(side, 1.0), &circle(hole, -1.0)], &RED, &[])
+}
+
+#[test]
+fn req_auto_084_a_column_along_a_hole_wide_enough_to_read_has_no_pull_compensation_on_that_side() {
+    let reach = rules().auto_pull_compensation_mm.get();
+    let pulled = |made: &Digitized| made.elements.iter().map(|column| setting(column, PULL_COMPENSATION).unwrap().to_string()).collect::<Vec<_>>();
+    // A ring 6 mm across round a hole a little wider than a disc of 0.8 mm, and wider: its column's inner
+    // rail has none, its outer rail the rules'.
+    let open = OPEN_HOLE.get();
+    for hole in [open + 0.05, 2.0] {
+        let made = made(&ring("o", (3.0, 3.0), 6.0, hole));
+        assert_eq!(made.stitches, Some(Stitches::Satin), "{hole} mm");
+        let sides = pulled(&made);
+        assert!(sides.iter().all(|pull| pull == &format!("0 {reach}") || pull == &format!("{reach} 0")), "{hole} mm: {sides:?}");
+    }
+    // A hole narrower closes under its own threads' width whatever sews round it: the column has the rules'.
+    let made = made(&ring("o", (3.0, 3.0), 6.0, open - 0.05));
+    assert_eq!(pulled(&made), [reach.to_string()]);
+    // A shape drawn later whose box meets the hole's box may fill it or lie over it: the ring reaches under
+    // it as before. A line 1 mm wide round the ring's top and right side, its box from 2 mm round the hole's,
+    // meets it when it runs down to 1.5 mm, half its width short of the hole's box, and not 0.001 mm higher;
+    // and a shape drawn before the ring leaves the hole open.
+    let reach_of = |elements: Vec<Element>| {
+        let design = Design::new(elements.into_iter().map(automatic).collect(), DesignSettings::default()).unwrap();
+        let (made, _) = digitized(&design, &Budget::DEFAULT);
+        let columns = made.iter().filter(|element| element.id.as_str().starts_with('o') && setting(element, SATIN_COLUMN) == Some("true"));
+        columns.map(|column| setting(column, PULL_COMPENSATION).unwrap().to_string()).collect::<Vec<_>>()
+    };
+    let round = |to: f64| widened(along("line", polylines(&[&[(-2.0, -2.0), (8.0, -2.0), (8.0, to)]]), &BLUE, &[]), 1.0);
+    let o = || ring("o", (3.0, 3.0), 6.0, 2.0);
+    assert_eq!(reach_of(vec![o(), round(1.5)]), [reach.to_string()]);
+    for elements in [vec![o(), round(1.499)], vec![round(1.5), o()]] {
+        let open = reach_of(elements);
+        assert!(open.len() == 1 && open[0] != reach.to_string(), "{open:?}");
+    }
+}
+
+#[test]
+fn req_auto_085_a_column_whose_rails_pair_evenly_moves_its_points_in_no_farther_than_its_edge_and_a_reach() {
+    let reach = rules().auto_pull_compensation_mm.get();
+    let insets = |element: &Element| setting(element, SHORT_STITCH_INSET).map(str::to_string);
+    // A straight band 1.8 mm wide: its first inset is held to the compensation and the reach, in tenths of a
+    // percent of its stitch, and the second stays.
+    let band = made(&shape("band", &rectangle((0.0, 0.0), (30.0, 1.8))));
+    let held = (1000.0 * (reach + EDGE_REACH) / (1.8 + 2.0 * reach)).round() / 10.0;
+    assert_eq!(held, 19.2);
+    assert_eq!(insets(&band.elements[0]), Some(format!("{held} 50")));
+    // A band 1.1 mm wide would be held above a quarter: it keeps the quarter.
+    let narrow = made(&shape("narrow", &rectangle((0.0, 0.0), (30.0, 1.1))));
+    assert_eq!(insets(&narrow.elements[0]), Some(CROWDED_INSETS.to_string()));
+    // A column along a hole kept open is held to the hole's edge, where it has no compensation: by the reach
+    // alone.
+    let o = made(&ring("o", (3.0, 3.0), 6.0, 2.0));
+    let Shape::Stroke { width, .. } = &o.elements[0].shape else { panic!("{o:?}") };
+    let width = width.get();
+    let edge = (1000.0 * EDGE_REACH / (width + reach)).round() / 10.0;
+    assert_eq!(insets(&o.elements[0]), Some(format!("{edge} 50")));
+    // A shape that sets how its points move in keeps it.
+    let set = made(&fill("set", &[&rectangle((0.0, 0.0), (30.0, 1.8))], &RED, &[(SHORT_STITCH_INSET, "10")]));
+    assert_eq!(insets(&set.elements[0]), Some("10".to_string()));
+}
+
+#[test]
+fn req_auto_086_a_column_that_walks_its_middle_once_starts_at_its_start() {
+    let band = |width: f64, params: &[(&str, &str)]| made(&fill("band", &[&rectangle((0.0, 0.0), (30.0, width))], &RED, params));
+    let from = CONTOUR_FROM.get();
+    for (width, params, expected) in [
+        (1.5, &[][..], Some("false")),
+        (from - 0.001, &[], Some("false")),
+        (from, &[], None),
+        (1.5, &[(START_AT_NEAREST_POINT, "true")], Some("true")),
+    ] {
+        assert_eq!(setting(&band(width, params).elements[0], START_AT_NEAREST_POINT), expected, "{width} mm {params:?}");
+    }
 }
 
 #[test]

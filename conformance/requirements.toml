@@ -3318,6 +3318,33 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-AUTO-084"
+area = "auto"
+level = "L2"
+statement = "A hole of an automatic area that a disc 0.8 mm across fits in, and whose box no shape drawn after the area meets, stays open whatever stitch the area gets: a satin column whose rail runs along the hole has no pull compensation on that side (`pull_compensation_mm` 0 there, the rules' on the other), so its stitches end on the hole's edge. A smaller hole, and one a later shape may fill or cover, keeps the compensation. On the lettered patch and TS-13B's 10 and 15 mm words at least half of the A's counter shows what lies under it, and on the 6 mm word a quarter."
+rationale = "The owner, on 2026-11-17, of MC-8's traced lettered patch: the A has no white space. Its counter, a triangle 1.4 mm across inside, was sewn over by the pull compensation of the 3 columns round it, 0.4 mm past each rail, with half a thread of each stitch's width beyond: 7 % of it showed the field on main at M13.35, 3 % at M13.30 and at M14.5's merge, and none on the 6 mm word. A filled area keeps a hole, as its rows stop at its edge. A column along it ending on the hole's edge leaves the hole less half a thread along each edge, (1 - 0.4 / 1.4)² of the 10 mm counter, half, and of the 6 mm one, 0.84 mm across inside, a quarter. Below 0.8 mm the 2 edges' threads meet and the hole closes anyway. A shape drawn later in the hole's box may be a detail in it, which the area reaches under with its compensation (REQ-AUTO-029)."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-085"
+area = "auto"
+level = "L2"
+statement = "An automatic satin column whose stitches pair no more than 1.5 mm of one rail with a millimetre of the other, measured as REQ-AUTO-017 measures crowding, and one with a rail along a hole kept open (REQ-AUTO-084), moves its crowded needle points in (REQ-AUTO-071) by a first inset no farther than its pull compensation on that side and 0.1 mm, a quarter of a thread, past its edge as drawn: the percentage of its stitch's width that the compensation and 0.1 mm make, in tenths, when that is under 25. The later insets stay, and a shape that sets either setting keeps its own. No letter of the lettered patch and TS-13B's 15, 10 and 6 mm words sewn as columns leaves a strip of another colour a thread wide inside its outline, and those of the patch and of the 10 and 6 mm words leave no notch a disc 0.15 mm across fits in."
+rationale = "The owner, on 2026-11-17: the patch's letters have new gaps. They were notches. A straight stem's rail beside a junction pairs 0.3 mm with 0.4 mm of the other rail round the junction's corner, closer than the 0.35 mm of REQ-AUTO-071, so every other point of the stem's outer edge moved in by a quarter of the 1.8 mm column, 0.65 mm, 0.25 mm past the edge: the M's stems showed 6 notches of 0.02 to 0.06 mm² 0.65 mm apart, none on main at M13.30. Moved in by its compensation and 0.1 mm, a point's thread, half a thread wide on each side, still covers the edge. Where a column fans, at a bend or where it ends on the slant under another column, its points pile up: held there too, TS-13A rose from 4.28 to 4.57 fills and the badges from 4.40 to 4.58, so a column that pairs more than 1.5 mm keeps the quarter. On TS-13B's 15 mm word the M and the C keep notches they had on main, where their points fan."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-086"
+area = "auto"
+level = "L2"
+statement = "An automatic satin column that walks its middle once (REQ-AUTO-075) starts at its start (`start_at_nearest_point` false) unless its shape sets where it starts."
+rationale = "Started at the point of it nearest the needle, such a column first runs along its middle under itself from there to its start, walks its middle, and its top stitches come back to where it began, so the run, the walk, the lock and its last stitches lay their thread at one spot. The spot moved with where the shape before it ended: the lettered patch's M measured 4.32 fills at its V on main at M13.35 and 4.48 when the A before it ended 0.4 mm further left. Starting at its start, the patch's thickest spot is 4.20 fills and the traced pear's 4.20, where they were 4.33 and 4.55. It costs jumps: TS-13B's digitized half leaves 44 jump threads where it left 42, and TS-13C's sews down 1 of its 13 where it sewed down 5."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-AUTO-069"
 area = "auto"
 level = "L2"

@@ -454,6 +454,48 @@ that a shape sewn after the column runs along, the column sews by the overlap in
 than at the point nearest the next shape, which would join its ends to the next shape with a straight run
 across it. Fills keep the tatami fill's defaults, underlay included.
 
+### Holes and edges of columns
+
+A letter traced as an area is cut into columns, and the reader has to see its counters and straight
+edges. On MC-8's traced lettered patch (2026-11-17) the owner found the A black all over, and notches
+along the letters' edges. 2 rules keep them (M13.36):
+
+- **A hole shows what lies under it** (`REQ-AUTO-084`). A column's pull compensation reaches 0.4 mm past each rail, and
+  the 3 columns round the A's counter, a triangle 1.4 mm across inside, sewed over all but 7 % of it. It
+  was no better at M13.30 or at M14.5's merge, 3 %. A hole that a disc 0.8 mm across fits in, and whose
+  box no shape drawn after the area meets, keeps its columns' stitches on its edge: a rail along it has no
+  pull compensation on that side, the other rail keeps its own. Each edge's thread then spreads half a
+  thread into the hole, and the hole keeps (1 - 0.4 / 1.4)² of itself, half of the 10 mm A's counter. A
+  smaller hole closes under its edges' threads anyway, and a later shape in the hole's box may be a detail
+  that the area reaches under (`REQ-AUTO-029`). A filled area keeps a hole as its rows stop at its edge.
+- **An even column keeps its edge** (`REQ-AUTO-085`). Beside a junction a straight stem's other rail runs
+  round the junction's corner, and the stem's outer points lie 0.3 mm apart, closer than the 0.35 mm at
+  which a point moves in ([The thickest spot](#the-thickest-spot)). Every other point then moved in by a
+  quarter of the column, 0.25 mm past its edge, and left a notch: 6 on the M's stems, 0.65 mm apart. A
+  column whose stitches pair no more than 1.5 mm of one rail with a millimetre of the other moves its
+  first crowded point no farther than its pull compensation and 0.1 mm, a quarter of a thread, past its
+  edge, and the point's thread still covers the edge. So does a column along a hole kept open, held to the
+  hole's edge. A column that fans, at a bend or where it ends on the slant under another, keeps the
+  quarter: held there too, TS-13A rose from 4.28 to 4.57 fills and the badges from 4.40 to 4.58.
+
+Where 2 columns of one shape meet, the one that ends under the other reaches its pull compensation past
+the chord between them. No join of the patch's letters or TS-13B's words opened a gap a thread wide, on
+`main` or since: the gaps the owner saw were the notches.
+
+Measured with the cases' plans (`tests/auto_letters.rs`, `fabric::shown`), before (`main` at M13.35)
+and after. The thickest spot and the jump threads include the start rule of
+[a narrow column](#a-narrow-column-walks-once):
+
+| Design | A's counter showing | Notches in letters | Thickest, fills | At 3 fills or more, mm² | Jump threads |
+|---|---:|---:|---:|---:|---:|
+| Lettered patch | 7 % → 62 % | 6 → 0 | 4.33 → 4.20 | 52.0 → 43.3 | 8 → 8 |
+| TS-13B's word, 15 mm | 25 % → 73 % | 14 → 5 | 3.88 → 3.63 | 4.5 → 1.0 | 7 → 7 |
+| TS-13B's word, 10 mm | 7 % → 62 % | 6 → 0 | 3.63 → 3.28 | 0 → 0 | 8 → 8 |
+| TS-13B's word, 6 mm | 0 → 41 % | 0 → 0 | 3.78 → 3.44 | 0 → 0 | 3 → 5 |
+
+The 15 mm word's M and C keep 5 notches where their points fan. The 4 mm word runs along its letters'
+middles, and its A's counter, 0.56 mm across inside, isn't kept open.
+
 ## Neighbours
 
 The shapes of a traced picture meet. VectorCraft's Abutting method traces each area with a hole where the
@@ -1396,6 +1438,18 @@ stitch sews down. Where 2 columns of one shape join, the one that ends under the
 compensation, 0.4 mm, past the chord between them. Ending it at the chord took TS-13A to 4.15 and TS-13B
 to 3.79 fills, and changed the dogs by 0.01 or less. The thread pulls such an end back by about as much,
 which opens the join. The joins are left as they were.
+
+A column that walks once starts at its start (`REQ-AUTO-086`, `start_at_nearest_point` off). Started at the
+point of it nearest the needle, it ran along its middle under itself to its start before its walk, and
+its top stitches came back to where it began. The run, the walk, the lock and its last stitches met at
+one spot there. That spot moved with the shape sewn before: the lettered patch's M measured 4.32
+fills at its V, and 4.48 when the A before it ended 0.4 mm further left (M13.36). Starting at its start,
+the patch's thickest spot is 4.20 fills and the traced pear's 4.20, where they were 4.33 and 4.55. With the
+rules of [holes and edges](#holes-and-edges-of-columns) too, the traced dogs' are 4.53, 4.49, 5.07 and 5.63 fills, where they were 4.53, 4.51, 5.07 and 5.89, and their area
+at 3 fills or more is 130.5, 156.5, 142.0 and 207.75 mm², where it was 132.25, 160.0, 146.25 and 209.75. It
+costs jumps. The dogs in 9 threads leave one jump thread more each. TS-13B's digitized half leaves 44 where
+it left 42, as the 6 mm word's A and T jump to the far end of a column, and of TS-13C's 13 one is sewn down
+where 5 were.
 
 #### The outline under a later fill
 
