@@ -167,6 +167,12 @@ is there.
 A satin stitch longer than 7 mm lies loose, so a part whose column would sew one is filled instead. A part
 that is filled is filled whole under the shapes that fill its holes, and they sew on it.
 
+A letter's counter, such as the hole in an A or an O, stays open where a disc 0.8 mm across fits in it and
+nothing drawn later lies over it: the columns round it end their stitches on its edge, without the pull
+compensation that widens them elsewhere. A smaller counter closes under its own threads. A straight column
+keeps its edges straight, and only a column that bends or fans moves the needle points that crowd on its
+inside away from its edge.
+
 The pictures are drawn from `docs/fixtures/rules.svg`. Its 5 shapes are a blob, a letter T of a thick and a
 thin stroke, a blob with 2 tails, a nose with 2 nostrils and a leaf.
 
