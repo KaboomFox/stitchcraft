@@ -65,7 +65,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Guided parameters](params/guided.md) | 3 | Guided fill |
 | [Tartan parameters](params/tartan.md) | 5 | Tartan fill |
 | [Path fill parameters](params/path-fill.md) | 3 | Contour fill, Meander fill, Circular fill |
-| [Auto parameters](params/auto.md) | 26 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
+| [Auto parameters](params/auto.md) | 27 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
 
 ## Every parameter
 
@@ -88,6 +88,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`auto_max_unevenness`](params/auto.md#auto_max_unevenness) | Most a column's width varies | Auto parameters |
 | [`auto_min_area_mm2`](params/auto.md#auto_min_area_mm2) | Smallest area | Auto parameters |
 | [`auto_min_fill_width_mm`](params/auto.md#auto_min_fill_width_mm) | Narrowest piece of a fill | Auto parameters |
+| [`auto_min_line_unevenness`](params/auto.md#auto_min_line_unevenness) | Least a merged line's width varies | Auto parameters |
 | [`auto_min_slenderness`](params/auto.md#auto_min_slenderness) | Least slenderness of a column | Auto parameters |
 | [`auto_min_triple_run_width_mm`](params/auto.md#auto_min_triple_run_width_mm) | Narrowest triple run | Auto parameters |
 | [`auto_overlap_mm`](params/auto.md#auto_overlap_mm) | Overlap | Auto parameters |

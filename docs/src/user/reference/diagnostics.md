@@ -122,6 +122,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-I0912`](#sc-i0912) | Info | Rule that chose a shape's stitches |
 | [`SC-W0913`](#sc-w0913) | Warning | Design sews thick |
 | [`SC-I0914`](#sc-i0914) | Info | Jumps not looked at for a run under later shapes |
+| [`SC-I0915`](#sc-i0915) | Info | Thin line merged into a neighbour |
 | [`SC-E1001`](#sc-e1001) | Error | Nothing to route |
 | [`SC-I1002`](#sc-i1002) | Info | Element left out of the route |
 | [`SC-W1003`](#sc-w1003) | Warning | Piece of a routed satin column may sew otherwise |
@@ -1694,6 +1695,20 @@ from the element named on its moves are as they were before: sewn on within the 
 and jumps beyond it. The design sews, with more jump threads than it need have. To have the runs,
 plan it with a larger work budget, or digitize fewer shapes: trace the picture in fewer colours,
 or raise `auto_min_area_mm2`.
+
+## SC-I0915
+
+**Info** — Thin line merged into a neighbour
+
+`--auto` takes a part of an automatic area narrower than the design's narrowest satin stroke
+everywhere, a thin line such as soft shading and the strands of fur trace into, and merges it into
+the automatic area it shares the longest edge with, which may be the rest of its own area. Sewn on
+its own, such a line is a running stitch between 2 fills, and the fills beside it end their rows on
+it. Merged, it sews as part of the fill beside it. An area whose every part is such a line, merged,
+sews nothing of its own. A thin part that shares no edge with an automatic area sews as a line.
+
+The message gives the line's area and says where it went. To sew such lines as running stitches,
+turn `auto_fill_uneven` off, as the `logo` style does, or give the shape settings.
 
 ## SC-E1001
 

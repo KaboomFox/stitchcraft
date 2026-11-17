@@ -134,7 +134,8 @@ running dog, 62 of 107 shapes sewed so.
 The [rules' table](../user/reference/auto-rules.md) is generated from the code's own
 (`stitchcraft_engine::auto::rules::RULES`), with each bound's default, so that the table, the notice a
 shape gives and the tests at each bound can't drift apart. The rules are tried in this order. First a shape whose
-setting names a stitch sews so. Then a speck merges into a neighbour and a line runs. Areas are filled next,
+setting names a stitch sews so. Then a speck merges into a neighbour and a line runs. A ragged thin line has
+merged into its neighbour before the rules are tried ([Neighbours](#neighbours)). Areas are filled next,
 with compact parts and uneven parts after them, and then a part with arms. Any other part sews as satin
 columns, unless its columns are refused.
 One function compares every bound (`auto::rules::choose`), a length to the micrometre and a ratio to its
@@ -501,7 +502,7 @@ middles, and its A's counter, 0.56 mm across inside, isn't kept open.
 The shapes of a traced picture meet. VectorCraft's Abutting method traces each area with a hole where the
 next one lies, and its Overlapping method, like Inkscape's Trace Bitmap with its Stack option, traces each
 colour whole, over the colours under it. Sewn as drawn, either sews badly where shapes meet, and digitizing
-mends it in 4 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.2 and M13.12).
+mends it in 5 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.2, M13.12 and M13.18).
 
 1. **Background** (`REQ-AUTO-009`). The lowest shape is the picture's background when it is an automatic
    area with a shape on another path drawn on it, and its outlines cover the box around the design to within
@@ -543,7 +544,7 @@ mends it in 4 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
      or a part of one, no wider than a satin column everywhere, such as a letter or an outline, keeps its
      holes, and the shapes in them sew beside it. Closed, it would be a broad fill under them. Specks in a
      hole aren't details. When only specks fill a hole, the hole is left open, and the specks merge into the
-     area round them (step 3), which closes it. A hole is filled from the parts whose boxes meet its own, and costs
+     area round them (step 4), which closes it. A hole is filled from the parts whose boxes meet its own, and costs
      the work of those parts alone.
    - **Moved back.** The area sews before its details, so that they lie on it. It moves back in paint
      order past them, past the automatic areas whose part that shows doesn't overlap it, and past the
@@ -555,7 +556,7 @@ mends it in 4 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
      ring on it and the red showing again as a bullseye in the ring's hole, the ring moves back before the
      red, the bullseye being its detail, and the red's hole is opened again round the ring.
 
-   The overlaps (step 4) then cut the area away under its details, the overlap inside their edges. So a trace
+   The overlaps (step 5) then cut the area away under its details, the overlap inside their edges. So a trace
    that stacks its colours sews as one whose colours abut. An area whose region changed is given its new
    outline, and one whose region is what it was keeps its path as drawn. `SC-I0908` counts the areas that
    sew only what shows of them and those digitized whole under their details.
@@ -580,7 +581,27 @@ mends it in 4 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
    way, and as many stitches, 1,925, 1,845 of them in the same places. Its yellow
    is one fill of 445.9 mm² under the dots, each dot a fill too, and its rim a satin column 2.50 mm wide.
    `tests/auto_pictures.rs` keeps the pictures sewing so.
-3. **Specks** (`REQ-AUTO-008`). An automatic area, or a part of one, smaller than 1 mm² is too small to sew:
+3. **Thin lines** (`REQ-AUTO-090`, M13.18). A trace of a photo draws soft shading and the strands of fur as
+   thin lines between patches. Each sewed as a running stitch between 2 fills, which ended their rows on it:
+   the traced dogs sewed 15 to 34 shapes so, and those lines caused most of their stitches astray, their
+   slivers and their jump threads. A digitizer sews such a strand as part of the patch it lies in. So once the
+   layers are flattened, and before the stitches of any area are chosen, a part of an automatic area that is
+   narrower than the narrowest satin stroke everywhere, and is no speck, is a thin line when its width varies
+   along its centre lines by `auto_min_line_unevenness` of its width or more, measured as a column's
+   unevenness is ([The measures](#the-measures)). It merges into the automatic area it shares the longest
+   edge with, which may be the rest of its own area, the edge measured as a speck's is (step 4). Every area
+   gives up its thin lines first. A line then goes into what its neighbours keep. On a tie it goes into the
+   area that sews first. A thin line that doesn't touch an automatic area sews as a line. The thin lines of a
+   shape that turns `auto_fill_uneven` off sew as lines, as with the `logo` style, and so do those of a shape
+   that names its stitch. An area
+   whose every part merges sews nothing. `SC-I0915` names each line merged, by its area, and where it went
+   (`auto::neighbours::lines`). The bound of 0.05 is StitchCraft's own. The dogs' 80 thin lines vary by 0.09
+   to 0.46 of their width, and TS-13B's window lines, drawn with an even pen 0.3 and 0.6 mm wide, by 0.01.
+   The rule goes by the line's width and how it varies, never by what the picture shows. Each area has the
+   work budget to itself to find its thin lines, and each line to find where it goes. One that needs more
+   keeps its lines, and `SC-I0915` says so. The measure of thread astray paints the picture with each line
+   merged in its neighbour's colour (`auto::as_merged`), since the neighbour's thread covers it by the rule.
+4. **Specks** (`REQ-AUTO-008`). An automatic area, or a part of one, smaller than 1 mm² is too small to sew:
    it would sew a knot. It is merged into the automatic area it shares the longest edge with, which may be
    its own. A speck that fills a hole goes into the area around it, and no hole shows where it was. One that
    rounding left a hair from the rest of its own area rejoins that. On a tie, it goes into the area drawn
@@ -590,7 +611,7 @@ mends it in 4 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
    merged in beside it. `SC-I0905` names each speck, by its area rounded to a hundredth of a square millimetre and
    kept under 1 mm², and where it went. A line filled because it is too wide for a column (M13.1) is an area
    too, so a part of it that small is a speck.
-4. **Overlaps** (`REQ-AUTO-007`). Pull draws stitches in from the edges of their shape, so shapes that only
+5. **Overlaps** (`REQ-AUTO-007`). Pull draws stitches in from the edges of their shape, so shapes that only
    meet show fabric between them. Each automatic area reaches its overlap, 1 mm, under each area, satin
    column, filled line or part's line or column sewn after it, from where it touches that shape, and no
    further than that shape as it is sewn. Under an area it reaches that far along its rows and less across
@@ -1485,6 +1506,11 @@ where 7 elements meet. The traced dogs sew
 the rows of the fills under them (the rims), the turns and travel of small fills, and the base layer. No
 rule tried here takes enough of that without opening fabric or showing less of an outline. The lowest
 honest cap now is about 4.5 fills on the sheets, the pear and the lettered patch, and 6 on the dogs.
+
+With the ragged thin lines merged into their neighbours (M13.18, [Neighbours](#neighbours)), the traced dogs
+sew 4.69, 4.80, 4.62 and 5.63 fills at their thickest spots, and 141.5, 153.25, 130.5 and 187.5 mm² at 3
+fills or more. The dogs on turf sew thicker, at new spots where a satin column or a fill lies over 3 or 4
+other fills.
 
 
 ## Sewing order

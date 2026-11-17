@@ -194,13 +194,14 @@ pub struct Preset {
 pub const PRESETS: [Preset; 2] = [
     Preset {
         name: "logo",
-        help: "Flat art drawn in strokes, such as a logo, lettering or an ink drawing: more parts sew as satin columns, and a part of \
-               several strokes keeps its columns though its width varies.",
+        help: "Flat art drawn in strokes, such as a logo, lettering or an ink drawing: more parts sew as satin columns, a part of \
+               several strokes keeps its columns though its width varies, and a thin line sews as a line.",
         values: &[(PREFER, "satin"), (FILL_UNEVEN, "false")],
     },
     Preset {
         name: "photo",
-        help: "A traced photo, whose shapes are patches and not strokes: the rules as they are by default, which fill a ragged patch.",
+        help: "A traced photo, whose shapes are patches and not strokes: the rules as they are by default, which fill a ragged patch \
+               and merge a ragged thin line into the patch beside it.",
         values: &[(PREFER, "balanced"), (FILL_UNEVEN, "true")],
     },
 ];

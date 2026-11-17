@@ -56,6 +56,7 @@ pub(super) use base::off as base_off;
 #[cfg(test)]
 pub(crate) use base::sewn_by_default as default_base_layer;
 mod layers;
+mod lines;
 mod order;
 mod outline;
 mod specks;
@@ -63,6 +64,7 @@ mod under;
 
 pub(super) use background::{Background, background, left_out};
 pub(super) use layers::flattened;
+pub(super) use lines::merged as lines_merged;
 pub(super) use outline::ending_near;
 
 use std::collections::BTreeSet;
