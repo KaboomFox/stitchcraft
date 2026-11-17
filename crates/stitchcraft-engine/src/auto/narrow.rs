@@ -73,6 +73,9 @@ pub(super) struct Parts {
     pub(super) said: Vec<Diagnostic>,
     /// The rule each part sewed by, and each piece that left a fill, in the order they were judged.
     pub(super) fired: Vec<Fired>,
+    /// The place in `fired` of the rule each part sewn along its middle sewed by, in the order of `along`, so
+    /// that a part that leaves the area takes its rule with it.
+    pub(super) judged: Vec<usize>,
 }
 
 /// A part sewn along its middle.
@@ -158,6 +161,7 @@ fn sort(
             match width(&edges, &lines, meter)? {
                 Some(width) => {
                     let measures = Measures { width: width.get(), ..Measures::of_breadth(part.area(), Breadth::Narrow) };
+                    sorted.judged.push(sorted.fired.len());
                     sorted.fired.push(fired(rule, Some(measures)));
                     sorted.along.push(Along::Narrow(Narrow { part, lines, width }));
                 }
@@ -169,6 +173,7 @@ fn sort(
         }
         Found::Columns => match columns::columns(&part, bounds, by.rules, sorting.cuts(), by.open, meter)? {
             Made::Columns { sewn, rule, measures } => {
+                sorted.judged.push(sorted.fired.len());
                 sorted.fired.push(fired(rule, Some(measures)));
                 sorted.along.push(Along::Columns(Columns { part, sewn }));
             }

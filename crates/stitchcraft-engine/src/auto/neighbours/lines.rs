@@ -198,13 +198,25 @@ pub(in crate::auto) fn merged<'d>(
     Merged { layers: Flattened { elements: sewing, kept, said }, merges: done, sorted }
 }
 
-/// `parts`, an area's sorted, less those sewn along their middles at the places `left`, which left it.
+/// `parts`, an area's sorted, less those sewn along their middles at the places `left`, which left it, and
+/// less the rule each of those sewed by: it sews by its new area's rules now, and `SC-I0912` names only the
+/// rules the area's own parts sew by.
 fn without(parts: Parts, left: &BTreeSet<usize>) -> Parts {
     if left.is_empty() {
         return parts;
     }
-    let along = parts.along.into_iter().enumerate().filter(|(at, _)| !left.contains(at)).map(|(_, along)| along).collect();
-    Parts { along, ..parts }
+    let Parts { filled, along, said, fired, judged } = parts;
+    let gone: BTreeSet<usize> = left.iter().filter_map(|at| judged.get(*at).copied()).collect();
+    let fired = fired.into_iter().enumerate().filter(|(place, _)| !gone.contains(place)).map(|(_, fired)| fired).collect();
+    let (along, judged) = along
+        .into_iter()
+        .zip(judged)
+        .enumerate()
+        .filter(|(at, _)| !left.contains(at))
+        // Each rule kept moves up by the rules before it that left.
+        .map(|(_, (along, place))| (along, place - gone.range(..place).count()))
+        .unzip();
+    Parts { filled, along, said, fired, judged }
 }
 
 /// Whether an area with `rules` merges its thin lines: unless it turns that off, or names its stitch.
