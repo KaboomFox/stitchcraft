@@ -309,6 +309,18 @@ M13.35 takes thread away where one shape piles it up by itself
   dogs, cut the jump threads this leaves. Does the edge of each outline still look whole where it meets
   the next patch?
 
+M13.18 merges the thin lines of a traced photo into the patches beside them
+([neighbours](../design/image-to-embroidery.md#neighbours)). It changes what the traced dogs sew, and no
+test sheet. At MC-8, sew the running dog in 9 threads from `main` before M13.18 and from after it, side by
+side:
+
+- A ragged strand of fur narrower than 1 mm now sews as part of the patch beside it, in that patch's
+  thread. Does the dog still read as the photo does, its eyes, nose and the white blaze on its face clear?
+  Which version looks more like fur?
+- The dogs leave a fifth to a third fewer jump threads. Count the ones you cut on each.
+- The dog on turf sews 0.29 fills more at its thickest spot, 4.8 fills, where a satin column or a fill lies
+  over 3 or 4 other fills. Does the needle thump there, or the thread fray?
+
 ## Report template
 
 The GitHub issue form *Sew-out report* asks for these fields; this is the same template for notes kept

@@ -48,6 +48,18 @@ along each line, as a drawing made of strokes of changing width may want.
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 
+### `auto_merge_lines`
+
+**Merge thin lines.** Whether a thin part of the shape merges into the shape beside it. On, a part narrower than the
+design's narrowest satin stroke everywhere, as soft shading and fur trace into, is merged into the
+automatic area it shares the longest edge with, and sews as part of that area's fill. Off, it sews
+as a running stitch along its middle, as a drawing's fine lines may want.
+
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
+- **Default:** `true`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
 ### `auto_fill_angle`
 
 **Fill angle.** The angle of the rows of every fill that automatic digitizing makes, as a fill's `angle` gives
@@ -194,6 +206,19 @@ a leaf and a tapering stroke sew well as one column.
 
 - **Accepts:** a number from 0 to 5
 - **Default:** `0.3`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_min_line_unevenness`
+
+**Least a merged line's width varies.** How much the width of a thin line varies along it, at the least, for it to merge into the shape
+beside it (`auto_merge_lines`): the standard deviation of its width divided by its width. A thin
+line is a part narrower than the narrowest satin stroke everywhere. The ragged strands that soft
+shading and fur trace into vary by 0.09 to 0.46, and merge. A line drawn with an even pen varies
+by less, and sews as a line.
+
+- **Accepts:** a number from 0 to 5
+- **Default:** `0.05`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 
