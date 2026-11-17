@@ -102,9 +102,9 @@ The performance budget counts instructions, because they come out the same on an
 run, where milliseconds do not. Its check fails for a change that slows planning, on whichever runner it
 runs. The time is still measured and reported, against the budget the requirement states in milliseconds.
 
-The pictures are counted in the `profiling` profile of the root `Cargo.toml`: the release build without
-link-time optimization, which would inline the stages into each other, and with line tables, so that
-callgrind can name each function and the files of the code inlined into it. Each picture's count is the
+The pictures are counted in the `profiling` profile of the root `Cargo.toml`. It is the release build
+without link-time optimization, since that would inline the stages into each other. It has line tables,
+which give callgrind the name of each function and the files of the code inlined into it. Each picture's count is the
 whole run of `stitch`, and each stage's is that of its functions. The table of stages, and what they found
 the first time, is in [where automatic digitizing spends its work](vectorcraft-integration.md#where-automatic-digitizing-spends-its-work).
 A TS-13 sheet that the profiling build writes otherwise than its golden file fails the check.

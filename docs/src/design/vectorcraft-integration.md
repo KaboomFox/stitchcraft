@@ -447,11 +447,11 @@ makes the same comparison in Chromium on every pull request, the picture include
 
 ### Where automatic digitizing spends its work
 
-M13.32 (`REQ-AUTO-083`). `cargo xtask perf` counts the instructions `stitch` takes to write each traced dog
-and the pear with the Auto effect, and each TS-13 sheet, and splits each count into the stages of
-automatic digitizing ([guardrails](guardrails.md)). The numbers below were measured on 2026-11-17 on main
+M13.32 (`REQ-AUTO-083`). `cargo xtask perf` counts the instructions `stitch` takes to write 11 pictures:
+the traced dogs and the pear with the Auto effect, and the TS-13 sheets. Its report splits each count into
+the stages of automatic digitizing ([guardrails](guardrails.md)). The numbers below were measured on 2026-11-17 on main
 `8a59600d`, natively, by callgrind, in the `profiling` build at opt-level 2 with Rust 1.97. Rust 1.97 gets
-opt-level 3 wrong, so the build here differs from CI's, which uses Rust 1.99 at opt-level 3. The records in
+opt-level 3 wrong. CI's build uses Rust 1.99 at opt-level 3 and counts a little differently. The records in
 `conformance/perf.toml` are CI's counts. A WebAssembly module runs 3.6 to 3.7 times the native count on
 the TS-13 sheets (M13.31), so a dog would need about 100 to 125 billion in VectorCraft, an estimate.
 VectorCraft allows it about 11 billion.
@@ -483,14 +483,14 @@ Millions of instructions for each stage, and the time the command takes:
 The other pictures fall between these: the dog on turf in 9 threads takes 30,791 million and the running
 dog in 6 threads 28,557. TS-13B to TS-13E take 1,730, 1,886, 1,539 and 1,116. TS-13F's ladder of squares
 has no shape digitized automatically. A sheet's shapes are drawn in code, and that work is in the rest of
-its run. The last pass of M13.35 gets a row of its own when it lands. Each stage's functions are listed in
+its run. The last pass of M13.35 gets a row of its own when it is merged. Each stage's functions are listed in
 `xtask/src/pictures.rs`, and the CI job's summary gives the table for all 11 pictures.
 
 **The overlaps cost most, and M13.30 made them 4 times dearer.** On the dog on turf, finding where each
 area reaches under its neighbours takes 82 % of the run. It does about 1,800 operations on regions:
 growing a shape (298 calls, 5.9 billion), cutting one from another (565 calls, 3.8 billion), the parts 2
-shapes share (306 calls, 3.6 billion) and joining shapes (2.7 billion or more). Growing a reach takes 1.5
-billion more. Each operation arranges the edges of its regions where they cross, and that arranging takes
+shapes share (306 calls, 3.6 billion) and joining shapes (2.7 billion or more). Growing the strip an
+area reaches under its neighbour takes 1.5 billion more. Each operation arranges the edges of its regions where they cross, and that arranging takes
 17.9 billion of the run's 26.6. Sorting the arrangement's points takes 8.5 billion of it. Built the same
 way, the commit before M13.30 was merged (`265fa8af`) took 9.7 billion for the whole export and 4.9 billion
 for the overlaps, where [an export that finishes](#an-export-that-finishes) measured 9.8 billion. M13.30
