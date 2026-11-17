@@ -2007,10 +2007,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
-- M13.35: no spot of an automatically digitized design sews above a cap (`REQ-AUTO-071` to `REQ-AUTO-074`).
+- M13.35: no spot of an automatically digitized design sews above a cap (`REQ-AUTO-071` to `REQ-AUTO-075`).
   The owner said of the thickest spots M13.30 left, 5.5 to 7 fills, that they won't work. Work in progress.
   - An automatic satin column moves its crowded needle points in: a point closer than 0.35 mm to the last
     one left on its rail moves in by 25 % of its stitch, the next by 50 %. A straight column keeps all.
+  - An automatic satin column narrower than 2 mm walks its middle once, not there and back, and sews its
+    top stitches back to where it started. The next column of its part starts nearest there.
   - Everything automatic digitizing makes locks in steps of 0.3 mm, the machine's shortest stitch, where the
     half stitch went up to 1 mm.
   - Where a spot of a planned design digitized automatically still sews above 4 fills, a last pass takes
@@ -2021,7 +2023,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - Where a shape sets a column's short stitches or a lock, its settings are used.
   - Public API: `auto::CROWDED_CLOSER_THAN` and `CROWDED_INSETS`, the keys
     `common::LOCK_START`, `LOCK_END`, `LOCK_START_SCALE` and `LOCK_END_SCALE`, and
-    `generators::satin::SHORT_STITCH_DISTANCE` and `SHORT_STITCH_INSET`, so that the cases import them.
+    `generators::satin::SHORT_STITCH_DISTANCE`, `SHORT_STITCH_INSET` and `CENTER_WALK_UNDERLAY_REPEATS`, so
+    that the cases import them.
 - M13.30: less thread where a design sews thick (`REQ-AUTO-067`). The owner's first concern on 2026-11-16
   was how thick her traced dogs sew along the edges between their patches, and M13.29 measured that the
   overlaps cause most of it.
@@ -3239,9 +3242,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ### Golden files
 - Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes`, `TS-13C.pes`, `TS-13D.pes` and
   `TS-13E.pes` (M13.35, the cap on the thickest spot). The digitized half of each moves a satin column's crowded
-  needle points in, locks in steps of 0.3 mm, and has thread taken at spots above 4 fills by the last
-  pass. The sheets sew 23,896, 14,616, 10,362, 20,233 and 6,007 stitches, where they sewed 23,908,
-  14,640, 10,390, 20,259 and 6,011. Their sizes and the halves in paint order are as they were.
+  needle points in, walks the middle of a column narrower than 2 mm once, locks in steps of 0.3 mm, and
+  has thread taken at spots above 4 fills by the last pass. The sheets sew 23,896, 14,524, 10,350, 20,233
+  and 5,961 stitches, where they sewed 23,908, 14,640, 10,390, 20,259 and 6,011. TS-13B's digitized half
+  jumps 47 times, where it jumped 48 times. Their sizes and the halves in paint order are as they were.
 - Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes`, `TS-13C.pes`, `TS-13D.pes` and
   `TS-13E.pes`, and added `TS-13F.pes` (M13.30, less thread where a design sews thick). The digitized half
   of each of the 5 sews narrower overlaps across its rows, one overlap under a shape, one base layer where

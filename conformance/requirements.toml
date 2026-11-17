@@ -3273,6 +3273,15 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-AUTO-075"
+area = "auto"
+level = "L2"
+statement = "An automatic satin column narrower than 2 mm to the micrometre, which has a centre walk and no other underlay (REQ-AUTO-018), walks its middle once (`center_walk_underlay_repeats` 1) unless its shape sets the repeats: the walk ends at the column's end, and its top stitches sew back to its start, where it ends. Of a part's columns, the one sewn after such a column is the one with an end nearest that column's start, sewn from that end."
+rationale = "After the last pass (REQ-AUTO-074) the thickest spots left were mostly satin columns, a column's zigzag of 1.3 to 2.8 fills and its underlay of 0.6 to 0.8, and the pass can't take a centre walk's way back without turning the column. A centre run alone is the underlay digitizing guides give a narrow column (Wilcom EmbroideryStudio, Stabilizing; ColDesi, Underlay 101), and Ink/Stitch's centre walk may be all a thin column needs (Ink/Stitch, Satin column). Measured on 2026-11-17, walking once took the lettered patch's thickest spot from 4.73 to 4.33 fills, the pear's from 4.78 to 4.55, the dogs' from 4.91, 4.75 and 6.27 to 4.53, 4.51 and 6.00, and TS-13B's from 4.02 to 3.99, under the cap. Without the order knowing where such a column ends, the lettered patch and TS-13B jumped 2 or 3 times more."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-AUTO-069"
 area = "auto"
 level = "L2"

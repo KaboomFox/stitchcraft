@@ -13,8 +13,8 @@ use stitchcraft_engine::design::{DesignSettings, Element, Shape};
 use stitchcraft_engine::generators::passes::BEAN_STITCH_REPEATS;
 use stitchcraft_engine::generators::pull::PULL_COMPENSATION;
 use stitchcraft_engine::generators::satin::{
-    CENTER_WALK_UNDERLAY, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PUSH_COMPENSATION, SATIN_COLUMN, SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET,
-    ZIGZAG_UNDERLAY,
+    CENTER_WALK_UNDERLAY, CENTER_WALK_UNDERLAY_REPEATS, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PUSH_COMPENSATION, SATIN_COLUMN,
+    SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET, ZIGZAG_UNDERLAY,
 };
 use stitchcraft_engine::normalize::region;
 use stitchcraft_engine::normalize::satin::{Pairing, Shape as Read, recognize};
@@ -323,6 +323,27 @@ fn req_auto_071_a_straight_column_spans_its_width_with_every_stitch_and_a_bend_m
     let outside = points.iter().filter(|r| **r > 6.8).count();
     let between = points.iter().filter(|r| (4.2..6.8).contains(*r)).count();
     assert!(outside > 30 && inside * 2 <= outside + 2 && between * 2 + 4 >= outside, "inside {inside}, between {between}, outside {outside}");
+}
+
+#[test]
+fn req_auto_075_a_narrow_column_walks_its_middle_once_and_ends_where_it_started() {
+    // Below 2 mm, compared to the micrometre, a stroke's column and a part's walk once, unless the shape says
+    // how often; wider columns have no centre walk.
+    let stroke = |width: f64, params: &[(&str, &str)]| widened(along("line", polylines(&[&[(0.0, 0.0), (30.0, 0.0)]]), &RED, params), width);
+    let band = |width: f64, params: &[(&str, &str)]| fill("band", &[&rectangle((0.0, 0.0), (30.0, width))], &RED, params);
+    let from = CONTOUR_FROM.get();
+    for (width, params, expected) in
+        [(1.5, &[][..], Some("1")), (from - 0.001, &[], Some("1")), (from, &[], None), (1.5, &[(CENTER_WALK_UNDERLAY_REPEATS, "3")], Some("3"))]
+    {
+        for made in [made(&stroke(width, params)), made(&band(width, params))] {
+            assert_eq!(setting(&made.elements[0], CENTER_WALK_UNDERLAY_REPEATS), expected, "{width} mm {params:?}");
+        }
+    }
+    // Planned alone, a band 1.5 mm wide and 30 mm long sews its last stitch near where it sewed its first.
+    let plan = planned(vec![automatic(band(1.5, &[]))]).plan.unwrap();
+    let sewn: Vec<Point> = plan.stitches().filter(|s| s.kind == StitchKind::Normal).map(|s| s.at).collect();
+    let (first, last) = (sewn[0], *sewn.last().unwrap());
+    assert!(first.distance(last) < 2.0, "{first:?} {last:?}");
 }
 
 #[test]

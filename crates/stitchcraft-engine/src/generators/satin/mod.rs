@@ -73,6 +73,10 @@ pub const CONTOUR_UNDERLAY: &str = "contour_underlay";
 /// See [`CENTER_WALK_UNDERLAY`].
 pub const ZIGZAG_UNDERLAY: &str = "zigzag_underlay";
 
+/// The key of the setting that says how many times a satin column's centre walk runs its length. An odd
+/// number ends the walk at the column's end, and the rest of the column then sews back to its start.
+pub const CENTER_WALK_UNDERLAY_REPEATS: &str = "center_walk_underlay_repeats";
+
 /// The key of the setting that shortens or lengthens a satin column at its start and its end, with which
 /// automatic digitizing makes a column that ends under another reach under it.
 pub const PUSH_COMPENSATION: &str = "push_compensation_mm";

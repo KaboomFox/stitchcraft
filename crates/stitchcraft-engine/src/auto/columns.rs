@@ -201,8 +201,10 @@ pub(super) fn columns(part: &Polygon, bounds: &Bounds, rules: &AutoParams, cuts:
         let own = Edges::of(&outline, piece(part), meter)?;
         widths.push(Width { average, widest: widest(&own, &column.line, meter)?, farthest: farthest(&column.line, &outline, meter)? });
     }
+    // A satin column that walks its middle once ends where it started (`REQ-AUTO-075`).
+    let once: Vec<bool> = widths.iter().map(|measured| !runs(*measured, narrowest) && super::walks_once(measured.average)).collect();
     let mut sewn = Vec::with_capacity(found.len());
-    for (index, column) in ordered(&found, meter)? {
+    for (index, column) in ordered(&found, &once, meter)? {
         let Some(&measured) = widths.get(index) else { return Ok(Made::Unmade) };
         let width = measured.average;
         if runs(measured, narrowest) {
@@ -389,8 +391,9 @@ fn runs(width: Width, narrowest: Mm) -> bool {
 /// next the one with an end nearest where the last one ended, sewn from that end, or a ring from its rung
 /// nearest. Where the columns that end under each other go round, as a pinwheel's bars do, none can sew
 /// after every column it ends under: the one that comes first in that order sews first, and the last of them
-/// ends on top of it. On a tie, the column found first.
-fn ordered(columns: &[Column], meter: &mut Meter) -> Result<Vec<(usize, Column)>, Exhausted> {
+/// ends on top of it. On a tie, the column found first. A column that `once` marks, by its place among
+/// `columns`, ends where it starts, and the next is looked for from there (`REQ-AUTO-075`).
+fn ordered(columns: &[Column], once: &[bool], meter: &mut Meter) -> Result<Vec<(usize, Column)>, Exhausted> {
     let count = columns.len();
     // How many columns end under each, which must sew before it.
     let mut waiting = vec![0_usize; count];
@@ -437,7 +440,13 @@ fn ordered(columns: &[Column], meter: &mut Meter) -> Result<Vec<(usize, Column)>
                 *slot = slot.saturating_sub(1);
             }
         }
-        here = if column.closed { column.rails[0].first().copied() } else { column.line.points.last().copied() };
+        here = if column.closed {
+            column.rails[0].first().copied()
+        } else if once.get(c) == Some(&true) {
+            column.line.points.first().copied()
+        } else {
+            column.line.points.last().copied()
+        };
         out.push((c, column));
     }
     Ok(out)
@@ -526,9 +535,14 @@ mod tests {
 
     /// The columns of `part` as found, and in the order they are sewn, each with its place among those found.
     fn sewn(part: &Polygon) -> (Vec<Column>, Vec<(usize, Column)>) {
+        sewn_walking(part, false)
+    }
+
+    /// [`sewn`], each column walking its middle `once` or not.
+    fn sewn_walking(part: &Polygon, once: bool) -> (Vec<Column>, Vec<(usize, Column)>) {
         let mut meter = Budget::DEFAULT.meter();
         let found = strips::columns(part, piece(part), &[], 1.0, &mut meter).unwrap().unwrap().unwrap();
-        let order = ordered(&found, &mut meter).unwrap();
+        let order = ordered(&found, &vec![once; found.len()], &mut meter).unwrap();
         (found, order)
     }
 
@@ -638,6 +652,42 @@ mod tests {
             }
         }
         assert!(turned > 0 && kept > 0, "{turned} turned, {kept} kept");
+    }
+
+    #[test]
+    fn req_auto_075_after_a_column_that_walks_once_the_next_sews_from_its_end_nearest_where_that_one_started() {
+        // An H, its bars and its crossbar 1.5 mm wide, the crossbar low. It sews first, and ends where it
+        // started when it walks once: the next bar is then the one nearest its start, sewn from its end
+        // nearest there, and the last bar from its end nearest where that one started. When the columns
+        // don't walk once, the bar nearest the crossbar's end comes next.
+        let h = part(
+            &[
+                (0.0, 0.0),
+                (1.5, 0.0),
+                (1.5, 4.0),
+                (10.0, 4.0),
+                (10.0, 0.0),
+                (11.5, 0.0),
+                (11.5, 20.0),
+                (10.0, 20.0),
+                (10.0, 5.5),
+                (1.5, 5.5),
+                (1.5, 20.0),
+                (0.0, 20.0),
+            ],
+            &[],
+        );
+        let (found, order) = sewn_walking(&h, true);
+        let [(crossbar, first), (bar, second), (_, third)] = order.as_slice() else { panic!("{order:?}") };
+        assert_eq!(found[*crossbar].under.iter().flatten().count(), 2, "{found:?}");
+        let here = ends(first).0;
+        assert!(nearest_end(second, here) < nearest_end(third, here), "{order:?}");
+        for (column, here) in [(second, here), (third, ends(second).0)] {
+            let (start, end) = ends(column);
+            assert!(start.distance(here) < end.distance(here), "{column:?} from {here:?}");
+        }
+        let (_, other) = sewn(&h);
+        assert_ne!(other[1].0, *bar, "{other:?}");
     }
 
     #[test]

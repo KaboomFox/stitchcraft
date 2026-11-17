@@ -108,8 +108,8 @@ use crate::generators::passes::BEAN_STITCH_REPEATS;
 use crate::generators::pull::PULL_COMPENSATION;
 use crate::generators::running::TOLERANCE;
 use crate::generators::satin::{
-    self, CENTER_WALK_UNDERLAY, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PUSH_COMPENSATION, SATIN_COLUMN, SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET,
-    ZIGZAG_UNDERLAY,
+    self, CENTER_WALK_UNDERLAY, CENTER_WALK_UNDERLAY_REPEATS, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PUSH_COMPENSATION, SATIN_COLUMN,
+    SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET, ZIGZAG_UNDERLAY,
 };
 use crate::generators::tatami::{ANGLE, TURN_STITCHES};
 use crate::generators::{TooSmall, mm, too_small};
@@ -240,13 +240,20 @@ fn read(element: &Element, said: &mut Vec<Diagnostic>) -> Option<AutoParams> {
 /// zigzag wider. A narrow column needs only a walk down its middle to hold its stitches up; a wider one a
 /// contour inside its edges to keep them sharp, and a wide one a zigzag as well, to lift its stitches.
 pub fn underlay(width: Mm) -> &'static [&'static str] {
-    if !at_most(CONTOUR_FROM, width) {
+    if walks_once(width) {
         &[CENTER_WALK_UNDERLAY]
     } else if at_most(width, ZIGZAG_ABOVE) {
         &[CONTOUR_UNDERLAY]
     } else {
         &[CONTOUR_UNDERLAY, ZIGZAG_UNDERLAY]
     }
+}
+
+/// Whether an automatic satin column `width` wide, narrower than [`CONTOUR_FROM`] to the micrometre, has
+/// only a centre walk under it, which it walks once (`REQ-AUTO-075`): it then sews from its end back to
+/// its start, and ends where it started.
+pub(crate) fn walks_once(width: Mm) -> bool {
+    !at_most(CONTOUR_FROM, width)
 }
 
 /// The settings of an automatic satin column `width` wide whose shape's settings of the rules are `rules`:
@@ -264,6 +271,10 @@ fn satin_params(params: &ParamSet, width: Mm, rules: &AutoParams) -> ParamSet {
     column.set(END_AT_NEAREST_POINT, "false");
     for key in underlay(width) {
         column.set(*key, "true");
+    }
+    // A narrow column walks its middle once, there and not back, unless its shape says how often.
+    if walks_once(width) && column.get(CENTER_WALK_UNDERLAY_REPEATS).is_none() {
+        column.set(CENTER_WALK_UNDERLAY_REPEATS, "1");
     }
     // Its crowded needle points move in, unless its shape says how (`REQ-AUTO-071`).
     if column.get(SHORT_STITCH_DISTANCE).is_none() && column.get(SHORT_STITCH_INSET).is_none() {

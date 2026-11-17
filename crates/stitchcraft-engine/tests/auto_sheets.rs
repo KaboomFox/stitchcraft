@@ -331,10 +331,11 @@ fn ts13_the_jump_threads_that_its_stitches_sew_down() {
     // it held TS-13E's buttons. Apart (M13.31), the halves leave 11 and 4.
     // One of TS-13B's jumps is a run under a shape sewn later (REQ-AUTO-053): its digitized half leaves 43
     // where it left 44. With the locks and columns of M13.35 (REQ-AUTO-071, REQ-AUTO-072) no later stitch of
-    // TS-13E's digitized half sews down the one jump thread that one did. Why was not traced.
+    // TS-13E's digitized half sews down the one jump thread that one did. Why was not traced. With narrow
+    // columns that walk once (REQ-AUTO-075), TS-13B's leaves 42, 20 of them sewn down, where it left 43, 19.
     for (id, recorded) in [
         ("TS-13A", [(8, 0), (18, 9)]),
-        ("TS-13B", [(6, 0), (43, 19)]),
+        ("TS-13B", [(6, 0), (42, 20)]),
         ("TS-13C", [(9, 4), (13, 5)]),
         ("TS-13D", [(1, 0), (11, 3)]),
         ("TS-13E", [(0, 0), (4, 0)]),

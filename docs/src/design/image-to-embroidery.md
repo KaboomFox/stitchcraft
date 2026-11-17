@@ -1334,10 +1334,8 @@ Stitches and jump threads stay as they were. The bare share of the dog on turf i
 so a spot can differ from `stitch plan --auto`'s by up to 0.8 fill, as the 0.5 mm cells fall.
 
 Alone, the locks took TS-13B from 5.65 to 4.58 fills and the pear to 5.35, and the columns took TS-13A to
-4.73. Walking a narrow column's middle once takes the lettered patch to 4.62 and the pear to 5.00 more,
-but such a column ends where it started, and the order of columns still expects it at its other end: 2
-or 3 jump threads more. No outline round fills halves the dogs' area at 3 fills or more and moves their
-thickest spots little. Neither is built yet.
+4.73. No outline round fills halves the dogs' area at 3 fills or more and moves their thickest spots
+little. It isn't built.
 
 #### The last pass
 
@@ -1365,6 +1363,38 @@ shorter than the machine's shortest (a lock's 0.2 mm into or out of a lock point
 replaces, or longer than the machine's longest. It keeps every top stitch that shows, and it doesn't make
 a jump thread. It keeps the measure up to date stitch by stitch (`Thickness::add` and `remove`) and hands
 it to `SC-W0913`, so that the design is measured once. `SC-I1119` says what it took.
+
+#### A narrow column walks once
+
+What the last pass left at the thickest spots was mostly satin columns: a column's zigzag of 1.3 to 2.8
+fills and its underlay of 0.6 to 0.8, over a fill's rows that run on under it. The pass can't take a
+centre walk's way back without turning the column. So a column narrower than 2 mm, which has only a
+centre walk under it, walks its middle once (`REQ-AUTO-075`, `center_walk_underlay_repeats` 1), as
+digitizing guides give a narrow column a single run down its middle. The walk then ends at the column's
+far end, and the top stitches sew back to where it started. The order of a part's columns knows that: the
+next column is the one with an end nearest the start of such a column. A shape that sets the repeats
+keeps them. Measured with the cases' plans on 2026-11-17, the last pass in both columns:
+
+| Design | Thickest, fills, last pass | Walked once | At 3 fills or more, mm² | Walked once | Jump threads | Walked once |
+|---|---:|---:|---:|---:|---:|---:|
+| Lettered patch | 4.73 | 4.33 | 78 | 58 | 7 | 8 |
+| TS-13A, digitized half | 4.28 | 4.28 | 31 | 31 | 18 | 18 |
+| TS-13B, digitized half | 4.02 | 3.99 | 31 | 24 | 43 | 42 |
+| TS-13C, digitized half | 4.49 | 4.49 | 113 | 112 | 13 | 13 |
+| TS-13D, digitized half | 4.17 | 4.17 | 79 | 79 | 12 | 12 |
+| TS-13E, digitized half | 3.71 | 3.42 | 27 | 9 | 5 | 5 |
+| Traced pear | 4.78 | 4.55 | 26 | 21 | 2 | 2 |
+| Traced dog on turf, 6 threads | 4.91 | 4.53 | 172 | 164 | 71 | 73 |
+| Traced dog on turf, 9 threads | 4.75 | 4.51 | 200 | 192 | 80 | 81 |
+| Traced running dog, 6 threads | 5.15 | 5.15 | 190 | 184 | 58 | 58 |
+| Traced running dog, 9 threads | 6.27 | 6.00 | 276 | 265 | 74 | 72 |
+
+The designs sew 5 to 100 stitches fewer. A jump thread starts or ends elsewhere where a column now ends at
+its start, so a dog has 2 more or 2 fewer. The lettered patch has one more, and one fewer that no later
+stitch sews down. Where 2 columns of one shape join, the one that ends under the other reaches its pull
+compensation, 0.4 mm, past the chord between them. Ending it at the chord took TS-13A to 4.15 and TS-13B
+to 3.79 fills, and changed the dogs by 0.01 or less. The thread pulls such an end back by about as much,
+which opens the join, so the joins stay as they are.
 
 
 ## Sewing order
@@ -1510,7 +1540,9 @@ left 71, 73, 64 and 84. Since M13.27 filled 5 of their blobs they jump 79, 91, 7
 [an outline round a fill](#an-outline-round-a-fill)) they jump 84, 97, 82 and 109 times, and leave 76, 84,
 73 and 96. With runs under the shapes sewn later (M13.17, [runs in place of jumps](#runs-in-place-of-jumps))
 they leave 69, 79, 60 and 83. Since M13.30
-([less thread where areas overlap](#less-thread-where-areas-overlap)) they leave 71, 80, 58 and 74. The traced pear and the test pictures change thread once for each thread after
+([less thread where areas overlap](#less-thread-where-areas-overlap)) they leave 71, 80, 58 and 74, and
+since narrow columns walk once (M13.35, [a narrow column walks once](#a-narrow-column-walks-once)) 73,
+81, 58 and 72. The traced pear and the test pictures change thread once for each thread after
 the first, as they did. The digitized halves of the TS-13 sheets change thread 2, 4, 4 and 6 times, where
 they changed 5, 4, 5 and 8 times. TS-13B's black sews twice: its base layer and letters first, and the
 lines of its windows after the fills they border. The search keeps 87 to 3,584 rows of batches on the
