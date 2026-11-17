@@ -334,7 +334,7 @@ fn req_auto_037_digitized_dogs_change_thread_as_seldom_as_their_lines_allow() {
 /// lines (REQ-AUTO-090), and on the dog on turf the pale strip above its nose. The case fails when a number
 /// changes, so that a change that takes detail away, or puts it back, shows here.
 const LIKE: [(&str, usize, usize, f64); 4] =
-    [("dog-on-turf-6", 97, 75, 814.0), ("dog-on-turf-9", 111, 83, 779.0), ("dog-running-6", 78, 67, 898.0), ("dog-running-9", 100, 88, 921.0)];
+    [("dog-on-turf-6", 97, 75, 814.0), ("dog-on-turf-9", 111, 83, 779.0), ("dog-running-6", 77, 66, 898.0), ("dog-running-9", 100, 88, 921.0)];
 
 /// What `likeness` keeps, as [`LIKE`] records it.
 fn recorded(name: &str, likeness: &likeness::Likeness) -> (String, usize, usize, f64) {
@@ -358,7 +358,7 @@ fn req_auto_094_digitized_dogs_keep_their_likeness_as_recorded() {
 /// What each traced dog keeps with its thin lines sewn as lines, as before they merged (`auto_fill_uneven`
 /// off, REQ-AUTO-090), as measured on 2026-11-17.
 const LINED: [(&str, usize, usize, f64); 4] =
-    [("dog-on-turf-6", 97, 96, 993.0), ("dog-on-turf-9", 111, 105, 947.0), ("dog-running-6", 78, 73, 949.0), ("dog-running-9", 100, 97, 983.0)];
+    [("dog-on-turf-6", 97, 96, 993.0), ("dog-on-turf-9", 111, 105, 947.0), ("dog-running-6", 77, 73, 970.0), ("dog-running-9", 100, 97, 983.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]

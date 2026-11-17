@@ -374,36 +374,36 @@ fn a_hole_sewn_round_stays_open_and_one_sewn_over_shows_its_shapes_thread() {
     assert!(at.min().x() > 9.0 && at.max().x() < 10.0, "{at:?}");
 }
 
-/// A red field 20 mm wide with a blue eye 1 mm wide in its middle, drawn over it.
+/// A red field 20 mm wide with a blue eye 1.2 mm wide in its middle, drawn over it.
 fn face() -> Design {
-    design(vec![square("field", (0.0, 0.0), 20.0, &RED), square("eye", (9.5, 9.5), 1.0, &BLUE)])
+    design(vec![square("field", (0.0, 0.0), 20.0, &RED), square("eye", (9.4, 9.4), 1.2, &BLUE)])
 }
 
 #[test]
 fn req_auto_093_a_part_lost_shows_however_small_it_is() {
     // Sewn as drawn: the field's rows, then the eye's, over them.
-    let kept = likeness(&face(), &plan(&[(&RED, rows(0.0, 20.0, 0.0, 20.0)), (&BLUE, rows(9.5, 10.5, 9.5, 10.5))]));
+    let kept = likeness(&face(), &plan(&[(&RED, rows(0.0, 20.0, 0.0, 20.0)), (&BLUE, rows(9.4, 10.6, 9.4, 10.6))]));
     assert_eq!(kept.likeness(), 1.0, "{kept:?}");
     let [field, eye] = kept.colours.as_slice() else { panic!("{kept:?}") };
     assert_eq!((field.thread, field.parts, field.kept, eye.thread, eye.parts, eye.kept), (RED.color, 1, 1, BLUE.color, 1, 1));
-    assert!((field.area - 399.0).abs() < 0.5 && (eye.area - 1.0).abs() < 0.1 && eye.shown == 1.0, "{kept:?}");
-    // The eye merged into the field: a quarter of a percent of the picture's area, and half its likeness, the
+    assert!((field.area - 398.56).abs() < 0.5 && (eye.area - 1.44).abs() < 0.1 && eye.shown == 1.0, "{kept:?}");
+    // The eye merged into the field: 0.36 % of the picture's area, and half its likeness, the
     // field's colour kept and the eye's lost.
     let merged = likeness(&face(), &plan(&[(&RED, rows(0.0, 20.0, 0.0, 20.0))]));
     assert_eq!(merged.likeness(), 0.5, "{merged:?}");
     let lost: Vec<&Part> = merged.lost().collect();
     let [eye] = lost.as_slice() else { panic!("{merged:?}") };
     assert_eq!((eye.colour, eye.shown, merged.colours[1].shown, merged.colours[1].likeness()), (BLUE.color, 0.0, 0.0, 0.0));
-    assert!((eye.at.min().x() - 9.525).abs() < 1e-9 && (eye.at.max().y() - 10.475).abs() < 1e-9, "{eye:?}");
+    assert!((eye.at.min().x() - 9.425).abs() < 1e-9 && (eye.at.max().y() - 10.575).abs() < 1e-9, "{eye:?}");
     assert!((merged.colours[0].shown - 1.0).abs() < 1e-12 && merged.colours[0].likeness() == 1.0, "{merged:?}");
 }
 
 #[test]
 fn req_auto_093_a_change_that_keeps_every_part_scores_the_same() {
-    let drawn = likeness(&face(), &plan(&[(&RED, rows(0.0, 20.0, 0.0, 20.0)), (&BLUE, rows(9.5, 10.5, 9.5, 10.5))]));
+    let drawn = likeness(&face(), &plan(&[(&RED, rows(0.0, 20.0, 0.0, 20.0)), (&BLUE, rows(9.4, 10.6, 9.4, 10.6))]));
     // The eye's rows half a millimetre short of its right edge, and the field's 1 mm short of its left one: the shares
     // shown move, the parts kept don't.
-    let moved = likeness(&face(), &plan(&[(&RED, rows(1.0, 20.0, 0.0, 20.0)), (&BLUE, rows(9.5, 10.0, 9.5, 10.5))]));
+    let moved = likeness(&face(), &plan(&[(&RED, rows(1.0, 20.0, 0.0, 20.0)), (&BLUE, rows(9.4, 10.1, 9.4, 10.6))]));
     assert_eq!(moved.likeness(), drawn.likeness());
     assert_eq!(moved.parts.iter().map(Part::kept).collect::<Vec<_>>(), [true, true]);
     assert!(moved.colours[0].shown < 0.99 && moved.colours[1].shown < 1.0, "{moved:?}");
@@ -418,10 +418,15 @@ fn req_auto_093_a_line_run_along_its_middle_is_kept_and_one_too_narrow_for_a_thr
     let wide = likeness(&design(vec![field(), widened(line("line", (0.0, 0.0), 10.0, &RED, &[]), 1.6)]), &running());
     let run = &wide.parts[1];
     assert!(run.kept() && run.colour == RED.color && (run.shown - 0.8 / 1.2).abs() < 0.05, "{wide:?}");
-    // 0.3 mm wide, no disc a thread across fits in it: its colour has no part, and nothing to lose.
+    // 0.3 mm wide, no disc a thread across fits in it: its colour has no part, and nothing to lose. Nor has a
+    // square smaller than the smallest area sewn, 0.9 mm wide.
     let thin = likeness(&design(vec![field(), widened(line("line", (0.0, 0.0), 10.0, &RED, &[]), 0.3)]), &running());
     assert_eq!((thin.parts.len(), thin.colours[1].parts, thin.colours[1].likeness(), thin.likeness()), (1, 0, 1.0, 1.0));
     assert!(thin.colours[1].area > 2.5, "{thin:?}");
+    let speck = likeness(&design(vec![field(), square("speck", (4.5, 4.5), 0.9, &RED)]), &running());
+    assert_eq!((speck.parts.len(), speck.colours[1].parts), (1, 0));
+    let square = likeness(&design(vec![field(), square("square", (4.5, 4.5), 1.0, &RED)]), &running());
+    assert_eq!((square.parts.len(), square.colours[1].parts), (2, 1));
 }
 
 #[test]

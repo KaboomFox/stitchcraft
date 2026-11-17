@@ -1,6 +1,6 @@
 //! How much of a picture's detail automatic digitizing keeps (`REQ-AUTO-093`, `REQ-AUTO-094`), measured as
 //! `stitchcraft_testkit::fabric::likeness` measures any design: each colour's parts of the trace that the
-//! stitches show in that colour. A speck merged into its neighbour is a part lost. The test pictures, the
+//! stitches show in that colour. A part merged into its neighbour as a speck is a part lost. The test pictures, the
 //! traced pear, the lettered patch and the test sheets' digitized halves keep their likeness as recorded, and
 //! the traced dogs are `tests/auto_photos.rs`'s, in the release build.
 
@@ -14,7 +14,7 @@ use stitchcraft_testkit::designs::{BLUE, GREEN, RED, automatic, fill, in_place};
 use stitchcraft_testkit::fabric::likeness::{self, LIKENESS};
 use stitchcraft_testkit::pictures;
 
-/// A red field 20 mm wide with a blue speck `side` millimetres wide in its middle, and a green square 5 mm
+/// A red field 20 mm wide with a blue square `side` millimetres wide in its middle, and a green square 5 mm
 /// wide beside it, so that the field is no background (REQ-AUTO-009): all automatic, each with the
 /// parameters `params`.
 fn speck(side: f64, params: &[(&str, &str)]) -> Design {
@@ -34,17 +34,19 @@ fn kept(design: &Design) -> likeness::Likeness {
 }
 
 #[test]
-fn req_auto_093_a_speck_merged_into_its_neighbour_is_a_part_lost() {
-    // 0.9 mm wide, 0.81 mm², the speck merges into the field (REQ-AUTO-008): its colour has 1 part, lost.
-    let merged = kept(&speck(0.9, &[]));
+fn req_auto_093_a_part_merged_as_a_speck_is_a_part_lost() {
+    // 1.5 mm wide, 2.25 mm², the square sews in its own thread and is kept.
+    let sewn = kept(&speck(1.5, &[]));
+    assert_eq!((sewn.likeness(), sewn.lost().count(), sewn.parts.len()), (1.0, 0, 3), "{sewn:?}");
+    // With a smallest area of 3 mm² it is a speck and merges into the field (REQ-AUTO-008): its colour's 1
+    // part is lost.
+    let merged = kept(&speck(1.5, &[(auto::MIN_AREA, "3")]));
     assert_eq!(merged.likeness(), 2.0 / 3.0, "{merged:?}");
     let lost: Vec<_> = merged.lost().map(|part| part.colour).collect();
     assert_eq!(lost, [BLUE.color]);
-    // With a smallest area of 0.5 mm² it is no speck, sews in its own thread and is kept.
-    let sewn = kept(&speck(0.9, &[(auto::MIN_AREA, "0.5")]));
-    assert_eq!((sewn.likeness(), sewn.lost().count()), (1.0, 0), "{sewn:?}");
-    // 1.1 mm wide it is no speck by default.
-    assert_eq!(kept(&speck(1.1, &[])).likeness(), 1.0);
+    // 0.9 mm wide, smaller than the smallest area sewn by default, it is no part, merged or not.
+    let speck = kept(&speck(0.9, &[]));
+    assert_eq!((speck.likeness(), speck.parts.len()), (1.0, 2));
 }
 
 /// The digitized half of each test sheet that has one, by the name the before and after sheet gives it: its
@@ -59,13 +61,13 @@ fn digitized_halves() -> Vec<(String, Design)> {
 }
 
 /// What each picture keeps, as measured on 2026-11-17: its parts, the parts kept and its likeness in
-/// thousandths. TS-13A's digitized half loses 7 of its red parts: the specks drawn round its disc, which share
-/// no edge and are left out by design (REQ-AUTO-008). The case fails when a number changes, so that a change
-/// that takes detail away, or puts it back, shows here.
+/// thousandths. Each keeps every part. The specks drawn round TS-13A's disc are smaller than the smallest area
+/// sewn, and no parts. The case fails when a number changes, so that a change that takes detail away shows
+/// here.
 const KEPT: [(&str, usize, usize, f64); 7] = [
     ("pear", 5, 5, 1000.0),
     ("lettered-patch", 8, 8, 1000.0),
-    ("ts-13a-digitized", 23, 16, 767.0),
+    ("ts-13a-digitized", 16, 16, 1000.0),
     ("ts-13b-digitized", 31, 31, 1000.0),
     ("ts-13c-digitized", 11, 11, 1000.0),
     ("ts-13d-digitized", 14, 14, 1000.0),

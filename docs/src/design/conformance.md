@@ -242,6 +242,7 @@ Metrics are defined once in `stitchcraft-testkit::metrics` so every case measure
 | Cover | The same painting, read more strictly: the gaps a thread wide that the top stitches leave inside the design, and the share of the design they leave bare (`stitchcraft_testkit::fabric::cover`, `REQ-AUTO-027`) |
 | Each shape's own | What of each area's shape shows its own thread: how much of each hole shows what lies under it, and the gaps a thread wide and the notches 0.15 mm wide where another colour shows inside its outline (`stitchcraft_testkit::fabric::shown`, `REQ-AUTO-084`, `REQ-AUTO-085`) |
 | Thread astray | The longest stretch of a stitch that shows on another colour or on bare fabric, or of an underlay or travel stitch that shows at all. Moves between elements and jump threads are counted apart |
+| Likeness | What of each colour's parts of the trace the stitches keep, each part counted once whatever its size, and the mean over the colours (`stitchcraft_testkit::fabric::likeness`, `REQ-AUTO-093`) |
 | Thickness | The thread over each spot, in fills, and the needle points per mm², which the plan itself measures (`stitchcraft_plan::thickness`, `REQ-AUTO-060`) and `stitchcraft_testkit::fabric::thickness` reads for the cases and the before and after sheet. The pixel and the thread's width of the metrics above are that measure's |
 
 Coverage is defined since M5.9 and edge coverage since M13.2, and the other metrics arrive with the cases that

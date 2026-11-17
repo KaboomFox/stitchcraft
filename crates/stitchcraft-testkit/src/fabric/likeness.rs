@@ -13,8 +13,12 @@
 //! and no colour where none does. Underlay, travel and locks are left out: they lie under the top stitches.
 //!
 //! **Parts.** A colour's parts are its pieces of the trace: pixels of that colour that touch at a side or a
-//! corner are one part. A part counts when a disc a thread across fits in it. Narrower than that, no stitch
-//! of its own can sew it, so the stitches can neither keep nor lose it.
+//! corner are one part. A part counts when it is as large as the smallest area digitizing sews by default,
+//! 1 mm² (`auto_min_area_mm2`), and a disc a thread across fits in it. A smaller part is a speck, which the
+//! rules merge or leave out as too small to sew, and no stitch of its own can sew a narrower one. A traced
+//! photo has hundreds of such bits of texture: counted, they would rule the measure as the large patches
+//! rule a share of pixels. A speck setting raised above the default makes larger parts specks, and their
+//! loss shows.
 //!
 //! **Kept.** A pixel of a part is shown when the stitches have the part's colour within half a thread of
 //! its centre. A part's core is its pixels that a disc a thread across, centred on them, fits in: the part
@@ -77,7 +81,8 @@ pub struct Colour {
     pub area: f64,
     /// The share of that area the stitches show in it, within half a thread.
     pub shown: f64,
-    /// How many parts of the colour count.
+    /// How many parts of the colour count: those as large as the smallest area sewn by default, that a disc a
+    /// thread across fits in.
     pub parts: usize,
     /// How many of them the stitches keep.
     pub kept: usize,
@@ -192,6 +197,8 @@ impl Compared {
             shown[at] = sewn[at] == Some(own) || around().any(|k| sewn.get(k).copied().flatten() == Some(own));
             fits[at] = disc.iter().all(|&step| stepped(at, step, columns, rows).is_some_and(|k| colour(k) == Some(own)));
         }
+        let area = |pixels: usize| pixels as f64 * PIXEL * PIXEL;
+        let smallest = crate::designs::rules().auto_min_area_mm2;
         // Each colour's area, area shown, and parts, found by flooding from the top left.
         let mut totals: BTreeMap<Rgb, (usize, usize, usize)> = BTreeMap::new();
         let mut order: Vec<Rgb> = Vec::new();
@@ -221,13 +228,12 @@ impl Compared {
                     }
                 }
             }
-            if group.iter().any(|&at| fits[at]) {
+            if area(group.len()) >= smallest && group.iter().any(|&at| fits[at]) {
                 found.push((own, group));
             }
         }
         // The largest colour first, and of 2 as large the one painted first.
         order.sort_by_key(|colour| totals.get(colour).map(|&(pixels, _, first)| (std::cmp::Reverse(pixels), first)));
-        let area = |pixels: usize| pixels as f64 * PIXEL * PIXEL;
         let place = |colour: &Rgb| order.iter().position(|known| known == colour).unwrap_or(order.len());
         found.sort_by_key(|(colour, group)| (place(colour), group.first().copied()));
         let mut part = vec![None; size];
