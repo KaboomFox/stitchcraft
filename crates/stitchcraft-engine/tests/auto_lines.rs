@@ -103,11 +103,11 @@ fn req_auto_090_the_design_as_merged_draws_a_merged_line_in_its_neighbours_threa
         DesignSettings::default(),
     )
     .unwrap();
-    let merged = as_merged(&design, &Budget::DEFAULT);
+    let merged = as_merged(&design, &Budget::DEFAULT).unwrap();
     let drawn: Vec<(&str, Thread)> = merged.elements().iter().map(|element| (element.id.as_str(), element.thread.clone())).collect();
     assert_eq!(drawn, [("left", RED), ("line", GOLD), ("right", BLUE), ("left~line1", RED)]);
     assert!((area(merged.elements(), "left~line1") - 5.5).abs() < 1e-6);
     // A design whose lines don't merge comes back as it is.
     let even = Design::new(unbased(vec![rect("a", (0.0, 0.0), (10.0, 10.0), &RED)]), DesignSettings::default()).unwrap();
-    assert_eq!(as_merged(&even, &Budget::DEFAULT).elements(), even.elements());
+    assert_eq!(as_merged(&even, &Budget::DEFAULT).unwrap().elements(), even.elements());
 }

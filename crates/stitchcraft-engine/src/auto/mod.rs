@@ -530,8 +530,9 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
 /// other shape, named after that area with `~line` and a number. A measure of where thread shows on a colour
 /// it shouldn't compares a plan with this design, since a line merged into its neighbour sews in the
 /// neighbour's thread by the rules. A design without automatic elements, or whose lines don't merge, comes
-/// back as it is. Each step has `budget`'s work, as it has when the design is digitized.
-pub fn as_merged(design: &Design, budget: &Budget) -> Design {
+/// back as it is. Each step has `budget`'s work, as it has when the design is digitized. The error is
+/// `Design::new`'s, which the lines' names, unique among the design's ids, never give.
+pub fn as_merged(design: &Design, budget: &Budget) -> Result<Design, Diagnostic> {
     let mut diagnostics = Vec::new();
     let cut = clips::cut(design, budget, &mut diagnostics);
     let cut = cut.as_ref().unwrap_or(design);
@@ -553,7 +554,7 @@ pub fn as_merged(design: &Design, budget: &Budget) -> Design {
         let shape = Shape::Fill { path: outline(std::slice::from_ref(&merge.line)), rule: FillRule::NonZero, gradient: None };
         drawn.push(Element { id, shape, ..area.clone() });
     }
-    Design::new(drawn, design.settings).unwrap_or_else(|_| design.clone())
+    Design::new(drawn, design.settings)
 }
 
 /// Adds the outline of the fill `id` among `elements` after it, when it still sews: a running stitch along

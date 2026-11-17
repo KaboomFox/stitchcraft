@@ -108,7 +108,7 @@ pub const stitchcraft_engine::auto::PREFER: &str
 pub const stitchcraft_engine::auto::STITCH: &str
 pub const stitchcraft_engine::auto::TOUCHING: f64
 pub const stitchcraft_engine::auto::ZIGZAG_ABOVE: stitchcraft_core::units::Mm
-pub fn stitchcraft_engine::auto::as_merged(&stitchcraft_engine::design::Design, &stitchcraft_core::budget::Budget) -> stitchcraft_engine::design::Design
+pub fn stitchcraft_engine::auto::as_merged(&stitchcraft_engine::design::Design, &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_engine::design::Design, stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_engine::auto::digitize(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::auto::Digitized, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_engine::auto::digitized<'d>(&'d stitchcraft_engine::design::Design, &stitchcraft_core::budget::Budget) -> (alloc::borrow::Cow<'d, [stitchcraft_engine::design::Element]>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>)
 pub fn stitchcraft_engine::auto::rules(&stitchcraft_params::set::ParamSet) -> core::option::Option<stitchcraft_engine::auto::AutoParams>

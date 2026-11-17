@@ -128,7 +128,8 @@ pub fn unsewn(design: &Design, plan: &StitchPlan) -> Unsewn {
 /// The thread `plan`, whose stitches lie where `design` draws its shapes, lays where it shows and should not,
 /// and the jump threads it leaves (see the module's docs).
 pub fn astray(design: &Design, plan: &StitchPlan) -> Astray {
-    let picture = Painted::of(&auto::as_merged(design, &Budget::DEFAULT), plan);
+    let merged = auto::as_merged(design, &Budget::DEFAULT).unwrap_or_else(|_| design.clone());
+    let picture = Painted::of(&merged, plan);
     let grid = &picture.grid;
     let sewn: Vec<_> = plan.sewn_stitches().into_iter().filter(|stitch| !stitch.is_lock()).collect();
     // The last stitch whose thread covers each pixel, by its place among `sewn`, plus 1: 0 for none.

@@ -86,7 +86,7 @@ pub(in crate::auto) fn merged<'d>(
         let Some(rules) = rules.get(*index).and_then(Option::as_ref).filter(|rules| merges(rules)) else { continue };
         let Some(area) = areas.get_mut(from).and_then(Option::as_mut) else { continue };
         match thin(&area.parts, narrowest, rules, &mut budget.meter()) {
-            Ok(thin) if thin.iter().any(|&thin| thin) => {
+            Ok(thin) => {
                 let parts = std::mem::take(&mut area.parts);
                 for (part, thin) in parts.into_iter().zip(thin) {
                     if thin {
@@ -96,7 +96,6 @@ pub(in crate::auto) fn merged<'d>(
                     }
                 }
             }
-            Ok(_) => {}
             Err(failed) => {
                 said.push(failed.said(Code::AutoLineMerged, "the thin lines of this area", "it keeps them", budget.max_work, element.id.clone()));
             }

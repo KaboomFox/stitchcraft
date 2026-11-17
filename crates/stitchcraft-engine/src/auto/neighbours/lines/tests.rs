@@ -145,3 +145,17 @@ fn a_line_merges_into_no_area_whose_box_only_is_near_it() {
     let (ids, said) = run(vec![auto("around", &[around], &[]), auto("line", &[strand(10.0)], &[])], &Budget::DEFAULT);
     assert_eq!((ids, said), (vec!["around".to_string(), "line".to_string()], Vec::<String>::new()));
 }
+
+#[test]
+fn a_line_beside_no_area_stays_in_its_area_when_another_line_of_it_merges() {
+    let elements = vec![auto("left", &[square((0.0, 0.0), (10.0, 10.0))], &[]), auto("lines", &[strand(10.0), strand(40.0)], &[])];
+    let (flattened, rules) = flattened(elements);
+    let (out, merges) = merged(flattened, &rules, NARROWEST, &Budget::DEFAULT);
+    assert_eq!(merges.len(), 1);
+    // `lines` keeps its far line, and sews it.
+    let Some((_, element)) = out.elements.get(1) else { panic!("{} elements", out.elements.len()) };
+    let Shape::Fill { path, rule, .. } = &element.shape else { panic!("no fill") };
+    let parts = parts_of(path, *rule, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    assert_eq!((element.id.as_str(), parts.len()), ("lines", 1));
+    assert!((ops::area_of(&parts) - 5.5).abs() < 1e-6, "{}", ops::area_of(&parts));
+}
