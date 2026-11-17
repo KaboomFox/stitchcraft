@@ -53,7 +53,7 @@ fn said(said: &[Diagnostic], code: Code) -> Vec<String> {
 }
 
 #[test]
-fn req_auto_090_a_ragged_thin_line_merges_into_the_area_it_shares_the_longest_edge_with() {
+fn diag_sc_i0915_a_ragged_thin_line_merges_into_the_area_it_shares_the_longest_edge_with() {
     // The line runs along `left` for 10 mm and touches `right` only at its widest places. `left` reaches
     // under nothing, so that it sews what it merged and no more.
     let left = automatic(fill("left", &[&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)]], &RED, &[("auto_overlap_mm", "0")]));

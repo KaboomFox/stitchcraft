@@ -1,6 +1,6 @@
 # Diagnostics
 
-<!-- implements: crates/stitchcraft-core/src/diag.rs, crates/stitchcraft-core/src/diag/registry.rs, crates/stitchcraft-core/src/text.rs, apps/stitchcraft-cli/src/commands/explain.rs -->
+<!-- implements: crates/stitchcraft-core/src/diag.rs, crates/stitchcraft-core/src/diag/registry.rs, crates/stitchcraft-core/src/diag/registry/auto.rs, crates/stitchcraft-core/src/text.rs, apps/stitchcraft-cli/src/commands/explain.rs -->
 
 A diagnostic is a problem with the user's design or input, explained in the user's terms, with a
 stable code. Diagnostics are values: the engine collects them and keeps planning whatever it can.
@@ -44,7 +44,8 @@ Codes are never reused. A retired code keeps its page with "retired in vX".
 ## The registry
 
 The codes are one table in `stitchcraft-core`, the `registry!` block in `src/diag/registry.rs`, which
-defines the `Code` enum. Each entry is one line — variant, id, severity, title — and its doc comment is
+defines the `Code` enum. Automatic digitizing's codes, `SC-x09xx`, are written in `src/diag/registry/auto.rs`,
+which keeps the table's file under the size limit, and the table hands them on in the order of their codes. Each entry is one line — variant, id, severity, title — and its doc comment is
 the long explanation (Markdown: what it means, why it matters for the sew-out, how to fix it), so the
 text users read is also the code's rustdoc. Tests reject an entry whose id is malformed or duplicated,
 whose letter disagrees with its severity, or whose explanation is missing. From that table:

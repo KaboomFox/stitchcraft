@@ -98,7 +98,7 @@ pub(in crate::auto) fn merged<'d>(
             }
             Ok(_) => {}
             Err(failed) => {
-                said.push(failed.said(Code::AutoLineMerged, "the thin lines of this area", "it keeps them", budget.max_work, element.id.clone()))
+                said.push(failed.said(Code::AutoLineMerged, "the thin lines of this area", "it keeps them", budget.max_work, element.id.clone()));
             }
         }
     }

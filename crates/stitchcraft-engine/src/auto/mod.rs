@@ -472,7 +472,7 @@ pub fn as_merged(design: &Design, budget: &Budget) -> Design {
         let shape = Shape::Fill { path: outline(std::slice::from_ref(&merge.line)), rule: FillRule::NonZero, gradient: None };
         drawn.push(Element { id, shape, ..area.clone() });
     }
-    Design::new(drawn, design.settings.clone()).unwrap_or_else(|_| design.clone())
+    Design::new(drawn, design.settings).unwrap_or_else(|_| design.clone())
 }
 
 /// Adds the outline of the fill `id` among `elements` after it, when it still sews: a running stitch along
