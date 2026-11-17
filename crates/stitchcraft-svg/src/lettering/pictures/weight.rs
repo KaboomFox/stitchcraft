@@ -256,6 +256,23 @@ mod tests {
     }
 
     #[test]
+    fn req_auto_080_a_ray_passes_an_outline_by_when_its_box_is_behind_or_beside_it() {
+        let square = Outline::of(&rect(0.0, 0.0, 10.0, 10.0)).unwrap();
+        // Ahead, behind, and wholly to either side of the ray.
+        assert!(!square.missed((-5.0, 5.0), (1.0, 0.0)));
+        assert!(square.missed((20.0, 5.0), (1.0, 0.0)));
+        assert!(square.missed((-5.0, -5.0), (1.0, 0.0)));
+        assert!(square.missed((-5.0, 15.0), (1.0, 0.0)));
+        // A box the ray only grazes along an edge, or starts on the far edge of, is not passed by.
+        assert!(!square.missed((-5.0, 0.0), (1.0, 0.0)));
+        assert!(!square.missed((10.0, 5.0), (1.0, 0.0)));
+        // A slanted ray: the box lies to its right, where the ray mirrored in the x axis would go.
+        let small = Outline::of(&rect(7.5, -6.5, 8.5, -5.5)).unwrap();
+        assert!(small.missed((0.0, 0.0), (0.8, 0.6)));
+        assert!(!small.missed((0.0, 0.0), (0.8, -0.6)));
+    }
+
+    #[test]
     fn req_auto_080_the_median_weighs_each_width_by_its_length() {
         assert_eq!(median(Vec::new()), None);
         assert_eq!(median(vec![(3.0, 2.0), (1.0, 1.0)]), Some(3.0));

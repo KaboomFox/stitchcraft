@@ -148,6 +148,9 @@ fn req_auto_080_a_font_is_as_bold_as_its_capital_letters_satin_columns_are_wide(
     // for them.
     assert_eq!(weight::of_font(&font_of("strokes", &glyph("D", "M 0,58 L 0,70", "")), &Budget::DEFAULT).unwrap(), None);
     assert_eq!(weight::of_font(&plain("small"), &Budget::DEFAULT).unwrap(), None);
+    // Nor has a font whose capitals are mostly drawn flat: their median height is 0.
+    let flat = [glyph("A", "M 0,60 L 0,70 M 2,60 L 2,70", satin), glyph("B", "M 0,60 L 5,60", ""), glyph("C", "M 0,60 L 5,60", "")];
+    assert_eq!(weight::of_font(&font_of("flat", &flat.concat()), &Budget::DEFAULT).unwrap(), None);
     // Measuring is metered: a budget too small for it ends with SC-E0004.
     let font = font_of("columns", &layers.concat());
     for allowed in [0, 1, 3, 10, 40, 60, 80] {

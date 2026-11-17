@@ -354,5 +354,8 @@ mod tests {
             [Folder { name: "barstitch_bold", files: &[] }, Folder { name: "test", files: &[] }, Folder { name: "small_font", files: &[] }];
         let offered = BuiltIn::new(&FOLDERS).choices();
         assert_eq!(offered.iter().map(|choice| choice.font.as_str()).collect::<Vec<_>>(), ["small_font", "barstitch_bold"]);
+        // Of the light font alone, only it is offered.
+        let alone = BuiltIn::new(&FOLDERS[2..]).choices();
+        assert_eq!(alone.iter().map(|choice| choice.font.as_str()).collect::<Vec<_>>(), ["small_font"]);
     }
 }

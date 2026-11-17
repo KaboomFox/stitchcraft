@@ -49,6 +49,12 @@ line = "twice += from.0 * to.1 - to.0 * from.1;"
 why = "the sum's sign is the way the ring runs, and the area is its absolute value"
 
 [[equivalent]]
+file = "crates/stitchcraft-svg/src/lettering/pictures/weight.rs"
+mutant = "replace > with < in Outline::missed"
+line = "let side = |sign: f64| corners.iter().all(|corner| sign * (toward.0 * corner.1 - toward.1 * corner.0) > 0.0);"
+why = "the side is asked for with both signs, and `sign * x < 0` is `-sign * x > 0`: the 2 tests swap, and their `or` is the same"
+
+[[equivalent]]
 file = "crates/stitchcraft-engine/src/locks/mod.rs"
 mutant = "replace < with <= in Stitching::follow"
 line = "while length < reach {"
@@ -317,6 +323,12 @@ file = "apps/stitchcraft-cli/src/commands/inspect.rs"
 mutant = "replace < with <= in run"
 line = "let short: Vec<f64> = lengths.iter().copied().filter(|l| *l < min - 1e-9).collect();"
 why = "a stitch read from a file joins needle points a whole number of tenths of a millimetre apart, and its length is never exactly 1e-9 mm less than the profile's shortest"
+
+[[equivalent]]
+file = "crates/stitchcraft-vectorcraft/src/lettering.rs"
+mutant = "replace Fonts::choices -> Vec<Choice> with vec![]"
+line = "Vec::new()"
+why = "the trait's default already returns an empty list, and `vec![]` is the same empty list"
 
 [[equivalent]]
 file = "crates/stitchcraft-vectorcraft/src/color.rs"

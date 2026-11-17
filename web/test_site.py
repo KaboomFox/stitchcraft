@@ -181,7 +181,8 @@ class BuildTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'the font bare has no licence file'):
                 build.fonts(fonts, listed)
             # The plug-in's own list names fonts, the default first.
-            self.assertEqual(build.FONTS.read_text().splitlines()[-1], 'small_font')
+            named = [line for line in build.FONTS.read_text().splitlines() if line and not line.startswith('#')]
+            self.assertEqual(named, ['small_font', 'barstitch_bold'])
 
     def test_a_change_to_the_drawing_or_its_finished_example_names_another_build(self):
         hashed = [*build.SCRIPTS, 'start.mjs', 'templates/alpine-night.svg', 'templates/alpine-night.vctemplate']

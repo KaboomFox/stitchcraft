@@ -82,6 +82,7 @@ pub stitchcraft_core::diag::Code::FillTartanTooFine
 pub stitchcraft_core::diag::Code::FillTooThin
 pub stitchcraft_core::diag::Code::FillUnderlayInsetShrinksAway
 pub stitchcraft_core::diag::Code::FillUnderlayTooThin
+pub stitchcraft_core::diag::Code::FontChosenByWeight
 pub stitchcraft_core::diag::Code::FontFileSkipped
 pub stitchcraft_core::diag::Code::FontReadAsInkStitch
 pub stitchcraft_core::diag::Code::FontSettingDefault
@@ -367,6 +368,7 @@ pub stitchcraft_core::Code::FillTartanTooFine
 pub stitchcraft_core::Code::FillTooThin
 pub stitchcraft_core::Code::FillUnderlayInsetShrinksAway
 pub stitchcraft_core::Code::FillUnderlayTooThin
+pub stitchcraft_core::Code::FontChosenByWeight
 pub stitchcraft_core::Code::FontFileSkipped
 pub stitchcraft_core::Code::FontReadAsInkStitch
 pub stitchcraft_core::Code::FontSettingDefault
