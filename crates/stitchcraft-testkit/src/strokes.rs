@@ -23,6 +23,9 @@ pub struct Stroke {
 /// Half the width of the word's strokes, in heights: its letters are drawn in strokes 0.18 wide.
 const HALF: f64 = 0.09;
 
+/// How many stitches at each end of a column's run of top stitches [`leans`] leaves out.
+pub const ENDS: usize = 2;
+
 /// Where the A starts in the word, in heights: after the M, 0.92 wide, and the gap between letters, 0.14.
 pub const A_LEFT: f64 = 1.06;
 
@@ -81,7 +84,9 @@ pub fn outside(stroke: &Stroke, p: Point) -> f64 {
 /// the letter's elements, the letter's own or one named after it with `#2`, `#3` and so on, that zigzags:
 /// the stitches before and after it, those it has, go back the other way, within 60°, each to a point of
 /// its own. A run along the column, as a column that walks its middle sews, goes on the same way, also
-/// where it turns at an end, and a triple run goes back to the point it came from.
+/// where it turns at an end, and a triple run goes back to the point it came from. The [`ENDS`] stitches at
+/// each end of a column's run are left out: they follow the column's end, as drawn, on the slant where the
+/// letter's foot is.
 pub fn leans(plan: &StitchPlan, id: &str, strokes: &[Stroke], shortest: f64) -> Vec<(Point, f64)> {
     let ours = |stitch: &stitchcraft_plan::Stitch| {
         let named = stitch.origin.element.and_then(|e| plan.element(e)).map(ToString::to_string);
@@ -104,7 +109,8 @@ pub fn leans(plan: &StitchPlan, id: &str, strokes: &[Stroke], shortest: f64) -> 
             }
         }
         for points in &runs {
-            for k in 0..points.len().saturating_sub(1) {
+            // The 2 stitches at each end of a column follow its end as drawn.
+            for k in ENDS..points.len().saturating_sub(1 + ENDS) {
                 let (a, b) = (points[k], points[k + 1]);
                 // The stitch next to it goes back within 60° of the way it came.
                 let back = |c: Point, d: Point, from: Point| {
@@ -124,10 +130,6 @@ pub fn leans(plan: &StitchPlan, id: &str, strokes: &[Stroke], shortest: f64) -> 
                     .filter(|stroke| outside(stroke, middle) <= nearest + 1e-9)
                     .map(|stroke| lean(stroke, a, b))
                     .fold(f64::INFINITY, f64::min);
-                if degrees > 80.0 && std::env::var("LEAN90").is_ok() {
-                    let w: Vec<String> = points[k.saturating_sub(3)..(k + 5).min(points.len())].iter().map(|p| format!("({:.2},{:.2})", p.x(), p.y())).collect();
-                    eprintln!("lean90 {id} k={k} {}", w.join(" "));
-                }
                 found.push((middle, degrees));
             }
         }

@@ -8,9 +8,9 @@
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
+use stitchcraft_core::{Budget, Point, Rect};
 use stitchcraft_engine::design::{Design, DesignSettings};
 use stitchcraft_engine::testsheets::pictures::word;
-use stitchcraft_core::{Budget, Point, Rect};
 use stitchcraft_plan::thickness::{Measure, Thickness};
 use stitchcraft_testkit::designs::in_place;
 use stitchcraft_testkit::fabric::{self, Shown};
