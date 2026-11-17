@@ -76,7 +76,7 @@ fn diag_sc_w0913_a_design_digitized_automatically_is_told_where_it_sews_thick_an
     let outcome = planned(&shapes(&[("auto_thick_warn_fills", "2")]));
     let said = thick(&outcome);
     assert!(outcome.plan.is_some() && said.len() == 1, "{:?}", outcome.diagnostics);
-    assert!(said[0].message.starts_with(&format!("The design sews thick. Thread: up to {:.1} fills", report.fills.value)), "{}", said[0].message);
+    assert!(said[0].message.starts_with(&format!("Thread is up to {:.1} fills thick at ", report.fills.value)), "{}", said[0].message);
     assert!(said[0].message.contains("`left`") && said[0].message.contains("`right`"), "{}", said[0].message);
     // And held to 2 needle points in a square millimetre, the ends of the rows are.
     assert_eq!(thick(&planned(&shapes(&[("auto_thick_warn_points", "2")]))).len(), 1);
@@ -87,4 +87,60 @@ fn req_auto_062_a_design_without_an_automatic_shape_is_not_measured() {
     let outcome = in_place(&ladder(6));
     assert!(outcome.plan.is_some() && thick(&outcome).is_empty(), "{:?}", thick(&outcome));
     assert!(fabric::thickness(outcome.plan.as_ref().unwrap(), &Limits::DEFAULT).warns());
+}
+
+#[test]
+fn req_auto_067_where_3_areas_meet_the_thread_as_sewn_is_one_overlap_deep() {
+    // 3 areas that meet at (10, 10): 2 squares, one above the other, and a bar to the right of both. The bar
+    // sews first and reaches 1 mm under both squares, across their rows. The upper square sews next, and
+    // reaches 0.4 mm under the lower one, along its rows, but not where the bar already does.
+    let gold = Thread::new(stitchcraft_plan::Rgb::new(200, 160, 0));
+    let shapes = vec![
+        automatic(rect("a", (0.0, 0.0), (10.0, 10.0), &RED, &[])),
+        automatic(rect("b", (0.0, 10.0), (10.0, 10.0), &BLUE, &[])),
+        automatic(rect("c", (10.0, 0.0), (10.0, 20.0), &gold, &[])),
+    ];
+    let plan = in_place(&Design::new(shapes, DesignSettings::default()).unwrap()).plan.unwrap();
+    assert_eq!(plan.elements.iter().map(ToString::to_string).collect::<Vec<_>>(), ["stitchcraft:base", "c", "a", "b"]);
+    let thickness = Thickness::of(&plan, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let at = |x: f64, y: f64| thickness.at(Measure::Fills, Point::new(x, y).unwrap());
+    let halves = |from: i32, to: i32| (from..=to).map(|k| f64::from(k) * 0.5);
+    // Measured on 2026-11-16, as sewn. Along the bar's edge with the upper square, half a millimetre inside
+    // the square: its fill, the bar's overlap under it and the base layer's one layer, 2.1 fills.
+    let seam: Vec<f64> = halves(4, 16).map(|y| at(9.5, y)).collect();
+    assert!(seam.iter().all(|fills| *fills > 1.9 && *fills < 2.3), "{seam:?}");
+    // In the bar beside that edge, where no overlap lies: its fill, the ends of its rows and its outline.
+    let beside: Vec<f64> = halves(6, 14).map(|y| at(10.5, y)).collect();
+    assert!(beside.iter().all(|fills| *fills > 1.3 && *fills < 1.7), "{beside:?}");
+    // At the corner, 3.8 fills at the most: the 2 squares, the bar's overlap under them, the upper square's
+    // 0.4 mm under the lower one beside it, and their 2 outlines. A second whole overlap there would make
+    // it 4.8.
+    let corner = halves(18, 20).flat_map(|x| halves(18, 22).map(move |y| (x, y))).map(|(x, y)| at(x, y)).fold(0.0, f64::max);
+    assert!(corner > 3.5 && corner < 4.1, "{corner}");
+}
+
+#[test]
+fn req_auto_060_test_sheet_ts13f_s_squares_measure_the_fills_their_places_name() {
+    // The ladder that a sew-out sets the limits with: its squares of 1 to 6 fills, each on one open layer.
+    let plan = stitchcraft_engine::testsheets::find("TS-13F").unwrap().plan().unwrap();
+    let thickness = Thickness::of(&plan, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    // The sheet is 112 by 57 mm round the plan's origin, and its squares are 15 mm a side, 19 mm apart.
+    let mean = |left: f64, top: f64| {
+        let spots = (0..23)
+            .flat_map(|i| (0..23).map(move |j| Point::new(left - 56.0 + 2.0 + f64::from(i) * 0.5, top - 28.5 + 2.0 + f64::from(j) * 0.5).unwrap()));
+        let fills: Vec<f64> = spots.map(|at| thickness.at(Measure::Fills, at)).collect();
+        fills.iter().sum::<f64>() / fills.len() as f64
+    };
+    for fills in 1..=6 {
+        let (left, layers) = (1.0 + f64::from(fills - 1) * 19.0, f64::from(fills));
+        // Measured on 2026-11-16: the base layer is 0.10 of a fill, and the fills on it 1.03 each.
+        for (row, top) in [("top", 0.0), ("middle", 22.0)] {
+            let mean = mean(left, top);
+            assert!(mean >= 0.98 * layers + 0.05 && mean <= 1.06 * layers + 0.15, "{row} row, {layers} fills: the mean is {mean}");
+        }
+    }
+    // The outline adds its thread along the edge, so the thickest spot of the sheet is on the last outlined square.
+    let report = fabric::thickness(&plan, &Limits::DEFAULT);
+    println!("TS-13F: thickest {:.2} at {:?}, thick {:?}, failing {:?}", report.fills.value, report.fills.at, report.thick, report.failing);
+    assert!(report.fills.value > 6.0 && report.fills.at.x() > 38.0 && report.fills.at.y() > -8.5, "{:?}", report.fills);
 }

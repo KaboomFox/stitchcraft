@@ -219,6 +219,9 @@ fn req_auto_027_on_black_fabric_nothing_shows_through_a_gap_between_neighbours()
 fn req_auto_028_one_base_layer_sews_first_under_the_designs_outer_shape() {
     // 2 rectangles that meet at x = 20, red 20 by 20 mm and blue 30 by 20 mm: one outer shape, 50 by 20 mm.
     let pair = design(vec![rect("red", (0.0, 0.0), (20.0, 20.0), &RED), rect("blue", (20.0, 0.0), (30.0, 20.0), &BLUE)]);
+    let lattice = [("auto_base_rows", "lattice")];
+    let woven = design(vec![with(rect("red", (0.0, 0.0), (20.0, 20.0), &RED), &lattice), rect("blue", (20.0, 0.0), (30.0, 20.0), &BLUE)]);
+    let in_3 = stitches(&plan(&woven), BASE);
     let plan = plan(&pair);
     let base = stitches(&plan, BASE);
     assert!(!base.is_empty(), "the plan has no element {BASE}: {:?}", plan.elements);
@@ -227,35 +230,53 @@ fn req_auto_028_one_base_layer_sews_first_under_the_designs_outer_shape() {
     let last = base.iter().map(|(at, _)| *at).max().unwrap();
     let first = ["red", "blue"].iter().flat_map(|id| stitches(&plan, id)).map(|(at, _)| at).min().unwrap();
     assert!(last < first, "the base layer's last stitch is the plan's {last}th, and a shape's first its {first}th");
-    // It lies inside the outer shape by 0.4 mm and reaches that far on every side: its rows end on its
-    // outline, level ones on the left and right sides and those at 60° on all 4.
+    // It lies inside the outer shape by 0.4 mm. Its rows run across the fills' level rows, straight up and
+    // down, and end on its outline at the top and the bottom. Its first and last row lie within a row's
+    // spacing, 2.6 mm, of its left and right sides.
     let [left, right, top, bottom] = span(&base);
-    for (side, at, wanted) in [("left", left, INSET), ("right", right, 50.0 - INSET), ("top", top, INSET), ("bottom", bottom, 20.0 - INSET)] {
+    for (side, at, wanted) in [("top", top, INSET), ("bottom", bottom, 20.0 - INSET)] {
         assert!((at - wanted).abs() < 0.05, "the base layer's {side} side lies at {at:.2}, not {wanted:.2}");
+    }
+    assert!(left > INSET - 0.05 && left < INSET + 2.6 && right < 50.0 - INSET + 0.05 && right > 50.0 - INSET - 2.6, "{left} to {right}");
+    assert!(base.iter().all(|(_, stitch)| (stitch.from.x() - stitch.to.x()).abs() < 0.3 || (stitch.from.y() - stitch.to.y()).abs() < 0.3));
+    // Sewn in 3 directions (`auto_base_rows`), its level rows end on the left and right sides too, and those
+    // at 60° on all 4.
+    let [left, right, top, bottom] = span(&in_3);
+    for (side, at, wanted) in [("left", left, INSET), ("right", right, 50.0 - INSET), ("top", top, INSET), ("bottom", bottom, 20.0 - INSET)] {
+        assert!((at - wanted).abs() < 0.05, "in 3 directions the base layer's {side} side lies at {at:.2}, not {wanted:.2}");
     }
     // It is one shape across the edge where the rectangles meet: its stitches cross that edge.
     assert!(base.iter().any(|(_, stitch)| stitch.from.x().min(stitch.to.x()) < 20.0 && stitch.from.x().max(stitch.to.x()) > 20.0));
     // Its thread paints the most: blue, 600 mm² to red's 400.
     let block = plan.blocks.get(base[0].1.block).unwrap();
     assert_eq!(block.thread.color, BLUE.color);
-    // Digitized, it is a tatami fill with the parameters of Ink/Stitch's Knockdown Fill at a stitch length of
-    // 3 mm, and the 2 fills on it sew no underlay of their own.
+    // Digitized, it is a tatami fill of one layer at a stitch length of 3 mm, its rows a quarter turn from
+    // the fills' and as far apart as those of Ink/Stitch's Knockdown Fill, and the 2 fills on it sew no
+    // underlay of their own.
     let (elements, _) = auto::digitized(&pair, &Budget::DEFAULT);
     let element = elements.iter().find(|element| element.id.to_string() == BASE).unwrap();
-    let wanted = [
-        ("max_stitch_length_mm", "3"),
-        ("row_spacing_mm", "2.5981"),
-        ("staggers", "2"),
-        ("underpath", "false"),
-        ("fill_underlay", "true"),
-        ("fill_underlay_angle", "60 -60"),
-        ("fill_underlay_max_stitch_length_mm", "3"),
-        ("fill_underlay_row_spacing_mm", "2.5981"),
-        ("underlay_underpath", "false"),
-    ];
-    for (key, value) in wanted {
-        assert_eq!(element.params.get(key), Some(value), "{key}");
+    let rows = [("max_stitch_length_mm", "3"), ("row_spacing_mm", "2.5981"), ("staggers", "2"), ("underpath", "false")];
+    let across: Vec<(&str, Option<&str>)> = rows.iter().map(|(key, value)| (*key, Some(*value))).collect();
+    let one = [("fill_underlay", Some("false")), ("angle", Some("90")), ("fill_underlay_angle", None), ("underlay_underpath", None)];
+    for (key, value) in across.iter().chain(&one) {
+        assert_eq!(element.params.get(key), *value, "{key}");
     }
+    // In 3 directions it has every parameter that the Knockdown Fill writes: level rows on an underlay at 60°
+    // and −60° with the same length and spacing.
+    let (elements, _) = auto::digitized(&woven, &Budget::DEFAULT);
+    let element = elements.iter().find(|element| element.id.to_string() == BASE).unwrap();
+    let three = [
+        ("fill_underlay", Some("true")),
+        ("fill_underlay_angle", Some("60 -60")),
+        ("fill_underlay_max_stitch_length_mm", Some("3")),
+        ("fill_underlay_row_spacing_mm", Some("2.5981")),
+        ("underlay_underpath", Some("false")),
+        ("angle", None),
+    ];
+    for (key, value) in across.iter().chain(&three) {
+        assert_eq!(element.params.get(key), *value, "in 3 directions, {key}");
+    }
+    let (elements, _) = auto::digitized(&pair, &Budget::DEFAULT);
     assert_eq!(elements.first().map(|element| element.id.to_string()).as_deref(), Some(BASE));
     for id in ["red", "blue"] {
         let fill = elements.iter().find(|element| element.id.to_string() == id).unwrap();
@@ -268,7 +289,8 @@ fn req_auto_028_the_base_layer_keeps_a_hole_and_leaves_a_part_narrower_than_twic
     // A square 30 mm a side with a hole 6 mm a side, and a strip 0.7 mm wide and 10 mm long from its right
     // side: Ink/Stitch's knockdown at an offset of -1 mm grows such a hole to 8 mm.
     let ring: [&[(f64, f64)]; 2] = [&[(0.0, 0.0), (30.0, 0.0), (30.0, 30.0), (0.0, 30.0)], &[(12.0, 12.0), (12.0, 18.0), (18.0, 18.0), (18.0, 12.0)]];
-    let holed = design(vec![fill("holed", &ring, &RED, &[]), rect("strip", (30.0, 14.65), (10.0, 0.7), &RED)]);
+    // The base layer sews in 3 directions here, so that its rows end on every side of its shape.
+    let holed = design(vec![fill("holed", &ring, &RED, &[("auto_base_rows", "lattice")]), rect("strip", (30.0, 14.65), (10.0, 0.7), &RED)]);
     let plan = plan(&holed);
     let base = stitches(&plan, BASE);
     assert!(!base.is_empty(), "the plan has no element {BASE}: {:?}", plan.elements);
@@ -424,18 +446,27 @@ fn req_auto_028_the_base_layer_goes_by_the_settings_of_the_lowest_shape() {
     assert!((inside - (38.0 * 28.0 - 8.0 * 8.0 + rounded(1.2))).abs() < 0.02, "{inside}");
     let outside = area(&[("auto_base_offset_mm", "0.5"), ("auto_base_keep_holes", "false")]);
     assert!((outside - (41.0 * 31.0 - rounded(0.5))).abs() < 0.02, "{outside}");
-    // A stitch length of 2 mm: rows 2 mm times √3/2 apart, in the underlay too.
-    let shorter = holed(&[("auto_base_stitch_length_mm", "2")]);
-    let (elements, _) = auto::digitized(&shorter, &Budget::DEFAULT);
-    let base = elements.iter().find(|element| element.id.as_str() == BASE).unwrap();
+    // A stitch length of 2 mm: rows 2 mm times √3/2 apart, in the underlay of 3 directions too.
+    let based_on = |settings: &[(&str, &str)]| {
+        let design = holed(settings);
+        let (elements, _) = auto::digitized(&design, &Budget::DEFAULT);
+        elements.iter().find(|element| element.id.as_str() == BASE).unwrap().clone()
+    };
+    let shorter = based_on(&[("auto_base_stitch_length_mm", "2"), ("auto_base_rows", "lattice")]);
     for (key, value) in [
         ("max_stitch_length_mm", "2"),
         ("row_spacing_mm", "1.7321"),
         ("fill_underlay_max_stitch_length_mm", "2"),
         ("fill_underlay_row_spacing_mm", "1.7321"),
     ] {
-        assert_eq!(base.params.get(key), Some(value), "{key}");
+        assert_eq!(shorter.params.get(key), Some(value), "{key}");
     }
+    let shorter = based_on(&[("auto_base_stitch_length_mm", "2")]);
+    assert_eq!([shorter.params.get("max_stitch_length_mm"), shorter.params.get("row_spacing_mm")], [Some("2"), Some("1.7321")]);
+    // One layer's rows lie a quarter turn from the fills' rows, towards 0°: across rows at 30° they run at
+    // −60°, across rows at −30° at 60°, and across level rows at 90°.
+    let angle = |fills: &str| based_on(&[("auto_fill_angle", fills)]).params.get("angle").map(str::to_string);
+    assert_eq!([angle("30"), angle("-30"), angle("0"), angle("90")].map(Option::unwrap), ["-60", "60", "90", "0"]);
 }
 
 #[test]

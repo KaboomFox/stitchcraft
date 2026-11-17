@@ -77,6 +77,11 @@ impl Envelope {
         env
     }
 
+    /// Whether `p` lies within these bounds, edges included.
+    pub(crate) fn holds(&self, p: Point) -> bool {
+        p.x() >= self.min_x && p.x() <= self.max_x && p.y() >= self.min_y && p.y() <= self.max_y
+    }
+
     /// Whether `other` lies within these bounds, edges included.
     pub(crate) fn covers(&self, other: &Envelope) -> bool {
         other.min_x >= self.min_x && other.max_x <= self.max_x && other.min_y >= self.min_y && other.max_y <= self.max_y
@@ -253,6 +258,17 @@ mod tests {
 
     fn square() -> Vec<Point> {
         vec![p(0.0, 0.0), p(4.0, 0.0), p(4.0, 4.0), p(0.0, 4.0), p(0.0, 0.0)]
+    }
+
+    #[test]
+    fn bounds_hold_the_points_within_them_edges_included() {
+        let bounds = Envelope::of(&[p(1.0, 2.0), p(3.0, 5.0)]);
+        for inside in [p(2.0, 3.0), p(1.0, 2.0), p(3.0, 5.0), p(1.0, 5.0), p(3.0, 2.0)] {
+            assert!(bounds.holds(inside), "{inside:?}");
+        }
+        for outside in [p(0.999, 3.0), p(3.001, 3.0), p(2.0, 1.999), p(2.0, 5.001)] {
+            assert!(!bounds.holds(outside), "{outside:?}");
+        }
     }
 
     #[test]

@@ -173,6 +173,10 @@ fn sort(
                 sorted.fired.push(fired(RuleId::Refused, Some(measures)));
                 kept(sorted, part, columns::long(id, stitch, bounds));
             }
+            Made::Crowded(most, measures) => {
+                sorted.fired.push(fired(RuleId::Refused, Some(measures)));
+                kept(sorted, part, columns::piled(id, most));
+            }
             Made::Unmade => {
                 sorted.fired.push(fired(RuleId::Refused, None));
                 kept(sorted, part, columns::unmade(id, bounds));
@@ -739,6 +743,28 @@ mod tests {
         let [said] = sorted.said.as_slice() else { panic!("{:?}", sorted.said) };
         assert_eq!((said.code, said.element.as_ref()), (Code::AutoSatinFilled, Some(&area)));
         assert!(said.message.contains("would sew a stitch 7.31 mm long between its rails, longer than the widest satin column, 7 mm"), "{said}");
+    }
+
+    #[test]
+    fn req_auto_068_a_part_whose_column_would_crowd_its_stitches_stays_in_the_fill_and_says_so() {
+        // A band 2.5 mm wide bent three quarters of the way round a point 1 mm inside it: a column along it
+        // would sew 3.5 mm of its outer edge to each millimetre of its inner one.
+        let arc = |radius: f64, from: f64, to: f64| {
+            (0..=48).map(move |i| {
+                let (sin, cos) = sin_cos(from + (to - from) * f64::from(i) / 48.0);
+                (radius * cos, radius * sin)
+            })
+        };
+        let turn = 1.5 * std::f64::consts::PI;
+        let band = outline(&arc(3.5, 0.0, turn).chain(arc(1.0, turn, 0.0)).collect::<Vec<_>>());
+        let area = ElementId::new("area").unwrap();
+        let sorted = sorted(&area, vec![band.clone()], &bounds(1.0), &AutoParams::defaults(), &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!((sorted.filled, sorted.along.len()), (vec![band], 0));
+        let [Fired { rule: RuleId::Refused, measures: Some(measures) }] = sorted.fired.as_slice() else { panic!("{:?}", sorted.fired) };
+        assert_eq!(measures.lines, 1);
+        let [said] = sorted.said.as_slice() else { panic!("{:?}", sorted.said) };
+        assert_eq!((said.code, said.element.as_ref()), (Code::AutoSatinFilled, Some(&area)));
+        assert!(said.message.contains("of one edge to 1 mm of the other, more than 2 mm"), "{said}");
     }
 
     #[test]

@@ -234,8 +234,8 @@ numbers):
 The satin stitches that lean along their column (`SC-W0208`), which a fan sews, fell from 26 to 34 a dog to
 4 to 8. The thread changes rose with M13.21, and each is a rethread by hand on a machine with one needle.
 A design of many small fills has many lines, each of which sews after the fills it borders. M13.22
-searches for the order that changes thread least, and the dogs change thread 8, 12, 8 and 12 times
-([Sewing order](#sewing-order)). With `auto_fill_uneven` off they change thread 6, 9, 7 and 10 times and
+searches for the order that changes thread least, and the dogs changed thread 8, 12, 8 and 12 times
+([Sewing order](#sewing-order)). Since M13.30 the second changes thread 13 times. With `auto_fill_uneven` off they change thread 6, 9, 7 and 10 times and
 jump 113, 135, 105 and 132 times, where they jump 84, 91, 79 and 108 times as planned. The switch trades
 thread changes for jump threads.
 
@@ -551,7 +551,9 @@ mends it in 4 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
 4. **Overlaps** (`REQ-AUTO-007`). Pull draws stitches in from the edges of their shape, so shapes that only
    meet show fabric between them. Each automatic area reaches its overlap, 1 mm, under each area, satin
    column, filled line or part's line or column sewn after it, from where it touches that shape, and no
-   further than that shape as it is sewn. The areas are taken from the last sewn to the first, so each
+   further than that shape as it is sewn. Under an area it reaches that far along its rows and less across
+   them, half as far under a narrow part, and not where an area sewn before it already sews
+   ([Less thread where areas overlap](#less-thread-where-areas-overlap)). The areas are taken from the last sewn to the first, so each
 shape is taken as it is sewn: across a line narrower than the overlap, an area reaches on under the area beyond it.
    Shapes touch where their edges meet within twice the shapes' tolerance, so a gap that rounding left
    between edges drawn as one closes too. Along an edge where a shape runs on near the area without
@@ -833,7 +835,8 @@ StitchCraft's base layer (`REQ-AUTO-028`) is that fill, made by automatic digiti
    the message that says which rule chose a shape's stitches, and it takes the next free one.
 
 What it costs on the running dog in 9 threads, by Ink/Stitch's counts above at an offset of −0.6 mm, and
-how much of a gap its 3 directions of thread 0.4 mm wide would hide:
+how much of a gap 3 directions of thread 0.4 mm wide would hide, as it sewed before M13.30 gave it one
+layer ([Less thread where areas overlap](#less-thread-where-areas-overlap)):
 
 | Stitch length | Row spacing | Stitches | Less the fills' own underlays | At 600 stitches a minute | Of a gap, hidden |
 |---|---:|---:|---:|---:|---:|
@@ -899,6 +902,180 @@ widened every satin column on both sides, which laid stitches astray, so these a
 
 At 1 mm the pictures sewed 2.2 to 4.7 % more stitches, and at 1.5 mm 3.9 to 9.5 % more. At 1 mm one gap of
 the running dog in 6 threads was new, 2.0 mm² at (40.9, 42.4): the skewed end of the blaze's column.
+
+### Less thread where areas overlap
+
+An overlap is thread under thread. M13.29 measured that the overlaps cause most of the thread where a
+traced picture sews thick ([How thick a design sews](#how-thick-a-design-sews)), and the owner's first
+concern on 2026-11-16 was that thickness. `REQ-AUTO-067` (M13.30) takes away the part of an overlap that
+the pull doesn't ask for (`auto::neighbours::under`):
+
+1. **The overlap follows the rows.** The thread pulls a row in at its ends and not sideways. So an area
+   reaches its overlap, 1 mm, along its rows, and its pull compensation, 0.4 mm, across them. What it sews
+   under a shape is every point of that shape within an ellipse with those half axes round a point where the
+   2 touch. Across its rows the overlap is never wider than along them, and without pull compensation
+   it is 0.01 mm wide.
+2. **Half as far under a narrow part.** Under a part of an area that is narrower than 3 overlaps, the
+   overlap is half: 0.5 mm along the rows, and across them no more than that. A part is narrow where no disc 3
+   overlaps across fits on the area. The areas on both sides of a part just under 3 mm wide then leave a
+   third of it free, where 2 whole overlaps filled a part 2 mm wide between them. This is the owner's idea of
+   2026-11-16, and digitizers work so by hand: one guide extends the lower colour 1.5 mm under bold areas,
+   1 mm under fine details and 0.3 to 0.5 mm under delicate lettering
+   ([Stitch Era's magic wand, a retailer's article](https://embroideryhoopstore.com/blogs/articles/stitch-era-magic-wand-digitizing-that-actually-stitches-clean-vector-vs-bitmap-underlay-and-the-1-5-mm-overlap-fix)).
+3. **One overlap under a shape.** Where 2 areas would both sew under a shape sewn after them, only the
+   area sewn first sews there. This is the owner's idea too: one overlap then lies under the shape at that
+   place, where 2 lay at the corner of 3 shapes. The areas are taken from the first sewn to the last. A piece of an overlap that this cuts off from what shows of its area is left out.
+
+Under a satin column, and under the part that a running stitch or a column sews along the middle of, an area
+reaches its whole overlap whichever way its rows run, as before. A column's stitches don't cover its
+ends and its bends as a fill's rows cover an area, and a running stitch covers a thread's width of its part.
+Where what an area sews across a line's part meets a shape beyond the line, the area reaches on under
+that shape from there. Of the 2 areas beside a line of fur, the one sewn first then sews the line's part
+and 1 mm under the other, and the other gives the part up: their overlap is whole, whatever the line's
+width.
+
+When parting an area's overlaps needs more work than the budget allows, the area sews its whole overlap,
+and `SC-I0904` says so. `SC-W0913` tells of a place that still has 3 fills of thread or more.
+
+**Where the thread lay.** Before the step, the running dog in 9 threads had 629 mm² at 3 fills or more.
+Each stitch of its plan was put to what it sews, and the thread summed over each window of 1 mm, as the
+measure sums it. The mean window of the thick area had 4.0 fills:
+
+| Thread in the thick area | Fills, mean |
+|---|---:|
+| Overlaps of other areas | 1.47 |
+| Satin columns | 0.84 |
+| The area's own fill | 0.71 |
+| Base layer | 0.43 |
+| Outlines | 0.25 |
+| Running lines | 0.18 |
+| Lock stitches | 0.11 |
+| Travel stitches | 0.03 |
+
+Of the thick area, 61 % had the overlaps of 2 areas or more on it, and 20 % those of 3 or more. An outline lay
+on an overlap in 59 %, and an overlap under a column or a line in 33 %. 2 columns joined in 6 %. Locks
+made half a fill or more in 7 %, and travel stitches in 1 %. A third of the thick area lay between 3.0
+and 3.5 fills, because a straight edge between 2 fills is at the limit by itself. The upper fill and the
+overlap are a fill each, and the ends of their rows a quarter each. The base layer adds 0.3 to 0.45, and
+the upper fill's outline a quarter.
+
+**What was measured.** Each change was built as a switch and measured alone and with the others on the
+standard pictures. These are the running dog's numbers in 9 threads. The bare share is what the top thread
+leaves of the design ([covering the fabric](#covering-the-fabric)). The last column is that share once every
+top stitch is pulled in by 0.4 mm where the thread turns, with the gaps that then open:
+
+| Change | At 3 fills or more, mm² | At 6 or more | Bare, % | Stitches | Pulled in: bare, %, and gaps |
+|---|---:|---:|---:|---:|---|
+| As sewn before | 629 | 6.2 | 0.000 | 14,380 | 0.037, none |
+| One overlap under a shape | 522 | 0 | 0.000 | 13,984 | 0.140, 1 |
+| The overlap across the rows 0.4 mm | 528 | 2.0 | 0.000 | 13,574 | 0.056, none |
+| Half the overlap under a narrow part of an area | 502 | 1.0 | 0.012 | 14,019 | 0.148, 1 |
+| Half the overlap under columns and lines' parts | 589 | 4.8 | 0.007 | 14,241 | 0.098, 1 |
+| At every other turn, the rows go on past the area | 538 | 2.2 | 0.013 | 14,246 | 0.115, 1 |
+| A column reaches 0.4 mm past a rail | 611 | 5.2 | 0.000 | 14,380 | 0.043, none |
+| No outline along an edge another area reaches under | 548 | 2.2 | 0.000 | 13,400 | 0.038, none |
+| An overlap of 0.5 mm | 437 | 1.0 | 0.012 | 13,638 | 0.173, 1 |
+| No overlap | 155 | 0 | 0.409 | 12,849 | 2.533, 47 |
+| The rules as built, with the overlap across a line | 491 | 1.2 | 0.000 | 14,028 | 0.077, none |
+
+The owner also asked on 2026-11-16 whether the overlap could sew every other row. A fill sews its rows out
+and back, so a row can't stop short alone: it was built as rows that reach on past the area at every other
+turn. With the other rules it measured the same thick area as the overlap by the rows, 393 mm² against 395, and left
+twice the fabric bare. It was left out, and nothing in the fill changed.
+
+Half the overlap under columns and under the parts of lines took 5 to 8 points more off. It left 6 slivers
+on the dog on turf in 9 threads, where an area no longer reached across a line of fur, and on the running
+dog in 6 threads it opened a gap of 0.6 mm² beside a column, which fails the check of the cover. A column
+that reaches 0.4 mm past its rail takes 3 % off a dog and reverses `REQ-AUTO-029`. Leaving the outline out
+along an edge that an area sewn before reaches under takes 13 to 17 points more off, the largest change
+left. The owner chose the outlines ([An outline round a fill](#an-outline-round-a-fill)), so that is hers
+to decide. The area sewn last keeping a shared place, in place of the first, opened 4 to 8 gaps once the
+thread was pulled in: the first area's rows then end on its own edge with the shape. Without the overlap
+across a line's part, the 2 areas beside a line of fur overlapped by 1 mm less the line's width, and the
+running dog left 0.184 % bare once pulled in. With both areas keeping the line's part, the cover was as
+before and the dogs had only 11 to 16 % less thick area.
+
+**The base layer has one layer.** The overlaps were not all of it. The base layer sewed as Ink/Stitch's
+knockdown fill does, in 3 layers 60° apart. Each layer sews along the piece's edge from the end of one row to the next, so 3 in 10 of the base layer's millimetres of thread lay along its own edge: 894 of 2,995 mm on
+the running dog in 9 threads. There it measured 1.2 to 1.5 fills, and 2.3 at its worst, under the ends of
+the fills' rows and under the outline. It measured 1 fill or more on 106 mm² of that dog's 1,841. Every
+automatic fill has the rows of one angle, `auto_fill_angle`. So the base layer now sews one layer, its rows
+across the fills' rows: the underlay a fill is usually given, once under the whole design. The setting
+`auto_base_rows` at `lattice` sews the 3 layers as before, for a fabric with pile.
+
+Measured and left out: the base layer cut away under the overlaps, which leaves 43 to 58 % more thick area,
+since each layer of each piece then sews along its new edges, beside each edge between 2 fills. The base layer cut
+away under satin columns leaves 2 to 5 % more and a gap with nothing under it. With `underpath` on, the needle moves from row to row inside the base layer and not along its edge, which leaves 1 to 2 % more. 2 layers leave 10 to 17 % less than 3, and one
+layer 22 to 29 % less, whichever way its rows run. The check of the cover gives each of these the same result: it knows where the base layer's shape lies, and not where its thread does.
+
+**A part whose one satin column would crowd its stitches is filled** (`REQ-AUTO-068`). What was left at 6
+fills or more was no overlap and no fill. A fill's own thread reaches 2.5 fills nowhere on the dogs. A
+satin column of a small ragged part does: a column lays 1.25 fills where it runs straight, and each dog had
+34 to 40 mm² where one column alone laid 2.5 or more, up to 6.6. A column sews as many needle points on one
+rail as on the other, so where one rail is short its stitches meet: a part 3 mm across of the dog on turf
+sewed 19 stitches from a rail 5 mm long to one of 0.8 mm. A part that would sew as one column is now
+filled when the column would sew more than 2 mm of one rail to 1 mm of the other. A part of several columns
+isn't measured, since a column that ends under another is cut on the slant and fans there by the way it is
+drawn: measured on every part, the bound filled every T and the letters of TS-13B. A part with a hole stays
+a column too, as the white round TS-13D's star does: its fill would sew in pieces round the star. Measured
+by the whole rails' lengths, the bound filled almost nothing: the dogs' columns crowd at one bend.
+
+**What it changed**, as `--auto` sews each picture, before the step and after it:
+
+| Picture | Thickest, fills | At 3 fills or more, mm² | At 6 or more, mm² | Bare, % | Stitches | Jump threads |
+|---|---|---|---|---|---|---|
+| Lettered patch | 5.8 to 5.3 | 142 to 107 | 0 | 0.000 | 4,736 to 4,089 | 7 |
+| TS-13A, digitized half | 5.7 to 5.6 | 124 to 78 | 0 | 0.003 | 13,809 to 11,524 | 18 |
+| TS-13B, digitized half | 6.6 to 5.6 | 120 to 49 | 0 | 0.059 to 0.062 | 8,205 to 6,973 | 43 |
+| TS-13C, digitized half | 6.2 to 5.1 | 339 to 145 | 0 | 0.000 | 7,233 to 6,111 | 13 |
+| TS-13D, digitized half | 7.5 to 6.5 | 229 to 109 | 1.0 to 0 | 0.000 | 10,293 to 8,878 | 12 |
+| TS-13E, digitized half | 5.3 to 4.9 | 99 to 33 | 0 | 0.000 | 3,108 to 2,767 | 5 |
+| Traced pear | 6.4 to 6.5 | 40 to 24 | 0 | 0.000 | 5,517 to 4,689 | 2 |
+| Traced dog on turf, 6 threads | 8.4 to 5.5 | 436 to 178 | 11.8 to 0 | 0.025 to 0.017 | 11,382 to 10,514 | 69 to 71 |
+| Traced dog on turf, 9 threads | 8.5 to 5.5 | 480 to 206 | 11.0 to 0 | 0.081 to 0.038 | 12,238 to 11,489 | 79 to 80 |
+| Traced running dog, 6 threads | 7.9 to 6.1 | 511 to 184 | 6.5 to 0 | 0.025 to 0.000 | 12,427 to 11,550 | 60 to 58 |
+| Traced running dog, 9 threads | 8.0 to 7.0 | 629 to 280 | 6.2 to 0 | 0.000 | 14,380 to 13,259 | 83 to 74 |
+
+The overlaps alone left the dogs 363, 378, 412 and 491 mm² at 3 fills or more. With the base layer in 3
+layers and the rest as it is now, they have 268, 320, 292 and 400.
+
+The step's aims were no place at 6 fills or more and half the area at 3 or more on each dog, with the
+cover as it was. No picture has a piece of 1 mm² or more at 6 fills or more, the smallest that the measure
+counts, though single spots of 4 pictures measure 6.1 to 7.0. The dogs have 55 to 64 % less area at 3
+or more. The cover is as it was by its check. No gap lies where the base layer isn't under it, and the bare share is lower or as it was. The dog on turf in 9 threads has one sliver of 0.18 mm², and the running dog in 6 lost its one. What is worse:
+
+- The dog on turf in 9 threads changes thread 13 times where it changed 12, and the step's aim was no more
+  than before. It was traced, by sewing each of that dog's 19 crowded parts as a column again. The dog
+  changes thread 12 times with the parts of 2 grey shapes at the top of the picture as columns, which sew
+  3.9 and 2.7 mm of one rail to a millimetre of the other. It also does with 2 parts of a tan and a pale
+  grey shape lower down as columns, 4.9 and 5.9 mm to a millimetre. One part alone doesn't do it. The
+  cause is rule 2 of the [sewing order](#sewing-order): a line sews after the fill it borders, and a line
+  beside a column sews when its thread does. Each part that became a
+  fill makes the lines of other threads that touch it wait for its thread. The search for the fewest
+  changes is exact, so with these fills every order within rules 1 and 2 has 13 or more. The twelfth change comes
+  back only by sewing 2 crowded columns again, or by letting a line sew before a fill it borders, which
+  M13.22 measured: more stitches astray and more slivers. Neither was done.
+- The dogs' satin columns are fewer: 10, 13, 6 and 11 where they were 25, 31, 21 and 28. The parts that
+  sewed as short bent columns sew as flat fills, which changes the look of the fur close up.
+- 16 stitches of the dogs show on another colour for 1 mm or more, where 14 did. Each of the new ones was
+  traced: a row of the area sewn first lies on the part of a running line 0.5 to 0.8 mm wide, beside the
+  line's thread, where the area beyond lay before. No cheap change takes them away. The line's thread is
+  0.4 mm wide and its part wider, so a row of one of the 2 areas lies on the part beside the thread, or
+  the fabric shows there. With both areas sewing the part, as before the step, the dogs kept all but 11
+  to 16 % of their thick area, and with neither sewing across it the running dog left 0.184 % bare once
+  pulled in.
+- The dog on turf leaves 2 and 1 more jump threads. One is a jump inside an outline in 2 pieces. The others
+  are moves that were under the 3 mm an element's end may lie from the next start, and are 3.0 to 4.0 mm
+  now that an end moved by up to 1 mm.
+- Once the thread is pulled in by 0.4 mm at every turn, 3 of the dogs leave 0.1 to 0.7 mm² more of their
+  area with no thread at all on it, of 1,640 to 1,940 mm², and one 0.15 mm² less.
+- A fill's base is thinner. Whether a fill lies flat on the fabric over one layer is for MC-8 to sew: nothing
+  here measures it.
+
+A straight edge between 2 fills that crosses their rows still measures about 2.9 fills by itself: the
+upper fill 1.0, the ends of its rows 0.25, the overlap 1.0, the ends of its rows 0.25, the base layer 0.1
+and the outline 0.25. The 178 to 280 mm² that the dogs keep at 3 fills or more are such edges with a column or a third shape beside them. 2 parts could still go. One is the outline along an edge between 2 areas, which the owner chose. The other is the overlap itself, which costs cover. The demo's badge was
+not measured again.
 
 ### On black fabric
 
@@ -1031,8 +1208,9 @@ Counted in processor instructions on the sheets TS-13A and TS-13B, the measure t
 
 ### What today's designs measure
 
-Measured on 2026-11-16 as `--auto` sews each picture, with the base layer and the outline on. The last
-2 pairs of columns give the thickest spot and the area at 3 fills or more with one of them off.
+Measured on 2026-11-16 as `--auto` sewed each picture before M13.30, with the base layer and the outline
+on. What M13.30 changed is measured in [Less thread where areas overlap](#less-thread-where-areas-overlap).
+The last 2 pairs of columns give the thickest spot and the area at 3 fills or more with one of them off.
 
 | Picture | Design, mm² | Thickest, fills | At 3 fills or more, mm² | At 6 or more, mm² | Most needle points | Base layer off | Outline off |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -1054,7 +1232,10 @@ sews no outline, because its letters are satin columns.
 
 On TS-13B the letters of one word measure differently, and that is what sews. In the word 15 mm tall
 the base layer has a piece under the M, the A, the T and the H, whose strokes sew as 2 to 4 columns
-each. It has none under the C, which sews as one column with an underlay of its own. The smaller words
+each. It has none under the C, which sews as one column with an underlay of its own. A piece of the
+base layer is the letter moved in by 0.4 mm, and it is kept only where a disc as wide as the base layer's
+rows are apart, 2.6 mm, fits on it. The strokes are 2.7 mm wide. A disc fits only where 2 strokes
+join, and the C is one stroke with no join. The smaller words
 have no base layer, and a letter is thick there where its columns meet: the M has 4 columns and 3
 joins. In the word 4 mm tall the M and the A still sew as columns, and the other letters as lines of
 running stitch.
@@ -1093,11 +1274,11 @@ by changing one setting, and the bare share is what the top thread leaves of the
 | Smallest area 10 mm² | 323 | 0.138 | 11,321 |
 
 Halving the overlap takes away 30 % and still covers. Merging patches under 10 mm² takes away 49 %, and
-changes the picture. 2 more ways need code and are not measured. One cuts an area's overlap away
-where 2 fills already lie under it, as other embroidery software removes hidden stitching. The other
-sews the overlap with rows twice as far apart. Fills with rows 0.4 mm apart would lower every number of
-this page by 37 %. The step that removes thread is M13.30 ([roadmap](../plan/roadmap.md)), and the
-bare-fabric measure checks each change: one that lowers the thickness and leaves a gap is not taken.
+changes the picture. 2 more ways needed code. One cuts an area's overlap away where 2 fills already lie
+under it, as other embroidery software removes hidden stitching. The other sews the overlap with rows
+twice as far apart. Fills with rows 0.4 mm apart would lower every number of this page by 37 %. M13.30
+built and measured both, with the bare-fabric measure checking each change
+([Less thread where areas overlap](#less-thread-where-areas-overlap)).
 
 ## Sewing order
 
@@ -1241,7 +1422,8 @@ left 71, 73, 64 and 84. Since M13.27 filled 5 of their blobs they jump 79, 91, 7
 71, 78, 70 and 93 jump threads. With an outline after each fill (M13.28,
 [an outline round a fill](#an-outline-round-a-fill)) they jump 84, 97, 82 and 109 times, and leave 76, 84,
 73 and 96. With runs under the shapes sewn later (M13.17, [runs in place of jumps](#runs-in-place-of-jumps))
-they leave 69, 79, 60 and 83. The traced pear and the test pictures change thread once for each thread after
+they leave 69, 79, 60 and 83. Since M13.30
+([less thread where areas overlap](#less-thread-where-areas-overlap)) they leave 71, 80, 58 and 74. The traced pear and the test pictures change thread once for each thread after
 the first, as they did. The digitized halves of the TS-13 sheets change thread 2, 4, 4 and 6 times, where
 they changed 5, 4, 5 and 8 times. TS-13B's black sews twice: its base layer and letters first, and the
 lines of its windows after the fills they border. The search keeps 87 to 3,584 rows of batches on the
@@ -1278,11 +1460,11 @@ jump threads, where it left 4: the narrow ends of its olive and dark olive bands
 fills with their bands (M13.21). `tests/auto_fabric.rs` keeps the moves and the jump threads as measured.
 
 The owner's dog, traced from her 2 photos in 6 and in 9 threads (M13.15, `docs/fixtures/README.md` › The
-traced dogs), lays 14 stitches astray: 2 and 5 on the dog on turf in 6 and in 9 threads, and 5 and 2 on the
+traced dogs), lays 16 stitches astray: 5 and 8 on the dog on turf in 6 and in 9 threads, and 1 and 2 on the
 running dog. 2 are straight moves, 2.25 and 2.1 mm long, each between 2 lines of one narrow part, which is
-a stitch because it is shorter than the collapse length. 2 are stitches of outlines, 2.34 and 2.24 mm
-long, each along the edge of a thin, ragged fill. The other 10 are rows of fills, each up to 4 mm
-long, a fill's stitch. M13.21, which fills where columns sewed, brought 20 of them. Of the 6 that were traced
+a stitch because it is shorter than the collapse length. 3 are stitches of outlines, 1.76 to 2.34 mm
+long, each along the edge of a thin, ragged fill. The other 11 are rows of fills, each up to 4 mm
+long, a fill's stitch. Before M13.30 the dogs laid 14, which the rest of this paragraph counts up to. M13.21, which fills where columns sewed, brought 20 of them. Of the 6 that were traced
 then, 5 lay along a line of fur of another colour that sews on the fill or that the fill reaches under.
 The line sews as wide as its thread, and the row shows beside it. The sixth lay under the edge of a column
 sewn after its fill. M13.22's order took 8 of the 20 away and brought 4 others, beside neighbours that
@@ -1291,7 +1473,9 @@ now sew in another order. M13.27 fills 5 blobs of fur that sewed as columns
 in both running dogs, the second move crosses a blob that a column covered before, and one row of the
 running dog in 9 threads no longer shows: 19 stitches where there were 17. M13.28 sews an outline after
 each fill, and the fills end elsewhere. 8 of the rows no longer show and one other does, and the 2
-stitches of outlines came: 14 stitches. Which neighbour hid each of the 8 rows was not traced. Before
+stitches of outlines came: 14 stitches. Which neighbour hid each of the 8 rows was not traced. M13.30
+left 11 rows where 10 lay, on other shapes, and a third stitch of an outline
+([less thread where areas overlap](#less-thread-where-areas-overlap)). Before
 M13.21 the dogs laid 7 stitches astray. 2 of them were satin stitches 7.89 and 4.72 mm long that fanned
 across a shape biting into their column, and M13.21 removed those. `tests/auto_photos.rs` lists each stitch,
 with where it lies and why, and its case fails on any other stitch astray and on any listed one that no

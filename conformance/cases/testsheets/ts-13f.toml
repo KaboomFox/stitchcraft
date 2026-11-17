@@ -1,0 +1,14 @@
+# The ladder of squares that sets the limits of how thick a design may sew: squares of 1 to 6 fills on each
+# other, bare and under a satin outline, and fills cut into small patches that reach under each other. None
+# of it is digitized automatically, so the sheet says nothing.
+# The invariants (REQ-PLAN-…) run on the sheet's plan; the golden file is the bytes MC-8 sews.
+id = "ts-13f"
+requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PLAN-007", "REQ-PRF-002", "REQ-FMT-001"]
+kind = "testsheet"
+sheet = "TS-13F"
+profile = "brother-pe800-5x7"
+
+[expect]
+size_mm = [112.0, 57.0]
+diagnostics = []
+golden = ["golden/testsheets/TS-13F.pes"]

@@ -3,9 +3,10 @@
 //!
 //! The fabric's colour isn't the design's to choose, and on dark fabric a slit between 2 shapes shows as a
 //! dark line. So a design digitized automatically first sews one open fill under everything, in one thread,
-//! which then lies under each slit (`docs/src/design/image-to-embroidery.md` › Covering the fabric). It is
-//! the fill that Ink/Stitch's Knockdown Fill tool makes, with that tool's parameters, so no stitch code is
-//! new here: this module finds its shape, and the tatami fill sews it.
+//! which then lies under each slit (`docs/src/design/image-to-embroidery.md` › Covering the fabric). Its
+//! shape is the one that Ink/Stitch's Knockdown Fill tool makes, and with `auto_base_rows` at `lattice` so
+//! are its 3 layers of rows. By default it sews one layer, across the rows of the fills on it. No stitch
+//! code is new here: this module finds its shape, and the tatami fill sews it.
 //!
 //! - **The shape** is what the automatic elements paint together once the specks are merged: each area its
 //!   region, each line the area its stroke covers, and each part's line or column its part. It is grown by
@@ -36,6 +37,7 @@ use crate::auto::{AutoParams, numbered};
 use crate::common::MAX_STITCH_LENGTH;
 use crate::design::{Element, FillRule, Hints, Shape};
 use crate::generators::mm;
+use crate::generators::tatami::ANGLE;
 use crate::normalize::region::Polygon;
 use crate::normalize::region::ops::{area_of, buffered, union};
 
@@ -147,7 +149,7 @@ fn pieces(shapes: &mut Shapes, rules: &AutoParams, taken: &mut Labels, meter: &m
             kept.push(piece);
         }
     }
-    let params = knockdown(rules.auto_base_stitch_length_mm.get());
+    let params = sewn_as(rules);
     let mut pieces = Vec::with_capacity(kept.len());
     for (place, piece) in kept.iter().enumerate() {
         // The first piece has the base layer's id, and the others are numbered from it. An id that the
@@ -177,24 +179,52 @@ fn pieces(shapes: &mut Shapes, rules: &AutoParams, taken: &mut Labels, meter: &m
     Ok(Some((pieces, area_of(&kept))))
 }
 
-/// The parameters that Ink/Stitch's Knockdown Fill writes for a stitch `length` millimetres long: rows that
-/// far times [`ROWS`] apart, written to 4 decimals, staggered over 2 rows, under an underlay at 60° and −60°
-/// with the same length and spacing, and no travel along the outline under either.
-fn knockdown(length: f64) -> ParamSet {
+/// The value of `auto_base_rows` that sews the base layer in 3 directions.
+const LATTICE: &str = "lattice";
+
+/// The parameters of the base layer's fill by `rules`. Either way its stitches are
+/// `auto_base_stitch_length_mm` long, in rows that far times [`ROWS`] apart, written to 4 decimals and
+/// staggered over 2 rows, and it travels along its outline.
+///
+/// - **Across**, the default: one layer and no underlay, its rows across those of the fills on it
+///   ([`across`]). Every automatic fill has the rows of `auto_fill_angle`, so one layer across them is the
+///   underlay a fill is usually given, under all of them at once.
+/// - **Lattice**: what Ink/Stitch's Knockdown Fill writes, rows at 0° on an underlay at 60° and −60° with
+///   the same length and spacing. Each of the 3 layers travels along the outline, and on the traced dogs
+///   3 in 10 of the base layer's millimetres of thread lay there: up to 2.3 fills along the design's edge,
+///   under the ends of the rows and the outline (`docs/src/design/image-to-embroidery.md` › Less thread
+///   where a design sews thick).
+fn sewn_as(rules: &AutoParams) -> ParamSet {
+    let length = rules.auto_base_stitch_length_mm.get();
     let (length, spacing) = (length.to_string(), format!("{:.4}", length * ROWS));
+    let lattice = rules.auto_base_rows == LATTICE;
+    let angle = across(rules.auto_fill_angle).to_string();
+    let layers: &[(&str, &str)] = if lattice {
+        &[
+            (UNDERLAY, "true"),
+            ("fill_underlay_angle", "60 -60"),
+            ("fill_underlay_max_stitch_length_mm", length.as_str()),
+            ("fill_underlay_row_spacing_mm", spacing.as_str()),
+            ("underlay_underpath", "false"),
+        ]
+    } else {
+        &[(UNDERLAY, "false"), (ANGLE, angle.as_str())]
+    };
+    let rows = [(MAX_STITCH_LENGTH, length.as_str()), ("row_spacing_mm", spacing.as_str()), ("staggers", "2"), ("underpath", "false")];
     let mut params = ParamSet::new();
-    for (key, value) in [
-        (MAX_STITCH_LENGTH, length.as_str()),
-        ("row_spacing_mm", spacing.as_str()),
-        ("staggers", "2"),
-        ("underpath", "false"),
-        (UNDERLAY, "true"),
-        ("fill_underlay_angle", "60 -60"),
-        ("fill_underlay_max_stitch_length_mm", length.as_str()),
-        ("fill_underlay_row_spacing_mm", spacing.as_str()),
-        ("underlay_underpath", "false"),
-    ] {
-        params.set(key, value);
+    for (key, value) in rows.iter().chain(layers) {
+        params.set(*key, *value);
     }
     params
+}
+
+/// What the base layer sews with when no shape sets a rule: test sheet TS-13F lays its squares on it.
+#[cfg(test)]
+pub(crate) fn sewn_by_default() -> ParamSet {
+    sewn_as(&AutoParams::defaults())
+}
+
+/// The angle of rows across rows at `angle` degrees: a quarter turn from it, towards 0.
+fn across(angle: f64) -> f64 {
+    if angle > 0.0 { angle - 90.0 } else { angle + 90.0 }
 }

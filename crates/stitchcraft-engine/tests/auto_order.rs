@@ -520,9 +520,18 @@ proptest! {
         for upper in (0..shapes.len()).filter(|&upper| shapes[upper].square) {
             let [x0, y0, x1, y1] = shapes[upper].paints;
             let within = [x0 + overlap, y0 + overlap, x1 - overlap, y1 - overlap];
+            // Where a square drawn after the upper one covers it, the upper one shows nothing, and the lower
+            // one may reach there: across the part of a line that the upper one sews as, and its overlap
+            // under the square beyond (`REQ-AUTO-067`). That square's own edge is checked in its turn.
+            let hidden: Vec<[f64; 4]> = (upper + 1..shapes.len())
+                .filter(|&later| shapes[later].square)
+                .map(|later| shapes[later].paints)
+                .map(|[a, b, c, d]| [within[0].max(a - overlap), within[1].max(b - overlap), within[2].min(c + overlap), within[3].min(d + overlap)])
+                .filter(|[a, b, c, d]| a < c && b < d)
+                .collect();
             for lower in (0..upper).filter(|&lower| shapes[lower].square) {
                 for (element, _) in out.iter().zip(&sewn).filter(|&(_, &s)| s == lower) {
-                    let covered = inside(element, within);
+                    let covered = inside(element, within) - hidden.iter().map(|part| inside(element, *part)).sum::<f64>();
                     prop_assert!(covered < 1e-6, "{} sews {} mm² of s{}, drawn over it: {:?}", element.id, covered, upper, ids);
                 }
             }

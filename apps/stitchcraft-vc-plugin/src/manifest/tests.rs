@@ -77,7 +77,7 @@ fn req_vc_016_the_auto_effect_s_dialog_holds_the_rules_settings_and_its_preview_
     // of how thick the design sews (M13.29), have no row: the dialog holds 12 rows, one fewer than the 13 that made it 3 px taller than its window. The
     // outline's switch has a row (M13.28), and the offset, the base layer's finest adjustment, gave it its place.
     let advanced: Vec<&str> = AutoParams::SPECS.iter().filter(|spec| spec.group == ADVANCED).map(|spec| spec.key).collect();
-    assert_eq!(advanced.len(), 14);
+    assert_eq!(advanced.len(), 15);
     assert!(advanced.contains(&MIN_AREA) && advanced.iter().all(|key| !keys.contains(key)), "{advanced:?}");
     assert_eq!(keys.len() + advanced.len(), AutoParams::SPECS.len() + 1);
     // Each setting's row has the registry's label, unit, section, help and page, and always shows: the

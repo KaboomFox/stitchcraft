@@ -41,6 +41,7 @@
 //! them, and only the `documentData` VectorCraft gives every filter from 0.16 tells them apart. So before 0.16
 //! the filter declines with `SC-E0813`.
 
+use serde_json::value::RawValue;
 use serde_json::{Map, Value};
 use stitchcraft_core::{Code, Diagnostic, Fix, Point};
 use stitchcraft_engine::design::{Design, Element, Shape, within_working_limit};
@@ -48,7 +49,8 @@ use stitchcraft_engine::generate::stitch_type_of;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_engine::testsheets::{SHEETS, TestSheet};
-use stitchcraft_params::{Family, ParamSet, ParamSpec, StitchType, find_for};
+use stitchcraft_params::{ParamSet, ParamSpec, StitchType, find_for};
+use stitchcraft_plan::Rgb;
 use stitchcraft_vectorcraft::filter::{self, Given, Out, Record, gradient, solid, stroke};
 use stitchcraft_vectorcraft::{effect_error, param_text};
 
@@ -74,8 +76,17 @@ pub fn sheets() -> impl Iterator<Item = &'static TestSheet> {
 pub(crate) fn options() -> Vec<(&'static str, Param)> {
     let ids: Vec<&'static str> = sheets().map(|sheet| sheet.id).collect();
     let default = ids.first().copied().unwrap_or_default();
-    let tests: Vec<String> = sheets().map(|sheet| format!("- {}: {}", sheet.id, sheet.title)).collect();
-    // VectorCraft shows 1,000 characters of help (`limits::MAX_HELP`), which a line for each sheet nearly fills.
+    // VectorCraft shows 1,000 characters of help (`limits::MAX_HELP`), which a line for each sheet with its
+    // whole title overfills. A title's first part, up to its colon, is left out when the sheet before has the
+    // same one, as TS-13B to TS-13E have TS-13A's. The page the help links to has every title whole.
+    let mut group = "";
+    let mut tests = Vec::new();
+    for sheet in sheets() {
+        let (first, rest) = sheet.title.split_once(": ").unwrap_or((sheet.title, ""));
+        let title = if first == group && !rest.is_empty() { rest } else { sheet.title };
+        group = first;
+        tests.push(format!("- {}: {title}", sheet.id));
+    }
     let help = format!("The test sheet to draw:\n\n{}", tests.join("\n"));
     vec![(SHEET, own(Schema::Choice { options: ids, default }, "Sheet", &help, PAGE))]
 }
@@ -105,12 +116,53 @@ pub fn run(input: &[u8], params: &[u8]) -> Result<Vec<u8>, RunError> {
 /// elements, each an object, placed as [`placed`] places the sheet.
 fn objects(sheet: &TestSheet, given: &Given) -> Result<Vec<Out>, Diagnostic> {
     let design = placed(sheet, given.artboard_centre)?;
-    let declared = declared();
+    let mut made = Made::default();
     let mut out: Vec<Out> = given.objects.iter().map(Out::given).collect();
     for element in design.elements() {
-        out.push(object(sheet, element, &design, &declared)?);
+        out.push(object(sheet, element, &design, &mut made)?);
     }
     Ok(out)
+}
+
+/// What the objects of a sheet share, made once as the first object that needs it is drawn: the settings
+/// of each effect they use, as its manifest declares them, each effect record of an element's settings, and
+/// each solid paint. A sheet of many small shapes repeats few of them, as TS-13F's 179 objects have 2
+/// threads and 15 records, and making them again for each object took TS-13F past a light filter's work.
+#[derive(Default)]
+struct Made {
+    declared: Vec<(Module, Vec<(&'static str, Schema)>)>,
+    records: Vec<(Module, ParamSet, Record)>,
+    paints: Vec<(Rgb, Box<RawValue>)>,
+}
+
+impl Made {
+    /// The record of `effect` that sews as `params` ([`record_params`]), or why a record can't hold them.
+    fn record(&mut self, effect: Module, params: &ParamSet) -> Result<Record, String> {
+        if let Some((_, _, record)) = self.records.iter().find(|(each, held, _)| *each == effect && held == params) {
+            return Ok(record.clone());
+        }
+        let at = match self.declared.iter().position(|(each, _)| *each == effect) {
+            Some(at) => at,
+            None => {
+                self.declared.push((effect, declared_of(effect)));
+                self.declared.len() - 1
+            }
+        };
+        let schemas = self.declared.get(at).map_or(&[][..], |(_, schemas)| schemas.as_slice());
+        let record = Record::ours(effect.name(), &record_params(effect, params, schemas)?).map_err(|e| format!("it can't be written: {e}"))?;
+        self.records.push((effect, params.clone(), record.clone()));
+        Ok(record)
+    }
+
+    /// The solid paint of `color` ([`solid`]).
+    fn solid(&mut self, color: Rgb) -> Result<Box<RawValue>, serde_json::Error> {
+        if let Some((_, paint)) = self.paints.iter().find(|(each, _)| *each == color) {
+            return Ok(paint.clone());
+        }
+        let paint = solid(color)?;
+        self.paints.push((color, paint.clone()));
+        Ok(paint)
+    }
 }
 
 /// `sheet`'s design moved by whole millimetres, or whole multiples of its step ([`TestSheet::step`]), so that
@@ -137,17 +189,16 @@ pub fn placed(sheet: &TestSheet, centre: Option<Point>) -> Result<Design, Diagno
     design.moved([dx, dy])
 }
 
-/// The settings each StitchCraft effect declares, a stitch family's or the Auto effect's, by their keys, as
-/// its manifest declares them.
-fn declared() -> Vec<(Module, Vec<(&'static str, Schema)>)> {
-    let effects = Family::ALL.iter().map(|family| Module::Family(*family)).chain([Module::Auto]);
-    effects.map(|effect| (effect, effect.manifest().params.into_iter().map(|(key, param)| (key, param.schema)).collect())).collect()
+/// The settings `effect`, a stitch family's StitchCraft effect or the Auto effect, declares, by their keys,
+/// as its manifest declares them.
+fn declared_of(effect: Module) -> Vec<(&'static str, Schema)> {
+    effect.manifest().params.into_iter().map(|(key, param)| (key, param.schema)).collect()
 }
 
 /// `element` of `sheet`'s `design` as an object: its path, its thread as the paint its family sews with, and
-/// its settings as its family's effect record, or the Auto effect's for an automatic element, by the
-/// settings `declared`.
-fn object(sheet: &TestSheet, element: &Element, design: &Design, declared: &[(Module, Vec<(&'static str, Schema)>)]) -> Result<Out, Diagnostic> {
+/// its settings as its family's effect record, or the Auto effect's for an automatic element, each made
+/// once for the sheet and kept in `made`.
+fn object(sheet: &TestSheet, element: &Element, design: &Design, made: &mut Made) -> Result<Out, Diagnostic> {
     let bug =
         |why: String| Diagnostic::new(Code::InternalCheckFailed, format!("The test sheet {}'s {} can't be drawn: {why}.", sheet.id, element.id));
     let written = |e: serde_json::Error| bug(format!("it can't be written: {e}"));
@@ -156,14 +207,13 @@ fn object(sheet: &TestSheet, element: &Element, design: &Design, declared: &[(Mo
     } else {
         Module::Family(stitch_type_of(element, &design.settings).map(StitchType::family).ok_or_else(|| bug("it names no stitch".into()))?)
     };
-    let schemas = declared.iter().find(|(each, _)| *each == effect).map_or(&[][..], |(_, schemas)| schemas.as_slice());
-    let record = Record::ours(effect.name(), &record_params(effect, &element.params, schemas).map_err(bug)?).map_err(written)?;
+    let record = made.record(effect, &element.params).map_err(bug)?;
     let path = element.shape.path();
     let out = Out::default().with_name(element.id.to_string()).with_path(path, path.subpaths.len() > 1).map_err(written)?;
     // A linear gradient fill's paint is its gradient, which it sews.
     let paint = match &element.shape {
         Shape::Fill { gradient: Some(painted), .. } => gradient(painted).map_err(written)?,
-        _ => solid(element.thread.color).map_err(written)?,
+        _ => made.solid(element.thread.color).map_err(written)?,
     };
     Ok(match &element.shape {
         Shape::Fill { rule, .. } => out.with_fill_rule(*rule).with_fills(vec![paint]),
@@ -184,8 +234,9 @@ pub(crate) fn record_params(effect: Module, params: &ParamSet, schemas: &[(&'sta
         let held = |why: &str| format!("its setting `{key} = {text}` {why} its {} effect's record", effect.name());
         let schema = schemas.iter().find(|(declared, _)| *declared == key).map(|(_, schema)| schema).ok_or_else(|| held("is no setting of"))?;
         let value = value(schema, text).ok_or_else(|| held("is no value of its row in"))?;
-        let read = |text: &str| spec_of(effect, key).and_then(|spec| spec.kind.parse(text)).map(|(value, _)| value);
-        if param_text(&value).is_none_or(|back| read(&back).is_none() || read(&back) != read(text)) {
+        let spec = spec_of(effect, key);
+        let read = |text: &str| spec.and_then(|spec| spec.kind.parse(text)).map(|(value, _)| value);
+        if param_text(&value).map(|back| read(&back)).is_none_or(|back| back.is_none() || back != read(text)) {
             return Err(held("doesn't read back from"));
         }
         record.insert(key.to_string(), value);

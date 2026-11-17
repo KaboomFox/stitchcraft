@@ -41,7 +41,7 @@
 use stitchcraft_core::{Code, Diagnostic, ElementId, Exhausted, Fix, Meter, Mm, Point};
 
 use super::narrow::{Edges, farthest, piece, reach, spread, widest, width};
-use super::rules::{Bounds, Breadth, Measures, RuleId, choose, fills};
+use super::rules::{Bounds, Breadth, MOST_CROWDING, Measures, RuleId, choose, crowds, fills};
 use super::{AutoParams, at_most};
 use crate::design::Path;
 use crate::generators::mm;
@@ -86,6 +86,9 @@ pub(super) enum Made {
     /// One of its columns would sew a stitch this long between its rails, in millimetres, longer than the
     /// widest satin column: it is refused, and stays in the fill.
     Long(f64, Measures),
+    /// One of its columns would sew this much of one rail, in millimetres, to a millimetre of the other, more
+    /// than a column may ([`crowds`]): it is refused, and stays in the fill.
+    Crowded(f64, Measures),
     /// Its columns can't be drawn: it is refused, and stays in the fill.
     Unmade,
     /// Its triangulation lost its shape, a bug, and it stays in the fill.
@@ -126,10 +129,14 @@ pub(in crate::auto) fn filled(part: &Polygon, bounds: &Bounds, meter: &mut Meter
     let edges = Edges::of(part, piece(part), meter)?;
     // A part without a centre line of any length is a dot, which is compact.
     let measures = measured(part, &found, &edges, meter)?.unwrap_or(unmeasured);
-    if let Some(rule) = as_filled(choose(&measures, bounds)) {
+    let rule = choose(&measures, bounds);
+    if let Some(rule) = as_filled(rule) {
         return Ok(Some(rule));
     }
-    Ok(too_long(&found, bounds, meter)?.map(|_| RuleId::Refused))
+    if too_long(&found, bounds, meter)?.is_some() {
+        return Ok(Some(RuleId::Refused));
+    }
+    Ok(crowded(part, &found, rule, meter)?.map(|_| RuleId::Refused))
 }
 
 /// The longest stitch that one of the columns `found` would sew between its rails, in millimetres, when
@@ -143,6 +150,22 @@ fn too_long(found: &[Column], bounds: &Bounds, meter: &mut Meter) -> Result<Opti
         }
     }
     Ok(None)
+}
+
+/// How much of one rail, in millimetres, the one column `found` of a part would sew to a millimetre of the
+/// other, when that is more than a column may ([`crowding`], [`crowds`]), with `meter`'s work. None for a
+/// part of several columns: where one of them ends under another, as the bar of a T does, it is cut on the
+/// slant there, and its last stitches fan from a corner by the way it is drawn, under the other column.
+/// None for a part with a hole, a ring: its column runs round what fills the hole, as a border does, and a
+/// fill in its place would sew in pieces round it. None either for a part that sews by `rule` because its
+/// shape asks for satin columns: it is sewn as asked.
+fn crowded(part: &Polygon, found: &[Column], rule: RuleId, meter: &mut Meter) -> Result<Option<f64>, Exhausted> {
+    let [column] = found else { return Ok(None) };
+    if rule == RuleId::Asked || !part.holes.is_empty() {
+        return Ok(None);
+    }
+    let most = crowding(&column.rails, &column.rungs, meter)?;
+    Ok(Some(most).filter(|most| crowds(*most)))
 }
 
 /// The columns of `part`, an area's held to `bounds` whose settings of the rules are `rules`, cut from a
@@ -165,6 +188,10 @@ pub(super) fn columns(part: &Polygon, bounds: &Bounds, rules: &AutoParams, cuts:
     // A satin stitch longer than the widest satin column lies loose: the part is filled instead.
     if let Some(stitch) = too_long(&found, bounds, meter)? {
         return Ok(Made::Long(stitch, measures));
+    }
+    // Stitches that crowd on one rail pile their thread up there: the part is filled instead.
+    if let Some(most) = crowded(part, &found, rule, meter)? {
+        return Ok(Made::Crowded(most, measures));
     }
     let mut widths = Vec::with_capacity(found.len());
     for column in &found {
@@ -202,16 +229,7 @@ fn longest_stitch(rails: &[Vec<Point>; 2], rungs: &[[Point; 2]], meter: &mut Met
     let [first, second] = rails;
     let (along_first, along_second) = (lengths(first), lengths(second));
     let (Some(&end_first), Some(&end_second)) = (along_first.last(), along_second.last()) else { return Ok(0.0) };
-    let corners = u64::try_from(first.len() + second.len()).unwrap_or(u64::MAX);
-    // Where each section starts and ends on each rail: at the rails' starts, at each rung in order, and at
-    // their ends.
-    let mut cuts = vec![[0.0, 0.0]];
-    for [a, b] in rungs {
-        meter.charge(corners)?;
-        let last = cuts.last().copied().unwrap_or([0.0, 0.0]);
-        cuts.push([position(first, &along_first, *a).max(last[0]), position(second, &along_second, *b).max(last[1])]);
-    }
-    cuts.push([end_first, end_second]);
+    let cuts = sections(rails, [&along_first, &along_second], [end_first, end_second], rungs, meter)?;
     let mut longest = 0.0_f64;
     for (from, to) in cuts.iter().zip(cuts.iter().skip(1)) {
         // The shares of the section at which one rail or the other turns a corner, and its 2 ends.
@@ -228,6 +246,85 @@ fn longest_stitch(rails: &[Vec<Point>; 2], rungs: &[[Point; 2]], meter: &mut Met
         }
     }
     Ok(longest)
+}
+
+/// Where each section of a satin column starts and ends along each of its `rails`, both from its start
+/// and `ends` long, whose points lie `along` them: at the rails' starts, at each of the `rungs` in order,
+/// each the point it pairs on the first rail and then on the second, and at their ends. A rung never
+/// starts a section before the last one did. A unit of work for each rung, times the rails' corners.
+fn sections(
+    rails: &[Vec<Point>; 2],
+    along: [&[f64]; 2],
+    ends: [f64; 2],
+    rungs: &[[Point; 2]],
+    meter: &mut Meter,
+) -> Result<Vec<[f64; 2]>, Exhausted> {
+    let ([first, second], [along_first, along_second]) = (rails, along);
+    let corners = u64::try_from(first.len() + second.len()).unwrap_or(u64::MAX);
+    let mut cuts = vec![[0.0, 0.0]];
+    for [a, b] in rungs {
+        meter.charge(corners)?;
+        let last = cuts.last().copied().unwrap_or([0.0, 0.0]);
+        cuts.push([position(first, along_first, *a).max(last[0]), position(second, along_second, *b).max(last[1])]);
+    }
+    cuts.push(ends);
+    Ok(cuts)
+}
+
+/// How long a stretch of a rail is that [`crowding`] looks at, in millimetres: the window that a design's
+/// thickness is measured in (`stitchcraft_plan::thickness::WINDOW`).
+const STRETCH: f64 = 1.0;
+
+/// How far the stitches of a satin column with these `rails`, both from its start, and `rungs` crowd: the
+/// most of one rail, in millimetres, that they pair with a stretch [`STRETCH`] long of the other, or with
+/// the whole of a rail that is shorter, with `meter`'s work. A column sews as many needle points on one rail
+/// as on the other, a stitch's length apart on the longer one. So a straight column pairs 1 mm with 1 mm, a
+/// ring twice as far across outside as inside 2 mm, and a fan, one of whose rails is a point, its whole
+/// other rail with that point: there every stitch meets, and the thread piles up. The stitches pair the
+/// points as far along the 2 rails between one rung and the next ([`longest_stitch`]), so what a stretch
+/// pairs with changes its pace only at a rung, and the most is found with a stretch that starts or ends at
+/// one. A unit of work for each rung, times the rails' corners, and for each pair of rungs.
+fn crowding(rails: &[Vec<Point>; 2], rungs: &[[Point; 2]], meter: &mut Meter) -> Result<f64, Exhausted> {
+    let [first, second] = rails;
+    let (along_first, along_second) = (lengths(first), lengths(second));
+    let ends = [along_first.last().copied().unwrap_or(0.0), along_second.last().copied().unwrap_or(0.0)];
+    let cuts = sections(rails, [&along_first, &along_second], ends, rungs, meter)?;
+    let count = u64::try_from(cuts.len()).unwrap_or(u64::MAX);
+    meter.charge(count.saturating_mul(count))?;
+    let mut most = 0.0_f64;
+    for swapped in [false, true] {
+        // Each cut as where it lies on this rail, and then on the other.
+        let pairs: Vec<(f64, f64)> = cuts.iter().map(|&[a, b]| if swapped { (b, a) } else { (a, b) }).collect();
+        let end = pairs.last().map_or(0.0, |pair| pair.0);
+        for &(at, _) in &pairs {
+            for start in [at, at - STRETCH] {
+                // A stretch that runs past the rail's end is cut off there. It pairs with no more than the
+                // rail's last whole stretch does, which ends at the last cut.
+                let start = start.max(0.0);
+                most = most.max(paired(&pairs, (start + STRETCH).min(end), true) - paired(&pairs, start, false));
+            }
+        }
+    }
+    Ok(most)
+}
+
+/// Where on the other rail the stitch lands that leaves a rail `at` millimetres along it, the `pairs`
+/// giving where each section starts on the rail and then on the other. Where the rail stands still while
+/// the other runs on, as at the point of a fan, it is the `farthest` such place, or the nearest.
+fn paired(pairs: &[(f64, f64)], at: f64, farthest: bool) -> f64 {
+    let mut spans = pairs.iter().zip(pairs.iter().skip(1));
+    let found = if farthest { spans.rev().find(|(from, _)| from.0 <= at) } else { spans.find(|(_, to)| at <= to.0) };
+    found.map_or(0.0, |(from, to)| {
+        let span = to.0 - from.0;
+        let share = if span > 0.0 {
+            (at - from.0) / span
+        } else if farthest {
+            1.0
+        } else {
+            0.0
+        };
+        from.1 + share * (to.1 - from.1)
+    })
 }
 
 /// How far along `rail` each of its points lies, in millimetres.
@@ -386,6 +483,21 @@ pub(super) fn long(id: &ElementId, stitch: f64, bounds: &Bounds) -> Diagnostic {
     Diagnostic::new(Code::AutoSatinFilled, message)
         .with_element(id.clone())
         .with_fix(Fix::Hint("To sew it as satin columns, draw the columns with 2 rails each and give them settings.".to_string()))
+}
+
+/// `SC-I0902` for a part of the automatic area `id`, one of whose satin columns would sew `most` millimetres
+/// of one rail to a millimetre of the other, more than a column may ([`MOST_CROWDING`]): it stays in the
+/// area's fill.
+pub(super) fn piled(id: &ElementId, most: f64) -> Diagnostic {
+    let message = format!(
+        "A satin column along a part of this area would sew {} mm of one edge to 1 mm of the other, more than {} mm, and its thread would pile \
+         up there, so the part is filled.",
+        mm(most),
+        mm(MOST_CROWDING)
+    );
+    Diagnostic::new(Code::AutoSatinFilled, message)
+        .with_element(id.clone())
+        .with_fix(Fix::Hint("To sew it as satin columns, set `auto_stitch` to satin on its shape.".to_string()))
 }
 
 #[cfg(test)]
@@ -713,6 +825,107 @@ mod tests {
     }
 
     #[test]
+    fn req_auto_068_a_column_s_stitches_crowd_by_the_most_of_one_rail_that_sews_to_a_millimetre_of_the_other() {
+        let p = |x: f64, y: f64| Point::new(x, y).unwrap();
+        // 2 straight rails 1 mm apart, the first `first` millimetres long and the second `second`, with rungs
+        // from so far along the first to so far along the second.
+        let crowd = |first: f64, second: f64, rungs: &[[f64; 2]]| {
+            let rails = [vec![p(0.0, 0.0), p(first, 0.0)], vec![p(0.0, 1.0), p(second, 1.0)]];
+            let rungs: Vec<[Point; 2]> = rungs.iter().map(|[a, b]| [p(*a, 0.0), p(*b, 1.0)]).collect();
+            crowding(&rails, &rungs, &mut Budget::DEFAULT.meter()).unwrap()
+        };
+        let near = |found: f64, most: f64| (found - most).abs() < 1e-9;
+        // A straight column sews 1 mm to 1 mm, and one shorter than a millimetre its whole length.
+        assert!(near(crowd(10.0, 10.0, &[]), 1.0) && near(crowd(0.5, 0.5, &[]), 0.5), "{} {}", crowd(10.0, 10.0, &[]), crowd(0.5, 0.5, &[]));
+        // Rails of 10 and 16 mm: 1.6 mm to each millimetre, whichever rail is the longer.
+        assert!(near(crowd(10.0, 16.0, &[]), 1.6) && near(crowd(16.0, 10.0, &[]), 1.6));
+        // A fan: all 6 mm of a rail sew to the other's half millimetre, or to its one point.
+        assert!(near(crowd(0.5, 6.0, &[]), 6.0) && near(crowd(0.0, 6.0, &[]), 6.0), "{} {}", crowd(0.5, 6.0, &[]), crowd(0.0, 6.0, &[]));
+        // Rungs change the pace: 5 mm sew to 10, then 0.4 mm to 4, then 4.6 mm to 2.3. The millimetre that ends
+        // where the fast stretch does sews 0.6 mm at 2 to 1 and all of the 4 mm: 5.2 mm. The one that starts
+        // where it starts sews 4.3 mm.
+        assert!(near(crowd(10.0, 16.3, &[[5.0, 10.0], [5.4, 14.0]]), 5.2), "{}", crowd(10.0, 16.3, &[[5.0, 10.0], [5.4, 14.0]]));
+        // 2 rungs from one point of a rail: the other rail's 4 mm between them sew to that point.
+        assert!(near(crowd(10.0, 14.0, &[[5.0, 5.0], [5.0, 9.0]]), 5.0), "{}", crowd(10.0, 14.0, &[[5.0, 5.0], [5.0, 9.0]]));
+        // More than 2 mm crowds, to the micrometre.
+        assert_eq!([crowds(2.0004), crowds(2.0006), crowds(MOST_CROWDING)], [false, true, false]);
+        // Each rung costs the rails' corners, and each pair of cuts a unit: with too little, the measuring stops.
+        let rails = [vec![p(0.0, 0.0), p(10.0, 0.0)], vec![p(0.0, 1.0), p(16.0, 1.0)]];
+        let rungs = [[p(5.0, 0.0), p(10.0, 1.0)]];
+        let with = |work: u64| crowding(&rails, &rungs, &mut Budget { max_work: work, ..Budget::DEFAULT }.meter());
+        let least = (0..64).find(|work| with(*work).is_ok()).unwrap();
+        assert!((0..least).all(|work| with(work) == Err(Exhausted::Work)) && with(least) == Ok(2.0), "{least} {:?}", with(least));
+        // The rung costs the rails' 4 corners, and the 3 cuts 9.
+        assert_eq!(least, 13);
+    }
+
+    /// A band `width` millimetres wide that turns `turn` radians round the origin, its inner edge `inner`
+    /// millimetres from it.
+    fn bend(inner: f64, width: f64, turn: f64) -> Polygon {
+        let mut outline = arc(inner + width, 48, 0.0, turn);
+        outline.extend(arc(inner, 48, turn, -turn));
+        part(&outline, &[])
+    }
+
+    #[test]
+    fn req_auto_068_a_part_whose_column_would_crowd_its_stitches_is_filled_and_says_how_far() {
+        let made = |part: &Polygon, set: &[(&str, &str)]| {
+            let rules = AutoParams::from_set(&set.iter().copied().collect()).unwrap().params;
+            columns(part, &Bounds::of(&rules, Mm::new(1.0).unwrap()), &rules, &[], &mut Budget::DEFAULT.meter()).unwrap()
+        };
+        let filled = |part: &Polygon, set: &[(&str, &str)]| {
+            let rules = AutoParams::from_set(&set.iter().copied().collect()).unwrap().params;
+            filled(part, &Bounds::of(&rules, Mm::new(1.0).unwrap()), &mut Budget::DEFAULT.meter()).unwrap()
+        };
+        // A band 2.5 mm wide bent three quarters of the way round a point 1 mm inside it: its outer edge is
+        // 3.5 times as long as its inner one, so a column along it would sew 3.5 mm to each millimetre there.
+        let tight = bend(1.0, 2.5, 1.5 * std::f64::consts::PI);
+        let Made::Crowded(most, measures) = made(&tight, &[]) else { panic!("not refused") };
+        assert!((most - 3.5).abs() < 0.15 && measures.lines == 1 && measures.slenderness() >= 3.0, "{most} {measures:?}");
+        assert_eq!(filled(&tight, &[]), Some(RuleId::Refused));
+        let said = piled(&ElementId::new("bend").unwrap(), 3.5);
+        assert_eq!(
+            said.to_string(),
+            "info SC-I0902: A satin column along a part of this area would sew 3.5 mm of one edge to 1 mm of the other, more than 2 mm, and its \
+             thread would pile up there, so the part is filled."
+        );
+        assert_eq!((said.code, said.element.as_ref().map(|id| id.as_str())), (Code::AutoSatinFilled, Some("bend")));
+        // The same band round a point 3 mm inside it sews 1.83 mm to a millimetre: a column.
+        let wide = bend(3.0, 2.5, 1.5 * std::f64::consts::PI);
+        assert!(matches!(made(&wide, &[]), Made::Columns { rule: RuleId::Column, .. }) && filled(&wide, &[]).is_none());
+        // A T's bar ends on the slant under its stem, 4 mm of one edge to 2 of the other: a part of 2 columns
+        // isn't refused for that.
+        let t = part(&[(0.0, 0.0), (12.0, 0.0), (12.0, 2.0), (7.0, 2.0), (7.0, 12.0), (5.0, 12.0), (5.0, 2.0), (0.0, 2.0)], &[]);
+        let Made::Columns { sewn, rule: RuleId::Column, .. } = made(&t, &[]) else { panic!("the T has no columns") };
+        assert!(sewn.len() >= 2 && filled(&t, &[]).is_none(), "{}", sewn.len());
+        // A ring 2 mm wide round a hole 1 mm across sews 5 mm of its outer edge to each millimetre of its
+        // inner one, and stays a column: its fill would sew in pieces round what fills the hole.
+        let (outer, inner): (Vec<_>, Vec<_>) = (arc(2.5, 48, 0.0, std::f64::consts::TAU), arc(0.5, 24, 0.0, -std::f64::consts::TAU));
+        let ring = part(&outer[..48], &[&inner[..24]]);
+        assert!(matches!(made(&ring, &[]), Made::Columns { rule: RuleId::Column, .. }) && filled(&ring, &[]).is_none(), "the ring");
+        // A shape that asks for satin columns sews the tight bend as one.
+        let asked = [("auto_stitch", "satin")];
+        assert!(matches!(made(&tight, &asked), Made::Columns { rule: RuleId::Asked, .. }) && filled(&tight, &asked).is_none());
+        // Finding it is the part's work: with too little, it stops.
+        let rules = AutoParams::defaults();
+        let bounds = Bounds::of(&rules, Mm::new(1.0).unwrap());
+        let with = |work: u64| columns(&tight, &bounds, &rules, &[], &mut Budget { max_work: work, ..Budget::DEFAULT }.meter()).map(|_| ());
+        let asking = |work: u64| super::filled(&tight, &bounds, &mut Budget { max_work: work, ..Budget::DEFAULT }.meter()).map(|_| ());
+        // The crowding is measured last, so the work that just falls short falls short there.
+        let least = |enough: &dyn Fn(u64) -> bool| {
+            let (mut low, mut high) = (0_u64, 1 << 24);
+            while low < high {
+                let middle = low + (high - low) / 2;
+                if enough(middle) { high = middle } else { low = middle + 1 }
+            }
+            low
+        };
+        let (made, asked) = (least(&|work| with(work).is_ok()), least(&|work| asking(work).is_ok()));
+        assert!(with(made).is_ok() && with(made - 1) == Err(Exhausted::Work), "{made}");
+        assert!(asking(asked).is_ok() && asking(asked - 1) == Err(Exhausted::Work), "{asked}");
+    }
+
+    #[test]
     fn req_auto_033_the_layers_ask_whether_the_rules_fill_a_part() {
         let filled = |part: &Polygon, set: &[(&str, &str)]| {
             let rules = AutoParams::from_set(&set.iter().copied().collect()).unwrap().params;
@@ -776,10 +989,11 @@ mod tests {
              satin column, 7 mm, and such a stitch lies loose, so the part is filled."
         );
         assert_eq!((said.code, said.element.as_ref().map(|id| id.as_str())), (Code::AutoSatinFilled, Some("ring")));
-        // With a widest satin column of 5 mm, a ring 12 mm across, whose longest stitch is 5.49 mm, is refused too.
+        // With a widest satin column of 5 mm, a ring 12 mm across, whose longest stitch is 5.49 mm, is refused for
+        // that stitch too.
         let small: Vec<(f64, f64)> = arc(3.0, 48, 0.0, -std::f64::consts::TAU).into_iter().take(48).collect();
         let ring = part(&[(-6.0, -6.0), (6.0, -6.0), (6.0, 6.0), (-6.0, 6.0)], &[&small]);
-        assert!(matches!(made(&ring, &[]), Made::Columns { .. }) && matches!(made(&ring, &[("auto_max_satin_width_mm", "5")]), Made::Long(..)));
+        assert!(matches!(made(&ring, &[("auto_max_satin_width_mm", "5")]), Made::Long(..)));
     }
 
     /// A star of `points` points round the origin, its points `outer` millimetres out and the corners between

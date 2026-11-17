@@ -286,7 +286,8 @@ overlap.
 
 You can't choose the colour of the fabric a design is sewn on, and on black fabric every place the thread
 leaves bare is a dark spot. So a design digitized automatically sews one base layer first, under all of
-it: an open fill of stitches 3 mm long in 3 directions, in the thread that the picture has the most of. It
+it: an open fill of stitches 3 mm long, in the thread that the picture has the most of. Its rows run across the rows of the fills on it. For a towel or a fleece, `auto_base_rows` set to `lattice` sews it in 3
+directions, which holds the pile down and lays 3 times the thread. It
 lies 0.4 mm inside the design's outline, so that it doesn't show beside the edge. The fills sewn on it
 sew no underlay of their own (`SC-I0909`).
 
@@ -319,9 +320,10 @@ the shapes stacked there.
 <!-- /shot -->
 
 `stitch preview dog.pes --style thickness -o thick.png` draws this picture of any machine file. Grey is
-thread under 2 fills, yellow is 2 or more, orange 3 or more and red 6 or more. On the dog above, 629 mm²
-of 1,944 mm² is orange or red, mostly where several small patches meet, and its thickest spot has 8.0
-fills.
+thread under 2 fills, yellow is 2 or more, orange 3 or more and red 6 or more. On the dog above, 491 mm²
+of 1,944 mm² is orange or red, mostly where several small patches meet, and its thickest spot has 7.0
+fills. Before StitchCraft sewed an area's overlap by the way its rows run, and one overlap alone under a
+shape, 629 mm² was.
 
 The limits are starting values for a 75/11 needle and 40-weight polyester thread. They come from the
 public advice of machine and software makers, who disagree. The reference machine hasn't sewn a design

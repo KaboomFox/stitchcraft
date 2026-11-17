@@ -20,8 +20,8 @@
 //! the export's warnings, one line each ([`Diagnostic::one_line`]), as `stitch export` prints them.
 //! VectorCraft shows at most 100 ([`MAX_WARNINGS`]), so when there are more the last says how many more
 //! `stitch export` lists. It shows 500 characters of each ([`MAX_WARNING_CHARS`]) and cuts a longer one
-//! in the middle of a word, so a longer line ends at its last whole sentence that fits. `SC-W0913` is such
-//! a line: its numbers stay, and the hint after them goes.
+//! in the middle of a word, so a longer line ends at its last whole sentence that fits. `SC-W0913`, the
+//! longest, is written to fit with its hint (`stitchcraft_engine::auto::thick`).
 //!
 //! **Errors.** When anything said is an error, the exporter writes nothing and declines with the first
 //! error, as `stitch export` writes nothing (`REQ-CLI-003`). VectorCraft shows the first 300 characters of

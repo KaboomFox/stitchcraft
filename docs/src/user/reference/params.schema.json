@@ -53,7 +53,7 @@
     },
     "auto_base_layer": {
       "default": true,
-      "description": "Whether one base layer sews first under the whole design: an open fill in 3 directions under what the automatic shapes paint together, every stitch of it underlay. On fabric of another colour than the design, thread of one colour then lies under a slit between 2 shapes. The fills on it sew no underlay of their own. Off, each fill sews the underlay of its settings. The design goes by the settings its lowest automatic shape has for the base layer.",
+      "description": "Whether one base layer sews first under the whole design: an open fill under what the automatic shapes paint together, every stitch of it underlay. On fabric of another colour than the design, thread of one colour then lies under a slit between 2 shapes. The fills on it sew no underlay of their own. Off, each fill sews the underlay of its settings. The design goes by the settings its lowest automatic shape has for the base layer.",
       "title": "Base layer",
       "type": "boolean",
       "x-stitchcraft": {
@@ -78,6 +78,22 @@
         "unit": "mm"
       }
     },
+    "auto_base_rows": {
+      "default": "across",
+      "description": "Which way the base layer's rows run. `across` sews one layer, its rows across those of the fills on it, `auto_fill_angle` turned by 90°: the underlay a fill is usually given, once under the whole design. `lattice` sews 3 layers 60° apart, as Ink/Stitch's Knockdown Fill does. That holds down the pile of a towel or a fleece, and lays 3 times the thread under the design.",
+      "enum": [
+        "across",
+        "lattice"
+      ],
+      "title": "Base layer's rows",
+      "type": "string",
+      "x-stitchcraft": {
+        "automatic": true,
+        "group": "Advanced",
+        "origin": "stitchcraft",
+        "stability": "experimental"
+      }
+    },
     "auto_base_sliver_mm2": {
       "default": 0.4,
       "description": "The largest gap in the top thread that is left to the base layer: a sliver. Where thin shapes meet, the top thread can leave a place this small bare, and the base layer's thread shows there in place of the fabric. Nothing sews differently by this value. It is a limit of the check of a design's cover: a larger gap fails the check, and so does a gap with no base layer under it.",
@@ -95,7 +111,7 @@
     },
     "auto_base_stitch_length_mm": {
       "default": 3.0,
-      "description": "How long the base layer's stitches are. Its rows lie this length times 0.866 apart, in 3 directions, so that its needle points make triangles with sides this long, as the stitches of Ink/Stitch's Knockdown Fill do. Shorter stitches hide more of the fabric and sew longer.",
+      "description": "How long the base layer's stitches are. Its rows lie this length times 0.866 apart, so that its needle points make triangles with sides this long, as the stitches of Ink/Stitch's Knockdown Fill do. Shorter stitches hide more of the fabric and sew longer.",
       "maximum": 6.0,
       "minimum": 1.0,
       "title": "Base layer's stitch length",
@@ -3374,6 +3390,7 @@
           "auto_min_fill_width_mm",
           "auto_min_area_mm2",
           "auto_base_offset_mm",
+          "auto_base_rows",
           "auto_base_sliver_mm2",
           "auto_base_bare_percent",
           "auto_thick_warn_fills",

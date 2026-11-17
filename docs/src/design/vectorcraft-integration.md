@@ -346,8 +346,8 @@ writes of the document:
 - What `stitch export` says, the export says as its warnings, one line each, naming the object and with
   the hint after it. VectorCraft shows 100 of at most 500 characters each, so of more the last says how
   many more `stitch export` lists. It cuts a longer line in the middle of a word. The export ends such a
-  line at its last whole sentence that fits. `SC-W0913` is one: in VectorCraft it keeps its numbers and
-  loses its hint, which `stitch export` prints.
+  line at its last whole sentence that fits. `SC-W0913`, the longest warning, is worded to fit with its
+  hint: on a traced picture it has fewer than 500 characters.
 - When anything said is an error, the exporter declines with the first, after how many there are, and
   VectorCraft doesn't write the file, as `stitch export` doesn't (`REQ-CLI-003`). VectorCraft shows the
   first 300 characters of a decline, after `plug-in failed:`.
@@ -594,6 +594,9 @@ meander fills wander as their elements' ids draw, and the objects drawn would ha
 the filter doesn't draw it either (`TestSheet::drawable`). The TS-13 sheets are designs whose shapes
 StitchCraft digitizes automatically (`TestSheet::digitized`): each such shape has the Auto effect's
 record (M13.7, `REQ-VC-016`), and StitchCraft Auto must be installed for VectorCraft to keep it.
+A record is made once for each set of settings, and a solid paint once for each thread: objects that share
+them share the one made. TS-13F's 179 objects have 15 records and 2 paints, and making them for each
+object took it past a light filter's run.
 
 The contract test `req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcraft_s_limits`
 draws each sheet into a new document in VectorCraft 0.17.0's and 0.18.0's hosts alike, and exports it with
