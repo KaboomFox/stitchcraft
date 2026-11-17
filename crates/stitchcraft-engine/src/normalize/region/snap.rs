@@ -21,6 +21,11 @@
 //! iterated form). Every edge then runs from grid point to grid point and meets the others only at its
 //! ends, so the faces' winding numbers add up.
 //!
+//! **What is looked at again.** An edge that passed no hot point passes none until it or the hot points
+//! change, and 2 edges that didn't cross don't until one of them changes. So after the first round an edge
+//! is looked at only among the hot points added since it was, and the crossings are looked for only
+//! between the new edges and the rest ([`Look`]). The points come out the same, for less work.
+//!
 //! **What is searched.** Bending an edge needs the hot points near it, and the check needs the edges that
 //! may cross it. Both are sought in [`Buckets`]: the rings' bounds cut into about as many boxes as there
 //! are points, each edge looking only in the boxes it passes. An area shrunk or grown is cut from a raw
@@ -47,7 +52,7 @@ const HALF: f64 = GRID / 2.0;
 /// How far from the origin a point can be put on the grid, in millimetres: 2^16 mm, about 65 m. Within it
 /// a node's coordinates stay below 2^53 half cells, and every product taken of them fits in 128 bits. A
 /// design lies within 10 m of the origin (`design::WORKING_LIMIT_MM`), and a part grows by 10 mm at most.
-const REACH: f64 = 65_536.0;
+pub(crate) const REACH: f64 = 65_536.0;
 
 /// How many rounds, each bending edges or else making hot the cells where they cross, before the rings are
 /// given up as a bug. Every drawing tried settles within 6: up to 4 rounds of bending, 1 of crossings, and
@@ -159,18 +164,58 @@ impl Hot {
         Hot(points)
     }
 
-    /// Adds `points`, those not hot already. Put after the list, which is sorted, they are sorted on their
-    /// own, and the stable sort that merges them in is fast on 2 sorted runs one after the other, as its
-    /// docs say. Inserting them one by one would move the list's tail for each, and a drawing whose edges
-    /// cross many times would take time the work budget never charges.
-    fn extend(&mut self, points: impl IntoIterator<Item = Node>) {
-        let start = self.0.len();
-        self.0.extend(points);
-        if let Some(new) = self.0.get_mut(start..) {
-            new.sort_unstable();
+    /// The points of `rings`, each once, and each ring as the places of its points among them. Sorted with
+    /// where each comes from, the points are numbered as they are put in order.
+    fn ranked(rings: &[Vec<Node>]) -> (Hot, Vec<Vec<usize>>) {
+        let mut all: Vec<(Node, usize)> = rings.iter().flatten().copied().zip(0..).collect();
+        all.sort_unstable();
+        let mut points: Vec<Node> = Vec::with_capacity(all.len());
+        let mut places = vec![0; all.len()];
+        for (node, at) in all {
+            if points.last() != Some(&node) {
+                points.push(node);
+            }
+            if let Some(slot) = places.get_mut(at) {
+                *slot = points.len() - 1;
+            }
         }
-        self.0.sort();
-        self.0.dedup();
+        let mut places = places.into_iter();
+        let paths = rings.iter().map(|ring| places.by_ref().take(ring.len()).collect()).collect();
+        (Hot(points), paths)
+    }
+
+    /// Adds `points`, those not hot already, and gives the place each point hot before has now. Sorted on
+    /// their own, they are merged into the list, which is sorted. Inserting them one by one would move the
+    /// list's tail for each, and a drawing whose edges cross many times would take time the work budget
+    /// never charges.
+    fn extend(&mut self, points: impl IntoIterator<Item = Node>) -> Vec<usize> {
+        let mut new: Vec<Node> = points.into_iter().collect();
+        new.sort_unstable();
+        new.dedup();
+        let mut merged = Vec::with_capacity(self.0.len() + new.len());
+        let mut moved = Vec::with_capacity(self.0.len());
+        let mut new = new.into_iter().peekable();
+        for &old in &self.0 {
+            while let Some(added) = new.next_if(|&added| added < old) {
+                merged.push(added);
+            }
+            new.next_if_eq(&old);
+            moved.push(merged.len());
+            merged.push(old);
+        }
+        merged.extend(new);
+        self.0 = merged;
+        moved
+    }
+
+    /// The point at `place`.
+    fn at(&self, place: usize) -> Node {
+        self.0.get(place).copied().unwrap_or_default()
+    }
+
+    /// The place of `node`, which is hot.
+    fn place(&self, node: Node) -> usize {
+        self.0.partition_point(|&h| h < node)
     }
 }
 
@@ -322,14 +367,25 @@ fn grouped<T: Copy + Default>(items: impl Iterator<Item = (usize, T)> + Clone, c
 
 /// [`round`], with the edges given up as `Unjoined` should they not settle in `rounds` rounds.
 fn settle(rings: &[Vec<Node>], rounds: usize, meter: &mut Meter) -> Result<Result<Rounded, Unjoined>, Exhausted> {
-    let mut hot = Hot::of(rings.iter().flatten().copied());
-    let mut paths = rings.to_vec();
+    // The paths are the places of their points among the hot points, which every point of theirs is.
+    let (mut hot, mut paths) = Hot::ranked(rings);
     // Each round bends the edges, or, once none can be bent further, makes hot the cells where they cross.
-    let mut near = Near::of(&hot, side_for(hot.0.len()), meter)?;
+    // An edge is looked at again only where it may now pass a hot point: one made by bending is looked at
+    // among them all, and after a round of crossings every edge among the cells made hot. The hot points
+    // are in grids: those hot at first, and then those each round of crossings made.
+    let mut grids = vec![Near::of(&hot, side_for(hot.0.len()), meter)?];
+    let mut look = Look::all(&paths);
     for _ in 0..rounds {
-        let Bent::None(edges) = bend(&mut paths, &near, meter)? else { continue };
-        let crossing = crossings(&edges, meter)?;
+        let Bent::None(edges, fresh) = bend(&mut paths, &mut look, &hot, &grids, meter)? else { continue };
+        // Most edges are not new from the second check on, and only the new ones can cross.
+        let crossing = if 2 * fresh.iter().filter(|&&new| new).count() > edges.len() {
+            crossings(&edges, meter)?
+        } else {
+            crossings_of_new(&edges, &fresh, meter)?
+        };
+        look.unchecked.iter_mut().flatten().for_each(|unchecked| *unchecked = false);
         if crossing.is_empty() {
+            let paths = paths.iter().map(|path| path.iter().map(|&place| hot.at(place)).collect()).collect();
             return Ok(Ok(Rounded { paths, hot: hot.0 }));
         }
         // Each cell is new: an edge that passes through a hot cell has been bent through its point.
@@ -339,10 +395,60 @@ fn settle(rings: &[Vec<Node>], rounds: usize, meter: &mut Meter) -> Result<Resul
             let Some(cell) = meeting(a, b, c, d, at) else { return Ok(Err(Unjoined)) };
             cells.push(cell);
         }
-        hot.extend(cells);
-        near = Near::of(&hot, side_for(hot.0.len()), meter)?;
+        let added = Hot::of(cells.iter().copied());
+        let moved = hot.extend(cells);
+        paths.iter_mut().flatten().for_each(|place| *place = moved.get(*place).copied().unwrap_or(*place));
+        grids.push(Near::of(&added, side_for(added.0.len()), meter)?);
+        look.added = Some(Added::of(&added));
     }
     Ok(Err(Unjoined))
+}
+
+/// Which edges [`bend`] looks at, those that may pass through the cell of a hot point other than their ends,
+/// and which [`crossings`] looks at.
+#[derive(Debug)]
+struct Look {
+    /// For each edge of each path, whether it is new since the hot points last changed, and is looked at
+    /// among them all.
+    new: Vec<Vec<bool>>,
+    /// The bounds of the hot points the last round of crossings made, the last grid, which the other edges
+    /// are looked at among. With none, an edge that isn't new passes none: it passed none when it was
+    /// looked at, and neither it nor the hot points have changed since.
+    added: Option<Added>,
+    /// For each edge of each path, whether it is new since the edges were last checked for crossings. 2
+    /// edges that are not cross no more: where they crossed, both were bent through the cell made hot.
+    unchecked: Vec<Vec<bool>>,
+}
+
+impl Look {
+    /// Every edge of `paths` looked at.
+    fn all(paths: &[Vec<usize>]) -> Look {
+        let each = || paths.iter().map(|path| vec![true; path.len().saturating_sub(1)]).collect();
+        Look { new: each(), added: None, unchecked: each() }
+    }
+}
+
+/// The bounds of the hot points a round of crossings made: an edge can pass only through the cell of a point
+/// within its own bounds ([`through`]).
+#[derive(Debug)]
+struct Added {
+    least: Node,
+    most: Node,
+}
+
+impl Added {
+    /// The bounds of `added`.
+    fn of(added: &Hot) -> Added {
+        let (least, most) = added.0.iter().fold((Node { x: i64::MAX, y: i64::MAX }, Node { x: i64::MIN, y: i64::MIN }), |(least, most), n| {
+            (Node { x: least.x.min(n.x), y: least.y.min(n.y) }, Node { x: most.x.max(n.x), y: most.y.max(n.y) })
+        });
+        Added { least, most }
+    }
+
+    /// Whether a point of these may lie within the bounds of the segment from `a` to `b`.
+    fn within(&self, a: Node, b: Node) -> bool {
+        a.x.min(b.x) <= self.most.x && self.least.x <= a.x.max(b.x) && a.y.min(b.y) <= self.most.y && self.least.y <= a.y.max(b.y)
+    }
 }
 
 /// What [`bend`] did.
@@ -351,43 +457,74 @@ enum Bent {
     /// Bent an edge or more.
     Some,
     /// Bent none: each edge of the paths once, from its least end, in order of their least ends, as
-    /// [`crossings`] takes them.
-    None(Vec<(Node, Node)>),
+    /// [`crossings`] takes them, and whether each is new since the edges were last checked for crossings.
+    None(Vec<(Node, Node)>, Vec<bool>),
 }
 
-/// Bends each edge of `paths` that passes through the cell of a hot point other than its ends through
-/// that point, the points in order along the edge: `near` holds the hot points. One unit of `meter` for
-/// each edge, each bucket it looks in and each hot point tested against it.
-fn bend(paths: &mut [Vec<Node>], near: &Near, meter: &mut Meter) -> Result<Bent, Exhausted> {
+/// Bends each edge of `paths`, each a list of places among the points of `hot`, that passes through the
+/// cell of a hot point other than its ends through that point, the points in order along the edge: `grids`
+/// hold the hot points, and `look` says which edges may pass one, which it then keeps. One unit of `meter`
+/// for each edge, and for each bucket an edge looked at looks in and each hot point tested against it.
+fn bend(paths: &mut [Vec<usize>], look: &mut Look, hot: &Hot, grids: &[Near], meter: &mut Meter) -> Result<Bent, Exhausted> {
     // Each edge, from its least end, with where it is drawn: an edge drawn several times, either way, is
-    // worked out once. Sorted, the edges drawn alike lie side by side.
-    let mut edges: Vec<((Node, Node), usize, usize)> = Vec::with_capacity(paths.iter().map(Vec::len).sum());
+    // worked out once. The hot points are in order, so the edges in order of their ends' places are in
+    // order of their ends. Put by their least end's place, those of a place in the order the paths draw
+    // them, and those of a place by their other end's, which keeps that order among the edges drawn alike,
+    // they are sorted, and the edges drawn alike lie side by side. A place has few edges, and sorting all of
+    // them compared each many times.
+    let mut edges: Vec<(usize, usize, usize, usize)> = Vec::with_capacity(paths.iter().map(Vec::len).sum());
     for (p, path) in paths.iter().enumerate() {
         for (i, pair) in path.windows(2).enumerate() {
             if let &[a, b] = pair {
-                edges.push(((a.min(b), a.max(b)), p, i));
+                edges.push((a.min(b), a.max(b), p, i));
             }
         }
     }
-    edges.sort_unstable();
-    // The points each edge is bent through, from its least end: a stretch of `points` for each edge drawn.
-    let mut points: Vec<Node> = Vec::new();
-    let mut bends: Vec<(usize, usize, usize, usize)> = Vec::new();
-    let mut edge = 0;
-    while let Some(&(key, ..)) = edges.get(edge) {
-        meter.charge(1)?;
-        let start = points.len();
-        through(key.0, key.1, near, meter, &mut points)?;
-        let alike = edges.get(edge..).map_or(0, |rest| rest.iter().take_while(|(k, ..)| *k == key).count());
-        if points.len() > start {
-            bends.extend(edges.get(edge..edge + alike).into_iter().flatten().map(|&(_, p, i)| (p, i, start, points.len())));
+    let (mut sorted, starts) = grouped(edges.iter().enumerate().map(|(k, &(least, ..))| (least, k)), hot.0.len());
+    for span in starts.windows(2) {
+        let &[start, end] = span else { continue };
+        if let Some(group) = sorted.get_mut(start..end).filter(|group| group.len() > 1) {
+            group.sort_by_key(|&k| edges.get(k).map(|&(_, most, ..)| most));
         }
-        edge += alike.max(1);
     }
+    let key = |k: usize| edges.get(k).map(|&(least, most, ..)| (least, most));
+    // The points each edge is bent through, from its least end: a stretch of `points` for each edge drawn.
+    let (mut points, mut found): (Vec<usize>, Vec<Node>) = (Vec::new(), Vec::new());
+    // For each edge drawn, once, whether it is new since the last check for crossings.
+    let mut fresh = Vec::new();
+    let mut bends: Vec<(usize, usize, usize, usize)> = Vec::new();
+    let mut at = 0;
+    while let Some(&k) = sorted.get(at) {
+        meter.charge(1)?;
+        let (least, most) = key(k).unwrap_or_default();
+        let start = points.len();
+        let alike = sorted.get(at..).map_or(0, |rest| rest.iter().take_while(|&&j| key(j) == Some((least, most))).count());
+        let drawn = sorted.get(at..at + alike).unwrap_or_default();
+        let (a, b) = (hot.at(least), hot.at(most));
+        let flag = |of: &[Vec<bool>], j: usize| edges.get(j).and_then(|&(_, _, p, i)| of.get(p)?.get(i)) == Some(&true);
+        if drawn.iter().any(|&j| flag(&look.new, j)) {
+            for grid in grids {
+                through(a, b, grid, meter, &mut found)?;
+            }
+            // Each grid's points are in order along the edge, and those of all of them are put in order.
+            found.sort_by_key(|&c| (along(a, b, c), c));
+        } else if let (Some(grid), true) = (grids.last(), look.added.as_ref().is_some_and(|added| added.within(a, b))) {
+            through(a, b, grid, meter, &mut found)?;
+        }
+        fresh.push(drawn.iter().any(|&j| flag(&look.unchecked, j)));
+        points.extend(found.drain(..).map(|node| hot.place(node)));
+        if points.len() > start {
+            let drawn = sorted.get(at..at + alike).into_iter().flatten().filter_map(|&j| edges.get(j));
+            bends.extend(drawn.map(|&(_, _, p, i)| (p, i, start, points.len())));
+        }
+        at += alike.max(1);
+    }
+    look.added = None;
+    look.new.iter_mut().flatten().for_each(|new| *new = false);
     if bends.is_empty() {
-        let mut once: Vec<(Node, Node)> = edges.into_iter().map(|(key, ..)| key).collect();
+        let mut once: Vec<(Node, Node)> = sorted.iter().filter_map(|&k| key(k)).map(|(least, most)| (hot.at(least), hot.at(most))).collect();
         once.dedup();
-        return Ok(Bent::None(once));
+        return Ok(Bent::None(once, fresh));
     }
     // Each path that has an edge bent, rebuilt with the points of its edges in the order it runs.
     bends.sort_unstable();
@@ -397,6 +534,11 @@ fn bend(paths: &mut [Vec<Node>], near: &Near, meter: &mut Meter) -> Result<Bent,
         let Some(path_bends) = bends.get(next..next + mine).filter(|bent| !bent.is_empty()) else { continue };
         next += mine;
         let mut out = Vec::with_capacity(path.len() + path_bends.iter().map(|&(_, _, from, to)| to - from).sum::<usize>());
+        // The edges an edge is bent into are new, and the others not, though they may not have been
+        // checked for crossings yet.
+        let mut new = Vec::with_capacity(out.capacity());
+        let mut unchecked = Vec::with_capacity(out.capacity());
+        let was = look.unchecked.get(p).cloned().unwrap_or_default();
         let mut pending = path_bends.iter().peekable();
         for (i, pair) in path.windows(2).enumerate() {
             let &[a, b] = pair else { continue };
@@ -411,10 +553,18 @@ fn bend(paths: &mut [Vec<Node>], near: &Near, meter: &mut Meter) -> Result<Bent,
                 } else {
                     out.extend(between.iter().rev().copied());
                 }
+                new.extend(std::iter::repeat_n(true, between.len() + 1));
+                unchecked.extend(std::iter::repeat_n(true, between.len() + 1));
+            } else {
+                new.push(false);
+                unchecked.push(was.get(i).copied().unwrap_or(true));
             }
         }
         out.extend(path.last().copied());
         *path = out;
+        if let (Some(slot), Some(was)) = (look.new.get_mut(p), look.unchecked.get_mut(p)) {
+            (*slot, *was) = (new, unchecked);
+        }
     }
     Ok(Bent::Some)
 }
@@ -466,7 +616,7 @@ fn crossings(edges: &[(Node, Node)], meter: &mut Meter) -> Result<Vec<[Node; 4]>
 fn crossings_in(edges: &[(Node, Node)], side: usize, meter: &mut Meter) -> Result<Option<Vec<[Node; 4]>>, Exhausted> {
     let buckets = Buckets::over(edges.iter().flat_map(|&(a, b)| [a, b]), side);
     let most = 4 * edges.len();
-    let mut put: Vec<(usize, usize)> = Vec::new();
+    let mut put: Vec<(usize, usize)> = Vec::with_capacity(2 * edges.len());
     for (k, &(a, b)) in edges.iter().enumerate().filter(|(_, (a, b))| a != b) {
         buckets.along(a, b, |bucket| {
             put.push((bucket, k));
@@ -502,6 +652,58 @@ fn crossings_in(edges: &[(Node, Node)], side: usize, meter: &mut Meter) -> Resul
     Ok(Some(found))
 }
 
+/// The pairs of `edges` that cross, as [`crossings`] finds them, when only those `fresh` marks can cross:
+/// the others don't cross each other ([`Look::unchecked`]). The new edges are put in buckets over their
+/// own bounds, and every edge whose bounds meet theirs looks for them in the buckets it passes. One unit of
+/// `meter` for each bucket an edge is put in or looks in, and each pair of edges tested.
+fn crossings_of_new(edges: &[(Node, Node)], fresh: &[bool], meter: &mut Meter) -> Result<Vec<[Node; 4]>, Exhausted> {
+    let new: Vec<usize> = (0..edges.len()).filter(|&k| fresh.get(k) == Some(&true)).collect();
+    let ends: Vec<Node> = new.iter().filter_map(|&k| edges.get(k)).flat_map(|&(a, b)| [a, b]).collect();
+    let buckets = Buckets::over(ends.iter().copied(), side_for(new.len()));
+    let bounds = Added::of(&Hot(ends));
+    let mut put: Vec<(usize, usize)> = Vec::with_capacity(2 * new.len());
+    for &k in &new {
+        let Some(&(a, b)) = edges.get(k).filter(|(a, b)| a != b) else { continue };
+        buckets.along(a, b, |bucket| {
+            put.push((bucket, k));
+            meter.charge(1)
+        })?;
+    }
+    let (held, starts) = grouped(put.iter().copied(), buckets.count());
+    let mut found = Vec::new();
+    for (k, &(a, b)) in edges.iter().enumerate() {
+        if a == b || !bounds.within(a, b) {
+            continue;
+        }
+        let is_new = fresh.get(k) == Some(&true);
+        buckets.along(a, b, |bucket| {
+            meter.charge(1)?;
+            let ends = starts.get(bucket).zip(starts.get(bucket + 1));
+            for &j in ends.and_then(|(&start, &end)| held.get(start..end)).unwrap_or_default() {
+                // A new edge meets each new one after it, and every other edge each new one.
+                if j == k || (is_new && j < k) {
+                    continue;
+                }
+                let (Some(&(a, b)), Some(&(c, d))) = (edges.get(k.min(j)), edges.get(k.max(j))) else { continue };
+                // The edges are in order of their least ends, and the earlier starts no further along x
+                // than the later, so they are apart along x only when the later starts after the earlier ends.
+                if c.x > b.x {
+                    continue;
+                }
+                meter.charge(1)?;
+                if level(a, b, c, d) && crosses(a, b, c, d) {
+                    found.push([a, b, c, d]);
+                }
+            }
+            Ok(())
+        })?;
+    }
+    // Edges that share several buckets were tested in each.
+    found.sort_unstable();
+    found.dedup();
+    Ok(found)
+}
+
 /// The hot point for the crossing of the edges from `a` to `b` and from `c` to `d`, which floating point
 /// puts at `at`: of the cell `at` rounds to and the 8 round it, the one nearest `at` that both edges pass
 /// through (the first in order where 2 are as near). The crossing lies in one of them unless rounding
@@ -531,10 +733,11 @@ impl TwiceArea {
     /// None.
     const ZERO: TwiceArea = TwiceArea { wraps: 0, rest: 0 };
 
-    /// Of the closed ring through `ring`'s points (the first need not be repeated at the end).
-    pub(crate) fn of(ring: &[Node]) -> TwiceArea {
-        let next = ring.iter().skip(1).chain(ring.first());
-        ring.iter().zip(next).fold(TwiceArea::ZERO, |area, (a, b)| area.plus(i128::from(a.x) * i128::from(b.y) - i128::from(b.x) * i128::from(a.y)))
+    /// Of the closed ring through the points `nodes` gives one by one (the first need not be repeated at
+    /// the end).
+    pub(crate) fn along(nodes: impl Iterator<Item = Node> + Clone) -> TwiceArea {
+        let next = nodes.clone().skip(1).chain(nodes.clone().take(1));
+        nodes.zip(next).fold(TwiceArea::ZERO, |area, (a, b)| area.plus(i128::from(a.x) * i128::from(b.y) - i128::from(b.x) * i128::from(a.y)))
     }
 
     /// This and `term`, which is less than 2^127 in size.
@@ -635,13 +838,46 @@ mod tests {
     fn hot_points_are_kept_once_in_order() {
         let mut hot = Hot::of([n(4, 2), n(0, 0), n(2, 6), n(4, -2), n(2, 6), n(8, 0)]);
         assert_eq!(hot.0, [n(0, 0), n(2, 6), n(4, -2), n(4, 2), n(8, 0)], "in order of x, then y, each once");
-        hot.extend([n(6, 4), n(2, 6), n(-2, 0), n(6, 4)]);
+        let moved = hot.extend([n(6, 4), n(2, 6), n(-2, 0), n(6, 4)]);
         assert_eq!(hot.0, [n(-2, 0), n(0, 0), n(2, 6), n(4, -2), n(4, 2), n(6, 4), n(8, 0)], "the crossings' points join in their places, once");
+        assert_eq!(moved, [1, 2, 3, 4, 6], "where each point hot before is now");
+        assert_eq!((hot.place(n(4, 2)), hot.at(4), hot.at(9)), (4, n(4, 2), Node::default()));
+    }
+
+    #[test]
+    fn rings_are_numbered_by_the_places_of_their_points_among_the_hot_points() {
+        let rings = [vec![n(4, 0), n(0, 0), n(0, 4), n(4, 0)], vec![n(0, 4), n(8, 8)]];
+        let (hot, paths) = Hot::ranked(&rings);
+        assert_eq!(hot.0, [n(0, 0), n(0, 4), n(4, 0), n(8, 8)]);
+        assert_eq!(paths, [vec![2, 0, 1, 2], vec![1, 3]]);
+    }
+
+    #[test]
+    fn the_points_a_round_of_crossings_made_are_looked_for_only_within_their_bounds() {
+        let added = Added::of(&Hot::of([n(2, 2), n(6, 4)]));
+        assert_eq!((added.least, added.most), (n(2, 2), n(6, 4)));
+        // A segment whose bounds meet theirs, an edge or a corner at least, either way round.
+        for (a, b) in [(n(0, 0), n(2, 2)), (n(6, 4), n(8, 8)), (n(0, 4), n(8, 4)), (n(4, 0), n(4, 2)), (n(8, 8), n(6, 4))] {
+            assert!(added.within(a, b), "{a:?} to {b:?}");
+        }
+        // And segments beside them on each side.
+        for (a, b) in [(n(0, 0), n(1, 8)), (n(7, 0), n(8, 8)), (n(0, 0), n(8, 1)), (n(0, 5), n(8, 8))] {
+            assert!(!added.within(a, b), "{a:?} to {b:?}");
+        }
     }
 
     /// The hot points `hot` in a grid of `side` buckets each way.
     fn near(hot: &Hot, side: usize) -> Near {
         Near::of(hot, side, &mut Budget::DEFAULT.meter()).unwrap()
+    }
+
+    /// `paths` bent as [`bend`] bends them, as places among the points of `hot`, in `side` buckets each way.
+    fn bent(paths: &mut Vec<Vec<Node>>, hot: &Hot, side: usize, meter: &mut Meter) -> Bent {
+        let mut places: Vec<Vec<usize>> = paths.iter().map(|path| path.iter().map(|&node| hot.place(node)).collect()).collect();
+        let mut look = Look::all(&places);
+        let bent = bend(&mut places, &mut look, hot, &[near(hot, side)], meter).unwrap();
+        *paths = places.iter().map(|path| path.iter().map(|&place| hot.at(place)).collect()).collect();
+        bent
     }
 
     /// The work `run` spends.
@@ -822,9 +1058,9 @@ mod tests {
         assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 4 + 7);
         // Out and back: bent the same both ways.
         let mut paths = vec![vec![n(0, 0), n(20, 10), n(0, 0)]];
-        assert_eq!(bend(&mut paths, &near(&hot, 2), &mut meter).unwrap(), Bent::Some);
+        assert_eq!(bent(&mut paths, &hot, 2, &mut meter), Bent::Some);
         assert_eq!(paths[0], [n(0, 0), n(6, 2), n(10, 4), n(10, 6), n(20, 10), n(10, 6), n(10, 4), n(6, 2), n(0, 0)]);
-        assert!(matches!(bend(&mut paths, &near(&hot, 2), &mut meter).unwrap(), Bent::None(_)), "bent through every one already");
+        assert!(matches!(bent(&mut paths, &hot, 2, &mut meter), Bent::None(..)), "bent through every one already");
         // The same turned upside down and moved: running downhill, the edge reaches (-10, 26) before
         // (-10, 24), the other way round from the points' own order.
         let hot = Hot::of([n(-20, 30), n(0, 20), n(-10, 24), n(-14, 28), n(-14, 24), n(-6, 26), n(-10, 26)]);
@@ -838,7 +1074,7 @@ mod tests {
         let mut paths = vec![vec![n(0, 0), n(8, 0), n(8, 8), n(0, 8), n(0, 0)], vec![n(8, 0), n(16, 0), n(16, 8), n(8, 8), n(8, 0)]];
         let hot = Hot::of(paths.iter().flatten().copied().chain([n(8, 4), n(4, 0)]));
         let mut meter = Budget::DEFAULT.meter();
-        assert_eq!(bend(&mut paths, &near(&hot, 3), &mut meter).unwrap(), Bent::Some);
+        assert_eq!(bent(&mut paths, &hot, 3, &mut meter), Bent::Some);
         assert_eq!(paths[0], [n(0, 0), n(4, 0), n(8, 0), n(8, 4), n(8, 8), n(0, 8), n(0, 0)]);
         assert_eq!(paths[1], [n(8, 0), n(16, 0), n(16, 8), n(8, 8), n(8, 4), n(8, 0)]);
     }
@@ -981,6 +1217,69 @@ mod tests {
     }
 
     #[test]
+    fn only_the_new_edges_are_looked_at_and_the_same_crossings_found() {
+        // Old edges that don't cross each other, level rows, and new ones drawn at random across them.
+        let mut rng = stitchcraft_core::SplitMix64::new(0x5eed_0033);
+        let mut found = 0;
+        for round in 0..20 {
+            let mut drawn: Vec<((Node, Node), bool)> =
+                (0..30).map(|k| ((n(even(&mut rng, 40), 4 * k), n(even(&mut rng, 40), 4 * k)), false)).collect();
+            drawn.extend((0..1 + round % 5).map(|_| ((n(even(&mut rng, 40), even(&mut rng, 70)), n(even(&mut rng, 40), even(&mut rng, 70))), true)));
+            let mut drawn: Vec<((Node, Node), bool)> = drawn.into_iter().map(|((a, b), new)| ((a.min(b), a.max(b)), new)).collect();
+            drawn.sort();
+            drawn.dedup_by_key(|(edge, _)| *edge);
+            let (edges, fresh): (Vec<(Node, Node)>, Vec<bool>) = drawn.into_iter().unzip();
+            let all = crossings(&edges, &mut Budget::DEFAULT.meter()).unwrap();
+            assert_eq!(crossings_of_new(&edges, &fresh, &mut Budget::DEFAULT.meter()).unwrap(), all, "round {round}");
+            found += all.len();
+        }
+        assert!(found > 20, "{found} crossings in all");
+        // With no new edge there is nothing to look for, and no work.
+        let edges = [(n(0, 0), n(8, 0)), (n(0, 4), n(8, 4))];
+        let (found, work) = spent(|meter| crossings_of_new(&edges, &[false, false], meter).unwrap());
+        assert_eq!((found, work), (Vec::new(), 0));
+        // A new edge across 2 old ones, in 1 bucket: put in it, then each of the 3 looks in it, and the new
+        // one is tested against neither, being itself, while each old one is tested against it.
+        let edges = [(n(0, 0), n(8, 0)), (n(0, 4), n(8, 4)), (n(4, -2), n(4, 6))];
+        let (found, work) = spent(|meter| crossings_of_new(&edges, &[false, false, true], meter).unwrap());
+        assert_eq!(found, [[n(0, 0), n(8, 0), n(4, -2), n(4, 6)], [n(0, 4), n(8, 4), n(4, -2), n(4, 6)]]);
+        assert_eq!(work, 1 + 3 + 2);
+        // 2 new edges that cross are tested once, from the first of them.
+        let edges = [(n(0, 0), n(8, 8)), (n(0, 8), n(8, 0))];
+        let (found, work) = spent(|meter| crossings_of_new(&edges, &[true, true], meter).unwrap());
+        assert_eq!((found, work), (vec![[n(0, 0), n(8, 8), n(0, 8), n(8, 0)]], 2 + 2 + 1));
+        // Edges in a bucket but apart along x aren't tested, and an edge that starts where a new one ends
+        // along x is.
+        let edges = [(n(4, -2), n(4, 6)), (n(4, 2), n(8, 2)), (n(6, 4), n(8, 4)), (n(10, -2), n(10, 6))];
+        let (found, work) = spent(|meter| crossings_of_new(&edges, &[true, false, false, true], meter).unwrap());
+        assert_eq!((found, work), (Vec::new(), 2 + 4 + 1));
+    }
+
+    #[test]
+    fn edges_bent_none_come_once_in_order_of_their_ends() {
+        // From (0, 0) the ring runs to (8, 8) first and back from (8, 0) last: in order, (8, 0) comes first.
+        let (a, b, c) = (n(0, 0), n(8, 8), n(8, 0));
+        let hot = Hot::of([a, b, c]);
+        let mut places = vec![[a, b, c, a].iter().map(|&node| hot.place(node)).collect::<Vec<_>>()];
+        let mut look = Look::all(&places);
+        let Bent::None(once, fresh) = bend(&mut places, &mut look, &hot, &[near(&hot, 1)], &mut Budget::DEFAULT.meter()).unwrap() else { panic!() };
+        assert_eq!((once, fresh), (vec![(a, c), (a, b), (c, b)], vec![true; 3]));
+    }
+
+    #[test]
+    fn the_edges_a_bend_makes_are_new_and_the_others_keep_what_they_were() {
+        // A square with (4, 0) and (8, 4) hot on 2 of its sides: those 2 are bent into 2 edges each.
+        let ring = [n(0, 0), n(8, 0), n(8, 8), n(0, 8), n(0, 0)];
+        let hot = Hot::of(ring.iter().copied().chain([n(4, 0), n(8, 4)]));
+        let mut places = vec![ring.iter().map(|&node| hot.place(node)).collect::<Vec<_>>()];
+        let mut look = Look::all(&places);
+        look.unchecked = vec![vec![false, false, true, false]];
+        assert_eq!(bend(&mut places, &mut look, &hot, &[near(&hot, 2)], &mut Budget::DEFAULT.meter()).unwrap(), Bent::Some);
+        assert_eq!(look.new, [[true, true, true, true, false, false]]);
+        assert_eq!(look.unchecked, [[true, true, true, true, true, false]]);
+    }
+
+    #[test]
     fn nearly_parallel_edges_however_long_settle() {
         // Pairs of edges up to several metres long, level or at a slant, each end a few half cells aside
         // from a line through a common middle: they cross at angles down to a few half cells in their
@@ -1039,14 +1338,14 @@ mod tests {
     #[test]
     fn areas_are_exact_and_ordered() {
         let square = [n(0, 0), n(2, 0), n(2, 2), n(0, 2)];
-        assert_eq!(TwiceArea::of(&square), TwiceArea { wraps: 0, rest: 8 });
-        assert!(TwiceArea::of(&square).counter_clockwise());
+        assert_eq!(TwiceArea::along(square.iter().copied()), TwiceArea { wraps: 0, rest: 8 });
+        assert!(TwiceArea::along(square.iter().copied()).counter_clockwise());
         let turned: Vec<Node> = square.iter().rev().copied().collect();
-        assert!(TwiceArea::of(&turned).clockwise());
+        assert!(TwiceArea::along(turned.iter().copied()).clockwise());
         // A sliver a half cell wide and 2^52 half cells long: no float would say which way it turns.
         let far = 1_i64 << 52;
         let sliver = [n(-far, 0), n(far, 0), n(far, 2), n(-far + 2, 2)];
-        assert!(TwiceArea::of(&sliver).counter_clockwise());
+        assert!(TwiceArea::along(sliver.iter().copied()).counter_clockwise());
         // Sums past 2^127 wrap, and still compare as the numbers they stand for.
         let top = TwiceArea { wraps: 0, rest: i128::MAX };
         assert_eq!(top.plus(1), TwiceArea { wraps: 1, rest: i128::MIN });

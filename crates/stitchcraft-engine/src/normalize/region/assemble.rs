@@ -20,7 +20,7 @@
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Meter, Point};
 
 use super::arrange::Arrangement;
-use super::geom::{Envelope, Location, closed, locate_in_ring};
+use super::geom::{Envelope, Location, closed_of, locate_in_ring};
 use super::snap::TwiceArea;
 
 /// One part of a fill's area: rings as numbered points of the arrangement, each open (its first point not
@@ -198,7 +198,7 @@ struct Outline {
 /// outline's bounds cover the hole's, per point of the hole looked up on the outline and per point of the
 /// outline the hole is then located in.
 fn join(groups: Vec<Vec<Vec<usize>>>, arrangement: &Arrangement, meter: &mut Meter) -> Result<Vec<Part>, Exhausted> {
-    let polyline = |ring: &[usize]| closed(&ring.iter().map(|&i| arrangement.point(i)).collect::<Vec<_>>());
+    let polyline = |ring: &[usize]| closed_of(ring.iter().map(|&i| arrangement.point(i)), ring.len());
     let mut parts: Vec<Part> = Vec::new();
     let mut free: Vec<Vec<usize>> = Vec::new();
     for rings in groups {

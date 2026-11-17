@@ -520,6 +520,68 @@ simpler. The machine file and the thickness measure take about 1,000 instruction
    fills, 4 %. In the release build, finding a part's tails (`split::tails`) took 1.0 billion of the
    split's 1.6, and the parts 2 shapes share took 0.7 billion of the sewing order's 1.1.
 
+### The costs brought down
+
+M13.33 makes those stages cheaper and sews the same: every golden file stays as it is, byte for byte,
+and so does what each traced dog exports. The targets were set before the work, in millions of
+instructions on the dog on turf in 6 threads, natively, as above:
+
+| Stage | M13.32 | Target |
+|---|---:|---:|
+| The neighbours' overlaps | 21,692 | 9,000 |
+| The arranging under every region operation | 17,890 | 8,000 |
+| The split into parts by the rules | 1,686 | 1,200 |
+| The search for the sewing order | 1,122 | 800 |
+| **The whole run** | **26,607** | **13,300** |
+
+The whole run's target is the step's: half of M13.32's count, for each traced dog. The overlaps can't
+go back to the 4.9 billion they took before M13.30 with the same stitches, since M13.30's overlaps are
+work that the stitches need. So their target is what the rest of the run leaves of the half.
+
+What came of it, measured the same way on 2026-11-17, on main `9597c479` (M13.35 merged) and on this
+step's head:
+
+| Stage | Main | M13.33 | Target |
+|---|---:|---:|---:|
+| The neighbours' overlaps | 21,688 | 16,486 | 9,000 |
+| The arranging under every region operation | 17,887 | 13,595 | 8,000 |
+| The split into parts by the rules | 1,686 | 1,412 | 1,200 |
+| The search for the sewing order | 1,122 | 933 | 800 |
+| **The whole run** | **26,655** | **20,941** | **13,300** |
+
+CI's counts, the records now, fell by as much. The dogs' exports take 21.1, 24.3, 22.5 and 26.8 billion
+instructions where main took 27.0, 31.2, 28.9 and 34.1: 21 to 22 % less. The pear takes 2.26 billion
+for 2.66, and the TS-13 sheets 2 to 7 % less. Shrinking a region 300 times takes 5.4 billion for 6.7.
+Every golden file is the same, byte for byte, and so is what each picture exports.
+
+The savings are in the region operations, and each gives the same points as before. Each change was
+counted on the dog on turf, after those before it, in billions of instructions:
+
+- **Snap rounding by places.** The rings are kept as places in the sorted list of hot points while they
+  are bent, so the edges of a round are put in order by their places instead of sorted. With it, the
+  order of the edges round each point is sorted once for the faces and the parts: 26.6 to 24.6. Sorting
+  the edges by places found with a binary search for each point first saved 0.4 only: the searches cost
+  what the sort did.
+- **Edges looked at again only where they may pass a new hot point:** 24.6 to 22.9.
+- **Parts apart.** An intersection or a difference leaves out the parts far from the other region: 22.9
+  to 22.5. That is little, because a dog's neighbours join into one part round each area, which is never
+  far from it.
+- **The shapes beyond a line's part grown only near it,** and lists made at their size: 22.5 to 21.2.
+- **Crossings looked for only among the new edges** from the second check on, and the grid of every hot
+  point no longer built again: 21.2 to 20.9.
+- Looking for a ring in the faces round it from the smallest saved 2 million, and was undone.
+
+**Why not half.** What is left is the work that the overlaps' stitches are made of. On the dog on
+turf, the overlaps still do about 1,800 operations on regions, most on the shapes round an area joined
+into one part, which reaches all round it. The same result from less work needs operations on less of a
+shape: the part near the area, cut out of it. Such a part has points where the cut is made, and the
+operation then numbers its points in another order, which can start a ring elsewhere and move where a
+fill starts sewing. That changes what sews, so it is left to a step of its own, with M13.34, which needs
+the dog to fit VectorCraft's budget of about 11 billion. Natively the dogs now take 21 to 27 billion,
+and in VectorCraft about 75 to 100 billion, an estimate at 3.6 to 3.7 times the native count.
+
+Less work is charged to a budget for the same drawing, so one that ran out of work may now finish.
+
 A live preview and the drawing of a test sheet have smaller budgets, 50 million for a light filter. A
 live preview spends what its budget of units allows and shows less when that runs out, and the
 contract tests check each level (`REQ-VC-003`). The Test Sheet filter digitizes nothing. TS-13F's drawing

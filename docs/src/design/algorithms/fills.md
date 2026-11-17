@@ -96,6 +96,14 @@ however many times the rings draw it. A ring is rebuilt when one of its edges is
 join the hot points at once, merged into the sorted list. The arrangement finds each point's number by its
 place in that list, and groups the steps the rings take by their lower point. The steps between the same 2
 points, either way round, then lie side by side in a group, and are one edge.
+From M13.33 the rings are kept as the places of their points in that list while they are bent. The
+edges of a round are then sorted by grouping them by their lower place, which costs a step for each
+edge where a sort of the points compared each many times. Bending checks an edge again only where it
+may now pass a hot point. A new edge, made by bending, may pass any of them. An older one passed none
+when it was last checked, so after a round of crossings the search for it covers the cells that round
+made hot, if its bounds meet theirs. The points come out the same, for less work charged. The order of the edges round each
+point is sorted once, for the faces and for the rings of the parts: the order of those kept is the
+order of all with the others left out.
 Property tests draw random rings on a grid, and random rings with float coordinates beside near-copies of
 themselves, moved or turned by a hair or drawn back, and count how many times they wind round points off
 the edges. Such a point lies in the region exactly when the fill rule fills it, unless it lies in a part
@@ -110,7 +118,14 @@ clockwise. Its rings then wind -1 times round each point inside it and 0 times r
 the faces that the rings of 2 regions bound, the union keeps those some ring winds round and the
 intersection those wound -2 times. The difference first reverses the second region's rings, then keeps the
 faces wound -1 times. A region grows or shrinks by each part's offset curves, with round corners
-(`normalize::offset`), and the parts grown are joined, since they may then overlap.
+(`normalize::offset`), and the parts grown are joined, since they may then overlap. An intersection leaves out
+the parts of either region that no part of the other comes near, and a difference those of the second.
+The parts are taken in groups, each part's bounds within 2⁻²⁰ mm of another's of its group, about 32,000
+cells of the grid. The rings of 2 groups then neither meet nor bend each other's edges, and their points
+are numbered in the same order with the others there or not. So each group's faces, rings and parts come
+out the same, and a group whose faces the operation keeps none of can be left out. Growing a region for
+its intersection with another (`buffered_near`) grows only the groups whose bounds, grown by the
+distance, come within 2⁻²⁰ mm of the other's.
 
 ## Tatami fill
 

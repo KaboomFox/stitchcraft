@@ -2035,6 +2035,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.33: the largest costs of automatic digitizing brought down, with the same stitches. Every golden
+  file and every traced dog's export is the same, byte for byte.
+  - Snap rounding keeps the rings as places among the hot points and looks at an edge again only where it
+    may pass a new hot point. Each point's edges are sorted once for the faces and the parts.
+  - An intersection or a difference leaves out the groups of parts that can't reach its result, and the
+    overlaps grow a line's neighbours only near the line.
+  - The work charged to a budget falls with the work done.
 - M13.35: no spot of an automatically digitized design sews above a cap (`REQ-AUTO-071` to `REQ-AUTO-076`).
   The owner said of the thickest spots M13.30 left, 5.5 to 7 fills, that they won't work. The cap of 4 fills
   isn't met yet: the traced dogs sew 4.5 to 5.9 fills at their thickest spots, the other designs up to 4.55.

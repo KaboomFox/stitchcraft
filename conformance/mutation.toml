@@ -302,6 +302,36 @@ why = "with 1 bucket each edge is put once, which is never more than 4 each, so 
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/normalize/region/snap.rs"
+mutant = "replace * with + in settle"
+line = "let crossing = if 2 * fresh.iter().filter(|&&new| new).count() > edges.len() {"
+why = "it only chooses between 2 searches that find the same crossings, all of them among every edge or those of a new edge, as the cases of both check: what is found is the same, and only the work differs"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/snap.rs"
+mutant = "replace > with >= in settle"
+line = "let crossing = if 2 * fresh.iter().filter(|&&new| new).count() > edges.len() {"
+why = "it only chooses between 2 searches that find the same crossings, all of them among every edge or those of a new edge, as the cases of both check: what is found is the same, and only the work differs"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/snap.rs"
+mutant = "replace > with >= in bend"
+line = "if let Some(group) = sorted.get_mut(start..end).filter(|group| group.len() > 1) {"
+why = "a group of 1 edge is in order already, and sorting it leaves it as it is"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/snap.rs"
+mutant = "replace < with <= in crossings_of_new"
+line = "if j == k || (is_new && j < k) {"
+why = "an edge and itself were left out just before, so j <= k and j < k leave out the same new edges"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/snap.rs"
+mutant = "replace < with > in crossings_of_new"
+line = "if j == k || (is_new && j < k) {"
+why = "2 new edges are then tested from the later of them instead of the earlier, once all the same, as the pair keeps the edges' order: the same pairs for the same work"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/snap.rs"
 mutant = "replace > with >= in TwiceArea::plus"
 line = "let wraps = match (wrapped, term > 0) {"
 why = "adding a term of 0 never wraps, so the sign is read only for terms that are not 0"
