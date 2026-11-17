@@ -129,7 +129,7 @@ digitize as fills, satin columns and triple runs by their shape ([stitches by sh
 Its ragged patches sew as flat fills, and its nose as one fill with the nostrils on it. Its thin, ragged
 strands of fur sew as part of the patches beside them ([thin lines](#neighbours)). The fabric is covered
 where the dog has a colour, on black fabric as on cream ([covering the fabric](#covering-the-fabric)). 4
-stitches still lie where they shouldn't: rows and outlines of fills and a running line, beside thin pieces of fur, each 1.8 to
+stitches still lie where they shouldn't, beside thin pieces of fur. They are 1.8 to
 4 mm long. M13.38 of the [roadmap](../../plan/roadmap.md) is to remove them, and the like stitches of the
 other traced dogs. The thin straight lines are jumps between patches of one colour, which the reference
 machine leaves for you to cut by hand, as it leaves the pear's: 62 of them. Where patches sewn later cover a
@@ -257,9 +257,9 @@ in 6 steps:
    and letters, no wider than a satin column (`auto_max_satin_width_mm`), keep their holes, and the shapes
    inside them sew beside them (`SC-I0908`).
 3. **Thin lines.** A photo traces soft shading and the strands of fur as thin, ragged lines between
-   patches. Each would sew as a running stitch that the fills beside it end their rows on. A part narrower
-   than a satin column can be, whose width varies along it, is merged into the shape it shares the longest
-   edge with, and sews as part of its fill (`SC-I0915`). A line of even width, as a pen draws it, sews as a
+   patches. Each would sew as a running stitch that the fills beside it end their rows on. So a part
+   narrower than a satin column can be, whose width varies along it, sews as part of the fill of the shape
+   it shares the longest edge with (`SC-I0915`). A line of even width, as a pen draws it, sews as a
    line. Turn **Merge thin lines** off (`auto_merge_lines`) to keep every line, as the `logo` style does.
 4. **Specks.** A shape or a part of one smaller than 1 mm² would sew a knot. It is merged into the shape
    it shares the longest edge with (`SC-I0905`, `auto_min_area_mm2`).

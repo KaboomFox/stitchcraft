@@ -1117,7 +1117,7 @@ fixture = "docs/fixtures/traced-dog-running-9.vectorcraft"
 auto = true
 style = "realistic"
 scale = 4.5
-allow = ["SC-I0901", "SC-I0912", "SC-I0902", "SC-I0904", "SC-I0907", "SC-I0908", "SC-W0208", "SC-I0504", "SC-I0909", "SC-W0913", "SC-I1119"]
+allow = ["SC-I0901", "SC-I0912", "SC-I0902", "SC-I0904", "SC-I0907", "SC-I0908", "SC-I0915", "SC-W0208", "SC-I0504", "SC-I0909", "SC-W0913", "SC-I1119"]
 alt = "The traced running dog digitized automatically. Its patches sew as tatami fills, the broad and the ragged alike, its thin, ragged strands of fur as part of the patches beside them, and its narrow even parts as satin columns and triple runs, in black, greys, white, tan and dark brown. Thin threads run straight between patches of one colour, jumps that the machine doesn't cut."
 
 [[shot]]
@@ -1127,7 +1127,7 @@ fixture = "docs/fixtures/traced-dog-running-9.vectorcraft"
 auto = true
 style = "thickness"
 scale = 4.5
-allow = ["SC-I0901", "SC-I0912", "SC-I0902", "SC-I0904", "SC-I0907", "SC-I0908", "SC-W0208", "SC-I0504", "SC-I0909", "SC-W0913", "SC-I1119"]
+allow = ["SC-I0901", "SC-I0912", "SC-I0902", "SC-I0904", "SC-I0907", "SC-I0908", "SC-I0915", "SC-W0208", "SC-I0504", "SC-I0909", "SC-W0913", "SC-I1119"]
 alt = "How thick the traced running dog sews, as a heat map on white. Most of the dog is grey, under 2 fills of thread. Yellow bands, 2 fills or more, run along the edges where 2 patches overlap. Orange patches, 3 fills or more, lie where several small patches meet, most of them on its chest, its face and its legs. No spot is red, 6 fills or more."
 
 [[shot]]
@@ -1138,7 +1138,7 @@ auto = true
 style = "realistic"
 fabric = "#000000"
 scale = 4.5
-allow = ["SC-I0901", "SC-I0912", "SC-I0902", "SC-I0904", "SC-I0907", "SC-I0908", "SC-W0208", "SC-I0504", "SC-I0909", "SC-W0913", "SC-I1119"]
+allow = ["SC-I0901", "SC-I0912", "SC-I0902", "SC-I0904", "SC-I0907", "SC-I0908", "SC-I0915", "SC-W0208", "SC-I0504", "SC-I0909", "SC-W0913", "SC-I1119"]
 alt = "The traced running dog digitized automatically, as it sews on black fabric: the same stitches as on unbleached cotton. Its white face and chest and its tan legs stand out, and its black patches merge with the fabric. No black fabric shows between its patches."
 
 [[shot]]

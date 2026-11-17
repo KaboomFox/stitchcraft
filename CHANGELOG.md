@@ -17,7 +17,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - The testkit's measure of thread astray paints each merged line in its neighbour's colour.
   - Public API: `stitchcraft_engine::auto::as_merged`, `MERGE_LINES`, `MIN_LINE_UNEVENNESS` and their
     fields of `AutoParams`, and `Code::AutoLineMerged`.
-  - No golden file changes: no test sheet has a ragged thin line.
+  - The golden files stay as they are, since no test sheet has a ragged thin line.
 - M13.32: where automatic digitizing spends its work (`REQ-AUTO-083`, `REQ-VC-015`).
   - `cargo xtask perf` counts the instructions `stitch` takes to write each traced dog and the pear with
     the Auto effect, and each TS-13 sheet, records each count in `conformance/perf.toml` and fails a count
