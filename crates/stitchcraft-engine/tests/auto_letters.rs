@@ -25,7 +25,13 @@ fn letters(design: &Design) -> Vec<Shown> {
 
 /// The designs of the cases by name: the lettered patch and TS-13B's words 15, 10, 6 and 4 mm tall.
 fn designs() -> Vec<(&'static str, Design)> {
-    vec![("lettered patch", pictures::lettered_patch()), ("15 mm", traced(15.0)), ("10 mm", traced(10.0)), ("6 mm", traced(6.0)), ("4 mm", traced(4.0))]
+    vec![
+        ("lettered patch", pictures::lettered_patch()),
+        ("15 mm", traced(15.0)),
+        ("10 mm", traced(10.0)),
+        ("6 mm", traced(6.0)),
+        ("4 mm", traced(4.0)),
+    ]
 }
 
 #[test]

@@ -470,7 +470,8 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
         // A hole of an area that a shape drawn later meets is not kept open (`REQ-AUTO-084`).
         let later = elements.get(index + 1..).unwrap_or_default();
         let open = |hole: Rect, meter: &mut Meter| clear(later, hole, meter);
-        let made = match made_by(&element, &design.settings, rules, &open, &mut meter).and_then(|made| named(made, &element, &mut taken, &mut meter)) {
+        let made = match made_by(&element, &design.settings, rules, &open, &mut meter).and_then(|made| named(made, &element, &mut taken, &mut meter))
+        {
             Ok(made) => made,
             Err(exhausted) => {
                 diagnostics.push(exhausted.diagnostic(budget, Some(element.id.clone())));

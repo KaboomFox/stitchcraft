@@ -629,7 +629,9 @@ mod tests {
     fn req_auto_016_a_column_no_wider_than_the_narrowest_satin_stroke_runs() {
         // A band 1.5 mm wide is one column: a satin column where the narrowest satin stroke is 1 mm, and a
         // running stitch along its line, as wide as the band, where it is 2 mm.
-        let made = |narrowest: f64| columns(&band(1.5), &bounds(narrowest), &AutoParams::defaults(), &[], &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap();
+        let made = |narrowest: f64| {
+            columns(&band(1.5), &bounds(narrowest), &AutoParams::defaults(), &[], &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap()
+        };
         let Made::Columns { sewn, .. } = made(1.0) else { panic!("no columns") };
         let [Sewn::Satin { width, push, .. }] = sewn.as_slice() else { panic!("{sewn:?}") };
         assert!((width.get() - 1.5).abs() < 1e-6 && *push == [0.0, 0.0], "{width:?} {push:?}");
@@ -645,7 +647,9 @@ mod tests {
         // head's sides bare. Where the narrowest satin stroke is 1 mm, it is one satin column, and where that
         // stroke is 2 mm, it runs.
         let strand = part(&[(0.0, -0.3), (6.0, -0.3), (7.0, -0.7), (10.0, -0.7), (10.0, 0.7), (7.0, 0.7), (6.0, 0.3), (0.0, 0.3)], &[]);
-        let made = |narrowest: f64| columns(&strand, &bounds(narrowest), &AutoParams::defaults(), &[], &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap();
+        let made = |narrowest: f64| {
+            columns(&strand, &bounds(narrowest), &AutoParams::defaults(), &[], &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap()
+        };
         let Made::Columns { sewn, .. } = made(1.0) else { panic!("no columns") };
         let [Sewn::Satin { width, .. }] = sewn.as_slice() else { panic!("{sewn:?}") };
         assert!(width.get() < 1.0, "{width:?}");
@@ -1078,7 +1082,9 @@ mod tests {
         // Finding it is the part's work: with too little, it stops.
         let rules = AutoParams::defaults();
         let bounds = Bounds::of(&rules, Mm::new(1.0).unwrap());
-        let with = |work: u64| columns(&tight, &bounds, &rules, &[], &|_, _| Ok(true), &mut Budget { max_work: work, ..Budget::DEFAULT }.meter()).map(|_| ());
+        let with = |work: u64| {
+            columns(&tight, &bounds, &rules, &[], &|_, _| Ok(true), &mut Budget { max_work: work, ..Budget::DEFAULT }.meter()).map(|_| ())
+        };
         let asking = |work: u64| super::filled(&tight, &bounds, &mut Budget { max_work: work, ..Budget::DEFAULT }.meter()).map(|_| ());
         // The crowding is measured last, so the work that just falls short falls short there.
         let least = |enough: &dyn Fn(u64) -> bool| {

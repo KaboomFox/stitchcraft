@@ -701,7 +701,9 @@ mod tests {
             .collect();
         let plate = Polygon { holes, ..outline(&[(0.0, 0.0), (side, 0.0), (side, side), (0.0, side)]) };
         let area = ElementId::new("area").unwrap();
-        let sorted = sorted(&area, vec![strip.clone(), plate.clone()], &bounds(6.0), &AutoParams::defaults(), &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap();
+        let sorted =
+            sorted(&area, vec![strip.clone(), plate.clone()], &bounds(6.0), &AutoParams::defaults(), &|_, _| Ok(true), &mut Budget::DEFAULT.meter())
+                .unwrap();
         assert!(sorted.filled.is_empty() && sorted.said.is_empty(), "{sorted:?}");
         assert_eq!(sorted.along.iter().map(narrow_part).collect::<Vec<_>>(), [&strip, &plate]);
     }
@@ -725,14 +727,25 @@ mod tests {
             (0.0, 3.0),
         ]);
         let area = ElementId::new("area").unwrap();
-        let sorted = sorted(&area, vec![blob.clone()], &bounds(1.0), &AutoParams::defaults(), &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap();
+        let sorted =
+            sorted(&area, vec![blob.clone()], &bounds(1.0), &AutoParams::defaults(), &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap();
         let rules: Vec<RuleId> = sorted.fired.iter().map(|fired| fired.rule).collect();
         assert_eq!((rules, sorted.along.len(), sorted.said.len()), (vec![RuleId::Uneven, RuleId::Line, RuleId::Line], 2, 0));
         let [square] = sorted.filled.as_slice() else { panic!("{:?}", sorted.filled) };
         assert!((square.area() - 9.0).abs() < 0.5, "{}", square.area());
         // A tail is split no further: one that is uneven itself stays in the fill whole.
         let mut tail = Parts::default();
-        sort(&area, blob.clone(), &bounds(1.0), &AutoParams::defaults(), Sorting::Tail(&[]), &|_, _| Ok(true), &mut tail, &mut Budget::DEFAULT.meter()).unwrap();
+        sort(
+            &area,
+            blob.clone(),
+            &bounds(1.0),
+            &AutoParams::defaults(),
+            Sorting::Tail(&[]),
+            &|_, _| Ok(true),
+            &mut tail,
+            &mut Budget::DEFAULT.meter(),
+        )
+        .unwrap();
         assert_eq!((tail.filled, tail.along.len(), tail.fired.len()), (vec![blob], 0, 1));
         assert_eq!(Sorting::Tail(&[[p(0.0, 0.0), p(1.0, 0.0)]]).cuts().len(), 1);
     }
@@ -744,7 +757,8 @@ mod tests {
         let ring =
             Polygon { holes: vec![geom::closed(&circle(0.0, 0.0, 4.0, 48, 0.0))], ..outline(&[(-8.0, -8.0), (8.0, -8.0), (8.0, 8.0), (-8.0, 8.0)]) };
         let area = ElementId::new("area").unwrap();
-        let sorted = sorted(&area, vec![ring.clone()], &bounds(1.0), &AutoParams::defaults(), &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap();
+        let sorted =
+            sorted(&area, vec![ring.clone()], &bounds(1.0), &AutoParams::defaults(), &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!((sorted.filled, sorted.along.len()), (vec![ring], 0));
         let [Fired { rule: RuleId::Refused, measures: Some(measures) }] = sorted.fired.as_slice() else { panic!("{:?}", sorted.fired) };
         assert!((measures.width - 4.5).abs() < 0.1 && measures.breadth == Breadth::Medium, "{measures:?}");
@@ -766,7 +780,8 @@ mod tests {
         let turn = 1.5 * std::f64::consts::PI;
         let band = outline(&arc(3.5, 0.0, turn).chain(arc(1.0, turn, 0.0)).collect::<Vec<_>>());
         let area = ElementId::new("area").unwrap();
-        let sorted = sorted(&area, vec![band.clone()], &bounds(1.0), &AutoParams::defaults(), &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap();
+        let sorted =
+            sorted(&area, vec![band.clone()], &bounds(1.0), &AutoParams::defaults(), &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!((sorted.filled, sorted.along.len()), (vec![band], 0));
         let [Fired { rule: RuleId::Refused, measures: Some(measures) }] = sorted.fired.as_slice() else { panic!("{:?}", sorted.fired) };
         assert_eq!(measures.lines, 1);
@@ -804,7 +819,14 @@ mod tests {
         let mut dot = circle(40.0, 0.0, 0.75, 8, 0.5);
         dot.reverse();
         let dot = Polygon { outline: geom::closed(&dot), holes: Vec::new() };
-        let sorted = sorted(&area, vec![dot.clone(), square], &Bounds::of(&rules, Mm::new(1.0).unwrap()), &rules, &|_, _| Ok(true), &mut Budget::DEFAULT.meter());
+        let sorted = sorted(
+            &area,
+            vec![dot.clone(), square],
+            &Bounds::of(&rules, Mm::new(1.0).unwrap()),
+            &rules,
+            &|_, _| Ok(true),
+            &mut Budget::DEFAULT.meter(),
+        );
         let sorted = sorted.unwrap();
         assert!(sorted.filled.contains(&dot) && sorted.fired.first().map(|fired| fired.rule) == Some(RuleId::Compact), "{sorted:?}");
     }

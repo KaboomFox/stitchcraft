@@ -427,7 +427,12 @@ fn req_auto_085_a_column_whose_rails_pair_evenly_moves_its_points_in_no_farther_
 fn req_auto_086_a_column_that_walks_its_middle_once_starts_at_its_start() {
     let band = |width: f64, params: &[(&str, &str)]| made(&fill("band", &[&rectangle((0.0, 0.0), (30.0, width))], &RED, params));
     let from = CONTOUR_FROM.get();
-    for (width, params, expected) in [(1.5, &[][..], Some("false")), (from - 0.001, &[], Some("false")), (from, &[], None), (1.5, &[(START_AT_NEAREST_POINT, "true")], Some("true"))] {
+    for (width, params, expected) in [
+        (1.5, &[][..], Some("false")),
+        (from - 0.001, &[], Some("false")),
+        (from, &[], None),
+        (1.5, &[(START_AT_NEAREST_POINT, "true")], Some("true")),
+    ] {
         assert_eq!(setting(&band(width, params).elements[0], START_AT_NEAREST_POINT), expected, "{width} mm {params:?}");
     }
 }
