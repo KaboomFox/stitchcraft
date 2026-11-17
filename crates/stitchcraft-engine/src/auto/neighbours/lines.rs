@@ -24,12 +24,14 @@
 
 use std::borrow::Cow;
 
-use stitchcraft_core::{Budget, Code, Diagnostic, Fix, Meter, Mm};
+use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Meter, Mm};
 
 use super::layers::Flattened;
 use super::specks::shared;
-use super::{Failed, TOUCHING, envelope, joined, near, parts_of, speck};
-use crate::auto::narrow::{Edges, piece, spread, within};
+use super::{Failed, TOUCHING, envelope, joined, near, parts_of};
+use crate::auto::columns::Sewn;
+use crate::auto::narrow::{self, Along, Edges, piece, spread};
+use crate::auto::rules::Bounds;
 use crate::auto::{AutoParams, outline};
 use crate::design::{Element, FillRule, Shape};
 use crate::generate::trim_or_stop_left_out;
@@ -57,12 +59,22 @@ pub(in crate::auto) struct Merge {
     pub(in crate::auto) into: usize,
 }
 
-/// A thin part of an area: a line.
+/// A thin part of an area, or a thin piece of a broader part of it: a line.
 struct Line {
     /// The place among the elements of the area it is a part of.
     from: usize,
-    /// The part.
+    /// The part or piece.
     part: Polygon,
+    /// Whether it is a whole part of the area, not a piece of one.
+    whole: bool,
+}
+
+/// What an area gives up: its lines, and the rest of it.
+struct Given {
+    /// The rest of the area, joined.
+    rest: Vec<Polygon>,
+    /// Its lines, each with whether it is a whole part of the area.
+    lines: Vec<(Polygon, bool)>,
 }
 
 /// `flattened`, each automatic area's thin parts merged into the automatic area beside it that it shares the
@@ -85,16 +97,11 @@ pub(in crate::auto) fn merged<'d>(
     for (from, (index, element)) in elements.iter().enumerate() {
         let Some(rules) = rules.get(*index).and_then(Option::as_ref).filter(|rules| merges(rules)) else { continue };
         let Some(area) = areas.get_mut(from).and_then(Option::as_mut) else { continue };
-        match thin(&area.parts, narrowest, rules, &mut budget.meter()) {
-            Ok(thin) => {
-                let parts = std::mem::take(&mut area.parts);
-                for (part, thin) in parts.into_iter().zip(thin) {
-                    if thin {
-                        lines.push(Line { from, part });
-                    } else {
-                        area.parts.push(part);
-                    }
-                }
+        match given(&element.id, &area.parts, narrowest, rules, &mut budget.meter()) {
+            Ok(None) => {}
+            Ok(Some(given)) => {
+                area.parts = given.rest;
+                lines.extend(given.lines.into_iter().map(|(part, whole)| Line { from, part, whole }));
             }
             Err(failed) => {
                 said.push(failed.said(Code::AutoLineMerged, "the thin lines of this area", "it keeps them", budget.max_work, element.id.clone()));
@@ -103,18 +110,21 @@ pub(in crate::auto) fn merged<'d>(
     }
     for line in lines {
         let Some((_, element)) = elements.get(line.from) else { continue };
-        let this = format!("A line of this area, of {} mm²,", mm((line.part.area() * 100.0).round() / 100.0));
+        let area = mm((line.part.area() * 100.0).round() / 100.0);
+        let this = if line.whole {
+            format!("A line of this area, of {area} mm², is narrower than the narrowest satin stroke,")
+        } else {
+            format!("A thin piece of this area, of {area} mm², would sew as a running stitch,")
+        };
         match into(&mut areas, &line, &mut budget.meter()) {
+            // A piece that goes back to the rest of its own area sews as it would have.
+            Ok(Some(to)) if to == line.from && !line.whole => {}
             Ok(Some(to)) => {
                 let message = if to == line.from {
-                    format!(
-                        "{this} is narrower than the narrowest satin stroke, so it is joined to the rest of this area, which it shares the longest edge with."
-                    )
+                    format!("{this} so it is joined to the rest of this area, which it shares the longest edge with.")
                 } else {
                     let into = elements.get(to).map(|(_, element)| element.id.as_str().to_string()).unwrap_or_default();
-                    format!(
-                        "{this} is narrower than the narrowest satin stroke, so it is merged into `{into}`, which it shares the longest edge with."
-                    )
+                    format!("{this} so it is merged into `{into}`, which it shares the longest edge with.")
                 };
                 let hint = Fix::Hint("To sew it as a running stitch, turn `auto_fill_uneven` off, or give the shape settings.".to_string());
                 said.push(Diagnostic::new(Code::AutoLineMerged, message).with_element(element.id.clone()).with_fix(hint));
@@ -122,10 +132,10 @@ pub(in crate::auto) fn merged<'d>(
                     done.push(Merge { line: line.part, into: *into });
                 }
             }
-            Ok(None) => back(&mut areas, line),
+            Ok(None) => back(&mut areas, line, &mut budget.meter()),
             Err(failed) => {
                 said.push(failed.said(Code::AutoLineMerged, "where to merge this line", "it sews as a line", budget.max_work, element.id.clone()));
-                back(&mut areas, line);
+                back(&mut areas, line, &mut budget.meter());
             }
         }
     }
@@ -160,17 +170,38 @@ fn area(element: &Element, rules: Option<&AutoParams>, budget: &Budget) -> Optio
     Some(Area { parts, bounds, changed: false })
 }
 
-/// For each of `parts`, whether it is a line that merges: narrower than `narrowest` everywhere, no speck, no
-/// smaller than `rules`' smallest area, and ragged, its width varying by `rules`' least unevenness of a line
-/// or more, with `meter`'s work.
-fn thin(parts: &[Polygon], narrowest: Mm, rules: &AutoParams, meter: &mut Meter) -> Result<Vec<bool>, Failed> {
-    let mut thin = Vec::with_capacity(parts.len());
-    for part in parts {
+/// The lines `parts`, an automatic area `id`'s whose settings of the rules are `rules`, gives up, and the rest
+/// of it, with `meter`'s work: each part or piece that the rules sew as a running stitch along its middle
+/// once the parts are sorted as digitizing sorts them (`narrow::sorted`), a line or a column too narrow for
+/// satin, and that is ragged, its width varying by `rules`' least unevenness of a line or more. `narrowest`
+/// is the design's narrowest satin stroke. `None` when it gives up none.
+fn given(id: &ElementId, parts: &[Polygon], narrowest: Mm, rules: &AutoParams, meter: &mut Meter) -> Result<Option<Given>, Failed> {
+    let bounds = Bounds::of(rules, narrowest);
+    // Whether a hole is kept open changes how a satin column sews along it, never whether a part runs.
+    let sorted = narrow::sorted(id, parts.to_vec(), &bounds, rules, &|_, _| Ok(true), meter)?;
+    let mut rest = sorted.filled;
+    let mut lines = Vec::new();
+    for along in sorted.along {
         meter.charge(1)?;
-        let narrow = !speck(part.area(), rules.auto_min_area_mm2) && within(part, narrowest, meter)? == Some(true);
-        thin.push(narrow && ragged(part, rules.auto_min_line_unevenness, meter)?);
+        let (part, runs) = match along {
+            Along::Narrow(narrow) => (narrow.part, true),
+            Along::Columns(columns) => {
+                let runs = !columns.sewn.is_empty() && columns.sewn.iter().all(|sewn| matches!(sewn, Sewn::Running { .. }));
+                (columns.part, runs)
+            }
+        };
+        if runs && ragged(&part, rules.auto_min_line_unevenness, meter)? {
+            let whole = parts.contains(&part);
+            lines.push((part, whole));
+        } else {
+            rest.push(part);
+        }
     }
-    Ok(thin)
+    if lines.is_empty() {
+        return Ok(None);
+    }
+    let rest = joined(ops::union([rest.as_slice()], meter))?;
+    Ok(Some(Given { rest, lines }))
 }
 
 /// Whether the width of `part`, a thin line, varies along its centre lines by `least` or more, measured as a
@@ -214,11 +245,19 @@ fn into(areas: &mut [Option<Area>], line: &Line, meter: &mut Meter) -> Result<Op
     Ok(Some(place))
 }
 
-/// `line` put back into the area it is a part of: it shares no edge with an automatic area, or where it
-/// goes couldn't be found, and it sews as a line.
-fn back(areas: &mut [Option<Area>], line: Line) {
+/// `line` put back into the area it is a part of, with `meter`'s work: it shares no edge with an automatic
+/// area, or where it goes couldn't be found, and it sews as a line. A piece is joined to the rest again; when
+/// that needs more work than `meter` has, it is put back as a part of its own.
+fn back(areas: &mut [Option<Area>], line: Line, meter: &mut Meter) {
     if let Some(area) = areas.get_mut(line.from).and_then(Option::as_mut) {
-        area.parts.push(line.part);
+        if line.whole {
+            area.parts.push(line.part);
+            return;
+        }
+        match joined(ops::union([area.parts.as_slice(), std::slice::from_ref(&line.part)], meter)) {
+            Ok(parts) => area.parts = parts,
+            Err(_) => area.parts.push(line.part),
+        }
     }
 }
 
