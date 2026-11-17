@@ -84,9 +84,10 @@ fn diag_sc_w0913_a_design_digitized_automatically_is_told_where_it_sews_thick_an
 
 #[test]
 fn diag_sc_i1119_the_last_pass_says_what_it_took_and_what_is_left() {
-    // The lettered patch's letters sew on its field with locks, columns and the field's rows under them:
-    // spots above 4 fills, where the pass takes thread (`REQ-AUTO-074`).
-    let outcome = in_place(&stitchcraft_testkit::pictures::lettered_patch());
+    // The traced pear sews spots above 4 fills, where the pass takes thread (`REQ-AUTO-074`). The lettered
+    // patch did until M13.37, when its letters came to sew as strokes (REQ-AUTO-087) and no spot of it was
+    // left above 4.
+    let outcome = in_place(&stitchcraft_testkit::pictures::pear());
     let plan = outcome.plan.as_ref().unwrap();
     let said: Vec<&Diagnostic> = outcome.diagnostics.iter().filter(|said| said.code == Code::AutoThinned).collect();
     assert_eq!(said.len(), 1, "{:?}", outcome.diagnostics);

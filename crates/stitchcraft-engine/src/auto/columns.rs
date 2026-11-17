@@ -1235,8 +1235,8 @@ mod tests {
                 assert!(filled, "{points} points, {across} mm");
             }
         }
-        // A cross of 2 bars keeps a column along each bar and each arm, a leaf its one column, and so does a
-        // letter V, whose corner is no arm.
+        // A cross of 2 bars sews as its strokes (REQ-AUTO-088): one bar through, the other in 2 columns either
+        // side of it. A leaf keeps its one column, and a letter V, whose corner is no arm, its 2.
         let cross = part(
             &[
                 (2.0, 0.0),
@@ -1256,7 +1256,7 @@ mod tests {
         );
         let v = part(&[(-2.07, -5.7), (-0.8, -5.7), (0.0, -3.51), (0.8, -5.7), (2.07, -5.7), (0.0, 0.0)], &[]);
         let kite = part(&[(0.0, -4.0), (1.5, 0.0), (0.0, 4.0), (-1.5, 0.0)], &[]);
-        for (name, part, columns) in [("cross", &cross, 4), ("V", &v, 2), ("kite", &kite, 1)] {
+        for (name, part, columns) in [("cross", &cross, 3), ("V", &v, 2), ("kite", &kite, 1)] {
             let Made::Columns { sewn, rule: RuleId::Column, measures } = made(part, &[]) else { panic!("{name}: no columns") };
             assert!(sewn.len() == columns && measures.reach <= 1.0 + 1e-6, "{name}: {} columns, {measures:?}", sewn.len());
         }

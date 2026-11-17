@@ -519,3 +519,24 @@ fn the_shapes_helpers_clip_narrow_and_close() {
     assert_eq!(band.middle(), Some(p(3.0, 0.5)));
     assert_eq!(band.reach().map(|points| points[0]), Some(p(-1.0, -EDGE)));
 }
+
+#[test]
+fn a_stroke_wider_than_its_reach_over_tan_20_degrees_stops_at_the_others_side() {
+    // A T 3 mm wide: its stem's piece reaches 0.4 mm, the pull compensation, past the bar's side, less than
+    // its flat end's 20° allows along it (3 tan 20° = 1.09 mm), so the end takes in that stub and the rails
+    // end on the bar's side. The bar's stitches, which run along the stem there, reach 0.4 mm over the seam
+    // with their own pull compensation. The 1 mm T's stem, narrower than 0.4 / tan 20° = 1.1 mm, reaches in.
+    let wide = part(&[(0.0, 0.0), (20.0, 0.0), (20.0, 3.0), (11.5, 3.0), (11.5, 15.0), (8.5, 15.0), (8.5, 3.0), (0.0, 3.0)], &[]);
+    let low = |part: &Polygon| {
+        let columns = sewn(part).unwrap();
+        let stem = columns.iter().find(|column| column.under.iter().any(Option::is_some)).unwrap();
+        stem.rails.iter().flatten().map(|q| q.y()).fold(f64::INFINITY, f64::min)
+    };
+    assert!((low(&wide) - 3.0).abs() < 1e-6, "{}", low(&wide));
+    let high = |part: &Polygon| {
+        let columns = sewn(part).unwrap();
+        let stem = columns.iter().find(|column| column.under.iter().any(Option::is_some)).unwrap();
+        stem.rails.iter().flatten().map(|q| q.y()).fold(f64::NEG_INFINITY, f64::max)
+    };
+    assert!((high(&t()) - 5.0 - REACH).abs() < 1e-6, "{}", high(&t()));
+}
