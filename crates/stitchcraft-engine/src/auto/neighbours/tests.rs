@@ -524,6 +524,10 @@ fn a_rail_is_run_along_where_shapes_cover_more_than_half_of_its_length() {
     assert!(under::runs_along(&rail, &[band(0.0, 8.9), band(19.1, 26.9)], &mut meter()).unwrap());
     // 18 and 12 places are 15 mm, half the rail and not more.
     assert!(!under::runs_along(&rail, &[band(0.0, 8.9), band(19.1, 25.1)], &mut meter()).unwrap());
+    // A shape whose bounds hold the whole rail covers only what it covers: an L whose foot crosses the rail's
+    // first millimetre, and whose upright stands beside it, 1 mm away.
+    let corner = [p(-2.0, 0.0), p(-2.0, 30.0), p(-1.0, 30.0), p(-1.0, 1.0), p(2.0, 1.0), p(2.0, 0.0), p(-2.0, 0.0)];
+    assert!(!under::runs_along(&rail, &[Polygon { outline: corner.to_vec(), holes: Vec::new() }], &mut meter()).unwrap());
     assert!(!under::runs_along(&[p(0.0, 0.0), p(0.0, 2.0)], &[band(-1.0, 1.0)], &mut meter()).unwrap());
     // No shape runs along a rail with none beside it, and none along a rail of no length.
     assert!(!under::runs_along(&rail, &[], &mut meter()).unwrap());

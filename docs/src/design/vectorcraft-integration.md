@@ -581,7 +581,9 @@ the canvas's grids of 2 and 3 mm (`TestSheet::step`). The turned square's grid s
 corner, and moves with it. Each element is an object named by its id, with its path and its thread as
 the paint its family sews with, a linear gradient fill's gradient as its fill ([below](#a-gradients-geometry)).
 Its settings are its family's effect record, each the
-value its dialog row takes, which reads back as the setting it was. The objects selected are given back as
+value its dialog row takes, which reads back as the setting it was. A record is made once for the settings
+it holds, and a solid paint once for its thread: objects that share them share the one made. TS-13F's 179
+objects have 15 records and 2 paints, and making them for each object took it past a light filter's run. The objects selected are given back as
 they are, and the sheet goes above them. The document sews as the sheet's design moved. A fill's rows lie where the design's
 origin puts them, so moved they may fall elsewhere across a shape, and the sheet looks the same. The
 threads lose their names in the Brother palette, since VectorCraft unlinks the swatch of a paint a filter

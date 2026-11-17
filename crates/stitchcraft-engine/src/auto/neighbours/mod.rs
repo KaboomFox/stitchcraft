@@ -405,11 +405,8 @@ impl Shapes {
     /// The rails of the satin column `index` as they are sewn, as they were found or with `meter`'s work;
     /// `None` when its settings or its rails can't be read.
     fn rails(&mut self, index: usize, meter: &mut Meter) -> Result<Option<Rails>, Exhausted> {
-        let (Some(element), Some(&Some(stitch_type)), Some(known)) =
-            (self.elements.get(index), self.stitch_types.get(index), self.rails.get_mut(index))
-        else {
-            return Ok(None);
-        };
+        let (Some(element), Some(&Some(stitch_type))) = (self.elements.get(index), self.stitch_types.get(index)) else { return Ok(None) };
+        let Some(known) = self.rails.get_mut(index) else { return Ok(None) };
         rails_once(element, stitch_type, known, meter)
     }
 
@@ -481,11 +478,8 @@ impl Shapes {
         if self.area.get(index).is_none_or(Option::is_some) || self.painted.get(index).is_some_and(Option::is_some) {
             return;
         }
-        let (Some(element), Some(&Some(stitch_type)), Some(rails)) =
-            (self.elements.get(index), self.stitch_types.get(index), self.rails.get_mut(index))
-        else {
-            return;
-        };
+        let (Some(element), Some(&Some(stitch_type))) = (self.elements.get(index), self.stitch_types.get(index)) else { return };
+        let Some(rails) = self.rails.get_mut(index) else { return };
         let painted = paints(element, stitch_type, rails, &self.budget).unwrap_or_else(|said| {
             self.said.push(said);
             None
