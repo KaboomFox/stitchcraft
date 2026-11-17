@@ -506,9 +506,8 @@ fn bend(paths: &mut [Vec<usize>], look: &mut Look, hot: &Hot, grids: &[Near], me
             for grid in grids {
                 through(a, b, grid, meter, &mut found)?;
             }
-            if grids.len() > 1 {
-                found.sort_by_key(|&c| (along(a, b, c), c));
-            }
+            // Each grid's points are in order along the edge, and those of all of them are put in order.
+            found.sort_by_key(|&c| (along(a, b, c), c));
         } else if let (Some(grid), true) = (grids.last(), look.added.as_ref().is_some_and(|added| added.within(a, b))) {
             through(a, b, grid, meter, &mut found)?;
         }
@@ -1243,6 +1242,39 @@ mod tests {
         let (found, work) = spent(|meter| crossings_of_new(&edges, &[false, false, true], meter).unwrap());
         assert_eq!(found, [[n(0, 0), n(8, 0), n(4, -2), n(4, 6)], [n(0, 4), n(8, 4), n(4, -2), n(4, 6)]]);
         assert_eq!(work, 1 + 3 + 2);
+        // 2 new edges that cross are tested once, from the first of them.
+        let edges = [(n(0, 0), n(8, 8)), (n(0, 8), n(8, 0))];
+        let (found, work) = spent(|meter| crossings_of_new(&edges, &[true, true], meter).unwrap());
+        assert_eq!((found, work), (vec![[n(0, 0), n(8, 8), n(0, 8), n(8, 0)]], 2 + 2 + 1));
+        // Edges in a bucket but apart along x aren't tested, and an edge that starts where a new one ends
+        // along x is.
+        let edges = [(n(4, -2), n(4, 6)), (n(4, 2), n(8, 2)), (n(6, 4), n(8, 4)), (n(10, -2), n(10, 6))];
+        let (found, work) = spent(|meter| crossings_of_new(&edges, &[true, false, false, true], meter).unwrap());
+        assert_eq!((found, work), (Vec::new(), 2 + 4 + 1));
+    }
+
+    #[test]
+    fn edges_bent_none_come_once_in_order_of_their_ends() {
+        // From (0, 0) the ring runs to (8, 8) first and back from (8, 0) last: in order, (8, 0) comes first.
+        let (a, b, c) = (n(0, 0), n(8, 8), n(8, 0));
+        let hot = Hot::of([a, b, c]);
+        let mut places = vec![[a, b, c, a].iter().map(|&node| hot.place(node)).collect::<Vec<_>>()];
+        let mut look = Look::all(&places);
+        let Bent::None(once, fresh) = bend(&mut places, &mut look, &hot, &[near(&hot, 1)], &mut Budget::DEFAULT.meter()).unwrap() else { panic!() };
+        assert_eq!((once, fresh), (vec![(a, c), (a, b), (c, b)], vec![true; 3]));
+    }
+
+    #[test]
+    fn the_edges_a_bend_makes_are_new_and_the_others_keep_what_they_were() {
+        // A square with (4, 0) and (8, 4) hot on 2 of its sides: those 2 are bent into 2 edges each.
+        let ring = [n(0, 0), n(8, 0), n(8, 8), n(0, 8), n(0, 0)];
+        let hot = Hot::of(ring.iter().copied().chain([n(4, 0), n(8, 4)]));
+        let mut places = vec![ring.iter().map(|&node| hot.place(node)).collect::<Vec<_>>()];
+        let mut look = Look::all(&places);
+        look.unchecked = vec![vec![false, false, true, false]];
+        assert_eq!(bend(&mut places, &mut look, &hot, &[near(&hot, 2)], &mut Budget::DEFAULT.meter()).unwrap(), Bent::Some);
+        assert_eq!(look.new, [[true, true, true, true, false, false]]);
+        assert_eq!(look.unchecked, [[true, true, true, true, true, false]]);
     }
 
     #[test]

@@ -96,8 +96,9 @@ fn kept<'p>(a: &'p [Polygon], b: &'p [Polygon], keep: impl Fn(bool, bool) -> boo
     let mut holds = vec![(false, false); parts.len()];
     for k in 0..parts.len() {
         let root = top(&mut group, k);
-        if let Some(slot) = holds.get_mut(root) {
-            *slot = if k < a.len() { (true, slot.1) } else { (slot.0, true) };
+        if let Some((of_a, of_b)) = holds.get_mut(root) {
+            *of_a |= k < a.len();
+            *of_b |= k >= a.len();
         }
     }
     let (mut kept_a, mut kept_b) = (Vec::new(), Vec::new());
@@ -129,12 +130,7 @@ pub(crate) fn buffered_near(parts: &[Polygon], distance: f64, near: &[Polygon], 
     let bounds = bounds_of(&all, meter)?;
     let mut group = groups(&bounds, distance + APART, meter)?;
     let near: Vec<&Polygon> = near.iter().collect();
-    let around = bounds_of(&near, meter)?.into_iter().reduce(|a, b| Envelope {
-        min_x: a.min_x.min(b.min_x),
-        min_y: a.min_y.min(b.min_y),
-        max_x: a.max_x.max(b.max_x),
-        max_y: a.max_y.max(b.max_y),
-    });
+    let around = bounds_of(&near, meter)?.into_iter().reduce(merged);
     let reach = distance + APART;
     let mut meets = vec![false; parts.len()];
     for (k, at) in bounds.iter().enumerate() {
@@ -175,19 +171,14 @@ fn bounds_of(parts: &[&Polygon], meter: &mut Meter) -> Result<Vec<Envelope>, Exh
     let mut bounds = Vec::with_capacity(parts.len());
     for part in parts {
         meter.charge(1 + part.rings().map(|ring| ring.len() as u64).sum::<u64>())?;
-        let mut envelope = Envelope::of(&part.outline);
-        for hole in &part.holes {
-            let of = Envelope::of(hole);
-            envelope = Envelope {
-                min_x: envelope.min_x.min(of.min_x),
-                min_y: envelope.min_y.min(of.min_y),
-                max_x: envelope.max_x.max(of.max_x),
-                max_y: envelope.max_y.max(of.max_y),
-            };
-        }
-        bounds.push(envelope);
+        bounds.push(part.holes.iter().map(|hole| Envelope::of(hole)).fold(Envelope::of(&part.outline), merged));
     }
     Ok(bounds)
+}
+
+/// The bounds of both `a` and `b`.
+fn merged(a: Envelope, b: Envelope) -> Envelope {
+    Envelope { min_x: a.min_x.min(b.min_x), min_y: a.min_y.min(b.min_y), max_x: a.max_x.max(b.max_x), max_y: a.max_y.max(b.max_y) }
 }
 
 /// The groups of `bounds`, each grown by `by` and meeting another of its group: for each, one of its group
@@ -375,8 +366,14 @@ mod tests {
 
     #[test]
     fn parts_far_from_the_other_region_are_left_out_and_the_result_is_the_same() {
-        let a = [square((0.0, 0.0), (10.0, 10.0)), square((40.0, 0.0), (50.0, 10.0))];
-        let b = [square((5.0, 0.0), (15.0, 10.0)), square((100.0, 0.0), (110.0, 10.0)), square((5.0, 20.0), (8.0, 24.0))];
+        // A group of 2 parts of each, one part of `a` on its own, and 2 parts of `b` far from `a`.
+        let a = [square((0.0, 0.0), (10.0, 10.0)), square((40.0, 0.0), (50.0, 10.0)), square((-5.0, 0.0), (0.0, 10.0))];
+        let b = [
+            square((5.0, 0.0), (15.0, 10.0)),
+            square((100.0, 0.0), (110.0, 10.0)),
+            square((5.0, 20.0), (8.0, 24.0)),
+            square((15.0, 0.0), (20.0, 10.0)),
+        ];
         assert_eq!(intersection(&a, &b, &mut meter()).unwrap(), whole(&a, &b, false, |w| w == -2));
         assert_eq!(difference(&a, &b, &mut meter()).unwrap(), whole(&a, &b, true, |w| w == -1));
         assert_eq!(difference(&b, &a, &mut meter()).unwrap(), whole(&b, &a, true, |w| w == -1));
@@ -391,7 +388,10 @@ mod tests {
         // A part left out with a point beyond the grid's reach fails as the whole operation would.
         let beyond = [square((70_000.0, 0.0), (70_001.0, 1.0))];
         assert!(intersection(&a, &beyond, &mut meter()).unwrap().is_err());
-        assert!(whole(&a, &beyond, false, |w| w == -2).is_err());
+        // Half a millimetre apart, 2 regions are apart: they cost their bounds alone.
+        let mut spent = meter();
+        assert!(intersection(&a[..1], &[square((10.5, 0.0), (12.0, 10.0))], &mut spent).unwrap().unwrap().is_empty());
+        assert_eq!(Budget::DEFAULT.max_work - spent.work_left(), 12);
     }
 
     #[test]
@@ -446,6 +446,33 @@ mod tests {
         let beyond = [square((0.0, 0.0), (1.0, 1.0)), square((65_535.5, 0.0), (65_535.8, 1.0))];
         assert!(buffered_near(&beyond, 0.4, &near, &mut meter()).unwrap().is_err());
         assert!(buffered(&beyond, 0.4, &mut meter()).unwrap().is_err());
+        // Just short of the reach, it is grown with the rest, and the growth then stays within it.
+        let edge = REACH - 0.4 - APART / 2.0;
+        let short = [square((0.0, 0.0), (1.0, 1.0)), square((edge - 0.5, 0.0), (edge, 1.0))];
+        assert_eq!(buffered_near(&short, 0.4, &near, &mut meter()).unwrap().unwrap().len(), 2);
+    }
+
+    #[test]
+    fn a_region_reaches_another_within_the_distance_and_a_millionth_of_a_millimetre() {
+        // A unit square at the origin and one far away, grown by 0.4 mm near a square just within 0.4 mm
+        // and half of `APART` of the first, on each side in turn: the first is grown, the far one not.
+        let parts = [square((0.0, 0.0), (1.0, 1.0)), square((50.0, 50.0), (51.0, 51.0))];
+        let first = buffered(&parts, 0.4, &mut meter()).unwrap().unwrap()[..1].to_vec();
+        let gap = 0.4 + APART / 2.0;
+        // Each side's square, and a second one 3 mm further out, which the bounds of both take in.
+        let sides = [(1.0 + gap, 0.0, 1.0, 0.0), (-1.0 - gap, 0.0, -1.0, 0.0), (0.0, 1.0 + gap, 0.0, 1.0), (0.0, -1.0 - gap, 0.0, -1.0)];
+        for (x, y, dx, dy) in sides {
+            let at = |by: f64| square((x + by * dx, y + by * dy), (x + by * dx + 1.0, y + by * dy + 1.0));
+            let near = [at(0.0), at(3.0)];
+            assert_eq!(buffered_near(&parts, 0.4, &near, &mut meter()).unwrap().unwrap(), first, "{x}, {y}");
+        }
+        // A part within twice 0.4 mm and `APART` of the one reached is grown with it, and one further isn't.
+        let next = 1.0 + 0.8 + APART;
+        let chained = [square((0.0, 0.0), (1.0, 1.0)), square((next, 0.0), (next + 1.0, 1.0))];
+        let near = [square((-0.6, 0.0), (-0.2, 1.0))];
+        assert_eq!(buffered_near(&chained, 0.4, &near, &mut meter()).unwrap().unwrap().len(), 2);
+        let apart = [square((0.0, 0.0), (1.0, 1.0)), square((next + 3.0 * APART, 0.0), (next + 1.0, 1.0))];
+        assert_eq!(buffered_near(&apart, 0.4, &near, &mut meter()).unwrap().unwrap(), first);
     }
 
     #[test]

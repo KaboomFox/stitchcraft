@@ -18,7 +18,7 @@ budget_ms = 200.0
 # The instructions one run takes, counted by valgrind's callgrind. More than this plus 2 % fails.
 # `cargo xtask perf --record` lowers it and never raises it: raise it by hand, in a pull request that
 # says why.
-instructions = 6690000000
+instructions = 5362000000
 
 # The pictures of automatic digitizing (xtask/src/pictures.rs): `stitch` run with each one's `args` and
 # `-o FILE`, built with the `profiling` profile, writes the `golden` file when it has one. `instructions` is
@@ -28,27 +28,27 @@ instructions = 6690000000
 [pictures.TS-13A]
 args = ["testsheet", "TS-13A"]
 golden = "conformance/golden/testsheets/TS-13A.pes"
-instructions = 1949000000
+instructions = 1883000000
 
 [pictures.TS-13B]
 args = ["testsheet", "TS-13B"]
 golden = "conformance/golden/testsheets/TS-13B.pes"
-instructions = 1715000000
+instructions = 1602000000
 
 [pictures.TS-13C]
 args = ["testsheet", "TS-13C"]
 golden = "conformance/golden/testsheets/TS-13C.pes"
-instructions = 1852000000
+instructions = 1722000000
 
 [pictures.TS-13D]
 args = ["testsheet", "TS-13D"]
 golden = "conformance/golden/testsheets/TS-13D.pes"
-instructions = 1565000000
+instructions = 1512000000
 
 [pictures.TS-13E]
 args = ["testsheet", "TS-13E"]
 golden = "conformance/golden/testsheets/TS-13E.pes"
-instructions = 1094000000
+instructions = 1059000000
 
 [pictures.TS-13F]
 args = ["testsheet", "TS-13F"]
@@ -57,20 +57,20 @@ instructions = 640000000
 
 [pictures.dog-on-turf-6]
 args = ["export", "docs/fixtures/traced-dog-on-turf-6.vectorcraft", "--auto"]
-instructions = 26952000000
+instructions = 21129000000
 
 [pictures.dog-on-turf-9]
 args = ["export", "docs/fixtures/traced-dog-on-turf-9.vectorcraft", "--auto"]
-instructions = 31183000000
+instructions = 24272000000
 
 [pictures.dog-running-6]
 args = ["export", "docs/fixtures/traced-dog-running-6.vectorcraft", "--auto"]
-instructions = 28919000000
+instructions = 22487000000
 
 [pictures.dog-running-9]
 args = ["export", "docs/fixtures/traced-dog-running-9.vectorcraft", "--auto"]
-instructions = 34072000000
+instructions = 26779000000
 
 [pictures.pear]
 args = ["export", "docs/fixtures/traced-pear.vectorcraft", "--auto"]
-instructions = 2661000000
+instructions = 2260000000
