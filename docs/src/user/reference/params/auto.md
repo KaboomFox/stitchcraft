@@ -40,20 +40,9 @@ it. `fill` moves them the other way, and `balanced` leaves them as they are set.
 ### `auto_fill_uneven`
 
 **Fill uneven parts.** Whether a part of several centre lines whose width varies along them is filled. On, such a part
-is a tatami fill: the ragged patches of a traced photo sew flat. Off, it sews a satin column
-along each line, as a drawing made of strokes of changing width may want.
-
-- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
-- **Default:** `true`
-- **Ink/Stitch:** none; this is StitchCraft's own
-- **Experimental:** designs that use it may stitch differently in a later version
-
-### `auto_merge_lines`
-
-**Merge thin lines.** Whether a thin part of the shape merges into the shape beside it. On, a part narrower than the
-design's narrowest satin stroke everywhere, as soft shading and fur trace into, is merged into the
-automatic area it shares the longest edge with, and sews as part of that area's fill. Off, it sews
-as a running stitch along its middle, as a drawing's fine lines may want.
+is a tatami fill: the ragged patches of a traced photo sew flat, and a ragged thin line merges
+into the area beside it. Off, it sews a satin column along each line, and a thin line runs along
+its middle, as a drawing made of strokes of changing width may want.
 
 - **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `true`
@@ -212,7 +201,7 @@ a leaf and a tapering stroke sew well as one column.
 ### `auto_min_line_unevenness`
 
 **Least a merged line's width varies.** How much the width of a thin line varies along it, at the least, for it to merge into the shape
-beside it (`auto_merge_lines`): the standard deviation of its width divided by its width. A thin
+beside it (`auto_fill_uneven`): the standard deviation of its width divided by its width. A thin
 line is a part narrower than the narrowest satin stroke everywhere. The ragged strands that soft
 shading and fur trace into vary by 0.09 to 0.46, and merge. A line drawn with an even pen varies
 by less, and sews as a line.

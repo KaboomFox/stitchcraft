@@ -15,7 +15,7 @@
 //! within [`TOUCHING`] of the line. Every area gives up its thin parts first, so a line goes into what its
 //! neighbours keep, never into another line. On a tie, it goes into the area that sews first. A line that
 //! shares no edge with an automatic area stays where it is and sews as a line. A speck is left to the specks
-//! (`REQ-AUTO-008`), and an area that sets `auto_merge_lines` off, or names its stitch with `auto_stitch`,
+//! (`REQ-AUTO-008`), and an area that turns `auto_fill_uneven` off, or names its stitch with `auto_stitch`,
 //! keeps its lines.
 //!
 //! **Work.** Each area has the budget's work to itself to find its thin parts, and each line to find where
@@ -117,7 +117,7 @@ pub(in crate::auto) fn merged<'d>(
                         "{this} is narrower than the narrowest satin stroke, so it is merged into `{into}`, which it shares the longest edge with."
                     )
                 };
-                let hint = Fix::Hint("To sew it as a running stitch, turn `auto_merge_lines` off, or give the shape settings.".to_string());
+                let hint = Fix::Hint("To sew it as a running stitch, turn `auto_fill_uneven` off, or give the shape settings.".to_string());
                 said.push(Diagnostic::new(Code::AutoLineMerged, message).with_element(element.id.clone()).with_fix(hint));
                 if let Some((into, _)) = elements.get(to) {
                     done.push(Merge { line: line.part, into: *into });
@@ -148,7 +148,7 @@ pub(in crate::auto) fn merged<'d>(
 
 /// Whether an area with `rules` merges its thin lines: unless it turns that off, or names its stitch.
 fn merges(rules: &AutoParams) -> bool {
-    rules.auto_merge_lines && rules.auto_stitch == "auto"
+    rules.auto_fill_uneven && rules.auto_stitch == "auto"
 }
 
 /// `element` as an area whose lines may merge or take lines in: an automatic area with settings of the

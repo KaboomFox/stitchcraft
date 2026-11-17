@@ -550,7 +550,7 @@ mends it in 5 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
    edge with, which may be the rest of its own area, the edge measured as a speck's is (step 4). Every area
    gives up its thin lines first. A line then goes into what its neighbours keep. On a tie it goes into the
    area that sews first. A thin line that doesn't touch an automatic area sews as a line. The thin lines of a
-   shape that turns `auto_merge_lines` off sew as lines, as with the `logo` style, and so do those of a shape
+   shape that turns `auto_fill_uneven` off sew as lines, as with the `logo` style, and so do those of a shape
    that names its stitch. An area
    whose every part merges sews nothing. `SC-I0915` names each line merged, by its area, and where it went
    (`auto::neighbours::lines`). The bound of 0.05 is StitchCraft's own. The dogs' 80 thin lines vary by 0.09

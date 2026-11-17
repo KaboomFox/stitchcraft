@@ -1708,7 +1708,7 @@ it. Merged, it sews as part of the fill beside it. An area whose every part is s
 sews nothing of its own. A thin part that shares no edge with an automatic area sews as a line.
 
 The message gives the line's area and says where it went. To sew such lines as running stitches,
-turn `auto_merge_lines` off, as the `logo` style does, or give the shape settings.
+turn `auto_fill_uneven` off, as the `logo` style does, or give the shape settings.
 
 ## SC-E1001
 

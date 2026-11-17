@@ -214,7 +214,7 @@ macro_rules! auto_codes {
         /// sews nothing of its own. A thin part that shares no edge with an automatic area sews as a line.
         ///
         /// The message gives the line's area and says where it went. To sew such lines as running stitches,
-        /// turn `auto_merge_lines` off, as the `logo` style does, or give the shape settings.
+        /// turn `auto_fill_uneven` off, as the `logo` style does, or give the shape settings.
         AutoLineMerged = "SC-I0915", Info, "Thin line merged into a neighbour";
         } }
     };

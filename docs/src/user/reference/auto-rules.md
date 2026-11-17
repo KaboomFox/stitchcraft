@@ -24,8 +24,8 @@ Automatic digitizing chooses the stitches of each part of a shape by the first o
 
 | Style | For | Sets |
 |---|---|---|
-| `logo` | Flat art drawn in strokes, such as a logo, lettering or an ink drawing: more parts sew as satin columns, a part of several strokes keeps its columns though its width varies, and a thin line sews as a line. | [`auto_prefer`](params/auto.md#auto_prefer) to `satin`, [`auto_fill_uneven`](params/auto.md#auto_fill_uneven) to `false`, [`auto_merge_lines`](params/auto.md#auto_merge_lines) to `false` |
-| `photo` | A traced photo, whose shapes are patches and not strokes: the rules as they are by default, which fill a ragged patch and merge a ragged thin line into the patch beside it. | [`auto_prefer`](params/auto.md#auto_prefer) to `balanced`, [`auto_fill_uneven`](params/auto.md#auto_fill_uneven) to `true`, [`auto_merge_lines`](params/auto.md#auto_merge_lines) to `true` |
+| `logo` | Flat art drawn in strokes, such as a logo, lettering or an ink drawing: more parts sew as satin columns, a part of several strokes keeps its columns though its width varies, and a thin line sews as a line. | [`auto_prefer`](params/auto.md#auto_prefer) to `satin`, [`auto_fill_uneven`](params/auto.md#auto_fill_uneven) to `false` |
+| `photo` | A traced photo, whose shapes are patches and not strokes: the rules as they are by default, which fill a ragged patch and merge a ragged thin line into the patch beside it. | [`auto_prefer`](params/auto.md#auto_prefer) to `balanced`, [`auto_fill_uneven`](params/auto.md#auto_fill_uneven) to `true` |
 
 ## Where each setting is set
 
@@ -36,7 +36,6 @@ A shape's settings are those of VectorCraft's Auto effect on it, or on the group
 | [`auto_stitch`](params/auto.md#auto_stitch) | auto | yes |
 | [`auto_prefer`](params/auto.md#auto_prefer) | balanced | yes |
 | [`auto_fill_uneven`](params/auto.md#auto_fill_uneven) | true | yes |
-| [`auto_merge_lines`](params/auto.md#auto_merge_lines) | true | yes |
 | [`auto_fill_angle`](params/auto.md#auto_fill_angle) | 0 ° | yes |
 | [`auto_fill_outline`](params/auto.md#auto_fill_outline) | true | yes |
 | [`auto_overlap_mm`](params/auto.md#auto_overlap_mm) | 1 mm | yes |

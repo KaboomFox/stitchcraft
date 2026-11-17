@@ -151,7 +151,7 @@
     },
     "auto_fill_uneven": {
       "default": true,
-      "description": "Whether a part of several centre lines whose width varies along them is filled. On, such a part is a tatami fill: the ragged patches of a traced photo sew flat. Off, it sews a satin column along each line, as a drawing made of strokes of changing width may want.",
+      "description": "Whether a part of several centre lines whose width varies along them is filled. On, such a part is a tatami fill: the ragged patches of a traced photo sew flat, and a ragged thin line merges into the area beside it. Off, it sews a satin column along each line, and a thin line runs along its middle, as a drawing made of strokes of changing width may want.",
       "title": "Fill uneven parts",
       "type": "boolean",
       "x-stitchcraft": {
@@ -216,18 +216,6 @@
         "stability": "experimental"
       }
     },
-    "auto_merge_lines": {
-      "default": true,
-      "description": "Whether a thin part of the shape merges into the shape beside it. On, a part narrower than the design's narrowest satin stroke everywhere, as soft shading and fur trace into, is merged into the automatic area it shares the longest edge with, and sews as part of that area's fill. Off, it sews as a running stitch along its middle, as a drawing's fine lines may want.",
-      "title": "Merge thin lines",
-      "type": "boolean",
-      "x-stitchcraft": {
-        "automatic": true,
-        "group": "Stitches by shape",
-        "origin": "stitchcraft",
-        "stability": "experimental"
-      }
-    },
     "auto_min_area_mm2": {
       "default": 1.0,
       "description": "The smallest area sewn. An area, or a part of one, smaller than this is a speck, which would sew a knot: it is merged into the area beside it that it shares the longest edge with, or left out when it shares none.",
@@ -260,7 +248,7 @@
     },
     "auto_min_line_unevenness": {
       "default": 0.05,
-      "description": "How much the width of a thin line varies along it, at the least, for it to merge into the shape beside it (`auto_merge_lines`): the standard deviation of its width divided by its width. A thin line is a part narrower than the narrowest satin stroke everywhere. The ragged strands that soft shading and fur trace into vary by 0.09 to 0.46, and merge. A line drawn with an even pen varies by less, and sews as a line.",
+      "description": "How much the width of a thin line varies along it, at the least, for it to merge into the shape beside it (`auto_fill_uneven`): the standard deviation of its width divided by its width. A thin line is a part narrower than the narrowest satin stroke everywhere. The ragged strands that soft shading and fur trace into vary by 0.09 to 0.46, and merge. A line drawn with an even pen varies by less, and sews as a line.",
       "maximum": 5.0,
       "minimum": 0.0,
       "title": "Least a merged line's width varies",
@@ -3400,7 +3388,6 @@
           "auto_stitch",
           "auto_prefer",
           "auto_fill_uneven",
-          "auto_merge_lines",
           "auto_fill_angle",
           "auto_fill_outline",
           "auto_overlap_mm",

@@ -81,7 +81,7 @@ fn req_auto_090_an_even_thin_line_sews_as_a_line() {
 
 #[test]
 fn req_auto_090_a_shape_that_turns_merging_off_or_names_its_stitch_keeps_its_lines() {
-    for params in [[("auto_merge_lines", "false")], [("auto_stitch", "run")]] {
+    for params in [[("auto_fill_uneven", "false")], [("auto_stitch", "run")]] {
         let (out, diagnostics) =
             sewn(vec![rect("left", (0.0, 0.0), (10.0, 10.0), &RED), ragged("line", &params), rect("right", (10.7, 0.0), (20.0, 10.0), &BLUE)]);
         assert!(kinds(&out).contains(&("line", false)), "{params:?}: {:?}", kinds(&out));

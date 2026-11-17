@@ -26,8 +26,7 @@ use stitchcraft_core::{Code, Diagnostic, ElementId, Exhausted, Meter, Mm};
 
 use super::neighbours::speck;
 use super::params::{
-    FILL_UNEVEN, MAX_REACH, MAX_SATIN_WIDTH, MAX_UNEVENNESS, MERGE_LINES, MIN_AREA, MIN_FILL_WIDTH, MIN_SLENDERNESS, MIN_TRIPLE_RUN_WIDTH, PREFER,
-    STITCH,
+    FILL_UNEVEN, MAX_REACH, MAX_SATIN_WIDTH, MAX_UNEVENNESS, MIN_AREA, MIN_FILL_WIDTH, MIN_SLENDERNESS, MIN_TRIPLE_RUN_WIDTH, PREFER, STITCH,
 };
 use super::{AutoParams, micrometres, narrow};
 use crate::design::DesignSettings;
@@ -197,13 +196,13 @@ pub const PRESETS: [Preset; 2] = [
         name: "logo",
         help: "Flat art drawn in strokes, such as a logo, lettering or an ink drawing: more parts sew as satin columns, a part of \
                several strokes keeps its columns though its width varies, and a thin line sews as a line.",
-        values: &[(PREFER, "satin"), (FILL_UNEVEN, "false"), (MERGE_LINES, "false")],
+        values: &[(PREFER, "satin"), (FILL_UNEVEN, "false")],
     },
     Preset {
         name: "photo",
         help: "A traced photo, whose shapes are patches and not strokes: the rules as they are by default, which fill a ragged patch \
                and merge a ragged thin line into the patch beside it.",
-        values: &[(PREFER, "balanced"), (FILL_UNEVEN, "true"), (MERGE_LINES, "true")],
+        values: &[(PREFER, "balanced"), (FILL_UNEVEN, "true")],
     },
 ];
 

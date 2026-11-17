@@ -28,8 +28,6 @@ pub const STITCH: &str = "auto_stitch";
 pub const PREFER: &str = "auto_prefer";
 /// The key of the switch that fills uneven parts.
 pub const FILL_UNEVEN: &str = "auto_fill_uneven";
-/// The key of whether a shape's thin parts merge into the shapes beside them.
-pub const MERGE_LINES: &str = "auto_merge_lines";
 /// The key of the switch that sews an outline round each fill.
 pub const FILL_OUTLINE: &str = "auto_fill_outline";
 /// The key of the fills' angle.
@@ -91,16 +89,10 @@ params! {
             origin Origin::StitchCraft, stability Stability::Experimental;
 
         /// Whether a part of several centre lines whose width varies along them is filled. On, such a part
-        /// is a tatami fill: the ragged patches of a traced photo sew flat. Off, it sews a satin column
-        /// along each line, as a drawing made of strokes of changing width may want.
+        /// is a tatami fill: the ragged patches of a traced photo sew flat, and a ragged thin line merges
+        /// into the area beside it. Off, it sews a satin column along each line, and a thin line runs along
+        /// its middle, as a drawing made of strokes of changing width may want.
         auto_fill_uneven: Toggle = "true", label "Fill uneven parts",
-            origin Origin::StitchCraft, stability Stability::Experimental;
-
-        /// Whether a thin part of the shape merges into the shape beside it. On, a part narrower than the
-        /// design's narrowest satin stroke everywhere, as soft shading and fur trace into, is merged into the
-        /// automatic area it shares the longest edge with, and sews as part of that area's fill. Off, it sews
-        /// as a running stitch along its middle, as a drawing's fine lines may want.
-        auto_merge_lines: Toggle = "true", label "Merge thin lines",
             origin Origin::StitchCraft, stability Stability::Experimental;
 
         /// The angle of the rows of every fill that automatic digitizing makes, as a fill's `angle` gives
@@ -194,7 +186,7 @@ params! {
             origin Origin::StitchCraft, stability Stability::Experimental;
 
         /// How much the width of a thin line varies along it, at the least, for it to merge into the shape
-        /// beside it (`auto_merge_lines`): the standard deviation of its width divided by its width. A thin
+        /// beside it (`auto_fill_uneven`): the standard deviation of its width divided by its width. A thin
         /// line is a part narrower than the narrowest satin stroke everywhere. The ragged strands that soft
         /// shading and fur trace into vary by 0.09 to 0.46, and merge. A line drawn with an even pen varies
         /// by less, and sews as a line.
@@ -295,7 +287,7 @@ mod tests {
     #[test]
     fn each_key_names_a_setting_in_the_order_they_are_declared() {
         let keys: Vec<&str> = AutoParams::SPECS.iter().map(|spec| spec.key).collect();
-        let shape = [STITCH, PREFER, FILL_UNEVEN, MERGE_LINES, FILL_ANGLE, FILL_OUTLINE];
+        let shape = [STITCH, PREFER, FILL_UNEVEN, FILL_ANGLE, FILL_OUTLINE];
         let neighbours = [OVERLAP, "auto_pull_compensation_mm", IGNORE_BACKGROUND];
         let base = ["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_keep_holes"];
         let bounds =

@@ -260,7 +260,7 @@ in 6 steps:
    patches. Each would sew as a running stitch that the fills beside it end their rows on. So a part
    narrower than a satin column can be, whose width varies along it, sews as part of the fill of the shape
    it shares the longest edge with (`SC-I0915`). A line of even width, as a pen draws it, sews as a
-   line. Turn **Merge thin lines** off (`auto_merge_lines`) to keep every line, as the `logo` style does.
+   line. Turn **Fill uneven parts** off (`auto_fill_uneven`) to keep every line, as the `logo` style does.
 4. **Specks.** A shape or a part of one smaller than 1 mm² would sew a knot. It is merged into the shape
    it shares the longest edge with (`SC-I0905`, `auto_min_area_mm2`).
 5. **Overlaps.** The thread pulls stitches in from the edges of their shape, so shapes that only meet show
@@ -444,7 +444,7 @@ of `stitch plan --report`). The settings that change the choice come in 3 tiers:
   `stitch plan photo.jpg -o photo.pes --set auto_min_slenderness=4`.
 
 A style is a named set of these settings. `stitch plan --style logo` suits flat art drawn in strokes: it
-prefers satin columns, fills no uneven part and merges no thin line. `--style photo` is the defaults. The
+prefers satin columns, and fills no uneven part and merges no thin line. `--style photo` is the defaults. The
 [rules' reference](../reference/auto-rules.md) lists what each style sets, and every setting with its tier.
 
 ### Settings

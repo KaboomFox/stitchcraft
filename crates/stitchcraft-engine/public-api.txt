@@ -59,7 +59,6 @@ pub stitchcraft_engine::auto::AutoParams::auto_ignore_background: <stitchcraft_p
 pub stitchcraft_engine::auto::AutoParams::auto_max_reach: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_max_satin_width_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_max_unevenness: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
-pub stitchcraft_engine::auto::AutoParams::auto_merge_lines: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_min_area_mm2: <stitchcraft_params::kinds::Area as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_min_fill_width_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_min_line_unevenness: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
@@ -95,7 +94,6 @@ pub const stitchcraft_engine::auto::LONGEST_SATIN_STITCH: f64
 pub const stitchcraft_engine::auto::MAX_REACH: &str
 pub const stitchcraft_engine::auto::MAX_SATIN_WIDTH: &str
 pub const stitchcraft_engine::auto::MAX_UNEVENNESS: &str
-pub const stitchcraft_engine::auto::MERGE_LINES: &str
 pub const stitchcraft_engine::auto::MIN_AREA: &str
 pub const stitchcraft_engine::auto::MIN_FILL_WIDTH: &str
 pub const stitchcraft_engine::auto::MIN_LINE_UNEVENNESS: &str
