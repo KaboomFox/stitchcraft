@@ -43,7 +43,7 @@ fn auto(id: &str, parts: &[Polygon], params: &[(&str, &str)]) -> Element {
 /// The ids of what `merged` gives, and what it says.
 fn run(elements: Vec<Element>, budget: &Budget) -> (Vec<String>, Vec<String>) {
     let (flattened, rules) = flattened(elements);
-    let (out, _) = merged(flattened, &rules, NARROWEST, budget);
+    let out = merged(flattened, &[], &rules, NARROWEST, budget).layers;
     (out.elements.iter().map(|(_, element)| element.id.to_string()).collect(), out.said.iter().map(ToString::to_string).collect())
 }
 
@@ -67,7 +67,7 @@ fn a_line_whose_area_merges_whole_sews_nothing_and_its_trim_has_no_place() {
 fn a_line_a_hair_from_the_rest_of_its_own_area_rejoins_it_across_the_gap() {
     // 0.02 mm apart, nearer than twice the shapes' tolerance.
     let (flattened, rules) = flattened(vec![auto("a", &[square((0.0, 0.0), (10.0, 10.0)), strand(10.02)], &[])]);
-    let (out, merges) = merged(flattened, &rules, NARROWEST, &Budget::DEFAULT);
+    let Merged { layers: out, merges, .. } = merged(flattened, &[], &rules, NARROWEST, &Budget::DEFAULT);
     let said: Vec<String> = out.said.iter().map(ToString::to_string).collect();
     assert_eq!(
         said,
@@ -150,7 +150,7 @@ fn a_line_merges_into_no_area_whose_box_only_is_near_it() {
 fn a_line_beside_no_area_stays_in_its_area_when_another_line_of_it_merges() {
     let elements = vec![auto("left", &[square((0.0, 0.0), (10.0, 10.0))], &[]), auto("lines", &[strand(10.0), strand(40.0)], &[])];
     let (flattened, rules) = flattened(elements);
-    let (out, merges) = merged(flattened, &rules, NARROWEST, &Budget::DEFAULT);
+    let Merged { layers: out, merges, .. } = merged(flattened, &[], &rules, NARROWEST, &Budget::DEFAULT);
     assert_eq!(merges.len(), 1);
     // `lines` keeps its far line, and sews it.
     let Some((_, element)) = out.elements.get(1) else { panic!("{} elements", out.elements.len()) };

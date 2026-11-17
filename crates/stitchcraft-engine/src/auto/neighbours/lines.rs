@@ -18,21 +18,27 @@
 //! (`REQ-AUTO-008`), and an area that turns `auto_fill_uneven` off, or names its stitch with `auto_stitch`,
 //! keeps its lines.
 //!
+//! **Sorting kept.** Each area's parts are sorted as digitizing sorts them (`narrow::sorted`) to find its
+//! lines, with the holes digitizing keeps open. An area that takes nothing in sews as it was sorted then,
+//! less the lines it gave up: sorted again, what is left of a part that gave up a piece would split into
+//! new tails, which sew as lines where the piece left one. An area that takes a line in is sorted again.
+//!
 //! **Work.** Each area has the budget's work to itself to find its thin parts, and each line to find where
 //! it goes. It costs the work of the rings near it and a unit for each area it looks past. An area whose
 //! thin parts need more keeps them, and a line whose neighbours need more stays where it is, which is said.
 
 use std::borrow::Cow;
+use std::collections::{BTreeMap, BTreeSet};
 
-use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Meter, Mm};
+use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Meter, Mm, Rect};
 
 use super::layers::Flattened;
 use super::specks::shared;
 use super::{Failed, TOUCHING, envelope, joined, near, parts_of};
 use crate::auto::columns::Sewn;
-use crate::auto::narrow::{self, Along, Edges, piece, spread};
+use crate::auto::narrow::{self, Along, Edges, Parts, piece, spread};
 use crate::auto::rules::Bounds;
-use crate::auto::{AutoParams, outline};
+use crate::auto::{AutoParams, Open, clear, outline};
 use crate::design::{Element, FillRule, Shape};
 use crate::generate::trim_or_stop_left_out;
 use crate::generators::mm;
@@ -49,6 +55,20 @@ struct Area {
     bounds: Envelope,
     /// Whether its parts changed: it gave up a line, or took one in.
     changed: bool,
+    /// Its parts as digitizing sorts them, and the places among those sewn along their middles of the lines
+    /// that left it, while it takes nothing in: none once it does, or when it wasn't sorted.
+    sorted: Option<(Parts, BTreeSet<usize>)>,
+}
+
+/// What merging the lines makes of the flattened layers.
+pub(in crate::auto) struct Merged<'d> {
+    /// The layers, each area's lines merged.
+    pub(in crate::auto) layers: Flattened<'d>,
+    /// Each line merged, with where it went.
+    pub(in crate::auto) merges: Vec<Merge>,
+    /// The parts of each area that took nothing in, by its place in the design, as digitizing sorts them,
+    /// less the lines that left it: it sews them so.
+    pub(in crate::auto) sorted: BTreeMap<usize, Parts>,
 }
 
 /// A line merged into a neighbour: the line, and the place in the design of the area it merged into.
@@ -67,27 +87,32 @@ struct Line {
     part: Polygon,
     /// Whether it is a whole part of the area, not a piece of one.
     whole: bool,
+    /// Its place among the area's parts sewn along their middles.
+    at: usize,
 }
 
 /// What an area gives up: its lines, and the rest of it.
 struct Given {
     /// The rest of the area, joined.
     rest: Vec<Polygon>,
-    /// Its lines, each with whether it is a whole part of the area.
-    lines: Vec<(Polygon, bool)>,
+    /// Its lines, each with whether it is a whole part of the area and its place among the parts sewn along
+    /// their middles.
+    lines: Vec<(Polygon, bool, usize)>,
 }
 
 /// `flattened`, each automatic area's thin parts merged into the automatic area beside it that it shares the
-/// longest edge with ([the module](self)), and what is said of each. `rules` holds each element's settings
-/// of the rules by its place in the design, and `narrowest` is the design's narrowest satin stroke. Each area
-/// has `budget`'s work to itself to find its lines, and each line to find where it goes. Each line merged is
-/// given back too, with where it went.
+/// longest edge with ([the module](self)), and what is said of each. `design` holds the design's elements,
+/// whose shapes drawn after an area say which of its holes stay open, and `rules` each one's settings of the
+/// rules, both by place in the design, and `narrowest` is the design's narrowest satin stroke. Each area has
+/// `budget`'s work to itself to find its lines, and each line to find where it goes. Each line merged is given
+/// back too, with where it went, and the parts of each area that took nothing in, as they sew.
 pub(in crate::auto) fn merged<'d>(
     flattened: Flattened<'d>,
+    design: &[Element],
     rules: &[Option<AutoParams>],
     narrowest: Mm,
     budget: &Budget,
-) -> (Flattened<'d>, Vec<Merge>) {
+) -> Merged<'d> {
     let Flattened { elements, kept, mut said } = flattened;
     let mut areas: Vec<Option<Area>> =
         elements.iter().map(|(index, element)| area(element, rules.get(*index).and_then(Option::as_ref), budget)).collect();
@@ -97,11 +122,15 @@ pub(in crate::auto) fn merged<'d>(
     for (from, (index, element)) in elements.iter().enumerate() {
         let Some(rules) = rules.get(*index).and_then(Option::as_ref).filter(|rules| merges(rules)) else { continue };
         let Some(area) = areas.get_mut(from).and_then(Option::as_mut) else { continue };
-        match given(&element.id, &area.parts, narrowest, rules, &mut budget.meter()) {
-            Ok(None) => {}
-            Ok(Some(given)) => {
+        // A hole that a shape drawn later meets is not kept open, as when the area is digitized.
+        let later = design.get(index + 1..).unwrap_or_default();
+        let open = |hole: Rect, meter: &mut Meter| clear(later, hole, meter);
+        match given(&element.id, &area.parts, narrowest, rules, &open, &mut budget.meter()) {
+            Ok((sorted, None)) => area.sorted = Some((sorted, BTreeSet::new())),
+            Ok((sorted, Some(given))) => {
                 area.parts = given.rest;
-                lines.extend(given.lines.into_iter().map(|(part, whole)| Line { from, part, whole }));
+                area.sorted = Some((sorted, BTreeSet::new()));
+                lines.extend(given.lines.into_iter().map(|(part, whole, at)| Line { from, part, whole, at }));
             }
             Err(failed) => {
                 said.push(failed.said(Code::AutoLineMerged, "the thin lines of this area", "it keeps them", budget.max_work, element.id.clone()));
@@ -128,6 +157,10 @@ pub(in crate::auto) fn merged<'d>(
                 };
                 let hint = Fix::Hint("To sew it as a running stitch, turn `auto_fill_uneven` off, or give the shape settings.".to_string());
                 said.push(Diagnostic::new(Code::AutoLineMerged, message).with_element(element.id.clone()).with_fix(hint));
+                // The line left its area's parts sewn along their middles.
+                if let Some((_, left)) = areas.get_mut(line.from).and_then(Option::as_mut).and_then(|area| area.sorted.as_mut()) {
+                    left.insert(line.at);
+                }
                 if let Some((into, _)) = elements.get(to) {
                     done.push(Merge { line: line.part, into: *into });
                 }
@@ -140,19 +173,38 @@ pub(in crate::auto) fn merged<'d>(
         }
     }
     let mut sewing = Vec::with_capacity(elements.len());
+    let mut sorted = BTreeMap::new();
     for ((index, element), area) in elements.into_iter().zip(areas) {
+        let area = area.map(|mut area| {
+            if let Some((parts, left)) = area.sorted.take() {
+                sorted.insert(index, without(parts, &left));
+            }
+            area
+        });
         match area.filter(|area| area.changed) {
             None => sewing.push((index, element)),
             // An area whose every part merged into its neighbours sews nothing, and has no place for a trim or a
             // stop after it.
-            Some(area) if area.parts.is_empty() => said.extend(trim_or_stop_left_out(&element).map(|left| left.with_element(element.id.clone()))),
+            Some(area) if area.parts.is_empty() => {
+                sorted.remove(&index);
+                said.extend(trim_or_stop_left_out(&element).map(|left| left.with_element(element.id.clone())));
+            }
             Some(area) => {
                 let shape = Shape::Fill { path: outline(&area.parts), rule: FillRule::NonZero, gradient: None };
                 sewing.push((index, Cow::Owned(Element { shape, ..element.into_owned() })));
             }
         }
     }
-    (Flattened { elements: sewing, kept, said }, done)
+    Merged { layers: Flattened { elements: sewing, kept, said }, merges: done, sorted }
+}
+
+/// `parts`, an area's sorted, less those sewn along their middles at the places `left`, which left it.
+fn without(parts: Parts, left: &BTreeSet<usize>) -> Parts {
+    if left.is_empty() {
+        return parts;
+    }
+    let along = parts.along.into_iter().enumerate().filter(|(at, _)| !left.contains(at)).map(|(_, along)| along).collect();
+    Parts { along, ..parts }
 }
 
 /// Whether an area with `rules` merges its thin lines: unless it turns that off, or names its stitch.
@@ -167,41 +219,46 @@ fn area(element: &Element, rules: Option<&AutoParams>, budget: &Budget) -> Optio
     let (true, Some(_), Shape::Fill { path, rule, .. }) = (element.automatic, rules, &element.shape) else { return None };
     let parts = parts_of(path, *rule, &mut budget.meter()).ok()?.ok().filter(|parts| !parts.is_empty())?;
     let bounds = envelope(&parts)?;
-    Some(Area { parts, bounds, changed: false })
+    Some(Area { parts, bounds, changed: false, sorted: None })
 }
 
-/// The lines `parts`, an automatic area `id`'s whose settings of the rules are `rules`, gives up, and the rest
-/// of it, with `meter`'s work: each part or piece that the rules sew as a running stitch along its middle
-/// once the parts are sorted as digitizing sorts them (`narrow::sorted`), a line or a column too narrow for
-/// satin, and that is ragged, its width varying by `rules`' least unevenness of a line or more. `narrowest`
-/// is the design's narrowest satin stroke. `None` when it gives up none.
-fn given(id: &ElementId, parts: &[Polygon], narrowest: Mm, rules: &AutoParams, meter: &mut Meter) -> Result<Option<Given>, Failed> {
+/// `parts`, an automatic area `id`'s whose settings of the rules are `rules`, sorted as digitizing sorts them
+/// (`narrow::sorted`) with the holes `open` says, and the lines it gives up, with the rest of it, with
+/// `meter`'s work: each part or piece that the rules sew as a running stitch along its middle, a line or a
+/// column too narrow for satin, and that is ragged, its width varying by `rules`' least unevenness of a line
+/// or more. `narrowest` is the design's narrowest satin stroke. No lines when it gives up none.
+fn given(
+    id: &ElementId,
+    parts: &[Polygon],
+    narrowest: Mm,
+    rules: &AutoParams,
+    open: &Open<'_>,
+    meter: &mut Meter,
+) -> Result<(Parts, Option<Given>), Failed> {
     let bounds = Bounds::of(rules, narrowest);
-    // Whether a hole is kept open changes how a satin column sews along it, never whether a part runs.
-    let sorted = narrow::sorted(id, parts.to_vec(), &bounds, rules, &|_, _| Ok(true), meter)?;
-    let mut rest = sorted.filled;
+    let sorted = narrow::sorted(id, parts.to_vec(), &bounds, rules, open, meter)?;
+    let mut rest = sorted.filled.clone();
     let mut lines = Vec::new();
-    for along in sorted.along {
+    for (at, along) in sorted.along.iter().enumerate() {
         meter.charge(1)?;
         let (part, runs) = match along {
-            Along::Narrow(narrow) => (narrow.part, true),
+            Along::Narrow(narrow) => (&narrow.part, true),
             Along::Columns(columns) => {
                 let runs = !columns.sewn.is_empty() && columns.sewn.iter().all(|sewn| matches!(sewn, Sewn::Running { .. }));
-                (columns.part, runs)
+                (&columns.part, runs)
             }
         };
-        if runs && ragged(&part, rules.auto_min_line_unevenness, meter)? {
-            let whole = parts.contains(&part);
-            lines.push((part, whole));
+        if runs && ragged(part, rules.auto_min_line_unevenness, meter)? {
+            lines.push((part.clone(), parts.contains(part), at));
         } else {
-            rest.push(part);
+            rest.push(part.clone());
         }
     }
     if lines.is_empty() {
-        return Ok(None);
+        return Ok((sorted, None));
     }
     let rest = joined(ops::union([rest.as_slice()], meter))?;
-    Ok(Some(Given { rest, lines }))
+    Ok((sorted, Some(Given { rest, lines })))
 }
 
 /// Whether the width of `part`, a thin line, varies along its centre lines by `least` or more, measured as a
@@ -239,6 +296,10 @@ fn into(areas: &mut [Option<Area>], line: &Line, meter: &mut Meter) -> Result<Op
     area.bounds = envelope(&merged).unwrap_or(area.bounds);
     area.parts = merged;
     area.changed = true;
+    // A piece back in its own area still sews as it was sorted; anything else changes what the area sorts.
+    if place != line.from || line.whole {
+        area.sorted = None;
+    }
     if let Some(from) = areas.get_mut(line.from).and_then(Option::as_mut).filter(|_| line.from != place) {
         from.changed = true;
     }

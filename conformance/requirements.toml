@@ -2905,6 +2905,24 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-AUTO-091"
+area = "auto"
+level = "L2"
+statement = "A piece of a broader part of an automatic area that the rules sew as a running stitch along its middle, sorted as digitizing sorts the area (a tail of an uneven part, a narrow piece split from a broad part, or a part sewn as columns that are all too narrow for satin) is a thin line too when its width varies along its centre lines by auto_min_line_unevenness or more. It merges as REQ-AUTO-090 merges a thin line, and SC-I0915 names each piece merged into another area, by its area, its size and where it went. A piece whose longest edge is with the rest of its own area stays in it and sews as it was sorted, which is said of no piece. The holes of an area are those digitizing keeps open (REQ-AUTO-084) when its lines are found."
+rationale = "M13.18 merged the thin lines that are parts of their own. A trace of a photo also draws a strand of fur as a thin tail of a patch, which sorting cuts off the patch and sews as a running stitch between 2 fills. Measured on 2026-11-17, 8 of the 12 stitches the traced dogs laid astray after M13.18 lay beside such a piece or were its own running stitch: 4 rows of a fill under a tail of its neighbour, 1 tail moving between its 2 centre lines, and 3 rows under parts sorted as columns too narrow for satin, 0.64 to 0.77 mm wide, which sewed as triple runs. The other 4 are chords of a fill's outline along a curved edge (M13.43)."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-092"
+area = "auto"
+level = "L2"
+statement = "An automatic area that takes no thin line in (REQ-AUTO-090, REQ-AUTO-091) sews its parts as they were sorted when its lines were found, less the lines that left it: what is left of a part that gave up a piece is not sorted again. An area that takes a line in, its own whole part included, is sorted again as it then is."
+rationale = "Sorted again, what is left of a part that gave up a tail is a new shape, whose own uneven ends split into new tails. Measured on 2026-11-17 on the traced dogs, those tails sewed as new running stitches between fills, and fills met at new places: the dogs' thickest spots rose from 4.69, 4.80, 4.62 and 5.63 fills to 5.30, 5.47, 5.00 and 5.01. Kept sorted, they sew 5.30, 5.27, 4.81 and 4.97."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-AUTO-009"
 area = "auto"
 level = "L2"
