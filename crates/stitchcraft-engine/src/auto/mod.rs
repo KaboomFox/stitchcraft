@@ -1043,9 +1043,7 @@ mod tests {
             assert!(!clear(touching.0, touching.1), "{touching:?}");
             assert!(clear(apart.0, apart.1), "{apart:?}");
         }
-        assert!(
-            clear((0.0, 0.0), (1.0, 1.0)) == false && super::clear(&[], Rect::around([p(0.0, 0.0)]).unwrap(), &mut Budget::DEFAULT.meter()).unwrap()
-        );
+        assert!(!clear((0.0, 0.0), (1.0, 1.0)) && super::clear(&[], Rect::around([p(0.0, 0.0)]).unwrap(), &mut Budget::DEFAULT.meter()).unwrap());
         // A unit of work for each point.
         let tight = Budget { max_work: 1, ..Budget::DEFAULT };
         assert!(super::clear(std::slice::from_ref(&line), Rect::around([p(20.0, 20.0)]).unwrap(), &mut tight.meter()).is_err());
