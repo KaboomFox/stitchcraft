@@ -28,6 +28,8 @@ pub const STITCH: &str = "auto_stitch";
 pub const PREFER: &str = "auto_prefer";
 /// The key of the switch that fills uneven parts.
 pub const FILL_UNEVEN: &str = "auto_fill_uneven";
+/// The key of whether a shape's thin parts merge into the shapes beside them.
+pub const MERGE_LINES: &str = "auto_merge_lines";
 /// The key of the switch that sews an outline round each fill.
 pub const FILL_OUTLINE: &str = "auto_fill_outline";
 /// The key of the fills' angle.
@@ -40,6 +42,8 @@ pub const MIN_TRIPLE_RUN_WIDTH: &str = "auto_min_triple_run_width_mm";
 pub const MIN_SLENDERNESS: &str = "auto_min_slenderness";
 /// The key of the most a column's width varies.
 pub const MAX_UNEVENNESS: &str = "auto_max_unevenness";
+/// The key of the least a thin line's width varies for it to merge into its neighbour.
+pub const MIN_LINE_UNEVENNESS: &str = "auto_min_line_unevenness";
 /// The key of the farthest a column reaches from its centre line.
 pub const MAX_REACH: &str = "auto_max_reach";
 /// The key of the narrowest piece that stays in a fill.
@@ -90,6 +94,13 @@ params! {
         /// is a tatami fill: the ragged patches of a traced photo sew flat. Off, it sews a satin column
         /// along each line, as a drawing made of strokes of changing width may want.
         auto_fill_uneven: Toggle = "true", label "Fill uneven parts",
+            origin Origin::StitchCraft, stability Stability::Experimental;
+
+        /// Whether a thin part of the shape merges into the shape beside it. On, a part narrower than the
+        /// design's narrowest satin stroke everywhere, as soft shading and fur trace into, is merged into the
+        /// automatic area it shares the longest edge with, and sews as part of that area's fill. Off, it sews
+        /// as a running stitch along its middle, as a drawing's fine lines may want.
+        auto_merge_lines: Toggle = "true", label "Merge thin lines",
             origin Origin::StitchCraft, stability Stability::Experimental;
 
         /// The angle of the rows of every fill that automatic digitizing makes, as a fill's `angle` gives
@@ -180,6 +191,14 @@ params! {
         /// uneven is filled, unless `auto_fill_uneven` is off. A part of one centre line isn't held to it:
         /// a leaf and a tapering stroke sew well as one column.
         auto_max_unevenness: Number = "0.3", label "Most a column's width varies", range (0.0, 5.0),
+            origin Origin::StitchCraft, stability Stability::Experimental;
+
+        /// How much the width of a thin line varies along it, at the least, for it to merge into the shape
+        /// beside it (`auto_merge_lines`): the standard deviation of its width divided by its width. A thin
+        /// line is a part narrower than the narrowest satin stroke everywhere. The ragged strands that soft
+        /// shading and fur trace into vary by 0.09 to 0.46, and merge. A line drawn with an even pen varies
+        /// by less, and sews as a line.
+        auto_min_line_unevenness: Number = "0.05", label "Least a merged line's width varies", range (0.0, 5.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
         /// How far a part reaches from one of its centre lines on both sides of the line, at the most, for
@@ -276,10 +295,11 @@ mod tests {
     #[test]
     fn each_key_names_a_setting_in_the_order_they_are_declared() {
         let keys: Vec<&str> = AutoParams::SPECS.iter().map(|spec| spec.key).collect();
-        let shape = [STITCH, PREFER, FILL_UNEVEN, FILL_ANGLE, FILL_OUTLINE];
+        let shape = [STITCH, PREFER, FILL_UNEVEN, MERGE_LINES, FILL_ANGLE, FILL_OUTLINE];
         let neighbours = [OVERLAP, "auto_pull_compensation_mm", IGNORE_BACKGROUND];
         let base = ["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_keep_holes"];
-        let bounds = [MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH, MIN_SLENDERNESS, MAX_UNEVENNESS, MAX_REACH, MIN_FILL_WIDTH, MIN_AREA];
+        let bounds =
+            [MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH, MIN_SLENDERNESS, MAX_UNEVENNESS, MIN_LINE_UNEVENNESS, MAX_REACH, MIN_FILL_WIDTH, MIN_AREA];
         let cover = ["auto_base_offset_mm", "auto_base_rows", "auto_base_sliver_mm2", "auto_base_bare_percent"];
         let thick = ["auto_thick_warn_fills", "auto_thick_fail_fills", "auto_thick_warn_points", "auto_thick_fail_points"];
         assert_eq!(keys, [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..], &thick[..]].concat());

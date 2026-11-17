@@ -28,7 +28,9 @@
 //! thread covers the pixel under it. A step of a top stitch is astray where it shows and neither that pixel
 //! nor a pixel beside it has the colour of the stitch's thread: a row may run along its shape's edge. A
 //! satin column reaches past its rails by its pull compensation, 0.4 mm, so a stitch is astray when a
-//! stretch of it [`ASTRAY`] long or longer is. Locks are left out, as they are meant to be covered. A stitch
+//! stretch of it [`ASTRAY`] long or longer is. The picture is the design as digitizing sews its colours
+//! ([`stitchcraft_engine::auto::as_merged`]): a thin line that merges into its neighbour (`REQ-AUTO-090`)
+//! has its neighbour's colour, which its thread then covers by the rules. Locks are left out, as they are meant to be covered. A stitch
 //! from one element's needle point to the next element's is a move, which the plan sews where the 2 lie
 //! nearer than its collapse length rather than jump (`REQ-ASM-002`). Moves astray are counted apart from the
 //! elements' own stitches, and so are the jump threads that a machine cutting no jump leaves
@@ -124,7 +126,7 @@ pub fn unsewn(design: &Design, plan: &StitchPlan) -> Unsewn {
 /// The thread `plan`, whose stitches lie where `design` draws its shapes, lays where it shows and should not,
 /// and the jump threads it leaves (see the module's docs).
 pub fn astray(design: &Design, plan: &StitchPlan) -> Astray {
-    let picture = Painted::of(design, plan);
+    let picture = Painted::of(&auto::as_merged(design, &Budget::DEFAULT), plan);
     let grid = &picture.grid;
     let sewn: Vec<_> = plan.sewn_stitches().into_iter().filter(|stitch| !stitch.is_lock()).collect();
     // The last stitch whose thread covers each pixel, by its place among `sewn`, plus 1: 0 for none.

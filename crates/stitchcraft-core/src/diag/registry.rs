@@ -1202,6 +1202,17 @@ macro_rules! codes {
         /// or raise `auto_min_area_mm2`.
         AutoRunsLeft = "SC-I0914", Info, "Jumps not looked at for a run under later shapes";
 
+        /// `--auto` takes a part of an automatic area narrower than the design's narrowest satin stroke
+        /// everywhere, a thin line such as soft shading and the strands of fur trace into, and merges it into
+        /// the automatic area it shares the longest edge with, which may be the rest of its own area. Sewn on
+        /// its own, such a line is a running stitch between 2 fills, and the fills beside it end their rows on
+        /// it. Merged, it sews as part of the fill beside it. An area whose every part is such a line, merged,
+        /// sews nothing of its own. A thin part that shares no edge with an automatic area sews as a line.
+        ///
+        /// The message gives the line's area and says where it went. To sew such lines as running stitches,
+        /// turn `auto_merge_lines` off, as the `logo` style does, or give the shape settings.
+        AutoLineMerged = "SC-I0915", Info, "Thin line merged into a neighbour";
+
         /// Routing joins satin columns, and the running stitches among them, into one route, as Ink/Stitch's
         /// Auto-Route Satin Columns does: StitchCraft Auto-Route Satin Columns in VectorCraft, and lettering in a
         /// font whose `auto_satin` is on. It joins running stitches alone as Ink/Stitch's Auto-Route Running

@@ -90,7 +90,7 @@ pub(crate) use neighbours::default_base_layer;
 use neighbours::{Background, Sewn, no_area, parts_of, speck};
 pub use params::{
     ADVANCED, AutoParams, FILL_ANGLE, FILL_OUTLINE, FILL_UNEVEN, IGNORE_BACKGROUND, LONGEST_SATIN_STITCH, MAX_REACH, MAX_SATIN_WIDTH, MAX_UNEVENNESS,
-    MIN_AREA, MIN_FILL_WIDTH, MIN_SLENDERNESS, MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, STITCH,
+    MERGE_LINES, MIN_AREA, MIN_FILL_WIDTH, MIN_LINE_UNEVENNESS, MIN_SLENDERNESS, MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, STITCH,
 };
 use rules::{Asked, Bounds, Fired, Measures, RuleId};
 
@@ -379,6 +379,8 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     // the layers are flattened: what shows of the background inside the picture is sewn.
     let background = neighbours::background(design, rules.first().and_then(Option::as_ref), budget);
     let layers = neighbours::flattened(design, &rules, matches!(background, Some(Background::Found)), budget);
+    // Thin lines, such as the strands of fur a photo traces into, merge into the areas beside them.
+    let (layers, _) = neighbours::lines_merged(layers, &rules, design.settings.min_satin_stroke_width, budget);
     // How each shape digitized sews, by its place in the design.
     let mut digitized = Vec::new();
     let mut sewn = Vec::with_capacity(layers.elements.len());
@@ -440,6 +442,37 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
         small_locks(&mut element.params);
     }
     Sewing { elements: Cow::Owned(elements), diagnostics, base: beside.base, made, limits }
+}
+
+/// `design` as automatic digitizing sews its colours: each thin line that merges into a neighbour
+/// (`REQ-AUTO-090`) drawn over in the thread of the area it merges into, as a fill of its own after every
+/// other shape, named after that area with `~line` and a number. A measure of where thread shows on a colour
+/// it shouldn't compares a plan with this design, since a line merged into its neighbour sews in the
+/// neighbour's thread by the rules. A design without automatic elements, or whose lines don't merge, comes
+/// back as it is. Each step has `budget`'s work, as it has when the design is digitized.
+pub fn as_merged(design: &Design, budget: &Budget) -> Design {
+    let mut diagnostics = Vec::new();
+    let cut = clips::cut(design, budget, &mut diagnostics);
+    let cut = cut.as_ref().unwrap_or(design);
+    let elements = cut.elements();
+    let rules: Vec<Option<AutoParams>> =
+        elements.iter().map(|element| if element.automatic { read(element, &mut diagnostics) } else { None }).collect();
+    let background = neighbours::background(cut, rules.first().and_then(Option::as_ref), budget);
+    let layers = neighbours::flattened(cut, &rules, matches!(background, Some(Background::Found)), budget);
+    let (_, merges) = neighbours::lines_merged(layers, &rules, cut.settings.min_satin_stroke_width, budget);
+    let mut drawn = design.elements().to_vec();
+    let mut taken = Labels::default();
+    for element in &drawn {
+        let _ = taken.claim(element.id.as_str().to_string(), &mut budget.meter());
+    }
+    for (n, merge) in merges.iter().enumerate() {
+        let Some(area) = elements.get(merge.into) else { continue };
+        let name = format!("{}~line{}", area.id.as_str(), n + 1);
+        let Ok(Ok(id)) = taken.claim(name, &mut budget.meter()).map(ElementId::new) else { continue };
+        let shape = Shape::Fill { path: outline(std::slice::from_ref(&merge.line)), rule: FillRule::NonZero, gradient: None };
+        drawn.push(Element { id, shape, ..area.clone() });
+    }
+    Design::new(drawn, design.settings.clone()).unwrap_or_else(|_| design.clone())
 }
 
 /// Adds the outline of the fill `id` among `elements` after it, when it still sews: a running stitch along
