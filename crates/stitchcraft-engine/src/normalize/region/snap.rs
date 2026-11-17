@@ -685,7 +685,9 @@ fn crossings_of_new(edges: &[(Node, Node)], fresh: &[bool], meter: &mut Meter) -
                     continue;
                 }
                 let (Some(&(a, b)), Some(&(c, d))) = (edges.get(k.min(j)), edges.get(k.max(j))) else { continue };
-                if c.x > b.x || a.x > d.x {
+                // The edges are in order of their least ends, and the earlier starts no further along x
+                // than the later, so they are apart along x only when the later starts after the earlier ends.
+                if c.x > b.x {
                     continue;
                 }
                 meter.charge(1)?;
