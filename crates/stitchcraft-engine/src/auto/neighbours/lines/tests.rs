@@ -10,7 +10,7 @@ const NARROWEST: Mm = DesignSettings::MIN_SATIN_STROKE_WIDTH;
 
 /// A line 10 mm long from `x` = `left` to the right, straight on its left and ragged on its right: 0.4 mm
 /// wide every millimetre and 0.7 mm wide half way between.
-fn ragged(left: f64) -> Polygon {
+fn strand(left: f64) -> Polygon {
     let mut ring = vec![(left, 0.0), (left, 10.0)];
     ring.extend((0..=20).map(|i| (left + if i % 2 == 0 { 0.4 } else { 0.7 }, 10.0 - f64::from(i) * 0.5)));
     part(&ring, &[])
@@ -50,7 +50,7 @@ fn run(elements: Vec<Element>, budget: &Budget) -> (Vec<String>, Vec<String>) {
 #[test]
 fn a_line_whose_area_merges_whole_sews_nothing_and_its_trim_has_no_place() {
     let set = filled("set", &[square((30.0, 0.0), (40.0, 10.0))]);
-    let elements = vec![auto("left", &[square((0.0, 0.0), (10.0, 10.0))], &[]), auto("line", &[ragged(10.0)], &[("trim_after", "true")]), set];
+    let elements = vec![auto("left", &[square((0.0, 0.0), (10.0, 10.0))], &[]), auto("line", &[strand(10.0)], &[("trim_after", "true")]), set];
     let (ids, said) = run(elements, &Budget::DEFAULT);
     assert_eq!(ids, ["left", "set"]);
     assert_eq!(
@@ -66,7 +66,7 @@ fn a_line_whose_area_merges_whole_sews_nothing_and_its_trim_has_no_place() {
 #[test]
 fn a_line_a_hair_from_the_rest_of_its_own_area_rejoins_it_across_the_gap() {
     // 0.02 mm apart, nearer than twice the shapes' tolerance.
-    let (flattened, rules) = flattened(vec![auto("a", &[square((0.0, 0.0), (10.0, 10.0)), ragged(10.02)], &[])]);
+    let (flattened, rules) = flattened(vec![auto("a", &[square((0.0, 0.0), (10.0, 10.0)), strand(10.02)], &[])]);
     let (out, merges) = merged(flattened, &rules, NARROWEST, &Budget::DEFAULT);
     let said: Vec<String> = out.said.iter().map(ToString::to_string).collect();
     assert_eq!(
@@ -90,7 +90,7 @@ fn a_line_on_a_tie_goes_into_the_area_that_sews_first() {
     let elements = vec![
         auto("left", &[square((0.0, 0.0), (10.0, 10.0))], &[]),
         auto("again", &[square((0.0, 0.0), (10.0, 10.0))], &[]),
-        auto("line", &[ragged(10.0)], &[]),
+        auto("line", &[strand(10.0)], &[]),
     ];
     let (_, said) = run(elements, &Budget::DEFAULT);
     assert!(said.first().is_some_and(|said| said.contains("merged into `left`")), "{said:?}");
@@ -103,7 +103,7 @@ fn a_shape_that_needs_more_work_than_the_budget_allows_keeps_its_lines_and_says_
     let elements = || {
         vec![
             auto("left", &[square((0.0, 0.0), (10.0, 10.0))], &[]),
-            auto("line", &[ragged(10.0)], &[]),
+            auto("line", &[strand(10.0)], &[]),
             auto("right", &[finely(10.7, 20.0, 3000)], &[]),
         ]
     };
@@ -123,4 +123,25 @@ fn a_shape_that_needs_more_work_than_the_budget_allows_keeps_its_lines_and_says_
         seen.into_iter().collect::<Vec<_>>(),
         ["info SC-I0915: Finding the thin lines of this area", "info SC-I0915: Finding where to merge this line"]
     );
+}
+
+#[test]
+fn a_line_is_ragged_from_the_least_unevenness_on() {
+    let line = strand(10.0);
+    let mut meter = Budget::DEFAULT.meter();
+    let cell = piece(&line);
+    let lines = centre_lines(&line, cell, &mut meter).unwrap().unwrap();
+    let spread = spread(&Edges::of(&line, cell, &mut meter).unwrap(), &lines, &mut meter).unwrap().unwrap();
+    // The line's own unevenness: it is ragged at it, and not above it.
+    let least = spread.deviation / spread.mean.get();
+    assert!(ragged(&line, least, &mut Budget::DEFAULT.meter()).unwrap());
+    assert!(!ragged(&line, least * 1.001, &mut Budget::DEFAULT.meter()).unwrap());
+}
+
+#[test]
+fn a_line_merges_into_no_area_whose_box_only_is_near_it() {
+    // An L round the line's top and right side, 1 mm and more away from it: its box holds the line.
+    let around = part(&[(0.0, 12.0), (20.0, 12.0), (20.0, -5.0), (12.0, -5.0), (12.0, 11.0), (0.0, 11.0)], &[]);
+    let (ids, said) = run(vec![auto("around", &[around], &[]), auto("line", &[strand(10.0)], &[])], &Budget::DEFAULT);
+    assert_eq!((ids, said), (vec!["around".to_string(), "line".to_string()], Vec::<String>::new()));
 }

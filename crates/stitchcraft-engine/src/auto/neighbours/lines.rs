@@ -182,7 +182,7 @@ fn ragged(part: &Polygon, least: f64, meter: &mut Meter) -> Result<bool, Failed>
     let Ok(lines) = centre_lines(part, cell, meter)? else { return Ok(false) };
     let edges = Edges::of(part, cell, meter)?;
     let Some(spread) = spread(&edges, &lines, meter)? else { return Ok(false) };
-    Ok(spread.deviation >= least * spread.mean.get())
+    Ok(spread.deviation / spread.mean.get() >= least)
 }
 
 /// Merges `line` into the area of `areas` it shares the longest edge with, its own included, and gives
