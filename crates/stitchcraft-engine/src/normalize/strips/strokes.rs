@@ -17,8 +17,9 @@
 //! 3. **Joins.** Where 2 strokes' bands meet inside the part, the one the part goes on past on both sides
 //!    runs through, and the other stops against it ([`join`]). Of 2 that end there, the one whose end lies
 //!    square to it runs through: an M's stem, whose top is square, where the middle stroke's top is cut on
-//!    the slant. Of 2 ends alike, as at the bottom of a V or the top of an A, the join is cut along the
-//!    line that halves the angle between them. A stroke that stops reaches the pull compensation past the
+//!    the slant. Of 2 ends alike that meet at a sharp angle, as at the bottom of a V or the top of an A, the
+//!    join is cut along the line that halves the angle between them, and at a blunter one, as at an L's
+//!    corner, the longer runs through. A stroke that stops reaches the pull compensation past the
 //!    other's side along its own line, and at a halving line half of it.
 //! 4. **Pieces.** Each stroke's piece is the part inside its band, cut so ([`pieces`]). The pieces must
 //!    cover the part, but for [`UNCOVERED`] of it, or the part keeps its centre lines' columns.
@@ -63,6 +64,13 @@ const FLAT: f64 = 0.363_970_234_266_202_4;
 
 /// The sine of 15°: 2 strokes whose lines cross more nearly parallel than this are not cut by a halving line.
 const CROSSING: f64 = 0.258_819_045_102_520_8;
+
+/// The sine of 60°: 2 strokes that end alike at a join whose lines meet at a sharper angle than this, as at
+/// an apex of an A or the bottom of a V, are cut along the line that halves it. At a blunter one, as at an
+/// L's corner, cut so, each would end in a point at the corner's outside, and their tips and their pull
+/// compensation piled 4.3 fills of thread there on TS-13D's emblem, where its columns along their centre
+/// lines laid 4.1: the longer runs through instead, and the other stops against it.
+const APEX: f64 = 0.866_025_403_784_438_6;
 
 /// How far a band reaches past its sides across the stroke, in millimetres, so that the part's own edge lies
 /// inside it: a ten-thousandth of a millimetre, which leaves a step that small where a piece's side leaves
@@ -380,7 +388,7 @@ fn join(part: &Polygon, (i, one): (usize, &Band), (j, other): (usize, &Band), me
                 stop((j, other), (i, one))
             } else if b + TIE < a {
                 stop((i, one), (j, other))
-            } else if sine(one.u, other.u) >= CROSSING {
+            } else if (CROSSING..=APEX).contains(&sine(one.u, other.u)) {
                 halved((i, one), (j, other), reach)
             } else if longer(one, other) {
                 stop((j, other), (i, one))
