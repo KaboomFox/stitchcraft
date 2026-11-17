@@ -213,6 +213,14 @@ scale = 3.0
 alt = "TS-13E as it will sew: 2 buttons, a yellow disc with 7 orange dots in a black rim, one above the other, twice. At the top, digitized, each button's rim is a satin column round one yellow fill under its dots. At the bottom, in paint order, every shape is a fill."
 
 [[shot]]
+id = "testsheet-ts-13f"
+kind = "stitch"
+sheet = "TS-13F"
+style = "realistic"
+scale = 3.0
+alt = "TS-13F as it will sew: 3 rows in blue. At the top, 6 squares 15 mm a side, of 1 to 6 fills on each other from left to right. In the middle, the same 6 squares, each with a black satin outline along its edge. At the bottom, 3 blocks 12 mm a side, each a fill cut into square patches 1.5, 2 and 3 mm across."
+
+[[shot]]
 id = "testsheet-ts-17c"
 kind = "stitch"
 sheet = "TS-17C"

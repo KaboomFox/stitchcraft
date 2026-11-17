@@ -86,6 +86,10 @@ const PAST_ENDS: f64 = 2.0 * (OVERLAP + TOUCHING) * TOUCHING;
 /// (`REQ-AUTO-029`).
 const OVERLAP: f64 = 1.0;
 
+/// How far an automatic area reaches under an area across its rows by default, in millimetres: its pull
+/// compensation (`REQ-AUTO-067`). The rows of these cases run along x.
+const ACROSS: f64 = 0.4;
+
 #[test]
 fn req_auto_007_an_area_reaches_the_overlap_under_the_area_sewn_after_it_that_it_touches() {
     let (out, diagnostics) =
@@ -107,16 +111,19 @@ fn req_auto_007_an_area_reaches_the_overlap_under_the_area_sewn_after_it_that_it
 #[test]
 fn req_auto_007_areas_reach_under_the_shape_sewn_after_them_both() {
     // 2 squares, one on the other, and a bar beside both, sewn after them: the lower square reaches under the
-    // upper one and the bar, and the upper square under the bar. Where the squares meet beside the bar, each
-    // reaches round its corner under the bar, a quarter of a circle as wide as the overlap.
+    // upper one, along whose edge its rows run, and under the bar, where they end, and the upper square
+    // under the bar. Where the squares meet beside the bar, each would reach round its corner under the bar,
+    // a quarter of an ellipse: the lower square, sewn first, does, and the upper one gives up what it sewed
+    // there and its own quarter beside it (REQ-AUTO-067).
     let (out, diagnostics) =
         sewn(vec![rect("low", (0.0, 0.0), (10.0, 10.0)), rect("high", (0.0, 10.0), (10.0, 20.0)), rect("bar", (10.0, 0.0), (20.0, 20.0))]);
-    let corner = std::f64::consts::PI * OVERLAP * OVERLAP / 4.0;
-    assert!(near(area(named(&out, "low")), 120.0 + corner, 2.0 * PAST_ENDS), "{}", area(named(&out, "low")));
-    assert!(near(area(named(&out, "high")), 110.0 + corner, PAST_ENDS), "{}", area(named(&out, "high")));
+    let corner = std::f64::consts::PI * OVERLAP * ACROSS / 4.0;
+    let low = 100.0 + 10.0 * OVERLAP + 10.0 * ACROSS + corner;
+    assert!(near(area(named(&out, "low")), low, 2.0 * PAST_ENDS), "{}", area(named(&out, "low")));
+    assert!(near(area(named(&out, "high")), 100.0 + 10.0 * OVERLAP - corner, PAST_ENDS), "{}", area(named(&out, "high")));
     let [x0, y0, x1, y1] = bounds(named(&out, "low"));
     assert!(
-        near(x0, 0.0, TOUCHING) && near(y0, 0.0, TOUCHING) && near(x1, 10.0 + OVERLAP, 1e-6) && near(y1, 10.0 + OVERLAP, 1e-6),
+        near(x0, 0.0, TOUCHING) && near(y0, 0.0, TOUCHING) && near(x1, 10.0 + OVERLAP, 1e-6) && near(y1, 10.0 + ACROSS, 1e-6),
         "{:?}",
         bounds(named(&out, "low"))
     );
@@ -143,12 +150,12 @@ fn req_auto_007_an_area_reaches_under_a_shape_only_where_they_touch() {
     // from it, too far to touch.
     let ell = automatic(fill("ell", &[&[(8.0, 10.0), (10.2, 10.0), (10.2, 0.0), (20.0, 0.0), (20.0, 12.0), (8.0, 12.0)]], &BLUE, &[]));
     let (out, _) = sewn(vec![rect("square", (0.0, 0.0), (10.0, 10.0)), ell]);
-    // The square reaches 1 mm under the L along the 2 mm they share and round the corner there, and no
-    // further down its right side than the overlap from that corner.
+    // The square reaches 0.4 mm under the L along the 2 mm they share, where its rows run along the edge,
+    // and round the corner there, and no further down its right side than the overlap from that corner.
     let square = named(&out, "square");
-    // Round the corner it reaches a quarter of a disc above the corner and less than one beside it.
-    let corner = std::f64::consts::PI * OVERLAP * OVERLAP / 4.0;
-    assert!(near(area(square), 100.0 + 2.0 * OVERLAP + 1.5 * corner, 0.5 * corner + PAST_ENDS), "{}", area(square));
+    // Round the corner it reaches a quarter of an ellipse above the corner and less than one beside it.
+    let corner = std::f64::consts::PI * OVERLAP * ACROSS / 4.0;
+    assert!(near(area(square), 100.0 + 2.0 * ACROSS + 1.5 * corner, 0.5 * corner + PAST_ENDS), "{}", area(square));
     let region = region_of(square);
     let beside =
         region.parts.iter().flat_map(|part| part.outline.iter()).filter(|p| p.x() > 10.0 + 1e-9).map(|p| p.y()).fold(f64::INFINITY, f64::min);
@@ -628,12 +635,13 @@ fn req_auto_008_a_speck_left_out_leaves_out_the_stop_after_it() {
 fn req_auto_023_an_area_drawn_under_others_sews_what_shows_of_it() {
     // A bar along the bottom, a square drawn over its middle: what shows of the bar is its 2 ends, which sew
     // first and reach 1 mm under the square along the edges they share with it, and round the corners at
-    // their ends, a quarter of a circle as wide as the overlap each (REQ-AUTO-007).
+    // their ends, a quarter of an ellipse each, the overlap long and the pull compensation high
+    // (REQ-AUTO-007, REQ-AUTO-067).
     let (out, diagnostics) =
         sewn(vec![rect("bar", (0.0, 0.0), (30.0, 10.0)), rect("square", (10.0, -5.0), (20.0, 15.0)), rect("far", (40.0, 0.0), (45.0, 5.0))]);
     let bar = named(&out, "bar");
     assert_eq!(region_of(bar).parts.len(), 2);
-    let corners = std::f64::consts::PI * OVERLAP * OVERLAP;
+    let corners = std::f64::consts::PI * OVERLAP * ACROSS;
     assert!(near(area(bar), 200.0 + 2.0 * OVERLAP * 10.0 + corners, 4.0 * PAST_ENDS), "{}", area(bar));
     assert_eq!(named(&out, "square").shape, rect("square", (10.0, -5.0), (20.0, 15.0)).shape);
     assert_eq!(said(&diagnostics, Code::AutoLayers), ["info SC-I0908: 1 area sews only what shows of it under the areas drawn over it."]);

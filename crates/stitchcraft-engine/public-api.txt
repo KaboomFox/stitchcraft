@@ -32,6 +32,7 @@ pub stitchcraft_engine::auto::rules::Rule::is: &'static str
 pub stitchcraft_engine::auto::rules::Rule::label: &'static str
 pub stitchcraft_engine::auto::rules::Rule::sewn: &'static str
 pub const stitchcraft_engine::auto::rules::LEAN: f64
+pub const stitchcraft_engine::auto::rules::MOST_CROWDING: f64
 pub const stitchcraft_engine::auto::rules::PRESETS: [stitchcraft_engine::auto::rules::Preset; 2]
 pub const stitchcraft_engine::auto::rules::RULES: [stitchcraft_engine::auto::rules::Rule; 9]
 pub fn stitchcraft_engine::auto::rules::filled(&str) -> alloc::string::String
@@ -48,6 +49,7 @@ pub stitchcraft_engine::auto::AutoParams::auto_base_bare_percent: <stitchcraft_p
 pub stitchcraft_engine::auto::AutoParams::auto_base_keep_holes: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_base_layer: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_base_offset_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_base_rows: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_base_sliver_mm2: <stitchcraft_params::kinds::Area as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_base_stitch_length_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_fill_angle: <stitchcraft_params::kinds::Angle as stitchcraft_params::kinds::ParamKind>::Value
