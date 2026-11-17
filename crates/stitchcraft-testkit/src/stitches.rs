@@ -12,7 +12,8 @@
 //! back from the one before by more than 135°, across a column wider than the step; a stitch along a rail
 //! turns by less, and isn't part of the zigzag. So of 2 stitches in turn the rung is the one that advances
 //! less along the column: along the way its 2 rails run there, from each of its ends to the needle point 2
-//! further on the same rail. In each stretch of at least 4 stitches that each turn back so, the rungs are
+//! further on the same rail and from the point 2 back to it, so that a column sewn the other way round
+//! has the same rungs. In each stretch of at least 4 stitches that each turn back so, the rungs are
 //! every other stitch: those that advance less than the stitch after them more often than the others do,
 //! the first stitch's on a tie ([`rungs`]). A shorter stretch is no satin: an underlay that runs to a
 //! column's end and back turns back once. Where a column tapers to a point, its rungs shorten as they go,
@@ -80,16 +81,17 @@ pub fn rungs(needles: &[Point]) -> Vec<[Point; 2]> {
 }
 
 /// How far stitch `k` of `zigzag` advances along the column, less than 0 going back: along the way its 2
-/// rails run there, from each of its ends to the needle point 2 further on the same rail, or 2 back at the
-/// zigzag's end. 0 where the rails go nowhere.
+/// rails run there, from each of its ends to the needle point 2 further on the same rail and from the
+/// needle point 2 back on each rail to its ends, so that a zigzag sewn the other way round has the same
+/// rungs. 0 where the rails go nowhere.
 fn advance(zigzag: &[[Point; 2]], k: usize) -> f64 {
     let points: Vec<Point> = zigzag.first().map(|first| first[0]).into_iter().chain(zigzag.iter().map(|stitch| stitch[1])).collect();
-    let step = |i: usize| match (points.get(i), points.get(i + 2)) {
-        (Some(&from), Some(&to)) => direction([from, to]),
-        _ => points.get(i.wrapping_sub(2)).zip(points.get(i)).map_or((0.0, 0.0), |(&from, &to)| direction([from, to])),
+    let step = |i: Option<usize>| match i.and_then(|i| points.get(i).zip(points.get(i + 2))) {
+        Some((&from, &to)) => direction([from, to]),
+        None => (0.0, 0.0),
     };
-    let (a, b) = (step(k), step(k + 1));
-    let way = (a.0 + b.0, a.1 + b.1);
+    let steps = [k.checked_sub(2), k.checked_sub(1), Some(k), Some(k + 1)].map(step);
+    let way = steps.iter().fold((0.0, 0.0), |sum, step| (sum.0 + step.0, sum.1 + step.1));
     let (x, y) = zigzag.get(k).map_or((0.0, 0.0), |stitch| direction(*stitch));
     let length = stitchcraft_core::math::hypot(way.0, way.1);
     if length == 0.0 { 0.0 } else { (x * way.0 + y * way.1) / length }

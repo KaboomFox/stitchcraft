@@ -66,6 +66,11 @@ fn stitch(from: (f64, f64), to: (f64, f64)) -> SewnStitch {
     SewnStitch { block: 0, index: 1, from: p(from.0, from.1), to: p(to.0, to.1), role: Role::Top, from_role: Role::Top }
 }
 
+/// `stitch` with its needle points at their places on `thickness`'s grid, where a pass gives them.
+fn placed(thickness: &Thickness, stitch: SewnStitch) -> SewnStitch {
+    SewnStitch { from: thickness.placed(stitch.from), to: thickness.placed(stitch.to), ..stitch }
+}
+
 #[test]
 fn req_auto_060_a_square_sewn_1_2_3_and_6_times_measures_as_many_fills() {
     for layers in [1, 2, 3, 6] {
@@ -221,7 +226,7 @@ fn drawn(over: &[usize]) -> Thickness {
         fills[*at] = 3.0;
     }
     let points = fills.iter().map(|fills| if *fills == 3.0 { 4.0 } else { 0.0 }).collect();
-    Thickness { grid: Grid { corner: (1.0, 2.0), columns: 11, rows: 11 }, fills, points, sewn: Vec::new() }
+    Thickness { origin: Point::ORIGIN, grid: Grid { corner: (1.0, 2.0), columns: 11, rows: 11 }, fills, points, sewn: Vec::new() }
 }
 
 /// The spots of the block of `across` by `down` spots whose first is in `column` and `row`, of 12 columns.
@@ -318,7 +323,13 @@ fn req_auto_061_the_thickest_spot_is_a_corner_of_the_cells() {
     let window = |at: usize| grid.window(at).collect::<Vec<usize>>();
     assert_eq!((window(13), window(0), window(11), window(143)), (vec![0, 1, 11, 12], vec![0], vec![10], vec![120]));
     assert_eq!(grid.windows(&(0..121).map(f64::from).collect::<Vec<f64>>(), 2.0).get(13..15), Some(&[48.0, 56.0][..]));
-    let none = Thickness { grid: Grid { corner: (0.0, 0.0), columns: 0, rows: 0 }, fills: Vec::new(), points: Vec::new(), sewn: Vec::new() };
+    let none = Thickness {
+        origin: Point::ORIGIN,
+        grid: Grid { corner: (0.0, 0.0), columns: 0, rows: 0 },
+        fills: Vec::new(),
+        points: Vec::new(),
+        sewn: Vec::new(),
+    };
     assert_eq!(none.most(Measure::Fills), Spot { value: 0.0, at: Point::ORIGIN });
     // Of spots with the same value, the last is the one named.
     let equal = drawn(&block(3, 3, 2, 2));
@@ -481,6 +492,161 @@ fn measuring_stops_when_the_work_runs_out() {
     assert_eq!(needed(&|meter| thickness.over(Measure::Fills, 1.0, meter).is_ok()), spots);
     // The 3 turns lie 5 mm from the spot, and are not followed.
     assert_eq!(needed(&|meter| thickness.stack(&plan, p(5.0, 0.5), meter).is_ok()), 7 + steps - 3);
-    // The thickest spot lies where the rows turn: 3 rows and 2 turns are near it.
-    assert_eq!(needed(&|meter| thickness.report(&plan, &Limits::DEFAULT, meter).is_ok()), 4 * spots + 7 + 3 * 20 + 2);
+    // The thickest spot lies where the rows turn: 4 rows and 2 turns are near it, by the grid laid from the
+    // plan's first needle point, (0, 0.1).
+    assert_eq!(needed(&|meter| thickness.report(&plan, &Limits::DEFAULT, meter).is_ok()), 4 * spots + 7 + 4 * 20 + 2);
+}
+
+/// A plan of a short stitch across (5, 5) sewn back and forth 200 times over, and 2 rows 5 mm away that
+/// widen the grid: one thick place, round (5, 5), a corner of the cells.
+fn knot() -> StitchPlan {
+    let mut points: Vec<(f64, f64)> = (0..200).map(|k| if k % 2 == 0 { (4.6, 4.6) } else { (5.4, 5.4) }).collect();
+    points.extend([(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)]);
+    plan(&[("a", Role::Top, &points)])
+}
+
+#[test]
+fn req_auto_074_stitches_added_and_taken_out_measure_as_the_plan_does() {
+    let sewn = plan(&[("a", Role::Top, &rows(2)), ("b", Role::Lock, &[(3.0, 3.0), (3.3, 3.0), (3.0, 3.0)])]);
+    let whole = measured(&sewn);
+    let mut added = whole.blank();
+    assert!(added.sewn().is_empty() && added.most(Measure::Fills).value == 0.0 && added.size() == whole.size());
+    for stitch in whole.sewn() {
+        added.add(stitch, &mut meter()).unwrap();
+    }
+    let same = |a: &[f64], b: &[f64]| a.len() == b.len() && a.iter().zip(b).all(|(a, b)| near(*a, *b));
+    assert!(same(&added.fills, &whole.fills) && same(&added.points, &whole.points));
+    // Each spot's needle points: the locks' are not counted, as measuring leaves them out.
+    let mut taken = whole.clone();
+    for stitch in whole.sewn() {
+        taken.remove(stitch, &mut meter()).unwrap();
+    }
+    assert!(taken.fills.iter().chain(&taken.points).all(|value| near(*value, 0.0)));
+    // The stitches kept for the stack are the plan's until it is measured again.
+    assert_eq!(taken.sewn(), whole.sewn());
+    let shorter = plan(&[("a", Role::Top, &rows(1))]);
+    taken.resewn(&shorter, &mut meter()).unwrap();
+    assert_eq!(taken.sewn(), measured(&shorter).sewn());
+}
+
+#[test]
+fn req_auto_074_the_same_stitches_moved_anywhere_measure_the_same() {
+    // The grid of 0.1 mm is laid from the plan's first needle point: a place is rounded from there.
+    let origin = p(0.33, 0.47);
+    assert_eq!(super::placed(p(0.37, 0.41), origin), p(0.0, -0.1));
+    assert_eq!(super::placed(p(0.48, 0.72), origin), Point::from_tenths(2, 2));
+    let points: Vec<(f64, f64)> = rows(2).iter().map(|(x, y)| (x * 1.03 + 0.017, y * 0.97 + 0.004)).collect();
+    let moved: Vec<(f64, f64)> = points.iter().map(|(x, y)| (x + 62.999_59, y + 84.010_07)).collect();
+    let (here, there) = (measured(&plan(&[("a", Role::Top, &points)])), measured(&plan(&[("a", Role::Top, &moved)])));
+    assert_eq!((here.fills.clone(), here.points.clone(), here.sewn()), (there.fills.clone(), there.points.clone(), there.sewn()));
+    // Its spots are where the plan has them, and a place is found at its point.
+    let (most, far) = (here.most(Measure::Fills), there.most(Measure::Fills));
+    assert!((far.at.x() - most.at.x() - 62.999_59).abs() < 1e-9 && (far.at.y() - most.at.y() - 84.010_07).abs() < 1e-9, "{most:?} {far:?}");
+    assert!(near(there.at(Measure::Fills, far.at), most.value) && near(there.at_place(Measure::Fills, there.placed(far.at)), most.value));
+    let place = there.placed(p(70.0, 90.0));
+    assert!(there.point(place).distance(p(70.0, 90.0)) <= 0.05 * 2.0_f64.sqrt() + 1e-9);
+    assert_eq!(there.placed(there.point(place)), place);
+}
+
+#[test]
+fn req_auto_074_the_hottest_spot_of_a_stitch_is_the_most_of_the_spots_it_lays_thread_in() {
+    let thickness = measured(&knot());
+    let most = thickness.most(Measure::Fills);
+    assert!(most.value > 10.0, "{most:?}");
+    assert_eq!(most.at, p(5.0, 5.0));
+    let through = placed(&thickness, stitch((4.6, 4.6), (5.4, 5.4)));
+    assert!(near(thickness.hottest(&through, &mut meter()).unwrap(), most.value));
+    // A stitch of the far row lays thread only beside it; one outside the grid lays none.
+    let row = thickness.hottest(&placed(&thickness, stitch((1.0, 0.0), (2.0, 0.0))), &mut meter()).unwrap();
+    assert!(row > 0.0 && row < 1.0, "{row}");
+    assert_eq!(thickness.hottest(&placed(&thickness, stitch((50.0, 50.0), (51.0, 50.0))), &mut meter()).unwrap(), 0.0);
+}
+
+#[test]
+fn req_auto_074_the_hottest_spot_of_a_stitch_is_a_corner_of_its_cell() {
+    // A short stitch sewn 100 times in the middle of a cell, 4 mm along and 2 mm up from the first needle
+    // point, and another in the cell below it: the corners the 2 cells share are the thickest spots, and the
+    // hottest of the upper stitch, which lays thread in its cell's 4 corners.
+    let upper = knot_at((4.2, 2.25), (4.3, 2.25));
+    let lower = knot_at((4.2, 2.75), (4.3, 2.75));
+    let points: Vec<(f64, f64)> = [vec![(0.0, 0.0)], upper, lower, vec![(10.0, 10.0)]].concat();
+    let thickness = measured(&plan(&[("a", Role::Top, &points)]));
+    let most = thickness.most(Measure::Fills);
+    assert!(most.value > 5.0 && near(most.at.y(), 2.5), "{most:?}");
+    let through = placed(&thickness, stitch((4.2, 2.25), (4.3, 2.25)));
+    assert!(near(thickness.hottest(&through, &mut meter()).unwrap(), most.value));
+}
+
+/// A stitch from `a` to `b` sewn back and forth 100 times.
+fn knot_at(a: (f64, f64), b: (f64, f64)) -> Vec<(f64, f64)> {
+    (0..=100).map(|k| if k % 2 == 0 { a } else { b }).collect()
+}
+
+#[test]
+fn req_auto_074_stitches_measured_alone_lie_from_their_first_needle_point() {
+    let sewn = [stitch((1.5, 2.5), (3.0, 4.5)), stitch((3.0, 4.5), (1.0, 4.0))];
+    let thickness = Thickness::of_stitches(&sewn, &mut meter()).unwrap().unwrap();
+    let kept: Vec<[(f64, f64); 2]> = thickness.sewn().iter().map(|s| [(s.from.x(), s.from.y()), (s.to.x(), s.to.y())]).collect();
+    assert_eq!(kept, [[(0.0, 0.0), (1.5, 2.0)], [(1.5, 2.0), (-0.5, 1.5)]]);
+    assert_eq!(thickness.point(p(0.0, 0.0)), p(1.5, 2.5));
+}
+
+#[test]
+fn req_auto_074_a_zone_is_the_cells_within_reach_of_a_spot_over_its_limit() {
+    let thickness = measured(&knot());
+    let Spot { value, at } = thickness.most(Measure::Fills);
+    let (x, y) = (at.x(), at.y());
+    // Over: more than the limit. A spot just at it marks nothing.
+    let zone = thickness.near(value - 1e-6, 1.0, &mut meter()).unwrap();
+    let none = thickness.near(value, 1.0, &mut meter()).unwrap();
+    let short = |x0: f64, y0: f64| placed(&thickness, stitch((x + x0, y + y0), (x + x0 + 0.05, y + y0 + 0.05)));
+    assert!(zone.touches(&short(0.0, 0.0)) && !none.touches(&short(0.0, 0.0)));
+    // Cells of 0.5 mm: 1 mm of reach marks 3 cells to each side of the spot, 1.5 mm.
+    for (x0, y0) in [(1.4, 0.0), (-1.45, 0.0), (0.0, 1.4), (0.0, -1.45), (1.4, 1.4), (-1.45, -1.45)] {
+        assert!(zone.touches(&short(x0, y0)), "({x0}, {y0})");
+    }
+    for (x0, y0) in [(1.55, 0.0), (-1.6, 0.0), (0.0, 1.55), (0.0, -1.6), (1.55, -1.6), (-1.6, 1.4)] {
+        assert!(!zone.touches(&short(x0, y0)), "({x0}, {y0})");
+    }
+    // A stitch beyond the grid touches no cell.
+    assert!(
+        !zone.touches(&placed(&thickness, stitch((x, y + 30.0), (x, y + 40.0))))
+            && !zone.touches(&placed(&thickness, stitch((x - 30.0, y), (x - 20.0, y))))
+    );
+    // A long stitch whose box holds the zone touches it, wherever its needle points lie.
+    assert!(zone.touches(&placed(&thickness, stitch((x - 3.0, y + 3.0), (x + 3.0, y - 3.0)))));
+    // A wider reach marks more.
+    let wide = thickness.near(value - 1e-6, 2.0, &mut meter()).unwrap();
+    assert!(wide.touches(&short(1.55, 0.0)) && !wide.touches(&short(2.55, 0.0)));
+}
+
+#[test]
+fn req_auto_074_a_zone_lies_round_its_spot_by_column_and_row() {
+    // A knot round (7, 3) in a grid 10 mm across: the zone round it touches it, and not the place across the
+    // grid's diagonal from it.
+    let mut points: Vec<(f64, f64)> = (0..200).map(|k| if k % 2 == 0 { (6.6, 2.6) } else { (7.4, 3.4) }).collect();
+    points.extend([(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)]);
+    let thickness = measured(&plan(&[("a", Role::Top, &points)]));
+    let Spot { value, at } = thickness.most(Measure::Fills);
+    assert_eq!(at, p(7.0, 3.0));
+    let zone = thickness.near(value - 1e-6, 0.5, &mut meter()).unwrap();
+    let short = |x: f64, y: f64| placed(&thickness, stitch((x, y), (x + 0.05, y + 0.05)));
+    assert!(zone.touches(&short(7.0, 3.0)) && !zone.touches(&short(3.0, 7.0)));
+}
+
+#[test]
+fn req_auto_074_the_pass_s_measures_stop_when_the_work_runs_out() {
+    let plan = knot();
+    let thickness = measured(&plan);
+    let through = stitch((5.0, 5.0), (6.0, 5.0));
+    // 2 steps along the stitch.
+    assert_eq!(least(&|meter| thickness.clone().add(&through, meter).is_ok()), 2);
+    assert_eq!(least(&|meter| thickness.clone().remove(&through, meter).is_ok()), 2);
+    assert_eq!(least(&|meter| thickness.hottest(&through, meter).is_ok()), 2);
+    assert_eq!(least(&|meter| thickness.clone().resewn(&plan, meter).is_ok()), thickness.sewn().len() as u64);
+    // Each spot, and the cells marked round the one spot over 30 fills: 1 cell of reach and 1 more, 2 to each side.
+    let spots = thickness.fills.len() as u64;
+    let over = thickness.fills.iter().filter(|fills| **fills > 30.0).count();
+    assert_eq!(over, 1);
+    assert_eq!(least(&|meter| thickness.near(30.0, 0.5, meter).is_ok()), spots + 16);
 }

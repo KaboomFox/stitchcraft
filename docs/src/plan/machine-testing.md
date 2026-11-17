@@ -291,6 +291,24 @@ At MC-8, look at the edges between 2 fills of the digitized halves and of the tr
 - A small ragged part that sewed as a short bent satin column is a fill now. Does the fur of the traced
   dog read as well without those columns?
 
+M13.35 takes thread away where one shape piles it up by itself
+([the thickest spot](../design/image-to-embroidery.md#the-thickest-spot)). At MC-8, after TS-13F's ladder:
+
+- On the inside of a satin column's bend, half the needle points stop a quarter or half of the column
+  short of the rail. Does the inside of TS-13A's blue strip and of the lettered patch's M still look
+  smooth, or does it look ragged?
+- Locks are 4 stitches of 0.3 mm. Cut the jump threads of the traced pear's stem and of TS-13B's letters
+  by hand. Does an end pull out?
+- At a spot still above 4 fills, the last pass keeps one back and forth of a lock, and moves row ends
+  back under the shapes sewn after them. Look where TS-13D's white ring meets the star, and at the traced
+  dogs' seams. Is fabric showing between 2 shapes there? Is a row's end showing past its neighbour?
+- A satin column narrower than 2 mm walks its middle once, where it walked there and back. Do the
+  lettered patch's letters and TS-13B's 6 mm and 10 mm words still stand up off the fabric, with sharp
+  edges?
+- An outline no longer sews through a stretch longer than 12 mm under a fill sewn after it. On the traced
+  dogs, cut the jump threads this leaves. Does the edge of each outline still look whole where it meets
+  the next patch?
+
 ## Report template
 
 The GitHub issue form *Sew-out report* asks for these fields; this is the same template for notes kept

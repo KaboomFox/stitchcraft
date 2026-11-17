@@ -21,6 +21,10 @@
 //!   the ring closes. Left out, such a stretch parts 2 lines by a jump, a thread to cut by hand, and leaves
 //!   the outline 2 ends where a ring can start and end anywhere. An edge that shows for less than
 //!   [`SHORTEST`] in all is left as it is, with no outline.
+//! - **Not through a fill's seam.** A stretch under a fill sewn after the area is sewn through only when it is
+//!   no longer than [`FILL_BRIDGE`] (`REQ-AUTO-076`). The run would lie along the seam where that fill's rows
+//!   end over the area's, the fill's own outline beside it, and the seams of the traced dogs are where most of
+//!   their thread piles up. The fill hides the stretch, so leaving it out changes nothing that shows.
 //! - **Where it ends.** The fill before an outline ends where the outline starts, as every fill ends near the
 //!   element after it. The outline's last line is the one with an end, or a corner when it is a ring, nearest
 //!   where the element sewn next starts, and it ends there ([`ending_near`]). A ring starts and ends at one
@@ -50,6 +54,14 @@ pub(super) const SHORTEST: f64 = 3.0;
 /// stitches under the shape that covers it, in place of a jump and its thread to cut.
 pub(super) const BRIDGE: f64 = 25.0;
 
+/// The longest stretch of an edge under a fill sewn after the area that an outline sews through, in
+/// millimetres (`REQ-AUTO-076`). Such a stretch lies along the seam where the fill's rows end over the area,
+/// and its thread thickens the seam, so it is left out where that costs little: a short stretch lays little
+/// thread and would cost a jump all the same. Measured on the 4 traced dogs on 2026-11-17, leaving out every
+/// stretch under a later fill took their area at 3 fills or more down by 12 to 19 % for 3 to 11 jump threads
+/// more each, and leaving out those longer than 12 mm by 6 to 12 % for 1 to 3 more.
+pub(super) const FILL_BRIDGE: f64 = 12.0;
+
 /// For each automatic area of `shapes` whose edge shows somewhere, in the order they sew, its id and the lines
 /// of its outline, each area with `budget`'s work to itself; and `SC-I0904` for each area that needed more,
 /// which sews no outline.
@@ -73,28 +85,32 @@ pub(super) fn outlines(shapes: &mut Shapes, budget: &Budget) -> (Vec<(ElementId,
 /// outside the shapes sewn after it and the other elements of its own shape, with `meter`'s work.
 fn shown(shapes: &mut Shapes, index: usize, region: &[Polygon], meter: &mut Meter) -> Result<Vec<Line>, Failed> {
     let Some(bounds) = envelope(region) else { return Ok(Vec::new()) };
-    let mut covering = Vec::new();
+    // The fills sewn after the area first, so that a piece under one of them is found to be.
+    let (mut fills, mut others) = (Vec::new(), Vec::new());
     for other in 0..shapes.len() {
         meter.charge(1)?;
+        let (later, kind) = (other > index, shapes.kind(other));
         let own = other != index && shapes.of_shape.get(other) == shapes.of_shape.get(index);
-        let covers = (other > index || own) && shapes.kind(other) != Some(Kind::Line);
+        let covers = (later || own) && kind != Some(Kind::Line);
         if !covers || !shapes.bounds(other).is_some_and(|theirs| near(&bounds, TOUCHING, &theirs)) {
             continue;
         }
-        covering.extend(shapes.grown(other, meter)?.unwrap_or_default());
+        let grown = shapes.grown(other, meter)?.unwrap_or_default();
+        if later && kind == Some(Kind::Area) { fills.extend(grown) } else { others.extend(grown) }
     }
-    let covering: Vec<(Envelope, &Polygon)> = covering.iter().map(|part| (Envelope::of(&part.outline), part)).collect();
+    let covering: Vec<(Envelope, &Polygon)> = fills.iter().chain(&others).map(|part| (Envelope::of(&part.outline), part)).collect();
     let mut lines = Vec::new();
     for ring in region.iter().flat_map(Polygon::rings) {
-        lines.extend(uncovered(ring, &covering, meter)?);
+        lines.extend(uncovered(ring, &covering, fills.len(), meter)?);
     }
     Ok(lines)
 }
 
-/// Whether `p` lies in one of `parts`, each with its bounds, on its edge included, with `meter`'s work.
-fn covered(p: Point, parts: &[(Envelope, &Polygon)], meter: &mut Meter) -> Result<bool, Failed> {
+/// Whether `p` lies in one of `parts`, each with its bounds, on its edge included, with `meter`'s work: `None`
+/// where it doesn't, and whether it lies in one of the first `fills` of them where it does.
+fn covered(p: Point, parts: &[(Envelope, &Polygon)], fills: usize, meter: &mut Meter) -> Result<Option<bool>, Failed> {
     let here = Envelope::of(&[p]);
-    for (bounds, part) in parts {
+    for (at, (bounds, part)) in parts.iter().enumerate() {
         meter.charge(1)?;
         if !bounds.covers(&here) {
             continue;
@@ -102,18 +118,20 @@ fn covered(p: Point, parts: &[(Envelope, &Polygon)], meter: &mut Meter) -> Resul
         meter.charge(u64::try_from(part.rings().map(<[Point]>::len).sum::<usize>()).unwrap_or(u64::MAX))?;
         let inside = geom::locate_in_ring(p, &part.outline) != Location::Exterior;
         if inside && !part.holes.iter().any(|hole| geom::locate_in_ring(p, hole) == Location::Interior) {
-            return Ok(true);
+            return Ok(Some(at < fills));
         }
     }
-    Ok(false)
+    Ok(None)
 }
 
-/// The lines along the closed `ring` that lie outside `parts`: the ring cut into pieces no longer than
-/// [`STEP`], those whose middles `parts` don't hold joined in rows, with the hidden rows between them that
-/// [`through`] shows, the ring whole when all of it shows, and the lines shorter than [`SHORTEST`] left out. A line keeps the ring's corners, and its ends lie where a
-/// piece ends.
-fn uncovered(ring: &[Point], parts: &[(Envelope, &Polygon)], meter: &mut Meter) -> Result<Vec<Line>, Failed> {
-    // Each piece: where it ends, whether that is a corner of the ring, and whether it shows.
+/// The lines along the closed `ring` that lie outside `parts`, the first `fills` of them fills sewn after the
+/// area: the ring cut into pieces no longer than [`STEP`], those whose middles `parts` don't hold joined in
+/// rows, with the hidden rows between them that [`through`] shows, the ring whole when all of it shows, and the
+/// lines shorter than [`SHORTEST`] left out. A line keeps the ring's corners, and its ends lie where a piece
+/// ends.
+fn uncovered(ring: &[Point], parts: &[(Envelope, &Polygon)], fills: usize, meter: &mut Meter) -> Result<Vec<Line>, Failed> {
+    // Each piece: where it ends, whether that is a corner of the ring, whether it shows, and whether a fill
+    // sewn after the area hides it.
     let mut pieces = Vec::new();
     let Some(&start) = ring.first() else { return Ok(Vec::new()) };
     for pair in ring.windows(2) {
@@ -123,14 +141,15 @@ fn uncovered(ring: &[Point], parts: &[(Envelope, &Polygon)], meter: &mut Meter) 
         let mut k = 1.0;
         while k <= count {
             let to = if k == count { b } else { a.lerp(b, k / count) };
-            pieces.push((to, k == count, !covered(from.lerp(to, 0.5), parts, meter)?));
+            let under = covered(from.lerp(to, 0.5), parts, fills, meter)?;
+            pieces.push((to, k == count, under.is_none(), under == Some(true)));
             (from, k) = (to, k + 1.0);
         }
     }
     through(&mut pieces, meter)?;
-    let Some(hidden) = pieces.iter().position(|&(_, _, shows)| !shows) else {
+    let Some(hidden) = pieces.iter().position(|&(_, _, shows, _)| !shows) else {
         // All of it shows: the ring, by its corners.
-        let points: Vec<Point> = pieces.iter().filter(|&&(_, corner, _)| corner).map(|&(to, ..)| to).collect();
+        let points: Vec<Point> = pieces.iter().filter(|&&(_, corner, ..)| corner).map(|&(to, ..)| to).collect();
         let line = Line { points, closed: true };
         return Ok(if line.length() >= SHORTEST { vec![line] } else { Vec::new() });
     };
@@ -139,7 +158,7 @@ fn uncovered(ring: &[Point], parts: &[(Envelope, &Polygon)], meter: &mut Meter) 
     let mut points: Vec<Point> = Vec::new();
     let mut from = pieces.get(hidden).map_or(start, |&(to, ..)| to);
     for step in 1..=pieces.len() {
-        let Some(&(to, corner, shows)) = pieces.get((hidden + step) % pieces.len()) else { continue };
+        let Some(&(to, corner, shows, _)) = pieces.get((hidden + step) % pieces.len()) else { continue };
         if shows {
             if points.is_empty() {
                 points.push(from);
@@ -159,29 +178,31 @@ fn uncovered(ring: &[Point], parts: &[(Envelope, &Polygon)], meter: &mut Meter) 
     Ok(lines)
 }
 
-/// Shows each row of hidden `pieces` of a ring that is no longer than [`BRIDGE`], with `meter`'s work: the
-/// lines on both sides of it are one line, or the ring closes. A ring that shows for less than [`SHORTEST`]
-/// in all, or not at all, stays as it is.
-fn through(pieces: &mut [(Point, bool, bool)], meter: &mut Meter) -> Result<(), Failed> {
+/// Shows each row of hidden `pieces` of a ring that is no longer than [`BRIDGE`], and no longer than
+/// [`FILL_BRIDGE`] when a fill sewn after the area hides one of its pieces, with `meter`'s work: the lines on
+/// both sides of it are one line, or the ring closes. A ring that shows for less than [`SHORTEST`] in all, or
+/// not at all, stays as it is.
+fn through(pieces: &mut [(Point, bool, bool, bool)], meter: &mut Meter) -> Result<(), Failed> {
     let count = pieces.len();
-    let Some(shown) = pieces.iter().position(|&(_, _, shows)| shows) else { return Ok(()) };
-    // Each hidden row, its pieces and its length, from the piece after one that shows round to that piece
-    // again, so that no row is cut where the pieces start.
-    let (mut rows, mut hidden, mut showing) = (Vec::<(Vec<usize>, f64)>::new(), false, 0.0);
+    let Some(shown) = pieces.iter().position(|&(_, _, shows, _)| shows) else { return Ok(()) };
+    // Each hidden row, its pieces, its length and whether a later fill hides some of it, from the piece after
+    // one that shows round to that piece again, so that no row is cut where the pieces start.
+    let (mut rows, mut hidden, mut showing) = (Vec::<(Vec<usize>, f64, bool)>::new(), false, 0.0);
     for step in 1..=count {
         meter.charge(1)?;
         let at = (shown + step) % count;
-        let (Some(&(from, ..)), Some(&(to, _, shows))) = (pieces.get((at + count - 1) % count), pieces.get(at)) else { continue };
+        let (Some(&(from, ..)), Some(&(to, _, shows, fill))) = (pieces.get((at + count - 1) % count), pieces.get(at)) else { continue };
         let length = from.distance(to);
         if shows {
             showing += length;
         } else {
             if !hidden {
-                rows.push((Vec::new(), 0.0));
+                rows.push((Vec::new(), 0.0, false));
             }
-            if let Some((row, sum)) = rows.last_mut() {
+            if let Some((row, sum, under_fill)) = rows.last_mut() {
                 row.push(at);
                 *sum += length;
+                *under_fill |= fill;
             }
         }
         hidden = !shows;
@@ -189,7 +210,8 @@ fn through(pieces: &mut [(Point, bool, bool)], meter: &mut Meter) -> Result<(), 
     if showing < SHORTEST {
         return Ok(());
     }
-    for at in rows.iter().filter(|(_, length)| *length <= BRIDGE).flat_map(|(row, _)| row) {
+    let sewn_through = |&&(_, length, fill): &&(Vec<usize>, f64, bool)| length <= BRIDGE && (!fill || length <= FILL_BRIDGE);
+    for at in rows.iter().filter(sewn_through).flat_map(|(row, ..)| row) {
         if let Some(piece) = pieces.get_mut(*at) {
             piece.2 = true;
         }
@@ -289,10 +311,26 @@ mod tests {
     /// 2 opposite corners of a square, in millimetres.
     type Corners = ((f64, f64), (f64, f64));
 
-    /// The lines of the outline of a square 64 mm across, with a square sewn after it over each of `notches`.
+    /// A satin column `id` of the shape at `shape`, between 2 rails that run up from `(x0, y0)` and `(x1, y0)`
+    /// to `y1`: it paints the box between those corners.
+    fn column(id: &str, ((x0, y0), (x1, y1)): Corners, shape: usize) -> Sewn {
+        let rail = |x: f64| Subpath { start: p(x, y0), segments: vec![Segment::Line(p(x, y1))], closed: false };
+        let stroke = Shape::stroke(Path { subpaths: vec![rail(x0), rail(x1)] });
+        let params = [("satin_column", "true")].into_iter().collect();
+        Sewn { element: Element { shape: stroke, params, ..filled(id, &[]) }, area: None, automatic: true, reach: None, shape, part: None }
+    }
+
+    /// The lines of the outline of a square 64 mm across, with a satin column sewn after it over each of
+    /// `notches`.
     fn notched(notches: &[Corners]) -> Vec<Line> {
+        let sewn = notches.iter().enumerate().map(|(at, corners)| column(&format!("n{at}"), *corners, at + 1)).collect();
+        notched_by(sewn)
+    }
+
+    /// The lines of the outline of a square 64 mm across, sewn before `after`.
+    fn notched_by(after: Vec<Sewn>) -> Vec<Line> {
         let mut sewn = vec![area("a", square((0.0, 0.0), (64.0, 64.0)), 0)];
-        sewn.extend(notches.iter().enumerate().map(|(at, (from, to))| area(&format!("n{at}"), square(*from, *to), at + 1)));
+        sewn.extend(after);
         let mut shapes = Shapes::new(sewn, &DesignSettings::default(), &Budget::DEFAULT);
         let (mut found, said) = outlines(&mut shapes, &Budget::DEFAULT);
         assert!(said.is_empty() && found[0].0.as_str() == "a", "{said:?}");
@@ -371,9 +409,9 @@ mod tests {
         let (s, h) = (true, false);
         let pieces = [(p(4.0, 0.0), s, s), (p(4.0, 17.0), s, h), (p(-4.0, 17.0), h, h), (p(0.0, 0.0), s, s)];
         let shows = |pieces: &[(Point, bool, bool)]| {
-            let mut pieces = pieces.to_vec();
+            let mut pieces: Vec<_> = pieces.iter().map(|&(to, corner, shows)| (to, corner, shows, false)).collect();
             through(&mut pieces, &mut Budget::DEFAULT.meter()).unwrap();
-            pieces.iter().map(|&(_, _, shows)| shows).collect::<Vec<_>>()
+            pieces.iter().map(|&(_, _, shows, _)| shows).collect::<Vec<_>>()
         };
         assert_eq!(shows(&pieces), [s, s, s, s]);
         assert_eq!(shows(&[pieces[1], pieces[2], pieces[3], pieces[0]]), [s, s, s, s]);
@@ -388,6 +426,31 @@ mod tests {
         assert_eq!(shows(&[pieces[1], pieces[2]]), [h, h]);
         assert_eq!(shows(&[pieces[0], pieces[3]]), [s, s]);
         assert_eq!(shows(&[]), [false; 0]);
+    }
+
+    #[test]
+    fn req_auto_076_an_outline_sews_through_a_stretch_under_a_later_fill_only_when_it_is_12_mm_or_shorter() {
+        let lengths = |lines: &[Line]| lines.iter().map(|line| ((line.length() * 1000.0).round(), line.closed)).collect::<Vec<_>>();
+        let whole = [(256_000.0, true)];
+        let fill = |id: &str, corners: Corners, shape: usize| area(id, square(corners.0, corners.1), shape);
+        // The first side of a square 64 mm across runs up from its corner at the origin in pieces of 0.5 mm. A
+        // fill sewn after it over 12 mm of that side, 24 pieces, is sewn through; over 12.5 mm it is left out.
+        let (twelve, more) = (((-1.0, 19.6), (1.0, 31.6)), ((-1.0, 19.6), (1.0, 32.1)));
+        assert_eq!(lengths(&notched_by(vec![fill("f", twelve, 1)])), whole);
+        assert_eq!(lengths(&notched_by(vec![fill("f", more, 1)])), [(243_500.0, false)]);
+        // A satin column over the same 12.5 mm is sewn through, as a stretch under any other shape is up to
+        // 25 mm (`REQ-AUTO-052`).
+        assert_eq!(lengths(&notched(&[more])), whole);
+        // A fill of the area's own shape sewn after it counts as a later fill, and one sewn before it doesn't.
+        assert_eq!(lengths(&notched_by(vec![fill("f", more, 0)])), [(243_500.0, false)]);
+        let before = outlines_of(vec![fill("f", more, 0), area("a", square((0.0, 0.0), (64.0, 64.0)), 0)]);
+        assert_eq!(before.last(), Some(&one("a", 256.0, true)));
+        // A stretch hidden by a column and then a fill, 13.5 mm in all, is a stretch under a later fill: it
+        // is left out, and so is one hidden by the fill first.
+        let (low, high) = (((-1.0, 19.6), (1.0, 30.0)), ((-1.0, 29.6), (1.0, 33.0)));
+        assert_eq!(lengths(&notched_by(vec![column("c", low, 1), fill("f", high, 2)])), [(242_500.0, false)]);
+        let (low, high) = (((-1.0, 19.6), (1.0, 23.0)), ((-1.0, 22.6), (1.0, 33.0)));
+        assert_eq!(lengths(&notched_by(vec![fill("f", low, 1), column("c", high, 2)])), [(242_500.0, false)]);
     }
 
     #[test]
@@ -477,7 +540,7 @@ mod tests {
         let filling = outlines_of(vec![area("a", square((4.0, 4.0), (6.0, 6.0)), 0), area("f", frame(square((4.0, 4.0), (6.0, 6.0))), 1)]);
         assert_eq!(filling.iter().map(|(id, _)| id.as_str()).collect::<Vec<_>>(), ["f"]);
         // A part with no ring at all has no outline.
-        assert_eq!(uncovered(&[], &[], &mut Budget::DEFAULT.meter()).map_err(|_| ()), Ok(Vec::new()));
+        assert_eq!(uncovered(&[], &[], 0, &mut Budget::DEFAULT.meter()).map_err(|_| ()), Ok(Vec::new()));
     }
 
     #[test]

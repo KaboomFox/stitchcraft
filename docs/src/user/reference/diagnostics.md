@@ -144,6 +144,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-I1116`](#sc-i1116) | Info | Text sewn in an embroidery font |
 | [`SC-W1117`](#sc-w1117) | Warning | Lettering longer than its text's place |
 | [`SC-I1118`](#sc-i1118) | Info | Font chosen by the letters' weight |
+| [`SC-I1119`](#sc-i1119) | Info | Thread taken from thick spots |
 | [`SC-E1201`](#sc-e1201) | Error | Subject cut-out's models not ready |
 | [`SC-E1202`](#sc-e1202) | Error | No subject found to cut out |
 | [`SC-E1203`](#sc-e1203) | Error | Picture could not be read for the cut-out |
@@ -1986,6 +1987,19 @@ so, and from what height that font sews. Nothing needs doing. To choose yourself
 For a text object under automatic digitizing, which has no traced letters, a bold weight chooses
 the bold font when it sews every line at its size. The message says so, or gives the font size
 from which the bold font sews.
+
+## SC-I1119
+
+**Info** — Thread taken from thick spots
+
+A design digitized automatically still sewed more than 4 fills of thread on a spot of a millimetre once it was planned, and a last pass
+took thread there that is hidden or does no visible work: travel that went out and back on itself, lock stitches beyond one back and
+forth, and row ends that lie under shapes sewn later, moved back along their rows, the base layer's first. It took no top stitch that
+shows, and made no jump thread.
+
+The message gives the area that was above 4 fills, how much thread of each kind was taken in how many places, the area still above, and
+the thickest spot left. Nothing needs doing. A spot still above 4 fills is one where no more thread is hidden: `SC-W0913` names what is
+stacked there. If the pass needs more work than the budget allows, it takes nothing, and the message says so.
 
 ## SC-E1201
 

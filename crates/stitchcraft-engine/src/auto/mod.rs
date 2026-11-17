@@ -82,6 +82,7 @@ mod params;
 pub mod rules;
 mod split;
 pub(crate) mod thick;
+mod thin;
 
 pub use neighbours::TOUCHING;
 #[cfg(test)]
@@ -98,15 +99,17 @@ use std::collections::BTreeSet;
 
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Labels, Meter, Mm, Point};
 use stitchcraft_params::{ParamSet, Validated};
+use stitchcraft_plan::profiles::REFERENCE;
 
-use crate::common::{STOP_AFTER, TRIM_AFTER};
+use crate::common::{LOCK_END, LOCK_END_SCALE, LOCK_START, LOCK_START_SCALE, STOP_AFTER, TRIM_AFTER};
 use crate::design::{Cap, Design, DesignSettings, Element, FillRule, Hints, Join, Path, Segment, Shape, Subpath, within_working_limit};
 use crate::generate::approach;
 use crate::generators::passes::BEAN_STITCH_REPEATS;
 use crate::generators::pull::PULL_COMPENSATION;
 use crate::generators::running::TOLERANCE;
 use crate::generators::satin::{
-    self, CENTER_WALK_UNDERLAY, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PUSH_COMPENSATION, SATIN_COLUMN, ZIGZAG_UNDERLAY,
+    self, CENTER_WALK_UNDERLAY, CENTER_WALK_UNDERLAY_REPEATS, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PUSH_COMPENSATION, SATIN_COLUMN,
+    SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET, ZIGZAG_UNDERLAY,
 };
 use crate::generators::tatami::{ANGLE, TURN_STITCHES};
 use crate::generators::{TooSmall, mm, too_small};
@@ -129,6 +132,23 @@ pub const OUTLINE_WIDTH: Mm = Mm::from_tenths(4);
 /// `running_stitch_tolerance_mm` unless the shape sets one: half a running stitch's own 0.2 mm, a quarter of
 /// a thread. At 0.2 mm, stitches 2.5 mm long keep to a circle 9.6 mm across, and it sews with 12 sides.
 pub const OUTLINE_TOLERANCE: Mm = Mm::from_tenths(1);
+
+/// How close, in millimetres, a needle point of an automatic satin column may come to the last one left in
+/// place on its rail before it is moved in along its stitch (`REQ-AUTO-071`): closer than the 0.4 mm that a
+/// rail's points lie apart on a straight column, so that only the points of a curve's inside crowd, where a
+/// column fans and lays up to 4 fills of thread by itself, and every stitch of a straight one spans it.
+pub const CROWDED_CLOSER_THAN: f64 = 0.35;
+
+/// How far the crowded needle points of an automatic satin column ([`CROWDED_CLOSER_THAN`]) are moved in, in
+/// percent of their stitch's width, taking turns (`REQ-AUTO-071`): a quarter and a half, so that of 3
+/// stitches that fan to one point one reaches it, one ends a quarter of the column short of it and one half.
+pub const CROWDED_INSETS: &str = "25 50";
+
+/// The lock that automatic digitizing gives what it makes (`REQ-AUTO-072`): back and forth twice, each step
+/// as long as the reference machine's shortest stitch, 0.3 mm. The half stitch goes up to 1 mm, and lays its
+/// 4 stitches across a narrow shape, so that 2 or 3 locks at one spot piled up to 2.75 fills. A step as
+/// short as the machine sews stays as short where the first stitch is short, as the half stitch does there.
+const LOCK_SHAPE: &str = "back_forth";
 
 /// Room left in an id made for a column of a stroke of several subpaths, for the `~2` a clash adds
 /// ([`Labels::claim`]).
@@ -220,13 +240,20 @@ fn read(element: &Element, said: &mut Vec<Diagnostic>) -> Option<AutoParams> {
 /// zigzag wider. A narrow column needs only a walk down its middle to hold its stitches up; a wider one a
 /// contour inside its edges to keep them sharp, and a wide one a zigzag as well, to lift its stitches.
 pub fn underlay(width: Mm) -> &'static [&'static str] {
-    if !at_most(CONTOUR_FROM, width) {
+    if walks_once(width) {
         &[CENTER_WALK_UNDERLAY]
     } else if at_most(width, ZIGZAG_ABOVE) {
         &[CONTOUR_UNDERLAY]
     } else {
         &[CONTOUR_UNDERLAY, ZIGZAG_UNDERLAY]
     }
+}
+
+/// Whether an automatic satin column `width` wide, narrower than [`CONTOUR_FROM`] to the micrometre, has
+/// only a centre walk under it, which it walks once (`REQ-AUTO-075`): it then sews from its end back to
+/// its start, and ends where it started.
+pub(crate) fn walks_once(width: Mm) -> bool {
+    !at_most(CONTOUR_FROM, width)
 }
 
 /// The settings of an automatic satin column `width` wide whose shape's settings of the rules are `rules`:
@@ -245,7 +272,28 @@ fn satin_params(params: &ParamSet, width: Mm, rules: &AutoParams) -> ParamSet {
     for key in underlay(width) {
         column.set(*key, "true");
     }
+    // A narrow column walks its middle once, there and not back, unless its shape says how often.
+    if walks_once(width) && column.get(CENTER_WALK_UNDERLAY_REPEATS).is_none() {
+        column.set(CENTER_WALK_UNDERLAY_REPEATS, "1");
+    }
+    // Its crowded needle points move in, unless its shape says how (`REQ-AUTO-071`).
+    if column.get(SHORT_STITCH_DISTANCE).is_none() && column.get(SHORT_STITCH_INSET).is_none() {
+        column.set(SHORT_STITCH_DISTANCE, CROWDED_CLOSER_THAN.to_string().as_str());
+        column.set(SHORT_STITCH_INSET, CROWDED_INSETS);
+    }
     column
+}
+
+/// `params`, an element's that automatic digitizing made, with the locks of [`LOCK_SHAPE`] at each end whose
+/// lock its shape doesn't set, neither its shape nor its step (`REQ-AUTO-072`).
+fn small_locks(params: &mut ParamSet) {
+    let step = REFERENCE.min_stitch.get().to_string();
+    for (lock, scale) in [(LOCK_START, LOCK_START_SCALE), (LOCK_END, LOCK_END_SCALE)] {
+        if params.get(lock).is_none() && params.get(scale).is_none() {
+            params.set(lock, LOCK_SHAPE);
+            params.set(scale, step.as_str());
+        }
+    }
 }
 
 /// What [`digitize`] makes of an automatic element.
@@ -300,7 +348,7 @@ pub(crate) struct Sewing<'d> {
     pub(crate) base: Vec<ElementId>,
     /// The limits of the design's thickness, by its lowest automatic shape's settings (`REQ-AUTO-062`);
     /// `None` for a design without an automatic shape, which is not measured.
-    pub(crate) limits: Option<stitchcraft_plan::thickness::Limits>,
+    pub(crate) limits: Option<thick::Held>,
     /// The ids of the elements that digitizing made, the base layer's pieces and the outlines among them:
     /// every element but those with settings. Planning runs the thread under later shapes between them
     /// where it would jump (`REQ-AUTO-053`).
@@ -373,7 +421,7 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     // A design that turns the base layer off is told that fabric may show (`SC-I0911`).
     diagnostics.extend(lowest.filter(|rules| !rules.auto_base_layer).map(|_| neighbours::base_off()));
     let outlined = lowest.is_some_and(|rules| rules.auto_fill_outline);
-    let limits = lowest.map(thick::limits);
+    let limits = lowest.map(thick::held);
     let mut beside = neighbours::beside(sewn, &design.settings, budget, design.sort_colours, base.map(|rules| (rules, &mut taken)), outlined);
     diagnostics.extend(std::mem::take(&mut beside.said));
     for (id, lines) in std::mem::take(&mut beside.outlines) {
@@ -386,8 +434,12 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     }
     diagnostics.splice(0..0, counts.said());
     let set: BTreeSet<&ElementId> = elements.iter().filter(|element| !element.automatic).map(|element| &element.id).collect();
-    let made = beside.elements.iter().filter(|element| !set.contains(&element.id)).map(|element| element.id.clone()).collect();
-    Sewing { elements: Cow::Owned(beside.elements), diagnostics, base: beside.base, made, limits }
+    let mut elements = beside.elements;
+    let made: BTreeSet<ElementId> = elements.iter().filter(|element| !set.contains(&element.id)).map(|element| element.id.clone()).collect();
+    for element in elements.iter_mut().filter(|element| made.contains(&element.id)) {
+        small_locks(&mut element.params);
+    }
+    Sewing { elements: Cow::Owned(elements), diagnostics, base: beside.base, made, limits }
 }
 
 /// Adds the outline of the fill `id` among `elements` after it, when it still sews: a running stitch along

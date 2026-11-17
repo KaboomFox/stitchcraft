@@ -83,6 +83,26 @@ fn diag_sc_w0913_a_design_digitized_automatically_is_told_where_it_sews_thick_an
 }
 
 #[test]
+fn diag_sc_i1119_the_last_pass_says_what_it_took_and_what_is_left() {
+    // The lettered patch's letters sew on its field with locks, columns and the field's rows under them:
+    // spots above 4 fills, where the pass takes thread (`REQ-AUTO-074`).
+    let outcome = in_place(&stitchcraft_testkit::pictures::lettered_patch());
+    let plan = outcome.plan.as_ref().unwrap();
+    let said: Vec<&Diagnostic> = outcome.diagnostics.iter().filter(|said| said.code == Code::AutoThinned).collect();
+    assert_eq!(said.len(), 1, "{:?}", outcome.diagnostics);
+    let report = fabric::thickness(plan, &Limits::DEFAULT);
+    let message = &said[0].message;
+    assert!(message.contains(" fills or more. The last pass took ") && message.contains(" in "), "{message}");
+    assert!(message.contains(&format!("the thickest spot, {:.1} fills at ", report.fills.value)), "{message}");
+    // The warning that follows gives the plan as the pass left it.
+    let warned = thick(&outcome);
+    assert!(warned.len() == 1 && warned[0].message.starts_with(&format!("Thread is up to {:.1} fills thick at ", report.fills.value)), "{warned:?}");
+    // A design whose spots are all within the cap is not thinned, and nothing is said of a pass.
+    let thin = in_place(&Design::new(vec![automatic(rect("one", (0.0, 0.0), (20.0, 15.0), &RED, &[]))], DesignSettings::default()).unwrap());
+    assert!(thin.plan.is_some() && thin.diagnostics.iter().all(|said| said.code != Code::AutoThinned), "{:?}", thin.diagnostics);
+}
+
+#[test]
 fn req_auto_062_a_design_without_an_automatic_shape_is_not_measured() {
     let outcome = in_place(&ladder(6));
     assert!(outcome.plan.is_some() && thick(&outcome).is_empty(), "{:?}", thick(&outcome));

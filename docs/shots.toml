@@ -1021,7 +1021,7 @@ fixture = "docs/fixtures/traced-badge.svg"
 auto = true
 style = "realistic"
 scale = 6.0
-allow = ["SC-I0901", "SC-I0912", "SC-W0906", "SC-I0907", "SC-I0904", "SC-I0908", "SC-I0909", "SC-I0504", "SC-W0913"]
+allow = ["SC-I0901", "SC-I0912", "SC-W0906", "SC-I0907", "SC-I0904", "SC-I0908", "SC-I0909", "SC-I0504", "SC-W0913", "SC-I1119"]
 alt = "The traced badge digitized automatically. A red disc with a blue square on it and a gold disc in the middle sew as tatami fills, with no white round them."
 
 
@@ -1032,7 +1032,7 @@ fixture = "docs/fixtures/traced-badge.svg"
 auto = true
 style = "realistic"
 scale = 6.0
-allow = ["SC-I0901", "SC-I0912", "SC-W0906", "SC-I0907", "SC-I0904", "SC-I0908", "SC-I0909", "SC-I0504", "SC-W0913"]
+allow = ["SC-I0901", "SC-I0912", "SC-W0906", "SC-I0907", "SC-I0904", "SC-I0908", "SC-I0909", "SC-I0504", "SC-W0913", "SC-I1119"]
 alt = "The same badge digitized automatically. Its white background is left out, and each colour sews under the edges of the colours sewn on it."
 
 [[shot]]
@@ -1060,7 +1060,7 @@ fixture = "docs/fixtures/emblem.svg"
 auto = true
 style = "realistic"
 scale = 6.0
-allow = ["SC-I0901", "SC-I0912", "SC-W0906", "SC-I0908", "SC-I0904", "SC-I0909", "SC-I0504", "SC-W0913"]
+allow = ["SC-I0901", "SC-I0912", "SC-W0906", "SC-I0908", "SC-I0904", "SC-I0909", "SC-I0504", "SC-W0913", "SC-I1119"]
 alt = "The emblem digitized automatically. The navy square, the white disc and the red star sew as tatami fills, and the gold bars as satin columns. The white round the square is left out."
 
 [[shot]]
@@ -1083,7 +1083,7 @@ fixture = "docs/fixtures/traced-pear.vectorcraft"
 auto = true
 style = "realistic"
 scale = 5.0
-allow = ["SC-I0901", "SC-I0912", "SC-W0906", "SC-I0907", "SC-I0904", "SC-W0208", "SC-I0504", "SC-I0909", "SC-W0913"]
+allow = ["SC-I0901", "SC-I0912", "SC-W0906", "SC-I0907", "SC-I0904", "SC-W0208", "SC-I0504", "SC-I0909", "SC-W0913", "SC-I1119"]
 alt = "The traced pear digitized automatically. Its 3 greens sew as tatami fills, whole to the narrow ends of the olive and dark olive bands. Its stem sews as 2 satin columns side by side, olive and dark olive, and the light grey square is left out. Thin threads run straight from the stem to the bands, 2 jumps that the machine doesn't cut."
 
 [[shot]]
@@ -1094,7 +1094,7 @@ auto = true
 style = "realistic"
 fabric = "#000000"
 scale = 5.0
-allow = ["SC-I0901", "SC-I0912", "SC-W0906", "SC-I0907", "SC-I0904", "SC-W0208", "SC-I0504", "SC-I0909", "SC-W0913"]
+allow = ["SC-I0901", "SC-I0912", "SC-W0906", "SC-I0907", "SC-I0904", "SC-W0208", "SC-I0504", "SC-I0909", "SC-W0913", "SC-I1119"]
 alt = "The traced pear digitized automatically, as it sews on black fabric: the same stitches as on unbleached cotton. No black shows inside the pear, between its 3 greens or along its stem."
 
 [[shot]]
@@ -1117,7 +1117,7 @@ fixture = "docs/fixtures/traced-dog-running-9.vectorcraft"
 auto = true
 style = "realistic"
 scale = 4.5
-allow = ["SC-I0901", "SC-I0912", "SC-I0902", "SC-I0904", "SC-I0907", "SC-I0908", "SC-W0208", "SC-I0504", "SC-I0909", "SC-W0913"]
+allow = ["SC-I0901", "SC-I0912", "SC-I0902", "SC-I0904", "SC-I0907", "SC-I0908", "SC-W0208", "SC-I0504", "SC-I0909", "SC-W0913", "SC-I1119"]
 alt = "The traced running dog digitized automatically. Its patches sew as tatami fills, the broad and the ragged alike, and its thin strands of fur as satin columns and triple runs between them, in black, greys, white, tan and dark brown. Thin threads run straight between patches of one colour, jumps that the machine doesn't cut."
 
 [[shot]]
@@ -1127,8 +1127,8 @@ fixture = "docs/fixtures/traced-dog-running-9.vectorcraft"
 auto = true
 style = "thickness"
 scale = 4.5
-allow = ["SC-I0901", "SC-I0912", "SC-I0902", "SC-I0904", "SC-I0907", "SC-I0908", "SC-W0208", "SC-I0504", "SC-I0909", "SC-W0913"]
-alt = "How thick the traced running dog sews, as a heat map on white. Most of the dog is grey, under 2 fills of thread. Yellow bands, 2 fills or more, run along the edges where 2 patches overlap. Orange patches, 3 fills or more, lie where several small patches meet, most of them on its chest, its face and its legs, and a few red dots, 6 fills or more, sit inside them."
+allow = ["SC-I0901", "SC-I0912", "SC-I0902", "SC-I0904", "SC-I0907", "SC-I0908", "SC-W0208", "SC-I0504", "SC-I0909", "SC-W0913", "SC-I1119"]
+alt = "How thick the traced running dog sews, as a heat map on white. Most of the dog is grey, under 2 fills of thread. Yellow bands, 2 fills or more, run along the edges where 2 patches overlap. Orange patches, 3 fills or more, lie where several small patches meet, most of them on its chest, its face and its legs. No spot is red, 6 fills or more."
 
 [[shot]]
 id = "auto-dog-black"
@@ -1138,7 +1138,7 @@ auto = true
 style = "realistic"
 fabric = "#000000"
 scale = 4.5
-allow = ["SC-I0901", "SC-I0912", "SC-I0902", "SC-I0904", "SC-I0907", "SC-I0908", "SC-W0208", "SC-I0504", "SC-I0909", "SC-W0913"]
+allow = ["SC-I0901", "SC-I0912", "SC-I0902", "SC-I0904", "SC-I0907", "SC-I0908", "SC-W0208", "SC-I0504", "SC-I0909", "SC-W0913", "SC-I1119"]
 alt = "The traced running dog digitized automatically, as it sews on black fabric: the same stitches as on unbleached cotton. Its white face and chest and its tan legs stand out, and its black patches merge with the fabric. No black fabric shows between its patches."
 
 [[shot]]
@@ -1155,7 +1155,7 @@ fixture = "docs/fixtures/widths.svg"
 auto = true
 style = "realistic"
 scale = 10.0
-allow = ["SC-I0901", "SC-I0912", "SC-I0907", "SC-I0504", "SC-I0909", "SC-W0913"]
+allow = ["SC-I0901", "SC-I0912", "SC-I0907", "SC-I0504", "SC-I0909", "SC-W0913", "SC-I1119"]
 alt = "The same shapes digitized automatically. The line runs along its middle, tripled, and the C sews as a satin column between its edges. The disc sews as a tatami fill."
 
 [[shot]]
@@ -1172,7 +1172,7 @@ fixture = "docs/fixtures/rules.svg"
 auto = true
 style = "realistic"
 scale = 10.0
-allow = ["SC-I0901", "SC-I0912", "SC-I0907", "SC-I0904", "SC-I0908", "SC-I0909", "SC-I0504", "SC-W0913"]
+allow = ["SC-I0901", "SC-I0912", "SC-I0907", "SC-I0904", "SC-I0908", "SC-I0909", "SC-I0504", "SC-W0913", "SC-I1119"]
 alt = "The same shapes digitized automatically. The blob sews as a small tatami fill, and so does the letter T, bar and stem. The blob with tails sews as a fill with a triple run along each tail. The nose sews as one fill with the 2 nostrils sewn on it. The leaf sews as one satin column from tip to tip."
 
 [[shot]]
@@ -1189,7 +1189,7 @@ fixture = "docs/fixtures/parts.svg"
 auto = true
 style = "realistic"
 scale = 8.0
-allow = ["SC-I0901", "SC-I0912", "SC-I0904", "SC-I0909", "SC-I0504", "SC-W0913"]
+allow = ["SC-I0901", "SC-I0912", "SC-I0904", "SC-I0909", "SC-I0504", "SC-W0913", "SC-I1119"]
 alt = "The same shapes digitized automatically. The lollipop's disc and the balloon sew as tatami fills. The stick sews as a satin column and the string as a triple run, each into its fill."
 [[shot]]
 id = "badge-simple"

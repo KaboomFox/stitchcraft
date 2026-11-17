@@ -8,12 +8,13 @@
 
 use stitchcraft_core::math::{self, sin_cos};
 use stitchcraft_core::{Budget, Mm, Point};
-use stitchcraft_engine::auto::{CONTOUR_FROM, Digitized, Stitches, ZIGZAG_ABOVE, digitize};
+use stitchcraft_engine::auto::{CONTOUR_FROM, CROWDED_CLOSER_THAN, CROWDED_INSETS, Digitized, Stitches, ZIGZAG_ABOVE, digitize};
 use stitchcraft_engine::design::{DesignSettings, Element, Shape};
 use stitchcraft_engine::generators::passes::BEAN_STITCH_REPEATS;
 use stitchcraft_engine::generators::pull::PULL_COMPENSATION;
 use stitchcraft_engine::generators::satin::{
-    CENTER_WALK_UNDERLAY, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PUSH_COMPENSATION, SATIN_COLUMN, ZIGZAG_UNDERLAY,
+    CENTER_WALK_UNDERLAY, CENTER_WALK_UNDERLAY_REPEATS, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PUSH_COMPENSATION, SATIN_COLUMN,
+    SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET, ZIGZAG_UNDERLAY,
 };
 use stitchcraft_engine::normalize::region;
 use stitchcraft_engine::normalize::satin::{Pairing, Shape as Read, recognize};
@@ -266,6 +267,83 @@ fn req_auto_017_a_curved_columns_stitches_lie_square_to_it() {
         assert!(cosine >= math::cos(math::to_radians(10.0)), "{a:?} {b:?}: {}°", math::to_degrees(math::acos(cosine.min(1.0))));
     }
     assert!(across > 50, "{across}");
+}
+
+/// The top stitches of the automatic shape `element`, planned alone, each from one needle point to the next.
+fn top_stitches(element: &Element) -> Vec<[Point; 2]> {
+    let plan = planned(vec![automatic(element.clone())]).plan.unwrap();
+    let tops: Vec<Point> = plan.stitches().filter(|s| s.kind == StitchKind::Normal && s.origin.role == Role::Top).map(|s| s.at).collect();
+    tops.windows(2).map(|pair| [pair[0], pair[1]]).collect()
+}
+
+#[test]
+fn req_auto_071_a_column_moves_its_crowded_needle_points_in_unless_its_shape_says_how() {
+    let outline = rectangle((0.0, 0.0), (30.0, 3.0));
+    let column = |params: &[(&str, &str)]| made(&fill("band", &[&outline], &RED, params)).elements[0].clone();
+    let distance = CROWDED_CLOSER_THAN.to_string();
+    let set =
+        |column: &Element| [setting(column, SHORT_STITCH_DISTANCE).map(str::to_string), setting(column, SHORT_STITCH_INSET).map(str::to_string)];
+    assert_eq!(set(&column(&[])), [Some(distance), Some(CROWDED_INSETS.to_string())]);
+    // A shape that sets either keeps it, and the other is Ink/Stitch's.
+    assert_eq!(set(&column(&[(SHORT_STITCH_DISTANCE, "0.1")])), [Some("0.1".to_string()), None]);
+    assert_eq!(set(&column(&[(SHORT_STITCH_INSET, "10")])), [None, Some("10".to_string())]);
+}
+
+#[test]
+fn req_auto_071_a_straight_column_spans_its_width_with_every_stitch_and_a_bend_moves_its_inside_points_in() {
+    // Straight, 3 mm wide: a rail's needle points lie 0.4 mm apart, farther than the 0.35 mm that crowds
+    // them, so every top stitch crosses the whole column and its pull compensation.
+    let band = shape("band", &rectangle((0.0, 0.0), (30.0, 3.0)));
+    let stitches = top_stitches(&band);
+    // Its contour underlay, which runs along its rails, has the top's role in a plan: a stitch across is one
+    // that runs more across than along, and its ends are left out.
+    let across = |[a, b]: &&[Point; 2]| (a.y() - b.y()).abs() > (a.x() - b.x()).abs() && a.x().min(b.x()) > 1.0 && a.x().max(b.x()) < 29.0;
+    let short: Vec<&[Point; 2]> = stitches.iter().filter(across).filter(|[a, b]| (a.y() - b.y()).abs() < 3.0).collect();
+    assert!(stitches.iter().filter(across).count() > 100);
+    assert!(short.is_empty(), "{short:?}");
+    // A half ring 3 mm wide whose inside is 4 mm from its centre: the inside rail is half as long as the
+    // outside, its points 0.2 mm apart, and every second one is moved in, a quarter of the column and then
+    // half of it in turn, so the inside has half the needle points of the outside.
+    let centre = (20.0, 20.0);
+    let ring = |r: f64, from: f64, to: f64| -> Vec<(f64, f64)> {
+        (0..=36)
+            .map(|i| {
+                let (sin, cos) = sin_cos(from + (to - from) * f64::from(i) / 36.0);
+                (centre.0 + r * cos, centre.1 + r * sin)
+            })
+            .collect()
+    };
+    let mut outline = ring(7.0, 0.0, std::f64::consts::PI);
+    outline.extend(ring(4.0, std::f64::consts::PI, 0.0));
+    let half = shape("half", &outline);
+    assert_eq!(made(&half).stitches, Some(Stitches::Satin));
+    let radius = |q: Point| math::hypot(q.x() - centre.0, q.y() - centre.1);
+    let points: Vec<f64> = top_stitches(&half).iter().map(|[a, _]| radius(*a)).collect();
+    let inside = points.iter().filter(|r| **r < 4.2).count();
+    let outside = points.iter().filter(|r| **r > 6.8).count();
+    let between = points.iter().filter(|r| (4.2..6.8).contains(*r)).count();
+    assert!(outside > 30 && inside * 2 <= outside + 2 && between * 2 + 4 >= outside, "inside {inside}, between {between}, outside {outside}");
+}
+
+#[test]
+fn req_auto_075_a_narrow_column_walks_its_middle_once_and_ends_where_it_started() {
+    // Below 2 mm, compared to the micrometre, a stroke's column and a part's walk once, unless the shape says
+    // how often; wider columns have no centre walk.
+    let stroke = |width: f64, params: &[(&str, &str)]| widened(along("line", polylines(&[&[(0.0, 0.0), (30.0, 0.0)]]), &RED, params), width);
+    let band = |width: f64, params: &[(&str, &str)]| fill("band", &[&rectangle((0.0, 0.0), (30.0, width))], &RED, params);
+    let from = CONTOUR_FROM.get();
+    for (width, params, expected) in
+        [(1.5, &[][..], Some("1")), (from - 0.001, &[], Some("1")), (from, &[], None), (1.5, &[(CENTER_WALK_UNDERLAY_REPEATS, "3")], Some("3"))]
+    {
+        for made in [made(&stroke(width, params)), made(&band(width, params))] {
+            assert_eq!(setting(&made.elements[0], CENTER_WALK_UNDERLAY_REPEATS), expected, "{width} mm {params:?}");
+        }
+    }
+    // Planned alone, a band 1.5 mm wide and 30 mm long sews its last stitch near where it sewed its first.
+    let plan = planned(vec![automatic(band(1.5, &[]))]).plan.unwrap();
+    let sewn: Vec<Point> = plan.stitches().filter(|s| s.kind == StitchKind::Normal).map(|s| s.at).collect();
+    let (first, last) = (sewn[0], *sewn.last().unwrap());
+    assert!(first.distance(last) < 2.0, "{first:?} {last:?}");
 }
 
 #[test]

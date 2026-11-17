@@ -211,14 +211,27 @@ pub stitchcraft_plan::thickness::Spot::at: stitchcraft_core::units::Point
 pub stitchcraft_plan::thickness::Spot::value: f64
 pub struct stitchcraft_plan::thickness::Thickness
 impl stitchcraft_plan::thickness::Thickness
+pub fn stitchcraft_plan::thickness::Thickness::add(&mut self, &stitchcraft_plan::plan::SewnStitch, &mut stitchcraft_core::budget::Meter) -> core::result::Result<(), stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_plan::thickness::Thickness::at(&self, stitchcraft_plan::thickness::Measure, stitchcraft_core::units::Point) -> f64
+pub fn stitchcraft_plan::thickness::Thickness::at_place(&self, stitchcraft_plan::thickness::Measure, stitchcraft_core::units::Point) -> f64
+pub fn stitchcraft_plan::thickness::Thickness::blank(&self) -> stitchcraft_plan::thickness::Thickness
+pub fn stitchcraft_plan::thickness::Thickness::hottest(&self, &stitchcraft_plan::plan::SewnStitch, &mut stitchcraft_core::budget::Meter) -> core::result::Result<f64, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_plan::thickness::Thickness::most(&self, stitchcraft_plan::thickness::Measure) -> stitchcraft_plan::thickness::Spot
+pub fn stitchcraft_plan::thickness::Thickness::near(&self, f64, f64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_plan::thickness::Zone, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_plan::thickness::Thickness::of(&stitchcraft_plan::plan::StitchPlan, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::option::Option<stitchcraft_plan::thickness::Thickness>, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_plan::thickness::Thickness::of_stitches(&[stitchcraft_plan::plan::SewnStitch], &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::option::Option<stitchcraft_plan::thickness::Thickness>, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_plan::thickness::Thickness::over(&self, stitchcraft_plan::thickness::Measure, f64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_plan::thickness::Over, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_plan::thickness::Thickness::placed(&self, stitchcraft_core::units::Point) -> stitchcraft_core::units::Point
+pub fn stitchcraft_plan::thickness::Thickness::point(&self, stitchcraft_core::units::Point) -> stitchcraft_core::units::Point
+pub fn stitchcraft_plan::thickness::Thickness::remove(&mut self, &stitchcraft_plan::plan::SewnStitch, &mut stitchcraft_core::budget::Meter) -> core::result::Result<(), stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_plan::thickness::Thickness::report(&self, &stitchcraft_plan::plan::StitchPlan, &stitchcraft_plan::thickness::Limits, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_plan::thickness::Report, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_plan::thickness::Thickness::resewn(&mut self, &stitchcraft_plan::plan::StitchPlan, &mut stitchcraft_core::budget::Meter) -> core::result::Result<(), stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_plan::thickness::Thickness::sewn(&self) -> &[stitchcraft_plan::plan::SewnStitch]
 pub fn stitchcraft_plan::thickness::Thickness::size(&self) -> (usize, usize)
 pub fn stitchcraft_plan::thickness::Thickness::stack(&self, &stitchcraft_plan::plan::StitchPlan, stitchcraft_core::units::Point, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::vec::Vec<stitchcraft_plan::thickness::Layer>, stitchcraft_core::budget::Exhausted>
+pub struct stitchcraft_plan::thickness::Zone
+impl stitchcraft_plan::thickness::Zone
+pub fn stitchcraft_plan::thickness::Zone::touches(&self, &stitchcraft_plan::plan::SewnStitch) -> bool
 pub const stitchcraft_plan::thickness::CELL: f64
 pub const stitchcraft_plan::thickness::MAX_CELLS: usize
 pub const stitchcraft_plan::thickness::ORDINARY: f64

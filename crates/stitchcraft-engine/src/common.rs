@@ -22,6 +22,16 @@ pub const TRIM_AFTER: &str = "trim_after";
 /// several elements keeps it for the last.
 pub const STOP_AFTER: &str = "stop_after";
 
+/// The keys of the settings of an element's lock stitches: the shape at its start and at its end, and the
+/// length of each step of a lock made of steps. Automatic digitizing sets them on what it makes.
+pub const LOCK_START: &str = "lock_start";
+/// See [`LOCK_START`].
+pub const LOCK_END: &str = "lock_end";
+/// See [`LOCK_START`].
+pub const LOCK_START_SCALE: &str = "lock_start_scale_mm";
+/// See [`LOCK_START`].
+pub const LOCK_END_SCALE: &str = "lock_end_scale_mm";
+
 /// The key of the shortest stitch, which an SVG file's clone gives everything it sews when it sets one.
 pub const MIN_STITCH_LENGTH: &str = "min_stitch_length_mm";
 

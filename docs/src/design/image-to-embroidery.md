@@ -643,7 +643,8 @@ An outline is sewn with as few jumps as its lines allow (`REQ-AUTO-052`). A trac
 wherever a neighbour sewn later touches it, often for a few millimetres, and each hidden stretch parted 2
 lines by a jump. The outline now sews through a hidden stretch of `BRIDGE`, 25 mm, or less, along the edge
 and under the shape that covers it, at a stitch for each 2.5 mm. The longest hidden stretch of a ring stays
-out, because sewing it would join nothing. Of an outline's lines, the one with an end nearest where the
+out, because sewing it would join nothing. Under a fill sewn after the area the limit is 12 mm
+([the outline under a later fill](#the-outline-under-a-later-fill)). Of an outline's lines, the one with an end nearest where the
 next element starts sews last and ends there. An open line is turned round for that if need be, and a ring
 starts at its corner nearest that place.
 
@@ -1138,8 +1139,9 @@ can't tell 1 layer from 6. So a finished plan is measured for its thickness too
 A plan is measured where the machine sews it, each needle point on the machine's grid of 0.1 mm. The
 engine's own positions have digits that no file shows. Measured on those, the warning of VectorCraft's
 export differed from the one `stitch export` gives for the same file (the compatibility gate on
-2026-11-16). The grid is the plan's own: the same stitches moved by half a tenth of a millimetre round
-to other needle points. A coordinate is rounded to a millionth of a millimetre first. Shapes drawn on
+2026-11-16). The grid is laid from the plan's first needle point (M13.35). The same stitches measure
+the same wherever they lie. On the machine's own grid, a test sheet drawn on a page measured otherwise
+than its machine file, and the last pass ([The last pass](#the-last-pass)) changed the two otherwise. A coordinate is rounded to a millionth of a millimetre first. Shapes drawn on
 round numbers put needle points half way between 2 points of the grid, and without that such a point
 goes to one or the other by the last digits of its position.
 
@@ -1279,6 +1281,157 @@ under it, as other embroidery software removes hidden stitching. The other sews 
 twice as far apart. Fills with rows 0.4 mm apart would lower every number of this page by 37 %. M13.30
 built and measured both, with the bare-fabric measure checking each change
 ([Less thread where areas overlap](#less-thread-where-areas-overlap)).
+
+### The thickest spot
+
+M13.30 left thickest spots of 5.5 to 7 fills, and the owner read them as what will sew: "5.5 to 7 just
+won't work". She is right to. The area at 3 fills or more says how much of a design is thick, and the
+thickest spot says whether any of it is too thick to sew. A report gives both. M13.35 aims at no spot of
+1 mm above 4 fills on any test design (`REQ-AUTO-073`), and its cases list each design still above that
+with its thickest spot, a list that only shrinks.
+
+Each design's 10 thickest spots were split by element and by kind of thread on 2026-11-16. On the sheets
+and the pear one shape lays 2 to 4 fills by itself at the thickest spot, in 2 out of 3 such spots or more:
+
+- **A satin column fans.** Its stitches keep their spacing on the outside of a corner or a bend, and on the
+  inside they meet. TS-13A's blue strip sews 25 stitches from 5 mm of one rail to 1 mm of the other, 3.6 to
+  4.6 fills by itself. Where 2 columns of one letter join, both sew whole, 2.3 and 1.9 fills in the M.
+- **Lock stitches pile up.** A half stitch lock is 4 stitches of up to 1 mm, about 1 fill where it lies.
+  The pear's stem ties in and off at one end, 1.9 fills of locks, and at TS-13B's thickest spot a fill, its
+  outline and a line lock, 2.75 fills.
+- **A narrow column walks its middle twice.** The centre walk goes there and back, 0.5 fill under the
+  column's 1.25.
+
+On the traced dogs every kind adds a little at the peaks. At their spots of 4 fills or more a column gives 1.0 to 1.6
+fills, the overlap 0.85, a fill's rows 0.45, its turns and travel 0.6 to 0.8, the outline 0.3 to 0.4 and
+the locks 0.2 to 0.45. In a third of those spots 5 elements or more meet, each with 0.3 fill or more.
+
+2 rules for single shapes come first. An automatic column moves its crowded needle points in
+(`REQ-AUTO-071`): a point closer than 0.35 mm to the last one left on its rail moves in by 25 % of its
+stitch, the next by 50 %, as digitizing programs shorten stitches in a sharp turn. A rail's points lie
+0.4 mm apart on a straight column, so no straight column loses any of its width. A larger distance takes
+more thread away only because it thins every column's edges. And everything digitizing makes locks in
+steps as long as the reference machine's shortest stitch, 0.3 mm (`REQ-AUTO-072`), as advised for small
+lettering. Steps of 0.4 mm did nearly as well on the sheets, but where 3 areas meet at a corner the first
+stitch is short, the half stitch there is short too, and 0.4 mm steps made the corner 4.15 fills where it
+was 3.76. Measured with the case's plans:
+
+| Design | Thickest, fills, M13.30 | Now | At 3 fills or more, mm², M13.30 | Now |
+|---|---:|---:|---:|---:|
+| Lettered patch | 5.31 | 5.04 | 107 | 75 |
+| TS-13A, digitized half | 5.56 | 4.28 | 78 | 26 |
+| TS-13B, digitized half | 5.65 | 4.29 | 49 | 20 |
+| TS-13C, digitized half | 5.07 | 4.51 | 145 | 108 |
+| TS-13D, digitized half | 6.46 | 5.17 | 109 | 69 |
+| TS-13E, digitized half | 4.86 | 3.65 | 33 | 15 |
+| Traced pear | 6.45 | 5.01 | 24 | 23 |
+| Traced dog on turf, 6 threads | 5.54 | 5.24 | 178 | 161 |
+| Traced dog on turf, 9 threads | 5.54 | 5.23 | 206 | 188 |
+| Traced running dog, 6 threads | 6.05 | 5.21 | 184 | 170 |
+| Traced running dog, 9 threads | 7.01 | 6.53 | 280 | 275 |
+
+Stitches and jump threads stay as they were. The bare share of the dog on turf in 9 threads grew from
+0.00038 % to 0.00041 %, and one jump thread of TS-13E's digitized half is no longer sewn down, neither traced. The plans here sew each design where it draws its shapes,
+so a spot can differ from `stitch plan --auto`'s by up to 0.8 fill, as the 0.5 mm cells fall.
+
+Alone, the locks took TS-13B from 5.65 to 4.58 fills and the pear to 5.35, and the columns took TS-13A to
+4.73. No outline round fills halves the dogs' area at 3 fills or more and moves their thickest spots
+little. It isn't built.
+
+#### The last pass
+
+The rules of single shapes can't bring the dogs to the cap: 5 to 8 elements meet at their thickest spots,
+each with a little thread, and no rule of one shape knows the sum: the finished plan does. So a plan of a design digitized
+automatically is measured once, and where a spot sews above 4 fills a last pass takes thread
+(`REQ-AUTO-074`, `auto/thin.rs`). Taking a needle point out of a run takes no thread away, since its 2
+stitches become one as long, and cutting a run leaves a jump thread. Thread leaves a spot only where the
+stitching doubles back on itself, or where the end of a row can move. The pass looks at the stitches
+within 2 mm of a spot above the cap and takes, in this order:
+
+1. travel that goes out and comes back within 0.1 mm of where it was 2 needle points before: those 2
+   points go, and the stitch before them runs on to the one after;
+2. a lock's stitches beyond one back and forth, where it has 4 or more;
+3. the base layer's row ends, where a row turns to the next within 1 mm and the 2 rows run nearly
+   opposite ways: the end and the next row's start move back along their rows by the overlap
+   (`auto_overlap_mm`), or by half of it;
+4. the other shapes' top row ends, moved the same way.
+
+A row's end moves only where it is hidden at both places: the top stitches of the elements sewn after it
+lay 1 fill or more at its old and new points. The pass measures them from the plan's end, so that thread
+taken from a later shape no longer hides an earlier one. The pass skips a change that would leave
+a spot it lays thread in thicker than both the cap and what it was. It skips one that would make a stitch
+shorter than the machine's shortest (a lock's 0.2 mm into or out of a lock point) or than the turn it
+replaces, or longer than the machine's longest. It keeps every top stitch that shows, and it doesn't make
+a jump thread. It keeps the measure up to date stitch by stitch (`Thickness::add` and `remove`) and hands
+it to `SC-W0913`, so that the design is measured once. `SC-I1119` says what it took.
+
+#### A narrow column walks once
+
+What the last pass left at the thickest spots was mostly satin columns: a column's zigzag of 1.3 to 2.8
+fills and its underlay of 0.6 to 0.8, over a fill's rows that run on under it. The pass can't take a
+centre walk's way back without turning the column. So a column narrower than 2 mm, which has only a
+centre walk under it, walks its middle once (`REQ-AUTO-075`, `center_walk_underlay_repeats` 1), as
+digitizing guides give a narrow column one run down its middle. The walk then ends at the column's
+far end, and the top stitches sew back to where it started. The order of a part's columns knows that: the
+next column is the one with an end nearest the start of such a column. A shape that sets the repeats
+keeps them. Measured with the cases' plans on 2026-11-17, the last pass in both columns:
+
+| Design | Thickest, fills, last pass | Walked once | At 3 fills or more, mm² | Walked once | Jump threads | Walked once |
+|---|---:|---:|---:|---:|---:|---:|
+| Lettered patch | 4.73 | 4.33 | 78 | 58 | 7 | 8 |
+| TS-13A, digitized half | 4.28 | 4.28 | 31 | 31 | 18 | 18 |
+| TS-13B, digitized half | 4.02 | 3.99 | 31 | 24 | 43 | 42 |
+| TS-13C, digitized half | 4.49 | 4.49 | 113 | 112 | 13 | 13 |
+| TS-13D, digitized half | 4.17 | 4.17 | 79 | 79 | 12 | 12 |
+| TS-13E, digitized half | 3.71 | 3.42 | 27 | 9 | 5 | 5 |
+| Traced pear | 4.78 | 4.55 | 26 | 21 | 2 | 2 |
+| Traced dog on turf, 6 threads | 4.91 | 4.53 | 172 | 164 | 71 | 73 |
+| Traced dog on turf, 9 threads | 4.75 | 4.51 | 200 | 192 | 80 | 81 |
+| Traced running dog, 6 threads | 5.15 | 5.15 | 190 | 184 | 58 | 58 |
+| Traced running dog, 9 threads | 6.27 | 6.00 | 276 | 265 | 74 | 72 |
+
+The designs sew 5 to 100 stitches fewer. A jump thread starts or ends elsewhere where a column now ends at
+its start, so a dog has 2 more or 2 fewer. The lettered patch has one more, and one fewer that no later
+stitch sews down. Where 2 columns of one shape join, the one that ends under the other reaches its pull
+compensation, 0.4 mm, past the chord between them. Ending it at the chord took TS-13A to 4.15 and TS-13B
+to 3.79 fills, and changed the dogs by 0.01 or less. The thread pulls such an end back by about as much,
+which opens the join. The joins are left as they were.
+
+#### The outline under a later fill
+
+An outline sews through a hidden stretch of its edge up to 25 mm ([an outline round a fill](#an-outline-round-a-fill)),
+under the shape that hides it. Where a fill sewn later hides the stretch, the run lies along the edge where
+that fill's rows end over the area's overlap, beside the fill's own outline. The dogs' thread piles up
+along those edges between 2 patches. The owner chose on 2026-11-16 that an outline's thread may be left out only where
+a fill sewn later covers it, so that what shows doesn't change. So a stretch that a later fill hides, in
+part or whole, is sewn through only when it is 12 mm or shorter (`REQ-AUTO-076`, `FILL_BRIDGE` in
+`auto/neighbours/outline.rs`). Each stretch left out costs a jump, and a short one lays little thread.
+Measured with the probe's plans on 2026-11-17:
+
+| Dog | Thickest, fills, walked once | Now | At 3 fills or more, mm² | Now | Jump threads | Now |
+|---|---:|---:|---:|---:|---:|---:|
+| On turf, 6 threads | 4.53 | 4.53 | 164 | 154 | 73 | 74 |
+| On turf, 9 threads | 4.51 | 4.51 | 192 | 181 | 81 | 84 |
+| Running, 6 threads | 5.15 | 5.07 | 184 | 174 | 58 | 61 |
+| Running, 9 threads | 6.00 | 5.89 | 265 | 234 | 72 | 74 |
+
+The sheets, the pear and the lettered patch don't change. Leaving out every stretch under a later fill
+took the dogs' area at 3 fills or more down by 12 to 19 %, for 3 to 11 jump threads more each, and took
+the dog on turf's thickest spot up to 5.09: the last pass could no longer move row ends that the stretch
+had hidden. With no outline at all, which would change what shows, the dogs' thickest spots are still
+4.50 to 5.62.
+
+#### The thickest spots left
+
+The cap of 4 fills isn't met. TS-13B and TS-13E's digitized halves are under it, at 3.99 and 3.42. The
+other sheets, the pear and the lettered patch sew 4.17 to 4.55 fills at their thickest spots, where 2
+satin columns of one shape join, where a column wider than 2 mm lies over a fill's rows, or, on TS-13C,
+where 7 elements meet. The traced dogs sew
+4.51 to 5.89. At their thickest spots 5 to 9 elements meet, each with 0.3 to 2 fills: columns that join,
+the rows of the fills under them (the rims), the turns and travel of small fills, and the base layer. No
+rule tried here takes enough of that without opening fabric or showing less of an outline. The lowest
+honest cap now is about 4.5 fills on the sheets, the pear and the lettered patch, and 6 on the dogs.
+
 
 ## Sewing order
 
@@ -1423,7 +1576,10 @@ left 71, 73, 64 and 84. Since M13.27 filled 5 of their blobs they jump 79, 91, 7
 [an outline round a fill](#an-outline-round-a-fill)) they jump 84, 97, 82 and 109 times, and leave 76, 84,
 73 and 96. With runs under the shapes sewn later (M13.17, [runs in place of jumps](#runs-in-place-of-jumps))
 they leave 69, 79, 60 and 83. Since M13.30
-([less thread where areas overlap](#less-thread-where-areas-overlap)) they leave 71, 80, 58 and 74. The traced pear and the test pictures change thread once for each thread after
+([less thread where areas overlap](#less-thread-where-areas-overlap)) they leave 71, 80, 58 and 74, and
+since narrow columns walk once (M13.35, [a narrow column walks once](#a-narrow-column-walks-once)) 73,
+81, 58 and 72. Since an outline sews through no more than 12 mm under a later fill
+([the outline under a later fill](#the-outline-under-a-later-fill)) they leave 74, 84, 61 and 74. The traced pear and the test pictures change thread once for each thread after
 the first, as they did. The digitized halves of the TS-13 sheets change thread 2, 4, 4 and 6 times, where
 they changed 5, 4, 5 and 8 times. TS-13B's black sews twice: its base layer and letters first, and the
 lines of its windows after the fills they border. The search keeps 87 to 3,584 rows of batches on the
@@ -1461,7 +1617,8 @@ fills with their bands (M13.21). `tests/auto_fabric.rs` keeps the moves and the 
 
 The owner's dog, traced from her 2 photos in 6 and in 9 threads (M13.15, `docs/fixtures/README.md` › The
 traced dogs), lays 16 stitches astray: 5 and 8 on the dog on turf in 6 and in 9 threads, and 1 and 2 on the
-running dog. 2 are straight moves, 2.25 and 2.1 mm long, each between 2 lines of one narrow part, which is
+running dog (15 since M13.35's last pass moved a row of the dog on turf in 9 threads back under its
+neighbour). 2 are straight moves, 2.25 and 2.1 mm long, each between 2 lines of one narrow part, which is
 a stitch because it is shorter than the collapse length. 3 are stitches of outlines, 1.76 to 2.34 mm
 long, each along the edge of a thin, ragged fill. The other 11 are rows of fills, each up to 4 mm
 long, a fill's stitch. Before M13.30 the dogs laid 14, which the rest of this paragraph counts up to. M13.21, which fills where columns sewed, brought 20 of them. Of the 6 that were traced

@@ -1,7 +1,7 @@
 $ stitch plan traced-badge.svg --auto -o traced-badge.pes --preview traced-badge.png
 traced-badge.svg
   file      traced-badge.pes (PES v1, 8347 bytes)
-  sha256    9ee19d8c3bcb026446be7d903708e2c0cb47a70fc6b1d68a09e599d49693f265
+  sha256    ab10564f3719e441a57550adbc5f89e1e23ef7e4403dd2c94904f7e077415114
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      50.0 × 50.0 mm
   stitches  3431 stitches, 3 jumps, 2 trims, 2 colour changes, 0 stops

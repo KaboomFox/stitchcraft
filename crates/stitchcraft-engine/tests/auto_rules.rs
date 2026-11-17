@@ -503,12 +503,13 @@ fn req_auto_035_no_satin_stitch_is_longer_than_the_widest_column() {
     assert_eq!((kinds(&refused.elements), refused.stitches), (vec!["fill"], Some(Stitches::Fill)));
     assert!(rule(&refused).starts_with("refused ("), "{}", rule(&refused));
     // One 12 mm across sews as a column: its longest stitch is 5.49 mm between its rails, and its pull
-    // compensation longer on either side as sewn.
+    // compensation longer on either side as sewn, unless it is one of the stitches of the corner's inside
+    // that are moved in (REQ-AUTO-071), 5.08 mm.
     let design = Design::new(unbased(vec![automatic(square_with_a_round_hole(12.0))]), DesignSettings::default()).unwrap();
     let longest = longest_satin_stitches(&design);
     let limit = LONGEST_SATIN_STITCH + 2.0 * rules().auto_pull_compensation_mm.get();
     let longest: Vec<f64> = longest.into_iter().map(|(_, length)| length).collect();
-    assert!(!longest.is_empty() && longest.iter().all(|length| *length > 5.49 && *length < 6.4), "{longest:?}");
+    assert!(!longest.is_empty() && longest.iter().all(|length| *length > 5.0 && *length < 6.4), "{longest:?}");
     // The traced pear sewed stitches of 7.65 and 7.91 mm in 2 columns under 7 mm wide on average. No column
     // of it now sews a stitch longer than 7 mm and its pull compensation on either side.
     let pear = longest_satin_stitches(&pictures::pear());

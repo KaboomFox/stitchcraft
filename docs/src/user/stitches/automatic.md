@@ -316,14 +316,14 @@ more, `stitch plan` warns (`SC-W0913`) and still writes the file. The warning na
 the shapes stacked there.
 
 <!-- shot: auto-dog-thickness -->
-![How thick the traced running dog sews, as a heat map on white. Most of the dog is grey, under 2 fills of thread. Yellow bands, 2 fills or more, run along the edges where 2 patches overlap. Orange patches, 3 fills or more, lie where several small patches meet, most of them on its chest, its face and its legs, and a few red dots, 6 fills or more, sit inside them.](../../images/generated/auto-dog-thickness.png)
+![How thick the traced running dog sews, as a heat map on white. Most of the dog is grey, under 2 fills of thread. Yellow bands, 2 fills or more, run along the edges where 2 patches overlap. Orange patches, 3 fills or more, lie where several small patches meet, most of them on its chest, its face and its legs. No spot is red, 6 fills or more.](../../images/generated/auto-dog-thickness.png)
 <!-- /shot -->
 
 `stitch preview dog.pes --style thickness -o thick.png` draws this picture of any machine file. Grey is
-thread under 2 fills, yellow is 2 or more, orange 3 or more and red 6 or more. On the dog above, 491 mm²
-of 1,944 mm² is orange or red, mostly where several small patches meet, and its thickest spot has 7.0
-fills. Before StitchCraft sewed an area's overlap by the way its rows run, and one overlap alone under a
-shape, 629 mm² was.
+thread under 2 fills, yellow is 2 or more, orange 3 or more and red 6 or more. On the dog above, 210 mm²
+of 1,944 mm² is orange, mostly where several small patches meet, and its thickest spot has 5.9 fills.
+Before StitchCraft sewed an area's overlap by the way its rows run, and one overlap alone under a
+shape, 629 mm² was orange or red, and M13.30 left 280 mm² and a thickest spot of 7.0 fills.
 
 The limits are starting values for a 75/11 needle and 40-weight polyester thread. They come from the
 public advice of machine and software makers, who disagree. The reference machine hasn't sewn a design

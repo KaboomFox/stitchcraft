@@ -73,9 +73,20 @@ pub const CONTOUR_UNDERLAY: &str = "contour_underlay";
 /// See [`CENTER_WALK_UNDERLAY`].
 pub const ZIGZAG_UNDERLAY: &str = "zigzag_underlay";
 
+/// The key of the setting that says how many times a satin column's centre walk runs its length. An odd
+/// number ends the walk at the column's end, and the rest of the column then sews back to its start.
+pub const CENTER_WALK_UNDERLAY_REPEATS: &str = "center_walk_underlay_repeats";
+
 /// The key of the setting that shortens or lengthens a satin column at its start and its end, with which
 /// automatic digitizing makes a column that ends under another reach under it.
 pub const PUSH_COMPENSATION: &str = "push_compensation_mm";
+
+/// The keys of the settings that move a satin column's crowded needle points in along their stitches, on the
+/// inside of a tight curve: how close a point may come to the last one left in place, and by how much each is
+/// moved. Automatic digitizing sets them on its columns.
+pub const SHORT_STITCH_DISTANCE: &str = "short_stitch_distance_mm";
+/// See [`SHORT_STITCH_DISTANCE`].
+pub const SHORT_STITCH_INSET: &str = "short_stitch_inset";
 
 /// The key of the setting that starts a satin column near where the needle is, which Ink/Stitch's update of
 /// a file older than its version 3 turns off, as it does [`END_AT_NEAREST_POINT`].
