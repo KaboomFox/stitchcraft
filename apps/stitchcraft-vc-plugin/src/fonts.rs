@@ -48,6 +48,31 @@ mod tests {
         assert!(built_in().font("", &Budget::DEFAULT).is_some_and(|font| font.is_ok()));
     }
 
+    #[test]
+    fn req_font_022_the_fonts_held_are_those_listed_with_the_weight_and_the_heights_each_measures() {
+        use stitchcraft_svg::lettering::pictures::weight;
+        use stitchcraft_vectorcraft::lettering::HELD;
+
+        // The list the build reads and the table a font is chosen by name the same fonts, in one order.
+        let listed: Vec<&str> =
+            include_str!("../built-in-fonts.txt").lines().map(str::trim).filter(|line| !line.is_empty() && !line.starts_with('#')).collect();
+        assert_eq!(HELD.iter().map(|held| held.folder).collect::<Vec<_>>(), listed);
+        if FONTS.is_empty() {
+            assert!(built_in().choices().is_empty());
+            eprintln!("skipped: no font is built in (STITCHCRAFT_FONTS_DIR is not set)");
+            return;
+        }
+        assert_eq!(built_in().choices().iter().map(|choice| choice.font.as_str()).collect::<Vec<_>>(), listed);
+        for (folder, held) in FONTS.iter().zip(HELD) {
+            let font = font::read(folder.name, folder.files, &Budget::DEFAULT).unwrap();
+            let measured = weight::of_font(&font, &Budget::DEFAULT).unwrap().unwrap();
+            let (least, most) = (measured.height * font.settings.min_scale, measured.height * font.settings.max_scale);
+            // The table writes the weight and the heights to 2 places.
+            assert!((measured.ratio() - held.weight).abs() <= 0.005, "{}: {}", held.folder, measured.ratio());
+            assert!((least - held.heights.0).abs() <= 0.005 && (most - held.heights.1).abs() <= 0.005, "{}: {least} to {most}", held.folder);
+        }
+    }
+
     /// A document of one text object, `Hi` at (72, 72) points, with the Lettering effect and its `params`.
     // A case writes the parameters in place.
     #[allow(clippy::needless_pass_by_value)]

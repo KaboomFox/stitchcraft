@@ -195,6 +195,12 @@ pub(crate) struct RunStyle {
     pub leading: Maybe<f64>,
     #[serde(default)]
     pub font_family: Maybe<String>,
+    /// The typeface's style, such as `Bold Italic`.
+    #[serde(default)]
+    pub font_style: Maybe<String>,
+    /// A variable typeface's axes, by their tags: `wght` is the weight.
+    #[serde(default, rename = "fontAxes")]
+    pub font_axes: Maybe<std::collections::BTreeMap<String, f64>>,
 }
 
 /// How an object paints: its fills and strokes, in paint order, and its effects.

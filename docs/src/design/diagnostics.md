@@ -228,6 +228,7 @@ another.
 | `SC-W1115` | Warning | Lettering not the traced letters' size (set at the nearest height the font sews, or over a tenth of their height from their width) | M14 |
 | `SC-I1116` | Info | Text sewn in an embroidery font (a text object under automatic digitizing, whose own typeface can't be read. The message has the font used, the height with its reason, and the longest line's length) | M14 |
 | `SC-W1117` | Warning | Lettering longer than its text's place (a line of a text object under automatic digitizing that is longer than the length its text most likely had, at the smallest height the font sews at) | M14 |
+| `SC-I1118` | Info | Font chosen by the letters' weight (a text marker without a font, set in the font nearest in weight to its traced letters among those that sew at their height, or a bold text object sewn in the bold font where it can. The message names the font and says why) | M14 |
 | `SC-I1119` | Info | Thread taken from thick spots (by the last pass over a design digitized automatically, where a spot still sewed above 4 fills: how much of each kind, and what is left) | M13 |
 | `SC-E1201` | Error | Subject cut-out's models not ready (a model that couldn't be fetched, or isn't the file pinned: the message names every file and the folder they belong in) | M13 |
 | `SC-E1202` | Error | No subject found to cut out (no part of U²-Net-p's map reaches a half and no box is given, or MobileSAM didn't keep a pixel) | M13 |

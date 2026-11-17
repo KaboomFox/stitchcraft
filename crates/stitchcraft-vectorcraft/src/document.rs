@@ -206,8 +206,9 @@ pub fn read_in(bytes: &[u8], budget: &Budget, reading: Reading, fonts: &mut dyn 
     let design = Design::new(reader.elements, reader.settings)?.read_as(reading);
     // Text in pictures: what lies inside each object named `stitch:text` becomes lettering (`REQ-VC-028`).
     let (fonts, mut lettered) = (reader.fonts, reader.lettered);
-    let (design, said) =
-        pictures::replace(design, &[], &mut |name, budget| crate::lettering::found(&mut *fonts, name, budget), &mut lettered, budget)?;
+    let choices = fonts.choices();
+    let mut found = |name: &str, text: &str, budget: &Budget| crate::lettering::found_for(&mut *fonts, name, text, budget);
+    let (design, said) = pictures::replace_among(design, &[], &mut found, &choices, &mut lettered, budget)?;
     warnings.extend(said);
     Ok(VectorCraft { design, machine: kept.machine, warnings })
 }

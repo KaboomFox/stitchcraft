@@ -411,6 +411,49 @@ fn req_font_004_glyphs_are_the_groups_labelled_so_wherever_they_lie() {
 }
 
 #[test]
+fn req_font_023_a_font_read_for_a_text_has_only_the_glyphs_the_text_can_use() {
+    // `é` is written as an `e` and a combining accent, which NFC joins. `?` is the default glyph, `ab` a
+    // ligature, `a.alt` a form of `a`, and `.` a glyph of its own. The glyph `x` has no path, and `q` is
+    // drawn twice.
+    let labels = ["a", "A", "b", "ab", "a.alt", "e\u{301}", "?", ".", "c", "ß", "S", "x", "q", "q"];
+    let body: String = labels.iter().map(|label| layer(label, if *label == "x" { "" } else { LINE })).collect();
+    let settings = r#"{"default_glyph": "?"}"#;
+    let files = [("font.json", settings), ("ltr.svg", &*file(Some(30.0), &body)), ("rtl.svg", &*file(Some(30.0), &layer("a", LINE)))];
+    let given: Vec<(&str, &[u8])> = files.iter().map(|(path, text)| (*path, text.as_bytes())).collect();
+    let read_for = |text: &str| font::read_for("test", &given, text, &Budget::DEFAULT).unwrap();
+    // The text's characters in either case, the glyphs made of them, and the default glyph.
+    assert_eq!(names(&read_for("a"), Direction::LeftToRight), ["?", "A", "a", "a.alt"]);
+    assert_eq!(names(&read_for("B a"), Direction::LeftToRight), ["?", "A", "a", "a.alt", "ab", "b"]);
+    assert_eq!(names(&read_for("."), Direction::LeftToRight), [".", "?"]);
+    assert_eq!(names(&read_for(""), Direction::LeftToRight), ["?"]);
+    // A character written in 2 parts asks for the glyph NFC names, and a character whose capital is 2 letters
+    // for theirs.
+    assert_eq!(names(&read_for("e\u{301}"), Direction::LeftToRight), ["?", "\u{e9}"]);
+    assert_eq!(names(&read_for("ß"), Direction::LeftToRight), ["?", "S", "ß"]);
+    // Every direction is read the same way, and a direction keeps its files though no glyph of it is used.
+    let partly = read_for("b");
+    assert_eq!(names(&partly, Direction::RightToLeft), Vec::<String>::new());
+    assert_eq!(partly.variant(Direction::RightToLeft).unwrap().files, ["rtl.svg"]);
+    // A glyph that is read is the glyph the whole font has, and the rest of the font is the same.
+    let whole = font::read("test", &given, &Budget::DEFAULT).unwrap();
+    assert_eq!(names(&whole, Direction::LeftToRight).len(), 12);
+    let some = read_for("ab");
+    let both = |font: &Font| ["a", "b", "ab", "?"].map(|name| font.variant(Direction::LeftToRight).unwrap().glyphs[name].clone());
+    assert_eq!(both(&some), both(&whole));
+    assert_eq!((&some.settings, &some.licence, &some.folder), (&whole.settings, &whole.licence, &whole.folder));
+    // Nothing is said of a glyph that isn't read: the whole font names the glyph without a path and the one
+    // drawn twice, and the font read for a text that uses neither doesn't.
+    assert_eq!(said(&whole).len(), 2, "{:?}", said(&whole));
+    assert!(said(&some).is_empty(), "{:?}", said(&some));
+    assert_eq!(said(&read_for("xq")), said(&whole));
+    // The glyphs left out cost no work: a budget that reads the font for one character doesn't read it whole.
+    let least = |read: &dyn Fn(&Budget) -> bool| (1..).map(|k| k * 50).find(|&work| read(&Budget { max_work: work, ..Budget::DEFAULT })).unwrap();
+    let (for_one, for_all) =
+        (least(&|budget| font::read_for("test", &given, "c", budget).is_ok()), least(&|budget| font::read("test", &given, budget).is_ok()));
+    assert!(for_one * 2 < for_all, "{for_one} {for_all}");
+}
+
+#[test]
 fn req_font_004_a_glyph_s_name_is_its_label_in_nfc() {
     // The ohm sign is the Greek capital omega in NFC, and an a with a combining diaeresis is one character.
     let font = read(&[("font.json", "{}"), ("ltr.svg", &file(Some(30.0), &(layer("\u{2126}", LINE) + &layer("a\u{308}", LINE))))]);

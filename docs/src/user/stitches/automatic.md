@@ -396,7 +396,9 @@ text's colour.
 
 Its letters are not those of the drawing's typeface. StitchCraft can't read a typeface's letter shapes yet,
 so every text comes out in the embroidery font's letters, which are light and upright in Ink/Stitch Small
-Font. Small Font's letters are wider than most typefaces', so a line at the text's height would often run past
+Font. A bold text sews in Barstitch Bold, whose strokes are half again as wide, when its font size is 51
+points (17.9 mm) or more. A smaller bold text sews in Small Font, and the report says from what size it
+would sew bold. Small Font's letters are wider than most typefaces', so a line at the text's height would often run past
 the shape it is drawn on. StitchCraft keeps each line to the length the text most likely had in the
 drawing: half the font size for each character, or the length an SVG file states with `textLength`. It
 closes the letters up a little, then sews the line smaller. The report says for each text which font was

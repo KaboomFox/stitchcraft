@@ -31,7 +31,7 @@ use svgtypes::{Length, LengthUnit};
 
 use super::{Axis, Reader};
 use crate::inkstitch::INKSCAPE_NS;
-use crate::lettering::objects::{Anchor, Line, TextObject, Waiting};
+use crate::lettering::objects::{self, Anchor, Line, TextObject, Waiting};
 use crate::style::{Paint, Plain, Style};
 use crate::transform::{Affine, user_units};
 
@@ -51,9 +51,13 @@ struct Draft<'a> {
     y: f64,
     /// How long its `textLength` says it is, in user units.
     length: Option<f64>,
-    /// The font size, the anchor, the fill's thread and the typeface of its first visible character.
-    first: Option<(f64, Anchor, Option<Thread>, Option<&'a str>)>,
+    /// What it takes from its first visible character.
+    first: Option<First<'a>>,
 }
+
+/// What a line takes from its first visible character: its font size, its anchor, its fill's thread, its
+/// typeface and whether its weight is bold.
+type First<'a> = (f64, Anchor, Option<Thread>, Option<&'a str>, bool);
 
 impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
     /// The `<text>` element `node`, `label`, drawn with `style` under `map` inside the clips of the chain
@@ -124,10 +128,11 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                     _ => Anchor::Start,
                 };
                 let typeface = self.inherited(parent, "font-family")?.first().copied();
+                let bold = self.inherited(parent, "font-weight")?.first().is_some_and(|weight| objects::bold_weight(weight));
                 let fill = if shown.fill_clear { None } else { self.colour(label, "fill", shown.fill, shown.color, false)? };
                 let stroke = if shown.stroke_clear { None } else { self.colour(label, "stroke", shown.stroke, shown.color, false)? };
                 let thread = fill.or(stroke).map(|painted| Thread::new(painted.colour));
-                draft.first = Some((size, anchor, thread, typeface));
+                draft.first = Some((size, anchor, thread, typeface, bold));
             }
         }
         if on_a_path {
@@ -142,10 +147,10 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         let (along, across) = (math::hypot(a, b), math::hypot(c, d));
         // The map doesn't flatten the element, or it would not be drawn: its baseline has a length.
         let turn = (a / along, b / along);
-        let mut typeface = None;
+        let (mut typeface, mut bold) = (None, false);
         let mut lines = Vec::new();
         for draft in drafts {
-            let Some((size, anchor, thread, family)) = draft.first else { continue };
+            let Some((size, anchor, thread, family, heavy)) = draft.first else { continue };
             let text = if preserve { draft.raw.replace(['\n', '\r', '\t'], " ") } else { draft.raw.split_whitespace().collect::<Vec<_>>().join(" ") };
             let size = size * across;
             // A viewer shows nothing of a text without a size, or without a fill and a stroke.
@@ -158,6 +163,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 return Ok(());
             };
             typeface = typeface.or(family);
+            bold = bold || (lines.is_empty() && heavy);
             lines.push(Line { text, at, anchor, size, thread, length: draft.length.map(|length| length * along) });
         }
         match (lines.as_mut_slice(), whole) {
@@ -189,7 +195,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         let clips = self.chain(clipped)?;
         let name = node.attribute((INKSCAPE_NS, "label")).map(str::trim).filter(|s| !s.is_empty()).map(str::to_string);
         let typeface = typeface.map(|family| family.trim().to_string()).filter(|family| !family.is_empty());
-        let text = TextObject { label: format!("svg:{label}"), name, typeface, lines, turn, clips };
+        let text = TextObject { label: format!("svg:{label}"), name, typeface, bold, lines, turn, clips };
         self.texts.push(Waiting { after: self.elements.len(), text });
         Ok(())
     }
