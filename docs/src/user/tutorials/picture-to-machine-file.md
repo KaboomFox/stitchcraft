@@ -48,7 +48,10 @@ traced lowest, and covers the whole picture. It is the picture's background, the
 left out (`SC-W0906`). The red disc and the blue square are broader than a satin column, and each is
 filled whole under the shape in its hole, which sews on top (`SC-I0908`). Each is then cut away under that
 shape, 0.4 mm inside its edge (`SC-I0904`), so that no fabric shows where they meet once the thread pulls
-in, and nothing sews twice. The example plans
+in, and nothing sews twice. A shape drawn in straight strokes, as a block letter or a logo's bars are,
+sews a satin column along each stroke, with its stitches square to the stroke. Where 2 strokes meet, one
+runs through and the other stops against it, as an embroidery font's letters do. A curved stroke, as a C's,
+sews along the shape's middle. The example plans
 `traced-badge.svg`, a badge drawn as Image Trace traces one, and a document that VectorCraft saved plans the
 same way.
 

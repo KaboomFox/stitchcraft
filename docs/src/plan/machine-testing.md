@@ -323,6 +323,19 @@ the traced lettered patch (kit item 14) beside the patch with its word as text (
   between the columns?
 - TS-13B's 6 mm word has 2 more jump threads. Cut them by hand. Does an end pull out?
 
+M13.37 sews a traced letter's straight strokes each as a column of its own
+([letters sewn as strokes](../design/image-to-embroidery.md#letters-sewn-as-strokes)). At MC-8, compare the
+traced lettered patch (kit item 14) with the patch with its word as text (item 15):
+
+- Do the M's stems run top to bottom with level stitches, and its middle strokes stop against them, as on
+  item 15? Does the A's apex split upright, and does its crossbar stop against both legs?
+- Where a stroke stops against another, as the T's stem under its bar, the H's crossbar against its stems
+  and the M's middle strokes against its stems, does fabric show where they meet after sewing? The stroke
+  that stops ends on the other's side, and the other's pull compensation is what reaches past that side. If
+  fabric shows, the stopping stroke reaches 0.4 mm into the other again, in a step of its own.
+- TS-13D's emblems sew their white frames as columns along their sides, where they were filled. Do the
+  frames' corners sew cleanly, and is the stacked emblem's white ring, 4.23 fills at its thickest, stiff?
+
 M13.18 merges the thin lines of a traced photo into the patches beside them
 ([neighbours](../design/image-to-embroidery.md#neighbours)). It changes what the traced dogs sew, and no
 test sheet. At MC-8, sew the running dog in 9 threads from `main` before M13.18 and from after it, side by

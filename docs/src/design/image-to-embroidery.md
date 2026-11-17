@@ -499,19 +499,20 @@ middles, and its A's counter, 0.56 mm across inside, isn't kept open.
 
 ### Letters sewn as strokes
 
-A person draws a block letter, or a logo's bars, in strokes: straight bands of nearly even width that meet
-at joins. A font sews each stroke as a satin column of its own, its stitches across it. The columns along
-a part's centre lines run on round the corners where strokes meet, so an M's middle strokes took in the
-corners of its stems, their rails ran on unevenly, and their stitches leaned up to 56°. TS-13B said so 6
+Block letters and a logo's bars are drawn in strokes: straight bands of nearly even width that meet at
+joins. An embroidery font sews each stroke as a satin column of its own, its stitches across it. The
+columns along a part's centre lines run on round the corners where strokes meet. An M's middle strokes
+took in the corners of its stems there, their rails ran on unevenly, and their stitches leaned up to 56°. TS-13B said so 6
 times (SC-W0208). A part that reads as strokes now sews a column along each (`REQ-AUTO-087`), and where
 2 strokes meet one runs through and the other stops (`REQ-AUTO-088`). The code is
 `normalize/strips/strokes.rs` and its joins `strokes/joins.rs`, called from `auto/columns.rs`.
 
 **Reading the strokes.** Each ring of the part is cut into straight runs, from its sharpest corner: a run's
-points lie within 0.05 mm of the line between its ends. 2 runs are a stroke's sides when they run opposite
-ways within 5°, lie as far apart at both ends within a tenth, are at least the narrowest satin stroke and
-at most the widest satin column apart, overlap along each other by half that width, the longer as long as
-the width and the shorter half as long, and hold the part between them but for 2 % of the band. Sides on
+points lie within 0.05 mm of the line between its ends. 2 runs are a stroke's sides when all of these hold.
+They run opposite ways within 5°, and lie as far apart at both ends within a tenth. They are at least the
+narrowest satin stroke and at most the widest satin column apart, and overlap along each other by half that
+width. The longer is as long as the width and the shorter half as long. The part fills the band between
+them but for 2 % of it. Sides on
 the same 2 lines, within 2° and a tenth of the width, are one stroke, as an E's stem is between its arms.
 
 **Joins.** 2 strokes meet where their bands, a width longer at each end, share more of the part than
@@ -519,23 +520,23 @@ the same 2 lines, within 2° and a tenth of the width, are one stroke, as an E's
 join by half its width both ways along it. Of 2 that both do, as in a cross, the longer runs through and
 the other loses its band, narrowed on each side by its stitches' reach across, and sews in 2 columns. Of 2
 that end there, the one whose end lies more nearly square to it runs through, by more than 0.15 of its
-width: an M's stem, whose top is square, against its middle stroke, cut on the slant. Alike, 2 strokes
+width. An M's stem has a square top and runs through, and its middle stroke, cut on the slant, stops. Alike, 2 strokes
 whose lines meet between 15° and 60° are cut along the line that halves the angle between them, as at the
-top of an A and the bottom of an M's V, and each reaches max(0, reach / 2 - reach cos) past that line,
-the reach being its pull compensation and the cosine that of its line to the halving line. At a blunter
+top of an A and the bottom of an M's V, and each reaches max(0, reach / 2 - reach cos) past that line.
+There, reach is the stroke's pull compensation and cos the cosine of its line to the halving line. At a blunter
 join, as at an L's corner, the longer runs through. Cut along a halving line there, each would end in a
 point at the corner's outside, and the 2 tips and their pull compensation piled 4.34 fills on TS-13D's
 white frame, where the columns along their centre lines laid 4.17.
 
 **Where a stroke stops.** A stroke that stops keeps its side of the other's near side, moved into the
 other by reach (1 - cos), the cosine of the angle between the 2 lines: its own stitches' pull compensation
-already reaches the rest across the seam. That stub is part of the stroke's end when it lies within the
-flat end's 20° along the stroke, that is when the stroke is wider than reach / tan 20°, 1.1 mm at the
-default 0.4 mm. A wider stroke then ends on the other's side, and the overlap is the other's own pull
-compensation, whose stitches run along the stopping stroke at a square join and reach 0.4 mm over the
-seam. Restored as rails of the stroke, the stub made TS-13D 4.55 fills thick where it is 4.23, the lettered
+already reaches the rest across the line where they meet. That stub is part of the stroke's end when it
+lies within the flat end's 20° along the stroke, and it does for a stroke wider than reach / tan 20°,
+1.1 mm at the default 0.4 mm. A wider stroke then ends on the other's side, and the overlap is the other's
+own pull compensation, whose stitches run along the stopping stroke at a square join and reach 0.4 mm past
+that side. Restored as rails of the stroke, the stub made TS-13D 4.55 fills thick where it is 4.23, the lettered
 patch 4.09 where it is 4.00 and TS-13B 3.90 where it is 3.85, and no measure showed a gap either way, so
-the stub is left out until a sew-out shows fabric along a seam (MC-8). The stroke that stops sews first,
+the stub is left out until a sew-out shows fabric where 2 strokes meet (MC-8). The stroke that stops sews first,
 and ends under the other without a push compensation.
 
 **Columns.** Each stroke's piece is the part inside its band, cut so. The pieces must cover the part but for
@@ -550,15 +551,15 @@ corner of the part are that corner, so that a rail runs along a hole's edge wher
 (`REQ-AUTO-084`): without that the A's counter fell to 7 %.
 
 **When a part keeps its centre lines' columns.** The rule runs only on a part that wasn't cut from a broad
-one, has 2 or more columns along its centre lines and none of them a ring, and reads as 2 strokes or more
-that meet. Its columns are kept only when none of them runs (`REQ-AUTO-016`). Strokes are straight only:
+one and reads as 2 strokes or more that meet. Its centre lines must give 2 columns or more, none of them a
+ring. Its columns are kept only when none of them runs (`REQ-AUTO-016`). Strokes are straight only:
 a curved stroke, as a C's or an S's, or a D's bowl, keeps today's columns, and curved strokes are a
 candidate for a later step.
 
 **Measuring the lean.** A stitch leans by the angle between it and the square to its stroke, over the zigzag
 top stitches 0.4 mm long or more, leaving out the 2 at each end of a column. Those follow the column's
-end: a flat end 19° on the slant, with the zigzag's own 10° at 6 mm, measured 31°, which says nothing of how
-the column lies along its stroke.
+end. A flat end 19° on the slant measured 31° with the zigzag's own 10° at 6 mm, which says nothing of
+how the column lies along its stroke.
 
 Measured with the cases' plans before (`main` at M13.36) and after, built at opt-level 1. Small Font's M at
 10 mm measures 3.71 fills and its A 3.31, alike:
@@ -572,8 +573,8 @@ Measured with the cases' plans before (`main` at M13.36) and after, built at opt
 | TS-13B's digitized half | | | 3.99 → 3.85 | 12.25 → 4.25 | 44 → 46 |
 | TS-13D's digitized half | | | 4.17 → 4.23 | 67.75 → 51.25 | 12 → 12 |
 
-TS-13D's one rise sits at the stacked emblem's white ring, not on a stroke: the white frame now sews as
-strokes, its corners one bar through, and the ring's column starts elsewhere. Its area at 3 fills or more
+TS-13D's one rise sits at the stacked emblem's white ring, not on a stroke. The white frame now sews as
+strokes, with one bar through at each corner, and the ring's column starts elsewhere. Its area at 3 fills or more
 fell by 16.5 mm². The emblems' white frames, refused as columns before, sew as strokes, and TS-13B's M no
 longer says that its stitches lean. The 4 mm word runs along its letters' middles, as before. Every other
 test picture sews as it did. Taking the strokes from the centre lines instead fails: the M's middle stroke

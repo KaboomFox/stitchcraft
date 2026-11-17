@@ -2048,6 +2048,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.37: traced letters sew as strokes (`REQ-AUTO-087`, `REQ-AUTO-088`).
+  - A block letter or a logo's bars traced as an automatic area sews a satin column along each straight
+    stroke. Its stitches lie square to the stroke. Its centre lines' columns ran on round its corners. The M's stitches lean at most 17° to 19° from square, where they leaned up to
+    56°, and TS-13B no longer warns of leaning stitches (`SC-W0208`).
+  - Where 2 strokes meet, the one the part goes on past runs through and the other stops against it and
+    sews first. Of 2 that end there, the squarer end runs through, as an M's stem does. 2 that meet at a
+    sharp angle, as at an A's apex, are cut along the line that halves it, and at an L's corner the longer
+    runs through. Of 2 strokes that cross, the longer runs through and the other sews in 2 columns.
+  - A stroke that stops has no push compensation. A stroke wider than 1.1 mm ends on the other's side,
+    and the other's pull compensation covers the line where they meet. MC-8 checks that line.
+  - Curved strokes, a C's, an S's and a D's bowl, keep their centre lines' columns.
+  - The lettered patch is 4.00 fills thick at its thickest, where it was 4.20. TS-13D's digitized half is
+    4.23 where it was 4.17, at the stacked emblem's white ring, whose frame now sews as strokes so the
+    ring's column starts elsewhere. Its area at 3 fills or more fell by 16.5 mm². TS-13D's white frames sew
+    as columns, where they were filled (`SC-I0902` said so twice).
 - M13.36: a traced letter keeps its counters open, and its columns meet without gaps (`REQ-AUTO-084` to
   `REQ-AUTO-086`). The owner said of MC-8's traced lettered patch that the A has no white space and the
   letters have new gaps.
