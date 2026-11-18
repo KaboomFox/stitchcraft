@@ -335,6 +335,16 @@ side:
 - The dog on turf in 9 threads sews 0.31 fills more at its thickest spot, 4.8 fills, where a satin column or a fill lies
   over 3 or 4 other fills. Does the needle thump there, or the thread fray?
 
+M13.40 sews a detail after the fills round it where that costs no thread change and the plan measures
+no worse ([details last](../design/image-to-embroidery.md#details-last)). Of the traced dogs, only the dog
+on turf in 9 threads changes. At MC-8, sew it from `main` before M13.40 and from after it, side by side:
+
+- Its eyes and nose sew after the fur round them. Are their edges whole, without fur rows lying over
+  them?
+- Measure the dark parts of the face across, and compare them with the trace. Are they smaller on
+  the version from `main`?
+- Its thickest spot has 4.69 fills, where it had 4.80. Does the needle sound the same?
+
 ## Report template
 
 The GitHub issue form *Sew-out report* asks for these fields; this is the same template for notes kept

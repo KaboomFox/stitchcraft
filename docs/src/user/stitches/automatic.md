@@ -344,7 +344,7 @@ thickest part before a whole design, slowly, and listen for the needle thumping.
 
 ### Sewing order
 
-The shapes sew in an order StitchCraft chooses. 5 rules decide it, each where the rules before it leave a
+The shapes sew in an order StitchCraft chooses. 6 rules decide it, each where the rules before it leave a
 choice:
 
 1. Of 2 shapes that overlap, the lower sews first, as drawn.
@@ -354,7 +354,14 @@ choice:
    searches for the row of threads with the fewest changes.
 4. A satin column sews after a fill it borders where that costs no thread change. Where it sews first, it
    reaches 1 mm under the fill.
-5. Of the shapes a thread may sew, the nearest sews next.
+5. A detail, such as an eye or a mark on a patch, sews after the larger shapes round it where that costs
+   no thread change, so that no fill's rows lie over it. Any shape whose neighbours close in on it and
+   are larger counts as one. StitchCraft finds it by its outline and its neighbours alone, not by what
+   the picture shows.
+   Moving a fill can make another spot thicker, so StitchCraft plans the design with this rule and
+   without it. It keeps the plan with the rule only when that plan sews no thicker and leaves no more
+   jumps or thread changes. `SC-I0907` says when it doesn't.
+6. Of the shapes a thread may sew, the nearest sews next.
 
 One thread or another comes back where the rules need it. Dark outlines sew after the light fills they
 border, and a dark fill under those sews before them. A picture in 6 threads changes thread 5 times at

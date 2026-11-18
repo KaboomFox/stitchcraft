@@ -28,8 +28,11 @@
 //!    meets, as an eye is of the fur round it. It sews after them, as a column does after its fill: of the
 //!    rows with the fewest changes, the one that sews fewer details early is taken, and a detail waits for a
 //!    later batch of its thread. A line or a column round a detail still goes by rules 2 and 4: it covers
-//!    the detail's edge, as an outline does, and the detail reaches under a column. Which shape is a detail goes by geometry alone, never by what the picture shows. `SC-I0907` says how
-//!    many details still sew before a larger shape round them.
+//!    the detail's edge, as an outline does, and the detail reaches under a column. Which shape is a detail
+//!    goes by geometry alone, never by what the picture shows. `SC-I0907` says how many details still sew
+//!    before a larger shape round them. Moving fills for the details can make another spot thicker, which
+//!    no rule of geometry foresees, so where the details change the order it is also found without them,
+//!    and planning keeps the plan that measures no worse (`crate::auto::details`, `REQ-AUTO-098`).
 //! 6. **The nearest next.** Of the free elements of a batch, the next is the one whose box lies nearest
 //!    the box of the one sewn last, then the one whose box's centre does, then the one drawn first. Each
 //!    element then starts and ends at its points nearest its neighbours (`REQ-GEN-003`).

@@ -1810,6 +1810,85 @@ release build ([conformance](conformance.md#cases-in-the-release-build)). The pi
 showed fabric before the rules above, the paw of the dog on turf and the running dog's ear, are cases of
 `tests/auto_fabric.rs` too.
 
+### Details last
+
+(`REQ-AUTO-096` to `REQ-AUTO-098`, M13.40.) A digitizer sews an eye, a nose or a mark on a patch after the
+fills round it, so that no fill's rows lie over it. StitchCraft can't tell an eye from a speck of noise,
+and no rule may know what a picture shows. A detail is known by geometry and order alone. It is an
+automatic area that meets a larger automatic area without overlapping it, and that the shapes round it
+close in on. The strip one tolerance wide round its region lies under what the other shapes paint,
+grown by twice the shapes' tolerance, for 3 quarters of its area or more (`order::Order::closed_in`). An eye or a mark has
+neighbours all round it. A patch at the picture's edge is open along it, and a patch of fur is larger
+than the shapes inside it.
+
+**What the layers' rule missed.** [Neighbours](#neighbours) already digitizes an area wider than a satin
+column whole under the details in its holes, and moves it back before them. That rule missed 4 cases,
+each shown on main by a case of `tests/auto_details.rs`:
+
+1. A detail where 2 or more patches meet lies in the hole of none of them, and the rule left it where it
+   was drawn. The cases draw a mark 12 mm square where 2 patches meet.
+2. An area no wider than a satin column keeps its holes. Where it sews as a fill, as a ring 3 mm wide
+   round a square does, the square in its hole sewed first. Where the ring sews as satin columns, the
+   columns sew after the square as an outline does, and the square reaches under them: no miss.
+3. An area that can't move back past a shape with settings near it opens its hole again, and the detail
+   sewed first (`REQ-AUTO-097`). A stop keeps every element on its side of it, so a detail drawn before
+   a stop still sews before an area drawn after it.
+4. A fill sewn after a detail eats its edge. On the marked patch, sewn on main, the black dot measures
+   5.5 mm where it is drawn 6 mm, and the diamond 11.7 mm where it is drawn 12 mm: the later fill's rows
+   and their pull compensation reach over them.
+
+**Wishes to the search.** Each detail sews after the larger areas it meets where that costs no thread
+change, as a satin column does after its fill (rule 5 above). Of the rows of batches with the fewest
+changes, the search takes the one that sews fewer details early. A detail then waits for a later batch of
+its thread. The owner's machine has one needle, and each thread change is a rethread by hand. As hard
+rules, details last took the dogs in 6 threads from 8 thread changes to 13 and 14. In 9 threads the
+search ran out of its budget, and the dogs changed thread 35 and 38 times.
+
+**The guard.** Wishes alone raised the thickest spot of 2 dogs, at spots where no detail lies. On the dog
+on turf in 6 threads it rose from 4.69 fills to 5.49, at (47.2, 21.7), by one wish. The detail `vc:84`,
+sewn after `vc:83`, starts and ends elsewhere, and its own travel crosses the spot 3 times more: its
+thread in a box 1 mm across there grew from 3.76 mm to 9.50 mm, with the same stitches. `vc:83`, sewn
+earlier, then reaches under it too. On the running dog in 6 threads the spot at (45.6, 44.3) rose from
+4.62 to 5.03, and no one wish raises it. The wishes change which of the rows with equally few changes the
+search takes. In the row it takes, a batch of `vc:97` sews before `vc:38`'s, and `vc:38`, sewn later,
+starts elsewhere and retraces a row. So the thickness comes from where the fills that move are routed, not from more layers
+stacked on the detail. No rule of geometry told the harmful wishes apart. The wishes of the details whose rim
+the larger area covers less than a share were left out, for shares from a quarter to all of it. Each
+share kept one dog at main's thickest spot and raised another.
+
+So the plan is measured (`stitchcraft_engine::auto::details`). When the details' wishes change the order,
+the design is planned both ways, each plan with the work budget, and the plan that sews the details last
+is kept only when it is no thicker at its thickest spot, in hundredths of a fill, and leaves no more jump
+stitches or thread changes than the plan without them. Otherwise the plan without them is kept, and
+`SC-I0907` gives both plans' numbers. A design whose order the details leave as it was is planned once. The
+thicknesses come from `stitchcraft_plan::thickness` and the jumps and changes from the plan's own counts,
+as planning already measures them.
+
+**Measured** (2026-11-18, planned at opt-level 2). Main, then this step, and the plan the guard kept:
+
+| Picture | Thread changes | Jump threads | Thickest spot, fills | Likeness | Kept |
+|---|---|---|---|---|---|
+| Dog on turf, 6 threads | 8, 8 | 57, 57 | 4.69, 4.69 | 0.814, 0.814 | without: 5.49 with |
+| Dog on turf, 9 threads | 12, 12 | 58, 58 | 4.80, 4.69 | 0.779, 0.779 | details last |
+| Running dog, 6 threads | 8, 8 | 49, 49 | 4.62, 4.62 | 0.898, 0.898 | without: 5.03 with |
+| Running dog, 9 threads | 11, 11 | 64, 64 | 5.63, 5.63 | 0.921, 0.921 | without: 81 jump stitches with, 76 without |
+| Marked patch, abutting | 3, 3 | 1, 1 | 3.85, 3.41 | 1, 1 | details last |
+| Marked patch, stacked | 3, 3 | 1, 1 | 3.39, 3.39 | 1, 1 | details last |
+
+The jump threads are those the machine leaves to cut (`stitchcraft_testkit::fabric`). The guard counts
+the plan's jump stitches, which include the jumps that shapes sewn later cover. The running dog in 9
+threads sews thinner with its details last, 5.02 fills, but jumps 5 times more, and the guard keeps main's
+plan. The dog on turf in 9 threads keeps its details last and sews 0.11 fills thinner, with 139 mm² at 3
+fills or more where it had 153. The badges, the emblem, the button, the pear and the lettered patch sew as
+they did. On the dog on turf in 9 threads, 16 of 51 details still sew early, where 28 did. The 2 patches
+with a mark where they meet keep the mark first: with it last, the plan's thickest spot has 4.12 fills
+where it has 3.93.
+
+**Cost.** A design whose order the details change is planned twice. @@COST@@
+
+**Open question.** Where a detail sews before a fill, the fill's rows and pull compensation reach about
+0.25 mm over its edge, and a later step could end them at the detail's edge.
+
 ### Runs in place of jumps
 
 Between 2 shapes of one thread the needle jumps, and a machine with one needle cuts no thread at a jump:

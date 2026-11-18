@@ -158,6 +158,8 @@ edges where its shapes meet. `stitchcraft_testkit::pictures` places them where t
 There are 3 stripes side by side, and a badge, a row of badges, an emblem and a button, each traced
 abutting or stacked ([image to embroidery](image-to-embroidery.md#testing)). The cases sew the pear that the
 docs show too, a photo that VectorCraft traced into ragged shapes (`stitchcraft_testkit::pictures::pear`).
+`stitchcraft_testkit::pictures::marked` draws a patch of 2 halves with a ring, a dot and a mark on it,
+traced either way, for the cases of details sewn last.
 
 ## Levels
 

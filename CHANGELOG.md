@@ -5,6 +5,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.40: details sew last (`REQ-AUTO-096` to `REQ-AUTO-098`).
+  - An automatic area that the shapes round it close in on, smaller than a shape it meets, is a detail of
+    that shape, as an eye is of the fur round it. It sews after that shape where that costs no thread
+    change: a wish to the search for the fewest changes, as a satin column's after its fill is. It is
+    known by geometry alone. A detail where 2 patches meet, in the hole of a ring that is filled, or in
+    the hole of an area that can't move back, sewed first before.
+  - Moving fills for the details can make another spot thicker, which no rule of geometry foresees. When
+    the details change the order, the design is planned both ways, and the plan with the details last is
+    kept only when it is no thicker at its thickest spot and leaves no more jumps or thread changes.
+    `SC-I0907` says when it isn't, with both plans' numbers, and how many details sew before a larger
+    area round them.
+  - The marked patch sews its dot and diamond whole, and its thickest spot has 3.41 fills where it had
+    3.85. The dog on turf in 9 threads sews its details last, 0.11 fills thinner at its thickest spot. The
+    other 3 dogs keep main's plan: with their details last, 2 sewed thicker and 1 jumped 5 times more.
+  - @@COST@@
 - M13.41: a likeness measure (`REQ-AUTO-093`, `REQ-AUTO-094`).
   - `stitchcraft_testkit::fabric::likeness` compares the stitches with the trace, colour by colour. Each part
     of a colour of 1 mm² or more, wide enough for a thread, counts once, and is kept when the stitches show
