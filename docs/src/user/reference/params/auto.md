@@ -211,6 +211,22 @@ by less, and sews as a line.
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 
+### `auto_min_likeness`
+
+**Least likeness kept when lines merge.** The least likeness of the picture that merging thin lines keeps. A part is a piece of one colour of
+1 mm² or more in which a disc a thread across fits, and the likeness is the mean over the colours
+of the share of their parts kept. A thin line that touches no other piece of its colour is a part
+of its own, and merged into a neighbour of another colour it is a part lost: a twig, the rim of a
+petal, a shadow. Such lines merge, those of the colours with the most parts and the smallest first,
+while the picture keeps this likeness, and the others sew as lines. At 0, the default, every thin
+line merges, and at 1 none that is a part does. Keeping lines adds running stitches and jump threads,
+and it can change the order the blocks sew in, which can make a spot elsewhere sew thicker.
+
+- **Accepts:** a number from 0 to 1
+- **Default:** `0`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
 ### `auto_max_reach`
 
 **Farthest a column reaches from its line.** How far a part reaches from one of its centre lines on both sides of the line, at the most, for

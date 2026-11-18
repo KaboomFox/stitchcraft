@@ -267,6 +267,15 @@ in 6 steps:
    narrower than a satin column can be, whose width varies along it, sews as part of the fill of the shape
    it shares the longest edge with (`SC-I0915`). A line of even width, as a pen draws it, sews as a
    line. Turn **Fill uneven parts** off (`auto_fill_uneven`) to keep every line, as the `logo` style does.
+   A line that doesn't touch another piece of its colour, such as a twig or the pale rim of a petal, is a detail
+   of its own, and merged it is lost. By default every such line merges. Raise **Least likeness kept when
+   lines merge** (`auto_min_likeness`) when the stitched preview loses fine details that matter, such as the
+   twigs of a branch. Lines then merge only while the picture keeps that share of its detail, those of the
+   colours with the most pieces first, and the rest sew as lines. 0.85 keeps 0.75 or more of every picture
+   measured. Each line kept sews as a running stitch and can add a jump thread: the photos measured sewed 61
+   to 274 more shapes as running stitches and 50 to 236 more jump threads. Keeping lines can also change the
+   order the shapes sew in, and a spot elsewhere can then sew thicker: one photo's thickest spot rose by 1.4
+   fills. Check the thickness view after you raise it.
 4. **Specks.** A shape or a part of one smaller than 1 mm² would sew a knot. It is merged into the shape
    it shares the longest edge with (`SC-I0905`, `auto_min_area_mm2`).
 5. **Overlaps.** The thread pulls stitches in from the edges of their shape, so shapes that only meet show

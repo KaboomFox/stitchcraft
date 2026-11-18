@@ -258,6 +258,20 @@
         "unit": "mm"
       }
     },
+    "auto_min_likeness": {
+      "default": 0.0,
+      "description": "The least likeness of the picture that merging thin lines keeps. A part is a piece of one colour of 1 mm² or more in which a disc a thread across fits, and the likeness is the mean over the colours of the share of their parts kept. A thin line that touches no other piece of its colour is a part of its own, and merged into a neighbour of another colour it is a part lost: a twig, the rim of a petal, a shadow. Such lines merge, those of the colours with the most parts and the smallest first, while the picture keeps this likeness, and the others sew as lines. At 0, the default, every thin line merges, and at 1 none that is a part does. Keeping lines adds running stitches and jump threads, and it can change the order the blocks sew in, which can make a spot elsewhere sew thicker.",
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Least likeness kept when lines merge",
+      "type": "number",
+      "x-stitchcraft": {
+        "automatic": true,
+        "group": "Advanced",
+        "origin": "stitchcraft",
+        "stability": "experimental"
+      }
+    },
     "auto_min_line_unevenness": {
       "default": 0.05,
       "description": "How much the width of a thin line varies along it, at the least, for it to merge into the shape beside it (`auto_fill_uneven`): the standard deviation of its width divided by its width. A thin line is a part narrower than the narrowest satin stroke everywhere. The ragged strands that soft shading and fur trace into vary by 0.09 to 0.46, and merge. A line drawn with an even pen varies by less, and sews as a line.",
@@ -3413,6 +3427,7 @@
           "auto_min_slenderness",
           "auto_max_unevenness",
           "auto_min_line_unevenness",
+          "auto_min_likeness",
           "auto_max_reach",
           "auto_min_fill_width_mm",
           "auto_min_area_mm2",

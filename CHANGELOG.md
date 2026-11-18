@@ -5,6 +5,20 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.44: line merging keeps each picture's likeness (`REQ-AUTO-095`, `SC-I0915`).
+  - A thin line that doesn't touch another piece of its colour is a part of the picture by itself, such as a
+    twig or the pale rim of a petal. Such lines merge, those of the colours with the most parts and the
+    smallest first, only while the picture keeps `auto_min_likeness` of its likeness, counted as the
+    likeness measure counts it. The others sew as lines, and `SC-I0915` says so.
+  - The setting is 0 by default, and every design sews as before. Keeping lines can change the order the
+    blocks sew in and make a spot elsewhere sew thicker, so it is turned on by default once M13.35's cap on
+    thickness is merged. Raised to 0.85, local photos kept 0.78 to 0.85 of their likeness, where they kept 0.43 to
+    0.48, with 50 to 236 more jump threads.
+  - The roadmap holds the owner's decision of 2026-11-18: M13.38 closed, M13.43 added, M13.35's last pass a
+    general cap, and the new order of the steps.
+  - The likeness measure takes its definition of a part from `stitchcraft_engine::auto::is_part`.
+  - Public API: `stitchcraft_engine::auto::is_part`, `MIN_LIKENESS` and its field of `AutoParams`.
+  - The golden files stay as they are, since no test sheet has a ragged thin line.
 - M13.40: details sew last (`REQ-AUTO-096` to `REQ-AUTO-098`).
   - An automatic area that the shapes round it close in on, smaller than a shape it meets, is a detail of
     that shape, as an eye is of the fur round it. It sews after that shape where that costs no thread

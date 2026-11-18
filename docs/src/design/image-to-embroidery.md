@@ -684,6 +684,19 @@ mends it in 5 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
    work budget to itself to find its thin lines, and each line to find where it goes. One that needs more
    keeps its lines, and `SC-I0915` says so. The measure of thread astray paints the picture with each line
    merged in its neighbour's colour (`auto::as_merged`), since the neighbour's thread covers it by the rule.
+
+   Lines merge only while the picture keeps its likeness (`REQ-AUTO-095`, M13.44,
+   `auto::neighbours::lines::parts`). A line that doesn't touch another piece of its colour is a part of the
+   picture by itself, as [the likeness measure](#likeness) counts parts, and merged into a neighbour of
+   another colour it takes its colour away, as with a twig or the pale rim of a petal. The
+   lines of one colour that touch each other are one group. A group that touches a piece of its colour that
+   is no speck merges freely, since its colour still shows there. Any other group that is a part costs the
+   picture's likeness 1 of its colour's parts, divided by the number of colours. The groups that share an
+   edge with an area merge the cheapest first, those of the colour with the most parts, and of 2 as cheap
+   the smaller, while their cost stays within `auto_min_likeness` of the picture's likeness. The rest sew
+   as lines, and `SC-I0915` says so. A part is defined once, by `auto::is_part`, and the measure imports it.
+   At 0, the default, nothing is measured and every line merges. The setting stays off until M13.35's cap
+   on thickness lands ([Merging by likeness](#merging-by-likeness)).
 4. **Specks** (`REQ-AUTO-008`). An automatic area, or a part of one, smaller than 1 mm² is too small to sew:
    it would sew a knot. It is merged into the automatic area it shares the longest edge with, which may be
    its own. A speck that fills a hole goes into the area around it, and no hole shows where it was. One that
@@ -1807,12 +1820,67 @@ picture's number, so that any change that takes a part away shows. The limit is 
 pictures, the dog on turf in 9 threads at 0.779, rounded down to a twentieth. The traced dogs and the pear set
 it among photos, and the lettered patch and the test sheets' digitized halves among drawings.
 
-The local flowers, bird and building keep 0.43 to 0.48 and are under the limit. Thin lines are half of
-their parts, and the rule of `REQ-AUTO-090` merges them. With their thin lines sewn as lines they keep 0.93
-to 0.99. A merge of thin pieces (M13.38) would take more of them.
+Before M13.44 the local flowers, bird and building kept 0.43 to 0.48, under the limit. Thin lines are half
+of their parts, and the rule of `REQ-AUTO-090` merged them all. With their thin lines sewn as lines they keep
+0.93 to 0.99. Merging now keeps the picture's likeness ([Merging by likeness](#merging-by-likeness)). A merge
+of thin pieces (M13.38) would take more of them, and waits for M13.44.
 
 The before and after sheet shows the share of detail lost, 1 less the likeness, in percent, from the same
 function ([before and after sheet](before-after-sheet.md)).
+
+### Merging by likeness
+
+Thin lines merge only while the picture keeps `auto_min_likeness` of its likeness ([Neighbours](#neighbours),
+`REQ-AUTO-095`, M13.44). The setting is 0 by default, where every line merges as before the rule, and a user
+raises it for a picture.
+
+It is off by default because keeping lines can make a spot sew thicker far from any line. A line kept sews as
+a running stitch, and the sewing order then puts the blocks of a colour in another order. A fill that sewed
+first at a spot can then sew over others there. On one photo measured at 0.85 the thickest spot rose from 5.60
+to 7.03 fills, at a place 3.6 mm or more from every line kept, where the block order had changed. Merging any
+quarter of the lines kept there left 7.03 to 7.62 fills. Merging all of them put that spot back, and the
+thickest spot moved to another place at 7.55. On another photo the thickest spot moved too, and the block
+order changed there as well. Where a reorder piles thread can't be told from a line, so no rule about lines
+prevents it, and planning twice to check costs a second plan. The answer is one cap on thickness at the end of
+planning that every design meets, whatever its order (M13.35). The setting is turned on by default once that
+cap is merged.
+
+The measurements below are evidence of what the rule does, at a bound of 0.85 and as each picture sews with
+the setting off. No picture is the rule's goal. The photos marked * are local. Thickest is the thickest spot in fills, and the area is at 3 fills or
+more, in mm².
+
+| Picture | Likeness | Shapes as running stitches | Jump threads | Thickest | Area |
+|---|---|---|---|---|---|
+| The dog on turf, 6 threads | 0.814 → 0.856 | 3 → 6 | 57 → 60 | 4.69 → 4.57 | 141.50 → 136.00 |
+| The dog on turf, 9 threads | 0.779 → 0.829 | 4 → 8 | 58 → 62 | 4.80, the same | 153.25 → 153.50 |
+| The running dogs, 6 and 9 threads | 0.898 and 0.921 | 1 and 3 | 49 and 64 | 4.62 and 5.63 | 130.50 and 187.50 |
+| The pear, the lettered patch, TS-13A to TS-13E | 1.000 | no change | no change | no change | no change |
+| A magnolia * | 0.480 → 0.849 | 32 → 199 | 155 → 313 | 5.54 → 5.68 | 462.75 → 545.75 |
+| A coleus * | 0.454 → 0.841 | 30 → 304 | 237 → 473 | 10.46 → 7.39 | 894.50 → 1,004.75 |
+| A greylag goose * | 0.483 → 0.820 | 21 → 98 | 95 → 170 | 5.60 → 7.03 | 499.50 → 517.75 |
+| A castle * | 0.434 → 0.779 | 3 → 64 | 54 → 104 | 5.88 → 5.75 | 225.75 → 267.00 |
+
+The running dogs and the drawings sew as on main, and the dogs on turf keep 3 and 4 lines. Their strands of
+fur lie among many pieces of their colours, so each is a small share of its colour. The flowers' twigs, the
+shadows along their branches and the pale rims of their petals are most of what their colours have there,
+and they sew as lines: the photos keep 0.78 to 0.85, where they kept 0.43 to 0.48. That costs them 50 to 236
+jump threads more. The goose's thickest spot rises by 1.43 fills and the magnolia's by 0.14, and the coleus's
+falls by 3.07.
+
+Merging counts only what it loses itself. The measure also counts the parts that specks and stitches astray
+lose. It also counts as parts some lines that are too narrow for a disc a thread across as merging measures
+them on their outlines, but not on the measure's grid. So a
+picture keeps less than the bound: at a bound of 0.8 the goose kept 0.782 and the castle 0.728, under the
+limit. With no line merged that is a part, the castle keeps 0.918. A bound of 0.85 kept every picture
+measured at 0.75 or more, so 0.85 is the value to raise it to.
+
+2 other ways were measured and not taken. Counted colour by colour, each colour keeping 0.75 of its parts,
+merging kept more lines on the dogs, 6 and 8 on the dogs on turf, which left them 5 and 7 jump threads more,
+and the running dog in 6 threads 0.39 fills thicker. Counted over the picture, a colour with many pieces gives
+up its lines for a colour with few. The other way merged first the lines closest in colour (CIEDE2000) to the
+area each would go into. At 0.8 the magnolia kept 0.802 and the coleus 0.793 so, the same as with the cheapest
+first, with 30 and 71 jump threads more. It moved what is lost
+from dark lines on dark patches to the pale rims of petals on pink ones.
 
 ## Sewing order
 
