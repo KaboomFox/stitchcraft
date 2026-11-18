@@ -8,6 +8,12 @@ use super::*;
 use crate::normalize::fixture::part;
 use crate::normalize::strips::columns;
 
+/// A way of turning or mirroring a part's points.
+type Turn = fn((f64, f64)) -> (f64, f64);
+
+/// A way of turning or mirroring a part's points, from its outline's.
+type TurnPoint = fn(Point) -> (f64, f64);
+
 /// The pull compensation of the cases' columns, in millimetres: the profile's default.
 const REACH: f64 = 0.4;
 
@@ -724,7 +730,7 @@ fn a_halving_line_keeps_each_strokes_middle_on_its_side_with_an_upright_stroke()
 #[test]
 fn a_stroke_that_stops_ends_under_the_other_at_its_end_nearer_it_however_the_part_lies() {
     let ring = [(0.0, 5.0), (2.5, 5.0), (2.5, 0.0), (3.5, 0.0), (3.5, 5.0), (6.0, 5.0), (6.0, 6.0), (0.0, 6.0)];
-    let turns: [fn((f64, f64)) -> (f64, f64); 4] = [|(x, y)| (x, y), |(x, y)| (x, 6.0 - y), |(x, y)| (6.0 - x, y), |(x, y)| (y, x)];
+    let turns: [Turn; 4] = [|(x, y)| (x, y), |(x, y)| (x, 6.0 - y), |(x, y)| (6.0 - x, y), |(x, y)| (y, x)];
     for turn in turns {
         let turned: Vec<(f64, f64)> = ring.iter().map(|&q| turn(q)).collect();
         let part = part(&turned, &[]);
@@ -742,7 +748,7 @@ fn a_stroke_that_stops_ends_under_the_other_at_its_end_nearer_it_however_the_par
 #[test]
 fn each_piece_of_a_crossed_stroke_ends_under_the_other_at_its_end_beside_it() {
     // The cross turned every way, so that its strokes' bands are measured from either end.
-    let turns: [fn(Point) -> (f64, f64); 4] = [|q| (q.x(), q.y()), |q| (q.x(), 7.0 - q.y()), |q| (8.0 - q.x(), q.y()), |q| (q.y(), q.x())];
+    let turns: [TurnPoint; 4] = [|q| (q.x(), q.y()), |q| (q.x(), 7.0 - q.y()), |q| (8.0 - q.x(), q.y()), |q| (q.y(), q.x())];
     for turn in turns {
         let ring: Vec<(f64, f64)> = cross().outline.iter().map(|&q| turn(q)).collect();
         let part = part(&ring, &[]);
