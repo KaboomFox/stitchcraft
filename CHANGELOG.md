@@ -11,8 +11,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     (`auto/cap.rs`) takes needle points out of the finished plan's runs, of the elements that digitizing
     made, where other stitches cover what their stitches covered. It takes underlay and travel under
     later top stitches first. Of top stitches, it takes a shape's under later shapes before its own where
-    they lie twice over the same places. It adds no jump or thread change and takes no lock. It reuses the
-    last pass's measure.
+    they lie twice over the same places. It doesn't add a jump or a thread change, and it keeps every lock.
+    It reuses the last pass's measure.
   - Every test design and the 4 traced dogs now sew 4.00 fills or less at their thickest spot. The dogs
     sewed 4.69, 4.80, 4.62 and 5.63, and their area at 3 fills or more fell from 141.5, 153.25, 130.5 and
     187.5 mm² to 137.25, 150.75, 129.0 and 176.5 mm².

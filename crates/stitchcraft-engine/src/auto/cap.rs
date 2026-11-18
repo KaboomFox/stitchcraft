@@ -134,7 +134,8 @@ pub(crate) fn capped(
     let (reach, near) = (thickness.near(rules.cap, REACH, meter)?, thickness.near(rules.cap, NEAR, meter)?);
     let sewn = thickness.sewn();
     meter.charge(units(sewn.len()))?;
-    let element = |stitch: &SewnStitch| plan.blocks.get(stitch.block).and_then(|block| block.stitches.get(stitch.index)).and_then(|entry| entry.origin.element);
+    let element =
+        |stitch: &SewnStitch| plan.blocks.get(stitch.block).and_then(|block| block.stitches.get(stitch.index)).and_then(|entry| entry.origin.element);
     let (mut ribbons, mut points, mut longest) = (Ribbons::default(), BTreeSet::new(), BTreeMap::new());
     let mut before: Option<&SewnStitch> = None;
     for stitch in sewn {

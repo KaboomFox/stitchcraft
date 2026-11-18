@@ -77,8 +77,13 @@ pub(crate) fn finished(
                 plan.elements.iter().enumerate().filter(|(_, id)| of(id)).filter_map(|(at, _)| ElementRef::from_index(at)).collect()
             };
             let (base, made) = (refs(&|id| base.contains(id)), refs(&|id| made.contains(id)));
-            let rules =
-                thin::Rules { cap: held.cap, base: &base, overlap: held.overlap, shortest: profile.min_stitch.get(), longest: profile.max_stitch.get() };
+            let rules = thin::Rules {
+                cap: held.cap,
+                base: &base,
+                overlap: held.overlap,
+                shortest: profile.min_stitch.get(),
+                longest: profile.max_stitch.get(),
+            };
             let (mut thinner, mut measure) = (plan.clone(), thickness.clone());
             let thinned = match thin::thinned(&mut thinner, &mut measure, &rules, &mut budget.meter()) {
                 Ok(Some(thinned)) => thinned,

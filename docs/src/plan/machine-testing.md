@@ -316,7 +316,7 @@ TS-13F's ladder shows where the needle starts to struggle. At MC-8, after it:
 - At how many fills did the ladder's needle start to thump or break the thread? That sets the cap's
   value and the limits of `SC-W0913`.
 - The cap took a base layer's and a fill's turns under later shapes on the traced dogs and on TS-13C's
-  face. Is fabric showing at the seams between 2 patches there?
+  face. Is fabric showing where 2 patches meet there?
 - Where a satin column's points crowd in a bend, the cap may take one, and the stitch left crosses part
   of the column only, 14° from square on TS-13C's face outline. Can you see it on the outline's inner
   bend, and does the column still look smooth?

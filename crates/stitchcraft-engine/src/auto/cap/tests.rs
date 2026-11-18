@@ -49,7 +49,11 @@ fn zigzag(width: f64, apart: f64) -> Vec<(f64, f64)> {
 /// `apart` between them.
 fn rows(width: f64, apart: f64) -> Vec<(f64, f64)> {
     let count = (width / apart).round() as usize;
-    (0..=count).flat_map(|k| if k % 2 == 0 { [(0.0, k as f64 * apart), (width, k as f64 * apart)] } else { [(width, k as f64 * apart), (0.0, k as f64 * apart)] }).collect()
+    (0..=count)
+        .flat_map(|k| {
+            if k % 2 == 0 { [(0.0, k as f64 * apart), (width, k as f64 * apart)] } else { [(width, k as f64 * apart), (0.0, k as f64 * apart)] }
+        })
+        .collect()
 }
 
 const NONE: &BTreeSet<ElementRef> = &BTreeSet::new();
@@ -137,9 +141,8 @@ fn req_auto_100_only_the_elements_digitizing_made_lose_needle_points() {
 
 #[test]
 fn req_auto_100_a_shape_s_top_under_a_later_shape_goes_second() {
-    let sewn = plan(&[("under", Role::Top, zigzag(4.0, 0.25)), ("over", Role::Top, zigzag(4.0, 0.0625))]);
-    let mut capped_plan = sewn.clone();
-    let (capped, kept, measured) = cap(&mut capped_plan, &rules());
+    let mut sewn = plan(&[("under", Role::Top, zigzag(4.0, 0.25)), ("over", Role::Top, zigzag(4.0, 0.0625))]);
+    let (capped, kept, measured) = cap(&mut sewn, &rules());
     let capped = capped.unwrap();
     assert!(capped.times[1] > 0 && capped.times[0] == 0 && capped.times[2] == 0, "{capped:?}");
     assert!(capped.taken[1] > 0.0);
@@ -166,7 +169,8 @@ fn req_auto_100_a_shape_s_own_top_where_it_is_doubled_goes_last() {
 
 #[test]
 fn req_auto_100_every_kind_is_said_in_order() {
-    let thickest = Thickness::of(&plan(&[("one", Role::Top, zigzag(4.0, 0.25))]), &mut Budget::DEFAULT.meter()).unwrap().unwrap().most(Measure::Fills);
+    let thickest =
+        Thickness::of(&plan(&[("one", Role::Top, zigzag(4.0, 0.25))]), &mut Budget::DEFAULT.meter()).unwrap().unwrap().most(Measure::Fills);
     let capped = Capped { taken: [1.0, 2.0, 3.04], times: [1, 2, 3], left: Over::default(), thickest };
     assert_eq!(
         kinds(&capped),
@@ -198,7 +202,7 @@ fn req_auto_100_a_lock_s_needle_points_and_the_one_after_a_lock_stay() {
     let mut thin = plan(&[("one", Role::Top, zigzag(4.0, 0.25))]);
     assert_eq!(cap(&mut thin, &rules()).0, None);
     // A cap above every spot takes nothing.
-    let mut five = sewn.clone();
+    let mut five = sewn;
     assert_eq!(cap(&mut five, &Rules { cap: 50.0, ..rules() }).0, None);
 }
 
@@ -214,17 +218,22 @@ fn req_auto_100_a_point_on_a_straight_run_takes_no_thread_and_stays() {
     let (capped, _, _) = cap(&mut sewn, &rules());
     assert!(capped.unwrap().thickest.value > 4.0);
     // Only the turns at the line's ends may go.
-    let kept: Vec<(f64, f64)> = sewn.stitches().filter(|stitch| stitch.kind == StitchKind::Normal).map(|stitch| (stitch.at.x(), stitch.at.y())).collect();
-    let all: Vec<(f64, f64)> = was.stitches().filter(|stitch| stitch.kind == StitchKind::Normal).map(|stitch| (stitch.at.x(), stitch.at.y())).collect();
+    let kept: Vec<(f64, f64)> =
+        sewn.stitches().filter(|stitch| stitch.kind == StitchKind::Normal).map(|stitch| (stitch.at.x(), stitch.at.y())).collect();
+    let all: Vec<(f64, f64)> =
+        was.stitches().filter(|stitch| stitch.kind == StitchKind::Normal).map(|stitch| (stitch.at.x(), stitch.at.y())).collect();
     let inner = |points: &[(f64, f64)]| points.iter().filter(|(x, _)| *x > 0.0 && *x < 4.0).count();
     assert_eq!(inner(&kept), inner(&all));
 }
 
 #[test]
 fn req_auto_101_the_cap_stops_when_the_work_runs_out() {
-    let sewn = plan(&[("under", Role::Top, zigzag(1.5, 0.25)), ("over", Role::Top, zigzag(1.5, 0.0625)), ("over", Role::Underlay, zigzag(1.5, 0.25))]);
+    let sewn =
+        plan(&[("under", Role::Top, zigzag(1.5, 0.25)), ("over", Role::Top, zigzag(1.5, 0.0625)), ("over", Role::Underlay, zigzag(1.5, 0.25))]);
     let thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
-    let run = |max_work: u64| capped(&mut sewn.clone(), &mut thickness.clone(), &rules(), &all(&sewn), &mut Budget { max_work, ..Budget::DEFAULT }.meter()).is_ok();
+    let run = |max_work: u64| {
+        capped(&mut sewn.clone(), &mut thickness.clone(), &rules(), &all(&sewn), &mut Budget { max_work, ..Budget::DEFAULT }.meter()).is_ok()
+    };
     let enough = (0..10_000_000u64).find(|work| run(*work)).unwrap();
     assert!((0..enough).all(|work| !run(work)), "{enough}");
 }
@@ -269,7 +278,11 @@ fn diag_sc_i1119_says_when_the_cap_ran_out_of_work_and_keeps_what_the_pass_left(
     let budget = Budget { max_work: measure.max(pass), ..Budget::DEFAULT };
     let (said, kept) = said(&sewn, &budget);
     let note = said.iter().find(|said| said.code == Code::AutoThinned).unwrap();
-    assert!(note.message.contains("The last pass took nothing there. The cap needs more work than the budget allows, and took nothing. Left: "), "{}", note.message);
+    assert!(
+        note.message.contains("The last pass took nothing there. The cap needs more work than the budget allows, and took nothing. Left: "),
+        "{}",
+        note.message
+    );
     assert_eq!(kept, sewn);
 }
 

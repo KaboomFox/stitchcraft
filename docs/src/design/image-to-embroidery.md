@@ -1660,17 +1660,17 @@ machine's shortest. A lock's needle points, and the one after a lock, stay. A po
 leave a spot that the joined stitch lays thread in thicker than both the cap and what it was. Each needle
 point the cap leaves is one of the plan's, in the same order. The jumps, the trims and the thread changes
 are those of the plan. The cap reads roles, elements and places, whatever the picture shows. It takes
-needle points only of the elements that digitizing made: a shape sewn by its own settings is sewn as its
-settings say, and its stitches cover and lay thread like the others. A test sheet's half as drawn sews so.
+needle points only of the elements that digitizing made. A shape with settings of its own keeps the
+stitches they give it, and its stitches cover and lay thread like the others. A test sheet's half as drawn sews so.
 Where a spot stays above the cap, `SC-W0913` says "Above the cap." after what is stacked there. `SC-I1119`
 says what the last pass took and then what each kind of the cap's gave.
 
 The cap is `stitchcraft_engine::auto::cap`. It goes through the needle points whose stitch in or out comes
 within 1 mm of a spot above the cap, and judges cover by the top stitches within 2.5 mm of such a spot,
-found once. A place farther off counts as not covered, so a long stitch keeps its points. Each kind goes
+found once. Places farther off count as not covered, and that keeps the points of a long stitch. Each kind goes
 through the plan up to 4 times, and stops once a time takes nothing or no spot is above the cap. It keeps
-the last pass's measure up to date with the pass's own helpers, so the design is still measured once, and
-works on copies: when it runs out of work, the plan stays as the last pass left it, and `SC-I1119` says
+the last pass's measure up to date with the pass's own helpers, so the design is still measured once. It
+works on copies. When it runs out of work, the plan stays as the last pass left it, and `SC-I1119` says
 so.
 
 Where a satin column's points crowd in a bend, the third kind may take one. The stitch left then crosses

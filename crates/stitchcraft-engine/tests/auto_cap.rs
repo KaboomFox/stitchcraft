@@ -53,7 +53,9 @@ fn among_or_moved(some: &[Stitch], all: &[Stitch]) -> bool {
 
 /// The plan's commands, or its lock stitches, by block.
 fn kept(plan: &StitchPlan, locks: bool) -> Vec<Vec<Stitch>> {
-    let held = |stitch: &&Stitch| if locks { stitch.kind == StitchKind::Normal && stitch.origin.role == Role::Lock } else { stitch.kind != StitchKind::Normal };
+    let held = |stitch: &&Stitch| {
+        if locks { stitch.kind == StitchKind::Normal && stitch.origin.role == Role::Lock } else { stitch.kind != StitchKind::Normal }
+    };
     plan.blocks.iter().map(|block| block.stitches.iter().filter(held).copied().collect()).collect()
 }
 
@@ -103,8 +105,7 @@ fn diag_sc_i1119_the_cap_says_what_it_took_of_each_kind_and_what_is_left() {
     // The traced pear: the last pass leaves it above 4 fills, and the cap takes the rest
     // (`REQ-AUTO-101`).
     let outcome = in_place(&pictures::pear());
-    let said: Vec<&str> =
-        outcome.diagnostics.iter().filter(|said| said.code == Code::AutoThinned).map(|said| said.message.as_str()).collect();
+    let said: Vec<&str> = outcome.diagnostics.iter().filter(|said| said.code == Code::AutoThinned).map(|said| said.message.as_str()).collect();
     assert_eq!(said.len(), 1, "{:?}", outcome.diagnostics);
     assert!(said[0].contains(" fills or more. The last pass took ") && said[0].contains(", and the cap took "), "{}", said[0]);
     assert!(said[0].contains("Left: 0.0 mm² at 4 fills or more"), "{}", said[0]);

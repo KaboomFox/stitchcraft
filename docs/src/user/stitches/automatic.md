@@ -335,8 +335,8 @@ a tatami fill lays by default. When a place of 1 mm² or more has 3 fills or mor
 more, `stitch plan` warns (`SC-W0913`) and still writes the file. The warning names the thickest spot and
 the shapes stacked there.
 
-No spot sews more than 4 fills, the cap, where StitchCraft can help it. Once the design is planned, a
-last pass and then the cap take thread away at each spot above it. They take thread that other stitches
+StitchCraft keeps every spot at 4 fills or less where it can, a limit called the cap. Once the design is planned,
+a last pass and then the cap take thread away at each spot above it. They take thread that other stitches
 cover, first under the shapes sewn later and then where a shape lays its stitches twice over the same
 place. They take only the stitches of the shapes they digitized, and what shows keeps its colour. No jump
 thread or thread change is added. `SC-I1119` says what they took. Where no more may go, the warning says the spot is above the cap. The advanced setting
