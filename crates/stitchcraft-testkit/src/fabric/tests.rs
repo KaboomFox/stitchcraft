@@ -4,6 +4,7 @@ use stitchcraft_core::ElementId;
 use stitchcraft_engine::design::{Cap, DesignSettings};
 use stitchcraft_plan::{ColorBlock, ElementRef, Provenance, StitchKind, Thread};
 
+use super::likeness::{KEPT, Part};
 use super::*;
 use crate::designs::{BLUE, RED, automatic, fill, line, p, widened};
 
@@ -371,4 +372,87 @@ fn a_hole_sewn_round_stays_open_and_one_sewn_over_shows_its_shapes_thread() {
     assert!(ring.gaps.len() == 1 && ring.largest_gap() > 7.0 && ring.notches.len() == 1 && ring.other > 7.0, "{ring:?}");
     let at = ring.gaps[0].0;
     assert!(at.min().x() > 9.0 && at.max().x() < 10.0, "{at:?}");
+}
+
+/// A red field 20 mm wide with a blue eye 1.2 mm wide in its middle, drawn over it.
+fn face() -> Design {
+    design(vec![square("field", (0.0, 0.0), 20.0, &RED), square("eye", (9.4, 9.4), 1.2, &BLUE)])
+}
+
+#[test]
+fn req_auto_093_a_part_lost_shows_however_small_it_is() {
+    // Sewn as drawn: the field's rows, then the eye's, over them.
+    let kept = likeness(&face(), &plan(&[(&RED, rows(0.0, 20.0, 0.0, 20.0)), (&BLUE, rows(9.4, 10.6, 9.4, 10.6))]));
+    assert_eq!(kept.likeness(), 1.0, "{kept:?}");
+    let [field, eye] = kept.colours.as_slice() else { panic!("{kept:?}") };
+    assert_eq!((field.thread, field.parts, field.kept, eye.thread, eye.parts, eye.kept), (RED.color, 1, 1, BLUE.color, 1, 1));
+    assert!((field.area - 398.56).abs() < 0.5 && (eye.area - 1.44).abs() < 0.1 && eye.shown == 1.0, "{kept:?}");
+    // The eye merged into the field: 0.36 % of the picture's area, and half its likeness, the
+    // field's colour kept and the eye's lost.
+    let merged = likeness(&face(), &plan(&[(&RED, rows(0.0, 20.0, 0.0, 20.0))]));
+    assert_eq!(merged.likeness(), 0.5, "{merged:?}");
+    let lost: Vec<&Part> = merged.lost().collect();
+    let [eye] = lost.as_slice() else { panic!("{merged:?}") };
+    assert_eq!((eye.colour, eye.shown, merged.colours[1].shown, merged.colours[1].likeness()), (BLUE.color, 0.0, 0.0, 0.0));
+    assert!((eye.at.min().x() - 9.425).abs() < 1e-9 && (eye.at.max().y() - 10.575).abs() < 1e-9, "{eye:?}");
+    assert!((merged.colours[0].shown - 1.0).abs() < 1e-12 && merged.colours[0].likeness() == 1.0, "{merged:?}");
+}
+
+#[test]
+fn req_auto_093_a_change_that_keeps_every_part_scores_the_same() {
+    let drawn = likeness(&face(), &plan(&[(&RED, rows(0.0, 20.0, 0.0, 20.0)), (&BLUE, rows(9.4, 10.6, 9.4, 10.6))]));
+    // The eye's rows half a millimetre short of its right edge, and the field's 1 mm short of its left one: the shares
+    // shown move, the parts kept don't.
+    let moved = likeness(&face(), &plan(&[(&RED, rows(1.0, 20.0, 0.0, 20.0)), (&BLUE, rows(9.4, 10.1, 9.4, 10.6))]));
+    assert_eq!(moved.likeness(), drawn.likeness());
+    assert_eq!(moved.parts.iter().map(Part::kept).collect::<Vec<_>>(), [true, true]);
+    assert!(moved.colours[0].shown < 0.99 && moved.colours[1].shown < 1.0, "{moved:?}");
+}
+
+#[test]
+fn req_auto_093_a_line_run_along_its_middle_is_kept_and_one_too_narrow_for_a_thread_is_no_part() {
+    let field = || square("field", (-5.0, -5.0), 20.0, &BLUE);
+    let running = || plan(&[(&BLUE, rows(-5.0, 15.0, -5.0, 15.0)), (&RED, vec![Some((0.0, 0.0)), Some((10.0, 0.0))])]);
+    // 1.6 mm wide, its core is 1.2 mm wide, and a running stitch shows its colour within half a thread on 0.8
+    // mm of it.
+    let wide = likeness(&design(vec![field(), widened(line("line", (0.0, 0.0), 10.0, &RED, &[]), 1.6)]), &running());
+    let run = &wide.parts[1];
+    assert!(run.kept() && run.colour == RED.color && (run.shown - 0.8 / 1.2).abs() < 0.05, "{wide:?}");
+    // 0.3 mm wide, no disc a thread across fits in it: its colour has no part, and nothing to lose. Nor has a
+    // square smaller than the smallest area sewn, 0.9 mm wide.
+    let thin = likeness(&design(vec![field(), widened(line("line", (0.0, 0.0), 10.0, &RED, &[]), 0.3)]), &running());
+    assert_eq!((thin.parts.len(), thin.colours[1].parts, thin.colours[1].likeness(), thin.likeness()), (1, 0, 1.0, 1.0));
+    assert!(thin.colours[1].area > 2.5, "{thin:?}");
+    let speck = likeness(&design(vec![field(), square("speck", (4.5, 4.5), 0.9, &RED)]), &running());
+    assert_eq!((speck.parts.len(), speck.colours[1].parts), (1, 0));
+    let square = likeness(&design(vec![field(), square("square", (4.5, 4.5), 1.0, &RED)]), &running());
+    assert_eq!((square.parts.len(), square.colours[1].parts), (2, 1));
+}
+
+#[test]
+fn req_auto_093_a_part_is_kept_from_half_of_it_shown() {
+    let part = |shown: f64| Part { colour: RED.color, area: 1.0, shown, at: Rect::around([p(0.0, 0.0)]).unwrap() };
+    assert!(part(KEPT).kept() && !part(KEPT - 1e-9).kept() && KEPT == 0.5);
+    let colour = |parts: usize, kept: usize| likeness::Colour { thread: RED.color, area: 1.0, shown: 1.0, parts, kept };
+    assert_eq!((colour(0, 0).likeness(), colour(4, 3).likeness()), (1.0, 0.75));
+    let none = Likeness { colours: Vec::new(), parts: Vec::new() };
+    assert_eq!(none.likeness(), 1.0);
+    let two = Likeness { colours: vec![colour(4, 3), colour(2, 0)], parts: vec![part(0.25), part(0.5)] };
+    assert_eq!((two.likeness(), two.lost().count()), (0.375, 1));
+}
+
+#[test]
+fn a_likeness_map_draws_each_part_kept_in_its_colour_and_each_lost_one_red() {
+    let merged = plan(&[(&RED, rows(0.0, 20.0, 0.0, 20.0))]);
+    let (width, height, pixels) = likeness::map(&face(), &merged, 1, None);
+    assert_eq!(pixels.len(), width * height);
+    let colours = |pixels: &[[u8; 3]]| pixels.iter().copied().collect::<std::collections::BTreeSet<[u8; 3]>>();
+    let all = colours(&pixels);
+    let (red, blue) = ([RED.color.r, RED.color.g, RED.color.b], [BLUE.color.r, BLUE.color.g, BLUE.color.b]);
+    assert!(all.contains(&[230, 0, 0]) && all.contains(&red) && !all.contains(&blue), "{all:?}");
+    // A map of the eye's colour alone draws the field pale grey, and every 2nd pixel each way of it a quarter
+    // as many.
+    let (half, _, eye) = likeness::map(&face(), &merged, 2, Some(BLUE.color));
+    assert_eq!(half, width.div_ceil(2));
+    assert_eq!(colours(&eye).into_iter().collect::<Vec<_>>(), [[230, 0, 0], [235, 235, 235], [255, 255, 255]]);
 }

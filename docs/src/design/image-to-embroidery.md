@@ -1513,6 +1513,85 @@ fills or more. The dogs on turf sew thicker, at new spots where a satin column o
 other fills.
 
 
+
+## Likeness
+
+Each merge of automatic digitizing takes a jump thread or a thread change away: a speck (`REQ-AUTO-008`)
+and a thin line (`REQ-AUTO-090`) sew as part of their neighbour. A merge can also take what makes a picture
+read, such as an eye or a stripe. The rules go by geometry and can't tell an eye from noise. The
+likeness measure checks afterwards what the geometry kept (`REQ-AUTO-093`,
+`stitchcraft_testkit::fabric::likeness`).
+
+### The measure
+
+The trace is the design as drawn, before anything merges, painted as [the bare fabric](#covering-the-fabric)
+paints it at 0.05 mm on a grid round the design alone. The stitches are painted on the same grid: each pixel
+has the colour of the last top stitch whose thread, 0.4 mm wide, covers its centre. Underlay and travel
+stitches lie under the top stitches, as locks do, and are left out.
+
+1. A colour's parts are its pixels that touch at a side or a corner.
+2. A part counts when it is as large as the smallest area sewn by default, 1 mm², and a disc a thread across
+   fits in it. Smaller, it is a speck, which the rules merge or leave out, and no stitch of its own sews it
+   narrower.
+3. A part's core is its pixels that a disc a thread across, centred on them, fits in.
+4. A pixel is shown when the stitches have its colour within half a thread of it.
+5. A part is kept when half of its core or more is shown.
+6. A colour's likeness is the share of its parts kept, and the picture's is the mean of its colours'.
+
+A share of matching pixels is ruled by the large patches. An eye of 1.44 mm² on a field 20 mm wide is
+0.36 % of the picture, and its loss moves that share by less than the stitches' edges move it. Each part
+counts once, whatever its size, and so the eye's loss halves the likeness of that picture of 2 colours. Each
+colour counts once too, so the few dark parts of a face weigh as much as a colour's many pieces of shading.
+A change that keeps every part keeps the likeness, however it moves the stitches.
+
+The core leaves out a strip half a thread wide along a part's edge, where its neighbours' rows end. A strand
+1.4 mm wide that a running stitch sews along its middle shows its colour on 0.8 mm of its core's 1 mm, and is
+kept. The parts of the traced dogs are shown on less than a fifth or more than three fifths of their cores, so
+the line at a half moves no count.
+
+A traced photo has hundreds of bits of texture smaller than 1 mm². Counted, they ruled the measure as the large
+patches rule a share of pixels: 476 of a traced magnolia's 972 parts that a thread fits in are such bits.
+Parts that digitizing merges as specks show when the smallest area is raised.
+
+### The pictures measured
+
+Measured on 2026-11-17, digitized as main sews them, and with `auto_fill_uneven` off, which sews thin lines
+as lines as before M13.18 ([Neighbours](#neighbours)). The photos marked * are local and not in the
+repository, since their licences are not its own.
+
+| Picture | Kind | Parts | Kept | Likeness | With thin lines as lines |
+|---|---|---:|---:|---:|---:|
+| The pear | a photo of a fruit | 5 | 5 | 1.000 | 1.000 |
+| The lettered patch | a drawing | 8 | 8 | 1.000 | 1.000 |
+| TS-13A to TS-13E, digitized halves | drawings | 16, 31, 11, 14, 18 | all | 1.000 | 1.000 |
+| The dog on turf, 6 threads | an animal photo | 97 | 75 | 0.814 | 0.993 |
+| The dog on turf, 9 threads | an animal photo | 111 | 83 | 0.779 | 0.947 |
+| The running dog, 6 threads | an animal photo | 77 | 66 | 0.898 | 0.970 |
+| The running dog, 9 threads | an animal photo | 100 | 88 | 0.921 | 0.983 |
+| A magnolia * | a flower photo | 496 | 233 | 0.480 | 0.981 |
+| A coleus * | a leaf photo | 841 | 395 | 0.454 | 0.986 |
+| A greylag goose * | a bird photo | 342 | 167 | 0.483 | 0.989 |
+| A castle * | a building photo | 191 | 81 | 0.434 | 0.932 |
+
+The dogs lose strands of fur and shading, and the dog on turf the pale strip above its nose. The magnolia
+loses its thin twigs and the pale rims of its petals, and the shadows along its branches. Each is a thin line,
+which merges into the patch beside it. With the smallest area raised to 3 mm², more parts merge as specks,
+and the dogs keep 0.764, 0.631, 0.768 and 0.773.
+
+### The limit
+
+The pictures in the repository keep a likeness of 0.75 or more (`REQ-AUTO-094`), and each case records its
+picture's number, so that any change that takes a part away shows. The limit is the lowest likeness of those
+pictures, the dog on turf in 9 threads at 0.779, rounded down to a twentieth. The traced dogs and the pear set
+it among photos, and the lettered patch and the test sheets' digitized halves among drawings.
+
+The local flowers, bird and building keep 0.43 to 0.48 and are under the limit. Thin lines are half of
+their parts, and the rule of `REQ-AUTO-090` merges them. With their thin lines sewn as lines they keep 0.93
+to 0.99. A merge of thin pieces (M13.38) would take more of them.
+
+The before and after sheet shows the share of detail lost, 1 less the likeness, in percent, from the same
+function ([before and after sheet](before-after-sheet.md)).
+
 ## Sewing order
 
 Automatic elements sew in an order StitchCraft chooses (`stitchcraft_engine::auto::neighbours::order`,
