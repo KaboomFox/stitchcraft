@@ -23,7 +23,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use stitchcraft_core::units::at_least;
 use stitchcraft_core::{Exhausted, Meter, Point};
-use stitchcraft_plan::thickness::{Measure, Over, PIXEL, Spot, THREAD, Thickness};
+use stitchcraft_plan::thickness::{Measure, Over, PIXEL, Spot, THREAD, Thickness, Zone};
 use stitchcraft_plan::{ElementRef, Role, SewnStitch, StitchPlan};
 
 use super::thin::{Entry, Pass, Rules, taken_out};
@@ -115,7 +115,8 @@ impl Capped {
 }
 
 /// Takes needle points of the elements `made` out of `plan` where `thickness`, its measure, has a spot above
-/// the cap of `rules`, and keeps the measure up to date; `None` when no spot is above the cap. The other
+/// the cap of `rules`, and keeps the measure up to date; `None` when no spot is above the cap, or no needle
+/// point of the elements `made` is near one. The other
 /// elements' stitches, those a shape's settings sew as drawn, stay as they are, and cover and lay thread
 /// all the same. A unit of work for each stitch
 /// and needle point looked at, each step along a stitch measured, and each top stitch looked at for a
@@ -131,13 +132,20 @@ pub(crate) fn capped(
     if thickness.most(Measure::Fills).value <= rules.cap {
         return Ok(None);
     }
-    let (reach, near) = (thickness.near(rules.cap, REACH, meter)?, thickness.near(rules.cap, NEAR, meter)?);
     let sewn = thickness.sewn();
     meter.charge(units(sewn.len()))?;
     let element =
         |stitch: &SewnStitch| plan.blocks.get(stitch.block).and_then(|block| block.stitches.get(stitch.index)).and_then(|entry| entry.origin.element);
-    let (mut ribbons, mut points, mut longest) = (Ribbons::default(), BTreeSet::new(), BTreeMap::new());
-    let mut before: Option<&SewnStitch> = None;
+    let near = thickness.near(rules.cap, NEAR, meter)?;
+    let points = candidates(sewn, &near, |stitch| element(stitch).is_some_and(|element| made.contains(&element)));
+    // A design whose spots above the cap lie only in shapes sewn by their own settings has nothing the cap
+    // may take, and the work of the cover is spared.
+    if points.is_empty() {
+        return Ok(None);
+    }
+    let reach = thickness.near(rules.cap, REACH, meter)?;
+    meter.charge(units(sewn.len()))?;
+    let (mut ribbons, mut longest) = (Ribbons::default(), BTreeMap::new());
     for stitch in sewn {
         let element = element(stitch);
         let most: &mut f64 = longest.entry((element, stitch.role == Role::Top)).or_default();
@@ -145,16 +153,8 @@ pub(crate) fn capped(
         if stitch.role == Role::Top && reach.touches(stitch) {
             ribbons.add(Ribbon { from: stitch.from, to: stitch.to, at: (stitch.block, stitch.index), element, alive: true }, meter)?;
         }
-        // A needle point is looked at when the stitch into it, or the one out of it, comes near a spot above
-        // the cap.
-        if near.touches(stitch) {
-            points.insert((stitch.block, stitch.index));
-            points.extend(before.filter(|before| before.block == stitch.block).map(|before| (before.block, before.index)));
-        }
-        before = Some(stitch);
     }
-    let points: Vec<Entry> = points.into_iter().collect();
-    let mut cap = Cap { pass: Pass::new(plan, thickness, rules), made, ribbons, longest, taken: [0.0; 3], times: [0; 3] };
+    let mut cap = Cap { pass: Pass::new(plan, thickness, rules), ribbons, longest, taken: [0.0; 3], times: [0; 3] };
     for kind in Kind::ALL {
         for _ in 0..ROUNDS {
             if !cap.above(meter)? || cap.round(kind, &points, meter)? == 0 {
@@ -170,11 +170,26 @@ pub(crate) fn capped(
     Ok(Some(Capped { taken, times, left, thickest: thickness.most(Measure::Fills) }))
 }
 
+/// The needle points of `sewn`, the plan's stitches, that the cap looks at: those of the elements `made`
+/// whose stitch in or out touches `near`, the cells near a spot above the cap, in the plan's order.
+fn candidates(sewn: &[SewnStitch], near: &Zone, made: impl Fn(&SewnStitch) -> bool) -> Vec<Entry> {
+    let mut points = BTreeSet::new();
+    let mut before: Option<&SewnStitch> = None;
+    for stitch in sewn {
+        if near.touches(stitch) {
+            // The point the stitch ends at, and the one it starts at: the end of the stitch before it in its
+            // block.
+            let start = before.filter(|before| before.block == stitch.block);
+            points.extend([Some(stitch), start].into_iter().flatten().filter(|point| made(point)).map(|point| (point.block, point.index)));
+        }
+        before = Some(stitch);
+    }
+    points.into_iter().collect()
+}
+
 /// The plan being capped, and what is known of it.
 struct Cap<'p, 'r> {
     pass: Pass<'p, 'r>,
-    /// The elements that digitizing made, whose needle points alone may go.
-    made: &'p BTreeSet<ElementRef>,
     /// The top stitches near a spot above the cap, as the cap leaves them.
     ribbons: Ribbons,
     /// The longest stitch of each element, of its top stitches and of the others.
@@ -208,7 +223,7 @@ impl Cap<'_, '_> {
     fn taken_out(&mut self, (block, at): Entry, kind: Kind, meter: &mut Meter) -> Result<bool, Exhausted> {
         let pass = &self.pass;
         let Some((_, role, element)) = pass.stitch((block, at)) else { return Ok(false) };
-        if !kind.takes(role) || !element.is_some_and(|element| self.made.contains(&element)) {
+        if !kind.takes(role) {
             return Ok(false);
         }
         let (Some(from), Some(to)) = (pass.beside((block, at), false, meter)?, pass.beside((block, at), true, meter)?) else { return Ok(false) };

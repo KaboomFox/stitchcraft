@@ -91,10 +91,10 @@ fn hundredths(value: f64) -> f64 {
 }
 
 #[test]
-fn req_auto_102_no_spot_of_a_digitized_picture_sews_above_the_cap() {
-    // The cap at the end of planning (REQ-AUTO-100) emptied the list that REQ-AUTO-073's case kept here of
-    // the designs above 4 fills: the badges at 4.40, the pear at 4.20, the lettered patch at 4.00 and the
-    // digitized halves of TS-13A, C and D at 4.28, 4.49 and 4.23.
+fn req_auto_073_no_spot_of_a_digitized_picture_sews_above_the_cap() {
+    // The cap at the end of planning (REQ-AUTO-100) emptied the list that this case kept of the designs
+    // above 4 fills: the badges at 4.40, the pear at 4.20, the lettered patch at 4.00 and the digitized
+    // halves of TS-13A, C and D at 4.28, 4.49 and 4.23.
     let mut above = Vec::new();
     for (name, design) in designs() {
         let outcome = in_place(&design);
@@ -105,4 +105,21 @@ fn req_auto_102_no_spot_of_a_digitized_picture_sews_above_the_cap() {
         }
     }
     assert!(above.is_empty(), "{above:?}");
+}
+
+#[test]
+fn req_auto_102_the_cap_keeps_each_design_s_jumps_and_thread_changes() {
+    // Each design with the cap at 50 fills, above every spot, and as digitized: the cap and the last pass
+    // take stitches, and never a jump or a thread change.
+    for (name, design) in designs() {
+        let mut elements = design.elements().to_vec();
+        for element in elements.iter_mut().filter(|element| element.automatic) {
+            element.params.set("auto_thick_cap_fills", "50");
+        }
+        let off = in_place(&Design::new(elements, design.settings).unwrap()).plan.unwrap();
+        let on = in_place(&design).plan.unwrap();
+        let (on, off) = (on.stats(), off.stats());
+        assert_eq!((on.jumps, on.trims, on.color_changes), (off.jumps, off.trims, off.color_changes), "{name}");
+        assert!(on.stitches <= off.stitches, "{name}: {} stitches, {} with the cap off", on.stitches, off.stitches);
+    }
 }

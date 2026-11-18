@@ -86,13 +86,14 @@ pub(crate) fn finished(
             };
             let (mut thinner, mut measure) = (plan.clone(), thickness.clone());
             let thinned = match thin::thinned(&mut thinner, &mut measure, &rules, &mut budget.meter()) {
-                Ok(Some(thinned)) => thinned,
-                Ok(None) => return thickness,
+                Ok(thinned) => thinned,
                 Err(_) => {
                     said.push(Diagnostic::new(Code::AutoThinned, not_thinned(held.cap)));
                     return thickness;
                 }
             };
+            // The pass looks at a plan above the cap only, which this one is.
+            let Some(thinned) = thinned else { return thickness };
             // The cap works on what the pass left, and keeps it when it runs out of work (`REQ-AUTO-101`).
             let (mut capped, mut kept) = (thinner.clone(), measure.clone());
             let outcome = cap::capped(&mut capped, &mut kept, &rules, &made, &mut budget.meter());
@@ -278,6 +279,16 @@ mod tests {
         assert!(line.ends_with(HINT) && line.chars().count() <= 500, "{}: {line}", line.chars().count());
     }
 
+    #[test]
+    fn req_auto_101_the_warning_names_the_cap_only_where_a_spot_is_above_it() {
+        let sewn = plan(4, 1);
+        let mut meter = Budget::DEFAULT.meter();
+        let report = Thickness::of(&sewn, &mut meter).unwrap().unwrap().report(&sewn, &Limits::DEFAULT, &mut meter).unwrap();
+        let at = report.fills.value;
+        assert!(!message(&sewn, &report, &Limits::DEFAULT, at).contains("cap"));
+        assert!(message(&sewn, &report, &Limits::DEFAULT, at - 0.01).contains(" and 2 more. Above the cap. "));
+    }
+
     /// The message of 4 squares on a layer of no shape: a corner where the rows turn is thickest, above the cap
     /// (`REQ-AUTO-101`).
     const EXPECTED: &str = "Thread is up to 5.3 fills thick at (9.5, 9.5) mm from the design's centre: stitches of no shape #000000 1.1, `s1` #010000 1.1, `s2` #020000 1.1 and 2 more. Above the cap. 109.2 mm² in 1 place has 3 fills or more, 90.2 mm² of it 4.5 or more. Needle points: up to 20 per mm² at (10.5, 9.5), 20.0 mm² in 2 places at 12 or more, 18.5 mm² of it at 16 or more.";
@@ -321,7 +332,11 @@ mod tests {
         let budget = Budget { max_work: measure, ..Budget::DEFAULT };
         let mut kept = sewn.clone();
         let said = finished(&mut kept, &held, (&[], &BTreeSet::new()), profile, &budget);
-        assert_eq!(said.first().map(|said| (said.code, said.message.as_str())), Some((Code::AutoThinned, not_thinned(4.0).as_str())), "{said:?}");
+        assert_eq!(
+            said.first().map(|said| (said.code, said.message.as_str())),
+            Some((Code::AutoThinned, "No thread was taken from the spots above 4 fills: the last pass needs more work than the budget allows.")),
+            "{said:?}"
+        );
         assert_eq!(kept, sewn);
     }
 

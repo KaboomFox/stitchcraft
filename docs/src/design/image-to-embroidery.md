@@ -1682,7 +1682,9 @@ A joined stitch no longer than the longer of its 2 left the dogs at 4.02 to 4.18
 lay too far for the stitch into a turn. With the element's own longest stitch as the bound they come to 4.00.
 
 **Measured** with a prototype on the plans of the cases, on 2026-11-18. The jump threads, the thread
-changes, the slivers and the likeness stay as they were on every design:
+changes, the slivers and the likeness stay as they were on every design. The cap as built measures the
+same but for 3 designs, which differ a little: TS-13C's digitized half comes to 3.96
+fills and 95.75 mm² at 3 fills or more, the badges to 19.50 mm² and TS-13D's half to 50.75 mm².
 
 | Design | Thickest, fills | With the cap | At 3 fills or more, mm² | With the cap | Bare, % | With the cap | Needle points taken |
 |---|---:|---:|---:|---:|---:|---:|---:|

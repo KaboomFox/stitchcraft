@@ -28,27 +28,27 @@ instructions = 5362000000
 [pictures.TS-13A]
 args = ["testsheet", "TS-13A"]
 golden = "conformance/golden/testsheets/TS-13A.pes"
-instructions = 1883000000
+instructions = 1950000000
 
 [pictures.TS-13B]
 args = ["testsheet", "TS-13B"]
 golden = "conformance/golden/testsheets/TS-13B.pes"
-instructions = 1635000000
+instructions = 1691000000
 
 [pictures.TS-13C]
 args = ["testsheet", "TS-13C"]
 golden = "conformance/golden/testsheets/TS-13C.pes"
-instructions = 1722000000
+instructions = 1760000000
 
 [pictures.TS-13D]
 args = ["testsheet", "TS-13D"]
 golden = "conformance/golden/testsheets/TS-13D.pes"
-instructions = 1396000000
+instructions = 1465000000
 
 [pictures.TS-13E]
 args = ["testsheet", "TS-13E"]
 golden = "conformance/golden/testsheets/TS-13E.pes"
-instructions = 1059000000
+instructions = 1087000000
 
 [pictures.TS-13F]
 args = ["testsheet", "TS-13F"]
