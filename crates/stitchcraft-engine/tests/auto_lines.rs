@@ -131,7 +131,7 @@ fn req_auto_091_a_ragged_thin_piece_of_a_broader_part_merges_into_the_area_besid
     assert!(kinds(&out).iter().all(|(_, filled)| *filled), "{:?}", kinds(&out));
     // `beside` took the strand in, cut off near where it meets the square, which keeps the rest.
     let (tailed, beside) = (area(&out, "tailed"), area(&out, "beside"));
-    assert!(beside > 145.4 && beside < 145.5 && tailed >= 400.0 && tailed < 405.5, "{tailed}, {beside}");
+    assert!((145.4..145.5).contains(&beside) && (400.0..405.5).contains(&tailed), "{tailed}, {beside}");
     assert_eq!(
         said(&diagnostics, Code::AutoLineMerged),
         ["info SC-I0915: A thin piece of this area, of 5.48 mm², would sew as a running stitch, so it is merged into `beside`, which it \
