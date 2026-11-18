@@ -109,9 +109,12 @@ fn req_auto_090_a_shape_that_turns_merging_off_or_names_its_stitch_keeps_its_lin
 
 #[test]
 fn req_auto_090_a_thin_line_beside_no_area_sews_as_a_line() {
-    let (out, diagnostics) = sewn(vec![ragged("line", &[]), rect("far", (30.0, 0.0), (40.0, 10.0), &RED)]);
-    assert!(kinds(&out).contains(&("line", false)), "{:?}", kinds(&out));
-    assert!(said(&diagnostics, Code::AutoLineMerged).is_empty());
+    // Whatever share of the likeness merging keeps (REQ-AUTO-095): a part of its own beside no area costs none.
+    for share in ["0", "1"] {
+        let (out, diagnostics) = sewn(vec![ragged("line", &[(MIN_LIKENESS, share)]), rect("far", (30.0, 0.0), (40.0, 10.0), &RED)]);
+        assert!(kinds(&out).contains(&("line", false)), "{share}: {:?}", kinds(&out));
+        assert!(said(&diagnostics, Code::AutoLineMerged).is_empty(), "{share}");
+    }
 }
 
 #[test]
