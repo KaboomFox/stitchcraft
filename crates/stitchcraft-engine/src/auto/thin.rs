@@ -449,7 +449,7 @@ pub(crate) fn kinds(thinned: &Thinned) -> String {
         .zip(names)
         .filter_map(|(kind, name)| {
             let (taken, times) = (thinned.taken.get(kind.at())?, thinned.times.get(kind.at())?);
-            (*times > 0).then(|| format!("{taken:.1} mm of {name} in {times} places"))
+            (*times > 0).then(|| format!("{taken:.1} mm of {name} in {}", super::thick::places(*times)))
         })
         .collect();
     said.join(", ")
