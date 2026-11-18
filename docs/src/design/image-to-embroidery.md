@@ -1598,7 +1598,7 @@ Automatic elements sew in an order StitchCraft chooses (`stitchcraft_engine::aut
 M13.3). The order is chosen after specks are merged, so that a speck merged into an area is no element of
 its own, and before areas reach under their neighbours, which follows it. VectorCraft's Auto Grouping
 draws each shape together with the shapes inside it. Sewn in paint order, a picture traced with it changes
-thread at nearly every shape, and each change is a stop to rethread a home machine. The order comes from 5
+thread at nearly every shape, and each change is a stop to rethread a home machine. The order comes from 6
 rules.
 
 1. **What overlaps keeps its paint order** (`REQ-AUTO-010`). Of 2 shapes whose paint overlaps, the lower
@@ -1631,7 +1631,12 @@ rules.
    rows with the fewest changes, the search takes the one in which fewer columns sew before a fill they
    border. The column then waits for a later batch of its thread when the row has one after the fill.
    Satin columns with settings go by rule 2.
-5. **The nearest next.** Of the free elements of a batch, the next is the one whose box lies nearest
+5. **Details last, where that costs no thread change** (`REQ-AUTO-096`, `REQ-AUTO-097`, M13.40). An
+   eye, a nose or a mark on a patch sews after the shapes round it, so that no fill's rows lie over it
+   ([Details last](#details-last)). Of the rows with the fewest changes, the search takes the one in which
+   fewer details sew before a shape round them, as it does for rule 4, and a detail waits for a later
+   batch of its thread when the row has one. A line or a column round a detail goes by rules 2 and 4.
+6. **The nearest next.** Of the free elements of a batch, the next is the one whose box lies nearest
    the box of the element sewn last. On a tie it is the one whose box's centre lies nearest, and then the
    one drawn first. Each element then starts and ends at its points nearest its neighbours
    (`REQ-GEN-003`).

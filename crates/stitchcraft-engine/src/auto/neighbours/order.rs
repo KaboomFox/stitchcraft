@@ -3,7 +3,7 @@
 //! Sewn in paint order, a traced picture changes thread far more often than it needs to. VectorCraft's Auto
 //! Grouping draws each shape together with the shapes inside it, so a row of badges goes red, blue, gold,
 //! red, blue, gold, and on a home machine each change of thread is a stop to rethread it. So the elements
-//! are put in an order of their own, by 4 rules:
+//! are put in an order of their own, by 6 rules:
 //!
 //! 1. **What overlaps keeps its paint order.** Of 2 shapes whose paint overlaps, the lower sews first:
 //!    sewn the other way, it would cover the upper one. An area paints its region, a satin column the area
@@ -23,7 +23,14 @@
 //!    fill when it sews first (`REQ-AUTO-029`), so the fabric is covered either way. Of the rows with the
 //!    fewest changes, the one that sews more such columns after their fills is taken, and a column waits
 //!    for a later batch of its thread where there is one. Any other satin column goes by rule 2.
-//! 5. **The nearest next.** Of the free elements of a batch, the next is the one whose box lies nearest
+//! 5. **Details last, where that costs no thread change** (`REQ-AUTO-096`, `REQ-AUTO-097`). An automatic
+//!    area that the shapes round it close in on ([`Order::closed_in`]) is a detail of each larger shape it
+//!    meets, as an eye is of the fur round it. It sews after them, as a column does after its fill: of the
+//!    rows with the fewest changes, the one that sews fewer details early is taken, and a detail waits for a
+//!    later batch of its thread. A line or a column round a detail still goes by rules 2 and 4: it covers
+//!    the detail's edge, as an outline does, and the detail reaches under a column. Which shape is a detail goes by geometry alone, never by what the picture shows. `SC-I0907` says how
+//!    many details still sew before a larger shape round them.
+//! 6. **The nearest next.** Of the free elements of a batch, the next is the one whose box lies nearest
 //!    the box of the one sewn last, then the one whose box's centre does, then the one drawn first. Each
 //!    element then starts and ends at its points nearest its neighbours (`REQ-GEN-003`).
 //!
@@ -57,13 +64,18 @@ use crate::design::{Element, Join, Shape};
 use crate::generate::{colours, stops_after};
 use crate::normalize::region::Polygon;
 use crate::normalize::region::geom::Envelope;
-use crate::normalize::region::ops::{area_of, buffered, intersection};
+use crate::normalize::region::ops::{area_of, buffered, difference, intersection, union};
 
 /// What becomes of an element whose neighbours need more work to find than the budget allows: it keeps its
 /// place, as an element with a stop after it does.
 const PLACE: &str = "it keeps its place in paint order: the elements drawn before it sew before it, and those drawn after it after it";
 
 mod fewest;
+
+/// The share of the strip round an automatic area that the other shapes must cover for them to close in
+/// on it, so that it is a detail of the larger ones it meets ([`Order::closed_in`]): an eye or a mark on a
+/// patch is closed in whole, and a patch at the picture's edge is open along it.
+const CLOSED_IN: f64 = 0.75;
 
 /// How an element may move round the others.
 #[derive(Clone, Copy, Debug)]
@@ -90,7 +102,18 @@ pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, u
     let reaches: Vec<Option<Envelope>> = (0..shapes.len()).map(|index| reach(shapes, index)).collect();
     let facts: Vec<Facts> = shapes.elements.iter().zip(reaches).map(|(element, reach)| Facts::of(element, reach)).collect();
     let (graph, kept) = (Graph::new(shapes.len()), BTreeSet::new());
-    let mut order = Order { facts: &facts, moving, graph, borders: Vec::new(), wished: Vec::new(), kept, unsought: None, under };
+    let mut order = Order {
+        facts: &facts,
+        moving,
+        graph,
+        borders: Vec::new(),
+        wished: Vec::new(),
+        details: Vec::new(),
+        closed: BTreeMap::new(),
+        kept,
+        unsought: None,
+        under,
+    };
     let stop = |index: usize| facts.get(index).is_some_and(|facts| facts.stop);
     let mut said = Vec::new();
     for run in runs(&live, stop) {
@@ -110,6 +133,7 @@ pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, u
     if sewing.order != live {
         said.push(summary(changes(&live, &facts), changes(&sewing.order, &facts)));
     }
+    said.extend(early(&order.details, &sewing.order));
     // The elements left out go last, where they are left out.
     sewing.order.extend((0..shapes.len()).filter(|&index| shapes.left_out(index)));
     shapes.reorder(&sewing.order);
@@ -203,6 +227,12 @@ struct Order<'o> {
     /// Each satin column that automatic digitizing made and that borders a fill, as the fill and the column,
     /// in the order they were found: it sews after the fill where that costs no thread change.
     wished: Vec<(usize, usize)>,
+    /// Each detail, an automatic area that the shapes round it close in on ([`Self::closed_in`]), with each
+    /// shape it meets that is larger than it is, as that shape and the detail, in the order they were found:
+    /// it sews after that shape where that costs no thread change.
+    details: Vec<(usize, usize)>,
+    /// Whether each automatic area looked at is closed in, once found.
+    closed: BTreeMap<usize, bool>,
     /// The elements whose neighbours need more work to find than the budget allows, which keep their place.
     kept: BTreeSet<usize>,
     /// The first element of the run that finding the fewest thread changes needed more work for than the
@@ -221,6 +251,9 @@ enum Beside {
     /// A line borders a fill: the fill, then the line. The fill sews first unless what overlaps holds the
     /// line before it.
     Border(usize, usize),
+    /// 2 automatic areas meet without overlapping: the one drawn first, then the other. Either may be a
+    /// detail of the other.
+    Meet(usize, usize),
 }
 
 impl Order<'_> {
@@ -255,16 +288,10 @@ impl Order<'_> {
         }
         for (at, &index) in run.iter().enumerate() {
             let later = run.get(at + 1..).unwrap_or_default();
-            match self.beside(shapes, index, later, &mut budget.meter()) {
-                Ok(found) => {
-                    for beside in found {
-                        match beside {
-                            Beside::After(other) => self.graph.add(index, other),
-                            Beside::Border(fill, line) if shapes.column(line).is_some() => self.wished.push((fill, line)),
-                            Beside::Border(fill, line) => self.borders.push((fill, line)),
-                        }
-                    }
-                }
+            let mut meter = budget.meter();
+            let found = self.beside(shapes, index, later, &mut meter);
+            match found.and_then(|found| self.settle(shapes, index, found, &mut meter)) {
+                Ok(()) => {}
                 Err(failed) => {
                     self.kept.insert(index);
                     let finding = "where this element meets the shapes drawn after it";
@@ -272,6 +299,49 @@ impl Order<'_> {
                 }
             }
         }
+    }
+
+    /// What `found`, how the shapes drawn after `index` lie beside it, makes them sew before what, with `meter`'s work: a
+    /// shape sews after one it overlaps, a line after the fill it borders, a satin column after the fill it
+    /// borders where that costs no thread change, and a detail after a larger area it meets where that costs
+    /// none ([`Self::detail`]).
+    fn settle(&mut self, shapes: &mut Shapes, index: usize, found: Vec<Beside>, meter: &mut Meter) -> Result<(), Failed> {
+        for beside in found {
+            match beside {
+                Beside::After(other) => self.graph.add(index, other),
+                Beside::Border(fill, line) if shapes.column(line).is_some() => self.wished.push((fill, line)),
+                Beside::Border(fill, line) => self.borders.push((fill, line)),
+                Beside::Meet(first, second) => {
+                    if self.detail(shapes, second, first, meter)? {
+                        self.details.push((first, second));
+                    } else if self.detail(shapes, first, second, meter)? {
+                        self.details.push((second, first));
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Whether the automatic area `detail` is a detail of `other`, a shape it meets, with `meter`'s work:
+    /// the shapes round it close in on it ([`Self::closed_in`]), and it is smaller than `other` paints.
+    fn detail(&mut self, shapes: &mut Shapes, detail: usize, other: usize, meter: &mut Meter) -> Result<bool, Failed> {
+        let size = |index: usize| shapes.paint(index).map(|(_, parts)| area_of(parts));
+        let (true, Some(own), Some(theirs)) = (shapes.is_area(detail), size(detail), size(other)) else { return Ok(false) };
+        Ok(own < theirs && self.closed_in(shapes, detail, meter)?)
+    }
+
+    /// Whether the shapes round the automatic area `index` close in on it, with `meter`'s work, found once:
+    /// a strip [`TOUCHING`] wide round its region lies under what the other shapes paint, grown by
+    /// [`TOUCHING`], for [`CLOSED_IN`] of its area or more. It costs a unit for each shape looked at, and the
+    /// work of those near it.
+    fn closed_in(&mut self, shapes: &mut Shapes, index: usize, meter: &mut Meter) -> Result<bool, Failed> {
+        if let Some(&known) = self.closed.get(&index) {
+            return Ok(known);
+        }
+        let found = enclosed(shapes, self.facts, index, meter)?;
+        self.closed.insert(index, found);
+        Ok(found)
     }
 
     /// How each of `later`, the elements drawn after `index` in its run, lies beside it, with `meter`'s work:
@@ -361,7 +431,7 @@ impl Order<'_> {
             }
         }
         let place = |index: &usize| places.get(index).copied();
-        let wished = self.wished.iter().filter_map(|(fill, column)| place(fill).zip(place(column))).collect();
+        let wished = self.wished.iter().chain(&self.details).filter_map(|(first, then)| place(first).zip(place(then))).collect();
         fewest::Run { threads: run.iter().map(threads).collect(), before, wished, sewing }
     }
 
@@ -427,6 +497,9 @@ fn lie(shapes: &mut Shapes, first: usize, second: usize, meter: &mut Meter) -> R
     let (fill, line) = match (a, b) {
         (Kind::Area, Kind::Column | Kind::Line | Kind::Part) => (first, second),
         (Kind::Column | Kind::Line | Kind::Part, Kind::Area) => (second, first),
+        (Kind::Area, Kind::Area) if shapes.is_area(first) && shapes.is_area(second) => {
+            return Ok(touch(shapes, first, second, meter)?.then_some(Beside::Meet(first, second)));
+        }
         _ => return Ok(None),
     };
     Ok(touch(shapes, fill, line, meter)?.then_some(Beside::Border(fill, line)))
@@ -450,6 +523,44 @@ fn touch(shapes: &mut Shapes, fill: usize, line: usize, meter: &mut Meter) -> Re
     let grown = shapes.grown(fill, meter)?.unwrap_or_default();
     let line = shapes.paint(line).map(|(_, parts)| parts).unwrap_or_default();
     Ok(!no_area(area_of(&joined(intersection(&grown, line, meter))?)))
+}
+
+/// Whether the shapes round the automatic area `index` of `shapes` close in on it ([`Order::closed_in`]),
+/// each shape's box in `facts`, with `meter`'s work.
+fn enclosed(shapes: &mut Shapes, facts: &[Facts], index: usize, meter: &mut Meter) -> Result<bool, Failed> {
+    let Some(region) = shapes.paint(index).map(|(_, parts)| parts.to_vec()) else { return Ok(false) };
+    let rim = joined(difference(&joined(buffered(&region, TOUCHING, meter))?, &region, meter))?;
+    let all = area_of(&rim);
+    let reach = |other: usize| facts.get(other).and_then(|facts| facts.reach);
+    let Some(bounds) = reach(index).filter(|_| !no_area(all)) else { return Ok(false) };
+    let mut around = Vec::new();
+    for other in 0..shapes.len() {
+        meter.charge(1)?;
+        if other == index || shapes.left_out(other) || !reach(other).is_some_and(|other| near(&bounds, 2.0 * TOUCHING, &other)) {
+            continue;
+        }
+        around.extend(shapes.grown(other, meter)?.unwrap_or_default());
+    }
+    let covered = joined(intersection(&rim, &joined(union([around.as_slice()], meter))?, meter))?;
+    Ok(area_of(&covered) >= CLOSED_IN * all)
+}
+
+/// `SC-I0907` saying how many of the `details`, each the shape it meets and the detail, sew before that
+/// shape in `order`; `None` when none does.
+fn early(details: &[(usize, usize)], order: &[usize]) -> Option<Diagnostic> {
+    let at = |index: usize| order.iter().position(|&sewn| sewn == index);
+    let early: BTreeSet<usize> = details.iter().filter(|&&(shape, detail)| at(detail) < at(shape)).map(|&(_, detail)| detail).collect();
+    let message = match early.len() {
+        0 => return None,
+        1 => "1 detail sews before a larger area round it: sewn after it, it would change thread more often, or break \
+              what must sew before what."
+            .to_string(),
+        n => format!(
+            "{n} details sew before a larger area round them: sewn after it, they would change thread more often, or break \
+             what must sew before what."
+        ),
+    };
+    Some(Diagnostic::new(Code::AutoOrder, message))
 }
 
 /// The square of the distance between boxes `a` and `b`: 0 when they overlap.
