@@ -12,9 +12,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     likeness measure counts it. The others sew as lines, and `SC-I0915` says so.
   - The setting is 0 by default, and every design sews as before. Keeping lines can change the order the
     blocks sew in and make a spot elsewhere sew thicker, so it is turned on by default once M13.35's cap on
-    thickness lands. Raised to 0.85, local photos kept 0.78 to 0.85 of their likeness, where they kept 0.43 to
+    thickness is merged. Raised to 0.85, local photos kept 0.78 to 0.85 of their likeness, where they kept 0.43 to
     0.48, with 50 to 236 more jump threads.
-  - The roadmap carries the owner's decision of 2026-11-18: M13.38 closed, M13.43 added, M13.35's last pass a
+  - The roadmap holds the owner's decision of 2026-11-18: M13.38 closed, M13.43 added, M13.35's last pass a
     general cap, and the new order of the steps.
   - The likeness measure takes its definition of a part from `stitchcraft_engine::auto::is_part`.
   - Public API: `stitchcraft_engine::auto::is_part`, `MIN_LIKENESS` and its field of `AutoParams`.

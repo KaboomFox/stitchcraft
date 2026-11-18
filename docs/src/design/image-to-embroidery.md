@@ -1704,7 +1704,7 @@ thickest spot moved to another place at 7.55. On another photo the thickest spot
 order changed there as well. Where a reorder piles thread can't be told from a line, so no rule about lines
 prevents it, and planning twice to check costs a second plan. The answer is one cap on thickness at the end of
 planning that every design meets, whatever its order (M13.35). The setting is turned on by default once that
-cap lands.
+cap is merged.
 
 The measurements below are evidence of what the rule does, at a bound of 0.85 and as each picture sews with
 the setting off. No picture is the rule's goal. The photos marked * are local. Thickest is the thickest spot in fills, and the area is at 3 fills or

@@ -247,8 +247,8 @@
       }
     },
     "auto_min_likeness": {
-      "default": 0.85,
-      "description": "The least likeness of the picture that merging thin lines keeps. A part is a piece of one colour of 1 mm² or more in which a disc a thread across fits, and the likeness is the mean over the colours of the share of their parts kept. A thin line that touches no other piece of its colour is a part of its own, and merged into a neighbour of another colour it is a part lost: a twig, the rim of a petal, a shadow. Such lines merge, those of the colours with the most parts and the smallest first, while the picture keeps this likeness, and the others sew as lines. At 0 every thin line merges, and at 1 none that is a part does.",
+      "default": 0.0,
+      "description": "The least likeness of the picture that merging thin lines keeps. A part is a piece of one colour of 1 mm² or more in which a disc a thread across fits, and the likeness is the mean over the colours of the share of their parts kept. A thin line that touches no other piece of its colour is a part of its own, and merged into a neighbour of another colour it is a part lost: a twig, the rim of a petal, a shadow. Such lines merge, those of the colours with the most parts and the smallest first, while the picture keeps this likeness, and the others sew as lines. At 0, the default, every thin line merges, and at 1 none that is a part does. Keeping lines adds running stitches and jump threads, and it can change the order the blocks sew in, which can make a spot elsewhere sew thicker.",
       "maximum": 1.0,
       "minimum": 0.0,
       "title": "Least likeness kept when lines merge",
