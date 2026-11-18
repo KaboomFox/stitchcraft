@@ -951,7 +951,7 @@ fn strokes_meet_in_exactly_the_least_area_and_their_ends_measure_from_the_join()
 }
 
 #[test]
-fn a_stroke_that_crosses_another_on_the_slant_loses_its_band_narrowed_by_its_reachs_share() {
+fn a_stroke_that_crosses_another_on_the_slant_loses_its_band_narrowed_by_a_share_of_its_reach() {
     let (sin, cos) = math::sin_cos(math::to_radians(60.0));
     let level = Band { o: p(0.0, 0.0), u: (1.0, 0.0), n: (0.0, 1.0), lo: -0.5, hi: 0.5, from: 0.0, to: 10.0 };
     let slanted = Band { o: p(5.0 - 5.0 * cos, -5.0 * sin), u: (cos, sin), n: (-sin, cos), lo: -0.5, hi: 0.5, from: 0.0, to: 10.0 };
