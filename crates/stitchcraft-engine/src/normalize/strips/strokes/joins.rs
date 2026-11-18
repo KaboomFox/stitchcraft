@@ -5,7 +5,7 @@
 
 use stitchcraft_core::{Exhausted, Meter, Point};
 
-use super::{APEX, Band, CROSSING, Cut, Joined, SLIVER, TIE, Way, cosine, polygon, sine, unit_of};
+use super::{APEX, Band, CROSSING, Cut, Joined, SLIVER, TIE, Way, cosine, dot, polygon, sine, unit_of};
 use crate::normalize::region::{Polygon, ops};
 
 /// The cuts of a join: each the stroke, its cut, and the end it ends under the other with and that other.
@@ -94,7 +94,7 @@ fn span(band: &Band, points: &[Point]) -> (f64, f64) {
 
 /// Where along `band` its end at the join of `points` lies, for the column to know which end is under the
 /// other: the middle of the join.
-fn end(band: &Band, points: &[Point]) -> f64 {
+pub(super) fn end(band: &Band, points: &[Point]) -> f64 {
     let (lo, hi) = span(band, points);
     (lo + hi) / 2.0
 }
@@ -159,14 +159,14 @@ pub(super) fn halved((i, one): (usize, &Band), (j, other): (usize, &Band), reach
     let crossing = crossed(one, other)?;
     let towards = |band: &Band| -> Option<Way> {
         let middle = band.middle()?;
-        let sign = if (middle.x() - crossing.x()) * band.u.0 + (middle.y() - crossing.y()) * band.u.1 >= 0.0 { 1.0 } else { -1.0 };
+        let sign = if dot((middle.x() - crossing.x(), middle.y() - crossing.y()), band.u) >= 0.0 { 1.0 } else { -1.0 };
         Some((sign * band.u.0, sign * band.u.1))
     };
     let (a, b) = (towards(one)?, towards(other)?);
     let halving = unit_of((a.0 + b.0, a.1 + b.1))?;
     let m = (-halving.1, halving.0);
     let cut = |band: &Band, way: Way| -> Option<Cut> {
-        let sign = if way.0 * m.0 + way.1 * m.1 >= 0.0 { 1.0 } else { -1.0 };
+        let sign = if dot(way, m) >= 0.0 { 1.0 } else { -1.0 };
         // Its stitches' pull compensation reaches across the halving line by its share square to the line,
         // and the piece reaches the line, so that the pieces cover the join.
         let past = (reach / 2.0 - reach * cosine(band.u, halving)).max(0.0);

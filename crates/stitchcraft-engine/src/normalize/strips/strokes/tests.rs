@@ -3,7 +3,7 @@
 
 use stitchcraft_core::{Budget, math};
 
-use super::joins::{crossed, halved, join, leaves, meeting, square, stops};
+use super::joins::{crossed, end, halved, join, leaves, meeting, square, stops};
 use super::*;
 use crate::normalize::fixture::part;
 use crate::normalize::strips::columns;
@@ -770,9 +770,243 @@ fn a_column_ends_under_another_at_its_end_nearer_the_join_wherever_its_band_is_m
     let bar = part(&[(0.0, 0.0), (6.0, 0.0), (6.0, 1.0), (0.0, 1.0)], &[]);
     // Measured from 100 mm before it: the bar lies from 100 to 106 mm along, and the join at its start.
     let band = Band { o: p(-100.0, 0.0), u: (1.0, 0.0), n: (0.0, 1.0), lo: 0.0, hi: 1.0, from: 100.0, to: 106.0 };
-    for (at, under) in [(100.0, [Some(0), None]), (106.0, [None, Some(0)])] {
+    // A join half way between its ends is at its start.
+    for (at, under) in [(100.0, [Some(0), None]), (106.0, [None, Some(0)]), (103.0, [Some(0), None])] {
         let joined = Joined { cuts: Vec::new(), under: vec![(at, 0)] };
         let columns = columns_of(&bar, &[band], &[joined], &[vec![bar.clone()]], meter).unwrap().unwrap();
         assert_eq!(columns[0].under, under);
+    }
+}
+
+/// `band` turned `degrees` about the origin.
+fn turned(band: Band, degrees: f64) -> Band {
+    let (sin, cos) = math::sin_cos(math::to_radians(degrees));
+    let turn = |(x, y): (f64, f64)| (x * cos - y * sin, x * sin + y * cos);
+    let (x, y) = turn((band.o.x(), band.o.y()));
+    Band { o: p(x, y), u: turn(band.u), n: turn(band.n), ..band }
+}
+
+#[test]
+fn a_rings_runs_close_it_from_its_first_point_when_that_is_the_sharpest() {
+    let meter = &mut Budget::DEFAULT.meter();
+    // A square with a point half way along its bottom: its corners turn alike, so the first is the start.
+    let ring: Vec<Point> = [(0.0, 0.0), (2.0, 0.0), (4.0, 0.0), (4.0, 4.0), (0.0, 4.0), (0.0, 0.0)].iter().map(|&(x, y)| p(x, y)).collect();
+    let expected = vec![side((0.0, 0.0), (4.0, 0.0)), side((4.0, 0.0), (4.0, 4.0)), side((4.0, 4.0), (0.0, 4.0)), side((0.0, 4.0), (0.0, 0.0))];
+    assert_eq!(sides(&ring, meter).unwrap(), expected);
+    // A circle of 200 points, each turning 1.8°: its runs are arcs, and the last ends where the first starts.
+    let circle: Vec<Point> = (0..=200)
+        .map(|k| {
+            let (sin, cos) = math::sin_cos(math::to_radians(f64::from(k % 200) * 1.8));
+            p(5.0 * cos, 5.0 * sin)
+        })
+        .collect();
+    let found = sides(&circle, meter).unwrap();
+    assert!(found.len() > 2, "{found:?}");
+    for (one, next) in found.iter().zip(found.iter().cycle().skip(1)) {
+        assert_eq!(one.b, next.a, "{found:?}");
+    }
+}
+
+#[test]
+fn reading_runs_and_pairing_them_charges_a_unit_for_each_point_and_each_pair() {
+    // One unit for each point between a run's ends.
+    let edge = [p(0.0, 0.0), p(1.0, 0.0), p(2.0, 0.0)];
+    assert!(straight(&edge, 0, 2, &mut Budget { max_stitches: 0, max_work: 1 }.meter()).unwrap());
+    // One for each pair of runs: 4 runs the same way make 6 pairs and no stroke.
+    let bar = part(&[(0.0, 0.0), (10.0, 0.0), (10.0, 1.0), (0.0, 1.0)], &[]);
+    let runs: Vec<Side> = (0..4).map(|k| side((0.0, f64::from(k)), (5.0, f64::from(k)))).collect();
+    assert_eq!(bands(&bar, &runs, LIMITS, &mut Budget { max_stitches: 0, max_work: 6 }.meter()), Ok(Some(Vec::new())));
+    assert_eq!(bands(&bar, &runs, LIMITS, &mut Budget { max_stitches: 0, max_work: 5 }.meter()), Err(Exhausted::Work));
+}
+
+#[test]
+fn two_sides_are_a_strokes_at_exactly_their_bounds() {
+    // Opposite at exactly 5°.
+    let sin = (1.0 - OPPOSITE * OPPOSITE).sqrt();
+    let one = side((0.0, -5.0), (5.5, -5.0));
+    let other = side((4.0 * OPPOSITE, 0.0), (0.0, 4.0 * sin));
+    assert_eq!(dot(unit(one.a, one.b).unwrap(), unit(other.a, other.b).unwrap()), -OPPOSITE);
+    assert!(paired(one, other, LIMITS).is_some());
+    // Ends apart by exactly a tenth of the width, 10 mm, and by a little more.
+    let long = side((0.0, 0.0), (100.0, 0.0));
+    let wide = (0.5, 20.0);
+    assert!(paired(long, side((100.0, 9.5), (0.0, 10.5)), wide).is_some());
+    assert!(paired(long, side((100.0, 9.49), (0.0, 10.51)), wide).is_none());
+}
+
+#[test]
+fn bands_lie_on_the_same_lines_at_exactly_2_degrees_whichever_way_they_lie_measured_at_their_middle() {
+    let kept = Band { o: p(0.0, 0.0), u: (1.0, 0.0), n: (0.0, 1.0), lo: 0.0, hi: 1.0, from: 0.0, to: 2.0 };
+    // Turned exactly 2° about kept's middle.
+    let s = (1.0 - SAME_WAY * SAME_WAY).sqrt();
+    assert!(same(&kept, &Band { o: p(1.0, 0.0), u: (SAME_WAY, s), n: (-s, SAME_WAY), from: -1.0, to: 1.0, ..kept }));
+    // 3° about it, the 2 turned 30° together.
+    let (sin, cos) = math::sin_cos(math::to_radians(3.0));
+    let off = Band { o: p(1.0, 0.0), u: (cos, sin), n: (-sin, cos), from: -1.0, to: 1.0, ..kept };
+    assert!(!same(&turned(kept, 30.0), &turned(off, 30.0)));
+    assert!(same(&turned(kept, 30.0), &turned(kept, 30.0)));
+    // A band 1.5° off kept's lines that crosses them at its middle, 10 mm along it: its ends lie 0.2 mm off.
+    let (sin, cos) = math::sin_cos(math::to_radians(1.5));
+    let long = Band { o: p(-10.0 * cos, -10.0 * sin), u: (cos, sin), n: (-sin, cos), lo: 0.0, hi: 1.0, from: 2.0, to: 18.0 };
+    assert!(same(&kept, &long));
+    // Merged, its ends count where its line half way across meets kept's.
+    let slanted = Band { o: p(0.0, 0.0), lo: 1.0, hi: 3.0, from: -3.0, to: 6.0, ..long };
+    let mut merged = kept;
+    merge(&mut merged, &slanted);
+    assert!((merged.from + 3.0 * cos + 2.0 * sin).abs() < 1e-12 && (merged.to - 6.0 * cos + 2.0 * sin).abs() < 1e-12, "{merged:?}");
+}
+
+#[test]
+fn a_piece_of_a_stroke_past_its_sides_ends_is_left_to_the_others() {
+    let meter = &mut Budget::DEFAULT.meter();
+    // A bar to 10.6 mm whose stroke's sides end at 10.4 mm, crossed by an upright stroke from 10 to 10.5 mm:
+    // the bar's piece past that holds none of its middle line, and it is less than a hundredth of the part.
+    let bar = part(&[(0.0, 0.0), (10.6, 0.0), (10.6, 1.0), (0.0, 1.0)], &[]);
+    let level = Band { o: p(0.0, 0.0), u: (1.0, 0.0), n: (0.0, 1.0), lo: 0.0, hi: 1.0, from: 0.0, to: 10.4 };
+    let upright = Band { o: p(10.0, 0.0), u: (0.0, 1.0), n: (-1.0, 0.0), lo: -0.5, hi: 0.0, from: 0.0, to: 1.0 };
+    let crossed = Joined { cuts: vec![Cut::Crossed { of: 1, by: 0.0 }], under: Vec::new() };
+    let found = pieces(&bar, &[level, upright], &[crossed, Joined::default()], meter).unwrap().unwrap();
+    assert_eq!(found[0].len(), 1, "{found:?}");
+    assert!(found[0][0].outline.iter().all(|q| q.x() <= 10.0 + 1e-9), "{found:?}");
+}
+
+#[test]
+fn a_column_with_pointed_ends_and_one_too_short_for_rails() {
+    let meter = &mut Budget::DEFAULT.meter();
+    let band = Band { o: p(0.0, 0.0), u: (1.0, 0.0), n: (0.0, 1.0), lo: 0.0, hi: 1.0, from: 0.0, to: 6.0 };
+    // Pointed at both ends: the rails hold every point of the ring, the 2 ends twice.
+    let pointed = part(&[(0.0, 0.5), (1.0, 0.0), (5.0, 0.0), (6.0, 0.5), (5.0, 1.0), (1.0, 1.0)], &[]);
+    let (rails, _, _) = column(&pointed, &pointed, &band, meter).unwrap().unwrap();
+    assert_eq!(rails[0].len() + rails[1].len(), 8);
+    // Shorter along the stroke than a flat end may slant: its ends take in the whole ring.
+    let short = part(&[(0.0, 0.0), (0.3, 0.0), (0.3, 1.0), (0.0, 1.0)], &[]);
+    assert_eq!(column(&short, &short, &band, meter).unwrap(), None);
+}
+
+#[test]
+fn a_pieces_ring_keeps_a_lone_point_and_a_last_point_exactly_close_from_its_first() {
+    let meter = &mut Budget::DEFAULT.meter();
+    let bar = part(&[(0.0, 0.0), (6.0, 0.0), (6.0, 1.0), (0.0, 1.0)], &[]);
+    assert_eq!(cleaned(&[p(3.0, 0.5)], &bar, meter).unwrap(), vec![p(3.0, 0.5)]);
+    let ring = [p(0.0, 0.5), p(3.0, 0.25), p(3.0, 0.75), p(CLOSE, 0.5)];
+    assert_eq!(ring[0].distance(ring[3]), CLOSE);
+    assert_eq!(cleaned(&ring, &bar, meter).unwrap(), ring.to_vec());
+    // A run on from its start, and one round a ring that holds everywhere.
+    assert_eq!(run_round(&[0.0, 0.0, 0.0, 5.0], 0, |t| t < 1.0), (0, 2));
+    assert_eq!(run_round(&[0.0, 0.0, 0.0, 0.0], 2, |t| t < 1.0), (3, 2));
+}
+
+#[test]
+fn rungs_at_exactly_their_bounds() {
+    let meter = &mut Budget::DEFAULT.meter();
+    let band = Band { o: p(0.0, 0.0), u: (1.0, 0.0), n: (0.0, 1.0), lo: 0.0, hi: 1.0, from: 0.0, to: 6.0 };
+    let none = Vec::<[Point; 2]>::new();
+    // A flat end whose corners lie exactly 2 × RUNGS_APART apart along the stroke is square.
+    assert_eq!(rungs(&[p(0.1, 0.0), p(6.0, 0.0)], &[p(0.0, 1.0), p(6.0, 1.0)], &band, meter).unwrap(), none);
+    // A rung exactly RUNGS_APART from the rails' ends is kept.
+    assert_eq!(p(0.0, 0.0).distance(p(RUNGS_APART, 0.0)), RUNGS_APART);
+    let one = [p(0.0, 0.0), p(0.05, 0.0), p(6.0, 0.0)];
+    let other = [p(0.0, 1.0), p(0.05, 1.0), p(6.0, 1.0)];
+    assert_eq!(rungs(&one, &other, &band, meter).unwrap(), vec![[p(0.05, 0.0), p(0.05, 1.0)]]);
+    // Rungs exactly RUNGS_APART apart on both rails don't crowd.
+    assert_eq!(p(0.05, 0.0).distance(p(0.1, 0.0)), RUNGS_APART);
+    let one = [p(0.0, 0.0), p(0.05, 0.0), p(0.1, 0.0), p(6.0, 0.0)];
+    let other = [p(0.0, 1.0), p(0.05, 1.0), p(0.1, 1.0), p(6.0, 1.0)];
+    assert_eq!(rungs(&one, &other, &band, meter).unwrap(), vec![[p(0.05, 0.0), p(0.05, 1.0)], [p(0.1, 0.0), p(0.1, 1.0)]]);
+    // A ring of no area keeps its order, and a dot product is exact.
+    assert_eq!(polygon(vec![p(0.0, 0.0), p(1.0, 0.0), p(2.0, 0.0)]).outline, vec![p(0.0, 0.0), p(1.0, 0.0), p(2.0, 0.0), p(0.0, 0.0)]);
+    assert_eq!(dot((2.0, 3.0), (5.0, 7.0)), 31.0);
+    assert_eq!(cosine((0.6, 0.8), (-0.6, -0.8)), 1.0);
+}
+
+#[test]
+fn strokes_meet_in_exactly_the_least_area_and_their_ends_measure_from_the_join() {
+    let meter = &mut Budget::DEFAULT.meter();
+    // 5 and 10 mm wide, they meet in the whole of a square of 1 mm², exactly 0.02 × 5 × 10.
+    let square_part = part(&[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)], &[]);
+    let five = Band { o: p(0.0, 0.0), u: (1.0, 0.0), n: (0.0, 1.0), lo: -2.0, hi: 3.0, from: -1.0, to: 2.0 };
+    let ten = Band { o: p(0.0, 0.0), u: (0.0, 1.0), n: (-1.0, 0.0), lo: -5.0, hi: 5.0, from: -1.0, to: 2.0 };
+    assert_eq!(0.02 * five.width() * ten.width(), 1.0);
+    assert!(meeting(&square_part, &five, &ten, meter).unwrap().unwrap().is_some());
+    // The end at a join lies half way along it.
+    assert_eq!(end(&five, &[p(3.0, 0.0), p(5.0, 1.0)]), 4.0);
+    // A stroke whose middle lies on either side of the other's band doesn't stop against it.
+    let running = Band { o: p(0.0, 5.0), u: (1.0, 0.0), n: (0.0, 1.0), lo: 0.0, hi: 1.0, from: 0.0, to: 6.0 };
+    for y in [3.0, 4.0] {
+        let stopping = Band { o: p(2.5, y), u: (0.0, 1.0), n: (-1.0, 0.0), lo: -0.5, hi: 0.5, from: 0.0, to: 4.0 };
+        assert_eq!(stops(&stopping, &running, REACH), None, "{y}");
+    }
+    // A ray from a point of an edge leaves the part where it next crosses one, on the slant too.
+    let bar = part(&[(0.0, 0.0), (10.0, 0.0), (10.0, 1.0), (0.0, 1.0)], &[]);
+    assert_eq!(leaves(&bar, p(0.0, 0.5), (1.0, 0.0)), Some(10.0));
+    let slant = part(&[(0.0, 0.0), (10.0, 0.0), (9.0, 2.0), (0.0, 2.0)], &[]);
+    assert!((leaves(&slant, p(5.0, 0.2), (1.0, 0.0)).unwrap() - 4.9).abs() < 1e-12);
+    // A band 2 mm wide whose end slants back 0.8 mm between its sides' rays, a tenth of its width in.
+    let wide = Band { o: p(0.0, 0.0), u: (1.0, 0.0), n: (0.0, 1.0), lo: 0.0, hi: 2.0, from: 0.0, to: 10.0 };
+    assert!((square(&slant, &wide, &[p(9.5, 1.0)]).unwrap() - 0.4).abs() < 1e-12);
+}
+
+#[test]
+fn a_stroke_that_crosses_another_on_the_slant_loses_its_band_narrowed_by_its_reachs_share() {
+    let (sin, cos) = math::sin_cos(math::to_radians(60.0));
+    let level = Band { o: p(0.0, 0.0), u: (1.0, 0.0), n: (0.0, 1.0), lo: -0.5, hi: 0.5, from: 0.0, to: 10.0 };
+    let slanted = Band { o: p(5.0 - 5.0 * cos, -5.0 * sin), u: (cos, sin), n: (-sin, cos), lo: -0.5, hi: 0.5, from: 0.0, to: 10.0 };
+    let met = [p(4.4, -0.5), p(5.6, -0.5), p(5.6, 0.5), p(4.4, 0.5)];
+    let cuts = join(&t(), (0, &level), (1, &slanted), &met, REACH).unwrap();
+    assert_eq!(cuts.len(), 1);
+    assert!(matches!(cuts[0], (1, Cut::Crossed { of: 0, by }, Some((_, 0))) if (by - REACH * sin).abs() < 1e-12), "{cuts:?}");
+}
+
+#[test]
+fn of_2_strokes_whose_ends_differ_by_exactly_tie_neither_is_squarer() {
+    // A level stroke 2 mm wide with a square end, and a longer upright one whose sides' rays from its middle
+    // leave the part 0.5 and 0.2 mm on: 0.3 mm over its width of 2, exactly TIE.
+    let ring = [
+        (0.0, 0.0),
+        (8.0, 0.0),
+        (8.0, 2.0),
+        (17.5, 2.0),
+        (17.5, 0.3),
+        (18.5, 0.3),
+        (18.5, 2.0),
+        (19.5, 2.0),
+        (19.5, 0.0),
+        (20.5, 0.0),
+        (20.5, 4.0),
+        (0.0, 4.0),
+    ];
+    let part = part(&ring, &[]);
+    let level = Band { o: p(0.0, 0.0), u: (1.0, 0.0), n: (0.0, 1.0), lo: 0.0, hi: 2.0, from: 0.0, to: 8.0 };
+    let upright = Band { o: p(20.0, -100.0), u: (0.0, 1.0), n: (-1.0, 0.0), lo: 0.0, hi: 2.0, from: 91.0, to: 110.0 };
+    let met = [p(7.5, -8.5), p(8.0, -8.5), p(8.0, -8.0), p(7.5, -8.0)];
+    assert_eq!((square(&part, &level, &met), square(&part, &upright, &met)), (Some(0.0), Some(TIE)));
+    // At right angles, the shorter stops, whichever is named first.
+    let bands = [level, upright];
+    for (a, b) in [(0, 1), (1, 0)] {
+        let cuts = join(&part, (a, &bands[a]), (b, &bands[b]), &met, REACH).unwrap();
+        assert_eq!(cuts.iter().map(|cut| cut.0).collect::<Vec<_>>(), vec![0]);
+    }
+}
+
+#[test]
+fn a_halving_line_at_a_blunt_join_lets_each_stroke_reach_its_share_past_it() {
+    // Strokes 150° apart, at 10° and 160° from their join at (2, 3): the halving line runs at 85°, each stroke
+    // 75° from it, and each reaches 0.2 - 0.4 cos 75° mm past it. The first runs from its far end in.
+    let way = |degrees: f64| {
+        let (sin, cos) = math::sin_cos(math::to_radians(degrees));
+        (cos, sin)
+    };
+    let (a, b, h) = (way(10.0), way(160.0), way(85.0));
+    let one = Band { o: p(2.0 + 6.0 * a.0, 3.0 + 6.0 * a.1), u: (-a.0, -a.1), n: (a.1, -a.0), lo: -0.5, hi: 0.5, from: 0.0, to: 5.0 };
+    let other = Band { o: p(2.0, 3.0), u: b, n: (-b.1, b.0), lo: -0.5, hi: 0.5, from: 1.0, to: 6.0 };
+    let past = REACH / 2.0 - REACH * cosine(a, h);
+    let m = (-h.1, h.0);
+    let expected = [(0, (2.0 + past * m.0, 3.0 + past * m.1), (-m.0, -m.1)), (1, (2.0 - past * m.0, 3.0 - past * m.1), m)];
+    for ((stroke, cut, _), (want, at, keeps)) in halved((0, &one), (1, &other), REACH).unwrap().into_iter().zip(expected) {
+        assert_eq!(stroke, want);
+        assert!(
+            matches!(cut, Cut::Keep { p: q, m: kept } if q.distance(p(at.0, at.1)) < 1e-9 && (kept.0 - keeps.0).abs() < 1e-9 && (kept.1 - keeps.1).abs() < 1e-9),
+            "{stroke}: {cut:?}"
+        );
     }
 }

@@ -119,11 +119,11 @@ struct Band {
 
 impl Band {
     fn along(&self, p: Point) -> f64 {
-        (p.x() - self.o.x()) * self.u.0 + (p.y() - self.o.y()) * self.u.1
+        dot((p.x() - self.o.x(), p.y() - self.o.y()), self.u)
     }
 
     fn across(&self, p: Point) -> f64 {
-        (p.x() - self.o.x()) * self.n.0 + (p.y() - self.o.y()) * self.n.1
+        dot((p.x() - self.o.x(), p.y() - self.o.y()), self.n)
     }
 
     fn at(&self, along: f64, across: f64) -> Option<Point> {
@@ -212,7 +212,7 @@ fn sides(ring: &[Point], meter: &mut Meter) -> Result<Vec<Side>, Exhausted> {
         meter.charge(1)?;
         let (Some(before), Some(here), Some(after)) = (at(k + count - 1), at(k), at(k + 1)) else { continue };
         let (Some(into), Some(out)) = (unit(before, here), unit(here, after)) else { continue };
-        let turn = into.0 * out.0 + into.1 * out.1;
+        let turn = dot(into, out);
         if turn < sharpest {
             (start, sharpest) = (k, turn);
         }
@@ -277,7 +277,7 @@ fn bands(part: &Polygon, runs: &[Side], limits: (f64, f64), meter: &mut Meter) -
 fn paired(one: Side, other: Side, (narrowest, widest): (f64, f64)) -> Option<(Band, (f64, f64))> {
     let u = unit(one.a, one.b)?;
     let v = unit(other.a, other.b)?;
-    if u.0 * v.0 + u.1 * v.1 > -OPPOSITE {
+    if dot(u, v) > -OPPOSITE {
         return None;
     }
     let mut band = Band { o: one.a, u, n: (-u.1, u.0), lo: 0.0, hi: 0.0, from: 0.0, to: 0.0 };
@@ -311,7 +311,7 @@ fn held(part: &Polygon, band: &Band, (from, to): (f64, f64), meter: &mut Meter) 
 /// Whether the strokes `kept` and `band` lie on the same 2 lines: within [`SAME_WAY`], and each side within a
 /// tenth of the width of `kept`'s.
 fn same(kept: &Band, band: &Band) -> bool {
-    let way = kept.u.0 * band.u.0 + kept.u.1 * band.u.1;
+    let way = dot(kept.u, band.u);
     if way.abs() < SAME_WAY {
         return false;
     }
@@ -523,17 +523,11 @@ fn extreme(values: &[f64], most: bool) -> Option<usize> {
 fn run_round(values: &[f64], at: usize, holds: impl Fn(f64) -> bool) -> (usize, usize) {
     let count = values.len().max(1);
     let holding = |k: usize| values.get(k % count).copied().is_some_and(&holds);
-    let (mut first, mut last) = (at, at);
-    let mut steps = 0;
-    while steps + 1 < count && holding(first + count - 1) {
-        first = (first + count - 1) % count;
-        steps += 1;
-    }
-    while steps + 1 < count && holding(last + 1) {
-        last = (last + 1) % count;
-        steps += 1;
-    }
-    (first, last)
+    // Counted over ranges no longer than the ring, so that the run ends whatever `holds` answers: back from
+    // `at`, then on from it over the points the run back left.
+    let back = (1..count).take_while(|&step| holding(at + count - step)).count();
+    let on = (1..count - back).take_while(|&step| holding(at + step)).count();
+    ((at + count - back) % count, (at + on) % count)
 }
 
 /// The points of `ring` from `from` to `to`, stepping `step` round it (1 on, the ring's length less 1 back).
@@ -648,7 +642,12 @@ fn sine(a: Way, b: Way) -> f64 {
 
 /// The cosine of the angle between the ways `a` and `b`, taken as 0 to 1, whichever way each runs.
 fn cosine(a: Way, b: Way) -> f64 {
-    (a.0 * b.0 + a.1 * b.1).abs()
+    dot(a, b).abs()
+}
+
+/// The dot product of `a` and `b`.
+fn dot(a: (f64, f64), b: (f64, f64)) -> f64 {
+    a.0 * b.0 + a.1 * b.1
 }
 
 /// `a` and `b`, the smaller first.
