@@ -180,6 +180,18 @@ fn a_line_that_is_a_part_of_its_own_merges_while_the_picture_keeps_its_share() {
 }
 
 #[test]
+fn a_line_that_touches_a_piece_of_its_colour_merges_whatever_share_is_kept() {
+    // The 2 areas and the line are of one colour: the line belongs to their part, and merging it loses none.
+    let elements = vec![
+        auto("left", &[square((0.0, 0.0), (10.0, 10.0))], &[]),
+        auto("line", &[strand(10.0)], &[(MIN_LIKENESS, "1")]),
+        auto("right", &[square((10.7, 0.0), (20.0, 10.0))], &[]),
+    ];
+    let (ids, said) = run(elements, &Budget::DEFAULT);
+    assert_eq!(ids, ["left", "right"], "{said:?}");
+}
+
+#[test]
 fn a_part_is_no_speck_and_holds_a_thread() {
     let rules = AutoParams::defaults();
     let smallest = rules.auto_min_area_mm2;
