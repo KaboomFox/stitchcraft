@@ -550,11 +550,9 @@ fn enclosed(shapes: &mut Shapes, facts: &[Facts], index: usize, meter: &mut Mete
     }
     let rim = joined(difference(&joined(buffered(&region, TOUCHING, meter))?, &region, meter))?;
     let all = area_of(&rim);
-    if no_area(all) {
-        return Ok(false);
-    }
     let covered = joined(intersection(&rim, &joined(union([around.as_slice()], meter))?, meter))?;
-    Ok(area_of(&covered) >= CLOSED_IN * all)
+    // A region with no strip round it, too small to measure, is closed in by nothing.
+    Ok(!no_area(all) && area_of(&covered) >= CLOSED_IN * all)
 }
 
 /// `SC-I0907` saying how many of the `details`, each the area it meets and the detail, sew before that area

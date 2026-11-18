@@ -635,3 +635,62 @@ fn req_auto_096_closing_in_on_a_detail_is_metered_and_stops_where_the_work_runs_
     assert!(short(&mut painted, 2));
     assert!(!short(&mut found(), work));
 }
+
+/// `shapes` of `sewn`, each one's paint found, the facts of each, and the work `enclosed` takes for shape
+/// `index`, with what it finds.
+fn closing(sewn: Vec<Sewn>, index: usize) -> (bool, u64) {
+    let settings = DesignSettings::default();
+    let mut shapes = Shapes::new(sewn, &settings, &Budget::DEFAULT);
+    (0..shapes.len()).for_each(|index| shapes.find(index));
+    let facts: Vec<Facts> = (0..shapes.len()).map(|index| Facts::of(&shapes.elements[index], reach(&shapes, index))).collect();
+    let mut meter = Budget::DEFAULT.meter();
+    let closed = enclosed(&mut shapes, &facts, index, &mut meter).unwrap();
+    (closed, Budget::DEFAULT.max_work - meter.work_left())
+}
+
+#[test]
+fn req_auto_096_closing_in_grows_only_the_shapes_near_the_detail() {
+    // A square 1 mm right of the mark's box is looked at, for a unit, and not grown: it lies farther than
+    // twice the shapes' tolerance from the mark.
+    let (closed, work) = closing(pinwheel(), 0);
+    assert!(closed);
+    let mut far = pinwheel();
+    far.push(square("far", (15.0, 11.0), 1.0, &RED));
+    assert_eq!(closing(far, 0), (true, work + 1));
+}
+
+#[test]
+fn req_auto_096_a_detail_is_closed_in_and_smaller_than_the_area_it_meets() {
+    // The pinwheel's mark, and a green square 4 mm wide beside a red one 10 mm wide, open all round.
+    let mut beside = vec![square("small", (100.0, 0.0), 4.0, &GREEN), square("large", (90.0, 0.0), 10.0, &RED)];
+    beside.extend(pinwheel());
+    let settings = DesignSettings::default();
+    let mut shapes = Shapes::new(beside, &settings, &Budget::DEFAULT);
+    (0..shapes.len()).for_each(|index| shapes.find(index));
+    let facts: Vec<Facts> = (0..shapes.len()).map(|index| Facts::of(&shapes.elements[index], reach(&shapes, index))).collect();
+    let moving: Vec<Moving> = (0..shapes.len()).map(|shape| Moving { free: true, made: true, shape }).collect();
+    let mut order = Order {
+        facts: &facts,
+        moving: &moving,
+        graph: Graph::new(shapes.len()),
+        borders: Vec::new(),
+        wished: Vec::new(),
+        last: true,
+        details: Vec::new(),
+        closed: BTreeMap::new(),
+        kept: BTreeSet::new(),
+        unsought: None,
+        under: None,
+    };
+    let mut detail = |detail: usize, other: usize| order.detail(&mut shapes, detail, other, &mut Budget::DEFAULT.meter()).unwrap();
+    // The mark (2) is closed in and smaller than a square of the pinwheel (3), and no smaller than itself.
+    assert!(detail(2, 3));
+    assert!(!detail(2, 2));
+    // The small square is smaller than the large one, and open: no detail.
+    assert!(!detail(0, 1));
+}
+
+#[test]
+fn req_auto_096_a_detail_paired_with_itself_sews_neither_before_nor_after_itself() {
+    assert_eq!(early(&[(2, 2)], &[0, 1, 2]), None);
+}
