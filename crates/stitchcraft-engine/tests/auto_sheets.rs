@@ -17,7 +17,7 @@ use stitchcraft_engine::normalize::region;
 use stitchcraft_engine::normalize::stroke::distance_to_segment;
 use stitchcraft_engine::testsheets::find;
 use stitchcraft_plan::{StitchKind, StitchPlan};
-use stitchcraft_testkit::designs::{p, rules};
+use stitchcraft_testkit::designs::{in_place, p, rules};
 use stitchcraft_testkit::metrics::{coverage, edge_coverage};
 use stitchcraft_testkit::pictures;
 use stitchcraft_testkit::stitches::{jump_threads, rungs, top_runs};
@@ -258,7 +258,16 @@ fn req_auto_017_ts13_satin_columns_lie_square_to_their_strokes() {
     // point from its tip to its cut too.
     let mut measured: Vec<(String, Vec<(Point, f64)>)> = Vec::new();
     let round = |middle: Point| move |at: Point| Some(towards(middle, at));
-    let (design, plan) = sheet("TS-13C");
+    // The columns as digitizing lays them, the cap at the end of planning (`REQ-AUTO-100`) above every spot:
+    // where a column's points crowd in a bend, the cap may take one out of the doubled thread, and the
+    // stitch it leaves runs across part of the column only, 14° from square on the face's outline.
+    let (design, _) = sheet("TS-13C");
+    let mut elements = design.elements().to_vec();
+    for element in elements.iter_mut().filter(|element| element.automatic) {
+        element.params.set("auto_thick_cap_fills", "50");
+    }
+    let laid = in_place(&Design::new(elements, design.settings).unwrap()).plan.unwrap();
+    let plan = &laid;
     let face = middle(boxes(drawn(design, "ts13c:auto:face:face"))[0]);
     let eyes: Vec<Point> = boxes(drawn(design, "ts13c:auto:face:eyes")).into_iter().map(middle).collect();
     let nearer_eye = |at: Point| {

@@ -114,12 +114,20 @@ impl Capped {
     }
 }
 
-/// Takes needle points out of `plan` where `thickness`, its measure, has a spot above the cap of `rules`,
-/// and keeps the measure up to date; `None` when no spot is above the cap. A unit of work for each stitch
+/// Takes needle points of the elements `made` out of `plan` where `thickness`, its measure, has a spot above
+/// the cap of `rules`, and keeps the measure up to date; `None` when no spot is above the cap. The other
+/// elements' stitches, those a shape's settings sew as drawn, stay as they are, and cover and lay thread
+/// all the same. A unit of work for each stitch
 /// and needle point looked at, each step along a stitch measured, and each top stitch looked at for a
 /// place's cover. A cap out of work may leave the plan and the measure part changed, so its caller works on
 /// copies and keeps what the last pass left.
-pub(crate) fn capped(plan: &mut StitchPlan, thickness: &mut Thickness, rules: &Rules, meter: &mut Meter) -> Result<Option<Capped>, Exhausted> {
+pub(crate) fn capped(
+    plan: &mut StitchPlan,
+    thickness: &mut Thickness,
+    rules: &Rules,
+    made: &BTreeSet<ElementRef>,
+    meter: &mut Meter,
+) -> Result<Option<Capped>, Exhausted> {
     if thickness.most(Measure::Fills).value <= rules.cap {
         return Ok(None);
     }
@@ -145,7 +153,7 @@ pub(crate) fn capped(plan: &mut StitchPlan, thickness: &mut Thickness, rules: &R
         before = Some(stitch);
     }
     let points: Vec<Entry> = points.into_iter().collect();
-    let mut cap = Cap { pass: Pass::new(plan, thickness, rules), ribbons, longest, taken: [0.0; 3], times: [0; 3] };
+    let mut cap = Cap { pass: Pass::new(plan, thickness, rules), made, ribbons, longest, taken: [0.0; 3], times: [0; 3] };
     for kind in Kind::ALL {
         for _ in 0..ROUNDS {
             if !cap.above(meter)? || cap.round(kind, &points, meter)? == 0 {
@@ -164,6 +172,8 @@ pub(crate) fn capped(plan: &mut StitchPlan, thickness: &mut Thickness, rules: &R
 /// The plan being capped, and what is known of it.
 struct Cap<'p, 'r> {
     pass: Pass<'p, 'r>,
+    /// The elements that digitizing made, whose needle points alone may go.
+    made: &'p BTreeSet<ElementRef>,
     /// The top stitches near a spot above the cap, as the cap leaves them.
     ribbons: Ribbons,
     /// The longest stitch of each element, of its top stitches and of the others.
@@ -197,7 +207,7 @@ impl Cap<'_, '_> {
     fn taken_out(&mut self, (block, at): Entry, kind: Kind, meter: &mut Meter) -> Result<bool, Exhausted> {
         let pass = &self.pass;
         let Some((_, role, element)) = pass.stitch((block, at)) else { return Ok(false) };
-        if !kind.takes(role) {
+        if !kind.takes(role) || !element.is_some_and(|element| self.made.contains(&element)) {
             return Ok(false);
         }
         let (Some(from), Some(to)) = (pass.beside((block, at), false, meter)?, pass.beside((block, at), true, meter)?) else { return Ok(false) };

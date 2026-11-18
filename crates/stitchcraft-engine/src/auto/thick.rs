@@ -57,8 +57,15 @@ pub(crate) fn held(rules: &AutoParams) -> Held {
 /// (`REQ-AUTO-074`, [`thin`]) and then capped there (`REQ-AUTO-100`, [`cap`]), and what is said of it: what
 /// the pass and the cap took (`SC-I1119`) and how thick the plan sews (`SC-W0913`). It is measured once, with
 /// `budget`'s work, and the pass and the cap have the work once more each. `base` names the base layer's
-/// pieces, and `profile` is the machine's, whose stitches the pass keeps to.
-pub(crate) fn finished(plan: &mut StitchPlan, held: &Held, base: &[ElementId], profile: &MachineProfile, budget: &Budget) -> Vec<Diagnostic> {
+/// pieces and `made` the elements that digitizing made, whose needle points alone the cap takes, and
+/// `profile` is the machine's, whose stitches the pass keeps to.
+pub(crate) fn finished(
+    plan: &mut StitchPlan,
+    held: &Held,
+    (base, made): (&[ElementId], &BTreeSet<ElementId>),
+    profile: &MachineProfile,
+    budget: &Budget,
+) -> Vec<Diagnostic> {
     let mut meter = budget.meter();
     let mut said = Vec::new();
     let measured = Thickness::of(plan, &mut meter).map(|thickness| {
@@ -66,8 +73,10 @@ pub(crate) fn finished(plan: &mut StitchPlan, held: &Held, base: &[ElementId], p
             if thickness.most(Measure::Fills).value <= held.cap {
                 return thickness;
             }
-            let base: BTreeSet<ElementRef> =
-                plan.elements.iter().enumerate().filter(|(_, id)| base.contains(id)).filter_map(|(at, _)| ElementRef::from_index(at)).collect();
+            let refs = |of: &dyn Fn(&ElementId) -> bool| -> BTreeSet<ElementRef> {
+                plan.elements.iter().enumerate().filter(|(_, id)| of(id)).filter_map(|(at, _)| ElementRef::from_index(at)).collect()
+            };
+            let (base, made) = (refs(&|id| base.contains(id)), refs(&|id| made.contains(id)));
             let rules =
                 thin::Rules { cap: held.cap, base: &base, overlap: held.overlap, shortest: profile.min_stitch.get(), longest: profile.max_stitch.get() };
             let (mut thinner, mut measure) = (plan.clone(), thickness.clone());
@@ -81,7 +90,7 @@ pub(crate) fn finished(plan: &mut StitchPlan, held: &Held, base: &[ElementId], p
             };
             // The cap works on what the pass left, and keeps it when it runs out of work (`REQ-AUTO-101`).
             let (mut capped, mut kept) = (thinner.clone(), measure.clone());
-            let outcome = cap::capped(&mut capped, &mut kept, &rules, &mut budget.meter());
+            let outcome = cap::capped(&mut capped, &mut kept, &rules, &made, &mut budget.meter());
             let took = matches!(&outcome, Ok(Some(capped)) if capped.took());
             if thinned.took() || took || outcome.is_err() {
                 said.push(note(&thinned, &outcome, held.cap));
@@ -158,7 +167,7 @@ fn message(plan: &StitchPlan, report: &Report, limits: &Limits, cap: f64) -> Str
     let areas = |over: &Over, failing: &Over| (format!("{:.1} mm² in {}", over.area, places(over.pieces)), format!("{:.1} mm² of it", failing.area));
     let (thick, failing) = areas(&report.thick, &report.failing);
     let (dense, pierced) = areas(&report.dense, &report.pierced);
-    let capped = if report.fills.value > cap { format!(" The cap of {cap} fills could take no more there.") } else { String::new() };
+    let capped = if report.fills.value > cap { " Above the cap." } else { "" };
     format!(
         "Thread is up to {:.1} fills thick at {} mm from the design's centre: {}.{capped} {thick} has {} fills or more, {failing} {} or more. Needle points: up to {:.0} per mm² at {}, {dense} at {} or more, {pierced} at {} or more.",
         report.fills.value,
@@ -264,8 +273,9 @@ mod tests {
         assert!(line.ends_with(HINT) && line.chars().count() <= 500, "{}: {line}", line.chars().count());
     }
 
-    /// The message of 4 squares on a layer of no shape: a corner where the rows turn is thickest.
-    const EXPECTED: &str = "Thread is up to 5.3 fills thick at (9.5, 9.5) mm from the design's centre: stitches of no shape #000000 1.1, `s1` #010000 1.1, `s2` #020000 1.1 and 2 more. 109.2 mm² in 1 place has 3 fills or more, 90.2 mm² of it 4.5 or more. Needle points: up to 20 per mm² at (10.5, 9.5), 20.0 mm² in 2 places at 12 or more, 18.5 mm² of it at 16 or more.";
+    /// The message of 4 squares on a layer of no shape: a corner where the rows turn is thickest, above the cap
+    /// (`REQ-AUTO-101`).
+    const EXPECTED: &str = "Thread is up to 5.3 fills thick at (9.5, 9.5) mm from the design's centre: stitches of no shape #000000 1.1, `s1` #010000 1.1, `s2` #020000 1.1 and 2 more. Above the cap. 109.2 mm² in 1 place has 3 fills or more, 90.2 mm² of it 4.5 or more. Needle points: up to 20 per mm² at (10.5, 9.5), 20.0 mm² in 2 places at 12 or more, 18.5 mm² of it at 16 or more.";
 
     #[test]
     fn diag_sc_w0913_says_when_the_design_was_not_measured() {
@@ -285,11 +295,11 @@ mod tests {
         let sewn = plan(0, 5);
         let mut kept = sewn.clone();
         let codes = |said: &[Diagnostic]| said.iter().map(|said| said.code).collect::<Vec<_>>();
-        assert_eq!(codes(&finished(&mut kept, &held, &[], profile, &Budget::DEFAULT)), [Code::AutoThick]);
+        assert_eq!(codes(&finished(&mut kept, &held, (&[], &BTreeSet::new()), profile, &Budget::DEFAULT)), [Code::AutoThick]);
         assert_eq!(kept, sewn);
         // A plan within the cap is not gone through, and 2 fills say nothing.
         let (within, mut kept) = (plan(0, 2), plan(0, 2));
-        assert!(finished(&mut kept, &held, &[], profile, &Budget::DEFAULT).is_empty());
+        assert!(finished(&mut kept, &held, (&[], &BTreeSet::new()), profile, &Budget::DEFAULT).is_empty());
         assert_eq!(kept, within);
         // With the work to measure it and not to thin it, the plan stays as it is, and SC-I1119 says so.
         let used = |work: &dyn Fn(&mut Meter) -> bool| {
@@ -305,7 +315,7 @@ mod tests {
         assert!(pass > measure, "{pass} {measure}");
         let budget = Budget { max_work: measure, ..Budget::DEFAULT };
         let mut kept = sewn.clone();
-        let said = finished(&mut kept, &held, &[], profile, &budget);
+        let said = finished(&mut kept, &held, (&[], &BTreeSet::new()), profile, &budget);
         assert_eq!(said.first().map(|said| (said.code, said.message.as_str())), Some((Code::AutoThinned, not_thinned(4.0).as_str())), "{said:?}");
         assert_eq!(kept, sewn);
     }

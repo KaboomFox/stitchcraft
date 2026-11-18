@@ -90,33 +90,11 @@ fn hundredths(value: f64) -> f64 {
     (value * 100.0).round() / 100.0
 }
 
-/// The thickest spot of each design still above the cap, in fills to the hundredth, as measured. The list
-/// only shrinks: a design that comes under the cap leaves it. Since the measure's grid is laid from the
-/// plan's first needle point (`REQ-AUTO-074`), the badges measure 4.40, where they measured 4.20 on the
-/// machine file's grid: a needle point on a cell's edge counts on the other side.
-/// The lettered patch came to 4.00 when its letters sewed as strokes (M13.37), and TS-13D went to 4.23 from 4.17
-/// at its stacked emblem's white ring, whose frame then sews as strokes and whose column starts elsewhere:
-/// its area at 3 fills or more fell by 16.5 mm².
-const ABOVE: [(&str, f64); 7] =
-    [("badges-abutting", 4.4), ("badges-stacked", 4.4), ("pear", 4.2), ("lettered-patch", 4.0), ("ts-13a", 4.28), ("ts-13c", 4.49), ("ts-13d", 4.23)];
-
-#[test]
-fn req_auto_073_no_spot_of_a_digitized_picture_sews_above_the_cap_but_as_listed() {
-    let mut above = Vec::new();
-    for (name, design) in designs() {
-        let outcome = in_place(&design);
-        let plan = outcome.plan.unwrap_or_else(|| panic!("{name}: {:?}", outcome.diagnostics));
-        let thickest = fabric::thickness(&plan, &Limits::DEFAULT).fills.value;
-        if thickest > CAP {
-            above.push((name, hundredths(thickest)));
-        }
-    }
-    assert_eq!(above, ABOVE.map(|(name, thickest)| (name.to_string(), thickest)));
-}
-
 #[test]
 fn req_auto_102_no_spot_of_a_digitized_picture_sews_above_the_cap() {
-    // The cap at the end of planning (REQ-AUTO-100) empties the list of REQ-AUTO-073's case.
+    // The cap at the end of planning (REQ-AUTO-100) emptied the list that REQ-AUTO-073's case kept here of
+    // the designs above 4 fills: the badges at 4.40, the pear at 4.20, the lettered patch at 4.00 and the
+    // digitized halves of TS-13A, C and D at 4.28, 4.49 and 4.23.
     let mut above = Vec::new();
     for (name, design) in designs() {
         let outcome = in_place(&design);

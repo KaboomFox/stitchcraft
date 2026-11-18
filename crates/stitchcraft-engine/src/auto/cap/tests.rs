@@ -1,3 +1,288 @@
-//! Cases of the cap at the end of planning.
+// Test data: small counts of rows, from sizes given in whole steps.
+#![allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+
+use stitchcraft_core::{Budget, Code, Diagnostic, ElementId};
+use stitchcraft_plan::thickness::Limits;
+use stitchcraft_plan::{PlanBuilder, Provenance, Rgb, Stitch, StitchKind, Thread};
 
 use super::*;
+use crate::auto::thick::{Held, finished};
+
+fn p(x: f64, y: f64) -> Point {
+    Point::new(x, y).unwrap()
+}
+
+/// An element's id, the role of its stitches, and their needle points; the first part of each element
+/// starts with a jump to its first point.
+type Part<'a> = (&'a str, Role, Vec<(f64, f64)>);
+
+/// A plan of one block of `parts`, sewn in order.
+fn plan(parts: &[Part]) -> StitchPlan {
+    let mut builder = PlanBuilder::new(Thread::new(Rgb::new(0, 0, 0)));
+    let mut ids: Vec<(&str, ElementRef)> = Vec::new();
+    for (id, role, points) in parts {
+        let element = match ids.iter().find(|(known, _)| known == id) {
+            Some((_, element)) => *element,
+            None => {
+                let element = builder.element(ElementId::new(*id).unwrap()).unwrap();
+                ids.push((id, element));
+                let (x, y) = points[0];
+                builder.jump(p(x, y), Provenance::new(element, Role::Travel));
+                element
+            }
+        };
+        for (x, y) in points {
+            builder.stitch(p(*x, *y), Provenance::new(element, *role));
+        }
+    }
+    builder.finish()
+}
+
+/// A zigzag from x = 0 to x = `width` and back, from y = 0 to y = `width`, its needle points `apart` above
+/// each other on alternate sides: a fill of `0.25 / apart` fills, whose stitches turn at each point.
+fn zigzag(width: f64, apart: f64) -> Vec<(f64, f64)> {
+    let count = (width / apart).round() as usize;
+    (0..=count).map(|k| (if k % 2 == 0 { 0.0 } else { width }, k as f64 * apart)).collect()
+}
+
+/// Rows from x = 0 to x = `width` and back, `apart` above each other, each in 1 stitch, with a turn of
+/// `apart` between them.
+fn rows(width: f64, apart: f64) -> Vec<(f64, f64)> {
+    let count = (width / apart).round() as usize;
+    (0..=count).flat_map(|k| if k % 2 == 0 { [(0.0, k as f64 * apart), (width, k as f64 * apart)] } else { [(width, k as f64 * apart), (0.0, k as f64 * apart)] }).collect()
+}
+
+const NONE: &BTreeSet<ElementRef> = &BTreeSet::new();
+
+fn rules() -> Rules<'static> {
+    Rules { cap: 4.0, base: NONE, overlap: 1.0, shortest: 0.3, longest: 12.1 }
+}
+
+/// Every element of `plan`, as digitizing made them all.
+fn all(plan: &StitchPlan) -> BTreeSet<ElementRef> {
+    (0..plan.elements.len()).filter_map(ElementRef::from_index).collect()
+}
+
+/// `plan` capped with `rules`, its measure kept up to date, and the measure of what the cap left.
+fn cap(plan: &mut StitchPlan, rules: &Rules) -> (Option<Capped>, Thickness, Thickness) {
+    let mut thickness = Thickness::of(plan, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let capped = capped(plan, &mut thickness, rules, &all(plan), &mut Budget::DEFAULT.meter()).unwrap();
+    let again = Thickness::of(plan, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    (capped, thickness, again)
+}
+
+/// How many needle points of `plan` have `role`.
+fn count(plan: &StitchPlan, role: Role) -> usize {
+    plan.stitches().filter(|stitch| stitch.kind == StitchKind::Normal && stitch.origin.role == role).count()
+}
+
+/// Whether `kept`, the measure the cap kept up to date, measures as `measured`, the plan's measured again,
+/// at every half millimetre round the origin, and has its stitches.
+fn measures_as(kept: &Thickness, measured: &Thickness) -> bool {
+    kept.sewn() == measured.sewn()
+        && (-12..=12).all(|x| {
+            (-12..=12).all(|y| {
+                let place = p(f64::from(x) * 0.5, f64::from(y) * 0.5);
+                [Measure::Fills, Measure::Points].into_iter().all(|measure| (kept.at(measure, place) - measured.at(measure, place)).abs() < 1e-9)
+            })
+        })
+}
+
+#[test]
+fn req_auto_100_underlay_under_later_top_stitches_goes_first() {
+    // A fill of underlay under 4 fills of top stitches, sewn after it: 5 fills.
+    let sewn = plan(&[("base", Role::Underlay, zigzag(4.0, 0.25)), ("top", Role::Top, zigzag(4.0, 0.0625))]);
+    let mut capped_plan = sewn.clone();
+    let (capped, kept, measured) = cap(&mut capped_plan, &rules());
+    let capped = capped.unwrap();
+    assert!(capped.times[0] > 0 && capped.times[1..] == [0, 0], "{capped:?}");
+    assert!(capped.taken[0] > 0.0 && capped.taken[1..] == [0.0, 0.0], "{capped:?}");
+    assert!(count(&capped_plan, Role::Underlay) < count(&sewn, Role::Underlay));
+    assert_eq!(count(&capped_plan, Role::Top), count(&sewn, Role::Top));
+    assert!(measures_as(&kept, &measured));
+    assert!((capped.thickest.value - measured.most(Measure::Fills).value).abs() < 1e-9);
+    assert!(capped.left.area < measured.over(Measure::Fills, 4.0, &mut Budget::DEFAULT.meter()).unwrap().area + 1e-9);
+    assert!(kinds(&capped).starts_with(&format!("{:.1} mm of underlay and travel in {} places", capped.taken[0], capped.times[0])));
+    // Each needle point left is one of the plan's, in its order, and the jump stays.
+    let left: Vec<Stitch> = capped_plan.stitches().copied().collect();
+    let mut all = sewn.stitches();
+    assert!(left.iter().all(|stitch| all.any(|other| other == stitch)));
+    assert_eq!(capped_plan.stitches().filter(|stitch| stitch.kind == StitchKind::Jump).count(), 2);
+}
+
+#[test]
+fn req_auto_100_underlay_sewn_after_the_top_stitches_stays() {
+    // Nothing is sewn after the underlay, and the top stitches are too close together to join.
+    let mut sewn = plan(&[("top", Role::Top, zigzag(4.0, 0.0625)), ("base", Role::Underlay, zigzag(4.0, 0.25))]);
+    let was = sewn.clone();
+    let (capped, _, _) = cap(&mut sewn, &rules());
+    let capped = capped.unwrap();
+    assert!(!capped.took() && capped.left.area > 0.0 && capped.thickest.value > 4.0, "{capped:?}");
+    assert_eq!(sewn, was);
+    assert_eq!(kinds(&capped), "");
+}
+
+#[test]
+fn req_auto_100_only_the_elements_digitizing_made_lose_needle_points() {
+    // The same 5 fills, of which digitizing made the top stitches only: the underlay is a shape's own,
+    // sewn as its settings say.
+    let mut sewn = plan(&[("base", Role::Underlay, zigzag(4.0, 0.25)), ("top", Role::Top, zigzag(4.0, 0.0625))]);
+    let was = sewn.clone();
+    let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let made: BTreeSet<ElementRef> = ElementRef::from_index(1).into_iter().collect();
+    let capped = capped(&mut sewn, &mut thickness, &rules(), &made, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    assert!(!capped.took(), "{capped:?}");
+    assert_eq!(sewn, was);
+}
+
+#[test]
+fn req_auto_100_a_shape_s_top_under_a_later_shape_goes_second() {
+    let sewn = plan(&[("under", Role::Top, zigzag(4.0, 0.25)), ("over", Role::Top, zigzag(4.0, 0.0625))]);
+    let mut capped_plan = sewn.clone();
+    let (capped, kept, measured) = cap(&mut capped_plan, &rules());
+    let capped = capped.unwrap();
+    assert!(capped.times[1] > 0 && capped.times[0] == 0 && capped.times[2] == 0, "{capped:?}");
+    assert!(capped.taken[1] > 0.0);
+    assert!(measures_as(&kept, &measured));
+    assert!(kinds(&capped).starts_with(&format!("{:.1} mm of top stitches under later shapes in ", capped.taken[1])));
+    // Sewn the other way round, the shape below is the later one, and its points can't go.
+    let mut turned = plan(&[("over", Role::Top, zigzag(4.0, 0.0625)), ("under", Role::Top, zigzag(4.0, 0.25))]);
+    assert!(!cap(&mut turned, &rules()).0.unwrap().took());
+}
+
+#[test]
+fn req_auto_100_a_shape_s_own_top_where_it_is_doubled_goes_last() {
+    // One shape sews the same zigzag 5 times: 5 fills, each pass covering the others' places.
+    let points: Vec<(f64, f64)> = (0..5).flat_map(|_| zigzag(4.0, 0.25)).collect();
+    let sewn = plan(&[("doubled", Role::Top, points)]);
+    let mut capped_plan = sewn.clone();
+    let (capped, kept, measured) = cap(&mut capped_plan, &rules());
+    let capped = capped.unwrap();
+    assert!(capped.times[2] > 0 && capped.times[..2] == [0, 0], "{capped:?}");
+    assert!(measures_as(&kept, &measured));
+    assert!(measured.most(Measure::Fills).value < Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap().most(Measure::Fills).value);
+    assert!(kinds(&capped).starts_with(&format!("{:.1} mm of a shape's own doubled top stitches in ", capped.taken[2])));
+}
+
+#[test]
+fn req_auto_100_every_kind_is_said_in_order() {
+    let thickest = Thickness::of(&plan(&[("one", Role::Top, zigzag(4.0, 0.25))]), &mut Budget::DEFAULT.meter()).unwrap().unwrap().most(Measure::Fills);
+    let capped = Capped { taken: [1.0, 2.0, 3.04], times: [1, 2, 3], left: Over::default(), thickest };
+    assert_eq!(
+        kinds(&capped),
+        "1.0 mm of underlay and travel in 1 place, 2.0 mm of top stitches under later shapes in 2 places, 3.0 mm of a shape's own doubled top stitches in 3 places"
+    );
+}
+
+#[test]
+fn req_auto_100_a_joined_stitch_is_no_longer_than_its_element_s_longest() {
+    // The underlay's rows are its longest stitches, 4 mm: a row and its turn joined are longer.
+    let mut sewn = plan(&[("base", Role::Underlay, rows(4.0, 0.25)), ("top", Role::Top, zigzag(4.0, 0.0625))]);
+    let (capped, _, _) = cap(&mut sewn, &rules());
+    assert_eq!(capped.unwrap().times[0], 0);
+}
+
+#[test]
+fn req_auto_100_a_lock_s_needle_points_and_the_one_after_a_lock_stay() {
+    let lock = vec![(0.0, 0.0), (0.3, 0.0), (0.0, 0.0), (0.3, 0.0), (0.0, 0.0)];
+    let sewn = plan(&[("base", Role::Lock, lock), ("base", Role::Underlay, zigzag(4.0, 0.25)), ("top", Role::Top, zigzag(4.0, 0.0625))]);
+    let mut capped_plan = sewn.clone();
+    let (capped, _, _) = cap(&mut capped_plan, &rules());
+    assert!(capped.unwrap().times[0] > 0);
+    let locks = |plan: &StitchPlan| plan.stitches().filter(|stitch| stitch.origin.role == Role::Lock).copied().collect::<Vec<_>>();
+    assert_eq!(locks(&capped_plan), locks(&sewn));
+    // The underlay's first point, after the lock, is the plan's.
+    let first = |plan: &StitchPlan| plan.stitches().find(|stitch| stitch.origin.role == Role::Underlay).copied();
+    assert_eq!(first(&capped_plan), first(&sewn));
+    // A plan whose spots are all within the cap is not gone through.
+    let mut thin = plan(&[("one", Role::Top, zigzag(4.0, 0.25))]);
+    assert_eq!(cap(&mut thin, &rules()).0, None);
+    // A cap above every spot takes nothing.
+    let mut five = sewn.clone();
+    assert_eq!(cap(&mut five, &Rules { cap: 50.0, ..rules() }).0, None);
+}
+
+#[test]
+fn req_auto_100_a_point_on_a_straight_run_takes_no_thread_and_stays() {
+    // The top stitches run straight across and back, in stitches of 0.5 mm, 24 times: 6 fills. A point
+    // between 2 of them takes no thread.
+    let line: Vec<(f64, f64)> = (0..=8).map(|k| (f64::from(k) * 0.5, 1.0)).collect();
+    let back: Vec<(f64, f64)> = line.iter().rev().copied().collect();
+    let points: Vec<(f64, f64)> = (0..24).flat_map(|k| if k % 2 == 0 { line.clone() } else { back.clone() }).collect();
+    let mut sewn = plan(&[("line", Role::Top, points)]);
+    let was = sewn.clone();
+    let (capped, _, _) = cap(&mut sewn, &rules());
+    assert!(capped.unwrap().thickest.value > 4.0);
+    // Only the turns at the line's ends may go.
+    let kept: Vec<(f64, f64)> = sewn.stitches().filter(|stitch| stitch.kind == StitchKind::Normal).map(|stitch| (stitch.at.x(), stitch.at.y())).collect();
+    let all: Vec<(f64, f64)> = was.stitches().filter(|stitch| stitch.kind == StitchKind::Normal).map(|stitch| (stitch.at.x(), stitch.at.y())).collect();
+    let inner = |points: &[(f64, f64)]| points.iter().filter(|(x, _)| *x > 0.0 && *x < 4.0).count();
+    assert_eq!(inner(&kept), inner(&all));
+}
+
+#[test]
+fn req_auto_101_the_cap_stops_when_the_work_runs_out() {
+    let sewn = plan(&[("under", Role::Top, zigzag(1.5, 0.25)), ("over", Role::Top, zigzag(1.5, 0.0625)), ("over", Role::Underlay, zigzag(1.5, 0.25))]);
+    let thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let run = |max_work: u64| capped(&mut sewn.clone(), &mut thickness.clone(), &rules(), &all(&sewn), &mut Budget { max_work, ..Budget::DEFAULT }.meter()).is_ok();
+    let enough = (0..10_000_000u64).find(|work| run(*work)).unwrap();
+    assert!((0..enough).all(|work| !run(work)), "{enough}");
+}
+
+/// What `finished` says of `sewn` with `budget`, and the plan it leaves.
+fn said(sewn: &StitchPlan, budget: &Budget) -> (Vec<Diagnostic>, StitchPlan) {
+    let held = Held { limits: Limits::DEFAULT, overlap: 1.0, cap: 4.0 };
+    let mut kept = sewn.clone();
+    let made: BTreeSet<ElementId> = sewn.elements.iter().cloned().collect();
+    let said = finished(&mut kept, &held, (&[], &made), stitchcraft_plan::profiles::REFERENCE, budget);
+    (said, kept)
+}
+
+/// The work `work` takes.
+fn used(work: &dyn Fn(&mut Meter) -> bool) -> u64 {
+    let mut meter = Budget::DEFAULT.meter();
+    assert!(work(&mut meter));
+    Budget::DEFAULT.max_work - meter.work_left()
+}
+
+#[test]
+fn diag_sc_i1119_says_what_the_cap_took_after_a_pass_that_took_nothing() {
+    let sewn = plan(&[("base", Role::Underlay, zigzag(4.0, 0.25)), ("top", Role::Top, zigzag(4.0, 0.0625))]);
+    let (said, kept) = said(&sewn, &Budget::DEFAULT);
+    let note = said.iter().find(|said| said.code == Code::AutoThinned).unwrap();
+    assert!(note.message.contains("sewed 4 fills or more. The last pass took nothing there, and the cap took "), "{}", note.message);
+    assert!(note.message.contains(" mm of underlay and travel in "), "{}", note.message);
+    assert!(count(&kept, Role::Underlay) < count(&sewn, Role::Underlay));
+    // The warning that follows gives the plan as the cap left it.
+    let measured = Thickness::of(&kept, &mut Budget::DEFAULT.meter()).unwrap().unwrap().most(Measure::Fills).value;
+    assert!(note.message.contains(&format!("the thickest spot, {measured:.1} fills at ")), "{}", note.message);
+    let warned = said.iter().find(|said| said.code == Code::AutoThick).unwrap();
+    assert!(warned.message.starts_with(&format!("Thread is up to {measured:.1} fills thick at ")), "{}", warned.message);
+}
+
+#[test]
+fn diag_sc_i1119_says_when_the_cap_ran_out_of_work_and_keeps_what_the_pass_left() {
+    let sewn = plan(&[("base", Role::Underlay, zigzag(4.0, 0.25)), ("top", Role::Top, zigzag(4.0, 0.0625))]);
+    let thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let measure = used(&|meter| Thickness::of(&sewn, meter).is_ok());
+    let pass = used(&|meter| super::super::thin::thinned(&mut sewn.clone(), &mut thickness.clone(), &rules(), meter).is_ok());
+    let budget = Budget { max_work: measure.max(pass), ..Budget::DEFAULT };
+    let (said, kept) = said(&sewn, &budget);
+    let note = said.iter().find(|said| said.code == Code::AutoThinned).unwrap();
+    assert!(note.message.contains("The last pass took nothing there. The cap needs more work than the budget allows, and took nothing. Left: "), "{}", note.message);
+    assert_eq!(kept, sewn);
+}
+
+#[test]
+fn diag_sc_i1119_says_only_what_the_pass_took_when_the_cap_takes_nothing() {
+    // Lock stitches beyond one back and forth, on top stitches sewn 30 times over a stitch: the pass takes
+    // the locks, and no top point may go, as a joined stitch would have no length.
+    let thick: Vec<(f64, f64)> = (0..=30).map(|k| if k % 2 == 0 { (0.0, 0.5) } else { (1.0, 0.5) }).collect();
+    let lock = vec![(0.5, 0.5), (0.8, 0.5), (0.5, 0.5), (0.8, 0.5), (0.5, 0.5)];
+    let sewn = plan(&[("thick", Role::Top, thick), ("tied", Role::Lock, lock)]);
+    let (said, kept) = said(&sewn, &Budget::DEFAULT);
+    let note = said.iter().find(|said| said.code == Code::AutoThinned).unwrap();
+    assert!(note.message.contains("The last pass took ") && note.message.contains(" mm of lock stitches in "), "{}", note.message);
+    assert!(!note.message.contains("the cap"), "{}", note.message);
+    assert!(count(&kept, Role::Lock) < count(&sewn, Role::Lock));
+}
