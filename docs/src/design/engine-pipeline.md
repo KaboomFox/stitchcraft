@@ -37,7 +37,9 @@ paint order, and a line sews after the fill it borders. Then the thread changes 
 nearest element next ([image to embroidery](image-to-embroidery.md#sewing-order), `SC-I0907`). Elements
 with settings keep their order among themselves, unless `--sort-colours` is given. The switch brings a
 design without automatic elements through this stage too. An element sewn in several threads moves as one,
-its colours together and in their order (`REQ-AUTO-024`).
+its colours together and in their order (`REQ-AUTO-024`). With `auto_details_last` on, the details sew
+after the larger areas round them where that costs no thread change
+([details last](image-to-embroidery.md#details-last), `REQ-AUTO-098`).
 
 ## 1. Normalize
 

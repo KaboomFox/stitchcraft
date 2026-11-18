@@ -60,3 +60,4 @@ A shape's settings are those of VectorCraft's Auto effect on it, or on the group
 | [`auto_thick_fail_fills`](params/auto.md#auto_thick_fail_fills) | 6 | no: advanced |
 | [`auto_thick_warn_points`](params/auto.md#auto_thick_warn_points) | 15 | no: advanced |
 | [`auto_thick_fail_points`](params/auto.md#auto_thick_fail_points) | 30 | no: advanced |
+| [`auto_details_last`](params/auto.md#auto_details_last) | false | no: advanced |
