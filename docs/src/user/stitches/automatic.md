@@ -347,8 +347,9 @@ thread or thread change is added. `SC-I1119` says what they took. Where no more 
 <!-- /shot -->
 
 `stitch preview dog.pes --style thickness -o thick.png` draws this picture of any machine file. Grey is
-thread under 2 fills, yellow is 2 or more, orange 3 or more and red 6 or more. On the dog above, 210 mm²
-of 1,944 mm² is orange, mostly where several small patches meet, and its thickest spot has 5.9 fills.
+thread under 2 fills, yellow is 2 or more, orange 3 or more and red 6 or more. On the dog above, 177 mm²
+of 1,944 mm² is orange, mostly where several small patches meet, and its thickest spot has 4.0 fills, the
+cap. Before the cap it had 5.6.
 Before StitchCraft sewed an area's overlap by the way its rows run, and one overlap alone under a
 shape, 629 mm² was orange or red, and M13.30 left 280 mm² and a thickest spot of 7.0 fills.
 

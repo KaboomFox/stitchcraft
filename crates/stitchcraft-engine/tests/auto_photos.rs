@@ -269,10 +269,11 @@ fn req_auto_027_digitized_dogs_show_no_fabric_and_leave_the_slivers_recorded() {
 /// (REQ-AUTO-071 to REQ-AUTO-075) and outlines no longer sewn through more than 12 mm under a later fill
 /// (REQ-AUTO-076), 132.25, 160.0, 146.25 and 209.75 mm² before M13.36's holes, edges and narrow columns
 /// started at their start (REQ-AUTO-084 to REQ-AUTO-086), and 130.5, 156.5, 142.0 and 207.75 before the ragged
-/// thin lines merged into their neighbours (REQ-AUTO-090). The case fails when a number changes, so that a
-/// change that piles thread up again shows here.
+/// thin lines merged into their neighbours (REQ-AUTO-090), and 141.5, 153.25, 130.5 and 187.5 before the cap at
+/// the end of planning (REQ-AUTO-100). The case fails when a number changes, so that a change that piles
+/// thread up again shows here.
 const THICK: [(&str, f64, f64); 4] =
-    [("dog-on-turf-6", 14150.0, 0.0), ("dog-on-turf-9", 15325.0, 0.0), ("dog-running-6", 13050.0, 0.0), ("dog-running-9", 18750.0, 0.0)];
+    [("dog-on-turf-6", 13725.0, 0.0), ("dog-on-turf-9", 15075.0, 0.0), ("dog-running-6", 12900.0, 0.0), ("dog-running-9", 17650.0, 0.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -289,10 +290,11 @@ fn req_auto_067_digitized_dogs_sew_thick_on_the_area_recorded() {
 
 /// The thickest spot of each traced dog, in hundredths of a fill (REQ-AUTO-073): M13.30 left 5.54, 5.54, 6.05
 /// and 7.01, M13.35 4.53, 4.51, 5.07 and 5.89, and M13.36 4.53, 4.49, 5.07 and 5.63. Every dog is still above
-/// the cap of 4 fills, where 5 to 8 elements meet. With the ragged thin lines merged (REQ-AUTO-090), the running
+/// the cap of 4 fills then, where 5 to 8 elements meet. With the ragged thin lines merged (REQ-AUTO-090), the running
 /// dog in 6 threads sews 0.45 fills less at its thickest spot and the one in 9 as much, and the dogs on turf 0.16
-/// and 0.31 more, at new spots where a satin column or a fill lies over 3 or 4 other fills.
-const THICKEST: [(&str, f64); 4] = [("dog-on-turf-6", 469.0), ("dog-on-turf-9", 480.0), ("dog-running-6", 462.0), ("dog-running-9", 563.0)];
+/// and 0.31 more, at new spots where a satin column or a fill lies over 3 or 4 other fills: 4.69, 4.80, 4.62
+/// and 5.63. The cap at the end of planning (REQ-AUTO-100) brings each to 4.00.
+const THICKEST: [(&str, f64); 4] = [("dog-on-turf-6", 400.0), ("dog-on-turf-9", 400.0), ("dog-running-6", 400.0), ("dog-running-9", 400.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
