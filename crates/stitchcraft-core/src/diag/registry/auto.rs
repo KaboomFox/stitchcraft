@@ -192,7 +192,8 @@ macro_rules! auto_codes {
         /// The design is written all the same. The limits are starting values for a 75/11 needle and
         /// 40-weight polyester thread, from the public advice of machine and software makers, and no sew-out
         /// has confirmed them yet: sew a test piece of the thickest part before the whole design.
-        /// `stitch preview --style thickness` draws where the thread is thick. A design too large to measure,
+        /// `stitch preview --style thickness` draws where the thread is thick. Where the thickest spot is above
+        /// the cap, 4 fills (`auto_thick_cap_fills`), the message says so: no more thread there may go. A design too large to measure,
         /// or one whose measuring needs more work than the budget allows, gets this warning too, and its
         /// message says that the design was not measured.
         AutoThick = "SC-W0913", Warning, "Design sews thick";

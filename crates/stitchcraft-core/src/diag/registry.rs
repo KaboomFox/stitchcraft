@@ -1246,14 +1246,17 @@ macro_rules! later_codes {
         /// from which the bold font sews.
         FontChosenByWeight = "SC-I1118", Info, "Font chosen by the letters' weight";
 
-        /// A design digitized automatically still sewed more than 4 fills of thread on a spot of a millimetre once it was planned, and a last pass
-        /// took thread there that is hidden or does no visible work: travel that went out and back on itself, lock stitches beyond one back and
-        /// forth, and row ends that lie under shapes sewn later, moved back along their rows, the base layer's first. It took no top stitch that
-        /// shows, and made no jump thread.
+        /// A design digitized automatically still sewed more than its cap of thread on a spot of a millimetre once it was planned, 4 fills by
+        /// default (`auto_thick_cap_fills`). A last pass took thread there that is hidden or does no visible work: travel that went out and back
+        /// on itself, lock stitches beyond one back and forth, and row ends that lie under shapes sewn later, moved back along their rows, the
+        /// base layer's first. Where a spot was still above the cap, the cap took needle points out of the runs of the shapes digitizing made,
+        /// where other stitches cover what their stitches covered: underlay and travel under later top stitches, then top stitches under later
+        /// shapes, then a shape's own top stitches where they are doubled. Neither made a jump thread, and what shows keeps its colour.
         ///
-        /// The message gives the area that was above 4 fills, how much thread of each kind was taken in how many places, the area still above, and
-        /// the thickest spot left. Nothing needs doing. A spot still above 4 fills is one where no more thread is hidden: `SC-W0913` names what is
-        /// stacked there. If the pass needs more work than the budget allows, it takes nothing, and the message says so.
+        /// The message gives the area that was above the cap, how much thread of each kind the pass and the cap took in how many places, the
+        /// area still above, and the thickest spot left. Nothing needs doing. At a spot still above the cap no more thread may go by these rules:
+        /// `SC-W0913` names what is stacked there. If the pass or the cap needs more work than the budget allows, it takes nothing, and the
+        /// message says so.
         AutoThinned = "SC-I1119", Info, "Thread taken from thick spots";
 
         /// `--subject` and `stitch cutout` cut a picture's subject out with 3 models, which `stitch` fetches with
