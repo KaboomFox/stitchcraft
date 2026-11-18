@@ -26,14 +26,12 @@ use stitchcraft_core::{Budget, Code, Diagnostic};
 use stitchcraft_plan::{MachineProfile, StitchPlan};
 
 use crate::assemble::{Assembled, assemble_routed};
-use crate::auto::details;
-use crate::auto::{Details, Sewing, sewing, thick};
+use crate::auto::{Sewing, sewing, thick};
 use crate::design::{Design, Element};
 use crate::finalize::{Finalized, finalize};
 use crate::generate::layered::{Layered, underlay};
 use crate::generate::{Generated, Generation, approach, generate_with};
 use crate::generators::{Layer, Neighbours};
-use crate::guard::{self, Measured, Planned, Worse};
 use crate::moves::Routing;
 use crate::underlays_first::{Candidate, alone, steps};
 
@@ -51,23 +49,8 @@ pub struct PlanOutcome {
 /// The stitch plan for `design`, sewn on the machine `profile` describes. Each element has `budget`'s
 /// work to itself, and the stitches the elements before it left; assembling and finalizing have the work
 /// once more, and the design `budget`'s stitches.
-///
-/// When sewing the details of a design digitized automatically last changes its order (`REQ-AUTO-096`),
-/// the design is planned both ways, each with `budget`, and the plan that sews them last is kept only
-/// when it is no thicker and has no more jumps or thread changes ([`guard::kept`], `REQ-AUTO-098`).
 pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanOutcome {
-    let last = sewing(design, budget, Details::Last);
-    if !last.moved {
-        return planned(design, profile, budget, last).outcome;
-    }
-    let last = planned(design, profile, budget, last);
-    let unwished = planned(design, profile, budget, sewing(design, budget, Details::Unwished));
-    guard::kept(unwished, last, &Worse::ALL, details::worse)
-}
-
-/// The stitch plan for `design` sewn as `sewing` holds it, as [`plan`] makes it, and how it measures.
-fn planned(design: &Design, profile: &MachineProfile, budget: &Budget, sewing: Sewing<'_>) -> Planned {
-    let Sewing { elements, mut diagnostics, base, made, limits, .. } = sewing;
+    let Sewing { elements, mut diagnostics, base, made, limits } = sewing(design, budget);
     let candidates: Vec<Candidate> = elements.iter().map(|element| Candidate::of(element, &design.settings)).collect();
     let (steps, lone) = steps(&candidates);
     diagnostics.extend(lone.into_iter().filter_map(|(k, why)| elements.get(k).map(|element| alone(element, why))));
@@ -96,7 +79,7 @@ fn planned(design: &Design, profile: &MachineProfile, budget: &Budget, sewing: S
             Ok(generation) => generation,
             Err(said) => {
                 diagnostics.extend(said);
-                return Planned { outcome: PlanOutcome { plan: None, diagnostics }, measured: None };
+                return PlanOutcome { plan: None, diagnostics };
             }
         };
         // A top whose work ran out skips its element: its underlay is left out too, and its stitches come back.
@@ -126,16 +109,13 @@ fn planned(design: &Design, profile: &MachineProfile, budget: &Budget, sewing: S
         None => Ok(None),
     });
     diagnostics.extend(routing.and_then(|routing| routing.said(budget)));
-    let mut thickest = None;
     let plan = match finished {
         Ok(Some(Finalized { mut plan, diagnostics: said })) => {
             diagnostics.extend(said);
             // A design digitized automatically is thinned where a spot sews above the cap (`REQ-AUTO-074`),
             // told where it sews thick (`SC-W0913`), and is written.
             if let (Some(held), Some(plan)) = (limits, plan.as_mut()) {
-                let (said, measured) = thick::finished(plan, &held, &base, profile, budget);
-                diagnostics.extend(said);
-                thickest = measured;
+                diagnostics.extend(thick::finished(plan, &held, &base, profile, budget));
             }
             plan
         }
@@ -149,7 +129,5 @@ fn planned(design: &Design, profile: &MachineProfile, budget: &Budget, sewing: S
             None
         }
     };
-    // A plan not measured for thickness, of a design with no automatic shape, has no details to move.
-    let measured = plan.as_ref().map(|plan| Measured::of(plan, thickest.unwrap_or_default()));
-    Planned { outcome: PlanOutcome { plan, diagnostics }, measured }
+    PlanOutcome { plan, diagnostics }
 }

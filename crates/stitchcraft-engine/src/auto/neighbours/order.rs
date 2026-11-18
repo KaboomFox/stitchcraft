@@ -30,9 +30,11 @@
 //!    later batch of its thread. A line or a column round a detail still goes by rules 2 and 4: it covers
 //!    the detail's edge, as an outline does, and the detail reaches under a column. Which shape is a detail
 //!    goes by geometry alone, never by what the picture shows. `SC-I0907` says how many details still sew
-//!    before a larger shape round them. Moving fills for the details can make another spot thicker, which
-//!    no rule of geometry foresees, so where the details change the order it is also found without them,
-//!    and planning keeps the plan that measures no worse (`crate::guard`, `REQ-AUTO-098`).
+//!    before a larger shape round them. The rule runs only when the design's lowest automatic shape turns
+//!    `auto_details_last` on (`REQ-AUTO-098`). It is off by default: a fill that moves for a detail starts,
+//!    ends and travels elsewhere, and can make a spot away from any detail thicker. Nothing about the
+//!    shapes' geometry tells in advance where, so the rule waits for one cap on thickness at the end of
+//!    planning. Off, no area is looked at for details at all.
 //! 6. **The nearest next.** Of the free elements of a batch, the next is the one whose box lies nearest
 //!    the box of the one sewn last, then the one whose box's centre does, then the one drawn first. Each
 //!    element then starts and ends at its points nearest its neighbours (`REQ-GEN-003`).
@@ -63,7 +65,6 @@ use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Meter, Po
 use stitchcraft_plan::Rgb;
 
 use super::{Failed, Kind, Shapes, TOUCHING, envelope, joined, near, no_area};
-use crate::auto::Details;
 use crate::design::{Element, Join, Shape};
 use crate::generate::{colours, stops_after};
 use crate::normalize::region::Polygon;
@@ -97,14 +98,12 @@ pub(super) struct Moving {
 /// `shapes` put in the order they sew in, each element moving round the others as `moving` says, and what
 /// is said of it: `SC-I0907` when the order isn't paint order, and for each element left in paint order.
 /// `under` is the thread of the base layer, if there is one: it sews before the first element that automatic
-/// digitizing made, and is sewing when that element's run starts. With [`Details::Last`] the details sew
-/// last where that costs no thread change (rule 5), and the order is also found without that rule: the
-/// second value says whether the 2 differ, so that the plan is made both ways and measured
-/// (`crate::guard`). With [`Details::Unwished`] rule 5 is left out.
-pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, under: Option<Rgb>, details: Details) -> (Vec<Diagnostic>, bool) {
+/// digitizing made, and is sewing when that element's run starts. With `last`, the details sew last where
+/// that costs no thread change (rule 5); without it, no area is looked at for details.
+pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, under: Option<Rgb>, last: bool) -> Vec<Diagnostic> {
     let live: Vec<usize> = (0..shapes.len()).filter(|&index| !shapes.left_out(index)).collect();
     if !live.iter().any(|&index| moving.get(index).is_some_and(|moving| moving.free)) {
-        return (Vec::new(), false);
+        return Vec::new();
     }
     let reaches: Vec<Option<Envelope>> = (0..shapes.len()).map(|index| reach(shapes, index)).collect();
     let facts: Vec<Facts> = shapes.elements.iter().zip(reaches).map(|(element, reach)| Facts::of(element, reach)).collect();
@@ -115,6 +114,7 @@ pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, u
         graph,
         borders: Vec::new(),
         wished: Vec::new(),
+        last,
         details: Vec::new(),
         closed: BTreeMap::new(),
         kept,
@@ -128,37 +128,23 @@ pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, u
     }
     // Nothing moves across an element whose neighbours needed more work than the budget allows either.
     let runs = runs(&live, |index| stop(index) || order.kept.contains(&index));
-    // The order without the details' wishes, and with them when they are wished for. Each is found with the
-    // budget's work.
-    let found = std::mem::take(&mut order.details);
-    let without = order.clone().placed(&runs, &live, shapes, budget);
-    let (sewn, moved) = match details {
-        Details::Last if !found.is_empty() => {
-            let with = Order { details: found.clone(), ..order }.placed(&runs, &live, shapes, budget);
-            let moved = with.order != without.order;
-            (with, moved)
-        }
-        Details::Last | Details::Unwished => (without, false),
-    };
-    let Placed { order: mut sewing, said: placing } = sewn;
-    said.extend(placing);
-    if sewing != live {
-        said.push(summary(changes(&live, &facts), changes(&sewing, &facts)));
+    let mut sewing = Sewing::default();
+    let spent = order.sew(&runs, &mut sewing, budget).is_err();
+    said.extend(order.unsought.and_then(|index| shapes.id(index)).map(|id| unsought(budget.max_work, id)));
+    // What wasn't placed sews in paint order after the rest: what the work left, and so no element is lost.
+    let rest: Vec<usize> = live.iter().copied().filter(|index| !sewing.placed.contains(index)).collect();
+    if spent {
+        said.extend(rest.first().and_then(|&index| shapes.id(index)).map(|id| unplaced(budget.max_work, id)));
     }
-    said.extend(early(&found, &sewing, details));
+    sewing.order.extend(rest);
+    if sewing.order != live {
+        said.push(summary(changes(&live, &facts), changes(&sewing.order, &facts)));
+    }
+    said.extend(early(&order.details, &sewing.order));
     // The elements left out go last, where they are left out.
-    sewing.extend((0..shapes.len()).filter(|&index| shapes.left_out(index)));
-    shapes.reorder(&sewing);
-    (said, moved)
-}
-
-/// An order found ([`Order::placed`]).
-struct Placed {
-    /// The elements not left out, in the order they sew.
-    order: Vec<usize>,
-    /// What is said of it: `SC-I0907` for the run that finding the fewest thread changes needed more work
-    /// for, and for the elements not placed for want of work.
-    said: Vec<Diagnostic>,
+    sewing.order.extend((0..shapes.len()).filter(|&index| shapes.left_out(index)));
+    shapes.reorder(&sewing.order);
+    said
 }
 
 /// What the order needs to know of an element.
@@ -235,7 +221,6 @@ fn runs(live: &[usize], cut: impl Fn(usize) -> bool) -> Vec<Vec<usize>> {
 }
 
 /// The order as it is found.
-#[derive(Clone)]
 struct Order<'o> {
     /// What it needs to know of each element.
     facts: &'o [Facts],
@@ -249,6 +234,8 @@ struct Order<'o> {
     /// Each satin column that automatic digitizing made and that borders a fill, as the fill and the column,
     /// in the order they were found: it sews after the fill where that costs no thread change.
     wished: Vec<(usize, usize)>,
+    /// Whether the details sew last where that costs no thread change (rule 5, `auto_details_last`).
+    last: bool,
     /// Each detail, an automatic area that the shapes round it close in on ([`Self::closed_in`]), with each
     /// shape it meets that is larger than it is, as that shape and the detail, in the order they were found:
     /// it sews after that shape where that costs no thread change.
@@ -373,7 +360,7 @@ impl Order<'_> {
         for &other in later {
             meter.charge(1)?;
             if self.near(index, other) {
-                found.extend(lie(shapes, index, other, meter)?);
+                found.extend(lie(shapes, index, other, self.last, meter)?);
             }
         }
         Ok(found)
@@ -427,22 +414,6 @@ impl Order<'_> {
             self.run(&rest, sewing, &mut placing)?;
         }
         Ok(())
-    }
-
-    /// The elements of `live`, cut into `runs`, in the order they sew ([`Self::sew`]), with `budget`'s work,
-    /// and what is said of it. What wasn't placed sews in paint order after the rest: what the work left, and
-    /// so no element is lost.
-    fn placed(mut self, runs: &[Vec<usize>], live: &[usize], shapes: &Shapes, budget: &Budget) -> Placed {
-        let mut sewing = Sewing::default();
-        let spent = self.sew(runs, &mut sewing, budget).is_err();
-        let mut said: Vec<Diagnostic> =
-            self.unsought.and_then(|index| shapes.id(index)).map(|id| unsought(budget.max_work, id)).into_iter().collect();
-        let rest: Vec<usize> = live.iter().copied().filter(|index| !sewing.placed.contains(index)).collect();
-        if spent {
-            said.extend(rest.first().and_then(|&index| shapes.id(index)).map(|id| unplaced(budget.max_work, id)));
-        }
-        sewing.order.extend(rest);
-        Placed { order: sewing.order, said }
     }
 
     /// The line `line` sews after the fill `fill` it borders, unless an element kept in its place lies
@@ -522,8 +493,9 @@ impl Order<'_> {
 
 /// How `second`, drawn after `first`, lies beside it, with `meter`'s work: after it when they overlap, or
 /// when what one of them paints can't be found, each with the budget's work to itself; a line bordering a
-/// fill; or `None`, either way round.
-fn lie(shapes: &mut Shapes, first: usize, second: usize, meter: &mut Meter) -> Result<Option<Beside>, Failed> {
+/// fill; 2 automatic areas that meet without overlapping, when the details sew `last`; or `None`, either
+/// way round.
+fn lie(shapes: &mut Shapes, first: usize, second: usize, last: bool, meter: &mut Meter) -> Result<Option<Beside>, Failed> {
     shapes.find(first);
     shapes.find(second);
     let (Some((a, painted_first)), Some((b, painted_second))) = (shapes.paint(first), shapes.paint(second)) else {
@@ -535,7 +507,7 @@ fn lie(shapes: &mut Shapes, first: usize, second: usize, meter: &mut Meter) -> R
     let (fill, line) = match (a, b) {
         (Kind::Area, Kind::Column | Kind::Line | Kind::Part) => (first, second),
         (Kind::Column | Kind::Line | Kind::Part, Kind::Area) => (second, first),
-        (Kind::Area, Kind::Area) if shapes.is_area(first) && shapes.is_area(second) => {
+        (Kind::Area, Kind::Area) if last && shapes.is_area(first) && shapes.is_area(second) => {
             return Ok(touch(shapes, first, second, meter)?.then_some(Beside::Meet(first, second)));
         }
         _ => return Ok(None),
@@ -586,21 +558,22 @@ fn enclosed(shapes: &mut Shapes, facts: &[Facts], index: usize, meter: &mut Mete
 }
 
 /// `SC-I0907` saying how many of the `details`, each the area it meets and the detail, sew before that area
-/// in `order`, and how many details there are, and why, as `details` says the order was found; `None` when
-/// none does.
-fn early(details: &[(usize, usize)], order: &[usize], found: Details) -> Option<Diagnostic> {
+/// in `order`, and how many details there are; `None` when none does.
+fn early(details: &[(usize, usize)], order: &[usize]) -> Option<Diagnostic> {
     let at = |index: usize| order.iter().position(|&sewn| sewn == index);
     let all: BTreeSet<usize> = details.iter().map(|&(_, detail)| detail).collect();
     let early: BTreeSet<usize> = details.iter().filter(|&&(area, detail)| at(detail) < at(area)).map(|&(_, detail)| detail).collect();
     let (count, of) = (early.len(), all.len());
-    let why = match found {
-        Details::Last => "would change thread more often, or break what must sew before what",
-        Details::Unwished => "made the plan sew thicker, or with more jump stitches or thread changes",
-    };
     let message = match count {
         0 => return None,
-        1 => format!("1 of {of} details sews before a larger area round it: sewn after it, it {why}."),
-        n => format!("{n} of {of} details sew before a larger area round them: sewn after it, they {why}."),
+        1 => format!(
+            "1 of {of} details sews before a larger area round it: sewn after it, it would change thread more often, or break what \
+             must sew before what."
+        ),
+        n => format!(
+            "{n} of {of} details sew before a larger area round them: sewn after it, they would change thread more often, or break \
+             what must sew before what."
+        ),
     };
     Some(Diagnostic::new(Code::AutoOrder, message))
 }
@@ -633,7 +606,6 @@ struct Sewing {
 }
 
 /// What must sew before what.
-#[derive(Clone)]
 struct Graph {
     /// The elements each element must sew before.
     after: Vec<BTreeSet<usize>>,

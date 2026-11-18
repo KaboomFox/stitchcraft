@@ -22,7 +22,6 @@ pub mod design;
 pub mod finalize;
 pub mod generate;
 pub mod generators;
-mod guard;
 pub mod locks;
 mod moves;
 pub mod normalize;

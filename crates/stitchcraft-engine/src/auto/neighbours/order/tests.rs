@@ -78,7 +78,7 @@ fn ordered_under(sewn: Vec<Sewn>, painting: &Budget, budget: &Budget, under: Opt
     let moving: Vec<Moving> =
         sewn.iter().enumerate().map(|(index, sewn)| Moving { free: sewn.automatic, made: sewn.automatic, shape: shape(index, sewn) }).collect();
     let mut shapes = Shapes::new(sewn, &settings, painting);
-    let (mut said, _) = super::ordered(&mut shapes, &moving, budget, under, Details::Last);
+    let mut said = super::ordered(&mut shapes, &moving, budget, under, true);
     said.append(&mut shapes.said);
     (shapes.elements.iter().map(|element| element.id.as_str().to_string()).collect(), said)
 }
@@ -241,6 +241,7 @@ fn a_line_waits_for_no_fill_it_borders_beyond_an_element_kept_in_its_place() {
         graph: Graph::new(3),
         borders: vec![(2, 0)],
         wished: Vec::new(),
+        last: true,
         details: Vec::new(),
         closed: BTreeMap::new(),
         kept: BTreeSet::from([1]),
@@ -268,6 +269,7 @@ fn req_auto_012_nothing_moves_across_an_element_kept_in_its_place_and_each_sews_
         graph,
         borders: Vec::new(),
         wished: Vec::new(),
+        last: true,
         details: Vec::new(),
         closed: BTreeMap::new(),
         kept: BTreeSet::from([1]),
@@ -291,6 +293,7 @@ fn threaded(colours: &[&[Rgb]]) -> (Vec<usize>, usize, usize) {
         graph: Graph::new(facts.len()),
         borders: Vec::new(),
         wished: Vec::new(),
+        last: true,
         details: Vec::new(),
         closed: BTreeMap::new(),
         kept: BTreeSet::new(),
@@ -519,6 +522,7 @@ fn sewn(
         graph,
         borders: Vec::new(),
         wished: wished.to_vec(),
+        last: true,
         details: Vec::new(),
         closed: BTreeMap::new(),
         kept: BTreeSet::new(),
@@ -567,7 +571,7 @@ fn req_auto_096_the_details_sewn_before_a_larger_area_round_them_are_counted() {
     // Details 2 and 3, each of area 0 and 1, and detail 4 of area 1: sewn 2, 0, 3, 1, 4, detail 2 sews
     // before area 0 and detail 3 before area 1, and 4 after it. Sewn 0, 4, 1, 3, 2, only detail 4 sews early.
     let details = [(0, 2), (1, 2), (1, 3), (1, 4)];
-    let said = |order: &[usize]| early(&details, order, Details::Last).map(|said| said.message);
+    let said = |order: &[usize]| early(&details, order).map(|said| said.message);
     assert_eq!(
         said(&[2, 0, 3, 1, 4]).as_deref(),
         Some(
@@ -583,13 +587,6 @@ fn req_auto_096_the_details_sewn_before_a_larger_area_round_them_are_counted() {
         )
     );
     assert_eq!(said(&[0, 1, 2, 3, 4]), None);
-    // Found without their wishes, because the plan that sews them last measured worse, they say so.
-    assert_eq!(
-        early(&details, &[0, 4, 1, 3, 2], Details::Unwished).map(|said| said.message).as_deref(),
-        Some(
-            "1 of 3 details sews before a larger area round it: sewn after it, it made the plan sew thicker, or with more jump stitches or thread changes."
-        )
-    );
 }
 
 /// A green mark 4 mm square, drawn first, in a pinwheel of 4 squares 10 mm wide, red and blue, that close
