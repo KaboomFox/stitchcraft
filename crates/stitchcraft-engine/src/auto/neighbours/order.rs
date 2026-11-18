@@ -32,7 +32,7 @@
 //!    goes by geometry alone, never by what the picture shows. `SC-I0907` says how many details still sew
 //!    before a larger shape round them. Moving fills for the details can make another spot thicker, which
 //!    no rule of geometry foresees, so where the details change the order it is also found without them,
-//!    and planning keeps the plan that measures no worse (`crate::auto::details`, `REQ-AUTO-098`).
+//!    and planning keeps the plan that measures no worse (`crate::guard`, `REQ-AUTO-098`).
 //! 6. **The nearest next.** Of the free elements of a batch, the next is the one whose box lies nearest
 //!    the box of the one sewn last, then the one whose box's centre does, then the one drawn first. Each
 //!    element then starts and ends at its points nearest its neighbours (`REQ-GEN-003`).
@@ -100,7 +100,7 @@ pub(super) struct Moving {
 /// digitizing made, and is sewing when that element's run starts. With [`Details::Last`] the details sew
 /// last where that costs no thread change (rule 5), and the order is also found without that rule: the
 /// second value says whether the 2 differ, so that the plan is made both ways and measured
-/// (`crate::auto::details`). With [`Details::Unwished`] rule 5 is left out.
+/// (`crate::guard`). With [`Details::Unwished`] rule 5 is left out.
 pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, under: Option<Rgb>, details: Details) -> (Vec<Diagnostic>, bool) {
     let live: Vec<usize> = (0..shapes.len()).filter(|&index| !shapes.left_out(index)).collect();
     if !live.iter().any(|&index| moving.get(index).is_some_and(|moving| moving.free)) {

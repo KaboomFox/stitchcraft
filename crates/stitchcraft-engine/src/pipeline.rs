@@ -26,13 +26,14 @@ use stitchcraft_core::{Budget, Code, Diagnostic};
 use stitchcraft_plan::{MachineProfile, StitchPlan};
 
 use crate::assemble::{Assembled, assemble_routed};
-use crate::auto::details::{self, Measured, Planned};
+use crate::auto::details;
 use crate::auto::{Details, Sewing, sewing, thick};
 use crate::design::{Design, Element};
 use crate::finalize::{Finalized, finalize};
 use crate::generate::layered::{Layered, underlay};
 use crate::generate::{Generated, Generation, approach, generate_with};
 use crate::generators::{Layer, Neighbours};
+use crate::guard::{self, Measured, Planned, Worse};
 use crate::moves::Routing;
 use crate::underlays_first::{Candidate, alone, steps};
 
@@ -53,7 +54,7 @@ pub struct PlanOutcome {
 ///
 /// When sewing the details of a design digitized automatically last changes its order (`REQ-AUTO-096`),
 /// the design is planned both ways, each with `budget`, and the plan that sews them last is kept only
-/// when it measures no worse ([`details::kept`], `REQ-AUTO-098`).
+/// when it is no thicker and has no more jumps or thread changes ([`guard::kept`], `REQ-AUTO-098`).
 pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanOutcome {
     let last = sewing(design, budget, Details::Last);
     if !last.moved {
@@ -61,7 +62,7 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
     }
     let last = planned(design, profile, budget, last);
     let unwished = planned(design, profile, budget, sewing(design, budget, Details::Unwished));
-    details::kept(last, unwished)
+    guard::kept(unwished, last, &Worse::ALL, details::worse)
 }
 
 /// The stitch plan for `design` sewn as `sewing` holds it, as [`plan`] makes it, and how it measures.

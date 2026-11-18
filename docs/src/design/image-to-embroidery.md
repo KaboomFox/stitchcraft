@@ -1510,7 +1510,8 @@ honest cap now is about 4.5 fills on the sheets, the pear and the lettered patch
 With the ragged thin lines merged into their neighbours (M13.18, [Neighbours](#neighbours)), the traced dogs
 sew 4.69, 4.80, 4.62 and 5.63 fills at their thickest spots, and 141.5, 153.25, 130.5 and 187.5 mm² at 3
 fills or more. The dogs on turf sew thicker, at new spots where a satin column or a fill lies over 3 or 4
-other fills.
+other fills. With its details sewn last (M13.40, [details last](#details-last)), the dog on turf in 9
+threads sews 4.69 fills at its thickest spot and 139.0 mm² at 3 fills or more.
 
 
 
@@ -1856,7 +1857,8 @@ stacked on the detail. No rule of geometry told the harmful wishes apart. The wi
 the larger area covers less than a share were left out, for shares from a quarter to all of it. Each
 share kept one dog at main's thickest spot and raised another.
 
-So the plan is measured (`stitchcraft_engine::auto::details`). When the details' wishes change the order,
+So the plan is measured (`stitchcraft_engine::guard`, shared with other steps whose change can make a
+plan worse elsewhere). When the details' wishes change the order,
 the design is planned both ways, each plan with the work budget, and the plan that sews the details last
 is kept only when it is no thicker at its thickest spot, in hundredths of a fill, and leaves no more jump
 stitches or thread changes than the plan without them. Otherwise the plan without them is kept, and
@@ -1879,7 +1881,7 @@ The jump threads are those the machine leaves to cut (`stitchcraft_testkit::fabr
 the plan's jump stitches, which include the jumps that shapes sewn later cover. The running dog in 9
 threads sews thinner with its details last, 5.02 fills, but jumps 5 times more, and the guard keeps main's
 plan. The dog on turf in 9 threads keeps its details last and sews 0.11 fills thinner, with 139 mm² at 3
-fills or more where it had 153. The badges, the emblem, the button, the pear and the lettered patch sew as
+fills or more where it had 153, and 4 moves from one element to the next show where 5 did. The badges, the emblem, the button, the pear and the lettered patch sew as
 they did. On the dog on turf in 9 threads, 16 of 51 details still sew early, where 28 did. The 2 patches
 with a mark where they meet keep the mark first: with it last, the plan's thickest spot has 4.12 fills
 where it has 3.93.
