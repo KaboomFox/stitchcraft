@@ -13,12 +13,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     the hole of an area that can't move back, sewed first before.
   - The rule is behind a new setting, `auto_details_last`, off by default, as the design's lowest automatic
     shape sets it. Off, every design sews as before. A fill that moves for a detail can make a spot
-    elsewhere thicker, which nothing in the geometry foresees, so the setting turns on by default once
+    elsewhere thicker, at a place the geometry can't predict. The setting turns on by default once
     M13.35 caps the thread at every spot. With it on, `SC-I0907` says how many details still sew before
     a larger area round them.
   - On, the marked patch sews its dot and diamond whole, and its thickest spot has 3.41 fills where it
     had 3.85. On the traced dogs the thickest spot fell on 2 and rose on 2, at spots away from any detail.
-  - @@COST@@
+  - Off, every design writes the same machine file as before, at the same cost within 0.24 %. On, the
+    traced photos measured take 8 to 14 % more instructions.
 - M13.41: a likeness measure (`REQ-AUTO-093`, `REQ-AUTO-094`).
   - `stitchcraft_testkit::fabric::likeness` compares the stitches with the trace, colour by colour. Each part
     of a colour of 1 mm² or more, wide enough for a thread, counts once, and is kept when the stitches show

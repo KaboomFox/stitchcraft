@@ -1928,19 +1928,19 @@ rules, details last took the traced photos in 6 threads from 8 thread changes to
 the search ran out of its budget, and they changed thread 35 and 38 times.
 
 **Off by default** (`REQ-AUTO-098`). The rule runs only when the design's lowest automatic shape turns
-`auto_details_last` on. Off, no 2 areas are looked at as meeting, no area is looked at for details, and a
-design sews as it did before M13.40. The rule waits for one cap on thickness at the end of planning
-(M13.35). Reordering fills can raise the thread at a spot where no detail lies: a fill that moves for a
-detail starts and ends elsewhere, its own travel runs elsewhere under its rows, and it reaches under other
-neighbours. On one traced photo the thread over one spot rose from 4.69 fills to 5.49 by a single wish:
+`auto_details_last` on. Off, the order skips the search for details, and a design sews as it did before
+M13.40. The rule waits for one cap on thickness at the end of planning (M13.35). Reordering fills can
+raise the thread at a spot where no detail lies. A fill that moves for a detail starts and ends
+elsewhere, and its own travel runs elsewhere under its rows. It also reaches under other neighbours. On
+one traced photo the thread over one spot rose from 4.69 fills to 5.49 by one wish:
 the fill that moved crossed the spot 3 times more with its own travel, 9.50 mm of its thread in a box 1 mm
 across where it had 3.76 mm, with the same stitches. On another the wishes changed which of the rows with
 equally few changes the search took, and a fill sewn later retraced a row. Nothing in the shapes' geometry
 told the wishes that do this from those that help. Leaving out the wishes of details whose rim the larger
-area covers less than a share, for every share tried from a quarter to all of it, held one photo at its
+area covers less than a share, for every share tried from a quarter to all of it, kept one photo at its
 old thickest spot and raised another. A check that plans twice and keeps the better plan, or a cut-off by
 the number of areas, would only hide that. An area count can't even tell a photo from a logo: a traced
-photo can have fewer areas than a badge. Once the cap holds every spot, a reorder can't pile thread
+photo can have fewer areas than a badge. Once the cap limits every spot, a reorder can't pile thread
 anywhere, and the setting is turned on by default.
 
 **Measured** (2026-11-18, planned at opt-level 2), off and then on:
@@ -1956,10 +1956,13 @@ anywhere, and the setting is turned on by default.
 
 The jump threads are those the machine leaves to cut (`stitchcraft_testkit::fabric`). The badges, the
 emblem, the button, the pear and the lettered patch sew the same either way. On, the thickest spot fell
-on 3 of these pictures and rose on 2, at spots away from any detail. That is why the rule waits for the
-cap.
+on 3 of these pictures and rose on 2, at spots away from any detail.
 
-**Cost.** @@COST@@
+**Cost.** Counted in instructions with callgrind (`stitch export --auto`, a build without link-time
+optimization, 2026-11-18). Off, every picture of `cargo xtask perf` writes a machine file byte for byte
+the same as before M13.40, and its count moves by 0.24 % or less, within what a build's layout moves it.
+On, the pear takes 8.3 % more, the dog on turf in 6 threads 13.6 % more and the running dog in 9 threads
+9.8 % more.
 
 **Open question.** Where a detail sews before a fill, the fill's rows and pull compensation reach about
 0.25 mm over its edge, and a later step could end them at the detail's edge.
