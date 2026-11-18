@@ -603,9 +603,9 @@ mends it in 5 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
    merged in its neighbour's colour (`auto::as_merged`), since the neighbour's thread covers it by the rule.
 
    Lines merge only while the picture keeps its likeness (`REQ-AUTO-095`, M13.44,
-   `auto::neighbours::lines::parts`). A line that touches no other piece of its colour is a part of the
+   `auto::neighbours::lines::parts`). A line that doesn't touch another piece of its colour is a part of the
    picture by itself, as [the likeness measure](#likeness) counts parts, and merged into a neighbour of
-   another colour it takes its colour away: a twig, the shadow along a branch, the pale rim of a petal. The
+   another colour it takes its colour away, as with a twig or the pale rim of a petal. The
    lines of one colour that touch each other are one group. A group that touches a piece of its colour that
    is no speck merges freely, since its colour still shows there. Any other group that is a part costs the
    picture's likeness 1 of its colour's parts, divided by the number of colours. The groups that share an
@@ -1641,9 +1641,9 @@ measured at 0.75 or more.
 2 other ways were measured and not taken. Counted colour by colour, each colour keeping 0.75 of its parts,
 merging kept more lines on the dogs, 6 and 8 on the dogs on turf, which left them 5 and 7 jump threads more,
 and the running dog in 6 threads 0.39 fills thicker. Counted over the picture, a colour with many pieces gives
-up its lines for a colour with few. Merging first the lines closest in colour to the area each would go into
-(CIEDE2000), and keeping those that contrast most, kept the same likeness at 0.8, 0.802 on the magnolia and
-0.793 on the coleus, with 30 and 71 jump threads more than merging the cheapest first. It moved what is lost
+up its lines for a colour with few. The other way merged first the lines closest in colour (CIEDE2000) to the
+area each would go into. At 0.8 the magnolia kept 0.802 and the coleus 0.793 so, the same as with the cheapest
+first, with 30 and 71 jump threads more. It moved what is lost
 from dark lines on dark patches to the pale rims of petals on pink ones.
 
 ## Sewing order

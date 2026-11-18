@@ -6,7 +6,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 
 ### Added
 - M13.44: line merging keeps each picture's likeness (`REQ-AUTO-095`, `SC-I0915`).
-  - A thin line that touches no other piece of its colour is a part of the picture by itself, such as a
+  - A thin line that doesn't touch another piece of its colour is a part of the picture by itself, such as a
     twig or the pale rim of a petal. Such lines merge, those of the colours with the most parts and the
     smallest first, only while the picture keeps `auto_min_likeness`, 0.85, of its likeness, counted as
     the likeness measure counts it. The others sew as lines, and `SC-I0915` says so.
