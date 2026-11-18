@@ -5,6 +5,7 @@ use crate::auto::MIN_LIKENESS;
 use crate::auto::neighbours::tests::{filled, square};
 use crate::design::DesignSettings;
 use crate::normalize::fixture::part;
+use stitchcraft_plan::{Rgb, Thread};
 
 /// The narrowest satin stroke of a design that sets none.
 const NARROWEST: Mm = DesignSettings::MIN_SATIN_STROKE_WIDTH;
@@ -122,7 +123,49 @@ fn a_shape_that_needs_more_work_than_the_budget_allows_keeps_its_lines_and_says_
     }
     assert_eq!(
         seen.into_iter().collect::<Vec<_>>(),
-        ["info SC-I0915: Finding the thin lines of this area", "info SC-I0915: Finding where to merge this line"]
+        [
+            "info SC-I0915: Finding the thin lines of this area",
+            "info SC-I0915: Finding where to merge this line",
+            "info SC-I0915: Finding whether this line is a part of its colour"
+        ]
+    );
+}
+
+#[test]
+fn lines_whose_parts_need_more_work_than_the_budget_allows_sew_as_lines_and_say_so() {
+    // 2 gold lines side by side between a red and a blue area: gold's one part, which sews as lines.
+    let coloured = |id: &str, parts: &[Polygon], color: Rgb| Element { thread: Thread::new(color), ..auto(id, parts, &[]) };
+    let elements = || {
+        vec![
+            coloured("left", &[square((0.0, 0.0), (10.0, 10.0))], Rgb::new(200, 0, 0)),
+            coloured("line", &[strand(10.0)], Rgb::new(230, 180, 30)),
+            coloured("line2", &[strand(10.7)], Rgb::new(230, 180, 30)),
+            coloured("right", &[square((11.4, 0.0), (20.0, 10.0))], Rgb::new(0, 0, 200)),
+        ]
+    };
+    let full = run(elements(), &Budget::DEFAULT);
+    assert_eq!(full.1.len(), 2, "{:?}", full.1);
+    assert!(full.1.iter().all(|said| said.contains("but sews as a line")), "{:?}", full.1);
+    let (mut seen, mut work) = (BTreeSet::new(), 0);
+    loop {
+        let (ids, said) = run(elements(), &Budget { max_work: work, ..Budget::DEFAULT });
+        if (ids.clone(), said.clone()) == full {
+            break;
+        }
+        assert_eq!(ids, ["left", "line", "line2", "right"], "{work}");
+        seen.extend(said.iter().filter_map(|said| said.split(" needed more").next().map(str::to_string)));
+        work += 1;
+    }
+    assert!(seen.contains("info SC-I0915: Finding whether this line is a part of its colour"), "{seen:?}");
+}
+
+#[test]
+fn a_part_is_no_speck_and_holds_a_thread() {
+    let rules = AutoParams::defaults();
+    let smallest = rules.auto_min_area_mm2;
+    assert_eq!(
+        [is_part(smallest, true, &rules), is_part(smallest - 1e-9, true, &rules), is_part(smallest * 10.0, false, &rules)],
+        [true, false, false]
     );
 }
 

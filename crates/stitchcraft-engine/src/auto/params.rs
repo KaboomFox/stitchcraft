@@ -42,7 +42,7 @@ pub const MIN_SLENDERNESS: &str = "auto_min_slenderness";
 pub const MAX_UNEVENNESS: &str = "auto_max_unevenness";
 /// The key of the least a thin line's width varies for it to merge into its neighbour.
 pub const MIN_LINE_UNEVENNESS: &str = "auto_min_line_unevenness";
-/// The key of the least share of a colour's parts that merging thin lines keeps.
+/// The key of the least likeness of the picture that merging thin lines keeps.
 pub const MIN_LIKENESS: &str = "auto_min_likeness";
 /// The key of the farthest a column reaches from its centre line.
 pub const MAX_REACH: &str = "auto_max_reach";
@@ -195,13 +195,14 @@ params! {
         auto_min_line_unevenness: Number = "0.05", label "Least a merged line's width varies", range (0.0, 5.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
-        /// The least share of each colour's parts that merging thin lines keeps. A part is a piece of one
-        /// colour of 1 mm² or more in which a disc a thread across fits. A thin line that touches no other
-        /// part of its colour is a part of its own, and merged into a neighbour of another colour it is a
-        /// part lost: a twig, the rim of a petal, a shadow. Such lines merge, the smallest first, while the
-        /// colour keeps this share of its parts, and the others sew as lines. At 0 every thin line merges,
+        /// The least likeness of the picture that merging thin lines keeps. A part is a piece of one colour of
+        /// 1 mm² or more in which a disc a thread across fits, and the likeness is the mean over the colours
+        /// of the share of their parts kept. A thin line that touches no other piece of its colour is a part
+        /// of its own, and merged into a neighbour of another colour it is a part lost: a twig, the rim of a
+        /// petal, a shadow. Such lines merge, those of the colours with the most parts and the smallest first,
+        /// while the picture keeps this likeness, and the others sew as lines. At 0 every thin line merges,
         /// and at 1 none that is a part does.
-        auto_min_likeness: Number = "0.85", label "Least share of a colour's parts kept", range (0.0, 1.0),
+        auto_min_likeness: Number = "0.8", label "Least likeness kept when lines merge", range (0.0, 1.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
         /// How far a part reaches from one of its centre lines on both sides of the line, at the most, for
