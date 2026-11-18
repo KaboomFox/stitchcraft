@@ -113,3 +113,18 @@ fn req_auto_073_no_spot_of_a_digitized_picture_sews_above_the_cap_but_as_listed(
     }
     assert_eq!(above, ABOVE.map(|(name, thickest)| (name.to_string(), thickest)));
 }
+
+#[test]
+fn req_auto_102_no_spot_of_a_digitized_picture_sews_above_the_cap() {
+    // The cap at the end of planning (REQ-AUTO-100) empties the list of REQ-AUTO-073's case.
+    let mut above = Vec::new();
+    for (name, design) in designs() {
+        let outcome = in_place(&design);
+        let plan = outcome.plan.unwrap_or_else(|| panic!("{name}: {:?}", outcome.diagnostics));
+        let thickest = fabric::thickness(&plan, &Limits::DEFAULT).fills.value;
+        if thickest > CAP {
+            above.push((name, hundredths(thickest)));
+        }
+    }
+    assert!(above.is_empty(), "{above:?}");
+}

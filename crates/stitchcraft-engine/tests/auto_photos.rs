@@ -302,6 +302,19 @@ fn req_auto_073_digitized_dogs_sew_their_thickest_spot_as_recorded() {
     assert_eq!(found, THICKEST.map(|(name, thickest)| (name.to_string(), thickest)));
 }
 
+/// The cap at the end of planning (REQ-AUTO-100) takes thread wherever a dog still sews above 4 fills, so
+/// that no spot of any dog is left above it (REQ-AUTO-102).
+#[test]
+#[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
+fn req_auto_102_digitized_dogs_sew_no_spot_above_the_cap() {
+    let above: Vec<(String, f64)> = planned()
+        .iter()
+        .map(|(name, _, plan)| (name.clone(), fabric::thickness(plan, &fabric::Limits::DEFAULT).fills.value))
+        .filter(|(_, thickest)| *thickest > 4.0)
+        .collect();
+    assert!(above.is_empty(), "{above:?}");
+}
+
 /// How often each traced dog's thread changes: as sewn, the fewest that any order has in which each shape
 /// sews after what it lies on and each running line after the fills it borders, and one less than its
 /// threads, which no order betters. Each change is a rethread by hand on a machine with one needle. Before
