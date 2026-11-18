@@ -1,5 +1,6 @@
-//! What automatic digitizing leaves of the owner's dog (`REQ-AUTO-025` to `REQ-AUTO-027`), and how often its
-//! thread changes (`REQ-AUTO-037`): her 2 photos, each
+//! What automatic digitizing leaves of the owner's dog (`REQ-AUTO-025` to `REQ-AUTO-027`), how often its
+//! thread changes (`REQ-AUTO-037`) and how much of its detail it keeps (`REQ-AUTO-093`, `REQ-AUTO-094`): her 2
+//! photos, each
 //! cut out by a mask checked by hand and traced by VectorCraft in 6 and in 9 threads (`docs/fixtures/README.md`
 //! › The traced dogs), digitized, planned with their stitches where they draw their shapes, and measured as
 //! `tests/auto_fabric.rs` measures the test pictures.
@@ -14,9 +15,11 @@
 
 use std::sync::OnceLock;
 
-use stitchcraft_engine::design::Design;
+use stitchcraft_engine::auto;
+use stitchcraft_engine::design::{Design, Element};
 use stitchcraft_plan::{Rgb, StitchPlan};
 use stitchcraft_testkit::designs::{in_place, rules};
+use stitchcraft_testkit::fabric::likeness::{self, LIKENESS};
 use stitchcraft_testkit::fabric::{self, GAP};
 use stitchcraft_testkit::pictures;
 
@@ -324,4 +327,57 @@ fn req_auto_037_digitized_dogs_change_thread_as_seldom_as_their_lines_allow() {
         })
         .collect();
     assert_eq!(found, CHANGES.map(|(name, changes, floor)| (name.to_string(), changes, floor)));
+}
+
+/// What each traced dog keeps of its detail (REQ-AUTO-093), as measured on 2026-11-17: its parts, the parts
+/// kept and its likeness in thousandths. What is lost is mostly strands of fur and shading that merge as thin
+/// lines (REQ-AUTO-090), and on the dog on turf the pale strip above its nose. The case fails when a number
+/// changes, so that a change that takes detail away, or puts it back, shows here.
+const LIKE: [(&str, usize, usize, f64); 4] =
+    [("dog-on-turf-6", 97, 75, 814.0), ("dog-on-turf-9", 111, 83, 779.0), ("dog-running-6", 77, 66, 898.0), ("dog-running-9", 100, 88, 921.0)];
+
+/// What `likeness` keeps, as [`LIKE`] records it.
+fn recorded(name: &str, likeness: &likeness::Likeness) -> (String, usize, usize, f64) {
+    (name.to_string(), likeness.parts.len(), likeness.parts.iter().filter(|part| part.kept()).count(), (likeness.likeness() * 1000.0).round())
+}
+
+#[test]
+#[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
+fn req_auto_094_digitized_dogs_keep_their_likeness_as_recorded() {
+    let found: Vec<(String, usize, usize, f64)> = planned()
+        .iter()
+        .map(|(name, design, plan)| {
+            let kept = likeness::likeness(design, plan);
+            assert!(kept.likeness() >= LIKENESS, "{name}: {:.3}", kept.likeness());
+            recorded(name, &kept)
+        })
+        .collect();
+    assert_eq!(found, LIKE.map(|(name, parts, kept, likeness)| (name.to_string(), parts, kept, likeness)));
+}
+
+/// What each traced dog keeps with its thin lines sewn as lines, as before they merged (`auto_fill_uneven`
+/// off, REQ-AUTO-090), as measured on 2026-11-17.
+const LINED: [(&str, usize, usize, f64); 4] =
+    [("dog-on-turf-6", 97, 96, 993.0), ("dog-on-turf-9", 111, 105, 947.0), ("dog-running-6", 77, 73, 970.0), ("dog-running-9", 100, 97, 983.0)];
+
+#[test]
+#[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
+fn req_auto_093_a_dog_whose_thin_lines_merge_keeps_less_of_its_detail() {
+    let found: Vec<(String, usize, usize, f64)> = pictures::dogs()
+        .into_iter()
+        .map(|(name, design)| {
+            let lined = design.elements().iter().cloned().map(|mut element: Element| {
+                element.params.set(auto::FILL_UNEVEN, "false");
+                element
+            });
+            let lined = Design::new(lined.collect(), design.settings).unwrap();
+            let outcome = in_place(&lined);
+            let kept = likeness::likeness(&design, &outcome.plan.unwrap());
+            recorded(&name, &kept)
+        })
+        .collect();
+    assert_eq!(found, LINED.map(|(name, parts, kept, likeness)| (name.to_string(), parts, kept, likeness)));
+    for ((_, _, merged, _), (name, _, lined, _)) in LIKE.iter().zip(LINED) {
+        assert!(lined > *merged, "{name}");
+    }
 }
