@@ -84,13 +84,13 @@ mod split;
 pub(crate) mod thick;
 mod thin;
 
-pub use neighbours::TOUCHING;
+pub use neighbours::{TOUCHING, is_part};
 #[cfg(test)]
 pub(crate) use neighbours::default_base_layer;
 use neighbours::{Background, Sewn, no_area, parts_of, speck};
 pub use params::{
     ADVANCED, AutoParams, FILL_ANGLE, FILL_OUTLINE, FILL_UNEVEN, IGNORE_BACKGROUND, LONGEST_SATIN_STITCH, MAX_REACH, MAX_SATIN_WIDTH, MAX_UNEVENNESS,
-    MIN_AREA, MIN_FILL_WIDTH, MIN_LINE_UNEVENNESS, MIN_SLENDERNESS, MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, STITCH,
+    MIN_AREA, MIN_FILL_WIDTH, MIN_LIKENESS, MIN_LINE_UNEVENNESS, MIN_SLENDERNESS, MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, STITCH,
 };
 use rules::{Asked, Bounds, Fired, Measures, RuleId};
 

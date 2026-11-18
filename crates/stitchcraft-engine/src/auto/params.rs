@@ -42,6 +42,8 @@ pub const MIN_SLENDERNESS: &str = "auto_min_slenderness";
 pub const MAX_UNEVENNESS: &str = "auto_max_unevenness";
 /// The key of the least a thin line's width varies for it to merge into its neighbour.
 pub const MIN_LINE_UNEVENNESS: &str = "auto_min_line_unevenness";
+/// The key of the least share of a colour's parts that merging thin lines keeps.
+pub const MIN_LIKENESS: &str = "auto_min_likeness";
 /// The key of the farthest a column reaches from its centre line.
 pub const MAX_REACH: &str = "auto_max_reach";
 /// The key of the narrowest piece that stays in a fill.
@@ -193,6 +195,15 @@ params! {
         auto_min_line_unevenness: Number = "0.05", label "Least a merged line's width varies", range (0.0, 5.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
+        /// The least share of each colour's parts that merging thin lines keeps. A part is a piece of one
+        /// colour of 1 mm² or more in which a disc a thread across fits. A thin line that touches no other
+        /// part of its colour is a part of its own, and merged into a neighbour of another colour it is a
+        /// part lost: a twig, the rim of a petal, a shadow. Such lines merge, the smallest first, while the
+        /// colour keeps this share of its parts, and the others sew as lines. At 0 every thin line merges,
+        /// and at 1 none that is a part does.
+        auto_min_likeness: Number = "0.85", label "Least share of a colour's parts kept", range (0.0, 1.0),
+            origin Origin::StitchCraft, stability Stability::Experimental;
+
         /// How far a part reaches from one of its centre lines on both sides of the line, at the most, for
         /// it to sew as satin columns: the distance, divided by the radius of the widest circle that fits
         /// inside the part centred on its lines. A column's edges lie as far from its line as that circle
@@ -291,7 +302,7 @@ mod tests {
         let neighbours = [OVERLAP, "auto_pull_compensation_mm", IGNORE_BACKGROUND];
         let base = ["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_keep_holes"];
         let bounds =
-            [MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH, MIN_SLENDERNESS, MAX_UNEVENNESS, MIN_LINE_UNEVENNESS, MAX_REACH, MIN_FILL_WIDTH, MIN_AREA];
+            [MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH, MIN_SLENDERNESS, MAX_UNEVENNESS, MIN_LINE_UNEVENNESS, MIN_LIKENESS, MAX_REACH, MIN_FILL_WIDTH, MIN_AREA];
         let cover = ["auto_base_offset_mm", "auto_base_rows", "auto_base_sliver_mm2", "auto_base_bare_percent"];
         let thick = ["auto_thick_warn_fills", "auto_thick_fail_fills", "auto_thick_warn_points", "auto_thick_fail_points"];
         assert_eq!(keys, [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..], &thick[..]].concat());

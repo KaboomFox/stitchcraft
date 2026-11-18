@@ -1,6 +1,7 @@
 use std::collections::BTreeSet;
 
 use super::*;
+use crate::auto::MIN_LIKENESS;
 use crate::auto::neighbours::tests::{filled, square};
 use crate::design::DesignSettings;
 use crate::normalize::fixture::part;
@@ -142,7 +143,9 @@ fn a_line_is_ragged_from_the_least_unevenness_on() {
 fn a_line_merges_into_no_area_whose_box_only_is_near_it() {
     // An L round the line's top and right side, 1 mm and more away from it: its box holds the line.
     let around = part(&[(0.0, 12.0), (20.0, 12.0), (20.0, -5.0), (12.0, -5.0), (12.0, 11.0), (0.0, 11.0)], &[]);
-    let (ids, said) = run(vec![auto("around", &[around], &[]), auto("line", &[strand(10.0)], &[])], &Budget::DEFAULT);
+    // Its colour keeps no share of its parts, so that a line merges wherever it shares an edge.
+    let line = auto("line", &[strand(10.0)], &[(MIN_LIKENESS, "0")]);
+    let (ids, said) = run(vec![auto("around", &[around], &[]), line], &Budget::DEFAULT);
     assert_eq!((ids, said), (vec!["around".to_string(), "line".to_string()], Vec::<String>::new()));
 }
 

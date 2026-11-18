@@ -64,6 +64,7 @@ mod under;
 
 pub(super) use background::{Background, background, left_out};
 pub(super) use layers::flattened;
+pub use lines::is_part;
 pub(super) use lines::merged as lines_merged;
 pub(super) use outline::ending_near;
 

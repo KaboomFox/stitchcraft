@@ -26,6 +26,9 @@ use std::borrow::Cow;
 
 use stitchcraft_core::{Budget, Code, Diagnostic, Fix, Meter, Mm};
 
+use parts::Fate;
+pub use parts::is_part;
+
 use super::layers::Flattened;
 use super::specks::shared;
 use super::{Failed, TOUCHING, envelope, joined, near, parts_of, speck};
@@ -101,9 +104,32 @@ pub(in crate::auto) fn merged<'d>(
             }
         }
     }
-    for line in lines {
+    // Merged, a line that is a part of its own takes its colour away: each colour keeps its share of parts.
+    let colour = |place: usize| elements.get(place).map(|(_, element)| element.thread.color);
+    let rule = |place: usize| elements.get(place).and_then(|(index, _)| rules.get(*index)).and_then(Option::as_ref);
+    let fates = parts::fates(&lines, &areas, colour, rule, budget);
+    let mut sewn_as_lines = Vec::new();
+    for (line, fate) in lines.into_iter().zip(fates) {
         let Some((_, element)) = elements.get(line.from) else { continue };
         let this = format!("A line of this area, of {} mm²,", mm((line.part.area() * 100.0).round() / 100.0));
+        match fate {
+            Fate::Merges => {}
+            Fate::Kept { least } => {
+                let message = format!(
+                    "{this} is narrower than the narrowest satin stroke, but sews as a line: it is a part of its colour by itself, and merged it would take the picture's likeness under {} (`auto_min_likeness`).",
+                    mm(least)
+                );
+                let hint = Fix::Hint("To merge it, lower `auto_min_likeness`.".to_string());
+                said.push(Diagnostic::new(Code::AutoLineMerged, message).with_element(element.id.clone()).with_fix(hint));
+                sewn_as_lines.push(line);
+                continue;
+            }
+            Fate::Unmeasured(failed) => {
+                said.push(failed.said(Code::AutoLineMerged, "whether this line is a part of its colour", "it sews as a line", budget.max_work, element.id.clone()));
+                sewn_as_lines.push(line);
+                continue;
+            }
+        }
         match into(&mut areas, &line, &mut budget.meter()) {
             Ok(Some(to)) => {
                 let message = if to == line.from {
@@ -128,6 +154,10 @@ pub(in crate::auto) fn merged<'d>(
                 back(&mut areas, line);
             }
         }
+    }
+    // The lines kept go back once every other has merged, so that none merges into a line.
+    for line in sewn_as_lines {
+        back(&mut areas, line);
     }
     let mut sewing = Vec::with_capacity(elements.len());
     for ((index, element), area) in elements.into_iter().zip(areas) {
@@ -222,5 +252,6 @@ fn back(areas: &mut [Option<Area>], line: Line) {
     }
 }
 
+mod parts;
 #[cfg(test)]
 mod tests;
