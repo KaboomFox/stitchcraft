@@ -1605,6 +1605,38 @@ to 0.99. A merge of thin pieces (M13.38) would take more of them.
 The before and after sheet shows the share of detail lost, 1 less the likeness, in percent, from the same
 function ([before and after sheet](before-after-sheet.md)).
 
+### Merging by likeness
+
+Thin lines merge only while the picture keeps `auto_min_likeness` of its likeness, 0.8 by default
+([Neighbours](#neighbours), `REQ-AUTO-095`, M13.44). Measured on 2026-11-18, as main sews them and with the
+bound. The photos marked * are local. Thickest is the thickest spot in fills, and the area is at 3 fills or
+more.
+
+| Picture | Likeness | Shapes as running stitches | Jump threads | Thickest | Area, mm² |
+|---|---|---|---|---|---|
+| The dog on turf, 6 threads | 0.814, the same | 3, the same | 57, the same | 4.69, the same | 141.50, the same |
+| The dog on turf, 9 threads | 0.779 → 0.792 | 4 → 5 | 58 → 59 | 4.80, the same | 153.25 → 152.75 |
+| The running dogs, 6 and 9 threads | 0.898 and 0.921, the same | 1 and 3, the same | 49 and 64, the same | 4.62 and 5.63, the same | 130.50 and 187.50, the same |
+| The pear, the lettered patch, TS-13A to TS-13E | 1.000, the same | no change | no change | no change | no change |
+| A magnolia * | 0.480 → 0.799 | 32 → 168 | 155 → 278 | 5.54 → 5.53 | 462.75 → 532.75 |
+| A coleus * | 0.454 → 0.794 | 30 → 273 | 237 → 427 | 10.46 → 10.85 | 894.50 → 964.00 |
+| A greylag goose * | GOOSE0L → 0.782 | GOOSE0R → 74 | GOOSE0J → 148 | GOOSE0T → 7.55 | GOOSE0A → 582.00 |
+| A castle * | CASTLE |
+
+The dogs keep their gain from M13.18 but for one line of the dog on turf in 9 threads. Their strands of fur
+lie among many pieces of their colours, so each is a small share of its colour, and the pictures keep 0.78
+or more with them merged. The flowers' twigs, the shadows along their branches and the pale rims of their
+petals are most of what their colours have there, and they sew as lines: the photos keep 0.78 to 0.80, where
+they kept 0.43 to 0.48. That costs them JUMPCOST jump threads more.
+
+Merging counts only what it loses itself. The measure also counts the parts that specks and stitches astray
+lose, so a picture keeps a little less than the bound: the goose 0.782 at 0.8. A bound of 0.8, a twentieth
+above the limit, keeps every picture measured above it. Counted colour by colour, each colour keeping 0.75 of
+its parts, merging kept more lines on the dogs, 6 and 8 on the dogs on turf, and left them 5 and 7 jump
+threads more, with the running dog in 6 threads 0.39 fills thicker. Counted over the picture, a colour with
+many pieces gives up its lines for a colour with few, and the magnolia keeps 0.799 with 278 jump threads,
+where colour by colour it kept 0.768 with 294.
+
 ## Sewing order
 
 Automatic elements sew in an order StitchCraft chooses (`stitchcraft_engine::auto::neighbours::order`,

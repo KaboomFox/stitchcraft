@@ -155,7 +155,7 @@ fn req_auto_095_a_thin_line_that_is_a_whole_part_of_its_colour_sews_as_a_line() 
         (line.to_string(), line.element.as_ref().map(ToString::to_string), format!("{:?}", line.fix)),
         (
             "info SC-I0915: A line of this area, of 5.5 mm², is narrower than the narrowest satin stroke, but sews as a line: it is a part of \
-             its colour by itself, and merged it would take the picture's likeness under 0.8 (`auto_min_likeness`)."
+             its colour by itself, and merged it would take the picture's likeness under 0.85 (`auto_min_likeness`)."
                 .to_string(),
             Some("line".to_string()),
             "Some(Hint(\"To merge it, lower `auto_min_likeness`.\"))".to_string()

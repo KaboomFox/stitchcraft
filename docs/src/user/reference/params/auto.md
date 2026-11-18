@@ -222,7 +222,7 @@ while the picture keeps this likeness, and the others sew as lines. At 0 every t
 and at 1 none that is a part does.
 
 - **Accepts:** a number from 0 to 1
-- **Default:** `0.8`
+- **Default:** `0.85`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 

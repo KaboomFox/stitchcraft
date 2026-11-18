@@ -202,7 +202,7 @@ params! {
         /// petal, a shadow. Such lines merge, those of the colours with the most parts and the smallest first,
         /// while the picture keeps this likeness, and the others sew as lines. At 0 every thin line merges,
         /// and at 1 none that is a part does.
-        auto_min_likeness: Number = "0.8", label "Least likeness kept when lines merge", range (0.0, 1.0),
+        auto_min_likeness: Number = "0.85", label "Least likeness kept when lines merge", range (0.0, 1.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
         /// How far a part reaches from one of its centre lines on both sides of the line, at the most, for
