@@ -160,6 +160,8 @@ abutting or stacked ([image to embroidery](image-to-embroidery.md#testing)). The
 docs show too, a photo that VectorCraft traced into ragged shapes (`stitchcraft_testkit::pictures::pear`). The
 cases of letters sewn as strokes measure how far each satin stitch of the traced M and A lies from square
 to the stroke a person draws it with, `stitchcraft_testkit::strokes`, which holds those strokes.
+`stitchcraft_testkit::pictures::marked` draws a patch of 2 halves with a ring, a dot and a mark on it,
+traced either way, for the cases of details sewn last.
 
 ## Levels
 

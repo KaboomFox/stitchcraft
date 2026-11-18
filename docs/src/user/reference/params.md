@@ -65,7 +65,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Guided parameters](params/guided.md) | 3 | Guided fill |
 | [Tartan parameters](params/tartan.md) | 5 | Tartan fill |
 | [Path fill parameters](params/path-fill.md) | 3 | Contour fill, Meander fill, Circular fill |
-| [Auto parameters](params/auto.md) | 28 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
+| [Auto parameters](params/auto.md) | 29 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
 
 ## Every parameter
 
@@ -79,6 +79,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`auto_base_rows`](params/auto.md#auto_base_rows) | Base layer's rows | Auto parameters |
 | [`auto_base_sliver_mm2`](params/auto.md#auto_base_sliver_mm2) | Largest sliver | Auto parameters |
 | [`auto_base_stitch_length_mm`](params/auto.md#auto_base_stitch_length_mm) | Base layer's stitch length | Auto parameters |
+| [`auto_details_last`](params/auto.md#auto_details_last) | Details sew last | Auto parameters |
 | [`auto_fill_angle`](params/auto.md#auto_fill_angle) | Fill angle | Auto parameters |
 | [`auto_fill_outline`](params/auto.md#auto_fill_outline) | Outline round fills | Auto parameters |
 | [`auto_fill_uneven`](params/auto.md#auto_fill_uneven) | Fill uneven parts | Auto parameters |

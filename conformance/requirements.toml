@@ -3461,3 +3461,30 @@ rationale = "The owner's machine has one needle, and each thread change is a ret
 milestone = "M13"
 status = "active"
 
+[[req]]
+id = "REQ-AUTO-096"
+area = "auto"
+level = "L2"
+statement = "An automatic area is a detail of each automatic area it meets without overlapping it that is larger than it is, when the shapes round it close in on it: what the other shapes paint, each grown by twice the shapes' tolerance, covers 3 quarters or more of the strip as wide as that tolerance round its region. Within what must sew before what (REQ-AUTO-010), a detail sews after each such area where no thread changes for it: of the rows of batches with the fewest thread changes (REQ-AUTO-037), the search takes the one that sews fewer details before such an area, as it does satin columns before their fills, and a detail then waits for a later batch of its thread when the row has one. So a detail where 2 or more patches meet, which lies in no area's hole, sews after them. A line or a satin column round a detail sews after it as it does after any fill it borders (REQ-AUTO-010, REQ-AUTO-037), covering its edge as an outline does. SC-I0907 says how many details still sew before a larger area round them."
+rationale = "A digitizer sews an eye, a nose or a mark on a patch last, so that no fill's rows lie over it. The layers' rule (REQ-AUTO-023) sews an area before the details in its holes, but a trace draws a detail where patches meet in no single area's hole. Measured on 2026-11-18, the traced dogs have 35 to 51 details each, 179 in all, and on main 104 of them sewed before a larger area round them; 71 do with this rule, at the same thread changes. Sewing every one last would take the dogs in 6 threads from 8 thread changes to 13 and 14. A detail is known by geometry and order alone, never by what the picture shows: the shapes round it close in on it, and it is smaller than they are. The owner's machine has one needle, so a detail never costs a thread change: it waits only for a batch its thread sews anyway."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-097"
+area = "auto"
+level = "L2"
+statement = "An automatic area that can't move back before a detail in its hole (REQ-AUTO-023), past a shape with settings near it, keeps its hole open, and the detail still sews after it where no thread changes for it and nothing that must sew before what holds the detail first (REQ-AUTO-096). Nothing moves across a stop: a detail drawn before a stop sews before an area drawn after it."
+rationale = "The layers move an area back in paint order before they know the order the elements sew in, and stop at a shape near it. Once the hole is open again the area and its detail only meet, and the order may still sew the detail last."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-098"
+area = "auto"
+level = "L2"
+statement = "The details sew last (REQ-AUTO-096, REQ-AUTO-097) only when the design's lowest automatic shape turns `auto_details_last` on, which is off by default. Off, no 2 automatic areas are looked at as meeting and no area is looked at for details, and the design sews as it would without those rules."
+rationale = "Measured on 2026-11-18, sewing the details last raised the thickest spot of 2 traced photos, from 4.69 fills to 5.49 and from 4.62 to 5.03, at spots where no detail lies, and lowered it on 2 others: a fill that moves starts and ends elsewhere, its own travel runs elsewhere under its rows, and it reaches under other neighbours. No rule of geometry told the wishes that do it from those that help: taking back the wishes of the details whose rim the larger area covers less than a share held one photo at its thickest spot and raised another, at every share tried from a quarter to all of it. The owner chose one general rule over a check that plans twice or a cut-off by size: thickness gets one cap at the end of planning (M13.35), so that no reorder piles thread anywhere, and the setting turns on by default once that cap lands."
+milestone = "M13"
+status = "active"
+

@@ -78,7 +78,7 @@ fn ordered_under(sewn: Vec<Sewn>, painting: &Budget, budget: &Budget, under: Opt
     let moving: Vec<Moving> =
         sewn.iter().enumerate().map(|(index, sewn)| Moving { free: sewn.automatic, made: sewn.automatic, shape: shape(index, sewn) }).collect();
     let mut shapes = Shapes::new(sewn, &settings, painting);
-    let mut said = super::ordered(&mut shapes, &moving, budget, under);
+    let mut said = super::ordered(&mut shapes, &moving, budget, under, true);
     said.append(&mut shapes.said);
     (shapes.elements.iter().map(|element| element.id.as_str().to_string()).collect(), said)
 }
@@ -241,6 +241,9 @@ fn a_line_waits_for_no_fill_it_borders_beyond_an_element_kept_in_its_place() {
         graph: Graph::new(3),
         borders: vec![(2, 0)],
         wished: Vec::new(),
+        last: true,
+        details: Vec::new(),
+        closed: BTreeMap::new(),
         kept: BTreeSet::from([1]),
         unsought: None,
         under: None,
@@ -266,6 +269,9 @@ fn req_auto_012_nothing_moves_across_an_element_kept_in_its_place_and_each_sews_
         graph,
         borders: Vec::new(),
         wished: Vec::new(),
+        last: true,
+        details: Vec::new(),
+        closed: BTreeMap::new(),
         kept: BTreeSet::from([1]),
         unsought: None,
         under: None,
@@ -287,6 +293,9 @@ fn threaded(colours: &[&[Rgb]]) -> (Vec<usize>, usize, usize) {
         graph: Graph::new(facts.len()),
         borders: Vec::new(),
         wished: Vec::new(),
+        last: true,
+        details: Vec::new(),
+        closed: BTreeMap::new(),
         kept: BTreeSet::new(),
         unsought: None,
         under: None,
@@ -513,6 +522,9 @@ fn sewn(
         graph,
         borders: Vec::new(),
         wished: wished.to_vec(),
+        last: true,
+        details: Vec::new(),
+        closed: BTreeMap::new(),
         kept: BTreeSet::new(),
         unsought: None,
         under: None,
@@ -552,4 +564,133 @@ fn req_auto_012_an_order_found_that_needs_more_work_to_place_leaves_the_rest_in_
     // another element, must sew before its fill.
     let (placed, order, unsought) = sewn(&[&RED, &BLUE, &RED], &[vec![0, 1, 2]], &[(1, 2)], &[(0, 1)], &Budget { max_work: 0, ..Budget::DEFAULT });
     assert_eq!((placed.is_err(), order, unsought), (true, vec![], Some(0)));
+}
+
+#[test]
+fn req_auto_096_the_details_sewn_before_a_larger_area_round_them_are_counted() {
+    // Details 2 and 3, each of area 0 and 1, and detail 4 of area 1: sewn 2, 0, 3, 1, 4, detail 2 sews
+    // before area 0 and detail 3 before area 1, and 4 after it. Sewn 0, 4, 1, 3, 2, only detail 4 sews early.
+    let details = [(0, 2), (1, 2), (1, 3), (1, 4)];
+    let said = |order: &[usize]| early(&details, order).map(|said| said.message);
+    assert_eq!(
+        said(&[2, 0, 3, 1, 4]).as_deref(),
+        Some(
+            "2 of 3 details sew before a larger area round them: sewn after it, they would change thread more often, or break what \
+             must sew before what."
+        )
+    );
+    assert_eq!(
+        said(&[0, 4, 1, 3, 2]).as_deref(),
+        Some(
+            "1 of 3 details sews before a larger area round it: sewn after it, it would change thread more often, or break what must \
+             sew before what."
+        )
+    );
+    assert_eq!(said(&[0, 1, 2, 3, 4]), None);
+}
+
+/// A green mark 4 mm square, drawn first, in a pinwheel of 4 squares 10 mm wide, red and blue, that close
+/// in on it: each meets one of its sides.
+fn pinwheel() -> Vec<Sewn> {
+    vec![
+        square("mark", (10.0, 10.0), 4.0, &GREEN),
+        square("left", (0.0, 4.0), 10.0, &RED),
+        square("bottom", (10.0, 0.0), 10.0, &BLUE),
+        square("right", (14.0, 10.0), 10.0, &RED),
+        square("top", (4.0, 14.0), 10.0, &BLUE),
+    ]
+}
+
+#[test]
+fn req_auto_096_closing_in_on_a_detail_is_metered_and_stops_where_the_work_runs_out() {
+    // With the budget, the mark is a detail of each square and sews last, at no thread change more.
+    let (ids, said) = ordered_with(pinwheel(), &Budget::DEFAULT, &Budget::DEFAULT);
+    assert_eq!(ids.last().map(String::as_str), Some("mark"), "{ids:?}");
+    assert!(!messages(&said).iter().any(|said| said.contains("work budget")), "{said:?}");
+    // The squares close in on the mark, and the mark and the other squares on no square.
+    let settings = DesignSettings::default();
+    let found = || {
+        let mut shapes = Shapes::new(pinwheel(), &settings, &Budget::DEFAULT);
+        (0..shapes.len()).for_each(|index| shapes.find(index));
+        // What the squares paint grown is found once, and kept.
+        (1..shapes.len()).for_each(|index| drop(shapes.grown(index, &mut Budget::DEFAULT.meter())));
+        shapes
+    };
+    let shapes = found();
+    let facts: Vec<Facts> = (0..shapes.len()).map(|index| Facts::of(&shapes.elements[index], reach(&shapes, index))).collect();
+    let mut meter = Budget::DEFAULT.meter();
+    assert!(enclosed(&mut found(), &facts, 0, &mut meter).unwrap());
+    assert!(!enclosed(&mut found(), &facts, 1, &mut Budget::DEFAULT.meter()).unwrap());
+    // Short of the work it needs, finding it runs out and says so to the order, which keeps the mark in its
+    // place: at each of the 5 shapes looked at, then as it finds the strip round the mark, and at the last
+    // unit, as it finds what of the strip the squares cover. With what the squares paint grown not yet
+    // found, it runs out finding that for the first.
+    let work = Budget::DEFAULT.max_work - meter.work_left();
+    let short = |shapes: &mut Shapes, work: u64| enclosed(shapes, &facts, 0, &mut Budget { max_work: work, ..Budget::DEFAULT }.meter()).is_err();
+    for work in [0, 1, 2, 3, 4, 5, work - 1] {
+        assert!(short(&mut found(), work), "{work}");
+    }
+    let mut painted = Shapes::new(pinwheel(), &settings, &Budget::DEFAULT);
+    (0..painted.len()).for_each(|index| painted.find(index));
+    assert!(short(&mut painted, 2));
+    assert!(!short(&mut found(), work));
+}
+
+/// `shapes` of `sewn`, each one's paint found, the facts of each, and the work `enclosed` takes for shape
+/// `index`, with what it finds.
+fn closing(sewn: Vec<Sewn>, index: usize) -> (bool, u64) {
+    let settings = DesignSettings::default();
+    let mut shapes = Shapes::new(sewn, &settings, &Budget::DEFAULT);
+    (0..shapes.len()).for_each(|index| shapes.find(index));
+    let facts: Vec<Facts> = (0..shapes.len()).map(|index| Facts::of(&shapes.elements[index], reach(&shapes, index))).collect();
+    let mut meter = Budget::DEFAULT.meter();
+    let closed = enclosed(&mut shapes, &facts, index, &mut meter).unwrap();
+    (closed, Budget::DEFAULT.max_work - meter.work_left())
+}
+
+#[test]
+fn req_auto_096_closing_in_grows_only_the_shapes_near_the_detail() {
+    // A square 1 mm right of the mark's box is looked at, for a unit, and not grown: it lies farther than
+    // twice the shapes' tolerance from the mark.
+    let (closed, work) = closing(pinwheel(), 0);
+    assert!(closed);
+    let mut far = pinwheel();
+    far.push(square("far", (15.0, 11.0), 1.0, &RED));
+    assert_eq!(closing(far, 0), (true, work + 1));
+}
+
+#[test]
+fn req_auto_096_a_detail_is_closed_in_and_smaller_than_the_area_it_meets() {
+    // The pinwheel's mark, and a green square 4 mm wide beside a red one 10 mm wide, open all round.
+    let mut beside = vec![square("small", (100.0, 0.0), 4.0, &GREEN), square("large", (90.0, 0.0), 10.0, &RED)];
+    beside.extend(pinwheel());
+    let settings = DesignSettings::default();
+    let mut shapes = Shapes::new(beside, &settings, &Budget::DEFAULT);
+    (0..shapes.len()).for_each(|index| shapes.find(index));
+    let facts: Vec<Facts> = (0..shapes.len()).map(|index| Facts::of(&shapes.elements[index], reach(&shapes, index))).collect();
+    let moving: Vec<Moving> = (0..shapes.len()).map(|shape| Moving { free: true, made: true, shape }).collect();
+    let mut order = Order {
+        facts: &facts,
+        moving: &moving,
+        graph: Graph::new(shapes.len()),
+        borders: Vec::new(),
+        wished: Vec::new(),
+        last: true,
+        details: Vec::new(),
+        closed: BTreeMap::new(),
+        kept: BTreeSet::new(),
+        unsought: None,
+        under: None,
+    };
+    let mut detail = |detail: usize, other: usize| order.detail(&mut shapes, detail, other, &mut Budget::DEFAULT.meter()).unwrap();
+    // The mark (2) is closed in and smaller than a square of the pinwheel (3), and no smaller than itself.
+    assert!(detail(2, 3));
+    assert!(!detail(2, 2));
+    // The small square is smaller than the large one, and open: no detail.
+    assert!(!detail(0, 1));
+}
+
+#[test]
+fn req_auto_096_a_detail_paired_with_itself_sews_neither_before_nor_after_itself() {
+    assert_eq!(early(&[(2, 2)], &[0, 1, 2]), None);
 }

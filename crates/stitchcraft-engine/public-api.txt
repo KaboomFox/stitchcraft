@@ -52,6 +52,7 @@ pub stitchcraft_engine::auto::AutoParams::auto_base_offset_mm: <stitchcraft_para
 pub stitchcraft_engine::auto::AutoParams::auto_base_rows: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_base_sliver_mm2: <stitchcraft_params::kinds::Area as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_base_stitch_length_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_details_last: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_fill_angle: <stitchcraft_params::kinds::Angle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_fill_outline: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_fill_uneven: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
@@ -87,6 +88,7 @@ pub const stitchcraft_engine::auto::ADVANCED: &str
 pub const stitchcraft_engine::auto::CONTOUR_FROM: stitchcraft_core::units::Mm
 pub const stitchcraft_engine::auto::CROWDED_CLOSER_THAN: f64
 pub const stitchcraft_engine::auto::CROWDED_INSETS: &str
+pub const stitchcraft_engine::auto::DETAILS_LAST: &str
 pub const stitchcraft_engine::auto::EDGE_REACH: f64
 pub const stitchcraft_engine::auto::FILL_ANGLE: &str
 pub const stitchcraft_engine::auto::FILL_OUTLINE: &str

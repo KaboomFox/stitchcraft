@@ -30,6 +30,8 @@ pub const PREFER: &str = "auto_prefer";
 pub const FILL_UNEVEN: &str = "auto_fill_uneven";
 /// The key of the switch that sews an outline round each fill.
 pub const FILL_OUTLINE: &str = "auto_fill_outline";
+/// The key of the switch that sews the details last.
+pub const DETAILS_LAST: &str = "auto_details_last";
 /// The key of the fills' angle.
 pub const FILL_ANGLE: &str = "auto_fill_angle";
 /// The key of the widest satin column.
@@ -282,6 +284,14 @@ params! {
         /// limit.
         auto_thick_fail_points: Number = "30", label "Needle points that fail, per mm²", range (0.5, 200.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
+
+        /// Whether a detail sews after the larger areas round it, where that costs no thread change: an
+        /// automatic area that the shapes round it close in on, smaller than an area it meets, as an eye is in
+        /// the fur round it. Sewn last, the detail keeps the later fills' rows off its edge. Off by default:
+        /// a fill that moves for a detail starts, ends and travels elsewhere, and can make a spot away from
+        /// the detail thicker. The design goes by the setting of its lowest automatic shape.
+        auto_details_last: Toggle = "false", label "Details sew last",
+            origin Origin::StitchCraft, stability Stability::Experimental;
     }
 }
 
@@ -316,11 +326,11 @@ mod tests {
         ];
         let cover = ["auto_base_offset_mm", "auto_base_rows", "auto_base_sliver_mm2", "auto_base_bare_percent"];
         let thick = ["auto_thick_warn_fills", "auto_thick_fail_fills", "auto_thick_warn_points", "auto_thick_fail_points"];
-        assert_eq!(keys, [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..], &thick[..]].concat());
-        // The bounds, the base layer's offset and rows, the 2 limits of the cover's check and the 4 of the thickness are the advanced settings,
-        // which no dialog shows.
+        assert_eq!(keys, [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..], &thick[..], &[DETAILS_LAST]].concat());
+        // The bounds, the base layer's offset and rows, the 2 limits of the cover's check, the 4 of the thickness and the switch of the details
+        // are the advanced settings, which no dialog shows.
         let advanced: Vec<&str> = AutoParams::SPECS.iter().filter(|spec| spec.group == ADVANCED).map(|spec| spec.key).collect();
-        assert_eq!(advanced, [&bounds[..], &cover[..], &thick[..]].concat());
+        assert_eq!(advanced, [&bounds[..], &cover[..], &thick[..], &[DETAILS_LAST]].concat());
     }
 
     #[test]

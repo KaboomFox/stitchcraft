@@ -356,3 +356,16 @@ limit.
 - **Default:** `30`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_details_last`
+
+**Details sew last.** Whether a detail sews after the larger areas round it, where that costs no thread change: an
+automatic area that the shapes round it close in on, smaller than an area it meets, as an eye is in
+the fur round it. Sewn last, the detail keeps the later fills' rows off its edge. Off by default:
+a fill that moves for a detail starts, ends and travels elsewhere, and can make a spot away from
+the detail thicker. The design goes by the setting of its lowest automatic shape.
+
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
+- **Default:** `false`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version

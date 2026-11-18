@@ -124,6 +124,18 @@
         "unit": "mm"
       }
     },
+    "auto_details_last": {
+      "default": false,
+      "description": "Whether a detail sews after the larger areas round it, where that costs no thread change: an automatic area that the shapes round it close in on, smaller than an area it meets, as an eye is in the fur round it. Sewn last, the detail keeps the later fills' rows off its edge. Off by default: a fill that moves for a detail starts, ends and travels elsewhere, and can make a spot away from the detail thicker. The design goes by the setting of its lowest automatic shape.",
+      "title": "Details sew last",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "automatic": true,
+        "group": "Advanced",
+        "origin": "stitchcraft",
+        "stability": "experimental"
+      }
+    },
     "auto_fill_angle": {
       "default": 0.0,
       "description": "The angle of the rows of every fill that automatic digitizing makes, as a fill's `angle` gives it. One angle for the whole design lets a small filled part lie flat beside the fills round it.",
@@ -3426,7 +3438,8 @@
           "auto_thick_warn_fills",
           "auto_thick_fail_fills",
           "auto_thick_warn_points",
-          "auto_thick_fail_points"
+          "auto_thick_fail_points",
+          "auto_details_last"
         ],
         "name": "AutoParams",
         "title": "Auto parameters"

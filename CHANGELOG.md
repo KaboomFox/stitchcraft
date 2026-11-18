@@ -19,6 +19,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - The likeness measure takes its definition of a part from `stitchcraft_engine::auto::is_part`.
   - Public API: `stitchcraft_engine::auto::is_part`, `MIN_LIKENESS` and its field of `AutoParams`.
   - The golden files stay as they are, since no test sheet has a ragged thin line.
+- M13.40: details sew last (`REQ-AUTO-096` to `REQ-AUTO-098`).
+  - An automatic area that the shapes round it close in on, smaller than a shape it meets, is a detail of
+    that shape, as an eye is of the fur round it. It sews after that shape where that costs no thread
+    change: a wish to the search for the fewest changes, as a satin column's after its fill is. It is
+    known by geometry alone. A detail where 2 patches meet, or in the hole of an area that can't move
+    back, sewed first before.
+  - The rule is behind a new setting, `auto_details_last`, off by default, as the design's lowest automatic
+    shape sets it. Off, every design sews as before. A fill that moves for a detail can make a spot
+    elsewhere thicker, at a place the geometry can't predict. The setting turns on by default once
+    M13.35 caps the thread at every spot. With it on, `SC-I0907` says how many details still sew before
+    a larger area round them.
+  - On, the marked patch sews its dot and diamond whole, and its thickest spot has 3.41 fills where it
+    had 3.85. On the traced dogs the thickest spot fell on 2 and rose on 2, at spots away from any detail.
+  - Off, every design writes the same machine file as before, at the same cost within 0.24 %. On, the
+    traced photos measured take 8 to 14 % more instructions.
 - M13.41: a likeness measure (`REQ-AUTO-093`, `REQ-AUTO-094`).
   - `stitchcraft_testkit::fabric::likeness` compares the stitches with the trace, colour by colour. Each part
     of a colour of 1 mm² or more, wide enough for a thread, counts once, and is kept when the stitches show
