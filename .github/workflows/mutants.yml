@@ -48,7 +48,9 @@ jobs:
     name: mutants in the changed lines, part ${{ matrix.part }} of 16
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    # A part of a large change runs past 90 minutes: M13.37's 803 mutants took 63 to 78 minutes a part on
+    # most runners, and some parts ran past 90 on slow ones, twice in a row for the same part.
+    timeout-minutes: 120
     # Each mutant builds its crate again and runs its tests, which take most of the time: without debug
     # information and with the workspace's own code optimized a little, an engine mutant takes 157 s on
     # 2 cores against 267 s (docs/src/design/conformance.md).
