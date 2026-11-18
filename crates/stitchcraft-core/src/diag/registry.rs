@@ -1250,8 +1250,8 @@ macro_rules! later_codes {
         /// default (`auto_thick_cap_fills`). A last pass took thread there that is hidden or does no visible work: travel that went out and back
         /// on itself, lock stitches beyond one back and forth, and row ends that lie under shapes sewn later, moved back along their rows, the
         /// base layer's first. Where a spot was still above the cap, the cap took needle points out of the runs of the shapes digitizing made,
-        /// where other stitches cover what their stitches covered: underlay and travel under later top stitches, then top stitches under later
-        /// shapes, then a shape's own top stitches where they are doubled. Neither made a jump thread, and what shows keeps its colour.
+        /// where other stitches cover what their stitches covered: first under the shapes sewn later, and then where a shape lays its own top
+        /// stitches twice over the same place. Neither made a jump thread, and what shows keeps its colour.
         ///
         /// The message gives the area that was above the cap, how much thread of each kind the pass and the cap took in how many places, the
         /// area still above, and the thickest spot left. Nothing needs doing. At a spot still above the cap no more thread may go by these rules:
