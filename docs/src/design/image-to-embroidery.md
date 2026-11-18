@@ -1598,44 +1598,53 @@ picture's number, so that any change that takes a part away shows. The limit is 
 pictures, the dog on turf in 9 threads at 0.779, rounded down to a twentieth. The traced dogs and the pear set
 it among photos, and the lettered patch and the test sheets' digitized halves among drawings.
 
-The local flowers, bird and building keep 0.43 to 0.48 and are under the limit. Thin lines are half of
-their parts, and the rule of `REQ-AUTO-090` merges them. With their thin lines sewn as lines they keep 0.93
-to 0.99. A merge of thin pieces (M13.38) would take more of them.
+Before M13.44 the local flowers, bird and building kept 0.43 to 0.48, under the limit. Thin lines are half
+of their parts, and the rule of `REQ-AUTO-090` merged them all. With their thin lines sewn as lines they keep
+0.93 to 0.99. Merging now keeps the picture's likeness ([Merging by likeness](#merging-by-likeness)). A merge
+of thin pieces (M13.38) would take more of them, and waits for M13.44.
 
 The before and after sheet shows the share of detail lost, 1 less the likeness, in percent, from the same
 function ([before and after sheet](before-after-sheet.md)).
 
 ### Merging by likeness
 
-Thin lines merge only while the picture keeps `auto_min_likeness` of its likeness, 0.8 by default
+Thin lines merge only while the picture keeps `auto_min_likeness` of its likeness, 0.85 by default
 ([Neighbours](#neighbours), `REQ-AUTO-095`, M13.44). Measured on 2026-11-18, as main sews them and with the
 bound. The photos marked * are local. Thickest is the thickest spot in fills, and the area is at 3 fills or
-more.
+more, in mm².
 
-| Picture | Likeness | Shapes as running stitches | Jump threads | Thickest | Area, mm² |
+| Picture | Likeness | Shapes as running stitches | Jump threads | Thickest | Area |
 |---|---|---|---|---|---|
-| The dog on turf, 6 threads | 0.814, the same | 3, the same | 57, the same | 4.69, the same | 141.50, the same |
-| The dog on turf, 9 threads | 0.779 → 0.792 | 4 → 5 | 58 → 59 | 4.80, the same | 153.25 → 152.75 |
-| The running dogs, 6 and 9 threads | 0.898 and 0.921, the same | 1 and 3, the same | 49 and 64, the same | 4.62 and 5.63, the same | 130.50 and 187.50, the same |
-| The pear, the lettered patch, TS-13A to TS-13E | 1.000, the same | no change | no change | no change | no change |
-| A magnolia * | 0.480 → 0.799 | 32 → 168 | 155 → 278 | 5.54 → 5.53 | 462.75 → 532.75 |
-| A coleus * | 0.454 → 0.794 | 30 → 273 | 237 → 427 | 10.46 → 10.85 | 894.50 → 964.00 |
-| A greylag goose * | GOOSE0L → 0.782 | GOOSE0R → 74 | GOOSE0J → 148 | GOOSE0T → 7.55 | GOOSE0A → 582.00 |
-| A castle * | CASTLE |
+| The dog on turf, 6 threads | 0.814 → 0.856 | 3 → 6 | 57 → 60 | 4.69 → 4.57 | 141.50 → 136.00 |
+| The dog on turf, 9 threads | 0.779 → 0.829 | 4 → 8 | 58 → 62 | 4.80, the same | 153.25 → 153.50 |
+| The running dogs, 6 and 9 threads | 0.898 and 0.921 | 1 and 3 | 49 and 64 | 4.62 and 5.63 | 130.50 and 187.50 |
+| The pear, the lettered patch, TS-13A to TS-13E | 1.000 | no change | no change | no change | no change |
+| A magnolia * | 0.480 → 0.849 | 32 → 199 | 155 → 313 | 5.54 → 5.68 | 462.75 → 545.75 |
+| A coleus * | 0.454 → 0.841 | 30 → 304 | 237 → 473 | 10.46 → 7.39 | 894.50 → 1,004.75 |
+| A greylag goose * | 0.483 → 0.820 | 21 → 98 | 95 → 170 | 5.60 → 7.03 | 499.50 → 517.75 |
+| A castle * | 0.434 → 0.779 | 3 → 64 | 54 → 104 | 5.88 → 5.75 | 225.75 → 267.00 |
 
-The dogs keep their gain from M13.18 but for one line of the dog on turf in 9 threads. Their strands of fur
-lie among many pieces of their colours, so each is a small share of its colour, and the pictures keep 0.78
-or more with them merged. The flowers' twigs, the shadows along their branches and the pale rims of their
-petals are most of what their colours have there, and they sew as lines: the photos keep 0.78 to 0.80, where
-they kept 0.43 to 0.48. That costs them JUMPCOST jump threads more.
+The running dogs and the drawings sew as on main, and the dogs on turf keep 3 and 4 lines. Their strands of
+fur lie among many pieces of their colours, so each is a small share of its colour. The flowers' twigs, the
+shadows along their branches and the pale rims of their petals are most of what their colours have there,
+and they sew as lines: the photos keep 0.78 to 0.85, where they kept 0.43 to 0.48. That costs them 50 to 236
+jump threads more. The goose's thickest spot rises by 1.43 fills and the magnolia's by 0.14, and the coleus's
+falls by 3.07.
 
 Merging counts only what it loses itself. The measure also counts the parts that specks and stitches astray
-lose, so a picture keeps a little less than the bound: the goose 0.782 at 0.8. A bound of 0.8, a twentieth
-above the limit, keeps every picture measured above it. Counted colour by colour, each colour keeping 0.75 of
-its parts, merging kept more lines on the dogs, 6 and 8 on the dogs on turf, and left them 5 and 7 jump
-threads more, with the running dog in 6 threads 0.39 fills thicker. Counted over the picture, a colour with
-many pieces gives up its lines for a colour with few, and the magnolia keeps 0.799 with 278 jump threads,
-where colour by colour it kept 0.768 with 294.
+lose. It also counts as parts some lines that are too narrow for a disc a thread across as merging measures
+them on their outlines, but not on the measure's grid. So a
+picture keeps less than the bound: at a bound of 0.8 the goose kept 0.782 and the castle 0.728, under the
+limit. With no line merged that is a part, the castle keeps 0.918. A bound of 0.85 keeps every picture
+measured at 0.75 or more.
+
+2 other ways were measured and not taken. Counted colour by colour, each colour keeping 0.75 of its parts,
+merging kept more lines on the dogs, 6 and 8 on the dogs on turf, which left them 5 and 7 jump threads more,
+and the running dog in 6 threads 0.39 fills thicker. Counted over the picture, a colour with many pieces gives
+up its lines for a colour with few. Merging first the lines closest in colour to the area each would go into
+(CIEDE2000), and keeping those that contrast most, kept the same likeness at 0.8, 0.802 on the magnolia and
+0.793 on the coleus, with 30 and 71 jump threads more than merging the cheapest first. It moved what is lost
+from dark lines on dark patches to the pale rims of petals on pink ones.
 
 ## Sewing order
 

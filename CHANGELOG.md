@@ -5,6 +5,17 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.44: line merging keeps each picture's likeness (`REQ-AUTO-095`, `SC-I0915`).
+  - A thin line that touches no other piece of its colour is a part of the picture by itself, such as a
+    twig or the pale rim of a petal. Such lines merge, those of the colours with the most parts and the
+    smallest first, only while the picture keeps `auto_min_likeness`, 0.85, of its likeness, counted as
+    the likeness measure counts it. The others sew as lines, and `SC-I0915` says so.
+  - The traced dogs on turf keep 0.856 and 0.829, where they kept 0.814 and 0.779, and sew 3 and 4 more
+    lines and leave 3 and 4 more jump threads. The running dogs and the drawings sew as before. Local photos
+    of a magnolia, a coleus, a goose and a castle keep 0.78 to 0.85, where they kept 0.43 to 0.48.
+  - The likeness measure takes its definition of a part from `stitchcraft_engine::auto::is_part`.
+  - Public API: `stitchcraft_engine::auto::is_part`, `MIN_LIKENESS` and its field of `AutoParams`.
+  - The golden files stay as they are, since no test sheet has a ragged thin line.
 - M13.41: a likeness measure (`REQ-AUTO-093`, `REQ-AUTO-094`).
   - `stitchcraft_testkit::fabric::likeness` compares the stitches with the trace, colour by colour. Each part
     of a colour of 1 mm² or more, wide enough for a thread, counts once, and is kept when the stitches show
