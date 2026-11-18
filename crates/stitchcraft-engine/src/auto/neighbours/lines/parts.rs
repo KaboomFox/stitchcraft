@@ -71,6 +71,11 @@ struct Touch {
     lines: Vec<usize>,
 }
 
+impl Touch {
+    /// What a line with no settings of the rules touches: nothing it could merge into.
+    const NOTHING: Touch = Touch { part: false, anchored: true, beside: false, lines: Vec::new() };
+}
+
 /// A group of lines of one colour that touch each other.
 #[derive(Default)]
 struct Group {
@@ -98,8 +103,10 @@ pub(super) fn fates<'r>(
 ) -> Vec<Fate> {
     let mut fates: Vec<Option<Fate>> = Vec::with_capacity(lines.len());
     let mut touches: Vec<Option<Touch>> = Vec::with_capacity(lines.len());
-    for at in 0..lines.len() {
-        match touch(at, lines, areas, &colour, &rules, &mut budget.meter()) {
+    for (at, line) in lines.iter().enumerate() {
+        // A line comes from an area with settings of the rules, and one without touches nothing.
+        let found = rules(line.from).map_or(Ok(Touch::NOTHING), |rules| touch(at, lines, areas, &colour, rules, &mut budget.meter()));
+        match found {
             Ok(found) => {
                 touches.push(Some(found));
                 fates.push(None);
@@ -191,18 +198,17 @@ fn root(group: &[usize], mut at: usize) -> usize {
 }
 
 /// What the line `at` of `lines` touches: the pieces of its colour in `areas` that are no specks, and the
-/// lines after it of its colour. `colour` and `rules` are as [`fates`] has them, and `meter` meters the work.
-fn touch<'r>(
+/// lines after it of its colour. `colour` is as [`fates`] has it, `rules` are the line's settings of the rules,
+/// and `meter` meters the work.
+fn touch(
     at: usize,
     lines: &[Line],
     areas: &[Option<Area>],
     colour: &impl Fn(usize) -> Option<Rgb>,
-    rules: &impl Fn(usize) -> Option<&'r AutoParams>,
+    rules: &AutoParams,
     meter: &mut Meter,
 ) -> Result<Touch, Failed> {
-    let (Some(line), Some(rules)) = (lines.get(at), lines.get(at).and_then(|line| rules(line.from))) else {
-        return Ok(Touch { part: false, anchored: true, beside: false, lines: Vec::new() });
-    };
+    let Some(line) = lines.get(at) else { return Ok(Touch::NOTHING) };
     let own = colour(line.from);
     let part = counts(&line.part, rules, meter)?;
     let zone = joined(ops::buffered(std::slice::from_ref(&line.part), TOUCHING, meter))?;

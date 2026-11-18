@@ -29,9 +29,14 @@ fn ragged(id: &str, params: &[(&str, &str)]) -> Element {
 /// A line as [`ragged`] draws it, from `x` = `left` to the right, `steps` half millimetres long and in
 /// `thread`.
 fn strand(id: &str, left: f64, steps: u32, thread: &Thread, params: &[(&str, &str)]) -> Element {
+    jagged(id, left, steps, (0.4, 0.7), thread, params)
+}
+
+/// A line as [`strand`] draws it, `narrow` wide every millimetre and `wide` half way between.
+fn jagged(id: &str, left: f64, steps: u32, (narrow, wide): (f64, f64), thread: &Thread, params: &[(&str, &str)]) -> Element {
     let long = f64::from(steps) * 0.5;
     let mut ring = vec![(left, 0.0), (left, long)];
-    ring.extend((0..=steps).map(|i| (left + if i % 2 == 0 { 0.4 } else { 0.7 }, long - f64::from(i) * 0.5)));
+    ring.extend((0..=steps).map(|i| (left + if i % 2 == 0 { narrow } else { wide }, long - f64::from(i) * 0.5)));
     automatic(fill(id, &[&ring], thread, params))
 }
 
@@ -207,4 +212,41 @@ fn req_auto_095_lines_of_a_colour_that_touch_are_one_part() {
     ];
     let (out, _) = sewn(elements);
     assert_eq!(lines_kept(&out), Vec::<&str>::new());
+}
+
+#[test]
+fn req_auto_095_lines_of_2_colours_that_touch_are_2_parts() {
+    // 4 colours, a gold line and a shorter green one side by side, each all of its colour. At 0.75 the picture
+    // may lose 1 colour's worth: the smaller, green, merges, and gold stays.
+    let elements = vec![
+        rect("left", (0.0, 0.0), (10.0, 10.0), &RED),
+        ragged("line1", &[(MIN_LIKENESS, "0.75")]),
+        strand("line2", 10.7, 16, &GREEN, &[(MIN_LIKENESS, "0.75")]),
+        rect("right", (11.4, 0.0), (20.0, 10.0), &BLUE),
+    ];
+    assert_eq!(lines_kept(&sewn(elements).0), ["line1"]);
+}
+
+#[test]
+fn req_auto_095_lines_of_a_colour_whose_boxes_meet_but_that_dont_touch_are_2_parts() {
+    // A second gold line 0.2 mm to the right of the first, its ragged side matching the first's: their boxes
+    // overlap and they don't touch. 2 parts of gold, half of its likeness each: at 0.75 one merges.
+    let mut ring = vec![(11.3, 10.0), (11.3, 0.0)];
+    ring.extend((0..=20).map(|i| (if i % 2 == 0 { 10.6 } else { 10.9 }, f64::from(i) * 0.5)));
+    let elements = vec![
+        rect("left", (0.0, 0.0), (10.0, 10.0), &RED),
+        ragged("line1", &[(MIN_LIKENESS, "0.75")]),
+        automatic(fill("line2", &[&ring], &GOLD, &[(MIN_LIKENESS, "0.75")])),
+        rect("right", (11.3, 0.0), (20.0, 10.0), &BLUE),
+    ];
+    // As one part, gold's only one, neither would merge.
+    assert_eq!(lines_kept(&sewn(elements).0).len(), 1);
+}
+
+#[test]
+fn req_auto_095_a_line_too_narrow_for_a_thread_is_no_part_and_merges() {
+    // 0.2 to 0.35 mm wide, 2.75 mm²: no speck, and a disc a thread across fits nowhere in it.
+    let line = jagged("line", 10.0, 20, (0.2, 0.35), &GOLD, &[]);
+    let elements = vec![rect("left", (0.0, 0.0), (10.0, 10.0), &RED), line, rect("right", (10.35, 0.0), (20.0, 10.0), &BLUE)];
+    assert_eq!(lines_kept(&sewn(elements).0), Vec::<&str>::new());
 }

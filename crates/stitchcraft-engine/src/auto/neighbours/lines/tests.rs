@@ -160,6 +160,25 @@ fn lines_whose_parts_need_more_work_than_the_budget_allows_sew_as_lines_and_say_
 }
 
 #[test]
+fn a_line_that_is_a_part_of_its_own_merges_while_the_picture_keeps_its_share() {
+    // A gold line between a red and a blue area, with gold squares far off. With 2 squares, merged it costs gold
+    // a third of its likeness and the picture a ninth, within the 0.15 it may lose. With 1, a sixth.
+    let coloured = |id: &str, parts: &[Polygon], color: Rgb| Element { thread: Thread::new(color), ..auto(id, parts, &[]) };
+    let gold = Rgb::new(230, 180, 30);
+    for (squares, line) in [(2, false), (1, true)] {
+        let mut elements = vec![
+            coloured("left", &[square((0.0, 0.0), (10.0, 10.0))], Rgb::new(200, 0, 0)),
+            coloured("line", &[strand(10.0)], gold),
+            coloured("right", &[square((10.7, 0.0), (20.0, 10.0))], Rgb::new(0, 0, 200)),
+        ];
+        let far = [square((40.0, 0.0), (45.0, 5.0)), square((50.0, 0.0), (55.0, 5.0))];
+        elements.push(coloured("far", &far[..squares], gold));
+        let (ids, said) = run(elements, &Budget::DEFAULT);
+        assert_eq!(ids.iter().any(|id| id == "line"), line, "{squares}: {said:?}");
+    }
+}
+
+#[test]
 fn a_part_is_no_speck_and_holds_a_thread() {
     let rules = AutoParams::defaults();
     let smallest = rules.auto_min_area_mm2;
