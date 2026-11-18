@@ -134,9 +134,10 @@ pub(super) fn fates<'r>(
     let mut parts: BTreeMap<Rgb, usize> = BTreeMap::new();
     for (place, area) in areas.iter().enumerate() {
         let Some(colour) = colour(place) else { continue };
-        let pieces = area.as_ref().zip(rules(place)).map_or(0, |(area, rules)| {
-            area.parts.iter().filter(|part| !speck(part.area(), rules.auto_min_area_mm2)).count()
-        });
+        let pieces = area
+            .as_ref()
+            .zip(rules(place))
+            .map_or(0, |(area, rules)| area.parts.iter().filter(|part| !speck(part.area(), rules.auto_min_area_mm2)).count());
         *parts.entry(colour).or_insert(0) += pieces;
     }
     let mut least: f64 = 0.0;

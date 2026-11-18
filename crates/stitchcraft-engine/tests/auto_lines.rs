@@ -126,13 +126,13 @@ fn req_auto_090_the_design_as_merged_draws_a_merged_line_in_its_neighbours_threa
 }
 
 /// A row of areas 10 mm tall, red and blue by turns, with a line between each 2: the line `id` of
-/// `lines`, `steps` half millimetres long in its thread with its settings, from the bottom along the area on
-/// its left. Each area is 9.3 mm wide.
-fn row(lines: &[(&str, u32, &Thread, &[(&str, &str)])]) -> Vec<Element> {
+/// `lines`, `steps` half millimetres long in `thread` with `auto_min_likeness` `share`, from the bottom along
+/// the area on its left. Each area is 9.3 mm wide.
+fn row(lines: &[(&str, u32, &Thread, &str)]) -> Vec<Element> {
     let mut elements = vec![rect("area0", (0.0, 0.0), (10.0, 10.0), &RED)];
-    for (at, &(id, steps, thread, params)) in (1_u32..).zip(lines) {
+    for (at, &(id, steps, thread, share)) in (1_u32..).zip(lines) {
         let left = 10.0 * f64::from(at);
-        elements.push(strand(id, left, steps, thread, params));
+        elements.push(strand(id, left, steps, thread, &[(MIN_LIKENESS, share)]));
         let colour = if at % 2 == 1 { &BLUE } else { &RED };
         elements.push(rect(&format!("area{at}"), (left + 0.7, 0.0), (left + 10.0, 10.0), colour));
     }
@@ -147,7 +147,8 @@ fn lines_kept(elements: &[Element]) -> Vec<&str> {
 #[test]
 fn req_auto_095_a_thin_line_that_is_a_whole_part_of_its_colour_sews_as_a_line() {
     // The line is gold's one part: merged, the picture's likeness would fall to 2 thirds.
-    let (out, diagnostics) = sewn(vec![rect("left", (0.0, 0.0), (10.0, 10.0), &RED), ragged("line", &[]), rect("right", (10.7, 0.0), (20.0, 10.0), &BLUE)]);
+    let (out, diagnostics) =
+        sewn(vec![rect("left", (0.0, 0.0), (10.0, 10.0), &RED), ragged("line", &[]), rect("right", (10.7, 0.0), (20.0, 10.0), &BLUE)]);
     assert_eq!(kinds(&out), [("left", true), ("right", true), ("line", false)]);
     let line = diagnostics.iter().find(|said| said.code == Code::AutoLineMerged).unwrap();
     assert_eq!(
@@ -175,9 +176,9 @@ fn req_auto_095_the_smallest_lines_merge_first_while_the_picture_keeps_the_stric
     // 3 colours, gold's 4 parts the 4 lines: each merged costs gold a quarter of its likeness, and the picture a
     // twelfth. So 3 merge at 0.75 and 2 at 0.8, and of 2 shapes' shares the larger rules.
     for (shares, kept) in [(["0.75"; 4], vec!["line10"]), (["0.75", "0.75", "0.75", "0.8"], vec!["line9", "line10"])] {
-        let lines: Vec<(&str, u32, Thread, [(&str, &str); 1])> =
-            [("line9", 18), ("line7", 14), ("line10", 20), ("line8", 16)].into_iter().zip(shares).map(|((id, steps), share)| (id, steps, GOLD, [(MIN_LIKENESS, share)])).collect();
-        let lines: Vec<(&str, u32, &Thread, &[(&str, &str)])> = lines.iter().map(|(id, steps, thread, params)| (*id, *steps, thread, &params[..])).collect();
+        let lines = [("line9", 18), ("line7", 14), ("line10", 20), ("line8", 16)];
+        let gold = GOLD;
+        let lines: Vec<_> = lines.into_iter().zip(shares).map(|((id, steps), share)| (id, steps, &gold, share)).collect();
         let (out, _) = sewn(row(&lines));
         assert_eq!(lines_kept(&out), kept, "{shares:?}");
     }
@@ -187,8 +188,8 @@ fn req_auto_095_the_smallest_lines_merge_first_while_the_picture_keeps_the_stric
 fn req_auto_095_a_colour_with_more_parts_gives_up_its_lines_first() {
     // 4 colours: gold's 3 lines cost a third of gold's likeness each, the green line all of green's. At 0.75
     // the picture may lose 1 colour's worth: the 3 gold lines go, though the green line is shorter.
-    let share = [(MIN_LIKENESS, "0.75")];
-    let (out, _) = sewn(row(&[("line1", 20, &GOLD, &share), ("line2", 10, &GREEN, &share), ("line3", 20, &GOLD, &share), ("line4", 20, &GOLD, &share)]));
+    let (out, _) =
+        sewn(row(&[("line1", 20, &GOLD, "0.75"), ("line2", 10, &GREEN, "0.75"), ("line3", 20, &GOLD, "0.75"), ("line4", 20, &GOLD, "0.75")]));
     assert_eq!(lines_kept(&out), ["line2"]);
 }
 

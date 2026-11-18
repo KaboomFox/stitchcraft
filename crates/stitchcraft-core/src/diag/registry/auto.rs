@@ -213,8 +213,14 @@ macro_rules! auto_codes {
         /// it. Merged, it sews as part of the fill beside it. An area whose every part is such a line, merged,
         /// sews nothing of its own. A thin part that shares no edge with an automatic area sews as a line.
         ///
+        /// A line that touches no other piece of its colour is a part of the picture of its own, such as a
+        /// twig or the rim of a petal, and merged it would take its colour away. Such lines merge only while
+        /// the picture keeps the likeness `auto_min_likeness` sets, and the others sew as lines, which this
+        /// says too.
+        ///
         /// The message gives the line's area and says where it went. To sew such lines as running stitches,
-        /// turn `auto_fill_uneven` off, as the `logo` style does, or give the shape settings.
+        /// turn `auto_fill_uneven` off, as the `logo` style does, or give the shape settings. To merge more of
+        /// the lines that are parts of their own, lower `auto_min_likeness`.
         AutoLineMerged = "SC-I0915", Info, "Thin line merged into a neighbour";
         } }
     };

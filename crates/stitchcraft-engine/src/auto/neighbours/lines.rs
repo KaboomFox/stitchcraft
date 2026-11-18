@@ -125,7 +125,13 @@ pub(in crate::auto) fn merged<'d>(
                 continue;
             }
             Fate::Unmeasured(failed) => {
-                said.push(failed.said(Code::AutoLineMerged, "whether this line is a part of its colour", "it sews as a line", budget.max_work, element.id.clone()));
+                said.push(failed.said(
+                    Code::AutoLineMerged,
+                    "whether this line is a part of its colour",
+                    "it sews as a line",
+                    budget.max_work,
+                    element.id.clone(),
+                ));
                 sewn_as_lines.push(line);
                 continue;
             }

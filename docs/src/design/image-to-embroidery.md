@@ -601,6 +601,19 @@ mends it in 5 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
    work budget to itself to find its thin lines, and each line to find where it goes. One that needs more
    keeps its lines, and `SC-I0915` says so. The measure of thread astray paints the picture with each line
    merged in its neighbour's colour (`auto::as_merged`), since the neighbour's thread covers it by the rule.
+
+   Lines merge only while the picture keeps its likeness (`REQ-AUTO-095`, M13.44,
+   `auto::neighbours::lines::parts`). A line that touches no other piece of its colour is a part of the
+   picture by itself, as [the likeness measure](#likeness) counts parts, and merged into a neighbour of
+   another colour it takes its colour away: a twig, the shadow along a branch, the pale rim of a petal. The
+   lines of one colour that touch each other are one group. A group that touches a piece of its colour that
+   is no speck merges freely, since its colour still shows there. Any other group that is a part costs the
+   picture's likeness 1 of its colour's parts, divided by the number of colours. The groups that share an
+   edge with an area merge the cheapest first, those of the colour with the most parts, and of 2 as cheap
+   the smaller, while their cost stays within `auto_min_likeness` of the picture's likeness. The rest sew
+   as lines, and `SC-I0915` says so. A part is defined once, by `auto::is_part`, and the measure imports it.
+   Merging can't see what else a picture loses, such as specks, so the bound is set above the limit of
+   `REQ-AUTO-094` ([Merging by likeness](#merging-by-likeness)).
 4. **Specks** (`REQ-AUTO-008`). An automatic area, or a part of one, smaller than 1 mm² is too small to sew:
    it would sew a knot. It is merged into the automatic area it shares the longest edge with, which may be
    its own. A speck that fills a hole goes into the area around it, and no hole shows where it was. One that

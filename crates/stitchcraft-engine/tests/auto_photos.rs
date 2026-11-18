@@ -130,9 +130,10 @@ const ASTRAY: [Astray; 12] = [
 /// the running dog in 9. M13.30 fills the parts whose one satin column would crowd its stitches
 /// (REQ-AUTO-068): 15, 18, 15 and 17 shapes that sewed as satin columns, when they were 25, 31, 21 and 28.
 /// With the ragged thin lines merged into their neighbours (REQ-AUTO-090, M13.18), the dogs sew 3, 4, 1 and 3 shapes
-/// as running stitches, where they sewed 25, 34, 15 and 18.
+/// as running stitches, where they sewed 25, 34, 15 and 18. Merging keeps the picture's likeness
+/// (REQ-AUTO-095, M13.44), and the dog on turf in 9 threads keeps one line, which sews as a running stitch.
 const SEWN: [(&str, [usize; 3]); 4] =
-    [("dog-on-turf-6", [3, 10, 62]), ("dog-on-turf-9", [4, 12, 70]), ("dog-running-6", [1, 6, 62]), ("dog-running-9", [3, 11, 78])];
+    [("dog-on-turf-6", [3, 10, 62]), ("dog-on-turf-9", [5, 12, 70]), ("dog-running-6", [1, 6, 62]), ("dog-running-9", [3, 11, 78])];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -220,8 +221,9 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
     // With narrow columns that start at their start (REQ-AUTO-086, M13.36), the dogs in 9 threads leave one
     // jump thread more each, 85 and 75, and the running one shows 9 moves.
     // With the ragged thin lines merged into their neighbours (REQ-AUTO-090, M13.18), 57, 58, 49 and 64, and
-    // the dogs on turf show 4 and 5 moves.
-    let recorded = [("dog-on-turf-6", 4, 57), ("dog-on-turf-9", 5, 58), ("dog-running-6", 3, 49), ("dog-running-9", 9, 64)];
+    // the dogs on turf show 4 and 5 moves. The line the dog on turf in 9 threads keeps, as merging keeps its
+    // likeness (REQ-AUTO-095, M13.44), leaves it one jump thread more.
+    let recorded = [("dog-on-turf-6", 4, 57), ("dog-on-turf-9", 5, 59), ("dog-running-6", 3, 49), ("dog-running-9", 9, 64)];
     let recorded = recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps));
     assert_eq!((found, apart), (listed, recorded.to_vec()), "the stitches astray, as found and as listed in ASTRAY, and the moves and jumps");
 }
@@ -269,10 +271,11 @@ fn req_auto_027_digitized_dogs_show_no_fabric_and_leave_the_slivers_recorded() {
 /// (REQ-AUTO-071 to REQ-AUTO-075) and outlines no longer sewn through more than 12 mm under a later fill
 /// (REQ-AUTO-076), 132.25, 160.0, 146.25 and 209.75 mm² before M13.36's holes, edges and narrow columns
 /// started at their start (REQ-AUTO-084 to REQ-AUTO-086), and 130.5, 156.5, 142.0 and 207.75 before the ragged
-/// thin lines merged into their neighbours (REQ-AUTO-090). The case fails when a number changes, so that a
+/// thin lines merged into their neighbours (REQ-AUTO-090), and 153.25 for the dog on turf in 9 threads before
+/// merging kept its likeness (REQ-AUTO-095). The case fails when a number changes, so that a
 /// change that piles thread up again shows here.
 const THICK: [(&str, f64, f64); 4] =
-    [("dog-on-turf-6", 14150.0, 0.0), ("dog-on-turf-9", 15325.0, 0.0), ("dog-running-6", 13050.0, 0.0), ("dog-running-9", 18750.0, 0.0)];
+    [("dog-on-turf-6", 14150.0, 0.0), ("dog-on-turf-9", 15275.0, 0.0), ("dog-running-6", 13050.0, 0.0), ("dog-running-9", 18750.0, 0.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -331,10 +334,11 @@ fn req_auto_037_digitized_dogs_change_thread_as_seldom_as_their_lines_allow() {
 
 /// What each traced dog keeps of its detail (REQ-AUTO-093), as measured on 2026-11-17: its parts, the parts
 /// kept and its likeness in thousandths. What is lost is mostly strands of fur and shading that merge as thin
-/// lines (REQ-AUTO-090), and on the dog on turf the pale strip above its nose. The case fails when a number
-/// changes, so that a change that takes detail away, or puts it back, shows here.
+/// lines (REQ-AUTO-090), and on the dog on turf the pale strip above its nose. Merging keeps the picture's
+/// likeness (REQ-AUTO-095, M13.44), and the dog on turf in 9 threads keeps 84, 0.792, where it kept 83, 0.779.
+/// The case fails when a number changes, so that a change that takes detail away, or puts it back, shows here.
 const LIKE: [(&str, usize, usize, f64); 4] =
-    [("dog-on-turf-6", 97, 75, 814.0), ("dog-on-turf-9", 111, 83, 779.0), ("dog-running-6", 77, 66, 898.0), ("dog-running-9", 100, 88, 921.0)];
+    [("dog-on-turf-6", 97, 75, 814.0), ("dog-on-turf-9", 111, 84, 792.0), ("dog-running-6", 77, 66, 898.0), ("dog-running-9", 100, 88, 921.0)];
 
 /// What `likeness` keeps, as [`LIKE`] records it.
 fn recorded(name: &str, likeness: &likeness::Likeness) -> (String, usize, usize, f64) {

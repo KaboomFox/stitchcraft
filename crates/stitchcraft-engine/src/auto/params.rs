@@ -302,8 +302,17 @@ mod tests {
         let shape = [STITCH, PREFER, FILL_UNEVEN, FILL_ANGLE, FILL_OUTLINE];
         let neighbours = [OVERLAP, "auto_pull_compensation_mm", IGNORE_BACKGROUND];
         let base = ["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_keep_holes"];
-        let bounds =
-            [MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH, MIN_SLENDERNESS, MAX_UNEVENNESS, MIN_LINE_UNEVENNESS, MIN_LIKENESS, MAX_REACH, MIN_FILL_WIDTH, MIN_AREA];
+        let bounds = [
+            MAX_SATIN_WIDTH,
+            MIN_TRIPLE_RUN_WIDTH,
+            MIN_SLENDERNESS,
+            MAX_UNEVENNESS,
+            MIN_LINE_UNEVENNESS,
+            MIN_LIKENESS,
+            MAX_REACH,
+            MIN_FILL_WIDTH,
+            MIN_AREA,
+        ];
         let cover = ["auto_base_offset_mm", "auto_base_rows", "auto_base_sliver_mm2", "auto_base_bare_percent"];
         let thick = ["auto_thick_warn_fills", "auto_thick_fail_fills", "auto_thick_warn_points", "auto_thick_fail_points"];
         assert_eq!(keys, [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..], &thick[..]].concat());
