@@ -881,6 +881,10 @@ fn a_column_with_pointed_ends_and_one_too_short_for_rails() {
     // Shorter along the stroke than a flat end may slant: its ends take in the whole ring.
     let short = part(&[(0.0, 0.0), (0.3, 0.0), (0.3, 1.0), (0.0, 1.0)], &[]);
     assert_eq!(column(&short, &short, &band, meter).unwrap(), None);
+    // Shorter than a rail may run back: both ends take in the whole ring, and the rails, which each run
+    // round past the other end, hold more points than it has.
+    let tiny = part(&[(0.0, 0.0), (0.02, 0.0), (0.04, 0.0), (0.04, 1.0), (0.02, 1.0), (0.0, 1.0)], &[]);
+    assert_eq!(column(&tiny, &tiny, &band, meter).unwrap(), None);
 }
 
 #[test]
