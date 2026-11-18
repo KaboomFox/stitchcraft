@@ -66,7 +66,7 @@ fn columns(from: f64, width: f64) -> Vec<(f64, f64)> {
 const NONE: &BTreeSet<ElementRef> = &BTreeSet::new();
 
 fn rules(base: &BTreeSet<ElementRef>) -> Rules<'_> {
-    Rules { base, overlap: 1.0, shortest: 0.3, longest: 12.1 }
+    Rules { cap: 4.0, base, overlap: 1.0, shortest: 0.3, longest: 12.1 }
 }
 
 /// `plan` thinned with `rules`, its measure kept up to date, and the measure of what the pass left.
@@ -103,7 +103,7 @@ fn req_auto_074_locks_keep_one_back_and_forth_where_a_spot_is_above_the_cap() {
     // The measure kept is the plan's as it is left.
     assert_eq!(kept.sewn(), measured.sewn());
     assert!((kept.most(Measure::Fills).value - measured.most(Measure::Fills).value).abs() < 1e-9);
-    assert!(thinned.left.area <= thinned.above.area && thinned.thickest.value > CAP);
+    assert!(thinned.left.area <= thinned.above.area && thinned.thickest.value > rules(NONE).cap);
     assert_eq!(kinds(&thinned), "0.6 mm of lock stitches in 1 places");
     // Away from a thick place a lock is kept whole, and a plan within the cap is not gone through.
     let mut far = plan(&[thick(), ("tied", Role::Lock, knot((5.5, 0.5), (5.8, 0.5), 4)), ("tied", Role::Top, vec![(5.5, 3.0)])]);

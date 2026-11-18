@@ -42,9 +42,18 @@ fn among(some: &[Stitch], all: &[Stitch]) -> bool {
     some.iter().all(|stitch| rest.any(|other| other == stitch))
 }
 
-/// The plan's commands and lock stitches: what the cap never takes.
-fn kept(plan: &StitchPlan) -> Vec<Vec<Stitch>> {
-    let held = |stitch: &&Stitch| stitch.kind != StitchKind::Normal || stitch.origin.role == Role::Lock;
+/// Whether the stitches of `some` are those of `all`, in the same order, with some of `all`'s left out, or
+/// row ends of theirs that the last pass moved back along their rows, by the overlap of 1 mm at the most
+/// (`REQ-AUTO-074`).
+fn among_or_moved(some: &[Stitch], all: &[Stitch]) -> bool {
+    let mut rest = all.iter();
+    let moved = |stitch: &Stitch, other: &Stitch| other.kind == stitch.kind && other.origin == stitch.origin && other.at.distance(stitch.at) <= 1.0;
+    some.iter().all(|stitch| rest.any(|other| other == stitch || moved(stitch, other)))
+}
+
+/// The plan's commands, or its lock stitches, by block.
+fn kept(plan: &StitchPlan, locks: bool) -> Vec<Vec<Stitch>> {
+    let held = |stitch: &&Stitch| if locks { stitch.kind == StitchKind::Normal && stitch.origin.role == Role::Lock } else { stitch.kind != StitchKind::Normal };
     plan.blocks.iter().map(|block| block.stitches.iter().filter(held).copied().collect()).collect()
 }
 
@@ -67,15 +76,19 @@ fn req_auto_100_the_cap_only_takes_needle_points_out_and_bares_nothing() {
         let (before, after) = (fabric::thickness(&off, &Limits::DEFAULT), fabric::thickness(&on, &Limits::DEFAULT));
         assert!(before.fills.value > 4.0, "{name}: {:.2}", before.fills.value);
         assert!(after.fills.value <= 4.0, "{name}: {:.2} fills at its thickest spot, {:.2} with the cap off", after.fills.value, before.fills.value);
-        // Every needle point left is one the plan had, in its order: no run is cut and no stitch moves.
+        // Every needle point left is one the plan had, in its order, but for the row ends the last pass moves:
+        // no run is cut.
         assert_eq!(on.blocks.len(), off.blocks.len(), "{name}");
         for (block, (left, was)) in on.blocks.iter().zip(&off.blocks).enumerate() {
             assert_eq!(left.thread, was.thread, "{name}: block {block}");
-            assert!(among(&left.stitches, &was.stitches), "{name}: block {block}");
+            assert!(among_or_moved(&left.stitches, &was.stitches), "{name}: block {block}");
         }
         assert!(on.stats().stitches < off.stats().stitches, "{name}");
-        // The jumps, trims, stops, thread changes and locks stay as they were.
-        assert_eq!(kept(&on), kept(&off), "{name}");
+        // The jumps, trims, stops and thread changes stay as they were. The cap takes no lock: the last pass,
+        // which runs below the cap too, takes those beyond one back and forth (`auto/cap/tests.rs` holds the
+        // cap alone to it).
+        assert_eq!(kept(&on, false), kept(&off, false), "{name}");
+        assert!(kept(&on, true).iter().zip(&kept(&off, true)).all(|(on, off)| among(on, off)), "{name}");
         // What the top thread leaves bare stays within the cover's limit, with no sliver more.
         let (cover_on, cover_off) = (fabric::cover(&design, &on, GAP), fabric::cover(&design, &off, GAP));
         assert!(cover_on.bare_share() * 100.0 <= limits.auto_base_bare_percent, "{name}: {:.4} %", cover_on.bare_share() * 100.0);

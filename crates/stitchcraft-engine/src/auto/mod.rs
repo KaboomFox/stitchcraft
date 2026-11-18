@@ -74,6 +74,7 @@
 //! neighbours, and the areas sewn before it reach under it.
 
 mod area;
+mod cap;
 mod clips;
 mod columns;
 mod narrow;

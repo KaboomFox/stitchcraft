@@ -3,7 +3,7 @@
 //!
 //! The rules of digitizing lower what a single shape piles up by itself, but where 5 to 8 elements meet at
 //! one spot, each laying a little, no rule of one shape knows the sum. So the finished plan is measured,
-//! and at each spot above [`CAP`] the pass takes out thread that is hidden or does no visible work, in this
+//! and at each spot above the cap (`auto_thick_cap_fills`) the pass takes out thread that is hidden or does no visible work, in this
 //! order: travel that goes out and back on itself; lock stitches beyond one back and forth; the base
 //! layer's row ends under places that later shapes cover; and a shape's row ends under later shapes, moved
 //! back along their rows. It never takes a top stitch that shows, and never cuts a run of stitches, which
@@ -14,6 +14,9 @@
 //! the elements sewn after it lay at least [`COVERED`] fill there, measured as the plan is measured. The
 //! pass goes through the plan from its end, so what it takes from a later shape is gone before an earlier
 //! one is judged hidden under it.
+//!
+//! What the pass leaves above the cap, the cap at the end of planning takes ([`super::cap`]), with the
+//! helpers of this pass: it marks needle points gone and keeps the measure up to date in the same way.
 //!
 //! **One measure.** The measure that the warning `SC-W0913` gives is made once. The pass keeps it up to
 //! date stitch by stitch (`Thickness::add`, `Thickness::remove`) and hands it on, so that a design is not
@@ -27,10 +30,6 @@ use stitchcraft_core::{Exhausted, Meter, Point};
 use stitchcraft_plan::invariants::LOCK_MIN_STITCH;
 use stitchcraft_plan::thickness::{Measure, Over, Spot, Thickness};
 use stitchcraft_plan::{ElementRef, Role, SewnStitch, StitchKind, StitchPlan};
-
-/// The most thread, in fills, that a spot of a millimetre of a design digitized automatically may sew
-/// (`REQ-AUTO-073`): the pass takes thread where a spot has more.
-pub const CAP: f64 = 4.0;
 
 /// How close to where it was 2 needle points before the stitching must come back to have gone out and back
 /// on itself, in millimetres: a lane of the measure, a quarter of the thread's width.
@@ -103,9 +102,12 @@ impl Thinned {
     }
 }
 
-/// What the pass needs to know of a design.
+/// What the pass, and the cap after it, need to know of a design.
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct Rules<'r> {
+    /// The most thread, in fills, that a spot of a millimetre may sew (`auto_thick_cap_fills`,
+    /// `REQ-AUTO-099`): the pass takes thread where a spot has more.
+    pub(crate) cap: f64,
     /// The base layer's pieces, by their places in the plan's elements.
     pub(crate) base: &'r BTreeSet<ElementRef>,
     /// How far a row's end may move back along its row, in millimetres: the overlap of areas.
@@ -116,15 +118,15 @@ pub(crate) struct Rules<'r> {
     pub(crate) longest: f64,
 }
 
-/// Takes thread from `plan` where `thickness`, its measure, has a spot above [`CAP`], and keeps the measure
-/// up to date; `None` when no spot is above the cap. A unit of work for each stitch looked at, and each
+/// Takes thread from `plan` where `thickness`, its measure, has a spot above the cap of `rules`, and keeps the
+/// measure up to date; `None` when no spot is above the cap. A unit of work for each stitch looked at, and each
 /// step along a stitch measured.
 pub(crate) fn thinned(plan: &mut StitchPlan, thickness: &mut Thickness, rules: &Rules, meter: &mut Meter) -> Result<Option<Thinned>, Exhausted> {
-    if thickness.most(Measure::Fills).value <= CAP {
+    if thickness.most(Measure::Fills).value <= rules.cap {
         return Ok(None);
     }
-    let above = thickness.over(Measure::Fills, CAP, meter)?;
-    let mut pass = Pass { plan, thickness, rules, gone: BTreeSet::new(), taken: [0.0; 4], times: [0; 4] };
+    let above = thickness.over(Measure::Fills, rules.cap, meter)?;
+    let mut pass = Pass::new(plan, thickness, rules);
     // The stitches near a spot above the cap are found once: the pass only lowers spots, so those of the
     // spots above it later are among them.
     let near = pass.near(meter)?;
@@ -133,6 +135,14 @@ pub(crate) fn thinned(plan: &mut StitchPlan, thickness: &mut Thickness, rules: &
         pass.row_ends(kind, &near, meter)?;
     }
     let Pass { plan, thickness, gone, taken, times, .. } = pass;
+    taken_out(plan, &gone);
+    thickness.resewn(plan, meter)?;
+    let left = thickness.over(Measure::Fills, rules.cap, meter)?;
+    Ok(Some(Thinned { taken, times, above, left, thickest: thickness.most(Measure::Fills) }))
+}
+
+/// Takes the entries `gone`, by block and index, out of `plan`.
+pub(super) fn taken_out(plan: &mut StitchPlan, gone: &BTreeSet<Entry>) {
     // Only the blocks that lost a stitch are gone through again.
     let blocks: BTreeSet<usize> = gone.iter().map(|(block, _)| *block).collect();
     for (block, stitches) in plan.blocks.iter_mut().enumerate().filter(|(block, _)| blocks.contains(block)) {
@@ -142,29 +152,40 @@ pub(crate) fn thinned(plan: &mut StitchPlan, thickness: &mut Thickness, rules: &
             !gone.contains(&(block, index - 1))
         });
     }
-    thickness.resewn(plan, meter)?;
-    let left = thickness.over(Measure::Fills, CAP, meter)?;
-    Ok(Some(Thinned { taken, times, above, left, thickest: thickness.most(Measure::Fills) }))
 }
 
 /// A plan being thinned: entries are marked gone, and moved in place.
-struct Pass<'p, 'r> {
+pub(super) struct Pass<'p, 'r> {
     plan: &'p mut StitchPlan,
-    thickness: &'p mut Thickness,
-    rules: &'p Rules<'r>,
+    /// The plan's measure, kept up to date.
+    pub(super) thickness: &'p mut Thickness,
+    /// What the pass needs to know of the design.
+    pub(super) rules: &'p Rules<'r>,
     /// The entries taken out, by block and index.
-    gone: BTreeSet<(usize, usize)>,
+    pub(super) gone: BTreeSet<(usize, usize)>,
     taken: [f64; 4],
     times: [usize; 4],
 }
 
 /// An entry of the plan, by block and index.
-type Entry = (usize, usize);
+pub(super) type Entry = (usize, usize);
+
+impl<'p, 'r> Pass<'p, 'r> {
+    /// A pass over `plan`, whose measure is `thickness`, that has taken nothing yet.
+    pub(super) fn new(plan: &'p mut StitchPlan, thickness: &'p mut Thickness, rules: &'p Rules<'r>) -> Pass<'p, 'r> {
+        Pass { plan, thickness, rules, gone: BTreeSet::new(), taken: [0.0; 4], times: [0; 4] }
+    }
+
+    /// The pass's plan, its measure and the entries it took out.
+    pub(super) fn ended(self) -> (&'p mut StitchPlan, &'p mut Thickness, BTreeSet<Entry>) {
+        (self.plan, self.thickness, self.gone)
+    }
+}
 
 impl Pass<'_, '_> {
     /// The entry `at` when it is a stitch still sewn: its needle point's place on the measure's grid
     /// (`Thickness::placed`), its role and its element.
-    fn stitch(&self, (block, index): Entry) -> Option<(Point, Role, Option<ElementRef>)> {
+    pub(super) fn stitch(&self, (block, index): Entry) -> Option<(Point, Role, Option<ElementRef>)> {
         let entry = self.plan.blocks.get(block)?.stitches.get(index)?;
         (entry.kind == StitchKind::Normal && !self.gone.contains(&(block, index)))
             .then(|| (self.thickness.placed(entry.at), entry.origin.role, entry.origin.element))
@@ -172,7 +193,7 @@ impl Pass<'_, '_> {
 
     /// The stitch still sewn next to `at` in its run, after it when `later`, else before it: a jump or a
     /// trim ends a run, a stop does not. A unit of work for each entry passed.
-    fn beside(&self, (block, index): Entry, later: bool, meter: &mut Meter) -> Result<Option<usize>, Exhausted> {
+    pub(super) fn beside(&self, (block, index): Entry, later: bool, meter: &mut Meter) -> Result<Option<usize>, Exhausted> {
         let Some(stitches) = self.plan.blocks.get(block).map(|block| &block.stitches) else { return Ok(None) };
         let mut at = index;
         loop {
@@ -210,7 +231,7 @@ impl Pass<'_, '_> {
     }
 
     /// The stitch from entry `from` to entry `to` of `block`, as it is measured.
-    fn sewn(&self, block: usize, from: usize, to: usize) -> Option<SewnStitch> {
+    pub(super) fn sewn(&self, block: usize, from: usize, to: usize) -> Option<SewnStitch> {
         let ((start, from_role, _), (end, role, _)) = (self.stitch((block, from))?, self.stitch((block, to))?);
         Some(SewnStitch { block, index: to, from: start, to: end, role, from_role })
     }
@@ -222,8 +243,9 @@ impl Pass<'_, '_> {
 
     /// Takes `removed` out of the measure and puts `added` in, unless that would make a spot that `added`
     /// lays thread in thicker than both the cap and what it was: then the measure stays as it was, and
-    /// `false` is returned.
-    fn changed(&mut self, removed: &[SewnStitch], added: &[SewnStitch], meter: &mut Meter) -> Result<bool, Exhausted> {
+    /// `false` is returned. Fills within [`LENGTH_SLACK`](stitchcraft_core::units::LENGTH_SLACK) of each
+    /// other count as equal, as lengths do.
+    pub(super) fn changed(&mut self, removed: &[SewnStitch], added: &[SewnStitch], meter: &mut Meter) -> Result<bool, Exhausted> {
         let hottest = |thickness: &Thickness, meter: &mut Meter| -> Result<f64, Exhausted> {
             added.iter().try_fold(0.0_f64, |most, stitch| Ok(most.max(thickness.hottest(stitch, meter)?)))
         };
@@ -235,7 +257,7 @@ impl Pass<'_, '_> {
             self.thickness.add(stitch, meter)?;
         }
         let after = hottest(self.thickness, meter)?;
-        if after <= CAP.max(before) {
+        if at_least(self.rules.cap.max(before), after) {
             return Ok(true);
         }
         for stitch in added {
@@ -258,7 +280,7 @@ impl Pass<'_, '_> {
 
     /// The stitches of the plan as measured, near a spot above the cap, by their entries.
     fn near(&self, meter: &mut Meter) -> Result<Vec<SewnStitch>, Exhausted> {
-        let zone = self.thickness.near(CAP, NEAR, meter)?;
+        let zone = self.thickness.near(self.rules.cap, NEAR, meter)?;
         let sewn = self.thickness.sewn();
         meter.charge(u64::try_from(sewn.len()).unwrap_or(u64::MAX))?;
         Ok(sewn.iter().filter(|stitch| zone.touches(stitch)).copied().collect())
@@ -284,7 +306,7 @@ impl Pass<'_, '_> {
             if !same || out.from.distance(turn.to) > BACK || (kind == Kind::Locks && self.locks((block, here), meter)? < 4) {
                 continue;
             }
-            if self.thickness.hottest(&out, meter)? <= CAP
+            if self.thickness.hottest(&out, meter)? <= self.rules.cap
                 || !self.long_enough(&[(
                     self.at((block, before)),
                     self.at((block, on)),
@@ -381,7 +403,7 @@ impl Pass<'_, '_> {
         if !same || turn.length() > TURN || !opposite(&row, &next) || reach < LEAST_MOVE {
             return Ok(());
         }
-        if self.thickness.hottest(&turn, meter)? <= CAP {
+        if self.thickness.hottest(&turn, meter)? <= self.rules.cap {
             return Ok(());
         }
         let hidden = |place: Point| cover.at_place(Measure::Fills, place) >= COVERED;
