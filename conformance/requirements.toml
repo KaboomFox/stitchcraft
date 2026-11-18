@@ -3381,6 +3381,24 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-AUTO-087"
+area = "auto"
+level = "L2"
+statement = "A part of an automatic area that sews as satin columns (REQ-AUTO-016) reads as strokes when it has 2 or more open columns, every one of which is a stroke, and 2 strokes meet. A column is a stroke when its centre line, leaving out a stretch as long as the column is wide at each end, lies within a tenth of the column's width of the straight line between the ends of what is left, and its rails lie as far from that line along it within a fifth of the width. The stroke is the band along that line as wide as its rails lie on either side, as long as the column and a width more at each end. Such a part is cut where its strokes meet (REQ-AUTO-088) into one piece for each stroke, each a satin column whose rails are its 2 sides and whose rungs lie square to the stroke's line at every corner of either rail, so that its stitches lie square to the stroke, and it sews no push compensation at its ends. A part whose pieces leave more than 1 percent of it uncovered, a piece with a hole, and a piece whose rails turn back along its line keep the columns of REQ-AUTO-016. Every satin stitch at least 0.4 mm long of the M and the A of the lettered patch and of TS-13B's 6, 10 and 15 mm words lies within 30 degrees of square to the stroke it sews."
+rationale = "The owner, on 2026-11-17, looking at MC-8's traced lettered patch: the patch letter looks bad, and it should sew as the same word set in a font does. A font's letters are satin columns drawn stroke by stroke, each with its stitches across it. A traced M was cut along its centre lines, which run round the corners where the strokes meet, so its middle strokes' columns took in the corners of the stems: their rails ran on unevenly and their stitches leaned up to 56 degrees on the 6 mm word and 54 degrees on the patch, 16 to 29 stitches past 30 degrees a word, and SC-W0208 named them. A straight band of nearly even width is how a person draws a block letter's stroke, and a logo's bars, so the rule knows no letter. A curved stroke, as of a C, and a ring keep the columns along their centre lines, which follow them."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-088"
+area = "auto"
+level = "L2"
+statement = "Where 2 strokes of a part (REQ-AUTO-087) meet, one runs through the join and the other stops against it, or the join is cut between them. A stroke runs through when the part goes on beyond the join along the stroke's line by half its width on both sides; of 2 that both do, the one that is longer runs through. Of 2 strokes that end at the join, the one whose end lies more nearly square to its line runs through, when their ends differ by more than 0.15 of the stroke's width along it, measured where the part ends along each side of the band. Otherwise the join is cut along the line that halves the angle between the 2 strokes, through the point where their lines cross. A stroke that stops ends along the other's side, moved into it so that its end lies the pull compensation (auto_pull_compensation_mm) farther along its own line, and sews before it. A stroke wider than that move over tan 20°, 1.1 mm at the default 0.4 mm and a square join, takes the stub into its flat end and ends on the other's side: there the other's stitches, which run along it, reach their pull compensation over the seam. At a halving line each stroke reaches half the pull compensation past the line. The M and the A of the lettered patch and of TS-13B's 6, 10 and 15 mm words sew no thicker at their thickest than Small Font's at the same height, measured alike, and 0.25 fills: one run of thread through a square millimetre."
+rationale = "A font draws its joins so: an M's stems run from top to bottom and its middle strokes stop against them, the inside of each stem's top square, and the middle strokes meet at the bottom of the V along an upright line, each ending in a point. An A's legs meet at its top so, and its crossbar stops against both legs. A stem whose end lies square to it ends the join cleanly, and a stroke cut across on the slant ends where its stitches are shortest. The overlap is what a column that ends under another reaches today (REQ-AUTO-016), and no wider. Kept as rails of a wide stroke too, the stub made TS-13D 4.55 fills thick where it is 4.23, and no measure showed a gap without it: a sew-out at MC-8 decides. Wider overlaps add thread: 2 columns each with its underlay make a join the thickest spot of a letter, and Small Font's M at 10 mm measures 3.71 fills. A traced letter's stroke is 0.18 of its height wide where the font's is 0.13, and from 2 mm its underlay is a contour, a run along each rail, where the font's is a centre walk, so the traced letter may lay one more run of thread through a spot."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-AUTO-069"
 area = "auto"
 level = "L2"

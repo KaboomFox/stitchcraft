@@ -141,6 +141,12 @@ struct Rung {
 }
 
 impl Column {
+    /// An open column of a stroke (`super::strokes`): its `rails` and `rungs`, its middle `line`, and the
+    /// columns it ends `under` at its start, then its end.
+    pub(super) fn stroke(rails: [Vec<Point>; 2], rungs: Vec<[Point; 2]>, line: Line, under: [Option<usize>; 2]) -> Column {
+        Column { rails, rungs, closed: false, walked: line.clone(), line, under, ring: None }
+    }
+
     /// The column the other way round: from its end to its start. A ring is itself.
     pub(crate) fn reversed(&self) -> Column {
         if self.closed {

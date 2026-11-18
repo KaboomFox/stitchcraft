@@ -40,8 +40,10 @@
 //! the cut lie in that end, as a cap's do ([`Role::Cut`]), and a line that reaches them ends there.
 
 mod columns;
+mod strokes;
 
 pub(crate) use columns::{Column, columns};
+pub(crate) use strokes::strokes;
 
 use std::collections::{BTreeMap, BTreeSet};
 

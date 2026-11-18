@@ -481,6 +481,18 @@ line = "(lengths > 0.0).then(|| (a.0 * b.0 + a.1 * b.1) / lengths)"
 why = "a way of no length, past an open line's end, makes the cosine 0 over 0, which is not a number, and a cosine that is not a number is no corner, as no cosine is"
 
 [[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/strips/strokes.rs"
+mutant = "replace + with * in sides"
+line = "let mut last = first + 1;"
+why = "a run that starts at its first point is straight to the next with nothing between to check, so the loop takes that step at once, charging nothing, and the run goes on as it would"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/strips/strokes.rs"
+mutant = "replace > with >= in rungs"
+line = "let far = if inwards > 0.0 { ta.max(tb) } else { ta.min(tb) };"
+why = "inwards is 1 at the column's start and -1 at its end, never 0"
+
+[[equivalent]]
 file = "crates/stitchcraft-engine/src/normalize/strips/columns.rs"
 mutant = "replace < with <= in unslivered"
 line = "while i < rail.len() {"

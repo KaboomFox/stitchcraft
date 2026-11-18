@@ -203,6 +203,11 @@ lines are found as above, but for these steps:
   Satin filter draws one (`REQ-VC-014`), and read back as any satin column is, it must give the same rails
   and pair the same points. A part one of whose columns doesn't stays in the area's fill, with `SC-I0902`.
 
+A part drawn in straight strokes, as a block letter is, sews a column along each stroke in place of these
+(`normalize/strips/strokes.rs`). Its rails are a stroke's sides and its rungs lie square to the stroke,
+and the columns along the centre lines decide only whether the part is read so: 2 or more, none a ring
+([letters sewn as strokes](../image-to-embroidery.md#letters-sewn-as-strokes)).
+
 ## Sources
 
 - C. L. Lawson, *Software for C¹ surface interpolation*, in *Mathematical Software III* (1977), for

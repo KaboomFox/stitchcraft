@@ -8,11 +8,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - M13.44: line merging keeps each picture's likeness (`REQ-AUTO-095`, `SC-I0915`).
   - A thin line that doesn't touch another piece of its colour is a part of the picture by itself, such as a
     twig or the pale rim of a petal. Such lines merge, those of the colours with the most parts and the
-    smallest first, only while the picture keeps `auto_min_likeness`, 0.85, of its likeness, counted as
-    the likeness measure counts it. The others sew as lines, and `SC-I0915` says so.
-  - The traced dogs on turf keep 0.856 and 0.829, where they kept 0.814 and 0.779, and sew 3 and 4 more
-    lines and leave 3 and 4 more jump threads. The running dogs and the drawings sew as before. Local photos
-    of a magnolia, a coleus, a goose and a castle keep 0.78 to 0.85, where they kept 0.43 to 0.48.
+    smallest first, only while the picture keeps `auto_min_likeness` of its likeness, counted as the
+    likeness measure counts it. The others sew as lines, and `SC-I0915` says so.
+  - The setting is 0 by default, and every design sews as before. Keeping lines can change the order the
+    blocks sew in and make a spot elsewhere sew thicker, so it is turned on by default once M13.35's cap on
+    thickness lands. Raised to 0.85, local photos kept 0.78 to 0.85 of their likeness, where they kept 0.43 to
+    0.48, with 50 to 236 more jump threads.
+  - The roadmap carries the owner's decision of 2026-11-18: M13.38 closed, M13.43 added, M13.35's last pass a
+    general cap, and the new order of the steps.
   - The likeness measure takes its definition of a part from `stitchcraft_engine::auto::is_part`.
   - Public API: `stitchcraft_engine::auto::is_part`, `MIN_LIKENESS` and its field of `AutoParams`.
   - The golden files stay as they are, since no test sheet has a ragged thin line.
@@ -2068,6 +2071,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.37: traced letters sew as strokes (`REQ-AUTO-087`, `REQ-AUTO-088`).
+  - A block letter or a logo's bars traced as an automatic area sews a satin column along each straight
+    stroke. Its stitches lie square to the stroke. Its centre lines' columns ran on round its corners. The M's stitches lean at most 17° to 19° from square, where they leaned up to
+    56°, and TS-13B no longer warns of leaning stitches (`SC-W0208`).
+  - Where 2 strokes meet, the one the part goes on past runs through and the other stops against it and
+    sews first. Of 2 that end there, the squarer end runs through, as an M's stem does. 2 that meet at a
+    sharp angle, as at an A's apex, are cut along the line that halves it, and at an L's corner the longer
+    runs through. Of 2 strokes that cross, the longer runs through and the other sews in 2 columns.
+  - A stroke that stops has no push compensation. A stroke wider than 1.1 mm ends on the other's side,
+    and the other's pull compensation covers the line where they meet. MC-8 checks that line.
+  - Curved strokes, a C's, an S's and a D's bowl, keep their centre lines' columns.
+  - The lettered patch is 4.00 fills thick at its thickest, where it was 4.20. TS-13D's digitized half is
+    4.23 where it was 4.17, at the stacked emblem's white ring, whose frame now sews as strokes so the
+    ring's column starts elsewhere. Its area at 3 fills or more fell by 16.5 mm². TS-13D's white frames sew
+    as columns, where they were filled (`SC-I0902` said so twice).
 - M13.36: a traced letter keeps its counters open, and its columns meet without gaps (`REQ-AUTO-084` to
   `REQ-AUTO-086`). The owner said of MC-8's traced lettered patch that the A has no white space and the
   letters have new gaps.
@@ -3325,6 +3343,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13B.pes` and `TS-13D.pes` (M13.37, traced letters sewn as
+  strokes). In the digitized half of each, a part drawn in straight strokes sews a column along each
+  stroke. TS-13B's letters and TS-13D's white frames now sew so. The sheets sew 14,543 and 19,458 stitches,
+  where they sewed 14,509 and 20,233. TS-13B's digitized half jumps 51 times, where it jumped 49 times.
+  TS-13D measures 89.8 × 100.4 mm, where it measured 89.0 × 100.0 mm: its white frames, sewn as columns,
+  reach farther out than their fills did. TS-13B's size and both bottom
+  halves are as they were.
 - Changed `conformance/golden/testsheets/TS-13B.pes`, `TS-13C.pes` and `TS-13E.pes` (M13.36, a traced
   letter's counters and edges). In the digitized half of each, a column along a hole kept open has no pull
   compensation on that side, an even column moves its first crowded point no farther than its edge and

@@ -307,8 +307,9 @@ fn req_auto_050_a_small_star_is_filled() {
 
 #[test]
 fn req_auto_050_a_cross_and_a_sharp_corner_have_no_arms() {
-    // A cross of 2 bars 2 mm wide, 6 mm across: its arms end square, so each is a centre line of its own,
-    // and it sews as 4 columns.
+    // A cross of 2 bars 2 mm wide, 6 mm across: its arms end square, so each is a centre line of its own.
+    // It is drawn in 2 strokes that cross (REQ-AUTO-088): one bar runs through and the other sews in 2
+    // columns, one each side of it, 3 in all, where its 4 centre lines made 4 until M13.37.
     let cross = [
         (2.0, 0.0),
         (4.0, 0.0),
@@ -324,7 +325,7 @@ fn req_auto_050_a_cross_and_a_sharp_corner_have_no_arms() {
         (2.0, 2.0),
     ];
     let out = made(&shape("cross", &cross, &[]));
-    assert_eq!(kinds(&out.elements), ["satin"; 4]);
+    assert_eq!(kinds(&out.elements), ["satin"; 3]);
     assert!(rule(&out).starts_with("column (") && rule(&out).ends_with("4 centre lines)"), "{}", rule(&out));
     // A letter V 5.7 mm tall in strokes 1.2 mm wide: its corner lies far from its line on one side only.
     let v = [(-2.07, -5.7), (-0.8, -5.7), (0.0, -3.51), (0.8, -5.7), (2.07, -5.7), (0.0, 0.0)];
@@ -701,15 +702,16 @@ fn req_auto_030_unlike_subjects_sew_by_the_same_rules() {
         BTreeMap::from([("area", 2), ("compact", 2), ("line", 1), ("refused", 2), ("uneven", 4)]),
         BTreeMap::from([("area", 3), ("column", 3), ("uneven", 2)]),
         BTreeMap::from([("area", 5), ("column", 11), ("line", 1)]),
-        BTreeMap::from([("area", 4), ("column", 8), ("refused", 2)]),
+        BTreeMap::from([("area", 4), ("column", 10)]),
         BTreeMap::from([("area", 2), ("column", 2), ("compact", 14)]),
         BTreeMap::from([("area", 1), ("column", 9), ("compact", 1), ("line", 6), ("uneven", 1)]),
     ];
     let found: Vec<(&str, &BTreeMap<&str, usize>)> = subjects.iter().map(|(name, fired)| (*name, fired)).collect();
     assert_eq!(found, subjects.iter().map(|(name, _)| *name).zip(&recorded).collect::<Vec<_>>());
     // Each rule that sorts a part by its shape fires on 3 unlike subjects or more. A column refused is a
-    // matter of its rails, which the emblems' white rounds show here, and a square with a round hole in a
-    // case of its own.
+    // matter of its rails, which the dog's fur shows here, and a square with a round hole in a case of its
+    // own. The emblems' white rounds were refused until M13.37: drawn in straight strokes, they now sew a
+    // column along each (REQ-AUTO-087).
     for rule in ["line", "area", "compact", "uneven", "column"] {
         let on: Vec<&str> = subjects.iter().filter(|(_, fired)| fired.contains_key(rule)).map(|(name, _)| *name).collect();
         assert!(on.len() >= 3, "{rule}: {on:?}");

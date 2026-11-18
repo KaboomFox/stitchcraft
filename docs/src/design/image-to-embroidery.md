@@ -497,6 +497,89 @@ and after. The thickest spot and the jump threads include the start rule of
 The 15 mm word's M and C keep 5 notches where their points fan. The 4 mm word runs along its letters'
 middles, and its A's counter, 0.56 mm across inside, isn't kept open.
 
+### Letters sewn as strokes
+
+Block letters and a logo's bars are drawn in strokes: straight bands of nearly even width that meet at
+joins. An embroidery font sews each stroke as a satin column of its own, its stitches across it. The
+columns along a part's centre lines run on round the corners where strokes meet. An M's middle strokes
+took in the corners of its stems there, their rails ran on unevenly, and their stitches leaned up to 56°. TS-13B said so 6
+times (SC-W0208). A part that reads as strokes now sews a column along each (`REQ-AUTO-087`), and where
+2 strokes meet one runs through and the other stops (`REQ-AUTO-088`). The code is
+`normalize/strips/strokes.rs` and its joins `strokes/joins.rs`, called from `auto/columns.rs`.
+
+**Reading the strokes.** Each ring of the part is cut into straight runs, from its sharpest corner: a run's
+points lie within 0.05 mm of the line between its ends. 2 runs are a stroke's sides when all of these hold.
+They run opposite ways within 5°, and lie as far apart at both ends within a tenth. They are at least the
+narrowest satin stroke and at most the widest satin column apart, and overlap along each other by half that
+width. The longer is as long as the width and the shorter half as long. The part fills the band between
+them but for 2 % of it. Sides on
+the same 2 lines, within 2° and a tenth of the width, are one stroke, as an E's stem is between its arms.
+
+**Joins.** 2 strokes meet where their bands, a width longer at each end, share more of the part than
+0.02 of their widths' product (0.01 mm² at least). A stroke runs through when the part goes on past the
+join by half its width both ways along it. Of 2 that both do, as in a cross, the longer runs through and
+the other loses its band, narrowed on each side by its stitches' reach across, and sews in 2 columns. Of 2
+that end there, the one whose end lies more nearly square to it runs through, by more than 0.15 of its
+width. An M's stem has a square top and runs through, and its middle stroke, cut on the slant, stops. Alike, 2 strokes
+whose lines meet between 15° and 60° are cut along the line that halves the angle between them, as at the
+top of an A and the bottom of an M's V, and each reaches max(0, reach / 2 - reach cos) past that line.
+There, reach is the stroke's pull compensation and cos the cosine of its line to the halving line. At a blunter
+join, as at an L's corner, the longer runs through. Cut along a halving line there, each would end in a
+point at the corner's outside, and the 2 tips and their pull compensation piled 4.34 fills on TS-13D's
+white frame, where the columns along their centre lines laid 4.17.
+
+**Where a stroke stops.** A stroke that stops keeps its side of the other's near side, moved into the
+other by reach (1 - cos), the cosine of the angle between the 2 lines: its own stitches' pull compensation
+already reaches the rest across the line where they meet. That stub is part of the stroke's end when it
+lies within the flat end's 20° along the stroke, and it does for a stroke wider than reach / tan 20°,
+1.1 mm at the default 0.4 mm. A wider stroke then ends on the other's side, and the overlap is the other's
+own pull compensation, whose stitches run along the stopping stroke at a square join and reach 0.4 mm past
+that side. Restored as rails of the stroke, the stub made TS-13D 4.55 fills thick where it is 4.23, the lettered
+patch 4.09 where it is 4.00 and TS-13B 3.90 where it is 3.85, and no measure showed a gap either way, so
+the stub is left out until a sew-out shows fabric where 2 strokes meet (MC-8). The stroke that stops sews first,
+and ends under the other without a push compensation.
+
+**Columns.** Each stroke's piece is the part inside its band, cut so. The pieces must cover the part but for
+1 % of it. A piece's rails are its 2 sides from its end least far along the stroke to its end farthest. An
+end whose points lie within tan 20° of the width along the stroke is flat, and any other ends in a point,
+as a column ends along an edge within 20° of square (`REQ-AUTO-016`). A rung lies square to the stroke at
+every corner of either rail. A flat end on the slant gets one more, past its corner farther in by twice
+the corners' spread along the stroke, so that the stitches between pair no more than 1.5 of one rail with
+1 of the other. A rung 0.1 mm past the corner notched the A's feet. The middle line has a point every half
+width, so that a stroke's thin tips measure as the centre lines' do. A piece's points within 0.001 mm of a
+corner of the part are that corner, so that a rail runs along a hole's edge where the hole does
+(`REQ-AUTO-084`): without that the A's counter fell to 7 %.
+
+**When a part keeps its centre lines' columns.** The rule runs only on a part that wasn't cut from a broad
+one and reads as 2 strokes or more that meet. Its centre lines must give 2 columns or more, none of them a
+ring. Its columns are kept only when none of them runs (`REQ-AUTO-016`). Strokes are straight only:
+a curved stroke, as a C's or an S's, or a D's bowl, keeps today's columns, and curved strokes are a
+candidate for a later step.
+
+**Measuring the lean.** A stitch leans by the angle between it and the square to its stroke, over the zigzag
+top stitches 0.4 mm long or more, leaving out the 2 at each end of a column. Those follow the column's
+end. A flat end 19° on the slant measured 31° with the zigzag's own 10° at 6 mm, which says nothing of
+how the column lies along its stroke.
+
+Measured with the cases' plans before (`main` at M13.36) and after, built at opt-level 1. Small Font's M at
+10 mm measures 3.71 fills and its A 3.31, alike:
+
+| Design | M's most lean | A's most lean | Thickest, fills | At 3 fills or more, mm² | Jump threads |
+|---|---:|---:|---:|---:|---:|
+| Lettered patch | 54.5° → 16.7° | 28.0° → 25.2° | 4.20 → 4.00 | 43.25 → 40.75 | 8 → 8 |
+| TS-13B's word, 15 mm | 51.4° → 18.9° | 31.6° → 24.1° | 3.63 → 3.18 | 1.0 → 0 | 7 → 7 |
+| TS-13B's word, 10 mm | 54.5° → 16.7° | 28.0° → 25.2° | 3.26 → 3.13 | 0 → 0 | 8 → 8 |
+| TS-13B's word, 6 mm | 56.2° → 18.9° | 29.5° → 21.8° | 3.44 → 3.37 | 0 → 0 | 5 → 6 |
+| TS-13B's digitized half | | | 3.99 → 3.85 | 12.25 → 4.25 | 44 → 46 |
+| TS-13D's digitized half | | | 4.17 → 4.23 | 67.75 → 51.25 | 12 → 12 |
+
+TS-13D's one rise sits at the stacked emblem's white ring, not on a stroke. The white frame now sews as
+strokes, with one bar through at each corner, and the ring's column starts elsewhere. Its area at 3 fills or more
+fell by 16.5 mm². The emblems' white frames, refused as columns before, sew as strokes, and TS-13B's M no
+longer says that its stitches lean. The 4 mm word runs along its letters' middles, as before. Every other
+test picture sews as it did. Taking the strokes from the centre lines instead fails: the M's middle stroke
+is free for only 1.5 widths, too short to fit a line to.
+
 ## Neighbours
 
 The shapes of a traced picture meet. VectorCraft's Abutting method traces each area with a hole where the
@@ -612,8 +695,8 @@ mends it in 5 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
    edge with an area merge the cheapest first, those of the colour with the most parts, and of 2 as cheap
    the smaller, while their cost stays within `auto_min_likeness` of the picture's likeness. The rest sew
    as lines, and `SC-I0915` says so. A part is defined once, by `auto::is_part`, and the measure imports it.
-   Merging can't see what else a picture loses, such as specks, so the bound is set above the limit of
-   `REQ-AUTO-094` ([Merging by likeness](#merging-by-likeness)).
+   At 0, the default, nothing is measured and every line merges. The setting stays off until M13.35's cap
+   on thickness lands ([Merging by likeness](#merging-by-likeness)).
 4. **Specks** (`REQ-AUTO-008`). An automatic area, or a part of one, smaller than 1 mm² is too small to sew:
    it would sew a knot. It is merged into the automatic area it shares the longest edge with, which may be
    its own. A speck that fills a hole goes into the area around it, and no hole shows where it was. One that
@@ -1608,9 +1691,23 @@ function ([before and after sheet](before-after-sheet.md)).
 
 ### Merging by likeness
 
-Thin lines merge only while the picture keeps `auto_min_likeness` of its likeness, 0.85 by default
-([Neighbours](#neighbours), `REQ-AUTO-095`, M13.44). Measured on 2026-11-18, as main sews them and with the
-bound. The photos marked * are local. Thickest is the thickest spot in fills, and the area is at 3 fills or
+Thin lines merge only while the picture keeps `auto_min_likeness` of its likeness ([Neighbours](#neighbours),
+`REQ-AUTO-095`, M13.44). The setting is 0 by default, where every line merges as before the rule, and a user
+raises it for a picture.
+
+It is off by default because keeping lines can make a spot sew thicker far from any line. A line kept sews as
+a running stitch, and the sewing order then puts the blocks of a colour in another order. A fill that sewed
+first at a spot can then sew over others there. On one photo measured at 0.85 the thickest spot rose from 5.60
+to 7.03 fills, at a place 3.6 mm or more from every line kept, where the block order had changed. Merging any
+quarter of the lines kept there left 7.03 to 7.62 fills. Merging all of them put that spot back, and the
+thickest spot moved to another place at 7.55. On another photo the thickest spot moved too, and the block
+order changed there as well. Where a reorder piles thread can't be told from a line, so no rule about lines
+prevents it, and planning twice to check costs a second plan. The answer is one cap on thickness at the end of
+planning that every design meets, whatever its order (M13.35). The setting is turned on by default once that
+cap lands.
+
+The measurements below are evidence of what the rule does, at a bound of 0.85 and as each picture sews with
+the setting off. No picture is the rule's goal. The photos marked * are local. Thickest is the thickest spot in fills, and the area is at 3 fills or
 more, in mm².
 
 | Picture | Likeness | Shapes as running stitches | Jump threads | Thickest | Area |
@@ -1635,8 +1732,8 @@ Merging counts only what it loses itself. The measure also counts the parts that
 lose. It also counts as parts some lines that are too narrow for a disc a thread across as merging measures
 them on their outlines, but not on the measure's grid. So a
 picture keeps less than the bound: at a bound of 0.8 the goose kept 0.782 and the castle 0.728, under the
-limit. With no line merged that is a part, the castle keeps 0.918. A bound of 0.85 keeps every picture
-measured at 0.75 or more.
+limit. With no line merged that is a part, the castle keeps 0.918. A bound of 0.85 kept every picture
+measured at 0.75 or more, so 0.85 is the value to raise it to.
 
 2 other ways were measured and not taken. Counted colour by colour, each colour keeping 0.75 of its parts,
 merging kept more lines on the dogs, 6 and 8 on the dogs on turf, which left them 5 and 7 jump threads more,

@@ -20,6 +20,8 @@
 //! - [`stitches`]: what a plan sews, read back from its stitches: each element's needle points, a satin
 //!   column's rungs, and the jump threads a machine that cuts no jump leaves.
 //! - [`strategies`]: random plans for property tests, with fixed seeds on every PR.
+//! - [`strokes`]: the strokes of the traced word's M and A, and how far a letter's satin stitches lie from
+//!   square to them.
 //! - [`fuzz`]: what must hold for any bytes given to a reader — the bodies of the fuzz targets in `fuzz/`,
 //!   run on every PR here and with coverage-guided inputs every night.
 //! - [`temp`]: folders of a test's own for the files it writes, removed when the test is done.
@@ -43,5 +45,6 @@ pub mod plans;
 pub mod satins;
 pub mod stitches;
 pub mod strategies;
+pub mod strokes;
 pub mod temp;
 pub mod transformed;

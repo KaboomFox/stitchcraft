@@ -140,7 +140,10 @@ fn req_auto_016_the_bound_is_the_widest_satin_column_to_the_micrometre() {
 #[test]
 fn req_auto_016_a_column_that_ends_under_another_sews_first_and_reaches_under_it() {
     // A T: a bar 3 mm wide, and a stem 3 mm wide below it. The stem's column ends under the bar's: it sews
-    // first, as `t`, and is 0.4 mm longer at that end by its push compensation; the bar's sews after it.
+    // first, as `t`, and the bar's after it. The T is drawn in 2 strokes (REQ-AUTO-088), and the stem stops
+    // against the bar without a push compensation: wider than the pull compensation over tan 20° (1.1 mm),
+    // it ends on the bar's side, and the bar's stitches, which run along the stem there, reach 0.4 mm over
+    // the seam with their own pull compensation. Until M13.37 the stem was 0.4 mm longer there by its push.
     let t = |stem: f64| {
         let (left, right) = (10.0 - stem / 2.0, 10.0 + stem / 2.0);
         shape("t", &[(0.0, 0.0), (20.0, 0.0), (20.0, 3.0), (right, 3.0), (right, 15.0), (left, 15.0), (left, 3.0), (0.0, 3.0)])
@@ -151,14 +154,11 @@ fn req_auto_016_a_column_that_ends_under_another_sews_first_and_reaches_under_it
     let (stem, bar) = (&out.elements[0], &out.elements[1]);
     let (stem_rails, _) = read(stem);
     assert!(stem_rails.iter().flatten().all(|q| q.y() >= 3.0 - 1e-9), "{stem_rails:?}");
-    let under = format!("{}", -rules().auto_pull_compensation_mm.get());
-    let push = setting(stem, PUSH_COMPENSATION).unwrap();
-    assert!(push == format!("{under} 0") || push == format!("0 {under}"), "{push}");
+    assert_eq!(setting(stem, PUSH_COMPENSATION), None);
     assert_eq!(setting(bar, PUSH_COMPENSATION), None);
-    // A narrow stem is longer by its pull compensation too, not by the overlap of 1 mm (REQ-AUTO-029).
+    // A narrow stem, 1.5 mm, has no push either (REQ-AUTO-029).
     let narrow = made(&t(1.5));
-    let push = setting(&narrow.elements[0], PUSH_COMPENSATION).unwrap();
-    assert!(push == format!("{under} 0") || push == format!("0 {under}"), "{push}");
+    assert_eq!(setting(&narrow.elements[0], PUSH_COMPENSATION), None);
     // The stem's end under the bar is the bar's side, from the stem's one side to its other.
     let ends: Vec<Point> = stem_rails.iter().flat_map(|rail| [rail[0], *rail.last().unwrap()]).filter(|q| q.y() < 3.0 + 1e-9).collect();
     assert_eq!(ends.len(), 2, "{stem_rails:?}");
