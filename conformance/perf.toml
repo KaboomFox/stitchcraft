@@ -57,11 +57,11 @@ instructions = 640000000
 
 [pictures.dog-on-turf-6]
 args = ["export", "docs/fixtures/traced-dog-on-turf-6.vectorcraft", "--auto"]
-instructions = 18209000000
+instructions = 17857000000
 
 [pictures.dog-on-turf-9]
 args = ["export", "docs/fixtures/traced-dog-on-turf-9.vectorcraft", "--auto"]
-instructions = 20180000000
+instructions = 19088000000
 
 [pictures.dog-running-6]
 args = ["export", "docs/fixtures/traced-dog-running-6.vectorcraft", "--auto"]

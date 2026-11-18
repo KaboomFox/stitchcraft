@@ -29,7 +29,7 @@ fn finely(x0: f64, x1: f64, n: u32) -> Polygon {
 /// `elements` as the layers give them, each automatic with the default settings of the rules but for those
 /// in `params` by its place.
 fn flattened(elements: Vec<Element>) -> (Flattened<'static>, Vec<Option<AutoParams>>) {
-    let rules = elements.iter().map(|element| element.automatic.then(AutoParams::defaults)).collect();
+    let rules = elements.iter().map(|element| element.automatic.then(|| crate::auto::rules(&element.params).unwrap())).collect();
     let elements = elements.into_iter().enumerate().map(|(index, element)| (index, Cow::Owned(element))).collect();
     (Flattened { elements, kept: 0, said: Vec::new() }, rules)
 }
@@ -123,11 +123,8 @@ fn a_shape_that_needs_more_work_than_the_budget_allows_keeps_its_lines_and_says_
     }
     assert_eq!(
         seen.into_iter().collect::<Vec<_>>(),
-        [
-            "info SC-I0915: Finding the thin lines of this area",
-            "info SC-I0915: Finding where to merge this line",
-            "info SC-I0915: Finding whether this line is a part of its colour"
-        ]
+        // By default, at 0, merging keeps no likeness, and no line is measured as a part (REQ-AUTO-095).
+        ["info SC-I0915: Finding the thin lines of this area", "info SC-I0915: Finding where to merge this line"]
     );
 }
 
@@ -135,11 +132,12 @@ fn a_shape_that_needs_more_work_than_the_budget_allows_keeps_its_lines_and_says_
 fn lines_whose_parts_need_more_work_than_the_budget_allows_sew_as_lines_and_say_so() {
     // 2 gold lines side by side between a red and a blue area: gold's one part, which sews as lines.
     let coloured = |id: &str, parts: &[Polygon], color: Rgb| Element { thread: Thread::new(color), ..auto(id, parts, &[]) };
+    let keeping = |id: &str, parts: &[Polygon]| Element { thread: Thread::new(Rgb::new(230, 180, 30)), ..auto(id, parts, &[(MIN_LIKENESS, "0.85")]) };
     let elements = || {
         vec![
             coloured("left", &[square((0.0, 0.0), (10.0, 10.0))], Rgb::new(200, 0, 0)),
-            coloured("line", &[strand(10.0)], Rgb::new(230, 180, 30)),
-            coloured("line2", &[strand(10.7)], Rgb::new(230, 180, 30)),
+            keeping("line", &[strand(10.0)]),
+            keeping("line2", &[strand(10.7)]),
             coloured("right", &[square((11.4, 0.0), (20.0, 10.0))], Rgb::new(0, 0, 200)),
         ]
     };
@@ -161,14 +159,15 @@ fn lines_whose_parts_need_more_work_than_the_budget_allows_sew_as_lines_and_say_
 
 #[test]
 fn a_line_that_is_a_part_of_its_own_merges_while_the_picture_keeps_its_share() {
-    // A gold line between a red and a blue area, with gold squares far off. With 2 squares, merged it costs gold
-    // a third of its likeness and the picture a ninth, within the 0.15 it may lose. With 1, a sixth.
+    // A gold line between a red and a blue area, with gold squares far off, that keeps 0.85 of the likeness. With
+    // 2 squares, merged it costs gold a third of its likeness and the picture a ninth, within the 0.15 it may
+    // lose. With 1, a sixth.
     let coloured = |id: &str, parts: &[Polygon], color: Rgb| Element { thread: Thread::new(color), ..auto(id, parts, &[]) };
     let gold = Rgb::new(230, 180, 30);
     for (squares, line) in [(2, false), (1, true)] {
         let mut elements = vec![
             coloured("left", &[square((0.0, 0.0), (10.0, 10.0))], Rgb::new(200, 0, 0)),
-            coloured("line", &[strand(10.0)], gold),
+            Element { thread: Thread::new(gold), ..auto("line", &[strand(10.0)], &[(MIN_LIKENESS, "0.85")]) },
             coloured("right", &[square((10.7, 0.0), (20.0, 10.0))], Rgb::new(0, 0, 200)),
         ];
         let far = [square((40.0, 0.0), (45.0, 5.0)), square((50.0, 0.0), (55.0, 5.0))];

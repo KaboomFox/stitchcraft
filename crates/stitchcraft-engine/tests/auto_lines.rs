@@ -151,9 +151,13 @@ fn lines_kept(elements: &[Element]) -> Vec<&str> {
 
 #[test]
 fn req_auto_095_a_thin_line_that_is_a_whole_part_of_its_colour_sews_as_a_line() {
-    // The line is gold's one part: merged, the picture's likeness would fall to 2 thirds.
-    let (out, diagnostics) =
-        sewn(vec![rect("left", (0.0, 0.0), (10.0, 10.0), &RED), ragged("line", &[]), rect("right", (10.7, 0.0), (20.0, 10.0), &BLUE)]);
+    // The line is gold's one part: merged, the picture's likeness would fall to 2 thirds. By default, at 0, it
+    // merges.
+    let line = |share| ragged("line", &[(MIN_LIKENESS, share)]);
+    let elements = |line| vec![rect("left", (0.0, 0.0), (10.0, 10.0), &RED), line, rect("right", (10.7, 0.0), (20.0, 10.0), &BLUE)];
+    let by_default = sewn(elements(ragged("line", &[]))).0;
+    assert_eq!(kinds(&by_default), [("left", true), ("right", true)]);
+    let (out, diagnostics) = sewn(elements(line("0.85")));
     assert_eq!(kinds(&out), [("left", true), ("right", true), ("line", false)]);
     let line = diagnostics.iter().find(|said| said.code == Code::AutoLineMerged).unwrap();
     assert_eq!(
@@ -246,7 +250,7 @@ fn req_auto_095_lines_of_a_colour_whose_boxes_meet_but_that_dont_touch_are_2_par
 #[test]
 fn req_auto_095_a_line_too_narrow_for_a_thread_is_no_part_and_merges() {
     // 0.2 to 0.35 mm wide, 2.75 mm²: no speck, and a disc a thread across fits nowhere in it.
-    let line = jagged("line", 10.0, 20, (0.2, 0.35), &GOLD, &[]);
+    let line = jagged("line", 10.0, 20, (0.2, 0.35), &GOLD, &[(MIN_LIKENESS, "1")]);
     let elements = vec![rect("left", (0.0, 0.0), (10.0, 10.0), &RED), line, rect("right", (10.35, 0.0), (20.0, 10.0), &BLUE)];
     assert_eq!(lines_kept(&sewn(elements).0), Vec::<&str>::new());
 }

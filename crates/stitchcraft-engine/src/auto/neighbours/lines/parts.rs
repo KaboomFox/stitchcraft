@@ -23,6 +23,11 @@
 //!
 //! **Work.** Each line has the budget's work to itself to find what it touches. A line that needs more
 //! sews as a line, which is said.
+//!
+//! **Off by default.** At 0, the default, every line merges whatever it costs, so nothing is measured and
+//! merging works as it did before this rule. Keeping lines can change the order the blocks sew in, and a new
+//! order can pile thread up at a spot far from any line, which no rule about a line can foresee. The rule is
+//! turned on by default once one cap on thickness holds for every design (M13.35).
 
 use std::collections::BTreeMap;
 
@@ -101,6 +106,10 @@ pub(super) fn fates<'r>(
     rules: impl Fn(usize) -> Option<&'r AutoParams>,
     budget: &Budget,
 ) -> Vec<Fate> {
+    // At 0 the picture may lose every part a line is, so every line merges, and nothing is measured.
+    if !lines.iter().any(|line| rules(line.from).is_some_and(|rules| rules.auto_min_likeness > 0.0)) {
+        return lines.iter().map(|_| Fate::Merges).collect();
+    }
     let mut fates: Vec<Option<Fate>> = Vec::with_capacity(lines.len());
     let mut touches: Vec<Option<Touch>> = Vec::with_capacity(lines.len());
     for (at, line) in lines.iter().enumerate() {
