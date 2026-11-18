@@ -49,6 +49,7 @@ A shape's settings are those of VectorCraft's Auto effect on it, or on the group
 | [`auto_min_slenderness`](params/auto.md#auto_min_slenderness) | 3 | no: advanced |
 | [`auto_max_unevenness`](params/auto.md#auto_max_unevenness) | 0.3 | no: advanced |
 | [`auto_min_line_unevenness`](params/auto.md#auto_min_line_unevenness) | 0.05 | no: advanced |
+| [`auto_min_likeness`](params/auto.md#auto_min_likeness) | 0 | no: advanced |
 | [`auto_max_reach`](params/auto.md#auto_max_reach) | 1.4 | no: advanced |
 | [`auto_min_fill_width_mm`](params/auto.md#auto_min_fill_width_mm) | 4 mm | no: advanced |
 | [`auto_min_area_mm2`](params/auto.md#auto_min_area_mm2) | 1 mm² | no: advanced |

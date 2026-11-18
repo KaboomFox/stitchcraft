@@ -85,6 +85,7 @@ fn req_auto_020_the_rules_settings_are_stitchcraft_s_own_and_no_stitch_type_read
         (MIN_SLENDERNESS, "3"),
         (MAX_UNEVENNESS, "0.3"),
         ("auto_min_line_unevenness", "0.05"),
+        ("auto_min_likeness", "0"),
         ("auto_max_reach", "1.4"),
         (MIN_FILL_WIDTH, "4"),
         (MIN_AREA, "1"),

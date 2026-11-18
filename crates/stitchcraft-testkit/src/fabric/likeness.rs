@@ -39,6 +39,7 @@
 use std::collections::BTreeMap;
 
 use stitchcraft_core::{Budget, Meter, Rect};
+use stitchcraft_engine::auto::is_part;
 use stitchcraft_engine::design::Design;
 use stitchcraft_plan::{Rgb, Role, StitchPlan};
 
@@ -198,7 +199,7 @@ impl Compared {
             fits[at] = disc.iter().all(|&step| stepped(at, step, columns, rows).is_some_and(|k| colour(k) == Some(own)));
         }
         let area = |pixels: usize| pixels as f64 * PIXEL * PIXEL;
-        let smallest = crate::designs::rules().auto_min_area_mm2;
+        let rules = crate::designs::rules();
         // Each colour's area, area shown, and parts, found by flooding from the top left.
         let mut totals: BTreeMap<Rgb, (usize, usize, usize)> = BTreeMap::new();
         let mut order: Vec<Rgb> = Vec::new();
@@ -228,7 +229,8 @@ impl Compared {
                     }
                 }
             }
-            if area(group.len()) >= smallest && group.iter().any(|&at| fits[at]) {
+            // One definition of a part, the one line merging keeps (REQ-AUTO-095).
+            if is_part(area(group.len()), group.iter().any(|&at| fits[at]), &rules) {
                 found.push((own, group));
             }
         }

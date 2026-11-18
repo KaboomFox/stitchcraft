@@ -1,9 +1,11 @@
 use std::collections::BTreeSet;
 
 use super::*;
+use crate::auto::MIN_LIKENESS;
 use crate::auto::neighbours::tests::{filled, square};
 use crate::design::DesignSettings;
 use crate::normalize::fixture::part;
+use stitchcraft_plan::{Rgb, Thread};
 
 /// The narrowest satin stroke of a design that sets none.
 const NARROWEST: Mm = DesignSettings::MIN_SATIN_STROKE_WIDTH;
@@ -27,7 +29,7 @@ fn finely(x0: f64, x1: f64, n: u32) -> Polygon {
 /// `elements` as the layers give them, each automatic with the default settings of the rules but for those
 /// in `params` by its place.
 fn flattened(elements: Vec<Element>) -> (Flattened<'static>, Vec<Option<AutoParams>>) {
-    let rules = elements.iter().map(|element| element.automatic.then(AutoParams::defaults)).collect();
+    let rules = elements.iter().map(|element| element.automatic.then(|| crate::auto::rules(&element.params).unwrap())).collect();
     let elements = elements.into_iter().enumerate().map(|(index, element)| (index, Cow::Owned(element))).collect();
     (Flattened { elements, kept: 0, said: Vec::new() }, rules)
 }
@@ -121,7 +123,81 @@ fn a_shape_that_needs_more_work_than_the_budget_allows_keeps_its_lines_and_says_
     }
     assert_eq!(
         seen.into_iter().collect::<Vec<_>>(),
+        // By default, at 0, merging keeps no likeness, and no line is measured as a part (REQ-AUTO-095).
         ["info SC-I0915: Finding the thin lines of this area", "info SC-I0915: Finding where to merge this line"]
+    );
+}
+
+#[test]
+fn lines_whose_parts_need_more_work_than_the_budget_allows_sew_as_lines_and_say_so() {
+    // 2 gold lines side by side between a red and a blue area: gold's one part, which sews as lines.
+    let coloured = |id: &str, parts: &[Polygon], color: Rgb| Element { thread: Thread::new(color), ..auto(id, parts, &[]) };
+    let keeping = |id: &str, parts: &[Polygon]| Element { thread: Thread::new(Rgb::new(230, 180, 30)), ..auto(id, parts, &[(MIN_LIKENESS, "0.85")]) };
+    let elements = || {
+        vec![
+            coloured("left", &[square((0.0, 0.0), (10.0, 10.0))], Rgb::new(200, 0, 0)),
+            keeping("line", &[strand(10.0)]),
+            keeping("line2", &[strand(10.7)]),
+            coloured("right", &[square((11.4, 0.0), (20.0, 10.0))], Rgb::new(0, 0, 200)),
+        ]
+    };
+    let full = run(elements(), &Budget::DEFAULT);
+    assert_eq!(full.1.len(), 2, "{:?}", full.1);
+    assert!(full.1.iter().all(|said| said.contains("but sews as a line")), "{:?}", full.1);
+    let (mut seen, mut work) = (BTreeSet::new(), 0);
+    loop {
+        let (ids, said) = run(elements(), &Budget { max_work: work, ..Budget::DEFAULT });
+        if (ids.clone(), said.clone()) == full {
+            break;
+        }
+        assert_eq!(ids, ["left", "line", "line2", "right"], "{work}");
+        seen.extend(said.iter().filter_map(|said| said.split(" needed more").next().map(str::to_string)));
+        work += 1;
+    }
+    assert!(seen.contains("info SC-I0915: Finding whether this line is a part of its colour"), "{seen:?}");
+    // The least work with which both lines are measured: each looks at the lines after it, not at itself.
+    assert_eq!(work, 4724, "{seen:?}");
+}
+
+#[test]
+fn a_line_that_is_a_part_of_its_own_merges_while_the_picture_keeps_its_share() {
+    // A gold line between a red and a blue area, with gold squares far off, that keeps 0.85 of the likeness. With
+    // 2 squares, merged it costs gold a third of its likeness and the picture a ninth, within the 0.15 it may
+    // lose. With 1, a sixth.
+    let coloured = |id: &str, parts: &[Polygon], color: Rgb| Element { thread: Thread::new(color), ..auto(id, parts, &[]) };
+    let gold = Rgb::new(230, 180, 30);
+    for (squares, line) in [(2, false), (1, true)] {
+        let mut elements = vec![
+            coloured("left", &[square((0.0, 0.0), (10.0, 10.0))], Rgb::new(200, 0, 0)),
+            Element { thread: Thread::new(gold), ..auto("line", &[strand(10.0)], &[(MIN_LIKENESS, "0.85")]) },
+            coloured("right", &[square((10.7, 0.0), (20.0, 10.0))], Rgb::new(0, 0, 200)),
+        ];
+        let far = [square((40.0, 0.0), (45.0, 5.0)), square((50.0, 0.0), (55.0, 5.0))];
+        elements.push(coloured("far", &far[..squares], gold));
+        let (ids, said) = run(elements, &Budget::DEFAULT);
+        assert_eq!(ids.iter().any(|id| id == "line"), line, "{squares}: {said:?}");
+    }
+}
+
+#[test]
+fn a_line_that_touches_a_piece_of_its_colour_merges_whatever_share_is_kept() {
+    // The 2 areas and the line are of one colour: the line belongs to their part, and merging it loses none.
+    let elements = vec![
+        auto("left", &[square((0.0, 0.0), (10.0, 10.0))], &[]),
+        auto("line", &[strand(10.0)], &[(MIN_LIKENESS, "1")]),
+        auto("right", &[square((10.7, 0.0), (20.0, 10.0))], &[]),
+    ];
+    let (ids, said) = run(elements, &Budget::DEFAULT);
+    assert_eq!(ids, ["left", "right"], "{said:?}");
+}
+
+#[test]
+fn a_part_is_no_speck_and_holds_a_thread() {
+    let rules = AutoParams::defaults();
+    let smallest = rules.auto_min_area_mm2;
+    assert_eq!(
+        [is_part(smallest, true, &rules), is_part(smallest - 1e-9, true, &rules), is_part(smallest * 10.0, false, &rules)],
+        [true, false, false]
     );
 }
 
@@ -142,8 +218,13 @@ fn a_line_is_ragged_from_the_least_unevenness_on() {
 fn a_line_merges_into_no_area_whose_box_only_is_near_it() {
     // An L round the line's top and right side, 1 mm and more away from it: its box holds the line.
     let around = part(&[(0.0, 12.0), (20.0, 12.0), (20.0, -5.0), (12.0, -5.0), (12.0, 11.0), (0.0, 11.0)], &[]);
-    let (ids, said) = run(vec![auto("around", &[around], &[]), auto("line", &[strand(10.0)], &[])], &Budget::DEFAULT);
-    assert_eq!((ids, said), (vec!["around".to_string(), "line".to_string()], Vec::<String>::new()));
+    // Whatever share of the likeness the picture keeps: with all of it the line, a part of its own, shares no
+    // edge with the L, so nothing is said of it either (REQ-AUTO-095).
+    for share in ["0", "1"] {
+        let line = auto("line", &[strand(10.0)], &[(MIN_LIKENESS, share)]);
+        let (ids, said) = run(vec![auto("around", std::slice::from_ref(&around), &[]), line], &Budget::DEFAULT);
+        assert_eq!((ids, said), (vec!["around".to_string(), "line".to_string()], Vec::<String>::new()), "{share}");
+    }
 }
 
 #[test]
