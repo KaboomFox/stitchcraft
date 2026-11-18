@@ -25,7 +25,7 @@
 
 use stitchcraft_core::Code::{
     self, AutoBase, AutoDigitized, AutoLayers, AutoOrder, AutoSatinFilled, AutoSpeck, AutoThick, AutoThinned, AutoUnder, FillPartsApart,
-    SatinStitchesLean, StitchesMerged,
+    StitchesMerged,
 };
 
 use super::designed::Drawing;
@@ -58,23 +58,10 @@ pub(super) const NEIGHBOURS_SAY: [Code; 16] = [
 ];
 
 /// What the engine says of TS-13B, in order: how many shapes it digitized, the order, the areas that reach
-/// under others, the base layer, the stitches that lean where the M's strokes meet at sharp angles, and the needle points
-/// left out.
-pub(super) const LETTERS_SAY: [Code; 13] = [
-    AutoDigitized,
-    AutoOrder,
-    AutoUnder,
-    AutoBase,
-    SatinStitchesLean,
-    SatinStitchesLean,
-    SatinStitchesLean,
-    SatinStitchesLean,
-    SatinStitchesLean,
-    SatinStitchesLean,
-    StitchesMerged,
-    AutoThinned,
-    AutoThick,
-];
+/// under others, the base layer, the needle points left out, and where the design sews thick. Its letters
+/// sew as strokes (`REQ-AUTO-087`), and no stitch of the M leans where its strokes meet, as 6 did until
+/// M13.37.
+pub(super) const LETTERS_SAY: [Code; 7] = [AutoDigitized, AutoOrder, AutoUnder, AutoBase, StitchesMerged, AutoThinned, AutoThick];
 
 /// What the engine says of TS-13C, in order: how many shapes it digitized, the pupils and hairs that no
 /// satin column can follow, filled; the face, digitized whole under the eyes in its holes; the order; the
@@ -97,16 +84,16 @@ pub(super) const LINES_AND_PARTS_SAY: [Code; 15] = [
     AutoThick,
 ];
 
-/// What the engine says of TS-13D, in order: how many shapes it digitized; the white round each emblem, a
-/// square ring along which no satin column can be drawn, filled; the areas that sew only what shows of them
-/// and those digitized whole under their details; the order; the areas that reach under others and those
-/// cut away under their details; the base layer; the needle points left out where an outline starts at
-/// its fill's last stitch (`REQ-AUTO-051`); and where the design sews thick.
-pub(super) const LAYERS_SAY: [Code; 10] =
-    [AutoDigitized, AutoSatinFilled, AutoSatinFilled, AutoLayers, AutoOrder, AutoUnder, AutoBase, StitchesMerged, AutoThinned, AutoThick];
+/// What the engine says of TS-13D, in order: how many shapes it digitized; the areas that sew only what
+/// shows of them and those digitized whole under their details; the order; the areas that reach under
+/// others and those cut away under their details; the base layer; and where the design sews thick. The
+/// white round each emblem, a square ring along which no satin column could be drawn, was filled until
+/// M13.37, and an outline then started at its fill's last stitch, which left needle points out
+/// (`REQ-AUTO-051`): drawn in straight strokes, it sews a column along each (`REQ-AUTO-087`).
+pub(super) const LAYERS_SAY: [Code; 7] = [AutoDigitized, AutoLayers, AutoOrder, AutoUnder, AutoBase, AutoThinned, AutoThick];
 
-/// What the engine says of TS-13E, in order: as of TS-13D, without a satin column that can't be made. A
-/// button's rim is a ring a column follows.
+/// What the engine says of TS-13E, in order: as of TS-13D, and the needle points left out where an outline
+/// starts at its fill's last stitch. A button's rim is a ring a column follows.
 pub(super) const BUTTONS_SAY: [Code; 8] = [AutoDigitized, AutoLayers, AutoOrder, AutoUnder, AutoBase, StitchesMerged, AutoThinned, AutoThick];
 
 /// The check of every TS-13 sheet that asks where a jump thread is sewn down: the reference machine cuts
@@ -199,9 +186,9 @@ mod tests {
         // changes with any change to what a picture sews.
         let recorded = [
             ("TS-13A", [126.001, 167.98], 23_896),
-            ("TS-13B", [110.594, 148.4], 14_509),
+            ("TS-13B", [110.594, 148.4], 14_543),
             ("TS-13C", [111.397, 107.75], 10_334),
-            ("TS-13D", [89.0, 100.025], 20_233),
+            ("TS-13D", [89.8, 100.4], 19_458),
             ("TS-13E", [23.999, 108.394], 5_939),
         ];
         let found: Vec<(&str, [f64; 2], usize)> = recorded
