@@ -155,6 +155,8 @@ fn lines_whose_parts_need_more_work_than_the_budget_allows_sew_as_lines_and_say_
         work += 1;
     }
     assert!(seen.contains("info SC-I0915: Finding whether this line is a part of its colour"), "{seen:?}");
+    // The least work with which both lines are measured: each looks at the lines after it, not at itself.
+    assert_eq!(work, 4724, "{seen:?}");
 }
 
 #[test]
@@ -204,10 +206,13 @@ fn a_line_is_ragged_from_the_least_unevenness_on() {
 fn a_line_merges_into_no_area_whose_box_only_is_near_it() {
     // An L round the line's top and right side, 1 mm and more away from it: its box holds the line.
     let around = part(&[(0.0, 12.0), (20.0, 12.0), (20.0, -5.0), (12.0, -5.0), (12.0, 11.0), (0.0, 11.0)], &[]);
-    // Its colour keeps no share of its parts, so that a line merges wherever it shares an edge.
-    let line = auto("line", &[strand(10.0)], &[(MIN_LIKENESS, "0")]);
-    let (ids, said) = run(vec![auto("around", &[around], &[]), line], &Budget::DEFAULT);
-    assert_eq!((ids, said), (vec!["around".to_string(), "line".to_string()], Vec::<String>::new()));
+    // Whatever share of the likeness the picture keeps: with all of it the line, a part of its own, shares no
+    // edge with the L, so nothing is said of it either (REQ-AUTO-095).
+    for share in ["0", "1"] {
+        let line = auto("line", &[strand(10.0)], &[(MIN_LIKENESS, share)]);
+        let (ids, said) = run(vec![auto("around", std::slice::from_ref(&around), &[]), line], &Budget::DEFAULT);
+        assert_eq!((ids, said), (vec!["around".to_string(), "line".to_string()], Vec::<String>::new()), "{share}");
+    }
 }
 
 #[test]
