@@ -1595,7 +1595,146 @@ sew 4.69, 4.80, 4.62 and 5.63 fills at their thickest spots, and 141.5, 153.25, 
 fills or more. The dogs on turf sew thicker, at new spots where a satin column or a fill lies over 3 or 4
 other fills.
 
+#### The cap at the end of planning
 
+Sewing a picture's thin lines as lines (M13.44) and sewing details last (M13.40) change the order the
+blocks sew in. A changed order moves where fills start and end and which shape reaches under which,
+so a spot far from the change can pile up thread. No rule about a line or a detail foresees that. Each
+step tried planning twice and keeping the thinner plan, which doubled a traced photo's export. The owner
+asked on 2026-11-18 for one general cap at the end of planning instead, which every design meets whatever
+its shapes and their order (`REQ-AUTO-099` to `REQ-AUTO-103`). Its value is the setting
+`auto_thick_cap_fills`, 4 fills by default, since MC-8's sew-out will set the real limits.
+
+**Why the last pass stops.** The thread at every spot above 4 fills was split on 2026-11-18, in pieces of
+0.2 mm, by kind. A piece of top thread counts as hidden where the top stitches of the shapes sewn after it
+lay a fill or more:
+
+| Design | Spots above 4 | Top that shows | Top under later shapes | Base layer | Locks | Travel |
+|---|---:|---:|---:|---:|---:|---:|
+| Badges | 3 | 49 % | 45 % | 3 % | 3 % | 0 % |
+| TS-13A, digitized half | 5 | 39 % | 57 % | 4 % | 1 % | 0 % |
+| TS-13C, digitized half | 13 | 36 % | 60 % | 3 % | 0 % | 0 % |
+| TS-13D, digitized half | 2 | 49 % | 46 % | 2 % | 3 % | 0 % |
+| Traced pear | 4 | 43 % | 49 % | 4 % | 3 % | 0 % |
+| Traced dogs | 19 to 82 | 40 to 45 % | 47 to 54 % | 3 to 6 % | 1 to 3 % | 0 to 2 % |
+| 4 other traced photos | 142 to 259 | 40 to 52 % | 43 to 54 % | 3 % | 1 to 2 % | 1 % |
+
+No other underlay lies there. The last pass takes travel that doubles back, locks beyond one back and
+forth, and row ends. Of the hidden top thread it takes only a row's end where the next row starts within
+1 mm, moved back along the row. A satin column's stitches cross the column, each the next one's turn, so a
+column that ends under another column of its shape, or under a later shape, keeps all of them. The middle
+of a row it can't shorten. It never takes top thread that shows, and part of that covers nothing that other
+stitches don't already cover: a column's points crowded in a bend or a join, a fill's short rows bunched at
+a narrow tip.
+
+**One rule.** A needle point taken out of a run joins its 2 stitches into one. That takes thread only where
+the run turns at the point, and it doesn't leave a jump thread. So the cap looks at the finished plan alone, its
+stitches with their roles and elements, and its measure. Where a spot sews above the cap, it takes needle
+points out of the stitches that lay thread there, when other stitches already cover the places those stitches covered. A
+stitch covers the places within half a thread, 0.2 mm, of it, as the bare-fabric measure paints it. The
+kinds go in this order, each through the plan from its end:
+
+| Kind | A needle point goes when | Why it comes here |
+|---|---|---|
+| Underlay and travel | top stitches sewn after it cover all of the joined stitch | Nobody sees it, and the thread above it already lies flat on the fabric |
+| A shape's top under later shapes | the top stitches of shapes sewn after it cover the places its 2 stitches covered | Nobody sees it either, but it is the overlap that keeps fabric from showing between 2 shapes when the fabric pulls |
+| A shape's own top | its own other top stitches and those of later shapes cover the places its 2 stitches covered | It shows, so it goes last, and only where it is doubled |
+
+Through the plan from its end, a later shape loses its thread before an earlier one is judged under it, as in
+the last pass. The joined stitch is no longer than the longest stitch of its element and kind, top or not,
+so no stitch is longer than its shape already sews, and no shorter than the shorter of the 2 or the
+machine's shortest. A lock's needle points, and the one after a lock, stay. A point stays when taking it would
+leave a spot that the joined stitch lays thread in thicker than both the cap and what it was. Each needle
+point the cap leaves is one of the plan's, in the same order. The jumps, the trims and the thread changes
+are those of the plan. The cap reads roles, elements and places, whatever the picture shows. Where a spot stays above the cap, `SC-W0913` names it, and
+`SC-I1119` says what each kind gave.
+
+A joined stitch no longer than the longer of its 2 left the dogs at 4.02 to 4.18 fills: the next row's start
+lay too far for the stitch into a turn. With the element's own longest stitch as the bound they come to 4.00.
+
+**Measured** with a prototype on the plans of the cases, on 2026-11-18. The jump threads, the thread
+changes, the slivers and the likeness stay as they were on every design:
+
+| Design | Thickest, fills | With the cap | At 3 fills or more, mm² | With the cap | Bare, % | With the cap | Needle points taken |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Badges | 4.40 | 3.99 | 23.75 | 19.00 | 0.0080 | 0.0080 | 3 |
+| Lettered patch | 4.00 | 3.98 | 40.75 | 40.25 | 0.0029 | 0.0029 | 1 |
+| TS-13A, digitized half | 4.28 | 3.99 | 26.00 | 23.75 | 0.0118 | 0.0133 | 7 |
+| TS-13C, digitized half | 4.49 | 3.95 | 102.50 | 96.50 | 0.0000 | 0.0000 | 10 |
+| TS-13D, digitized half | 4.23 | 3.97 | 51.25 | 50.50 | 0.0004 | 0.0004 | 3 |
+| Traced pear | 4.20 | 3.86 | 13.75 | 13.00 | 0.0003 | 0.0003 | 7 |
+| Traced dog on turf, 6 threads | 4.69 | 4.00 | 141.50 | 137.25 | 0.0102 | 0.0102 | 67 |
+| Traced dog on turf, 9 threads | 4.80 | 4.00 | 153.25 | 150.75 | 0.0101 | 0.0101 | 57 |
+| Traced running dog, 6 threads | 4.62 | 4.00 | 130.50 | 129.00 | 0.0004 | 0.0004 | 33 |
+| Traced running dog, 9 threads | 5.63 | 4.00 | 187.50 | 176.50 | 0.0050 | 0.0050 | 187 |
+| Traced magnolia | 5.54 | 4.00 | 462.75 | 442.00 | 0.0042 | 0.0054 | 439 |
+| Traced coleus | 10.46 | 4.22 | 894.50 | 853.25 | 0.0067 | 0.0057 | 1059 |
+| Traced goose | 5.60 | 4.00 | 499.50 | 482.75 | 0.0068 | 0.0068 | 473 |
+| Traced building | 5.88 | 4.00 | 225.75 | 221.50 | 0.0002 | 0.0012 | 123 |
+
+TS-13B and TS-13E's digitized halves and the other test pictures are under 4 fills already, and the cap
+leaves them as they were. Of the 4 traced photos, which aren't in the repository, the coleus keeps one spot
+at 4.22 fills, where 9 elements meet over a run of travel that no later top stitch covers end to end. The
+cap takes 1 to 2 % of a photo's stitches, and fewer of the others'. The bare share rose on TS-13A, the magnolia
+and the building by about 0.001 % of the design, where a joined stitch's ribbon misses a corner that the pixels
+of the bare-fabric measure catch.
+
+Without the third kind, the badges stay at 4.40 fills, TS-13A at 4.16 and the pear at 4.16. What holds
+those spots is a shape's own top thread laid twice over the same places.
+
+**With the orders the later steps make.** The cap has to work for whatever order a step chooses. So each
+design was planned again with the thin lines kept at a likeness of 0.85 (M13.44, `auto_min_likeness`, its
+branch at `16d729db`) and with the details sewn last and no guard (M13.40, at `ed6b6421`), each from its
+branch before it merged:
+
+| Design | Thin lines kept, fills | With the cap | Details last, fills | With the cap |
+|---|---:|---:|---:|---:|
+| Badges | 4.40 | 3.99 | 4.40 | 3.99 |
+| Lettered patch | 4.20 | 4.00 | 4.20 | 4.00 |
+| TS-13A, digitized half | 4.28 | 3.99 | 4.28 | 3.99 |
+| TS-13B, digitized half | 3.99 | 3.99 | 3.99 | 3.99 |
+| TS-13C, digitized half | 4.49 | 3.95 | 4.49 | 3.95 |
+| TS-13D, digitized half | 4.17 | 3.99 | 4.17 | 3.99 |
+| Traced pear | 4.20 | 3.86 | 4.20 | 3.86 |
+| Traced dog on turf, 6 threads | 4.57 | 4.00 | 5.49 | 4.00 |
+| Traced dog on turf, 9 threads | 4.80 | 4.00 | 4.69 | 4.00 |
+| Traced running dog, 6 threads | 4.62 | 4.00 | 5.03 | 4.00 |
+| Traced running dog, 9 threads | 5.63 | 4.00 | 5.02 | 3.99 |
+| Traced magnolia | 5.68 | 4.00 | 5.26 | 4.00 |
+| Traced coleus | 7.39 | 4.12 | 10.13 | 4.00 |
+| Traced goose | 7.03 | 4.01 | 5.64 | 4.07 |
+| Traced building | 5.75 | 4.00 | 5.65 | 4.03 |
+
+The jump threads, the thread changes, the slivers and the likeness stayed as each branch had them. With the
+details last, the dog on turf in 6 threads rose to 5.49 fills and the running dog in 6 to 5.03, and the cap
+brought both to 4.00. The goose, the building and the coleus kept a spot at 4.01 to 4.12 fills in one order
+or the other.
+
+**Which cap every picture meets.** 4 fills, on every design of the repository in each of the 3 orders. Of the
+4 traced photos outside it, the magnolia meets it in each order and the others come within 0.22 fills.
+With the cap at 3.5 the badges, TS-13A and D and the pear come under it, but the lettered patch stays at 3.70,
+TS-13B at 3.74, TS-13C at 3.68 and the dogs at 3.61 to 3.98 (`sweep` of the prototype, thickest spots
+only). At 3 the thickest spots stay where they were at 3.5, while the area at 3 fills or more falls to
+10 to 20 mm² on the dogs, for 976 to 1,461 needle points fewer. That trade, and what it does to the bare share,
+was not measured, and MC-8 decides it.
+
+**What it costs.** Counted in processor instructions, the cap took 1.8 % of planning TS-13A's digitized half,
+0.8 % of TS-13C's, 0.4 % of the pear's and nothing of TS-13B's, which has no spot above the cap. It looks only
+at the stitches within 2.5 mm of a spot above the cap, found once, as the last pass does, and it takes the
+last pass's measure. The prototype that made a cover of every top stitch, and found the spots again each
+round, took 11 % on TS-13A.
+
+**Decisions for the owner.**
+
+- The cap's value: 4 fills by default. Every test design and the traced dogs meet it, and nothing lower is
+  met by all of them. Recommended until MC-8 sews the ladder.
+- The third kind takes a shape's own top stitches, which show, where its other stitches cover the same
+  places. Without it 3 designs stay above 4 fills. Recommended, since what shows doesn't change colour and
+  the bare share moves by 0.001 % at most.
+- The traced coleus, goose and building keep a spot at 4.01 to 4.22 fills in one order or more, where no
+  needle point may go by these rules, and `SC-W0913` names it. Recommended as it is: a rule for that one spot would be tuned to one picture.
+- The last pass runs before the cap, as now. Its row ends move rather than go, which the cap can't do. Whether the
+  cap alone would do as well is a measurement for the build phase.
 
 ## Likeness
 
