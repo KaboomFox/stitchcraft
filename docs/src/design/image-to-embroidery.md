@@ -1906,13 +1906,15 @@ than the shapes inside it.
 
 **What the layers' rule missed.** [Neighbours](#neighbours) already digitizes an area wider than a satin
 column whole under the details in its holes, and moves it back before them. That rule missed 4 cases,
-each shown on main by a case of `tests/auto_details.rs`:
+each shown on main before M13.37 by a case of `tests/auto_details.rs`:
 
 1. A detail where 2 or more patches meet lies in the hole of none of them, and the rule left it where it
    was drawn. The cases draw a mark 12 mm square where 2 patches meet.
 2. An area no wider than a satin column keeps its holes. Where it sews as a fill, as a ring 3 mm wide
-   round a square does, the square in its hole sewed first. Where the ring sews as satin columns, the
-   columns sew after the square as an outline does, and the square reaches under them: no miss.
+   round a square did, the square in its hole sewed first. Since M13.37 such a ring sews as satin
+   columns, which sew after the square as an outline does, and the square reaches under them: no miss.
+   A ring that asks to sew as a fill sews before the square with the setting off too, and the case
+   stays to keep it so.
 3. An area that can't move back past a shape with settings near it opens its hole again, and the detail
    sewed first (`REQ-AUTO-097`). A stop keeps every element on its side of it, so a detail drawn before
    a stop still sews before an area drawn after it.

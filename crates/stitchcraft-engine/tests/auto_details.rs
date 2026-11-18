@@ -14,7 +14,7 @@
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
 use stitchcraft_core::{Budget, Code, Diagnostic};
-use stitchcraft_engine::auto::{DETAILS_LAST, digitized};
+use stitchcraft_engine::auto::{DETAILS_LAST, STITCH, digitized};
 use stitchcraft_engine::design::{Design, DesignSettings, Element, Shape};
 use stitchcraft_plan::{Rgb, Thread};
 use stitchcraft_testkit::designs::{BLUE, along, automatic, fill, in_place, polylines, unbased};
@@ -81,11 +81,15 @@ fn req_auto_096_a_detail_where_2_patches_meet_sews_after_both() {
 #[test]
 fn req_auto_096_a_detail_in_the_hole_of_a_ring_filled_sews_after_the_ring() {
     // A blue ring 3 mm wide round a black square 6 mm wide, on a green patch: the ring is no wider than a
-    // satin column and keeps its hole, and the square is drawn first.
+    // satin column and keeps its hole, it asks to sew as a fill, and the square is drawn first. Before
+    // M13.37 the ring filled by the rules, and the square sewed first. Since, it sews as satin columns
+    // unless it asks for a fill, and the square sews after the ring with the setting off too.
     let disc = square(27.0, 12.0, 6.0, false);
     let ring = [square(24.0, 9.0, 12.0, false), square(27.0, 12.0, 6.0, true)];
     let patch = [square(0.0, 0.0, 60.0, false), square(24.0, 9.0, 12.0, true)];
-    let shapes = vec![area("disc", &[&disc], &BLACK), area("ring", &[&ring[0], &ring[1]], &BLUE), area("patch", &[&patch[0], &patch[1]], &GREEN)];
+    let mut filled = area("ring", &[&ring[0], &ring[1]], &BLUE);
+    filled.params.set(STITCH, "fill");
+    let shapes = vec![area("disc", &[&disc], &BLACK), filled, area("patch", &[&patch[0], &patch[1]], &GREEN)];
     let (ids, _) = sewn(shapes, Code::AutoOrder);
     assert!(
         ids.iter().any(|id| id == "ring fill") && at(&ids, "disc") > at(&ids, "ring"),

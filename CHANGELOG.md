@@ -9,8 +9,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - An automatic area that the shapes round it close in on, smaller than a shape it meets, is a detail of
     that shape, as an eye is of the fur round it. It sews after that shape where that costs no thread
     change: a wish to the search for the fewest changes, as a satin column's after its fill is. It is
-    known by geometry alone. A detail where 2 patches meet, in the hole of a ring that is filled, or in
-    the hole of an area that can't move back, sewed first before.
+    known by geometry alone. A detail where 2 patches meet, or in the hole of an area that can't move
+    back, sewed first before.
   - The rule is behind a new setting, `auto_details_last`, off by default, as the design's lowest automatic
     shape sets it. Off, every design sews as before. A fill that moves for a detail can make a spot
     elsewhere thicker, at a place the geometry can't predict. The setting turns on by default once
