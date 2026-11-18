@@ -174,7 +174,9 @@ fn req_auto_088_a_ts_stem_stops_under_its_bar_which_runs_on() {
     let top = line.iter().map(|q| q.y()).fold(f64::NEG_INFINITY, f64::max);
     assert!((top - 5.0 - REACH).abs() < 1e-6, "{top}");
     assert_eq!(columns[stem].under.iter().flatten().count(), 1);
-    assert!(columns[stem].under.contains(&Some(bar)));
+    // It ends under the bar at the end of its line nearer the bar, its top.
+    let rising = line.first().unwrap().y() < line.last().unwrap().y();
+    assert_eq!(columns[stem].under, if rising { [None, Some(bar)] } else { [Some(bar), None] });
     assert_eq!(columns[bar].under, [None, None]);
     let length = |column: &Column| column.line.length();
     assert!((length(&columns[bar]) - 6.0).abs() < 0.6, "{}", length(&columns[bar]));
@@ -636,5 +638,135 @@ fn of_2_strokes_that_end_alike_at_a_blunt_corner_either_way_round_the_longer_run
         assert_eq!(cuts.len(), 1);
         assert_eq!(cuts[0].0, 1 - long);
         assert_eq!(cuts[0].2.map(|(_, under)| under), Some(long));
+    }
+}
+
+#[test]
+fn a_piece_holds_the_bands_middle_line_where_it_lies_along_the_band() {
+    let band = Band { o: p(0.0, 0.0), u: (1.0, 0.0), n: (0.0, 1.0), lo: 0.0, hi: 1.0, from: 0.0, to: 9.0 };
+    // The 9 points lie at 0.5, 1.5 … 8.5 mm along, half way across.
+    assert!(cores(&band, &part(&[(8.0, 0.0), (9.0, 0.0), (9.0, 1.0), (8.0, 1.0)], &[])));
+    assert!(!cores(&band, &part(&[(-1.0, 0.0), (0.4, 0.0), (0.4, 1.0), (-1.0, 1.0)], &[])));
+    assert!(!cores(&band, &part(&[(0.0, 0.6), (9.0, 0.6), (9.0, 1.0), (0.0, 1.0)], &[])));
+}
+
+#[test]
+fn a_flat_end_square_to_its_stroke_gets_no_rung_past_it() {
+    let meter = &mut Budget::DEFAULT.meter();
+    let band = Band { o: p(0.0, 0.0), u: (1.0, 0.0), n: (0.0, 1.0), lo: 0.0, hi: 1.0, from: 0.0, to: 6.0 };
+    // The corners lie 0.04 mm apart along the stroke, within 2 × RUNGS_APART: square.
+    assert_eq!(rungs(&[p(3.0, 0.0), p(6.0, 0.0)], &[p(3.04, 1.0), p(6.0, 1.0)], &band, meter).unwrap(), Vec::<[Point; 2]>::new());
+}
+
+#[test]
+fn rungs_crowd_when_their_points_on_the_first_rail_lie_close() {
+    let meter = &mut Budget::DEFAULT.meter();
+    let band = Band { o: p(0.0, 0.0), u: (1.0, 0.0), n: (0.0, 1.0), lo: 0.0, hi: 3.0, from: 0.0, to: 6.0 };
+    // The other rail climbs steeply past 2 mm: its points of the rungs at 2 and 2.025 mm lie far apart,
+    // their points on the first rail 0.025 mm apart.
+    let one = [p(0.0, 0.0), p(2.0, 0.0), p(2.025, 0.0), p(6.0, 0.0)];
+    let other = [p(0.0, 1.0), p(2.0, 1.0), p(2.03, 3.0), p(6.0, 3.0)];
+    let found = rungs(&one, &other, &band, meter).unwrap();
+    assert_eq!(found.iter().filter(|rung| rung[0].x() < 3.0).count(), 1, "{found:?}");
+    // And with the rails the other way round, their points on the second rail lie close.
+    let found = rungs(&other, &one, &band, meter).unwrap();
+    assert_eq!(found.iter().filter(|rung| rung[1].x() < 3.0).count(), 1, "{found:?}");
+}
+
+#[test]
+fn a_rail_meets_a_place_along_the_stroke_on_its_first_piece_that_reaches_it() {
+    let band = Band { o: p(0.0, 0.0), u: (1.0, 0.0), n: (0.0, 1.0), lo: 0.0, hi: 1.0, from: 0.0, to: 6.0 };
+    // The first piece ends at 1 mm along: that end is the point, though the third piece starts there too.
+    assert_eq!(meet(&[p(2.0, 0.0), p(1.0, 0.0), p(1.0, 1.0), p(0.0, 2.0)], &band, 1.0), Some(p(1.0, 0.0)));
+}
+
+#[test]
+fn of_2_strokes_that_end_alike_at_an_ls_corner_the_longer_runs_through_whichever_is_the_foot() {
+    // A foot 7 mm long on a stem 6 mm long: the foot runs through.
+    let part = part(&[(0.0, 0.0), (7.0, 0.0), (7.0, 1.0), (1.0, 1.0), (1.0, 6.0), (0.0, 6.0)], &[]);
+    let bands = bands_of(&part);
+    let meter = &mut Budget::DEFAULT.meter();
+    let met = meeting(&part, &bands[0], &bands[1], meter).unwrap().unwrap().unwrap();
+    let foot = bands.iter().position(|band| band.u.1.abs() < 1e-9).unwrap();
+    for (a, b) in [(0, 1), (1, 0)] {
+        let cuts = join(&part, (a, &bands[a]), (b, &bands[b]), &met, REACH).unwrap();
+        assert_eq!(cuts[0].0, 1 - foot, "{bands:?}");
+    }
+}
+
+#[test]
+fn how_square_an_end_lies_is_measured_from_the_bands_middle() {
+    // A bar from 2 to 8 mm whose right end runs back on the slant, 0.8 mm over its width less 0.2 mm.
+    let bar = part(&[(2.0, 0.0), (8.0, 0.0), (7.0, 1.0), (2.0, 1.0)], &[]);
+    // The band reaches back to -3 mm, as a stroke's band does past a join: its middle lies at 2.5 mm.
+    let band = Band { o: p(0.0, 0.0), u: (1.0, 0.0), n: (0.0, 1.0), lo: 0.0, hi: 1.0, from: -3.0, to: 8.0 };
+    let measured = square(&bar, &band, &[p(7.5, 0.5)]).unwrap();
+    assert!((measured - 0.8).abs() < 1e-9, "{measured}");
+}
+
+#[test]
+fn a_halving_line_keeps_each_strokes_middle_on_its_side_with_an_upright_stroke() {
+    let (sin, cos) = math::sin_cos(math::to_radians(30.0));
+    let upright = Band { o: p(0.0, 0.0), u: (0.0, 1.0), n: (-1.0, 0.0), lo: -0.5, hi: 0.5, from: 0.0, to: 5.0 };
+    let leaning = Band { o: p(0.0, 0.0), u: (sin, cos), n: (-cos, sin), lo: -0.5, hi: 0.5, from: 0.0, to: 5.0 };
+    // And a level stroke with one rising at 30° from it.
+    let level = Band { u: (1.0, 0.0), n: (0.0, 1.0), ..upright };
+    let rising = Band { u: (cos, sin), n: (-sin, cos), ..upright };
+    for bands in [[upright, leaning], [level, rising]] {
+        for (stroke, cut, _) in halved((0, &bands[0]), (1, &bands[1]), REACH).unwrap() {
+            let Cut::Keep { p: at, m } = cut else { panic!() };
+            let middle = bands[stroke].middle().unwrap();
+            assert!((middle.x() - at.x()) * m.0 + (middle.y() - at.y()) * m.1 > 0.0, "{stroke}: {at:?} {m:?}");
+        }
+    }
+}
+
+#[test]
+fn a_stroke_that_stops_ends_under_the_other_at_its_end_nearer_it_however_the_part_lies() {
+    let ring = [(0.0, 5.0), (2.5, 5.0), (2.5, 0.0), (3.5, 0.0), (3.5, 5.0), (6.0, 5.0), (6.0, 6.0), (0.0, 6.0)];
+    let turns: [fn((f64, f64)) -> (f64, f64); 4] = [|(x, y)| (x, y), |(x, y)| (x, 6.0 - y), |(x, y)| (6.0 - x, y), |(x, y)| (y, x)];
+    for turn in turns {
+        let turned: Vec<(f64, f64)> = ring.iter().map(|&q| turn(q)).collect();
+        let part = part(&turned, &[]);
+        let bands = bands_of(&part);
+        let columns = sewn(&part).unwrap();
+        let stem = columns.iter().position(|column| column.under.iter().any(Option::is_some)).unwrap();
+        let bar = &bands[1 - stem];
+        let (line, under) = (&columns[stem].line.points, columns[stem].under);
+        let end = if under[0].is_some() { line.first() } else { line.last() };
+        let across = bar.across(*end.unwrap()) - (bar.lo + bar.hi) / 2.0;
+        assert!(across.abs() <= bar.width(), "{turned:?}: {under:?} {line:?}");
+    }
+}
+
+#[test]
+fn each_piece_of_a_crossed_stroke_ends_under_the_other_at_its_end_beside_it() {
+    // The cross turned every way, so that its strokes' bands are measured from either end.
+    let turns: [fn(Point) -> (f64, f64); 4] = [|q| (q.x(), q.y()), |q| (q.x(), 7.0 - q.y()), |q| (8.0 - q.x(), q.y()), |q| (q.y(), q.x())];
+    for turn in turns {
+        let ring: Vec<(f64, f64)> = cross().outline.iter().map(|&q| turn(q)).collect();
+        let part = part(&ring, &[]);
+        let bands = bands_of(&part);
+        let through = &bands[usize::from(bands[1].to - bands[1].from > bands[0].to - bands[0].from)];
+        let columns = sewn(&part).unwrap();
+        for column in columns.iter().filter(|column| column.under != [None, None]) {
+            let line = &column.line.points;
+            let end = if column.under[0].is_some() { line.first() } else { line.last() };
+            let across = through.across(*end.unwrap()) - (through.lo + through.hi) / 2.0;
+            assert!(across.abs() <= through.width(), "{:?}: {line:?}", column.under);
+        }
+    }
+}
+
+#[test]
+fn a_column_ends_under_another_at_its_end_nearer_the_join_wherever_its_band_is_measured_from() {
+    let meter = &mut Budget::DEFAULT.meter();
+    let bar = part(&[(0.0, 0.0), (6.0, 0.0), (6.0, 1.0), (0.0, 1.0)], &[]);
+    // Measured from 100 mm before it: the bar lies from 100 to 106 mm along, and the join at its start.
+    let band = Band { o: p(-100.0, 0.0), u: (1.0, 0.0), n: (0.0, 1.0), lo: 0.0, hi: 1.0, from: 100.0, to: 106.0 };
+    for (at, under) in [(100.0, [Some(0), None]), (106.0, [None, Some(0)])] {
+        let joined = Joined { cuts: Vec::new(), under: vec![(at, 0)] };
+        let columns = columns_of(&bar, &[band], &[joined], &[vec![bar.clone()]], meter).unwrap().unwrap();
+        assert_eq!(columns[0].under, under);
     }
 }
