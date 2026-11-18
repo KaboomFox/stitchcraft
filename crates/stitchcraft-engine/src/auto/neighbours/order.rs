@@ -545,18 +545,21 @@ fn enclosed(shapes: &mut Shapes, facts: &[Facts], index: usize, meter: &mut Mete
     Ok(area_of(&covered) >= CLOSED_IN * all)
 }
 
-/// `SC-I0907` saying how many of the `details`, each the shape it meets and the detail, sew before that
-/// shape in `order`; `None` when none does.
+/// `SC-I0907` saying how many of the `details`, each the area it meets and the detail, sew before that area
+/// in `order`, and how many details there are; `None` when none does.
 fn early(details: &[(usize, usize)], order: &[usize]) -> Option<Diagnostic> {
     let at = |index: usize| order.iter().position(|&sewn| sewn == index);
-    let early: BTreeSet<usize> = details.iter().filter(|&&(shape, detail)| at(detail) < at(shape)).map(|&(_, detail)| detail).collect();
-    let message = match early.len() {
+    let all: BTreeSet<usize> = details.iter().map(|&(_, detail)| detail).collect();
+    let early: BTreeSet<usize> = details.iter().filter(|&&(area, detail)| at(detail) < at(area)).map(|&(_, detail)| detail).collect();
+    let (count, of) = (early.len(), all.len());
+    let message = match count {
         0 => return None,
-        1 => "1 detail sews before a larger area round it: sewn after it, it would change thread more often, or break \
-              what must sew before what."
-            .to_string(),
+        1 => format!(
+            "1 of {of} details sews before a larger area round it: sewn after it, it would change thread more often, or break what \
+             must sew before what."
+        ),
         n => format!(
-            "{n} details sew before a larger area round them: sewn after it, they would change thread more often, or break \
+            "{n} of {of} details sew before a larger area round them: sewn after it, they would change thread more often, or break \
              what must sew before what."
         ),
     };

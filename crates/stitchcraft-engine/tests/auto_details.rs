@@ -72,7 +72,10 @@ fn req_auto_096_a_detail_in_the_hole_of_a_ring_filled_sews_after_the_ring() {
     let patch = [square(0.0, 0.0, 60.0, false), square(24.0, 9.0, 12.0, true)];
     let shapes = vec![area("disc", &[&disc], &BLACK), area("ring", &[&ring[0], &ring[1]], &BLUE), area("patch", &[&patch[0], &patch[1]], &GREEN)];
     let (ids, _) = sewn(shapes, Code::AutoOrder);
-    assert!(ids.iter().any(|id| id == "ring fill") && at(&ids, "disc") > at(&ids, "ring"), "the ring is filled, and the square sews after it: {ids:?}");
+    assert!(
+        ids.iter().any(|id| id == "ring fill") && at(&ids, "disc") > at(&ids, "ring"),
+        "the ring is filled, and the square sews after it: {ids:?}"
+    );
 }
 
 #[test]

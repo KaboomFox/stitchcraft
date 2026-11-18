@@ -561,3 +561,26 @@ fn req_auto_012_an_order_found_that_needs_more_work_to_place_leaves_the_rest_in_
     let (placed, order, unsought) = sewn(&[&RED, &BLUE, &RED], &[vec![0, 1, 2]], &[(1, 2)], &[(0, 1)], &Budget { max_work: 0, ..Budget::DEFAULT });
     assert_eq!((placed.is_err(), order, unsought), (true, vec![], Some(0)));
 }
+
+#[test]
+fn req_auto_096_the_details_sewn_before_a_larger_area_round_them_are_counted() {
+    // Details 2 and 3, each of area 0 and 1, and detail 4 of area 1: sewn 2, 0, 3, 1, 4, detail 2 sews
+    // before area 0 and detail 3 before area 1, and 4 after it. Sewn 0, 4, 1, 3, 2, only detail 4 sews early.
+    let details = [(0, 2), (1, 2), (1, 3), (1, 4)];
+    let said = |order: &[usize]| early(&details, order).map(|said| said.message);
+    assert_eq!(
+        said(&[2, 0, 3, 1, 4]).as_deref(),
+        Some(
+            "2 of 3 details sew before a larger area round them: sewn after it, they would change thread more often, or break what \
+             must sew before what."
+        )
+    );
+    assert_eq!(
+        said(&[0, 4, 1, 3, 2]).as_deref(),
+        Some(
+            "1 of 3 details sews before a larger area round it: sewn after it, it would change thread more often, or break what must \
+             sew before what."
+        )
+    );
+    assert_eq!(said(&[0, 1, 2, 3, 4]), None);
+}
