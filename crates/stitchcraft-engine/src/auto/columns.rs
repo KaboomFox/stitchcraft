@@ -193,6 +193,23 @@ pub(super) fn columns(
     if fills(rule, bounds) {
         return Ok(Made::Filled(rule, Some(measures)));
     }
+    // A part drawn in strokes sews a column along each stroke, its stitches square to it (`REQ-AUTO-087`),
+    // when none of them runs: it then reaches past where it meets another stroke by itself, not by a push.
+    let reach = rules.auto_pull_compensation_mm.get();
+    let stroked = if cuts.is_empty() { strips::strokes(part, &found, reach, (narrowest.get(), bounds.max_satin.get()), meter)? } else { None };
+    let mut chosen = None;
+    if let Some(strokes) = stroked
+        && let Some(widths) = widths_of(part, &strokes, &edges, meter)?.filter(|widths| widths.iter().all(|measured| !runs(*measured, narrowest)))
+    {
+        chosen = Some((strokes, widths, false));
+    }
+    let (found, widths, pushed) = match chosen {
+        Some(chosen) => chosen,
+        None => {
+            let Some(widths) = widths_of(part, &found, &edges, meter)? else { return Ok(Made::Unmade) };
+            (found, widths, true)
+        }
+    };
     // A satin stitch longer than the widest satin column lies loose: the part is filled instead.
     if let Some(stitch) = too_long(&found, bounds, meter)? {
         return Ok(Made::Long(stitch, measures));
@@ -200,14 +217,6 @@ pub(super) fn columns(
     // Stitches that crowd on one rail pile their thread up there: the part is filled instead.
     if let Some(most) = crowded(part, &found, rule, meter)? {
         return Ok(Made::Crowded(most, measures));
-    }
-    let mut widths = Vec::with_capacity(found.len());
-    for column in &found {
-        let Some(average) = width(&edges, std::slice::from_ref(&column.line), meter)? else { return Ok(Made::Unmade) };
-        // Where it meets another column the part is wider than either, and its own outline isn't.
-        let outline = column.outline();
-        let own = Edges::of(&outline, piece(part), meter)?;
-        widths.push(Width { average, widest: widest(&own, &column.line, meter)?, farthest: farthest(&column.line, &outline, meter)? });
     }
     // The holes wide enough to read that no shape drawn later meets, which a column along them keeps open
     // (`REQ-AUTO-084`).
@@ -229,14 +238,27 @@ pub(super) fn columns(
         }
         // A column that ends under another is its pull compensation longer there, not the overlap: pushed
         // on by 1 mm, a column skews its last stitch across what lies beside the other column (`REQ-AUTO-029`).
-        let reach = rules.auto_pull_compensation_mm.get();
-        let push = column.under.map(|under| if under.is_some() { -reach } else { 0.0 });
+        let push = column.under.map(|under| if pushed && under.is_some() { -reach } else { 0.0 });
         let holes = [along(&column.rails[0], &kept, meter)?, along(&column.rails[1], &kept, meter)?];
         let even = crowding(&column.rails, &column.rungs, meter)? <= EVEN;
         let Ok(drawn) = drawn::from_rails(column.rails, column.rungs, push, meter)? else { return Ok(Made::Unmade) };
         sewn.push(Sewn::Satin { path: drawn.path(), width, push, even, holes });
     }
     Ok(Made::Columns { sewn, rule, measures })
+}
+
+/// How wide each of `found`, the columns of `part` whose edges `edges` holds, is ([`Width`]), with `meter`'s
+/// work: `None` when a line has no width.
+fn widths_of(part: &Polygon, found: &[Column], edges: &Edges, meter: &mut Meter) -> Result<Option<Vec<Width>>, Exhausted> {
+    let mut widths = Vec::with_capacity(found.len());
+    for column in found {
+        let Some(average) = width(edges, std::slice::from_ref(&column.line), meter)? else { return Ok(None) };
+        // Where it meets another column the part is wider than either, and its own outline isn't.
+        let outline = column.outline();
+        let own = Edges::of(&outline, piece(part), meter)?;
+        widths.push(Width { average, widest: widest(&own, &column.line, meter)?, farthest: farthest(&column.line, &outline, meter)? });
+    }
+    Ok(Some(widths))
 }
 
 /// The most of one rail, in millimetres, that a stretch of a millimetre of the other pairs with ([`crowding`])
@@ -1213,8 +1235,8 @@ mod tests {
                 assert!(filled, "{points} points, {across} mm");
             }
         }
-        // A cross of 2 bars keeps a column along each bar and each arm, a leaf its one column, and so does a
-        // letter V, whose corner is no arm.
+        // A cross of 2 bars sews as its strokes (REQ-AUTO-088): one bar through, the other in 2 columns either
+        // side of it. A leaf keeps its one column, and a letter V, whose corner is no arm, its 2.
         let cross = part(
             &[
                 (2.0, 0.0),
@@ -1234,7 +1256,7 @@ mod tests {
         );
         let v = part(&[(-2.07, -5.7), (-0.8, -5.7), (0.0, -3.51), (0.8, -5.7), (2.07, -5.7), (0.0, 0.0)], &[]);
         let kite = part(&[(0.0, -4.0), (1.5, 0.0), (0.0, 4.0), (-1.5, 0.0)], &[]);
-        for (name, part, columns) in [("cross", &cross, 4), ("V", &v, 2), ("kite", &kite, 1)] {
+        for (name, part, columns) in [("cross", &cross, 3), ("V", &v, 2), ("kite", &kite, 1)] {
             let Made::Columns { sewn, rule: RuleId::Column, measures } = made(part, &[]) else { panic!("{name}: no columns") };
             assert!(sewn.len() == columns && measures.reach <= 1.0 + 1e-6, "{name}: {} columns, {measures:?}", sewn.len());
         }
