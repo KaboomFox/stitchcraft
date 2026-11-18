@@ -358,9 +358,10 @@ choice:
    no thread change, so that no fill's rows lie over it. Any shape whose neighbours close in on it and
    are larger counts as one. StitchCraft finds it by its outline and its neighbours alone, not by what
    the picture shows.
-   Moving a fill can make another spot thicker, so StitchCraft plans the design with this rule and
-   without it. It keeps the plan with the rule only when that plan sews no thicker and leaves no more
-   jumps or thread changes. `SC-I0907` says when it doesn't.
+   This rule is off by default: turn it on with `--set auto_details_last=true`. It costs no thread
+   change, but a fill that moves for a detail can lay more thread at a spot elsewhere, so look at the
+   thickness map before you sew. Turn it on for a picture whose small dark parts, such as eyes, must
+   keep their edges whole. It turns on by default once StitchCraft caps the thread at every spot.
 6. Of the shapes a thread may sew, the nearest sews next.
 
 One thread or another comes back where the rules need it. Dark outlines sew after the light fills they
