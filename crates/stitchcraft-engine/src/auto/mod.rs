@@ -76,6 +76,7 @@
 mod area;
 mod clips;
 mod columns;
+pub(crate) mod details;
 mod narrow;
 mod neighbours;
 mod params;
@@ -381,8 +382,11 @@ impl Digitized {
 /// the background, the layers, the specks, the order and the overlaps (`SC-W0906`, `SC-I0908`, `SC-I0905`,
 /// `SC-I0907`, `SC-I0904`). A design without automatic elements that doesn't ask for its threads sorted
 /// comes back as it is.
+///
+/// The details sew last here where that costs no thread change (`REQ-AUTO-096`). Planning may keep the order
+/// found without that rule instead, when the plan that sews them last measures worse (`REQ-AUTO-098`).
 pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>, Vec<Diagnostic>) {
-    let Sewing { elements, diagnostics, .. } = sewing(design, budget);
+    let Sewing { elements, diagnostics, .. } = sewing(design, budget, Details::Last);
     (elements, diagnostics)
 }
 
@@ -398,6 +402,9 @@ pub(crate) struct Sewing<'d> {
     /// The limits of the design's thickness, by its lowest automatic shape's settings (`REQ-AUTO-062`);
     /// `None` for a design without an automatic shape, which is not measured.
     pub(crate) limits: Option<thick::Held>,
+    /// Whether sewing the details last changed the order ([`Details::Last`]): the plan is then made both
+    /// ways, and measured ([`details`]).
+    pub(crate) moved: bool,
     /// The ids of the elements that digitizing made, the base layer's pieces and the outlines among them:
     /// every element but those with settings. Planning runs the thread under later shapes between them
     /// where it would jump (`REQ-AUTO-053`).
@@ -432,10 +439,22 @@ fn meets(a: Rect, b: Rect) -> bool {
     a.min().x() <= b.max().x() && b.min().x() <= a.max().x() && a.min().y() <= b.max().y() && b.min().y() <= a.max().y()
 }
 
-/// [`digitized`], with the ids of the base layer's pieces.
-pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
+/// Whether the details sew after the larger shapes round them, where that costs no thread change
+/// (`REQ-AUTO-096`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum Details {
+    /// They do: the rule is a wish to the search for the fewest thread changes.
+    Last,
+    /// They don't: the order is found without that rule, as the guard keeps it when the plan that sews them
+    /// last measures worse ([`details`]).
+    Unwished,
+}
+
+/// [`digitized`], with the ids of the base layer's pieces, its details sewn as `details` says.
+pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget, details: Details) -> Sewing<'d> {
     if !design.sort_colours && !design.elements().iter().any(|element| element.automatic) {
-        return Sewing { elements: Cow::Borrowed(design.elements()), diagnostics: Vec::new(), base: Vec::new(), made: BTreeSet::new(), limits: None };
+        let elements = Cow::Borrowed(design.elements());
+        return Sewing { elements, diagnostics: Vec::new(), base: Vec::new(), made: BTreeSet::new(), limits: None, moved: false };
     }
     let mut diagnostics = Vec::new();
     // Each automatic shape is cut to its clips first, so that what shows of it is digitized and hides others.
@@ -505,7 +524,8 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     diagnostics.extend(lowest.filter(|rules| !rules.auto_base_layer).map(|_| neighbours::base_off()));
     let outlined = lowest.is_some_and(|rules| rules.auto_fill_outline);
     let limits = lowest.map(thick::held);
-    let mut beside = neighbours::beside(sewn, &design.settings, budget, design.sort_colours, base.map(|rules| (rules, &mut taken)), outlined);
+    let mut beside =
+        neighbours::beside(sewn, &design.settings, budget, design.sort_colours, base.map(|rules| (rules, &mut taken)), outlined, details);
     diagnostics.extend(std::mem::take(&mut beside.said));
     for (id, lines) in std::mem::take(&mut beside.outlines) {
         diagnostics.extend(outline_after(&mut beside.elements, &id, lines, &mut taken, &design.settings, budget));
@@ -522,7 +542,7 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     for element in elements.iter_mut().filter(|element| made.contains(&element.id)) {
         small_locks(&mut element.params);
     }
-    Sewing { elements: Cow::Owned(elements), diagnostics, base: beside.base, made, limits }
+    Sewing { elements: Cow::Owned(elements), diagnostics, base: beside.base, made, limits, moved: beside.moved }
 }
 
 /// `design` as automatic digitizing sews its colours: each thin line that merges into a neighbour

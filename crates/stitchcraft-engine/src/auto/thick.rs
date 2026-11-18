@@ -54,7 +54,15 @@ pub(crate) fn held(rules: &AutoParams) -> Held {
 /// (`REQ-AUTO-074`, [`thin`]), and what is said of it: what the pass took (`SC-I1119`) and how thick the
 /// plan sews (`SC-W0913`). It is measured once, with `budget`'s work, and the pass has the work once more.
 /// `base` names the base layer's pieces, and `profile` is the machine's, whose stitches the pass keeps to.
-pub(crate) fn finished(plan: &mut StitchPlan, held: &Held, base: &[ElementId], profile: &MachineProfile, budget: &Budget) -> Vec<Diagnostic> {
+/// Also the thickest spot of the plan as it is left, in fills, which the guard of details last compares
+/// ([`super::details`]); `None` when it isn't measured.
+pub(crate) fn finished(
+    plan: &mut StitchPlan,
+    held: &Held,
+    base: &[ElementId],
+    profile: &MachineProfile,
+    budget: &Budget,
+) -> (Vec<Diagnostic>, Option<f64>) {
     let mut meter = budget.meter();
     let mut said = Vec::new();
     let measured = Thickness::of(plan, &mut meter).map(|thickness| {
@@ -80,8 +88,9 @@ pub(crate) fn finished(plan: &mut StitchPlan, held: &Held, base: &[ElementId], p
             }
         })
     });
+    let thickest = measured.as_ref().ok().and_then(Option::as_ref).map(|thickness| thickness.most(Measure::Fills).value);
     said.extend(told(plan, measured, &held.limits, &mut meter));
-    said
+    (said, thickest)
 }
 
 /// What the note says when the pass ran out of work.
@@ -260,12 +269,16 @@ mod tests {
         let sewn = plan(0, 5);
         let mut kept = sewn.clone();
         let codes = |said: &[Diagnostic]| said.iter().map(|said| said.code).collect::<Vec<_>>();
-        assert_eq!(codes(&finished(&mut kept, &held, &[], profile, &Budget::DEFAULT)), [Code::AutoThick]);
+        assert_eq!(codes(&finished(&mut kept, &held, &[], profile, &Budget::DEFAULT).0), [Code::AutoThick]);
         assert_eq!(kept, sewn);
         // A plan within the cap is not gone through, and 2 fills say nothing.
         let (within, mut kept) = (plan(0, 2), plan(0, 2));
-        assert!(finished(&mut kept, &held, &[], profile, &Budget::DEFAULT).is_empty());
+        let (said, thickest) = finished(&mut kept, &held, &[], profile, &Budget::DEFAULT);
+        assert!(said.is_empty());
         assert_eq!(kept, within);
+        // Its thickest spot is given as measured, for the guard of details last.
+        let measured = Thickness::of(&within, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        assert_eq!(thickest, Some(measured.most(Measure::Fills).value));
         // With the work to measure it and not to thin it, the plan stays as it is, and SC-I1119 says so.
         let used = |work: &dyn Fn(&mut Meter) -> bool| {
             let mut meter = Budget::DEFAULT.meter();
@@ -280,7 +293,7 @@ mod tests {
         assert!(pass > measure, "{pass} {measure}");
         let budget = Budget { max_work: measure, ..Budget::DEFAULT };
         let mut kept = sewn.clone();
-        let said = finished(&mut kept, &held, &[], profile, &budget);
+        let (said, _) = finished(&mut kept, &held, &[], profile, &budget);
         assert_eq!(said.first().map(|said| (said.code, said.message.as_str())), Some((Code::AutoThinned, NOT_THINNED)), "{said:?}");
         assert_eq!(kept, sewn);
     }

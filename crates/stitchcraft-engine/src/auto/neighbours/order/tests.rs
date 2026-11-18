@@ -78,7 +78,7 @@ fn ordered_under(sewn: Vec<Sewn>, painting: &Budget, budget: &Budget, under: Opt
     let moving: Vec<Moving> =
         sewn.iter().enumerate().map(|(index, sewn)| Moving { free: sewn.automatic, made: sewn.automatic, shape: shape(index, sewn) }).collect();
     let mut shapes = Shapes::new(sewn, &settings, painting);
-    let mut said = super::ordered(&mut shapes, &moving, budget, under);
+    let (mut said, _) = super::ordered(&mut shapes, &moving, budget, under, Details::Last);
     said.append(&mut shapes.said);
     (shapes.elements.iter().map(|element| element.id.as_str().to_string()).collect(), said)
 }
@@ -567,7 +567,7 @@ fn req_auto_096_the_details_sewn_before_a_larger_area_round_them_are_counted() {
     // Details 2 and 3, each of area 0 and 1, and detail 4 of area 1: sewn 2, 0, 3, 1, 4, detail 2 sews
     // before area 0 and detail 3 before area 1, and 4 after it. Sewn 0, 4, 1, 3, 2, only detail 4 sews early.
     let details = [(0, 2), (1, 2), (1, 3), (1, 4)];
-    let said = |order: &[usize]| early(&details, order).map(|said| said.message);
+    let said = |order: &[usize]| early(&details, order, Details::Last).map(|said| said.message);
     assert_eq!(
         said(&[2, 0, 3, 1, 4]).as_deref(),
         Some(
@@ -583,4 +583,58 @@ fn req_auto_096_the_details_sewn_before_a_larger_area_round_them_are_counted() {
         )
     );
     assert_eq!(said(&[0, 1, 2, 3, 4]), None);
+    // Found without their wishes, because the plan that sews them last measured worse, they say so.
+    assert_eq!(
+        early(&details, &[0, 4, 1, 3, 2], Details::Unwished).map(|said| said.message).as_deref(),
+        Some(
+            "1 of 3 details sews before a larger area round it: sewn after it, it made the plan sew thicker, or with more jump stitches or thread changes."
+        )
+    );
+}
+
+/// A green mark 4 mm square, drawn first, in a pinwheel of 4 squares 10 mm wide, red and blue, that close
+/// in on it: each meets one of its sides.
+fn pinwheel() -> Vec<Sewn> {
+    vec![
+        square("mark", (10.0, 10.0), 4.0, &GREEN),
+        square("left", (0.0, 4.0), 10.0, &RED),
+        square("bottom", (10.0, 0.0), 10.0, &BLUE),
+        square("right", (14.0, 10.0), 10.0, &RED),
+        square("top", (4.0, 14.0), 10.0, &BLUE),
+    ]
+}
+
+#[test]
+fn req_auto_096_closing_in_on_a_detail_is_metered_and_stops_where_the_work_runs_out() {
+    // With the budget, the mark is a detail of each square and sews last, at no thread change more.
+    let (ids, said) = ordered_with(pinwheel(), &Budget::DEFAULT, &Budget::DEFAULT);
+    assert_eq!(ids.last().map(String::as_str), Some("mark"), "{ids:?}");
+    assert!(!messages(&said).iter().any(|said| said.contains("work budget")), "{said:?}");
+    // The squares close in on the mark, and the mark and the other squares on no square.
+    let settings = DesignSettings::default();
+    let found = || {
+        let mut shapes = Shapes::new(pinwheel(), &settings, &Budget::DEFAULT);
+        (0..shapes.len()).for_each(|index| shapes.find(index));
+        // What the squares paint grown is found once, and kept.
+        (1..shapes.len()).for_each(|index| drop(shapes.grown(index, &mut Budget::DEFAULT.meter())));
+        shapes
+    };
+    let shapes = found();
+    let facts: Vec<Facts> = (0..shapes.len()).map(|index| Facts::of(&shapes.elements[index], reach(&shapes, index))).collect();
+    let mut meter = Budget::DEFAULT.meter();
+    assert!(enclosed(&mut found(), &facts, 0, &mut meter).unwrap());
+    assert!(!enclosed(&mut found(), &facts, 1, &mut Budget::DEFAULT.meter()).unwrap());
+    // Short of the work it needs, finding it runs out and says so to the order, which keeps the mark in its
+    // place: at each of the 5 shapes looked at, then as it finds the strip round the mark, and at the last
+    // unit, as it finds what of the strip the squares cover. With what the squares paint grown not yet
+    // found, it runs out finding that for the first.
+    let work = Budget::DEFAULT.max_work - meter.work_left();
+    let short = |shapes: &mut Shapes, work: u64| enclosed(shapes, &facts, 0, &mut Budget { max_work: work, ..Budget::DEFAULT }.meter()).is_err();
+    for work in [0, 1, 2, 3, 4, 5, work - 1] {
+        assert!(short(&mut found(), work), "{work}");
+    }
+    let mut painted = Shapes::new(pinwheel(), &settings, &Budget::DEFAULT);
+    (0..painted.len()).for_each(|index| painted.find(index));
+    assert!(short(&mut painted, 2));
+    assert!(!short(&mut found(), work));
 }

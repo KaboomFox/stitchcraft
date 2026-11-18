@@ -3452,3 +3452,12 @@ rationale = "The layers move an area back in paint order before they know the or
 milestone = "M13"
 status = "active"
 
+[[req]]
+id = "REQ-AUTO-098"
+area = "auto"
+level = "L2"
+statement = "When sewing the details last (REQ-AUTO-096) changes the order the elements of a design digitized automatically sew in, the design is planned both ways, each plan with the work budget, and the plan that sews them last is kept only when its thickest spot (REQ-AUTO-060), in hundredths of a fill, its jump stitches and its thread changes are each no more than those of the plan made without that rule. Otherwise, or when no plan comes of it, the plan without that rule is kept, and SC-I0907 says so with both plans' numbers. When the details change no order, the design is planned once."
+rationale = "Measured on 2026-11-18, sewing the details last raised the thickest spot of the dog on turf in 6 threads from 4.69 fills to 5.49 and of the running dog in 6 threads from 4.62 to 5.03, at spots where no detail lies: a fill that moves starts and ends elsewhere, its own travel runs elsewhere under its rows, and it reaches under other neighbours. No rule of geometry told the wishes that do it apart from those that help: taking back the wishes of the details whose rim the larger area covers less than a share held one dog at main's thickness and raised another, at every share tried from a quarter to all of it. The owner's first concern is thickness, and her machine has one needle, so each thread change and each jump is a stop by hand. Measuring both plans costs a second plan only for the designs whose order the details change."
+milestone = "M13"
+status = "active"
+
