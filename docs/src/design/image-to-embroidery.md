@@ -1820,7 +1820,7 @@ Automatic elements sew in an order StitchCraft chooses (`stitchcraft_engine::aut
 M13.3). The order is chosen after specks are merged, so that a speck merged into an area is no element of
 its own, and before areas reach under their neighbours, which follows it. VectorCraft's Auto Grouping
 draws each shape together with the shapes inside it. Sewn in paint order, a picture traced with it changes
-thread at nearly every shape, and each change is a stop to rethread a home machine. The order comes from 5
+thread at nearly every shape, and each change is a stop to rethread a home machine. The order comes from 6
 rules.
 
 1. **What overlaps keeps its paint order** (`REQ-AUTO-010`). Of 2 shapes whose paint overlaps, the lower
@@ -1853,7 +1853,12 @@ rules.
    rows with the fewest changes, the search takes the one in which fewer columns sew before a fill they
    border. The column then waits for a later batch of its thread when the row has one after the fill.
    Satin columns with settings go by rule 2.
-5. **The nearest next.** Of the free elements of a batch, the next is the one whose box lies nearest
+5. **Details last, where that costs no thread change** (`REQ-AUTO-096` to `REQ-AUTO-098`, M13.40),
+   when the design turns `auto_details_last` on. An eye, a nose or a mark on a patch sews after the shapes round it, so that no fill's rows lie over it
+   ([Details last](#details-last)). Of the rows with the fewest changes, the search takes the one in which
+   fewer details sew before a shape round them, as it does for rule 4, and a detail waits for a later
+   batch of its thread when the row has one. A line or a column round a detail goes by rules 2 and 4.
+6. **The nearest next.** Of the free elements of a batch, the next is the one whose box lies nearest
    the box of the element sewn last. On a tie it is the one whose box's centre lies nearest, and then the
    one drawn first. Each element then starts and ends at its points nearest its neighbours
    (`REQ-GEN-003`).
@@ -2026,6 +2031,82 @@ too long to digitize and measure in the tests' debug build, so CI's `perf` job r
 release build ([conformance](conformance.md#cases-in-the-release-build)). The pieces of the dogs that
 showed fabric before the rules above, the paw of the dog on turf and the running dog's ear, are cases of
 `tests/auto_fabric.rs` too.
+
+### Details last
+
+(`REQ-AUTO-096` to `REQ-AUTO-098`, M13.40.) A digitizer sews an eye, a nose or a mark on a patch after the
+fills round it, so that no fill's rows lie over it. StitchCraft can't tell an eye from a speck of noise,
+and no rule may know what a picture shows. A detail is known by geometry and order alone. It is an
+automatic area that meets a larger automatic area without overlapping it, and that the shapes round it
+close in on. The strip one tolerance wide round its region lies under what the other shapes paint,
+grown by twice the shapes' tolerance, for 3 quarters of its area or more (`order::Order::closed_in`). An eye or a mark has
+neighbours all round it. A patch at the picture's edge is open along it, and a patch of fur is larger
+than the shapes inside it.
+
+**What the layers' rule missed.** [Neighbours](#neighbours) already digitizes an area wider than a satin
+column whole under the details in its holes, and moves it back before them. That rule missed 4 cases,
+each shown on main before M13.37 by a case of `tests/auto_details.rs`:
+
+1. A detail where 2 or more patches meet lies in the hole of none of them, and the rule left it where it
+   was drawn. The cases draw a mark 12 mm square where 2 patches meet.
+2. An area no wider than a satin column keeps its holes. Where it sews as a fill, as a ring 3 mm wide
+   round a square did, the square in its hole sewed first. Since M13.37 such a ring sews as satin
+   columns, which sew after the square as an outline does, and the square reaches under them: no miss.
+   A ring that asks to sew as a fill sews before the square with the setting off too, and the case
+   stays to keep it so.
+3. An area that can't move back past a shape with settings near it opens its hole again, and the detail
+   sewed first (`REQ-AUTO-097`). A stop keeps every element on its side of it, so a detail drawn before
+   a stop still sews before an area drawn after it.
+4. A fill sewn after a detail eats its edge. On the marked patch, sewn on main, the black dot measures
+   5.5 mm where it is drawn 6 mm, and the diamond 11.7 mm where it is drawn 12 mm: the later fill's rows
+   and their pull compensation reach over them.
+
+**Wishes to the search.** Each detail sews after the larger areas it meets where that costs no thread
+change, as a satin column does after its fill (rule 5 above). Of the rows of batches with the fewest
+changes, the search takes the one that sews fewer details early. A detail then waits for a later batch of
+its thread. The owner's machine has one needle, and each thread change is a rethread by hand. As hard
+rules, details last took the traced photos in 6 threads from 8 thread changes to 13 and 14. In 9 threads
+the search ran out of its budget, and they changed thread 35 and 38 times.
+
+**Off by default** (`REQ-AUTO-098`). The rule runs only when the design's lowest automatic shape turns
+`auto_details_last` on. Off, the order skips the search for details, and a design sews as it did before
+M13.40. The rule waits for one cap on thickness at the end of planning (M13.35). Reordering fills can
+raise the thread at a spot where no detail lies. A fill that moves for a detail starts and ends
+elsewhere, and its own travel runs elsewhere under its rows. It also reaches under other neighbours. On
+one traced photo the thread over one spot rose from 4.69 fills to 5.49 by one wish:
+the fill that moved crossed the spot 3 times more with its own travel, 9.50 mm of its thread in a box 1 mm
+across where it had 3.76 mm, with the same stitches. On another the wishes changed which of the rows with
+equally few changes the search took, and a fill sewn later retraced a row. Nothing in the shapes' geometry
+told the wishes that do this from those that help. Leaving out the wishes of details whose rim the larger
+area covers less than a share, for every share tried from a quarter to all of it, kept one photo at its
+old thickest spot and raised another. A check that plans twice and keeps the better plan, or a cut-off by
+the number of areas, would only hide that. An area count can't even tell a photo from a logo: a traced
+photo can have fewer areas than a badge. Once the cap limits every spot, a reorder can't pile thread
+anywhere, and the setting is turned on by default.
+
+**Measured** (2026-11-18, planned at opt-level 2), off and then on:
+
+| Picture | Thread changes | Jump threads | Details sewn early | Thickest spot, fills | Likeness |
+|---|---|---|---|---|---|
+| Dog on turf, 6 threads | 8, 8 | 57, 57 | 14, 15 of 43 | 4.69, 5.49 | 0.814, 0.814 |
+| Dog on turf, 9 threads | 12, 12 | 58, 58 | 28, 16 of 51 | 4.80, 4.69 | 0.779, 0.779 |
+| Running dog, 6 threads | 8, 8 | 49, 52 | 30, 20 of 35 | 4.62, 5.03 | 0.898, 0.898 |
+| Running dog, 9 threads | 11, 11 | 64, 69 | 32, 20 of 50 | 5.63, 5.02 | 0.921, 0.921 |
+| Marked patch, abutting | 3, 3 | 1, 1 | 3, 0 | 3.85, 3.41 | 1, 1 |
+| Marked patch, stacked | 3, 3 | 1, 1 | 0, 0 | 3.39, 3.39 | 1, 1 |
+
+The jump threads are those the machine leaves to cut (`stitchcraft_testkit::fabric`). The badges, the
+emblem, the button, the pear and the lettered patch sew the same either way. On, the thickest spot fell
+on 3 of these pictures and rose on 2, at spots away from any detail.
+
+**Cost.** Counted in instructions with callgrind (`stitch export --auto`, a build without link-time
+optimization, 2026-11-18). Off, every picture of `cargo xtask perf` writes a machine file byte for byte
+the same as before M13.40, and its count moves by 0.24 % or less, within what a build's layout moves it.
+On, the pear takes 8.3 % more, the dog on turf in 6 threads 13.6 % more and the running dog in 9 threads
+9.8 % more.
+
+**Open question.** Where a detail sews before a fill, the fill's rows and pull compensation reach about
+0.25 mm over its edge, and a later step could end them at the detail's edge.
 
 ### Runs in place of jumps
 

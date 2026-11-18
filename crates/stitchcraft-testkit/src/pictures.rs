@@ -45,6 +45,52 @@ pub fn stripes() -> Picture {
     }
 }
 
+/// A black thread, of the details on [`marked`].
+pub const BLACK: Thread = Thread::new(Rgb::new(20, 20, 20));
+
+/// A green thread, of the right half of [`marked`].
+pub const GREEN: Thread = Thread::new(Rgb::new(0, 140, 60));
+
+/// A patch 60 mm wide and 40 mm tall with 2 details on it, traced as `trace` says, which only the cases
+/// sew (`REQ-AUTO-096`, `REQ-AUTO-097`): its left half blue and its right half green, a black diamond 12 mm
+/// across where the halves meet, and in the left half a gold square ring 3 mm wide round a black dot 6 mm
+/// square. Abutting, the details are drawn first, the dot, the mark and the ring, and each half has a notch
+/// where the mark lies, so the mark lies in no area's hole. Stacked, the halves are drawn first and the
+/// details on them. The edges are where the halves meet each other and the mark.
+pub fn marked(trace: Trace) -> Picture {
+    let square = |(x, y): (f64, f64), size: f64| vec![(x, y), (x + size, y), (x + size, y + size), (x, y + size)];
+    let reversed = |ring: Vec<(f64, f64)>| ring.into_iter().rev().collect::<Vec<_>>();
+    let (outer, inner) = (square((8.0, 14.0), 12.0), square((11.0, 17.0), 6.0));
+    let mark = vec![(24.0, 20.0), (30.0, 14.0), (36.0, 20.0), (30.0, 26.0)];
+    let area = |id: &str, rings: &[&[(f64, f64)]], thread: &Thread| automatic(fill(id, rings, thread, &[]));
+    let elements = match trace {
+        Trace::Abutting => {
+            let left = [(0.0, 0.0), (30.0, 0.0), (30.0, 14.0), (24.0, 20.0), (30.0, 26.0), (30.0, 40.0), (0.0, 40.0)];
+            let right = [(30.0, 0.0), (60.0, 0.0), (60.0, 40.0), (30.0, 40.0), (30.0, 26.0), (36.0, 20.0), (30.0, 14.0)];
+            vec![
+                area("dot", &[&inner], &BLACK),
+                area("mark", &[&mark], &BLACK),
+                area("ring", &[&outer, &reversed(inner.clone())], &GOLD),
+                area("left", &[&left, &reversed(outer.clone())], &BLUE),
+                area("right", &[&right], &GREEN),
+            ]
+        }
+        Trace::Stacked => vec![
+            area("left", &[&[(0.0, 0.0), (30.0, 0.0), (30.0, 40.0), (0.0, 40.0)]], &BLUE),
+            area("right", &[&[(30.0, 0.0), (60.0, 0.0), (60.0, 40.0), (30.0, 40.0)]], &GREEN),
+            area("ring", &[&outer], &GOLD),
+            area("dot", &[&inner], &BLACK),
+            area("mark", &[&mark], &BLACK),
+        ],
+    };
+    let meeting = [vec![p(30.0, 0.0), p(30.0, 14.0)], vec![p(30.0, 26.0), p(30.0, 40.0)], mark.iter().map(|&(x, y)| p(x, y)).collect()];
+    let name = match trace {
+        Trace::Abutting => "marked-abutting",
+        Trace::Stacked => "marked-stacked",
+    };
+    Picture { name: name.into(), elements, edges: meeting.to_vec() }
+}
+
 /// The badge, 50 mm across round (25, 25), traced as `trace` says ([`pictures::badge`]).
 pub fn badge(trace: Trace) -> Picture {
     pictures::badge((25.0, 25.0), 1.0, trace).unwrap()

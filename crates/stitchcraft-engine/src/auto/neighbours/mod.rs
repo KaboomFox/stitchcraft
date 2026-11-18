@@ -131,7 +131,8 @@ pub(super) struct Sewn {
 /// them; and what is said of them. With `base`, the settings the design's base layer goes by and the ids the
 /// design has given out, the base layer sews before the first element that automatic digitizing made
 /// (`base`, `REQ-AUTO-028`). With `outlined`, each area's outline is found where its edge shows (`outline`,
-/// `REQ-AUTO-051`).
+/// `REQ-AUTO-051`). With `last`, the details sew last where that costs no thread change (`order::ordered`,
+/// `REQ-AUTO-098`).
 pub(super) fn beside(
     sewn: Vec<Sewn>,
     settings: &DesignSettings,
@@ -139,6 +140,7 @@ pub(super) fn beside(
     sorted: bool,
     base: Option<(&AutoParams, &mut Labels)>,
     outlined: bool,
+    last: bool,
 ) -> Beside {
     let moving: Vec<order::Moving> =
         sewn.iter().map(|sewn| order::Moving { free: sorted || sewn.automatic, made: sewn.automatic, shape: sewn.shape }).collect();
@@ -150,7 +152,7 @@ pub(super) fn beside(
     let laid = base.map(|(rules, taken)| base::laid(&mut shapes, rules, taken, budget)).unwrap_or_default();
     // The base layer's thread is sewing when the elements that automatic digitizing made start.
     let under = laid.pieces.first().map(|piece| piece.thread.color);
-    said.extend(order::ordered(&mut shapes, &moving, budget, under));
+    said.extend(order::ordered(&mut shapes, &moving, budget, under, last));
     // An area's edge shows where no shape sewn after it covers it: found in the order they sew, before any
     // area reaches under another.
     let (outlines, unfound) = if outlined { outline::outlines(&mut shapes, budget) } else { Default::default() };

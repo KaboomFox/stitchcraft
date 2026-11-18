@@ -89,8 +89,8 @@ pub use neighbours::TOUCHING;
 pub(crate) use neighbours::default_base_layer;
 use neighbours::{Background, Sewn, no_area, parts_of, speck};
 pub use params::{
-    ADVANCED, AutoParams, FILL_ANGLE, FILL_OUTLINE, FILL_UNEVEN, IGNORE_BACKGROUND, LONGEST_SATIN_STITCH, MAX_REACH, MAX_SATIN_WIDTH, MAX_UNEVENNESS,
-    MIN_AREA, MIN_FILL_WIDTH, MIN_LINE_UNEVENNESS, MIN_SLENDERNESS, MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, STITCH,
+    ADVANCED, AutoParams, DETAILS_LAST, FILL_ANGLE, FILL_OUTLINE, FILL_UNEVEN, IGNORE_BACKGROUND, LONGEST_SATIN_STITCH, MAX_REACH, MAX_SATIN_WIDTH,
+    MAX_UNEVENNESS, MIN_AREA, MIN_FILL_WIDTH, MIN_LINE_UNEVENNESS, MIN_SLENDERNESS, MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, STITCH,
 };
 use rules::{Asked, Bounds, Fired, Measures, RuleId};
 
@@ -504,8 +504,10 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     // A design that turns the base layer off is told that fabric may show (`SC-I0911`).
     diagnostics.extend(lowest.filter(|rules| !rules.auto_base_layer).map(|_| neighbours::base_off()));
     let outlined = lowest.is_some_and(|rules| rules.auto_fill_outline);
+    // The details sew last only when the lowest automatic shape asks for it (`REQ-AUTO-098`).
+    let last = lowest.is_some_and(|rules| rules.auto_details_last);
     let limits = lowest.map(thick::held);
-    let mut beside = neighbours::beside(sewn, &design.settings, budget, design.sort_colours, base.map(|rules| (rules, &mut taken)), outlined);
+    let mut beside = neighbours::beside(sewn, &design.settings, budget, design.sort_colours, base.map(|rules| (rules, &mut taken)), outlined, last);
     diagnostics.extend(std::mem::take(&mut beside.said));
     for (id, lines) in std::mem::take(&mut beside.outlines) {
         diagnostics.extend(outline_after(&mut beside.elements, &id, lines, &mut taken, &design.settings, budget));
