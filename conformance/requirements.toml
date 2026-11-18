@@ -3094,6 +3094,24 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-AUTO-093"
+area = "auto"
+level = "L2"
+statement = "How much of a picture's detail its stitches keep, its likeness, is measured colour by colour against its trace: the design as drawn, before its specks (REQ-AUTO-008) and thin lines (REQ-AUTO-090) merge, painted as REQ-AUTO-025 paints it on a grid round the design alone. A colour's parts are its places that touch at a side or a corner, and a part counts when it is as large as the smallest area sewn by default, 1 mm² (REQ-AUTO-020), and a disc a thread across, 0.4 mm, fits in it. A part's core is its places that such a disc centred on them fits in. A place is shown when the last top stitch over a place within half a thread, 0.2 mm, of it has the part's colour. A part is kept when half of its core or more is shown. A colour's likeness is the share of its parts kept, 1 for a colour with none, and the picture's is the mean of its colours'. So each part counts once, whatever its size, and each colour once, whatever its area. A thin line merged into its neighbour is a part lost, and so is a part that a smallest area raised above the default makes a speck. A change that keeps every part keeps the likeness."
+rationale = "Each merge takes a jump thread or a thread change away, and may take what makes the picture read: an eye, a nostril, a stripe. The rules go by geometry, never by what the picture shows, so this measure checks what they kept. A share of matching places is ruled by the large patches: an eye of 1 mm² is 0.25 % of a field 20 mm wide, and its loss moves the share by less than the stitches' edges do. A running stitch sews a strand narrower than drawn, and the core leaves out the strip half a thread wide along the edge, where neighbours' rows end, so a strand 1.4 mm wide sewn along its middle is kept. A traced photo has hundreds of bits of texture smaller than a speck: counted, they would rule the measure, as the 476 such bits of a traced magnolia ruled it. Measured on 2026-11-17, no part of the traced dogs digitized on main is shown on between a fifth and three fifths of its core, so where the line between kept and lost lies moves no count."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-094"
+area = "auto"
+level = "L2"
+statement = "Digitized automatically, the traced dogs, the traced pear, the lettered patch and the test sheets' digitized halves keep a likeness (REQ-AUTO-093) of 0.75 or more, each the one recorded in its case, so that a change that takes detail away or puts it back shows there."
+rationale = "The limit is set from measurements on 2026-11-17 (docs/src/design/image-to-embroidery.md, Likeness): the lowest of these pictures, TS-13A's digitized half at 0.767, whose 7 red specks share no edge and are left out by design, and the dog on turf in 9 threads at 0.779, rounded down to a twentieth. The thin lines that merge since M13.18 cost the dogs 0.05 to 0.18 of their likeness: with auto_fill_uneven off, as before it, they keep 0.95 to 0.99."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-AUTO-028"
 area = "auto"
 level = "L2"

@@ -17,6 +17,15 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - Worse, accepted by the owner: the dogs sew 5.30, 5.27 and 4.81 fills at their thickest spots where they
     sewed 4.69, 4.80 and 4.62, and the running dog in 9 threads 4.97 where it sewed 5.63. The traced goose
     sews 6.26 where it sewed 5.56, and the castle 5.01 where it sewed 5.88.
+- M13.41: a likeness measure (`REQ-AUTO-093`, `REQ-AUTO-094`).
+  - `stitchcraft_testkit::fabric::likeness` compares the stitches with the trace, colour by colour. Each part
+    of a colour of 1 mm² or more, wide enough for a thread, counts once, and is kept when the stitches show
+    its colour on half of its core. A picture's likeness is the mean of its colours' shares of parts kept.
+  - The traced dogs keep 0.81, 0.78, 0.90 and 0.92 of their detail, and 0.99, 0.95, 0.97 and 0.98 with
+    their thin lines sewn as lines. The pear, the lettered patch and the test sheets' digitized halves keep
+    every part. The cases record each number, and the limit is 0.75.
+  - The before and after sheet shows the detail lost, in percent.
+  - The golden files stay as they are, since a measure changes nothing that sews.
 - M13.18: thin lines merged into their neighbours (`REQ-AUTO-090`, `SC-I0915`).
   - A part of an automatic area narrower than the narrowest satin stroke everywhere, whose width varies by
     0.05 of itself or more, merges into the automatic area it shares the longest edge with, and sews as
