@@ -57,20 +57,20 @@ instructions = 640000000
 
 [pictures.dog-on-turf-6]
 args = ["export", "docs/fixtures/traced-dog-on-turf-6.vectorcraft", "--auto"]
-instructions = 20128000000
+instructions = 18250000000
 
 [pictures.dog-on-turf-9]
 args = ["export", "docs/fixtures/traced-dog-on-turf-9.vectorcraft", "--auto"]
-instructions = 21635000000
+instructions = 20254000000
 
 [pictures.dog-running-6]
 args = ["export", "docs/fixtures/traced-dog-running-6.vectorcraft", "--auto"]
-instructions = 22227000000
+instructions = 20030000000
 
 [pictures.dog-running-9]
 args = ["export", "docs/fixtures/traced-dog-running-9.vectorcraft", "--auto"]
-instructions = 25575000000
+instructions = 23272000000
 
 [pictures.pear]
 args = ["export", "docs/fixtures/traced-pear.vectorcraft", "--auto"]
-instructions = 2473000000
+instructions = 2276000000
