@@ -70,7 +70,8 @@ fn red_fills(elements: &[Element]) -> Vec<&Element> {
 /// Whether `said` holds a diagnostic with the code `code`, such as `SC-I0918`, of the element whose id starts
 /// with `id`.
 fn names(said: &[Diagnostic], code: &str, id: &str) -> bool {
-    said.iter().any(|diagnostic| diagnostic.code.to_string() == code && diagnostic.element.as_ref().is_some_and(|element| element.as_str().starts_with(id)))
+    said.iter()
+        .any(|diagnostic| diagnostic.code.to_string() == code && diagnostic.element.as_ref().is_some_and(|element| element.as_str().starts_with(id)))
 }
 
 #[test]
@@ -101,8 +102,15 @@ fn req_auto_109_a_part_sewn_along_its_middle_keeps_its_stitches_when_a_guide_cro
     let across_both = guide("guide", "stitch:guide", "M 8,30 C 15,25 25,35 32,30");
     let (plain, _) = sewn(&picture(&[]));
     let (elements, _) = sewn(&picture(&[across_both]));
+    // The strokes along the bar, which lie between its edges: the fills' outlines change with the fills.
     let strokes = |elements: &[Element]| -> Vec<(String, Shape)> {
-        elements.iter().filter(|e| e.thread == RED && matches!(e.shape, Shape::Stroke { .. })).map(|e| (e.id.to_string(), e.shape.clone())).collect()
+        let on_bar = |e: &&Element| {
+            matches!(e.shape, Shape::Stroke { .. }) && {
+                let (left, right) = across(e);
+                left > 28.0 && right < 31.0
+            }
+        };
+        elements.iter().filter(|e| e.thread == RED).filter(on_bar).map(|e| (e.id.to_string(), e.shape.clone())).collect()
     };
     assert!(!strokes(&plain).is_empty());
     assert_eq!(strokes(&elements), strokes(&plain));
@@ -130,7 +138,11 @@ fn req_auto_110_an_area_no_guide_crosses_sews_as_without_guides() {
     let (plain, _) = sewn(&picture(std::slice::from_ref(&blue)));
     let (elements, _) = sewn(&picture(&[blue, down_the_left("guide")]));
     let of_blue = |elements: &[Element]| -> Vec<(String, Shape, String)> {
-        elements.iter().filter(|e| e.id.as_str().starts_with("svg:blue")).map(|e| (e.id.to_string(), e.shape.clone(), format!("{:?}", e.params))).collect()
+        elements
+            .iter()
+            .filter(|e| e.id.as_str().starts_with("svg:blue"))
+            .map(|e| (e.id.to_string(), e.shape.clone(), format!("{:?}", e.params)))
+            .collect()
     };
     assert!(!of_blue(&plain).is_empty());
     assert_eq!(of_blue(&elements), of_blue(&plain));
