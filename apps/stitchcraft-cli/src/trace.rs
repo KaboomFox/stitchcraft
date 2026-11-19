@@ -202,6 +202,17 @@ mod tests {
     }
 
     #[test]
+    fn req_cli_024_the_trace_fits_its_outlines_with_the_fewest_points_that_keep_the_picture() {
+        // M13.51 (`docs/src/design/image-to-embroidery.md` › Outlines thread can't show): Paths 0 and Corners 0,
+        // and Noise and Snap Curves To Lines left at Image Trace's defaults. The build phase adds the `logo`
+        // style's steps, which keep every fitting option at its default.
+        let given = steps("photo.jpg", b"\xff\xd8\xff and the rest", REFERENCE, None, COLOURS);
+        let trace = &given[2]["params"]["params"];
+        assert_eq!((&trace["paths"], &trace["corners"]), (&json!(0), &json!(0)), "{trace}");
+        assert!(trace.get("noise").is_none() && trace.get("snapCurvesToLines").is_none(), "{trace}");
+    }
+
+    #[test]
     fn req_cli_012_the_hoop_margin_is_as_far_as_an_automatic_satin_column_sews_past_a_pictures_edge() {
         // A satin column's pull compensation, from rails as far outside the shape as shapes still meet,
         // rounded up to a tenth of a millimetre. No shape is sewn after the column beyond the picture's edge,
