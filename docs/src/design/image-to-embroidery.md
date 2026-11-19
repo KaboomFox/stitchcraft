@@ -580,6 +580,124 @@ longer says that its stitches lean. The 4 mm word runs along its letters' middle
 test picture sews as it did. Taking the strokes from the centre lines instead fails: the M's middle stroke
 is free for only 1.5 widths, too short to fit a line to.
 
+### Joins of traced letters
+
+M13.47. Shown a patch with block letters as it sews, the owner said on 2026-11-18 that where a letter's
+strokes meet it looks lumpy or uneven, and the thickness map shows the joins as the letters' thickest
+places. The rule must hold for any traced lettering and any shape made of strokes, in any typeface. This
+section measures what is wrong at a join, by kind of join, and compares it with hand-digitized lettering.
+
+**The set.** Every capital, small letter and digit is drawn in the typefaces that VectorCraft's tests use,
+Source Sans 3 Bold and Inter SemiBold, and in Source Serif 4 Regular, whose strokes go from thick to thin. Each was drawn from
+its outline, flattened within 0.005 mm, at capitals 6, 12 and 25 mm tall, and a block alphabet was made in
+code from each Source Sans letter's own centre lines, in straight bands of one width. That is 744 letters,
+each planned alone as one automatic area. Hand-digitized lettering is the built-in Barstitch Bold, set at
+50, 100 and 130 percent, capitals 12, 24 and 31 mm tall. No font file is in the repository: the measuring
+tools stay with the step's notes.
+
+**Joins by geometry.** A join is found from a letter's own skeleton, never from its letter. A branch point
+of the skeleton is where 3 or more strokes meet, and a bend of 40° or more is a join of 2 strokes where the
+outline also turns into the letter by 50° or more within 0.3 of a stroke's width. That test keeps an S and
+an O from reading as corners. The kinds are a **corner** of 2 strokes at 75° or more (L, Z), an **apex**
+under 75° (A, M, N, V, W), a **T** where a stroke stops against one that runs on both ways (T, H, E), a
+**crossing** (X, x), a **fork** (Y, K, k), a **curve into a stem** where one of the strokes bends (B, D, R,
+n), and a **serif**, a T whose arms are under 2 widths long.
+
+**What is measured.** Within 0.75 of a stroke's width of each join, the thickest spot is measured over the
+thickest of the stroke's own away from joins, in [the thickness measure](#how-thick-a-design-sews). The
+lean of each satin stitch from square to the nearest of the join's strokes is taken at its 90th
+percentile. The columns that sew there, the bare area inside the outline and the satin stitches shorter
+than 0.5 mm are counted. Medians, traced letters on
+`main` at M13.45 against Barstitch Bold:
+
+| Kind | Joins | Thickest over the stroke's | Thickest, fills | Lean | Columns there | Bare, mm² | Short stitches |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Corner | 224 / 63 | 1.23 / 1.32 | 2.70 / 3.38 | 30° / 23° | 1.7 / 3.1 | 0.06 / 0 | 0.7 / 0 |
+| Apex | 182 / 25 | 1.57 / 1.68 | 2.92 / 3.27 | 31° / 27° | 1.8 / 2.8 | 0.04 / 0 | 0.9 / 0 |
+| T | 242 / 37 | 1.32 / 1.41 | 2.71 / 3.42 | 17° / 16° | 2.0 / 3.7 | 0.04 / 0 | 0.8 / 0 |
+| Crossing | 35 / 9 | 1.75 / 1.82 | 3.30 / 4.20 | 20° / 24° | 2.5 / 5.8 | 0.02 / 0 | 2.0 / 0.1 |
+| Fork | 38 / 10 | 1.69 / 1.23 | 2.84 / 3.31 | 24° / 22° | 2.1 / 3.4 | 0.08 / 0 | 1.4 / 0 |
+| Curve into a stem | 302 / 14 | 1.36 / 1.17 | 2.83 / 3.10 | 27° / 45° | 1.7 / 2.6 | 0.02 / 0 | 0.7 / 0 |
+| Serif | 126 / 10 | 1.46 / 1.73 | 2.38 / 3.56 | 14° / 15° | 1.8 / 4.6 | 0.09 / 0 | 0.7 / 0.1 |
+
+**What the numbers say.**
+
+- **Thickness alone is not what is wrong.** Traced joins sew no thicker than the hand-digitized font's, and
+  thinner at their thickest: 2.4 to 3.3 fills against 3.1 to 4.2. Every join is a letter's thickest place in
+  both, since 2 columns lie on each other there. Only forks and curves into a stem are thicker over their
+  strokes than the font's, by 0.46 and 0.19.
+- **Fans at apexes and corners are.** Most letters of a real typeface sew along their centre lines, and a
+  centre line runs on round an apex. Its column turns through it, and its stitches spread like the rays of a sunburst
+  at the top of an A and an M and at the feet of a W. At apexes sewn so, the 90th percentile of the lean is
+  44°, against 27° in the hand-digitized font and 13° where M13.37 reads the letter as strokes.
+- **Ridges where columns overlap.** Where one column stops against another, a ridge a millimetre wide runs along the side of the
+  one that runs through: an L 25 mm tall measures 3.81 fills along its stem's side, its stem 2.06. The
+  stopping column's last stitches and the other's pull compensation lie on each other there. Barstitch
+  Bold's L at 24 mm measures 4.06 at its corner.
+- **Few letters read as strokes.** M13.37's rule reads 7 or 8 letters of 62 in Source Sans 3 Bold as
+  strokes (E, F, H, L, T, Z, z, and the A at 6 and 12 mm), up to 9 in Inter SemiBold, none in Source Serif
+  4 and 11 to 18 of the block letters. Each straight letter fails at another test. A V has one centre line,
+  where the rule reads only a part with 2. The M, the X and the 7 fail at the joins, a K, a Y and a 4 leave more than 1 % of
+  the letter uncovered, and an N and a W fail when the columns are made. Allowing sides that narrow by 10°
+  and ends 35 % unlike read one or 2 more letters a set, the V among them, and made the 12 mm A a fill.
+  25 letters of 744 changed: 19 apex joins sewed thinner and 3 thicker.
+- **Letters filled.** 9 to 15 letters a set have a part filled (`SC-I0902`): the V and the v at 12 mm, whose
+  one column crowds round its foot, and the U, J, S, K, N, X, R and B at 25 mm. A whole letter in rows of
+  fill beside letters in satin reads as uneven, and it isn't a join's doing.
+- **A traced outline's jog.** Traced from a picture at 40 pixels to the millimetre, an H whose stems jog by
+  one pixel, 0.025 mm, where the bar meets them was refused as columns and filled. The cases draw exact
+  outlines, and the jog is left to its own step.
+
+**How lettering is digitized by hand.** Font digitizing guides describe the same kinds of join. A corner of
+2 satin columns is either 2 columns that meet with an overlap, a mitre, where each column ends on the line
+that halves the corner, or a turn, where the stitches lean round the corner and dense stitches pile up on
+its inside edge ([mySewnet, Mitered Corners](https://softwarehelp.mysewnet.com/MSW/120/FontDigitizing/Topics/Mitered_Corners.htm),
+[Embrilliance, Satin Column Cornering](https://embrilliance.com/Help/Platform%20Mac%201165/satincolumncorneringlevel2.htm)).
+A mitre is for corners near 90° and wider columns, and a tight turn makes long mitres with many short
+stitches ([Melco, Design Corners](https://melco-service.com/source1/Design_Corners.htm)). Where strokes meet,
+a slight gap and a slight overlap both show, and a stroke that meets a cap may just touch it. Strokes that
+meet nearly square sew best, and acute angles are best avoided ([Embrilliance, Digitizing Tips for Font
+Creation](https://embrilliance.com/Help/Platform%20Win%201169/digitizingtipsforfontcreation.htm)). One column
+is made a little larger to lie over or under the other, and a short satin bar sewn first under the join
+hides a split ([mySewnet, Overlaps and Underlay Bars](https://softwarehelp.mysewnet.com/MSW/120/FontDigitizing/Topics/Overlaps_and_Underlay_Bars.htm)).
+A narrow stroke doesn't need an overlap beyond its pull compensation, and a join's edge lies about square to the
+stroke ([Wilcom, Digitize the letters](https://docs.wilcom.com/embroiderystudio/28/en/OnlineHelp/Management/custom_fonts/custom_fonts-23.htm)).
+Barstitch Bold, measured above, overlaps generously: its joins have 3 to 6 columns in them, and more of
+each is sewn twice, 0.38 to 0.93 of a stroke's width squared against 0.16 to 0.72 at a traced join.
+
+**Rules.** A rule for each kind, by geometry:
+
+- **No column turns through a corner where 2 strokes meet** (`REQ-AUTO-115`), for corners and apexes.
+  Where a column's centre line bends by 40° or more within 1.5 of its width on each side, and the part's
+  outline turns into it by 50° or more within 0.3 of the width on the inside of the bend, the column is cut
+  in 2 there. The 2 meet as 2 strokes that end at a join do ([letters sewn as strokes](#letters-sewn-as-strokes)):
+  along the line that halves the angle between them from 15° to 60°, and else the longer runs through.
+  It works from the centre lines every letter has, so it needs none of the stroke reader's tests.
+- **A join sews at most one layer of satin more than its strokes** (`REQ-AUTO-116`), for every join where
+  a column stops against another: corners, T joins, forks and curves into a stem. 2 columns that
+  overlap make one more layer, 1.25 fills. The ridge's thread beyond that comes from the stopping column's
+  end and the other's pull compensation lying on each other, and the overlap is the pull compensation of
+  one column, as the guides have it.
+
+Crossings and serifs keep their rule: a crossing sews as thick over its strokes as the font's, and a serif
+thinner.
+
+The rules aren't built. Their cases are drawn in code (`tests/auto_joins.rs`): a V whose legs narrow from
+0.2 of its height to 0.14 where they meet, and an L and a T in bars of even width, at 6, 12 and 25 mm.
+
+**Decisions for the owner.** Each has a recommendation.
+
+- **Barstitch Bold's joins as the bar.** Measured alike, traced joins sew no thicker. Recommended: the
+  font is the bar. The fans are what to fix, as the font has none, and the ridges, which the font has as
+  thick.
+- **How corners and apexes are found.** Widening M13.37's stroke reader fails at a different test for each
+  letter, which is case-by-case work. Recommended: the cut of `REQ-AUTO-115` on centre lines. The text marker
+  sets a picture's letters in a built-in font, and stays the manual answer for lettering a rule sews badly.
+- **The overlap at a ridge.** Less overlap can open a gap that only a sew-out shows. Recommended: build
+  `REQ-AUTO-116` and sew the cases' L and T at MC-8.
+- **Letters sewn as fills** need a rule of their own about columns that crowd round a bend. Recommended: a
+  step after this one.
+
 ## Neighbours
 
 The shapes of a traced picture meet. VectorCraft's Abutting method traces each area with a hole where the
