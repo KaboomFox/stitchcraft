@@ -2270,7 +2270,7 @@ more, and less, with the sum of each, as the table above does:
 | Running dog, 9 threads | 64, 71 | 921, 921 | 16 of 86 (16.9 mm²), 7 (5.1 mm²) |
 
 Merging by likeness alone costs the dogs 3, 4, 0 and 0 jump threads, and raises the likeness of the 2 dogs
-where it costs. Details last costs 1, 4, 7 and 7 more and leaves the likeness as it is. The owner's machine
+where it costs. Details last adds 1, 4, 7 and 7 more and leaves the likeness as it is. The owner's machine
 trims no jump thread within a colour, so each is cut by hand. Most of the cost is the row of threads: to
 grant a wish, the search takes another row with as few thread changes, and a thread's whole batch then
 sews later. That is the cause M13.45 traced on the running dog in 6 threads. The setting stays, for a

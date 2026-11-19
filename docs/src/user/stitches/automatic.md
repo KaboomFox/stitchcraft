@@ -377,9 +377,9 @@ choice:
    the picture shows.
    The rule is off by default. It costs no thread change, but on traced photos it leaves 1 to 7 more
    jump threads to cut by hand and shows no more of the picture. Turn it on with
-   `--set auto_details_last=true` when an eye or a mark must keep a whole edge, as on a logo or a
-   drawing with small marks on large patches. The cap on thread limits every spot a moved fill reaches
-   to 4 fills.
+   `--set auto_details_last=true` when no fill's rows may lie over the edge of an eye or a mark, as on a
+   logo or a drawing with small marks on large patches. The cap on thread still limits every spot to 4
+   fills.
 6. Of the shapes a thread may sew, the nearest sews next.
 
 One thread or another comes back where the rules need it. Dark outlines sew after the light fills they
