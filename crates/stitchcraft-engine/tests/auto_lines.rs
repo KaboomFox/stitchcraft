@@ -154,12 +154,13 @@ fn lines_kept(elements: &[Element]) -> Vec<&str> {
 
 #[test]
 fn req_auto_095_a_thin_line_that_is_a_whole_part_of_its_colour_sews_as_a_line() {
-    // The line is gold's one part: merged, the picture's likeness would fall to 2 thirds. By default, at 0, it
-    // merges.
+    // The line is gold's one part: merged, the picture's likeness would fall to 2 thirds. By default, at 0.85,
+    // it sews as a line, and at 0 it merges.
     let line = |share| ragged("line", &[(MIN_LIKENESS, share)]);
     let elements = |line| vec![rect("left", (0.0, 0.0), (10.0, 10.0), &RED), line, rect("right", (10.7, 0.0), (20.0, 10.0), &BLUE)];
     let by_default = sewn(elements(ragged("line", &[]))).0;
-    assert_eq!(kinds(&by_default), [("left", true), ("right", true)]);
+    assert_eq!(kinds(&by_default), [("left", true), ("right", true), ("line", false)]);
+    assert_eq!(kinds(&sewn(elements(line("0"))).0), [("left", true), ("right", true)]);
     let (out, diagnostics) = sewn(elements(line("0.85")));
     assert_eq!(kinds(&out), [("left", true), ("right", true), ("line", false)]);
     let line = diagnostics.iter().find(|said| said.code == Code::AutoLineMerged).unwrap();

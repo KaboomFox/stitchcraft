@@ -1,8 +1,9 @@
 //! Details sew last (`REQ-AUTO-096`, `REQ-AUTO-097`, M13.40): a shape that the shapes round it close in
 //! on, smaller than they are, such as an eye, a nose or a mark on a patch, sews after them where that costs
-//! no thread change, so that no fill's rows lie over it. The rule runs when the design's lowest automatic
-//! shape turns `auto_details_last` on, which is off by default (`REQ-AUTO-098`): each case here turns it on,
-//! but the one that checks the default. Design: `docs/src/design/image-to-embroidery.md` › Details last.
+//! no thread change, so that no fill's rows lie over it, and a detail moves only with the details on it
+//! (`REQ-AUTO-108`). The rule runs when the design's lowest automatic shape has `auto_details_last` on, as
+//! it is by default (`REQ-AUTO-098`): each case here sets it, but the one that checks the default. Design:
+//! `docs/src/design/image-to-embroidery.md` › Details last.
 //!
 //! The layers' rule (`REQ-AUTO-023`) already sews an area with a detail in one of its holes before the
 //! detail. The cases here draw what that rule misses: a detail where 2 patches meet, which lies in no
@@ -18,6 +19,7 @@ use stitchcraft_engine::auto::{DETAILS_LAST, STITCH, digitized};
 use stitchcraft_engine::design::{Design, DesignSettings, Element, Shape};
 use stitchcraft_plan::{Rgb, Thread};
 use stitchcraft_testkit::designs::{BLUE, along, automatic, fill, in_place, polylines, unbased};
+use stitchcraft_testkit::fabric;
 use stitchcraft_testkit::pictures::{self, Trace};
 
 const GREEN: Thread = Thread::new(Rgb::new(0, 160, 0));
@@ -126,15 +128,16 @@ fn req_auto_096_the_marked_patch_sews_its_details_last_and_changes_thread_3_time
 
 #[test]
 fn req_auto_098_details_sew_last_only_when_the_lowest_automatic_shape_asks_for_it() {
-    // By default, and with the switch off, the mark drawn first where the 2 patches meet sews first, as
-    // the order without the rule puts it, and nothing is said of details.
-    for elements in [patches(), details_last(patches(), "false")] {
-        let (ids, said) = sewn_as(elements, Code::AutoOrder);
-        assert_eq!(at(&ids, "mark"), 0, "{ids:?}");
-        assert!(!said.iter().any(|said| said.contains("details")), "{said:?}");
-    }
+    // By default the mark, a detail where the 2 patches meet, sews last.
+    let (ids, _) = sewn_as(patches(), Code::AutoOrder);
+    assert_eq!(at(&ids, "mark"), 2, "{ids:?}");
+    // With the switch off, the mark drawn first sews first, as the order without the rule puts it, and
+    // nothing is said of details.
+    let (ids, said) = sewn_as(details_last(patches(), "false"), Code::AutoOrder);
+    assert_eq!(at(&ids, "mark"), 0, "{ids:?}");
+    assert!(!said.iter().any(|said| said.contains("details")), "{said:?}");
     // The design goes by its lowest automatic shape, the mark: turned on there alone, the mark sews last.
-    let mut on = patches();
+    let mut on = details_last(patches(), "false");
     on[0].params.set(DETAILS_LAST, "true");
     let (ids, _) = sewn_as(on, Code::AutoOrder);
     assert_eq!(at(&ids, "mark"), 2, "{ids:?}");
@@ -143,4 +146,47 @@ fn req_auto_098_details_sew_last_only_when_the_lowest_automatic_shape_asks_for_i
     off[0].params.set(DETAILS_LAST, "false");
     let (ids, _) = sewn_as(off, Code::AutoOrder);
     assert_eq!(at(&ids, "mark"), 0, "{ids:?}");
+}
+
+/// A blue iris 12 mm square where 3 patches of fur meet, a black one and a green one above and a black
+/// one below, and a black pupil 4 mm square on the iris against the black patch above, as VectorCraft's
+/// Abutting method traces them: each shape has a notch where the next one lies. The iris is drawn first,
+/// then the pupil and the patches.
+fn nest() -> Vec<Element> {
+    let iris = [(24.0, 24.0), (36.0, 24.0), (36.0, 36.0), (24.0, 36.0), (24.0, 30.0), (28.0, 30.0), (28.0, 26.0), (24.0, 26.0)];
+    let left = [(0.0, 0.0), (30.0, 0.0), (30.0, 24.0), (24.0, 24.0), (24.0, 30.0), (0.0, 30.0)];
+    let right = [(30.0, 0.0), (60.0, 0.0), (60.0, 30.0), (36.0, 30.0), (36.0, 24.0), (30.0, 24.0)];
+    let below = [(0.0, 30.0), (24.0, 30.0), (24.0, 36.0), (36.0, 36.0), (36.0, 30.0), (60.0, 30.0), (60.0, 45.0), (0.0, 45.0)];
+    vec![
+        area("iris", &[&iris], &BLUE),
+        area("pupil", &[&square(24.0, 26.0, 4.0, false)], &BLACK),
+        area("left", &[&left], &BLACK),
+        area("right", &[&right], &GREEN),
+        area("below", &[&below], &BLACK),
+    ]
+}
+
+/// What of `id`'s own shape shows once `elements` are planned with `auto_details_last` set to `on`, in
+/// square millimetres.
+fn shows(elements: Vec<Element>, on: &str, id: &str) -> f64 {
+    let design = Design::new(unbased(details_last(elements, on)), DesignSettings::default()).unwrap();
+    let plan = in_place(&design).plan.unwrap();
+    let shown = fabric::shown(&design, &plan).into_iter().find(|shown| shown.id == id).unwrap();
+    shown.area - shown.other
+}
+
+#[test]
+fn req_auto_108_a_detail_moves_only_with_the_details_on_it() {
+    // The iris is a detail of the 3 patches, and the pupil a detail of the iris and of the black patch above.
+    // Sewing the iris after the black patches costs no thread change, and sewing the pupil after the iris
+    // then costs one, since the pupil is black as they are. So the iris sews after the green patch alone,
+    // and the pupil after the iris, as it does with the setting off.
+    let (off, _) = sewn_as(details_last(nest(), "false"), Code::AutoOrder);
+    assert!(at(&off, "pupil") > at(&off, "iris"), "{off:?}");
+    let (ids, _) = sewn(nest(), Code::AutoOrder);
+    assert!(at(&ids, "pupil") > at(&ids, "iris"), "the pupil sews after the iris: {ids:?}");
+    // And the pupil shows as much as with the setting off, to the pixels along its edge: sewn last, it
+    // reaches under no later shape.
+    let (before, after) = (shows(nest(), "false", "pupil"), shows(nest(), "true", "pupil"));
+    assert!(after >= 0.99 * before, "{after:.3} mm² of the pupil shows, {before:.3} with the setting off");
 }

@@ -370,16 +370,29 @@ and its nose, beside the same dog without marks:
   round it?
 - The rest of the dog sews in another order. Feel for thick spots away from the marks.
 
-M13.40 sews a detail after the fills round it where that costs no thread change, when the design turns
-`auto_details_last` on ([details last](../design/image-to-embroidery.md#details-last)). It is off by
-default, so nothing sews differently until M13.35's cap lands and turns it on. At MC-8, sew a traced dog
-with it off and on, side by side:
+M13.40 sews a detail after the fills round it where that costs no thread change, when the design has
+`auto_details_last` on ([details last](../design/image-to-embroidery.md#details-last)). It landed off, and
+M13.45 turned it on by default. At MC-8, sew a traced dog with it off and on, side by side:
 
 - Its eyes and nose sew after the fur round them when it is on. Are their edges whole, without fur rows
   lying over them?
 - Measure the dark parts of the face across, and compare them with the trace. Are they smaller with it
   off?
 - Feel for thick spots away from the face: on, a moved fill can lay more thread elsewhere.
+
+M13.45 turns on by default both M13.40's details last and M13.44's merging by likeness: a thin line that is
+a whole part of its colour sews as a line where merging it would take the picture under 0.85 of its likeness
+([merging by likeness](../design/image-to-embroidery.md#merging-by-likeness)). Of the repository's
+pictures only the traced dogs and the marked patch drawn abutting sew differently. At MC-8, sew the dog on turf and the running dog in 6 threads from `main` before
+M13.45 and from after it, side by side:
+
+- The lines it keeps sew as running stitches over the patches. Do they read as the strands of fur and the
+  pale strip above the nose of the photo, or as stray thread?
+- It leaves 4 jump threads more. Cut them by hand, and say whether an end pulls out.
+- The cap limits every spot to 4 fills in both. Feel the areas at 3 fills or more: 137 mm² before and
+  126 mm² after. Is either stiffer?
+- On the running dog in 6 threads, the grey ring round the tan patch on its chest sews before the patch, so
+  the tan lies on top. Is its edge whole, and does it read as tan from a metre away?
 
 ## Report template
 
