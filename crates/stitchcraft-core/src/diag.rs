@@ -241,6 +241,16 @@ mod tests {
     }
 
     #[test]
+    fn req_auto_127_a_headline_names_the_shape_before_its_element() {
+        let element = ElementId::new("vc:63:fill").unwrap();
+        let said = Diagnostic::new(Code::AutoRule, "This shape sews by the rule area.").with_element(element.clone());
+        assert_eq!(said.headline(), "info SC-I0912 (vc:63:fill): This shape sews by the rule area.");
+        let named = Diagnostic { name: Some("Red \"fill\" (3)\n".to_string()), ..said };
+        assert_eq!(named.headline(), r#"info SC-I0912 ("Red \"fill\" (3)\n", vc:63:fill): This shape sews by the rule area."#);
+        assert_eq!(called(None, &element), "vc:63:fill");
+    }
+
+    #[test]
     fn every_code_is_explained() {
         for code in Code::ALL {
             assert!(!code.title().is_empty(), "{code} has no title");

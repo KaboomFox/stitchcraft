@@ -910,6 +910,28 @@ pub const stitchcraft_engine::locks::SIZED_IN_MM: &[&str]
 pub const stitchcraft_engine::locks::SIZED_IN_PERCENT: &[&str]
 pub fn stitchcraft_engine::locks::tie_in(&[stitchcraft_core::units::Point], &stitchcraft_engine::common::CommonParams, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::locks::Lock, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_engine::locks::tie_off(&[stitchcraft_core::units::Point], &stitchcraft_engine::common::CommonParams, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::locks::Lock, stitchcraft_core::budget::Exhausted>
+pub mod stitchcraft_engine::names
+pub enum stitchcraft_engine::names::Kind
+pub stitchcraft_engine::names::Kind::Column
+pub stitchcraft_engine::names::Kind::Fill
+pub stitchcraft_engine::names::Kind::LeftOut
+pub stitchcraft_engine::names::Kind::Line
+impl stitchcraft_engine::names::Kind
+pub const fn stitchcraft_engine::names::Kind::label(self) -> &'static str
+pub struct stitchcraft_engine::names::Names
+impl stitchcraft_engine::names::Names
+pub fn stitchcraft_engine::names::Names::name_of(&self, &str) -> core::option::Option<&str>
+pub fn stitchcraft_engine::names::Names::of(&self, &str) -> core::option::Option<&stitchcraft_engine::names::Shape>
+pub fn stitchcraft_engine::names::Names::sewing_order(&self) -> alloc::vec::Vec<&stitchcraft_engine::names::Shape>
+pub fn stitchcraft_engine::names::Names::tell(&self, &mut [stitchcraft_core::diag::Diagnostic])
+pub struct stitchcraft_engine::names::Shape
+pub stitchcraft_engine::names::Shape::element: alloc::string::String
+pub stitchcraft_engine::names::Shape::kind: stitchcraft_engine::names::Kind
+pub stitchcraft_engine::names::Shape::name: core::option::Option<alloc::string::String>
+pub stitchcraft_engine::names::Shape::place: core::option::Option<usize>
+pub stitchcraft_engine::names::Shape::thread: stitchcraft_plan::thread::Rgb
+pub fn stitchcraft_engine::names::name(&str, stitchcraft_engine::names::Kind, usize) -> alloc::string::String
+pub fn stitchcraft_engine::names::thread_name(&stitchcraft_plan::thread::Thread, &stitchcraft_plan::palette::Palette) -> alloc::string::String
 pub mod stitchcraft_engine::normalize
 pub mod stitchcraft_engine::normalize::offset
 pub struct stitchcraft_engine::normalize::offset::Corners
@@ -1077,5 +1099,6 @@ pub static stitchcraft_engine::testsheets::SHEETS: &[stitchcraft_engine::testshe
 pub fn stitchcraft_engine::testsheets::find(&str) -> core::option::Option<&'static stitchcraft_engine::testsheets::TestSheet>
 pub struct stitchcraft_engine::PlanOutcome
 pub stitchcraft_engine::PlanOutcome::diagnostics: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub stitchcraft_engine::PlanOutcome::names: stitchcraft_engine::names::Names
 pub stitchcraft_engine::PlanOutcome::plan: core::option::Option<stitchcraft_plan::plan::StitchPlan>
 pub fn stitchcraft_engine::plan(&stitchcraft_engine::design::Design, &stitchcraft_plan::profile::MachineProfile, &stitchcraft_core::budget::Budget) -> stitchcraft_engine::PlanOutcome

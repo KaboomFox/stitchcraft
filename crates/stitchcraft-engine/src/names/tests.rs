@@ -53,6 +53,11 @@ fn given(design: &Design, sewn: &[Element], order: &[&str]) -> Names {
     Names::given(design, (sewn, &base, &order), palette(), &mut Budget::DEFAULT.meter()).unwrap()
 }
 
+/// The names of a design of one automatic red area, `id`, which sews nothing.
+pub(crate) fn one(id: &str) -> Names {
+    given(&design(vec![fill(id, RED, true)]), &[], &[])
+}
+
 fn listed(names: &Names) -> Vec<(Option<&str>, &str, Kind, Option<usize>)> {
     names.shapes.iter().map(|shape| (shape.name.as_deref(), shape.element.as_str(), shape.kind, shape.place)).collect()
 }

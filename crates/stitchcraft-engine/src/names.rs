@@ -254,4 +254,4 @@ fn shape_of(id: &str) -> &str {
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

@@ -21,8 +21,13 @@ use super::cap::{self, Capped};
 use super::thin::{self, Thinned};
 use crate::names::Names;
 
-/// How many of the shapes stacked at the thickest spot the warning names: those with the most thread.
+/// How many of the shapes stacked at the thickest spot the warning names at the most: those with the most
+/// thread, as many as fit in [`WARNING_CHARS`].
 const NAMED: usize = 3;
+
+/// The most characters VectorCraft shows of one warning (`MAX_WARNING_CHARS` in its
+/// `crates/plugins/src/export.rs`). It cuts a longer one there, in the middle of a word.
+pub const WARNING_CHARS: usize = 500;
 
 /// What to do about the warning. VectorCraft shows 500 characters of an export's warning, so the message
 /// and this are kept short enough to be shown whole, the advice first.
@@ -165,7 +170,7 @@ fn told(
 ) -> Option<Diagnostic> {
     let measured = measured.and_then(|thickness| thickness.map(|thickness| thickness.report(plan, limits, meter)).transpose());
     let message = match measured {
-        Ok(Some(report)) if report.warns() => message(plan, &report, (limits, cap), names),
+        Ok(Some(report)) if report.warns() => fitted(&|named| message(plan, &report, (limits, cap), names, named), WARNING_CHARS),
         Ok(_) => return None,
         Err(_) => "How thick the design sews was not measured: it is larger than 500 mm, or measuring it needs more work than the budget allows."
             .to_string(),
@@ -174,10 +179,19 @@ fn told(
     Some(Diagnostic::new(Code::AutoThick, message).with_fix(Fix::Hint(hint.to_string())))
 }
 
+/// The warning's message that `make` makes naming as many stacked shapes as it is given, from [`NAMED`] down:
+/// the first whose line, with its hint, has `most` characters or fewer, or else the one naming 1. Names as
+/// long as the machine's threads have can make a line of 3 too long for VectorCraft.
+fn fitted(make: &dyn Fn(usize) -> String, most: usize) -> String {
+    let fits =
+        |message: &String| Diagnostic::new(Code::AutoThick, message.clone()).with_fix(Fix::Hint(HINT.to_string())).one_line().chars().count() <= most;
+    (2..=NAMED).rev().map(make).find(fits).unwrap_or_else(|| make(1))
+}
+
 /// The warning's message for `report` of `plan`, naming the cap of `cap` fills when the thickest spot is
 /// above it (`REQ-AUTO-101`). A place is given from the design's centre, x to the right and y down, as the
-/// plan has it, and the shapes stacked there by `names`.
-fn message(plan: &StitchPlan, report: &Report, (limits, cap): (&Limits, f64), names: &Names) -> String {
+/// plan has it, and `named` of the shapes stacked there by `names`.
+fn message(plan: &StitchPlan, report: &Report, (limits, cap): (&Limits, f64), names: &Names, named: usize) -> String {
     let place = |spot: &Spot| format!("({:.1}, {:.1})", spot.at.x(), spot.at.y());
     let areas = |over: &Over, failing: &Over| (format!("{:.1} mm² in {}", over.area, places(over.pieces)), format!("{:.1} mm² of it", failing.area));
     let (thick, failing) = areas(&report.thick, &report.failing);
@@ -187,7 +201,7 @@ fn message(plan: &StitchPlan, report: &Report, (limits, cap): (&Limits, f64), na
         "Thread is up to {:.1} fills thick at {} mm from the design's centre: {}.{capped} {thick} has {} fills or more, {failing} {} or more. Needle points: up to {:.0} per mm² at {}, {dense} at {} or more, {pierced} at {} or more.",
         report.fills.value,
         place(&report.fills),
-        stacked(plan, &report.stack, names),
+        stacked(plan, &report.stack, names, named),
         limits.warn_fills,
         limits.fail_fills.max(limits.warn_fills),
         report.points.value,
@@ -202,9 +216,9 @@ pub(super) fn places(count: usize) -> String {
     if count == 1 { "1 place".to_string() } else { format!("{count} places") }
 }
 
-/// The [`NAMED`] layers of `stack` with the most thread, the most first: each element's shape's name by
+/// The `named` layers of `stack` with the most thread, the most first: each element's shape's name by
 /// `names` and its id in brackets ([`called`]), its thread and its fills, and how many others lie there.
-fn stacked(plan: &StitchPlan, stack: &[Layer], names: &Names) -> String {
+fn stacked(plan: &StitchPlan, stack: &[Layer], names: &Names, named: usize) -> String {
     let mut layers: Vec<&Layer> = stack.iter().collect();
     layers.sort_by(|a, b| (b.top + b.under).total_cmp(&(a.top + a.under)));
     let name = |layer: &&Layer| {
@@ -215,8 +229,8 @@ fn stacked(plan: &StitchPlan, stack: &[Layer], names: &Names) -> String {
         let thread = plan.blocks.get(layer.block).map(|block| block.thread.color.to_string()).unwrap_or_default();
         format!("{id} {thread} {:.1}", layer.top + layer.under)
     };
-    let named: Vec<String> = layers.iter().take(NAMED).map(name).collect();
-    let others = layers.len().saturating_sub(NAMED);
+    let others = layers.len().saturating_sub(named);
+    let named: Vec<String> = layers.iter().take(named).map(name).collect();
     if others == 0 { named.join(", ") } else { format!("{} and {others} more", named.join(", ")) }
 }
 
@@ -280,11 +294,27 @@ mod tests {
         // VectorCraft shows 500 characters of a warning. With ids as long as a traced picture's shapes have,
         // names as long as the machine's thread names make them, coordinates and areas of 5 figures and the
         // hint, the line has fewer.
-        let named = |n: u8| format!("(\"Wisteria Violet column (12)\", vc:1234:fill#2~{n})");
-        let long = EXPECTED.replace("(s1)", &named(2)).replace("(s2)", &named(3)).replace("stitches of no shape", &named(4));
+        let long = EXPECTED.replace("(s1)", "(vc:1234:fill#2~2)").replace("(s2)", "(vc:1234:fill#2~3)");
+        let long = long.replace("stitches of no shape", "(vc:1234:fill#2~4)");
         let long = long.replace("(9.5, 9.5)", "(-123.4, -123.4)").replace("(10.5, 9.5)", "(-123.4, -123.4)").replace("2 more", "12 more");
-        let line = Diagnostic { message: long, ..warned }.one_line();
-        assert!(line.ends_with(HINT) && line.chars().count() <= 500, "{}: {line}", line.chars().count());
+        let line = Diagnostic { message: long.clone(), ..warned.clone() }.one_line();
+        assert!(line.ends_with(HINT) && line.chars().count() <= WARNING_CHARS, "{}: {line}", line.chars().count());
+        // With names, as many shapes are named as fit, and 1 when even 2 don't.
+        let named = |n: u8| format!("(\"Wisteria Violet column (12)\", vc:1234:fill#2~{n})");
+        let make = |shown: usize| {
+            let shapes: Vec<String> = (2..2 + shown).map(|n| named(u8::try_from(n).unwrap())).collect();
+            let more = 14 - shown;
+            long.replacen(
+                "(vc:1234:fill#2~2) #010000 1.1, (vc:1234:fill#2~3) #020000 1.1 and 12 more",
+                &format!("{} and {more} more", shapes.join(", ")),
+                1,
+            )
+        };
+        let fit = |most: usize| fitted(&make, most).matches("Wisteria").count();
+        let length = |shown: usize| Diagnostic { message: make(shown), ..warned.clone() }.one_line().chars().count();
+        assert_eq!([fit(length(3)), fit(length(3) - 1), fit(length(2)), fit(length(2) - 1), fit(0)], [3, 2, 2, 1, 1]);
+        // 3 names of the machine's longest thread name make a line too long to show whole.
+        assert!(length(2) < length(3) && length(3) > WARNING_CHARS, "{}", length(3));
     }
 
     #[test]
@@ -294,8 +324,8 @@ mod tests {
         let report = Thickness::of(&sewn, &mut meter).unwrap().unwrap().report(&sewn, &Limits::DEFAULT, &mut meter).unwrap();
         let at = report.fills.value;
         let names = Names::default();
-        assert!(!message(&sewn, &report, (&Limits::DEFAULT, at), &names).contains("cap"));
-        assert!(message(&sewn, &report, (&Limits::DEFAULT, at - 0.01), &names).contains(" and 2 more. Above the cap. "));
+        assert!(!message(&sewn, &report, (&Limits::DEFAULT, at), &names, NAMED).contains("cap"));
+        assert!(message(&sewn, &report, (&Limits::DEFAULT, at - 0.01), &names, NAMED).contains(" and 2 more. Above the cap. "));
     }
 
     /// The message of 4 squares on a layer of no shape: a corner where the rows turn is thickest, above the cap
@@ -364,10 +394,14 @@ mod tests {
         let layer = |block, element, top, under| Layer { block, element: stitchcraft_plan::ElementRef::from_index(element), top, under };
         let stack = [layer(0, 0, 0.5, 0.25), layer(1, 1, 1.5, 0.0), layer(1, 0, 0.0, 1.0), layer(7, 9, 0.25, 0.0)];
         let names = Names::default();
-        assert_eq!(stacked(&plan, &stack[..1], &names), "(s0) #000000 0.8");
-        assert_eq!(stacked(&plan, &stack[..3], &names), "(s1) #010000 1.5, (s0) #010000 1.0, (s0) #000000 0.8");
-        assert_eq!(stacked(&plan, &stack, &names), "(s1) #010000 1.5, (s0) #010000 1.0, (s0) #000000 0.8 and 1 more");
-        assert_eq!(stacked(&plan, &stack[3..], &names), "stitches of no shape  0.2");
+        assert_eq!(stacked(&plan, &stack[..1], &names, NAMED), "(s0) #000000 0.8");
+        assert_eq!(stacked(&plan, &stack[..3], &names, NAMED), "(s1) #010000 1.5, (s0) #010000 1.0, (s0) #000000 0.8");
+        assert_eq!(stacked(&plan, &stack, &names, NAMED), "(s1) #010000 1.5, (s0) #010000 1.0, (s0) #000000 0.8 and 1 more");
+        assert_eq!(stacked(&plan, &stack[3..], &names, NAMED), "stitches of no shape  0.2");
+        // A shape with a name is named before its id (`REQ-AUTO-127`).
+        let names = crate::names::tests::one("s1");
+        let name = names.name_of("s1").unwrap();
+        assert_eq!(stacked(&plan, &stack[1..2], &names, NAMED), format!("({name:?}, s1) #010000 1.5"));
         assert_eq!((places(0), places(1), places(2)), ("0 places".to_string(), "1 place".to_string(), "2 places".to_string()));
     }
 }
