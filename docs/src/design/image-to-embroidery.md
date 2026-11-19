@@ -3133,9 +3133,9 @@ is this? A mark ([marks that keep parts](#marks-that-keep-parts)), a guide (M13.
 effect all need the person to find the shape in VectorCraft. Today a notice names a shape by its element
 id, `vc:63:fill`, which is the number VectorCraft keeps in the file. The Layers panel never shows that
 number. Roadmap step M13.25 gives each shape of a traced design a name that the Layers panel, the notices
-and the report all show. Its phase 1 checked what VectorCraft shows, measured candidate names on the
-pictures, and wrote the requirements below with failing cases (`REQ-AUTO-125` to `REQ-AUTO-127`,
-`REQ-VC-033`, `REQ-VC-034`, `REQ-CLI-023`, and the new warning `SC-W0920`). A later phase builds them.
+and the report all show (`REQ-AUTO-125` to `REQ-AUTO-127`, `REQ-VC-033`, `REQ-CLI-023`), and says when a
+path's own Auto effect replaces its group's (`REQ-VC-034`, `SC-W0920`). The engine's `names` module
+builds the names.
 
 ### What VectorCraft shows
 
@@ -3167,12 +3167,18 @@ column (1)`, `Black line (12)`.
 - **The thread** is the thread's name. A traced shape's colour is one of the machine's threads exactly,
   since the trace uses the library's colours as they are, so its name is the palette's name of that colour.
   A colour that no thread of the palette has is written as its hex code, `#7d6f00`.
-- **How it sews** is the way the shape's largest part sews. A fill of any method is `fill`, a satin column
-  is `column`, and a running stitch or another stroke is `line`. A shape that sews nothing is `left out`,
-  as the background the design leaves out is (`SC-W0906`).
+- **How it sews** is the way the shape's main part sews: the part that keeps the id of its lowest element,
+  which is an area's fill, or its first narrow part when nothing of it is filled, or a stroke's first
+  column. A shape none of whose parts keeps that id goes by its first part in the sewing order. A fill of
+  any method is `fill`, a satin column is `column`, and a running stitch or another stroke is `line`. A
+  shape that sews nothing is `left out`, as the background the design leaves out is (`SC-W0906`), and so
+  is one merged whole into its neighbours.
 - **The number** counts the shapes of that thread and that way of sewing in the Layers panel's order, from
-  its top row, 1 first. It is written in brackets, so that a search for `fill (1)` doesn't also find
-  `fill (12)`.
+  its top row, 1 first. The top row is the object drawn last. The number is written in brackets, so that a
+  search for `fill (1)` doesn't also find `fill (12)`.
+- **A shape** is what the elements of one object make: their ids differ only in their last part
+  (`vc:6:fill` and `vc:6:stroke` are of `vc:6`), and the parts digitizing makes of them add `#` or `~`
+  and more to an element's id (`vc:6:fill#2`). Every part takes its shape's name.
 
 The longest name on the pictures measured was 18 characters with a hex code in place of the thread's name,
 and the longest thread name of the machine's palette has 15 (`Wisteria Violet`). A name then fits in 27.
@@ -3213,19 +3219,23 @@ none, and it is named, for that plan only, by the same rule with the next free n
 
 ### Places that show the names
 
-One function of the engine makes a name, and one gives the words that name a shape in any message: its
-name in quotes, and its element id after it for a bug report. Every place below uses them.
+One function of the engine makes a name (`names::name`), and one of `stitchcraft-core` gives the words that
+name a shape in any message (`diag::called`): its name in quotes, then its element id for a bug report,
+`"Red fill (3)", vc:63:fill`. Planning gives each diagnostic about a shape with a name that name
+(`Diagnostic::name`), and its headline shows it. Every place below uses them.
 
 - **The traced document.** `stitch plan picture.png --traced FILE` writes each shape's name into its node,
   and changes nothing else in the document (`REQ-VC-033`). The design that is planned is that document, with its names,
   so planning `FILE` again sews the same stitches and says the same notices.
-- **The notices.** A notice about a shape names it: `SC-I0912`, `SC-I0916`'s parts, the shapes at
-  `SC-W0913`'s thickest spot, and the notice of M13.24's guide, on its branch. A line of `stitch plan` shows the name
-  beside the id: `info SC-I0912 ("Red fill (3)", vc:63:fill): …` (`REQ-AUTO-127`).
+- **The notices.** A notice about a shape names it, the reader's warnings too: a line of `stitch plan`
+  shows the name beside the id, `info SC-I0912 ("Red fill (3)", vc:63:fill): …` (`REQ-AUTO-127`). The
+  shapes at `SC-W0913`'s thickest spot are named the same way, each in brackets: `("Red fill (3)",
+  vc:63:fill) #ed171f 2.1`. `SC-I0916` and `SC-I0918` are about a mark and a guide, which they name by
+  its id as before, and they count the parts they keep or steer.
 - **The report.** Each diagnostic with an element has its `name` too, and a list `shapes` gives each shape's
   name, id, thread, kind and place in the sewing order (`REQ-CLI-023`).
-- **The bug-report bundle** keeps the document as it was planned, names and all. A replay then names the shapes
-  as the run did.
+- **The bug-report bundle** of a picture keeps the traced document with its names. A replay then names the
+  shapes as the run did.
 
 ### A path's own Auto effect inside an automatic group
 
@@ -3236,39 +3246,36 @@ sews. VectorCraft writes an effect with every parameter, its defaults included (
 tell a setting the person chose from one left at its default. The group's settings can't be merged under
 the path's.
 
-The roadmap row said this happens without a word. The failing case shows that `SC-W0807` says it, in the
+The roadmap row said this happens without a word. A case showed that `SC-W0807` said it, in the
 words for StitchCraft effects that reach a path from 2 levels: "it is sewn as the nearest say". A person
 learns from them neither which of the group's settings the path loses nor which path it is, since an unnamed
-path is only "the object" with its id. The new warning `SC-W0920` is said in place of `SC-W0807` where an
+path is only "the object" with its id. The warning `SC-W0920` is said in place of `SC-W0807` where an
 Auto effect lies inside an automatic group, with the path's name and both values of every group setting
 that the path's own effect sets otherwise, leaving out those the group keeps at their defaults
 (`REQ-VC-034`). The stitches stay as they are today.
 
-### Decisions for the owner
+### Decisions taken
 
-Each with the recommendation.
+The owner took the 6 recommendations of phase 1 on 2026-11-19:
 
-- **Write names once, at the trace.** Names made again at every plan could follow the sewing order. After each
-  edit many shapes would change their names, and the Layers panel would then show names the notices no
-  longer use.
-  Recommended: written once by `--traced`, and kept as the person's own names.
-- **Number in the Layers panel's order, and give the sewing place beside the name.** The row asked that a
-  name says where the shape sews. A number in the sewing order is right only until the first edit.
-  Recommended: a number in the panel's order. The report lists the shapes in sewing order at every plan.
-- **Brackets round the number,** so that a search finds one shape. The other choice is a bare number, which
-  reads more plainly. Recommended: brackets.
-- **Name the shapes left out too,** since notices name the background. Recommended: name them, as `left out`.
-- **No reordering of the layers.** The row said the Layers panel would list the design as it sews. That needs
-  the paths reordered, and automatic digitizing cuts an area away under the areas over it in the layers. Recommended:
-  leave the layers in their order. The report's `shapes` list is in sewing order.
-- **A new code for the Auto effect inside an automatic group,** `SC-W0920`, a warning, in place of
-  `SC-W0807` there. The other choice is new words for `SC-W0807`. Recommended: the new code, so that
-  `stitch explain` can say what to do.
+- Names are written once, at the trace, and kept as the shapes' own names. Names made again at every plan
+  would follow the sewing order and change for many shapes after each edit.
+- The number counts in the Layers panel's order, and the report gives the place in the sewing order beside
+  the name.
+- The number stands in brackets, so that a search finds one shape.
+- The shapes left out are named too, as `left out`, since notices name the background.
+- The layers aren't reordered: automatic digitizing cuts an area away under the areas over it in the
+  layers, so the layers' order is part of the design.
+- A new code, `SC-W0920`, says that an Auto effect inside an automatic group replaces the group's settings,
+  so that `stitch explain` can say what to do.
 
 ### What isn't built
 
-Everything in this section. VectorCraft's own Layers panel isn't changed, and a shape renamed by the person
-keeps the person's name.
+- `SC-I0916` and `SC-I0918` don't name the shapes whose parts a mark keeps or a guide steers. The marks
+  and the guides count parts as they are found, deep inside digitizing, before the shapes are named.
+- The VectorCraft plug-in's own previews don't show names: a document opened in VectorCraft has the names
+  `--traced` wrote, and a path the person draws later is named for each plan only.
+- VectorCraft's own Layers panel isn't changed.
 
 ## Pictures from the command line
 

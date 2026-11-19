@@ -5,6 +5,18 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.25: names of shapes (`REQ-AUTO-125` to `REQ-AUTO-127`, `REQ-VC-033`, `REQ-VC-034`, `REQ-CLI-023`,
+  `SC-W0920`).
+  - Each automatic shape without a name is named by its thread, how it sews and its number among the shapes
+    of both from the Layers panel's top row: `Red fill (3)`. A shape keeps a name it has, and a name in use
+    is never given again.
+  - `stitch plan picture.png --traced` writes the names into the traced document, so VectorCraft's Layers
+    panel shows them and its search finds them. A picture's bug-report bundle keeps them.
+  - A notice about a shape names it before its id, `info SC-I0912 ("Red fill (3)", vc:63:fill): …`, and so
+    do the shapes of `SC-W0913`. The report gives each such notice a `name`, and lists the shapes under
+    `shapes` in their sewing order, each with its place.
+  - `SC-W0920` names a path whose own Auto effect inside an automatic group replaces the group's settings,
+    with each setting it doesn't take, in place of `SC-W0807`.
 - M13.24: a guide on one shape of an automatic design (`REQ-AUTO-109` to `REQ-AUTO-111`, `REQ-VC-032`,
   `REQ-CLI-022`, `SC-I0918`, `SC-W0919`).
   - A line named `stitch:guide`, drawn with VectorCraft's own tools or labelled so in an SVG file, or

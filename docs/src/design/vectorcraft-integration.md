@@ -1115,7 +1115,8 @@ strokes over it. A group's effects run on such a path too. After Make Clipping M
 sews nothing. VectorCraft draws nothing of a group or an image there, which an imported file can have,
 and neither is sewn. Where StitchCraft effects meet from more than one level, a path's own and a group's,
 or 2 groups', VectorCraft draws one effect run on the stitches another drew, which a machine cannot sew.
-The path sews as the nearest effects say, and `SC-W0807` names it.
+The path sews as the nearest effects say, and `SC-W0807` names it. A path's own Auto effect inside a group
+with an Auto effect is `SC-W0920` instead ([names of shapes](image-to-embroidery.md#a-paths-own-auto-effect-inside-an-automatic-group)).
 
 **Clip groups** (`REQ-VC-017`, M8.7). A group or a layer whose kind has `"clip": true` clips what it holds
 to its first object, the clipping object. Object › Clipping Mask › Make wraps the objects selected in such a
