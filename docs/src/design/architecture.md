@@ -109,6 +109,7 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
 pub struct PlanOutcome {
     pub plan: Option<StitchPlan>,   // None when nothing could be sewn
     pub diagnostics: Vec<Diagnostic>,
+    pub names: Names,               // the shapes' names and sewing places, since M13.25
     // per-element groups, for previews and reports, arrive with the VectorCraft plug-in (M6)
 }
 ```
