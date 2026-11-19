@@ -1777,8 +1777,9 @@ and a satin letter showed specks of fabric where its strokes join (M13.46).
 
 **Why.** The cap's test of cover checks whether the places along a needle point's 2 stitches lie within half a
 thread of other top thread. A column's stitches lie 0.4 mm apart or closer, nearer still at an inner edge or
-in a bend. The stitches beside any of its points pass that test. The test reads neither the column's edge,
-which its needle points make, nor the angle of its stitches. Traced on TS-13C's and the lettered patch's
+in a bend. The stitches beside any of its points pass that test. The test reads places along stitches. It misses
+the column's edge, which its needle points make, and the angle of its stitches, since a place on a stitch
+says nothing of either. Traced on TS-13C's and the lettered patch's
 digitized shapes with the cap at 3, the cap took 95 points of columns:
 
 | Kind | Points of columns | What the joined stitch does |
@@ -1802,7 +1803,7 @@ the cap brought each to 4.00 or below before. On every repository design the jum
 changes, the slivers and the likeness are those the cap gave before, and so is the bare share, but for
 TS-13A's half, where it falls from 0.0133 to 0.0118 %.
 
-#### Why the cap stays at 4
+#### The cap's default
 
 With columns whole, every design was planned with the cap at 4, 3.75, 3.5, 3.25 and 3 on 2026-11-19: each
 repository picture, its bare share and likeness too, and the 4 traced photos. The default would be the
@@ -1829,7 +1830,7 @@ cap stays at 4 fills:
 
 The other test pictures stay under 4 at every cap. At each cap the columns, the jumps, the jump threads, the
 thread changes, the slivers and the likeness of the repository's designs are those they have at 4, and the
-photos keep their jumps and thread changes. What a lower cap makes worse:
+photos keep their jumps and thread changes. A lower cap makes these worse:
 
 - At 3.75, TS-13C's thickest spot rises from 4.06 to 4.15 fills, where the order in which the cap takes
   points changes, and the bare share of 3 dogs rises by 0.0010 to 0.0020 points.
