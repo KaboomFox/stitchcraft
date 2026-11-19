@@ -2122,8 +2122,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - `auto_details_last` is off, and `auto_min_likeness` stays 0.85. On the traced dogs details last cost
     1, 4, 7 and 7 jump threads, each cut by hand, and their likeness didn't move. It comes back on by
     default once the search for the fewest thread changes no longer sews a thread's whole batch later for it.
-  - Of the repository's pictures only the traced dogs sew differently from M13.45. `REQ-AUTO-103`'s cases
-    set both settings themselves.
+  - The traced dogs leave 1, 4, 7 and 7 jump threads fewer than with M13.45, and sew as with likeness
+    merging alone. `REQ-AUTO-103`'s cases set both settings themselves.
   - Set `auto_details_last` to true to sew the details last, as M13.45 did.
 - M13.45: likeness merging and details last are on by default (`REQ-AUTO-103`, `REQ-AUTO-108`).
   - `auto_min_likeness` is 0.85, where it was 0, and `auto_details_last` is on. Both landed off, since each

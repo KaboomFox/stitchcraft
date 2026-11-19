@@ -395,8 +395,7 @@ M13.45 and from after it, side by side:
 - On the running dog in 6 threads, the grey ring round the tan patch on its chest sews before the patch, so
   the tan lies on top. Is its edge whole, and does it read as tan from a metre away?
 
-M13.48 turns details last off by default again and keeps merging by likeness on. Of the repository's
-pictures only the traced dogs sew differently from M13.45. At MC-8, sew the dog on turf in 9 threads and the
+M13.48 turns details last off by default again and keeps merging by likeness on. At MC-8, sew the dog on turf in 9 threads and the
 running dog in 6 threads from `main` after M13.48:
 
 - They leave 4 and 7 jump threads fewer than with M13.45. Count the cuts by hand on each.
