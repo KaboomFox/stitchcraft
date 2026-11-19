@@ -10,7 +10,8 @@ use stitchcraft_core::{Budget, ElementId, Point};
 use stitchcraft_engine::auto::digitized;
 use stitchcraft_engine::design::mark::Mark;
 use stitchcraft_engine::design::{Design, DesignSettings, Element, Path, Segment, Shape, Subpath};
-use stitchcraft_testkit::designs::{RED, automatic, fill, unbased};
+use stitchcraft_testkit::designs::{BLUE, RED, automatic, fill, in_place, unbased};
+use stitchcraft_testkit::fabric::{self, GAP};
 
 /// A guide `id` through `points`, an open line.
 fn guide(id: &str, points: &[(f64, f64)]) -> Mark {
@@ -57,4 +58,27 @@ fn req_auto_110_the_parts_a_guide_splits_from_their_area_overlap_it_no_more_than
     let rest = fills.iter().find(|e| e.params.get("fill_method").is_none()).unwrap();
     let (guided, rest) = (across(guided), across(rest));
     assert!(guided.1 <= 10.01 && rest.0 >= 10.0, "the guided fill sews {guided:?} and the rest {rest:?}");
+}
+
+#[test]
+fn req_auto_109_a_guided_fill_covers_its_edges_as_the_tatami_fill_did() {
+    // A red square on a blue one, as a picture is drawn: the red rows meet the square's left and right edges
+    // square on, a row spacing apart, closer than the shortest stitch. Automatic digitizing keeps a fill's
+    // turns there as stitches (REQ-FILL-TAT-014), so that no row starts inside the edge.
+    let picture = |guides: Vec<Mark>| {
+        let blue = automatic(fill("blue", &[&[(0.0, 0.0), (40.0, 0.0), (40.0, 30.0), (0.0, 30.0)]], &BLUE, &[]));
+        let red = automatic(fill("red", &[&[(10.0, 10.0), (30.0, 10.0), (30.0, 20.0), (10.0, 20.0)]], &RED, &[]));
+        design(vec![blue, red], guides)
+    };
+    let bare = |design: &Design| {
+        let plan = in_place(design).plan.unwrap();
+        fabric::cover(design, &plan, GAP).bare
+    };
+    let plain = bare(&picture(Vec::new()));
+    // A guide along the square, bent, makes the red rows a guided fill: its edges stay as covered.
+    let guided = picture(vec![guide("guide", &[(8.0, 15.0), (20.0, 13.0), (32.0, 15.0)])]);
+    let (elements, _) = digitized(&guided, &Budget::DEFAULT);
+    assert!(elements.iter().any(|e| e.params.get("fill_method") == Some("guided_fill")), "{elements:?}");
+    let with_guide = bare(&guided);
+    assert!(with_guide <= plain + 0.01, "{with_guide} mm² bare with the guide, {plain} without");
 }
