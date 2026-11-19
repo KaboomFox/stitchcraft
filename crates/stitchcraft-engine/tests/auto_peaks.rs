@@ -130,7 +130,7 @@ fn with(design: &Design, settings: &[(&str, &str)]) -> Design {
     let mut elements = design.elements().to_vec();
     for element in elements.iter_mut().filter(|element| element.automatic) {
         for (key, value) in settings {
-            element.params.set(key, value);
+            element.params.set(*key, *value);
         }
     }
     Design::new(elements, design.settings).unwrap()

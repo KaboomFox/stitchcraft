@@ -1849,10 +1849,10 @@ function ([before and after sheet](before-after-sheet.md)).
 ### Merging by likeness
 
 Thin lines merge only while the picture keeps `auto_min_likeness` of its likeness ([Neighbours](#neighbours),
-`REQ-AUTO-095`, M13.44). The setting is 0 by default, where every line merges as before the rule, and a user
-raises it for a picture.
+`REQ-AUTO-095`, M13.44). The setting is 0.85 by default since M13.45. At 0 every line merges, as before the
+rule.
 
-It is off by default because keeping lines can make a spot sew thicker far from any line. A line kept sews as
+It landed at 0, off, because keeping lines can make a spot sew thicker far from any line. A line kept sews as
 a running stitch, and the sewing order then puts the blocks of a colour in another order. A fill that sewed
 first at a spot can then sew over others there. On one photo measured at 0.85 the thickest spot rose from 5.60
 to 7.03 fills, at a place 3.6 mm or more from every line kept, where the block order had changed. Merging any
@@ -1860,8 +1860,8 @@ quarter of the lines kept there left 7.03 to 7.62 fills. Merging all of them put
 thickest spot moved to another place at 7.55. On another photo the thickest spot moved too, and the block
 order changed there as well. Where a reorder piles thread can't be told from a line, so no rule about lines
 prevents it, and planning twice to check costs a second plan. The answer is one cap on thickness at the end of
-planning that every design meets, whatever its order (M13.35). The setting is turned on by default once that
-cap is merged.
+planning that every design meets, whatever its order (M13.35). With the cap merged, the owner turned the
+setting on by default (M13.45). [Details last](#details-last) gives the numbers of both settings on.
 
 The measurements below are evidence of what the rule does, at a bound of 0.85 and as each picture sews with
 the setting off. No picture is the rule's goal. The photos marked * are local. Thickest is the thickest spot in fills, and the area is at 3 fills or
@@ -2154,9 +2154,9 @@ its thread. The owner's machine has one needle, and each thread change is a reth
 rules, details last took the traced photos in 6 threads from 8 thread changes to 13 and 14. In 9 threads
 the search ran out of its budget, and they changed thread 35 and 38 times.
 
-**Off by default** (`REQ-AUTO-098`). The rule runs only when the design's lowest automatic shape turns
-`auto_details_last` on. Off, the order skips the search for details, and a design sews as it did before
-M13.40. The rule waits for one cap on thickness at the end of planning (M13.35). Reordering fills can
+**On by default since M13.45** (`REQ-AUTO-098`). The rule runs only when the design's lowest automatic
+shape has `auto_details_last` on. Off, the order skips the search for details, and a design sews as it did
+before M13.40. The rule landed off, and waited for one cap on thickness at the end of planning (M13.35). Reordering fills can
 raise the thread at a spot where no detail lies. A fill that moves for a detail starts and ends
 elsewhere, and its own travel runs elsewhere under its rows. It also reaches under other neighbours. On
 one traced photo the thread over one spot rose from 4.69 fills to 5.49 by one wish:
@@ -2168,7 +2168,7 @@ area covers less than a share, for every share tried from a quarter to all of it
 old thickest spot and raised another. A check that plans twice and keeps the better plan, or a cut-off by
 the number of areas, would only hide that. An area count can't even tell a photo from a logo: a traced
 photo can have fewer areas than a badge. Once the cap limits every spot, a reorder can't pile thread
-anywhere, and the setting is turned on by default.
+anywhere, and so the setting is on by default.
 
 **Measured** (2026-11-18, planned at opt-level 2), off and then on:
 

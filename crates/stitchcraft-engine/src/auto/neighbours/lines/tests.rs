@@ -101,11 +101,12 @@ fn a_line_on_a_tie_goes_into_the_area_that_sews_first() {
 #[test]
 fn a_shape_that_needs_more_work_than_the_budget_allows_keeps_its_lines_and_says_so() {
     // The line looks at each of the 3,000 pieces of `right`'s side beside it, which costs more than finding
-    // that it is a line.
+    // that it is a line. It keeps no likeness, at 0, so that only the search for where it merges runs out
+    // of work here: the next case runs the measure of its part out.
     let elements = || {
         vec![
             auto("left", &[square((0.0, 0.0), (10.0, 10.0))], &[]),
-            auto("line", &[strand(10.0)], &[]),
+            auto("line", &[strand(10.0)], &[(MIN_LIKENESS, "0")]),
             auto("right", &[finely(10.7, 20.0, 3000)], &[]),
         ]
     };
@@ -123,7 +124,7 @@ fn a_shape_that_needs_more_work_than_the_budget_allows_keeps_its_lines_and_says_
     }
     assert_eq!(
         seen.into_iter().collect::<Vec<_>>(),
-        // By default, at 0, merging keeps no likeness, and no line is measured as a part (REQ-AUTO-095).
+        // At 0, merging keeps no likeness, and no line is measured as a part (REQ-AUTO-095).
         ["info SC-I0915: Finding the thin lines of this area", "info SC-I0915: Finding where to merge this line"]
     );
 }

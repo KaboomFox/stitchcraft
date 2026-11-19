@@ -360,16 +360,27 @@ side:
 - The dog on turf in 9 threads sews 0.31 fills more at its thickest spot, 4.8 fills, where a satin column or a fill lies
   over 3 or 4 other fills. Does the needle thump there, or the thread fray?
 
-M13.40 sews a detail after the fills round it where that costs no thread change, when the design turns
-`auto_details_last` on ([details last](../design/image-to-embroidery.md#details-last)). It is off by
-default, so nothing sews differently until M13.35's cap lands and turns it on. At MC-8, sew a traced dog
-with it off and on, side by side:
+M13.40 sews a detail after the fills round it where that costs no thread change, when the design has
+`auto_details_last` on ([details last](../design/image-to-embroidery.md#details-last)). It landed off, and
+M13.45 turned it on by default. At MC-8, sew a traced dog with it off and on, side by side:
 
 - Its eyes and nose sew after the fur round them when it is on. Are their edges whole, without fur rows
   lying over them?
 - Measure the dark parts of the face across, and compare them with the trace. Are they smaller with it
   off?
 - Feel for thick spots away from the face: on, a moved fill can lay more thread elsewhere.
+
+M13.45 turns on by default both M13.40's details last and M13.44's merging by likeness, which keeps a thin
+line that is a whole part of its colour while the picture keeps 0.85 of its likeness
+([merging by likeness](../design/image-to-embroidery.md#merging-by-likeness)). Of the repository's
+pictures only the traced dogs sew differently. At MC-8, sew the dog on turf in 6 threads from `main` before
+M13.45 and from after it, side by side:
+
+- The lines it keeps sew as running stitches over the patches. Do they read as the strands of fur and the
+  pale strip above the nose of the photo, or as stray thread?
+- It leaves 3 jump threads more. Cut them by hand, and say whether an end pulls out.
+- The cap holds every spot to 4 fills in both. Feel the areas at 3 fills or more: 137 mm² before and
+  124 mm² after. Is either stiffer?
 
 ## Report template
 
