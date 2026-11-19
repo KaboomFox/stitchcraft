@@ -74,6 +74,7 @@
 //! neighbours, and the areas sewn before it reach under it.
 
 mod area;
+mod cap;
 mod clips;
 mod columns;
 mod narrow;
@@ -1244,7 +1245,11 @@ mod tests {
                 &["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_offset_mm", "auto_base_sliver_mm2", "auto_base_bare_percent"],
             ),
             (Code::AutoBaseOff, &["auto_base_layer"]),
-            (Code::AutoThick, &["auto_thick_warn_fills", "auto_thick_fail_fills", "auto_thick_warn_points", "auto_thick_fail_points"]),
+            (
+                Code::AutoThick,
+                &["auto_thick_warn_fills", "auto_thick_fail_fills", "auto_thick_warn_points", "auto_thick_fail_points", "auto_thick_cap_fills"],
+            ),
+            (Code::AutoThinned, &["auto_thick_cap_fills"]),
         ];
         for (code, keys) in explained {
             let text = code.explanation();

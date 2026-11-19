@@ -3390,6 +3390,51 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-AUTO-099"
+area = "auto"
+level = "L2"
+statement = "The cap of a design digitized automatically, the most thread in fills that a spot of a millimetre may sew, is the setting `auto_thick_cap_fills`, 4 by default, an advanced setting of the shape beside the limits of how thick it sews (REQ-AUTO-062), from 1 to 50. The design goes by its lowest automatic shape's, as it goes by those limits. The last pass (REQ-AUTO-074) and the cap at the end of planning (REQ-AUTO-100) take thread above it, and no other rule reads it."
+rationale = "The owner, on 2026-11-18: one general cap at the end of planning, which every design meets whatever its shapes and their order. MC-8's ladder of squares (TS-13F) will set the real failing and warning limits, so the cap is a setting and not a constant: its value changes with a sew-out report, as a profile's do."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-100"
+area = "auto"
+level = "L2"
+statement = "After the last pass (REQ-AUTO-074), where a spot of a millimetre of a design digitized automatically still sews more than the cap (REQ-AUTO-099), measured as the plan is, the cap takes needle points out of the plan's runs, looking at nothing but its stitches, their roles and elements, and the measure. A needle point taken out joins the 2 stitches beside it into one. A stitch covers the places within half a thread, 0.2 mm, of it. A needle point may go when one of its 2 stitches lays thread in a spot above the cap, the joined stitch is no longer than the longest stitch of its element and kind (top stitches, or the others) and no shorter than the shorter of the 2 or the machine's shortest, and it is one of these, taken in this order, each going through the plan from its end: an underlay or travel stitch's point, when top stitches sewn after it cover all of the joined stitch; a shape's top stitch's point, when the top stitches of shapes sewn after it cover all that its 2 stitches covered; and a shape's top stitch's point, when its own other top stitches and those of shapes sewn after it cover all that its 2 stitches covered. A lock's needle points and the one after a lock stay. No point is taken that would leave a spot that the joined stitch lays thread in thicker than both the cap and what it was. The cap cuts no run, so it adds no jump, trim or thread change: each needle point it leaves is one of the plan's, in the same order, and it takes no lock."
+rationale = "At the spots that the last pass left above 4 fills, measured in pieces of 0.2 mm on 2026-11-18, 36 to 52 % of the thread is top thread that shows, 43 to 60 % top thread under a fill or more of the shapes sewn after it, 2 to 7 % the base layer, up to 3 % locks and up to 2 % travel, on every test design, the traced dogs and 4 other traced photos. The last pass takes hidden top thread only at a row's end turning within 1 mm, so not a satin column's stitches, which cross it, and never top thread that shows, though some of it covers nothing that other stitches don't: a column's points crowded in a bend or a join, a fill's short rows bunched at a tip. A needle point taken out of a run takes thread only where the run turns there, and leaves no jump thread. Judged by what still covers each place, it changes no colour that shows and bares next to nothing: the bare-fabric measure, on pixels of 0.05 mm, found the bare share of TS-13A's digitized half 0.0133 % where it was 0.0118 %, and of 2 traced photos 0.001 % higher, and no other design's higher. Joined stitches no longer than the longer of the 2 left the dogs at 4.02 to 4.18 fills, and no longer than their element's longest at 4.00."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-101"
+area = "auto"
+level = "L2"
+statement = "SC-I1119 says what the last pass took and then what the cap took, of each of its 3 kinds, in millimetres and places, the area above the cap before and after, and the thickest spot left. Where a spot is left above the cap, because no needle point near it may go, SC-W0913 names the cap and that spot. The cap has the work budget once and charges each stitch it looks at and each step along a stitch it measures: when the budget runs out, the plan is kept as the last pass left it, and SC-I1119 says so."
+rationale = "No silent fallbacks: a design that keeps a spot above the cap says where, so that the person can change the shapes or the setting there."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-102"
+area = "auto"
+level = "L2"
+statement = "Digitized automatically, each design of the cases of REQ-AUTO-073 and the 4 traced dogs sew no spot of a millimetre above 4 fills. Each has the jumps, trims, thread changes, jump threads and likeness (REQ-AUTO-093) it has with the cap at 50, fewer stitches where a spot was above 4, no more slivers, and a bare share within its cover's limit (`auto_base_bare_percent`)."
+rationale = "Measured with the prototype on 2026-11-18: the badges came from 4.40 to 3.99 fills, TS-13A from 4.28 to 3.99, TS-13C from 4.49 to 3.95, TS-13D from 4.23 to 3.97, the pear from 4.20 to 3.86, the lettered patch from 4.00 to 3.98, and the dogs from 4.69, 4.80, 4.62 and 5.63 to 4.00, with 1 to 187 needle points fewer, and the same jump threads, thread changes, slivers and likeness."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-103"
+area = "auto"
+level = "L2"
+statement = "With the thin lines kept at a likeness of 0.85 (`auto_min_likeness`, M13.44) and with the details sewn last (M13.40), each design of REQ-AUTO-102 still sews no spot of a millimetre above 4 fills, with the jumps, jump threads, thread changes and likeness that the setting gives it without the cap."
+rationale = "Each of those settings changes the order the blocks sew in, which moves where fills start and end and which shape reaches under which, so a spot far from the change can pile up thread. Each step tried to plan twice and keep the thinner plan, which doubled a traced photo's export. Measured with the prototype on 2026-11-18 on each step's branch: with the details last, the dog on turf in 6 threads rose from 4.69 to 5.49 fills and the running dog in 6 from 4.62 to 5.03, and the cap brought both to 4.00. The cases come with the step that merges second."
+milestone = "M13"
+status = "planned"
+
+[[req]]
 id = "REQ-AUTO-075"
 area = "auto"
 level = "L2"

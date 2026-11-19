@@ -357,6 +357,21 @@ limit.
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 
+### `auto_thick_cap_fills`
+
+**Most thread on a spot, in fills.** The most fills of thread a spot of a millimetre sews. Where a spot sews more once the design is
+planned, a last pass and then the cap take thread there that other stitches cover: travel, the
+base layer, a shape's thread under later shapes, and a shape's own top stitches where they are
+doubled. The cap adds no jump thread, and what shows keeps its colour. Where no more thread may go,
+the warning of how thick the design sews names the spot. A starting value for a 75/11 needle and
+40-weight polyester thread, which a sew-out has to confirm. The design goes by the setting of its
+lowest automatic shape.
+
+- **Accepts:** a number from 1 to 50
+- **Default:** `4`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
 ### `auto_details_last`
 
 **Details sew last.** Whether a detail sews after the larger areas round it, where that costs no thread change: an

@@ -66,7 +66,7 @@ fn columns(from: f64, width: f64) -> Vec<(f64, f64)> {
 const NONE: &BTreeSet<ElementRef> = &BTreeSet::new();
 
 fn rules(base: &BTreeSet<ElementRef>) -> Rules<'_> {
-    Rules { base, overlap: 1.0, shortest: 0.3, longest: 12.1 }
+    Rules { cap: 4.0, base, overlap: 1.0, shortest: 0.3, longest: 12.1 }
 }
 
 /// `plan` thinned with `rules`, its measure kept up to date, and the measure of what the pass left.
@@ -103,8 +103,8 @@ fn req_auto_074_locks_keep_one_back_and_forth_where_a_spot_is_above_the_cap() {
     // The measure kept is the plan's as it is left.
     assert_eq!(kept.sewn(), measured.sewn());
     assert!((kept.most(Measure::Fills).value - measured.most(Measure::Fills).value).abs() < 1e-9);
-    assert!(thinned.left.area <= thinned.above.area && thinned.thickest.value > CAP);
-    assert_eq!(kinds(&thinned), "0.6 mm of lock stitches in 1 places");
+    assert!(thinned.left.area <= thinned.above.area && thinned.thickest.value > rules(NONE).cap);
+    assert_eq!(kinds(&thinned), "0.6 mm of lock stitches in 1 place");
     // Away from a thick place a lock is kept whole, and a plan within the cap is not gone through.
     let mut far = plan(&[thick(), ("tied", Role::Lock, knot((5.5, 0.5), (5.8, 0.5), 4)), ("tied", Role::Top, vec![(5.5, 3.0)])]);
     let (thinned, _, _) = thin(&mut far, &rules(NONE));
@@ -124,7 +124,7 @@ fn req_auto_074_travel_out_and_back_goes_and_a_top_stitch_out_and_back_stays() {
     assert_eq!(thinned.times, [1, 0, 0, 0]);
     assert!((thinned.taken[0] - 6.8).abs() < 1e-9, "{:?}", thinned.taken);
     assert_eq!(of(&sewn, Role::Top).iter().filter(|(x, _)| *x == 0.2).count(), 3);
-    assert_eq!(kinds(&thinned), "6.8 mm of travel sewn out and back in 1 places");
+    assert_eq!(kinds(&thinned), "6.8 mm of travel sewn out and back in 1 place");
     // Where the stitch that would join the way's ends is shorter than the machine's shortest, 2.5 mm against
     // 2.6 here, the way stays.
     let way = || plan(&[thick(), ("way", Role::Top, vec![(0.5, -3.0)]), ("way", Role::Travel, vec![(0.5, 0.4), (0.5, -3.0), (3.0, -3.0)])]);

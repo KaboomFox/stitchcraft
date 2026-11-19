@@ -115,7 +115,7 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
             // A design digitized automatically is thinned where a spot sews above the cap (`REQ-AUTO-074`),
             // told where it sews thick (`SC-W0913`), and is written.
             if let (Some(held), Some(plan)) = (limits, plan.as_mut()) {
-                diagnostics.extend(thick::finished(plan, &held, &base, profile, budget));
+                diagnostics.extend(thick::finished(plan, &held, (&base, &made), profile, budget));
             }
             plan
         }
