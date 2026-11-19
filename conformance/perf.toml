@@ -55,8 +55,6 @@ args = ["testsheet", "TS-13F"]
 golden = "conformance/golden/testsheets/TS-13F.pes"
 instructions = 640000000
 
-# M13.45 raised the dogs' and the pear's records by 9 to 14 %: with thin lines kept at a likeness of 0.85
-# and details sewn last, both on by default, each line is measured as a part and the order searches for details.
 [pictures.dog-on-turf-6]
 args = ["export", "docs/fixtures/traced-dog-on-turf-6.vectorcraft", "--auto"]
 instructions = 20128000000
