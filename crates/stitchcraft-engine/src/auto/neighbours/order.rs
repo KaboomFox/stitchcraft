@@ -30,7 +30,7 @@
 //!    later batch of its thread. A line or a column round a detail still goes by rules 2 and 4: it covers
 //!    the detail's edge, as an outline does, and the detail reaches under a column. Which shape is a detail
 //!    goes by geometry alone, never by what the picture shows. A detail moves only together with what sews
-//!    on top of it, its own details and columns (`REQ-AUTO-108`, [`fewest`]'s nests). `SC-I0907` says how
+//!    on top of it, the smaller areas it meets and its columns (`REQ-AUTO-108`, [`fewest`]'s nests). `SC-I0907` says how
 //!    many details still sew before a larger shape round them. The rule runs when the design's lowest
 //!    automatic shape has `auto_details_last` on, as it is by default (`REQ-AUTO-098`). A fill that moves
 //!    for a detail starts, ends and travels elsewhere, and can make a spot away from any detail thicker:
