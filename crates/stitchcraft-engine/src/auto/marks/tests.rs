@@ -98,11 +98,12 @@ fn diag_sc_i0916_a_mark_names_the_parts_it_holds_and_what_it_kept() {
     assert_eq!(said.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::AutoKept, Code::AutoKept]);
     assert_eq!(said[0].element.as_ref().map(ElementId::as_str), Some("eye"));
     assert!(
-        said[0].message.contains("holds 2 parts of automatic areas wholly") && said[0].message.contains("1 specks and 2 thin lines"),
+        said[0].message.contains("holds 2 parts of automatic areas wholly")
+            && said[0].message.contains("Of them, 1 speck and 2 thin lines sew by their width"),
         "{}",
         said[0]
     );
-    assert!(said[1].message.contains("holds 1 part of") && said[1].message.contains("0 specks and 0 thin lines"), "{}", said[1]);
+    assert!(said[1].message.contains("holds 1 part of") && said[1].message.contains("Of them, 0 specks and 0 thin lines sew"), "{}", said[1]);
 }
 
 #[test]

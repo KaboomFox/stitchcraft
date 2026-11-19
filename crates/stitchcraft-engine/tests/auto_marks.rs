@@ -79,8 +79,8 @@ fn req_auto_104_a_speck_wholly_inside_a_mark_sews_by_its_width() {
     assert!(said(&diagnostics, Code::AutoSpeck).is_empty());
     assert_eq!(
         said(&diagnostics, Code::AutoKept),
-        ["info SC-I0916: The mark `eye` holds 1 part of automatic areas wholly, and keeps them: 1 specks and 0 thin lines among them sew by \
-          their width instead of merging into a neighbour."]
+        ["info SC-I0916: The mark `eye` holds 1 part of automatic areas wholly. Of them, 1 speck and 0 thin lines sew by their width, where \
+          without the mark they would merge into a neighbour."]
     );
 }
 
@@ -105,7 +105,7 @@ fn req_auto_105_a_thin_line_wholly_inside_a_mark_sews_as_a_line() {
     assert_eq!(in_thread(&out, &GREEN), [("line".to_string(), true)]);
     assert!(said(&diagnostics, Code::AutoLineMerged).is_empty());
     assert_eq!(said(&diagnostics, Code::AutoKept).len(), 1);
-    assert!(said(&diagnostics, Code::AutoKept)[0].contains("0 specks and 1 thin lines"), "{diagnostics:?}");
+    assert!(said(&diagnostics, Code::AutoKept)[0].contains("Of them, 0 specks and 1 thin line sew"), "{diagnostics:?}");
     // The design as merged, which a measure compares with, draws no merged line over the kept one.
     assert_eq!(as_merged(&marked, &Budget::DEFAULT).unwrap().elements().len(), marked.elements().len());
     assert_eq!(as_merged(&design(elements(), Vec::new()), &Budget::DEFAULT).unwrap().elements().len(), marked.elements().len() + 1);

@@ -150,12 +150,19 @@ fn unused(id: &ElementId, why: &str) -> Diagnostic {
 /// `SC-I0916`: the mark `id` holds `held` parts wholly, of which `specks` specks and `lines` thin lines sew
 /// that would have merged.
 fn kept(id: &ElementId, held: usize, specks: usize, lines: usize) -> Diagnostic {
-    let parts = if held == 1 { "1 part".to_string() } else { format!("{held} parts") };
     let message = format!(
-        "The mark `{id}` holds {parts} of automatic areas wholly, and keeps them: {specks} specks and {lines} thin lines among them sew by their width instead of merging into a neighbour."
+        "The mark `{id}` holds {} of automatic areas wholly. Of them, {} and {} sew by their width, where without the mark they would merge into a neighbour.",
+        counted(held, "part"),
+        counted(specks, "speck"),
+        counted(lines, "thin line")
     );
     let fix = Fix::Hint("To let the specks of a trace's noise merge, draw the mark tighter round the part.".to_string());
     Diagnostic::new(Code::AutoKept, message).with_element(id.clone()).with_fix(fix)
+}
+
+/// `n` and `noun`, the noun plural but for 1.
+fn counted(n: usize, noun: &str) -> String {
+    if n == 1 { format!("1 {noun}") } else { format!("{n} {noun}s") }
 }
 
 #[cfg(test)]
