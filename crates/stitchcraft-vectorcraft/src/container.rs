@@ -71,14 +71,19 @@ const MAX_WHOLE: usize = 4 * MAX_BYTES;
 /// `true`, when it is compressed, or else as it is and `false`. Charged to `meter`: `SC-E0806` when it is
 /// larger than [`MAX_WHOLE`] unpacked or its stream is damaged.
 pub(crate) fn whole<'a>(bytes: &'a [u8], meter: &mut Meter) -> Result<(Cow<'a, [u8]>, bool), Diagnostic> {
+    whole_within(bytes, MAX_WHOLE, meter)
+}
+
+/// [`whole`], unpacked to `most` bytes at the most.
+fn whole_within<'a>(bytes: &'a [u8], most: usize, meter: &mut Meter) -> Result<(Cow<'a, [u8]>, bool), Diagnostic> {
     if !bytes.starts_with(&GZIP) {
         return Ok((Cow::Borrowed(bytes), false));
     }
     let mut unpacked = Vec::new();
-    let limit = u64::try_from(MAX_WHOLE).unwrap_or(u64::MAX) + 1;
+    let limit = u64::try_from(most).unwrap_or(u64::MAX).saturating_add(1);
     GzDecoder::new(bytes).take(limit).read_to_end(&mut unpacked).map_err(|e| unreadable(&format!("Its compressed data does not unpack: {e}.")))?;
-    if unpacked.len() > MAX_WHOLE {
-        return Err(unreadable(&format!("It unpacks to more than the {} MiB StitchCraft writes again.", MAX_WHOLE >> 20)));
+    if unpacked.len() > most {
+        return Err(unreadable(&format!("It unpacks to more than the {} MiB StitchCraft writes again.", most >> 20)));
     }
     charge(meter, unpacked.len())?;
     Ok((Cow::Owned(unpacked), true))
@@ -203,6 +208,19 @@ mod tests {
                 assert!(refusal.message.contains("NUL byte"), "{refusal}");
             }
         }
+    }
+
+    #[test]
+    fn a_compressed_file_is_unpacked_whole_up_to_its_limit() {
+        let file = b"{}\n\0VCBLOBS\0abcd";
+        let packed = gzip(file);
+        let unpacked =
+            |most: usize| whole_within(&packed, most, &mut Budget::DEFAULT.meter()).map(|(bytes, compressed)| (bytes.into_owned(), compressed));
+        assert_eq!(unpacked(file.len()).unwrap(), (file.to_vec(), true));
+        assert_eq!(unpacked(file.len() - 1).map_err(|e| e.code), Err(Code::VcUnreadable));
+        assert_eq!(whole(file, &mut Budget::DEFAULT.meter()).unwrap(), (Cow::Borrowed(&file[..]), false));
+        // 4 times the JSON read, for the data a file keeps after it.
+        assert_eq!(MAX_WHOLE >> 20, 256);
     }
 
     #[test]
