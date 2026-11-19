@@ -3453,6 +3453,15 @@ milestone = "M13"
 status = "planned"
 
 [[req]]
+id = "REQ-AUTO-114"
+area = "auto"
+level = "L2"
+statement = "The cap at the end of planning (REQ-AUTO-100) judges cover as the fabric pulls, as REQ-AUTO-007 measures the cover of edges: a top stitch that covers a place counts shortened by the overlap of areas (`auto_overlap_mm`) at each end where the thread turns, by 10 degrees or more, into the stitch before or after it. Where taking a needle point makes a top stitch beside it turn where it ran straight on, the part the pull then moves in must be covered too. So the cap takes no thread within the overlap of the edge of the thread that covers it: the edge of what shows stays covered once pulled."
+rationale = "With the cap at 3.5, TS-13C's face columns covered 0.982 of the edges under them, where REQ-AUTO-007 holds them to 0.99: traced on 2026-11-19, the cap took 44 points of the face's rows under the outline and the eyes' lines, by its second kind, where it took 5 at 4. Those row ends are the overlap that keeps fabric from showing once the fabric pulls the column in, and the cap's test of cover read the column's stitches where they are drawn. A ring of satin on a disc's edge, capped at 2 fills, covered 0.965 of its inner edge where it covered all of it."
+milestone = "M13"
+status = "planned"
+
+[[req]]
 id = "REQ-AUTO-075"
 area = "auto"
 level = "L2"

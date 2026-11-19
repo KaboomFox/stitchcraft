@@ -241,7 +241,7 @@ fn req_auto_101_the_cap_stops_when_the_work_runs_out() {
 
 /// What `finished` says of `sewn` with `budget`, and the plan it leaves.
 fn said(sewn: &StitchPlan, budget: &Budget) -> (Vec<Diagnostic>, StitchPlan) {
-    let held = Held { limits: Limits::DEFAULT, overlap: 1.0, cap: 4.0 };
+    let held = Held { limits: Limits::DEFAULT, overlap: 0.0, cap: 4.0 };
     let mut kept = sewn.clone();
     let made: BTreeSet<ElementId> = sewn.elements.iter().cloned().collect();
     let said = finished(&mut kept, &held, (&[], &made, &BTreeSet::new()), stitchcraft_plan::profiles::REFERENCE, budget);
@@ -399,4 +399,67 @@ fn req_auto_100_a_stitch_taken_out_covers_nothing_after() {
     assert!(measures_as(&kept, &measured));
     let turns = sewn.stitches().filter(|stitch| stitch.kind == StitchKind::Normal && stitch.at == p(3.0, 2.0)).count();
     assert_eq!(turns, 1);
+}
+
+/// A stitch of block 0 ending at entry `index`, from `from` to `to`, of `role`.
+fn sewn(index: usize, from: (f64, f64), to: (f64, f64), role: Role) -> SewnStitch {
+    SewnStitch { block: 0, index, from: p(from.0, from.1), to: p(to.0, to.1), role, from_role: role }
+}
+
+#[test]
+fn req_auto_114_the_thread_runs_straight_on_within_10_degrees_from_where_it_ends() {
+    let first = sewn(1, (0.0, 0.0), (2.0, 0.0), Role::Top);
+    let turned = |degrees: f64| {
+        let t = degrees.to_radians();
+        sewn(2, (2.0, 0.0), (2.0 + 2.0 * math::cos(t), 2.0 * math::sin(t)), Role::Top)
+    };
+    assert!(straight_on(&first, &turned(0.0)) && straight_on(&first, &turned(9.9)));
+    assert!(!straight_on(&first, &turned(10.1)) && !straight_on(&first, &turned(90.0)));
+    // Only from where it ends, in its block, and with a length.
+    assert!(!straight_on(&first, &sewn(2, (2.1, 0.0), (4.0, 0.0), Role::Top)));
+    assert!(!straight_on(&first, &SewnStitch { block: 1, ..sewn(2, (2.0, 0.0), (4.0, 0.0), Role::Top) }));
+    assert!(!straight_on(&first, &sewn(2, (2.0, 0.0), (2.0, 0.0), Role::Top)));
+}
+
+#[test]
+fn req_auto_114_the_pull_moves_a_stitch_s_ends_in() {
+    let (a, b) = (p(0.0, 0.0), p(4.0, 0.0));
+    assert_eq!(pulled(a, b, 1.0, 1.0), Some((p(1.0, 0.0), p(3.0, 0.0))));
+    assert_eq!(pulled(a, b, 0.0, 1.5), Some((a, p(2.5, 0.0))));
+    assert_eq!(pulled(a, b, 2.5, 0.0), Some((p(2.5, 0.0), b)));
+    assert_eq!(pulled(a, b, 2.0, 2.0), None);
+    assert!(pulled(a, b, 1.99, 2.0).is_some());
+    let ribbon = Ribbon::of((a, b), (0.5, 1.0), (0, 3), None).unwrap();
+    assert_eq!(
+        (ribbon.from, ribbon.to, ribbon.whole, ribbon.cut, ribbon.at, ribbon.alive),
+        (p(0.5, 0.0), p(3.0, 0.0), (a, b), (0.5, 1.0), (0, 3), true)
+    );
+}
+
+/// Rows 0.25 mm apart from x = 0 to x = 4, each in a stitch of 3 mm and one of 1 mm, under a zigzag of 4 fills
+/// from x = `start` to x = 6: the row ends at x = 4 lie under the zigzag.
+fn rows_under(start: f64) -> StitchPlan {
+    let rows: Vec<(f64, f64)> = (0..=16)
+        .flat_map(|k| {
+            let y = f64::from(k) * 0.25;
+            if k % 2 == 0 { vec![(0.0, y), (3.0, y), (4.0, y)] } else { vec![(4.0, y), (3.0, y), (0.0, y)] }
+        })
+        .collect();
+    let over: Vec<(f64, f64)> = zigzag(6.0 - start, 0.0625).into_iter().map(|(x, y)| (x + start, y)).collect();
+    plan(&[("under", Role::Top, rows), ("over", Role::Top, over)])
+}
+
+#[test]
+fn req_auto_114_a_row_end_stays_where_the_later_thread_pulled_in_leaves_the_row_before_it_bare() {
+    let pull = Rules { overlap: 1.0, ..rules() };
+    // The zigzag from x = 0.5, pulled in to x = 1.5, covers the last millimetre of each row's long stitch,
+    // which turns into the joined stitch once the row's end goes: the ends at x = 4 go.
+    let (capped, _, _) = cap(&mut rows_under(0.5), &pull);
+    assert!(capped.unwrap().times[1] > 0);
+    // From x = 2.2, pulled in to x = 3.2, it covers the row's last stitch but not the millimetre before it.
+    let (capped, _, _) = cap(&mut rows_under(2.2), &pull);
+    assert_eq!(capped.unwrap().times[1], 0);
+    // Judged unpulled, it would take them.
+    let (capped, _, _) = cap(&mut rows_under(2.2), &rules());
+    assert!(capped.unwrap().times[1] > 0);
 }
