@@ -40,6 +40,10 @@ use crate::generators::tatami::stitches::Stitching;
 /// The stitch types a tatami fill's own settings apply to.
 const TATAMI: &[StitchType] = &[StitchType::TatamiFill];
 
+/// The stitch types whose turns between rows `turn_stitches` keeps: the tatami fill and the guided fill,
+/// whose rows are routed as the tatami fill's are.
+const TURNED: &[StitchType] = &[StitchType::TatamiFill, StitchType::GuidedFill];
+
 /// The key of the angle of a fill's rows ([`TatamiParams::angle`]), which an SVG file's clone turns with it.
 pub const ANGLE: &str = "angle";
 
@@ -150,8 +154,9 @@ params! {
         /// stitch: the turn's 2 needle points move apart along it until the stitch between them is the
         /// shortest stitch. Off, the second of them is left out, as any needle point too near the one before
         /// it is, and every second row then starts up to a stitch inside the outline, which leaves a notch
-        /// in the fill's edge there. Automatic digitizing turns it on for its fills.
-        turn_stitches: Toggle = "false", label "Keep turn stitches", applies TATAMI,
+        /// in the fill's edge there. A guided fill keeps the turns between its lines so too. Automatic
+        /// digitizing turns it on for its fills.
+        turn_stitches: Toggle = "false", label "Keep turn stitches", applies TURNED,
             origin Origin::StitchCraft, stability Stability::Experimental;
     }
 

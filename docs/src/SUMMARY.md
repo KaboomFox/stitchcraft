@@ -25,6 +25,7 @@
     - [Letter in VectorCraft](user/how-to/letter-in-vectorcraft.md)
     - [Letter a picture](user/how-to/letter-a-picture.md)
     - [Keep small parts of a picture](user/how-to/keep-small-parts.md)
+    - [Make the rows of a fill follow a form](user/how-to/guide-the-rows.md)
     - [Report a bug](user/how-to/report-a-bug.md)
   - [Stitch types](user/stitches/README.md)
     - [Running stitch](user/stitches/running.md)

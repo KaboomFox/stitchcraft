@@ -317,7 +317,52 @@ fn req_cli_021_stitch_plan_keeps_the_parts_a_keep_option_marks() {
     assert!(replayed.status.success(), "{} {}", text(&replayed.stdout), text(&replayed.stderr));
 }
 
-/// `REQ-AUTO-069`, `REQ-SVG-017`: `stitch plan --auto` sews the text of a drawn SVG design as lettering in the
+/// `REQ-CLI-022`: `--guide X,Y,X,Y…` draws a guide through points in percent of the design's box, and the
+/// filled parts of automatic areas it crosses sew a guided fill along it, as a line labelled
+/// `stitch:guide` does (`REQ-AUTO-109`). A bug-report bundle keeps the guide.
+#[test]
+fn req_cli_022_stitch_plan_guides_the_parts_a_guide_option_crosses() {
+    let dir = folder("guide");
+    // A white field 60 mm square and a red square on it, filled.
+    let picture = |guide: &str| {
+        format!(
+            r##"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="60mm" height="60mm" viewBox="0 0 60 60"><rect id="field" width="60" height="60" fill="#ffffff"/><rect id="square" x="10" y="10" width="40" height="40" fill="#ff0000"/>{guide}</svg>"##
+        )
+    };
+    std::fs::write(dir.join("plain.svg"), picture("")).unwrap();
+    std::fs::write(
+        dir.join("guided.svg"),
+        picture(r##"<path id="g" inkscape:label="stitch:guide" d="M 6,30 L 30,24 L 54,30" fill="none" stroke="#00ff00" stroke-width="0.2"/>"##),
+    )
+    .unwrap();
+    let run = |args: &[&str]| Command::new(env!("CARGO_BIN_EXE_stitch")).args(args).current_dir(&dir).output().unwrap();
+    let stitches =
+        |file: &str| text(&run(&["inspect", file]).stdout).lines().filter(|line| line.contains("stitches")).map(str::to_string).collect::<Vec<_>>();
+    let plain = run(&["plan", "plain.svg", "--auto", "-o", "plain.pes"]);
+    assert!(plain.status.success(), "{}", text(&plain.stderr));
+    // A line labelled stitch:guide, or the option through the same points in percent of the field, steers the
+    // square: the same stitches either way, and not those of the plain plan.
+    let labelled = run(&["plan", "guided.svg", "--auto", "-o", "guided.pes"]);
+    assert!(labelled.status.success() && text(&labelled.stderr).contains("SC-I0918"), "{}", text(&labelled.stderr));
+    let option = run(&["plan", "plain.svg", "--auto", "--guide", "10,50,50,40,90,50", "-o", "option.pes"]);
+    assert!(option.status.success() && text(&option.stderr).contains("SC-I0918"), "{}", text(&option.stderr));
+    assert!(!stitches("guided.pes").is_empty() && stitches("guided.pes") == stitches("option.pes"));
+    assert_ne!(stitches("plain.pes"), stitches("option.pes"));
+    // A guide of one point, or one with a number that doesn't read, is refused before anything is read.
+    for refused in ["10,50", "10,50,x,40"] {
+        let out = run(&["plan", "plain.svg", "--auto", "--guide", refused, "-o", "refused.pes"]);
+        assert_eq!(out.status.code(), Some(2), "{refused}");
+        assert!(!dir.join("refused.pes").exists(), "{}", text(&out.stderr));
+    }
+    // A bundle keeps the guide with the rules' settings, and its replay steers the square again.
+    let bundled = run(&["bug-report", "plain.svg", "--auto", "--guide", "10,50,50,40,90,50", "-o", "guide.bug-report.json"]);
+    assert!(bundled.status.success(), "{}", text(&bundled.stderr));
+    assert!(std::fs::read_to_string(dir.join("guide.bug-report.json")).unwrap().contains("10,50,50,40,90,50"));
+    let replayed = run(&["bug-report", "--replay", "guide.bug-report.json"]);
+    assert!(replayed.status.success(), "{} {}", text(&replayed.stdout), text(&replayed.stderr));
+}
+
+/// `REQ-AUTO-069`, `REQ-SVG-017`:`stitch plan --auto` sews the text of a drawn SVG design as lettering in the
 /// default font of the folder `STITCHCRAFT_FONTS` names, where the text stands, and says which font stands in.
 /// Without `--auto`, and without a font, the text is left out and that is said.
 #[test]

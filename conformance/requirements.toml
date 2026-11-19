@@ -304,7 +304,6 @@ status = "active"
 
 # ── SVG adapter ────────────────────────────────────────────────────────────────────────────────────
 
-
 [[req]]
 id = "REQ-PRM-006"
 area = "params"
@@ -313,6 +312,7 @@ statement = "A value that an element's own declaration of a key cannot read, but
 rationale = "Ink/Stitch sews such a fill with its default (DEV-PRM-001's rule refuses a value nothing can read). A value written for the node's stroke is the stroke's, and refusing the fill for it would leave out a part of the design that has nothing wrong."
 milestone = "M7"
 status = "active"
+
 [[req]]
 id = "REQ-SVG-001"
 area = "svg"
@@ -2624,6 +2624,15 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-VC-032"
+area = "vectorcraft"
+level = "L2"
+statement = "A path or a compound path of a VectorCraft document named `stitch:guide`, alone or with a note, that shows and has a line that reads is also a guide of the design (REQ-AUTO-109 to REQ-AUTO-111), wherever it lies in the layers and groups, and needs no paint. It still gives the shapes with settings grouped with it their guide as before (REQ-VC-009, REQ-VC-023). A group or a layer may hold any number of guides: a guide its group doesn't use is no longer said to be unused when the design has an automatic shape, and SC-W0919 names one that steers nothing. The PES and DST exporters and stitch sew a guided document alike."
+rationale = "A traced picture lies in one layer, so a person who guides 2 of its shapes draws 2 guides in the same layer, and the first-in-group reading of REQ-VC-009 would leave the second unused. The marker's name is the one VectorCraft documents already use for a guide, so a person learns one name."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-VC-019"
 area = "vectorcraft"
 level = "L2"
@@ -2842,6 +2851,15 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-CLI-022"
+area = "cli"
+level = "L2"
+statement = "`--guide X,Y,X,Y…`, which stitch plan, stitch export and stitch bug-report take any number of times, draws a guide (REQ-AUTO-109) through 2 points or more, each in percent of the box round the design's shapes as --keep reads its numbers (REQ-CLI-021), joined by straight lines. A guide of fewer than 2 points, an odd count of numbers or a number that doesn't read is refused as a usage error before anything is read. The guides are used after the design's own, named guide-1, guide-2 and so on in the order given. A bug-report bundle records them with the settings of automatic digitizing's rules, and its replay uses them."
+rationale = "A picture traced by the command line never opens in an editor where a guide could be drawn. A few points in percent of the picture's box can be read off the picture whatever size it sews at, and a guided fill smooths its rows, so straight lines between them serve."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-AUTO-001"
 area = "auto"
 level = "L2"
@@ -2964,6 +2982,33 @@ area = "auto"
 level = "L2"
 statement = "A mark changes no rule but for its kept parts: the background, the flattened layers, the rules by width, the order, the overlaps, the base layer and the thickness cap go by their own rules, though the order they find may differ for the parts kept, and a design whose marks keep no part that would merge sews as without them, element for element. SC-I0916 names each mark with the parts that lie wholly inside it, and how many of them sew that would have merged as specks and as thin lines. SC-W0917 names a mark that encloses no area, holds no part wholly, or is in a design with no automatic shape, and the design then sews as without it. Testing a part costs a unit for each of its points and each segment of each mark, charged to the budget the step has for the part, and a design without marks tests nothing."
 rationale = "A mark is a manual control: it keeps what the person drew it round and guesses nothing else. Measured on 2026-11-18 with a prototype, the repository's pictures whose marks held nothing that merges sewed element for element as without marks, and the traced photos kept every part marked but sewed elsewhere in another order, which only the thickness cap (M13.35) bounds (design page, Marks that keep parts). A mark that keeps nothing is said, since a person who drew it expects it to."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-109"
+area = "auto"
+level = "L2"
+statement = "A guide on one shape of an automatic design: each filled part of an automatic area, as the rules by width leave it (REQ-AUTO-013, REQ-AUTO-016, REQ-AUTO-019) and no speck (REQ-AUTO-008), that a guide's line crosses, with a stretch of the line inside the part where the area shows (round its details, for an area digitized whole under them, REQ-AUTO-023), sews as a guided fill whose rows follow that line (REQ-FILL-GDD-001), with the guided fill's defaults and the area's other settings. The guide's line is its first subpath, read as a guided fill reads its guide. The parts of one area that follow one guide are one element, after the area's other elements, in the order the guides are drawn: the area's own when nothing else of the area sews, or else one named after it with `#` and a number. Parts sewn along their middles, as running stitches or satin columns, keep their stitches whatever a guide crosses, and so does every stroke."
+rationale = "Automatic digitizing chooses a fill's rows by geometry, and where they should follow a form, such as fur, a petal, a roof or a ribbon, no rule can know the form: the person draws it. A traced picture is hundreds of shapes in one layer, so the shapes a guide steers are found by where it lies, as a mark's parts are, and not by grouping, which a person can't do for one of hundreds of shapes. A guided fill already follows a guide drawn across a part or beside it, lengthened at its ends, so a guide that crosses a part steers all of it. Measured on 2026-11-19 with a prototype (design page, A guide on one shape)."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-110"
+area = "auto"
+level = "L2"
+statement = "A guide changes no rule but for the parts it steers (REQ-AUTO-109): the background, the flattened layers, the specks and thin lines, the rules by width, the order, the overlaps, the base layer and the thickness cap go by their own rules, though the order they find may differ for the elements a guide makes, and an area no guide crosses sews as without guides, element for element. A part that several guides cross follows the one drawn last, which lies on top."
+rationale = "A guide is a manual control: it steers what it crosses and guesses nothing else. The one drawn last is the one a person sees over the others, and a rule that blends 2 guides would guess what the person meant."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-111"
+area = "auto"
+level = "L2"
+statement = "A guide is an element whose name is `stitch:guide`, alone or followed by white space and a note of the person's own, in any case and after any white space, read as a mark's name is (REQ-AUTO-106): an SVG element's inkscape:label, or a path in a VectorCraft document (REQ-VC-032). A reader takes each guide out of the design's elements, so it is never sewn, and gives it to the design with its name, beside the marks and by the same code. SC-I0918 names each guide with the areas and the parts that follow it, and the parts it crosses that keep their stitches since they sew along their middles. SC-W0919 names a guide that crosses no filled part of an automatic area, whose line has no length, or that is in a design with no automatic shape, and the design then sews as without it. Testing a part costs a unit for each pair of a segment of the guide's line and a side of the part, charged to the budget of the area's element, and a design without guides tests nothing."
+rationale = "A plug-in has no canvas tool in VectorCraft 0.23.0, so a person draws a guide with VectorCraft's own tools and names it, as a mark is drawn and named. A guide that steers nothing is said, since the person who drew it expects it to."
 milestone = "M13"
 status = "active"
 
@@ -3236,6 +3281,7 @@ statement = "Each automatic shape that sews says SC-I0912, with its id: the rule
 rationale = "A person who sees a shape sew as a fill, or as columns, wants to know why, and which setting changes it. The notice names the rule and its numbers, and the shape's own setting overrides it."
 milestone = "M13"
 status = "active"
+
 [[req]]
 id = "REQ-AUTO-050"
 area = "auto"

@@ -58,7 +58,8 @@ fn req_auto_104_marks_are_taken_out_of_the_elements_one_for_each_object() {
         element("l:stroke", Some("stitch:keep"), stroke(&[(0.0, 0.0), (5.0, 5.0)], false, 2.0)),
         element("c", Some("stitch:text a"), fill(&BOX)),
     ];
-    let (kept, marks) = taken_out(elements);
+    let Taken { elements: kept, marks, guides } = taken_out(elements);
+    assert!(guides.is_empty());
     fn ids(ids: Vec<&ElementId>) -> Vec<&str> {
         ids.into_iter().map(ElementId::as_str).collect()
     }
@@ -68,8 +69,28 @@ fn req_auto_104_marks_are_taken_out_of_the_elements_one_for_each_object() {
     assert_eq!(ids(marks.iter().map(|mark| &mark.id).collect()), ["m:fill", "b", "l:stroke"]);
     assert!(matches!(marks[2].shape, Shape::Stroke { .. }));
     // 2 marks of 2 paths in a row stay 2.
-    let (_, two) = taken_out(vec![element("x", Some("stitch:keep"), fill(&BOX)), element("y", Some("stitch:keep"), stroke(&BOX[..3], true, 1.0))]);
-    assert_eq!(two.len(), 2);
+    let two = taken_out(vec![element("x", Some("stitch:keep"), fill(&BOX)), element("y", Some("stitch:keep"), stroke(&BOX[..3], true, 1.0))]);
+    assert_eq!(two.marks.len(), 2);
+}
+
+#[test]
+fn req_auto_111_guides_are_taken_out_beside_the_marks_one_for_each_object() {
+    let line = [(0.0, 0.0), (5.0, 5.0)];
+    let elements = vec![
+        element("a", None, fill(&BOX)),
+        element("g:fill", Some("stitch:guide"), fill(&line)),
+        element("g:stroke", Some("stitch:guide"), stroke(&line, false, 0.2)),
+        element("m", Some("stitch:keep"), stroke(&line, false, 0.2)),
+        element("h", Some("  Stitch:GUIDE petal"), stroke(&BOX, true, 0.2)),
+        element("i", Some("stitch:guides"), stroke(&line, false, 0.2)),
+    ];
+    let taken = taken_out(elements);
+    let ids = |marks: &[Mark]| marks.iter().map(|mark| mark.id.as_str().to_string()).collect::<Vec<_>>();
+    assert_eq!(taken.elements.iter().map(|element| element.id.as_str()).collect::<Vec<_>>(), ["a", "i"]);
+    // An open line's stroke stands for its object, and a mark between 2 guides of one path keeps them 2.
+    assert_eq!(ids(&taken.guides), ["g:stroke", "h"]);
+    assert_eq!(ids(&taken.marks), ["m"]);
+    assert_eq!(note("stitch:guide", GUIDE), Some(""));
 }
 
 #[test]

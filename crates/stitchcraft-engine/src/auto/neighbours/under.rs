@@ -44,6 +44,7 @@
 //! are sewn.
 
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Meter, Point};
+use stitchcraft_params::{Family, StitchType};
 
 use super::{Failed, Kind, Shapes, TOUCHING, envelope, joined, near, no_area};
 use crate::auto::AutoParams;
@@ -185,11 +186,25 @@ fn near_later(shapes: &mut Shapes, index: usize, bounds: &Envelope, meter: &mut 
     let mut found = Vec::new();
     for later in index + 1..shapes.len() {
         meter.charge(1)?;
-        if shapes.kind(later) != Some(Kind::Line) && shapes.bounds(later).is_some_and(|other| near(bounds, TOUCHING, &other)) {
+        if shapes.kind(later) != Some(Kind::Line)
+            && !guided_apart(shapes, index, later)
+            && shapes.bounds(later).is_some_and(|other| near(bounds, TOUCHING, &other))
+        {
             found.push(later);
         }
     }
     Ok(found)
+}
+
+/// Whether the areas `index` and `later` of `shapes` are fills of one automatic area that guides split,
+/// one of them a guided fill (`REQ-AUTO-110`): they stay one area here, as they were before the guides split
+/// it, and neither reaches under the other nor is cut away under it. Their parts lay apart in one region,
+/// each sewn to its own edge, and an overlap between them would lay thread on thread where none lay.
+fn guided_apart(shapes: &Shapes, index: usize, later: usize) -> bool {
+    let guided = |at: usize| {
+        shapes.elements.get(at).is_some_and(|element| element.params.get(Family::Fill.method_param()) == Some(StitchType::GuidedFill.id()))
+    };
+    shapes.is_area(index) && shapes.is_area(later) && shapes.of_shape.get(index) == shapes.of_shape.get(later) && (guided(index) || guided(later))
 }
 
 /// What the shape `later` of `shapes` covers of element `index`, sewn before it: an area what it paints, and

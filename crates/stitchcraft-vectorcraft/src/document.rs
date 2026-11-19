@@ -98,7 +98,7 @@ use stitchcraft_core::Point;
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm};
 use stitchcraft_engine::auto::{self, Stitches};
 use stitchcraft_engine::design::{
-    Cap, Clip, Design, DesignSettings, Element, FillRule, Gradient, Guide, Hints, Join, Path, Reading, Segment, Shape, mark,
+    Cap, Clip, Design, DesignSettings, Element, FillRule, Gradient, Guide, Hints, Join, Path, Reading, Segment, Shape, mark, mark::Mark,
 };
 use stitchcraft_engine::generate::stops_after;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
@@ -193,6 +193,8 @@ pub fn read_in(bytes: &[u8], budget: &Budget, reading: Reading, fonts: &mut dyn 
         held: 0,
         places: Vec::new(),
         lettered: BTreeSet::new(),
+        guides: Vec::new(),
+        ungrouped: BTreeSet::new(),
     };
     reader.header(file.format.as_deref(), file.version.as_ref())?;
     let document = file.document.ok_or_else(|| unreadable("It holds no document."))?;
@@ -203,12 +205,18 @@ pub fn read_in(bytes: &[u8], budget: &Budget, reading: Reading, fonts: &mut dyn 
         reader.node(layer, &Around::default())?;
     }
     reader.placed();
-    let mut warnings = reader.warnings;
+    let (mut warnings, ungrouped) = (reader.warnings, reader.ungrouped);
     warnings.extend(unread);
-    // The objects named stitch:keep are marks, never sewn (`REQ-VC-031`).
-    let (elements, marks) = mark::taken_out(reader.elements);
-    let mut design = Design::new(elements, reader.settings)?.read_as(reading);
-    design.marks = marks;
+    // The objects named stitch:keep are marks, never sewn (`REQ-VC-031`), and the paths named stitch:guide
+    // are guides of the design (`REQ-VC-032`).
+    let taken = mark::taken_out(reader.elements);
+    let mut design = Design::new(taken.elements, reader.settings)?.read_as(reading);
+    design.marks = taken.marks;
+    design.guides = reader.guides.into_iter().chain(taken.guides).collect();
+    // A guide its group doesn't use is unused only when no automatic area can follow it.
+    if design.elements().iter().any(|element| element.automatic) {
+        warnings = warnings.into_iter().enumerate().filter(|(at, _)| !ungrouped.contains(at)).map(|(_, warning)| warning).collect();
+    }
     // Text in pictures: what lies inside each object named `stitch:text` becomes lettering (`REQ-VC-028`).
     let (fonts, mut lettered) = (reader.fonts, reader.lettered);
     let choices = fonts.choices();
@@ -471,6 +479,20 @@ fn marker(name: &str) -> Option<Marker> {
     Some(MARKERS.iter().find(|(known, _)| word.eq_ignore_ascii_case(known)).map_or(Marker::Unknown, |&(_, marker)| marker))
 }
 
+/// The paths of a marker of kind `own`: its own, or a compound path's paths, which are its subpaths.
+fn marker_data(own: Option<&Kind>) -> Vec<&PathData> {
+    let Some(own) = own else { return Vec::new() };
+    match own.name.as_str() {
+        "compound" => own.children.iter().filter_map(|c| c.kind.as_ref()).filter(|k| k.name == "path").filter_map(|k| k.path.as_ref()).collect(),
+        _ => own.path.iter().collect(),
+    }
+}
+
+/// The kind of `node`, unless it is a layer or a group, which is never a marker.
+fn kind_of(node: &Node) -> Option<&Kind> {
+    node.kind.as_ref().filter(|kind| !matches!(kind.name.as_str(), "layer" | "group"))
+}
+
 /// The markers StitchCraft reads, as a sentence names them: `stitch:ignore, stitch:start and stitch:end`.
 fn markers_read() -> String {
     let names: Vec<String> = MARKERS.iter().map(|(word, _)| format!("stitch:{word}")).collect();
@@ -503,6 +525,11 @@ struct Reader<'f> {
     places: Vec<(Marker, String, Option<Point>)>,
     /// The folders of the fonts whose reader's words were passed on, each once.
     lettered: BTreeSet<String>,
+    /// The paths named stitch:guide, the design's guides wherever they lie (`REQ-VC-032`).
+    guides: Vec<Mark>,
+    /// Where among the warnings each guide its group doesn't use is said: said only when the design has no
+    /// automatic shape.
+    ungrouped: BTreeSet<usize>,
 }
 
 impl Reader<'_> {
@@ -598,7 +625,27 @@ impl Reader<'_> {
                     self.warn(Code::VcObjectIgnored, Some(&label), message, Some("Rename it to stitch it."));
                     return Ok(());
                 }
-                (Marker::Start | Marker::End | Marker::Target | Marker::Guide | Marker::Anchor, None) => {
+                (Marker::Guide, None) => {
+                    // It is a guide of the design too, wherever it lies, which needs no paint, and it is not
+                    // stitched (`REQ-VC-032`).
+                    let data = marker_data(kind_of(node));
+                    if let Ok(path) = geometry::path(&data, &mut self.meter).map_err(|_| exhausted())?
+                        && !path.subpaths.is_empty()
+                        && let Ok(id) = ElementId::new(format!("vc:{label}"))
+                    {
+                        self.guides.push(Mark { id, shape: Shape::stroke(path) });
+                    }
+                    if !around.markers.iter().any(|used| std::ptr::eq(*used, node)) {
+                        let message = format!(
+                            "{shown} would mark {what}, and is not stitched. It is not used: it has no point that reads, or another \
+                             {noun} marker in its group comes first."
+                        );
+                        self.ungrouped.insert(self.warnings.len());
+                        self.feature(&label, message, Some(&format!("Keep one {noun} marker in a group, drawn as a small path.")));
+                    }
+                    return Ok(());
+                }
+                (Marker::Start | Marker::End | Marker::Target | Marker::Anchor, None) => {
                     // The group it is in places its shapes there, and it is not stitched.
                     if !around.markers.iter().any(|used| std::ptr::eq(*used, node)) {
                         let message = format!(
@@ -809,13 +856,7 @@ impl Reader<'_> {
             if taken || !child.visible || !shows(child.opacity) {
                 continue;
             }
-            // A compound path's paths are its subpaths.
-            let data: Vec<&PathData> = match own.name.as_str() {
-                "compound" => {
-                    own.children.iter().filter_map(|c| c.kind.as_ref()).filter(|k| k.name == "path").filter_map(|k| k.path.as_ref()).collect()
-                }
-                _ => own.path.iter().collect(),
-            };
+            let data = marker_data(Some(own));
             let found = match marked {
                 Marker::Guide | Marker::Anchor => {
                     let Ok(path) = geometry::path(&data, &mut self.meter).map_err(|_| exhausted())? else { continue };
@@ -957,10 +998,13 @@ impl Reader<'_> {
     /// group's, whose parameters `auto` are then its settings of the rules (`REQ-VC-016`).
     fn by_paints(&mut self, node: &Node, label: &str, path: &Path, rule: FillRule, auto: Option<&Value>, hints: Hints) -> Result<(), Diagnostic> {
         let automatic = self.auto || auto.is_some();
-        // Automatic digitizing places where an automatic shape's parts start and end.
-        let hints = if automatic && hints != Hints::default() {
-            let message = "It is digitized automatically, which places where its parts start and end: the markers grouped with it are not used.";
-            self.feature(label, message.to_string(), None);
+        // Automatic digitizing places where an automatic shape's parts start and end. A guide grouped with it
+        // is the design's guide, which steers the parts it crosses (`REQ-VC-032`), and needs no word.
+        let hints = if automatic {
+            if (Hints { guide: None, ..hints }) != Hints::default() {
+                let message = "It is digitized automatically, which places where its parts start and end: the markers grouped with it are not used.";
+                self.feature(label, message.to_string(), None);
+            }
             Hints::default()
         } else {
             hints

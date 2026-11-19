@@ -57,7 +57,7 @@ use crate::generators::tatami::rings::Rings;
 use crate::generators::tatami::rows::Grid;
 use crate::generators::tatami::rows::Segment;
 use crate::generators::tatami::sew::lines::{Given, Marked, lines_routed};
-use crate::generators::tatami::sew::{Fill, Layer, Parts, Pull, Travel, layer_sewn, parts_sewn, pieces, tatami_fill, too_thin, top_rows};
+use crate::generators::tatami::sew::{Fill, Layer, Parts, Pull, Travel, layer_sewn, parts_sewn, pieces, tatami_fill, too_thin, top_rows, turned};
 use crate::generators::tatami::stitches::Stitching;
 use crate::generators::{Approach, Stitched, settled};
 use crate::normalize::region::{Polygon, Region};
@@ -165,6 +165,9 @@ pub struct Guided {
     pub expand: f64,
     /// Whether locks part the element's groups (`force_lock_stitches`).
     pub force_locks: bool,
+    /// Whether the turn between 2 lines closer together than the shortest stitch stays a stitch
+    /// (`turn_stitches`, `REQ-FILL-TAT-014`), as a tatami fill's does.
+    pub turns: bool,
     /// The needle's travel between the lines: its running stitch, whether it runs under them, the shortest
     /// stitch, and the jump length.
     pub travel: Travel,
@@ -222,14 +225,25 @@ fn sewn(
     // Each row's random lengths draw from the element's generator as it came, as Ink/Stitch's draw from the
     // element's seed whatever the underlay drew.
     let base = rng.clone();
-    let mut top =
-        |piece: &Polygon,
-         _: &Polygon,
-         needle: Option<Point>,
-         end: Option<Point>,
-         rng: &mut SplitMix64,
-         meter: &mut Meter,
-         warnings: &mut Vec<Diagnostic>| { tally.top(piece, guided, guide, (needle, end), (&base, rng), meter, warnings) };
+    let mut top = |piece: &Polygon,
+                   _: &Polygon,
+                   needle: Option<Point>,
+                   end: Option<Point>,
+                   rng: &mut SplitMix64,
+                   meter: &mut Meter,
+                   warnings: &mut Vec<Diagnostic>| {
+        let runs = tally.top(piece, guided, guide, (needle, end), (&base, rng), meter, warnings)?;
+        if !guided.turns {
+            return Ok(runs);
+        }
+        // A line starts on the needle point it was cut at, which the row's own first point may repeat: the
+        // repeat is left out, as thinning would leave it out, so that the turn before it is found.
+        let runs = runs.into_iter().map(|mut run| {
+            run.dedup();
+            run
+        });
+        turned(runs.collect(), guided.travel.min_stitch, meter)
+    };
     let parts = Parts {
         underlay: &guided.underlay,
         inset: guided.inset,

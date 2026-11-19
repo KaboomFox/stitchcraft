@@ -31,7 +31,7 @@ fn finely(x0: f64, x1: f64, n: u32) -> Polygon {
 fn flattened(elements: Vec<Element>) -> (Flattened<'static>, Vec<Option<AutoParams>>) {
     let rules = elements.iter().map(|element| element.automatic.then(|| crate::auto::rules(&element.params).unwrap())).collect();
     let elements = elements.into_iter().enumerate().map(|(index, element)| (index, Cow::Owned(element))).collect();
-    (Flattened { elements, kept: 0, said: Vec::new() }, rules)
+    (Flattened { elements, kept: 0, said: Vec::new(), shown: Default::default() }, rules)
 }
 
 /// An automatic area `id` of `parts`, with `params`.

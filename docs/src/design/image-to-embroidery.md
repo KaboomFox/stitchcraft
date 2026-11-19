@@ -2923,6 +2923,209 @@ specks too, on 2026-11-18.
   exported file and its preview picture do.
 - A mark that merges what the rules sew, or that names a stitch.
 
+## A guide on one shape
+
+Automatic digitizing chooses the rows of each fill by geometry: every fill has the rows of `auto_fill_angle`.
+No rule can know the form that the rows of fur or a ribbon follow. The person draws it. Before M13.24 a guided fill needed the shape taken out of automatic digitizing by hand,
+which lost its overlaps with its neighbours, the base layer under it and its place in the sewing order. A
+guide keeps all of them, and works on any subject without naming one.
+
+### The rule
+
+A guide is a line the person draws over the picture. Each filled part of an automatic area that the line
+crosses sews as a guided fill whose rows follow it. The other parts and the steps after them sew as
+without the guide (`REQ-AUTO-109` to `REQ-AUTO-111`).
+
+- **Which parts.** The parts the rules by width leave filled ([stitch types by width](#stitch-types-by-width)):
+  the broad parts of an area, its compact and uneven parts, and the broad pieces of a part split by width. A
+  part follows a guide when a stretch of the guide's line lies inside it where the area shows. An area
+  digitized whole under the details that fill its holes ([neighbours](#neighbours), `REQ-AUTO-023`) shows only round them, so a
+  guide drawn over a detail steers the detail and leaves the area under it alone. Specks, under the smallest area
+  `auto_min_area_mm2`, stay in the area's fill and merge as before.
+- **The parts it crosses.** Unlike a mark, which keeps the parts lying wholly inside it, the guide steers the
+  parts it crosses. The guided fill lengthens the guide straight on at both ends until its rows cover
+  the whole part ([guided fill](algorithms/guided.md)). A guide that crosses only a corner of a large part steers all of
+  it. The person sees that in the exported file's preview and draws the guide again.
+- **Parts sewn along their middles keep their stitches.** A satin column already lays its stitches across
+  its width, which follows the part's form, and a running stitch follows its centre line. Such a part
+  sews the same stitches when a guide crosses it, and `SC-I0918` counts it.
+- **2 guides on one part.** The part follows the guide drawn last, the one a person sees on top. Blending
+  2 guides would guess what the person meant.
+- **One element for each area and guide.** The parts of one area that follow one guide are one element,
+  since a guided fill sews several parts nearest the needle first. These elements come after the area's
+  other elements, its fill and its parts sewn along their middles, in the order the guides are drawn, so
+  that the other elements keep their names. The first element of an area keeps its name and the others are
+  numbered, so a guided fill is the area's own element when nothing else of the area sews. The area keeps
+  its thread.
+- **Left alone.** The background, the flattened layers, the specks and the thin lines go as without a guide,
+  and so do the rules by width, the overlaps, the base layer and the cap on thickness. The guided fill takes
+  its own defaults and the area's other settings. The base
+  layer keeps its rows across `auto_fill_angle`, so under a guided fill it lies at an angle that changes
+  along the rows. Each element a guide makes is a shape more to order, so the order can change
+  ([what guides sew](#what-guides-sew)).
+
+### The guide's line
+
+The guide's line is its first subpath, as a guided fill reads its guide with the copy strategy, its
+default. Its stroke's width is ignored. A closed guide is opened where it
+closes, as a guided fill opens it. Other subpaths are ignored.
+
+### Drawing a guide
+
+A guide is a shape named `stitch:guide`, or `stitch:guide` and a note of the person's own, such as
+`stitch:guide left petal`. The name is read as a mark's, by the same code (`design::mark::note`), and the
+readers take guides out of the elements beside the marks (`mark::taken_out`). It is never sewn.
+
+- **In VectorCraft**, the person draws the guide with the Pen or Pencil tool over the traced picture and
+  names it in the Layers panel. VectorCraft 0.23.0 gives a plug-in no canvas tool. `stitch:guide` is the
+  name VectorCraft documents already give a guide grouped with the shapes it steers ([the markers
+  table](vectorcraft-integration.md)). A path so named keeps that meaning for shapes with settings, and is
+  also a guide of the design for every automatic area it crosses, wherever it lies in the layers. A traced
+  picture lies in one layer, and a person draws all its guides in that layer. A guide its group doesn't use is no
+  longer said to be unused (`SC-W0807`) when the design has an automatic shape, and an automatic shape
+  grouped with a guide alone is no longer told that its markers are unused. `SC-W0919` names a guide that
+  steers nothing (`REQ-VC-032`).
+- **In an SVG file**, the guide is a path whose `inkscape:label` is the name. Ink/Stitch's guide line, a
+  path with its marker grouped with a shape, keeps its Ink/Stitch meaning and guides only that group.
+- **From the command line**, `--guide X,Y,X,Y…` draws a guide through 2 points or more, in percent of the
+  box round the design's shapes as `--keep` reads its numbers, joined by straight lines. A few points
+  serve, since the guided fill smooths its rows. The guides are named `guide-1`, `guide-2` and so on, and a
+  bug-report bundle keeps them with the rules' settings (`REQ-CLI-022`).
+
+```sh
+stitch plan leaf.png -o leaf.pes --guide '20,80,45,50,60,20'
+```
+
+**What the notices say.** `SC-I0918` names each guide with the areas and the number of parts that follow
+it, and the parts it crosses that keep their stitches. `SC-W0919` names a guide that crosses no filled
+part of an automatic area, whose line has no length, or that is in a design with no automatic shape. The
+design then sews as without it. The Auto effect's preview in VectorCraft draws straight rows until a live
+effect is given its document's other objects (the [RFC](rfc-vectorcraft-abi-v2.md)'s P6). The exported
+file and its preview picture follow the guide.
+
+### Where it runs
+
+Planning reads each guide's line once, beside the marks (`auto::marks`). In the rules by width
+(`auto::sewn`), each filled part that is no speck is tested against the guides' lines, as a running
+stitch is cut to its clips (`normalize::region::cut::inside`). Each pair of a segment of a line and a side
+of the part costs a unit of work of the area's element. A design without guides tests
+nothing. The guided fill then sews as it does for a shape set by hand.
+
+### What guides sew
+
+Measured on 2026-11-19 with the build on `main` at `7486520b`, built at opt-level 1, by the numbers of
+M13.41's measure and M13.29's count, and the stitches of the PES file read back. No picture is a goal: one
+procedure drew every guide, never a form, and phase 1's prototype measured the same guides. Each picture
+was planned without guides. Its 3 largest filled parts were then each given a guide along their longest
+axis, the line between the 2 points of the part's outline farthest apart, bent so that its middle lies a
+fifth of its length to the left, through 25 points. A guide drawn so crosses other parts too, as a person's
+would. The last column counts, among the elements of the areas that the guides miss, those that sew the
+same stitches as without guides.
+
+| Picture | Guides | Parts that follow | Likeness | Thickest spot, fills | At 3 fills or more, mm² | Bare, % | Slivers | Jump threads | Thread changes | Stitches | Export's count | Other areas' elements the same |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Dog on turf, 6 threads | none |  | 0.856 | 4.00 | 131.25 | 0.021 | 0 | 60 | 8 | 10,068 | 10,068 |  |
+|  | 3 | 16 in 16 areas | 0.856 | 4.00 | 144.00 | 0.030 | 0 | 55 | 9 | 10,374 | 10,374 | 35 of 117 |
+| Dog on turf, 9 threads | none |  | 0.829 | 4.00 | 149.00 | 0.010 | 0 | 62 | 12 | 10,742 | 10,742 |  |
+|  | 3 | 13 in 13 areas | 0.829 | 4.00 | 164.25 | 0.015 | 0 | 59 | 12 | 11,167 | 11,167 | 68 of 143 |
+| Running dog, 6 threads | none |  | 0.898 | 4.00 | 129.00 | 0.000 | 0 | 49 | 8 | 11,077 | 11,077 |  |
+|  | 3 | 15 in 15 areas | 0.898 | 4.00 | 139.50 | 0.005 | 0 | 46 | 11 | 11,422 | 11,422 | 62 of 117 |
+| Running dog, 9 threads | none |  | 0.921 | 4.00 | 176.50 | 0.005 | 0 | 64 | 11 | 12,369 | 12,369 |  |
+|  | 3 | 8 in 8 areas | 0.921 | 4.00 | 213.75 | 0.014 | 0 | 63 | 13 | 12,659 | 12,659 | 56 of 174 |
+| Pear | none |  | 1.000 | 3.86 | 13.00 | 0.000 | 0 | 2 | 2 | 4,660 | 4,660 |  |
+|  | 3 | 5 in 4 areas | 1.000 | 4.00 | 16.75 | 0.007 | 0 | 3 | 2 | 5,218 | 5,218 | 2 of 3 |
+| Lettered patch | none |  | 1.000 | 3.98 | 40.25 | 0.003 | 0 | 8 | 2 | 4,026 | 4,026 |  |
+|  | 3 | 1 in 1 area | 1.000 | 3.98 | 49.75 | 0.002 | 0 | 8 | 2 | 4,328 | 4,328 | 13 of 15 |
+| TS-13A | none |  | 1.000 | 3.99 | 23.75 | 0.013 | 1 | 18 | 2 | 11,513 | 11,513 |  |
+|  | 3 | 5 in 5 areas | 1.000 | 3.99 | 24.00 | 0.014 | 1 | 18 | 2 | 12,021 | 12,021 | 30 of 30 |
+| TS-13B | none |  | 1.000 | 3.85 | 4.25 | 0.066 | 0 | 46 | 4 | 6,895 | 6,895 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.85 | 3.25 | 0.066 | 0 | 46 | 4 | 7,035 | 7,035 | 72 of 72 |
+| TS-13C | none |  | 1.000 | 3.96 | 95.75 | 0.000 | 0 | 13 | 4 | 6,064 | 6,064 |  |
+|  | 3 | 5 in 4 areas | 1.000 | 3.99 | 107.25 | 0.005 | 0 | 15 | 4 | 6,368 | 6,368 | 14 of 18 |
+| TS-13D | none |  | 1.000 | 3.97 | 50.75 | 0.000 | 0 | 12 | 3 | 7,994 | 7,994 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.99 | 101.00 | 0.000 | 0 | 12 | 3 | 9,008 | 9,008 | 17 of 19 |
+| TS-13E | none |  | 1.000 | 3.39 | 2.50 | 0.000 | 0 | 5 | 2 | 2,716 | 2,716 |  |
+|  | 3 | 7 in 7 areas | 1.000 | 3.41 | 2.75 | 0.018 | 0 | 5 | 2 | 3,023 | 3,023 | 22 of 22 |
+| Badge, abutting | none |  | 1.000 | 3.01 | 0.00 | 0.000 | 0 | 0 | 2 | 3,431 | 3,431 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.22 | 0.00 | 0.010 | 0 | 0 | 2 | 3,957 | 3,957 | 1 of 1 |
+| Badge, stacked | none |  | 1.000 | 3.01 | 0.00 | 0.000 | 0 | 0 | 2 | 3,431 | 3,431 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.22 | 0.00 | 0.010 | 0 | 0 | 2 | 3,957 | 3,957 | 1 of 1 |
+| Emblem, abutting | none |  | 1.000 | 3.57 | 1.25 | 0.000 | 0 | 2 | 3 | 4,997 | 4,997 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.62 | 3.00 | 0.000 | 0 | 2 | 3 | 6,188 | 6,188 | 4 of 4 |
+| Emblem, stacked | none |  | 1.000 | 3.39 | 1.00 | 0.000 | 0 | 2 | 3 | 4,998 | 4,998 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.71 | 1.00 | 0.000 | 0 | 2 | 3 | 6,153 | 6,153 | 4 of 4 |
+| Button | none |  | 1.000 | 3.96 | 2.75 | 0.000 | 0 | 0 | 2 | 1,847 | 1,847 |  |
+|  | 3 | 4 in 4 areas | 1.000 | 4.00 | 2.25 | 0.009 | 0 | 0 | 2 | 2,014 | 2,014 | 10 of 10 |
+| Marked patch | none |  | 1.000 | 3.95 | 14.25 | 0.000 | 0 | 1 | 3 | 4,077 | 4,077 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.97 | 15.25 | 0.005 | 0 | 1 | 3 | 4,503 | 4,503 | 2 of 6 |
+| Magnolia | none |  | 0.849 | 4.00 (above the cap) | 521.25 | 0.006 | 0 | 313 | 10 | 38,197 | 38,197 |  |
+|  | 3 | 26 in 25 areas | 0.848 | 4.00 | 603.00 | 0.005 | 0 | 302 | 10 | 39,946 | 39,946 | 289 of 560 |
+| Coleus | none |  | 0.841 | 4.12 (above the cap) | 959.25 | 0.041 | 1 | 473 | 13 | 62,219 | 62,219 |  |
+|  | 3 | 15 in 15 areas | 0.842 | 4.01 (above the cap) | 977.25 | 0.041 | 1 | 459 | 13 | 62,249 | 62,249 | 424 of 1020 |
+| Goose | none |  | 0.820 | 4.00 | 489.25 | 0.016 | 0 | 170 | 10 | 38,352 | 38,352 |  |
+|  | 3 | 10 in 9 areas | 0.820 | 4.00 | 549.25 | 0.014 | 0 | 169 | 10 | 39,509 | 39,509 | 270 of 384 |
+| Castle | none |  | 0.779 | 4.00 | 255.75 | 0.010 | 0 | 104 | 9 | 28,526 | 28,526 |  |
+|  | 3 | 7 in 6 areas | 0.779 | 4.00 | 280.00 | 0.009 | 0 | 102 | 9 | 29,395 | 29,395 | 122 of 210 |
+
+- **The parts follow their guides.** Each guide steered up to 16 filled parts, the parts it was drawn along
+  and those it crossed on the way. The rows bend with the guide in the preview pictures, and the export
+  sews what the plan says, stitch for stitch.
+- **The repository's drawn designs sew the rest as before.** TS-13A, TS-13B, TS-13E, the badges, the
+  emblems and the button sew the same stitches in every element of the areas the guides miss. Elsewhere
+  the order changes. Each element a guide makes is a shape more to order, so the rest of a traced photo or
+  dog starts and ends elsewhere. Thread changes rise by up to 3, on the running dog in 6 threads.
+- **The cap holds.** No guided picture sews above 4 fills where `main` doesn't, and the coleus, which sews
+  4.12 fills on `main`, sews 4.01. The prototype sewed the goose at 4.02 and the castle at 4.28, where
+  parts of one area that rounding left a hair apart each reached under the other once a guide made them 2
+  elements. Such fills stay one area for the overlaps (`REQ-AUTO-110`). The area at 3 fills or more grows
+  on most pictures, by up to 82 mm² of the magnolia's 521 and 50 mm² on TS-13D, since a guided fill sews
+  more stitches than the tatami fill it replaces: its copies lie closer where the guide bends.
+- **The fabric is covered as before.** The prototype left up to 0.23 % of a design bare, at the edges where the
+  guided rows ended square on: automatic digitizing keeps a fill's turns as stitches (`turn_stitches`), and
+  the guided fill didn't read it, so every second row started a needle point inside the edge. It reads it
+  now ([guided fill](algorithms/guided.md#sewing-the-lines)). What is left is at most 0.018 % more of a
+  design, on TS-13E, and 0.009 % on a dog, where a few rows meet the outline at a slant and end short of
+  it, far under the limit of 0.15 %.
+- **A guide over a detail leaves the area under it alone.** The badge's preview showed a guide drawn over
+  its disc steering the field round it too, since the field is digitized whole under the disc. The guide's
+  line is now tested where the area shows.
+- **The likeness doesn't move,** by at most 0.001, since a guide doesn't change a part's colour or place.
+- **What it costs to plan.** The guided fills cost more or less than tatami fills by their stitches, and the
+  test against the guides is a small share of it. With the prototype, planned and measured with its 3
+  guides, the pear took 1.2 % more instructions than without them, and the running dog in 6 threads 4.1 %
+  less (callgrind, opt-level 1).
+
+### Decisions for the owner
+
+Each with the recommendation, which the step took on 2026-11-19. The roadmap's row no longer
+says the area is grouped with the guide.
+
+- **Which parts follow: those the guide crosses.** The roadmap's row planned an area grouped with the guide.
+  A traced picture is hundreds of shapes in one layer, and a person can't easily group one of them, and in
+  VectorCraft a guide in that layer is already grouped with all of them. The other choices are the parts
+  wholly inside the guide's stroke, read as a mark's band, which leaves out the large parts whose rows show
+  most, and the parts of the shapes grouped with it. Recommended: the parts it crosses, drawn over the
+  picture as a mark is.
+- **One name, `stitch:guide`.** VectorCraft documents already name a guide so. The other choice is a name
+  of its own, such as `stitch:rows`, which would keep the 2 readings apart but gives a person 2 names for
+  one idea. Recommended: one name, with both readings.
+- **The guide drawn last steers** a part that 2 cross. The other choices, the guide nearest the part's
+  middle or the one with the longest stretch inside it, are guesses a person can't see. Recommended: the
+  last drawn.
+- **Columns and running stitches keep their stitches.** The other choice sews a crossed part no wider than
+  a satin column as a guided fill too. A column's stitches already follow its form. Recommended: keep them.
+- **No setting, the guided fill's defaults.** The guide is enough, as the row says. A person who wants
+  other rows gives the shape its own effect, as for any shape. Recommended: no setting.
+- **The rest of a photo may sew in another order,** as for marks. Each element a guide makes is a shape
+  more to order. Recommended: accept it, and let M13.35's cap bound the thickness.
+
+### What isn't built
+
+- A guide that steers satin columns. Their stitches already lie across the part's width.
+- A guide with an area, which would steer only the parts inside it, or a guide's stroke read as a band.
+  The prototype's guides did their work without them.
+- Turning the base layer to follow a guided fill.
+
 ## Pictures from the command line
 
 `stitch plan picture.png` and `stitch export picture.png` trace the picture with VectorCraft's command line,

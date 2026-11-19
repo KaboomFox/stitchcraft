@@ -241,6 +241,24 @@ macro_rules! auto_codes {
         /// that crosses the mark's edge is decided as if there were no mark, and the message says which of
         /// these it is. Draw the mark round the whole part, a little larger than it, or remove it.
         AutoMarkUnused = "SC-W0917", Warning, "Mark not used";
+
+        /// A guide, a line named `stitch:guide` or one that `stitch plan --guide` gives, crosses filled parts
+        /// of the design's automatic areas. `--auto` sews each part it crosses as a guided fill whose rows
+        /// follow the line, the parts of one area that follow one guide as one element. A part that 2 guides
+        /// cross follows the one drawn last. Parts sewn along their middles, as running stitches or satin
+        /// columns, keep their stitches. The overlaps, the base layer and the cap stay as they are, though
+        /// the rest of the design may sew in another order.
+        ///
+        /// The message names the guide, how many filled parts of how many areas follow it, and how many
+        /// parts sewn along their middles it crosses. A guide that crosses only a corner of a large part
+        /// steers all of it: look at the preview, and draw the guide again where the rows go wrong.
+        AutoGuided = "SC-I0918", Info, "Parts that follow a guide";
+
+        /// A guide steers nothing, and the design sews as it would without it. It crosses no filled part of
+        /// an automatic area, or its line has no length, or the design has no automatic shape, and the
+        /// message says which of these it is. Draw the guide as a line across the filled shapes whose rows
+        /// should follow it, or remove it.
+        AutoGuideUnused = "SC-W0919", Warning, "Guide not used";
         } }
     };
 }

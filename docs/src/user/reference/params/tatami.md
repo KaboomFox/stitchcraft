@@ -108,11 +108,12 @@ along the fill's edge.
 stitch: the turn's 2 needle points move apart along it until the stitch between them is the
 shortest stitch. Off, the second of them is left out, as any needle point too near the one before
 it is, and every second row then starts up to a stitch inside the outline, which leaves a notch
-in the fill's edge there. Automatic digitizing turns it on for its fills.
+in the fill's edge there. A guided fill keeps the turns between its lines so too. Automatic
+digitizing turns it on for its fills.
 
 - **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `false`
-- **Applies to:** Tatami fill
+- **Applies to:** Tatami fill, Guided fill
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 

@@ -20,7 +20,7 @@
 use std::collections::BTreeSet;
 
 use stitchcraft_core::{Budget, Diagnostic, Point};
-use stitchcraft_engine::design::{Design, FillRule, Path, Segment, Shape, Subpath};
+use stitchcraft_engine::design::{Design, FillRule, Path, Segment, Shape, Subpath, within_working_limit};
 use stitchcraft_svg::lettering::objects::{self, Waiting};
 use stitchcraft_svg::lettering::pictures::{self, MARKER, Marker};
 use stitchcraft_vectorcraft::lettering::{Fonts, found_for};
@@ -48,19 +48,36 @@ fn area(text: &str) -> Option<([f64; 4], &str)> {
 /// box's left and top: 4 numbers, the area inside the box and not empty. `--text` and `--keep` both read
 /// their areas so.
 pub fn share(text: &str) -> Option<[f64; 4]> {
-    let mut parts = text.split(',').map(|part| part.trim().parse::<f64>().ok().filter(|number| number.is_finite()));
-    let area = [parts.next()??, parts.next()??, parts.next()??, parts.next()??];
+    let area: [f64; 4] = numbers(text)?.try_into().ok()?;
     let [left, top, width, height] = area;
     let inside = left >= 0.0 && top >= 0.0 && width > 0.0 && height > 0.0 && left + width <= 100.0 && top + height <= 100.0;
-    (parts.next().is_none() && inside).then_some(area)
+    inside.then_some(area)
+}
+
+/// The numbers of `text`, separated by commas, white space round each allowed: `None` when one doesn't read
+/// as a finite number. `--text`, `--keep` and `--guide` read their numbers so.
+pub fn numbers(text: &str) -> Option<Vec<f64>> {
+    text.split(',').map(|part| part.trim().parse::<f64>().ok().filter(|number| number.is_finite())).collect()
+}
+
+/// The point at `x` and `y` in percent of the box round `design`'s shapes, from its left and top, in the
+/// design's millimetres; `None` when it lies outside the range a design's points may have.
+pub fn at(design: &Design, x: f64, y: f64) -> Option<Point> {
+    let (left, top, across, down) = scale(design);
+    Point::new(left + x * across, top + y * down).ok().filter(|point| within_working_limit(*point))
+}
+
+/// The left and the top of the box round `design`'s shapes, and a hundredth of its width and of its height.
+fn scale(design: &Design) -> (f64, f64, f64, f64) {
+    design
+        .bounds()
+        .map_or((0.0, 0.0, 0.0, 0.0), |b| (b.min().x(), b.min().y(), (b.max().x() - b.min().x()) / 100.0, (b.max().y() - b.min().y()) / 100.0))
 }
 
 /// The rectangle that `share`, an area as [`share`] reads it, marks of `design`: a closed fill in the
 /// design's millimetres, from the box round its shapes.
 pub fn rectangle(design: &Design, [left, top, width, height]: [f64; 4]) -> Shape {
-    let bounds = design.bounds();
-    let (x, y, across, down) =
-        bounds.map_or((0.0, 0.0, 0.0, 0.0), |b| (b.min().x(), b.min().y(), (b.max().x() - b.min().x()) / 100.0, (b.max().y() - b.min().y()) / 100.0));
+    let (x, y, across, down) = scale(design);
     let (x0, y0) = (x + left * across, y + top * down);
     let (x1, y1) = (x0 + width * across, y0 + height * down);
     // A share of a design's box lies inside it, so each corner is a point of the design's own range.
