@@ -268,14 +268,14 @@ in 6 steps:
    it shares the longest edge with (`SC-I0915`). A line of even width, as a pen draws it, sews as a
    line. Turn **Fill uneven parts** off (`auto_fill_uneven`) to keep every line, as the `logo` style does.
    A line that doesn't touch another piece of its colour, such as a twig or the pale rim of a petal, is a detail
-   of its own, and merged it is lost. By default every such line merges. Raise **Least likeness kept when
-   lines merge** (`auto_min_likeness`) when the stitched preview loses fine details that matter, such as the
-   twigs of a branch. Lines then merge only while the picture keeps that share of its detail, those of the
-   colours with the most pieces first, and the rest sew as lines. 0.85 keeps 0.75 or more of every picture
+   of its own, and merged it is lost. So lines merge only while the picture keeps a share of its detail,
+   **Least likeness kept when lines merge** (`auto_min_likeness`), those of the colours with the most
+   pieces first, and the rest sew as lines. The default, 0.85, keeps 0.75 or more of every picture
    measured. Each line kept sews as a running stitch and can add a jump thread: the photos measured sewed 61
-   to 274 more shapes as running stitches and 50 to 236 more jump threads. Keeping lines can also change the
-   order the shapes sew in, and a spot elsewhere can then sew thicker: one photo's thickest spot rose by 1.4
-   fills. Check the thickness view after you raise it.
+   to 274 more shapes as running stitches and 50 to 236 more jump threads. Lower the setting for fewer jump
+   threads where the fine lines matter less, such as a photo sewn small, or set it to 0 to merge every line.
+   Keeping lines changes the order the shapes sew in. The cap on thread (`auto_thick_cap_fills`) holds
+   every spot to 4 fills in any order.
 4. **Specks.** A shape or a part of one smaller than 1 mm² would sew a knot. It is merged into the shape
    it shares the longest edge with (`SC-I0905`, `auto_min_area_mm2`).
 5. **Overlaps.** The thread pulls stitches in from the edges of their shape, so shapes that only meet show
@@ -375,10 +375,11 @@ choice:
    no thread change, so that no fill's rows lie over it. Any shape whose neighbours close in on it and
    are larger counts as one. StitchCraft finds it by its outline and its neighbours alone, not by what
    the picture shows.
-   This rule is off by default: turn it on with `--set auto_details_last=true`. It costs no thread
-   change, but a fill that moves for a detail can lay more thread at a spot elsewhere, so look at the
-   thickness map before you sew. Turn it on for a picture whose small dark parts, such as eyes, need
-   whole edges. It turns on by default once StitchCraft caps the thread at every spot.
+   The rule is off by default. It costs no thread change, but on traced photos it leaves 1 to 7 more
+   jump threads to cut by hand and shows no more of the picture. Turn it on with
+   `--set auto_details_last=true` when no fill's rows may lie over the edge of an eye or a mark, as on a
+   logo or a drawing with small marks on large patches. The cap on thread still limits every spot to 4
+   fills.
 6. Of the shapes a thread may sew, the nearest sews next.
 
 One thread or another comes back where the rules need it. Dark outlines sew after the light fills they

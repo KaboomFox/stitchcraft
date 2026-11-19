@@ -2118,6 +2118,24 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.48: details last is off by default again (`REQ-AUTO-098`).
+  - `auto_details_last` is off, and `auto_min_likeness` stays 0.85. On the traced dogs details last cost
+    1, 4, 7 and 7 jump threads, each cut by hand, and their likeness didn't move. It comes back on by
+    default once the search for the fewest thread changes no longer sews a thread's whole batch later for it.
+  - The traced dogs leave 1, 4, 7 and 7 jump threads fewer than with M13.45, and sew as with likeness
+    merging alone. `REQ-AUTO-103`'s cases set both settings themselves.
+  - Set `auto_details_last` to true to sew the details last, as M13.45 did.
+- M13.45: likeness merging and details last are on by default (`REQ-AUTO-103`, `REQ-AUTO-108`).
+  - `auto_min_likeness` is 0.85, where it was 0, and `auto_details_last` is on. Both landed off, since each
+    can change the order the blocks sew in, and M13.35's cap now limits every spot to 4 fills in any order.
+  - Of the repository's pictures only the traced dogs and the marked patch drawn abutting sew differently. The dogs on turf keep 3 and 4 thin
+    lines more, and their likeness rises from 0.814 and 0.779 to 0.856 and 0.829. The dogs leave 4 to 8 jump
+    threads more, and each sews less area at 3 fills or more.
+  - A detail moves to sew after a larger area only together with its own details and columns
+    (`REQ-AUTO-108`). Of 2 rows of threads with as few changes, the search prefers the one that keeps them
+    on top. Without it a
+    traced dog's tan patch lay under the edge of the grey area round it, which had moved.
+  - Set `auto_min_likeness` to 0 for fewer jump threads, or `auto_details_last` to false, to sew as before.
 - M13.37: traced letters sew as strokes (`REQ-AUTO-087`, `REQ-AUTO-088`).
   - A block letter or a logo's bars traced as an automatic area sews a satin column along each straight
     stroke. Its stitches lie square to the stroke. Its centre lines' columns ran on round its corners. The M's stitches lean at most 17° to 19° from square, where they leaned up to

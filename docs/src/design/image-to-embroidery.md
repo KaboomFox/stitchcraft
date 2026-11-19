@@ -1849,10 +1849,10 @@ function ([before and after sheet](before-after-sheet.md)).
 ### Merging by likeness
 
 Thin lines merge only while the picture keeps `auto_min_likeness` of its likeness ([Neighbours](#neighbours),
-`REQ-AUTO-095`, M13.44). The setting is 0 by default, where every line merges as before the rule, and a user
-raises it for a picture.
+`REQ-AUTO-095`, M13.44). The setting is 0.85 by default since M13.45. At 0 every line merges, as before the
+rule.
 
-It is off by default because keeping lines can make a spot sew thicker far from any line. A line kept sews as
+It was merged at 0, off, because keeping lines can make a spot sew thicker far from any line. A line kept sews as
 a running stitch, and the sewing order then puts the blocks of a colour in another order. A fill that sewed
 first at a spot can then sew over others there. On one photo measured at 0.85 the thickest spot rose from 5.60
 to 7.03 fills, at a place 3.6 mm or more from every line kept, where the block order had changed. Merging any
@@ -1860,8 +1860,8 @@ quarter of the lines kept there left 7.03 to 7.62 fills. Merging all of them put
 thickest spot moved to another place at 7.55. On another photo the thickest spot moved too, and the block
 order changed there as well. Where a reorder piles thread can't be told from a line, so no rule about lines
 prevents it, and planning twice to check costs a second plan. The answer is one cap on thickness at the end of
-planning that every design meets, whatever its order (M13.35). The setting is turned on by default once that
-cap is merged.
+planning that every design meets, whatever its order (M13.35). With the cap merged, the owner turned the
+setting on by default (M13.45). [Details last](#details-last) gives the numbers of both settings on.
 
 The measurements below are evidence of what the rule does, at a bound of 0.85 and as each picture sews with
 the setting off. No picture is the rule's goal. The photos marked * are local. Thickest is the thickest spot in fills, and the area is at 3 fills or
@@ -2154,9 +2154,9 @@ its thread. The owner's machine has one needle, and each thread change is a reth
 rules, details last took the traced photos in 6 threads from 8 thread changes to 13 and 14. In 9 threads
 the search ran out of its budget, and they changed thread 35 and 38 times.
 
-**Off by default** (`REQ-AUTO-098`). The rule runs only when the design's lowest automatic shape turns
-`auto_details_last` on. Off, the order skips the search for details, and a design sews as it did before
-M13.40. The rule waits for one cap on thickness at the end of planning (M13.35). Reordering fills can
+**Off by default** (`REQ-AUTO-098`, M13.48). The rule runs only when the design's lowest automatic
+shape has `auto_details_last` on. Off, the order skips the search for details, and a design sews as it did
+before M13.40. The rule landed off, and waited for one cap on thickness at the end of planning (M13.35). Reordering fills can
 raise the thread at a spot where no detail lies. A fill that moves for a detail starts and ends
 elsewhere, and its own travel runs elsewhere under its rows. It also reaches under other neighbours. On
 one traced photo the thread over one spot rose from 4.69 fills to 5.49 by one wish:
@@ -2168,7 +2168,27 @@ area covers less than a share, for every share tried from a quarter to all of it
 old thickest spot and raised another. A check that plans twice and keeps the better plan, or a cut-off by
 the number of areas, would only hide that. An area count can't even tell a photo from a logo: a traced
 photo can have fewer areas than a badge. Once the cap limits every spot, a reorder can't pile thread
-anywhere, and the setting is turned on by default.
+anywhere, and so M13.45 turned the setting on by default. M13.48 turned it off again, for its jump
+threads ([off by default again](#details-last), below).
+
+**A detail inside a detail** (`REQ-AUTO-108`, M13.45). A detail can have details of its own, as a pupil on
+an iris or a window in a door does. With both settings on, a traced dog's grey area that the darker fur
+closes in on moved to sew after the fur, while the tan patch on it, which would cost a thread change to
+move, stayed where it was. The grey's outline and rows then lay over the tan's edge. So a detail moves only
+together with what sews on top of it. A wish moves its second element later. Its nest is that wish, each
+wish that something sews after that element, a detail of it or a satin column bordering it, and the
+nests of those. The search grants a nest whole or not at all. It also keeps the row itself from doing the
+same. Of the rows with the fewest changes it takes the one that misses the fewest inner wishes, those whose
+first element another wish moves, and only then the one that misses the fewest wishes. So wherever a row
+with as few changes keeps a pupil on top, the search doesn't take one that sews the iris after the fur and
+leaves its pupil under it. A nest goes by the shapes' sizes and where they meet. It doesn't need a second
+plan or a measure of what shows. The cases in `tests/auto_details.rs` and `order/fewest/tests.rs` draw a pupil on
+an iris where 3 patches meet.
+
+Making every smaller area that a moving detail meets one of its followers, as the nest's own wishes are,
+was measured and not taken. With more inner pairs to weigh in the choice of the row, the search took a row
+that left the dog's tan patch under the grey's edge again. The small areas of the dogs that show less, by
+each area's own pixels that show its thread (`fabric::shown`), were as many as before.
 
 **Measured** (2026-11-18, planned at opt-level 2), off and then on:
 
@@ -2193,6 +2213,70 @@ On, the pear takes 8.3 % more, the dog on turf in 6 threads 13.6 % more and the 
 
 **Open question.** Where a detail sews before a fill, the fill's rows and pull compensation reach about
 0.25 mm over its edge, and a later step could end them at the detail's edge.
+
+**Both on by default** (M13.45, `REQ-AUTO-103`). With the cap merged, the owner turned on details last and
+merging by likeness, at 0.85 ([merging by likeness](#merging-by-likeness)), on 2026-11-18. Each design of the
+repository sews as before, stitch for stitch, but the traced dogs and the marked patch drawn abutting, which
+now sews as the stacked one does. Measured on 2026-11-19 at opt-level 2,
+main before M13.45 and then this step, with the area at 3 fills or more in mm², the bare share in
+thousandths of a percent and the likeness in thousandths. What shows of each area is its own pixels that
+show its thread (`fabric::shown`): the last column counts the areas under 20 mm² that show 0.1 mm² or more
+less, and more, with the sum of each. The photos marked * are local:
+
+| Picture | Thickest, fills | Area | Bare | Likeness | Jump threads | Thread changes | Stitches | Small areas showing less, more |
+|---|---|---|---|---|---|---|---|---|
+| Dog on turf, 6 threads | 4.00, 4.00 | 137.25, 126.00 | 10, 21 | 814, 856 | 57, 61 | 8, 8 | 9,985, 9,999 | 2 of 80 (0.6 mm²), 12 (9.4 mm²) |
+| Dog on turf, 9 threads | 4.00, 4.00 | 150.75, 130.00 | 10, 10 | 779, 829 | 58, 66 | 12, 12 | 10,675, 10,697 | 7 of 98 (6.0 mm²), 24 (18.9 mm²) |
+| Running dog, 6 threads | 4.00, 4.00 | 129.00, 106.75 | 0, 1 | 898, 898 | 49, 56 | 8, 8 | 11,077, 10,853 | 9 of 65 (8.7 mm²), 14 (15.8 mm²) |
+| Running dog, 9 threads | 4.00, 4.00 | 176.50, 173.75 | 5, 2 | 921, 921 | 64, 71 | 11, 11 | 12,369, 12,546 | 7 of 86 (5.2 mm²), 16 (16.9 mm²) |
+| Marked patch, abutting | 3.95, 3.98 | 14.25, 14.25 | 0, 0 | 1000, 1000 | 1, 1 | 3, 3 | 4,077, 4,054 | none |
+| A magnolia * | 4.00, 4.00 | 441.75, 470.50 | 5, 6 | 480, 848 | 155, 335 | 9, 10 | 34,258, 36,938 | 107 of 1,982 (65.1 mm²), 266 (359.7 mm²) |
+| A coleus * | 4.22, 4.01 | 851.50, 899.00 | 6, 53 | 454, 839 | 237, 511 | 12, 13 | 56,886, 60,741 | 231 of 3,932 (139.5 mm²), 461 (623.7 mm²) |
+| A greylag goose * | 4.00, 4.00 | 482.50, 473.25 | 7, 16 | 483, 822 | 95, 171 | 8, 10 | 36,668, 37,981 | 35 of 1,784 (18.0 mm²), 140 (211.7 mm²) |
+| A castle * | 4.00, 4.00 | 221.75, 228.50 | 1, 10 | 434, 779 | 54, 114 | 8, 9 | 26,201, 27,892 | 30 of 1,412 (26.5 mm²), 86 (125.6 mm²) |
+
+The machine file holds as many stitches as the plan. The dogs keep their thickest spots within the cap, and
+all 4 sew less area at 3 fills or more. The lines kept and the details moved cost the dogs 4 to 8 jump
+threads and the photos 60 to 274. More small areas show more than show less: the details now sew on top.
+What got worse:
+
+- Each local photo changes thread once or twice more. A line kept sews after the fills it borders, which
+  can bring its thread back. Which lines did it was not traced.
+- The coleus keeps a spot at 4.01 fills, where it kept 4.22, and `SC-W0913` names it. It also leaves 2
+  slivers, and its bare share rises from 0.006 % to 0.053 %, within the cover's limit of 0.5 %.
+- 2 to 14 % of the small areas show less. On the running dog in 6 threads a patch of 16 mm² shows 2.2 mm²
+  less: an area of 108 mm² beside it now sews after it. The search took another row of threads with as few
+  changes, to grant wishes elsewhere, and that area's thread now sews later. A nest binds only what a wish
+  moves, not a whole thread's batch that a change of row moves. Traced by the order of the 2 areas alone.
+
+Planning takes longer where lines are kept, since each line is measured as a part: by the clock on a shared
+machine, the local photos but the magnolia took 1.8 to 2.2 times as long. Counted in instructions by CI,
+the dogs' exports took 10.6 to 13.3 % more and the pear's 9.4 % more before nests, and the test sheets as
+much as before (`conformance/perf.toml`).
+
+These leave every limit as it was, since a limit comes from the whole set.
+
+**Off by default again** (M13.48, `REQ-AUTO-098`). Shown the cost of each setting alone on the traced dogs,
+the owner kept merging by likeness on and turned details last off by default on 2026-11-19. Measured at
+opt-level 2 with M13.45's nests, each dog with merging by likeness on: the jump threads with details last
+off, then on. The last column counts the areas under 20 mm² that details last makes show 0.1 mm² or more
+more, and less, with the sum of each, as the table above does:
+
+| Picture | Jump threads, off, on | Likeness | Small areas showing more, less |
+|---|---|---|---|
+| Dog on turf, 6 threads | 60, 61 | 856, 856 | 2 of 80 (2.7 mm²), none |
+| Dog on turf, 9 threads | 62, 66 | 829, 829 | 20 of 98 (12.1 mm²), 7 (5.8 mm²) |
+| Running dog, 6 threads | 49, 56 | 898, 898 | 14 of 65 (15.8 mm²), 9 (8.7 mm²) |
+| Running dog, 9 threads | 64, 71 | 921, 921 | 16 of 86 (16.9 mm²), 7 (5.1 mm²) |
+
+Merging by likeness alone costs the dogs 3, 4, 0 and 0 jump threads, and raises the likeness of the 2 dogs
+where it costs. Details last adds 1, 4, 7 and 7 more and leaves the likeness as it is. The owner's machine
+trims no jump thread within a colour, so each is cut by hand. Most of the cost is the row of threads: to
+grant a wish, the search takes another row with as few thread changes, and a thread's whole batch then
+sews later. That is the cause M13.45 traced on the running dog in 6 threads. The setting stays, for a
+design where an eye or a mark must keep its edge clear. It comes back on by default once the search's
+tie-break no longer moves a whole batch of a thread later for a wish, and the dogs show a clear gain for
+it.
 
 ### Runs in place of jumps
 
@@ -2727,7 +2811,8 @@ inside it and a mark in a design without an automatic shape, which then sews as 
 
 ### What marks sew
 
-Measured on 2026-11-19 with the build, on `main` with M13.35's cap (`stitch plan --auto`'s numbers, as M13.41's
+Measured on 2026-11-19 with the build, on `main` with M13.35's cap and before M13.45, so with both
+`auto_min_likeness` and `auto_details_last` off (`stitch plan --auto`'s numbers, as M13.41's
 measure and M13.29's count them, and the stitches of the PES file read back). No picture is a goal: one
 procedure marked each, never an eye. Each picture was planned without marks. Its 3 largest parts that the
 plan loses ([likeness](#likeness)) were then each marked by the box round them, grown by 0.5 mm, as a person
