@@ -2107,7 +2107,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - M13.45: likeness merging and details last are on by default (`REQ-AUTO-103`).
   - `auto_min_likeness` is 0.85, where it was 0, and `auto_details_last` is on. Both landed off, since each
     can change the order the blocks sew in, and M13.35's cap now holds every spot to 4 fills in any order.
-  - Of the repository's pictures only the traced dogs sew differently. The dogs on turf keep 3 and 4 thin
+  - Of the repository's pictures only the traced dogs and the marked patch drawn abutting sew differently. The dogs on turf keep 3 and 4 thin
     lines more, and their likeness rises from 0.814 and 0.779 to 0.856 and 0.829. The dogs leave 3 to 5 jump
     threads more, and 3 of them sew less area at 3 fills or more.
   - Set `auto_min_likeness` to 0 for fewer jump threads, or `auto_details_last` to false, to sew as before.
