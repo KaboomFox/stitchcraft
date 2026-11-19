@@ -108,6 +108,9 @@ pub(crate) struct Rules<'r> {
     /// The most thread, in fills, that a spot of a millimetre may sew (`auto_thick_cap_fills`,
     /// `REQ-AUTO-099`): the pass takes thread where a spot has more.
     pub(crate) cap: f64,
+    /// The warning's limit of thread, in fills (`auto_thick_warn_fills`): above it, and only there, the cap may
+    /// take a satin column's top stitches as a last resort (`REQ-AUTO-112`).
+    pub(crate) limit: f64,
     /// The base layer's pieces, by their places in the plan's elements.
     pub(crate) base: &'r BTreeSet<ElementRef>,
     /// The satin columns that digitizing made, by their places in the plan's elements: their top stitches are

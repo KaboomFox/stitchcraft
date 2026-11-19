@@ -80,6 +80,7 @@ pub(crate) fn finished(
             let (base, made, columns) = (refs(&|id| base.contains(id)), refs(&|id| made.contains(id)), refs(&|id| columns.contains(id)));
             let rules = thin::Rules {
                 cap: held.cap,
+                limit: held.limits.warn_fills,
                 base: &base,
                 columns: &columns,
                 overlap: held.overlap,
@@ -331,7 +332,7 @@ mod tests {
         let measure = used(&|meter| Thickness::of(&sewn, meter).is_ok());
         let thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
         let base = BTreeSet::new();
-        let rules = thin::Rules { cap: 4.0, base: &base, columns: &base, overlap: 1.0, shortest: 0.3, longest: 12.1 };
+        let rules = thin::Rules { cap: 4.0, limit: 4.0, base: &base, columns: &base, overlap: 1.0, shortest: 0.3, longest: 12.1 };
         let pass = used(&|meter| thin::thinned(&mut sewn.clone(), &mut thickness.clone(), &rules, meter).is_ok());
         assert!(pass > measure, "{pass} {measure}");
         let budget = Budget { max_work: measure, ..Budget::DEFAULT };

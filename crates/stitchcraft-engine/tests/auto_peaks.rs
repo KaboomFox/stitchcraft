@@ -108,12 +108,14 @@ fn req_auto_073_a_spot_of_a_digitized_picture_sews_above_the_cap_only_on_satin_c
     // (REQ-AUTO-112). Where a spot stays above the cap, the rest of its thread is the cap or less: the cap took
     // what it may. On every design listed, 2 columns of one shape meet over a fill, or a column lies over
     // fills whose top shows.
-    let cap = rules().auto_thick_cap_fills;
+    let (cap, limit) = (rules().auto_thick_cap_fills, rules().auto_thick_warn_fills);
     let mut above = Vec::new();
     for (name, design) in designs() {
         let outcome = in_place(&design);
         let plan = outcome.plan.unwrap_or_else(|| panic!("{name}: {:?}", outcome.diagnostics));
         let (thickest, columns) = fabric::thickest(&plan, &fabric::columns(&design));
+        // No spot above the warning's limit: there the cap takes columns' points too, as a last resort.
+        assert!(thickest <= limit + 1e-9, "{name}: {thickest:.2} fills");
         if thickest > cap {
             assert!(thickest - columns <= cap, "{name}: {thickest:.2} fills, {columns:.2} of them satin columns' top stitches");
             above.push((name, hundredths(thickest)));
@@ -158,14 +160,14 @@ fn req_auto_103_with_lines_kept_and_details_last_each_design_sews_above_the_cap_
     // or less, and the cap, against a cap of 50 fills above every spot, keeps its jumps, jump threads, thread
     // changes and likeness.
     let reordered = [(MIN_LIKENESS, "0.85"), (DETAILS_LAST, "true")];
-    let cap = rules().auto_thick_cap_fills;
+    let (cap, limit) = (rules().auto_thick_cap_fills, rules().auto_thick_warn_fills);
     let mut above = Vec::new();
     for (name, design) in designs() {
         let design = with(&design, &reordered);
         let on = in_place(&design).plan.unwrap();
         let off = in_place(&with(&design, &[("auto_thick_cap_fills", "50")])).plan.unwrap();
         let (thickest, columns) = fabric::thickest(&on, &fabric::columns(&design));
-        if thickest - columns > cap {
+        if thickest - columns > cap || thickest > limit + 1e-9 {
             above.push((name.clone(), hundredths(thickest), hundredths(columns)));
         }
         let (stats_on, stats_off) = (on.stats(), off.stats());

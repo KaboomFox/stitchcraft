@@ -59,7 +59,7 @@ fn rows(width: f64, apart: f64) -> Vec<(f64, f64)> {
 const NONE: &BTreeSet<ElementRef> = &BTreeSet::new();
 
 fn rules() -> Rules<'static> {
-    Rules { cap: 4.0, base: NONE, columns: NONE, overlap: 0.0, shortest: 0.3, longest: 12.1 }
+    Rules { cap: 4.0, limit: 4.0, base: NONE, columns: NONE, overlap: 0.0, shortest: 0.3, longest: 12.1 }
 }
 
 /// Every element of `plan`, as digitizing made them all.
@@ -99,8 +99,8 @@ fn req_auto_100_underlay_under_later_top_stitches_goes_first() {
     let mut capped_plan = sewn.clone();
     let (capped, kept, measured) = cap(&mut capped_plan, &rules());
     let capped = capped.unwrap();
-    assert_eq!(capped.times, [8, 0, 0], "{capped:?}");
-    assert!((capped.taken[0] - 60.129_848_823).abs() < 1e-6 && capped.taken[1..] == [0.0, 0.0], "{capped:?}");
+    assert_eq!(capped.times, [8, 0, 0, 0], "{capped:?}");
+    assert!((capped.taken[0] - 60.129_848_823).abs() < 1e-6 && capped.taken[1..] == [0.0, 0.0, 0.0], "{capped:?}");
     assert!(count(&capped_plan, Role::Underlay) < count(&sewn, Role::Underlay));
     assert_eq!(count(&capped_plan, Role::Top), count(&sewn, Role::Top));
     assert!(measures_as(&kept, &measured));
@@ -144,7 +144,7 @@ fn req_auto_100_a_shape_s_top_under_a_later_shape_goes_second() {
     let mut sewn = plan(&[("under", Role::Top, zigzag(4.0, 0.25)), ("over", Role::Top, zigzag(4.0, 0.0625))]);
     let (capped, kept, measured) = cap(&mut sewn, &rules());
     let capped = capped.unwrap();
-    assert_eq!(capped.times, [0, 8, 0], "{capped:?}");
+    assert_eq!(capped.times, [0, 8, 0, 0], "{capped:?}");
     assert!((capped.taken[1] - 60.129_848_823).abs() < 1e-6, "{capped:?}");
     assert!(measures_as(&kept, &measured));
     assert!(kinds(&capped).starts_with(&format!("{:.1} mm of top stitches under later shapes in ", capped.taken[1])));
@@ -162,7 +162,7 @@ fn req_auto_100_a_shape_s_own_top_where_it_is_doubled_goes_last() {
     let (capped, kept, measured) = cap(&mut capped_plan, &rules());
     let capped = capped.unwrap();
     // A joined stitch lays thread only where the zigzag's own does: 2 points at its turns stay.
-    assert_eq!(capped.times, [0, 0, 20], "{capped:?}");
+    assert_eq!(capped.times, [0, 0, 20, 0], "{capped:?}");
     assert!((capped.taken[2] - 143.808_390_956).abs() < 1e-6, "{capped:?}");
     assert!(measures_as(&kept, &measured));
     assert!(measured.most(Measure::Fills).value < Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap().most(Measure::Fills).value);
@@ -173,7 +173,7 @@ fn req_auto_100_a_shape_s_own_top_where_it_is_doubled_goes_last() {
 fn req_auto_100_every_kind_is_said_in_order() {
     let thickest =
         Thickness::of(&plan(&[("one", Role::Top, zigzag(4.0, 0.25))]), &mut Budget::DEFAULT.meter()).unwrap().unwrap().most(Measure::Fills);
-    let capped = Capped { taken: [1.0, 2.0, 3.04], times: [1, 2, 3], left: Over::default(), thickest };
+    let capped = Capped { taken: [1.0, 2.0, 3.04, 0.0], times: [1, 2, 3, 0], left: Over::default(), thickest };
     assert_eq!(
         kinds(&capped),
         "1.0 mm of underlay and travel in 1 place, 2.0 mm of top stitches under later shapes in 2 places, 3.0 mm of a shape's own doubled top stitches in 3 places"
@@ -309,7 +309,7 @@ fn req_auto_100_a_point_left_by_a_round_goes_in_the_next_once_the_one_before_it_
     let run = vec![(0.0, 1.0), (4.0, 1.0), (2.0, 1.25), (0.0, 1.5)];
     let mut sewn = plan(&[("base", Role::Underlay, run), ("top", Role::Top, zigzag(4.0, 0.05))]);
     let (capped, kept, measured) = cap(&mut sewn, &rules());
-    assert_eq!(capped.unwrap().times, [2, 0, 0]);
+    assert_eq!(capped.unwrap().times, [2, 0, 0, 0]);
     assert!(measures_as(&kept, &measured));
     let left: Vec<(f64, f64)> = sewn
         .stitches()
@@ -369,7 +369,7 @@ fn req_auto_100_a_point_is_looked_at_when_its_stitch_out_comes_near_a_spot_above
 #[test]
 fn ribbons_index_the_cells_a_stitch_covers_and_charge_one_unit_each() {
     let mut ribbons = Ribbons::default();
-    let ribbon = |from: (f64, f64), to: (f64, f64), at: Entry| Ribbon::of((p(from.0, from.1), p(to.0, to.1)), (0.0, 0.0), at, None).unwrap();
+    let ribbon = |from: (f64, f64), to: (f64, f64), at: Entry| Ribbon::of((p(from.0, from.1), p(to.0, to.1)), (0.0, 0.0), at, None);
     let mut meter = Budget::DEFAULT.meter();
     ribbons.add(ribbon((2.5, 3.5), (4.5, 3.5), (0, 1)), &mut meter).unwrap();
     assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 3);
@@ -378,15 +378,15 @@ fn ribbons_index_the_cells_a_stitch_covers_and_charge_one_unit_each() {
     // A place under both: each place along a stitch of 0.1 mm, 3 of them, looks at the 2 stitches of its cell.
     let along = SewnStitch { block: 0, index: 9, from: p(3.2, 3.5), to: p(3.3, 3.5), role: Role::Underlay, from_role: Role::Underlay };
     let mut meter = Budget::DEFAULT.meter();
-    assert!(ribbons.covers(&along, |_| true, &mut meter).unwrap());
+    assert!(ribbons.covers(&along, |_| true, false, &mut meter).unwrap());
     assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 9);
     // Ended, a stitch covers nothing.
     ribbons.kill((0, 1));
     ribbons.kill((0, 2));
-    assert!(!ribbons.covers(&along, |_| true, &mut Budget::DEFAULT.meter()).unwrap());
+    assert!(!ribbons.covers(&along, |_| true, false, &mut Budget::DEFAULT.meter()).unwrap());
     // A place in no cell is not covered.
     let away = SewnStitch { from: p(9.0, 9.0), to: p(9.1, 9.0), ..along };
-    assert!(!ribbons.covers(&away, |_| true, &mut Budget::DEFAULT.meter()).unwrap());
+    assert!(!ribbons.covers(&away, |_| true, false, &mut Budget::DEFAULT.meter()).unwrap());
 }
 
 #[test]
@@ -396,7 +396,7 @@ fn req_auto_100_a_stitch_taken_out_covers_nothing_after() {
     let twice = vec![(1.0, 1.5), (3.0, 2.0), (1.0, 2.5), (1.0, 1.5), (3.0, 2.0), (1.0, 2.5)];
     let mut sewn = plan(&[("base", Role::Top, zigzag(4.0, 0.0625)), ("twice", Role::Top, twice)]);
     let (capped, kept, measured) = cap(&mut sewn, &rules());
-    assert_eq!(capped.unwrap().times, [0, 0, 1]);
+    assert_eq!(capped.unwrap().times, [0, 0, 1, 0]);
     assert!(measures_as(&kept, &measured));
     let turns = sewn.stitches().filter(|stitch| stitch.kind == StitchKind::Normal && stitch.at == p(3.0, 2.0)).count();
     assert_eq!(turns, 1);
@@ -430,10 +430,10 @@ fn req_auto_114_the_pull_moves_a_stitch_s_ends_in() {
     assert_eq!(pulled(a, b, 2.5, 0.0), Some((p(2.5, 0.0), b)));
     assert_eq!(pulled(a, b, 2.0, 2.0), None);
     assert!(pulled(a, b, 1.99, 2.0).is_some());
-    let ribbon = Ribbon::of((a, b), (0.5, 1.0), (0, 3), None).unwrap();
+    let ribbon = Ribbon::of((a, b), (0.5, 1.0), (0, 3), None);
     assert_eq!(
-        (ribbon.from, ribbon.to, ribbon.whole, ribbon.cut, ribbon.at, ribbon.alive),
-        (p(0.5, 0.0), p(3.0, 0.0), (a, b), (0.5, 1.0), (0, 3), true)
+        (ribbon.pulled, ribbon.whole, ribbon.cut, ribbon.at, ribbon.alive),
+        (Some((p(0.5, 0.0), p(3.0, 0.0))), (a, b), (0.5, 1.0), (0, 3), true)
     );
 }
 
@@ -465,4 +465,36 @@ fn req_auto_114_a_row_end_stays_where_a_later_column_pulled_in_leaves_the_row_be
     // As a fill's rows, which hide what they lie on, it takes them.
     let (capped, _, _) = cap(&mut rows_under(2.2), &rules());
     assert!(capped.unwrap().times[1] > 0);
+}
+
+#[test]
+fn req_auto_112_a_joined_stitch_that_turns_45_degrees_or_more_is_a_notch() {
+    let into = sewn(1, (0.0, 0.0), (2.0, 0.0), Role::Top);
+    let towards = |x: f64, y: f64| Change::of(&into, &sewn(2, (0.0, 0.0), (x, y), Role::Top));
+    let (on, turned, across, along) = (towards(3.0, 0.0), towards(2.0, 1.0), towards(1.0, 0.99), towards(0.0, 2.0));
+    assert!(!on.notch && (on.cosine - 1.0).abs() < 1e-12);
+    assert!(!turned.notch && !across.notch && along.notch);
+    assert!(towards(1.0, 1.01).notch);
+    // No notch beats a notch, and then the smaller turn.
+    assert!(on.less_than(turned) && turned.less_than(across) && across.less_than(along) && turned.less_than(along));
+    assert!(!along.less_than(turned) && !turned.less_than(turned) && !along.less_than(along));
+    assert!(towards(0.0, 2.0).less_than(towards(-1.0, 1.0)));
+}
+
+#[test]
+fn req_auto_112_a_column_s_points_go_only_above_the_warning_s_limit_and_until_it() {
+    // One column sews the same zigzag 5 times: 5 fills, each pass covering the others' places as sewn.
+    let points: Vec<(f64, f64)> = (0..5).flat_map(|_| zigzag(4.0, 0.25)).collect();
+    let column: BTreeSet<ElementRef> = ElementRef::from_index(0).into_iter().collect();
+    let as_column = Rules { cap: 3.0, limit: 4.0, columns: &column, ..rules() };
+    let mut sewn = plan(&[("column", Role::Top, points.clone())]);
+    let (capped, _, measured) = cap(&mut sewn, &as_column);
+    let capped = capped.unwrap();
+    assert!(capped.times[..3] == [0, 0, 0] && capped.times[3] > 0, "{capped:?}");
+    let left = measured.most(Measure::Fills).value;
+    assert!(left <= 4.0 && left > 3.5, "{left}");
+    // Under the warning's limit the column stays as it is.
+    let mut kept = plan(&[("column", Role::Top, points)]);
+    let (capped, _, _) = cap(&mut kept, &Rules { limit: 50.0, ..as_column });
+    assert!(capped.is_none_or(|capped| capped.times == [0; 4]));
 }

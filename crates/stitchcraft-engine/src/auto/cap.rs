@@ -74,11 +74,14 @@ pub(crate) enum Kind {
     /// A shape's top point, when its own other top stitches and those of shapes sewn after it cover all that
     /// its 2 stitches covered: it shows, so it goes last, and only where it is doubled.
     Doubled,
+    /// A satin column's top point, as a last resort where a spot still sews above the warning's limit: as a
+    /// shape's own doubled top, the one point at a time that changes the column least (`REQ-AUTO-112`).
+    Column,
 }
 
 impl Kind {
     /// Every kind, in order.
-    const ALL: [Kind; 3] = [Kind::Hidden, Kind::Under, Kind::Doubled];
+    const ALL: [Kind; 4] = [Kind::Hidden, Kind::Under, Kind::Doubled, Kind::Column];
 
     /// Its place among [`Kind::ALL`].
     const fn at(self) -> usize {
@@ -86,6 +89,7 @@ impl Kind {
             Kind::Hidden => 0,
             Kind::Under => 1,
             Kind::Doubled => 2,
+            Kind::Column => 3,
         }
     }
 
@@ -93,7 +97,7 @@ impl Kind {
     fn takes(self, role: Role) -> bool {
         match self {
             Kind::Hidden => matches!(role, Role::Underlay | Role::Travel),
-            Kind::Under | Kind::Doubled => role == Role::Top,
+            Kind::Under | Kind::Doubled | Kind::Column => role == Role::Top,
         }
     }
 }
@@ -102,9 +106,9 @@ impl Kind {
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Capped {
     /// The thread taken of each kind, by [`Kind::at`], in millimetres.
-    pub(crate) taken: [f64; 3],
+    pub(crate) taken: [f64; 4],
     /// How many needle points of each kind were taken out, by [`Kind::at`].
-    pub(crate) times: [usize; 3],
+    pub(crate) times: [usize; 4],
     /// What is above the cap after.
     pub(crate) left: Over,
     /// The thickest spot after.
@@ -149,9 +153,18 @@ pub(crate) fn capped(
         element(stitch).is_some_and(|element| made.contains(&element) && !(stitch.role == Role::Top && columns.contains(&element)))
     };
     let points = candidates(sewn, &near, takes);
+    // Where a spot still sews above the warning's limit, a column's top points near it are the last resort.
+    let column = |stitch: &SewnStitch| {
+        element(stitch).is_some_and(|element| made.contains(&element) && stitch.role == Role::Top && columns.contains(&element))
+    };
+    let last = if thickness.most(Measure::Fills).value > rules.limit {
+        candidates(sewn, &thickness.near(rules.limit, NEAR, meter)?, column)
+    } else {
+        Vec::new()
+    };
     // A design whose spots above the cap lie only in shapes sewn by their own settings has nothing the cap
     // may take, and the work of the cover is spared.
-    if points.is_empty() {
+    if points.is_empty() && last.is_empty() {
         return Ok(None);
     }
     let reach = thickness.near(rules.cap, REACH, meter)?;
@@ -167,19 +180,18 @@ pub(crate) fn capped(
             let after = sewn.get(at.saturating_add(1)).is_some_and(|after| straight_on(stitch, after));
             let column = element.is_some_and(|element| columns.contains(&element));
             let cut = |straight: bool| if straight || !column { 0.0 } else { rules.overlap };
-            if let Some(ribbon) = Ribbon::of((stitch.from, stitch.to), (cut(before), cut(after)), (stitch.block, stitch.index), element) {
-                ribbons.add(ribbon, meter)?;
-            }
+            ribbons.add(Ribbon::of((stitch.from, stitch.to), (cut(before), cut(after)), (stitch.block, stitch.index), element), meter)?;
         }
     }
-    let mut cap = Cap { pass: Pass::new(plan, thickness, rules), ribbons, longest, taken: [0.0; 3], times: [0; 3] };
-    for kind in Kind::ALL {
+    let mut cap = Cap { pass: Pass::new(plan, thickness, rules), ribbons, longest, taken: [0.0; 4], times: [0; 4] };
+    for kind in [Kind::Hidden, Kind::Under, Kind::Doubled] {
         for _ in 0..ROUNDS {
-            if !cap.above(meter)? || cap.round(kind, &points, meter)? == 0 {
+            if !cap.above(rules.cap, meter)? || cap.round(kind, &points, meter)? == 0 {
                 break;
             }
         }
     }
+    cap.last_resort(last, meter)?;
     let Cap { pass, taken, times, .. } = cap;
     let (plan, thickness, gone) = pass.ended();
     taken_out(plan, &gone);
@@ -212,16 +224,37 @@ struct Cap<'p, 'r> {
     ribbons: Ribbons,
     /// The longest stitch of each element, of its top stitches and of the others.
     longest: BTreeMap<(Option<ElementRef>, bool), f64>,
-    taken: [f64; 3],
-    times: [usize; 3],
+    taken: [f64; 4],
+    times: [usize; 4],
 }
 
 impl Cap<'_, '_> {
-    /// Whether a spot is still above the cap. A unit of work for each spot.
-    fn above(&self, meter: &mut Meter) -> Result<bool, Exhausted> {
+    /// Whether a spot is still above `limit`, in fills. A unit of work for each spot.
+    fn above(&self, limit: f64, meter: &mut Meter) -> Result<bool, Exhausted> {
         let (columns, rows) = self.pass.thickness.size();
         meter.charge(units(columns.saturating_mul(rows)))?;
-        Ok(self.pass.thickness.most(Measure::Fills).value > self.pass.rules.cap)
+        Ok(self.pass.thickness.most(Measure::Fills).value > limit)
+    }
+
+    /// Takes satin columns' top points out of `points` while a spot sews above the warning's limit, one at a time:
+    /// of those that may go, the one whose joined stitch runs across the column, not along an edge, and turns
+    /// least from the stitch into it. A unit of work for each point looked at each time.
+    fn last_resort(&mut self, mut points: Vec<Entry>, meter: &mut Meter) -> Result<(), Exhausted> {
+        while self.above(self.pass.rules.limit, meter)? {
+            let mut best: Option<(Change, Entry)> = None;
+            for &point in &points {
+                meter.charge(1)?;
+                if let Some(change) = self.taken_out(point, Kind::Column, true, meter)? {
+                    if best.is_none_or(|(least, _)| change.less_than(least)) {
+                        best = Some((change, point));
+                    }
+                }
+            }
+            let Some((_, point)) = best else { break };
+            points.retain(|other| *other != point);
+            self.taken_out(point, Kind::Column, false, meter)?;
+        }
+        Ok(())
     }
 
     /// Goes once through `points`, from the plan's end, taking those of `kind` that may go; how many it took.
@@ -229,63 +262,66 @@ impl Cap<'_, '_> {
         let mut count = 0;
         for &point in points.iter().rev() {
             meter.charge(1)?;
-            if !self.pass.gone.contains(&point) && self.taken_out(point, kind, meter)? {
+            if !self.pass.gone.contains(&point) && self.taken_out(point, kind, false, meter)?.is_some() {
                 count += 1;
             }
         }
         Ok(count)
     }
 
-    /// Takes the needle point at entry `(block, at)` out of its run when it is of `kind` and may go: its 2
-    /// stitches become one.
-    fn taken_out(&mut self, (block, at): Entry, kind: Kind, meter: &mut Meter) -> Result<bool, Exhausted> {
+    /// Takes the needle point at entry `(block, at)` out of its run when it is of `kind` and may go, its 2
+    /// stitches become one, and says how that changes the stitch into it; only says so when `asked`.
+    fn taken_out(&mut self, (block, at): Entry, kind: Kind, asked: bool, meter: &mut Meter) -> Result<Option<Change>, Exhausted> {
         let pass = &self.pass;
-        let Some((_, role, element)) = pass.stitch((block, at)) else { return Ok(false) };
-        if !kind.takes(role) {
-            return Ok(false);
+        let Some((_, role, element)) = pass.stitch((block, at)) else { return Ok(None) };
+        if !kind.takes(role) || pass.gone.contains(&(block, at)) {
+            return Ok(None);
         }
-        let (Some(from), Some(to)) = (pass.beside((block, at), false, meter)?, pass.beside((block, at), true, meter)?) else { return Ok(false) };
-        let Some((_, next, next_element)) = pass.stitch((block, to)) else { return Ok(false) };
+        let (Some(from), Some(to)) = (pass.beside((block, at), false, meter)?, pass.beside((block, at), true, meter)?) else { return Ok(None) };
+        let Some((_, next, next_element)) = pass.stitch((block, to)) else { return Ok(None) };
         // An underlay or travel point goes between 2 stitches of either, a top point between 2 of its shape.
         let fits = if kind == Kind::Hidden { kind.takes(next) } else { next == Role::Top && next_element == element };
-        let (Some(into), Some(out)) = (pass.sewn(block, from, at), pass.sewn(block, at, to)) else { return Ok(false) };
+        let (Some(into), Some(out)) = (pass.sewn(block, from, at), pass.sewn(block, at, to)) else { return Ok(None) };
         if !fits || into.from_role == Role::Lock {
-            return Ok(false);
+            return Ok(None);
         }
         let joined = SewnStitch { block, index: to, from: into.from, to: out.to, role: next, from_role: into.from_role };
         let (length, was) = (joined.length(), into.length() + out.length());
         let longest = self.longest.get(&(element, role == Role::Top)).copied().unwrap_or(0.0);
         let shortest = pass.rules.shortest.min(into.length()).min(out.length());
         if !at_least(was - length, LEAST) || !at_least(longest, length) || !at_least(length, shortest) {
-            return Ok(false);
+            return Ok(None);
         }
         // The plan keeps its own needle points, off the machine's grid, and a plan's checks measure those
         // (`REQ-PLAN-002`): there too the joined stitch is no shorter than the machine's shortest or the
         // shorter of the 2, and no longer than the machine's longest.
-        let (Some(first), Some(middle), Some(last)) = (pass.at((block, from)), pass.at((block, at)), pass.at((block, to))) else { return Ok(false) };
+        let (Some(first), Some(middle), Some(last)) = (pass.at((block, from)), pass.at((block, at)), pass.at((block, to))) else { return Ok(None) };
         let (shorter, joined_length) = (first.distance(middle).min(middle.distance(last)), first.distance(last));
         if !at_least(joined_length, pass.rules.shortest.min(shorter)) || !at_least(pass.rules.longest, joined_length) {
-            return Ok(false);
+            return Ok(None);
         }
-        if pass.thickness.hottest(&into, meter)?.max(pass.thickness.hottest(&out, meter)?) <= pass.rules.cap {
-            return Ok(false);
+        let limit = if kind == Kind::Column { pass.rules.limit } else { pass.rules.cap };
+        if pass.thickness.hottest(&into, meter)?.max(pass.thickness.hottest(&out, meter)?) <= limit {
+            return Ok(None);
         }
+        // The last resort judges a column's cover as drawn, as the 3 kinds did before columns were left whole.
+        let whole = kind == Kind::Column;
         let after = (block, to);
         let covered = match kind {
-            Kind::Hidden => self.ribbons.covers(&joined, |ribbon| ribbon.at > after, meter)?,
+            Kind::Hidden => self.ribbons.covers(&joined, |ribbon| ribbon.at > after, false, meter)?,
             Kind::Under => {
                 let counts = |ribbon: &Ribbon| ribbon.at > after && ribbon.element != element;
-                self.ribbons.covers(&into, counts, meter)? && self.ribbons.covers(&out, counts, meter)?
+                self.ribbons.covers(&into, counts, false, meter)? && self.ribbons.covers(&out, counts, false, meter)?
             }
-            Kind::Doubled => {
+            Kind::Doubled | Kind::Column => {
                 let counts = |ribbon: &Ribbon| ribbon.at != (block, at) && ribbon.at != after && (ribbon.element == element || ribbon.at > after);
-                self.ribbons.covers(&into, counts, meter)? && self.ribbons.covers(&out, counts, meter)?
+                self.ribbons.covers(&into, counts, whole, meter)? && self.ribbons.covers(&out, counts, whole, meter)?
             }
         };
         // A joined top stitch lays its thread only where its shape's own top thread or a later shape's lies: a
         // stitch cut across a bend would show on a neighbour (`REQ-AUTO-026`).
-        let covered =
-            covered && (kind == Kind::Hidden || self.ribbons.covers(&joined, |ribbon| ribbon.element == element || ribbon.at > after, meter)?);
+        let covered = covered
+            && (kind == Kind::Hidden || self.ribbons.covers(&joined, |ribbon| ribbon.element == element || ribbon.at > after, whole, meter)?);
         // The top stitches beside the 2 that ran straight on into them turn into the joined one, and the pull
         // moves their needle holes in: what they then leave must be covered too.
         let overlap = self.pass.rules.overlap;
@@ -311,44 +347,74 @@ impl Cap<'_, '_> {
             let t = (overlap / side.length()).min(1.0);
             let part =
                 if start { SewnStitch { to: side.from.lerp(side.to, t), ..side } } else { SewnStitch { from: side.to.lerp(side.from, t), ..side } };
-            if !self.ribbons.covers(&part, others, meter)? {
-                return Ok(false);
+            if !self.ribbons.covers(&part, others, whole, meter)? {
+                return Ok(None);
             }
         }
-        if !covered || !self.pass.changed(&[into, out], &[joined], meter)? {
-            return Ok(false);
+        let change = Change::of(&into, &joined);
+        if !covered {
+            return Ok(None);
+        }
+        if asked {
+            return Ok(Some(change));
+        }
+        if !self.pass.changed(&[into, out], &[joined], meter)? {
+            return Ok(None);
         }
         self.pass.gone.insert((block, at));
         if role == Role::Top {
             self.ribbons.kill((block, at));
             self.ribbons.kill(after);
-            // The joined stitch, a stitch of the shape's own that no pull counts here, as no fill's is.
-            let ribbon =
-                Ribbon { from: joined.from, to: joined.to, whole: (joined.from, joined.to), cut: (0.0, 0.0), at: after, element, alive: true };
-            self.ribbons.add(ribbon, meter)?;
+            // The joined stitch: a fill's, which no pull counts, or a column's, which turns at both its ends.
+            let cut = if kind == Kind::Column { (overlap, overlap) } else { (0.0, 0.0) };
+            self.ribbons.add(Ribbon::of((joined.from, joined.to), cut, after, element), meter)?;
         }
         // The stitches beside it, pulled in where they now turn.
         for (side, start) in [(before, false), (next, true)] {
             let Some(was) = side.and_then(|side| self.ribbons.kill((side.block, side.index))) else { continue };
             let cut = if start { (overlap, was.cut.1) } else { (was.cut.0, overlap) };
-            if let Some(ribbon) = Ribbon::of(was.whole, cut, was.at, was.element) {
-                self.ribbons.add(ribbon, meter)?;
-            }
+            self.ribbons.add(Ribbon::of(was.whole, cut, was.at, was.element), meter)?;
         }
         if let (Some(taken), Some(times)) = (self.taken.get_mut(kind.at()), self.times.get_mut(kind.at())) {
             *taken += was - length;
             *times += 1;
         }
-        Ok(true)
+        Ok(Some(change))
     }
 }
+
+/// How joining a needle point's 2 stitches changes the stitch into it.
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Change {
+    /// Whether the joined stitch turns 45° or more from it: along a column's edge, a notch in it.
+    notch: bool,
+    /// The cosine of the angle between them: 1 where the joined stitch runs on as the stitch did.
+    cosine: f64,
+}
+
+impl Change {
+    /// How the stitch `joined` turns from `into`, the stitch it replaces into the point.
+    fn of(into: &SewnStitch, joined: &SewnStitch) -> Change {
+        let (u, v) = ((into.to.x() - into.from.x(), into.to.y() - into.from.y()), (joined.to.x() - joined.from.x(), joined.to.y() - joined.from.y()));
+        let cosine = (u.0 * v.0 + u.1 * v.1) / (into.length() * joined.length());
+        Change { notch: !(cosine >= math::cos(NOTCH.to_radians())), cosine }
+    }
+
+    /// Whether this change is smaller than `other`: no notch where `other` has one, or else a smaller turn.
+    fn less_than(self, other: Change) -> bool {
+        (!self.notch && other.notch) || (self.notch == other.notch && self.cosine > other.cosine)
+    }
+}
+
+/// The turn from the stitch into a point, in degrees, from which the joined stitch runs along a column's edge
+/// rather than across the column.
+const NOTCH: f64 = 45.0;
 
 /// A top stitch, as it covers the fabric.
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct Ribbon {
-    /// Where it starts and ends, pulled in.
-    from: Point,
-    to: Point,
+    /// Where it starts and ends, pulled in; `None` when the pull leaves nothing of it.
+    pulled: Option<(Point, Point)>,
     /// The stitch as sewn, and how far the pull moves it in at its start and its end.
     whole: (Point, Point),
     cut: (f64, f64),
@@ -361,10 +427,9 @@ struct Ribbon {
 
 impl Ribbon {
     /// The stitch from `from` to `to` that ends at entry `at`, of `element`, pulled in by `cut` at its start and
-    /// its end; `None` when the pull leaves nothing of it.
-    fn of((from, to): (Point, Point), cut: (f64, f64), at: Entry, element: Option<ElementRef>) -> Option<Ribbon> {
-        let (start, end) = pulled(from, to, cut.0, cut.1)?;
-        Some(Ribbon { from: start, to: end, whole: (from, to), cut, at, element, alive: true })
+    /// its end.
+    fn of((from, to): (Point, Point), cut: (f64, f64), at: Entry, element: Option<ElementRef>) -> Ribbon {
+        Ribbon { pulled: pulled(from, to, cut.0, cut.1), whole: (from, to), cut, at, element, alive: true }
     }
 }
 
@@ -380,7 +445,8 @@ impl Ribbons {
     /// Adds `ribbon` to the cells it covers. A unit of work for each cell.
     fn add(&mut self, ribbon: Ribbon, meter: &mut Meter) -> Result<(), Exhausted> {
         let span = |a: f64, b: f64| (cell(a.min(b) - RIBBON), cell(a.max(b) + RIBBON));
-        let ((x0, x1), (y0, y1)) = (span(ribbon.from.x(), ribbon.to.x()), span(ribbon.from.y(), ribbon.to.y()));
+        let (from, to) = ribbon.whole;
+        let ((x0, x1), (y0, y1)) = (span(from.x(), to.x()), span(from.y(), to.y()));
         let count = (x1 - x0 + 1).saturating_mul(y1 - y0 + 1);
         meter.charge(u64::try_from(count).unwrap_or(u64::MAX))?;
         let at = self.ribbons.len();
@@ -401,15 +467,17 @@ impl Ribbons {
         Some(*ribbon)
     }
 
-    /// Whether every place along `stitch`, each [`STEP`], lies under a stitch still sewn that `counts`. A
-    /// unit of work for each place, and for each stitch looked at.
-    fn covers(&self, stitch: &SewnStitch, counts: impl Fn(&Ribbon) -> bool, meter: &mut Meter) -> Result<bool, Exhausted> {
+    /// Whether every place along `stitch`, each [`STEP`], lies under a stitch still sewn that `counts`, pulled
+    /// in or, when `as_sewn`, as sewn. A unit of work for each place, and for each stitch looked at.
+    fn covers(&self, stitch: &SewnStitch, counts: impl Fn(&Ribbon) -> bool, as_sewn: bool, meter: &mut Meter) -> Result<bool, Exhausted> {
         let steps = whole(stitch.length() / STEP).max(1);
         for step in 0..=steps {
             let place = stitch.from.lerp(stitch.to, step as f64 / steps as f64);
             let near = self.cells.get(&(cell(place.x()), cell(place.y()))).map_or(&[][..], Vec::as_slice);
             meter.charge(units(near.len()).saturating_add(1))?;
-            let under = |ribbon: &&Ribbon| ribbon.alive && counts(ribbon) && to_side(place, ribbon.from, ribbon.to) <= RIBBON;
+            let lies = |ribbon: &Ribbon| if as_sewn { Some(ribbon.whole) } else { ribbon.pulled };
+            let under =
+                |ribbon: &&Ribbon| ribbon.alive && counts(ribbon) && lies(ribbon).is_some_and(|(from, to)| to_side(place, from, to) <= RIBBON);
             if !near.iter().filter_map(|index| self.ribbons.get(*index)).any(|ribbon| under(&ribbon)) {
                 return Ok(false);
             }
@@ -454,7 +522,12 @@ fn units(count: usize) -> u64 {
 
 /// Every kind's thread taken, in words, for the note: those of none are left out.
 pub(crate) fn kinds(capped: &Capped) -> String {
-    let names = ["underlay and travel", "top stitches under later shapes", "a shape's own doubled top stitches"];
+    let names = [
+        "underlay and travel",
+        "top stitches under later shapes",
+        "a shape's own doubled top stitches",
+        "satin columns' top stitches above the warning's limit",
+    ];
     let said: Vec<String> = Kind::ALL
         .iter()
         .zip(names)

@@ -32,6 +32,15 @@ fn capped(design: &Design, value: &str) -> Design {
     Design::new(elements, design.settings).unwrap()
 }
 
+/// `design` with `value` as the setting `key` of every automatic shape.
+fn set(design: &Design, key: &str, value: &str) -> Design {
+    let mut elements = design.elements().to_vec();
+    for element in elements.iter_mut().filter(|element| element.automatic) {
+        element.params.set(key, value);
+    }
+    Design::new(elements, design.settings).unwrap()
+}
+
 /// The traced pear and TS-13A's digitized half, by name.
 fn designs() -> Vec<(&'static str, Design)> {
     let sheet = find("TS-13A").unwrap().design().unwrap().unwrap();
@@ -158,14 +167,15 @@ fn drawn_columns() -> Vec<(&'static str, Design)> {
 }
 
 #[test]
-fn req_auto_112_the_cap_leaves_every_top_stitch_of_a_satin_column_as_digitizing_laid_it() {
+fn req_auto_112_below_the_warning_s_limit_the_cap_leaves_every_top_stitch_of_a_satin_column_as_digitizing_laid_it() {
     for (name, design) in drawn_columns() {
         let columns = fabric::columns(&design);
         assert!(!columns.is_empty(), "{name}: no column");
         // A cap of 50 fills is above every spot, so nothing is taken. At 2, the cap takes thread wherever the
-        // column lies over the area under it, its inner edge and its parts' join among those places.
+        // column lies over the area under it, its inner edge and its parts' join among those places. With the
+        // warning's limit at 50 fills, no spot is above it, where alone the cap may take a column's point.
         let off = in_place(&capped(&design, "50")).plan.unwrap();
-        let on = in_place(&capped(&design, "2")).plan.unwrap();
+        let on = in_place(&set(&capped(&design, "2"), "auto_thick_warn_fills", "50")).plan.unwrap();
         let thickest = fabric::thickness(&off, &Limits::DEFAULT).fills.value;
         assert!(thickest > 2.0, "{name}: {thickest:.2} fills at its thickest spot with the cap off");
         assert!(on.stats().stitches < off.stats().stitches, "{name}: the cap took nothing");
@@ -211,4 +221,47 @@ fn req_auto_100_a_joined_stitch_lays_thread_only_where_its_shape_s_or_a_later_sh
         let astray = fabric::astray(&design, &in_place(&capped(&design, cap)).plan.unwrap());
         assert!(astray.stitches.len() <= 1 && astray.longest < 1.5, "{cap}: {:?}, the longest {:.3} mm", astray.stitches, astray.longest);
     }
+}
+
+/// The needle points of the top stitches of `columns` in `plan`, as their places.
+fn column_points(plan: &StitchPlan, columns: &BTreeSet<String>) -> Vec<(f64, f64)> {
+    tops(plan, columns).into_iter().flat_map(|(_, stitches)| stitches.into_iter().map(|[_, to]| to)).collect()
+}
+
+#[test]
+fn req_auto_112_above_the_warning_s_limit_the_cap_takes_column_points_at_the_spot_only() {
+    // An X of 2 strokes 3 mm wide, one shape, over a plate: its 2 columns cross over the plate's fill, the
+    // thickest place, above the warning's limit of 4 fills. There the cap may take a column's top stitch, and
+    // nowhere else, until the spot is at the limit.
+    let (w, c) = (1.5, 10.0);
+    let x = [
+        (c - 8.0, c - 8.0 - w),
+        (c, c - w * 1.4),
+        (c + 8.0, c - 8.0 - w),
+        (c + 8.0 + w, c - 8.0),
+        (c + w * 1.4, c),
+        (c + 8.0 + w, c + 8.0),
+        (c + 8.0, c + 8.0 + w),
+        (c, c + w * 1.4),
+        (c - 8.0, c + 8.0 + w),
+        (c - 8.0 - w, c + 8.0),
+        (c - w * 1.4, c),
+        (c - 8.0 - w, c - 8.0),
+    ];
+    let plate = automatic(fill("plate", &[&[(-2.0, -2.0), (22.0, -2.0), (22.0, 22.0), (-2.0, 22.0)]], &RED, &[]));
+    let cross = automatic(fill("x", &[&x], &BLUE, &[]));
+    let design = Design::new(vec![plate, cross], DesignSettings::default()).unwrap();
+    let columns = fabric::columns(&design);
+    assert!(columns.len() >= 2, "{columns:?}");
+    let limit = rules().auto_thick_warn_fills;
+    let (on, off) = (in_place(&design).plan.unwrap(), in_place(&capped(&design, "50")).plan.unwrap());
+    let before = fabric::thickness(&off, &Limits::DEFAULT).fills;
+    assert!(before.value > limit, "{:.2} fills at the crossing with the cap off", before.value);
+    let after = fabric::thickest(&on, &columns).0;
+    assert!(after <= limit + 1e-9, "{after:.2} fills at the thickest spot");
+    // Every column point taken lies within 3 mm of the crossing.
+    let kept = column_points(&on, &columns);
+    let taken: Vec<(f64, f64)> = column_points(&off, &columns).into_iter().filter(|point| !kept.contains(point)).collect();
+    assert!(!taken.is_empty());
+    assert!(taken.iter().all(|(px, py)| (px - c).abs() < 3.0 && (py - c).abs() < 3.0), "{taken:?}");
 }
