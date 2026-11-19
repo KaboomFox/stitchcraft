@@ -93,7 +93,7 @@ fn req_auto_020_the_rules_settings_are_stitchcraft_s_own_and_no_stitch_type_read
     let cover = [("auto_base_offset_mm", "-0.4"), ("auto_base_rows", "across"), ("auto_base_sliver_mm2", "0.4"), ("auto_base_bare_percent", "0.5")];
     // And the 4 limits of how thick the design sews (`REQ-AUTO-062`), and its cap (`REQ-AUTO-099`).
     let thick = [
-        ("auto_thick_warn_fills", "3"),
+        ("auto_thick_warn_fills", "4"),
         ("auto_thick_fail_fills", "6"),
         ("auto_thick_warn_points", "15"),
         ("auto_thick_fail_points", "30"),

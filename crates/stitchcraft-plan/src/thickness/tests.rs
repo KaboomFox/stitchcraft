@@ -452,13 +452,13 @@ fn req_auto_062_a_report_holds_a_plan_to_its_limits() {
 #[test]
 fn req_auto_062_the_steps_of_the_heat_map_start_at_their_limits() {
     let limits = Limits::DEFAULT;
-    assert_eq!((limits.warn_fills, limits.fail_fills, limits.warn_points, limits.fail_points), (3.0, 6.0, 15.0, 30.0));
-    let steps = [0.0, 0.01, 1.99, 2.0, 2.99, 3.0, 5.99, 6.0, 40.0].map(|fills| limits.step(fills));
+    assert_eq!((limits.warn_fills, limits.fail_fills, limits.warn_points, limits.fail_points), (4.0, 6.0, 15.0, 30.0));
+    let steps = [0.0, 0.01, 1.99, 2.0, 3.99, 4.0, 5.99, 6.0, 40.0].map(|fills| limits.step(fills));
     let expected = [Step::Bare, Step::Ordinary, Step::Ordinary, Step::Doubled, Step::Doubled, Step::Thick, Step::Thick, Step::Failing, Step::Failing];
     assert_eq!(steps, expected);
     // A failing limit under the warning's is the warning's.
     let turned = Limits { fail_fills: 1.0, ..limits };
-    assert_eq!((turned.step(2.5), turned.step(3.0)), (Step::Doubled, Step::Failing));
+    assert_eq!((turned.step(3.5), turned.step(4.0)), (Step::Doubled, Step::Failing));
 }
 
 #[test]

@@ -86,13 +86,13 @@ pub struct Limits {
 }
 
 impl Limits {
-    /// The limits for a 75/11 needle and 40-weight polyester thread: 3 fills on each other is what
-    /// Brother's troubleshooting names as a fault of the design, and 6 layers is where one vendor's density
-    /// map turns red.
+    /// The limits for a 75/11 needle and 40-weight polyester thread. 4 fills is 2 dense layers on a fill, which
+    /// the trade's rule of thumb says risks broken needles and thread, where one layer of satin over a fill, 2
+    /// to 3 fills, sews well (M13.46). 6 layers is where one vendor's density map turns red.
     /// No source gives a number of needle points. Measured on 2026-11-15, the row ends of a fill lie 5 to a
     /// square millimetre along its edge, so 15 and 30 are what the edges of 3 and of 6 fills on each other
     /// make, and 2 fills, with 10 or 11, stay under.
-    pub const DEFAULT: Limits = Limits { warn_fills: 3.0, fail_fills: 6.0, warn_points: 15.0, fail_points: 30.0 };
+    pub const DEFAULT: Limits = Limits { warn_fills: 4.0, fail_fills: 6.0, warn_points: 15.0, fail_points: 30.0 };
 
     /// The step of the heat map that `fills` of thread over a spot belong to.
     pub fn step(&self, fills: f64) -> Step {
