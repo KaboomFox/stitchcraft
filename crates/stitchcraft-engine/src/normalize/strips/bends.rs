@@ -237,13 +237,10 @@ struct Halves {
     second: Column,
 }
 
-/// The ends of `columns` but those in the places `but`: the middles of their rails' ends.
+/// The ends of the open columns of `columns` but those in the places `but`: the middles of their rails' ends.
 fn ends_of(columns: &[Column], but: &[usize]) -> Vec<Point> {
-    let mut ends = Vec::new();
-    for (i, column) in columns.iter().enumerate().filter(|(i, _)| !but.contains(i)) {
-        ends.extend((0..2).filter_map(|end| end_of(column, end)).filter(|_| !column.closed || i == usize::MAX));
-    }
-    ends
+    let open = columns.iter().enumerate().filter(|(i, column)| !but.contains(i) && !column.closed);
+    open.flat_map(|(_, column)| (0..2).filter_map(|end| end_of(column, end))).collect()
 }
 
 /// The middle of `column`'s rails' ends at its start (`end` 0) or its end (1).
