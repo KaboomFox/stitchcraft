@@ -2132,6 +2132,17 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.43: an automatic fill's outline stays on its fill (`REQ-AUTO-130`).
+  - A stitch is straight, and an outline that followed its fill's edge within 0.1 mm laid a stitch up to
+    0.25 mm on the neighbour where the edge bends away from the fill, or across an inward corner that the
+    shortest stitch passed over. On the 4 traced dogs 4 of the 12 stitches astray were such stitches.
+  - Each line of an outline now runs its tolerance inside the fill's edge, offset towards the fill with
+    round joins, so that each stitch lies between the edge and twice the tolerance in. A line whose offset
+    falls apart, where the fill is narrower than twice the tolerance, keeps to its edge. An outline whose
+    lines need more work to move in than the budget allows sews none, and `SC-I0904` says so.
+  - No outline stitch lies on a neighbour on any repository picture. The pictures sew 66 stitches fewer to
+    12 more. The fills before the outlines end elsewhere, so the dogs leave 0 to 2 jump threads more, and 3
+    rows of the running dog in 6 threads now show beside a line (`tests/auto_photos.rs`).
 - M13.48: details last is off by default again (`REQ-AUTO-098`).
   - `auto_details_last` is off, and `auto_min_likeness` stays 0.85. On the traced dogs details last cost
     1, 4, 7 and 7 jump threads, each cut by hand, and their likeness didn't move. It comes back on by
@@ -3422,6 +3433,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes`, `TS-13C.pes` and `TS-13E.pes` (M13.43,
+  an outline inside its fill's edge). In the digitized half of each, every outline runs 0.1 mm inside its
+  fill's edge. The digitized halves sew 11,490, 6,829, 6,061 and 2,718 stitches, where they sewed 11,513,
+  6,895, 6,064 and 2,716. TS-13A measures 126.0 × 167.9 mm and TS-13C 111.4 × 107.6 mm, where they measured
+  126.0 × 168.0 and 111.4 × 107.7 mm: their outermost outlines lie 0.1 mm further in.
 - Changed `conformance/golden/testsheets/TS-13B.pes` and `TS-13D.pes` (M13.37, traced letters sewn as
   strokes). In the digitized half of each, a part drawn in straight strokes sews a column along each
   stroke. TS-13B's letters and TS-13D's white frames now sew so. The sheets sew 14,543 and 19,458 stitches,

@@ -254,29 +254,30 @@ pub(in crate::auto) fn ending_near(mut lines: Vec<Line>, target: &Approach, budg
 
 /// `lines`, the outline of the area `id` along its edge as [`outlines`] found it, moved `by` into the area
 /// (`REQ-AUTO-130`), with `budget`'s work: each line offset towards the area with round joins, a ring as a
-/// ring, a line that comes within twice `by` of itself parted where the offset leaves the stretch out, and a
-/// line shorter than [`SHORTEST`] left out. A ring's line runs as the ring does, so the area lies on its
-/// right with y up, the outline's clockwise and a hole's the other way. An outline that needs more work is
-/// not sewn, and `Err` says so (`SC-I0904`).
+/// ring. A line whose offset falls apart or comes to nothing keeps to its edge: where the area is narrower
+/// than twice `by`, the offset leaves a stretch out, and the pieces left would be joined by straight
+/// stitches across whatever lies between them. A line shorter than [`SHORTEST`] is left out. A
+/// ring's line runs as the ring does, so the area lies on its right with y up, the outline's clockwise and
+/// a hole's the other way. An outline that needs more work is not sewn, and `Err` says so (`SC-I0904`).
 pub(in crate::auto) fn inset(lines: Vec<Line>, by: f64, budget: &Budget, id: &ElementId) -> Result<Vec<Line>, Diagnostic> {
     let mut meter = budget.meter();
     let mut moved = Vec::with_capacity(lines.len());
     for line in lines {
-        let points = if line.closed { opened(&line.points) } else { line.points };
-        let offset = offset::offset(&points, -by, Join::Round, &mut meter).map_err(|_| {
+        let edge = if line.closed { opened(&line.points) } else { line.points.clone() };
+        let offset = offset::offset(&edge, -by, Join::Round, &mut meter).map_err(|_| {
             let (finding, consequence) = ("where this area's outline runs inside its edge", "it sews no outline");
             Failed::Work.said(Code::AutoUnder, finding, consequence, budget.max_work, id.clone())
         })?;
         match offset {
+            // A ring's offset that is one curve runs round from the opening to it again, its last point its
+            // first: the offset cuts no stretch out of it, or joins round where it does.
             Offset::Line(mut curve) => {
-                // A ring's offset closes, its last point its first again.
                 if line.closed {
                     curve.pop();
                 }
                 moved.push(Line { points: curve, closed: line.closed });
             }
-            Offset::Apart(curves) => moved.extend(curves.into_iter().map(|points| Line { points, closed: false })),
-            Offset::Empty => {}
+            Offset::Apart(_) | Offset::Empty => moved.push(line),
         }
     }
     moved.retain(|line| line.length() >= SHORTEST);
@@ -587,15 +588,31 @@ mod tests {
         // An open line moves to its right with y up, and is left out when it comes to less than 3 mm.
         assert_eq!(moved_in(vec![open(&[(0.0, 0.0), (0.0, 3.0)]), open(&[(5.0, 0.0), (5.0, 2.999)])]), [(vec![(0.1, 0.0), (0.1, 3.0)], false)]);
         // A ring with a bar narrower than twice the distance loses the bar, even where it was opened along the
-        // bar, and closes round the rest. A ring narrower than that throughout moves in to nothing, and so does
-        // a ring of no points.
+        // bar, and closes round the rest. A ring narrower than that throughout, which moves in to nothing, keeps
+        // to its edge, and so does one whose offset falls apart, 2 squares joined by a neck 0.15 mm wide: the
+        // 2 rings it moves in to would be joined by a straight stitch. A ring of no points is left out.
         let flagged = [(0.0, 0.0), (0.0, 5.0), (2.5, 5.0), (2.5, 15.0), (2.65, 15.0), (2.65, 5.0), (5.0, 5.0), (5.0, 0.0)];
         let lines = moved_in(vec![ring(&flagged)]);
         let flag = &lines[0].0;
         assert_eq!((lines.len(), lines[0].1), (1, true), "{lines:?}");
         assert!(flag.iter().all(|&(x, y)| (0.1..=4.9).contains(&x) && (0.1..4.95).contains(&y)), "{flag:?}");
         let bar = [(0.0, 0.0), (0.0, 10.0), (0.15, 10.0), (0.15, 0.0)];
-        assert_eq!(moved_in(vec![ring(&bar), ring(&[])]), []);
+        assert_eq!(moved_in(vec![ring(&bar), ring(&[])]), [(bar.to_vec(), true)]);
+        let dumbbell = [
+            (0.0, 0.0),
+            (0.0, 5.0),
+            (5.0, 5.0),
+            (5.0, 2.6),
+            (7.0, 2.6),
+            (7.0, 5.0),
+            (12.0, 5.0),
+            (12.0, 0.0),
+            (7.0, 0.0),
+            (7.0, 2.45),
+            (5.0, 2.45),
+            (5.0, 0.0),
+        ];
+        assert_eq!(moved_in(vec![ring(&dumbbell)]), [(dumbbell.to_vec(), true)]);
     }
 
     #[test]

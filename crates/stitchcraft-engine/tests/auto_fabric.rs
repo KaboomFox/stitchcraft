@@ -85,7 +85,8 @@ fn req_auto_026_digitized_pictures_lay_no_thread_that_shows_where_it_should_not(
     // With an outline after each fill (REQ-AUTO-051, REQ-AUTO-052) the paw left one and the ear 3, where they
     // left none and one: the paw's fill is 2 parts of one shape, each with an outline of its own, and in the
     // ear 2 such outlines and the rings of one outline lie apart. The needle now runs from one outline to the
-    // next under the part sewn later (REQ-AUTO-053): the paw leaves none and the ear 2.
+    // next under the part sewn later (REQ-AUTO-053): the paw leaves none and the ear 2. With each outline its
+    // tolerance inside its fill's edge (REQ-AUTO-130), the ear's outlines start elsewhere and it leaves none.
     let recorded = [
         ("stripes", 0, 0),
         ("badge-abutting", 0, 0),
@@ -99,7 +100,7 @@ fn req_auto_026_digitized_pictures_lay_no_thread_that_shows_where_it_should_not(
         ("strand", 0, 0),
         ("pear", 0, 2),
         ("paw", 0, 0),
-        ("ear", 1, 2),
+        ("ear", 1, 0),
     ];
     assert_eq!(apart, recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps)));
 }

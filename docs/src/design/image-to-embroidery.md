@@ -798,6 +798,22 @@ badge's moon was outlined with 12 sides. An outline has a tolerance of `auto::OU
 0.1 mm, unless its shape sets `running_stitch_tolerance_mm`. Its stitches are then shorter where the edge
 bends, never shorter than the machine's shortest stitch, and the moon has 18 sides.
 
+An outline's stitches lie on its own fill (M13.43, `REQ-AUTO-130`). A stitch is straight, and a running
+stitch keeps within its tolerance on both sides of its path. Where the edge bends away from the area, a
+stitch along it lay up to the tolerance on the neighbour. Across an inward corner that the shortest stitch
+passed over, it lay further on it. Where the neighbour has another colour, that is a thread of the wrong
+colour on it. So each line of an outline is moved into the area by the tolerance it keeps to, offset with
+round joins, and its stitches keep within the tolerance of that line: each lies between the edge and twice
+the tolerance in. An inward corner becomes a curve round it at that distance, and an outward corner stays a
+corner. A ring stays a ring, and a line shorter than 3 mm is left out, as on the edge. Where the area is
+narrower than twice the distance, such as at a narrow neck, the offset falls apart into pieces. The
+running stitch would join them with straight stitches across whatever lies between, so such a line keeps
+to the edge, as does one whose offset comes to nothing. The thread is 0.4 mm
+wide, so it still reaches 0.1 mm past the edge, and the fill's rows reach under the neighbour as before.
+Moving a line costs work: the offset cuts the ring of curves round the line where it crosses itself, which
+costs 67,252 units for a square. An outline whose lines need more than the budget sews none, and says so
+with SC-I0904.
+
 An outline is sewn with as few jumps as its lines allow (`REQ-AUTO-052`). A traced area's edge is hidden
 wherever a neighbour sewn later touches it, often for a few millimetres, and each hidden stretch parted 2
 lines by a jump. The outline now sews through a hidden stretch of `BRIDGE`, 25 mm, or less, along the edge
