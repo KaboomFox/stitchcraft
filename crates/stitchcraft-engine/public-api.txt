@@ -509,8 +509,8 @@ pub stitchcraft_engine::generators::guided::Guided::smoothness: f64
 pub stitchcraft_engine::generators::guided::Guided::spacing: f64
 pub stitchcraft_engine::generators::guided::Guided::stitching: stitchcraft_engine::generators::guided::RowStitching
 pub stitchcraft_engine::generators::guided::Guided::strategy: stitchcraft_engine::generators::guided::Strategy
-pub stitchcraft_engine::generators::guided::Guided::turns: bool
 pub stitchcraft_engine::generators::guided::Guided::travel: stitchcraft_engine::generators::tatami::sew::Travel
+pub stitchcraft_engine::generators::guided::Guided::turns: bool
 pub stitchcraft_engine::generators::guided::Guided::underlay: alloc::vec::Vec<stitchcraft_engine::generators::tatami::sew::Layer>
 pub struct stitchcraft_engine::generators::guided::GuidedParams
 pub stitchcraft_engine::generators::guided::GuidedParams::guided_fill_angle: <stitchcraft_params::kinds::OptionalAngle as stitchcraft_params::kinds::ParamKind>::Value

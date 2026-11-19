@@ -30,8 +30,8 @@ pub fn guide(text: &str) -> Result<(String, String), String> {
 /// number that doesn't read.
 fn points(text: &str) -> Option<Vec<[f64; 2]>> {
     let numbers = numbers(text)?;
-    let points: Vec<[f64; 2]> = numbers.chunks_exact(2).filter_map(|pair| if let &[x, y] = pair { Some([x, y]) } else { None }).collect();
-    (numbers.len() % 2 == 0 && points.len() >= 2).then_some(points)
+    let (points, odd) = numbers.as_chunks::<2>();
+    (odd.is_empty() && points.len() >= 2).then(|| points.to_vec())
 }
 
 /// `design` with a guide for each line of `guides`, after its own, named from `guide-1` in the order given.
