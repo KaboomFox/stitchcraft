@@ -54,6 +54,9 @@ pub const THREAD: f64 = 0.4;
 pub const ROWS: f64 = 0.25;
 /// The side of a pixel of the grid that the bare fabric is measured on, in millimetres.
 pub const PIXEL: f64 = 0.05;
+/// Stitches that turn by less than this, in degrees, run straight on, as a row's stitches do: the pull of the
+/// fabric doesn't move the needle hole between them. Where the thread turns more, the pull moves it in.
+pub const STRAIGHT_ON: f64 = 10.0;
 /// The side of a cell, in millimetres: 10 pixels, half a window.
 pub const CELL: f64 = 10.0 * PIXEL;
 /// The side of a window, in millimetres, 2 cells: its area is 1 mm², so a sum over it is a value per mm².

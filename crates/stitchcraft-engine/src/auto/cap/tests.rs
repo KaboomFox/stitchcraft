@@ -59,7 +59,7 @@ fn rows(width: f64, apart: f64) -> Vec<(f64, f64)> {
 const NONE: &BTreeSet<ElementRef> = &BTreeSet::new();
 
 fn rules() -> Rules<'static> {
-    Rules { cap: 4.0, base: NONE, overlap: 1.0, shortest: 0.3, longest: 12.1 }
+    Rules { cap: 4.0, base: NONE, overlap: 0.0, shortest: 0.3, longest: 12.1 }
 }
 
 /// Every element of `plan`, as digitizing made them all.
@@ -368,7 +368,7 @@ fn req_auto_100_a_point_is_looked_at_when_its_stitch_out_comes_near_a_spot_above
 #[test]
 fn ribbons_index_the_cells_a_stitch_covers_and_charge_one_unit_each() {
     let mut ribbons = Ribbons::default();
-    let ribbon = |from: (f64, f64), to: (f64, f64), at: Entry| Ribbon { from: p(from.0, from.1), to: p(to.0, to.1), at, element: None, alive: true };
+    let ribbon = |from: (f64, f64), to: (f64, f64), at: Entry| Ribbon::of((p(from.0, from.1), p(to.0, to.1)), (0.0, 0.0), at, None).unwrap();
     let mut meter = Budget::DEFAULT.meter();
     ribbons.add(ribbon((2.5, 3.5), (4.5, 3.5), (0, 1)), &mut meter).unwrap();
     assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 3);

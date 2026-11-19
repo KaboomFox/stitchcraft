@@ -238,6 +238,7 @@ pub const stitchcraft_plan::thickness::ORDINARY: f64
 pub const stitchcraft_plan::thickness::PIECE: f64
 pub const stitchcraft_plan::thickness::PIXEL: f64
 pub const stitchcraft_plan::thickness::ROWS: f64
+pub const stitchcraft_plan::thickness::STRAIGHT_ON: f64
 pub const stitchcraft_plan::thickness::THREAD: f64
 pub const stitchcraft_plan::thickness::WINDOW: f64
 pub mod stitchcraft_plan::thread

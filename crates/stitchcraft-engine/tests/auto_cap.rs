@@ -17,6 +17,7 @@ use stitchcraft_engine::testsheets::find;
 use stitchcraft_plan::{Role, Stitch, StitchKind, StitchPlan};
 use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, in_place, letter, polylines, rules, widened};
 use stitchcraft_testkit::fabric::{self, GAP, Limits};
+use stitchcraft_testkit::metrics::edge_coverage;
 use stitchcraft_testkit::pictures;
 
 /// The key of the cap.
@@ -172,4 +173,18 @@ fn req_auto_112_the_cap_leaves_every_top_stitch_of_a_satin_column_as_digitizing_
         // no stitch turns from square to its column.
         assert_eq!(tops(&on, &columns), tops(&off, &columns), "{name}");
     }
+}
+
+#[test]
+fn req_auto_114_the_cap_keeps_the_edge_under_a_later_shape_covered_as_the_fabric_pulls() {
+    // The ring of satin lies on the disc's edge, and the disc reaches under it by the overlap. Pulled in by
+    // the overlap where the thread turns, as `REQ-AUTO-007` measures, the thread still covers the ring's inner
+    // edge, which the disc's row ends under the ring cover: the cap at 2 fills takes none of them there.
+    let (_, design) = drawn_columns().into_iter().next().unwrap();
+    let overlap = rules().auto_overlap_mm.get();
+    let edge = vec![circle(8.0).into_iter().chain(circle(8.0).into_iter().take(1)).map(|(x, y)| stitchcraft_testkit::designs::p(x, y)).collect()];
+    let (off, on) = (in_place(&capped(&design, "50")).plan.unwrap(), in_place(&capped(&design, "2")).plan.unwrap());
+    let (was, is) = (edge_coverage(&edge, &off, overlap), edge_coverage(&edge, &on, overlap));
+    assert!(was > 0.99, "{was}");
+    assert!(is >= was, "{is:.4} of the edge covered, {was:.4} with the cap off");
 }

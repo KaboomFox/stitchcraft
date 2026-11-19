@@ -11,7 +11,10 @@
 //!
 //! A point goes only where other stitches cover what its stitches covered: a stitch covers the places
 //! within half a thread of it, as the bare-fabric measure paints it, so what shows keeps its colour and no
-//! fabric is bared. The kinds go in this order, each through the plan from its end, so that a later shape
+//! fabric is bared. Cover is judged as the fabric pulls (`REQ-AUTO-114`): a covering stitch counts shortened
+//! by the overlap of areas at each end where the thread turns, as the edges' cover is measured
+//! (`REQ-AUTO-007`). So the cap takes nothing within the overlap of the edge of the thread that covers it,
+//! where the fabric would show once pulled. The kinds go in this order, each through the plan from its end, so that a later shape
 //! loses its thread before an earlier one is judged under it ([`Kind`]): underlay and travel under later
 //! top stitches, a shape's top under later shapes, and a shape's own top where it is doubled.
 //!
@@ -22,8 +25,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use stitchcraft_core::units::at_least;
-use stitchcraft_core::{Exhausted, Meter, Point};
-use stitchcraft_plan::thickness::{Measure, Over, PIXEL, Spot, THREAD, Thickness, Zone};
+use stitchcraft_core::{Exhausted, Meter, Point, math};
+use stitchcraft_plan::thickness::{Measure, Over, PIXEL, STRAIGHT_ON, Spot, THREAD, Thickness, Zone};
 use stitchcraft_plan::{ElementRef, Role, SewnStitch, StitchPlan};
 
 use super::thin::{Entry, Pass, Rules, taken_out};
@@ -152,12 +155,18 @@ pub(crate) fn capped(
     let reach = thickness.near(rules.cap, REACH, meter)?;
     meter.charge(units(sewn.len()))?;
     let (mut ribbons, mut longest) = (Ribbons::default(), BTreeMap::new());
-    for stitch in sewn {
+    for (at, stitch) in sewn.iter().enumerate() {
         let element = element(stitch);
         let most: &mut f64 = longest.entry((element, stitch.role == Role::Top)).or_default();
         *most = most.max(stitch.length());
         if stitch.role == Role::Top && reach.touches(stitch) {
-            ribbons.add(Ribbon { from: stitch.from, to: stitch.to, at: (stitch.block, stitch.index), element, alive: true }, meter)?;
+            // Pulled in by the overlap at each end where the thread turns.
+            let before = at.checked_sub(1).and_then(|before| sewn.get(before)).is_some_and(|before| straight_on(before, stitch));
+            let after = sewn.get(at.saturating_add(1)).is_some_and(|after| straight_on(stitch, after));
+            let cut = |straight: bool| if straight { 0.0 } else { rules.overlap };
+            if let Some(ribbon) = Ribbon::of((stitch.from, stitch.to), (cut(before), cut(after)), (stitch.block, stitch.index), element) {
+                ribbons.add(ribbon, meter)?;
+            }
         }
     }
     let mut cap = Cap { pass: Pass::new(plan, thickness, rules), ribbons, longest, taken: [0.0; 3], times: [0; 3] };
@@ -262,6 +271,35 @@ impl Cap<'_, '_> {
                 self.ribbons.covers(&into, counts, meter)? && self.ribbons.covers(&out, counts, meter)?
             }
         };
+        // The top stitches beside the 2 that ran straight on into them turn into the joined one, and the pull
+        // moves their needle holes in: what they then leave must be covered too.
+        let overlap = self.pass.rules.overlap;
+        let before = match pass.beside((block, from), false, meter)? {
+            Some(start) => {
+                pass.sewn(block, start, from).filter(|before| before.role == Role::Top && straight_on(before, &into) && !straight_on(before, &joined))
+            }
+            None => None,
+        };
+        let next = match pass.beside((block, to), true, meter)? {
+            Some(end) => pass.sewn(block, to, end).filter(|next| next.role == Role::Top && straight_on(&out, next) && !straight_on(&joined, next)),
+            None => None,
+        };
+        let others = |ribbon: &Ribbon| {
+            ribbon.at != (block, at)
+                && ribbon.at != after
+                && Some(ribbon.at) != before.map(|b| (b.block, b.index))
+                && Some(ribbon.at) != next.map(|n| (n.block, n.index))
+        };
+        for (side, start) in [(before, false), (next, true)] {
+            let Some(side) = side else { continue };
+            let length = side.length();
+            let t = if length > 0.0 { (overlap / length).min(1.0) } else { 0.0 };
+            let part =
+                if start { SewnStitch { to: side.from.lerp(side.to, t), ..side } } else { SewnStitch { from: side.to.lerp(side.from, t), ..side } };
+            if !self.ribbons.covers(&part, others, meter)? {
+                return Ok(false);
+            }
+        }
         if !covered || !self.pass.changed(&[into, out], &[joined], meter)? {
             return Ok(false);
         }
@@ -269,7 +307,18 @@ impl Cap<'_, '_> {
         if role == Role::Top {
             self.ribbons.kill((block, at));
             self.ribbons.kill(after);
-            self.ribbons.add(Ribbon { from: joined.from, to: joined.to, at: after, element, alive: true }, meter)?;
+            // The joined stitch turns at both its ends.
+            if let Some(ribbon) = Ribbon::of((joined.from, joined.to), (overlap, overlap), after, element) {
+                self.ribbons.add(ribbon, meter)?;
+            }
+        }
+        // The stitches beside it, pulled in where they now turn.
+        for (side, start) in [(before, false), (next, true)] {
+            let Some(was) = side.and_then(|side| self.ribbons.kill((side.block, side.index))) else { continue };
+            let cut = if start { (overlap, was.cut.1) } else { (was.cut.0, overlap) };
+            if let Some(ribbon) = Ribbon::of(was.whole, cut, was.at, was.element) {
+                self.ribbons.add(ribbon, meter)?;
+            }
         }
         if let (Some(taken), Some(times)) = (self.taken.get_mut(kind.at()), self.times.get_mut(kind.at())) {
             *taken += was - length;
@@ -282,13 +331,26 @@ impl Cap<'_, '_> {
 /// A top stitch, as it covers the fabric.
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct Ribbon {
+    /// Where it starts and ends, pulled in.
     from: Point,
     to: Point,
+    /// The stitch as sewn, and how far the pull moves it in at its start and its end.
+    whole: (Point, Point),
+    cut: (f64, f64),
     /// The entry it ends at.
     at: Entry,
     element: Option<ElementRef>,
     /// Whether it is still sewn: a needle point taken out ends the 2 stitches beside it.
     alive: bool,
+}
+
+impl Ribbon {
+    /// The stitch from `from` to `to` that ends at entry `at`, of `element`, pulled in by `cut` at its start and
+    /// its end; `None` when the pull leaves nothing of it.
+    fn of((from, to): (Point, Point), cut: (f64, f64), at: Entry, element: Option<ElementRef>) -> Option<Ribbon> {
+        let (start, end) = pulled(from, to, cut.0, cut.1)?;
+        Some(Ribbon { from: start, to: end, whole: (from, to), cut, at, element, alive: true })
+    }
 }
 
 /// The top stitches near a spot above the cap, by the cells of [`CELL`] they cover.
@@ -317,11 +379,11 @@ impl Ribbons {
         Ok(())
     }
 
-    /// Ends the stitch that ends at entry `at`.
-    fn kill(&mut self, at: Entry) {
-        if let Some(ribbon) = self.by_entry.remove(&at).and_then(|index| self.ribbons.get_mut(index)) {
-            ribbon.alive = false;
-        }
+    /// Ends the stitch that ends at entry `at`, and gives it back.
+    fn kill(&mut self, at: Entry) -> Option<Ribbon> {
+        let ribbon = self.by_entry.remove(&at).and_then(|index| self.ribbons.get_mut(index))?;
+        ribbon.alive = false;
+        Some(*ribbon)
     }
 
     /// Whether every place along `stitch`, each [`STEP`], lies under a stitch still sewn that `counts`. A
@@ -339,6 +401,22 @@ impl Ribbons {
         }
         Ok(true)
     }
+}
+
+/// Whether the thread runs straight on from `first` into `next`, the stitch sewn after it: from where it ends,
+/// turning by less than [`STRAIGHT_ON`], so that the pull of the fabric doesn't move the needle hole between
+/// them.
+fn straight_on(first: &SewnStitch, next: &SewnStitch) -> bool {
+    let (u, v) = ((first.to.x() - first.from.x(), first.to.y() - first.from.y()), (next.to.x() - next.from.x(), next.to.y() - next.from.y()));
+    let lengths = first.length() * next.length();
+    first.block == next.block && first.to == next.from && lengths > 0.0 && (u.0 * v.0 + u.1 * v.1) / lengths >= math::cos(STRAIGHT_ON.to_radians())
+}
+
+/// The stitch from `from` to `to` shortened by `start` at its start and `end` at its end, in millimetres, as
+/// the pull moves its needle holes in; `None` when that leaves nothing of it.
+fn pulled(from: Point, to: Point, start: f64, end: f64) -> Option<(Point, Point)> {
+    let length = from.distance(to);
+    (length > start + end).then(|| (from.lerp(to, start / length), from.lerp(to, (length - end) / length)))
 }
 
 /// The cell of the cover's index that `value`, in millimetres, lies in along one axis.
