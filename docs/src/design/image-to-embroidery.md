@@ -2228,8 +2228,9 @@ to 249. What got worse:
   not the smaller one inside it, which would cost a thread change.
 
 Planning takes longer where lines are kept, since each line is measured as a part: by the clock on a shared
-machine, the local photos but the magnolia took 1.8 to 2.2 times as long. `conformance/perf.toml` records
-the dogs' counts.
+machine, the local photos but the magnolia took 1.8 to 2.2 times as long. Counted in instructions by CI,
+the dogs' exports take 10.6 to 13.3 % more and the pear's 9.4 % more, and the test sheets as much as before
+(`conformance/perf.toml`).
 
 These leave every limit as it was, since a limit comes from the whole set.
 

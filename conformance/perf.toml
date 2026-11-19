@@ -28,12 +28,12 @@ instructions = 5362000000
 [pictures.TS-13A]
 args = ["testsheet", "TS-13A"]
 golden = "conformance/golden/testsheets/TS-13A.pes"
-instructions = 1950000000
+instructions = 1953000000
 
 [pictures.TS-13B]
 args = ["testsheet", "TS-13B"]
 golden = "conformance/golden/testsheets/TS-13B.pes"
-instructions = 1691000000
+instructions = 1670000000
 
 [pictures.TS-13C]
 args = ["testsheet", "TS-13C"]
@@ -43,34 +43,36 @@ instructions = 1760000000
 [pictures.TS-13D]
 args = ["testsheet", "TS-13D"]
 golden = "conformance/golden/testsheets/TS-13D.pes"
-instructions = 1465000000
+instructions = 1454000000
 
 [pictures.TS-13E]
 args = ["testsheet", "TS-13E"]
 golden = "conformance/golden/testsheets/TS-13E.pes"
-instructions = 1087000000
+instructions = 1076000000
 
 [pictures.TS-13F]
 args = ["testsheet", "TS-13F"]
 golden = "conformance/golden/testsheets/TS-13F.pes"
 instructions = 640000000
 
+# M13.45 raised the dogs' and the pear's records by 9 to 14 %: with thin lines kept at a likeness of 0.85
+# and details sewn last, both on by default, each line is measured as a part and the order searches for details.
 [pictures.dog-on-turf-6]
 args = ["export", "docs/fixtures/traced-dog-on-turf-6.vectorcraft", "--auto"]
-instructions = 17857000000
+instructions = 20128000000
 
 [pictures.dog-on-turf-9]
 args = ["export", "docs/fixtures/traced-dog-on-turf-9.vectorcraft", "--auto"]
-instructions = 19088000000
+instructions = 21635000000
 
 [pictures.dog-running-6]
 args = ["export", "docs/fixtures/traced-dog-running-6.vectorcraft", "--auto"]
-instructions = 19949000000
+instructions = 22227000000
 
 [pictures.dog-running-9]
 args = ["export", "docs/fixtures/traced-dog-running-9.vectorcraft", "--auto"]
-instructions = 23130000000
+instructions = 25575000000
 
 [pictures.pear]
 args = ["export", "docs/fixtures/traced-pear.vectorcraft", "--auto"]
-instructions = 2260000000
+instructions = 2473000000
