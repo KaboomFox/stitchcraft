@@ -2180,8 +2180,8 @@ nests in turn. The search grants a nest whole or not at all. It also keeps the r
 same. Of the rows with the fewest changes it takes the one that misses the fewest inner wishes, those whose
 first element another wish moves, and only then the one that misses the fewest wishes. A row that sews an
 iris after the fur and leaves its pupil under it loses to one that keeps the pupil on top, whenever such a
-row has as few changes. A nest goes by the shapes' sizes and where they meet. It needs no second plan and
-no measure of what shows. The cases in `tests/auto_details.rs` and `order/fewest/tests.rs` draw a pupil on
+row has as few changes. A nest goes by the shapes' sizes and where they meet. It doesn't need a second
+plan or a measure of what shows. The cases in `tests/auto_details.rs` and `order/fewest/tests.rs` draw a pupil on
 an iris where 3 patches meet.
 
 Making every smaller area that a moving detail meets one of its followers, as the nest's own wishes are,
