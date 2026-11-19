@@ -2124,7 +2124,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - Of the repository's pictures only the traced dogs and the marked patch drawn abutting sew differently. The dogs on turf keep 3 and 4 thin
     lines more, and their likeness rises from 0.814 and 0.779 to 0.856 and 0.829. The dogs leave 3 to 9 jump
     threads more, and 3 of them sew less area at 3 fills or more.
-  - A detail moves to sew after a larger area only together with the smaller areas it meets and its columns
+  - A detail moves to sew after a larger area only together with its own details and columns
     (`REQ-AUTO-108`). Of 2 rows of threads with as few changes, the search prefers the one that keeps them
     on top. Without it a
     traced dog's tan patch lay under the edge of the grey area round it, which had moved.

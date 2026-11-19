@@ -2171,23 +2171,23 @@ photo can have fewer areas than a badge. Once the cap limits every spot, a reord
 anywhere, and so the setting is on by default.
 
 **A detail inside a detail** (`REQ-AUTO-108`, M13.45). A detail can have details of its own, as a pupil on
-an iris or a window in a door does. With both settings on, a traced dog's grey area that the
-darker fur closes in on moved to sew after the fur, while the tan patch on it, which would cost a thread
-change to move, stayed where it was. The grey's outline and rows then lay over the tan's edge. So a detail
-moves only together with what sews on top of it. An element's followers are the smaller automatic areas
-it meets, its details among them, and the satin columns that border it. A wish moves its second element
-later. Its nest is that wish, the pairs of that element and each follower, and of each follower and its
-own. The search grants a nest whole or not at all. It also keeps the row itself from doing the same. Of the
-rows with the fewest changes it takes the one that leaves the fewest followers of a moved detail before
-it, and only then the one that misses the fewest wishes. A row that sews an iris after the fur and leaves
-its pupil under it loses to one that keeps the pupil on top, whenever such a row has as few changes.
+an iris or a window in a door does. With both settings on, a traced dog's grey area that the darker fur
+closes in on moved to sew after the fur, while the tan patch on it, which would cost a thread change to
+move, stayed where it was. The grey's outline and rows then lay over the tan's edge. So a detail moves only
+together with what sews on top of it. A wish moves its second element later. Its nest is that wish, each
+wish that something sews after that element, a detail of it or a satin column bordering it, and their
+nests in turn. The search grants a nest whole or not at all. It also keeps the row itself from doing the
+same. Of the rows with the fewest changes it takes the one that misses the fewest inner wishes, those whose
+first element another wish moves, and only then the one that misses the fewest wishes. A row that sews an
+iris after the fur and leaves its pupil under it loses to one that keeps the pupil on top, whenever such a
+row has as few changes. A nest goes by the shapes' sizes and where they meet. It needs no second plan and
+no measure of what shows. The cases in `tests/auto_details.rs` and `order/fewest/tests.rs` draw a pupil on
+an iris where 3 patches meet.
 
-Followers were details alone at first. Measured with each area's own pixels that show their thread
-(`fabric::shown`), that still left smaller areas that are no details, open on a side, under a larger area
-that moved: on the running dog in 6 threads, a patch of 16 mm² showed 2.2 mm² less, under the edge of an
-area of 108 mm² that moved after it. A nest goes by the shapes' sizes and where they meet. It needs no
-second plan and no measure of what shows. The cases in `tests/auto_details.rs` and `order/fewest/tests.rs`
-draw a pupil on an iris where 3 patches meet.
+Making every smaller area that a moving detail meets one of its followers, as the nest's own wishes are,
+was measured and not taken. With more inner pairs to weigh in the choice of the row, the search took a row
+that left the dog's tan patch under the grey's edge again. The small areas of the dogs that show less, by
+each area's own pixels that show its thread (`fabric::shown`), were as many as before.
 
 **Measured** (2026-11-18, planned at opt-level 2), off and then on:
 
@@ -2245,7 +2245,7 @@ What got worse:
   sliver, and its bare share rises from 0.006 % to 0.053 %, within the cover's limit of 0.5 %.
 - 2 to 12 % of the small areas show less. On the running dog in 6 threads a patch of 16 mm² shows 2.2 mm²
   less: an area of 108 mm² beside it now sews after it. The search took another row of threads with as few
-  changes, to grant wishes elsewhere, and that area's thread now sews later. Followers bind only what a wish
+  changes, to grant wishes elsewhere, and that area's thread now sews later. A nest binds only what a wish
   moves, not a whole thread's batch that a change of row moves. Traced by the order of the 2 areas alone.
 
 Planning takes longer where lines are kept, since each line is measured as a part: by the clock on a shared
