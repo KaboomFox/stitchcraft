@@ -37,7 +37,9 @@
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Meter, Point};
 
 use super::{Failed, Kind, Shapes, TOUCHING, envelope, near};
+use crate::design::Join;
 use crate::generators::Approach;
+use crate::normalize::offset::{self, Offset};
 use crate::normalize::region::Polygon;
 use crate::normalize::region::geom::{self, Envelope, Location};
 use crate::normalize::strips::Line;
@@ -248,6 +250,49 @@ pub(in crate::auto) fn ending_near(mut lines: Vec<Line>, target: &Approach, budg
     }
     lines.push(last);
     Ok(lines)
+}
+
+/// `lines`, the outline of the area `id` along its edge as [`outlines`] found it, moved `by` into the area
+/// (`REQ-AUTO-130`), with `budget`'s work: each line offset towards the area with round joins, a ring as a
+/// ring, a line that comes within twice `by` of itself parted where the offset leaves the stretch out, and a
+/// line shorter than [`SHORTEST`] left out. A ring's line runs as the ring does, so the area lies on its
+/// right with y up, the outline's clockwise and a hole's the other way. An outline that needs more work is
+/// not sewn, and `Err` says so (`SC-I0904`).
+pub(in crate::auto) fn inset(lines: Vec<Line>, by: f64, budget: &Budget, id: &ElementId) -> Result<Vec<Line>, Diagnostic> {
+    let mut meter = budget.meter();
+    let mut moved = Vec::with_capacity(lines.len());
+    for line in lines {
+        let points = if line.closed { opened(&line.points) } else { line.points };
+        let offset = offset::offset(&points, -by, Join::Round, &mut meter).map_err(|_| {
+            let (finding, consequence) = ("where this area's outline runs inside its edge", "it sews no outline");
+            Failed::Work.said(Code::AutoUnder, finding, consequence, budget.max_work, id.clone())
+        })?;
+        match offset {
+            Offset::Line(mut curve) => {
+                // A ring's offset closes, its last point its first again.
+                if line.closed {
+                    curve.pop();
+                }
+                moved.push(Line { points: curve, closed: line.closed });
+            }
+            Offset::Apart(curves) => moved.extend(curves.into_iter().map(|points| Line { points, closed: false })),
+            Offset::Empty => {}
+        }
+    }
+    moved.retain(|line| line.length() >= SHORTEST);
+    Ok(moved)
+}
+
+/// The ring `points`, its last point joined to its first, as an open line from the middle of its longest
+/// side round to it again: a start where the ring doesn't turn, so that its offset needs no join there.
+fn opened(points: &[Point]) -> Vec<Point> {
+    let count = points.len();
+    let side = |k: usize| points.get(k).zip(points.get((k + 1) % count)).map(|(&a, &b)| (k, a, b));
+    let longer =
+        |best: (usize, Point, Point), next: (usize, Point, Point)| if next.1.distance(next.2) > best.1.distance(best.2) { next } else { best };
+    let Some((k, a, b)) = (0..count).filter_map(side).reduce(longer) else { return points.to_vec() };
+    let middle = a.lerp(b, 0.5);
+    std::iter::once(middle).chain(points.iter().cycle().skip(k + 1).take(count).copied()).chain([middle]).collect()
 }
 
 /// How far `p` is from where `target` lets an element start, in millimetres: its point, or the nearest point
@@ -506,6 +551,66 @@ mod tests {
         assert!((0..80).all(|work| with(work).is_err()));
         // A point costs nothing.
         assert!(ending_near(lines(), &Approach::Point(p(0.0, 0.0)), &Budget { max_work: 0, ..Budget::DEFAULT }, &id).is_ok());
+    }
+
+    /// `lines` moved 0.1 mm in with the default budget: each line's points, rounded to the micrometre, and
+    /// whether it closes.
+    fn moved_in(lines: Vec<Line>) -> Vec<(Vec<(f64, f64)>, bool)> {
+        let id = ElementId::new("a").unwrap();
+        let micrometres = |v: f64| (v * 1000.0).round() / 1000.0;
+        let moved = inset(lines, 0.1, &Budget::DEFAULT, &id).unwrap();
+        moved.into_iter().map(|line| (line.points.iter().map(|q| (micrometres(q.x()), micrometres(q.y()))).collect(), line.closed)).collect()
+    }
+
+    fn ring(points: &[(f64, f64)]) -> Line {
+        Line { points: points.iter().map(|&(x, y)| p(x, y)).collect(), closed: true }
+    }
+
+    fn open(points: &[(f64, f64)]) -> Line {
+        Line { points: points.iter().map(|&(x, y)| p(x, y)).collect(), closed: false }
+    }
+
+    #[test]
+    fn req_auto_130_an_outline_runs_its_tolerance_inside_its_area_s_edge() {
+        // A square's outline, clockwise with y up, moves in and closes, its corners square: it starts at the
+        // middle of its longest side, the first, where its offset needs no join. A hole's, the other way,
+        // moves out, into the area round it, its corners round.
+        let square = [(0.0, 0.0), (0.0, 10.0), (10.0, 10.0), (10.0, 0.0)];
+        let inside = vec![(0.1, 5.0), (0.1, 9.9), (9.9, 9.9), (9.9, 0.1), (0.1, 0.1), (0.1, 5.0)];
+        assert_eq!(moved_in(vec![ring(&square)]), [(inside[..5].to_vec(), true)]);
+        let hole: Vec<(f64, f64)> = square.iter().rev().copied().collect();
+        let rings = moved_in(vec![ring(&hole)]);
+        let around = &rings[0].0;
+        assert_eq!((rings.len(), rings[0].1), (1, true));
+        assert_eq!((around.first(), around.len() > 8), (Some(&(10.1, 5.0)), true));
+        assert!(around.iter().all(|&(x, y)| (-0.1 - 1e-9..=10.1 + 1e-9).contains(&x) && (-0.1 - 1e-9..=10.1 + 1e-9).contains(&y)));
+        // An open line moves to its right with y up, and is left out when it comes to less than 3 mm.
+        assert_eq!(moved_in(vec![open(&[(0.0, 0.0), (0.0, 3.0)]), open(&[(5.0, 0.0), (5.0, 2.999)])]), [(vec![(0.1, 0.0), (0.1, 3.0)], false)]);
+        // A ring with a bar narrower than twice the distance loses the bar, even where it was opened along the
+        // bar, and closes round the rest. A ring narrower than that throughout moves in to nothing, and so does
+        // a ring of no points.
+        let flagged = [(0.0, 0.0), (0.0, 5.0), (2.5, 5.0), (2.5, 15.0), (2.65, 15.0), (2.65, 5.0), (5.0, 5.0), (5.0, 0.0)];
+        let lines = moved_in(vec![ring(&flagged)]);
+        let flag = &lines[0].0;
+        assert_eq!((lines.len(), lines[0].1), (1, true), "{lines:?}");
+        assert!(flag.iter().all(|&(x, y)| (0.1..=4.9).contains(&x) && (0.1..4.95).contains(&y)), "{flag:?}");
+        let bar = [(0.0, 0.0), (0.0, 10.0), (0.15, 10.0), (0.15, 0.0)];
+        assert_eq!(moved_in(vec![ring(&bar), ring(&[])]), []);
+    }
+
+    #[test]
+    fn req_auto_130_an_outline_that_needs_more_work_to_move_in_than_its_budget_allows_says_so() {
+        let id = ElementId::new("a").unwrap();
+        let with = |work: u64| {
+            inset(vec![ring(&[(0.0, 0.0), (0.0, 10.0), (10.0, 10.0), (10.0, 0.0)])], 0.1, &Budget { max_work: work, ..Budget::DEFAULT }, &id)
+        };
+        assert!(with(67_252).is_ok());
+        let said = with(67_251).unwrap_err();
+        assert_eq!(
+            said.to_string(),
+            "info SC-I0904: Finding where this area's outline runs inside its edge needed more than the work budget of 67251 units, so it sews no \
+             outline."
+        );
     }
 
     #[test]

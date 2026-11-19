@@ -590,12 +590,16 @@ fn outline_after(
     budget: &Budget,
 ) -> Option<Diagnostic> {
     let at = elements.iter().position(|element| element.id == *id)?;
-    let lines = match elements.get(at + 1).and_then(|next| approach(next, settings, budget)) {
-        Some(target) => match neighbours::ending_near(lines, &target, budget, id) {
-            Ok(lines) => lines,
-            Err(said) => return Some(said),
-        },
-        None => lines,
+    // The outline runs its tolerance inside the edge, so that its stitches keep to the area (REQ-AUTO-130).
+    let set = elements.get(at).and_then(|fill| fill.params.get(TOLERANCE)).and_then(|by| by.parse::<f64>().ok());
+    let target = elements.get(at + 1).and_then(|next| approach(next, settings, budget));
+    let ended = neighbours::inset(lines, set.unwrap_or(OUTLINE_TOLERANCE.get()), budget, id).and_then(|lines| match &target {
+        Some(target) => neighbours::ending_near(lines, target, budget, id),
+        None => Ok(lines),
+    });
+    let lines = match ended {
+        Ok(lines) => lines,
+        Err(said) => return Some(said),
     };
     let fill = elements.get_mut(at)?;
     let path = Path { subpaths: lines.iter().filter_map(subpath).collect() };
@@ -1188,7 +1192,8 @@ mod tests {
     #[test]
     fn req_auto_051_an_outline_is_a_running_stitch_after_its_fill_in_the_fill_s_thread() {
         let p = |x: f64, y: f64| Point::new(x, y).unwrap();
-        let ring = Line { points: vec![p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0)], closed: true };
+        // An outline's lines run as the area's rings do, the area on their right with y up.
+        let ring = Line { points: vec![p(0.0, 0.0), p(0.0, 10.0), p(10.0, 10.0), p(10.0, 0.0)], closed: true };
         let side = Line { points: vec![p(20.0, 0.0), p(30.0, 0.0)], closed: false };
         let square = Polygon { outline: vec![p(0.0, 0.0), p(0.0, 10.0), p(10.0, 10.0), p(10.0, 0.0), p(0.0, 0.0)], holes: Vec::new() };
         let fill = |id: &str, settings: &[(&str, &str)]| Element {
@@ -1210,12 +1215,14 @@ mod tests {
         let ids: Vec<&str> = elements.iter().map(|element| element.id.as_str()).collect();
         assert_eq!(ids, ["a", "a#2", "b"]);
         // The outline is a line a thread wide along both lines, in the fill's thread, with the fill's settings
-        // but a fill's own, and the trim after the fill follows it now. It keeps to the edge within 0.1 mm.
-        // The ring goes last, and starts at the first of its corners on the edge of the fill sewn next.
+        // but a fill's own, and the trim after the fill follows it now. It keeps to the edge within 0.1 mm,
+        // and runs that far inside it, on the area's side (REQ-AUTO-130). The ring goes last, and starts at the
+        // first of its corners nearest the edge of the fill sewn next, all 0.1 mm from it.
         let (filled, outline) = (&elements[0], &elements[1]);
         let Shape::Stroke { path, width, .. } = &outline.shape else { panic!("{:?}", outline.shape) };
         assert_eq!((path.subpaths.len(), path.subpaths[0].closed, path.subpaths[1].closed, *width), (2, false, true, OUTLINE_WIDTH));
-        assert_eq!((path.subpaths[0].start, path.subpaths[1].start), (p(20.0, 0.0), p(0.0, 0.0)));
+        assert_eq!(path.subpaths[0].start, p(20.0, -0.1));
+        assert!(path.subpaths[1].start.distance(p(0.1, 9.9)) < 1e-9, "{:?}", path.subpaths[1].start);
         assert_eq!((outline.thread.clone(), outline.automatic, OUTLINE_WIDTH.get()), (filled.thread.clone(), false, 0.4));
         assert_eq!((OUTLINE_TOLERANCE.get(), TOLERANCE), (0.1, "running_stitch_tolerance_mm"));
         assert_eq!(outline.params.iter().collect::<Vec<_>>(), [(OVERLAP, "0.5"), (TOLERANCE, "0.1"), (TRIM_AFTER, "true")]);
@@ -1226,7 +1233,7 @@ mod tests {
         // That one is followed by an outline, a line, which offers its first point: the side ends at its end
         // nearest that, turned round.
         let Shape::Stroke { path, .. } = &elements[1].shape else { panic!("{:?}", elements[1].shape) };
-        assert_eq!(path.subpaths[0].start, p(30.0, 0.0));
+        assert_eq!(path.subpaths[0].start, p(30.0, -0.1));
         let gone = ElementId::new("gone").unwrap();
         assert_eq!(outline_after(&mut elements, &gone, vec![side.clone()], &mut taken, &design, &budget), None);
         // The last element's outline ends where its lines do, and needs no work. It keeps the tolerance its
@@ -1237,7 +1244,7 @@ mod tests {
     }
 
     #[test]
-    fn req_auto_052_an_outline_whose_end_needs_more_work_than_its_budget_allows_is_not_sewn_and_says_so() {
+    fn req_auto_130_an_outline_that_needs_more_work_to_move_in_than_its_budget_allows_is_not_sewn_and_says_so() {
         let p = |x: f64, y: f64| Point::new(x, y).unwrap();
         let square = Polygon { outline: vec![p(0.0, 0.0), p(0.0, 10.0), p(10.0, 10.0), p(10.0, 0.0), p(0.0, 0.0)], holes: Vec::new() };
         let fill = |id: &str| Element {
@@ -1250,21 +1257,23 @@ mod tests {
             hints: Hints::default(),
             clips: Vec::new(),
         };
-        // A ring of 4,000 corners before a fill: each corner costs the 5 units of the fill's ring, 20,000 in
-        // all, far more than the fill's area costs to find.
-        let ring = Line { points: (0..4000).map(|k| p(f64::from(k % 2000), f64::from(k / 2000))).collect(), closed: true };
+        // The square's ring before another fill: moving it 0.1 mm in costs 67,252 units, the work of cutting
+        // the ring of curves round it where it crosses itself, far more than finding where it ends.
+        let ring = Line { points: vec![p(0.0, 0.0), p(0.0, 10.0), p(10.0, 10.0), p(10.0, 0.0)], closed: true };
         let after = |work: u64| {
             let mut elements = vec![fill("a"), fill("b")];
             let id = elements[0].id.clone();
             let budget = Budget { max_work: work, ..Budget::DEFAULT };
             (outline_after(&mut elements, &id, vec![ring.clone()], &mut Labels::default(), &DesignSettings::default(), &budget), elements.len())
         };
-        assert_eq!(after(20_000), (None, 3));
-        let (said, sewn) = after(19_999);
+        assert_eq!(after(67_252), (None, 3));
+        let (said, sewn) = after(67_251);
         assert_eq!(sewn, 2);
         let said = said.unwrap();
         assert_eq!((said.code, said.element.as_ref().map(|id| id.as_str())), (Code::AutoUnder, Some("a")));
-        assert!(said.message.ends_with("needed more than the work budget of 19999 units, so it sews no outline."), "{said}");
+        let message =
+            "Finding where this area's outline runs inside its edge needed more than the work budget of 67251 units, so it sews no outline.";
+        assert_eq!(said.message, message);
     }
 
     #[test]
