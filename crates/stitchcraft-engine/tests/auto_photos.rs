@@ -317,6 +317,25 @@ fn req_auto_102_digitized_dogs_sew_no_spot_above_the_cap() {
     assert!(above.is_empty(), "{above:?}");
 }
 
+/// The dogs keep their thin lines at a likeness of 0.85 and sew their details last, as both settings are by
+/// default (REQ-AUTO-103), and still sew no spot above the cap.
+#[test]
+#[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
+fn req_auto_103_digitized_dogs_with_lines_kept_and_details_last_sew_no_spot_above_the_cap() {
+    let default = |key: &str| auto::AutoParams::SPECS.iter().find(|spec| spec.key == key).map(|spec| spec.default);
+    assert_eq!((default(auto::MIN_LIKENESS), default(auto::DETAILS_LAST)), (Some("0.85"), Some("true")));
+    for (name, design, _) in planned() {
+        let set = |key: &str| design.elements().iter().any(|element| element.params.iter().any(|(k, _)| k == key));
+        assert!(!set(auto::MIN_LIKENESS) && !set(auto::DETAILS_LAST), "{name}");
+    }
+    let above: Vec<(String, f64)> = planned()
+        .iter()
+        .map(|(name, _, plan)| (name.clone(), fabric::thickness(plan, &fabric::Limits::DEFAULT).fills.value))
+        .filter(|(_, thickest)| *thickest > 4.0)
+        .collect();
+    assert!(above.is_empty(), "{above:?}");
+}
+
 /// How often each traced dog's thread changes: as sewn, the fewest that any order has in which each shape
 /// sews after what it lies on and each running line after the fills it borders, and one less than its
 /// threads, which no order betters. Each change is a rethread by hand on a machine with one needle. Before

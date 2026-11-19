@@ -218,12 +218,13 @@ by less, and sews as a line.
 of the share of their parts kept. A thin line that touches no other piece of its colour is a part
 of its own, and merged into a neighbour of another colour it is a part lost: a twig, the rim of a
 petal, a shadow. Such lines merge, those of the colours with the most parts and the smallest first,
-while the picture keeps this likeness, and the others sew as lines. At 0, the default, every thin
-line merges, and at 1 none that is a part does. Keeping lines adds running stitches and jump threads,
-and it can change the order the blocks sew in, which can make a spot elsewhere sew thicker.
+while the picture keeps this likeness, and the others sew as lines. At 0 every thin line merges,
+and at 1 none that is a part does. Keeping lines adds running stitches and jump threads, and it
+changes the order the blocks sew in: the cap (`auto_thick_cap_fills`) keeps the spots that order
+piles up within it. Lower it for fewer jump threads where the detail matters less.
 
 - **Accepts:** a number from 0 to 1
-- **Default:** `0`
+- **Default:** `0.85`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 
@@ -376,11 +377,12 @@ lowest automatic shape.
 
 **Details sew last.** Whether a detail sews after the larger areas round it, where that costs no thread change: an
 automatic area that the shapes round it close in on, smaller than an area it meets, as an eye is in
-the fur round it. Sewn last, the detail keeps the later fills' rows off its edge. Off by default:
-a fill that moves for a detail starts, ends and travels elsewhere, and can make a spot away from
-the detail thicker. The design goes by the setting of its lowest automatic shape.
+the fur round it. Sewn last, the detail keeps the later fills' rows off its edge. A fill that moves
+for a detail starts, ends and travels elsewhere, and the cap (`auto_thick_cap_fills`) keeps the
+spots that piles up within it. Turn it off to keep the order of the areas as drawn. The design
+goes by the setting of its lowest automatic shape.
 
 - **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
-- **Default:** `false`
+- **Default:** `true`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
