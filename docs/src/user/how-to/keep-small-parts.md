@@ -10,8 +10,8 @@ wholly inside the mark sews in its own thread, by its width:
   running stitch along its middle. A wider one sews as a satin column or a fill.
 - A thin line sews as a running stitch along its middle.
 
-Nothing else changes. A part that crosses the mark's edge is decided as if there were no mark. The mark
-itself is never sewn.
+The rest of the picture sews by the same rules as before. A part that crosses the mark's edge is decided as
+if there were no mark. The mark itself is never sewn.
 
 ## Mark a part in VectorCraft
 
@@ -26,7 +26,7 @@ itself is never sewn.
 For a whisker or a twig, draw a path along it with the Pen tool instead, and give it a stroke as wide as
 the part. The mark is the band the stroke covers, between the path's ends.
 
-Name a shape, not a group or a layer. A group named `stitch:keep` keeps nothing, and the export says so.
+Name a shape. A group or a layer named `stitch:keep` is no mark, and the export says so.
 
 ## Mark a part in an SVG file
 
@@ -50,17 +50,18 @@ That marks the area that starts 62 % from the left and 18 % from the top, 6 % of
 5 % of it tall. Read it off the picture by eye. Give `--keep` once for each part. A bug-report bundle
 keeps the marks, and its replay sews the same parts.
 
-## What the notice says
+## Notices SC-I0916 and SC-W0917
 
 For each mark, `SC-I0916` says how many parts lie wholly inside it, and how many of them sew that would
 have merged, as specks and as thin lines. A mark round an eye of a traced photo usually takes in a few
 specks of the trace's noise too. Each sews as a short stitch, and may leave a jump thread to cut. If the
 notice counts more specks than the part has, draw the mark tighter round the part.
 
-`SC-W0917` says that a mark keeps nothing: no part lies wholly inside it, or the design has no shape
+`SC-W0917` says that a mark doesn't keep a part: no part lies wholly inside it, or the design has no shape
 digitized automatically. Draw it round the whole part.
 
 ## What it costs
 
 Each kept part is a shape more to sew, and the rest of the design may then sew in another order. The
-thread may lie thicker somewhere else: the cap on thickness, 4 fills, still holds for the whole design.
+thread may lie thicker somewhere else. The cap on thickness, 4 fills, applies to the whole design all the
+same.

@@ -123,6 +123,8 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0913`](#sc-w0913) | Warning | Design sews thick |
 | [`SC-I0914`](#sc-i0914) | Info | Jumps not looked at for a run under later shapes |
 | [`SC-I0915`](#sc-i0915) | Info | Thin line merged into a neighbour |
+| [`SC-I0916`](#sc-i0916) | Info | Parts kept by a mark |
+| [`SC-W0917`](#sc-w0917) | Warning | Mark not used |
 | [`SC-E1001`](#sc-e1001) | Error | Nothing to route |
 | [`SC-I1002`](#sc-i1002) | Info | Element left out of the route |
 | [`SC-W1003`](#sc-w1003) | Warning | Piece of a routed satin column may sew otherwise |
@@ -1716,6 +1718,30 @@ says too.
 The message gives the line's area and says where it went. To sew such lines as running stitches,
 turn `auto_fill_uneven` off, as the `logo` style does, or give the shape settings. To merge more of
 the lines that are parts of their own, lower `auto_min_likeness`.
+
+## SC-I0916
+
+**Info** — Parts kept by a mark
+
+A mark, a shape named `stitch:keep` or an area that `stitch plan --keep` gives, holds parts of the
+design's automatic areas wholly inside it. `--auto` sews each of them by its width, where it would
+merge a speck or a thin line into a neighbour: a speck narrower than the narrowest satin stroke is
+a short running stitch, and a thin line a running stitch along its middle, each in its own thread.
+Nothing else changes, though the rest of the design may sew in another order.
+
+The message names the mark, how many parts lie wholly inside it, and how many of them sew that
+would have merged, as specks and as thin lines. A mark round a part of a traced photo takes in
+the specks of the trace's noise too, each a short stitch and maybe a jump thread: to merge them,
+draw the mark tighter round the part.
+
+## SC-W0917
+
+**Warning** — Mark not used
+
+A mark keeps nothing, and the design sews as it would without it. The mark encloses no area, or no
+part of an automatic area lies wholly inside it, or the design has no automatic shape. A part
+that crosses the mark's edge is decided as if there were no mark, and the message says which of
+these it is. Draw the mark round the whole part, a little larger than it, or remove it.
 
 ## SC-E1001
 
