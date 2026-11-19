@@ -15,13 +15,13 @@ if there were no mark. The mark itself is never sewn.
 
 ## Mark a part in VectorCraft
 
-1. Trace the picture with **Object › Image Trace › Make**, as for any picture.
+1. Trace the picture in VectorCraft (**Object › Image Trace › Make**).
 2. With the Rectangle or the Ellipse tool, draw a shape round the part: round all of it, a little larger
    than it. Give it a stroke and no fill, so that it shows the picture under it.
 3. In the Layers panel, name the shape `stitch:keep`. A note after the name is yours, such as
    `stitch:keep left eye`.
-4. Choose **File › Export › Export As**, and the PES or DST format of StitchCraft, with automatic
-   digitizing on.
+4. Export it as for any traced picture, in StitchCraft's PES or DST format with automatic digitizing on
+   (**File › Export › Export As**).
 
 For a whisker or a twig, draw a path along it with the Pen tool instead, and give it a stroke as wide as
 the part. The mark is the band the stroke covers, between the path's ends.
@@ -39,8 +39,8 @@ stitch plan traced.svg --auto -o traced.pes
 
 ## Mark a part from the command line
 
-`stitch plan` and `stitch export` trace a picture themselves, and no document opens to draw on. Give the
-area with `--keep`, as its left, top, width and height in percent of the picture:
+When `stitch plan` traces the picture itself, there is no document to draw a mark on. Give the area with
+`--keep`, as its left, top, width and height in percent of the picture:
 
 ```sh
 stitch plan bird.png -o bird.pes --preview bird-preview.png --keep '62,18,6,5'

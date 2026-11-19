@@ -35,6 +35,7 @@ pub struct Design {                  // checked by Design::new
     elements: Vec<Element>,
     pub settings: DesignSettings,
     pub sort_colours: bool,          // since M13.3: the elements with settings sew in the order StitchCraft chooses too
+    pub marks: Vec<Mark>,            // since M13.39: areas whose parts automatic digitizing keeps, never sewn
 }
 
 pub struct Element {
@@ -121,6 +122,11 @@ automatic elements or `sort_colours` is set: since M13.3 automatic digitizing th
 `underlays_first` sews in that order twice, its underlays first and its top stitches after
 ([engine pipeline](engine-pipeline.md#underlays-first)). Curves keep their control points, and the
 generators flatten them with the tolerance their parameters give.
+
+A design's marks (`design::mark::Mark`, an id and a shape) are no elements: a reader takes the shapes named
+`stitch:keep` out of its elements and gives them to the design, and automatic digitizing keeps the parts
+wholly inside them ([marks that keep parts](image-to-embroidery.md#marks-that-keep-parts)).
+`Design::with_elements` gives a design other elements and keeps its settings and its marks.
 
 A host reads 3 of the settings by Ink/Stitch's names, `collapse_len_mm`, `min_stitch_len_mm` and
 `min_satin_stroke_width_mm`: an SVG file's metadata, and since M6.11 the data a VectorCraft document keeps
