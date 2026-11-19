@@ -2708,18 +2708,22 @@ alone and doesn't merge, so it looks the same with a mark or without one
 
 ### Where it runs
 
-The readers take each mark out of the design's elements and give it to the design, with its name
-(`stitchcraft_engine::design::Mark`). The reading of a marker's area moves from
-`stitchcraft_svg::lettering::pictures` down to the engine, and the text markers use it from there. Automatic
+The readers take each mark out of the design's elements and give it to the design, with its id
+(`stitchcraft_engine::design::mark::Mark`, `mark::taken_out`). An object painted with a fill and a stroke
+is read as 2 elements of one path, and is one mark. The reading of a marker's area lies in the engine
+(`design::mark::Area`), and the text markers of `stitchcraft_svg::lettering::pictures` use it from there.
+Planning reads each mark's area once (`auto::marks`), with the budget's work to itself. Automatic
 digitizing tests a part against the marks where a step would take the part away: in the width rules, which
 leave a speck in its area's fill (`auto::narrow`), and in the steps of thin lines (`auto::neighbours::lines`)
-and of specks (`auto::neighbours::specks`). Testing a part costs a unit for each of its points and each segment
-of each mark, charged to the budget that step has for the part. Without marks, nothing is tested.
+and of specks (`auto::neighbours::specks`). The step of thin lines tests every part of every automatic
+area, so that each mark knows what it holds. Testing a part costs a unit for each mark, and where the box
+round the part lies in the box round the mark, a unit for each of the part's points and each segment of
+the mark, charged to the budget that step has for the part. A part that needs more is decided as if there
+were no mark, and `SC-I0916` says so. Without marks, nothing is tested and nothing is charged.
 
 `SC-I0916` names each mark with the parts that lie wholly inside it, and how many of them sew that would have
 merged, as specks and as thin lines. `SC-W0917` names a mark that encloses no area, a mark with no part wholly
-inside it and a mark in a design without an automatic shape, which then sews as without it. Both codes are
-added once M13.35's cap has split the registry.
+inside it and a mark in a design without an automatic shape, which then sews as without it.
 
 ### What marks sew
 
@@ -2780,30 +2784,31 @@ with marks that sew thin lines but merge specks, the choice in the decisions bel
   marks of the running dog in 6 threads it took 3.3 % more, for the parts that now sew and for the tests. The
   prototype reads its marks again for each part, so the rule should cost less.
 
-### Decisions for the owner
+### Decisions
 
-Each has a recommendation.
+The owner's choices of 2026-11-18, each the one recommended. The owner confirmed the 4th, that marks keep
+specks too, on 2026-11-18.
 
 - **One mark, `stitch:keep`.** The row asked that a marked part's lines and specks don't merge, and that it
   sews by its own rule. That is one rule, so one mark does both. Other names were `stitch:detail`, which
   suggests the order of [details last](#details-last) that a mark doesn't change, and `stitch:favour`, which
-  doesn't say what it does. Recommended: `stitch:keep`.
-- **Read when planned, with no Apply Marks command,** as text markers are. Recommended: no command.
+  doesn't say what it does. Chosen: `stitch:keep`.
+- **Read when planned, with no Apply Marks command,** as text markers are. Chosen: no command.
 - **Wholly inside.** Automatic digitizing decides a part crossing the mark's edge as if it were unmarked. One other
   choice sews a part when most of it is inside, which is a guess. Another cuts a part at the edge, which sews an
-  edge the picture doesn't have. Recommended: wholly inside, as text markers take their letters.
+  edge the picture doesn't have. Chosen: wholly inside, as text markers take their letters.
 - **Marks sew specks too.** The row asked that a marked part's specks don't merge, and a dot under 1 mm², such
   as the light in an eye, is a speck. A mark also takes in the specks of a trace's noise, which cost the photos
   7 to 39 jump threads and no likeness. The other choice sews marked thin lines and merges specks.
-  Recommended: sew specks, since a mark is the person's word. `SC-I0916` counts the specks, so a person can
+  Chosen: sew specks, since a mark is the person's word. `SC-I0916` counts the specks, so a person can
   draw a tighter mark.
 - **A marked speck sews by its width,** usually a short running stitch. The other choice is a fill, which sews
-  a knot under 1 mm². Recommended: by its width.
+  a knot under 1 mm². Chosen: by its width.
 - **The rest of a photo may sew in another order.** Each marked part is a shape more to order. Holding the
-  rest of the order fixed would need a second order for marked designs. Recommended: accept it, and let
+  rest of the order fixed would need a second order for marked designs. Chosen: accept it, and let
   M13.35's cap bound the thickness, as for details last and likeness.
 - **Details last stays its own setting.** A mark could also sew its parts last. That moves fills, which can
-  thicken a spot elsewhere, as M13.40 measured. Recommended: leave the order alone until the cap is merged and
+  thicken a spot elsewhere, as M13.40 measured. Chosen: leave the order alone until the cap is merged and
   `auto_details_last` is turned on.
 
 ### What isn't built

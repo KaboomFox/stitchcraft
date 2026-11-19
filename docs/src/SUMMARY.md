@@ -24,6 +24,7 @@
     - [Set text in an embroidery font](user/how-to/set-text-in-a-font.md)
     - [Letter in VectorCraft](user/how-to/letter-in-vectorcraft.md)
     - [Letter a picture](user/how-to/letter-a-picture.md)
+    - [Keep small parts of a picture](user/how-to/keep-small-parts.md)
     - [Report a bug](user/how-to/report-a-bug.md)
   - [Stitch types](user/stitches/README.md)
     - [Running stitch](user/stitches/running.md)

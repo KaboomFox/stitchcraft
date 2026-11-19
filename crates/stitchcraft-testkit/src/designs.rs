@@ -226,7 +226,10 @@ pub fn planned_with(elements: Vec<Element>, settings: DesignSettings) -> PlanOut
 pub fn in_place(design: &Design) -> PlanOutcome {
     let Some(bounds) = design.bounds() else { return plan(design, REFERENCE, &Budget::DEFAULT) };
     let middle = p((bounds.min().x() + bounds.max().x()) / 2.0, (bounds.min().y() + bounds.max().y()) / 2.0);
-    let mut outcome = planned_with(design.elements().to_vec(), DesignSettings { origin: Some(middle), ..design.settings });
+    // The design's marks go with it (`REQ-AUTO-104`).
+    let mut centred = Design::new(design.elements().to_vec(), DesignSettings { origin: Some(middle), ..design.settings }).unwrap();
+    centred.marks.clone_from(&design.marks);
+    let mut outcome = plan(&centred, REFERENCE, &Budget::DEFAULT);
     for stitch in outcome.plan.iter_mut().flat_map(|plan| &mut plan.blocks).flat_map(|block| &mut block.stitches) {
         stitch.at = p(stitch.at.x() + middle.x(), stitch.at.y() + middle.y());
     }
