@@ -459,11 +459,11 @@ validates the result. A violation is a bug in StitchCraft: `plan` returns no pla
 It writes a bug-report bundle that reproduces the failure (`REQ-CLI-002`). The conformance suite has a case for every invariant.
 
 A plan that passes, of a design with an automatic shape, is then measured for its thickness, with the
-budget's work once more. Where a spot sews above the cap, 4 fills by default, a last pass takes thread there that is hidden or
+budget's work once more. Where a spot sews above the cap (`auto_thick_cap_fills`), a last pass takes thread there that is hidden or
 that the design doesn't need, with the budget's work once more, keeping to the profile's shortest and longest
 stitch, and keeps the measure up to date (`SC-I1119`, [the thickest spot](image-to-embroidery.md#the-thickest-spot)).
-Where a spot is still above it, the cap takes needle points out of the runs of the shapes that digitizing made, with the
-budget's work once more ([the cap at the end of planning](image-to-embroidery.md#the-cap-at-the-end-of-planning)).
+Where a spot is still above it, the cap takes needle points out of the runs of the shapes that digitizing made, but none of a satin
+column's top stitches below the warning's limit, with the budget's work once more ([the cap at the end of planning](image-to-embroidery.md#the-cap-at-the-end-of-planning)).
 Planning adds `SC-W0913` when the design sews thick and returns the plan all the
 same ([how thick a design sews](image-to-embroidery.md#how-thick-a-design-sews)).
 

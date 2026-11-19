@@ -23,7 +23,7 @@
 //! measured twice, since VectorCraft's export has few instructions to spare. Only the stitches near a spot
 //! above the cap are looked at again (`Thickness::near`).
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use stitchcraft_core::units::at_least;
 use stitchcraft_core::{Exhausted, Meter, Point};
@@ -108,8 +108,15 @@ pub(crate) struct Rules<'r> {
     /// The most thread, in fills, that a spot of a millimetre may sew (`auto_thick_cap_fills`,
     /// `REQ-AUTO-099`): the pass takes thread where a spot has more.
     pub(crate) cap: f64,
+    /// The warning's limit of thread, in fills (`auto_thick_warn_fills`): above it, and only there, the cap may
+    /// take a satin column's top stitches as a last resort (`REQ-AUTO-112`).
+    pub(crate) limit: f64,
     /// The base layer's pieces, by their places in the plan's elements.
     pub(crate) base: &'r BTreeSet<ElementRef>,
+    /// The satin columns that digitizing made, by their places in the plan's elements: their top stitches are
+    /// the surface a person sees, and the thread under their edges keeps those covered once the fabric pulls
+    /// them in (`REQ-AUTO-112`, `REQ-AUTO-114`).
+    pub(crate) columns: &'r BTreeSet<ElementRef>,
     /// How far a row's end may move back along its row, in millimetres: the overlap of areas.
     pub(crate) overlap: f64,
     /// The machine's shortest stitch, in millimetres, which no stitch the pass shortens goes under.
@@ -213,7 +220,7 @@ impl Pass<'_, '_> {
     }
 
     /// Where entry `at` puts its needle point in the plan, as the plan's checks measure it.
-    fn at(&self, (block, index): Entry) -> Option<Point> {
+    pub(super) fn at(&self, (block, index): Entry) -> Option<Point> {
         self.plan.blocks.get(block)?.stitches.get(index).map(|entry| entry.at)
     }
 
@@ -241,23 +248,33 @@ impl Pass<'_, '_> {
         Some([self.sewn(block, a, b)?, self.sewn(block, b, c)?, self.sewn(block, c, d)?])
     }
 
-    /// Takes `removed` out of the measure and puts `added` in, unless that would make a spot that `added`
-    /// lays thread in thicker than both the cap and what it was: then the measure stays as it was, and
-    /// `false` is returned. Fills within [`LENGTH_SLACK`](stitchcraft_core::units::LENGTH_SLACK) of each
+    /// Takes `removed` out of the measure and puts `added` in, unless that would make the thickest spot that
+    /// `added` lays thread in thicker than both the cap and what it was, or any spot it lays thread in that was
+    /// at the warning's limit or under it thicker than that limit: then the measure stays as it was, and `false` is
+    /// returned. Fills within [`LENGTH_SLACK`](stitchcraft_core::units::LENGTH_SLACK) of each
     /// other count as equal, as lengths do.
     pub(super) fn changed(&mut self, removed: &[SewnStitch], added: &[SewnStitch], meter: &mut Meter) -> Result<bool, Exhausted> {
-        let hottest = |thickness: &Thickness, meter: &mut Meter| -> Result<f64, Exhausted> {
-            added.iter().try_fold(0.0_f64, |most, stitch| Ok(most.max(thickness.hottest(stitch, meter)?)))
+        // A stitch that crosses a thick spot may make a thinner one thicker, but none that was at the warning's
+        // limit or under it goes above it.
+        let spots = |thickness: &Thickness, meter: &mut Meter| -> Result<BTreeMap<usize, f64>, Exhausted> {
+            let mut spots = BTreeMap::new();
+            for stitch in added {
+                spots.extend(thickness.spots(stitch, meter)?);
+            }
+            Ok(spots)
         };
-        let before = hottest(self.thickness, meter)?;
+        let before = spots(self.thickness, meter)?;
         for stitch in removed {
             self.thickness.remove(stitch, meter)?;
         }
         for stitch in added {
             self.thickness.add(stitch, meter)?;
         }
-        let after = hottest(self.thickness, meter)?;
-        if at_least(self.rules.cap.max(before), after) {
+        let after = spots(self.thickness, meter)?;
+        let (cap, limit) = (self.rules.cap, self.rules.limit);
+        let most = |spots: &BTreeMap<usize, f64>| spots.values().fold(0.0_f64, |most, fills| most.max(*fills));
+        let raised = after.iter().any(|(spot, fills)| at_least(limit, before.get(spot).copied().unwrap_or(0.0)) && !at_least(limit, *fills));
+        if at_least(cap.max(most(&before)), most(&after)) && !raised {
             return Ok(true);
         }
         for stitch in added {
@@ -348,7 +365,9 @@ impl Pass<'_, '_> {
     /// the later shapes' top stitches, as the pass leaves them, are measured on a blank of the measure as it
     /// goes, and an element's own are added once its stitches are passed.
     fn row_ends(&mut self, kind: Kind, near: &[SewnStitch], meter: &mut Meter) -> Result<(), Exhausted> {
-        let mut cover = self.thickness.blank();
+        // The cover by later shapes, without their satin columns and with them: above the warning's limit a
+        // column's thread hides a row's end too, as it did before columns kept the rows under their edges.
+        let mut cover = [self.thickness.blank(), self.thickness.blank()];
         let mut run: Vec<Entry> = Vec::new();
         let mut owner = None;
         for stitch in near.iter().rev() {
@@ -365,14 +384,23 @@ impl Pass<'_, '_> {
         Ok(())
     }
 
-    /// Adds the top stitches that end at the entries of `run`, as they are now, to `cover`.
-    fn covering(&self, cover: &mut Thickness, run: &[Entry], meter: &mut Meter) -> Result<(), Exhausted> {
+    /// Adds the top stitches that end at the entries of `run`, as they are now, to `cover`: to its first all
+    /// but satin columns', to its second all.
+    fn covering(&self, cover: &mut [Thickness; 2], run: &[Entry], meter: &mut Meter) -> Result<(), Exhausted> {
+        let [others, all] = cover;
         for &(block, at) in run {
-            if !self.stitch((block, at)).is_some_and(|(_, role, _)| role == Role::Top) {
+            // Below the warning's limit a satin column's thread hides no row end: a row's end under a column is
+            // the overlap that keeps the column's edge covered once the fabric pulls it in (`REQ-AUTO-114`).
+            let column = |element: Option<ElementRef>| element.is_some_and(|element| self.rules.columns.contains(&element));
+            let Some((_, role, element)) = self.stitch((block, at)) else { continue };
+            if role != Role::Top {
                 continue;
             }
             if let Some(stitch) = self.beside((block, at), false, meter)?.and_then(|before| self.sewn(block, before, at)) {
-                cover.add(&stitch, meter)?;
+                all.add(&stitch, meter)?;
+                if !column(element) {
+                    others.add(&stitch, meter)?;
+                }
             }
         }
         Ok(())
@@ -382,7 +410,7 @@ impl Pass<'_, '_> {
     /// of a row of `kind` whose turn lies under `cover` and lays thread in a spot above the cap. Rows lie
     /// on each side of a turn of up to [`TURN`], running nearly opposite ways; each moves by the overlap at
     /// the most, or half as far when only that is hidden, and every stitch keeps the machine's shortest.
-    fn row_end(&mut self, (block, at): Entry, kind: Kind, cover: &Thickness, meter: &mut Meter) -> Result<(), Exhausted> {
+    fn row_end(&mut self, (block, at): Entry, kind: Kind, cover: &[Thickness; 2], meter: &mut Meter) -> Result<(), Exhausted> {
         let Some((end, role, element)) = self.stitch((block, at)) else { return Ok(()) };
         let based = element.is_some_and(|element| self.rules.base.contains(&element));
         let wanted = match kind {
@@ -403,9 +431,12 @@ impl Pass<'_, '_> {
         if !same || turn.length() > TURN || !opposite(&row, &next) || reach < LEAST_MOVE {
             return Ok(());
         }
-        if self.thickness.hottest(&turn, meter)? <= self.rules.cap {
+        let hottest = self.thickness.hottest(&turn, meter)?;
+        if hottest <= self.rules.cap {
             return Ok(());
         }
+        let [others, all] = cover;
+        let cover = if hottest > self.rules.limit { all } else { others };
         let hidden = |place: Point| cover.at_place(Measure::Fills, place) >= COVERED;
         // A place between 2 others, on the grid.
         let between = |place: Point| self.thickness.placed(self.thickness.point(place));

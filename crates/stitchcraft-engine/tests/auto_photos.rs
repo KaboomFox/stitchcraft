@@ -109,14 +109,16 @@ const MOVED: &str = "A row of an automatic fill shows on another colour for 1 mm
 /// show, a row of the dog on turf in 9 threads does ([`REORDERED`]), and a stitch of an outline of the running
 /// dog in 6 is sewn the other way: 12. With details last off by default again (M13.48), the stitches of the
 /// running dogs' outlines are sewn as before M13.45, and the row of the dog on turf in 9 threads the other way.
+/// With the cap at 3.25 (M13.46), the row of `vc:68:fill` on the dog on turf in 6 threads, and of `vc:78:fill`
+/// on the one in 9, ends 1 mm sooner, where the cap joined its end: each shows for 1.4 and 1.75 mm.
 const ASTRAY: [Astray; 12] = [
-    Astray { dog: "dog-on-turf-6", element: "vc:68:fill", stitch: [(45.58, 74.75), (43.22, 74.77)], length: 2.35, cause: MOVED, step: "M13.38" },
+    Astray { dog: "dog-on-turf-6", element: "vc:68:fill", stitch: [(45.58, 74.75), (44.18, 74.82)], length: 1.4, cause: MOVED, step: "M13.38" },
     Astray { dog: "dog-on-turf-6", element: "vc:68:fill", stitch: [(45.0, 74.25), (42.3, 74.26)], length: 2.7, cause: MOVED, step: "M13.38" },
     Astray { dog: "dog-on-turf-6", element: "vc:71:fill#2", stitch: [(51.96, 22.56), (51.83, 24.9)], length: 2.34, cause: OUTLINE, step: "M13.38" },
     Astray { dog: "dog-on-turf-6", element: "vc:81:fill#2", stitch: [(49.08, 80.85), (49.52, 82.56)], length: 1.76, cause: OUTLINE, step: "M13.38" },
     Astray { dog: "dog-on-turf-9", element: "vc:6:fill", stitch: [(53.0, 44.25), (55.14, 44.25)], length: 2.14, cause: ACROSS, step: "M13.38" },
     Astray { dog: "dog-on-turf-9", element: "vc:6:fill", stitch: [(56.0, 44.0), (52.0, 44.0)], length: 4.0, cause: ACROSS, step: "M13.38" },
-    Astray { dog: "dog-on-turf-9", element: "vc:78:fill", stitch: [(45.92, 74.75), (43.23, 74.77)], length: 2.7, cause: REORDERED, step: "M13.38" },
+    Astray { dog: "dog-on-turf-9", element: "vc:78:fill", stitch: [(45.92, 74.75), (44.18, 74.82)], length: 1.75, cause: REORDERED, step: "M13.38" },
     Astray { dog: "dog-running-6", element: "vc:26:fill#2", stitch: [(41.19, 4.89), (38.98, 4.59)], length: 2.24, cause: OUTLINE, step: "M13.38" },
     Astray { dog: "dog-running-9", element: "vc:21:fill", stitch: [(49.31, 51.51), (46.0, 51.5)], length: 3.31, cause: MOVED, step: "M13.38" },
     Astray { dog: "dog-running-9", element: "vc:52:fill", stitch: [(60.0, 74.0), (64.0, 74.0)], length: 4.0, cause: ACROSS, step: "M13.38" },
@@ -248,9 +250,11 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
 /// sew through no more than 12 mm under a later fill (REQ-AUTO-076). With the ragged thin lines merged into their
 /// neighbours (REQ-AUTO-090), its sliver is gone, and the dogs leave 10, 10, 0 and 5 thousandths of a percent bare.
 /// With lines kept and details last by default (M13.45), 21, 10, 1 and 2: a line kept is as wide as its thread.
-/// With details last off by default again (M13.48), 21, 10, 0 and 5.
+/// With details last off by default again (M13.48), 21, 10, 0 and 5. With the cap at 3.25 (M13.46), which joins
+/// more rows under later shapes, 38, 38, 11 and 21, and with its last resort above the warning's limit, 41, 39, 11
+/// and 19, far under the cover's limit of 500.
 const SLIVERS: [(&str, usize, usize, f64, f64); 4] =
-    [("dog-on-turf-6", 0, 0, 0.0, 21.0), ("dog-on-turf-9", 0, 0, 0.0, 10.0), ("dog-running-6", 0, 0, 0.0, 0.0), ("dog-running-9", 0, 0, 0.0, 5.0)];
+    [("dog-on-turf-6", 0, 0, 0.0, 41.0), ("dog-on-turf-9", 0, 0, 0.0, 39.0), ("dog-running-6", 0, 0, 0.0, 11.0), ("dog-running-9", 0, 0, 0.0, 19.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -285,10 +289,11 @@ fn req_auto_027_digitized_dogs_show_no_fabric_and_leave_the_slivers_recorded() {
 /// thin lines merged into their neighbours (REQ-AUTO-090), and 141.5, 153.25, 130.5 and 187.5 before the cap at
 /// the end of planning (REQ-AUTO-100), and 137.25, 150.75, 129.0 and 176.5 before lines were kept and details
 /// sewn last by default (M13.45), and 126.0, 130.0, 106.75 and 173.75 before details last was off by default
-/// again (M13.48). The case fails when a number changes, so that a change that piles thread up
-/// again shows here.
+/// again (M13.48), and 131.25, 149.0, 129.0 and 176.5 with the cap at 4, before it left satin columns whole below
+/// the warning's limit and was 3.25 (M13.46). The case fails when a number changes, so that a change that piles
+/// thread up again shows here.
 const THICK: [(&str, f64, f64); 4] =
-    [("dog-on-turf-6", 13125.0, 0.0), ("dog-on-turf-9", 14900.0, 0.0), ("dog-running-6", 12900.0, 0.0), ("dog-running-9", 17650.0, 0.0)];
+    [("dog-on-turf-6", 5425.0, 0.0), ("dog-on-turf-9", 6375.0, 0.0), ("dog-running-6", 5350.0, 0.0), ("dog-running-9", 9400.0, 0.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -296,7 +301,8 @@ fn req_auto_067_digitized_dogs_sew_thick_on_the_area_recorded() {
     let found: Vec<(String, f64, f64)> = planned()
         .iter()
         .map(|(name, _, plan)| {
-            let report = fabric::thickness(plan, &fabric::Limits::DEFAULT);
+            // The area at 3 fills, below the warning's limit of 4 since M13.46 (REQ-AUTO-113).
+            let report = fabric::thickness(plan, &fabric::Limits { warn_fills: 3.0, ..fabric::Limits::DEFAULT });
             (name.clone(), hundredths(report.thick.area), hundredths(report.failing.area))
         })
         .collect();
@@ -308,8 +314,12 @@ fn req_auto_067_digitized_dogs_sew_thick_on_the_area_recorded() {
 /// the cap of 4 fills then, where 5 to 8 elements meet. With the ragged thin lines merged (REQ-AUTO-090), the running
 /// dog in 6 threads sews 0.45 fills less at its thickest spot and the one in 9 as much, and the dogs on turf 0.16
 /// and 0.31 more, at new spots where a satin column or a fill lies over 3 or 4 other fills: 4.69, 4.80, 4.62
-/// and 5.63. The cap at the end of planning (REQ-AUTO-100) brings each to 4.00.
-const THICKEST: [(&str, f64); 4] = [("dog-on-turf-6", 400.0), ("dog-on-turf-9", 400.0), ("dog-running-6", 400.0), ("dog-running-9", 400.0)];
+/// and 5.63. The cap at the end of planning (REQ-AUTO-100) brought each to 4.00. Since it leaves satin columns
+/// whole (REQ-AUTO-112) and is 3.25 (M13.46), 2 columns of one shape that meet over a fill hold the dog on turf
+/// in 6 threads at 4.77 and the running dog in 6 at 4.64, and 3 columns that cross over a fill the running dog in
+/// 9 at 5.25. Above the warning's limit the cap takes columns' points as a last resort (REQ-AUTO-112): 3.87,
+/// 3.97, 3.92 and 3.98, the running dogs' at spots of fills alone.
+const THICKEST: [(&str, f64); 4] = [("dog-on-turf-6", 387.0), ("dog-on-turf-9", 397.0), ("dog-running-6", 392.0), ("dog-running-9", 398.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -319,25 +329,37 @@ fn req_auto_073_digitized_dogs_sew_their_thickest_spot_as_recorded() {
     assert_eq!(found, THICKEST.map(|(name, thickest)| (name.to_string(), thickest)));
 }
 
-/// The cap at the end of planning (REQ-AUTO-100) takes thread wherever a dog still sews above 4 fills, so
-/// that no spot of any dog is left above it (REQ-AUTO-102).
+/// The dogs whose thickest spot sews above the cap with no satin column there, with it in hundredths of a fill, as measured
+/// on 2026-11-19 (REQ-AUTO-102): 4 fills and the base layer meet, and the top of each shows, which the cap
+/// takes only where a shape lays it twice. The list only shrinks.
+const FILLS_ALONE: [(&str, f64); 2] = [("dog-running-6", 392.0), ("dog-running-9", 398.0)];
+
+/// The cap at the end of planning (REQ-AUTO-100) takes thread wherever a dog still sews above the cap, so
+/// that what is left above it is satin columns' top stitches, which it leaves below the warning's limit
+/// (REQ-AUTO-102, REQ-AUTO-112), but on the dogs listed.
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
-fn req_auto_102_digitized_dogs_sew_no_spot_above_the_cap() {
-    let above: Vec<(String, f64)> = planned()
+fn req_auto_102_digitized_dogs_sew_above_the_cap_only_on_satin_columns() {
+    let (cap, limit) = (rules().auto_thick_cap_fills, rules().auto_thick_warn_fills);
+    let above: Vec<(String, f64, f64)> = planned()
         .iter()
-        .map(|(name, _, plan)| (name.clone(), fabric::thickness(plan, &fabric::Limits::DEFAULT).fills.value))
-        .filter(|(_, thickest)| *thickest > 4.0)
+        .map(|(name, design, plan)| {
+            let (thickest, columns) = fabric::thickest(plan, &fabric::columns(design));
+            (name.clone(), thickest, columns)
+        })
+        .filter(|(_, thickest, columns)| thickest - columns > cap || *thickest > limit + 1e-9)
         .collect();
-    assert!(above.is_empty(), "{above:?}");
+    assert!(above.iter().all(|(_, thickest, _)| *thickest <= limit + 1e-9), "{above:?}");
+    let listed: Vec<(String, f64)> = above.iter().map(|(name, thickest, _)| (name.clone(), hundredths(*thickest))).collect();
+    assert_eq!(listed, FILLS_ALONE.map(|(name, thickest)| (name.to_string(), thickest)), "{above:?}");
 }
 
 /// The dogs keep their thin lines at a likeness of 0.85, as by default, and sew their details last, which each
-/// shape here turns on since M13.48 turned it off by default (REQ-AUTO-103), and still sew no spot above the
-/// cap.
+/// shape here turns on since M13.48 turned it off by default (REQ-AUTO-103), and still sew above the cap only
+/// where satin columns' top stitches lie (REQ-AUTO-112).
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
-fn req_auto_103_digitized_dogs_with_lines_kept_and_details_last_sew_no_spot_above_the_cap() {
+fn req_auto_103_digitized_dogs_with_lines_kept_and_details_last_sew_above_the_cap_only_on_satin_columns() {
     let default = |key: &str| auto::AutoParams::SPECS.iter().find(|spec| spec.key == key).map(|spec| spec.default);
     assert_eq!((default(auto::MIN_LIKENESS), default(auto::DETAILS_LAST)), (Some("0.85"), Some("false")));
     let mut above = Vec::new();
@@ -349,9 +371,9 @@ fn req_auto_103_digitized_dogs_with_lines_kept_and_details_last_sew_no_spot_abov
             element.params.set(auto::DETAILS_LAST, "true");
         }
         let plan = in_place(&Design::new(elements, design.settings).unwrap()).plan.unwrap();
-        let thickest = fabric::thickness(&plan, &fabric::Limits::DEFAULT).fills.value;
-        if thickest > 4.0 {
-            above.push((name.clone(), thickest));
+        let (thickest, columns) = fabric::thickest(&plan, &fabric::columns(design));
+        if thickest - columns > rules().auto_thick_cap_fills || thickest > rules().auto_thick_warn_fills + 1e-9 {
+            above.push((name.clone(), thickest, columns));
         }
     }
     assert!(above.is_empty(), "{above:?}");

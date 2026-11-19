@@ -158,13 +158,13 @@ fn req_auto_027_a_sliver_over_the_base_layer_is_left_to_it() {
 #[test]
 fn req_auto_027_without_the_base_layer_a_sliver_shows_fabric_and_that_is_said() {
     // The same sliver with the base layer off: nothing lies under it, so fabric shows, and the design was
-    // told that it may (SC-I0911). The bare share, 0.152 %, is over the 0.15 % of a design without one too.
+    // told that it may (SC-I0911). The bare share, 0.153 %, is over the 0.15 % of a design without one too.
     let (design, plan, said) = patched((1.3, 1.1), false);
     let cover = fabric::cover(&design, &plan, GAP);
     assert_eq!((cover.gaps, cover.beyond.as_slice(), cover.base, cover.limit(&rules())), (1, &[f64::INFINITY][..], 0.0, BARE), "{cover:?}");
     assert!(cover.slivers(&rules()).is_empty() && cover.bare_share() > BARE && cover.bare_share() < 0.5 / 100.0, "{cover:?}");
     let faults =
-        ["a gap of 0.285 mm² at (5.7, 5.6) in patch: no base layer under all of it", "0.152 % of the design bare, 0.32 of 207 mm², over 0.150 %"];
+        ["a gap of 0.285 mm² at (5.7, 5.6) in patch: no base layer under all of it", "0.153 % of the design bare, 0.32 of 207 mm², over 0.150 %"];
     assert_eq!(cover.faults(&rules()), faults);
     let off = "info SC-I0911: The base layer is off, so nothing lies under a place that the top thread leaves bare between 2 shapes, and the fabric may show there.";
     assert_eq!(said, [off]);

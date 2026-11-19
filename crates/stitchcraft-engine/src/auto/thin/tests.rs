@@ -66,7 +66,7 @@ fn columns(from: f64, width: f64) -> Vec<(f64, f64)> {
 const NONE: &BTreeSet<ElementRef> = &BTreeSet::new();
 
 fn rules(base: &BTreeSet<ElementRef>) -> Rules<'_> {
-    Rules { cap: 4.0, base, overlap: 1.0, shortest: 0.3, longest: 12.1 }
+    Rules { cap: 4.0, limit: 4.0, base, columns: NONE, overlap: 1.0, shortest: 0.3, longest: 12.1 }
 }
 
 /// `plan` thinned with `rules`, its measure kept up to date, and the measure of what the pass left.
@@ -194,6 +194,27 @@ fn req_auto_074_row_ends_under_a_later_shape_move_back_by_the_overlap_where_a_sp
 }
 
 #[test]
+fn req_auto_114_a_satin_column_hides_no_row_end_of_the_pass() {
+    // The same seam, the later shape a satin column: below the warning's limit the rows' ends under it keep
+    // its edge covered once the fabric pulls it in, and stay.
+    let mut sewn = seam(Role::Top, 0.25, true);
+    let column: BTreeSet<ElementRef> = ElementRef::from_index(1).into_iter().collect();
+    let (thinned, _, _) = thin(&mut sewn, &Rules { columns: &column, limit: 50.0, ..rules(NONE) });
+    assert_eq!(thinned.unwrap().times[3], 0);
+    assert!(right_ends(&sewn, Role::Top).iter().all(|x| *x == 6.0));
+    // At it, they stay too.
+    let mut at = seam(Role::Top, 0.25, true);
+    let most = Thickness::of(&at, &mut Budget::DEFAULT.meter()).unwrap().unwrap().most(Measure::Fills).value;
+    let (thinned, _, _) = thin(&mut at, &Rules { columns: &column, cap: 2.0, limit: most, ..rules(NONE) });
+    assert_eq!(thinned.unwrap().times[3], 0);
+    // Above it, as a last resort, the column hides them as any later shape does (`REQ-AUTO-112`).
+    let mut hot = seam(Role::Top, 0.25, true);
+    let (thinned, _, _) = thin(&mut hot, &Rules { columns: &column, ..rules(NONE) });
+    assert!(thinned.unwrap().times[3] > 0);
+    assert!(right_ends(&hot, Role::Top).contains(&5.0));
+}
+
+#[test]
 fn req_auto_074_the_base_layer_s_row_ends_move_first_and_only_the_base_layer_s() {
     let base: BTreeSet<ElementRef> = ElementRef::from_index(0).into_iter().collect();
     let mut sewn = seam(Role::Underlay, 0.8, true);
@@ -278,11 +299,11 @@ fn a_run_ends_at_its_block_s_first_entry_and_a_jump_and_a_top_stitch_after_a_jum
     assert_eq!(pass.beside((0, 1), true, &mut meter).unwrap(), Some(2));
     // The top stitch after the jump to `over` lays no thread of its own.
     let over = pass.plan.blocks[0].stitches.iter().position(|stitch| stitch.at == p(0.5, 3.0) && stitch.kind == StitchKind::Normal).unwrap();
-    let mut cover = pass.thickness.blank();
+    let mut cover = [pass.thickness.blank(), pass.thickness.blank()];
     pass.covering(&mut cover, &[(0, over)], &mut meter).unwrap();
-    assert_eq!(cover.most(Measure::Fills).value, 0.0);
+    assert!(cover.iter().all(|cover| cover.most(Measure::Fills).value == 0.0));
     pass.covering(&mut cover, &[(0, over + 1)], &mut meter).unwrap();
-    assert!(cover.most(Measure::Fills).value > 0.0);
+    assert!(cover.iter().all(|cover| cover.most(Measure::Fills).value > 0.0));
 }
 
 /// Whether `kept`, the measure the pass kept up to date, measures as `measured`, the plan's measured again,
@@ -393,4 +414,27 @@ fn a_stitch_is_a_normal_entry_not_taken_out_and_the_next_one_passes_those_taken_
     assert!(pass.stitch((0, 0)).is_none() && pass.stitch((0, 2)).is_none() && pass.stitch((0, 1)).is_some());
     assert_eq!(pass.beside((0, 1), true, &mut meter).unwrap(), Some(3));
     assert_eq!(pass.beside((0, 3), false, &mut meter).unwrap(), Some(1));
+}
+
+#[test]
+fn req_auto_074_a_change_takes_no_spot_at_the_warning_s_limit_or_under_above_it() {
+    // A thick place round (0.5, 0.5), 7.5 fills, and a thinner one round (3.5, 0.5), 3.75 fills. A change that
+    // takes 2 stitches of the thick place and adds 2 that run from it across the thinner one keeps the thick
+    // place as it was and lays the thinner one at 4.25 fills: above the warning's limit, 4 here, where it was
+    // under it. That the stitches added cross a spot thicker still doesn't allow it.
+    let mut sewn = plan(&[thick(), ("thin", Role::Top, knot((3.0, 0.5), (4.0, 0.5), 15))]);
+    let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let rules = rules(NONE);
+    let mut meter = Budget::DEFAULT.meter();
+    let removed: Vec<SewnStitch> = thickness.sewn().iter().filter(|stitch| stitch.role == Role::Top).take(2).copied().collect();
+    let at = |x: f64| thickness.at(Measure::Fills, p(x, 0.5));
+    let (thick_was, thin_was) = (at(0.5), at(3.5));
+    assert!(thick_was > 7.0 && (3.5..4.0).contains(&thin_was), "{thick_was} {thin_was}");
+    let added: Vec<SewnStitch> =
+        removed.iter().map(|stitch| SewnStitch { from: thickness.placed(p(0.0, 0.5)), to: thickness.placed(p(4.0, 0.5)), ..*stitch }).collect();
+    let mut pass = Pass::new(&mut sewn, &mut thickness, &rules);
+    assert!(!pass.changed(&removed, &added, &mut meter).unwrap());
+    // The measure stays as it was.
+    let (thick_now, thin_now) = (pass.thickness.at(Measure::Fills, p(0.5, 0.5)), pass.thickness.at(Measure::Fills, p(3.5, 0.5)));
+    assert!((thick_now - thick_was).abs() < 1e-9 && (thin_now - thin_was).abs() < 1e-9);
 }
