@@ -31,6 +31,8 @@ pub stitchcraft_core::diag::Code::AutoBase
 pub stitchcraft_core::diag::Code::AutoBaseLeftOut
 pub stitchcraft_core::diag::Code::AutoBaseOff
 pub stitchcraft_core::diag::Code::AutoDigitized
+pub stitchcraft_core::diag::Code::AutoGuideUnused
+pub stitchcraft_core::diag::Code::AutoGuided
 pub stitchcraft_core::diag::Code::AutoKept
 pub stitchcraft_core::diag::Code::AutoLayers
 pub stitchcraft_core::diag::Code::AutoLineMerged
@@ -321,6 +323,8 @@ pub stitchcraft_core::Code::AutoBase
 pub stitchcraft_core::Code::AutoBaseLeftOut
 pub stitchcraft_core::Code::AutoBaseOff
 pub stitchcraft_core::Code::AutoDigitized
+pub stitchcraft_core::Code::AutoGuideUnused
+pub stitchcraft_core::Code::AutoGuided
 pub stitchcraft_core::Code::AutoKept
 pub stitchcraft_core::Code::AutoLayers
 pub stitchcraft_core::Code::AutoLineMerged

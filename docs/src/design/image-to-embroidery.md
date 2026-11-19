@@ -1335,7 +1335,7 @@ times at the least.
 
 | Measure | Warning | Failing | Where the number is from |
 |---|---:|---:|---|
-| Thread, in fills | 3 | 6 | Brother's troubleshooting table names "three or more overlapping stitches" as a fault of the design. Embrilliance's density map turns red at 6 layers |
+| Thread, in fills | 4 | 6 | Brother's troubleshooting table names "three or more overlapping stitches" as a fault of the design, and the warning started at 3. From M13.46 it starts at 4 ([The cap and the warning](#the-cap-and-the-warning)). Embrilliance's density map turns red at 6 layers |
 | Needle points per mm² | 15 | 30 | Our own. The rows of one fill end 5 to a square millimetre along its edge, so these are the edges of 3 and of 6 fills on each other |
 
 A place counts when 1 mm² of it in one piece is at the limit or over it: 4 spots beside each other, each
@@ -1357,7 +1357,7 @@ each measure and where, the 3 shapes with the most thread at the thickest spot, 
 limits. A design drawn by hand is not measured: its author chose every layer.
 
 `stitch preview --style thickness` draws the heat map of a machine file (`REQ-RND-004`). Thread under 2
-fills is grey, and thread of 2 fills or more yellow. From 3 fills it is orange, and from 6 red.
+fills is grey, and thread of 2 fills or more yellow. From 4 fills it is orange, and from 6 red.
 
 The user page shows [the running dog's](../user/stitches/automatic.md#how-thick-it-sews).
 
@@ -1662,8 +1662,8 @@ point the cap leaves is one of the plan's, in the same order. The jumps, the tri
 are those of the plan. The cap reads roles, elements and places, whatever the picture shows. It takes
 needle points only of the elements that digitizing made. A shape with settings of its own keeps the
 stitches they give it, and its stitches cover and lay thread like the others. A test sheet's half as drawn sews so.
-Where a spot stays above the cap, `SC-W0913` says "Above the cap." after what is stacked there. `SC-I1119`
-says what the last pass took and then what each kind of the cap's gave.
+`SC-I1119` says what the last pass took and then what each kind of the cap's gave, and what is left above
+the cap ([The cap and the warning](#the-cap-and-the-warning)).
 
 The cap is `stitchcraft_engine::auto::cap`. It goes through the needle points whose stitch in or out comes
 within 1 mm of a spot above the cap, and judges cover by the top stitches within 2.5 mm of such a spot,
@@ -1673,10 +1673,10 @@ the last pass's measure up to date with the pass's own helpers, so the design is
 works on copies. When it runs out of work, the plan stays as the last pass left it, and `SC-I1119` says
 so.
 
-Where a satin column's points crowd in a bend, the third kind may take one. The stitch left then crosses
-part of the column only: on TS-13C's face outline it lies 14° from square, where `REQ-AUTO-017` holds the
-columns' rungs to 10°. Its places were covered twice over, so no colour changes, and MC-8 looks at it.
-That case plans the columns with the cap at 50 fills, as digitizing lays them.
+Until M13.46 the cap took a satin column's top stitches too. Where a column's points crowded in a bend,
+the third kind could take one. The stitch left then crossed part of the column only. On TS-13C's face
+outline it lay 14° from square, where `REQ-AUTO-017` holds the columns' rungs to 10°. Since M13.46 the cap
+takes none of a column's top stitches ([The cap and satin columns](#the-cap-and-satin-columns)).
 
 A joined stitch no longer than the longer of its 2 left the dogs at 4.02 to 4.18 fills: the next row's start
 lay too far for the stitch into a turn. With the element's own longest stitch as the bound they come to 4.00.
@@ -1766,6 +1766,169 @@ round, took 11 % on TS-13A.
   needle point may go by these rules, and `SC-W0913` names it. Recommended as it is: a rule for that one spot would be tuned to one picture.
 - The last pass runs before the cap, as now. Its row ends move rather than go, which the cap can't do. Whether the
   cap alone would do as well is a measurement for the build phase.
+
+#### The cap and satin columns
+
+The owner asked on 2026-11-18 whether her machine can sew designs this thick. The trade's rule of thumb is
+that one layer of satin over a fill sews well, and that 2 dense layers on each other risk broken needles
+and thread. In this page's measure a fill under a satin column is 2 to 3 fills, so a cap of 4 is at the
+edge. With the cap at 3 the area at 3 fills or more nearly went, but a ring of satin got a ragged inner edge
+and a satin letter showed specks of fabric where its strokes join (M13.46).
+
+**Why.** The cap's test of cover checks whether the places along a needle point's 2 stitches lie within half a
+thread of other top thread. A column's stitches lie 0.4 mm apart or closer, nearer still at an inner edge or
+in a bend. The stitches beside any of its points pass that test. The test reads places along stitches. It misses
+the column's edge, which its needle points make, and the angle of its stitches, since a place on a stitch
+says nothing of either. Traced on TS-13C's and the lettered patch's
+digitized shapes with the cap at 3, the cap took 95 points of columns:
+
+| Kind | Points of columns | What the joined stitch does |
+|---|---:|---|
+| A shape's top under later shapes | 49 | It runs 45° across the column, half of them more, where a later shape covers part of it. Where that shape's edge pulls in, it shows |
+| A shape's own doubled top | 46 | A point on one edge goes, and its 2 stitches across become one stitch of 0.4 mm along the other edge: a notch in the edge |
+
+The same cap took 158 points of fills' top stitches and 7 of underlay, which change nothing that shows. At
+4 fills the cap changed the columns of 11 of the 24 designs measured, by 1 to 10 points, in the same 2 ways.
+The last pass moved no column's stitch.
+
+**The rule.** Below the warning's limit the cap takes no needle point of a satin column's top stitches
+(`REQ-AUTO-112`), and above it only as a last resort ([Above the warning's limit](#above-the-warnings-limit)).
+The column keeps the edge and the angle that digitizing gave it. Its underlay and travel are the cap's to take, and so
+are the stitches of the fills under it and beside it. A column is an element that digitizing made whose
+stitch type is satin, which planning knows from the stitches each element generates. The rule reads that
+and the stitches' roles, and no picture, shape or limit of its own.
+
+**A column's edge.** Lowered to 3.5, the cap left TS-13C's face columns covering 0.982 of the edges under
+them, once pulled in, where `REQ-AUTO-007` holds them to 0.99. The last pass and the cap took the overlap that the face's
+and the eyes' rows lay under the columns, which keeps a column's edge covered when the fabric pulls the
+column in. The last pass moved those rows' ends back from under the columns, and the cap took 44 points of
+them by its second kind, where it took 5 at 4. Either alone left the edges at 0.982 or 0.983. Both read a
+column's stitches where they are drawn. So since M13.46, below the warning's limit (`REQ-AUTO-114`):
+
+- the last pass counts no satin column's thread as hiding a row's end;
+- the cap counts a column's top stitch as covering a place only as the fabric pulls it, shortened by the
+  overlap at each end where the thread turns by 10° or more, as `REQ-AUTO-007` measures;
+- where taking a point makes a stitch beside it turn where it ran straight on, the part that the pull then
+  moves in must stay covered.
+
+Judging every covering stitch as pulled, the fills' rows too, kept the overlap under every shape, but left the
+cap nearly nothing to take: at 4 the dogs sewed up to 5.63 fills. Only a column pulls in so hard that its
+edge needs the rows under it.
+
+**Where a joined stitch lies.** With the cap at 3.25, a stitch the cap joined across a bend of the ear's
+rows lay beside the shape for 1.7 mm, on another colour, where `REQ-AUTO-026` allows 1.5. And on TS-13E a
+stitch it joined measured 0.262 mm on the plan's own points, off the machine's grid, at least 0.3 mm on the
+grid, where `REQ-PLAN-002` asks every stitch to be as long as the machine's shortest. So a joined top stitch lays its
+thread only where its shape's own top thread or a later shape's lies, and its length is checked on the
+plan's points as well (`REQ-AUTO-100`).
+
+#### The cap's default
+
+With these rules every design was planned with the cap at 4, 3.75, 3.5, 3.25 and 3, and each was held to
+every requirement, with `auto_details_last` off (M13.48). 3.25 is the lowest at which the cases of every requirement pass.
+At 3 the cap joins the base layer's row ends, hidden under the top, across the rows that `REQ-AUTO-028`
+holds straight. A bare share that rises far under its limit doesn't count against a cap, and the spots that
+satin columns hold are reported, not counted. The numbers are under
+[Above the warning's limit](#above-the-warnings-limit), with the cap's last resort.
+
+#### Above the warning's limit
+
+Left whole everywhere, the columns held spots at up to 5.25 fills on a traced dog with the cap at 3.25, and
+the badges at 4.40. Main's cap, which took their points, kept every repository design and dog at 4.00 or less.
+The owner's question was whether her machine can sew these designs, so this step can't raise the thickest
+spot. Above the warning's limit, 4 fills (`auto_thick_warn_fills`), a spot is too thick to sew well, and that
+outweighs a column's edge (`REQ-AUTO-112`):
+
+- The last pass counts a column's thread as hiding a row's end where the turn lays thread in a spot above
+  the limit.
+- The cap's 3 kinds go first through the needle points near such a spot, judging a column's stitches as
+  drawn, without the checks of a column's pulled edge and of where a joined stitch lies. Then they go down
+  to the cap with every rule.
+- What is still above the limit then loses top points of the columns whose stitches lay thread there, one at
+  a time. The candidates are the points that lower the thickest spot by half as much as the best one, or
+  more. Of those the cap prefers one whose joined stitch runs across the column, turning less than 45° from
+  the stitch into the point, and then the one that turns least. It stops once no spot is above the
+  limit.
+- No change takes a spot at the limit or under it above it (`REQ-AUTO-074`, `REQ-AUTO-100`). The check read
+  only the thickest spot along the stitches a change adds, so a stitch across a spot of 7 fills could raise
+  a spot of 3.75 beside it to 4.25. Each spot held to what it was blocked changes that add a hundredth of a
+  fill anywhere above the cap, which left the dogs at up to 5.1 fills, so the check is at the limit.
+
+The least change alone took more than it had to. A point whose stitches barely lower the spot changes a
+column for nothing: on the dog on turf in 6 threads, where 2 columns of one shape meet over a fill at 4.36
+fills, it took 2 points that lowered the spot by less than a hundredth before the 3 that brought it under 4.
+
+**Measured** on 2026-11-19, main against this step, each at its defaults. The plan with the cap at 50 fills
+has every top needle point of a column, and the points it has that this plan lacks are the points taken. A notch is a new
+stitch of a column that turns more than 45° from the one it replaced, and a leaning stitch one that turns 10°
+to 45°:
+
+| Design | Thickest, main | M13.46 | At 3 fills or more, mm², main | M13.46 | Column points taken, main | M13.46 | Notches, main | M13.46 | Leaning, main | M13.46 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Badges | 3.99 | 4.00 | 19.50 | 18.25 | 3 | 2 | 3 | 2 | 0 | 0 |
+| Lettered patch | 3.98 | 3.98 | 40.25 | 38.75 | 1 | 1 | 1 | 1 | 0 | 0 |
+| TS-13A, digitized half | 3.99 | 3.99 | 23.75 | 19.50 | 6 | 2 | 4 | 2 | 2 | 0 |
+| TS-13B, digitized half | 3.85 | 3.85 | 4.25 | 3.25 | 0 | 0 | 0 | 0 | 0 | 0 |
+| TS-13C, digitized half | 3.96 | 3.92 | 95.75 | 83.75 | 9 | 1 | 2 | 1 | 1 | 0 |
+| TS-13D, digitized half | 3.97 | 3.97 | 50.75 | 41.50 | 0 | 0 | 0 | 0 | 0 | 0 |
+| TS-13E, digitized half | 3.39 | 3.24 | 2.50 | 2.50 | 0 | 0 | 0 | 0 | 0 | 0 |
+| Traced pear | 3.86 | 3.99 | 13.00 | 10.50 | 1 | 1 | 1 | 1 | 0 | 0 |
+| Traced dog on turf, 6 threads | 4.00 | 3.87 | 131.25 | 54.25 | 2 | 3 | 2 | 3 | 0 | 0 |
+| Traced dog on turf, 9 threads | 4.00 | 3.97 | 149.00 | 63.75 | 0 | 0 | 0 | 0 | 0 | 0 |
+| Traced running dog, 6 threads | 4.00 | 3.92 | 129.00 | 53.50 | 3 | 1 | 1 | 0 | 0 | 1 |
+| Traced running dog, 9 threads | 4.00 | 3.98 | 176.50 | 94.00 | 10 | 7 | 7 | 7 | 1 | 0 |
+| Traced magnolia | 4.00 | 4.22 | 521.25 | 217.50 | 1 | 1 | 1 | 1 | 0 | 0 |
+| Traced coleus | 4.12 | 4.16 | 959.25 | 306.25 | 0 | 0 | 0 | 0 | 0 | 0 |
+| Traced goose | 4.00 | 4.37 | 489.25 | 156.75 | 3 | 0 | 2 | 0 | 1 | 0 |
+| Traced building | 4.00 | 3.82 | 255.75 | 91.75 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+On the repository's designs and the dogs no spot is above 4.00. The columns lose 18 points where main's cap
+took 35, with 17 notches where it made 21 and 1 leaning stitch where it made 4. The area at 3 fills or more
+falls by 58 to 64 % on the dogs. Against main, the dog on turf in 6 threads loses 3 column points where
+main's cap took 2, one more notch, and the running dog in 6 threads has 1 leaning stitch where main's has
+none. The badges' thickest spot is at the limit, 4.00, where main's is 3.99, and the pear's 3.99, where
+main's is 3.86. The cases of `REQ-AUTO-102` hold the bare share within its limit and the slivers, jumps,
+thread changes and likeness to those of the cap at 50 fills.
+
+Of the 4 traced photos outside the repository, the magnolia keeps a spot at 4.22 fills, the coleus at 4.16
+and the goose at 4.37, where main's cap held them to 4.00, 4.12 and 4.00. Each is a spot of fills alone, 4
+to 9 of them, whose top thread shows. Before the cap the goose's spot was at 4 fills or less, and it rose
+during the cap. That isn't traced further here.
+
+**What holds a spot above the cap.** At 3.25 the thickest spot of each design above it, split by element, and
+the step whose work its cause is. This step doesn't add a rule for them:
+
+| Design | Thickest | Satin columns' top | Other top | Under | What lies there | Owner |
+|---|---:|---:|---:|---:|---|---|
+| Badges, TS-13A's badges | 4.00, 3.99 | 3.21 to 3.43 | 0.41 to 0.65 | 0.12 to 0.16 | 2 columns of one ring meet over a fill | M13.47, joins |
+| Lettered patch, TS-13B's word | 3.98, 3.85 | 2.95 to 2.99 | 0 to 1.02 | 0 to 0.86 | 2 columns of the M meet over the field | M13.47, joins |
+| Traced dog on turf, 6 threads | 3.87 | 2.08 | 1.51 | 0.27 | a column over a fill where 2 columns of one shape meet | M13.47, joins |
+| Buttons | 3.52 to 3.66 | 1.89 to 2.09 | 1.26 to 1.62 | 0 to 0.31 | the rim's column over the disc | none yet: a column over a fill |
+| TS-13D, digitized half | 3.97 | 2.24 | 1.48 | 0.25 | one column of a white ring over the star and the navy | none yet: a bend |
+| Traced pear | 3.99 | 2.40 | 1.38 | 0.22 | the stem's 2 columns, of 2 shapes, over a fill | M13.49, columns of 2 shapes over a fill |
+| TS-13C, digitized half | 3.92 | 2.31 | 1.36 | 0.25 | the eyes' lines over the face and the eyes | none yet: a column over a fill's turns |
+| Traced dog on turf, 9 threads | 3.97 | 1.85 | 1.54 | 0.58 | a column over a fill and the base layer | none yet: a column over a fill |
+| Traced running dog, 6 threads | 3.92 | 0 | 2.86 | 1.06 | 4 fills and the base layer, whose tops show | none yet: fills alone |
+| Traced running dog, 9 threads | 3.98 | 0 | 3.80 | 0.18 | 4 fills, whose tops show | none yet: fills alone |
+
+On the 2 running dogs the thickest spot is now one of fills alone, 3.92 and 3.98 fills, above the cap of
+3.25. The cap took what its rules let it there. Their top thread shows, and the cap takes a shape's own top
+only where it is doubled.
+
+#### The cap and the warning
+
+The cap is what planning aims at. The limits of `REQ-AUTO-061` are what a person acts on. A spot that satin
+columns hold stays above the cap of 3.25 on 10 of the 20 repository designs. The warning used to name the cap there, and
+it started at 3 fills, which nearly every design has somewhere, so it was said of nearly every design. Since M13.46 (`REQ-AUTO-113`):
+
+- `SC-I1119` says what the last pass and the cap took and what is left above the cap, whenever a spot was
+  above it, also when nothing could be taken.
+- `SC-W0913` warns at its own limits and never names the cap. Its limit of thread is 4 fills, where it was
+  3. One layer of satin over a fill measures 2 to 3 fills and sews well, and 2 dense layers on a fill measure
+  4 or more. The failing limit stays at 6.
+
+With the cap's last resort no digitized design of the repository and no dog sews above 4 fills. TS-13A, D and
+E still warn, at places of their halves as drawn, which the cap doesn't touch.
 
 #### The cap and lettering
 
@@ -3046,6 +3209,209 @@ specks too, on 2026-11-18.
 - The Auto effect's preview in VectorCraft shows each shape alone, so it can't show what a mark sews. The
   exported file and its preview picture do.
 - A mark that merges what the rules sew, or that names a stitch.
+
+## A guide on one shape
+
+Automatic digitizing chooses the rows of each fill by geometry: every fill has the rows of `auto_fill_angle`.
+No rule can know the form that the rows of fur or a ribbon follow. The person draws it. Before M13.24 a guided fill needed the shape taken out of automatic digitizing by hand,
+which lost its overlaps with its neighbours, the base layer under it and its place in the sewing order. A
+guide keeps all of them, and works on any subject without naming one.
+
+### The rule
+
+A guide is a line the person draws over the picture. Each filled part of an automatic area that the line
+crosses sews as a guided fill whose rows follow it. The other parts and the steps after them sew as
+without the guide (`REQ-AUTO-109` to `REQ-AUTO-111`).
+
+- **Which parts.** The parts the rules by width leave filled ([stitch types by width](#stitch-types-by-width)):
+  the broad parts of an area, its compact and uneven parts, and the broad pieces of a part split by width. A
+  part follows a guide when a stretch of the guide's line lies inside it where the area shows. An area
+  digitized whole under the details that fill its holes ([neighbours](#neighbours), `REQ-AUTO-023`) shows only round them, so a
+  guide drawn over a detail steers the detail and leaves the area under it alone. Specks, under the smallest area
+  `auto_min_area_mm2`, stay in the area's fill and merge as before.
+- **The parts it crosses.** Unlike a mark, which keeps the parts lying wholly inside it, the guide steers the
+  parts it crosses. The guided fill lengthens the guide straight on at both ends until its rows cover
+  the whole part ([guided fill](algorithms/guided.md)). A guide that crosses only a corner of a large part steers all of
+  it. The person sees that in the exported file's preview and draws the guide again.
+- **Parts sewn along their middles keep their stitches.** A satin column already lays its stitches across
+  its width, which follows the part's form, and a running stitch follows its centre line. Such a part
+  sews the same stitches when a guide crosses it, and `SC-I0918` counts it.
+- **2 guides on one part.** The part follows the guide drawn last, the one a person sees on top. Blending
+  2 guides would guess what the person meant.
+- **One element for each area and guide.** The parts of one area that follow one guide are one element,
+  since a guided fill sews several parts nearest the needle first. These elements come after the area's
+  other elements, its fill and its parts sewn along their middles, in the order the guides are drawn, so
+  that the other elements keep their names. The first element of an area keeps its name and the others are
+  numbered, so a guided fill is the area's own element when nothing else of the area sews. The area keeps
+  its thread.
+- **Left alone.** The background, the flattened layers, the specks and the thin lines go as without a guide,
+  and so do the rules by width, the overlaps, the base layer and the cap on thickness. The guided fill takes
+  its own defaults and the area's other settings. The base
+  layer keeps its rows across `auto_fill_angle`, so under a guided fill it lies at an angle that changes
+  along the rows. Each element a guide makes is a shape more to order, so the order can change
+  ([what guides sew](#what-guides-sew)).
+
+### The guide's line
+
+The guide's line is its first subpath, as a guided fill reads its guide with the copy strategy, its
+default. Its stroke's width is ignored. A closed guide is opened where it
+closes, as a guided fill opens it. Other subpaths are ignored.
+
+### Drawing a guide
+
+A guide is a shape named `stitch:guide`, or `stitch:guide` and a note of the person's own, such as
+`stitch:guide left petal`. The name is read as a mark's, by the same code (`design::mark::note`), and the
+readers take guides out of the elements beside the marks (`mark::taken_out`). It is never sewn.
+
+- **In VectorCraft**, the person draws the guide with the Pen or Pencil tool over the traced picture and
+  names it in the Layers panel. VectorCraft 0.23.0 gives a plug-in no canvas tool. `stitch:guide` is the
+  name VectorCraft documents already give a guide grouped with the shapes it steers ([the markers
+  table](vectorcraft-integration.md)). A path so named keeps that meaning for shapes with settings, and is
+  also a guide of the design for every automatic area it crosses, wherever it lies in the layers. A traced
+  picture lies in one layer, and a person draws all its guides in that layer. A guide its group doesn't use is no
+  longer said to be unused (`SC-W0807`) when the design has an automatic shape, and an automatic shape
+  grouped with a guide alone is no longer told that its markers are unused. `SC-W0919` names a guide that
+  steers nothing (`REQ-VC-032`).
+- **In an SVG file**, the guide is a path whose `inkscape:label` is the name. Ink/Stitch's guide line, a
+  path with its marker grouped with a shape, keeps its Ink/Stitch meaning and guides only that group.
+- **From the command line**, `--guide X,Y,X,Y…` draws a guide through 2 points or more, in percent of the
+  box round the design's shapes as `--keep` reads its numbers, joined by straight lines. A few points
+  serve, since the guided fill smooths its rows. The guides are named `guide-1`, `guide-2` and so on, and a
+  bug-report bundle keeps them with the rules' settings (`REQ-CLI-022`).
+
+```sh
+stitch plan leaf.png -o leaf.pes --guide '20,80,45,50,60,20'
+```
+
+**What the notices say.** `SC-I0918` names each guide with the areas and the number of parts that follow
+it, and the parts it crosses that keep their stitches. `SC-W0919` names a guide that crosses no filled
+part of an automatic area, whose line has no length, or that is in a design with no automatic shape. The
+design then sews as without it. The Auto effect's preview in VectorCraft draws straight rows until a live
+effect is given its document's other objects (the [RFC](rfc-vectorcraft-abi-v2.md)'s P6). The exported
+file and its preview picture follow the guide.
+
+### Where it runs
+
+Planning reads each guide's line once, beside the marks (`auto::marks`). In the rules by width
+(`auto::sewn`), each filled part that is no speck is tested against the guides' lines, as a running
+stitch is cut to its clips (`normalize::region::cut::inside`). Each pair of a segment of a line and a side
+of the part costs a unit of work of the area's element. A design without guides tests
+nothing. The guided fill then sews as it does for a shape set by hand.
+
+### What guides sew
+
+Measured on 2026-11-19 with the build on `main` at `7486520b`, built at opt-level 1, by the numbers of
+M13.41's measure and M13.29's count, and the stitches of the PES file read back. No picture is a goal: one
+procedure drew every guide, never a form, and phase 1's prototype measured the same guides. Each picture
+was planned without guides. Its 3 largest filled parts were then each given a guide along their longest
+axis, the line between the 2 points of the part's outline farthest apart, bent so that its middle lies a
+fifth of its length to the left, through 25 points. A guide drawn so crosses other parts too, as a person's
+would. The last column counts, among the elements of the areas that the guides miss, those that sew the
+same stitches as without guides.
+
+| Picture | Guides | Parts that follow | Likeness | Thickest spot, fills | At 3 fills or more, mm² | Bare, % | Slivers | Jump threads | Thread changes | Stitches | Export's count | Other areas' elements the same |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Dog on turf, 6 threads | none |  | 0.856 | 4.00 | 131.25 | 0.021 | 0 | 60 | 8 | 10,068 | 10,068 |  |
+|  | 3 | 16 in 16 areas | 0.856 | 4.00 | 144.00 | 0.030 | 0 | 55 | 9 | 10,374 | 10,374 | 35 of 117 |
+| Dog on turf, 9 threads | none |  | 0.829 | 4.00 | 149.00 | 0.010 | 0 | 62 | 12 | 10,742 | 10,742 |  |
+|  | 3 | 13 in 13 areas | 0.829 | 4.00 | 164.25 | 0.015 | 0 | 59 | 12 | 11,167 | 11,167 | 68 of 143 |
+| Running dog, 6 threads | none |  | 0.898 | 4.00 | 129.00 | 0.000 | 0 | 49 | 8 | 11,077 | 11,077 |  |
+|  | 3 | 15 in 15 areas | 0.898 | 4.00 | 139.50 | 0.005 | 0 | 46 | 11 | 11,422 | 11,422 | 62 of 117 |
+| Running dog, 9 threads | none |  | 0.921 | 4.00 | 176.50 | 0.005 | 0 | 64 | 11 | 12,369 | 12,369 |  |
+|  | 3 | 8 in 8 areas | 0.921 | 4.00 | 213.75 | 0.014 | 0 | 63 | 13 | 12,659 | 12,659 | 56 of 174 |
+| Pear | none |  | 1.000 | 3.86 | 13.00 | 0.000 | 0 | 2 | 2 | 4,660 | 4,660 |  |
+|  | 3 | 5 in 4 areas | 1.000 | 4.00 | 16.75 | 0.007 | 0 | 3 | 2 | 5,218 | 5,218 | 2 of 3 |
+| Lettered patch | none |  | 1.000 | 3.98 | 40.25 | 0.003 | 0 | 8 | 2 | 4,026 | 4,026 |  |
+|  | 3 | 1 in 1 area | 1.000 | 3.98 | 49.75 | 0.002 | 0 | 8 | 2 | 4,328 | 4,328 | 13 of 15 |
+| TS-13A | none |  | 1.000 | 3.99 | 23.75 | 0.013 | 1 | 18 | 2 | 11,513 | 11,513 |  |
+|  | 3 | 5 in 5 areas | 1.000 | 3.99 | 24.00 | 0.014 | 1 | 18 | 2 | 12,021 | 12,021 | 30 of 30 |
+| TS-13B | none |  | 1.000 | 3.85 | 4.25 | 0.066 | 0 | 46 | 4 | 6,895 | 6,895 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.85 | 3.25 | 0.066 | 0 | 46 | 4 | 7,035 | 7,035 | 72 of 72 |
+| TS-13C | none |  | 1.000 | 3.96 | 95.75 | 0.000 | 0 | 13 | 4 | 6,064 | 6,064 |  |
+|  | 3 | 5 in 4 areas | 1.000 | 3.99 | 107.25 | 0.005 | 0 | 15 | 4 | 6,368 | 6,368 | 14 of 18 |
+| TS-13D | none |  | 1.000 | 3.97 | 50.75 | 0.000 | 0 | 12 | 3 | 7,994 | 7,994 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.99 | 101.00 | 0.000 | 0 | 12 | 3 | 9,008 | 9,008 | 17 of 19 |
+| TS-13E | none |  | 1.000 | 3.39 | 2.50 | 0.000 | 0 | 5 | 2 | 2,716 | 2,716 |  |
+|  | 3 | 7 in 7 areas | 1.000 | 3.41 | 2.75 | 0.018 | 0 | 5 | 2 | 3,023 | 3,023 | 22 of 22 |
+| Badge, abutting | none |  | 1.000 | 3.01 | 0.00 | 0.000 | 0 | 0 | 2 | 3,431 | 3,431 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.22 | 0.00 | 0.010 | 0 | 0 | 2 | 3,957 | 3,957 | 1 of 1 |
+| Badge, stacked | none |  | 1.000 | 3.01 | 0.00 | 0.000 | 0 | 0 | 2 | 3,431 | 3,431 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.22 | 0.00 | 0.010 | 0 | 0 | 2 | 3,957 | 3,957 | 1 of 1 |
+| Emblem, abutting | none |  | 1.000 | 3.57 | 1.25 | 0.000 | 0 | 2 | 3 | 4,997 | 4,997 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.62 | 3.00 | 0.000 | 0 | 2 | 3 | 6,188 | 6,188 | 4 of 4 |
+| Emblem, stacked | none |  | 1.000 | 3.39 | 1.00 | 0.000 | 0 | 2 | 3 | 4,998 | 4,998 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.71 | 1.00 | 0.000 | 0 | 2 | 3 | 6,153 | 6,153 | 4 of 4 |
+| Button | none |  | 1.000 | 3.96 | 2.75 | 0.000 | 0 | 0 | 2 | 1,847 | 1,847 |  |
+|  | 3 | 4 in 4 areas | 1.000 | 4.00 | 2.25 | 0.009 | 0 | 0 | 2 | 2,014 | 2,014 | 10 of 10 |
+| Marked patch | none |  | 1.000 | 3.95 | 14.25 | 0.000 | 0 | 1 | 3 | 4,077 | 4,077 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.97 | 15.25 | 0.005 | 0 | 1 | 3 | 4,503 | 4,503 | 2 of 6 |
+| Magnolia | none |  | 0.849 | 4.00 (above the cap) | 521.25 | 0.006 | 0 | 313 | 10 | 38,197 | 38,197 |  |
+|  | 3 | 26 in 25 areas | 0.848 | 4.00 | 603.00 | 0.005 | 0 | 302 | 10 | 39,946 | 39,946 | 289 of 560 |
+| Coleus | none |  | 0.841 | 4.12 (above the cap) | 959.25 | 0.041 | 1 | 473 | 13 | 62,219 | 62,219 |  |
+|  | 3 | 15 in 15 areas | 0.842 | 4.01 (above the cap) | 977.25 | 0.041 | 1 | 459 | 13 | 62,249 | 62,249 | 424 of 1020 |
+| Goose | none |  | 0.820 | 4.00 | 489.25 | 0.016 | 0 | 170 | 10 | 38,352 | 38,352 |  |
+|  | 3 | 10 in 9 areas | 0.820 | 4.00 | 549.25 | 0.014 | 0 | 169 | 10 | 39,509 | 39,509 | 270 of 384 |
+| Castle | none |  | 0.779 | 4.00 | 255.75 | 0.010 | 0 | 104 | 9 | 28,526 | 28,526 |  |
+|  | 3 | 7 in 6 areas | 0.779 | 4.00 | 280.00 | 0.009 | 0 | 102 | 9 | 29,395 | 29,395 | 122 of 210 |
+
+- **The parts follow their guides.** Each guide steered up to 16 filled parts, the parts it was drawn along
+  and those it crossed on the way. The rows bend with the guide in the preview pictures, and the export
+  sews what the plan says, stitch for stitch.
+- **The repository's drawn designs sew the rest as before.** TS-13A, TS-13B, TS-13E, the badges, the
+  emblems and the button sew the same stitches in every element of the areas the guides miss. Elsewhere
+  the order changes. Each element a guide makes is a shape more to order, so the rest of a traced photo or
+  dog starts and ends elsewhere. Thread changes rise by up to 3, on the running dog in 6 threads.
+- **The cap holds.** No guided picture sews above 4 fills where `main` doesn't, and the coleus, which sews
+  4.12 fills on `main`, sews 4.01. The prototype sewed the goose at 4.02 and the castle at 4.28, where
+  parts of one area that rounding left a hair apart each reached under the other once a guide made them 2
+  elements. Such fills stay one area for the overlaps (`REQ-AUTO-110`). The area at 3 fills or more grows
+  on most pictures, by up to 82 mm² of the magnolia's 521 and 50 mm² on TS-13D, since a guided fill sews
+  more stitches than the tatami fill it replaces: its copies lie closer where the guide bends.
+- **The fabric is covered as before.** The prototype left up to 0.23 % of a design bare, at the edges where the
+  guided rows ended square on: automatic digitizing keeps a fill's turns as stitches (`turn_stitches`), and
+  the guided fill didn't read it, so every second row started a needle point inside the edge. It reads it
+  now ([guided fill](algorithms/guided.md#sewing-the-lines)). What is left is at most 0.018 % more of a
+  design, on TS-13E, and 0.009 % on a dog, where a few rows meet the outline at a slant and end short of
+  it, far under the limit of 0.15 %.
+- **A guide over a detail leaves the area under it alone.** The badge's preview showed a guide drawn over
+  its disc steering the field round it too, since the field is digitized whole under the disc. The guide's
+  line is now tested where the area shows.
+- **The likeness doesn't move,** by at most 0.001, since a guide doesn't change a part's colour or place.
+- **What it costs to plan.** The guided fills cost more or less than tatami fills by their stitches, and the
+  test against the guides is a small share of it. With the prototype, planned and measured with its 3
+  guides, the pear took 1.2 % more instructions than without them, and the running dog in 6 threads 4.1 %
+  less (callgrind, opt-level 1).
+
+### Decisions for the owner
+
+Each with the recommendation, which the step took on 2026-11-19. The roadmap's row no longer
+says the area is grouped with the guide.
+
+- **Which parts follow: those the guide crosses.** The roadmap's row planned an area grouped with the guide.
+  A traced picture is hundreds of shapes in one layer, and a person can't easily group one of them, and in
+  VectorCraft a guide in that layer is already grouped with all of them. The other choices are the parts
+  wholly inside the guide's stroke, read as a mark's band, which leaves out the large parts whose rows show
+  most, and the parts of the shapes grouped with it. Recommended: the parts it crosses, drawn over the
+  picture as a mark is.
+- **One name, `stitch:guide`.** VectorCraft documents already name a guide so. The other choice is a name
+  of its own, such as `stitch:rows`, which would keep the 2 readings apart but gives a person 2 names for
+  one idea. Recommended: one name, with both readings.
+- **The guide drawn last steers** a part that 2 cross. The other choices, the guide nearest the part's
+  middle or the one with the longest stretch inside it, are guesses a person can't see. Recommended: the
+  last drawn.
+- **Columns and running stitches keep their stitches.** The other choice sews a crossed part no wider than
+  a satin column as a guided fill too. A column's stitches already follow its form. Recommended: keep them.
+- **No setting, the guided fill's defaults.** The guide is enough, as the row says. A person who wants
+  other rows gives the shape its own effect, as for any shape. Recommended: no setting.
+- **The rest of a photo may sew in another order,** as for marks. Each element a guide makes is a shape
+  more to order. Recommended: accept it, and let M13.35's cap bound the thickness.
+
+### What isn't built
+
+- A guide that steers satin columns. Their stitches already lie across the part's width.
+- A guide with an area, which would steer only the parts inside it, or a guide's stroke read as a band.
+  The prototype's guides did their work without them.
+- Turning the base layer to follow a guided fill.
 
 ## Pictures from the command line
 

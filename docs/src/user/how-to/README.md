@@ -19,6 +19,8 @@ Each guide solves one problem:
   isn't sewn (`stitch plan --subject`)
 - [Keep small parts of a picture](keep-small-parts.md), such as an eye, from merging into their
   neighbours, with a mark
+- [Make the rows of a fill follow a form](guide-the-rows.md), such as fur or a petal, with a line drawn
+  over the picture
 - [Report a bug](report-a-bug.md) with a bundle that reproduces it (`stitch bug-report`)
 
 Planned, each with the milestone that brings its feature:

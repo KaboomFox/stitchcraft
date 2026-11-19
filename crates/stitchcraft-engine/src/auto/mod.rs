@@ -77,6 +77,7 @@ mod area;
 mod cap;
 mod clips;
 mod columns;
+mod guides;
 mod marks;
 mod narrow;
 mod neighbours;
@@ -86,6 +87,7 @@ mod split;
 pub(crate) mod thick;
 mod thin;
 
+use guides::Guides;
 use marks::Marks;
 #[cfg(test)]
 pub(crate) use neighbours::default_base_layer;
@@ -101,12 +103,12 @@ use std::borrow::Cow;
 use std::collections::BTreeSet;
 
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Labels, Meter, Mm, Point, Rect};
-use stitchcraft_params::{ParamSet, Validated};
+use stitchcraft_params::{Family, ParamSet, StitchType, Validated};
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::thickness::THREAD;
 
 use crate::common::{LOCK_END, LOCK_END_SCALE, LOCK_START, LOCK_START_SCALE, STOP_AFTER, TRIM_AFTER};
-use crate::design::{Cap, Design, DesignSettings, Element, FillRule, Hints, Join, Path, Segment, Shape, Subpath, within_working_limit};
+use crate::design::{Cap, Design, DesignSettings, Element, FillRule, Guide, Hints, Join, Path, Segment, Shape, Subpath, within_working_limit};
 use crate::generate::approach;
 use crate::generators::passes::BEAN_STITCH_REPEATS;
 use crate::generators::pull::PULL_COMPENSATION;
@@ -439,12 +441,12 @@ fn meets(a: Rect, b: Rect) -> bool {
 pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     let automatic = design.elements().iter().any(|element| element.automatic);
     if !design.sort_colours && !automatic {
-        let diagnostics = marks::unused_all(&design.marks);
+        let diagnostics = marks::unused_all(&design.marks, &design.guides);
         return Sewing { elements: Cow::Borrowed(design.elements()), diagnostics, base: Vec::new(), made: BTreeSet::new(), limits: None };
     }
     let mut diagnostics = Vec::new();
-    // Each mark's area is read once, before the shapes are cut to their clips.
-    let marks = Marks::of(&design.marks, budget);
+    // Each mark's area and each guide's line are read once, before the shapes are cut to their clips.
+    let marks = Marks::of(&design.marks, budget).guided(&design.guides, budget);
     // Each automatic shape is cut to its clips first, so that what shows of it is digitized and hides others.
     let cut = clips::cut(design, budget, &mut diagnostics);
     let design = cut.as_ref().unwrap_or(design);
@@ -479,7 +481,9 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
         // A hole of an area that a shape drawn later meets is not kept open (`REQ-AUTO-084`).
         let later = elements.get(index + 1..).unwrap_or_default();
         let open = |hole: Rect, meter: &mut Meter| clear(later, hole, meter);
-        let made = match made_by(&element, &design.settings, rules, (&open, &marks), &mut meter)
+        // A guide steers an area digitized whole under its details only where it shows (`REQ-AUTO-109`).
+        let shown = layers.shown.get(&index).map(Vec::as_slice);
+        let made = match made_by(&element, &design.settings, rules, (&open, &marks, shown), &mut meter)
             .and_then(|made| named(made, &element, &mut taken, &mut meter))
         {
             Ok(made) => made,
@@ -653,20 +657,21 @@ pub fn digitize(element: &Element, settings: &DesignSettings, meter: &mut Meter)
     let Some(rules) = read(element, &mut said) else { return Ok(Digitized { diagnostics: said, ..Digitized::default() }) };
     // Alone, an element has no shape drawn after it, each of its holes wide enough to read is open, and no
     // mark keeps its specks.
-    let mut made = made_by(element, settings, &rules, (&|_, _| Ok(true), &Marks::default()), meter)?;
+    let mut made = made_by(element, settings, &rules, (&|_, _| Ok(true), &Marks::default(), None), meter)?;
     made.diagnostics.splice(0..0, said);
     Ok(made)
 }
 
 /// The ordinary elements that sew the automatic `element` of a design with `settings` by `rules`, its
-/// settings of the rules, a hole of it kept open as `open` says and its specks inside `marks` measured
-/// (`REQ-AUTO-104`), as [`digitize`] makes them: each fill at the angle the rules give the design's
+/// settings of the rules, a hole of it kept open as `open` says, its specks inside `marks` measured
+/// (`REQ-AUTO-104`) and its filled parts steered by the guides read with them where `shown`, what shows of
+/// it when it is digitized whole under its details, shows (`REQ-AUTO-109`), as [`digitize`] makes them: each fill at the angle the rules give the design's
 /// fills, and `SC-I0912` last, naming the rule each part of it sewed by, when it sews by the rules.
 fn made_by(
     element: &Element,
     settings: &DesignSettings,
     rules: &AutoParams,
-    (open, marks): (&Open<'_>, &Marks),
+    (open, marks, shown): (&Open<'_>, &Marks, Option<&[Polygon]>),
     meter: &mut Meter,
 ) -> Result<Digitized, Exhausted> {
     let bounds = Bounds::of(rules, settings.min_satin_stroke_width);
@@ -675,7 +680,7 @@ fn made_by(
             let (fired, stitches) = of_stroke(*width, &bounds);
             (stroke(element, path, Style { width: *width, join: *join, cap: *cap }, stitches, rules, meter)?, vec![fired])
         }
-        Shape::Fill { .. } => areas(element, &bounds, narrow::By { rules, open, marks }, meter)?,
+        Shape::Fill { .. } => areas(element, &bounds, (narrow::By { rules, open, marks }, shown), meter)?,
     };
     if made.stitches.is_some() {
         made.diagnostics.extend(rules::said(&element.id, &fired));
@@ -717,23 +722,75 @@ fn stroke(element: &Element, path: &Path, style: Style, stitches: Stitches, rule
 /// The elements that sew `element`, an automatic area held to `bounds`, by `by`, its shape's settings of the rules, whether a hole may be kept open and the marks, with `meter`'s work: its
 /// parts sorted by the rules (`narrow`) and [`sewn`], and the rule each part sewed by. An area whose region
 /// the region code can't join, a bug, is itself as it is, and its fill says so.
-fn areas(element: &Element, bounds: &Bounds, by: narrow::By<'_>, meter: &mut Meter) -> Result<(Digitized, Vec<Fired>), Exhausted> {
+fn areas(
+    element: &Element,
+    bounds: &Bounds,
+    (by, shown): (narrow::By<'_>, Option<&[Polygon]>),
+    meter: &mut Meter,
+) -> Result<(Digitized, Vec<Fired>), Exhausted> {
     let as_it_is = itself(element, Some(Stitches::Fill));
     let Shape::Fill { path, rule, .. } = &element.shape else { return Ok((as_it_is, Vec::new())) };
     let Ok(parts) = parts_of(path, *rule, meter)? else { return Ok((as_it_is, Vec::new())) };
     let mut sorted = narrow::sorted(&element.id, parts, bounds, by, meter)?;
     let fired = std::mem::take(&mut sorted.fired);
-    Ok((sewn(element, sorted, by.rules), fired))
+    let guided = guided(&mut sorted, by.rules, (&by.marks.guides, shown), meter)?;
+    Ok((sewn(element, sorted, by.rules, (guided, &by.marks.guides)), fired))
+}
+
+/// The filled parts of `sorted`, an automatic area's parts by `rules`, that follow the guides of `guides`,
+/// taken out of its fill, with `meter`'s work: each part that is no speck and that a guide's line crosses
+/// where the area shows, all of it or `shown` when it is digitized whole under its details, goes to the last
+/// such guide, by that guide's place, the guides in their order (`REQ-AUTO-109`,
+/// `REQ-AUTO-110`). Each part sewn along its middle that a guide crosses is counted for the last such guide,
+/// and keeps its stitches. Without guides nothing is tested.
+fn guided(
+    sorted: &mut narrow::Parts,
+    rules: &AutoParams,
+    (guides, shown): (&Guides, Option<&[Polygon]>),
+    meter: &mut Meter,
+) -> Result<Vec<(usize, Vec<Polygon>)>, Exhausted> {
+    if guides.is_empty() {
+        return Ok(Vec::new());
+    }
+    let mut steered: Vec<(usize, Vec<Polygon>)> = Vec::new();
+    let mut filled = Vec::with_capacity(sorted.filled.len());
+    for part in std::mem::take(&mut sorted.filled) {
+        let by = if speck(part.area(), rules.auto_min_area_mm2) { None } else { guides.crossing(&part, shown, meter)? };
+        match by {
+            None => filled.push(part),
+            Some(at) => match steered.iter_mut().find(|(guide, _)| *guide == at) {
+                Some((_, parts)) => parts.push(part),
+                None => steered.push((at, vec![part])),
+            },
+        }
+    }
+    sorted.filled = filled;
+    steered.sort_by_key(|(at, _)| *at);
+    for along in &sorted.along {
+        let part = match along {
+            narrow::Along::Narrow(narrow) => &narrow.part,
+            narrow::Along::Columns(found) => &found.part,
+        };
+        if let Some(at) = guides.crossing(part, shown, meter)? {
+            guides.kept(at);
+        }
+    }
+    for (at, parts) in &steered {
+        guides.steered(*at, parts.len());
+    }
+    Ok(steered)
 }
 
 /// The elements that sew `element`, an automatic area whose parts are `sorted` by their width, by `rules`:
 /// itself as it is when no part of it is sewn along its middle, or else the fill of its other parts, if any,
 /// then for each narrow part a running stitch along its centre lines, and for each part no wider than a satin
 /// column its columns, a running stitch along each too narrow for satin, each running stitch tripled from the
-/// narrowest triple run. The first keeps the area's name and those after it are numbered, and a trim or a
-/// stop after the area follows the last. What was said of its parts is said either way.
-fn sewn(element: &Element, sorted: narrow::Parts, rules: &AutoParams) -> Digitized {
-    if sorted.along.is_empty() {
+/// narrowest triple run, then for each guide that parts of it follow (`guided`, by their guide's place among
+/// `guides`) a guided fill of those parts along it. The first keeps the area's name and those after it are
+/// numbered, and a trim or a stop after the area follows the last. What was said of its parts is said either
+/// way.
+fn sewn(element: &Element, sorted: narrow::Parts, rules: &AutoParams, (guided, guides): (Vec<(usize, Vec<Polygon>)>, &Guides)) -> Digitized {
+    if sorted.along.is_empty() && guided.is_empty() {
         return Digitized { diagnostics: sorted.said, ..itself(element, Some(Stitches::Fill)) };
     }
     let (rest, after) = split_after(&element.params);
@@ -772,7 +829,19 @@ fn sewn(element: &Element, sorted: narrow::Parts, rules: &AutoParams) -> Digitiz
             made.add(part(element, id, shape, params), Some(painted.clone()));
         }
     }
-    made.stitches = Some(match (sorted.filled.is_empty(), satin) {
+    for (at, parts) in &guided {
+        let id = if made.elements.is_empty() { Some(element.id.clone()) } else { numbered(&element.id, made.elements.len() + 1) };
+        // A numbered id fits by construction, and a guide that read has a path: either missing would only
+        // leave the parts out.
+        let (Some(id), Some(path)) = (id, guides.path(*at)) else { continue };
+        let mut params = rest.clone();
+        params.set(Family::Fill.method_param(), StitchType::GuidedFill.id());
+        let shape = Shape::Fill { path: outline(parts), rule: FillRule::NonZero, gradient: None };
+        let mut fill = part(element, id, shape, params);
+        fill.hints.guide = Some(Guide { path: path.clone(), width: Mm::ZERO, join: Join::Round, params: ParamSet::new() });
+        made.add(fill, None);
+    }
+    made.stitches = Some(match (sorted.filled.is_empty() && guided.is_empty(), satin) {
         (false, _) => Stitches::Fill,
         (true, true) => Stitches::Satin,
         (true, false) => Stitches::Running,
@@ -1238,11 +1307,11 @@ mod tests {
         };
         let said = vec![Diagnostic::new(Code::InternalCheckFailed, "A part could not be measured.").with_element(area.id.clone())];
         let filled = narrow::Parts { filled: vec![square.clone()], along: Vec::new(), said: said.clone(), fired: Vec::new() };
-        assert_eq!(sewn(&area, filled, &AutoParams::defaults()).diagnostics, said);
+        assert_eq!(sewn(&area, filled, &AutoParams::defaults(), (Vec::new(), &Guides::default())).diagnostics, said);
         let line = Line { points: vec![p(20.3, 0.3), p(29.7, 0.3)], closed: false };
         let thin = narrow::Narrow { part: strip, lines: vec![line], width: Mm::new(0.6).unwrap() };
         let both = narrow::Parts { filled: vec![square], along: vec![narrow::Along::Narrow(thin)], said: said.clone(), fired: Vec::new() };
-        let made = sewn(&area, both, &AutoParams::defaults());
+        let made = sewn(&area, both, &AutoParams::defaults(), (Vec::new(), &Guides::default()));
         assert_eq!((made.elements.len(), made.diagnostics), (2, said));
     }
 
