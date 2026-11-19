@@ -335,13 +335,21 @@ a tatami fill lays by default. When a place of 1 mm² or more has 3 fills or mor
 more, `stitch plan` warns (`SC-W0913`) and still writes the file. The warning names the thickest spot and
 the shapes stacked there.
 
+StitchCraft keeps every spot at 4 fills or less where it can, a limit called the cap. Once the design is planned,
+a last pass and then the cap take thread away at each spot above it. They take thread that other stitches
+cover, first under the shapes sewn later and then where a shape lays its stitches twice over the same
+place. They take only the stitches of the shapes they digitized, and what shows keeps its colour. No jump
+thread or thread change is added. `SC-I1119` says what they took. Where no more may go, the warning says the spot is above the cap. The advanced setting
+`auto_thick_cap_fills` moves the cap.
+
 <!-- shot: auto-dog-thickness -->
 ![How thick the traced running dog sews, as a heat map on white. Most of the dog is grey, under 2 fills of thread. Yellow bands, 2 fills or more, run along the edges where 2 patches overlap. Orange patches, 3 fills or more, lie where several small patches meet, most of them on its chest, its face and its legs. No spot is red, 6 fills or more.](../../images/generated/auto-dog-thickness.png)
 <!-- /shot -->
 
 `stitch preview dog.pes --style thickness -o thick.png` draws this picture of any machine file. Grey is
-thread under 2 fills, yellow is 2 or more, orange 3 or more and red 6 or more. On the dog above, 210 mm²
-of 1,944 mm² is orange, mostly where several small patches meet, and its thickest spot has 5.9 fills.
+thread under 2 fills, yellow is 2 or more, orange 3 or more and red 6 or more. On the dog above, 177 mm²
+of 1,944 mm² is orange, mostly where several small patches meet, and its thickest spot has 4.0 fills, the
+cap. Before the cap it had 5.6.
 Before StitchCraft sewed an area's overlap by the way its rows run, and one overlap alone under a
 shape, 629 mm² was orange or red, and M13.30 left 280 mm² and a thickest spot of 7.0 fills.
 

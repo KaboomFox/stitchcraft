@@ -5,6 +5,24 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.35: the cap at the end of planning (`REQ-AUTO-099` to `REQ-AUTO-102`, `SC-I1119`, `SC-W0913`).
+  - The cap is a setting, `auto_thick_cap_fills`, 4 fills by default, until MC-8's ladder sets the real
+    limits. The last pass takes thread above it as before. Where a spot is still above it, the cap
+    (`auto/cap.rs`) takes needle points out of the finished plan's runs, of the elements that digitizing
+    made, where other stitches cover what their stitches covered. It takes underlay and travel under
+    later top stitches first. Of top stitches, it takes a shape's under later shapes before its own where
+    they lie twice over the same places. It doesn't add a jump or a thread change, and it keeps every lock.
+    It reuses the last pass's measure.
+  - Every test design and the 4 traced dogs now sew 4.00 fills or less at their thickest spot. The dogs
+    sewed 4.69, 4.80, 4.62 and 5.63, and their area at 3 fills or more fell from 141.5, 153.25, 130.5 and
+    187.5 mm² to 137.25, 150.75, 129.0 and 176.5 mm².
+  - `SC-I1119` says what the cap took after the last pass, and `SC-W0913` says "Above the cap." where a
+    spot stays above it.
+  - A shape sewn by its own settings keeps its stitches. TS-13C's face outline has a satin stitch 14° from
+    square where the cap took a crowded point in a bend: REQ-AUTO-017's case plans the columns with the cap
+    at 50, and MC-8 looks at it.
+  - Golden files: `TS-13A.pes`, `TS-13C.pes` and `TS-13D.pes` change, as the cap takes needle points of
+    their digitized halves. The sheets sew 23,890, 10,320 and 19,457 stitches.
 - M13.44: line merging keeps each picture's likeness (`REQ-AUTO-095`, `SC-I0915`).
   - A thin line that doesn't touch another piece of its colour is a part of the picture by itself, such as a
     twig or the pale rim of a petal. Such lines merge, those of the colours with the most parts and the
