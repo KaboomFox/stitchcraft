@@ -1335,7 +1335,7 @@ times at the least.
 
 | Measure | Warning | Failing | Where the number is from |
 |---|---:|---:|---|
-| Thread, in fills | 3 | 6 | Brother's troubleshooting table names "three or more overlapping stitches" as a fault of the design. Embrilliance's density map turns red at 6 layers |
+| Thread, in fills | 4 | 6 | Brother's troubleshooting table names "three or more overlapping stitches" as a fault of the design, and the warning started at 3. From M13.46 it starts at 4 ([The cap and the warning](#the-cap-and-the-warning)). Embrilliance's density map turns red at 6 layers |
 | Needle points per mm² | 15 | 30 | Our own. The rows of one fill end 5 to a square millimetre along its edge, so these are the edges of 3 and of 6 fills on each other |
 
 A place counts when 1 mm² of it in one piece is at the limit or over it: 4 spots beside each other, each
@@ -1357,7 +1357,7 @@ each measure and where, the 3 shapes with the most thread at the thickest spot, 
 limits. A design drawn by hand is not measured: its author chose every layer.
 
 `stitch preview --style thickness` draws the heat map of a machine file (`REQ-RND-004`). Thread under 2
-fills is grey, and thread of 2 fills or more yellow. From 3 fills it is orange, and from 6 red.
+fills is grey, and thread of 2 fills or more yellow. From 4 fills it is orange, and from 6 red.
 
 The user page shows [the running dog's](../user/stitches/automatic.md#how-thick-it-sews).
 
@@ -1766,6 +1766,119 @@ round, took 11 % on TS-13A.
   needle point may go by these rules, and `SC-W0913` names it. Recommended as it is: a rule for that one spot would be tuned to one picture.
 - The last pass runs before the cap, as now. Its row ends move rather than go, which the cap can't do. Whether the
   cap alone would do as well is a measurement for the build phase.
+
+#### Satin columns stay whole
+
+The owner asked on 2026-11-18 whether her machine can sew designs this thick. The trade's rule of thumb is
+that one layer of satin over a fill sews well, and that 2 dense layers on each other risk broken needles
+and thread. In this page's measure a fill under a satin column is 2 to 3 fills, so a cap of 4 is at the
+edge. With the cap at 3 the area at 3 fills or more nearly went, but a ring of satin got a ragged inner edge
+and a satin letter showed specks of fabric where its strokes join (M13.46).
+
+**Why.** The cap's test of cover asks whether the places along a needle point's 2 stitches lie within half a
+thread of other top thread. A column's stitches lie 0.4 mm apart or closer, nearer still at an inner edge or
+in a bend, so the stitches beside any of its points pass that test. Nothing in it sees the column's edge,
+which its needle points make, or the angle of its stitches. Traced on TS-13C's and the lettered patch's
+digitized shapes with the cap at 3, the cap took 95 points of columns:
+
+| Kind | Points of columns | What the joined stitch does |
+|---|---:|---|
+| A shape's top under later shapes | 49 | It runs 45° across the column, half of them more, where a later shape covers part of it. Where that shape's edge pulls in, it shows |
+| A shape's own doubled top | 46 | A point on one edge goes, and its 2 stitches across become one stitch of 0.4 mm along the other edge: a notch in the edge |
+
+The same cap took 158 points of fills' top stitches and 7 of underlay, which change nothing that shows. At
+4 fills the cap changed the columns of 11 of the 24 designs measured, by 1 to 10 points, in the same 2 ways.
+The last pass moved no column's stitch.
+
+**The rule.** The cap takes no needle point of a satin column's top stitches (`REQ-AUTO-112`). The column
+keeps the edge and the angle that digitizing gave it. Its underlay and travel are the cap's to take, and so
+are the stitches of the fills under it and beside it. A column is an element that digitizing made whose
+stitch type is satin, which planning knows from the stitches each element generates. The cap needs nothing
+else: no picture, no shape and no limit.
+
+The rule costs where columns pile up. With the cap at 4, the badges and TS-13A's half keep a spot at 4.16
+fills, the pear 4.04, the dog on turf in 6 threads 4.36, the running dog in 9 threads 4.50, the magnolia 4.18
+and the goose 4.87, where the cap brought each to 4.00 before. Nothing else changes: the jump threads, the
+thread changes, the slivers, the bare share and the likeness stay as they were.
+
+#### A lower cap
+
+With columns whole, every design was planned with the cap at 4, 3.5, 3.25 and 3 on 2026-11-19: each
+repository picture, its bare share and likeness too, and the 4 traced photos with the quicker numbers.
+The default is the lowest cap at which no column changes and nothing else is worse than at 4
+(`REQ-AUTO-113`).
+
+| Design | Thickest at 4 | At 3.5 | At 3.5 fills or more, mm², at 4 | At 3.5 | At 3 or more, at 4 | At 3.5 | Bare, % at 4 | At 3.5 | Stitches at 4 | At 3.5 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Badges | 4.16 | 4.16 | 3.25 | 1.25 | 23.25 | 18.25 | 0.0080 | 0.0080 | 4,645 | 4,632 |
+| Lettered patch | 4.00 | 4.00 | 0 | 0 | 40.75 | 36.00 | 0.0029 | 0.0029 | 4,027 | 4,011 |
+| TS-13A, digitized half | 4.16 | 4.16 | 8.25 | 4.50 | 25.75 | 23.00 | 0.0118 | 0.0118 | 11,519 | 11,494 |
+| TS-13B, digitized half | 3.85 | 3.49 | 0 | 0 | 4.25 | 3.50 | 0.0657 | 0.0657 | 6,895 | 6,879 |
+| TS-13C, digitized half | 4.06 | 3.71 | 14.00 | 2.25 | 102.25 | 86.00 | 0.0000 | 0.0000 | 6,055 | 5,999 |
+| TS-13D, digitized half | 3.97 | 3.85 | 7.50 | 0 | 50.75 | 36.50 | 0.0004 | 0.0005 | 7,994 | 7,939 |
+| Traced pear | 4.04 | 4.04 | 3.50 | 2.00 | 13.00 | 11.00 | 0.0003 | 0.0003 | 4,660 | 4,640 |
+| Traced dog on turf, 6 threads | 4.36 | 4.37 | 28.75 | 2.50 | 137.75 | 88.50 | 0.0102 | 0.0128 | 9,984 | 9,673 |
+| Traced dog on turf, 9 threads | 4.00 | 3.87 | 24.25 | 0 | 150.75 | 99.00 | 0.0101 | 0.0140 | 10,675 | 10,287 |
+| Traced running dog, 6 threads | 4.02 | 3.87 | 20.00 | 1.75 | 129.00 | 98.50 | 0.0004 | 0.0044 | 11,071 | 10,840 |
+| Traced running dog, 9 threads | 4.50 | 4.50 | 45.75 | 5.75 | 178.25 | 114.75 | 0.0050 | 0.0116 | 12,370 | 11,967 |
+| Traced magnolia | 4.18 | 4.18 | 75.00 | 2.00 | 442.00 | 307.75 | | | 34,258 | 33,257 |
+| Traced coleus | 4.22 | 4.22 | 185.75 | 3.75 | 851.50 | 594.00 | | | 56,886 | 54,704 |
+| Traced goose | 4.87 | 4.87 | 106.00 | 3.50 | 485.50 | 352.25 | | | 36,671 | 35,477 |
+| Traced building | 4.00 | 3.90 | 34.75 | 0 | 221.75 | 158.00 | | | 26,201 | 25,625 |
+
+The stripes, the single badges, the emblems, the buttons and TS-13E's half stay under 4 and lose a few
+stitches. On every design the columns, the jumps, the jump threads, the thread changes, the slivers and the
+likeness are those it has at 4, and the export counts as many stitches as the plan. At 3.5 the area at 3.5
+fills or more falls to 6 mm² or less everywhere, and the area at 3 fills or more by a quarter to a third on
+the dogs and the photos.
+
+What gets a little worse at 3.5: the bare share rises on TS-13D's half by 0.0001 points and on the dogs by 0.003
+to 0.007, as the cap joins more rows under later shapes, but no sliver appears and every share stays far
+under the cover's limit of 0.5 %. The dog on turf in 6 threads keeps its thickest spot, which 2 columns hold,
+at 4.37 where it was 4.36. At 3.25 the coleus rises from 4.22 to 4.43 fills, and at 3 the bare share of the
+dog on turf in 9 threads rises to 0.059 % and the magnolia to 4.21 fills. So the cap is 3.5 by default.
+Counted as `REQ-AUTO-102` counts the cover, by its slivers and its limit, nothing is worse at 3.5. Counted by
+the bare share's last digit, it is, and the default would stay at 4. MC-8's ladder (TS-13F) sets the final
+value.
+
+**What holds a spot above the cap.** At 3.5 the thickest spot of each design above it, split by element:
+
+| Design | Thickest | Satin columns' top | Other top | Under | What lies there |
+|---|---:|---:|---:|---:|---|
+| Badges, TS-13A's badges | 4.16 | 2.88 to 2.91 | 1.00 | 0.25 to 0.28 | 2 columns of one ring meet over the red disc |
+| Lettered patch | 4.00 | 2.79 | 1.00 | 0.21 | 2 columns of the M meet over the field |
+| TS-13D, digitized half | 3.85 | 2.87 | 0.98 | 0 | 2 columns of the white ring meet over the navy |
+| Traced pear | 4.04 | 2.37 | 1.52 | 0.15 | the stem's 2 columns over the fill |
+| Traced dog on turf, 6 threads | 4.37 | 3.33 | 0.79 | 0.25 | 2 columns of one shape meet over a fill |
+| Traced running dog, 6 threads | 3.87 | 2.56 | 0.98 | 0.33 | 2 columns of one shape meet over a fill |
+| Traced running dog, 9 threads | 4.50 | 2.88 | 1.22 | 0.41 | 3 columns cross over a fill |
+| Traced goose | 4.87 | 2.84 | 1.67 | 0.36 | 2 columns of one shape meet over 2 fills |
+| TS-13C, digitized half | 3.71 | 1.55 | 1.91 | 0.25 | the face's outline over the hair and the face, whose tops show |
+| Traced dog on turf, 9 threads | 3.87 | 1.70 | 2.17 | 0 | a column over 3 fills whose tops show |
+| Traced magnolia | 4.18 | 1.26 | 2.59 | 0.32 | a column over 2 fills whose tops show |
+| Traced coleus | 4.22 | 0 | 3.39 | 0.83 | 6 fills meet, each top shows, over travel that no later top covers whole |
+
+On every repository design and dog the thread other than columns' tops is the cap or less, so the cap took
+what it may (`REQ-AUTO-073` holds them to it). The coleus is the one place where fills alone stay above it,
+as with the cap at 4. The goose with M13.39's 3 marks on it sews 4.97 fills at a spot where one fill lays
+2.64 fills by itself, its rows over each other where its 2 parts meet, with 1.10 of another fill: top
+thread that shows, which the cap's third kind didn't take. No rule was added for any of these.
+
+#### The cap and the warning
+
+The cap is what planning aims at. The limits of `REQ-AUTO-061` are what a person acts on. With the cap at
+3.5, nearly every design keeps a spot a few tenths above it, where a column lies, and a warning there would
+fire on nearly every design. So since M13.46 (`REQ-AUTO-114`):
+
+- `SC-I1119` says what the last pass and the cap took and what is left above the cap, whenever a spot was
+  above it, also when nothing could be taken.
+- `SC-W0913` warns at its own limits and never names the cap. Its limit of thread is 4 fills, where it was
+  3. One layer of satin over a fill measures 2 to 3 fills and sews well, and 2 dense layers on a fill measure
+  4 or more. The failing limit stays at 6.
+
+At 3.5 no digitized design of the repository warns. TS-13A, D and E still do, at places of their halves as
+drawn, which the cap doesn't touch. Of the traced photos the goose warns, where 2 columns hold 1 mm² at 4
+fills or more.
 
 ## Likeness
 

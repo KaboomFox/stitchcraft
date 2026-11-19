@@ -1128,7 +1128,7 @@ auto = true
 style = "thickness"
 scale = 4.5
 allow = ["SC-I0901", "SC-I0912", "SC-I0902", "SC-I0904", "SC-I0907", "SC-I0908", "SC-I0915", "SC-W0208", "SC-I0504", "SC-I0909", "SC-W0913", "SC-I1119"]
-alt = "How thick the traced running dog sews, as a heat map on white. Most of the dog is grey, under 2 fills of thread. Yellow bands, 2 fills or more, run along the edges where 2 patches overlap. Orange patches, 3 fills or more, lie where several small patches meet, most of them on its chest, its face and its legs. No spot is red, 6 fills or more."
+alt = "How thick the traced running dog sews, as a heat map on white. Most of the dog is grey, under 2 fills of thread. Yellow bands, 2 fills or more, run along the edges where 2 patches overlap, and wider where several small patches meet, on its chest, its face and its legs. A few orange specks, 4 fills or more, lie where satin columns cross over a fill. No spot is red, 6 fills or more."
 
 [[shot]]
 id = "auto-dog-black"

@@ -5,6 +5,18 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.46: the cap leaves satin columns whole, and is lower (`REQ-AUTO-112` to `REQ-AUTO-114`, `SC-I1119`,
+  `SC-W0913`).
+  - The cap at the end of planning takes no needle point of a satin column's top stitches. With the cap at 3
+    it notched a ring's inner edge and left specks at a letter's join, and at 4 it changed the columns of 11
+    of 24 designs. A column's underlay and the fills under it are still the cap's to take.
+  - `auto_thick_cap_fills` is 3.5 by default, where it was 4: the lowest cap at which no column changes and
+    the jump threads, thread changes, slivers and likeness stay as at 4. The bare share rises by up to
+    0.007 points on the dogs, with no sliver, and one dog's thickest spot by 0.01 fills.
+  - The warning `SC-W0913` starts at 4 fills, where it started at 3, and no longer names the cap. `SC-I1119`
+    says what is left above the cap whenever a spot was above it. The heat map's orange starts at 4.
+  - Golden files: `TS-13A.pes` to `TS-13E.pes` change, as the cap takes more of their digitized halves and
+    none of their columns. The sheets sew 23,877, 14,535, 10,256, 19,421 and 5,937 stitches.
 - M13.39: marks that keep parts (`REQ-AUTO-104` to `REQ-AUTO-107`, `REQ-VC-031`, `REQ-CLI-021`,
   `SC-I0916`, `SC-W0917`).
   - A shape named `stitch:keep`, drawn with VectorCraft's own tools or labelled so in an SVG file, or

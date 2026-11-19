@@ -309,17 +309,21 @@ M13.35 takes thread away where one shape piles it up by itself
   dogs, cut the jump threads this leaves. Does the edge of each outline still look whole where it meets
   the next patch?
 
-M13.35's cap takes needle points out of the plan where a spot still sews above 4 fills, the setting
+M13.35's cap takes needle points out of the plan where a spot still sews above the setting
 `auto_thick_cap_fills` ([the cap at the end of planning](../design/image-to-embroidery.md#the-cap-at-the-end-of-planning)).
-TS-13F's ladder shows where the needle starts to struggle. At MC-8, after it:
+Since M13.46 it is 3.5 fills, and it takes none of a satin column's top stitches
+([satin columns stay whole](../design/image-to-embroidery.md#satin-columns-stay-whole)). The warning
+`SC-W0913` starts at 4 fills. TS-13F's ladder shows where the needle starts to struggle, and it sets the
+final value of both. The reference machine trims no jump thread within a colour, so snip them before
+judging a spot. At MC-8, after the ladder:
 
 - At how many fills did the ladder's needle start to thump or break the thread? That sets the cap's
   value and the limits of `SC-W0913`.
 - The cap took a base layer's and a fill's turns under later shapes on the traced dogs and on TS-13C's
   face. Is fabric showing where 2 patches meet there?
-- Where a satin column's points crowd in a bend, the cap may take one, and the stitch left crosses part
-  of the column only, 14° from square on TS-13C's face outline. Can you see it on the outline's inner
-  bend, and does the column still look smooth?
+- Where 2 satin columns of one shape meet over a fill, the cap leaves 4.0 to 4.5 fills: the M of the
+  lettered patch, the badges' blue rings, the running dog in 9 threads. Does the needle thump there, and
+  are the columns' edges whole?
 
 M13.36 keeps a traced letter's counters open and its edges whole
 ([holes and edges of columns](../design/image-to-embroidery.md#holes-and-edges-of-columns)). At MC-8, on
