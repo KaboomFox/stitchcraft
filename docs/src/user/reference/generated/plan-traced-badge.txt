@@ -1,15 +1,15 @@
 $ stitch plan traced-badge.svg --auto -o traced-badge.pes --preview traced-badge.png
 traced-badge.svg
-  file      traced-badge.pes (PES v1, 8347 bytes)
-  sha256    ab10564f3719e441a57550adbc5f89e1e23ef7e4403dd2c94904f7e077415114
+  file      traced-badge.pes (PES v1, 8309 bytes)
+  sha256    7242bbef53cc9ab63393a9331152e4ebebec426aaab95c3f3f117163f3b6d663
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
-  size      50.0 × 50.0 mm
-  stitches  3431 stitches, 3 jumps, 2 trims, 2 colour changes, 0 stops
+  size      50.0 × 49.8 mm
+  stitches  3412 stitches, 3 jumps, 2 trims, 2 colour changes, 0 stops
   trims     the machine makes none of them: cut the jump threads by hand
   threads   1. unnamed (#ed171f), shown as Brother PEC 5 "Red"
             2. unnamed (#0a55a3), shown as Brother PEC 2 "Blue"
             3. unnamed (#e8a900), shown as Brother PEC 11 "Deep Gold"
-  preview   traced-badge.png (432 × 432 pixels)
+  preview   traced-badge.png (432 × 431 pixels)
 info SC-I0901: 3 shapes are digitized automatically: all sew as tatami fills.
 info SC-I0912 (svg:red:fill): This shape sews by the rule area.
 info SC-I0912 (svg:blue:fill): This shape sews by the rule area.

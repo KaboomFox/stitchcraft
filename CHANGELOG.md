@@ -3434,10 +3434,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 
 ### Golden files
 - Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes`, `TS-13C.pes` and `TS-13E.pes` (M13.43,
-  an outline inside its fill's edge). In the digitized half of each, every outline runs 0.1 mm inside its
-  fill's edge. The digitized halves sew 11,490, 6,829, 6,061 and 2,718 stitches, where they sewed 11,513,
-  6,895, 6,064 and 2,716. TS-13A measures 126.0 × 167.9 mm and TS-13C 111.4 × 107.6 mm, where they measured
-  126.0 × 168.0 and 111.4 × 107.7 mm: their outermost outlines lie 0.1 mm further in.
+  an outline inside its fill's edge). Each outline of an automatic fill runs 0.1 mm inside the fill's edge.
+  The sheets sew 23,908, 14,522, 10,326 and 5,940 stitches, where they sewed 23,890, 14,543, 10,320 and
+  5,939. TS-13A and TS-13C are 0.1 mm shorter, 167.88 and 107.64 mm tall: their lowest outlines lie 0.1 mm
+  further in. Their jumps are as they were.
 - Changed `conformance/golden/testsheets/TS-13B.pes` and `TS-13D.pes` (M13.37, traced letters sewn as
   strokes). In the digitized half of each, a part drawn in straight strokes sews a column along each
   stroke. TS-13B's letters and TS-13D's white frames now sew so. The sheets sew 14,543 and 19,458 stitches,
