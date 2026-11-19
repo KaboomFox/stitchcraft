@@ -11,7 +11,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     notched a ring's inner edge and left specks at a letter's join, and at 4 it changed the columns of 11 of
     24 designs. A column's underlay and the fills under it are still the cap's to take.
   - Neither the last pass nor the cap takes the rows under a satin column's edge, which keep it covered when
-    the fabric pulls the column in: a column's thread hides no row end of the pass, and the cap counts a
+    the fabric pulls the column in. A column's thread hides no row end of the pass, and the cap counts a
     column's stitch as covering only pulled in by the overlap at its turns (`REQ-AUTO-114`, `REQ-AUTO-007`).
   - A joined top stitch lays its thread only where its shape's or a later shape's top thread lies, and keeps
     the machine's shortest on the plan's own points, not only on the machine's grid (`REQ-AUTO-100`,

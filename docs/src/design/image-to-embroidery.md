@@ -1798,7 +1798,7 @@ stitch type is satin, which planning knows from the stitches each element genera
 and the stitches' roles, and no picture, shape or limit of its own.
 
 **A column's edge.** Lowered to 3.5, the cap left TS-13C's face columns covering 0.982 of the edges under
-them, once pulled in, where `REQ-AUTO-007` holds them to 0.99. Two things took the overlap that the face's
+them, once pulled in, where `REQ-AUTO-007` holds them to 0.99. The last pass and the cap took the overlap that the face's
 and the eyes' rows lay under the columns, which keeps a column's edge covered when the fabric pulls the
 column in. The last pass moved those rows' ends back from under the columns, and the cap took 44 points of
 them by its second kind, where it took 5 at 4. Either alone left the edges at 0.982 or 0.983. Both read a
@@ -1817,14 +1817,14 @@ edge needs the rows under it.
 **Where a joined stitch lies.** With the cap at 3.25, a stitch the cap joined across a bend of the ear's
 rows lay beside the shape for 1.7 mm, on another colour, where `REQ-AUTO-026` allows 1.5. And on TS-13E a
 stitch it joined measured 0.262 mm on the plan's own points, off the machine's grid, at least 0.3 mm on the
-grid, where `REQ-PLAN-002` holds every stitch to the machine's shortest. So a joined top stitch lays its
+grid, where `REQ-PLAN-002` asks every stitch to be as long as the machine's shortest. So a joined top stitch lays its
 thread only where its shape's own top thread or a later shape's lies, and its length is checked on the
 plan's points as well (`REQ-AUTO-100`).
 
 #### The cap's default
 
 With these rules every design was planned with the cap at 4, 3.75, 3.5, 3.25 and 3, and each was held to
-every requirement, with `auto_details_last` off (M13.48). 3.25 is the lowest at which every requirement holds.
+every requirement, with `auto_details_last` off (M13.48). 3.25 is the lowest at which the cases of every requirement pass.
 At 3 the cap joins the base layer's row ends, hidden under the top, across the rows that `REQ-AUTO-028`
 holds straight. A bare share that rises far under its limit doesn't count against a cap, and the spots that
 satin columns hold are reported, not counted. Measured on 2026-11-19, main's cap at 4 against the cap at
@@ -1847,14 +1847,14 @@ satin columns hold are reported, not counted. Measured on 2026-11-19, main's cap
 | Traced coleus | 4.12 | 4.18 | 959.25 | 309.25 | 0.0408 | 0.0598 | 62,219 | 57,467 |
 | Traced goose | 4.00 | 4.37 | 489.25 | 164.00 | 0.0160 | 0.0220 | 38,352 | 36,053 |
 
-On every design no column changes, where main's cap changed the columns of 11, and the jump threads, the
+On every design the columns sew as digitizing lays them, where main's cap changed the columns of 11, and the jump threads, the
 thread changes, the slivers and the likeness are those of main's cap. The area at 3 fills or more falls by
 44 to 68 % on the dogs and the photos. The bare share rises on the dogs and the photos to 0.06 % at the
 most, under the cover's limit of 0.5 % (`auto_base_bare_percent`), with no sliver more. The thickest spots rise
 where satin columns hold them, which the cap leaves.
 
 **What holds a spot above the cap.** At 3.25 the thickest spot of each design above it, split by element,
-and the step that owns its cause. No rule was added for these here:
+and the step whose work its cause is. This step doesn't add a rule for them:
 
 | Design | Thickest | Satin columns' top | Other top | Under | What lies there | Owner |
 |---|---:|---:|---:|---:|---|---|

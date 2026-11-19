@@ -339,7 +339,7 @@ StitchCraft aims to keep every spot at 3.25 fills or less, a limit called the ca
 a last pass and then the cap take thread away at each spot above it. They take thread that other stitches
 cover, first under the shapes sewn later and then where a shape lays its stitches twice over the same
 place. They take only the stitches of the shapes they digitized, and never a satin column's top stitches,
-nor the rows under a column's edge, so a column keeps its edge and its angle. What shows keeps its colour, and no jump thread or thread change
+nor the rows under a column's edge. A column keeps its edge and its angle. What shows keeps its colour, and no jump thread or thread change
 is added. `SC-I1119` says what they took and what is left above the cap, which is mostly where 2 satin
 columns meet over a fill. The warning comes only where a place of 1 mm² has 4 fills or more. The advanced setting
 `auto_thick_cap_fills` moves the cap.
