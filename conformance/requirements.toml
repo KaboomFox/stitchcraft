@@ -3435,6 +3435,60 @@ milestone = "M13"
 status = "planned"
 
 [[req]]
+id = "REQ-AUTO-119"
+area = "auto"
+level = "L2"
+statement = "Lettering that automatic digitizing places is in the reach of the last pass and the cap (REQ-AUTO-074, REQ-AUTO-100), as the elements digitizing made are: the text a marker names in a picture (REQ-AUTO-063) and a text object that automatic digitizing letters (REQ-AUTO-069). Its satin columns count as columns (REQ-AUTO-112, REQ-AUTO-114). A design whose only automatic shape is a marker's text is measured with the default limits of the rules."
+rationale = "The owner chose on 2026-11-19 to sew words on patches as marked text, for its clean joins and fewer jump threads. Measured on 2026-11-19, the marked word of the lettered patch sews 4.53 fills at its thickest spot and 75 mm² at 3 fills or more, where the traced word sewed 3.98 and 40, and letters of the built-in fonts on a field sew up to 6.67. The cap is for the owner's machine, and it reached none of it, since a lettering element has settings of its own."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-120"
+area = "auto"
+level = "L2"
+statement = "A satin column sewn whole, in one step with its top stitches, tags its underlay's stitches as underlay in the plan, as a column sewn in a run of underlays first does (REQ-ASM-009). The needle points, their order and every count stay as they are."
+rationale = "A hand-digitized font sews each column whole, so its centre walk or contour underlay was tagged as top stitches. The cap then read it as the column's surface and could take none of it, and the stack of a thick spot showed it as top thread. Measured on 2026-11-19, a lettering column's underlay is 0.33 to 0.75 fills at the thickest spots of the built-in fonts' letters."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-121"
+area = "auto"
+level = "L2"
+statement = "The top stitch of a lettering column counts as covering a place only as its own pull compensation pulls it in: shortened at each end where the thread turns by 10° or more by the column's `pull_compensation_mm`, or by what its `pull_compensation_percent` gives, and by no less than 0.2 mm, where a digitized column is shortened by the areas' overlap (REQ-AUTO-114)."
+rationale = "A digitized column's edge is held by the areas that reach 1 mm under it. A font's column is held by its own pull compensation, which its author set for the overlap at its joins (Wilcom's custom-font help: on narrow strokes the pull compensation gives enough overlap). Shortened by 1 mm at each end, a Small Font column 1 to 1.5 mm wide covered nothing, and the cap could take none of the font's running stitches hidden under it. Measured on 2026-11-19 on 744 letters: by its own pull compensation the cap took 6,200 mm of hidden running stitches and the thickest spots fell by up to 1.1 fills, with no column's top changed."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-122"
+area = "auto"
+level = "L2"
+statement = "The cap takes a needle point of a lettering column's underlay only where the joined stitch lies under the top stitches of another column of the lettering as well as under its own: where 2 columns overlap. Elsewhere a column's underlay stays whole."
+rationale = "Underlay holds a column's top stitches up and keeps its edges sharp. Where 2 columns of a letter overlap, the other column's top holds them, and nobody sees the underlay between. Measured on 2026-11-19, taking the underlay wherever its own top hid it took its turns at every column's end, at the edge a person sees."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-123"
+area = "auto"
+level = "L2"
+statement = "The last resort of REQ-AUTO-112 takes no top stitch of a lettering column. A spot that lettering holds above the warning's limit stays, and SC-W0913 names it."
+rationale = "The owner chose lettering for how its letters look. Measured on 2026-11-19 on 744 letters of the built-in fonts, the last resort took 5,400 mm of the columns' top thread, made 629 notches and 137 leaning stitches, and changed the look of S, X, Z, 8 and M in the stitched previews. On a field it still left spots of 4.4 to 5.0 fills."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-124"
+area = "auto"
+level = "L2"
+statement = "A design with elements that sew by their own settings and no automatic shape is measured for its thickness when it has a lettering element, and SC-W0913 warns of it at its limits. Planning takes no thread from it: its plan is the plan without the measure."
+rationale = "Lettering that a person sets sews by its font's settings, which the person chose, and the cap leaves it as it is. Nothing told a person that a join of a built-in font sews up to 5.36 fills alone and 6.67 on a fill under it, as measured on 2026-11-19."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-AUTO-075"
 area = "auto"
 level = "L2"

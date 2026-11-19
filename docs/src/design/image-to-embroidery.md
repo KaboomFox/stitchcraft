@@ -1767,6 +1767,127 @@ round, took 11 % on TS-13A.
 - The last pass runs before the cap, as now. Its row ends move rather than go, which the cap can't do. Whether the
   cap alone would do as well is a measurement for the build phase.
 
+#### The cap and lettering
+
+The owner compared, on 2026-11-19, a patch's word sewn from its traced letters with the same word marked
+([text in pictures](#text-in-pictures)) and sewn in a built-in font. She chose the marked text for words on
+patches: its joins are clean and it leaves fewer jump threads. The cap is for her machine, and it didn't
+reach lettering. A lettering element has settings of its own, the font's, and the cap takes needle points
+only of the elements digitizing made. M13.50 measured how thick lettering sews and what may go
+(`REQ-AUTO-119` to `REQ-AUTO-124`). The rules hold for any text, any built-in font, any size it sews at and
+any background.
+
+**How thick lettering sews.** Every letter and digit of the 2 built-in fonts was planned at 3 heights each,
+alone and on a field, an automatic fill 3 mm round it, as a patch's field lies under its word. So were 4
+made-up words, the lettered patch with its word marked, and TS-13B's 4 words marked. Measured on
+2026-11-19 with M13.46's cap, which doesn't reach lettering:
+
+| Letters, 62 a set | Thickest, fills | Median of the letters' thickest | At 3 fills or more, mm² | At 4 or more |
+|---|---:|---:|---:|---:|
+| Small Font, 3.6, 7.6 and 15.2 mm, alone | 3.72 to 4.28 | 2.95 to 3.21 | 2 to 16 | 0 |
+| Small Font, on a field | 4.87 to 5.35 | 3.96 to 4.15 | 175 to 1,361 | 1.0 to 14.8 |
+| Barstitch Bold, 12.5, 22.5 and 32.5 mm, alone | 4.99 to 5.36 | 3.74 to 4.00 | 172 to 202 | 3.5 to 6.2 |
+| Barstitch Bold, on a field | 6.31 to 6.67 | 4.60 to 5.00 | 1,296 to 3,820 | 189 to 257 |
+
+The marked patch sews 4.53 fills at its thickest spot and 75.25 mm² at 3 fills or more, TS-13B's words 4.16
+and 11.0. At a letter's thickest spot lie, on average:
+
+| Thread at the thickest spot | Small Font | Barstitch Bold |
+|---|---:|---:|
+| The top stitches of the columns that meet there: 2 at 55 to 85 % of the spots, 1 or 3 at the others | 1.8 to 2.1 | 2.3 to 2.6 |
+| The columns' own underlay | 0.48 to 0.75 | 0.33 to 0.40 |
+| The font's running stitches, which run between a letter's columns and fill its narrow parts | 0.21 to 0.29 | 0.45 to 0.99 |
+| Locks, where the thread jumps to the next letter or part | 0.1 to 0.5 | 0.1 to 0.5 |
+| The field's top stitches and the base layer, on a field | 1.15 to 1.24 | 1.16 to 1.19 |
+
+A hand-digitized font overlaps its columns where they join on purpose. Thread pulls a column narrower, and
+columns that only touch part and show fabric between them. The overlap that pull compensation gives is what
+keeps them joined, and on narrow strokes it is enough without more
+([Wilcom's help on digitizing custom fonts](https://docs.wilcom.com/embroiderystudio/27/en/OnlineHelp/Management/custom_fonts/custom_fonts-23.htm);
+a retailer's article puts it at 0.2 mm on stable fabric and 1 mm or more on knits,
+[Hooping Station](https://hoopingstation.com/blogs/articles/ink-stitch-push-pull-compensation-for-satin-fonts-the-overlap-trick-that-stops-gaps-plus-underlay-settings-that-actually-matter)).
+Barstitch Bold sets 0.3 mm of pull compensation and Small Font 0.2. So the 2 columns at a join are the
+font's own drawing, and the overlap within its pull compensation must stay.
+
+**What may go, by geometry.** The cap takes a needle point out of a run and joins its 2 stitches. That
+takes thread where the run turns, and none from the middle of a straight run.
+
+| Thread | What became of it | Rule |
+|---|---|---|
+| The field and the base layer under the letters | A fill's rows run straight under a letter. The cap takes none of them. Cut away under the letters, as an area is under a shape digitized from an area, the field turned its rows at every letter's edge, and those turns piled up. Cut 0.5 mm inside the letters' edges, Small Font at 15.2 mm went from 4.87 fills to 6.23 at its thickest, with 14 times the area at 4 fills or more, and cut 1 mm inside, to 5.70 with twice the area. A field sews whole under lettering, as an area does under a column digitized from a stroke | none |
+| A column's own underlay | Tagged top today, since a font's column sews whole. The cap read it as the column's surface. Tagged underlay, the cap's first kind takes its turns where top stitches sewn after it cover them | `REQ-AUTO-120`, `REQ-AUTO-122` |
+| The font's running stitches under a later column | The cap's second kind, as for any shape's top under later shapes, once the column covers as its own pull compensation pulls it | `REQ-AUTO-119`, `REQ-AUTO-121` |
+| Locks | They stand where the thread jumps, and the owner cuts those threads by hand. The last pass keeps one back and forth of each, as for any design | `REQ-AUTO-119` |
+| A column's top under another column | Not the cap's: the overlap is the font's. Taken by the second kind where wholly under a later column, it took little more than the rules above, and the column's end under the other is what pull compensation needs | none |
+
+A column's underlay stays where no other column lies over it. It holds the column's top up and keeps its
+edges sharp, and taken wherever its own top hid it, it went at every column's end. Where 2 columns overlap
+the other's top holds them. Taking the underlay out of each column more than its pull compensation inside
+another, in the plan rather than by the cap, didn't lower a letter's thickest spot by more than 0.1 fills: a
+centre walk or a contour lies along its own column's middle, and seldom inside the other.
+
+**Whose lettering.** Lettering that automatic digitizing places is digitizing's: the text a marker names in
+a picture (M14.5) and a text object that automatic digitizing letters (M14.7). It is in the cap's reach
+(`REQ-AUTO-119`), its columns are columns (`REQ-AUTO-112`), and a design of lettering alone is measured with
+the default limits. A lettering object a person places sews by its own settings, as every element with
+settings does. The cap leaves it as it is, and `SC-W0913` tells of a spot above the warning's limit
+(`REQ-AUTO-124`). Planning knows the lettering it may change by a mark the lettering pass gives the elements
+it places. The elements' ids aren't that mark, since a person may name a shape so.
+
+**The last resort and lettering.** Above the warning's limit, M13.46's cap takes a satin column's top
+stitch as a last resort. On lettering it does not (`REQ-AUTO-123`). Measured on the 744 letters and the
+words with the rules above and with the last resort, against the rules alone:
+
+| | Rules above | With the last resort |
+|---|---:|---:|
+| Thickest spot, letters alone, Barstitch Bold | 4.13 to 4.68 | 3.96 to 3.99 |
+| Thickest spot, letters on a field, Barstitch Bold | 5.47 to 5.74 | 4.64 to 5.01 |
+| Thickest spot, letters on a field, Small Font | 4.87 to 5.35 | 4.44 to 5.35 |
+| The marked patch | 4.53 | 4.38 |
+| Columns' top thread taken | none | 5,364 mm |
+| Notches, a joined stitch along a column's edge | 0 | 629 |
+| Stitches turned 10° to 45° | 0 | 137 |
+| Joins whose look changed beyond the noise of moving the letters 0.05 mm | JUDGE109 | JUDGE77 |
+
+In the stitched previews the last resort ragged the inner edge of an S and an 8 and changed the angle of
+an X's crossing, a Z's corner and an M's top. The owner chose lettering for how it looks. And on a field it
+leaves the thickest spots above the limit all the same, where the field and 2 columns' tops make 3.0 to 3.8
+fills by themselves.
+
+**Measured** with a prototype of these rules on M13.46's branch, on 2026-11-19:
+
+| Set | Thickest today | Prototype | At 3 fills or more today, mm² | Prototype | At 4 or more today | Prototype |
+|---|---:|---:|---:|---:|---:|---:|
+| Small Font alone | 3.72 to 4.28 | 3.71 to 3.85 | 21 | 16 | 0 | 0 |
+| Small Font on a field | 4.87 to 5.35 | 4.87 to 5.35 | 2,049 | 2,038 | 20.0 | 17.5 |
+| Barstitch Bold alone | 4.99 to 5.36 | 4.13 to 4.68 | 568 | 263 | 14.5 | 4.8 |
+| Barstitch Bold on a field | 6.31 to 6.67 | 5.47 to 5.74 | 7,468 | 6,954 | 677.7 | 287.5 |
+| Made-up words, Barstitch Bold, on a field | 5.95 to 6.60 | 5.15 to 5.79 | 1,070 | 999 | 138.2 | 37.8 |
+| The marked patch | 4.53 | 4.53 | 75.25 | 75.00 | 0 | 0 |
+| TS-13B's words marked | 4.16 | 3.68 | 11.00 | 2.50 | 0 | 0 |
+
+No column's top stitch moved, and the jump threads, the thread changes and the trims are those of today on
+every design. The plans have 0.9 % fewer stitches. Planning took as long within the shared machine's noise,
+5.1 s today and 4.7 s with the prototype over every design together. The sets of letters alone, which
+had no cap to run before, took 20 to 100 ms more for their 62 letters.
+
+The rules leave Small Font as it was. Its thickest spots are 2 columns' tops, the field and the base
+layer, and a centre walk along each column, and none of those may go. The marked patch keeps its spot of 4.53
+fills, where 2 columns meet over the field between the M and the A.
+
+**Decisions for the owner.**
+
+- Lettering that digitizing places is in the cap's reach, and a person's own lettering is warned of and
+  never changed. Recommended, since the rule doesn't read the font, the text or the size.
+- The last resort leaves lettering's columns whole (`REQ-AUTO-123`). Recommended, since it changed the
+  letters' look on the previews and still left the spots on a field above the limit. The other choice is
+  M13.46's rule for every column, which took the marked patch to 4.38.
+- The field sews whole under lettering. Recommended: cut away, it turned its rows at the letters' edges
+  and sewed thicker.
+- Small Font on a field stays at 4.9 to 5.4 fills at its thickest joins, and the marked patch at 4.53. What
+  MC-8 shows decides whether a word on a patch needs more. A lighter field under the letters would be a
+  setting of the field's.
+
 ## Likeness
 
 Each merge of automatic digitizing takes a jump thread or a thread change away: a speck (`REQ-AUTO-008`)
