@@ -17,8 +17,10 @@ use stitchcraft_core::{Code, Diagnostic, ElementId, Mm, Point, Rect};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::{Rgb, Thread};
 
+pub mod mark;
 mod turn;
 
+use mark::Mark;
 pub use turn::Turn;
 
 /// How far from the design's origin geometry may lie, in millimetres: the reach of machine-file
@@ -508,6 +510,10 @@ pub struct Design {
     /// and each thread then sews as long as it can. Without it, the elements with settings keep their
     /// order among themselves. [`Design::new`] leaves it off, and a reader sets it as its [`Reading`] asks.
     pub sort_colours: bool,
+    /// The marks that keep the parts of automatic areas lying wholly inside them (`REQ-AUTO-104`), which are
+    /// never sewn. [`Design::new`] leaves them empty, and a reader gives the ones it takes out of its
+    /// elements ([`mark::taken_out`]).
+    pub marks: Vec<Mark>,
 }
 
 impl Design {
@@ -555,7 +561,7 @@ impl Design {
             let message = "The design's collapse length, shortest stitch or narrowest satin stroke is negative.";
             return Err(Diagnostic::new(Code::InternalCheckFailed, message));
         }
-        Ok(Design { elements, settings, sort_colours: false })
+        Ok(Design { elements, settings, sort_colours: false, marks: Vec::new() })
     }
 
     /// The design, its elements sewing in the order `reading` asks for: the design as it is, with
@@ -579,6 +585,12 @@ impl Design {
         self
     }
 
+    /// The design with `elements` in the place of its own, checked as [`Design::new`] checks them, keeping its
+    /// settings, its sorting of colours and its marks: what a pass that replaces shapes gives back.
+    pub fn with_elements(&self, elements: Vec<Element>) -> Result<Design, Diagnostic> {
+        Ok(Design { sort_colours: self.sort_colours, marks: self.marks.clone(), ..Design::new(elements, self.settings)? })
+    }
+
     /// The elements, in the host's paint order.
     pub fn elements(&self) -> &[Element] {
         &self.elements
@@ -590,7 +602,7 @@ impl Design {
     }
 
     /// The design moved by `by`, `[dx, dy]` in millimetres: every point of its elements, their hints and
-    /// gradients, and its origin and stop position, as a host draws a design somewhere else (`REQ-VC-015`). `SC-E0009`, as from
+    /// gradients, its marks, and its origin and stop position, as a host draws a design somewhere else (`REQ-VC-015`). `SC-E0009`, as from
     /// [`Design::new`], when a point would lie more than 10 m from the origin.
     pub fn moved(&self, [dx, dy]: [f64; 2]) -> Result<Design, Diagnostic> {
         let point = |p: Point| {
@@ -598,25 +610,28 @@ impl Design {
                 Diagnostic::new(Code::InternalCheckFailed, format!("The design moved by ({dx}, {dy}) mm has a point that is no number: {e}."))
             })
         };
-        let elements = self.elements.iter().map(|element| {
-            let shape = match &element.shape {
+        let moved = |shape: &Shape| -> Result<Shape, Diagnostic> {
+            Ok(match shape {
                 Shape::Stroke { path, width, join, cap } => Shape::Stroke { path: path.map(point)?, width: *width, join: *join, cap: *cap },
                 Shape::Fill { path, rule, gradient } => {
                     Shape::Fill { path: path.map(point)?, rule: *rule, gradient: gradient.as_ref().map(|gradient| gradient.map(point)).transpose()? }
                 }
-            };
+            })
+        };
+        let elements = self.elements.iter().map(|element| {
             let shapes = |clip: &Clip| {
                 clip.shapes.iter().map(|shape| Ok(ClipShape { path: shape.path.map(point)?, rule: shape.rule })).collect::<Result<_, Diagnostic>>()
             };
             let clips = element.clips.iter().map(|clip| Ok(Clip { shapes: shapes(clip)? })).collect::<Result<_, Diagnostic>>()?;
-            Ok(Element { shape, hints: element.hints.map(point)?, clips, ..element.clone() })
+            Ok(Element { shape: moved(&element.shape)?, hints: element.hints.map(point)?, clips, ..element.clone() })
         });
+        let marks = self.marks.iter().map(|mark| Ok(Mark { id: mark.id.clone(), shape: moved(&mark.shape)? })).collect::<Result<_, Diagnostic>>()?;
         let settings = DesignSettings {
             origin: self.settings.origin.map(point).transpose()?,
             stop_position: self.settings.stop_position.map(point).transpose()?,
             ..self.settings
         };
-        Ok(Design { sort_colours: self.sort_colours, ..Design::new(elements.collect::<Result<_, Diagnostic>>()?, settings)? })
+        Ok(Design { sort_colours: self.sort_colours, marks, ..Design::new(elements.collect::<Result<_, Diagnostic>>()?, settings)? })
     }
 }
 
@@ -685,8 +700,16 @@ mod tests {
         let fill =
             Element { shape: Shape::Fill { path: quad, rule: FillRule::EvenOdd, gradient: None }, hints, clips, ..element("q", Path::default()) };
         let settings = DesignSettings { origin: Some(p(5.0, 5.0)), stop_position: Some(p(-1.0, 0.0)), ..DesignSettings::default() };
-        let design = Design::new(vec![element("c", curve), fill, element("l", line(p(-2.0, 1.0), p(3.0, 1.0)))], settings).unwrap();
+        let mut design = Design::new(vec![element("c", curve), fill, element("l", line(p(-2.0, 1.0), p(3.0, 1.0)))], settings).unwrap();
+        // Its marks move too, and keep their ids.
+        design.marks = vec![Mark { id: ElementId::new("m").unwrap(), shape: Shape::stroke(line(p(1.0, 1.0), p(2.0, 2.0))) }];
         let moved = design.moved([3.0, -2.0]).unwrap();
+        assert_eq!(moved.marks, [Mark { id: ElementId::new("m").unwrap(), shape: Shape::stroke(line(p(4.0, -1.0), p(5.0, 0.0))) }]);
+        // Given other elements, a design keeps its marks, its settings and its sorting of colours.
+        let sorted = Design { sort_colours: true, ..design.clone() };
+        let other = sorted.with_elements(vec![element("x", line(p(0.0, 0.0), p(1.0, 0.0)))]).unwrap();
+        assert_eq!((other.elements().len(), &other.marks, other.settings, other.sort_colours), (1, &design.marks, design.settings, true));
+        assert!(sorted.with_elements(vec![element("x", Path::default()), element("x", Path::default())]).is_err());
         // Every point, the hints' and the clips' among them.
         let points = |design: &Design| {
             let clips = |e: &Element| e.clips.iter().flat_map(Clip::points).collect::<Vec<_>>();

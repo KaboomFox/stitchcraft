@@ -1,5 +1,6 @@
-//! The geometry text in pictures measures with (`REQ-AUTO-063`, `REQ-AUTO-065`): whether a point lies in a
-//! marker's area, and where a point lies along and across the line a text follows.
+//! The geometry of markers (`REQ-AUTO-063`, `REQ-AUTO-065`): whether a point lies in a marker's area, and
+//! where a point lies along and across the line a marker's text follows. Text in pictures and marks that
+//! keep parts both test points with it ([`super::Area`]).
 //!
 //! **Why a line for every marker.** Letters stand on a line, level or bent. Measured along and across that
 //! line, their height and their width are the same 2 numbers whichever way the line runs, so a level word
@@ -13,11 +14,11 @@
 use stitchcraft_core::math;
 
 /// A point, in millimetres.
-pub(super) type At = (f64, f64);
+pub type At = (f64, f64);
 
 /// Whether `p` lies inside the area the closed polylines `rings` enclose, by the even-odd rule: a ray from
 /// it to the right crosses their edges an odd number of times.
-pub(super) fn inside(rings: &[Vec<At>], (x, y): At) -> bool {
+pub fn inside(rings: &[Vec<At>], (x, y): At) -> bool {
     let mut odd = false;
     for ring in rings {
         let Some(&last) = ring.last() else { continue };
@@ -35,7 +36,7 @@ pub(super) fn inside(rings: &[Vec<At>], (x, y): At) -> bool {
 }
 
 /// The area the closed polyline `ring` encloses, in square millimetres, whichever way it runs.
-pub(super) fn area(ring: &[At]) -> f64 {
+pub fn area(ring: &[At]) -> f64 {
     let Some(&last) = ring.last() else { return 0.0 };
     let mut from = last;
     let mut twice = 0.0;
@@ -47,13 +48,13 @@ pub(super) fn area(ring: &[At]) -> f64 {
 }
 
 /// The length of the polyline `points`.
-pub(super) fn length(points: &[At]) -> f64 {
+pub fn length(points: &[At]) -> f64 {
     points.windows(2).map(|pair| if let [a, b] = pair { math::hypot(b.0 - a.0, b.1 - a.1) } else { 0.0 }).sum()
 }
 
 /// The line a text follows: a polyline with how far along it each point lies.
 #[derive(Clone, Debug, PartialEq)]
-pub(super) struct Line {
+pub struct Line {
     /// Its points, no 2 in a row the same: 2 or more.
     points: Vec<At>,
     /// How far along the line each point lies, from 0.
@@ -62,7 +63,7 @@ pub(super) struct Line {
 
 impl Line {
     /// The line through `points`, or `None` when they give it no length.
-    pub(super) fn of(points: &[At]) -> Option<Line> {
+    pub fn of(points: &[At]) -> Option<Line> {
         let mut kept: Vec<At> = Vec::with_capacity(points.len());
         let mut far = Vec::with_capacity(points.len());
         let mut length = 0.0;
@@ -81,12 +82,12 @@ impl Line {
     }
 
     /// Its length.
-    pub(super) fn length(&self) -> f64 {
+    pub fn length(&self) -> f64 {
         self.far.last().copied().unwrap_or_default()
     }
 
     /// How many segments it has.
-    pub(super) fn segments(&self) -> usize {
+    pub fn segments(&self) -> usize {
         self.points.len().saturating_sub(1)
     }
 
@@ -103,7 +104,7 @@ impl Line {
     /// Where `p` lies by the line: how far along it the nearest point of the line lies, and how far `p` is
     /// from that point, counted towards the letters' tops. The line's first and last segments go on past its
     /// ends, so a point before its start lies a negative distance along it.
-    pub(super) fn locate(&self, p: At) -> (f64, f64) {
+    pub fn locate(&self, p: At) -> (f64, f64) {
         let last = self.segments().saturating_sub(1);
         let mut best = (f64::INFINITY, 0.0, 0.0);
         for index in 0..=last {
@@ -140,7 +141,7 @@ impl Line {
     /// The line `across` millimetres beside this one, towards the letters' tops, from `from` along it to
     /// `to`: its ends, and between them each corner of this line pushed out along the line that halves the
     /// corner. Either end may lie past an end of this line.
-    pub(super) fn beside(&self, across: f64, from: f64, to: f64) -> Vec<At> {
+    pub fn beside(&self, across: f64, from: f64, to: f64) -> Vec<At> {
         let mut points = vec![self.beside_at(from, across)];
         for index in 1..self.segments() {
             let (corner, far, _, (ux, uy)) = self.segment(index);

@@ -156,6 +156,35 @@ pub const stitchcraft_engine::common::STOP_AFTER: &str
 pub const stitchcraft_engine::common::TRIM_AFTER: &str
 pub const stitchcraft_engine::common::UNDERLAYS_FIRST: &str
 pub mod stitchcraft_engine::design
+pub mod stitchcraft_engine::design::mark
+pub mod stitchcraft_engine::design::mark::frame
+pub struct stitchcraft_engine::design::mark::frame::Line
+impl stitchcraft_engine::design::mark::frame::Line
+pub fn stitchcraft_engine::design::mark::frame::Line::beside(&self, f64, f64, f64) -> alloc::vec::Vec<stitchcraft_engine::design::mark::frame::At>
+pub fn stitchcraft_engine::design::mark::frame::Line::length(&self) -> f64
+pub fn stitchcraft_engine::design::mark::frame::Line::locate(&self, stitchcraft_engine::design::mark::frame::At) -> (f64, f64)
+pub fn stitchcraft_engine::design::mark::frame::Line::of(&[stitchcraft_engine::design::mark::frame::At]) -> core::option::Option<stitchcraft_engine::design::mark::frame::Line>
+pub fn stitchcraft_engine::design::mark::frame::Line::segments(&self) -> usize
+pub fn stitchcraft_engine::design::mark::frame::area(&[stitchcraft_engine::design::mark::frame::At]) -> f64
+pub fn stitchcraft_engine::design::mark::frame::inside(&[alloc::vec::Vec<stitchcraft_engine::design::mark::frame::At>], stitchcraft_engine::design::mark::frame::At) -> bool
+pub fn stitchcraft_engine::design::mark::frame::length(&[stitchcraft_engine::design::mark::frame::At]) -> f64
+pub type stitchcraft_engine::design::mark::frame::At = (f64, f64)
+pub struct stitchcraft_engine::design::mark::Area
+impl stitchcraft_engine::design::mark::Area
+pub fn stitchcraft_engine::design::mark::Area::cost(&self) -> u64
+pub fn stitchcraft_engine::design::mark::Area::holds(&self, stitchcraft_engine::design::mark::frame::At) -> bool
+pub fn stitchcraft_engine::design::mark::Area::line(&self) -> &stitchcraft_engine::design::mark::frame::Line
+pub fn stitchcraft_engine::design::mark::Area::may_hold(&self, [f64; 4]) -> bool
+pub fn stitchcraft_engine::design::mark::Area::of(&stitchcraft_engine::design::Shape, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::result::Result<stitchcraft_engine::design::mark::Area, &'static str>, stitchcraft_core::budget::Exhausted>
+pub struct stitchcraft_engine::design::mark::Mark
+pub stitchcraft_engine::design::mark::Mark::id: stitchcraft_core::element::ElementId
+pub stitchcraft_engine::design::mark::Mark::shape: stitchcraft_engine::design::Shape
+pub const stitchcraft_engine::design::mark::FLAT: f64
+pub const stitchcraft_engine::design::mark::KEEP: &str
+pub fn stitchcraft_engine::design::mark::bounds(impl core::iter::traits::iterator::Iterator<Item = stitchcraft_engine::design::mark::frame::At>) -> core::option::Option<[f64; 4]>
+pub fn stitchcraft_engine::design::mark::flat(&stitchcraft_engine::design::Path, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::vec::Vec<alloc::vec::Vec<stitchcraft_engine::design::mark::frame::At>>, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_engine::design::mark::note<'n>(&'n str, &str) -> core::option::Option<&'n str>
+pub fn stitchcraft_engine::design::mark::taken_out(alloc::vec::Vec<stitchcraft_engine::design::Element>) -> (alloc::vec::Vec<stitchcraft_engine::design::Element>, alloc::vec::Vec<stitchcraft_engine::design::mark::Mark>)
 pub enum stitchcraft_engine::design::Cap
 pub stitchcraft_engine::design::Cap::Butt
 pub stitchcraft_engine::design::Cap::Round
@@ -199,6 +228,7 @@ pub struct stitchcraft_engine::design::ClipShape
 pub stitchcraft_engine::design::ClipShape::path: stitchcraft_engine::design::Path
 pub stitchcraft_engine::design::ClipShape::rule: stitchcraft_engine::design::FillRule
 pub struct stitchcraft_engine::design::Design
+pub stitchcraft_engine::design::Design::marks: alloc::vec::Vec<stitchcraft_engine::design::mark::Mark>
 pub stitchcraft_engine::design::Design::settings: stitchcraft_engine::design::DesignSettings
 pub stitchcraft_engine::design::Design::sort_colours: bool
 impl stitchcraft_engine::design::Design
@@ -208,6 +238,7 @@ pub fn stitchcraft_engine::design::Design::elements(&self) -> &[stitchcraft_engi
 pub fn stitchcraft_engine::design::Design::moved(&self, [f64; 2]) -> core::result::Result<stitchcraft_engine::design::Design, stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_engine::design::Design::new(alloc::vec::Vec<stitchcraft_engine::design::Element>, stitchcraft_engine::design::DesignSettings) -> core::result::Result<stitchcraft_engine::design::Design, stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_engine::design::Design::read_as(self, stitchcraft_engine::design::Reading) -> stitchcraft_engine::design::Design
+pub fn stitchcraft_engine::design::Design::with_elements(&self, alloc::vec::Vec<stitchcraft_engine::design::Element>) -> core::result::Result<stitchcraft_engine::design::Design, stitchcraft_core::diag::Diagnostic>
 pub struct stitchcraft_engine::design::DesignSettings
 pub stitchcraft_engine::design::DesignSettings::collapse_len: stitchcraft_core::units::Mm
 pub stitchcraft_engine::design::DesignSettings::min_satin_stroke_width: stitchcraft_core::units::Mm

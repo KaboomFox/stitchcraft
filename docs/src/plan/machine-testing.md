@@ -360,6 +360,16 @@ side:
 - The dog on turf in 9 threads sews 0.31 fills more at its thickest spot, 4.8 fills, where a satin column or a fill lies
   over 3 or 4 other fills. Does the needle thump there, or the thread fray?
 
+M13.39 keeps the parts a person marks ([marks that keep parts](../design/image-to-embroidery.md#marks-that-keep-parts)).
+Without a mark nothing sews differently. At MC-8, sew a traced dog with a `stitch:keep` mark round each eye
+and its nose, beside the same dog without marks:
+
+- A marked speck sews as a short running stitch, 1 to 2 mm long. Does the light in an eye show as a dot,
+  and does its short stitch hold, or pull out once its jump threads are cut?
+- A marked part sews in its own thread over the fur round it. Are its edges whole, and does fabric show
+  round it?
+- The rest of the dog sews in another order. Feel for thick spots away from the marks.
+
 M13.40 sews a detail after the fills round it where that costs no thread change, when the design turns
 `auto_details_last` on ([details last](../design/image-to-embroidery.md#details-last)). It is off by
 default, so nothing sews differently until M13.35's cap lands and turns it on. At MC-8, sew a traced dog

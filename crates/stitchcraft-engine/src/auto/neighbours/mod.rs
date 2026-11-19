@@ -73,6 +73,7 @@ use std::collections::BTreeSet;
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Labels, Meter, Point};
 use stitchcraft_params::{Family, StitchType, Validated};
 
+use super::marks::Marks;
 use super::{AutoParams, Style, outline, painted};
 use crate::design::{DesignSettings, Element, FillRule, Path, Shape};
 use crate::generate::{stitch_type_of, trim_or_stop_left_out};
@@ -127,27 +128,17 @@ pub(super) struct Sewn {
     pub(super) part: Option<Polygon>,
 }
 
-/// `sewn`, its specks merged into their neighbours, put in the order it sews in, every element moving when
-/// `sorted` and only the automatic ones otherwise, and its areas reaching under the shapes sewn after
-/// them; and what is said of them. With `base`, the settings the design's base layer goes by and the ids the
-/// design has given out, the base layer sews before the first element that automatic digitizing made
-/// (`base`, `REQ-AUTO-028`). With `outlined`, each area's outline is found where its edge shows (`outline`,
-/// `REQ-AUTO-051`). With `last`, the details sew last where that costs no thread change (`order::ordered`,
-/// `REQ-AUTO-098`).
-pub(super) fn beside(
-    sewn: Vec<Sewn>,
-    settings: &DesignSettings,
-    budget: &Budget,
-    sorted: bool,
-    base: Option<(&AutoParams, &mut Labels)>,
-    outlined: bool,
-    last: bool,
-) -> Beside {
+/// `sewn`, its specks merged into their neighbours but those the marks keep, put in the order it sews in,
+/// and its areas reaching under the shapes sewn after them, as `how` asks; and what is said of them. With
+/// `base`, the settings the design's base layer goes by and the ids the design has given out, the base layer
+/// sews before the first element that automatic digitizing made (`base`, `REQ-AUTO-028`).
+pub(super) fn beside(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget, how: How<'_>, base: Option<(&AutoParams, &mut Labels)>) -> Beside {
+    let How { sorted, outlined, last, marks } = how;
     let moving: Vec<order::Moving> =
         sewn.iter().map(|sewn| order::Moving { free: sorted || sewn.automatic, made: sewn.automatic, shape: sewn.shape }).collect();
     let made: BTreeSet<ElementId> = sewn.iter().filter(|sewn| sewn.automatic).map(|sewn| sewn.element.id.clone()).collect();
     let mut shapes = Shapes::new(sewn, settings, budget);
-    let mut said = specks::merged(&mut shapes, budget);
+    let mut said = specks::merged(&mut shapes, marks, budget);
     // The base layer lies under the shapes as they are once the specks are merged, before any reaches under
     // another.
     let laid = base.map(|(rules, taken)| base::laid(&mut shapes, rules, taken, budget)).unwrap_or_default();
@@ -169,6 +160,19 @@ pub(super) fn beside(
     let first = elements.iter().position(|element| made.contains(&element.id)).unwrap_or(elements.len());
     elements.splice(first..first, laid.pieces);
     Beside { elements, said, sewing, base, outlines }
+}
+
+/// How the neighbours are sewn ([`beside`]).
+#[derive(Clone, Copy)]
+pub(super) struct How<'m> {
+    /// Whether every element moves in the order, and not only the automatic ones.
+    pub(super) sorted: bool,
+    /// Whether each area's outline is found where its edge shows (`outline`, `REQ-AUTO-051`).
+    pub(super) outlined: bool,
+    /// Whether the details sew last where that costs no thread change (`order::ordered`, `REQ-AUTO-098`).
+    pub(super) last: bool,
+    /// The marks, whose specks don't merge (`REQ-AUTO-104`).
+    pub(super) marks: &'m Marks,
 }
 
 /// What the neighbours make of the elements ([`beside`]).

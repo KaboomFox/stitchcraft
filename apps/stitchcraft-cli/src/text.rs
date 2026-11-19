@@ -40,37 +40,45 @@ pub fn mark(text: &str) -> Result<(String, String), String> {
 /// The area and the note of the mark `text`: its left, top, width and height in percent, inside the box.
 fn area(text: &str) -> Option<([f64; 4], &str)> {
     let (numbers, note) = text.split_once(':')?;
-    let mut parts = numbers.split(',').map(|part| part.trim().parse::<f64>().ok().filter(|number| number.is_finite()));
+    let area = share(numbers)?;
+    (!note.trim().is_empty()).then_some((area, note.trim()))
+}
+
+/// The area `text` gives, `LEFT,TOP,WIDTH,HEIGHT` in percent of the box round a design's shapes, from the
+/// box's left and top: 4 numbers, the area inside the box and not empty. `--text` and `--keep` both read
+/// their areas so.
+pub fn share(text: &str) -> Option<[f64; 4]> {
+    let mut parts = text.split(',').map(|part| part.trim().parse::<f64>().ok().filter(|number| number.is_finite()));
     let area = [parts.next()??, parts.next()??, parts.next()??, parts.next()??];
     let [left, top, width, height] = area;
     let inside = left >= 0.0 && top >= 0.0 && width > 0.0 && height > 0.0 && left + width <= 100.0 && top + height <= 100.0;
-    (parts.next().is_none() && inside && !note.trim().is_empty()).then_some((area, note.trim()))
+    (parts.next().is_none() && inside).then_some(area)
+}
+
+/// The rectangle that `share`, an area as [`share`] reads it, marks of `design`: a closed fill in the
+/// design's millimetres, from the box round its shapes.
+pub fn rectangle(design: &Design, [left, top, width, height]: [f64; 4]) -> Shape {
+    let bounds = design.bounds();
+    let (x, y, across, down) =
+        bounds.map_or((0.0, 0.0, 0.0, 0.0), |b| (b.min().x(), b.min().y(), (b.max().x() - b.min().x()) / 100.0, (b.max().y() - b.min().y()) / 100.0));
+    let (x0, y0) = (x + left * across, y + top * down);
+    let (x1, y1) = (x0 + width * across, y0 + height * down);
+    // A share of a design's box lies inside it, so each corner is a point of the design's own range.
+    let corner = |x: f64, y: f64| Point::new(x, y).unwrap_or(Point::from_tenths(0, 0));
+    let outline =
+        Subpath { start: corner(x0, y0), segments: [(x1, y0), (x1, y1), (x0, y1)].map(|(x, y)| Segment::Line(corner(x, y))).to_vec(), closed: true };
+    Shape::Fill { path: Path { subpaths: vec![outline] }, rule: FillRule::NonZero, gradient: None }
 }
 
 /// `design` with the text of each of its own markers and of each mark of `marks` in the place of the shapes
 /// inside it ([`pictures::replace`]), in the fonts of `fonts`, and what was said. The marks are numbered from
 /// 1 in the order given: `text-1` is the first.
 pub fn replaced(design: Design, marks: &[&str], fonts: &mut dyn Fonts) -> Result<(Design, Vec<Diagnostic>), Diagnostic> {
-    let bounds = design.bounds();
-    let (x, y, across, down) =
-        bounds.map_or((0.0, 0.0, 0.0, 0.0), |b| (b.min().x(), b.min().y(), (b.max().x() - b.min().x()) / 100.0, (b.max().y() - b.min().y()) / 100.0));
     let markers: Vec<Marker> = marks
         .iter()
         .filter_map(|mark| area(mark))
         .enumerate()
-        .map(|(index, ([left, top, width, height], note))| {
-            let (x0, y0) = (x + left * across, y + top * down);
-            let (x1, y1) = (x0 + width * across, y0 + height * down);
-            // A share of a design's box lies inside it, so each corner is a point of the design's own range.
-            let corner = |x: f64, y: f64| Point::new(x, y).unwrap_or(Point::from_tenths(0, 0));
-            let outline = Subpath {
-                start: corner(x0, y0),
-                segments: [(x1, y0), (x1, y1), (x0, y1)].map(|(x, y)| Segment::Line(corner(x, y))).to_vec(),
-                closed: true,
-            };
-            let shape = Shape::Fill { path: Path { subpaths: vec![outline] }, rule: FillRule::NonZero, gradient: None };
-            Marker { label: format!("text-{}", index + 1), shape, note: note.to_string() }
-        })
+        .map(|(index, (area, note))| Marker { label: format!("text-{}", index + 1), shape: rectangle(&design, area), note: note.to_string() })
         .collect();
     let choices = fonts.choices();
     let mut found = |name: &str, text: &str, budget: &Budget| found_for(&mut *fonts, name, text, budget);

@@ -245,9 +245,7 @@ pub fn lettered_among(
         elements.extend(letters);
         warnings.extend(notes);
     }
-    let mut with = Design::new(elements, design.settings)?;
-    with.sort_colours = design.sort_colours;
-    Ok((with, warnings))
+    Ok((design.with_elements(elements)?, warnings))
 }
 
 /// The elements `text` sews, set a line at a time in the host's default font, which `fonts` gives for the

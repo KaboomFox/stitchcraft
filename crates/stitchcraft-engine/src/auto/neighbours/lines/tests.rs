@@ -44,9 +44,39 @@ fn auto(id: &str, parts: &[Polygon], params: &[(&str, &str)]) -> Element {
 
 /// The ids of what `merged` gives, and what it says.
 fn run(elements: Vec<Element>, budget: &Budget) -> (Vec<String>, Vec<String>) {
+    marked(elements, &Marks::default(), budget)
+}
+
+/// The ids of what `merged` gives, its lines kept by `marks`, and what it says.
+fn marked(elements: Vec<Element>, marks: &Marks, budget: &Budget) -> (Vec<String>, Vec<String>) {
     let (flattened, rules) = flattened(elements);
-    let (out, _) = merged(flattened, &rules, NARROWEST, budget);
+    let (out, _) = merged(flattened, &rules, NARROWEST, marks, budget);
     (out.elements.iter().map(|(_, element)| element.id.to_string()).collect(), out.said.iter().map(ToString::to_string).collect())
+}
+
+#[test]
+fn req_auto_105_a_line_a_mark_holds_stays_and_an_area_too_costly_to_test_keeps_its_lines() {
+    let elements = || vec![auto("left", &[square((0.0, 0.0), (10.0, 10.0))], &[]), auto("line", &[strand(10.0)], &[])];
+    let near = |n| Marks::of(&[crate::auto::marks::tests::edged("strand", [9.9, -0.1, 10.8, 10.1], n)], &Budget::DEFAULT);
+    let (ids, said) = marked(elements(), &near(1), &Budget::DEFAULT);
+    assert_eq!((ids, said.len()), (vec!["left".to_string(), "line".to_string()], 0), "{said:?}");
+    // The line's 24 points against a mark of 4,000 segments cost more than 20,000 units.
+    let (ids, said) = marked(elements(), &near(1_000), &Budget { max_work: 20_000, ..Budget::DEFAULT });
+    assert_eq!(ids, ["left", "line"]);
+    assert_eq!(
+        said,
+        ["info SC-I0916: Finding which parts of this area a mark holds needed more than the work budget of 20000 units, so it keeps its thin lines."]
+    );
+}
+
+#[test]
+fn req_auto_090_an_area_that_turns_merging_off_keeps_its_line_and_still_counts_what_a_mark_holds() {
+    let elements = vec![auto("left", &[square((0.0, 0.0), (10.0, 10.0))], &[]), auto("line", &[strand(10.0)], &[("auto_fill_uneven", "false")])];
+    let marks = Marks::of(&[crate::auto::marks::tests::edged("strand", [9.9, -0.1, 10.8, 10.1], 1)], &Budget::DEFAULT);
+    let (ids, said) = marked(elements, &marks, &Budget::DEFAULT);
+    assert_eq!((ids, said.len()), (vec!["left".to_string(), "line".to_string()], 0), "{said:?}");
+    let said = marks.said(true);
+    assert!(said[0].message.contains("holds 1 part of automatic areas wholly. Of them, 0 specks and 0 thin lines"), "{}", said[0]);
 }
 
 #[test]
@@ -69,7 +99,7 @@ fn a_line_whose_area_merges_whole_sews_nothing_and_its_trim_has_no_place() {
 fn a_line_a_hair_from_the_rest_of_its_own_area_rejoins_it_across_the_gap() {
     // 0.02 mm apart, nearer than twice the shapes' tolerance.
     let (flattened, rules) = flattened(vec![auto("a", &[square((0.0, 0.0), (10.0, 10.0)), strand(10.02)], &[])]);
-    let (out, merges) = merged(flattened, &rules, NARROWEST, &Budget::DEFAULT);
+    let (out, merges) = merged(flattened, &rules, NARROWEST, &Marks::default(), &Budget::DEFAULT);
     let said: Vec<String> = out.said.iter().map(ToString::to_string).collect();
     assert_eq!(
         said,
@@ -231,7 +261,7 @@ fn a_line_merges_into_no_area_whose_box_only_is_near_it() {
 fn a_line_beside_no_area_stays_in_its_area_when_another_line_of_it_merges() {
     let elements = vec![auto("left", &[square((0.0, 0.0), (10.0, 10.0))], &[]), auto("lines", &[strand(10.0), strand(40.0)], &[])];
     let (flattened, rules) = flattened(elements);
-    let (out, merges) = merged(flattened, &rules, NARROWEST, &Budget::DEFAULT);
+    let (out, merges) = merged(flattened, &rules, NARROWEST, &Marks::default(), &Budget::DEFAULT);
     assert_eq!(merges.len(), 1);
     // `lines` keeps its far line, and sews it.
     let Some((_, element)) = out.elements.get(1) else { panic!("{} elements", out.elements.len()) };

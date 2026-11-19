@@ -23,21 +23,46 @@
 use stitchcraft_core::{Budget, Code, Diagnostic, Fix, Meter, Point};
 
 use super::{Failed, Shapes, TOUCHING, envelope, joined, near, speck};
+use crate::auto::marks::Marks;
 use crate::generators::mm;
 use crate::normalize::region::Polygon;
 use crate::normalize::region::geom::Envelope;
 use crate::normalize::region::ops;
 
 /// The specks of `shapes`' automatic areas merged into their neighbours or left out, each with what is
-/// said of it. Each speck has the budget's work to itself; one that needs more is left out.
-pub(super) fn merged(shapes: &mut Shapes, budget: &Budget) -> Vec<Diagnostic> {
+/// said of it, but those that one of `marks` holds wholly (`REQ-AUTO-104`). Each speck has the budget's
+/// work to itself, to be tested against the marks and to find where it goes; one that needs more to test
+/// merges as if there were no marks, and one that needs more to place is left out.
+pub(super) fn merged(shapes: &mut Shapes, marks: &Marks, budget: &Budget) -> Vec<Diagnostic> {
     // Every area split into the parts it keeps and its specks.
     let mut specks = Vec::new();
+    let mut said = Vec::new();
     for index in 0..shapes.len() {
         // An automatic area has its region and its settings of the rules alike.
-        let (Some(parts), Some(rules)) = (shapes.region(index), shapes.rules(index)) else { continue };
+        let (Some(parts), Some(rules), Some(id)) = (shapes.region(index), shapes.rules(index), shapes.id(index)) else { continue };
         let smallest = rules.auto_min_area_mm2;
-        let (small, kept): (Vec<Polygon>, Vec<Polygon>) = parts.iter().cloned().partition(|part| speck(part.area(), smallest));
+        let (mut small, mut kept) = (Vec::new(), Vec::new());
+        for part in parts.iter().cloned() {
+            if !speck(part.area(), smallest) {
+                kept.push(part);
+                continue;
+            }
+            match marks.holding(&part, &mut budget.meter()) {
+                Ok(Some(_)) => kept.push(part),
+                Ok(None) => small.push(part),
+                Err(exhausted) => {
+                    let finding = "whether a mark holds this speck";
+                    said.push(Failed::from(exhausted).said(
+                        Code::AutoKept,
+                        finding,
+                        "it merges as if there were no mark",
+                        budget.max_work,
+                        id.clone(),
+                    ));
+                    small.push(part);
+                }
+            }
+        }
         if small.is_empty() {
             continue;
         }
@@ -45,7 +70,7 @@ pub(super) fn merged(shapes: &mut Shapes, budget: &Budget) -> Vec<Diagnostic> {
         shapes.set_region(index, kept);
         specks.extend(small.into_iter().map(|speck| Speck { index, speck, whole, smallest }));
     }
-    let mut said = Vec::with_capacity(specks.len());
+    said.reserve(specks.len());
     for speck in specks {
         let Some(id) = shapes.id(speck.index) else { continue };
         let this = speck.this();
