@@ -5,6 +5,20 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.24: a guide on one shape of an automatic design (`REQ-AUTO-109` to `REQ-AUTO-111`, `REQ-VC-032`,
+  `REQ-CLI-022`, `SC-I0918`, `SC-W0919`).
+  - A line named `stitch:guide`, drawn with VectorCraft's own tools or labelled so in an SVG file, or
+    `stitch plan --guide X,Y,X,Y…` in percent of the design's box, is a guide. Each filled part of an
+    automatic area that the line crosses sews as a guided fill whose rows follow it, and stays automatic:
+    it overlaps its neighbours, keeps the base layer under it and its place in the order, and the cap on
+    thickness holds. Parts sewn as satin columns or running stitches keep their stitches. A part that 2
+    guides cross follows the one drawn last. The guide itself sews no stitch.
+  - The readers take the guides out of the design's elements beside the marks and give them to the design
+    (`Design::guides`, `design::mark::taken_out`, which now returns `Taken`). In a VectorCraft document a
+    path so named still guides the shapes with settings grouped with it, and a person may draw any number
+    of guides in one layer. A bug-report bundle keeps the guides of `--guide`.
+  - `SC-I0918` counts the parts that follow each guide, and the parts it crosses that keep their stitches.
+    `SC-W0919` names a guide that steers nothing.
 - M13.39: marks that keep parts (`REQ-AUTO-104` to `REQ-AUTO-107`, `REQ-VC-031`, `REQ-CLI-021`,
   `SC-I0916`, `SC-W0917`).
   - A shape named `stitch:keep`, drawn with VectorCraft's own tools or labelled so in an SVG file, or

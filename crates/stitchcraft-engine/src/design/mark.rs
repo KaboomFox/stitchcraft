@@ -2,9 +2,11 @@
 //! `docs/src/design/image-to-embroidery.md` › Text in pictures and › Marks that keep parts).
 //!
 //! **Why on the design.** A mark is no shape to sew: it tells automatic digitizing which parts to keep
-//! (`REQ-AUTO-104`). Each reader takes the shapes named [`KEEP`] out of the elements it reads ([`taken_out`])
-//! and gives them to the [`Design`](super::Design) as its marks, and planning reads them on every plan. A
-//! command that applied them once would go stale when the picture is traced again.
+//! (`REQ-AUTO-104`), and a guide which filled parts sew rows that follow its line (`REQ-AUTO-109`, roadmap
+//! step M13.24). Each reader takes the shapes named [`KEEP`] and [`GUIDE`] out of the elements it reads
+//! ([`taken_out`]) and gives them to the [`Design`](super::Design) as its marks and its guides, and planning
+//! reads them on every plan. A command that applied them once would go stale when the picture is traced
+//! again.
 //!
 //! **Why here, in the engine.** A text marker of `stitchcraft_svg` and a mark that keeps parts are read the
 //! same way: a name in the `stitch:` family ([`note`]), and an area that a closed outline encloses or a band
@@ -23,11 +25,17 @@ use frame::{At, Line};
 /// and a note of the person's own if any, is a mark (`REQ-AUTO-104`).
 pub const KEEP: &str = "stitch:keep";
 
+/// The name of a guide of an automatic design: an element named `stitch:guide`, in any mix of upper and
+/// lower case, and a note of the person's own if any, is a guide (`REQ-AUTO-111`). VectorCraft documents
+/// give the same name to a guide grouped with the shapes it steers.
+pub const GUIDE: &str = "stitch:guide";
+
 /// How near a curve its polyline lies when a marker's area is read and a shape is tested against it, in
 /// millimetres: a tenth of the shortest letter an embroidery font sews would still measure within 2 %.
 pub const FLAT: f64 = 0.05;
 
-/// A mark that keeps the parts of automatic areas lying wholly inside it (`REQ-AUTO-104`).
+/// A mark that keeps the parts of automatic areas lying wholly inside it (`REQ-AUTO-104`), or a guide whose
+/// line the filled parts it crosses follow (`REQ-AUTO-109`).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Mark {
     /// What messages call it: the id of the element it was read from, or the name a host gave it.
@@ -48,33 +56,48 @@ pub fn note<'n>(name: &'n str, marker: &str) -> Option<&'n str> {
     (rest.is_empty() || rest.starts_with(char::is_whitespace)).then_some(rest.trim())
 }
 
-/// `elements` without the shapes named [`KEEP`], and those shapes as marks, in paint order. An object with
-/// both a fill and a stroke is read as 2 elements in a row with one name and the points of one path, its fill's
-/// closed: it is one mark, its
-/// fill, or its stroke when the path is an open line, whose stroke's width is the mark's band.
-pub fn taken_out(elements: Vec<Element>) -> (Vec<Element>, Vec<Mark>) {
-    let mut kept = Vec::with_capacity(elements.len());
-    let mut marks: Vec<Mark> = Vec::new();
+/// What [`taken_out`] takes out of a design's elements.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Taken {
+    /// The elements that are neither marks nor guides, in paint order.
+    pub elements: Vec<Element>,
+    /// The shapes named [`KEEP`], as marks, in paint order.
+    pub marks: Vec<Mark>,
+    /// The shapes named [`GUIDE`], as guides, in paint order.
+    pub guides: Vec<Mark>,
+}
+
+/// `elements` without the shapes named [`KEEP`] or [`GUIDE`], and those shapes as marks and as guides, in
+/// paint order. An object with both a fill and a stroke is read as 2 elements in a row with one name and the
+/// points of one path, its fill's closed: it is one mark or guide, its fill, or its stroke when the path is an
+/// open line, whose stroke's width is a mark's band.
+pub fn taken_out(elements: Vec<Element>) -> Taken {
+    let mut taken = Taken::default();
     let mut last: Option<String> = None;
     for element in elements {
-        let Some(name) = element.name.as_deref().filter(|name| note(name, KEEP).is_some()).map(str::to_string) else {
-            kept.push(element);
-            last = None;
-            continue;
+        let named = element.name.as_deref().map(str::to_string);
+        let into = match named.as_deref() {
+            Some(name) if note(name, KEEP).is_some() => &mut taken.marks,
+            Some(name) if note(name, GUIDE).is_some() => &mut taken.guides,
+            _ => {
+                taken.elements.push(element);
+                last = None;
+                continue;
+            }
         };
         let mark = Mark { id: element.id, shape: element.shape };
-        match marks.last_mut() {
-            Some(before) if last.as_deref() == Some(name.as_str()) && before.shape.path().points().eq(mark.shape.path().points()) => {
+        match into.last_mut() {
+            Some(before) if last.is_some() && last == named && before.shape.path().points().eq(mark.shape.path().points()) => {
                 let open = mark.shape.path().subpaths.first().is_some_and(|first| !first.closed);
                 if open && matches!(mark.shape, Shape::Stroke { .. }) {
                     *before = mark;
                 }
             }
-            _ => marks.push(mark),
+            _ => into.push(mark),
         }
-        last = Some(name);
+        last = named;
     }
-    (kept, marks)
+    taken
 }
 
 /// A marker's area, and the line a text marker's text follows.

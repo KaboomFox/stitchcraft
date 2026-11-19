@@ -117,7 +117,7 @@ fn diag_sc_w0917_a_mark_that_keeps_nothing_is_named_with_why() {
     // In a design with no automatic shape, whether its area was read or not.
     let held = Marks::of(&[mark("auto", [0.0, 0.0, 10.0, 10.0])], &Budget::DEFAULT);
     held.held(&[part(1.0, 1.0, 1.0)], &mut Budget::DEFAULT.meter()).unwrap();
-    for said in [held.said(false), unused_all(&[mark("auto", [0.0, 0.0, 10.0, 10.0])])] {
+    for said in [held.said(false), unused_all(&[mark("auto", [0.0, 0.0, 10.0, 10.0])], &[])] {
         assert_eq!(said.len(), 1);
         assert!(said[0].message.ends_with("the design has no shape digitized automatically."), "{}", said[0]);
         assert_eq!(said[0].element.as_ref().map(ElementId::as_str), Some("auto"));

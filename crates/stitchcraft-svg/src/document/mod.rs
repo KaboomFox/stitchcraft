@@ -365,10 +365,11 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         if let Some(message) = self.version.note(self.updated) {
             self.warnings.insert(0, self.diagnostic(Code::SvgInkStitchUpdated, None, message, None));
         }
-        // The shapes named stitch:keep are marks, never sewn (`REQ-AUTO-104`).
-        let (elements, marks) = mark::taken_out(std::mem::take(&mut self.elements));
-        let mut design = Design::new(elements, self.settings.settings)?;
-        design.marks = marks;
+        // The shapes named stitch:keep are marks and those named stitch:guide guides, never sewn
+        // (`REQ-AUTO-104`, `REQ-AUTO-111`).
+        let taken = mark::taken_out(std::mem::take(&mut self.elements));
+        let mut design = Design::new(taken.elements, self.settings.settings)?;
+        (design.marks, design.guides) = (taken.marks, taken.guides);
         Ok(Svg { design, warnings: std::mem::take(&mut self.warnings), texts: std::mem::take(&mut self.texts) })
     }
 

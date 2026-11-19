@@ -86,6 +86,9 @@ Options:
       --keep <AREA>
           Keep the parts of the design inside an area from merging into their neighbours: each part of a shape digitized automatically that lies wholly inside it sews by its width, where it would merge as a speck or a thin line. The area is LEFT,TOP,WIDTH,HEIGHT in percent of the box round the design's shapes, such as 62,18,6,5 round an eye (docs/src/user/how-to/keep-small-parts.md). May be given several times
 
+      --guide <POINTS>
+          Draw a guide over the design: each filled part of a shape digitized automatically that it crosses sews as a guided fill whose rows follow it. The guide is 2 points or more, X,Y,X,Y… in percent of the box round the design's shapes, joined by straight lines, such as 20,80,45,50,60,20 along a leaf (docs/src/user/how-to/guide-the-rows.md). May be given several times
+
       --vectorcraft-cli <PROGRAM>
           VectorCraft's command line, which traces a picture; by default `vectorcraft-cli` on the PATH
 
@@ -445,6 +448,9 @@ Options:
 
       --keep <AREA>
           Keep the parts of the design inside an area from merging into their neighbours: each part of a shape digitized automatically that lies wholly inside it sews by its width, where it would merge as a speck or a thin line. The area is LEFT,TOP,WIDTH,HEIGHT in percent of the box round the design's shapes, such as 62,18,6,5 round an eye (docs/src/user/how-to/keep-small-parts.md). May be given several times
+
+      --guide <POINTS>
+          Draw a guide over the design: each filled part of a shape digitized automatically that it crosses sews as a guided fill whose rows follow it. The guide is 2 points or more, X,Y,X,Y… in percent of the box round the design's shapes, joined by straight lines, such as 20,80,45,50,60,20 along a leaf (docs/src/user/how-to/guide-the-rows.md). May be given several times
 
   -h, --help
           Print help (see a summary with '-h')

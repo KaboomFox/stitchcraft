@@ -34,6 +34,7 @@ pub(super) fn guided(guide: &[(f64, f64)], spacing: f64) -> Guided {
         inset: 0.0,
         expand: 0.0,
         force_locks: false,
+        turns: false,
         travel: TRAVEL,
         plain: Plain { fill: None, said: Vec::new() },
     }
@@ -641,4 +642,18 @@ fn diag_sc_w0333_rows_that_only_meet_a_hole_are_sewn_after_a_jump() {
     let ring = [(4.6, 1.6), (5.6, 1.6), (5.6, 2.6), (4.6, 2.6), (4.6, 1.6)];
     let sewn = sew(&crate::generators::tatami::fixture::frame(), &Guided { strategy: Strategy::Offset, ..guided(&ring, 0.25) });
     assert_eq!((sewn.runs.len(), codes(&sewn)), (1, vec![]));
+}
+
+#[test]
+fn req_fill_tat_014_a_guided_fill_keeps_its_turns_as_stitches_when_asked() {
+    // Rows 0.25 mm apart across a strip 10 mm long, closer than the shortest stitch, 0.3 mm, along a bent
+    // guide: each row meets the strip's ends at a slant. Without `turn_stitches`, each turn is a stitch too
+    // short to sew, and every second row starts at its second needle point inside the strip. With it, each
+    // turn is the shortest stitch, and every row keeps a needle point on the strip's ends.
+    let strip = Polygon { outline: vec![p(0.0, 0.0), p(0.0, 2.0), p(10.0, 2.0), p(10.0, 0.0), p(0.0, 0.0)], holes: Vec::new() };
+    let guided = guided(&[(-2.0, 1.0), (5.0, 0.6), (12.0, 1.0)], 0.25);
+    let on_ends = |sewn: &Stitched| sewn.runs.concat().iter().filter(|q| q.x().abs() < 1e-6 || (q.x() - 10.0).abs() < 1e-6).count();
+    let plain = sew(&strip, &guided);
+    let turned = sew(&strip, &Guided { turns: true, ..guided });
+    assert!(on_ends(&turned) >= on_ends(&plain) + 6, "{} on the ends with the turns kept, {} without", on_ends(&turned), on_ends(&plain));
 }
