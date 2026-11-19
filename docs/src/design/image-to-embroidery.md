@@ -2178,9 +2178,9 @@ together with what sews on top of it. A wish moves its second element later. Its
 wish that something sews after that element, a detail of it or a satin column bordering it, and their
 nests in turn. The search grants a nest whole or not at all. It also keeps the row itself from doing the
 same. Of the rows with the fewest changes it takes the one that misses the fewest inner wishes, those whose
-first element another wish moves, and only then the one that misses the fewest wishes. A row that sews an
-iris after the fur and leaves its pupil under it loses to one that keeps the pupil on top, whenever such a
-row has as few changes. A nest goes by the shapes' sizes and where they meet. It doesn't need a second
+first element another wish moves, and only then the one that misses the fewest wishes. So wherever a row
+with as few changes keeps a pupil on top, the search doesn't take one that sews the iris after the fur and
+leaves its pupil under it. A nest goes by the shapes' sizes and where they meet. It doesn't need a second
 plan or a measure of what shows. The cases in `tests/auto_details.rs` and `order/fewest/tests.rs` draw a pupil on
 an iris where 3 patches meet.
 
