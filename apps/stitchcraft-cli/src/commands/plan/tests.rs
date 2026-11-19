@@ -43,7 +43,7 @@ fn req_thread_003_the_report_lists_each_thread_of_an_element_sewn_in_3() {
     let file = stitchcraft_formats::encode(&plan, FormatId::PesV1, "gradient").unwrap().bytes;
     let back = read_back(&file, &plan).unwrap();
     let args = args(PathBuf::from("gradient.svg"), PathBuf::from("gradient.pes"));
-    let made = Made { file: Some((FormatId::PesV1, &file)), planned: Some((&plan, &back)), subject: None };
+    let made = Made { file: Some((FormatId::PesV1, &file)), planned: Some((&plan, &back)), subject: None, names: None };
     let report: Value = serde_json::from_str(&report(&args, REFERENCE, &made, &[])).unwrap();
     let colours: Vec<&str> = report["threads"].as_array().unwrap().iter().map(|thread| thread["color"].as_str().unwrap()).collect();
     assert_eq!(colours, ["#c80000", "#00a000", "#0000c8"]);

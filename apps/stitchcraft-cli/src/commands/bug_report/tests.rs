@@ -3,6 +3,7 @@
 
 use serde_json::Value;
 
+use stitchcraft_engine::names::Names;
 use stitchcraft_testkit::temp::TempDir;
 
 use super::*;
@@ -198,9 +199,12 @@ fn req_cli_002_a_bug_found_while_planning_writes_a_bundle() {
     let design = strokes();
     let run = pes(Path::new("strokes.svg"), "strokes", &design);
     let check = Diagnostic::new(Code::InternalCheckFailed, "A stitch of 0.1 mm.");
-    let sewn = Sewn { diagnostics: vec![check.clone()], plan: None, file: None, back: None };
+    let sewn = Sewn { diagnostics: vec![check.clone()], plan: None, file: None, back: None, names: Names::default() };
     assert!(sewn.found_a_bug());
-    assert!(!Sewn { diagnostics: vec![Diagnostic::new(Code::StitchesMerged, "Merged.")], plan: None, file: None, back: None }.found_a_bug());
+    assert!(
+        !Sewn { diagnostics: vec![Diagnostic::new(Code::StitchesMerged, "Merged.")], plan: None, file: None, back: None, names: Names::default() }
+            .found_a_bug()
+    );
     let out = beside(&dir.join("checked.pes"), &run, Ok(&sewn), Outcome::refuse(String::new(), &[check]));
     assert_eq!(out.status, Status::Bug);
     let bundle = dir.join("checked.bug-report.json");

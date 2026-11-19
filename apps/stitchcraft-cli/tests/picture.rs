@@ -216,10 +216,12 @@ fn req_cli_012_stitch_plan_traces_a_picture_with_vectorcraft_s_command_line_and_
     let scratch = saved.parent().unwrap().file_name().unwrap().to_str().unwrap().to_string();
     assert!(scratch.starts_with("badge.pes.") && scratch.ends_with(".partial") && saved.ends_with("traced.vectorcraft"), "{}", saved.display());
     assert_eq!(left(dir.path()), ["badge.json", "badge.pes", "badge.png", "traced.vectorcraft"]);
-    // The document VectorCraft saved is written, and sews digitized automatically, as `stitch plan --auto`
-    // sews it under the picture's name.
+    // The document VectorCraft saved is written, with its shapes' names (`REQ-VC-033`, which checks that
+    // nothing else changes), and sews digitized automatically, as `stitch plan --auto` sews it under the
+    // picture's name.
     let traced = std::fs::read(TRACED).unwrap();
-    assert_eq!(std::fs::read(dir.join("traced.vectorcraft")).unwrap(), traced);
+    let written = std::fs::read(dir.join("traced.vectorcraft")).unwrap();
+    assert!(written.len() > traced.len() && String::from_utf8_lossy(&written).contains(r#""name": "Red fill (1)","#));
     let again = TempDir::new("picture-traced-again");
     std::fs::write(again.join("badge.vectorcraft"), &traced).unwrap();
     let planned = Command::new(env!("CARGO_BIN_EXE_stitch"))
@@ -257,13 +259,16 @@ fn req_vc_033_the_traced_document_names_each_shape_and_changes_nothing_else() {
     let traced: Value = serde_json::from_slice(&std::fs::read(TRACED).unwrap()).unwrap();
     assert_eq!(written, traced);
     // The named document sews the same stitches, and its notices name the shapes alike.
+    // Under the picture's name, which the machine file keeps.
+    let again = TempDir::new("picture-named-again");
+    std::fs::copy(dir.join("traced.vectorcraft"), again.join("badge.vectorcraft")).unwrap();
     let planned = Command::new(env!("CARGO_BIN_EXE_stitch"))
-        .args(["plan", "traced.vectorcraft", "--auto", "-o", "again.pes"])
-        .current_dir(dir.path())
+        .args(["plan", "badge.vectorcraft", "--auto", "-o", "badge.pes"])
+        .current_dir(again.path())
         .output()
         .unwrap();
     assert_eq!(planned.status.code(), Some(0), "{}", text(&planned.stderr));
-    assert_eq!(std::fs::read(dir.join("badge.pes")).unwrap(), std::fs::read(dir.join("again.pes")).unwrap());
+    assert_eq!(std::fs::read(dir.join("badge.pes")).unwrap(), std::fs::read(again.join("badge.pes")).unwrap());
     assert_eq!(text(&out.stderr), text(&planned.stderr));
     assert!(text(&out.stderr).contains(r#"info SC-I0912 ("Red fill (1)", vc:6:fill): "#), "{}", text(&out.stderr));
 }

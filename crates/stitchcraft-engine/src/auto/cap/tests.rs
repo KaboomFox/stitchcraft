@@ -244,7 +244,7 @@ fn said(sewn: &StitchPlan, budget: &Budget) -> (Vec<Diagnostic>, StitchPlan) {
     let held = Held { limits: Limits::DEFAULT, overlap: 1.0, cap: 4.0 };
     let mut kept = sewn.clone();
     let made: BTreeSet<ElementId> = sewn.elements.iter().cloned().collect();
-    let said = finished(&mut kept, &held, (&[], &made), stitchcraft_plan::profiles::REFERENCE, budget);
+    let said = finished(&mut kept, &held, (&[], &made), stitchcraft_plan::profiles::REFERENCE, &crate::names::Names::default(), budget);
     (said, kept)
 }
 

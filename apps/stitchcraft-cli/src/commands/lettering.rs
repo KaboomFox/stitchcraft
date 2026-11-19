@@ -86,7 +86,7 @@ pub fn run(args: &LetteringArgs) -> Outcome {
     };
     said.extend(set.warnings.iter().cloned());
     let sewn = sew_design(&set.design, said, profile, format, design_name(&args.output));
-    let Sewn { mut diagnostics, plan: Some(plan), file: Some(machine_file), back: Some(back) } = sewn else {
+    let Sewn { mut diagnostics, plan: Some(plan), file: Some(machine_file), back: Some(back), .. } = sewn else {
         return Outcome::refuse(String::new(), &sewn.diagnostics);
     };
     let image = match args.preview.as_ref().map(|path| (path, picture(&back, profile.trims))) {
