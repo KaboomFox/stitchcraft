@@ -804,6 +804,7 @@ fn guided_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option
         inset: tatami.fill_underlay_inset_mm.get(),
         expand: tatami.expand_mm.get(),
         force_locks: shared.force_locks,
+        turns: tatami.turn_stitches,
         travel,
         plain: Plain { fill: plain, said },
     })

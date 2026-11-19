@@ -239,6 +239,13 @@ With `bean_stitch_repeats`, the stitches shorter than the shortest stitch are le
 stitch the bean stitch sews back over is one the machine sews. Then each stitch of the lines is sewn back and
 forth, and the travel between them is not.
 
+With `turn_stitches`, StitchCraft's own switch, the turn from one line to the next stays a stitch as a
+tatami fill's does ([tatami fill](fills.md), `REQ-FILL-TAT-014`). Automatic digitizing turns it on for its
+fills, guided fills among them (`REQ-AUTO-109`). A line starts at the point it was cut at, and the row's
+first needle point may lie there too: that repeat is left out first, so that the turn before it is found.
+Without the switch, a line that meets an edge a row spacing from the line before starts at its second
+needle point, and leaves a notch of bare fabric in the edge.
+
 ## Fallbacks
 
 The rows can miss a part thinner than the row spacing between 2 of them. Such a part is sewn as a tatami
@@ -247,8 +254,8 @@ where its rows meet a part but the cut keeps none of them. Where no copy or offs
 all, it stops with an error first (`DEV-FILL-034`), and with the buffer strategy it falls back there too.
 The tatami fill's rows lie the guided fill's row spacing apart, in its longest stitch with its staggers and
 `skip_last`. It has no end spacing, random lengths, pull compensation or rows that fill gaps, which
-Ink/Stitch's fallback doesn't pass on. It doesn't keep the turns between its rows as stitches either:
-`turn_stitches` is a tatami fill's own setting ([tatami fill](fills.md)). `SC-W0332` counts those parts, and `SC-W0305` those too thin for the
+Ink/Stitch's fallback doesn't pass on. It doesn't keep the turns between its rows as stitches either,
+whatever `turn_stitches` says. `SC-W0332` counts those parts, and `SC-W0305` those too thin for the
 tatami rows too, which are sewn round their outline.
 
 ## Preview

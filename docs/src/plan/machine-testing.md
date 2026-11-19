@@ -379,6 +379,17 @@ and its nose, beside the same dog without marks:
   round it?
 - The rest of the dog sews in another order. Feel for thick spots away from the marks.
 
+M13.24 sews the filled parts a guide crosses as guided fills along it
+([a guide on one shape](../design/image-to-embroidery.md#a-guide-on-one-shape)). Without a guide nothing sews
+differently. At MC-8, sew a traced dog with a `stitch:guide` line along its back, and a leaf or a petal with
+one along its middle, each beside the same picture without guides:
+
+- Do the rows follow the line, and does the fur or the leaf read better than with straight rows?
+- A guided part still overlaps the parts round it. Does fabric show at its edges, where its rows end at
+  other angles than straight rows do?
+- The base layer under a guided part lies at `auto_fill_angle`. Does it show through between the bent rows?
+- The rest of the picture sews in another order. Feel for thick spots near the guided parts.
+
 M13.40 sews a detail after the fills round it where that costs no thread change, when the design has
 `auto_details_last` on ([details last](../design/image-to-embroidery.md#details-last)). It landed off,
 M13.45 turned it on by default, and M13.48 turned it off again. At MC-8, sew a traced dog with it off and on,

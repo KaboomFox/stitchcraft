@@ -522,4 +522,6 @@ marks text in a traced picture (`REQ-SVG-016`). The reader has no fonts, so it r
 other, and `stitch` sets the lettering once the file is read
 ([text in pictures](image-to-embroidery.md#text-in-pictures)). From M13.39, the reader takes a shape labelled `stitch:keep`
 out of the elements and gives it to the design as a mark
-([marks that keep parts](image-to-embroidery.md#marks-that-keep-parts)).
+([marks that keep parts](image-to-embroidery.md#marks-that-keep-parts)), and from M13.24 a path labelled
+`stitch:guide` as a guide ([a guide on one shape](image-to-embroidery.md#a-guide-on-one-shape)). Ink/Stitch's
+guide line, a path with its marker, guides only the shape grouped with it.

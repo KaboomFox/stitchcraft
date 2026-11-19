@@ -2918,12 +2918,13 @@
     },
     "turn_stitches": {
       "default": false,
-      "description": "Keep the turn between 2 rows as a stitch where the rows lie closer together than the shortest stitch: the turn's 2 needle points move apart along it until the stitch between them is the shortest stitch. Off, the second of them is left out, as any needle point too near the one before it is, and every second row then starts up to a stitch inside the outline, which leaves a notch in the fill's edge there. Automatic digitizing turns it on for its fills.",
+      "description": "Keep the turn between 2 rows as a stitch where the rows lie closer together than the shortest stitch: the turn's 2 needle points move apart along it until the stitch between them is the shortest stitch. Off, the second of them is left out, as any needle point too near the one before it is, and every second row then starts up to a stitch inside the outline, which leaves a notch in the fill's edge there. A guided fill keeps the turns between its lines so too. Automatic digitizing turns it on for its fills.",
       "title": "Keep turn stitches",
       "type": "boolean",
       "x-stitchcraft": {
         "applies_to": [
-          "tatami_fill"
+          "tatami_fill",
+          "guided_fill"
         ],
         "group": "Stitches",
         "origin": "stitchcraft",

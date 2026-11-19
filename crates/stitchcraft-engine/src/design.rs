@@ -514,6 +514,10 @@ pub struct Design {
     /// never sewn. [`Design::new`] leaves them empty, and a reader gives the ones it takes out of its
     /// elements ([`mark::taken_out`]).
     pub marks: Vec<Mark>,
+    /// The guides whose lines the filled parts of automatic areas they cross follow (`REQ-AUTO-109`), which
+    /// are never sewn, in paint order. [`Design::new`] leaves them empty, and a reader gives the ones it takes
+    /// out of its elements ([`mark::taken_out`]).
+    pub guides: Vec<Mark>,
 }
 
 impl Design {
@@ -561,7 +565,7 @@ impl Design {
             let message = "The design's collapse length, shortest stitch or narrowest satin stroke is negative.";
             return Err(Diagnostic::new(Code::InternalCheckFailed, message));
         }
-        Ok(Design { elements, settings, sort_colours: false, marks: Vec::new() })
+        Ok(Design { elements, settings, sort_colours: false, marks: Vec::new(), guides: Vec::new() })
     }
 
     /// The design, its elements sewing in the order `reading` asks for: the design as it is, with
@@ -586,9 +590,10 @@ impl Design {
     }
 
     /// The design with `elements` in the place of its own, checked as [`Design::new`] checks them, keeping its
-    /// settings, its sorting of colours and its marks: what a pass that replaces shapes gives back.
+    /// settings, its sorting of colours, its marks and its guides: what a pass that replaces shapes gives back.
     pub fn with_elements(&self, elements: Vec<Element>) -> Result<Design, Diagnostic> {
-        Ok(Design { sort_colours: self.sort_colours, marks: self.marks.clone(), ..Design::new(elements, self.settings)? })
+        let (marks, guides) = (self.marks.clone(), self.guides.clone());
+        Ok(Design { sort_colours: self.sort_colours, marks, guides, ..Design::new(elements, self.settings)? })
     }
 
     /// The elements, in the host's paint order.
@@ -625,13 +630,15 @@ impl Design {
             let clips = element.clips.iter().map(|clip| Ok(Clip { shapes: shapes(clip)? })).collect::<Result<_, Diagnostic>>()?;
             Ok(Element { shape: moved(&element.shape)?, hints: element.hints.map(point)?, clips, ..element.clone() })
         });
-        let marks = self.marks.iter().map(|mark| Ok(Mark { id: mark.id.clone(), shape: moved(&mark.shape)? })).collect::<Result<_, Diagnostic>>()?;
+        let marked =
+            |marks: &[Mark]| marks.iter().map(|mark| Ok(Mark { id: mark.id.clone(), shape: moved(&mark.shape)? })).collect::<Result<_, Diagnostic>>();
+        let (marks, guides) = (marked(&self.marks)?, marked(&self.guides)?);
         let settings = DesignSettings {
             origin: self.settings.origin.map(point).transpose()?,
             stop_position: self.settings.stop_position.map(point).transpose()?,
             ..self.settings
         };
-        Ok(Design { sort_colours: self.sort_colours, marks, ..Design::new(elements.collect::<Result<_, Diagnostic>>()?, settings)? })
+        Ok(Design { sort_colours: self.sort_colours, marks, guides, ..Design::new(elements.collect::<Result<_, Diagnostic>>()?, settings)? })
     }
 }
 
@@ -703,12 +710,15 @@ mod tests {
         let mut design = Design::new(vec![element("c", curve), fill, element("l", line(p(-2.0, 1.0), p(3.0, 1.0)))], settings).unwrap();
         // Its marks move too, and keep their ids.
         design.marks = vec![Mark { id: ElementId::new("m").unwrap(), shape: Shape::stroke(line(p(1.0, 1.0), p(2.0, 2.0))) }];
+        design.guides = vec![Mark { id: ElementId::new("g").unwrap(), shape: Shape::stroke(line(p(1.0, 2.0), p(2.0, 1.0))) }];
         let moved = design.moved([3.0, -2.0]).unwrap();
         assert_eq!(moved.marks, [Mark { id: ElementId::new("m").unwrap(), shape: Shape::stroke(line(p(4.0, -1.0), p(5.0, 0.0))) }]);
+        assert_eq!(moved.guides, [Mark { id: ElementId::new("g").unwrap(), shape: Shape::stroke(line(p(4.0, 0.0), p(5.0, -1.0))) }]);
         // Given other elements, a design keeps its marks, its settings and its sorting of colours.
         let sorted = Design { sort_colours: true, ..design.clone() };
         let other = sorted.with_elements(vec![element("x", line(p(0.0, 0.0), p(1.0, 0.0)))]).unwrap();
         assert_eq!((other.elements().len(), &other.marks, other.settings, other.sort_colours), (1, &design.marks, design.settings, true));
+        assert_eq!(other.guides, design.guides);
         assert!(sorted.with_elements(vec![element("x", Path::default()), element("x", Path::default())]).is_err());
         // Every point, the hints' and the clips' among them.
         let points = |design: &Design| {

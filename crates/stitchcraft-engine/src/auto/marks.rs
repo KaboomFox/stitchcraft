@@ -22,6 +22,7 @@ use std::cell::Cell;
 
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Meter};
 
+use super::guides::Guides;
 use crate::design::mark::{Area, Mark, bounds};
 use crate::normalize::region::Polygon;
 
@@ -32,6 +33,8 @@ pub(crate) struct Marks {
     read: Vec<Read>,
     /// What was said of the marks whose areas don't read.
     unread: Vec<Diagnostic>,
+    /// The design's guides, read beside the marks (`REQ-AUTO-109`).
+    pub(crate) guides: Guides,
 }
 
 /// A mark whose area reads, and what it kept.
@@ -65,7 +68,12 @@ impl Marks {
                 }
             }
         }
-        Marks { read, unread }
+        Marks { read, unread, guides: Guides::default() }
+    }
+
+    /// The marks with the guides `guides` read beside them ([`Guides::of`]).
+    pub(crate) fn guided(self, guides: &[Mark], budget: &Budget) -> Marks {
+        Marks { guides: Guides::of(guides, budget), ..self }
     }
 
     /// The first mark that holds every point of `part`'s outline, by its place among the marks that read,
@@ -119,8 +127,8 @@ impl Marks {
     }
 
     /// What is said of the marks once a design is digitized: `SC-I0916` for each mark that holds a part,
-    /// and `SC-W0917` for each that doesn't, or whose area didn't read. In a design with no `automatic`
-    /// shape, every mark is unused.
+    /// and `SC-W0917` for each that doesn't, or whose area didn't read, then what is said of the guides
+    /// ([`Guides::said`]). In a design with no `automatic` shape, every mark and every guide is unused.
     pub(crate) fn said(self, automatic: bool) -> Vec<Diagnostic> {
         let mut said = self.unread;
         for mark in self.read {
@@ -131,13 +139,17 @@ impl Marks {
                 _ => kept(&mark.id, held, mark.specks.get(), mark.lines.get()),
             });
         }
+        said.extend(self.guides.said(automatic));
         said
     }
 }
 
-/// The marks of `marks` in a design that has no automatic shape: `SC-W0917` for each, its area unread.
-pub(crate) fn unused_all(marks: &[Mark]) -> Vec<Diagnostic> {
-    marks.iter().map(|mark| unused(&mark.id, "the design has no shape digitized automatically.")).collect()
+/// The marks of `marks` and the guides of `guides` in a design that has no automatic shape: `SC-W0917` for
+/// each mark, its area unread, then `SC-W0919` for each guide.
+pub(crate) fn unused_all(marks: &[Mark], guides: &[Mark]) -> Vec<Diagnostic> {
+    let mut said: Vec<Diagnostic> = marks.iter().map(|mark| unused(&mark.id, "the design has no shape digitized automatically.")).collect();
+    said.extend(super::guides::unused_all(guides));
+    said
 }
 
 /// `SC-W0917`: the mark `id` keeps nothing, for the reason `why`.

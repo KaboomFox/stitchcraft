@@ -170,7 +170,7 @@ pub struct Fill {
 /// points move apart along it, each by half of what it falls short. The needle point before the turn is
 /// left out when it lies nearer the turn than `min_stitch`, since thinning would leave out the turn's first
 /// point for it. It stays when it is the run's first or the turn before moved it.
-fn turned(runs: Vec<Vec<Point>>, min_stitch: f64, meter: &mut Meter) -> Result<Vec<Vec<Point>>, Exhausted> {
+pub(crate) fn turned(runs: Vec<Vec<Point>>, min_stitch: f64, meter: &mut Meter) -> Result<Vec<Vec<Point>>, Exhausted> {
     let mut turned = Vec::with_capacity(runs.len());
     for mut run in runs {
         meter.charge(run.len() as u64)?;

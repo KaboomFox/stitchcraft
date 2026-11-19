@@ -273,7 +273,8 @@ Each part's segments are sewn once each, in the order Ink/Stitch routes them
    ends lie farther apart: the spacing over the sine of the angle between edge and rows, 0.35 mm at 45°
    for rows 0.25 mm apart, which the Brother sews.
 
-   `turn_stitches`, StitchCraft's own switch, keeps the handover on such a machine (`REQ-FILL-TAT-014`).
+   `turn_stitches`, StitchCraft's own switch, keeps the handover on such a machine (`REQ-FILL-TAT-014`),
+   and a guided fill's lines read it too ([guided fill](guided.md#sewing-the-lines)).
    A turn is a stitch shorter than the shortest stitch between 2 stitches that run opposite ways. Its 2
    needle points move apart along the edge, each by half of the length the turn lacks, and the turn is
    then as long as the shortest stitch: 0.3 mm for rows 0.25 mm apart, each point 0.025 mm off its row.
