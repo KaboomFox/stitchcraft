@@ -580,6 +580,84 @@ longer says that its stitches lean. The 4 mm word runs along its letters' middle
 test picture sews as it did. Taking the strokes from the centre lines instead fails: the M's middle stroke
 is free for only 1.5 widths, too short to fit a line to.
 
+### Joins of letters sewn as strokes
+
+Shown a patch with block letters as it sews, the owner said on 2026-11-19 that where a letter's strokes meet
+it looks lumpy or uneven. Those letters read as strokes (`REQ-AUTO-087`). Measured by thickness, lean and bare
+fabric, their joins are as good as a hand-digitized font's. Those measures miss what she sees. This section
+measures what shows on a stitched preview and states 2 rules (`REQ-AUTO-117`, `REQ-AUTO-118`), each from
+geometry alone. No picture is their goal: they hold for any part read as strokes, in any typeface.
+
+**What shows.** Each letter is drawn as it sews, at 40 pixels a millimetre, each top stitch a line 0.35 mm
+wide, so that a later stitch hides an earlier one, and measured within 1.5 stroke widths of each join. The
+meeting line of 2 columns is the length of edge, in stroke widths, between their visible stitches where
+these lie more than 20° apart. Its raggedness is that length over the distance between its farthest points,
+1 for a straight line. Needle points that show are those of one column that lie on another column's stitches
+uncovered, counted per stroke width. The noise of each is the 90th percentile of its change when the letters
+move 0.05 mm, as M13.47 judged its measures: 0.07 widths of meeting line, 0.04 of raggedness and 0.4 needle
+points a width. The sets are M13.47's 744 letters, whose letters sewn as strokes have 106 joins, against
+Barstitch Bold at 50, 100 and 130 %, its joins found alike from its drawn columns. Each cell gives the medians
+of a traced join and of the font's, then the chance that a traced join measures more:
+
+| Join | Meeting line, widths | Raggedness | Needle points that show, per width |
+|---|---|---|---|
+| Apex | 4.01 against 2.21, 0.78 | 1.90 against 1.40, 0.73 | 7.9 against 6.3, 0.76 |
+| Corner | 3.34 against 1.43, 0.88 | 2.12 against 1.84, 0.71 | 5.6 against 0.3, 0.86 |
+| T | 2.51 against 2.20, 0.69 | 2.05 against 1.48, 0.75 | 4.9 against 4.2, 0.63 |
+| Serif | 2.74 against 0, 0.94 | 2.00 against 1.27, 1.00 | 5.8 against 0.7, 0.91 |
+
+Compared only at like sizes (traced 6 and 12 mm against the font at 50 %, 25 mm against 100 and 130 %) the
+meeting lines of apexes and corners and the raggedness at T joins part them as clearly. Measures of the
+outline do not part them. The area sewn outside the drawn shape past a stroke's own spill, the bare area
+inside it and how rough the sewn edge is all measure no more at a traced join than at the font's.
+
+**What the font does.** Measured from Barstitch Bold's own columns, read at their rails, at 3 sizes. At 26
+of its 30 apexes one leg runs on to the tip, and the other ends on the slant along its inner side, sewn after
+it. At 60 of 106 T joins one stroke runs through and the other ends against it, square or slanted, sewn after
+it at 88 ends of 151 and before at 63. At 63 of 139 corners one column turns the corner. An ending column
+reaches into the other by a median of 0.01 to 0.09 of a width: the columns meet edge to edge, and pull
+compensation alone laps them. Where the ending column sews last, its end is one straight stitch along the
+other's side, and the other's zigzag edge lies under it. Where it sews first, as `REQ-AUTO-088` has a stroke
+that stops do, the zigzag edge of the stroke that runs through lies on it, with its needle points.
+
+**Prototypes.** Measured on the 744 letters at opt-level 1, a join counted better or worse only past the
+noise:
+
+- The stroke that stops sews after the one it stops against (`REQ-AUTO-117`). Meeting lines shorter at 32
+  corners and longer at 4, less ragged at 32 and more at 4. At T joins 11 less ragged and 2 more, and needle
+  points that show fewer at all 13. No letter changed how it sews. By M13.47's measures of thickness and lean
+  the joins are as before: 18 better, 25 worse and 6 mixed of 1,162. It cost 21 jump threads more over the
+  sets, 372 to 393, where the thread from the end of the stroke that runs through to the start of the one
+  that stops now lies across sewn stitches.
+- Also, where 2 strokes that both end meet at an apex, their ways from the join under 90° apart, one runs
+  through and the other stops along it (`REQ-AUTO-118`). An obtuse corner keeps its halving line. Cut
+  otherwise, 6 block letters drawn round in straight bands (O, D, G, Q, c and 2) were no longer read as
+  strokes. Apex meeting lines shorter at 19 and longer at 5, and by M13.47's measures 10 better, 6 worse and
+  8 mixed of 182 apexes. Inter's z at 25 mm became filled, and Source Sans 3's A at 6 mm no longer is.
+
+Of the repository's pictures and the 4 local photos, only the lettered patch has a part read as strokes,
+and every other sews as on main with both rules prototyped. On the patch they added 2 jump threads, 8 to 10, and
+its thickest spot measured 4.00 fills where it measured 3.98.
+
+Seen on the previews, the stroke that runs through matters. Chosen as the longer, the Z's diagonal runs on
+past the end of its bar, where the font's bar runs through and the diagonal ends under it. The font's
+choice is the stroke whose end the outline cuts nearly square, and the stroke reader already measures that
+(`REQ-AUTO-088`, 0.15 of a width). An A's legs that meet under a flat top end alike. The leg that runs
+through ends square to itself, and the other leg keeps a corner of the top as a piece of its own. The
+font's leg takes in the whole top.
+
+**The rules.** A stroke that stops sews after the one it stops against, and its end lies along that one's
+side, so that its last stitch is the line where they meet (`REQ-AUTO-117`). It must cost no jump thread.
+To keep the thread between the 2 columns under stitches still to sew, the build may change the order of
+the part's columns or where the one that runs through starts. At an apex the stroke whose end lies more nearly square
+to its line runs through, and on a tie the longer. It takes in the part beyond its band at the tip, and the
+other ends along its inner side (`REQ-AUTO-118`).
+
+The step of a pull compensation along an outer edge, where one stroke's side meets the other's end (an L's
+foot below its stem), measured 0.33 mm at traced corners and 0.05 mm at the font's. The font's drawn columns
+end where its own steps lie, so that comparison is not alike, and the measure was left out. A sew-out at MC-8
+decides whether it shows.
+
 ## Neighbours
 
 The shapes of a traced picture meet. VectorCraft's Abutting method traces each area with a hole where the

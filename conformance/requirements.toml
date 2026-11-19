@@ -3498,6 +3498,24 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-AUTO-117"
+area = "auto"
+level = "L2"
+statement = "Where a stroke of a part read as strokes (REQ-AUTO-087) stops against another (REQ-AUTO-088), it sews after that one, and its end lies along that one's side, so that its own last stitch is the seam and the other's zigzag edge lies under it. Planning it so adds no jump thread to the part. A drawn T's stem and a drawn H's bar sew after the strokes they stop against, the stem's needle points lie no more than 0.45 mm inside the bar, and neither letter sews a jump thread."
+rationale = "The owner, on 2026-11-19, looking at a patch with block letters: where a letter's strokes meet it looks lumpy or uneven. Measured on stitched previews of 744 letters, a traced letter's joins show longer and more ragged seams than Barstitch Bold's, with more needle points of one column on another (docs/src/design/image-to-embroidery.md, Joins of letters sewn as strokes). Where the stroke that stops sews first, the zigzag edge of the one that runs through lies on it. The font sews the ending column after the other at most of its joins. Sewn so, 32 corners of 42 measured less ragged and 4 more, and every T join's needle points that show fewer, with thickness and lean as before. The prototype cost 21 jump threads over the sets, which a person cuts by hand, so the rule includes that it costs none."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-118"
+area = "auto"
+level = "L2"
+statement = "Where 2 strokes of a part read as strokes (REQ-AUTO-087) both end at a join and their ways from it lie within 90 degrees of each other, an apex, one runs through and the other stops along its inner side (REQ-AUTO-117): the one whose end lies more nearly square to its line, by REQ-AUTO-088's measure, and on a tie the longer. The one that runs through takes in the part beyond its band at the tip. A join of 2 strokes whose ways lie more than 90 degrees apart keeps the halving line of REQ-AUTO-088. Of a drawn M's V, one stroke's needle points within 0.8 mm of its flat bottom lie on both sides of its middle."
+rationale = "Barstitch Bold sews 26 of its 30 apexes with one leg run through and the other ended along it, where REQ-AUTO-088 cuts both along the line that halves the angle, and a long seam runs up the middle: traced apexes measured 4.01 widths of seam to the font's 2.21. Prototyped with the longer stroke run through, apex seams measured shorter at 19 and longer at 5, but the Z's diagonal then ran on past its bar's end and an A's flat top kept a sliver of the other leg, so the stroke the outline ends squarely runs through and takes in the tip. Obtuse corners, as a block letter's bowl drawn in straight bands, keep the halving line: cut otherwise, 6 such letters were no longer read as strokes."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-AUTO-069"
 area = "auto"
 level = "L2"
