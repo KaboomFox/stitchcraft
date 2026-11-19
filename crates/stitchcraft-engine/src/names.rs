@@ -238,7 +238,7 @@ impl Names {
         for diagnostic in diagnostics {
             let name = diagnostic.element.as_ref().and_then(|element| self.name_of(element.as_str()));
             if let Some(name) = name {
-                diagnostic.name = Some(name.to_string());
+                diagnostic.name = Some(name.into());
             }
         }
     }

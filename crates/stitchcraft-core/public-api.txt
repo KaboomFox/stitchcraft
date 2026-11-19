@@ -206,7 +206,7 @@ pub stitchcraft_core::diag::Diagnostic::code: stitchcraft_core::diag::Code
 pub stitchcraft_core::diag::Diagnostic::element: core::option::Option<stitchcraft_core::element::ElementId>
 pub stitchcraft_core::diag::Diagnostic::fix: core::option::Option<stitchcraft_core::diag::Fix>
 pub stitchcraft_core::diag::Diagnostic::message: alloc::string::String
-pub stitchcraft_core::diag::Diagnostic::name: core::option::Option<alloc::string::String>
+pub stitchcraft_core::diag::Diagnostic::name: core::option::Option<alloc::boxed::Box<str>>
 impl stitchcraft_core::diag::Diagnostic
 pub fn stitchcraft_core::diag::Diagnostic::headline(&self) -> alloc::string::String
 pub fn stitchcraft_core::diag::Diagnostic::located(self, stitchcraft_core::units::Point) -> Self
@@ -333,6 +333,7 @@ pub stitchcraft_core::Code::AutoLayers
 pub stitchcraft_core::Code::AutoLineMerged
 pub stitchcraft_core::Code::AutoMarkUnused
 pub stitchcraft_core::Code::AutoOrder
+pub stitchcraft_core::Code::AutoOwnReplaces
 pub stitchcraft_core::Code::AutoRule
 pub stitchcraft_core::Code::AutoRunsLeft
 pub stitchcraft_core::Code::AutoSatinFilled
@@ -520,6 +521,7 @@ pub stitchcraft_core::Diagnostic::code: stitchcraft_core::diag::Code
 pub stitchcraft_core::Diagnostic::element: core::option::Option<stitchcraft_core::element::ElementId>
 pub stitchcraft_core::Diagnostic::fix: core::option::Option<stitchcraft_core::diag::Fix>
 pub stitchcraft_core::Diagnostic::message: alloc::string::String
+pub stitchcraft_core::Diagnostic::name: core::option::Option<alloc::boxed::Box<str>>
 impl stitchcraft_core::diag::Diagnostic
 pub fn stitchcraft_core::diag::Diagnostic::headline(&self) -> alloc::string::String
 pub fn stitchcraft_core::diag::Diagnostic::located(self, stitchcraft_core::units::Point) -> Self

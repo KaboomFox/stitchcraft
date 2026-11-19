@@ -142,8 +142,9 @@ pub struct Diagnostic {
     pub element: Option<ElementId>,
     /// The name of the shape its element is part of, when that shape has one: the name the person finds it
     /// by in VectorCraft's Layers panel, which planning gives each shape digitized automatically
-    /// (`REQ-AUTO-127`). A host shows it before the element's id ([`called`]).
-    pub name: Option<String>,
+    /// (`REQ-AUTO-127`). A host shows it before the element's id ([`called`]). Boxed, so that a `Result`
+    /// whose error is a diagnostic stays small.
+    pub name: Option<Box<str>>,
     /// Where on the canvas, in millimetres, when it has a place.
     pub at: Option<Point>,
     /// A hint, or a change the host can apply.
@@ -245,7 +246,7 @@ mod tests {
         let element = ElementId::new("vc:63:fill").unwrap();
         let said = Diagnostic::new(Code::AutoRule, "This shape sews by the rule area.").with_element(element.clone());
         assert_eq!(said.headline(), "info SC-I0912 (vc:63:fill): This shape sews by the rule area.");
-        let named = Diagnostic { name: Some("Red \"fill\" (3)\n".to_string()), ..said };
+        let named = Diagnostic { name: Some("Red \"fill\" (3)\n".into()), ..said };
         assert_eq!(named.headline(), r#"info SC-I0912 ("Red \"fill\" (3)\n", vc:63:fill): This shape sews by the rule area."#);
         assert_eq!(called(None, &element), "vc:63:fill");
     }

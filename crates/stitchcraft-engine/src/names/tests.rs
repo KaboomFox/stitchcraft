@@ -142,6 +142,17 @@ fn req_auto_125_shapes_are_numbered_by_thread_and_kind_from_the_layers_panel_s_t
 }
 
 #[test]
+fn req_auto_125_a_shape_sews_as_its_own_part_or_else_as_its_first() {
+    // Nothing sews with the red area's id, and its first part is a column; the blue area's own part, a
+    // column, sews after a filled part of it.
+    let design = design(vec![fill("vc:7:fill", RED, true), fill("vc:8:fill", BLUE, true)]);
+    let sewn = [stroke("vc:7:fill#2", RED, true), fill("vc:7:fill#3", RED, true), fill("vc:8:fill#2", BLUE, true), stroke("vc:8:fill", BLUE, true)];
+    let names = given(&design, &sewn, &[]);
+    let kinds: Vec<(&str, Kind)> = names.shapes.iter().map(|shape| (shape.element.as_str(), shape.kind)).collect();
+    assert_eq!(kinds, [("vc:8", Kind::Column), ("vc:7", Kind::Column)]);
+}
+
+#[test]
 fn req_auto_126_own_names_are_kept_and_never_given_again() {
     let design = design(vec![
         fill("vc:1:fill", RED, true),

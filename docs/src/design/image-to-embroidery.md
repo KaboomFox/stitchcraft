@@ -3210,8 +3210,29 @@ Layers panel's order changes only for the shapes of the same thread and kind bel
 
 On the local photos, numbered by thread and kind in the Layers panel's order, a deletion renamed 23 of the
 magnolia's 424 other shapes on average. With the number counted by thread alone, without the kind, it renamed
-45. The magnolia and the coleus, of 704 shapes, gave the same names when digitized twice. The coleus's edits,
-the goose and the building weren't measured: the probe ran out of its 50 minutes.
+45. The magnolia and the coleus, of 704 shapes, gave the same names when digitized twice.
+
+The names as built were measured on 2026-11-19 with a probe test (not committed) that planned each design
+on the reference machine, at opt-level 2, and then planned it again with each of 4 shapes deleted, spread
+through it. Here every shape counts, those merged whole into their neighbours too, which are `left out`.
+
+| Design | Shapes | Longest name | Others renamed by a deletion | Plan |
+| --- | --- | --- | --- | --- |
+| Badge | 4 | 18 | 0 | under 0.1 s |
+| Pear | 6 | 23 | 0 | 0.2 s |
+| Dog on turf, 6 threads | 97 | 22 | 0 to 10 | 2 s |
+| Dog running, 9 threads | 107 | 22 | 0 to 2 | 2 to 3 s |
+| Magnolia | 2,014 | 26 | 84 to 430 | 43 to 69 s |
+| Coleus | 3,985 | 25 | 176 to 631 | 84 to 104 s |
+| Goose | 1,813 | 27 | 23 to 362 | 104 to 136 s |
+| Building | 1,444 | 26 | 10 to 289 | 100 to 111 s |
+
+Every design gave the same names when planned twice, and no thread was named by its hex code: the traced
+colours are the machine's threads. On a photo a deletion renames up to a fifth of the other shapes. A
+deleted shape changes which specks and thin lines merge into their neighbours, so shapes move between `fill`
+and `left out`, and the numbers of their thread below them move with them. Naming is one pass over the
+elements and the steps, and isn't timed apart from planning. The trace's own time wasn't measured, since
+VectorCraft isn't built here.
 
 So the names are written once, when the picture is traced, and are then the shapes' own names, as a name a
 person gives one is. StitchCraft never renames a shape that has a name. A shape the person draws later has

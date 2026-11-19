@@ -8,6 +8,9 @@
 //! text is scanned, and a name goes in after an object's opening brace, or in place of a `null` name, and
 //! every other byte stays as it was.
 //!
+//! **Its own form.** A compressed file is unpacked, named and compressed again, and the data a file keeps
+//! after its JSON, behind the marker (`container`), stays as it is.
+//!
 //! **Which objects.** An object of a layer's or a group's `children` whose numeric `id` is given a name
 //! and that has none: the objects StitchCraft's ids name `vc:` and their id. A name the object has is its
 //! own, kept (`REQ-AUTO-126`).
@@ -15,6 +18,8 @@
 use std::collections::BTreeMap;
 
 use stitchcraft_core::{Budget, Code, Diagnostic};
+
+use crate::container;
 
 /// Where a name goes in: at `at`, `text`, in place of `len` bytes.
 struct Edit {
@@ -46,6 +51,17 @@ enum Frame {
 /// byte stays as it was. A document that is not JSON as VectorCraft writes it, or work that runs out, is
 /// an error, `SC-E0009` or `SC-E0004`.
 pub fn named(document: &[u8], names: &BTreeMap<u64, String>, budget: &Budget) -> Result<Vec<u8>, Diagnostic> {
+    let (whole, compressed) = container::whole(document, &mut budget.meter())?;
+    // The JSON ends before the marker of the data after it, which stays as it is.
+    let end = whole.iter().position(|&b| b == 0).map_or(whole.len(), |nul| nul.saturating_sub(1));
+    let (json, after) = whole.split_at_checked(end).unwrap_or((&whole, &[]));
+    let mut out = json_named(json, names, budget)?;
+    out.extend_from_slice(after);
+    Ok(if compressed { container::packed(&out) } else { out })
+}
+
+/// The JSON text `document` with names written, as [`named`] writes them.
+fn json_named(document: &[u8], names: &BTreeMap<u64, String>, budget: &Budget) -> Result<Vec<u8>, Diagnostic> {
     let broken =
         || Diagnostic::new(Code::InternalCheckFailed, "The traced document's names can't be written: it isn't JSON as VectorCraft writes it.");
     budget.meter().charge(u64::try_from(document.len()).unwrap_or(u64::MAX)).map_err(|exhausted| exhausted.diagnostic(budget, None))?;
@@ -187,6 +203,27 @@ mod tests {
             "{\"children\": [\n  {\n    \"name\": \"Red fill (1)\",\n    \"id\": 2\n  }, {\"name\": \"Blue fill (1)\", \"id\": 5}]}"
         );
         assert_eq!(written(r#"{"children": [{}]}"#, &names).unwrap(), r#"{"children": [{}]}"#);
+        // An object with a name of another kind keeps it, and one with other texts is named.
+        let kinds = r#"{"children": [{"id": 2, "name": 12}, {"id": 5, "type": "path", "on": true}]}"#;
+        let want = r#"{"children": [{"id": 2, "name": 12}, {"name": "Blue fill (1)", "id": 5, "type": "path", "on": true}]}"#;
+        assert_eq!(written(kinds, &names).unwrap(), want);
+    }
+
+    #[test]
+    fn req_vc_033_a_compressed_document_stays_compressed_and_the_data_after_its_json_stays() {
+        use std::io::{Read, Write};
+        let names = BTreeMap::from([(2, "Red fill (1)".to_string())]);
+        let document = b"{\"children\": [{\"id\": 2}]}\n\0VCBLOBS\0\xff\x00data";
+        let want = b"{\"children\": [{\"name\": \"Red fill (1)\", \"id\": 2}]}\n\0VCBLOBS\0\xff\x00data";
+        assert_eq!(named(document, &names, &Budget::DEFAULT).unwrap(), want);
+        let mut encoder = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+        encoder.write_all(document).unwrap();
+        let packed = named(&encoder.finish().unwrap(), &names, &Budget::DEFAULT).unwrap();
+        let mut unpacked = Vec::new();
+        flate2::read::GzDecoder::new(packed.as_slice()).read_to_end(&mut unpacked).unwrap();
+        assert_eq!(unpacked, want);
+        // A damaged stream is refused.
+        assert_eq!(named(&[0x1f, 0x8b, 0], &names, &Budget::DEFAULT).map_err(|e| e.code), Err(Code::VcUnreadable));
     }
 
     #[test]
