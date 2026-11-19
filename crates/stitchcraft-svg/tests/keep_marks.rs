@@ -56,6 +56,18 @@ fn picture(shapes: &[String]) -> Design {
     stitchcraft_svg::read_with(svg.as_bytes(), &Budget::DEFAULT, Reading { auto: true, ..Reading::default() }).unwrap().design
 }
 
+/// `design` with every automatic shape merging its thin lines whatever the likeness kept
+/// (`auto_min_likeness` 0), and its marks.
+fn merging(design: Design) -> Design {
+    let mut elements = design.elements().to_vec();
+    for element in elements.iter_mut().filter(|element| element.automatic) {
+        element.params.set("auto_min_likeness", "0");
+    }
+    let mut merged = Design::new(elements, design.settings).unwrap();
+    merged.marks = design.marks;
+    merged
+}
+
 /// The elements `design` sews as, digitized, and what was said.
 fn sewn(design: &Design) -> (Vec<Element>, Vec<Diagnostic>) {
     let (elements, said) = digitized(design, &Budget::DEFAULT);
@@ -103,9 +115,11 @@ fn req_auto_104_a_speck_wholly_inside_a_keep_mark_sews_and_one_outside_merges_as
 
 #[test]
 fn req_auto_105_a_thin_line_wholly_inside_a_keep_mark_sews_as_a_line_and_one_across_its_edge_merges() {
-    // Without a mark, both ragged lines merge into the red square (REQ-AUTO-090).
+    // Without a mark, both ragged lines merge into the red square (REQ-AUTO-090). They are blue's only parts,
+    // so at the default likeness of 0.85 they would sew as lines with no mark too (REQ-AUTO-095): at 0 they
+    // merge, and the mark alone keeps the first.
     let lines = [line("inside", 20.0, 10.0), line("across", 35.0, 10.0)];
-    let (elements, said) = sewn(&picture(&lines));
+    let (elements, said) = sewn(&merging(picture(&lines)));
     assert!(in_thread(&elements, &BLUE).is_empty(), "{elements:?}");
     assert!(names(&said, "SC-I0915", "inside") && names(&said, "SC-I0915", "across"), "{said:?}");
     // The mark holds the first line whole and only the left of the second: the first sews as a running
@@ -113,7 +127,7 @@ fn req_auto_105_a_thin_line_wholly_inside_a_keep_mark_sews_as_a_line_and_one_acr
     // mark is decided as if there were none.
     let mut shapes = lines.to_vec();
     shapes.push(mark("stitch:keep", [18.0, 9.0, 35.5, 21.0]));
-    let (elements, said) = sewn(&picture(&shapes));
+    let (elements, said) = sewn(&merging(picture(&shapes)));
     let blue = in_thread(&elements, &BLUE);
     assert!(!blue.is_empty() && blue.iter().all(|id| id.starts_with("svg:inside")), "{elements:?}");
     assert!(elements.iter().filter(|element| element.thread == BLUE).all(runs), "{elements:?}");

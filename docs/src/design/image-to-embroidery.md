@@ -2170,6 +2170,20 @@ the number of areas, would only hide that. An area count can't even tell a photo
 photo can have fewer areas than a badge. Once the cap limits every spot, a reorder can't pile thread
 anywhere, and so the setting is on by default.
 
+**A detail inside a detail** (`REQ-AUTO-108`, M13.45). A detail can have details of its own: a pupil on an
+iris, a dot on a patch's mark, a window in a door. With both settings on, a traced dog's grey area that the
+darker fur closes in on moved to sew after the fur, while the tan patch on it, which would cost a thread
+change to move, stayed where it was. The grey's outline and rows then lay over the tan's edge. So a detail
+moves only together with what sews on top of it. A wish moves its second element later. Its nest is that
+wish, each wish that something sews after its second element, a detail of it or a satin column bordering it,
+and their nests in turn. The search grants a nest whole or not at all. It also keeps the order itself from
+doing the same: of the rows with the fewest changes, it takes the one that misses the fewest inner wishes,
+those whose first element another wish moves, and only then the fewest wishes. A row that sews an iris
+after the fur and leaves its pupil under it then loses to one that keeps the pupil on top, whenever such a
+row has as few changes. Simpler than any measure of what shows: no second plan, no picture's pixels, and a
+rule that holds for any nest by the shapes' sizes and where they meet. The cases in `tests/auto_details.rs`
+and `order/fewest/tests.rs` draw a pupil on an iris where 3 patches meet.
+
 **Measured** (2026-11-18, planned at opt-level 2), off and then on:
 
 | Picture | Thread changes | Jump threads | Details sewn early | Thickest spot, fills | Likeness |
