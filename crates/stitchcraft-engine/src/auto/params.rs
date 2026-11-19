@@ -202,10 +202,11 @@ params! {
         /// of the share of their parts kept. A thin line that touches no other piece of its colour is a part
         /// of its own, and merged into a neighbour of another colour it is a part lost: a twig, the rim of a
         /// petal, a shadow. Such lines merge, those of the colours with the most parts and the smallest first,
-        /// while the picture keeps this likeness, and the others sew as lines. At 0, the default, every thin
-        /// line merges, and at 1 none that is a part does. Keeping lines adds running stitches and jump threads,
-        /// and it can change the order the blocks sew in, which can make a spot elsewhere sew thicker.
-        auto_min_likeness: Number = "0", label "Least likeness kept when lines merge", range (0.0, 1.0),
+        /// while the picture keeps this likeness, and the others sew as lines. At 0 every thin line merges,
+        /// and at 1 none that is a part does. Keeping lines adds running stitches and jump threads, and it
+        /// changes the order the blocks sew in: the cap (`auto_thick_cap_fills`) keeps the spots that order
+        /// piles up within it. Lower it for fewer jump threads where the detail matters less.
+        auto_min_likeness: Number = "0.85", label "Least likeness kept when lines merge", range (0.0, 1.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
         /// How far a part reaches from one of its centre lines on both sides of the line, at the most, for
@@ -300,10 +301,11 @@ params! {
 
         /// Whether a detail sews after the larger areas round it, where that costs no thread change: an
         /// automatic area that the shapes round it close in on, smaller than an area it meets, as an eye is in
-        /// the fur round it. Sewn last, the detail keeps the later fills' rows off its edge. Off by default:
-        /// a fill that moves for a detail starts, ends and travels elsewhere, and can make a spot away from
-        /// the detail thicker. The design goes by the setting of its lowest automatic shape.
-        auto_details_last: Toggle = "false", label "Details sew last",
+        /// the fur round it. Sewn last, the detail keeps the later fills' rows off its edge. A fill that moves
+        /// for a detail starts, ends and travels elsewhere, and the cap (`auto_thick_cap_fills`) keeps the
+        /// spots that piles up within it. Turn it off to keep the order of the areas as drawn. The design
+        /// goes by the setting of its lowest automatic shape.
+        auto_details_last: Toggle = "true", label "Details sew last",
             origin Origin::StitchCraft, stability Stability::Experimental;
     }
 }

@@ -83,6 +83,34 @@ fn req_auto_037_a_wish_is_granted_where_it_costs_no_thread_change() {
 }
 
 #[test]
+fn req_auto_108_a_detail_moves_only_with_what_sews_on_top_of_it() {
+    // A blue iris (0) with a red pupil (1) on it, where 2 red patches (2, 4) and a green one (3) meet: the
+    // iris would sew after the 3 patches, and the pupil after the iris. Sewing the iris after the red patches
+    // grants 2 wishes and misses only the pupil's, which then sews under the iris's edge: no row does that
+    // where another row with as few changes keeps the pupil on top. The wishes of the red patches go with
+    // their nests, and the iris sews after the green patch alone, the pupil after it.
+    let nest = run(&[BLUE, RED, RED, GREEN, RED], &[], &[(2, 0), (4, 0), (3, 0), (0, 1)]);
+    let found = found(&nest);
+    assert_eq!(found.batches, [vec![3], vec![0], vec![1, 2, 4]]);
+    assert_eq!(found.granted, [(3, 0), (0, 1)]);
+    assert_eq!(changes(&nest, &found.batches), 3);
+}
+
+#[test]
+fn req_auto_108_a_nest_holds_each_wish_that_moves_what_is_on_top_once() {
+    // 0 under 1 under 2, and 1 under 3: the nest of the first wish holds every wish, each once, in the order
+    // found, and that of the last wish only itself.
+    let wished = [(0, 1), (1, 2), (2, 1), (1, 3)];
+    let nest = |at: usize| nest(&wished, at, &mut Budget::DEFAULT.meter()).unwrap();
+    assert_eq!(nest(0), [(0, 1), (1, 2), (1, 3), (2, 1)]);
+    assert_eq!(nest(3), [(1, 3)]);
+    assert_eq!(nest(9), []);
+    // A unit for each wish looked at: 4 for each of the 4 wishes in the nest.
+    let needed = (0..100).find(|&work| super::nest(&wished, 0, &mut Budget { max_work: work, ..Budget::DEFAULT }.meter()).is_ok());
+    assert_eq!(needed, Some(16));
+}
+
+#[test]
 fn req_auto_037_a_column_waits_for_a_later_batch_of_its_thread_to_sew_after_its_fill() {
     // Red, a blue after it and a red after that: red sews twice. A red column wished after the blue fill is
     // free from the start, and waits for the second red batch.
@@ -169,6 +197,8 @@ fn the_search_counts_what_is_left_and_what_is_missed() {
     let meter = || Budget::DEFAULT.meter();
     assert_eq!(search.plain, BTreeMap::from([(RED, vec![0]), (BLUE, vec![1, 4]), (GREEN, vec![3])]));
     assert_eq!(search.wishes, [vec![1, 3], vec![], vec![], vec![4], vec![]]);
+    // The wish of 3 before 0 is inner: the wish of 4 before 3 moves 3 (REQ-AUTO-108).
+    assert_eq!(search.inner, [vec![3], vec![], vec![], vec![], vec![]]);
     // 3 threads have elements left, less one for the element in 2 threads; with it sewn, all 3.
     let mut done = Done::none(5);
     assert_eq!(search.left(&done, &mut meter()), Ok(2));
@@ -180,15 +210,18 @@ fn the_search_counts_what_is_left_and_what_is_missed() {
     // What may sew next: the thread of each free element once, and the element in several threads.
     assert_eq!(search.steps(&Done::none(5), &mut meter()), Ok(vec![Move::Thread(RED), Move::Element(2), Move::Thread(GREEN), Move::Thread(BLUE)]));
     assert_eq!([search.starts(Move::Thread(GREEN)), search.starts(Move::Element(2)), search.starts(Move::Element(9))], [GREEN, RED, None]);
-    // Element 0 sewn first misses its 2 wishes, and after 1 and 3 none. 3 and 0 in one batch miss the wish
-    // of 3 alone, and in 2 batches too.
+    // Element 0 sewn first misses its 2 wishes, one of them inner, and after 1 and 3 none. 3 and 0 in one
+    // batch miss the wish of 3 alone, and in 2 batches too. Each count is of the inner wishes, then of all.
     let missed = |sewn: &[usize], batches: &[Vec<usize>]| {
         let mut done = Done::none(5);
         sewn.iter().for_each(|&index| done.add(index));
         search.missed(done, batches, &mut meter()).unwrap()
     };
-    assert_eq!([missed(&[], &[vec![0]]), missed(&[1, 3], &[vec![0]]), missed(&[1], &[vec![3, 0]]), missed(&[1], &[vec![3], vec![0]])], [2, 0, 1, 1]);
-    assert_eq!(missed(&[1], &[vec![0], vec![3]]), 2);
+    assert_eq!(
+        [missed(&[], &[vec![0]]), missed(&[1, 3], &[vec![0]]), missed(&[1], &[vec![3, 0]]), missed(&[1], &[vec![3], vec![0]])],
+        [[1, 2], [0, 0], [0, 1], [0, 1]]
+    );
+    assert_eq!(missed(&[1], &[vec![0], vec![3]]), [1, 2]);
 }
 
 /// The fewest thread changes of any order of `run`'s elements that its rules allow, by trying every order:

@@ -96,7 +96,14 @@ fn req_auto_104_a_speck_of_a_shape_asked_to_fill_stays_a_fill_of_its_own() {
 
 #[test]
 fn req_auto_105_a_thin_line_wholly_inside_a_mark_sews_as_a_line() {
-    let elements = || vec![rect("left", (0.0, 0.0), (10.0, 10.0), &RED), line("line"), rect("right", (10.7, 0.0), (20.0, 10.0), &BLUE)];
+    // The green line is its colour's one part, so at the default likeness of 0.85 it would sew as a line
+    // with no mark too (REQ-AUTO-095): at 0 it merges, and the mark alone keeps it.
+    let merging = || {
+        let mut line = line("line");
+        line.params.set("auto_min_likeness", "0");
+        line
+    };
+    let elements = || vec![rect("left", (0.0, 0.0), (10.0, 10.0), &RED), merging(), rect("right", (10.7, 0.0), (20.0, 10.0), &BLUE)];
     let (plain, said_plain) = sewn(&design(elements(), Vec::new()), &Budget::DEFAULT);
     assert!(in_thread(&plain, &GREEN).is_empty());
     assert_eq!(said(&said_plain, Code::AutoLineMerged).len(), 1);

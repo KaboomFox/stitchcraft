@@ -49,7 +49,7 @@ A shape's settings are those of VectorCraft's Auto effect on it, or on the group
 | [`auto_min_slenderness`](params/auto.md#auto_min_slenderness) | 3 | no: advanced |
 | [`auto_max_unevenness`](params/auto.md#auto_max_unevenness) | 0.3 | no: advanced |
 | [`auto_min_line_unevenness`](params/auto.md#auto_min_line_unevenness) | 0.05 | no: advanced |
-| [`auto_min_likeness`](params/auto.md#auto_min_likeness) | 0 | no: advanced |
+| [`auto_min_likeness`](params/auto.md#auto_min_likeness) | 0.85 | no: advanced |
 | [`auto_max_reach`](params/auto.md#auto_max_reach) | 1.4 | no: advanced |
 | [`auto_min_fill_width_mm`](params/auto.md#auto_min_fill_width_mm) | 4 mm | no: advanced |
 | [`auto_min_area_mm2`](params/auto.md#auto_min_area_mm2) | 1 mm² | no: advanced |
@@ -62,4 +62,4 @@ A shape's settings are those of VectorCraft's Auto effect on it, or on the group
 | [`auto_thick_warn_points`](params/auto.md#auto_thick_warn_points) | 15 | no: advanced |
 | [`auto_thick_fail_points`](params/auto.md#auto_thick_fail_points) | 30 | no: advanced |
 | [`auto_thick_cap_fills`](params/auto.md#auto_thick_cap_fills) | 4 | no: advanced |
-| [`auto_details_last`](params/auto.md#auto_details_last) | false | no: advanced |
+| [`auto_details_last`](params/auto.md#auto_details_last) | true | no: advanced |

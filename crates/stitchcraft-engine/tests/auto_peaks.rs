@@ -9,7 +9,7 @@
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
 use stitchcraft_core::Budget;
-use stitchcraft_engine::auto::{self};
+use stitchcraft_engine::auto::{self, DETAILS_LAST, MIN_LIKENESS};
 use stitchcraft_engine::common::{LOCK_END, LOCK_END_SCALE, LOCK_START, LOCK_START_SCALE};
 use stitchcraft_engine::design::{Design, DesignSettings, Element};
 use stitchcraft_engine::testsheets::SHEETS;
@@ -18,6 +18,7 @@ use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_testkit::designs::{BLUE, RED, automatic, fill, in_place, planned, rules};
 use stitchcraft_testkit::fabric;
 use stitchcraft_testkit::pictures::{self, Trace};
+use stitchcraft_testkit::stitches::jump_threads;
 
 /// A square from (`x`, `y`), `side` millimetres across, automatic, in `thread` with the settings `params`.
 fn square(id: &str, (x, y): (f64, f64), side: f64, params: &[(&str, &str)]) -> Element {
@@ -127,4 +128,39 @@ fn req_auto_102_the_cap_keeps_each_design_s_jumps_and_thread_changes() {
         assert_eq!((on.jumps, on.trims, on.color_changes), (off.jumps, off.trims, off.color_changes), "{name}");
         assert!(on.stitches <= off.stitches, "{name}: {} stitches, {} with the cap off", on.stitches, off.stitches);
     }
+}
+
+/// `design` with each automatic shape's `settings` set.
+fn with(design: &Design, settings: &[(&str, &str)]) -> Design {
+    let mut elements = design.elements().to_vec();
+    for element in elements.iter_mut().filter(|element| element.automatic) {
+        for (key, value) in settings {
+            element.params.set(*key, *value);
+        }
+    }
+    Design::new(elements, design.settings).unwrap()
+}
+
+#[test]
+fn req_auto_103_with_lines_kept_and_details_last_each_design_sews_no_spot_above_the_cap() {
+    // Both settings change the order the blocks sew in. They are on by default, and set here so that the case
+    // holds whatever the defaults: each design stays within the cap, and the cap, against a cap of 50 fills
+    // above every spot, keeps its jumps, jump threads, thread changes and likeness.
+    let reordered = [(MIN_LIKENESS, "0.85"), (DETAILS_LAST, "true")];
+    let mut above = Vec::new();
+    for (name, design) in designs() {
+        let design = with(&design, &reordered);
+        let on = in_place(&design).plan.unwrap();
+        let off = in_place(&with(&design, &[("auto_thick_cap_fills", "50")])).plan.unwrap();
+        let thickest = fabric::thickness(&on, &Limits::DEFAULT).fills.value;
+        if thickest > CAP {
+            above.push((name.clone(), hundredths(thickest)));
+        }
+        let (stats_on, stats_off) = (on.stats(), off.stats());
+        assert_eq!((stats_on.jumps, stats_on.trims, stats_on.color_changes), (stats_off.jumps, stats_off.trims, stats_off.color_changes), "{name}");
+        assert_eq!(jump_threads(&on).len(), jump_threads(&off).len(), "{name}");
+        let (kept_on, kept_off) = (fabric::likeness(&design, &on).likeness(), fabric::likeness(&design, &off).likeness());
+        assert!(kept_on >= kept_off, "{name}: {kept_on:.3}, {kept_off:.3} with the cap at 50");
+    }
+    assert!(above.is_empty(), "{above:?}");
 }
