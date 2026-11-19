@@ -11,7 +11,8 @@ use stitchcraft_engine::auto::digitized;
 use stitchcraft_engine::design::mark::Mark;
 use stitchcraft_engine::design::{Design, DesignSettings, Element, Path, Segment, Shape, Subpath};
 use stitchcraft_testkit::designs::{BLUE, RED, automatic, fill, in_place, unbased};
-use stitchcraft_testkit::fabric::{self, GAP};
+use stitchcraft_testkit::fabric::{self, GAP, Limits};
+use stitchcraft_testkit::pictures;
 
 /// A guide `id` through `points`, an open line.
 fn guide(id: &str, points: &[(f64, f64)]) -> Mark {
@@ -81,4 +82,27 @@ fn req_auto_109_a_guided_fill_covers_its_edges_as_the_tatami_fill_did() {
     assert!(elements.iter().any(|e| e.params.get("fill_method") == Some("guided_fill")), "{elements:?}");
     let with_guide = bare(&guided);
     assert!(with_guide <= plain + 0.01, "{with_guide} mm² bare with the guide, {plain} without");
+}
+
+#[test]
+fn req_auto_109_a_guide_across_ragged_patches_of_a_traced_photo_steers_them_and_the_cap_holds() {
+    // The running dog's ear in 6 threads, 4 ragged patches of a traced photo. A guide drawn along it, bent,
+    // from its left to its right a third of the way down: the filled parts it crosses sew guided fills.
+    let ear = pictures::dog_shapes("dog-running-6", &["vc:5:fill", "vc:6:fill", "vc:28:fill", "vc:50:fill"]);
+    let bounds = ear.bounds().unwrap();
+    let (x0, y0, x1, y1) = (bounds.min().x(), bounds.min().y(), bounds.max().x(), bounds.max().y());
+    let at = |u: f64, v: f64| (x0 + u * (x1 - x0), y0 + v * (y1 - y0));
+    let mut guided = ear.clone();
+    guided.guides = vec![guide("along", &[at(0.0, 0.35), at(0.5, 0.25), at(1.0, 0.35)])];
+    let (elements, said) = digitized(&guided, &Budget::DEFAULT);
+    assert!(elements.iter().any(|e| e.params.get("fill_method") == Some("guided_fill")), "{said:?}");
+    assert!(said.iter().any(|d| d.code.to_string() == "SC-I0918"), "{said:?}");
+    // The cap holds, and the guided parts leave no more fabric bare than the tatami fills did.
+    let measured = |design: &Design| {
+        let plan = in_place(design).plan.unwrap();
+        (fabric::thickness(&plan, &Limits::DEFAULT).fills.value, fabric::cover(design, &plan, GAP).bare)
+    };
+    let ((_, bare), (thickest, guided_bare)) = (measured(&ear), measured(&guided));
+    assert!(thickest <= 4.0 + 1e-9, "{thickest:.2} fills at the thickest spot");
+    assert!(guided_bare <= bare + 0.05, "{guided_bare:.3} mm² bare with the guide, {bare:.3} without");
 }
