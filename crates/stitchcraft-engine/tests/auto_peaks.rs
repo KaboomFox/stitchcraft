@@ -138,8 +138,8 @@ fn with(design: &Design, settings: &[(&str, &str)]) -> Design {
 
 #[test]
 fn req_auto_103_with_lines_kept_and_details_last_each_design_sews_no_spot_above_the_cap() {
-    // Both settings change the order the blocks sew in. They are on by default, and set here so that the case
-    // holds whatever the defaults: each design stays within the cap, and the cap, against a cap of 50 fills
+    // Both settings change the order the blocks sew in. Likeness merging is on by default and details last off
+    // (M13.48), and both are set here so that the case holds whatever the defaults: each design stays within the cap, and the cap, against a cap of 50 fills
     // above every spot, keeps its jumps, jump threads, thread changes and likeness.
     let reordered = [(MIN_LIKENESS, "0.85"), (DETAILS_LAST, "true")];
     let mut above = Vec::new();

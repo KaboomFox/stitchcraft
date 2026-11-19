@@ -1,9 +1,9 @@
 //! Details sew last (`REQ-AUTO-096`, `REQ-AUTO-097`, M13.40): a shape that the shapes round it close in
 //! on, smaller than they are, such as an eye, a nose or a mark on a patch, sews after them where that costs
 //! no thread change, so that no fill's rows lie over it, and a detail moves only with the details on it
-//! (`REQ-AUTO-108`). The rule runs when the design's lowest automatic shape has `auto_details_last` on, as
-//! it is by default (`REQ-AUTO-098`): each case here sets it, but the one that checks the default. Design:
-//! `docs/src/design/image-to-embroidery.md` › Details last.
+//! (`REQ-AUTO-108`). The rule runs when the design's lowest automatic shape has `auto_details_last` on,
+//! which is off by default (`REQ-AUTO-098`): each case here turns it on, but the one that checks the
+//! default. Design: `docs/src/design/image-to-embroidery.md` › Details last.
 //!
 //! The layers' rule (`REQ-AUTO-023`) already sews an area with a detail in one of its holes before the
 //! detail. The cases here draw what that rule misses: a detail where 2 patches meet, which lies in no
@@ -128,16 +128,15 @@ fn req_auto_096_the_marked_patch_sews_its_details_last_and_changes_thread_3_time
 
 #[test]
 fn req_auto_098_details_sew_last_only_when_the_lowest_automatic_shape_asks_for_it() {
-    // By default the mark, a detail where the 2 patches meet, sews last.
-    let (ids, _) = sewn_as(patches(), Code::AutoOrder);
-    assert_eq!(at(&ids, "mark"), 2, "{ids:?}");
-    // With the switch off, the mark drawn first sews first, as the order without the rule puts it, and
-    // nothing is said of details.
-    let (ids, said) = sewn_as(details_last(patches(), "false"), Code::AutoOrder);
-    assert_eq!(at(&ids, "mark"), 0, "{ids:?}");
-    assert!(!said.iter().any(|said| said.contains("details")), "{said:?}");
+    // By default, and with the switch off, the mark drawn first where the 2 patches meet sews first, as the
+    // order without the rule puts it, and nothing is said of details.
+    for elements in [patches(), details_last(patches(), "false")] {
+        let (ids, said) = sewn_as(elements, Code::AutoOrder);
+        assert_eq!(at(&ids, "mark"), 0, "{ids:?}");
+        assert!(!said.iter().any(|said| said.contains("details")), "{said:?}");
+    }
     // The design goes by its lowest automatic shape, the mark: turned on there alone, the mark sews last.
-    let mut on = details_last(patches(), "false");
+    let mut on = patches();
     on[0].params.set(DETAILS_LAST, "true");
     let (ids, _) = sewn_as(on, Code::AutoOrder);
     assert_eq!(at(&ids, "mark"), 2, "{ids:?}");

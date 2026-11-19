@@ -377,12 +377,12 @@ lowest automatic shape.
 
 **Details sew last.** Whether a detail sews after the larger areas round it, where that costs no thread change: an
 automatic area that the shapes round it close in on, smaller than an area it meets, as an eye is in
-the fur round it. Sewn last, the detail keeps the later fills' rows off its edge. A fill that moves
-for a detail starts, ends and travels elsewhere, and the cap (`auto_thick_cap_fills`) keeps the
-spots that piles up within it. Turn it off to keep the order of the areas as drawn. The design
-goes by the setting of its lowest automatic shape.
+the fur round it. Sewn last, the detail keeps the later fills' rows off its edge. Off by default:
+a fill that moves for a detail can wait for a later batch of its thread, which adds jump threads
+to cut by hand, and on traced photos it shows no more of the picture. Turn it on where an eye or a
+mark must keep its edge clear. The design goes by the setting of its lowest automatic shape.
 
 - **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
-- **Default:** `true`
+- **Default:** `false`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
