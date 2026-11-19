@@ -2118,12 +2118,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
-- M13.45: likeness merging and details last are on by default (`REQ-AUTO-103`).
+- M13.45: likeness merging and details last are on by default (`REQ-AUTO-103`, `REQ-AUTO-108`).
   - `auto_min_likeness` is 0.85, where it was 0, and `auto_details_last` is on. Both landed off, since each
     can change the order the blocks sew in, and M13.35's cap now limits every spot to 4 fills in any order.
   - Of the repository's pictures only the traced dogs and the marked patch drawn abutting sew differently. The dogs on turf keep 3 and 4 thin
-    lines more, and their likeness rises from 0.814 and 0.779 to 0.856 and 0.829. The dogs leave 3 to 5 jump
+    lines more, and their likeness rises from 0.814 and 0.779 to 0.856 and 0.829. The dogs leave 3 to 9 jump
     threads more, and 3 of them sew less area at 3 fills or more.
+  - A detail moves to sew after a larger area only together with the smaller areas it meets and its columns
+    (`REQ-AUTO-108`). Of 2 rows of threads with as few changes, the search prefers the one that keeps them
+    on top. Without it a
+    traced dog's tan patch lay under the edge of the grey area round it, which had moved.
   - Set `auto_min_likeness` to 0 for fewer jump threads, or `auto_details_last` to false, to sew as before.
 - M13.37: traced letters sew as strokes (`REQ-AUTO-087`, `REQ-AUTO-088`).
   - A block letter or a logo's bars traced as an automatic area sews a satin column along each straight

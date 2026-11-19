@@ -2218,38 +2218,40 @@ merging by likeness, at 0.85 ([merging by likeness](#merging-by-likeness)), on 2
 repository sews as before, stitch for stitch, but the traced dogs and the marked patch drawn abutting, which
 now sews as the stacked one does. Measured on 2026-11-19 at opt-level 2,
 main before M13.45 and then this step, with the area at 3 fills or more in mm², the bare share in
-thousandths of a percent and the likeness in thousandths. The photos marked * are local:
+thousandths of a percent and the likeness in thousandths. What shows of each area is its own pixels that
+show its thread (`fabric::shown`): the last column counts the areas under 20 mm² that show 0.1 mm² or more
+less, and more, with the sum of each. The photos marked * are local:
 
-| Picture | Thickest, fills | Area | Bare | Likeness | Jump threads | Thread changes | Stitches |
-|---|---|---|---|---|---|---|---|
-| Dog on turf, 6 threads | 4.00, 4.00 | 137.25, 124.25 | 10, 22 | 814, 856 | 57, 60 | 8, 8 | 9,985, 10,040 |
-| Dog on turf, 9 threads | 4.00, 4.00 | 150.75, 137.75 | 10, 11 | 779, 829 | 58, 61 | 12, 12 | 10,675, 10,659 |
-| Running dog, 6 threads | 4.00, 4.00 | 129.00, 100.75 | 0, 1 | 898, 898 | 49, 52 | 8, 8 | 11,077, 10,736 |
-| Running dog, 9 threads | 4.00, 3.99 | 176.50, 176.50 | 5, 1 | 921, 921 | 64, 69 | 11, 11 | 12,369, 12,528 |
-| Marked patch, abutting | 3.95, 3.98 | 14.25, 14.25 | 0, 0 | 1000, 1000 | 1, 1 | 3, 3 | 4,077, 4,054 |
-| A magnolia * | 4.00, 4.00 | 441.75, 466.50 | 5, 5 | 480, 846 | 155, 328 | 9, 10 | 34,258, 36,716 |
-| A coleus * | 4.22, 4.43 | 851.50, 955.75 | 6, 58 | 454, 838 | 237, 486 | 12, 13 | 56,886, 61,580 |
-| A greylag goose * | 4.00, 4.00 | 482.50, 465.25 | 7, 16 | 483, 824 | 95, 167 | 8, 10 | 36,668, 37,578 |
-| A castle * | 4.00, 4.00 | 221.75, 204.00 | 1, 10 | 434, 779 | 54, 113 | 8, 9 | 26,201, 27,406 |
+| Picture | Thickest, fills | Area | Bare | Likeness | Jump threads | Thread changes | Stitches | Small areas showing less, more |
+|---|---|---|---|---|---|---|---|---|
+| Dog on turf, 6 threads | 4.00, 4.00 | 137.25, 127.00 | 10, 21 | 814, 856 | 57, 60 | 8, 8 | 9,985, 9,975 | 3 of 80 (1.9 mm²), 13 (10.6 mm²) |
+| Dog on turf, 9 threads | 4.00, 4.00 | 150.75, 131.00 | 10, 10 | 779, 829 | 58, 67 | 12, 12 | 10,675, 10,711 | 8 of 98 (6.4 mm²), 25 (19.4 mm²) |
+| Running dog, 6 threads | 4.00, 4.00 | 129.00, 102.00 | 0, 3 | 898, 898 | 49, 54 | 8, 8 | 11,077, 10,776 | 8 of 65 (11.6 mm²), 20 (19.8 mm²) |
+| Running dog, 9 threads | 4.00, 4.00 | 176.50, 178.00 | 5, 2 | 921, 921 | 64, 72 | 11, 11 | 12,369, 12,552 | 7 of 86 (4.9 mm²), 17 (19.4 mm²) |
+| Marked patch, abutting | 3.95, 3.98 | 14.25, 14.25 | 0, 0 | 1000, 1000 | 1, 1 | 3, 3 | 4,077, 4,054 | none |
+| A magnolia * | 4.00, 4.00 | 441.75, 461.75 | 5, 6 | 480, 848 | 155, 335 | 9, 10 | 34,258, 36,888 | 107 of 1,982 (65.6 mm²), 267 (360.1 mm²) |
+| A coleus * | 4.22, 4.02 | 851.50, 902.25 | 6, 53 | 454, 839 | 237, 507 | 12, 13 | 56,886, 60,791 | 233 of 3,932 (140.0 mm²), 467 (624.7 mm²) |
+| A greylag goose * | 4.00, 4.00 | 482.50, 473.25 | 7, 16 | 483, 822 | 95, 171 | 8, 10 | 36,668, 37,981 | 35 of 1,784 (18.0 mm²), 140 (211.7 mm²) |
+| A castle * | 4.00, 4.00 | 221.75, 228.50 | 1, 10 | 434, 779 | 54, 114 | 8, 9 | 26,201, 27,892 | 30 of 1,412 (26.5 mm²), 86 (125.6 mm²) |
 
 The machine file holds as many stitches as the plan. The dogs keep their thickest spots within the cap, and
-3 of them sew less area at 3 fills or more. The lines kept cost the dogs 3 to 5 jump threads and the photos 59
-to 249. What got worse:
+3 of them sew less area at 3 fills or more. The lines kept and the details moved cost the dogs 3 to 9 jump
+threads and the photos 60 to 270. More small areas show more than show less: the details now sew on top.
+What got worse:
 
 - Each local photo changes thread once or twice more. A line kept sews after the fills it borders, which
   can bring its thread back. Which lines did it was not traced.
-- The coleus keeps a spot at 4.43 fills, 1.25 mm² above the cap, where it kept 4.22, and `SC-W0913` names it.
-  It also leaves one sliver, and its bare share rises from 0.006 % to 0.058 %, within the cover's limit of 0.5 %.
-- On the running dog in 6 threads, a grey area that the darker fur closes in on now sews after the tan patch
-  on the chest, which it rings, and its outline and rows lie over the tan's edge. In the stitched preview, at
-  20 pixels to the millimetre, the patch shows 6.0 mm² of tan where it showed 10.3 mm². The likeness doesn't
-  change, since the patch's core still shows: the rule moves a detail after the larger area it meets, and
-  not the smaller one inside it, which would cost a thread change.
+- The coleus keeps a spot at 4.02 fills, where it kept 4.22, and `SC-W0913` names it. It also leaves one
+  sliver, and its bare share rises from 0.006 % to 0.053 %, within the cover's limit of 0.5 %.
+- 2 to 12 % of the small areas show less. On the running dog in 6 threads a patch of 16 mm² shows 2.2 mm²
+  less: an area of 108 mm² beside it now sews after it. The search took another row of threads with as few
+  changes, to grant wishes elsewhere, and that area's thread now sews later. Followers bind only what a wish
+  moves, not a whole thread's batch that a change of row moves. Traced by the order of the 2 areas alone.
 
 Planning takes longer where lines are kept, since each line is measured as a part: by the clock on a shared
 machine, the local photos but the magnolia took 1.8 to 2.2 times as long. Counted in instructions by CI,
-the dogs' exports take 10.6 to 13.3 % more and the pear's 9.4 % more, and the test sheets as much as before
-(`conformance/perf.toml`).
+the dogs' exports took 10.6 to 13.3 % more and the pear's 9.4 % more before nests, and the test sheets as
+much as before (`conformance/perf.toml`).
 
 These leave every limit as it was, since a limit comes from the whole set.
 
