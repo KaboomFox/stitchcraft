@@ -28,7 +28,7 @@ fn budget(work: u64) -> Budget {
 fn req_auto_111_without_guides_nothing_is_tested_or_charged() {
     let guides = Guides::of(&[], &Budget::DEFAULT);
     assert!(guides.is_empty());
-    assert_eq!(guides.crossing(&part(0.0, 0.0, 1.0), &mut budget(0).meter()), Ok(None));
+    assert_eq!(guides.crossing(&part(0.0, 0.0, 1.0), None, &mut budget(0).meter()), Ok(None));
     assert_eq!(guides.path(0), None);
     assert!(guides.said(true).is_empty());
 }
@@ -37,14 +37,14 @@ fn req_auto_111_without_guides_nothing_is_tested_or_charged() {
 fn req_auto_109_a_part_follows_a_guide_whose_line_has_a_stretch_inside_it() {
     let guides = Guides::of(&[guide("across", &[(-1.0, 5.0), (11.0, 5.0)], false)], &Budget::DEFAULT);
     assert!(!guides.is_empty());
-    assert_eq!(guides.crossing(&part(0.0, 0.0, 10.0), &mut Budget::DEFAULT.meter()), Ok(Some(0)));
+    assert_eq!(guides.crossing(&part(0.0, 0.0, 10.0), None, &mut Budget::DEFAULT.meter()), Ok(Some(0)));
     // A part the line misses, and one it only touches at a corner, don't follow it.
-    assert_eq!(guides.crossing(&part(0.0, 6.0, 4.0), &mut Budget::DEFAULT.meter()), Ok(None));
-    assert_eq!(guides.crossing(&part(11.0, 5.0, 2.0), &mut Budget::DEFAULT.meter()), Ok(None));
+    assert_eq!(guides.crossing(&part(0.0, 6.0, 4.0), None, &mut Budget::DEFAULT.meter()), Ok(None));
+    assert_eq!(guides.crossing(&part(11.0, 5.0, 2.0), None, &mut Budget::DEFAULT.meter()), Ok(None));
     // A unit for each of the line's segment and the square's 4 sides, and one for each of the 3 stretches
     // between its cuts: 7.
-    assert_eq!(guides.crossing(&part(0.0, 0.0, 10.0), &mut budget(7).meter()), Ok(Some(0)));
-    assert!(guides.crossing(&part(0.0, 0.0, 10.0), &mut budget(6).meter()).is_err());
+    assert_eq!(guides.crossing(&part(0.0, 0.0, 10.0), None, &mut budget(7).meter()), Ok(Some(0)));
+    assert!(guides.crossing(&part(0.0, 0.0, 10.0), None, &mut budget(6).meter()).is_err());
 }
 
 #[test]
@@ -57,7 +57,7 @@ fn req_auto_110_a_part_two_guides_cross_follows_the_last() {
         ],
         &Budget::DEFAULT,
     );
-    assert_eq!(guides.crossing(&part(0.0, 0.0, 10.0), &mut Budget::DEFAULT.meter()), Ok(Some(1)));
+    assert_eq!(guides.crossing(&part(0.0, 0.0, 10.0), None, &mut Budget::DEFAULT.meter()), Ok(Some(1)));
     assert_eq!(guides.path(1).map(|path| path.subpaths[0].start), Some(p(5.0, -1.0)));
 }
 
@@ -66,8 +66,8 @@ fn req_auto_109_a_closed_guide_is_opened_where_it_closes() {
     // A closed guide round 3 sides of a square: opened, its line doesn't run back along the fourth, so a
     // part under that side alone isn't crossed.
     let guides = Guides::of(&[guide("ring", &[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)], true)], &Budget::DEFAULT);
-    assert_eq!(guides.crossing(&part(-1.0, 3.0, 2.0), &mut Budget::DEFAULT.meter()), Ok(None));
-    assert_eq!(guides.crossing(&part(9.0, 3.0, 2.0), &mut Budget::DEFAULT.meter()), Ok(Some(0)));
+    assert_eq!(guides.crossing(&part(-1.0, 3.0, 2.0), None, &mut Budget::DEFAULT.meter()), Ok(None));
+    assert_eq!(guides.crossing(&part(9.0, 3.0, 2.0), None, &mut Budget::DEFAULT.meter()), Ok(Some(0)));
 }
 
 #[test]
@@ -113,4 +113,24 @@ fn diag_sc_w0919_a_guide_that_steers_nothing_is_named() {
     without.steered(0, 1);
     assert!(without.said(false)[0].message.ends_with("the design has no shape digitized automatically."));
     assert_eq!(unused_all(&[point, line]).len(), 2);
+}
+
+#[test]
+fn req_auto_109_a_part_whole_under_its_details_follows_a_guide_only_where_it_shows() {
+    // A square 10 mm across, digitized whole under a detail that fills its middle, from 3 to 7 mm: a guide
+    // across the detail alone doesn't steer it, and one that crosses what shows of it does.
+    let shown = [Polygon {
+        outline: vec![p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0), p(0.0, 0.0)],
+        holes: vec![vec![p(3.0, 3.0), p(3.0, 7.0), p(7.0, 7.0), p(7.0, 3.0), p(3.0, 3.0)]],
+    }];
+    let over_the_detail = Guides::of(&[guide("detail", &[(4.0, 5.0), (6.0, 5.0)], false)], &Budget::DEFAULT);
+    let across = Guides::of(&[guide("across", &[(1.0, 5.0), (6.0, 5.0)], false)], &Budget::DEFAULT);
+    let square = part(0.0, 0.0, 10.0);
+    assert_eq!(over_the_detail.crossing(&square, None, &mut Budget::DEFAULT.meter()), Ok(Some(0)));
+    assert_eq!(over_the_detail.crossing(&square, Some(&shown), &mut Budget::DEFAULT.meter()), Ok(None));
+    assert_eq!(across.crossing(&square, Some(&shown), &mut Budget::DEFAULT.meter()), Ok(Some(0)));
+    // The line's segment against the square's 4 sides, its 1 stretch, then against the 8 sides of what
+    // shows and its 2 stretches: 15 units, and with 14 the work runs out.
+    assert_eq!(across.crossing(&square, Some(&shown), &mut budget(15).meter()), Ok(Some(0)));
+    assert!(across.crossing(&square, Some(&shown), &mut budget(14).meter()).is_err());
 }

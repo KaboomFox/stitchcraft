@@ -2938,7 +2938,9 @@ without the guide (`REQ-AUTO-109` to `REQ-AUTO-111`).
 
 - **Which parts.** The parts the rules by width leave filled ([stitch types by width](#stitch-types-by-width)):
   the broad parts of an area, its compact and uneven parts, and the broad pieces of a part split by width. A
-  part follows a guide when a stretch of the guide's line lies inside it. Specks, under the smallest area
+  part follows a guide when a stretch of the guide's line lies inside it where the area shows. An area
+  digitized whole under the details that fill its holes ([neighbours](#neighbours), `REQ-AUTO-023`) shows only round them, so a
+  guide drawn over a detail steers the detail and leaves the area under it alone. Specks, under the smallest area
   `auto_min_area_mm2`, stay in the area's fill and merge as before.
 - **The parts it crosses.** Unlike a mark, which keeps the parts lying wholly inside it, the guide steers the
   parts it crosses. The guided fill lengthens the guide straight on at both ends until its rows cover

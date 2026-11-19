@@ -83,7 +83,7 @@ pub(in crate::auto) fn merged<'d>(
     marks: &Marks,
     budget: &Budget,
 ) -> (Flattened<'d>, Vec<Merge>) {
-    let Flattened { elements, kept, mut said } = flattened;
+    let Flattened { elements, kept, mut said, shown } = flattened;
     let mut areas: Vec<Option<Area>> =
         elements.iter().map(|(index, element)| area(element, rules.get(*index).and_then(Option::as_ref), budget)).collect();
     // Every area gives up its lines first, so that a line goes into what its neighbours keep.
@@ -195,7 +195,7 @@ pub(in crate::auto) fn merged<'d>(
             }
         }
     }
-    (Flattened { elements: sewing, kept, said }, done)
+    (Flattened { elements: sewing, kept, said, shown }, done)
 }
 
 /// Whether an area with `rules` merges its thin lines: unless it turns that off, or names its stitch.

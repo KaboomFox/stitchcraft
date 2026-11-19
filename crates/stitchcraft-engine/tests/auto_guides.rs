@@ -10,7 +10,7 @@ use stitchcraft_core::{Budget, ElementId, Point};
 use stitchcraft_engine::auto::digitized;
 use stitchcraft_engine::design::mark::Mark;
 use stitchcraft_engine::design::{Design, DesignSettings, Element, Path, Segment, Shape, Subpath};
-use stitchcraft_testkit::designs::{BLUE, RED, automatic, fill, in_place, unbased};
+use stitchcraft_testkit::designs::{BLUE, GREEN, RED, automatic, fill, in_place, unbased};
 use stitchcraft_testkit::fabric::{self, GAP, Limits};
 use stitchcraft_testkit::pictures;
 
@@ -105,4 +105,26 @@ fn req_auto_109_a_guide_across_ragged_patches_of_a_traced_photo_steers_them_and_
     let ((_, bare), (thickest, guided_bare)) = (measured(&ear), measured(&guided));
     assert!(thickest <= 4.0 + 1e-9, "{thickest:.2} fills at the thickest spot");
     assert!(guided_bare <= bare + 0.05, "{guided_bare:.3} mm² bare with the guide, {bare:.3} without");
+}
+
+#[test]
+fn req_auto_109_a_guide_over_a_detail_leaves_the_area_under_it_alone() {
+    // A blue square drawn over the middle of a red one, as a stacked trace draws a detail: the red is
+    // digitized whole under it. A guide across the blue alone steers the blue, and the red, which shows only
+    // round it, keeps its tatami fill.
+    let picture = |guides: Vec<Mark>| {
+        // The green field is the picture's background, which is left out.
+        let field = automatic(fill("field", &[&[(-5.0, -5.0), (35.0, -5.0), (35.0, 35.0), (-5.0, 35.0)]], &GREEN, &[]));
+        let red = automatic(fill("red", &[&[(0.0, 0.0), (30.0, 0.0), (30.0, 30.0), (0.0, 30.0)]], &RED, &[]));
+        let blue = automatic(fill("blue", &[&[(10.0, 10.0), (20.0, 10.0), (20.0, 20.0), (10.0, 20.0)]], &BLUE, &[]));
+        design(vec![field, red, blue], guides)
+    };
+    let guided = picture(vec![guide("guide", &[(12.0, 15.0), (15.0, 13.0), (18.0, 15.0)])]);
+    let (elements, _) = digitized(&guided, &Budget::DEFAULT);
+    let guided_ids: Vec<&str> = elements.iter().filter(|e| e.params.get("fill_method") == Some("guided_fill")).map(|e| e.id.as_str()).collect();
+    assert_eq!(guided_ids, ["blue"], "{elements:?}");
+    // Drawn across the red where it shows too, the guide steers both.
+    let both = picture(vec![guide("guide", &[(5.0, 15.0), (15.0, 13.0), (18.0, 15.0)])]);
+    let (elements, _) = digitized(&both, &Budget::DEFAULT);
+    assert_eq!(elements.iter().filter(|e| e.params.get("fill_method") == Some("guided_fill")).count(), 2, "{elements:?}");
 }

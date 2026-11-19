@@ -15,6 +15,8 @@ The guide itself is never sewn.
   line that crosses only a corner of a large part steers all of it, since the rows are copies of the line,
   lengthened straight on at its ends until they cover the part. Look at the preview, and draw the guide
   again where the rows go wrong.
+- **Not the shape under a detail.** A guide drawn over a detail, such as an eye, steers the detail. The fur
+  round it follows the guide only where the line crosses the fur itself.
 - **Not the narrow parts.** A part sewn as a satin column or a running stitch keeps its stitches: a column's
   stitches already lie across its width, and a running stitch follows its middle.
 - **Not the specks.** A part under 1 mm² stays in its area's fill and merges as before.

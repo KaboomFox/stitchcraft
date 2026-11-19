@@ -85,12 +85,24 @@ impl Guides {
         self.read.is_empty()
     }
 
-    /// The last guide, by its place among those that read, whose line has a stretch inside `part`, with
-    /// `meter`'s work; `None` when none does.
-    pub(crate) fn crossing(&self, part: &Polygon, meter: &mut Meter) -> Result<Option<usize>, Exhausted> {
+    /// The last guide, by its place among those that read, whose line has a stretch inside `part` and, when
+    /// `shown` is given, inside it too: what shows of an area digitized whole under its details, which a guide
+    /// drawn over a detail doesn't steer. With `meter`'s work; `None` when no guide does.
+    pub(crate) fn crossing(&self, part: &Polygon, shown: Option<&[Polygon]>, meter: &mut Meter) -> Result<Option<usize>, Exhausted> {
         let mut last = None;
         for (at, guide) in self.read.iter().enumerate() {
-            if !cut::inside(&guide.line, std::slice::from_ref(part), meter)?.is_empty() {
+            let inside = cut::inside(&guide.line, std::slice::from_ref(part), meter)?;
+            let mut crosses = !inside.is_empty();
+            if let (Some(shown), true) = (shown, crosses) {
+                crosses = false;
+                for piece in &inside {
+                    if !cut::inside(piece, shown, meter)?.is_empty() {
+                        crosses = true;
+                        break;
+                    }
+                }
+            }
+            if crosses {
                 last = Some(at);
             }
         }

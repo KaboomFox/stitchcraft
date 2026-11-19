@@ -42,7 +42,7 @@
 //! region can't be given is sewn as it is drawn.
 
 use std::borrow::Cow;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Meter, Mm};
 
@@ -72,6 +72,9 @@ pub(in crate::auto) struct Flattened<'d> {
     /// `SC-I0908` for each area whose layers need more work than the budget allows, and `SC-I0908` counting
     /// the areas that sew only what shows of them and those digitized whole under their details.
     pub(in crate::auto) said: Vec<Diagnostic>,
+    /// What shows of each area digitized whole under its details, by its place in the design: a guide
+    /// steers such an area only where it shows (`REQ-AUTO-109`).
+    pub(in crate::auto) shown: BTreeMap<usize, Vec<Polygon>>,
 }
 
 /// An automatic area as the layers are flattened.
@@ -155,6 +158,7 @@ pub(in crate::auto) fn flattened<'d>(design: &'d Design, rules: &[Option<AutoPar
     moved(elements, &mut layers, &mut order, budget, &mut said);
     let (mut flattened, mut whole) = (0_usize, 0_usize);
     let mut sewing = Vec::with_capacity(order.len());
+    let mut shown = BTreeMap::new();
     for index in order {
         let Some(element) = elements.get(index) else { continue };
         let layer = layers.get(index).and_then(Option::as_ref).filter(|layer| !layer.unfound);
@@ -166,6 +170,9 @@ pub(in crate::auto) fn flattened<'d>(design: &'d Design, rules: &[Option<AutoPar
         // An area whose holes are closed is digitized whole under its details, drawn whole or not; one that
         // can't be given what it sews is sewn as it is drawn.
         whole += usize::from(given.is_ok() && !layer.closed.is_empty());
+        if given.is_ok() && !layer.closed.is_empty() {
+            shown.insert(index, layer.shown.clone());
+        }
         let given = given.unwrap_or_else(|failed| {
             said.push(failed.said(Code::AutoLayers, "what this area sews", "it is sewn as it is drawn", budget.max_work, element.id.clone()));
             Given::Drawn
@@ -180,7 +187,7 @@ pub(in crate::auto) fn flattened<'d>(design: &'d Design, rules: &[Option<AutoPar
         }
     }
     said.extend(summary(flattened, whole));
-    Flattened { elements: sewing, kept, said }
+    Flattened { elements: sewing, kept, said, shown }
 }
 
 /// The id of element `index` of `elements`.
