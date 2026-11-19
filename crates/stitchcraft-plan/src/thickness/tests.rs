@@ -563,6 +563,22 @@ fn req_auto_074_the_hottest_spot_of_a_stitch_is_the_most_of_the_spots_it_lays_th
 }
 
 #[test]
+fn req_auto_074_the_spots_of_a_stitch_are_those_it_lays_thread_in_with_their_fills() {
+    let thickness = measured(&knot());
+    let most = thickness.most(Measure::Fills);
+    let through = placed(&thickness, stitch((4.6, 4.6), (5.4, 5.4)));
+    let spots = thickness.spots(&through, &mut meter()).unwrap();
+    // The thickest of them is the stitch's hottest, and each has the fills the measure has there.
+    assert!(spots.len() >= 4, "{spots:?}");
+    assert!(near(spots.values().fold(0.0_f64, |most, fills| most.max(*fills)), most.value));
+    assert!(spots.iter().all(|(spot, fills)| thickness.fills.get(*spot) == Some(fills)), "{spots:?}");
+    assert!(spots.values().all(|fills| *fills > 0.0) && spots.keys().all(|spot| *spot > 1), "{spots:?}");
+    // One outside the grid lays thread in none.
+    assert!(thickness.spots(&placed(&thickness, stitch((50.0, 50.0), (51.0, 50.0))), &mut meter()).unwrap().is_empty());
+    assert_eq!(least(&|meter| thickness.spots(&stitch((5.0, 5.0), (6.0, 5.0)), meter).is_ok()), 2);
+}
+
+#[test]
 fn req_auto_074_the_hottest_spot_of_a_stitch_is_a_corner_of_its_cell() {
     // A short stitch sewn 100 times in the middle of a cell, 4 mm along and 2 mm up from the first needle
     // point, and another in the cell below it: the corners the 2 cells share are the thickest spots, and the

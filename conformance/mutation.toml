@@ -1031,3 +1031,9 @@ file = "apps/stitchcraft-cli/src/subject.rs"
 mutant = "replace cut -> Result<Subject, Stopped> with Ok(Default::default())"
 line = "Err(Stopped::Said(left_out()))"
 why = "this cut is compiled only without the cutout feature, which the mutants' build has on: the models workflow tests stitch without default features, and expects its SC-E1207"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/cap.rs"
+mutant = "replace > with >= in capped"
+line = "let (last, hottest) = if thickness.most(Measure::Fills).value > rules.limit {"
+why = "with the thickest spot at the warning's limit the candidates are found, but the kinds above the limit and the last resort first ask whether a spot is above it, and stop: only the work charged grows"

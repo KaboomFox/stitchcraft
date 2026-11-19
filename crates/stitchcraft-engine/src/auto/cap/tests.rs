@@ -499,3 +499,48 @@ fn req_auto_112_a_column_s_points_go_only_above_the_warning_s_limit_and_until_it
     let (capped, _, _) = cap(&mut kept, &Rules { limit: 50.0, ..as_column });
     assert!(capped.is_none_or(|capped| capped.times == [0; 4]));
 }
+
+#[test]
+fn req_auto_112_a_joined_stitch_s_turn_is_measured_from_the_stitch_into_the_point() {
+    // From (1, 1): along x, and then up 27 degrees and up 63 degrees, wherever the stitches start.
+    let into = sewn(1, (1.0, 1.0), (2.0, 1.0), Role::Top);
+    let up = |to: (f64, f64)| Change::of(&into, &sewn(2, (1.0, 1.0), to, Role::Top));
+    let (half, steep) = (up((3.0, 2.0)), up((1.5, 2.0)));
+    assert!((half.cosine - 2.0 / 5.0_f64.sqrt()).abs() < 1e-12 && !half.notch, "{half:?}");
+    assert!((steep.cosine - 0.5 / 1.25_f64.sqrt()).abs() < 1e-12 && steep.notch, "{steep:?}");
+    // Across the other way the cosine is the same, and from a stitch of no length it is a notch.
+    let down = Change::of(&sewn(1, (2.0, 2.0), (2.0, 3.0), Role::Top), &sewn(2, (2.0, 2.0), (1.0, 4.0), Role::Top));
+    assert!((down.cosine - 2.0 / 5.0_f64.sqrt()).abs() < 1e-12 && !down.notch, "{down:?}");
+    assert!(Change::of(&sewn(1, (1.0, 1.0), (1.0, 1.0), Role::Top), &sewn(2, (1.0, 1.0), (2.0, 1.0), Role::Top)).notch);
+}
+
+#[test]
+fn req_auto_112_the_last_resort_takes_the_least_change_of_the_points_that_lower_the_spot() {
+    let change = |notch: bool, cosine: f64, lowered: f64| Change { notch, cosine, lowered };
+    // The least change of those that lower the spot by half the most or more: 0.06 of 0.1 counts, 0.04 not.
+    let may = [(change(true, 0.2, 0.1), (0, 1)), (change(false, 0.9, 0.06), (0, 2)), (change(false, 0.99, 0.04), (0, 3))];
+    assert_eq!(chosen(&may), Some((0, 2)));
+    assert_eq!(chosen(&[(change(true, 0.2, 0.1), (0, 1)), (change(false, 0.9, 0.05), (0, 2))]), Some((0, 2)));
+    assert_eq!(chosen(&[(change(true, 0.2, 3.0), (0, 1)), (change(false, 0.9, 1.6), (0, 2))]), Some((0, 2)));
+    // None lowers it, or there is none.
+    assert_eq!(chosen(&[(change(false, 0.9, 0.0), (0, 2))]), None);
+    assert_eq!(chosen(&[]), None);
+}
+
+#[test]
+fn req_auto_112_the_last_resort_takes_no_point_of_a_column_that_digitizing_did_not_make() {
+    // A column sewn 5 times over itself, 5 fills: a satin column of a shape's own settings keeps its stitches.
+    let points: Vec<(f64, f64)> = (0..5).flat_map(|_| zigzag(4.0, 0.25)).collect();
+    let mut sewn = plan(&[("column", Role::Top, points)]);
+    let was = sewn.clone();
+    let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let columns: BTreeSet<ElementRef> = ElementRef::from_index(0).into_iter().collect();
+    let rules = Rules { columns: &columns, ..rules() };
+    assert!(capped(&mut sewn, &mut thickness, &rules, &BTreeSet::new(), &mut Budget::DEFAULT.meter()).unwrap().is_none());
+    assert_eq!(sewn, was);
+    // Made by digitizing, it loses points down to the limit.
+    let made = columns.clone();
+    let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let capped = capped(&mut sewn, &mut thickness, &rules, &made, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    assert!(capped.times[3] > 0, "{capped:?}");
+}

@@ -261,17 +261,7 @@ impl Cap<'_, '_> {
                     may.push((change, point));
                 }
             }
-            // Of the points that lower the thickest spot by half as much as the one that lowers it most, or
-            // more, the one that changes its column least: a point that leaves the spot as thick changes a
-            // column for nothing.
-            let most = may.iter().fold(0.0_f64, |most, (change, _)| most.max(change.lowered));
-            let mut best: Option<(Change, Entry)> = None;
-            for &(change, point) in may.iter().filter(|(change, _)| most > 0.0 && change.lowered >= most / 2.0) {
-                if best.is_none_or(|(least, _)| change.less_than(least)) {
-                    best = Some((change, point));
-                }
-            }
-            let Some((_, point)) = best else { break };
+            let Some(point) = chosen(&may) else { break };
             points.retain(|other| *other != point);
             self.taken_out(point, Kind::Column, true, false, meter)?;
         }
@@ -295,7 +285,8 @@ impl Cap<'_, '_> {
     fn taken_out(&mut self, (block, at): Entry, kind: Kind, hot: bool, asked: bool, meter: &mut Meter) -> Result<Option<Change>, Exhausted> {
         let pass = &self.pass;
         let Some((_, role, element)) = pass.stitch((block, at)) else { return Ok(None) };
-        if !kind.takes(role) || pass.gone.contains(&(block, at)) {
+        // A point taken out is no stitch any more (`Pass::stitch`).
+        if !kind.takes(role) {
             return Ok(None);
         }
         let (Some(from), Some(to)) = (pass.beside((block, at), false, meter)?, pass.beside((block, at), true, meter)?) else { return Ok(None) };
@@ -446,6 +437,20 @@ impl Change {
     fn less_than(self, other: Change) -> bool {
         (!self.notch && other.notch) || (self.notch == other.notch && self.cosine > other.cosine)
     }
+}
+
+/// Of the points `may`, with how taking each changes its column, those that lower the thickest spot by half as
+/// much as the one that lowers it most, or more, and of those the one that changes its column least: a point
+/// that leaves the spot as thick changes a column for nothing. `None` when none lowers it.
+fn chosen(may: &[(Change, Entry)]) -> Option<Entry> {
+    let most = may.iter().fold(0.0_f64, |most, (change, _)| most.max(change.lowered));
+    let mut best: Option<(Change, Entry)> = None;
+    for &(change, point) in may.iter().filter(|(change, _)| most > 0.0 && change.lowered * 2.0 >= most) {
+        if best.is_none_or(|(least, _)| change.less_than(least)) {
+            best = Some((change, point));
+        }
+    }
+    best.map(|(_, point)| point)
 }
 
 /// The turn from the stitch into a point, in degrees, from which the joined stitch runs along a column's edge

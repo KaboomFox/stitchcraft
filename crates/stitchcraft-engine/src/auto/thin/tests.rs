@@ -202,6 +202,11 @@ fn req_auto_114_a_satin_column_hides_no_row_end_of_the_pass() {
     let (thinned, _, _) = thin(&mut sewn, &Rules { columns: &column, limit: 50.0, ..rules(NONE) });
     assert_eq!(thinned.unwrap().times[3], 0);
     assert!(right_ends(&sewn, Role::Top).iter().all(|x| *x == 6.0));
+    // At it, they stay too.
+    let mut at = seam(Role::Top, 0.25, true);
+    let most = Thickness::of(&at, &mut Budget::DEFAULT.meter()).unwrap().unwrap().most(Measure::Fills).value;
+    let (thinned, _, _) = thin(&mut at, &Rules { columns: &column, cap: 2.0, limit: most, ..rules(NONE) });
+    assert_eq!(thinned.unwrap().times[3], 0);
     // Above it, as a last resort, the column hides them as any later shape does (`REQ-AUTO-112`).
     let mut hot = seam(Role::Top, 0.25, true);
     let (thinned, _, _) = thin(&mut hot, &Rules { columns: &column, ..rules(NONE) });
