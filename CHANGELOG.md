@@ -15,8 +15,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     guides cross follows the one drawn last. The guide itself sews no stitch.
   - The readers take the guides out of the design's elements beside the marks and give them to the design
     (`Design::guides`, `design::mark::taken_out`, which now returns `Taken`). In a VectorCraft document a
-    path so named still guides the shapes with settings grouped with it, and a layer may hold any number of
-    guides. A bug-report bundle keeps the guides of `--guide`.
+    path so named still guides the shapes with settings grouped with it, and a person may draw any number
+    of guides in one layer. A bug-report bundle keeps the guides of `--guide`.
   - `SC-I0918` counts the parts that follow each guide, and the parts it crosses that keep their stitches.
     `SC-W0919` names a guide that steers nothing.
 - M13.39: marks that keep parts (`REQ-AUTO-104` to `REQ-AUTO-107`, `REQ-VC-031`, `REQ-CLI-021`,

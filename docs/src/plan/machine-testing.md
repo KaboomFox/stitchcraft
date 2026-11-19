@@ -378,7 +378,7 @@ one along its middle, each beside the same picture without guides:
 - Do the rows follow the line, and does the fur or the leaf read better than with straight rows?
 - A guided part still overlaps the parts round it. Does fabric show at its edges, where its rows end at
   other angles than straight rows do?
-- The base layer under a guided part keeps its own angle. Does it show through between the bent rows?
+- The base layer under a guided part lies at `auto_fill_angle`. Does it show through between the bent rows?
 - The rest of the picture sews in another order. Feel for thick spots near the guided parts.
 
 M13.40 sews a detail after the fills round it where that costs no thread change, when the design has
