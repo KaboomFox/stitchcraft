@@ -959,6 +959,30 @@ mod tests {
     }
 
     #[test]
+    fn req_auto_104_a_speck_a_mark_holds_is_measured_and_one_outside_stays_in_the_fill() {
+        // 2 specks of 0.8 mm², 1.6 mm by 0.5 mm, and a mark round the first.
+        let (inside, outside) =
+            (outline(&[(0.0, 0.0), (1.6, 0.0), (1.6, 0.5), (0.0, 0.5)]), outline(&[(5.0, 0.0), (6.6, 0.0), (6.6, 0.5), (5.0, 0.5)]));
+        let marks = Marks::of(&[crate::auto::marks::tests::edged("eye", [-0.5, -0.5, 2.0, 1.0], 1)], &Budget::DEFAULT);
+        let (area, rules) = (ElementId::new("area").unwrap(), AutoParams::defaults());
+        let by = By { rules: &rules, open: &|_, _| Ok(true), marks: &marks };
+        let sorted = sorted(&area, vec![inside.clone(), outside.clone()], &bounds(1.0), by, &mut Budget::DEFAULT.meter()).unwrap();
+        // Narrower than the narrowest satin stroke, the first runs along its middle, and the other stays in
+        // the fill as a speck.
+        assert_eq!(sorted.along.iter().map(narrow_part).collect::<Vec<_>>(), [&inside]);
+        assert_eq!(sorted.filled, [outside]);
+        assert_eq!(sorted.fired.iter().map(|fired| fired.rule).collect::<Vec<_>>(), [RuleId::Line, RuleId::Speck]);
+        // Testing it against the mark charges the meter: with too little work, the area needs more.
+        let short = sorted_with_work(&area, &inside, by, 4);
+        assert_eq!(short, Err(Exhausted::Work));
+    }
+
+    /// `part` sorted by `by` with `work` units.
+    fn sorted_with_work(area: &ElementId, part: &Polygon, by: By<'_>, work: u64) -> Result<Parts, Exhausted> {
+        sorted(area, vec![part.clone()], &bounds(1.0), by, &mut Budget { max_work: work, ..Budget::DEFAULT }.meter())
+    }
+
+    #[test]
     fn a_part_of_1_square_millimetre_is_no_speck() {
         // A strip 0.5 mm wide and 2 mm long, as large as a speck can't be: narrow, with a line along it.
         let strip = outline(&[(0.0, 0.0), (2.0, 0.0), (2.0, 0.5), (0.0, 0.5)]);

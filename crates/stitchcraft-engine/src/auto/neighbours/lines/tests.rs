@@ -70,6 +70,16 @@ fn req_auto_105_a_line_a_mark_holds_stays_and_an_area_too_costly_to_test_keeps_i
 }
 
 #[test]
+fn req_auto_090_an_area_that_turns_merging_off_keeps_its_line_and_still_counts_what_a_mark_holds() {
+    let elements = vec![auto("left", &[square((0.0, 0.0), (10.0, 10.0))], &[]), auto("line", &[strand(10.0)], &[("auto_fill_uneven", "false")])];
+    let marks = Marks::of(&[crate::auto::marks::tests::edged("strand", [9.9, -0.1, 10.8, 10.1], 1)], &Budget::DEFAULT);
+    let (ids, said) = marked(elements, &marks, &Budget::DEFAULT);
+    assert_eq!((ids, said.len()), (vec!["left".to_string(), "line".to_string()], 0), "{said:?}");
+    let said = marks.said(true);
+    assert!(said[0].message.contains("holds 1 part of automatic areas wholly. Of them, 0 specks and 0 thin lines"), "{}", said[0]);
+}
+
+#[test]
 fn a_line_whose_area_merges_whole_sews_nothing_and_its_trim_has_no_place() {
     let set = filled("set", &[square((30.0, 0.0), (40.0, 10.0))]);
     let elements = vec![auto("left", &[square((0.0, 0.0), (10.0, 10.0))], &[]), auto("line", &[strand(10.0)], &[("trim_after", "true")]), set];

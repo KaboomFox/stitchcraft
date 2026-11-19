@@ -2727,62 +2727,83 @@ inside it and a mark in a design without an automatic shape, which then sews as 
 
 ### What marks sew
 
-Measured on 2026-11-18 with a prototype of the rule (`stitch plan --auto`'s numbers, as M13.41's measure and
-M13.29's count them). No picture is a goal: one procedure marked each, never an eye. Each picture was planned
-without marks. Its 3 largest parts that the plan loses ([likeness](#likeness)) were then each marked by the box
-round them, grown by 0.5 mm, as a person draws a rectangle round an eye. A picture that loses none was marked
-round its 3 smallest parts, and TS-13A round 3 of the specks it merges. Rows: without marks, with marks, and
-with marks that sew thin lines but merge specks, the choice in the decisions below.
+Measured on 2026-11-19 with the build, on `main` with M13.35's cap (`stitch plan --auto`'s numbers, as M13.41's
+measure and M13.29's count them, and the stitches of the PES file read back). No picture is a goal: one
+procedure marked each, never an eye. Each picture was planned without marks. Its 3 largest parts that the
+plan loses ([likeness](#likeness)) were then each marked by the box round them, grown by 0.5 mm, as a person
+draws a rectangle round an eye. A picture that loses none was marked round its 3 smallest parts, and TS-13A
+round 3 of the specks it merges.
 
-| Picture | Marks keep | Likeness | Parts kept | Thickest spot, fills | At 3 fills or more, mm² | Jump threads | Thread changes | Stitches | Specks merged |
-|---|---|---|---|---|---|---|---|---|---|
-| Dog on turf, 6 threads | none | 0.814 | 75 of 97 | 4.69 | 141.50 | 57 | 8 | 10,052 | 0 |
-|  | parts | 0.832 | 78 of 97 | 4.69 | 134.75 | 59 | 8 | 10,112 | 0 |
-|  | lines alone | 0.832 | 78 of 97 | 4.69 | 134.75 | 59 | 8 | 10,112 | 0 |
-| Dog on turf, 9 threads | none | 0.779 | 83 of 111 | 4.80 | 153.25 | 58 | 12 | 10,732 | 0 |
-|  | parts | 0.814 | 87 of 111 | 4.95 | 159.75 | 62 | 12 | 10,933 | 0 |
-|  | lines alone | 0.814 | 87 of 111 | 4.95 | 159.75 | 62 | 12 | 10,933 | 0 |
-| Running dog, 6 threads | none | 0.898 | 66 of 77 | 4.62 | 130.50 | 49 | 8 | 11,110 | 0 |
-|  | parts | 0.942 | 69 of 77 | 4.62 | 136.00 | 52 | 8 | 11,204 | 0 |
-|  | lines alone | 0.942 | 69 of 77 | 4.62 | 136.00 | 52 | 8 | 11,204 | 0 |
-| Running dog, 9 threads | none | 0.921 | 88 of 100 | 5.63 | 187.50 | 64 | 11 | 12,556 | 0 |
-|  | parts | 0.938 | 91 of 100 | 5.63 | 202.00 | 67 | 12 | 12,672 | 0 |
-|  | lines alone | 0.938 | 91 of 100 | 5.63 | 202.00 | 67 | 12 | 12,672 | 0 |
-| Magnolia | none | 0.480 | 233 of 496 | 5.54 | 462.75 | 155 | 9 | 34,697 | 1522 |
-|  | parts | 0.504 | 246 of 496 | 5.81 | 513.25 | 184 | 9 | 35,568 | 1441 |
-|  | lines alone | 0.504 | 246 of 496 | 5.63 | 496.75 | 162 | 9 | 35,169 | 1525 |
-| Coleus | none | 0.454 | 395 of 841 | 10.46 | 894.50 | 237 | 12 | 57,951 | 3250 |
-|  | parts | 0.461 | 401 of 841 | 7.45 | 909.75 | 282 | 12 | 58,385 | 3175 |
-|  | lines alone | 0.461 | 401 of 841 | 10.50 | 899.25 | 243 | 12 | 57,925 | 3254 |
-| Goose | none | 0.483 | 167 of 342 | 5.60 | 499.50 | 95 | 8 | 37,140 | 1486 |
-|  | parts | 0.493 | 171 of 342 | 6.57 | 512.25 | 114 | 8 | 37,697 | 1453 |
-|  | lines alone | 0.493 | 171 of 342 | 6.70 | 524.75 | 101 | 8 | 37,588 | 1486 |
-| Castle | none | 0.434 | 81 of 191 | 5.88 | 225.75 | 54 | 8 | 26,323 | 1334 |
-|  | parts | 0.449 | 85 of 191 | 5.80 | 235.00 | 69 | 8 | 26,840 | 1302 |
-|  | lines alone | 0.449 | 85 of 191 | 6.25 | 249.25 | 62 | 8 | 27,018 | 1334 |
+| Picture | Marks | Likeness | Parts kept | Thickest spot, fills | At 3 fills or more, mm² | Jump threads | Thread changes | Stitches | Export's count | Specks merged | `SC-I0915` notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Dog on turf, 6 threads | none | 0.814 | 75 of 97 | 4.00 | 137.25 | 57 | 8 | 9,985 | 9,985 | 0 | 22 |
+|  | 3 | 0.832 | 78 of 97 | 4.00 | 130.50 | 59 | 8 | 10,045 | 10,045 | 0 | 19 |
+| Dog on turf, 9 threads | none | 0.779 | 83 of 111 | 4.00 | 150.75 | 58 | 12 | 10,675 | 10,675 | 0 | 29 |
+|  | 3 | 0.814 | 87 of 111 | 4.00 | 154.75 | 62 | 12 | 10,856 | 10,856 | 0 | 25 |
+| Running dog, 6 threads | none | 0.898 | 66 of 77 | 4.00 | 129.00 | 49 | 8 | 11,077 | 11,077 | 0 | 14 |
+|  | 3 | 0.942 | 69 of 77 | 4.00 | 134.50 | 52 | 8 | 11,170 | 11,170 | 0 | 11 |
+| Running dog, 9 threads | none | 0.921 | 88 of 100 | 4.00 | 176.50 | 64 | 11 | 12,369 | 12,369 | 0 | 15 |
+|  | 3 | 0.938 | 91 of 100 | 4.00 | 190.00 | 67 | 12 | 12,473 | 12,473 | 0 | 12 |
+| Pear | none | 1.000 | 5 of 5 | 3.86 | 13.00 | 2 | 2 | 4,660 | 4,660 | 0 | 0 |
+|  | 3 | 1.000 | 5 of 5 | 3.86 | 13.00 | 2 | 2 | 4,660 | 4,660 | 0 | 0 |
+| Lettered patch | none | 1.000 | 8 of 8 | 3.98 | 40.25 | 8 | 2 | 4,026 | 4,026 | 0 | 0 |
+|  | 3 | 1.000 | 8 of 8 | 3.98 | 40.25 | 8 | 2 | 4,026 | 4,026 | 0 | 0 |
+| TS-13A | none | 1.000 | 16 of 16 | 3.99 | 23.75 | 18 | 2 | 11,513 | 11,513 | 7 | 0 |
+|  | 3 | 1.000 | 16 of 16 | 3.99 | 23.75 | 23 | 3 | 11,563 | 11,563 | 0 | 0 |
+| TS-13B | none | 1.000 | 31 of 31 | 3.85 | 4.25 | 46 | 4 | 6,895 | 6,895 | 0 | 0 |
+|  | 3 | 1.000 | 31 of 31 | 3.85 | 4.25 | 46 | 4 | 6,895 | 6,895 | 0 | 0 |
+| TS-13C | none | 1.000 | 11 of 11 | 3.96 | 95.75 | 13 | 4 | 6,064 | 6,064 | 0 | 0 |
+|  | 3 | 1.000 | 11 of 11 | 3.96 | 95.75 | 13 | 4 | 6,064 | 6,064 | 0 | 0 |
+| TS-13D | none | 1.000 | 14 of 14 | 3.97 | 50.75 | 12 | 3 | 7,994 | 7,994 | 0 | 0 |
+|  | 3 | 1.000 | 14 of 14 | 3.97 | 50.75 | 12 | 3 | 7,994 | 7,994 | 0 | 0 |
+| TS-13E | none | 1.000 | 18 of 18 | 3.39 | 2.50 | 5 | 2 | 2,716 | 2,716 | 0 | 0 |
+|  | 3 | 1.000 | 18 of 18 | 3.39 | 2.50 | 5 | 2 | 2,716 | 2,716 | 0 | 0 |
+| Badge, abutting | none | 1.000 | 3 of 3 | 3.01 | 0.00 | 0 | 2 | 3,431 | 3,431 | 0 | 0 |
+|  | 3 | 1.000 | 3 of 3 | 3.01 | 0.00 | 0 | 2 | 3,431 | 3,431 | 0 | 0 |
+| Badge, stacked | none | 1.000 | 3 of 3 | 3.01 | 0.00 | 0 | 2 | 3,431 | 3,431 | 0 | 0 |
+|  | 3 | 1.000 | 3 of 3 | 3.01 | 0.00 | 0 | 2 | 3,431 | 3,431 | 0 | 0 |
+| Emblem, abutting | none | 1.000 | 6 of 6 | 3.57 | 1.25 | 2 | 3 | 4,997 | 4,997 | 0 | 0 |
+|  | 3 | 1.000 | 6 of 6 | 3.57 | 1.25 | 2 | 3 | 4,997 | 4,997 | 0 | 0 |
+| Emblem, stacked | none | 1.000 | 6 of 6 | 3.39 | 1.00 | 2 | 3 | 4,998 | 4,998 | 0 | 0 |
+|  | 3 | 1.000 | 6 of 6 | 3.39 | 1.00 | 2 | 3 | 4,998 | 4,998 | 0 | 0 |
+| Button | none | 1.000 | 9 of 9 | 3.96 | 2.75 | 0 | 2 | 1,847 | 1,847 | 0 | 0 |
+|  | 3 | 1.000 | 9 of 9 | 3.96 | 2.75 | 0 | 2 | 1,847 | 1,847 | 0 | 0 |
+| Marked patch | none | 1.000 | 5 of 5 | 3.95 | 14.25 | 1 | 3 | 4,077 | 4,077 | 0 | 0 |
+|  | 3 | 1.000 | 5 of 5 | 3.95 | 14.25 | 1 | 3 | 4,077 | 4,077 | 0 | 0 |
+| Magnolia | none | 0.480 | 233 of 496 | 4.00 | 441.75 | 155 | 9 | 34,258 | 34,258 | 1,522 | 277 |
+|  | 3 | 0.504 | 246 of 496 | 4.00 | 490.25 | 184 | 9 | 35,092 | 35,092 | 1,441 | 264 |
+| Coleus | none | 0.454 | 395 of 841 | 4.22 | 851.50 | 237 | 12 | 56,886 | 56,886 | 3,250 | 487 |
+|  | 3 | 0.461 | 401 of 841 | 4.22 | 877.25 | 282 | 12 | 57,527 | 57,527 | 3,175 | 480 |
+| Goose | none | 0.483 | 167 of 342 | 4.00 | 482.50 | 95 | 8 | 36,668 | 36,668 | 1,486 | 184 |
+|  | 3 | 0.493 | 171 of 342 | 5.09 | 492.75 | 114 | 8 | 37,160 | 37,160 | 1,453 | 180 |
+| Castle | none | 0.434 | 81 of 191 | 4.00 | 221.75 | 54 | 8 | 26,201 | 26,201 | 1,334 | 116 |
+|  | 3 | 0.449 | 85 of 191 | 4.00 | 230.25 | 69 | 8 | 26,715 | 26,715 | 1,302 | 112 |
 
-- **The marked parts sew.** Every part inside a mark sews, 47 of the photos' 48 as the measure counts a part
-  kept. The other, a part of 5 mm² in the goose, sews as a line that shows less than half its area. Each
-  picture's likeness rises, by 0.007 for the coleus to 0.044 for the running dog in 6 threads.
-- **The pictures whose marks merge nothing sew as without them,** element for element and stitch for stitch.
-  The test sheets' 5 digitized halves sew so, and so do the badges and emblems traced either way, and the
-  button, the 2 patches and the pear. TS-13A, marked round the shapes of 3 of its specks, sews
-  all 7 of them as short running stitches, with 5 more jump threads, 1 more thread change and 50 more
-  stitches. 3 of its elements far from the marks start and end elsewhere and sew as many stitches as before.
-- **Outside the marks, a traced photo sews in another order.** Each marked part is an element of its own, or
-  a hole in the area round it, and the order of the whole design ([sewing order](#sewing-order)) is found
-  again. Elements more than 2 mm from every mark sew within a few stitches of their counts, but start, end and
-  travel elsewhere: 3 to 275 elements of a photo, 22 to 6,416 stitches. So the thickest spot moves, as when a
-  detail sews last or a line sews for likeness. It rose by up to 1.10 fills, on the goose, and fell by 3.01,
-  on the coleus with its specks sewn. A rule about marks can't foresee it. M13.35's cap on thickness, at the
-  end of planning, bounds it for any order.
-- **Marked specks cost jump threads and add nothing to the likeness,** which counts a speck as no part. The
-  boxes round the parts of a traced photo take in specks of its noise too: 32 to 81 of them in the photos' 3
-  marks, which cost 7 to 39 jump threads. The dogs' marks took in none.
-- **What it costs to plan.** Without marks, nothing is tested, and the plans are those of `main`. With the
-  pear's marks, `stitch export` took 729 instructions more of 3.16 billion, and wrote the same file. With the
-  marks of the running dog in 6 threads it took 3.3 % more, for the parts that now sew and for the tests. The
-  prototype reads its marks again for each part, so the rule should cost less.
+- **The marked parts sew.** Of the 48 parts the likeness measure finds inside the marks of the dogs and the
+  photos, 47 sew. The other, a part of 5 mm² in the goose, sews as a line that shows less than half its area. Each photo's
+  likeness rises, by 0.007 for the coleus to 0.044 for the running dog in 6 threads.
+- **The pictures whose marks merge nothing sew as without them,** stitch for stitch: the pear, the lettered
+  patch, TS-13B to TS-13E, the badges and emblems traced either way, the button and the marked patch. No part
+  lies wholly inside a mark of the lettered patch or inside any of TS-13C's 3, since the part the likeness
+  measure sees is a piece of a larger area, and `SC-W0917` says so. TS-13A sews all 7 of its marked specks
+  as short running stitches, with 5 more jump threads, 1 more thread change and 50 more stitches. 96 of its stitches far from the marks
+  start or end elsewhere.
+- **Outside the marks, a traced photo sews in another order.** Each marked part is an element of its own,
+  and the order of the whole design ([sewing order](#sewing-order)) is found again. Of the stitches more than
+  2 mm from every mark, 51 to 1,394 of a dog and 1,629 to 7,468 of a photo start or end elsewhere. So the
+  area at 3 fills or more moves both ways, from 6.75 mm² less on the dog on turf in 6 threads to 48.5 mm²
+  more on the magnolia.
+- **The cap holds but for one spot.** Every picture sews at most 4 fills where it did, but the goose: a
+  spot about 19 mm from its marks sews 5.09 fills, where one shape of grass lays 2.6 fills by itself, and
+  `SC-W0913` names it "above the cap". The coleus sews 4.22 fills with marks and without them.
+- **Marked specks cost jump threads.** The boxes round the parts of a traced photo take in specks of the
+  trace's noise too: 32 to 84 of them in a photo's 3 marks, and 4 to 13 thin lines. They cost the photos 15
+  to 45 jump threads. The dogs' marks took in no speck, and cost 2 to 4.
+- **What it costs to plan.** Without marks nothing is tested, and every picture sews as on `main`. With
+  the pear's 3 marks, `stitch export --keep` took 1,074,680 instructions more of 3.18 billion (0.03 %),
+  testing every part of every area against the marks, and wrote the same file. With the marks of the
+  running dog in 6 threads it took 3.4 % more, 29.38 billion, for the parts that now sew and the new order
+  (callgrind, a build at opt-level 1).
 
 ### Decisions
 
