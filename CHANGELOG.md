@@ -5,6 +5,20 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.39: marks that keep parts (`REQ-AUTO-104` to `REQ-AUTO-107`, `REQ-VC-031`, `REQ-CLI-021`,
+  `SC-I0916`, `SC-W0917`).
+  - A shape named `stitch:keep`, drawn with VectorCraft's own tools or labelled so in an SVG file, or
+    `stitch plan --keep LEFT,TOP,WIDTH,HEIGHT` in percent of the design's box, marks an area. Each part of
+    an automatic area wholly inside it sews by its width in its own thread, where automatic digitizing
+    would merge it as a speck or a thin line. A part across the mark's edge is decided as if there were no
+    mark. The mark itself sews no stitch. The marks are read each time a design is planned, so there is
+    no Apply Marks command.
+  - The readers take the marks out of the design's elements and give them to the design
+    (`stitchcraft_engine::design::mark`). The reading of a marker's area moved there from the text pass,
+    which uses it from there. A bug-report bundle keeps the marks of `--keep`.
+  - `SC-I0916` counts the parts wholly inside each mark, and the specks and thin lines among them that sew.
+    `SC-W0917` names a mark that doesn't keep a part.
+  - Without marks nothing is tested, and every design sews as before: no golden file changes.
 - M13.35: the cap at the end of planning (`REQ-AUTO-099` to `REQ-AUTO-102`, `SC-I1119`, `SC-W0913`).
   - The cap is a setting, `auto_thick_cap_fills`, 4 fills by default, until MC-8's ladder sets the real
     limits. The last pass takes thread above it as before. Where a spot is still above it, the cap

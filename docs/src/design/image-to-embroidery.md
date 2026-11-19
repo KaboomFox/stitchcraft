@@ -1,6 +1,6 @@
 # Image to embroidery
 
-<!-- implements: crates/stitchcraft-engine/src/auto/**, crates/stitchcraft-engine/src/moves.rs, crates/stitchcraft-engine/src/moves/**, crates/stitchcraft-plan/src/thickness/**, apps/stitchcraft-cli/src/commands/palette.rs, apps/stitchcraft-cli/src/trace.rs, apps/stitchcraft-cutout/src/**, apps/stitchcraft-cli/src/subject.rs, apps/stitchcraft-cli/src/subject/**, apps/stitchcraft-cli/src/commands/cutout.rs, crates/stitchcraft-svg/src/lettering/pictures.rs, crates/stitchcraft-svg/src/lettering/pictures/**, apps/stitchcraft-cli/src/text.rs -->
+<!-- implements: crates/stitchcraft-engine/src/auto/**, crates/stitchcraft-engine/src/moves.rs, crates/stitchcraft-engine/src/moves/**, crates/stitchcraft-plan/src/thickness/**, apps/stitchcraft-cli/src/commands/palette.rs, apps/stitchcraft-cli/src/trace.rs, apps/stitchcraft-cutout/src/**, apps/stitchcraft-cli/src/subject.rs, apps/stitchcraft-cli/src/subject/**, apps/stitchcraft-cli/src/commands/cutout.rs, crates/stitchcraft-svg/src/lettering/pictures.rs, crates/stitchcraft-svg/src/lettering/pictures/**, apps/stitchcraft-cli/src/text.rs, apps/stitchcraft-cli/src/keep.rs, crates/stitchcraft-engine/src/design/mark.rs, crates/stitchcraft-engine/src/design/mark/** -->
 
 Automatic digitizing makes a design that sews well from a picture of flat colours, such as a logo, clip
 art or a drawing, once it is traced into shapes. Settings on the shapes are optional. StitchCraft chooses
@@ -2677,6 +2677,207 @@ Each has a recommendation, which the step took.
 - A font is matched to the letters' weight, among 2 fonts. The letters' style, such as italic or script, doesn't choose a font yet.
 - The emblem's numbers are from a document traced earlier, kept outside the repository. A case in the
   repository waits for a traced picture with lettered arcs among the fixtures.
+
+## Marks that keep parts
+
+Automatic digitizing decides by geometry and measures alone which small shapes are specks to merge (step 4 of
+[Neighbours](#neighbours)) and which thin lines merge into their neighbours (step 3, and
+[merging by likeness](#merging-by-likeness)). [Details last](#details-last) decides by geometry too which parts
+sew last. Geometry can't know which small part a person cares about. The same speck is noise in one picture and
+the point of another, such as a bird's eye or the dot over a letter, and in other pictures a flower's centre or
+a window. M13.39 lets the person say so with a mark, which works on any subject and names none.
+
+### The rule
+
+A mark is an area of the design. Automatic digitizing sews the parts that lie wholly inside it by their width,
+where it would merge them, and changes nothing else (`REQ-AUTO-104` to `REQ-AUTO-107`).
+
+- **Which parts.** The parts of the automatic areas as the layers leave them once flattened (step 2), each one
+  connected piece of one area with its holes. The speck and line steps look at these pieces. A part is inside
+  a mark when every point of its outline is, flattened within 0.05 mm as a text marker's subpaths are.
+- **Specks.** Automatic digitizing doesn't merge a marked speck into the area beside it, or leave it out. It
+  sews by its width, as a larger part does. Narrower than the narrowest satin stroke everywhere, it is a
+  running stitch along its middle, and wider, satin columns or a fill. A speck of 0.8 mm², 1.6 mm by 0.5 mm,
+  sews a running stitch 1.6 mm long.
+- **Thin lines.** A marked thin line sews as a line in its own thread, whatever the likeness bound
+  (`auto_min_likeness`).
+- **Colour.** Merged, a part sews in its neighbour's thread, and marked, in its own. The threads of a picture
+  are the trace's, and a mark doesn't change them.
+- **Partly inside.** Automatic digitizing decides a part that crosses the mark's edge as if there were no mark,
+  since a part cut at the mark's edge would sew an edge the picture doesn't have. A person who wants it drawn
+  draws the mark larger.
+- **Left alone.** The rules of the background, the flattened layers, the widths, the order, the overlaps, the
+  base layer and the cap on thickness go as without a mark. The order they find can differ, since every part
+  sewn is a shape more ([what marks sew](#what-marks-sew)). A marked part reaches under its neighbours, and
+  they reach under it, as for any part. A speck or a line outside the mark may still merge into it. Details
+  last stays its own setting: a marked detail sews last when `auto_details_last` is on, as it would unmarked.
+  The mark doesn't name a stitch. For another stitch, a person gives the part its own effect, as for any
+  shape.
+
+One mark covers what the row of M13.39 asked: a marked part's lines and specks don't merge, and it sews by the
+rule of its width. A second mark, to merge what the rules sew, isn't proposed, since the pictures measured
+didn't need one.
+
+### Drawing a mark
+
+A mark is a shape named `stitch:keep`, or `stitch:keep` and a note of the person's own, such as `stitch:keep
+left eye`. The name is read as every marker's: in any case, after any white space. Its area is read as a
+[text marker's](#the-marker) is, by the same code. A closed shape's area is what its outline encloses. For an
+open line with a stroke, it is the band within half the stroke's width of the line, between its ends. A line suits a whisker or a twig. The mark needs a
+fill or a stroke, since a reader is given only objects that paint, and a rectangle or an ellipse drawn with a
+stroke and no fill shows the picture under it. It is never sewn.
+
+- **In VectorCraft**, the person draws the mark with VectorCraft's own tools over the traced picture and names
+  it in the Layers panel. VectorCraft 0.23.0 gives a plug-in no canvas tool. A group or a layer so named is not
+  a mark, and `SC-W0807` says so (`REQ-VC-031`).
+- **In an SVG file**, the mark is an element whose `inkscape:label` is the name.
+- **From the command line**, `--keep LEFT,TOP,WIDTH,HEIGHT` marks a rectangle in percent of the box round the
+  design's shapes, as `--text` does, read by the same code (`REQ-CLI-021`). The marks are named `keep-1`,
+  `keep-2` and so on, and a bug-report bundle keeps them with the rules' settings.
+
+```sh
+stitch plan bird.png -o bird.pes --keep '62,18,6,5'
+```
+
+**Read when the design is planned.** The roadmap's row planned an Apply Marks command. Instead a reader takes
+the marks out of the design's elements and gives them to the design, as it reads text markers, so `stitch`,
+File › Export and the bug report each read them on every plan. A command would copy what the names already say,
+and its result would go stale when the picture is traced again. The Auto effect's preview shows each shape
+alone and doesn't merge, so it looks the same with a mark or without one
+([previews](#previews-in-vectorcraft)).
+
+### Where it runs
+
+The readers take each mark out of the design's elements and give it to the design, with its id
+(`stitchcraft_engine::design::mark::Mark`, `mark::taken_out`). An object painted with a fill and a stroke
+is read as 2 elements of one path, and is one mark. The reading of a marker's area lies in the engine
+(`design::mark::Area`), and the text markers of `stitchcraft_svg::lettering::pictures` use it from there.
+Planning reads each mark's area once (`auto::marks`), with the budget's work to itself. Automatic
+digitizing tests a part against the marks where a step would take the part away: in the width rules, which
+leave a speck in its area's fill (`auto::narrow`), and in the steps of thin lines (`auto::neighbours::lines`)
+and of specks (`auto::neighbours::specks`). The step of thin lines tests every part of every automatic
+area, so that each mark knows what it holds. Testing a part costs a unit for each mark, and where the box
+round the part lies in the box round the mark, a unit for each of the part's points and each segment of
+the mark, charged to the budget that step has for the part. A part that needs more is decided as if there
+were no mark, and `SC-I0916` says so. Without marks, nothing is tested and nothing is charged.
+
+`SC-I0916` names each mark with the parts that lie wholly inside it, and how many of them sew that would have
+merged, as specks and as thin lines. `SC-W0917` names a mark that encloses no area, a mark with no part wholly
+inside it and a mark in a design without an automatic shape, which then sews as without it.
+
+### What marks sew
+
+Measured on 2026-11-19 with the build, on `main` with M13.35's cap and before M13.45, so with both
+`auto_min_likeness` and `auto_details_last` off (`stitch plan --auto`'s numbers, as M13.41's
+measure and M13.29's count them, and the stitches of the PES file read back). No picture is a goal: one
+procedure marked each, never an eye. Each picture was planned without marks. Its 3 largest parts that the
+plan loses ([likeness](#likeness)) were then each marked by the box round them, grown by 0.5 mm, as a person
+draws a rectangle round an eye. A picture that loses none was marked round its 3 smallest parts, and TS-13A
+round 3 of the specks it merges.
+
+| Picture | Marks | Likeness | Parts kept | Thickest spot, fills | At 3 fills or more, mm² | Jump threads | Thread changes | Stitches | Export's count | Specks merged | `SC-I0915` notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Dog on turf, 6 threads | none | 0.814 | 75 of 97 | 4.00 | 137.25 | 57 | 8 | 9,985 | 9,985 | 0 | 22 |
+|  | 3 | 0.832 | 78 of 97 | 4.00 | 130.50 | 59 | 8 | 10,045 | 10,045 | 0 | 19 |
+| Dog on turf, 9 threads | none | 0.779 | 83 of 111 | 4.00 | 150.75 | 58 | 12 | 10,675 | 10,675 | 0 | 29 |
+|  | 3 | 0.814 | 87 of 111 | 4.00 | 154.75 | 62 | 12 | 10,856 | 10,856 | 0 | 25 |
+| Running dog, 6 threads | none | 0.898 | 66 of 77 | 4.00 | 129.00 | 49 | 8 | 11,077 | 11,077 | 0 | 14 |
+|  | 3 | 0.942 | 69 of 77 | 4.00 | 134.50 | 52 | 8 | 11,170 | 11,170 | 0 | 11 |
+| Running dog, 9 threads | none | 0.921 | 88 of 100 | 4.00 | 176.50 | 64 | 11 | 12,369 | 12,369 | 0 | 15 |
+|  | 3 | 0.938 | 91 of 100 | 4.00 | 190.00 | 67 | 12 | 12,473 | 12,473 | 0 | 12 |
+| Pear | none | 1.000 | 5 of 5 | 3.86 | 13.00 | 2 | 2 | 4,660 | 4,660 | 0 | 0 |
+|  | 3 | 1.000 | 5 of 5 | 3.86 | 13.00 | 2 | 2 | 4,660 | 4,660 | 0 | 0 |
+| Lettered patch | none | 1.000 | 8 of 8 | 3.98 | 40.25 | 8 | 2 | 4,026 | 4,026 | 0 | 0 |
+|  | 3 | 1.000 | 8 of 8 | 3.98 | 40.25 | 8 | 2 | 4,026 | 4,026 | 0 | 0 |
+| TS-13A | none | 1.000 | 16 of 16 | 3.99 | 23.75 | 18 | 2 | 11,513 | 11,513 | 7 | 0 |
+|  | 3 | 1.000 | 16 of 16 | 3.99 | 23.75 | 23 | 3 | 11,563 | 11,563 | 0 | 0 |
+| TS-13B | none | 1.000 | 31 of 31 | 3.85 | 4.25 | 46 | 4 | 6,895 | 6,895 | 0 | 0 |
+|  | 3 | 1.000 | 31 of 31 | 3.85 | 4.25 | 46 | 4 | 6,895 | 6,895 | 0 | 0 |
+| TS-13C | none | 1.000 | 11 of 11 | 3.96 | 95.75 | 13 | 4 | 6,064 | 6,064 | 0 | 0 |
+|  | 3 | 1.000 | 11 of 11 | 3.96 | 95.75 | 13 | 4 | 6,064 | 6,064 | 0 | 0 |
+| TS-13D | none | 1.000 | 14 of 14 | 3.97 | 50.75 | 12 | 3 | 7,994 | 7,994 | 0 | 0 |
+|  | 3 | 1.000 | 14 of 14 | 3.97 | 50.75 | 12 | 3 | 7,994 | 7,994 | 0 | 0 |
+| TS-13E | none | 1.000 | 18 of 18 | 3.39 | 2.50 | 5 | 2 | 2,716 | 2,716 | 0 | 0 |
+|  | 3 | 1.000 | 18 of 18 | 3.39 | 2.50 | 5 | 2 | 2,716 | 2,716 | 0 | 0 |
+| Badge, abutting | none | 1.000 | 3 of 3 | 3.01 | 0.00 | 0 | 2 | 3,431 | 3,431 | 0 | 0 |
+|  | 3 | 1.000 | 3 of 3 | 3.01 | 0.00 | 0 | 2 | 3,431 | 3,431 | 0 | 0 |
+| Badge, stacked | none | 1.000 | 3 of 3 | 3.01 | 0.00 | 0 | 2 | 3,431 | 3,431 | 0 | 0 |
+|  | 3 | 1.000 | 3 of 3 | 3.01 | 0.00 | 0 | 2 | 3,431 | 3,431 | 0 | 0 |
+| Emblem, abutting | none | 1.000 | 6 of 6 | 3.57 | 1.25 | 2 | 3 | 4,997 | 4,997 | 0 | 0 |
+|  | 3 | 1.000 | 6 of 6 | 3.57 | 1.25 | 2 | 3 | 4,997 | 4,997 | 0 | 0 |
+| Emblem, stacked | none | 1.000 | 6 of 6 | 3.39 | 1.00 | 2 | 3 | 4,998 | 4,998 | 0 | 0 |
+|  | 3 | 1.000 | 6 of 6 | 3.39 | 1.00 | 2 | 3 | 4,998 | 4,998 | 0 | 0 |
+| Button | none | 1.000 | 9 of 9 | 3.96 | 2.75 | 0 | 2 | 1,847 | 1,847 | 0 | 0 |
+|  | 3 | 1.000 | 9 of 9 | 3.96 | 2.75 | 0 | 2 | 1,847 | 1,847 | 0 | 0 |
+| Marked patch | none | 1.000 | 5 of 5 | 3.95 | 14.25 | 1 | 3 | 4,077 | 4,077 | 0 | 0 |
+|  | 3 | 1.000 | 5 of 5 | 3.95 | 14.25 | 1 | 3 | 4,077 | 4,077 | 0 | 0 |
+| Magnolia | none | 0.480 | 233 of 496 | 4.00 | 441.75 | 155 | 9 | 34,258 | 34,258 | 1,522 | 277 |
+|  | 3 | 0.504 | 246 of 496 | 4.00 | 490.25 | 184 | 9 | 35,092 | 35,092 | 1,441 | 264 |
+| Coleus | none | 0.454 | 395 of 841 | 4.22 | 851.50 | 237 | 12 | 56,886 | 56,886 | 3,250 | 487 |
+|  | 3 | 0.461 | 401 of 841 | 4.22 | 877.25 | 282 | 12 | 57,527 | 57,527 | 3,175 | 480 |
+| Goose | none | 0.483 | 167 of 342 | 4.00 | 482.50 | 95 | 8 | 36,668 | 36,668 | 1,486 | 184 |
+|  | 3 | 0.493 | 171 of 342 | 5.09 | 492.75 | 114 | 8 | 37,160 | 37,160 | 1,453 | 180 |
+| Castle | none | 0.434 | 81 of 191 | 4.00 | 221.75 | 54 | 8 | 26,201 | 26,201 | 1,334 | 116 |
+|  | 3 | 0.449 | 85 of 191 | 4.00 | 230.25 | 69 | 8 | 26,715 | 26,715 | 1,302 | 112 |
+
+- **The marked parts sew.** Of the 48 parts the likeness measure finds inside the marks of the dogs and the
+  photos, 47 sew. The other, a part of 5 mm² in the goose, sews as a line that shows less than half its area. Each photo's
+  likeness rises, by 0.007 for the coleus to 0.044 for the running dog in 6 threads.
+- **The pictures whose marks merge nothing sew as without them,** stitch for stitch: the pear, the lettered
+  patch, TS-13B to TS-13E, the badges and emblems traced either way, the button and the marked patch. No part
+  lies wholly inside a mark of the lettered patch or inside any of TS-13C's 3, since the part the likeness
+  measure sees is a piece of a larger area, and `SC-W0917` says so. TS-13A sews all 7 of its marked specks
+  as short running stitches, with 5 more jump threads, 1 more thread change and 50 more stitches. 96 of its stitches far from the marks
+  start or end elsewhere.
+- **Outside the marks, a traced photo sews in another order.** Each marked part is an element of its own,
+  and the order of the whole design ([sewing order](#sewing-order)) is found again. Of the stitches more than
+  2 mm from every mark, 51 to 1,394 of a dog and 1,629 to 7,468 of a photo start or end elsewhere. So the
+  area at 3 fills or more moves both ways, from 6.75 mm² less on the dog on turf in 6 threads to 48.5 mm²
+  more on the magnolia.
+- **The cap holds but for one spot.** Every picture sews at most 4 fills where it did, but the goose: a
+  spot about 19 mm from its marks sews 5.09 fills, where one shape of grass lays 2.6 fills by itself, and
+  `SC-W0913` names it "above the cap". The coleus sews 4.22 fills with marks and without them.
+- **Marked specks cost jump threads.** The boxes round the parts of a traced photo take in specks of the
+  trace's noise too: 32 to 84 of them in a photo's 3 marks, and 4 to 13 thin lines. They cost the photos 15
+  to 45 jump threads. The dogs' marks took in no speck, and cost 2 to 4.
+- **What it costs to plan.** Without marks nothing is tested, and every picture sews as on `main`. With
+  the pear's 3 marks, `stitch export --keep` took 1,074,680 instructions more of 3.18 billion (0.03 %),
+  testing every part of every area against the marks, and wrote the same file. With the marks of the
+  running dog in 6 threads it took 3.4 % more, 29.38 billion, for the parts that now sew and the new order
+  (callgrind, a build at opt-level 1).
+
+### Decisions
+
+The owner's choices of 2026-11-18, each the one recommended. The owner confirmed the 4th, that marks keep
+specks too, on 2026-11-18.
+
+- **One mark, `stitch:keep`.** The row asked that a marked part's lines and specks don't merge, and that it
+  sews by its own rule. That is one rule, so one mark does both. Other names were `stitch:detail`, which
+  suggests the order of [details last](#details-last) that a mark doesn't change, and `stitch:favour`, which
+  doesn't say what it does. Chosen: `stitch:keep`.
+- **Read when planned, with no Apply Marks command,** as text markers are. Chosen: no command.
+- **Wholly inside.** Automatic digitizing decides a part crossing the mark's edge as if it were unmarked. One other
+  choice sews a part when most of it is inside, which is a guess. Another cuts a part at the edge, which sews an
+  edge the picture doesn't have. Chosen: wholly inside, as text markers take their letters.
+- **Marks sew specks too.** The row asked that a marked part's specks don't merge, and a dot under 1 mm², such
+  as the light in an eye, is a speck. A mark also takes in the specks of a trace's noise, which cost the photos
+  7 to 39 jump threads and no likeness. The other choice sews marked thin lines and merges specks.
+  Chosen: sew specks, since a mark is the person's word. `SC-I0916` counts the specks, so a person can
+  draw a tighter mark.
+- **A marked speck sews by its width,** usually a short running stitch. The other choice is a fill, which sews
+  a knot under 1 mm². Chosen: by its width.
+- **The rest of a photo may sew in another order.** Each marked part is a shape more to order. Holding the
+  rest of the order fixed would need a second order for marked designs. Chosen: accept it, and let
+  M13.35's cap bound the thickness, as for details last and likeness.
+- **Details last stays its own setting.** A mark could also sew its parts last. That moves fills, which can
+  thicken a spot elsewhere, as M13.40 measured. Chosen: leave the order alone until the cap is merged and
+  `auto_details_last` is turned on.
+
+### What isn't built
+
+- The Auto effect's preview in VectorCraft shows each shape alone, so it can't show what a mark sews. The
+  exported file and its preview picture do.
+- A mark that merges what the rules sew, or that names a stitch.
 
 ## Pictures from the command line
 

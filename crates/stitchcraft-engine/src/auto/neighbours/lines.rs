@@ -32,6 +32,7 @@ pub use parts::is_part;
 use super::layers::Flattened;
 use super::specks::shared;
 use super::{Failed, TOUCHING, envelope, joined, near, parts_of, speck};
+use crate::auto::marks::Marks;
 use crate::auto::narrow::{Edges, piece, spread, within};
 use crate::auto::{AutoParams, outline};
 use crate::design::{Element, FillRule, Shape};
@@ -70,13 +71,16 @@ struct Line {
 
 /// `flattened`, each automatic area's thin parts merged into the automatic area beside it that it shares the
 /// longest edge with ([the module](self)), and what is said of each. `rules` holds each element's settings
-/// of the rules by its place in the design, and `narrowest` is the design's narrowest satin stroke. Each area
-/// has `budget`'s work to itself to find its lines, and each line to find where it goes. Each line merged is
-/// given back too, with where it went.
+/// of the rules by its place in the design, and `narrowest` is the design's narrowest satin stroke. A line
+/// that one of `marks` holds wholly sews as a line, and every part of an automatic area that a mark holds is
+/// counted for it (`REQ-AUTO-105`). Each area has `budget`'s work to itself to test its parts against the
+/// marks and find its lines, and each line to find where it goes. Each line merged is given back too, with
+/// where it went.
 pub(in crate::auto) fn merged<'d>(
     flattened: Flattened<'d>,
     rules: &[Option<AutoParams>],
     narrowest: Mm,
+    marks: &Marks,
     budget: &Budget,
 ) -> (Flattened<'d>, Vec<Merge>) {
     let Flattened { elements, kept, mut said } = flattened;
@@ -86,9 +90,22 @@ pub(in crate::auto) fn merged<'d>(
     let mut lines = Vec::new();
     let mut done = Vec::new();
     for (from, (index, element)) in elements.iter().enumerate() {
-        let Some(rules) = rules.get(*index).and_then(Option::as_ref).filter(|rules| merges(rules)) else { continue };
+        let Some(rules) = rules.get(*index).and_then(Option::as_ref) else { continue };
         let Some(area) = areas.get_mut(from).and_then(Option::as_mut) else { continue };
-        match thin(&area.parts, narrowest, rules, &mut budget.meter()) {
+        let mut meter = budget.meter();
+        // Every automatic area's parts are tested against the marks, so that each mark knows what it holds.
+        let held = match marks.held(&area.parts, &mut meter) {
+            Ok(held) => held,
+            Err(exhausted) => {
+                let finding = "which parts of this area a mark holds";
+                said.push(Failed::from(exhausted).said(Code::AutoKept, finding, "it keeps its thin lines", budget.max_work, element.id.clone()));
+                continue;
+            }
+        };
+        if !merges(rules) {
+            continue;
+        }
+        match thin(&area.parts, &held, (narrowest, rules, marks), &mut meter) {
             Ok(thin) => {
                 let parts = std::mem::take(&mut area.parts);
                 for (part, thin) in parts.into_iter().zip(thin) {
@@ -197,14 +214,27 @@ fn area(element: &Element, rules: Option<&AutoParams>, budget: &Budget) -> Optio
 }
 
 /// For each of `parts`, whether it is a line that merges: narrower than `narrowest` everywhere, no speck, no
-/// smaller than `rules`' smallest area, and ragged, its width varying by `rules`' least unevenness of a line
+/// smaller than `rules`' smallest area, held by none of `marks` (`held` gives the mark that holds each part,
+/// and a line a mark keeps is counted for it), and ragged, its width varying by `rules`' least unevenness of a line
 /// or more, with `meter`'s work.
-fn thin(parts: &[Polygon], narrowest: Mm, rules: &AutoParams, meter: &mut Meter) -> Result<Vec<bool>, Failed> {
+fn thin(
+    parts: &[Polygon],
+    held: &[Option<usize>],
+    (narrowest, rules, marks): (Mm, &AutoParams, &Marks),
+    meter: &mut Meter,
+) -> Result<Vec<bool>, Failed> {
     let mut thin = Vec::with_capacity(parts.len());
     for part in parts {
         meter.charge(1)?;
         let narrow = !speck(part.area(), rules.auto_min_area_mm2) && within(part, narrowest, meter)? == Some(true);
-        thin.push(narrow && ragged(part, rules.auto_min_line_unevenness, meter)?);
+        let line = narrow && ragged(part, rules.auto_min_line_unevenness, meter)?;
+        match held.get(thin.len()).copied().flatten() {
+            Some(at) if line => {
+                marks.kept_line(at);
+                thin.push(false);
+            }
+            _ => thin.push(line),
+        }
     }
     Ok(thin)
 }

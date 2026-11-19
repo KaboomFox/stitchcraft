@@ -520,4 +520,6 @@ text's design ([lettering](fonts.md#lettering)). Along a path, each glyph's desi
 A shape's `inkscape:label` is its element's name. From M14.5, a shape labelled `stitch:text` and a text
 marks text in a traced picture (`REQ-SVG-016`). The reader has no fonts, so it reads the shape as any
 other, and `stitch` sets the lettering once the file is read
-([text in pictures](image-to-embroidery.md#text-in-pictures)).
+([text in pictures](image-to-embroidery.md#text-in-pictures)). From M13.39, the reader takes a shape labelled `stitch:keep`
+out of the elements and gives it to the design as a mark
+([marks that keep parts](image-to-embroidery.md#marks-that-keep-parts)).

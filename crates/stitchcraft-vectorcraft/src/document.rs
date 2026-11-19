@@ -97,7 +97,9 @@ use serde_json::Value;
 use stitchcraft_core::Point;
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm};
 use stitchcraft_engine::auto::{self, Stitches};
-use stitchcraft_engine::design::{Cap, Clip, Design, DesignSettings, Element, FillRule, Gradient, Guide, Hints, Join, Path, Reading, Segment, Shape};
+use stitchcraft_engine::design::{
+    Cap, Clip, Design, DesignSettings, Element, FillRule, Gradient, Guide, Hints, Join, Path, Reading, Segment, Shape, mark,
+};
 use stitchcraft_engine::generate::stops_after;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_params::stitch_type::Family;
@@ -203,7 +205,10 @@ pub fn read_in(bytes: &[u8], budget: &Budget, reading: Reading, fonts: &mut dyn 
     reader.placed();
     let mut warnings = reader.warnings;
     warnings.extend(unread);
-    let design = Design::new(reader.elements, reader.settings)?.read_as(reading);
+    // The objects named stitch:keep are marks, never sewn (`REQ-VC-031`).
+    let (elements, marks) = mark::taken_out(reader.elements);
+    let mut design = Design::new(elements, reader.settings)?.read_as(reading);
+    design.marks = marks;
     // Text in pictures: what lies inside each object named `stitch:text` becomes lettering (`REQ-VC-028`).
     let (fonts, mut lettered) = (reader.fonts, reader.lettered);
     let choices = fonts.choices();
@@ -412,12 +417,15 @@ enum Marker {
     /// Text in a picture: what lies inside the object is replaced by lettering of the note after the word
     /// (`REQ-VC-028`).
     Text,
+    /// A mark: the parts of automatic areas wholly inside the object sew by their width where they would
+    /// merge into a neighbour, and the object is never sewn (`REQ-VC-031`).
+    Keep,
     /// No marker StitchCraft reads.
     Unknown,
 }
 
 /// The word after `stitch:` of each marker StitchCraft reads.
-const MARKERS: [(&str, Marker); 11] = [
+const MARKERS: [(&str, Marker); 12] = [
     ("ignore", Marker::Ignore),
     ("start", Marker::Start),
     ("end", Marker::End),
@@ -429,6 +437,7 @@ const MARKERS: [(&str, Marker); 11] = [
     ("route-start", Marker::RouteStart),
     ("route-end", Marker::RouteEnd),
     ("text", Marker::Text),
+    ("keep", Marker::Keep),
 ];
 
 /// Which end of a route an object marks, as the routing filters read its name (`REQ-VC-019`).
@@ -617,6 +626,12 @@ impl Reader<'_> {
                         message,
                         Some("Name a shape drawn round the letters, or a line drawn through them, stitch:text and the text."),
                     );
+                }
+                // The path is read as any is, with its name, and taken out as a mark once the design is read.
+                (Marker::Keep, None) => {}
+                (Marker::Keep, Some(kind)) => {
+                    let message = format!("{shown} is named stitch:keep, which a {kind} can't be, and the name is ignored.");
+                    self.feature(&label, message, Some("Name a shape drawn round the parts to keep, or a line drawn along them, stitch:keep."));
                 }
                 (Marker::Unknown, _) => {
                     let message = format!("{shown} begins with stitch:, which names no marker StitchCraft reads, and the name is ignored.");

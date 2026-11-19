@@ -271,6 +271,52 @@ fn req_cli_020_stitch_plan_sews_marked_letters_as_lettering() {
     assert!(replayed.status.success(), "{} {}", text(&replayed.stdout), text(&replayed.stderr));
 }
 
+/// `REQ-CLI-021`: `--keep LEFT,TOP,WIDTH,HEIGHT` marks a rectangle of the design, in percent of its box, as a
+/// shape labelled `stitch:keep` marks one (`REQ-AUTO-104`), and the bundle of a bug report keeps it.
+#[test]
+fn req_cli_021_stitch_plan_keeps_the_parts_a_keep_option_marks() {
+    let dir = folder("keep");
+    // A white field 60 mm square, a red square on it, and a blue speck of 0.8 mm² at (20, 20), which merges
+    // into the square unless it is marked.
+    let picture = |marker: &str| {
+        format!(
+            r##"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="60mm" height="60mm" viewBox="0 0 60 60"><rect id="field" width="60" height="60" fill="#ffffff"/><rect id="square" x="10" y="10" width="40" height="40" fill="#ff0000"/><rect id="speck" x="20" y="20" width="1.6" height="0.5" fill="#0000ff"/>{marker}</svg>"##
+        )
+    };
+    std::fs::write(dir.join("plain.svg"), picture("")).unwrap();
+    std::fs::write(
+        dir.join("marked.svg"),
+        picture(
+            r##"<rect id="m" inkscape:label="stitch:keep" x="18" y="18" width="6" height="6" fill="none" stroke="#00ff00" stroke-width="0.2"/>"##,
+        ),
+    )
+    .unwrap();
+    let run = |args: &[&str]| Command::new(env!("CARGO_BIN_EXE_stitch")).args(args).current_dir(&dir).output().unwrap();
+    let stitches =
+        |file: &str| text(&run(&["inspect", file]).stdout).lines().filter(|line| line.contains("stitches")).map(str::to_string).collect::<Vec<_>>();
+    // The speck merges without a mark, and is said to.
+    let plain = run(&["plan", "plain.svg", "--auto", "-o", "plain.pes"]);
+    assert!(plain.status.success() && text(&plain.stderr).contains("SC-I0905"), "{}", text(&plain.stderr));
+    // A shape labelled stitch:keep, or the option over the same area, 30 % from the left and the top of the
+    // field and 10 % of it across, keeps it: the same stitches either way, and not those of the plain plan.
+    let marked = run(&["plan", "marked.svg", "--auto", "-o", "marked.pes"]);
+    assert!(marked.status.success() && !text(&marked.stderr).contains("SC-I0905"), "{}", text(&marked.stderr));
+    let option = run(&["plan", "plain.svg", "--auto", "--keep", "30,30,10,10", "-o", "option.pes"]);
+    assert!(option.status.success() && text(&option.stderr).contains("SC-I0916"), "{}", text(&option.stderr));
+    assert!(!stitches("marked.pes").is_empty() && stitches("marked.pes") == stitches("option.pes"));
+    assert_ne!(stitches("plain.pes"), stitches("option.pes"));
+    // A mark that doesn't read is refused before anything is read.
+    let refused = run(&["plan", "plain.svg", "--auto", "--keep", "90,0,20,10", "-o", "refused.pes"]);
+    assert_eq!(refused.status.code(), Some(2));
+    assert!(text(&refused.stderr).contains("isn't LEFT,TOP,WIDTH,HEIGHT") && !dir.join("refused.pes").exists(), "{}", text(&refused.stderr));
+    // A bundle keeps the mark with the rules' settings, and its replay keeps the speck again.
+    let bundled = run(&["bug-report", "plain.svg", "--auto", "--keep", "30,30,10,10", "-o", "keep.bug-report.json"]);
+    assert!(bundled.status.success(), "{}", text(&bundled.stderr));
+    assert!(std::fs::read_to_string(dir.join("keep.bug-report.json")).unwrap().contains("30,30,10,10"));
+    let replayed = run(&["bug-report", "--replay", "keep.bug-report.json"]);
+    assert!(replayed.status.success(), "{} {}", text(&replayed.stdout), text(&replayed.stderr));
+}
+
 /// `REQ-AUTO-069`, `REQ-SVG-017`: `stitch plan --auto` sews the text of a drawn SVG design as lettering in the
 /// default font of the folder `STITCHCRAFT_FONTS` names, where the text stands, and says which font stands in.
 /// Without `--auto`, and without a font, the text is left out and that is said.

@@ -336,6 +336,13 @@ pub struct ReadingArgs {
     /// (docs/src/user/how-to/letter-a-picture.md). May be given several times.
     #[arg(long = "text", value_name = "AREA:TEXT", value_parser = crate::text::mark)]
     pub text: Vec<(String, String)>,
+    /// Keep the parts of the design inside an area from merging into their neighbours: each part of a shape
+    /// digitized automatically that lies wholly inside it sews by its width, where it would merge as a speck
+    /// or a thin line. The area is LEFT,TOP,WIDTH,HEIGHT in percent of the box round the design's shapes,
+    /// such as 62,18,6,5 round an eye (docs/src/user/how-to/keep-small-parts.md). May be given several
+    /// times.
+    #[arg(long = "keep", value_name = "AREA", value_parser = crate::keep::mark)]
+    pub keep: Vec<(String, String)>,
 }
 
 impl ReadingArgs {
@@ -351,6 +358,8 @@ impl ReadingArgs {
         }
         // The marks of `--text` travel with the rules, every one of them, under the marker's name.
         rules.extend(self.text.iter().cloned());
+        // So do the marks of `--keep`.
+        rules.extend(self.keep.iter().cloned());
         rules
     }
 }

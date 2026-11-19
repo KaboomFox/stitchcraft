@@ -17,6 +17,8 @@ Each guide solves one problem:
 - [Set text in an embroidery font](set-text-in-a-font.md) with `stitch lettering`
 - [Cut a photo's subject out](cut-out-a-photos-subject.md) before it is traced, so that its background
   isn't sewn (`stitch plan --subject`)
+- [Keep small parts of a picture](keep-small-parts.md), such as an eye, from merging into their
+  neighbours, with a mark
 - [Report a bug](report-a-bug.md) with a bundle that reproduces it (`stitch bug-report`)
 
 Planned, each with the milestone that brings its feature:

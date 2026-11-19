@@ -83,6 +83,9 @@ Options:
       --text <AREA:TEXT>
           Sew the traced letters inside an area as lettering in an embroidery font, as tall as they are: the area's LEFT,TOP,WIDTH,HEIGHT in percent of the box round the design's shapes, which is a traced picture's own box, then a colon and the text, such as 10,40,80,20:MATCH. A font is named after the text in double quotes, as "MATCH" font=NAME, and is found in the folder STITCHCRAFT_FONTS names (docs/src/user/how-to/letter-a-picture.md). May be given several times
 
+      --keep <AREA>
+          Keep the parts of the design inside an area from merging into their neighbours: each part of a shape digitized automatically that lies wholly inside it sews by its width, where it would merge as a speck or a thin line. The area is LEFT,TOP,WIDTH,HEIGHT in percent of the box round the design's shapes, such as 62,18,6,5 round an eye (docs/src/user/how-to/keep-small-parts.md). May be given several times
+
       --vectorcraft-cli <PROGRAM>
           VectorCraft's command line, which traces a picture; by default `vectorcraft-cli` on the PATH
 
@@ -439,6 +442,9 @@ Options:
 
       --text <AREA:TEXT>
           Sew the traced letters inside an area as lettering in an embroidery font, as tall as they are: the area's LEFT,TOP,WIDTH,HEIGHT in percent of the box round the design's shapes, which is a traced picture's own box, then a colon and the text, such as 10,40,80,20:MATCH. A font is named after the text in double quotes, as "MATCH" font=NAME, and is found in the folder STITCHCRAFT_FONTS names (docs/src/user/how-to/letter-a-picture.md). May be given several times
+
+      --keep <AREA>
+          Keep the parts of the design inside an area from merging into their neighbours: each part of a shape digitized automatically that lies wholly inside it sews by its width, where it would merge as a speck or a thin line. The area is LEFT,TOP,WIDTH,HEIGHT in percent of the box round the design's shapes, such as 62,18,6,5 round an eye (docs/src/user/how-to/keep-small-parts.md). May be given several times
 
   -h, --help
           Print help (see a summary with '-h')

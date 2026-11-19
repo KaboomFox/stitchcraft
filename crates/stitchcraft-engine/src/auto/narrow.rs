@@ -38,6 +38,7 @@ use std::collections::BTreeMap;
 use stitchcraft_core::{Code, Diagnostic, ElementId, Exhausted, Meter, Mm, Point};
 
 use super::columns::{self, Columns, Made};
+use super::marks::Marks;
 use super::rules::{Asked, Bounds, Breadth, Fired, Measures, RuleId, choose};
 use super::split;
 use super::{AutoParams, Open, no_area};
@@ -84,32 +85,28 @@ pub(super) enum Along {
     Columns(Columns),
 }
 
-/// `parts`, the automatic area `id`'s, sorted by the rules (`auto::rules`) under `bounds`, its shape's, whose
-/// settings of the rules are `rules`: the lines, with their centre lines, the parts sewn as columns, with
+/// `parts`, the automatic area `id`'s, sorted by the rules (`auto::rules`) under `bounds`, its shape's, and
+/// `by`: the lines, with their centre lines, the parts sewn as columns, with
 /// their columns, and the rest, which is filled. Finding a part's width, centre line and columns is part of
 /// the work of digitizing the area, and costs `meter`'s.
-pub(super) fn sorted(
-    id: &ElementId,
-    parts: Vec<Polygon>,
-    bounds: &Bounds,
-    rules: &AutoParams,
-    open: &Open<'_>,
-    meter: &mut Meter,
-) -> Result<Parts, Exhausted> {
+pub(super) fn sorted(id: &ElementId, parts: Vec<Polygon>, bounds: &Bounds, by: By<'_>, meter: &mut Meter) -> Result<Parts, Exhausted> {
     let mut sorted = Parts::default();
     for part in parts {
-        sort(id, part, bounds, By { rules, open }, Sorting::Part, &mut sorted, meter)?;
+        sort(id, part, bounds, by, Sorting::Part, &mut sorted, meter)?;
     }
     Ok(sorted)
 }
 
-/// What a part is sorted by: its shape's settings of the rules, and whether a hole of it may be kept open.
+/// What a part is sorted by: its shape's settings of the rules, whether a hole of it may be kept open, and
+/// the marks that keep its specks.
 #[derive(Clone, Copy)]
-struct By<'b> {
+pub(super) struct By<'b> {
     /// The shape's settings of the rules.
-    rules: &'b AutoParams,
+    pub(super) rules: &'b AutoParams,
     /// Whether a hole may be kept open (`REQ-AUTO-084`).
-    open: &'b Open<'b>,
+    pub(super) open: &'b Open<'b>,
+    /// The design's marks: a speck one holds wholly is measured as a larger part is (`REQ-AUTO-104`).
+    pub(super) marks: &'b Marks,
 }
 
 /// What is sorted.
@@ -152,7 +149,7 @@ fn sort(
 ) -> Result<(), Exhausted> {
     meter.charge(1)?;
     let fired = |rule: RuleId, measures: Option<Measures>| Fired { rule, measures };
-    match lines(&part, bounds, meter)? {
+    match lines(&part, bounds, by.marks, meter)? {
         Found::Lines(lines, rule) => {
             let edges = Edges::of(&part, piece(&part), meter)?;
             match width(&edges, &lines, meter)? {
@@ -249,14 +246,22 @@ enum Found {
     Broken(&'static str),
 }
 
-/// What becomes of `part`, an area's held to `bounds`, with `meter`'s work: a speck stays in the fill, and so
-/// does a part of a shape that asks to be filled; a part nowhere wider than the narrowest satin stroke, and
+/// What becomes of `part`, an area's held to `bounds`, with `meter`'s work: a speck stays in the fill unless
+/// one of `marks` holds it wholly, and a part of a shape that asks to be filled stays there too; a part nowhere wider than the narrowest satin stroke, and
 /// any part of a shape that asks to run, sews along its centre lines; and one no wider than the widest satin
 /// column goes by its columns.
-fn lines(part: &Polygon, bounds: &Bounds, meter: &mut Meter) -> Result<Found, Exhausted> {
+fn lines(part: &Polygon, bounds: &Bounds, marks: &Marks, meter: &mut Meter) -> Result<Found, Exhausted> {
     // A speck needs no measuring, and neither does a part of a shape that names a stitch any part can sew as.
     let unmeasured = Measures::of_breadth(part.area(), Breadth::Narrow);
-    let rule = match choose(&unmeasured, bounds) {
+    let mut chosen = choose(&unmeasured, bounds);
+    // A speck a mark holds wholly sews by its width, as a larger part does (`REQ-AUTO-104`).
+    if chosen == RuleId::Speck
+        && let Some(at) = marks.holding(part, meter)?
+    {
+        marks.kept_speck(at);
+        chosen = choose(&unmeasured, &Bounds { min_area: 0.0, ..*bounds });
+    }
+    let rule = match chosen {
         RuleId::Speck => return Ok(Found::Filled(RuleId::Speck, unmeasured)),
         RuleId::Asked if bounds.asked == Asked::Fill => return Ok(Found::Filled(RuleId::Asked, unmeasured)),
         RuleId::Asked => RuleId::Asked,
@@ -541,6 +546,11 @@ mod tests {
     use stitchcraft_core::rng::SplitMix64;
 
     use super::*;
+
+    /// What a part of a shape with `rules` is sorted by: every hole kept open, and no marks.
+    fn by(rules: &AutoParams) -> By<'_> {
+        By { rules, open: &|_, _| Ok(true), marks: Box::leak(Box::default()) }
+    }
     use crate::normalize::region::geom;
 
     fn p(x: f64, y: f64) -> Point {
@@ -635,7 +645,7 @@ mod tests {
         let area = ElementId::new("area").unwrap();
         let parts = vec![square.clone(), speck.clone(), ended.clone(), strip.clone(), dot.clone(), ring.clone()];
         let even = Bounds { fill_uneven: false, ..bounds(1.5) };
-        let sorted = sorted(&area, parts, &even, &AutoParams::defaults(), &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap();
+        let sorted = sorted(&area, parts, &even, by(&AutoParams::defaults()), &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!(sorted.filled, [square, speck, dot, ring]);
         let fired: Vec<RuleId> = sorted.fired.iter().map(|fired| fired.rule).collect();
         assert_eq!(fired, [RuleId::Area, RuleId::Speck, RuleId::Column, RuleId::Line, RuleId::Compact]);
@@ -655,14 +665,14 @@ mod tests {
         // that were stays in the fill whole, and isn't split again.
         let tabbed = outline(&[(0.0, 0.0), (20.0, 0.0), (20.0, 8.5), (32.0, 8.5), (32.0, 11.5), (20.0, 11.5), (20.0, 20.0), (0.0, 20.0)]);
         let (area, narrowest, rules) = (ElementId::new("area").unwrap(), bounds(1.0), AutoParams::defaults());
-        let part = sorted(&area, vec![tabbed.clone()], &narrowest, &rules, &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap();
+        let part = sorted(&area, vec![tabbed.clone()], &narrowest, by(&rules), &mut Budget::DEFAULT.meter()).unwrap();
         assert!(matches!(part.along.as_slice(), [Along::Columns(_)]), "{:?}", part.along);
         let mut piece = Parts::default();
         sort(
             &area,
             tabbed.clone(),
             &narrowest,
-            By { rules: &rules, open: &|_, _| Ok(true) },
+            By { rules: &rules, open: &|_, _| Ok(true), marks: &Marks::default() },
             Sorting::Piece(&[]),
             &mut piece,
             &mut Budget::DEFAULT.meter(),
@@ -690,7 +700,7 @@ mod tests {
         let broken = Polygon { outline: clockwise(circle(50.0, 0.0, 4.0, 20, 0.5)), holes: vec![geom::closed(&circle(51.6, 0.0, 2.4, 40, 0.0))] };
         let area = ElementId::new("area").unwrap();
         let parts = vec![dot.clone(), pinched.clone(), broken.clone()];
-        let sorted = sorted(&area, parts, &bounds(1.5), &AutoParams::defaults(), &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap();
+        let sorted = sorted(&area, parts, &bounds(1.5), by(&AutoParams::defaults()), &mut Budget::DEFAULT.meter()).unwrap();
         assert!(sorted.along.is_empty(), "{:?}", sorted.along);
         assert_eq!(sorted.filled, [dot, pinched, broken]);
         let [unmade, lost] = sorted.said.as_slice() else { panic!("{:?}", sorted.said) };
@@ -719,8 +729,7 @@ mod tests {
         let plate = Polygon { holes, ..outline(&[(0.0, 0.0), (side, 0.0), (side, side), (0.0, side)]) };
         let area = ElementId::new("area").unwrap();
         let sorted =
-            sorted(&area, vec![strip.clone(), plate.clone()], &bounds(6.0), &AutoParams::defaults(), &|_, _| Ok(true), &mut Budget::DEFAULT.meter())
-                .unwrap();
+            sorted(&area, vec![strip.clone(), plate.clone()], &bounds(6.0), by(&AutoParams::defaults()), &mut Budget::DEFAULT.meter()).unwrap();
         assert!(sorted.filled.is_empty() && sorted.said.is_empty(), "{sorted:?}");
         assert_eq!(sorted.along.iter().map(narrow_part).collect::<Vec<_>>(), [&strip, &plate]);
     }
@@ -744,8 +753,7 @@ mod tests {
             (0.0, 3.0),
         ]);
         let area = ElementId::new("area").unwrap();
-        let sorted =
-            sorted(&area, vec![blob.clone()], &bounds(1.0), &AutoParams::defaults(), &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap();
+        let sorted = sorted(&area, vec![blob.clone()], &bounds(1.0), by(&AutoParams::defaults()), &mut Budget::DEFAULT.meter()).unwrap();
         let rules: Vec<RuleId> = sorted.fired.iter().map(|fired| fired.rule).collect();
         assert_eq!((rules, sorted.along.len(), sorted.said.len()), (vec![RuleId::Uneven, RuleId::Line, RuleId::Line], 2, 0));
         let [square] = sorted.filled.as_slice() else { panic!("{:?}", sorted.filled) };
@@ -756,7 +764,7 @@ mod tests {
             &area,
             blob.clone(),
             &bounds(1.0),
-            By { rules: &AutoParams::defaults(), open: &|_, _| Ok(true) },
+            By { rules: &AutoParams::defaults(), open: &|_, _| Ok(true), marks: &Marks::default() },
             Sorting::Tail(&[]),
             &mut tail,
             &mut Budget::DEFAULT.meter(),
@@ -773,8 +781,7 @@ mod tests {
         let ring =
             Polygon { holes: vec![geom::closed(&circle(0.0, 0.0, 4.0, 48, 0.0))], ..outline(&[(-8.0, -8.0), (8.0, -8.0), (8.0, 8.0), (-8.0, 8.0)]) };
         let area = ElementId::new("area").unwrap();
-        let sorted =
-            sorted(&area, vec![ring.clone()], &bounds(1.0), &AutoParams::defaults(), &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap();
+        let sorted = sorted(&area, vec![ring.clone()], &bounds(1.0), by(&AutoParams::defaults()), &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!((sorted.filled, sorted.along.len()), (vec![ring], 0));
         let [Fired { rule: RuleId::Refused, measures: Some(measures) }] = sorted.fired.as_slice() else { panic!("{:?}", sorted.fired) };
         assert!((measures.width - 4.5).abs() < 0.1 && measures.breadth == Breadth::Medium, "{measures:?}");
@@ -796,8 +803,7 @@ mod tests {
         let turn = 1.5 * std::f64::consts::PI;
         let band = outline(&arc(3.5, 0.0, turn).chain(arc(1.0, turn, 0.0)).collect::<Vec<_>>());
         let area = ElementId::new("area").unwrap();
-        let sorted =
-            sorted(&area, vec![band.clone()], &bounds(1.0), &AutoParams::defaults(), &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap();
+        let sorted = sorted(&area, vec![band.clone()], &bounds(1.0), by(&AutoParams::defaults()), &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!((sorted.filled, sorted.along.len()), (vec![band], 0));
         let [Fired { rule: RuleId::Refused, measures: Some(measures) }] = sorted.fired.as_slice() else { panic!("{:?}", sorted.fired) };
         assert_eq!(measures.lines, 1);
@@ -818,7 +824,7 @@ mod tests {
         let asked = |stitch: &str| {
             let rules = AutoParams::from_set(&[("auto_stitch", stitch)].into_iter().collect()).unwrap().params;
             let parts = vec![strip.clone(), speck.clone()];
-            sorted(&area, parts, &Bounds::of(&rules, Mm::new(1.0).unwrap()), &rules, &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap()
+            sorted(&area, parts, &Bounds::of(&rules, Mm::new(1.0).unwrap()), by(&rules), &mut Budget::DEFAULT.meter()).unwrap()
         };
         let run = asked("run");
         let [Along::Narrow(Narrow { part, lines, width })] = run.along.as_slice() else { panic!("{:?}", run.along) };
@@ -835,14 +841,7 @@ mod tests {
         let mut dot = circle(40.0, 0.0, 0.75, 8, 0.5);
         dot.reverse();
         let dot = Polygon { outline: geom::closed(&dot), holes: Vec::new() };
-        let sorted = sorted(
-            &area,
-            vec![dot.clone(), square],
-            &Bounds::of(&rules, Mm::new(1.0).unwrap()),
-            &rules,
-            &|_, _| Ok(true),
-            &mut Budget::DEFAULT.meter(),
-        );
+        let sorted = sorted(&area, vec![dot.clone(), square], &Bounds::of(&rules, Mm::new(1.0).unwrap()), by(&rules), &mut Budget::DEFAULT.meter());
         let sorted = sorted.unwrap();
         assert!(sorted.filled.contains(&dot) && sorted.fired.first().map(|fired| fired.rule) == Some(RuleId::Compact), "{sorted:?}");
     }
@@ -960,12 +959,36 @@ mod tests {
     }
 
     #[test]
+    fn req_auto_104_a_speck_a_mark_holds_is_measured_and_one_outside_stays_in_the_fill() {
+        // 2 specks of 0.8 mm², 1.6 mm by 0.5 mm, and a mark round the first.
+        let (inside, outside) =
+            (outline(&[(0.0, 0.0), (1.6, 0.0), (1.6, 0.5), (0.0, 0.5)]), outline(&[(5.0, 0.0), (6.6, 0.0), (6.6, 0.5), (5.0, 0.5)]));
+        let marks = Marks::of(&[crate::auto::marks::tests::edged("eye", [-0.5, -0.5, 2.0, 1.0], 1)], &Budget::DEFAULT);
+        let (area, rules) = (ElementId::new("area").unwrap(), AutoParams::defaults());
+        let by = By { rules: &rules, open: &|_, _| Ok(true), marks: &marks };
+        let sorted = sorted(&area, vec![inside.clone(), outside.clone()], &bounds(1.0), by, &mut Budget::DEFAULT.meter()).unwrap();
+        // Narrower than the narrowest satin stroke, the first runs along its middle, and the other stays in
+        // the fill as a speck.
+        assert_eq!(sorted.along.iter().map(narrow_part).collect::<Vec<_>>(), [&inside]);
+        assert_eq!(sorted.filled, [outside]);
+        assert_eq!(sorted.fired.iter().map(|fired| fired.rule).collect::<Vec<_>>(), [RuleId::Line, RuleId::Speck]);
+        // Testing it against the mark charges the meter: with too little work, the area needs more.
+        let short = sorted_with_work(&area, &inside, by, 4);
+        assert_eq!(short, Err(Exhausted::Work));
+    }
+
+    /// `part` sorted by `by` with `work` units.
+    fn sorted_with_work(area: &ElementId, part: &Polygon, by: By<'_>, work: u64) -> Result<Parts, Exhausted> {
+        sorted(area, vec![part.clone()], &bounds(1.0), by, &mut Budget { max_work: work, ..Budget::DEFAULT }.meter())
+    }
+
+    #[test]
     fn a_part_of_1_square_millimetre_is_no_speck() {
         // A strip 0.5 mm wide and 2 mm long, as large as a speck can't be: narrow, with a line along it.
         let strip = outline(&[(0.0, 0.0), (2.0, 0.0), (2.0, 0.5), (0.0, 0.5)]);
         assert_eq!(strip.area(), AutoParams::defaults().auto_min_area_mm2);
         let (area, rules) = (ElementId::new("area").unwrap(), AutoParams::defaults());
-        let sorted = sorted(&area, vec![strip.clone()], &bounds(1.5), &rules, &|_, _| Ok(true), &mut Budget::DEFAULT.meter()).unwrap();
+        let sorted = sorted(&area, vec![strip.clone()], &bounds(1.5), by(&rules), &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!(sorted.along.iter().map(narrow_part).collect::<Vec<_>>(), [&strip]);
     }
 

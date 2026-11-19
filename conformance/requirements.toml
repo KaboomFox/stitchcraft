@@ -2615,6 +2615,15 @@ milestone = "M14"
 status = "active"
 
 [[req]]
+id = "REQ-VC-031"
+area = "vectorcraft"
+level = "L2"
+statement = "A path or a compound path of a VectorCraft document named `stitch:keep`, alone or with a note, is a mark that keeps parts (REQ-AUTO-104 to REQ-AUTO-107): it is read as any object is, with its paints, so it needs a fill or a stroke, and the reader takes it out of the design's elements and gives it to the design as a mark. The PES and DST exporters and stitch sew a marked document alike. A group or a layer so named is not a mark, and SC-W0807 says so."
+rationale = "A name is how ABI v1 marks an object for StitchCraft (REQ-VC-009), and a person draws the mark with VectorCraft's own tools, a rectangle or an ellipse with a stroke and no fill over the part. The marks are read when the document is planned, as text markers are, so no command applies them."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-VC-019"
 area = "vectorcraft"
 level = "L2"
@@ -2824,6 +2833,15 @@ milestone = "M14"
 status = "active"
 
 [[req]]
+id = "REQ-CLI-021"
+area = "cli"
+level = "L2"
+statement = "`--keep LEFT,TOP,WIDTH,HEIGHT`, which stitch plan, stitch export and stitch bug-report take any number of times, marks a rectangle of the design read as a mark that keeps parts (REQ-AUTO-104), in percent of the box round the design's shapes as `--text` reads its 4 numbers (REQ-CLI-020), by the same code. A mark whose numbers don't read, that reaches outside the box or that has no width or height is refused as a usage error before anything is read. The marks are used after the design's own, named keep-1, keep-2 and so on in the order given. A bug-report bundle records them with the settings of automatic digitizing's rules, and its replay uses them."
+rationale = "A picture traced by the command line never opens in an editor where a mark could be drawn, and a share of the picture's box can be read off the picture whatever size it sews at, as for --text."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-AUTO-001"
 area = "auto"
 level = "L2"
@@ -2910,6 +2928,42 @@ area = "auto"
 level = "L2"
 statement = "Thin lines (REQ-AUTO-090) merge only while the picture keeps its likeness (REQ-AUTO-093) as merging can count it: a part is a piece of one colour no smaller than the smallest area (REQ-AUTO-020) in which a disc a thread across, 0.4 mm, fits, the one definition the likeness measure uses too. The thin lines of one colour that touch each other are one group. A group that touches a piece of an automatic area of its colour that is no speck merges freely: its colour still shows there. A group that touches none and is a part is a whole part of its colour, and merged into a neighbour of another colour it is a part lost. A colour's parts are its areas' pieces that are no specks and its groups that are parts, and a part lost costs the picture's likeness 1 of its colour's parts divided by the number of colours. The groups that share an edge with an area merge the cheapest first, those of the colour with the most parts, and of 2 as cheap the smaller, while what they cost together stays within 1 less auto_min_likeness times the number of colours. auto_min_likeness is 0.85 by default. At 0 every line merges and nothing is measured. The strictest auto_min_likeness of a shape with thin lines rules. The other groups sew as lines, and SC-I0915 says so for each of their lines that shares an edge with an area, with the least likeness kept. A line has the budget's work to itself to find what it touches, and one that needs more sews as a line, which SC-I0915 says."
 rationale = "Merging by geometry alone took the twigs of a traced magnolia's branches, the shadows along them and the pale rims of its petals: measured on 2026-11-18, a traced magnolia, coleus, goose and castle kept 0.43 to 0.48 of their parts' likeness with every line merged, and 0.93 to 0.99 with none. A rule can't tell a twig from a strand of fur, and none may know what a picture shows, so this one goes by counts. A strand of fur among many pieces of its colour costs little and merges, and a line of a colour with few parts stays. Merging sees only what it loses itself, not what specks and stitches astray lose, so a bound to raise it to is above the limit of REQ-AUTO-094: at 0.8 the castle kept 0.728, and at 0.85 every picture measured keeps 0.75 or more. Keeping lines can change the order the blocks sew in, which can pile thread up far from any line, so the setting stayed at 0 until the cap at the end of planning (M13.35) held every order to 4 fills, and is 0.85 by default since (docs/src/design/image-to-embroidery.md, Merging by likeness). Counting the parts as the measure does keeps one definition of a part, in the engine, which the testkit's measure imports."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-104"
+area = "auto"
+level = "L2"
+statement = "Marks that keep parts: a part of an automatic area, as it is once the layers are flattened (REQ-AUTO-023), whose outline lies wholly inside a mark (REQ-AUTO-106) is kept. Kept, it is no speck (REQ-AUTO-008): it merges into no neighbour, is not left out for sharing no edge, and sews by its width as a part that is no speck does (REQ-AUTO-013, REQ-AUTO-016), in its own thread. A speck and a thin line outside every mark merge as they would without one."
+rationale = "Automatic digitizing decides by geometry alone which small shapes are noise to merge, and no rule of geometry can know which small part a person cares about: the same speck is noise in one picture and the point of another, such as an eye, a dot over a letter or a window. A mark is the person's answer, and names no subject."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-105"
+area = "auto"
+level = "L2"
+statement = "A kept part (REQ-AUTO-104) is no thin line (REQ-AUTO-090): it merges into no neighbour whatever the likeness bound (REQ-AUTO-095), and sews by its width, a part narrower than the narrowest satin stroke everywhere as a running stitch along its centre lines. A part partly inside a mark is decided as if there were no mark, and the parts outside the marks may still merge into a kept part as into any other."
+rationale = "A thin line a person marks, such as a whisker, a twig or the rim of a petal, is the detail the merge takes away. A part is kept whole or not at all: cutting it at the mark's edge would draw a seam the picture doesn't have, and the person can draw the mark larger."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-106"
+area = "auto"
+level = "L2"
+statement = "A mark is an element whose name is `stitch:keep`, alone or followed by white space and a note of the person's own, in any case and after any white space: an object's name in VectorCraft's Layers panel or an SVG element's inkscape:label. Its area is read as a text marker's (REQ-AUTO-063), by the same code: a fill, or a stroke whose first subpath is closed, marks what its outline encloses, and a stroke whose first subpath is open marks what lies within half its width of the line, between its ends. An outline lies inside a mark when every point of it does, flattened within 0.05 mm. A reader takes each mark out of the design's elements, so it is never sewn, and gives it to the design with its name. An object read as 2 elements of one name and one path is one mark."
+rationale = "A plug-in has no canvas tool in VectorCraft 0.23.0, so a person draws a mark with VectorCraft's own tools and names it, as a text marker is drawn and named. One reading of a marker's area serves both markers."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-107"
+area = "auto"
+level = "L2"
+statement = "A mark changes no rule but for its kept parts: the background, the flattened layers, the rules by width, the order, the overlaps, the base layer and the thickness cap go by their own rules, though the order they find may differ for the parts kept, and a design whose marks keep no part that would merge sews as without them, element for element. SC-I0916 names each mark with the parts that lie wholly inside it, and how many of them sew that would have merged as specks and as thin lines. SC-W0917 names a mark that encloses no area, holds no part wholly, or is in a design with no automatic shape, and the design then sews as without it. Testing a part costs a unit for each of its points and each segment of each mark, charged to the budget the step has for the part, and a design without marks tests nothing."
+rationale = "A mark is a manual control: it keeps what the person drew it round and guesses nothing else. Measured on 2026-11-18 with a prototype, the repository's pictures whose marks held nothing that merges sewed element for element as without marks, and the traced photos kept every part marked but sewed elsewhere in another order, which only the thickness cap (M13.35) bounds (design page, Marks that keep parts). A mark that keeps nothing is said, since a person who drew it expects it to."
 milestone = "M13"
 status = "active"
 

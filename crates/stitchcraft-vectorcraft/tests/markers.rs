@@ -113,7 +113,7 @@ fn req_vc_009_a_stitch_name_stitchcraft_does_not_read_is_named_and_stitched() {
         hint.as_deref(),
         Some(
             "StitchCraft reads stitch:ignore, stitch:start, stitch:end, stitch:target, stitch:guide, stitch:anchor, stitch:origin, \
-             stitch:stop-position, stitch:route-start, stitch:route-end and stitch:text."
+             stitch:stop-position, stitch:route-start, stitch:route-end, stitch:text and stitch:keep."
         )
     );
 }
