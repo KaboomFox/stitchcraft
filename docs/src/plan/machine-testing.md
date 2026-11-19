@@ -370,8 +370,8 @@ M13.45 turned it on by default. At MC-8, sew a traced dog with it off and on, si
   off?
 - Feel for thick spots away from the face: on, a moved fill can lay more thread elsewhere.
 
-M13.45 turns on by default both M13.40's details last and M13.44's merging by likeness, which keeps a thin
-line that is a whole part of its colour while the picture keeps 0.85 of its likeness
+M13.45 turns on by default both M13.40's details last and M13.44's merging by likeness: a thin line that is
+a whole part of its colour sews as a line where merging it would take the picture under 0.85 of its likeness
 ([merging by likeness](../design/image-to-embroidery.md#merging-by-likeness)). Of the repository's
 pictures only the traced dogs and the marked patch drawn abutting sew differently. At MC-8, sew the dog on turf and the running dog in 6 threads from `main` before
 M13.45 and from after it, side by side:
@@ -379,7 +379,7 @@ M13.45 and from after it, side by side:
 - The lines it keeps sew as running stitches over the patches. Do they read as the strands of fur and the
   pale strip above the nose of the photo, or as stray thread?
 - It leaves 3 jump threads more. Cut them by hand, and say whether an end pulls out.
-- The cap holds every spot to 4 fills in both. Feel the areas at 3 fills or more: 137 mm² before and
+- The cap limits every spot to 4 fills in both. Feel the areas at 3 fills or more: 137 mm² before and
   124 mm² after. Is either stiffer?
 - On the running dog in 6 threads, a grey ring now sews over the edge of the tan patch on its chest. Does
   the patch still read as tan from a metre away?

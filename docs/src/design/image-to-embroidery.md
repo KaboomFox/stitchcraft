@@ -1852,7 +1852,7 @@ Thin lines merge only while the picture keeps `auto_min_likeness` of its likenes
 `REQ-AUTO-095`, M13.44). The setting is 0.85 by default since M13.45. At 0 every line merges, as before the
 rule.
 
-It landed at 0, off, because keeping lines can make a spot sew thicker far from any line. A line kept sews as
+It was merged at 0, off, because keeping lines can make a spot sew thicker far from any line. A line kept sews as
 a running stitch, and the sewing order then puts the blocks of a colour in another order. A fill that sewed
 first at a spot can then sew over others there. On one photo measured at 0.85 the thickest spot rose from 5.60
 to 7.03 fills, at a place 3.6 mm or more from every line kept, where the block order had changed. Merging any
@@ -2228,10 +2228,10 @@ to 249. What got worse:
   not the smaller one inside it, which would cost a thread change.
 
 Planning takes longer where lines are kept, since each line is measured as a part: by the clock on a shared
-machine, the coleus, the goose and the castle took 1.8 to 2.2 times as long. `conformance/perf.toml` records
+machine, the local photos but the magnolia took 1.8 to 2.2 times as long. `conformance/perf.toml` records
 the dogs' counts.
 
-No limit was changed for these: each comes from the whole set.
+These leave every limit as it was, since a limit comes from the whole set.
 
 ### Runs in place of jumps
 

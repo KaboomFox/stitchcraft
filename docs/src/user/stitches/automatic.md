@@ -376,7 +376,7 @@ choice:
    are larger counts as one. StitchCraft finds it by its outline and its neighbours alone, not by what
    the picture shows.
    The rule is on by default and costs no thread change. A fill that moves for a detail starts and ends
-   elsewhere, and the cap on thread holds every spot it reaches to 4 fills. It can leave a few more jump
+   elsewhere, and the cap on thread limits every spot it reaches to 4 fills. It can leave a few more jump
    threads. Turn it off with `--set auto_details_last=false` when fewer threads to cut matter more than
    whole edges on the details.
 6. Of the shapes a thread may sew, the nearest sews next.
