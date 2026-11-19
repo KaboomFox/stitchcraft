@@ -238,3 +238,33 @@ fn req_vc_016_the_nearest_stitchcraft_effects_say_how_a_path_sews() {
     assert_eq!(levels, ["vc:7", "vc:10"]);
     assert_eq!(read.warnings.len(), 2, "{:?}", read.warnings);
 }
+
+#[test]
+fn req_vc_034_a_path_s_own_auto_effect_inside_an_automatic_group_is_said_with_the_settings_it_does_not_take() {
+    // A group's Auto effect sets the overlap, and one of its paths, named in the Layers panel, has an Auto
+    // effect of its own that narrows the widest satin column. VectorCraft stores an effect with every
+    // parameter (`merged_params` in its `crates/effects`), so the path's own record holds the overlap at its
+    // default, and the path sews by its own record alone: its own settings replace all the group's.
+    let named = r#"{"name": "Red fill 2", "id": 6, "appearance": APPEARANCE, "kind": {"type": "path", "path": {"subpaths": [{"closed": true,
+        "anchors": [{"p": [0, 0]}, {"p": [40, 0]}, {"p": [40, 40]}, {"p": [0, 40]}]}]}}}"#
+        .replace("APPEARANCE", &effected(&[red()], &[("auto", r#"{"auto_max_satin_width_mm": 4, "auto_overlap_mm": 1}"#)]));
+    let objects = group(5, &effected(&[], &[("auto", r#"{"auto_overlap_mm": 0.6}"#)]), &[named, square(7, 60.0, 0.0, &appearance(&[red()], &[]))]);
+    let read = read(&document(4, &objects), false);
+    // What sews doesn't change: the path by its own settings, its neighbour by the group's.
+    assert_eq!(common::params(element(&read, "vc:6:fill")), [("auto_max_satin_width_mm", "4"), ("auto_overlap_mm", "1")]);
+    assert_eq!(common::params(element(&read, "vc:7:fill")), [("auto_overlap_mm", "0.6")]);
+    // One notice says so, naming the path as the Layers panel does and the group's setting it doesn't take,
+    // in place of SC-W0807's general words on effects from 2 levels.
+    let said: Vec<(&str, String, String)> =
+        read.warnings.iter().map(|w| (w.code.id(), w.element.as_ref().map_or(String::new(), ToString::to_string), w.message.clone())).collect();
+    assert_eq!(
+        said,
+        [(
+            "SC-W0920",
+            "vc:6".to_string(),
+            "The object \"Red fill 2\" has StitchCraft's Auto effect of its own inside a group with one, and sews by its own settings \
+             alone: it doesn't take the group's auto_overlap_mm 0.6 (its own: 1)."
+                .to_string()
+        )]
+    );
+}

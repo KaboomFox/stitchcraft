@@ -2923,6 +2923,150 @@ specks too, on 2026-11-18.
   exported file and its preview picture do.
 - A mark that merges what the rules sew, or that names a stitch.
 
+## Names of shapes
+
+A traced photo has hundreds of shapes, and every manual control starts with the same question: which shape
+is this? A mark ([marks that keep parts](#marks-that-keep-parts)), a guide (M13.24) and a shape's own
+effect all need the person to find the shape in VectorCraft. Today a notice names a shape by its element
+id, `vc:63:fill`, which is the number VectorCraft keeps in the file. The Layers panel never shows that
+number. Roadmap step M13.25 gives each shape of a traced design a name that the Layers panel, the notices
+and the report all show. Its phase 1 checked what VectorCraft shows, measured candidate names on the
+pictures, and wrote the requirements below with failing cases (`REQ-AUTO-125` to `REQ-AUTO-127`,
+`REQ-VC-033`, `REQ-VC-034`, `REQ-CLI-023`, and the new warning `SC-W0920`). A later phase builds them.
+
+### What VectorCraft shows
+
+Read in VectorCraft's source at `3f8d7a0`, its `.vectorcraft` format and the Layers panel's code. The app's
+window wasn't run: VectorCraft isn't built here.
+
+- **A row shows the object's name.** A node of a `.vectorcraft` document has an optional `name`. The Layers
+  panel shows `Node::display_name()` (`crates/doc`): the name when there is one, else the kind in angle
+  brackets, `<Compound Path>`, `<Path>` or `<Group>`. In a traced document no node has a name. It is a
+  layer with one group in it, and in the group a compound path or a path for each shape. So a traced photo shows hundreds of rows
+  that read `<Compound Path>`.
+- **Search All finds by name.** The panel's search keeps the rows whose shown name, in lower case, contains
+  what the person typed (`list_rows` in `crates/ui-egui/src/panels/layers.rs`). A name written into the file
+  is what a person can search for. A query matches inside longer names, so `red fill 1` also finds
+  `red fill 12`.
+- **A long name is cut at the row's end.** The panel paints the name clipped to the row, which loses its
+  right end on a narrow panel. VectorCraft keeps at most 255 characters of a name.
+- **A name stays a name.** StitchCraft's reader gives an element its node's name already (`Element::name`),
+  and a name that begins with `stitch:` is a marker. A name StitchCraft writes must never begin with it.
+
+Not checked without the app's window: how many characters fit a row at the panel's default width, and
+whether a person can read the names at the panel's smallest row size.
+
+### The parts of a name
+
+A name tells a person the thread, how the shape sews and which one of them it is: `Red fill (3)`, `Deep Gold
+column (1)`, `Black line (12)`.
+
+- **The thread** is the thread's name. A traced shape's colour is one of the machine's threads exactly,
+  since the trace uses the library's colours as they are, so its name is the palette's name of that colour.
+  A colour that no thread of the palette has is written as its hex code, `#7d6f00`.
+- **How it sews** is the way the shape's largest part sews. A fill of any method is `fill`, a satin column
+  is `column`, and a running stitch or another stroke is `line`. A shape that sews nothing is `left out`,
+  as the background the design leaves out is (`SC-W0906`).
+- **The number** counts the shapes of that thread and that way of sewing in the Layers panel's order, from
+  its top row, 1 first. It is written in brackets, so that a search for `fill (1)` doesn't also find
+  `fill (12)`.
+
+The longest name on the pictures measured was 18 characters with a hex code in place of the thread's name,
+and the longest thread name of the machine's palette has 15 (`Wisteria Violet`). A name then fits in 27.
+
+**Where it sews.** A name doesn't say where the shape is in the sewing order. The order is chosen again at
+every plan, and one small edit moves many shapes in it, as the measures below show. So the report lists
+the shapes in their sewing order at each plan, each with its place, which the name doesn't give.
+
+### How stable names are
+
+Measured on 2026-11-19 with a probe test (not committed), on the repository's traced badge, pear and 2
+dogs and on 2 of the 4 local photos, a magnolia and a coleus. Each design was read with
+`--auto`, digitized, and for the first 4 also planned on the reference machine. Then each of 9 shapes,
+spread through it, was deleted, or painted in another of the design's colours, and the names were made again.
+A count is of the other shapes whose names changed.
+
+Planned twice unchanged, every design gave the same names: digitizing is deterministic.
+
+| Number counted | Badge (3) | Pear (5) | Dog on turf (78) | Dog running (92) |
+| --- | --- | --- | --- | --- |
+| In the whole sewing order | 0 to 2 | 0 to 3 | 30 to 60 | 18 to 70 |
+| By thread in the sewing order | 0 to 2 | 0 to 2 | 7 to 54 | 1 to 32 |
+| By thread and kind in the sewing order | 0 | 0 | 3 to 25 | 1 to 29 |
+| By thread and kind in the Layers panel's order | 0 | 0 | 5 on average | 4 on average |
+
+The first 3 rows are for the deletion of 4 shapes. Deleting one shape reorders the sewing of shapes far from
+it, and a name with its place in the sewing order changes for up to 3 in 4 of the others. A number in the
+Layers panel's order changes only for the shapes of the same thread and kind below the one deleted.
+
+On the local photos, numbered by thread and kind in the Layers panel's order, a deletion renamed 23 of the
+magnolia's 424 other shapes on average. With the number counted by thread alone, without the kind, it renamed
+45. The magnolia and the coleus, of 704 shapes, gave the same names when digitized twice. The coleus's edits,
+the goose and the building weren't measured: the probe ran out of its 50 minutes.
+
+So the names are written once, when the picture is traced, and are then the shapes' own names, as a name a
+person gives one is. StitchCraft never renames a shape that has a name. A shape the person draws later has
+none, and it is named, for that plan only, by the same rule with the next free number.
+
+### Places that show the names
+
+One function of the engine makes a name, and one gives the words that name a shape in any message: its
+name in quotes, and its element id after it for a bug report. Every place below uses them.
+
+- **The traced document.** `stitch plan picture.png --traced FILE` writes each shape's name into its node,
+  and changes nothing else in the document (`REQ-VC-033`). The design that is planned is that document, with its names,
+  so planning `FILE` again sews the same stitches and says the same notices.
+- **The notices.** A notice about a shape names it: `SC-I0912`, `SC-I0916`'s parts, the shapes at
+  `SC-W0913`'s thickest spot, and the notice of M13.24's guide, on its branch. A line of `stitch plan` shows the name
+  beside the id: `info SC-I0912 ("Red fill (3)", vc:63:fill): …` (`REQ-AUTO-127`).
+- **The report.** Each diagnostic with an element has its `name` too, and a list `shapes` gives each shape's
+  name, id, thread, kind and place in the sewing order (`REQ-CLI-023`).
+- **The bug-report bundle** keeps the document as it was planned, names and all. A replay then names the shapes
+  as the run did.
+
+### A path's own Auto effect inside an automatic group
+
+A group's Auto effect makes everything inside it automatic with its settings. A path inside with an Auto
+effect of its own sews by its own settings alone (`REQ-VC-016`), since the nearest effects say how a path
+sews. VectorCraft writes an effect with every parameter, its defaults included (`merged_params` in its
+`crates/effects`, read at `3f8d7a0`), so the path's own effect stores every setting, and the reader can't
+tell a setting the person chose from one left at its default. The group's settings can't be merged under
+the path's.
+
+The roadmap row said this happens without a word. The failing case shows that `SC-W0807` says it, in the
+words for StitchCraft effects that reach a path from 2 levels: "it is sewn as the nearest say". A person
+learns from them neither which of the group's settings the path loses nor which path it is, since an unnamed
+path is only "the object" with its id. The new warning `SC-W0920` is said in place of `SC-W0807` where an
+Auto effect lies inside an automatic group, with the path's name and both values of every group setting
+that the path's own effect sets otherwise, leaving out those the group keeps at their defaults
+(`REQ-VC-034`). The stitches stay as they are today.
+
+### Decisions for the owner
+
+Each with the recommendation.
+
+- **Write names once, at the trace.** Names made again at every plan could follow the sewing order. After each
+  edit many shapes would change their names, and the Layers panel would then show names the notices no
+  longer use.
+  Recommended: written once by `--traced`, and kept as the person's own names.
+- **Number in the Layers panel's order, and give the sewing place beside the name.** The row asked that a
+  name says where the shape sews. A number in the sewing order is right only until the first edit.
+  Recommended: a number in the panel's order. The report lists the shapes in sewing order at every plan.
+- **Brackets round the number,** so that a search finds one shape. The other choice is a bare number, which
+  reads more plainly. Recommended: brackets.
+- **Name the shapes left out too,** since notices name the background. Recommended: name them, as `left out`.
+- **No reordering of the layers.** The row said the Layers panel would list the design as it sews. That needs
+  the paths reordered, and automatic digitizing cuts an area away under the areas over it in the layers. Recommended:
+  leave the layers in their order. The report's `shapes` list is in sewing order.
+- **A new code for the Auto effect inside an automatic group,** `SC-W0920`, a warning, in place of
+  `SC-W0807` there. The other choice is new words for `SC-W0807`. Recommended: the new code, so that
+  `stitch explain` can say what to do.
+
+### What isn't built
+
+Everything in this section. VectorCraft's own Layers panel isn't changed, and a shape renamed by the person
+keeps the person's name.
+
 ## Pictures from the command line
 
 `stitch plan picture.png` and `stitch export picture.png` trace the picture with VectorCraft's command line,

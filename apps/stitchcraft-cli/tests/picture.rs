@@ -61,6 +61,10 @@ const TESTS: &[(&str, fn())] = &[
     ),
     ("req_cli_013_a_document_vectorcraft_doesn_t_save_is_said", req_cli_013_a_document_vectorcraft_doesn_t_save_is_said),
     (
+        "req_vc_033_the_traced_document_names_each_shape_and_changes_nothing_else",
+        req_vc_033_the_traced_document_names_each_shape_and_changes_nothing_else,
+    ),
+    (
         "req_cli_016_models_that_aren_t_ready_are_said_with_each_file_and_the_folder_and_only_the_report_is_written",
         req_cli_016_models_that_aren_t_ready_are_said_with_each_file_and_the_folder_and_only_the_report_is_written,
     ),
@@ -231,6 +235,37 @@ fn req_cli_012_stitch_plan_traces_a_picture_with_vectorcraft_s_command_line_and_
     assert!(stdout.starts_with("badge.png\n") && stdout.ends_with("  report    badge.json\n  traced    traced.vectorcraft\n"), "{stdout}");
     let report: Value = serde_json::from_slice(&std::fs::read(dir.join("badge.json")).unwrap()).unwrap();
     assert_eq!((&report["design"], &report["profile"]), (&json!("badge.png"), &json!(REFERENCE.id)));
+}
+
+fn req_vc_033_the_traced_document_names_each_shape_and_changes_nothing_else() {
+    // `--traced` writes each shape's name into its node (docs/src/design/image-to-embroidery.md › Names of
+    // shapes), which the Layers panel shows and its Search All finds.
+    let dir = folder("named", "badge.png");
+    let args = ["plan", "badge.png", "-o", "badge.pes", "--traced", "traced.vectorcraft"];
+    let (out, _) = stitch(dir.path(), &args, None);
+    assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
+    let mut written: Value = serde_json::from_slice(&std::fs::read(dir.join("traced.vectorcraft")).unwrap()).unwrap();
+    let shapes = written.pointer_mut("/document/layers/0/kind/children/0/kind/children").unwrap().as_array_mut().unwrap();
+    let names: Vec<(u64, String)> = shapes
+        .iter_mut()
+        .map(|node| {
+            (node["id"].as_u64().unwrap(), node.as_object_mut().unwrap().remove("name").map(|n| n.as_str().unwrap().to_string()).unwrap_or_default())
+        })
+        .collect();
+    assert_eq!(names, [(3, "White left out (1)".into()), (6, "Red fill (1)".into()), (9, "Blue fill (1)".into()), (12, "Deep Gold fill (1)".into())]);
+    // Without the names, it is the document VectorCraft saved.
+    let traced: Value = serde_json::from_slice(&std::fs::read(TRACED).unwrap()).unwrap();
+    assert_eq!(written, traced);
+    // The named document sews the same stitches, and its notices name the shapes alike.
+    let planned = Command::new(env!("CARGO_BIN_EXE_stitch"))
+        .args(["plan", "traced.vectorcraft", "--auto", "-o", "again.pes"])
+        .current_dir(dir.path())
+        .output()
+        .unwrap();
+    assert_eq!(planned.status.code(), Some(0), "{}", text(&planned.stderr));
+    assert_eq!(std::fs::read(dir.join("badge.pes")).unwrap(), std::fs::read(dir.join("again.pes")).unwrap());
+    assert_eq!(text(&out.stderr), text(&planned.stderr));
+    assert!(text(&out.stderr).contains(r#"info SC-I0912 ("Red fill (1)", vc:6:fill): "#), "{}", text(&out.stderr));
 }
 
 fn req_cli_012_the_picture_is_traced_for_the_machine_at_the_size_and_in_the_colours_asked() {
