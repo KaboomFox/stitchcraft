@@ -2950,9 +2950,11 @@ without the guide (`REQ-AUTO-109` to `REQ-AUTO-111`).
 - **2 guides on one part.** The part follows the guide drawn last, the one a person sees on top. Blending
   2 guides would guess what the person meant.
 - **One element for each area and guide.** The parts of one area that follow one guide are one element,
-  since a guided fill sews several parts nearest the needle first. It is the area's own element when nothing
-  else of the area is filled, or else an element named after the area with `#` and a number, after the
-  area's other elements. The area keeps its thread.
+  since a guided fill sews several parts nearest the needle first. These elements come after the area's
+  other elements, its fill and its parts sewn along their middles, in the order the guides are drawn, so
+  that the other elements keep their names. The first element of an area keeps its name and the others are
+  numbered, so a guided fill is the area's own element when nothing else of the area sews. The area keeps
+  its thread.
 - **Left alone.** The background, the flattened layers, the specks and the thin lines go as without a guide,
   and so do the rules by width, the overlaps, the base layer and the cap on thickness. The guided fill takes
   its own defaults and the area's other settings. The base
@@ -2978,7 +2980,8 @@ readers take guides out of the elements beside the marks (`mark::taken_out`). It
   table](vectorcraft-integration.md)). A path so named keeps that meaning for shapes with settings, and is
   also a guide of the design for every automatic area it crosses, wherever it lies in the layers. A traced
   picture lies in one layer, and a person draws all its guides in that layer. A guide its group doesn't use is no
-  longer said to be unused (`SC-W0807`) when the design has an automatic shape. `SC-W0919` names one that
+  longer said to be unused (`SC-W0807`) when the design has an automatic shape, and an automatic shape
+  grouped with a guide alone is no longer told that its markers are unused. `SC-W0919` names a guide that
   steers nothing (`REQ-VC-032`).
 - **In an SVG file**, the guide is a path whose `inkscape:label` is the name. Ink/Stitch's guide line, a
   path with its marker grouped with a shape, keeps its Ink/Stitch meaning and guides only that group.

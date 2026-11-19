@@ -150,10 +150,13 @@ pub fn sew(
     // So did the marks of `--keep` (`REQ-CLI-021`), given to the design as read, in percent of its box.
     let (marks, rules): (Vec<_>, Vec<_>) = rules.iter().cloned().partition(|(key, _)| key == crate::text::KEY);
     let (keeps, rules): (Vec<_>, Vec<_>) = rules.into_iter().partition(|(key, _)| key == crate::keep::KEY);
+    // And the guides of `--guide` (`REQ-CLI-022`), after the design's own.
+    let (guides, rules): (Vec<_>, Vec<_>) = rules.into_iter().partition(|(key, _)| key == crate::guide::KEY);
     let marks: Vec<&str> = marks.iter().map(|(_, mark)| mark.as_str()).collect();
     let keeps: Vec<&str> = keeps.iter().map(|(_, mark)| mark.as_str()).collect();
+    let guides: Vec<&str> = guides.iter().map(|(_, guide)| guide.as_str()).collect();
     let read = source.read(design, reading).and_then(|(design, mut warnings)| {
-        let design = crate::keep::kept(design, &keeps);
+        let design = crate::guide::guided(crate::keep::kept(design, &keeps), &guides);
         let (design, said) =
             if marks.is_empty() { (design, Vec::new()) } else { crate::text::replaced(design, &marks, &mut FolderFonts::from_env())? };
         warnings.extend(said);
