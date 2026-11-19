@@ -1847,9 +1847,12 @@ words with the rules above and with the last resort, against the rules alone:
 | Columns' top thread taken | none | 5,364 mm |
 | Notches, a joined stitch along a column's edge | 0 | 629 |
 | Stitches turned 10° to 45° | 0 | 137 |
-| Joins whose look changed beyond the noise of moving the letters 0.05 mm | JUDGE109 | JUDGE77 |
+| Joins with more fabric bare, of 1,444 (M13.49's measure of the stitched letter) | 16 | 245 |
+| Joins where the line between 2 columns' stitches shows longer | 11 | 149 |
 
-In the stitched previews the last resort ragged the inner edge of an S and an 8 and changed the angle of
+Moving today's letters 0.05 mm, the noise of these measures, bares 12 joins more and makes the line between 2 columns longer at 10. The
+rules' 16 barer joins are 0.0025 mm² more at the median and 0.06 mm² at the most, on Barstitch Bold's 6 and
+e at 32.5 mm on a field. What bared them is for the build to find. In the stitched previews the last resort ragged the inner edge of an S and an 8 and changed the angle of
 an X's crossing, a Z's corner and an M's top. The owner chose lettering for how it looks. And on a field it
 leaves the thickest spots above the limit all the same, where the field and 2 columns' tops make 3.0 to 3.8
 fills by themselves.
