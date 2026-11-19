@@ -399,13 +399,13 @@ why = "it only ends the rounds early: a needle point goes only where one of its 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/auto/cap.rs"
 mutant = "replace > with >= in Cap<'_, '_>::above"
-line = "Ok(self.pass.thickness.most(Measure::Fills).value > self.pass.rules.cap)"
-why = "it only ends the rounds early: a needle point goes only where one of its stitches lays thread in a spot above the cap, so a round whose thickest spot is at the cap takes nothing, and the next test ends the rounds"
+line = "Ok(self.pass.thickness.most(Measure::Fills).value > limit)"
+why = "it only ends the rounds early: a needle point goes only where one of its stitches lays thread in a spot above the limit it is taken to, the cap or the warning's, so a round or a last resort whose thickest spot is at that limit takes nothing, and the next test ends it"
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/auto/cap.rs"
 mutant = "replace > with >= in Cap<'_, '_>::taken_out"
-line = "Kind::Hidden => self.ribbons.covers(&joined, |ribbon| ribbon.at > after, meter)?,"
+line = "Kind::Hidden => self.ribbons.covers(&joined, |ribbon| ribbon.at > after, false, meter)?,"
 why = "a ribbon is a top stitch, which ends at the entry it is named by, and the entry after an underlay or travel point is an underlay or travel point: no ribbon ends at it"
 
 [[equivalent]]
@@ -419,6 +419,12 @@ file = "crates/stitchcraft-engine/src/auto/cap.rs"
 mutant = "replace > with >= in Cap<'_, '_>::taken_out"
 line = "let counts = |ribbon: &Ribbon| ribbon.at != (block, at) && ribbon.at != after && (ribbon.element == element || ribbon.at > after);"
 why = "the ribbon that ends at the entry after the point is left out by the test before it, so the 2 tests differ on none"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/cap.rs"
+mutant = "replace > with >= in Cap<'_, '_>::taken_out"
+line = "|| self.ribbons.covers(&joined, |ribbon| ribbon.element == element || ribbon.at > after, false, meter)?);"
+why = "the ribbon that ends at the entry after the point is the shape's own, since a top point joins 2 stitches of its shape, so the test before it counts it already"
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/auto/cap.rs"
@@ -1025,3 +1031,9 @@ file = "apps/stitchcraft-cli/src/subject.rs"
 mutant = "replace cut -> Result<Subject, Stopped> with Ok(Default::default())"
 line = "Err(Stopped::Said(left_out()))"
 why = "this cut is compiled only without the cutout feature, which the mutants' build has on: the models workflow tests stitch without default features, and expects its SC-E1207"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/cap.rs"
+mutant = "replace > with >= in capped"
+line = "let (last, hottest) = if thickness.most(Measure::Fills).value > rules.limit {"
+why = "with the thickest spot at the warning's limit the candidates are found, but the kinds above the limit and the last resort first ask whether a spot is above it, and stop: only the work charged grows"

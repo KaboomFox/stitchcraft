@@ -316,12 +316,14 @@ It is the other limit of the check of a design's cover. A design without a base 
 
 **Thread that warns, in fills.** How many fills of thread over one spot make the design sew thick. A fill is what rows 0.4 mm
 apart lay, the width of the thread. Nothing sews differently by this value: planning warns of a
-place of 1 mm² or more with as much thread. It is a starting value for a 75/11 needle and
-40-weight polyester thread, which a sew-out has to confirm. The design goes by the settings its
+place of 1 mm² or more with as much thread, which a person should look at. One layer of satin
+over a fill lays 2 to 3 fills and sews well, and 2 dense layers on a fill, 4, risk broken needles.
+It is a starting value for a 75/11 needle and 40-weight polyester thread, which a sew-out has to
+confirm. The design goes by the settings its
 lowest automatic shape has for the 4 limits of its thickness.
 
 - **Accepts:** a number from 0.5 to 50
-- **Default:** `3`
+- **Default:** `4`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 
@@ -360,16 +362,17 @@ limit.
 
 ### `auto_thick_cap_fills`
 
-**Most thread on a spot, in fills.** The most fills of thread a spot of a millimetre sews. Where a spot sews more once the design is
-planned, a last pass and then the cap take thread there that other stitches cover: travel, the
-base layer, a shape's thread under later shapes, and a shape's own top stitches where they are
-doubled. The cap adds no jump thread, and what shows keeps its colour. Where no more thread may go,
-the warning of how thick the design sews names the spot. A starting value for a 75/11 needle and
-40-weight polyester thread, which a sew-out has to confirm. The design goes by the setting of its
-lowest automatic shape.
+**Most thread on a spot, in fills.** The most fills of thread a spot of a millimetre sews: what planning aims at. Where a spot sews
+more once the design is planned, a last pass and then the cap take thread there that other
+stitches cover: travel, the base layer, a shape's thread under later shapes, and a shape's own top
+stitches where they are doubled. The cap leaves a satin column's top stitches as they are, adds no
+jump thread, and what shows keeps its colour. A note says what is left above the cap, and the
+warning comes only at its own limit. A starting value for a 75/11 needle and 40-weight polyester
+thread, which a sew-out has to confirm. The design goes by the setting of its lowest automatic
+shape.
 
 - **Accepts:** a number from 1 to 50
-- **Default:** `4`
+- **Default:** `3.25`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 
