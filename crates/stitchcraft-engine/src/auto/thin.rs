@@ -217,7 +217,7 @@ impl Pass<'_, '_> {
     }
 
     /// Where entry `at` puts its needle point in the plan, as the plan's checks measure it.
-    fn at(&self, (block, index): Entry) -> Option<Point> {
+    pub(super) fn at(&self, (block, index): Entry) -> Option<Point> {
         self.plan.blocks.get(block)?.stitches.get(index).map(|entry| entry.at)
     }
 

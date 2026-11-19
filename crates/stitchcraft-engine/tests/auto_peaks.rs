@@ -142,19 +142,21 @@ fn with(design: &Design, settings: &[(&str, &str)]) -> Design {
 }
 
 #[test]
-fn req_auto_103_with_lines_kept_and_details_last_each_design_sews_no_spot_above_the_cap() {
-    // Both settings change the order the blocks sew in. They are on by default, and set here so that the case
-    // holds whatever the defaults: each design stays within the cap, and the cap, against a cap of 50 fills
-    // above every spot, keeps its jumps, jump threads, thread changes and likeness.
+fn req_auto_103_with_lines_kept_and_details_last_each_design_sews_above_the_cap_only_on_satin_columns() {
+    // Both settings change the order the blocks sew in. They are set here so that the case holds whatever the
+    // defaults: at each design's thickest spot, the thread other than satin columns' top stitches, which the cap
+    // leaves (REQ-AUTO-112), is the cap or less, and the cap, against a cap of 50 fills above every spot, keeps
+    // its jumps, jump threads, thread changes and likeness.
     let reordered = [(MIN_LIKENESS, "0.85"), (DETAILS_LAST, "true")];
+    let cap = rules().auto_thick_cap_fills;
     let mut above = Vec::new();
     for (name, design) in designs() {
         let design = with(&design, &reordered);
         let on = in_place(&design).plan.unwrap();
         let off = in_place(&with(&design, &[("auto_thick_cap_fills", "50")])).plan.unwrap();
-        let thickest = fabric::thickness(&on, &Limits::DEFAULT).fills.value;
-        if thickest > CAP {
-            above.push((name.clone(), hundredths(thickest)));
+        let (thickest, columns) = fabric::thickest(&on, &fabric::columns(&design));
+        if thickest - columns > cap {
+            above.push((name.clone(), hundredths(thickest), hundredths(columns)));
         }
         let (stats_on, stats_off) = (on.stats(), off.stats());
         assert_eq!((stats_on.jumps, stats_on.trims, stats_on.color_changes), (stats_off.jumps, stats_off.trims, stats_off.color_changes), "{name}");

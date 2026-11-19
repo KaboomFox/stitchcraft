@@ -188,3 +188,14 @@ fn req_auto_114_the_cap_keeps_the_edge_under_a_later_shape_covered_as_the_fabric
     assert!(was > 0.99, "{was}");
     assert!(is >= was, "{is:.4} of the edge covered, {was:.4} with the cap off");
 }
+
+#[test]
+fn req_auto_100_a_joined_stitch_keeps_the_machine_s_shortest_on_the_plan_s_own_points() {
+    // The measure places needle points on the machine's grid, and the plan keeps its own: TS-13E with the cap
+    // at 3 fills joined 2 stitches into one of 0.262 mm, at least 0.3 mm on the grid. Every stitch keeps the
+    // machine's shortest and longest as a plan's checks measure them (`REQ-PLAN-002`).
+    let sheet = find("TS-13E").unwrap();
+    let design = sheet.design().unwrap().unwrap();
+    let plan = stitchcraft_engine::plan(&capped(&design, "3"), sheet.profile, &stitchcraft_core::Budget::DEFAULT).plan.unwrap();
+    assert_eq!(stitchcraft_plan::invariants::check(&plan, sheet.profile), Vec::new());
+}

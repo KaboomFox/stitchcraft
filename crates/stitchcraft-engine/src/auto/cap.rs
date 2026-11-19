@@ -259,6 +259,14 @@ impl Cap<'_, '_> {
         if !at_least(was - length, LEAST) || !at_least(longest, length) || !at_least(length, shortest) {
             return Ok(false);
         }
+        // The plan keeps its own needle points, off the machine's grid, and a plan's checks measure those
+        // (`REQ-PLAN-002`): there too the joined stitch is no shorter than the machine's shortest or the
+        // shorter of the 2, and no longer than the machine's longest.
+        let (Some(first), Some(middle), Some(last)) = (pass.at((block, from)), pass.at((block, at)), pass.at((block, to))) else { return Ok(false) };
+        let (shorter, joined_length) = (first.distance(middle).min(middle.distance(last)), first.distance(last));
+        if !at_least(joined_length, pass.rules.shortest.min(shorter)) || !at_least(pass.rules.longest, joined_length) {
+            return Ok(false);
+        }
         if pass.thickness.hottest(&into, meter)?.max(pass.thickness.hottest(&out, meter)?) <= pass.rules.cap {
             return Ok(false);
         }
