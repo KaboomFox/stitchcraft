@@ -345,7 +345,7 @@ columns meet over a fill. The warning comes only where a place of 1 mm² has 4 f
 `auto_thick_cap_fills` moves the cap.
 
 <!-- shot: auto-dog-thickness -->
-![How thick the traced running dog sews, as a heat map on white. Most of the dog is grey, under 2 fills of thread. Yellow bands, 2 fills or more, run along the edges where 2 patches overlap, and wider where several small patches meet, on its chest, its face and its legs. A few orange specks, 4 fills or more, lie where satin columns cross over a fill. No spot is red, 6 fills or more.](../../images/generated/auto-dog-thickness.png)
+![How thick the traced running dog sews, as a heat map on white. Most of the dog is grey, under 2 fills of thread. Yellow bands, 2 fills or more, run along the edges where 2 patches overlap, and wider where several small patches meet, on its chest, its face and its legs. Small orange patches, 4 fills or more, lie where satin columns cross over a fill, on its chest and its legs. No spot is red, 6 fills or more.](../../images/generated/auto-dog-thickness.png)
 <!-- /shot -->
 
 `stitch preview dog.pes --style thickness -o thick.png` draws this picture of any machine file. Grey is
