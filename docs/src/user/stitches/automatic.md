@@ -338,20 +338,25 @@ the shapes stacked there.
 StitchCraft aims to keep every spot at 3.25 fills or less, a limit called the cap. Once the design is planned,
 a last pass and then the cap take thread away at each spot above it. They take thread that other stitches
 cover, first under the shapes sewn later and then where a shape lays its stitches twice over the same
-place. They take only the stitches of the shapes they digitized, and never a satin column's top stitches,
-nor the rows under a column's edge. A column keeps its edge and its angle. What shows keeps its colour, and no jump thread or thread change
-is added. `SC-I1119` says what they took and what is left above the cap, which is mostly where 2 satin
-columns meet over a fill. The warning comes only where a place of 1 mm² has 4 fills or more. The advanced setting
-`auto_thick_cap_fills` moves the cap.
+place. They take only the stitches of the shapes they digitized. Below 4 fills they leave a satin column's top
+stitches and the rows under its edge. A column keeps its edge and its angle. What shows keeps its
+colour, and no jump thread or thread change is added. `SC-I1119` says what they took and what is left above
+the cap, which is mostly where 2 satin columns meet over a fill.
+
+Above 4 fills, the warning's limit (`auto_thick_warn_fills`), a spot is too thick to sew well. There the last
+pass and the cap take the rows under a column's edge too, and what is still above 4 fills then loses a
+column's top stitches, one at a time, those that change the column least, until the spot is at 4 fills. The
+warning comes only where a place of 1 mm² has 4 fills or more. The advanced setting `auto_thick_cap_fills`
+moves the cap.
 
 <!-- shot: auto-dog-thickness -->
-![How thick the traced running dog sews, as a heat map on white. Most of the dog is grey, under 2 fills of thread. Yellow bands, 2 fills or more, run along the edges where 2 patches overlap, and wider where several small patches meet, on its chest, its face and its legs. Small orange patches, 4 fills or more, lie where satin columns cross over a fill, on its chest and its legs. No spot is red, 6 fills or more.](../../images/generated/auto-dog-thickness.png)
+![How thick the traced running dog sews, as a heat map on white. Most of the dog is grey, under 2 fills of thread. Yellow bands, 2 fills or more, run along the edges where 2 patches overlap, and wider where several small patches meet, on its chest, its face and its legs. A few specks are orange, 4 fills. No spot is red, 6 fills or more.](../../images/generated/auto-dog-thickness.png)
 <!-- /shot -->
 
 `stitch preview dog.pes --style thickness -o thick.png` draws this picture of any machine file. Grey is
-thread under 2 fills, yellow is 2 or more, orange 4 or more and red 6 or more. On the dog above, 9 mm² is
-orange, where 3 satin columns cross over a fill, whose top the cap leaves. Its thickest spot has 5.3 fills
-there, and 100 mm² of 1,944 mm² has 3 fills or more, where it had 177 mm² with the cap at 4.
+thread under 2 fills, yellow is 2 or more, orange 4 or more and red 6 or more. On the dog above, a few specks
+are orange: its thickest spot has 4.0 fills, and 94 mm² of 1,944 mm² has 3 fills or more, where it had
+177 mm² with the cap at 4.
 Before StitchCraft sewed an area's overlap by the way its rows run, and one overlap alone under a
 shape, 629 mm² was orange or red, and M13.30 left 280 mm² and a thickest spot of 7.0 fills.
 

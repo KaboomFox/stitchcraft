@@ -7,23 +7,30 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ### Added
 - M13.46: the cap leaves satin columns whole, and is lower (`REQ-AUTO-112` to `REQ-AUTO-114`, `SC-I1119`,
   `SC-W0913`).
-  - The cap at the end of planning takes no needle point of a satin column's top stitches. Lowered to 3, it
-    notched a ring's inner edge and left specks at a letter's join, and at 4 it changed the columns of 11 of
-    24 designs. A column's underlay and the fills under it are still the cap's to take.
-  - Neither the last pass nor the cap takes the rows under a satin column's edge, which keep it covered when
+  - Below the warning's limit, 4 fills, the cap at the end of planning takes no needle point of a satin
+    column's top stitches. Lowered to 3, it notched a ring's inner edge and left specks at a letter's join,
+    and at 4 it changed the columns of 11 of 24 designs. A column's underlay and the fills under it are still
+    the cap's to take.
+  - Above the warning's limit, a column's thread hides row ends of the last pass, the cap's kinds go first
+    there and judge a column as drawn, and what is still above the limit loses columns' top points as a last
+    resort, of those that lower the thickest spot, the one that changes its column least (`REQ-AUTO-112`). No
+    repository design or traced dog sews above 4.00 fills. Against main's cap, their columns lose 18 points
+    where it took 35, with 17 notches where it made 21 and 1 leaning stitch where it made 4.
+  - No change of the last pass or the cap takes a spot at the warning's limit or under it above it. The check
+    read only the thickest spot along the stitches added (`REQ-AUTO-074`, `REQ-AUTO-100`).
+  - Below the warning's limit, neither the last pass nor the cap takes the rows under a satin column's edge, which keep it covered when
     the fabric pulls the column in. A column's thread hides no row end of the pass, and the cap counts a
     column's stitch as covering only pulled in by the overlap at its turns (`REQ-AUTO-114`, `REQ-AUTO-007`).
   - A joined top stitch lays its thread only where its shape's or a later shape's top thread lies, and keeps
     the machine's shortest on the plan's own points, not only on the machine's grid (`REQ-AUTO-100`,
     `REQ-AUTO-026`, `REQ-PLAN-002`).
   - `auto_thick_cap_fills` is 3.25 by default, where it was 4: the lowest of 4, 3.75, 3.5, 3.25 and 3 at which
-    every requirement holds. The area at 3 fills or more falls by 44 to 68 % on the traced dogs and photos.
-    Spots that satin columns hold stay above it, up to 5.25 fills on a dog, and the bare share rises to
-    0.06 % at the most, under its limit of 0.5 %.
+    every requirement holds. The area at 3 fills or more falls by 58 to 64 % on the traced dogs. Spots that
+    satin columns hold stay above it, at 4.00 fills at the most.
   - The warning `SC-W0913` starts at 4 fills, where it started at 3, and no longer names the cap. `SC-I1119`
     says what is left above the cap whenever a spot was above it. The heat map's orange starts at 4.
-  - Golden files: `TS-13A.pes` to `TS-13E.pes` change with the lower cap. The sheets sew 23,862, 14,511,
-    10,229, 19,399 and 5,932 stitches.
+  - Golden files: `TS-13A.pes` to `TS-13E.pes` change with the lower cap. The sheets sew 23,861, 14,511,
+    10,235, 19,401 and 5,932 stitches.
 - M13.39: marks that keep parts (`REQ-AUTO-104` to `REQ-AUTO-107`, `REQ-VC-031`, `REQ-CLI-021`,
   `SC-I0916`, `SC-W0917`).
   - A shape named `stitch:keep`, drawn with VectorCraft's own tools or labelled so in an SVG file, or

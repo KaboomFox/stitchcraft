@@ -11,18 +11,24 @@
 //!
 //! A point goes only where other stitches cover what its stitches covered: a stitch covers the places
 //! within half a thread of it, as the bare-fabric measure paints it, so what shows keeps its colour and no
-//! fabric is bared. The cap changes nothing of a satin column (`REQ-AUTO-112`, `REQ-AUTO-114`): it takes none
-//! of its top stitches, and a column's stitch covers a place only as the fabric pulls the column in, shortened
-//! by the overlap of areas at the column's edges, as the edges' cover is measured (`REQ-AUTO-007`). The rows
-//! under a column's edge are what keeps it covered once pulled. And where taking a point makes a stitch
-//! beside it turn where it ran straight on, the part that the pull then moves in must stay covered. The kinds go in this order, each through the plan from its end, so that a later shape
+//! fabric is bared. The kinds go in this order, each through the plan from its end, so that a later shape
 //! loses its thread before an earlier one is judged under it ([`Kind`]): underlay and travel under later
 //! top stitches, a shape's top under later shapes, and a shape's own top where it is doubled.
+//!
+//! **Satin columns** (`REQ-AUTO-112`, `REQ-AUTO-114`). Below the warning's limit the cap changes nothing of
+//! a column: it takes none of its top stitches, and a column's stitch covers a place only as the fabric pulls
+//! the column in, shortened by the overlap of areas at the column's edges, as the edges' cover is measured
+//! (`REQ-AUTO-007`). The rows under a column's edge are what keeps it covered once pulled. And where taking a
+//! point makes a stitch beside it turn where it ran straight on, the part that the pull then moves in must
+//! stay covered. Above the warning's limit a spot is too thick to sew well, which outweighs an edge: there the
+//! 3 kinds go first, judging a column's stitches as drawn, and what is still above it after the cap loses
+//! columns' top points, one at a time, those that change their column least.
 //!
 //! **One measure.** The cap takes the last pass's measure and keeps it up to date stitch by stitch, as the
 //! pass does, with the pass's own helpers. Only the stitches near a spot above the cap are looked at, found
 //! once: taking thread only lowers spots.
 
+use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
 use stitchcraft_core::units::at_least;
@@ -75,7 +81,8 @@ pub(crate) enum Kind {
     /// its 2 stitches covered: it shows, so it goes last, and only where it is doubled.
     Doubled,
     /// A satin column's top point, as a last resort where a spot still sews above the warning's limit: as a
-    /// shape's own doubled top, the one point at a time that changes the column least (`REQ-AUTO-112`).
+    /// shape's own doubled top, one point at a time, of those that lower the thickest spot, the one that
+    /// changes the column least (`REQ-AUTO-112`).
     Column,
 }
 
@@ -157,10 +164,11 @@ pub(crate) fn capped(
     let column = |stitch: &SewnStitch| {
         element(stitch).is_some_and(|element| made.contains(&element) && stitch.role == Role::Top && columns.contains(&element))
     };
-    let last = if thickness.most(Measure::Fills).value > rules.limit {
-        candidates(sewn, &thickness.near(rules.limit, NEAR, meter)?, column)
+    let (last, hottest) = if thickness.most(Measure::Fills).value > rules.limit {
+        let near = thickness.near(rules.limit, NEAR, meter)?;
+        (candidates(sewn, &near, column), candidates(sewn, &near, takes))
     } else {
-        Vec::new()
+        (Vec::new(), Vec::new())
     };
     // A design whose spots above the cap lie only in shapes sewn by their own settings has nothing the cap
     // may take, and the work of the cover is spared.
@@ -184,10 +192,14 @@ pub(crate) fn capped(
         }
     }
     let mut cap = Cap { pass: Pass::new(plan, thickness, rules), ribbons, longest, taken: [0.0; 4], times: [0; 4] };
-    for kind in [Kind::Hidden, Kind::Under, Kind::Doubled] {
-        for _ in 0..ROUNDS {
-            if !cap.above(rules.cap, meter)? || cap.round(kind, &points, meter)? == 0 {
-                break;
+    // Above the warning's limit the 3 kinds go first, judging a column's cover as drawn; then below it, down to
+    // the cap, keeping the thread under a column's edge.
+    for (points, hot, limit) in [(&hottest, true, rules.limit), (&points, false, rules.cap)] {
+        for kind in [Kind::Hidden, Kind::Under, Kind::Doubled] {
+            for _ in 0..ROUNDS {
+                if !cap.above(limit, meter)? || cap.round(kind, points, hot, meter)? == 0 {
+                    break;
+                }
             }
         }
     }
@@ -236,33 +248,42 @@ impl Cap<'_, '_> {
         Ok(self.pass.thickness.most(Measure::Fills).value > limit)
     }
 
-    /// Takes satin columns' top points out of `points` while a spot sews above the warning's limit, one at a time:
-    /// of those that may go, the one whose joined stitch runs across the column, not along an edge, and turns
-    /// least from the stitch into it. A unit of work for each point looked at each time.
+    /// Takes satin columns' top points out of `points` while a spot sews above the warning's limit, one at a
+    /// time: of those that may go and lower the thickest spot by half as much as the one that lowers it most,
+    /// or more, the one whose joined stitch runs across the column, not along an edge, and turns least from the
+    /// stitch into it. A unit of work for each point looked at each time.
     fn last_resort(&mut self, mut points: Vec<Entry>, meter: &mut Meter) -> Result<(), Exhausted> {
         while self.above(self.pass.rules.limit, meter)? {
-            let mut best: Option<(Change, Entry)> = None;
+            let mut may = Vec::new();
             for &point in &points {
                 meter.charge(1)?;
-                if let Some(change) = self.taken_out(point, Kind::Column, true, meter)? {
-                    if best.is_none_or(|(least, _)| change.less_than(least)) {
-                        best = Some((change, point));
-                    }
+                if let Some(change) = self.taken_out(point, Kind::Column, true, true, meter)? {
+                    may.push((change, point));
+                }
+            }
+            // Of the points that lower the thickest spot by half as much as the one that lowers it most, or
+            // more, the one that changes its column least: a point that leaves the spot as thick changes a
+            // column for nothing.
+            let most = may.iter().fold(0.0_f64, |most, (change, _)| most.max(change.lowered));
+            let mut best: Option<(Change, Entry)> = None;
+            for &(change, point) in may.iter().filter(|(change, _)| most > 0.0 && change.lowered >= most / 2.0) {
+                if best.is_none_or(|(least, _)| change.less_than(least)) {
+                    best = Some((change, point));
                 }
             }
             let Some((_, point)) = best else { break };
             points.retain(|other| *other != point);
-            self.taken_out(point, Kind::Column, false, meter)?;
+            self.taken_out(point, Kind::Column, true, false, meter)?;
         }
         Ok(())
     }
 
     /// Goes once through `points`, from the plan's end, taking those of `kind` that may go; how many it took.
-    fn round(&mut self, kind: Kind, points: &[Entry], meter: &mut Meter) -> Result<usize, Exhausted> {
+    fn round(&mut self, kind: Kind, points: &[Entry], last: bool, meter: &mut Meter) -> Result<usize, Exhausted> {
         let mut count = 0;
         for &point in points.iter().rev() {
             meter.charge(1)?;
-            if !self.pass.gone.contains(&point) && self.taken_out(point, kind, false, meter)?.is_some() {
+            if !self.pass.gone.contains(&point) && self.taken_out(point, kind, last, false, meter)?.is_some() {
                 count += 1;
             }
         }
@@ -271,7 +292,7 @@ impl Cap<'_, '_> {
 
     /// Takes the needle point at entry `(block, at)` out of its run when it is of `kind` and may go, its 2
     /// stitches become one, and says how that changes the stitch into it; only says so when `asked`.
-    fn taken_out(&mut self, (block, at): Entry, kind: Kind, asked: bool, meter: &mut Meter) -> Result<Option<Change>, Exhausted> {
+    fn taken_out(&mut self, (block, at): Entry, kind: Kind, hot: bool, asked: bool, meter: &mut Meter) -> Result<Option<Change>, Exhausted> {
         let pass = &self.pass;
         let Some((_, role, element)) = pass.stitch((block, at)) else { return Ok(None) };
         if !kind.takes(role) || pass.gone.contains(&(block, at)) {
@@ -300,12 +321,13 @@ impl Cap<'_, '_> {
         if !at_least(joined_length, pass.rules.shortest.min(shorter)) || !at_least(pass.rules.longest, joined_length) {
             return Ok(None);
         }
-        let limit = if kind == Kind::Column { pass.rules.limit } else { pass.rules.cap };
+        let limit = if hot { pass.rules.limit } else { pass.rules.cap };
         if pass.thickness.hottest(&into, meter)?.max(pass.thickness.hottest(&out, meter)?) <= limit {
             return Ok(None);
         }
-        // The last resort judges a column's cover as drawn, as the 3 kinds did before columns were left whole.
-        let whole = kind == Kind::Column;
+        // Above the warning's limit a column's cover is judged as drawn, as the cap did before columns were
+        // left whole.
+        let whole = hot;
         let after = (block, to);
         let covered = match kind {
             Kind::Hidden => self.ribbons.covers(&joined, |ribbon| ribbon.at > after, false, meter)?,
@@ -319,10 +341,11 @@ impl Cap<'_, '_> {
             }
         };
         // A joined top stitch lays its thread only where its shape's own top thread or a later shape's lies: a
-        // stitch cut across a bend would show on a neighbour (`REQ-AUTO-026`). A column's joined stitch runs
-        // between its edges, on the column, as the cap took it before columns were left whole.
+        // stitch cut across a bend would show on a neighbour (`REQ-AUTO-026`). Above the warning's limit a spot
+        // too thick to sew outweighs that, as it outweighs a column's pulled edge (`REQ-AUTO-112`).
         let covered = covered
-            && (matches!(kind, Kind::Hidden | Kind::Column)
+            && (kind == Kind::Hidden
+                || hot
                 || self.ribbons.covers(&joined, |ribbon| ribbon.element == element || ribbon.at > after, false, meter)?);
         // The top stitches beside the 2 that ran straight on into them turn into the joined one, and the pull
         // moves their needle holes in: what they then leave must be covered too.
@@ -344,7 +367,7 @@ impl Cap<'_, '_> {
                 && Some(ribbon.at) != next.map(|n| (n.block, n.index))
         };
         for (side, start) in [(before, false), (next, true)] {
-            let Some(side) = side else { continue };
+            let Some(side) = side.filter(|_| !hot) else { continue };
             // A stitch of no length gives no number, and the whole of it, its one place, is what moves.
             let t = (overlap / side.length()).min(1.0);
             let part =
@@ -358,7 +381,20 @@ impl Cap<'_, '_> {
             return Ok(None);
         }
         if asked {
-            return Ok(Some(change));
+            // How much it lowers the thickest spot: the measure with the joined stitch, and back.
+            let spot = self.pass.thickness.most(Measure::Fills).at;
+            let was = self.pass.thickness.at(Measure::Fills, spot);
+            let thickness = &mut *self.pass.thickness;
+            for stitch in [into, out] {
+                thickness.remove(&stitch, meter)?;
+            }
+            thickness.add(&joined, meter)?;
+            let lowered = was - thickness.at(Measure::Fills, spot);
+            thickness.remove(&joined, meter)?;
+            for stitch in [into, out] {
+                thickness.add(&stitch, meter)?;
+            }
+            return Ok(Some(Change { lowered, ..change }));
         }
         if !self.pass.changed(&[into, out], &[joined], meter)? {
             return Ok(None);
@@ -392,6 +428,8 @@ struct Change {
     notch: bool,
     /// The cosine of the angle between them: 1 where the joined stitch runs on as the stitch did.
     cosine: f64,
+    /// How many fills taking the point takes from the thickest spot.
+    lowered: f64,
 }
 
 impl Change {
@@ -399,7 +437,9 @@ impl Change {
     fn of(into: &SewnStitch, joined: &SewnStitch) -> Change {
         let (u, v) = ((into.to.x() - into.from.x(), into.to.y() - into.from.y()), (joined.to.x() - joined.from.x(), joined.to.y() - joined.from.y()));
         let cosine = (u.0 * v.0 + u.1 * v.1) / (into.length() * joined.length());
-        Change { notch: !(cosine >= math::cos(NOTCH.to_radians())), cosine }
+        // A cosine of no number, from a stitch of no length, counts as a notch.
+        let across = matches!(cosine.partial_cmp(&math::cos(NOTCH.to_radians())), Some(Ordering::Greater | Ordering::Equal));
+        Change { notch: !across, cosine, lowered: 0.0 }
     }
 
     /// Whether this change is smaller than `other`: no notch where `other` has one, or else a smaller turn.

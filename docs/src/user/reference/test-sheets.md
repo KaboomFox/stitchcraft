@@ -315,7 +315,7 @@ After sewing, check:
 
 ## TS-13A — Pictures digitized automatically: neighbours and sewing order
 
-126.0 × 168.0 mm · 23862 stitches, 36 jumps, 35 trims, 19 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+126.0 × 168.0 mm · 23861 stitches, 36 jumps, 35 trims, 19 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -363,7 +363,7 @@ After sewing, check:
 
 ## TS-13C — Pictures digitized automatically: lines, and shapes in parts
 
-111.4 × 107.8 mm · 10229 stitches, 31 jumps, 30 trims, 9 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+111.4 × 107.8 mm · 10235 stitches, 31 jumps, 30 trims, 9 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -386,7 +386,7 @@ After sewing, check:
 
 ## TS-13D — Pictures digitized automatically: a traced emblem
 
-89.8 × 100.4 mm · 19399 stitches, 22 jumps, 21 trims, 10 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+89.8 × 100.4 mm · 19401 stitches, 22 jumps, 21 trims, 10 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 

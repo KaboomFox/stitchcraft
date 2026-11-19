@@ -653,6 +653,21 @@ impl Thickness {
         Ok(most)
     }
 
+    /// The spots in whose window `stitch` lays thread, by their place in the measure, with their fills: none
+    /// for a stitch that lays none on the grid. A unit of work for each step along it.
+    pub fn spots(&self, stitch: &SewnStitch, meter: &mut Meter) -> Result<BTreeMap<usize, f64>, Exhausted> {
+        let length = stitch.length();
+        let steps = steps(length);
+        meter.charge(units(index(steps)))?;
+        let mut spots = BTreeMap::new();
+        laid(&self.grid, stitch, length, steps, |cell, _| {
+            for spot in self.grid.corners(cell) {
+                spots.insert(spot, self.fills.get(spot).copied().unwrap_or(0.0));
+            }
+        });
+        Ok(spots)
+    }
+
     /// The cells `reach` millimetres round each spot with more than `limit` fills, or none when no spot has.
     /// A unit of work for each spot, and for each cell marked.
     pub fn near(&self, limit: f64, reach: f64, meter: &mut Meter) -> Result<Zone, Exhausted> {

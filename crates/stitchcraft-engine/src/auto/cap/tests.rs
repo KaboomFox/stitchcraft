@@ -159,9 +159,10 @@ fn req_auto_100_a_shape_s_own_top_where_it_is_doubled_goes_last() {
     let points: Vec<(f64, f64)> = (0..5).flat_map(|_| zigzag(4.0, 0.25)).collect();
     let sewn = plan(&[("doubled", Role::Top, points)]);
     let mut capped_plan = sewn.clone();
-    let (capped, kept, measured) = cap(&mut capped_plan, &rules());
+    // Below the warning's limit a joined stitch lays thread only where the zigzag's own does: 2 points at its
+    // turns stay.
+    let (capped, kept, measured) = cap(&mut capped_plan, &Rules { limit: 50.0, ..rules() });
     let capped = capped.unwrap();
-    // A joined stitch lays thread only where the zigzag's own does: 2 points at its turns stay.
     assert_eq!(capped.times, [0, 0, 20, 0], "{capped:?}");
     assert!((capped.taken[2] - 143.808_390_956).abs() < 1e-6, "{capped:?}");
     assert!(measures_as(&kept, &measured));
