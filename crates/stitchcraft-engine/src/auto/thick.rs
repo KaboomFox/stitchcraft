@@ -100,7 +100,7 @@ pub(crate) fn finished(
             let outcome = cap::capped(&mut capped, &mut kept, &rules, (&made, &columns), &mut budget.meter());
             let took = matches!(&outcome, Ok(Some(capped)) if capped.took());
             // What planning took, and what it left above the cap, is told whether or not it took anything:
-            // the cap is what planning aims at, and the warning only what a person acts on (`REQ-AUTO-114`).
+            // the cap is what planning aims at, and the warning only what a person acts on (`REQ-AUTO-113`).
             said.push(note(&thinned, &outcome, held.cap));
             if took {
                 (*plan, measure) = (capped, kept);
@@ -166,7 +166,7 @@ fn told(plan: &StitchPlan, measured: Result<Option<Thickness>, Exhausted>, limit
 }
 
 /// The warning's message for `report` of `plan`, against the limits a person acts on: the cap is told by
-/// `SC-I1119` (`REQ-AUTO-114`). A place is given from the design's centre, x to the right and y down, as the
+/// `SC-I1119` (`REQ-AUTO-113`). A place is given from the design's centre, x to the right and y down, as the
 /// plan has it.
 fn message(plan: &StitchPlan, report: &Report, limits: &Limits) -> String {
     let place = |spot: &Spot| format!("({:.1}, {:.1})", spot.at.x(), spot.at.y());
@@ -279,7 +279,7 @@ mod tests {
     }
 
     #[test]
-    fn req_auto_114_the_warning_never_names_the_cap() {
+    fn req_auto_113_the_warning_never_names_the_cap() {
         // 5 fills, above the cap of 3 and at the warning's limit: the warning gives the limits a person acts on,
         // and `SC-I1119` what is left above the cap.
         let mut sewn = plan(4, 1);
@@ -308,7 +308,7 @@ mod tests {
         let held = Held { limits: Limits::DEFAULT, overlap: 1.0, cap: 4.0 };
         let profile = stitchcraft_plan::profiles::REFERENCE;
         // 5 squares of rows of no shape, which no shape hides: the pass looks and takes nothing. SC-I1119 says
-        // what is left above the cap (`REQ-AUTO-114`), and SC-W0913 that it sews thick.
+        // what is left above the cap (`REQ-AUTO-113`), and SC-W0913 that it sews thick.
         let sewn = plan(0, 5);
         let mut kept = sewn.clone();
         let codes = |said: &[Diagnostic]| said.iter().map(|said| said.code).collect::<Vec<_>>();

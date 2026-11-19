@@ -335,13 +335,13 @@ a tatami fill lays by default. When a place of 1 mm² or more has 4 fills or mor
 more, `stitch plan` warns (`SC-W0913`) and still writes the file. The warning names the thickest spot and
 the shapes stacked there.
 
-StitchCraft aims to keep every spot at 3.5 fills or less, a limit called the cap. Once the design is planned,
+StitchCraft aims to keep every spot at 4 fills or less, a limit called the cap. Once the design is planned,
 a last pass and then the cap take thread away at each spot above it. They take thread that other stitches
 cover, first under the shapes sewn later and then where a shape lays its stitches twice over the same
 place. They take only the stitches of the shapes they digitized, and never a satin column's top stitches,
 so a column keeps its edge and its angle. What shows keeps its colour, and no jump thread or thread change
 is added. `SC-I1119` says what they took and what is left above the cap, which is mostly where 2 satin
-columns meet over a fill. The warning comes only at its own limit, 4 fills. The advanced setting
+columns meet over a fill. The warning comes only where a place of 1 mm² has 4 fills or more. The advanced setting
 `auto_thick_cap_fills` moves the cap.
 
 <!-- shot: auto-dog-thickness -->
@@ -349,8 +349,8 @@ columns meet over a fill. The warning comes only at its own limit, 4 fills. The 
 <!-- /shot -->
 
 `stitch preview dog.pes --style thickness -o thick.png` draws this picture of any machine file. Grey is
-thread under 2 fills, yellow is 2 or more, orange 4 or more and red 6 or more. On the dog above, no place of
-1 mm² is orange. Its thickest spot has 4.5 fills, where 3 satin columns cross over a fill, and 115 mm² of
+thread under 2 fills, yellow is 2 or more, orange 4 or more and red 6 or more. On the dog above, only specks
+are orange. Its thickest spot has 4.5 fills, where 3 satin columns cross over a fill, and 178 mm² of
 1,944 mm² has 3 fills or more. Before the cap its thickest spot had 5.6.
 Before StitchCraft sewed an area's overlap by the way its rows run, and one overlap alone under a
 shape, 629 mm² was orange or red, and M13.30 left 280 mm² and a thickest spot of 7.0 fills.

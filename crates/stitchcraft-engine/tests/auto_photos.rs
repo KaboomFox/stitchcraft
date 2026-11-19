@@ -270,11 +270,11 @@ fn req_auto_027_digitized_dogs_show_no_fabric_and_leave_the_slivers_recorded() {
 /// (REQ-AUTO-076), 132.25, 160.0, 146.25 and 209.75 mm² before M13.36's holes, edges and narrow columns
 /// started at their start (REQ-AUTO-084 to REQ-AUTO-086), and 130.5, 156.5, 142.0 and 207.75 before the ragged
 /// thin lines merged into their neighbours (REQ-AUTO-090), and 141.5, 153.25, 130.5 and 187.5 before the cap at
-/// the end of planning (REQ-AUTO-100), and 137.25, 150.75, 129.0 and 176.5 with the cap at 4 fills, before it
-/// was 3.5 and left satin columns whole (REQ-AUTO-112, REQ-AUTO-113). The case fails when a number changes,
-/// so that a change that piles thread up again shows here.
+/// the end of planning (REQ-AUTO-100), and 137.25, 150.75, 129.0 and 176.5 before it left satin columns whole
+/// (REQ-AUTO-112). The case fails when a number changes, so that a change that piles thread up again shows
+/// here.
 const THICK: [(&str, f64, f64); 4] =
-    [("dog-on-turf-6", 8850.0, 0.0), ("dog-on-turf-9", 9900.0, 0.0), ("dog-running-6", 9850.0, 0.0), ("dog-running-9", 11475.0, 0.0)];
+    [("dog-on-turf-6", 13775.0, 0.0), ("dog-on-turf-9", 15075.0, 0.0), ("dog-running-6", 12900.0, 0.0), ("dog-running-9", 17825.0, 0.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -282,7 +282,7 @@ fn req_auto_067_digitized_dogs_sew_thick_on_the_area_recorded() {
     let found: Vec<(String, f64, f64)> = planned()
         .iter()
         .map(|(name, _, plan)| {
-            // The area at 3 fills, below the warning's limit of 4 since M13.46 (REQ-AUTO-114).
+            // The area at 3 fills, below the warning's limit of 4 since M13.46 (REQ-AUTO-113).
             let report = fabric::thickness(plan, &fabric::Limits { warn_fills: 3.0, ..fabric::Limits::DEFAULT });
             (name.clone(), hundredths(report.thick.area), hundredths(report.failing.area))
         })
@@ -296,9 +296,9 @@ fn req_auto_067_digitized_dogs_sew_thick_on_the_area_recorded() {
 /// dog in 6 threads sews 0.45 fills less at its thickest spot and the one in 9 as much, and the dogs on turf 0.16
 /// and 0.31 more, at new spots where a satin column or a fill lies over 3 or 4 other fills: 4.69, 4.80, 4.62
 /// and 5.63. The cap at the end of planning (REQ-AUTO-100) brought each to 4.00. Since it leaves satin columns
-/// whole (REQ-AUTO-112), at 3.5 fills, 2 columns of one shape that meet hold the dogs on turf in 6 threads at
-/// 4.37 and the running dog in 9 at 4.50, and the others come to 3.87.
-const THICKEST: [(&str, f64); 4] = [("dog-on-turf-6", 437.0), ("dog-on-turf-9", 387.0), ("dog-running-6", 387.0), ("dog-running-9", 450.0)];
+/// whole (REQ-AUTO-112), satin columns that meet over a fill hold the dog on turf in 6 threads at 4.36, the
+/// running dogs at 4.02 and 4.50.
+const THICKEST: [(&str, f64); 4] = [("dog-on-turf-6", 436.0), ("dog-on-turf-9", 400.0), ("dog-running-6", 402.0), ("dog-running-9", 450.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]

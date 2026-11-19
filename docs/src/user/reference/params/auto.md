@@ -371,7 +371,7 @@ thread, which a sew-out has to confirm. The design goes by the setting of its lo
 shape.
 
 - **Accepts:** a number from 1 to 50
-- **Default:** `3.5`
+- **Default:** `4`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 

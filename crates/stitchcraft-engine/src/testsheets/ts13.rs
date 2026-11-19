@@ -60,13 +60,13 @@ pub(super) const NEIGHBOURS_SAY: [Code; 16] = [
 /// What the engine says of TS-13B, in order: how many shapes it digitized, the order, the areas that reach
 /// under others, the base layer, the needle points left out, and what the last pass took. Its letters
 /// sew as strokes (`REQ-AUTO-087`), and no stitch of the M leans where its strokes meet, as 6 did until
-/// M13.37. No place of 1 mm² sews 4 fills, the warning's limit since M13.46 (`REQ-AUTO-114`).
+/// M13.37. No place of 1 mm² sews 4 fills, the warning's limit since M13.46 (`REQ-AUTO-113`).
 pub(super) const LETTERS_SAY: [Code; 6] = [AutoDigitized, AutoOrder, AutoUnder, AutoBase, StitchesMerged, AutoThinned];
 
 /// What the engine says of TS-13C, in order: how many shapes it digitized, the pupils and hairs that no
 /// satin column can follow, filled; the face, digitized whole under the eyes in its holes; the order; the
 /// areas that reach under others; the base layer; the eyes, sewn in parts in both halves; the needle points left
-/// out; and what the last pass took. No place of 1 mm² sews 4 fills, the warning's limit (`REQ-AUTO-114`).
+/// out; and what the last pass took. No place of 1 mm² sews 4 fills, the warning's limit (`REQ-AUTO-113`).
 pub(super) const LINES_AND_PARTS_SAY: [Code; 14] = [
     AutoDigitized,
     AutoSatinFilled,
@@ -185,11 +185,11 @@ mod tests {
         // Each sheet's size, its conformance case's to the micrometre, and its stitches: what MC-8 sews, which
         // changes with any change to what a picture sews.
         let recorded = [
-            ("TS-13A", [126.001, 167.98], 23_877),
-            ("TS-13B", [110.594, 148.4], 14_535),
-            ("TS-13C", [111.397, 107.75], 10_256),
-            ("TS-13D", [89.8, 100.4], 19_421),
-            ("TS-13E", [23.999, 108.394], 5_937),
+            ("TS-13A", [126.001, 167.98], 23_894),
+            ("TS-13B", [110.594, 148.4], 14_543),
+            ("TS-13C", [111.397, 107.75], 10_313),
+            ("TS-13D", [89.8, 100.4], 19_457),
+            ("TS-13E", [23.999, 108.394], 5_939),
         ];
         let found: Vec<(&str, [f64; 2], usize)> = recorded
             .iter()

@@ -62,9 +62,9 @@ fn kept(plan: &StitchPlan, locks: bool) -> Vec<Vec<Stitch>> {
 }
 
 #[test]
-fn req_auto_099_the_cap_is_an_advanced_setting_of_3_5_fills() {
+fn req_auto_099_the_cap_is_an_advanced_setting_of_4_fills() {
     let spec = AutoParams::SPECS.iter().find(|spec| spec.key == CAP);
-    assert!(spec.is_some_and(|spec| spec.default == "3.5" && spec.group == ADVANCED), "{:?}", spec.map(|spec| (spec.default, spec.group)));
+    assert!(spec.is_some_and(|spec| spec.default == "4" && spec.group == ADVANCED), "{:?}", spec.map(|spec| (spec.default, spec.group)));
     // It sits beside the 4 limits of how thick a design sews, after them.
     let keys: Vec<&str> = AutoParams::SPECS.iter().map(|spec| spec.key).collect();
     let at = keys.iter().position(|key| *key == CAP).unwrap();
@@ -117,7 +117,7 @@ fn diag_sc_i1119_the_cap_says_what_it_took_of_each_kind_and_what_is_left() {
     let said: Vec<&str> = outcome.diagnostics.iter().filter(|said| said.code == Code::AutoThinned).map(|said| said.message.as_str()).collect();
     assert_eq!(said.len(), 1, "{:?}", outcome.diagnostics);
     assert!(said[0].contains(" fills or more. The last pass took ") && said[0].contains(", and the cap took "), "{}", said[0]);
-    assert!(said[0].contains("Left: ") && said[0].contains(" at 3.5 fills or more"), "{}", said[0]);
+    assert!(said[0].contains("Left: ") && said[0].contains(" at 4 fills or more"), "{}", said[0]);
 }
 
 /// Each column's id and its top stitches, as their 2 needle points.
@@ -171,26 +171,5 @@ fn req_auto_112_the_cap_leaves_every_top_stitch_of_a_satin_column_as_digitizing_
         // Every top stitch of every column is where digitizing laid it: no needle point at its edge goes, and
         // no stitch turns from square to its column.
         assert_eq!(tops(&on, &columns), tops(&off, &columns), "{name}");
-    }
-}
-
-#[test]
-fn req_auto_113_the_cap_at_its_default_keeps_what_it_keeps_at_4_fills() {
-    let limits = rules();
-    assert_eq!(limits.auto_thick_cap_fills, 3.5);
-    for (name, design) in designs() {
-        let (low, four) = (in_place(&design).plan.unwrap(), in_place(&capped(&design, "4")).plan.unwrap());
-        let columns = fabric::columns(&design);
-        assert_eq!(tops(&low, &columns), tops(&four, &columns), "{name}");
-        let (at, was) = (low.stats(), four.stats());
-        assert_eq!((at.jumps, at.trims, at.color_changes), (was.jumps, was.trims, was.color_changes), "{name}");
-        assert!(at.stitches <= was.stitches, "{name}");
-        assert_eq!(fabric::astray(&design, &low).jumps.len(), fabric::astray(&design, &four).jumps.len(), "{name}");
-        let (thickest, before) = (fabric::thickness(&low, &Limits::DEFAULT).fills.value, fabric::thickness(&four, &Limits::DEFAULT).fills.value);
-        assert!(thickest <= before + 0.01, "{name}: {thickest:.2} fills, {before:.2} at 4");
-        let (cover, cover_four) = (fabric::cover(&design, &low, GAP), fabric::cover(&design, &four, GAP));
-        assert!(cover.bare_share() * 100.0 <= limits.auto_base_bare_percent, "{name}");
-        assert!(cover.slivers(&limits).len() <= cover_four.slivers(&limits).len(), "{name}");
-        assert!(fabric::likeness(&design, &low).likeness() >= fabric::likeness(&design, &four).likeness(), "{name}");
     }
 }
