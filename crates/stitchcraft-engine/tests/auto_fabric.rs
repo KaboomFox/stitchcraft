@@ -119,7 +119,7 @@ fn inside_by(p: Point, ring: &[(f64, f64)]) -> f64 {
     let to_side = |((ax, ay), (bx, by)): (&(f64, f64), &(f64, f64))| {
         let (dx, dy) = (bx - ax, by - ay);
         let t = (((p.x() - ax) * dx + (p.y() - ay) * dy) / (dx * dx + dy * dy)).clamp(0.0, 1.0);
-        ((ax + t * dx - p.x()).powi(2) + (ay + t * dy - p.y()).powi(2)).sqrt()
+        stitchcraft_core::math::hypot(ax + t * dx - p.x(), ay + t * dy - p.y())
     };
     sides().map(to_side).fold(f64::INFINITY, f64::min)
 }
@@ -133,9 +133,17 @@ fn outline_stitches(plan: &StitchPlan, id: &str) -> Vec<[Point; 2]> {
     plan.sewn_stitches().iter().filter(|stitch| stitch.role == Role::Top && of(stitch) == Some(true)).map(|stitch| [stitch.from, stitch.to]).collect()
 }
 
+/// A case of an outline beside a neighbour: its name, the neighbour as drawn and as it shows, and the area's
+/// rings.
+type Drawn<'a> = (&'a str, Vec<(f64, f64)>, Vec<(f64, f64)>, Vec<&'a [(f64, f64)]>);
+
 /// A ring of `n` points `r` millimetres from `(x, y)`, the first at angle 0, clockwise on screen.
 fn circle((x, y): (f64, f64), r: f64, n: u32) -> Vec<(f64, f64)> {
-    (0..n).map(|k| f64::from(k) * std::f64::consts::TAU / f64::from(n)).map(|a| (x + r * a.cos(), y + r * a.sin())).collect()
+    (0..n)
+        .map(|k| f64::from(k) * std::f64::consts::TAU / f64::from(n))
+        .map(stitchcraft_core::math::sin_cos)
+        .map(|(sin, cos)| (x + r * cos, y + r * sin))
+        .collect()
 }
 
 #[test]
@@ -156,7 +164,7 @@ fn req_auto_130_an_outline_s_stitches_lie_on_its_own_fill_where_its_edge_bends_o
     let notched = [(0.0, 0.0), (8.0, 0.0), (8.0, 5.8), (8.2, 6.0), (12.0, 6.0), (12.0, 0.0), (20.0, 0.0), (20.0, 20.0), (0.0, 20.0)];
     // Each neighbour as drawn reaches 0.5 mm under the red area, so that it sews first (REQ-AUTO-010), and as
     // it shows.
-    let designs: [(&str, Vec<(f64, f64)>, Vec<(f64, f64)>, Vec<&[(f64, f64)]>); 3] = [
+    let designs: [Drawn; 3] = [
         ("disc in a bite", circle((15.0, 0.0), 5.5, 360), disc.clone(), vec![&bitten]),
         ("corner", vec![(9.5, 0.0), (20.0, 0.0), (20.0, 10.5), (9.5, 10.5)], square.to_vec(), vec![&l]),
         ("notch", vec![(7.5, 0.0), (12.5, 0.0), (12.5, 6.5), (7.5, 6.5)], notch.to_vec(), vec![&notched]),

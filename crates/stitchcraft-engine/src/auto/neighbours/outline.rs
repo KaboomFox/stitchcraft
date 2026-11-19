@@ -577,7 +577,7 @@ mod tests {
         // middle of its longest side, the first, where its offset needs no join. A hole's, the other way,
         // moves out, into the area round it, its corners round.
         let square = [(0.0, 0.0), (0.0, 10.0), (10.0, 10.0), (10.0, 0.0)];
-        let inside = vec![(0.1, 5.0), (0.1, 9.9), (9.9, 9.9), (9.9, 0.1), (0.1, 0.1), (0.1, 5.0)];
+        let inside = [(0.1, 5.0), (0.1, 9.9), (9.9, 9.9), (9.9, 0.1), (0.1, 0.1), (0.1, 5.0)];
         assert_eq!(moved_in(vec![ring(&square)]), [(inside[..5].to_vec(), true)]);
         let hole: Vec<(f64, f64)> = square.iter().rev().copied().collect();
         let rings = moved_in(vec![ring(&hole)]);

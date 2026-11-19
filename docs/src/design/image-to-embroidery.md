@@ -804,14 +804,14 @@ stitch along it lay up to the tolerance on the neighbour. Across an inward corne
 passed over, it lay further on it. Where the neighbour has another colour, that is a thread of the wrong
 colour on it. So each line of an outline is moved into the area by the tolerance it keeps to, offset with
 round joins, and its stitches keep within the tolerance of that line: each lies between the edge and twice
-the tolerance in. An inward corner becomes a curve round it at that distance, and an outward corner stays a
-corner. A ring stays a ring, and a line shorter than 3 mm is left out, as on the edge. Where the area is
-narrower than twice the distance, such as at a narrow neck, the offset falls apart into pieces. The
-running stitch would join them with straight stitches across whatever lies between, so such a line keeps
-to the edge, as does one whose offset comes to nothing. The thread is 0.4 mm
-wide, so it still reaches 0.1 mm past the edge, and the fill's rows reach under the neighbour as before.
-Moving a line costs work: the offset cuts the ring of curves round the line where it crosses itself, which
-costs 67,252 units for a square. An outline whose lines need more than the budget sews none, and says so
+the tolerance in. An inward corner becomes a curve round it at that distance, while an outward corner
+keeps its point. Rings stay rings, and a line shorter than 3 mm is left out, as on the edge. Where the area
+is narrower than twice the distance, such as at a narrow neck, the offset breaks into pieces. The running
+stitch would join those pieces by straight stitches across whatever lies between them. Such a line keeps to
+the edge, as does a line whose offset comes to nothing. The thread is 0.4 mm wide, so it still reaches
+0.1 mm past the edge, and the fill's rows reach under the neighbour as before. The offset cuts the ring of
+curves round the line where it crosses itself, which takes 67,252 units of work for a square. An outline
+whose lines need more than the budget sews none, and says so
 with SC-I0904.
 
 An outline is sewn with as few jumps as its lines allow (`REQ-AUTO-052`). A traced area's edge is hidden
