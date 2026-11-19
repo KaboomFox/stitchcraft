@@ -3092,7 +3092,8 @@ areas no guide crosses that sew the same stitches as without guides.
 
 ### Decisions for the owner
 
-Each with the recommendation. None is taken yet.
+Each with the recommendation, which the step took on 2026-11-19. The roadmap's row no longer
+says the area is grouped with the guide.
 
 - **Which parts follow: those the guide crosses.** The roadmap's row planned an area grouped with the guide.
   A traced picture is hundreds of shapes in one layer, and a person can't easily group one of them, and in
