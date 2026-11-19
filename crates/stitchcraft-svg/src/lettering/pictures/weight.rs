@@ -22,10 +22,10 @@
 
 use stitchcraft_core::{Budget, Diagnostic, Exhausted, Meter, math};
 use stitchcraft_engine::design::Shape;
+use stitchcraft_engine::design::mark::frame::At;
+use stitchcraft_engine::design::mark::{bounds, flat};
 use stitchcraft_engine::generators::satin;
 
-use super::frame::At;
-use super::{bounds, flat};
 use crate::font::Font;
 
 /// The setting that makes a glyph's path a satin column.

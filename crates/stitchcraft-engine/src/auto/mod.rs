@@ -77,6 +77,7 @@ mod area;
 mod cap;
 mod clips;
 mod columns;
+mod marks;
 mod narrow;
 mod neighbours;
 mod params;
@@ -85,6 +86,7 @@ mod split;
 pub(crate) mod thick;
 mod thin;
 
+use marks::Marks;
 #[cfg(test)]
 pub(crate) use neighbours::default_base_layer;
 use neighbours::{Background, Sewn, no_area, parts_of, speck};
@@ -435,10 +437,14 @@ fn meets(a: Rect, b: Rect) -> bool {
 
 /// [`digitized`], with the ids of the base layer's pieces.
 pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
-    if !design.sort_colours && !design.elements().iter().any(|element| element.automatic) {
-        return Sewing { elements: Cow::Borrowed(design.elements()), diagnostics: Vec::new(), base: Vec::new(), made: BTreeSet::new(), limits: None };
+    let automatic = design.elements().iter().any(|element| element.automatic);
+    if !design.sort_colours && !automatic {
+        let diagnostics = marks::unused_all(&design.marks);
+        return Sewing { elements: Cow::Borrowed(design.elements()), diagnostics, base: Vec::new(), made: BTreeSet::new(), limits: None };
     }
     let mut diagnostics = Vec::new();
+    // Each mark's area is read once, before the shapes are cut to their clips.
+    let marks = Marks::of(&design.marks, budget);
     // Each automatic shape is cut to its clips first, so that what shows of it is digitized and hides others.
     let cut = clips::cut(design, budget, &mut diagnostics);
     let design = cut.as_ref().unwrap_or(design);
@@ -458,7 +464,7 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     let background = neighbours::background(design, rules.first().and_then(Option::as_ref), budget);
     let layers = neighbours::flattened(design, &rules, matches!(background, Some(Background::Found)), budget);
     // Thin lines, such as the strands of fur a photo traces into, merge into the areas beside them.
-    let (layers, _) = neighbours::lines_merged(layers, &rules, design.settings.min_satin_stroke_width, budget);
+    let (layers, _) = neighbours::lines_merged(layers, &rules, design.settings.min_satin_stroke_width, &marks, budget);
     // How each shape digitized sews, by its place in the design.
     let mut digitized = Vec::new();
     let mut sewn = Vec::with_capacity(layers.elements.len());
@@ -473,7 +479,8 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
         // A hole of an area that a shape drawn later meets is not kept open (`REQ-AUTO-084`).
         let later = elements.get(index + 1..).unwrap_or_default();
         let open = |hole: Rect, meter: &mut Meter| clear(later, hole, meter);
-        let made = match made_by(&element, &design.settings, rules, &open, &mut meter).and_then(|made| named(made, &element, &mut taken, &mut meter))
+        let made = match made_by(&element, &design.settings, rules, (&open, &marks), &mut meter)
+            .and_then(|made| named(made, &element, &mut taken, &mut meter))
         {
             Ok(made) => made,
             Err(exhausted) => {
@@ -508,8 +515,10 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     // The details sew last only when the lowest automatic shape asks for it (`REQ-AUTO-098`).
     let last = lowest.is_some_and(|rules| rules.auto_details_last);
     let limits = lowest.map(thick::held);
-    let mut beside = neighbours::beside(sewn, &design.settings, budget, design.sort_colours, base.map(|rules| (rules, &mut taken)), outlined, last);
+    let how = neighbours::How { sorted: design.sort_colours, outlined, last, marks: &marks };
+    let mut beside = neighbours::beside(sewn, &design.settings, budget, how, base.map(|rules| (rules, &mut taken)));
     diagnostics.extend(std::mem::take(&mut beside.said));
+    diagnostics.extend(marks.said(automatic));
     for (id, lines) in std::mem::take(&mut beside.outlines) {
         diagnostics.extend(outline_after(&mut beside.elements, &id, lines, &mut taken, &design.settings, budget));
     }
@@ -544,7 +553,8 @@ pub fn as_merged(design: &Design, budget: &Budget) -> Result<Design, Diagnostic>
         elements.iter().map(|element| if element.automatic { read(element, &mut diagnostics) } else { None }).collect();
     let background = neighbours::background(cut, rules.first().and_then(Option::as_ref), budget);
     let layers = neighbours::flattened(cut, &rules, matches!(background, Some(Background::Found)), budget);
-    let (_, merges) = neighbours::lines_merged(layers, &rules, cut.settings.min_satin_stroke_width, budget);
+    let marks = Marks::of(&design.marks, budget);
+    let (_, merges) = neighbours::lines_merged(layers, &rules, cut.settings.min_satin_stroke_width, &marks, budget);
     let mut drawn = design.elements().to_vec();
     let mut taken = Labels::default();
     for element in &drawn {
@@ -641,23 +651,31 @@ fn named(made: Digitized, element: &Element, taken: &mut Labels, meter: &mut Met
 pub fn digitize(element: &Element, settings: &DesignSettings, meter: &mut Meter) -> Result<Digitized, Exhausted> {
     let mut said = Vec::new();
     let Some(rules) = read(element, &mut said) else { return Ok(Digitized { diagnostics: said, ..Digitized::default() }) };
-    // Alone, an element has no shape drawn after it, and each of its holes wide enough to read is open.
-    let mut made = made_by(element, settings, &rules, &|_, _| Ok(true), meter)?;
+    // Alone, an element has no shape drawn after it, each of its holes wide enough to read is open, and no
+    // mark keeps its specks.
+    let mut made = made_by(element, settings, &rules, (&|_, _| Ok(true), &Marks::default()), meter)?;
     made.diagnostics.splice(0..0, said);
     Ok(made)
 }
 
 /// The ordinary elements that sew the automatic `element` of a design with `settings` by `rules`, its
-/// settings of the rules, as [`digitize`] makes them: each fill at the angle the rules give the design's
+/// settings of the rules, a hole of it kept open as `open` says and its specks inside `marks` measured
+/// (`REQ-AUTO-104`), as [`digitize`] makes them: each fill at the angle the rules give the design's
 /// fills, and `SC-I0912` last, naming the rule each part of it sewed by, when it sews by the rules.
-fn made_by(element: &Element, settings: &DesignSettings, rules: &AutoParams, open: &Open<'_>, meter: &mut Meter) -> Result<Digitized, Exhausted> {
+fn made_by(
+    element: &Element,
+    settings: &DesignSettings,
+    rules: &AutoParams,
+    (open, marks): (&Open<'_>, &Marks),
+    meter: &mut Meter,
+) -> Result<Digitized, Exhausted> {
     let bounds = Bounds::of(rules, settings.min_satin_stroke_width);
     let (mut made, fired) = match &element.shape {
         Shape::Stroke { path, width, join, cap } => {
             let (fired, stitches) = of_stroke(*width, &bounds);
             (stroke(element, path, Style { width: *width, join: *join, cap: *cap }, stitches, rules, meter)?, vec![fired])
         }
-        Shape::Fill { .. } => areas(element, &bounds, rules, open, meter)?,
+        Shape::Fill { .. } => areas(element, &bounds, narrow::By { rules, open, marks }, meter)?,
     };
     if made.stitches.is_some() {
         made.diagnostics.extend(rules::said(&element.id, &fired));
@@ -696,16 +714,16 @@ fn stroke(element: &Element, path: &Path, style: Style, stitches: Stitches, rule
     Ok(made)
 }
 
-/// The elements that sew `element`, an automatic area held to `bounds`, by `rules`, with `meter`'s work: its
+/// The elements that sew `element`, an automatic area held to `bounds`, by `by`, its shape's settings of the rules, whether a hole may be kept open and the marks, with `meter`'s work: its
 /// parts sorted by the rules (`narrow`) and [`sewn`], and the rule each part sewed by. An area whose region
 /// the region code can't join, a bug, is itself as it is, and its fill says so.
-fn areas(element: &Element, bounds: &Bounds, rules: &AutoParams, open: &Open<'_>, meter: &mut Meter) -> Result<(Digitized, Vec<Fired>), Exhausted> {
+fn areas(element: &Element, bounds: &Bounds, by: narrow::By<'_>, meter: &mut Meter) -> Result<(Digitized, Vec<Fired>), Exhausted> {
     let as_it_is = itself(element, Some(Stitches::Fill));
     let Shape::Fill { path, rule, .. } = &element.shape else { return Ok((as_it_is, Vec::new())) };
     let Ok(parts) = parts_of(path, *rule, meter)? else { return Ok((as_it_is, Vec::new())) };
-    let mut sorted = narrow::sorted(&element.id, parts, bounds, rules, open, meter)?;
+    let mut sorted = narrow::sorted(&element.id, parts, bounds, by, meter)?;
     let fired = std::mem::take(&mut sorted.fired);
-    Ok((sewn(element, sorted, rules), fired))
+    Ok((sewn(element, sorted, by.rules), fired))
 }
 
 /// The elements that sew `element`, an automatic area whose parts are `sorted` by their width, by `rules`:

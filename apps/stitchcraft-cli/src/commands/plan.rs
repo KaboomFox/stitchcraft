@@ -147,9 +147,13 @@ pub fn sew(
 ) -> Sewn {
     // The marks of `--text` came with the rules (`REQ-CLI-020`): their letters are replaced before the
     // rules' settings are set on what is left.
+    // So did the marks of `--keep` (`REQ-CLI-021`), given to the design as read, in percent of its box.
     let (marks, rules): (Vec<_>, Vec<_>) = rules.iter().cloned().partition(|(key, _)| key == crate::text::KEY);
+    let (keeps, rules): (Vec<_>, Vec<_>) = rules.into_iter().partition(|(key, _)| key == crate::keep::KEY);
     let marks: Vec<&str> = marks.iter().map(|(_, mark)| mark.as_str()).collect();
+    let keeps: Vec<&str> = keeps.iter().map(|(_, mark)| mark.as_str()).collect();
     let read = source.read(design, reading).and_then(|(design, mut warnings)| {
+        let design = crate::keep::kept(design, &keeps);
         let (design, said) =
             if marks.is_empty() { (design, Vec::new()) } else { crate::text::replaced(design, &marks, &mut FolderFonts::from_env())? };
         warnings.extend(said);

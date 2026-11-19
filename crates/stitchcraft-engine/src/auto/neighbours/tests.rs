@@ -84,7 +84,7 @@ pub(super) fn reached(sewn: Vec<Sewn>, budget: &Budget) -> (Vec<Element>, Vec<Di
 fn merged(sewn: Vec<Sewn>, budget: &Budget) -> (Vec<Element>, Vec<Diagnostic>) {
     let settings = DesignSettings::default();
     let mut shapes = Shapes::new(sewn, &settings, &Budget::DEFAULT);
-    let said = specks::merged(&mut shapes, budget);
+    let said = specks::merged(&mut shapes, &Marks::default(), budget);
     (shapes.into_elements(), said)
 }
 

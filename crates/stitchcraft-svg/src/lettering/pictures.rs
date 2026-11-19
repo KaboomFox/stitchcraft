@@ -17,7 +17,8 @@
 //! 1. Every subpath of every element that lies wholly inside the marker is taken out. A traced picture
 //!    keeps all the areas of one colour in one compound path, so the letters are subpaths, and so are the
 //!    holes they leave in the colour round them: taking both out makes the background whole again.
-//! 2. What was taken out is measured along and across the line the text follows (the module `frame`), and
+//! 2. What was taken out is measured along and across the line the text follows (the engine's
+//!    `design::mark::frame`, which marks that keep parts read their areas with too), and
 //!    the text is set once at the font's own size to measure it too.
 //! 3. The text is set again ([`super::set_along`]) at the scale that makes it as tall, on a line beside the
 //!    marker's line that puts its box on the box of what was taken out, its letters spread or closed up to
@@ -32,29 +33,24 @@
 //! flattened point of the design a unit per segment of the marker it is tested against. Setting the text
 //! has the budget again, as [`super::set`] says.
 
-mod frame;
 pub mod weight;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 
 use stitchcraft_core::units::Point;
-use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Meter, Severity};
+use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Meter, Severity};
+use stitchcraft_engine::design::mark::frame::{self, At};
+use stitchcraft_engine::design::mark::{Area, bounds, flat};
 use stitchcraft_engine::design::{Design, Element, Path, Segment, Shape, Subpath};
-use stitchcraft_engine::normalize::stroke::flatten;
 use stitchcraft_plan::Thread;
 
 use super::{Along, Lettering, Set, TextPosition, VerticalPosition, exhausted, scaled, set, set_along};
 use crate::font::Font;
-use frame::{At, Line};
 
 /// The name that marks text in a picture: an element named `stitch:text` and a note, in any mix of upper and
 /// lower case, is a marker.
 pub const MARKER: &str = "stitch:text";
-
-/// How near a curve its polyline lies when a shape is tested and measured, in millimetres: a tenth of the
-/// shortest letter an embroidery font sews would still measure within 2 %.
-const FLAT: f64 = 0.05;
 
 /// How much closer than the font sets them the letters may be pushed to fit the traced letters' width, in
 /// heights of the letters: a tenth, about what a font leaves between 2 letters, so strokes don't sew over
@@ -137,12 +133,7 @@ impl Marker {
 /// The note of the marker `name` names: what follows [`MARKER`] and white space, without the white space at
 /// its ends. `None` for a name that isn't a marker's.
 pub fn note(name: &str) -> Option<&str> {
-    let name = name.trim_start();
-    if !name.get(..MARKER.len())?.eq_ignore_ascii_case(MARKER) {
-        return None;
-    }
-    let rest = name.get(MARKER.len()..)?;
-    (rest.is_empty() || rest.starts_with(char::is_whitespace)).then_some(rest.trim())
+    stitchcraft_engine::design::mark::note(name, MARKER)
 }
 
 /// What a marker's note asks for.
@@ -239,9 +230,7 @@ pub fn replace_among(
             Err(Stop::Failed(failed)) => return Err(failed),
         }
     }
-    let mut replaced = Design::new(elements, design.settings)?;
-    replaced.sort_colours = design.sort_colours;
-    Ok((replaced, warnings))
+    Ok((design.with_elements(elements)?, warnings))
 }
 
 /// `SC-W1113`: the marker isn't used, for the reason `why`.
@@ -305,67 +294,6 @@ fn chose(marker: &Marker, choices: &[Choice], choice: &Choice, bold: Option<f64>
     Diagnostic::new(Code::FontChosenByWeight, message).with_fix(Fix::Hint(fix))
 }
 
-/// A marker's area, and the line its text follows.
-struct Area {
-    /// The outline of a marker that is an area, as closed polylines.
-    rings: Vec<Vec<At>>,
-    /// Half the width of a marker that is a line.
-    band: Option<f64>,
-    /// The line the text follows: the marker itself, or a level line along the top of its area.
-    line: Line,
-}
-
-impl Area {
-    /// The area of `marker`, flattened within `meter`.
-    fn of(marker: &Marker, meter: &mut Meter) -> Result<Result<Area, &'static str>, Exhausted> {
-        let pieces: Vec<Vec<At>> = flat(marker.shape.path(), meter)?;
-        let open = marker.shape.path().subpaths.first().is_some_and(|first| !first.closed);
-        if let (Shape::Stroke { width, .. }, true) = (&marker.shape, open) {
-            let line = pieces.first().and_then(|first| Line::of(first));
-            return Ok(line.map(|line| Area { rings: Vec::new(), band: Some(width.get() / 2.0), line }).ok_or("its line has no length."));
-        }
-        let rings = pieces;
-        let Some([left, top, right, bottom]) = bounds(rings.iter().flatten().copied()) else { return Ok(Err("it encloses no area.")) };
-        // Any level line serves: what is measured across it is placed across it again.
-        let line = Line::of(&[(left, top), (right, top)]).filter(|_| bottom > top);
-        Ok(line.map(|line| Area { rings, band: None, line }).ok_or("it encloses no area."))
-    }
-
-    /// Whether `p` lies in the area: inside the outline, or no further from the line than half its width and
-    /// not past its ends.
-    fn holds(&self, p: At) -> bool {
-        match self.band {
-            None => frame::inside(&self.rings, p),
-            Some(half) => {
-                let (along, across) = self.line.locate(p);
-                across.abs() <= half && along >= 0.0 && along <= self.line.length()
-            }
-        }
-    }
-
-    /// What testing a point costs: a unit for each segment it is tested against.
-    fn cost(&self) -> u64 {
-        let segments = match self.band {
-            None => self.rings.iter().map(Vec::len).sum(),
-            Some(_) => self.line.segments(),
-        };
-        u64::try_from(segments).unwrap_or(u64::MAX)
-    }
-}
-
-/// The subpaths of `path` as polylines within [`FLAT`] of them, one for each, charging `meter` as
-/// [`flatten`] does.
-fn flat(path: &Path, meter: &mut Meter) -> Result<Vec<Vec<At>>, Exhausted> {
-    Ok(flatten(path, FLAT, meter)?.pieces.into_iter().map(|piece| piece.points.into_iter().map(|p| (p.x(), p.y())).collect()).collect())
-}
-
-/// The box round `points`: its left, top, right and bottom. `None` of no points.
-fn bounds(points: impl Iterator<Item = At>) -> Option<[f64; 4]> {
-    points.fold(None, |around: Option<[f64; 4]>, (x, y)| {
-        Some(around.map_or([x, y, x, y], |[left, top, right, bottom]| [left.min(x), top.min(y), right.max(x), bottom.max(y)]))
-    })
-}
-
 /// A subpath taken out of a design.
 struct Taken {
     /// Its element, as an index into the design's elements.
@@ -403,18 +331,18 @@ impl Work<'_> {
         if asked.text.trim().is_empty() {
             return Err(Stop::Unused("it has no text.".to_string()));
         }
-        let area = Area::of(marker, self.meter).map_err(|_| self.spent())?.map_err(|why| Stop::Unused(why.to_string()))?;
+        let area = Area::of(&marker.shape, self.meter).map_err(|_| self.spent())?.map_err(|why| Stop::Unused(why.to_string()))?;
         let (taken, flats, crossing) = self.taken(&area, elements)?;
         if taken.is_empty() {
             return Err(Stop::Unused("no shape lies wholly inside it.".to_string()));
         }
         // What was taken out, along and across the line: from its start to its end, and from its bottom to
         // its top.
-        let cost = u64::try_from(area.line.segments()).unwrap_or(u64::MAX);
+        let cost = u64::try_from(area.line().segments()).unwrap_or(u64::MAX);
         let mut held: Option<[f64; 4]> = None;
         for part in &taken {
             self.meter.charge(cost.saturating_mul(u64::try_from(part.points.len()).unwrap_or(u64::MAX))).map_err(|_| self.spent())?;
-            held = bounds(held.iter().flat_map(|&[a0, c0, a1, c1]| [(a0, c0), (a1, c1)]).chain(part.points.iter().map(|&p| area.line.locate(p))));
+            held = bounds(held.iter().flat_map(|&[a0, c0, a1, c1]| [(a0, c0), (a1, c1)]).chain(part.points.iter().map(|&p| area.line().locate(p))));
         }
         let [start, bottom, end, top] = held.unwrap_or_default();
         let height = top - bottom;
@@ -438,7 +366,7 @@ impl Work<'_> {
         // The baseline: the text's box centred on the traced letters' across the line, and the baseline as
         // far above the box's bottom as the text reaches below it.
         let base = (top + bottom) / 2.0 - tall / 2.0 + down * factor;
-        let room = frame::length(&area.line.beside(base, start, end));
+        let room = frame::length(&area.line().beside(base, start, end));
         let natural = (right - left) * factor;
         let gaps = trial.glyphs.len().saturating_sub(1) as f64;
         let spread = if gaps > 0.0 { ((room - natural) / gaps).clamp(-CLOSER * height, APART * height) } else { 0.0 };
@@ -452,7 +380,7 @@ impl Work<'_> {
         // The baseline goes on a letter's height past the text, so that it has a length whatever the text.
         let to = from + (wide + height) * step;
         // Every number here is finite, so every point is one, and the line has its 2 ends at least.
-        let mut track = area.line.beside(base, from, to).into_iter().filter_map(|(x, y)| Point::new(x, y).ok());
+        let mut track = area.line().beside(base, from, to).into_iter().filter_map(|(x, y)| Point::new(x, y).ok());
         let first = track.next().unwrap_or(Point::from_tenths(0, 0));
         let path = Path { subpaths: vec![Subpath { start: first, segments: track.map(Segment::Line).collect(), closed: false }] };
         let how = Lettering { scale, letter_spacing: spread / factor, word_spacing: spread / factor, ..asked.how };

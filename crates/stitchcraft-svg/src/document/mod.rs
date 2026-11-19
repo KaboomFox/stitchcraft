@@ -68,7 +68,7 @@ use roxmltree::{Document, Node, NodeId, ParsingOptions};
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm, Point};
 use stitchcraft_engine::auto::{self, Stitches};
 use stitchcraft_engine::common::MAX_STITCH_LENGTH;
-use stitchcraft_engine::design::{Design, Element, Hints, Reading, Shape, within_working_limit};
+use stitchcraft_engine::design::{Design, Element, Hints, Reading, Shape, mark, within_working_limit};
 use stitchcraft_engine::generate::stops_after;
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::{Rgb, Thread};
@@ -365,7 +365,10 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         if let Some(message) = self.version.note(self.updated) {
             self.warnings.insert(0, self.diagnostic(Code::SvgInkStitchUpdated, None, message, None));
         }
-        let design = Design::new(std::mem::take(&mut self.elements), self.settings.settings)?;
+        // The shapes named stitch:keep are marks, never sewn (`REQ-AUTO-104`).
+        let (elements, marks) = mark::taken_out(std::mem::take(&mut self.elements));
+        let mut design = Design::new(elements, self.settings.settings)?;
+        design.marks = marks;
         Ok(Svg { design, warnings: std::mem::take(&mut self.warnings), texts: std::mem::take(&mut self.texts) })
     }
 

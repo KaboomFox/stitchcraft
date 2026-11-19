@@ -28,7 +28,8 @@ fn speck(id: &str, x: f64, y: f64) -> String {
 /// A blue line 10 mm long from (`x`, `y`) downwards, straight on its left and ragged on its right: 0.4 mm
 /// wide every millimetre and 0.7 mm half way between, as a strand of fur traces. It is narrower than the
 /// narrowest satin stroke everywhere, and its width varies by far more than 0.05 of itself, so it is a
-/// thin line (`REQ-AUTO-090`).
+/// thin line (`REQ-AUTO-090`). The lines here start on the square's top edge: a line that lies wholly on
+/// an area fills a hole of it, a detail that sews on the area whole, and never merges (`REQ-AUTO-023`).
 fn line(id: &str, x: f64, y: f64) -> String {
     let mut points = vec![format!("{x},{y}"), format!("{x},{}", y + 10.0)];
     points.extend((0..=20).map(|i| format!("{},{}", x + if i % 2 == 0 { 0.4 } else { 0.7 }, y + 10.0 - f64::from(i) * 0.5)));
@@ -103,15 +104,15 @@ fn req_auto_104_a_speck_wholly_inside_a_keep_mark_sews_and_one_outside_merges_as
 #[test]
 fn req_auto_105_a_thin_line_wholly_inside_a_keep_mark_sews_as_a_line_and_one_across_its_edge_merges() {
     // Without a mark, both ragged lines merge into the red square (REQ-AUTO-090).
-    let lines = [line("inside", 20.0, 20.0), line("across", 35.0, 28.0)];
+    let lines = [line("inside", 20.0, 10.0), line("across", 35.0, 10.0)];
     let (elements, said) = sewn(&picture(&lines));
     assert!(in_thread(&elements, &BLUE).is_empty(), "{elements:?}");
     assert!(names(&said, "SC-I0915", "inside") && names(&said, "SC-I0915", "across"), "{said:?}");
-    // The mark holds the first line whole and only the top of the second: the first sews as a running
+    // The mark holds the first line whole and only the left of the second: the first sews as a running
     // stitch along its middle, in its blue, and the second merges as it did, since a part partly inside a
     // mark is decided as if there were none.
     let mut shapes = lines.to_vec();
-    shapes.push(mark("stitch:keep", [18.0, 18.0, 37.0, 32.0]));
+    shapes.push(mark("stitch:keep", [18.0, 9.0, 35.5, 21.0]));
     let (elements, said) = sewn(&picture(&shapes));
     let blue = in_thread(&elements, &BLUE);
     assert!(!blue.is_empty() && blue.iter().all(|id| id.starts_with("svg:inside")), "{elements:?}");
@@ -123,8 +124,8 @@ fn req_auto_105_a_thin_line_wholly_inside_a_keep_mark_sews_as_a_line_and_one_acr
 fn req_auto_106_a_mark_drawn_as_a_line_keeps_what_lies_within_half_its_stroke() {
     // A line drawn down the middle of the ragged line with a stroke 2 mm wide marks the band 1 mm either
     // side of it, between its ends, as a text marker's line does (REQ-AUTO-063).
-    let band = r##"<path id="mark" inkscape:label="stitch:keep" d="M 20.5,19 L 20.5,31" fill="none" stroke="#00ff00" stroke-width="2"/>"##;
-    let (elements, said) = sewn(&picture(&[line("inside", 20.0, 20.0), band.to_string()]));
+    let band = r##"<path id="mark" inkscape:label="stitch:keep" d="M 20.5,9 L 20.5,21" fill="none" stroke="#00ff00" stroke-width="2"/>"##;
+    let (elements, said) = sewn(&picture(&[line("inside", 20.0, 10.0), band.to_string()]));
     assert!(!in_thread(&elements, &BLUE).is_empty() && in_thread(&elements, &GREEN).is_empty(), "{elements:?}");
     assert!(!names(&said, "SC-I0915", "inside"), "{said:?}");
 }
