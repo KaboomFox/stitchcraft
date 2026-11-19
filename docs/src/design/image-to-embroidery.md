@@ -2175,8 +2175,8 @@ an iris or a window in a door does. With both settings on, a traced dog's grey a
 closes in on moved to sew after the fur, while the tan patch on it, which would cost a thread change to
 move, stayed where it was. The grey's outline and rows then lay over the tan's edge. So a detail moves only
 together with what sews on top of it. A wish moves its second element later. Its nest is that wish, each
-wish that something sews after that element, a detail of it or a satin column bordering it, and their
-nests in turn. The search grants a nest whole or not at all. It also keeps the row itself from doing the
+wish that something sews after that element, a detail of it or a satin column bordering it, and the
+nests of those. The search grants a nest whole or not at all. It also keeps the row itself from doing the
 same. Of the rows with the fewest changes it takes the one that misses the fewest inner wishes, those whose
 first element another wish moves, and only then the one that misses the fewest wishes. So wherever a row
 with as few changes keeps a pupil on top, the search doesn't take one that sews the iris after the fur and
