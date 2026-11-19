@@ -170,7 +170,9 @@ pub(in crate::auto) fn flattened<'d>(design: &'d Design, rules: &[Option<AutoPar
         // An area whose holes are closed is digitized whole under its details, drawn whole or not; one that
         // can't be given what it sews is sewn as it is drawn.
         whole += usize::from(given.is_ok() && !layer.closed.is_empty());
-        if given.is_ok() && !layer.closed.is_empty() {
+        // A guide steers an area whose holes its details fill only where the area shows, whether it is given
+        // its region or sewn as drawn.
+        if !layer.closed.is_empty() {
             shown.insert(index, layer.shown.clone());
         }
         let given = given.unwrap_or_else(|failed| {

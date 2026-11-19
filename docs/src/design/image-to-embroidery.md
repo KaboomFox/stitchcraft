@@ -3013,82 +3013,87 @@ nothing. The guided fill then sews as it does for a shape set by hand.
 
 ### What guides sew
 
-Measured on 2026-11-19 with a prototype on `main` at `78dc001f`, built at opt-level 1, by the numbers of
+Measured on 2026-11-19 with the build on `main` at `7486520b`, built at opt-level 1, by the numbers of
 M13.41's measure and M13.29's count, and the stitches of the PES file read back. No picture is a goal: one
-procedure drew every guide, never a form. Each picture was planned without guides. Its 3 largest filled
-parts were then each given a guide along their longest axis, the line between the 2 points of the part's
-outline farthest apart, bent so that its middle lies a fifth of its length to the left, through 25 points.
-A guide drawn so crosses other parts too, as a person's would. The last column counts the elements of the
-areas no guide crosses that sew the same stitches as without guides.
+procedure drew every guide, never a form, and phase 1's prototype measured the same guides. Each picture
+was planned without guides. Its 3 largest filled parts were then each given a guide along their longest
+axis, the line between the 2 points of the part's outline farthest apart, bent so that its middle lies a
+fifth of its length to the left, through 25 points. A guide drawn so crosses other parts too, as a person's
+would. The last column counts, among the elements of the areas that the guides miss, those that sew the
+same stitches as without guides.
 
 | Picture | Guides | Parts that follow | Likeness | Thickest spot, fills | At 3 fills or more, mm² | Bare, % | Slivers | Jump threads | Thread changes | Stitches | Export's count | Other areas' elements the same |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Dog on turf, 6 threads | none |  | 0.814 | 4.00 | 137.25 | 0.010 | 0 | 57 | 8 | 9,985 | 9,985 |  |
-|  | 3 | 16 in 16 areas | 0.814 | 4.00 | 127.25 | 0.041 | 0 | 52 | 9 | 9,650 | 9,650 | 31 of 115 |
-| Dog on turf, 9 threads | none |  | 0.779 | 4.00 | 150.75 | 0.010 | 0 | 58 | 12 | 10,675 | 10,675 |  |
-|  | 3 | 13 in 13 areas | 0.779 | 4.00 | 147.75 | 0.046 | 0 | 54 | 12 | 10,356 | 10,356 | 63 of 139 |
+| Dog on turf, 6 threads | none |  | 0.856 | 4.00 | 131.25 | 0.021 | 0 | 60 | 8 | 10,068 | 10,068 |  |
+|  | 3 | 16 in 16 areas | 0.856 | 4.00 | 144.00 | 0.030 | 0 | 55 | 9 | 10,374 | 10,374 | 35 of 117 |
+| Dog on turf, 9 threads | none |  | 0.829 | 4.00 | 149.00 | 0.010 | 0 | 62 | 12 | 10,742 | 10,742 |  |
+|  | 3 | 13 in 13 areas | 0.829 | 4.00 | 164.25 | 0.015 | 0 | 59 | 12 | 11,167 | 11,167 | 68 of 143 |
 | Running dog, 6 threads | none |  | 0.898 | 4.00 | 129.00 | 0.000 | 0 | 49 | 8 | 11,077 | 11,077 |  |
-|  | 3 | 15 in 15 areas | 0.898 | 3.99 | 124.25 | 0.047 | 0 | 47 | 11 | 10,724 | 10,724 | 64 of 117 |
+|  | 3 | 15 in 15 areas | 0.898 | 4.00 | 139.50 | 0.005 | 0 | 46 | 11 | 11,422 | 11,422 | 62 of 117 |
 | Running dog, 9 threads | none |  | 0.921 | 4.00 | 176.50 | 0.005 | 0 | 64 | 11 | 12,369 | 12,369 |  |
-|  | 3 | 8 in 8 areas | 0.921 | 4.00 | 210.00 | 0.045 | 0 | 63 | 13 | 12,351 | 12,351 | 56 of 174 |
+|  | 3 | 8 in 8 areas | 0.921 | 4.00 | 213.75 | 0.014 | 0 | 63 | 13 | 12,659 | 12,659 | 56 of 174 |
 | Pear | none |  | 1.000 | 3.86 | 13.00 | 0.000 | 0 | 2 | 2 | 4,660 | 4,660 |  |
-|  | 3 | 4 in 3 areas | 1.000 | 3.99 | 12.25 | 0.057 | 0 | 4 | 2 | 4,758 | 4,758 | 1 of 3 |
+|  | 3 | 5 in 4 areas | 1.000 | 4.00 | 16.75 | 0.007 | 0 | 3 | 2 | 5,218 | 5,218 | 2 of 3 |
 | Lettered patch | none |  | 1.000 | 3.98 | 40.25 | 0.003 | 0 | 8 | 2 | 4,026 | 4,026 |  |
-|  | 3 | 1 in 1 area | 1.000 | 3.98 | 45.25 | 0.003 | 0 | 8 | 2 | 4,211 | 4,211 | 13 of 15 |
+|  | 3 | 1 in 1 area | 1.000 | 3.98 | 49.75 | 0.002 | 0 | 8 | 2 | 4,328 | 4,328 | 13 of 15 |
 | TS-13A | none |  | 1.000 | 3.99 | 23.75 | 0.013 | 1 | 18 | 2 | 11,513 | 11,513 |  |
-|  | 3 | 5 in 5 areas | 1.000 | 3.99 | 23.75 | 0.043 | 1 | 18 | 2 | 11,456 | 11,456 | 30 of 30 |
+|  | 3 | 5 in 5 areas | 1.000 | 3.99 | 24.00 | 0.014 | 1 | 18 | 2 | 12,021 | 12,021 | 30 of 30 |
 | TS-13B | none |  | 1.000 | 3.85 | 4.25 | 0.066 | 0 | 46 | 4 | 6,895 | 6,895 |  |
-|  | 3 | 3 in 3 areas | 1.000 | 3.85 | 3.25 | 0.101 | 0 | 46 | 4 | 6,894 | 6,894 | 72 of 72 |
+|  | 3 | 3 in 3 areas | 1.000 | 3.85 | 3.25 | 0.066 | 0 | 46 | 4 | 7,035 | 7,035 | 72 of 72 |
 | TS-13C | none |  | 1.000 | 3.96 | 95.75 | 0.000 | 0 | 13 | 4 | 6,064 | 6,064 |  |
-|  | 3 | 5 in 4 areas | 1.000 | 4.00 | 94.00 | 0.039 | 0 | 15 | 4 | 5,988 | 5,988 | 13 of 18 |
+|  | 3 | 5 in 4 areas | 1.000 | 3.99 | 107.25 | 0.005 | 0 | 15 | 4 | 6,368 | 6,368 | 14 of 18 |
 | TS-13D | none |  | 1.000 | 3.97 | 50.75 | 0.000 | 0 | 12 | 3 | 7,994 | 7,994 |  |
-|  | 3 | 3 in 3 areas | 1.000 | 3.97 | 81.50 | 0.007 | 0 | 12 | 3 | 8,331 | 8,331 | 18 of 19 |
+|  | 3 | 3 in 3 areas | 1.000 | 3.99 | 101.00 | 0.000 | 0 | 12 | 3 | 9,008 | 9,008 | 17 of 19 |
 | TS-13E | none |  | 1.000 | 3.39 | 2.50 | 0.000 | 0 | 5 | 2 | 2,716 | 2,716 |  |
-|  | 3 | 7 in 7 areas | 1.000 | 3.41 | 1.50 | 0.020 | 0 | 5 | 2 | 2,871 | 2,871 | 22 of 22 |
+|  | 3 | 7 in 7 areas | 1.000 | 3.41 | 2.75 | 0.018 | 0 | 5 | 2 | 3,023 | 3,023 | 22 of 22 |
 | Badge, abutting | none |  | 1.000 | 3.01 | 0.00 | 0.000 | 0 | 0 | 2 | 3,431 | 3,431 |  |
-|  | 3 | 3 in 3 areas | 1.000 | 3.22 | 0.00 | 0.156 | 0 | 0 | 2 | 4,035 | 4,035 | 1 of 1 |
+|  | 3 | 3 in 3 areas | 1.000 | 3.22 | 0.00 | 0.010 | 0 | 0 | 2 | 3,957 | 3,957 | 1 of 1 |
 | Badge, stacked | none |  | 1.000 | 3.01 | 0.00 | 0.000 | 0 | 0 | 2 | 3,431 | 3,431 |  |
-|  | 3 | 3 in 3 areas | 1.000 | 3.22 | 0.00 | 0.156 | 0 | 0 | 2 | 4,035 | 4,035 | 1 of 1 |
+|  | 3 | 3 in 3 areas | 1.000 | 3.22 | 0.00 | 0.010 | 0 | 0 | 2 | 3,957 | 3,957 | 1 of 1 |
 | Emblem, abutting | none |  | 1.000 | 3.57 | 1.25 | 0.000 | 0 | 2 | 3 | 4,997 | 4,997 |  |
-|  | 3 | 3 in 3 areas | 1.000 | 3.38 | 1.25 | 0.227 | 0 | 2 | 3 | 5,224 | 5,224 | 4 of 4 |
+|  | 3 | 3 in 3 areas | 1.000 | 3.62 | 3.00 | 0.000 | 0 | 2 | 3 | 6,188 | 6,188 | 4 of 4 |
 | Emblem, stacked | none |  | 1.000 | 3.39 | 1.00 | 0.000 | 0 | 2 | 3 | 4,998 | 4,998 |  |
-|  | 3 | 3 in 3 areas | 1.000 | 3.53 | 1.25 | 0.226 | 0 | 2 | 3 | 5,222 | 5,222 | 4 of 4 |
+|  | 3 | 3 in 3 areas | 1.000 | 3.71 | 1.00 | 0.000 | 0 | 2 | 3 | 6,153 | 6,153 | 4 of 4 |
 | Button | none |  | 1.000 | 3.96 | 2.75 | 0.000 | 0 | 0 | 2 | 1,847 | 1,847 |  |
-|  | 3 | 4 in 4 areas | 1.000 | 4.00 | 3.25 | 0.020 | 0 | 0 | 2 | 1,906 | 1,906 | 10 of 10 |
+|  | 3 | 4 in 4 areas | 1.000 | 4.00 | 2.25 | 0.009 | 0 | 0 | 2 | 2,014 | 2,014 | 10 of 10 |
 | Marked patch | none |  | 1.000 | 3.95 | 14.25 | 0.000 | 0 | 1 | 3 | 4,077 | 4,077 |  |
-|  | 3 | 3 in 3 areas | 1.000 | 3.91 | 13.50 | 0.081 | 0 | 1 | 3 | 4,204 | 4,204 | 3 of 6 |
-| Magnolia | none |  | 0.480 | 4.00 | 441.75 | 0.005 | 0 | 155 | 9 | 34,258 | 34,258 |  |
-|  | 3 | 28 in 27 areas | 0.477 | 4.00 | 474.00 | 0.034 | 0 | 149 | 10 | 34,736 | 34,736 | 172 of 421 |
-| Coleus | none |  | 0.454 | 4.22 (above the cap) | 851.50 | 0.006 | 0 | 237 | 12 | 56,886 | 56,886 |  |
-|  | 3 | 17 in 17 areas | 0.456 | 4.00 | 881.50 | 0.019 | 0 | 241 | 12 | 56,691 | 56,691 | 422 of 788 |
-| Goose | none |  | 0.483 | 4.00 | 482.50 | 0.007 | 0 | 95 | 8 | 36,668 | 36,668 |  |
-|  | 3 | 10 in 9 areas | 0.486 | 4.02 (above the cap) | 476.75 | 0.013 | 0 | 97 | 8 | 36,566 | 36,566 | 246 of 301 |
-| Castle | none |  | 0.434 | 4.00 | 221.75 | 0.001 | 0 | 54 | 8 | 26,201 | 26,201 |  |
-|  | 3 | 6 in 6 areas | 0.434 | 4.28 (above the cap) | 233.00 | 0.016 | 0 | 55 | 7 | 26,570 | 26,570 | 80 of 150 |
+|  | 3 | 3 in 3 areas | 1.000 | 3.97 | 15.25 | 0.005 | 0 | 1 | 3 | 4,503 | 4,503 | 2 of 6 |
+| Magnolia | none |  | 0.849 | 4.00 (above the cap) | 521.25 | 0.006 | 0 | 313 | 10 | 38,197 | 38,197 |  |
+|  | 3 | 26 in 25 areas | 0.848 | 4.00 | 603.00 | 0.005 | 0 | 302 | 10 | 39,946 | 39,946 | 289 of 560 |
+| Coleus | none |  | 0.841 | 4.12 (above the cap) | 959.25 | 0.041 | 1 | 473 | 13 | 62,219 | 62,219 |  |
+|  | 3 | 15 in 15 areas | 0.842 | 4.01 (above the cap) | 977.25 | 0.041 | 1 | 459 | 13 | 62,249 | 62,249 | 424 of 1020 |
+| Goose | none |  | 0.820 | 4.00 | 489.25 | 0.016 | 0 | 170 | 10 | 38,352 | 38,352 |  |
+|  | 3 | 10 in 9 areas | 0.820 | 4.00 | 549.25 | 0.014 | 0 | 169 | 10 | 39,509 | 39,509 | 270 of 384 |
+| Castle | none |  | 0.779 | 4.00 | 255.75 | 0.010 | 0 | 104 | 9 | 28,526 | 28,526 |  |
+|  | 3 | 7 in 6 areas | 0.779 | 4.00 | 280.00 | 0.009 | 0 | 102 | 9 | 29,395 | 29,395 | 122 of 210 |
 
-- **The parts follow their guides.** Each guide steered 1 to 16 filled parts, the parts it was drawn along
+- **The parts follow their guides.** Each guide steered up to 16 filled parts, the parts it was drawn along
   and those it crossed on the way. The rows bend with the guide in the preview pictures, and the export
   sews what the plan says, stitch for stitch.
 - **The repository's drawn designs sew the rest as before.** TS-13A, TS-13B, TS-13E, the badges, the
-  emblems and the button sew the same stitches in every element of the areas the guides miss.
-  Elsewhere the order changes. Each element a guide makes is a shape more to order, so the rest of a
-  traced photo or dog starts and ends elsewhere: 27 % to 82 % of the other areas' elements of a photo or a
-  dog sew the same stitches. Thread changes rise by up to 3, on the running dog in 6 threads, and fall by
-  1 on the castle.
-- **The cap holds but for 2 spots.** The coleus, which sews 4.22 fills on `main`, sews 4.00 with guides.
-  The goose sews 4.02 fills and the castle 4.28, each at a part a guide steers, on the castle where it
-  overlaps the rest of its own area, and `SC-W0913` names each spot "above the cap". The area at 3 fills or more moves
-  both ways, from 10 mm² less on the dog on turf in 6 threads to 33.5 mm² more on the running dog in 9
-  threads, and up 30.75 mm² on TS-13D.
-- **Guided fills leave a little more fabric bare** at their edges: every picture shows more bare fabric,
-  at most 0.23 % of the emblem. A tatami fill of the same part leaves none there. The build phase finds why
-  before the guide is merged, since `REQ-AUTO-109` keeps the area's other settings.
-- **The likeness doesn't move,** by at most 0.003, since a guide doesn't change a part's colour or place.
+  emblems and the button sew the same stitches in every element of the areas the guides miss. Elsewhere
+  the order changes. Each element a guide makes is a shape more to order, so the rest of a traced photo or
+  dog starts and ends elsewhere. Thread changes rise by up to 3, on the running dog in 6 threads.
+- **The cap holds.** No guided picture sews above 4 fills where `main` doesn't, and the coleus, which sews
+  4.12 fills on `main`, sews 4.01. The prototype sewed the goose at 4.02 and the castle at 4.28, where
+  parts of one area that rounding left a hair apart each reached under the other once a guide made them 2
+  elements. Such fills stay one area for the overlaps (`REQ-AUTO-110`). The area at 3 fills or more grows
+  on most pictures, by up to 82 mm² of the magnolia's 521 and 50 mm² on TS-13D, since a guided fill sews
+  more stitches than the tatami fill it replaces: its copies lie closer where the guide bends.
+- **The fabric is covered as before.** The prototype left up to 0.23 % of a design bare, at the edges where the
+  guided rows ended square on: automatic digitizing keeps a fill's turns as stitches (`turn_stitches`), and
+  the guided fill didn't read it, so every second row started a needle point inside the edge. It reads it
+  now ([guided fill](algorithms/guided.md#sewing-the-lines)). What is left is at most 0.018 % more of a
+  design, on TS-13E, and 0.009 % on a dog, where a few rows meet the outline at a slant and end short of
+  it, far under the limit of 0.15 %.
+- **A guide over a detail leaves the area under it alone.** The badge's preview showed a guide drawn over
+  its disc steering the field round it too, since the field is digitized whole under the disc. The guide's
+  line is now tested where the area shows.
+- **The likeness doesn't move,** by at most 0.001, since a guide doesn't change a part's colour or place.
 - **What it costs to plan.** The guided fills cost more or less than tatami fills by their stitches, and the
-  test against the guides is a small share of it. Planned and measured with its 3 guides, the pear took 40.17
-  billion instructions, 1.2 % more than without them, and the running dog in 6 threads took 150.87 billion,
-  4.1 % less, since its guided fills sew fewer stitches (callgrind, the prototype at opt-level 1).
-
+  test against the guides is a small share of it. With the prototype, planned and measured with its 3
+  guides, the pear took 1.2 % more instructions than without them, and the running dog in 6 threads 4.1 %
+  less (callgrind, opt-level 1).
 
 ### Decisions for the owner
 
