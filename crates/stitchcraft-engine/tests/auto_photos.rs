@@ -360,7 +360,7 @@ fn req_auto_103_digitized_dogs_with_lines_kept_and_details_last_sew_above_the_ca
             element.params.set(auto::DETAILS_LAST, "true");
         }
         let plan = in_place(&Design::new(elements, design.settings).unwrap()).plan.unwrap();
-        let (thickest, columns) = fabric::thickest(&plan, &fabric::columns(&design));
+        let (thickest, columns) = fabric::thickest(&plan, &fabric::columns(design));
         if thickest - columns > rules().auto_thick_cap_fills {
             above.push((name.clone(), thickest, columns));
         }
