@@ -2154,7 +2154,7 @@ its thread. The owner's machine has one needle, and each thread change is a reth
 rules, details last took the traced photos in 6 threads from 8 thread changes to 13 and 14. In 9 threads
 the search ran out of its budget, and they changed thread 35 and 38 times.
 
-**On by default since M13.45** (`REQ-AUTO-098`). The rule runs only when the design's lowest automatic
+**Off by default** (`REQ-AUTO-098`, M13.48). The rule runs only when the design's lowest automatic
 shape has `auto_details_last` on. Off, the order skips the search for details, and a design sews as it did
 before M13.40. The rule landed off, and waited for one cap on thickness at the end of planning (M13.35). Reordering fills can
 raise the thread at a spot where no detail lies. A fill that moves for a detail starts and ends
@@ -2168,7 +2168,8 @@ area covers less than a share, for every share tried from a quarter to all of it
 old thickest spot and raised another. A check that plans twice and keeps the better plan, or a cut-off by
 the number of areas, would only hide that. An area count can't even tell a photo from a logo: a traced
 photo can have fewer areas than a badge. Once the cap limits every spot, a reorder can't pile thread
-anywhere, and so the setting is on by default.
+anywhere, and so M13.45 turned the setting on by default. M13.48 turned it off again, for its jump
+threads ([off by default again](#details-last), below).
 
 **A detail inside a detail** (`REQ-AUTO-108`, M13.45). A detail can have details of its own, as a pupil on
 an iris or a window in a door does. With both settings on, a traced dog's grey area that the darker fur
@@ -2254,6 +2255,28 @@ the dogs' exports took 10.6 to 13.3 % more and the pear's 9.4 % more before nest
 much as before (`conformance/perf.toml`).
 
 These leave every limit as it was, since a limit comes from the whole set.
+
+**Off by default again** (M13.48, `REQ-AUTO-098`). Shown the cost of each setting alone on the traced dogs,
+the owner kept merging by likeness on and turned details last off by default on 2026-11-19. Measured at
+opt-level 2 with M13.45's nests, each dog with merging by likeness on: the jump threads with details last
+off, then on. The last column counts the areas under 20 mm² that details last makes show 0.1 mm² or more
+more, and less, with the sum of each, as the table above does:
+
+| Picture | Jump threads, off, on | Likeness | Small areas showing more, less |
+|---|---|---|---|
+| Dog on turf, 6 threads | 60, 61 | 856, 856 | 2 of 80 (2.7 mm²), none |
+| Dog on turf, 9 threads | 62, 66 | 829, 829 | 20 of 98 (12.1 mm²), 7 (5.8 mm²) |
+| Running dog, 6 threads | 49, 56 | 898, 898 | 14 of 65 (15.8 mm²), 9 (8.7 mm²) |
+| Running dog, 9 threads | 64, 71 | 921, 921 | 16 of 86 (16.9 mm²), 7 (5.1 mm²) |
+
+Merging by likeness alone costs the dogs 3, 4, 0 and 0 jump threads, and raises the likeness of the 2 dogs
+where it costs. Details last costs 1, 4, 7 and 7 more and leaves the likeness as it is. The owner's machine
+trims no jump thread within a colour, so each is cut by hand. Most of the cost is the row of threads: to
+grant a wish, the search takes another row with as few thread changes, and a thread's whole batch then
+sews later. That is the cause M13.45 traced on the running dog in 6 threads. The setting stays, for a
+design where an eye or a mark must keep its edge clear. It comes back on by default once the search's
+tie-break no longer moves a whole batch of a thread later for a wish, and the dogs show a clear gain for
+it.
 
 ### Runs in place of jumps
 

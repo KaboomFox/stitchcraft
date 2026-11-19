@@ -371,8 +371,9 @@ and its nose, beside the same dog without marks:
 - The rest of the dog sews in another order. Feel for thick spots away from the marks.
 
 M13.40 sews a detail after the fills round it where that costs no thread change, when the design has
-`auto_details_last` on ([details last](../design/image-to-embroidery.md#details-last)). It landed off, and
-M13.45 turned it on by default. At MC-8, sew a traced dog with it off and on, side by side:
+`auto_details_last` on ([details last](../design/image-to-embroidery.md#details-last)). It landed off,
+M13.45 turned it on by default, and M13.48 turned it off again. At MC-8, sew a traced dog with it off and on,
+side by side:
 
 - Its eyes and nose sew after the fur round them when it is on. Are their edges whole, without fur rows
   lying over them?
@@ -393,6 +394,13 @@ M13.45 and from after it, side by side:
   126 mm² after. Is either stiffer?
 - On the running dog in 6 threads, the grey ring round the tan patch on its chest sews before the patch, so
   the tan lies on top. Is its edge whole, and does it read as tan from a metre away?
+
+M13.48 turns details last off by default again and keeps merging by likeness on. Of the repository's
+pictures only the traced dogs sew differently from M13.45. At MC-8, sew the dog on turf in 9 threads and the
+running dog in 6 threads from `main` after M13.48:
+
+- They leave 4 and 7 jump threads fewer than with M13.45. Count the cuts by hand on each.
+- Do the eyes, the nose and the tan chest patch keep their edges with the fur sewn after them?
 
 ## Report template
 

@@ -328,22 +328,28 @@ fn req_auto_102_digitized_dogs_sew_no_spot_above_the_cap() {
     assert!(above.is_empty(), "{above:?}");
 }
 
-/// The dogs keep their thin lines at a likeness of 0.85 and sew their details last, as both settings are by
-/// default (REQ-AUTO-103), and still sew no spot above the cap.
+/// The dogs keep their thin lines at a likeness of 0.85, as by default, and sew their details last, which each
+/// shape here turns on since M13.48 turned it off by default (REQ-AUTO-103), and still sew no spot above the
+/// cap.
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
 fn req_auto_103_digitized_dogs_with_lines_kept_and_details_last_sew_no_spot_above_the_cap() {
     let default = |key: &str| auto::AutoParams::SPECS.iter().find(|spec| spec.key == key).map(|spec| spec.default);
-    assert_eq!((default(auto::MIN_LIKENESS), default(auto::DETAILS_LAST)), (Some("0.85"), Some("true")));
+    assert_eq!((default(auto::MIN_LIKENESS), default(auto::DETAILS_LAST)), (Some("0.85"), Some("false")));
+    let mut above = Vec::new();
     for (name, design, _) in planned() {
         let set = |key: &str| design.elements().iter().any(|element| element.params.iter().any(|(k, _)| k == key));
         assert!(!set(auto::MIN_LIKENESS) && !set(auto::DETAILS_LAST), "{name}");
+        let mut elements = design.elements().to_vec();
+        for element in elements.iter_mut().filter(|element| element.automatic) {
+            element.params.set(auto::DETAILS_LAST, "true");
+        }
+        let plan = in_place(&Design::new(elements, design.settings).unwrap()).plan.unwrap();
+        let thickest = fabric::thickness(&plan, &fabric::Limits::DEFAULT).fills.value;
+        if thickest > 4.0 {
+            above.push((name.clone(), thickest));
+        }
     }
-    let above: Vec<(String, f64)> = planned()
-        .iter()
-        .map(|(name, _, plan)| (name.clone(), fabric::thickness(plan, &fabric::Limits::DEFAULT).fills.value))
-        .filter(|(_, thickest)| *thickest > 4.0)
-        .collect();
     assert!(above.is_empty(), "{above:?}");
 }
 
