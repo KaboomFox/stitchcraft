@@ -228,6 +228,7 @@ pub fn stitchcraft_plan::thickness::Thickness::report(&self, &stitchcraft_plan::
 pub fn stitchcraft_plan::thickness::Thickness::resewn(&mut self, &stitchcraft_plan::plan::StitchPlan, &mut stitchcraft_core::budget::Meter) -> core::result::Result<(), stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_plan::thickness::Thickness::sewn(&self) -> &[stitchcraft_plan::plan::SewnStitch]
 pub fn stitchcraft_plan::thickness::Thickness::size(&self) -> (usize, usize)
+pub fn stitchcraft_plan::thickness::Thickness::spots(&self, &stitchcraft_plan::plan::SewnStitch, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::collections::btree::map::BTreeMap<usize, f64>, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_plan::thickness::Thickness::stack(&self, &stitchcraft_plan::plan::StitchPlan, stitchcraft_core::units::Point, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::vec::Vec<stitchcraft_plan::thickness::Layer>, stitchcraft_core::budget::Exhausted>
 pub struct stitchcraft_plan::thickness::Zone
 impl stitchcraft_plan::thickness::Zone
@@ -238,6 +239,7 @@ pub const stitchcraft_plan::thickness::ORDINARY: f64
 pub const stitchcraft_plan::thickness::PIECE: f64
 pub const stitchcraft_plan::thickness::PIXEL: f64
 pub const stitchcraft_plan::thickness::ROWS: f64
+pub const stitchcraft_plan::thickness::STRAIGHT_ON: f64
 pub const stitchcraft_plan::thickness::THREAD: f64
 pub const stitchcraft_plan::thickness::WINDOW: f64
 pub mod stitchcraft_plan::thread

@@ -15,14 +15,10 @@ use stitchcraft_engine::design::{Design, DesignSettings, Element};
 use stitchcraft_engine::testsheets::SHEETS;
 use stitchcraft_plan::Role;
 use stitchcraft_plan::profiles::REFERENCE;
-use stitchcraft_testkit::designs::{BLUE, RED, automatic, fill, in_place, planned};
-use stitchcraft_testkit::fabric::{self, Limits};
+use stitchcraft_testkit::designs::{BLUE, RED, automatic, fill, in_place, planned, rules};
+use stitchcraft_testkit::fabric;
 use stitchcraft_testkit::pictures::{self, Trace};
 use stitchcraft_testkit::stitches::jump_threads;
-
-/// The most thread, in fills, that a spot of a millimetre of a design digitized automatically may sew
-/// (`REQ-AUTO-073`).
-const CAP: f64 = 4.0;
 
 /// A square from (`x`, `y`), `side` millimetres across, automatic, in `thread` with the settings `params`.
 fn square(id: &str, (x, y): (f64, f64), side: f64, params: &[(&str, &str)]) -> Element {
@@ -91,21 +87,41 @@ fn hundredths(value: f64) -> f64 {
     (value * 100.0).round() / 100.0
 }
 
+/// The designs whose thickest spot sews above the cap, with it in fills, as measured on 2026-11-19 with the
+/// cap at 3.25 (`REQ-AUTO-073`). The list only shrinks.
+const ABOVE: [(&str, f64); 10] = [
+    ("badges-abutting", 4.0),
+    ("badges-stacked", 4.0),
+    ("button-abutting", 3.66),
+    ("button-stacked", 3.52),
+    ("pear", 3.99),
+    ("lettered-patch", 3.98),
+    ("ts-13a", 3.99),
+    ("ts-13b", 3.85),
+    ("ts-13c", 3.92),
+    ("ts-13d", 3.97),
+];
+
 #[test]
-fn req_auto_073_no_spot_of_a_digitized_picture_sews_above_the_cap() {
-    // The cap at the end of planning (REQ-AUTO-100) emptied the list that this case kept of the designs
-    // above 4 fills: the badges at 4.40, the pear at 4.20, the lettered patch at 4.00 and the digitized
-    // halves of TS-13A, C and D at 4.28, 4.49 and 4.23.
+fn req_auto_073_a_spot_of_a_digitized_picture_sews_above_the_cap_only_on_satin_columns() {
+    // The cap at the end of planning (REQ-AUTO-100) leaves a satin column's top stitches as they are
+    // (REQ-AUTO-112). Where a spot stays above the cap, the rest of its thread is the cap or less: the cap took
+    // what it may. On every design listed, 2 columns of one shape meet over a fill, or a column lies over
+    // fills whose top shows.
+    let (cap, limit) = (rules().auto_thick_cap_fills, rules().auto_thick_warn_fills);
     let mut above = Vec::new();
     for (name, design) in designs() {
         let outcome = in_place(&design);
         let plan = outcome.plan.unwrap_or_else(|| panic!("{name}: {:?}", outcome.diagnostics));
-        let thickest = fabric::thickness(&plan, &Limits::DEFAULT).fills.value;
-        if thickest > CAP {
+        let (thickest, columns) = fabric::thickest(&plan, &fabric::columns(&design));
+        // No spot above the warning's limit: there the cap takes columns' points too, as a last resort.
+        assert!(thickest <= limit + 1e-9, "{name}: {thickest:.2} fills");
+        if thickest > cap {
+            assert!(thickest - columns <= cap, "{name}: {thickest:.2} fills, {columns:.2} of them satin columns' top stitches");
             above.push((name, hundredths(thickest)));
         }
     }
-    assert!(above.is_empty(), "{above:?}");
+    assert_eq!(above, ABOVE.map(|(name, thickest)| (name.to_string(), thickest)));
 }
 
 #[test]
@@ -137,19 +153,22 @@ fn with(design: &Design, settings: &[(&str, &str)]) -> Design {
 }
 
 #[test]
-fn req_auto_103_with_lines_kept_and_details_last_each_design_sews_no_spot_above_the_cap() {
+fn req_auto_103_with_lines_kept_and_details_last_each_design_sews_above_the_cap_only_on_satin_columns() {
     // Both settings change the order the blocks sew in. Likeness merging is on by default and details last off
-    // (M13.48), and both are set here so that the case holds whatever the defaults: each design stays within the cap, and the cap, against a cap of 50 fills
-    // above every spot, keeps its jumps, jump threads, thread changes and likeness.
+    // (M13.48), and both are set here so that the case holds whatever the defaults: at each design's thickest
+    // spot, the thread other than satin columns' top stitches, which the cap leaves (REQ-AUTO-112), is the cap
+    // or less, and the cap, against a cap of 50 fills above every spot, keeps its jumps, jump threads, thread
+    // changes and likeness.
     let reordered = [(MIN_LIKENESS, "0.85"), (DETAILS_LAST, "true")];
+    let (cap, limit) = (rules().auto_thick_cap_fills, rules().auto_thick_warn_fills);
     let mut above = Vec::new();
     for (name, design) in designs() {
         let design = with(&design, &reordered);
         let on = in_place(&design).plan.unwrap();
         let off = in_place(&with(&design, &[("auto_thick_cap_fills", "50")])).plan.unwrap();
-        let thickest = fabric::thickness(&on, &Limits::DEFAULT).fills.value;
-        if thickest > CAP {
-            above.push((name.clone(), hundredths(thickest)));
+        let (thickest, columns) = fabric::thickest(&on, &fabric::columns(&design));
+        if thickest - columns > cap || thickest > limit + 1e-9 {
+            above.push((name.clone(), hundredths(thickest), hundredths(columns)));
         }
         let (stats_on, stats_off) = (on.stats(), off.stats());
         assert_eq!((stats_on.jumps, stats_on.trims, stats_on.color_changes), (stats_off.jumps, stats_off.trims, stats_off.color_changes), "{name}");
