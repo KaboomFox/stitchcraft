@@ -105,10 +105,10 @@ const MOVED: &str = "A row of an automatic fill shows on another colour for 1 mm
 /// outlines sew through no more than 12 mm under a later fill (REQ-AUTO-076), so that some fills end elsewhere:
 /// 2 rows and a stitch of an outline more show, and a stitch of an outline is sewn the other way: 18. Which
 /// change moved each was not traced. M13.45 keeps more lines and sews details last by default, which changes
-/// the order of the blocks: a row of the dog on turf in 6 threads no longer shows, a row of the dog on turf in 9
-/// threads, one of the running dog in 6 and one of the running dog in 9 do ([`REORDERED`]), and a stitch of an
-/// outline of the running dog in 6 is sewn the other way: 14.
-const ASTRAY: [Astray; 14] = [
+/// the order of the blocks: a row of the dog on turf in 6 threads and one of the running dog in 9 no longer
+/// show, a row of the dog on turf in 9 threads does ([`REORDERED`]), and a stitch of an outline of the running
+/// dog in 6 is sewn the other way: 12.
+const ASTRAY: [Astray; 12] = [
     Astray { dog: "dog-on-turf-6", element: "vc:68:fill", stitch: [(45.58, 74.75), (43.22, 74.77)], length: 2.35, cause: MOVED, step: "M13.38" },
     Astray { dog: "dog-on-turf-6", element: "vc:68:fill", stitch: [(45.0, 74.25), (42.3, 74.26)], length: 2.7, cause: MOVED, step: "M13.38" },
     Astray { dog: "dog-on-turf-6", element: "vc:81:fill#2", stitch: [(49.08, 80.85), (49.52, 82.56)], length: 1.76, cause: OUTLINE, step: "M13.38" },
@@ -116,10 +116,8 @@ const ASTRAY: [Astray; 14] = [
     Astray { dog: "dog-on-turf-9", element: "vc:6:fill", stitch: [(53.0, 44.25), (55.14, 44.25)], length: 2.14, cause: ACROSS, step: "M13.38" },
     Astray { dog: "dog-on-turf-9", element: "vc:6:fill", stitch: [(56.0, 44.0), (52.0, 44.0)], length: 4.0, cause: ACROSS, step: "M13.38" },
     Astray { dog: "dog-on-turf-9", element: "vc:78:fill", stitch: [(43.22, 74.73), (45.92, 74.77)], length: 2.7, cause: REORDERED, step: "M13.38" },
-    Astray { dog: "dog-running-6", element: "vc:9:fill", stitch: [(56.0, 32.0), (53.99, 31.98)], length: 2.01, cause: REORDERED, step: "M13.38" },
     Astray { dog: "dog-running-6", element: "vc:26:fill#2", stitch: [(38.98, 4.59), (41.19, 4.89)], length: 2.24, cause: OUTLINE, step: "M13.38" },
     Astray { dog: "dog-running-9", element: "vc:21:fill", stitch: [(49.31, 51.51), (46.0, 51.5)], length: 3.31, cause: MOVED, step: "M13.38" },
-    Astray { dog: "dog-running-9", element: "vc:81:fill", stitch: [(71.69, 97.25), (69.66, 97.35)], length: 2.04, cause: REORDERED, step: "M13.38" },
     Astray {
         dog: "dog-running-9",
         element: "vc:43:fill#2~2",
@@ -230,9 +228,9 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
     // jump thread more each, 85 and 75, and the running one shows 9 moves.
     // With the ragged thin lines merged into their neighbours (REQ-AUTO-090, M13.18), 57, 58, 49 and 64, and
     // the dogs on turf show 4 and 5 moves.
-    // With lines kept and details last by default (M13.45), the blocks sew in another order: 60, 67, 54 and 72
-    // jump threads, and 3, 4, 4 and 8 moves.
-    let recorded = [("dog-on-turf-6", 3, 60), ("dog-on-turf-9", 4, 67), ("dog-running-6", 4, 54), ("dog-running-9", 8, 72)];
+    // With lines kept and details last by default (M13.45), the blocks sew in another order: 61, 66, 56 and 71
+    // jump threads, and 2, 4, 4 and 8 moves.
+    let recorded = [("dog-on-turf-6", 2, 61), ("dog-on-turf-9", 4, 66), ("dog-running-6", 4, 56), ("dog-running-9", 8, 71)];
     let recorded = recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps));
     assert_eq!((found, apart), (listed, recorded.to_vec()), "the stitches astray, as found and as listed in ASTRAY, and the moves and jumps");
 }
@@ -247,9 +245,9 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
 /// 38, and 45 with the last pass's row ends moved back (REQ-AUTO-074), not traced, and 43 with outlines that
 /// sew through no more than 12 mm under a later fill (REQ-AUTO-076). With the ragged thin lines merged into their
 /// neighbours (REQ-AUTO-090), its sliver is gone, and the dogs leave 10, 10, 0 and 5 thousandths of a percent bare.
-/// With lines kept and details last by default (M13.45), 21, 10, 3 and 2: a line kept is as wide as its thread.
+/// With lines kept and details last by default (M13.45), 21, 10, 1 and 2: a line kept is as wide as its thread.
 const SLIVERS: [(&str, usize, usize, f64, f64); 4] =
-    [("dog-on-turf-6", 0, 0, 0.0, 21.0), ("dog-on-turf-9", 0, 0, 0.0, 10.0), ("dog-running-6", 0, 0, 0.0, 3.0), ("dog-running-9", 0, 0, 0.0, 2.0)];
+    [("dog-on-turf-6", 0, 0, 0.0, 21.0), ("dog-on-turf-9", 0, 0, 0.0, 10.0), ("dog-running-6", 0, 0, 0.0, 1.0), ("dog-running-9", 0, 0, 0.0, 2.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -286,7 +284,7 @@ fn req_auto_027_digitized_dogs_show_no_fabric_and_leave_the_slivers_recorded() {
 /// sewn last by default (M13.45). The case fails when a number changes, so that a change that piles thread up
 /// again shows here.
 const THICK: [(&str, f64, f64); 4] =
-    [("dog-on-turf-6", 12700.0, 0.0), ("dog-on-turf-9", 13100.0, 0.0), ("dog-running-6", 10200.0, 0.0), ("dog-running-9", 17800.0, 0.0)];
+    [("dog-on-turf-6", 12600.0, 0.0), ("dog-on-turf-9", 13000.0, 0.0), ("dog-running-6", 10675.0, 0.0), ("dog-running-9", 17375.0, 0.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
