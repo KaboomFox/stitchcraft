@@ -243,7 +243,6 @@ fn a_line_waits_for_no_fill_it_borders_beyond_an_element_kept_in_its_place() {
         wished: Vec::new(),
         last: true,
         details: Vec::new(),
-        meets: Vec::new(),
         closed: BTreeMap::new(),
         kept: BTreeSet::from([1]),
         unsought: None,
@@ -272,7 +271,6 @@ fn req_auto_012_nothing_moves_across_an_element_kept_in_its_place_and_each_sews_
         wished: Vec::new(),
         last: true,
         details: Vec::new(),
-        meets: Vec::new(),
         closed: BTreeMap::new(),
         kept: BTreeSet::from([1]),
         unsought: None,
@@ -297,7 +295,6 @@ fn threaded(colours: &[&[Rgb]]) -> (Vec<usize>, usize, usize) {
         wished: Vec::new(),
         last: true,
         details: Vec::new(),
-        meets: Vec::new(),
         closed: BTreeMap::new(),
         kept: BTreeSet::new(),
         unsought: None,
@@ -527,7 +524,6 @@ fn sewn(
         wished: wished.to_vec(),
         last: true,
         details: Vec::new(),
-        meets: Vec::new(),
         closed: BTreeMap::new(),
         kept: BTreeSet::new(),
         unsought: None,
@@ -681,7 +677,6 @@ fn req_auto_096_a_detail_is_closed_in_and_smaller_than_the_area_it_meets() {
         wished: Vec::new(),
         last: true,
         details: Vec::new(),
-        meets: Vec::new(),
         closed: BTreeMap::new(),
         kept: BTreeSet::new(),
         unsought: None,
@@ -693,11 +688,6 @@ fn req_auto_096_a_detail_is_closed_in_and_smaller_than_the_area_it_meets() {
     assert!(!detail(2, 2));
     // The small square is smaller than the large one, and open: no detail.
     assert!(!detail(0, 1));
-    // 2 areas that meet are kept as the larger and the smaller, whichever is drawn first, to follow each other
-    // (REQ-AUTO-108); an area as large as the other, here itself, follows neither.
-    let found = vec![Beside::Meet(0, 1), Beside::Meet(1, 0), Beside::Meet(2, 2)];
-    order.settle(&mut shapes, 0, found, &mut Budget::DEFAULT.meter()).unwrap();
-    assert_eq!(order.meets, [(1, 0), (1, 0)]);
 }
 
 #[test]

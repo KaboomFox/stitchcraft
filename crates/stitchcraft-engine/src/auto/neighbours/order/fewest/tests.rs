@@ -16,7 +16,7 @@ fn run(threads: &[Thread], rules: &[(usize, usize)], wished: &[(usize, usize)]) 
     for &(first, then) in rules {
         before[then].push(first);
     }
-    Run { threads: threads.iter().map(|&thread| [thread; 2]).collect(), before, wished: wished.to_vec(), follow: Vec::new(), sewing: None }
+    Run { threads: threads.iter().map(|&thread| [thread; 2]).collect(), before, wished: wished.to_vec(), sewing: None }
 }
 
 /// The order found for `run` with the default budget.
@@ -97,30 +97,17 @@ fn req_auto_108_a_detail_moves_only_with_what_sews_on_top_of_it() {
 }
 
 #[test]
-fn req_auto_108_a_nest_holds_each_pair_that_moves_what_is_on_top_once() {
-    // 0 under 1 under 2, and 1 under 3; 2 is larger than 4 and meets it: the nest of the first wish holds
-    // every wish and the follower, each once, in the order found, and that of the last wish only itself.
-    let nested = Run { follow: vec![(2, 4), (4, 0)], ..run(&[RED; 5], &[], &[(0, 1), (1, 2), (2, 1), (1, 3)]) };
-    let nest = |at: usize| nest(&nested, at, &mut Budget::DEFAULT.meter()).unwrap();
-    assert_eq!(nest(0), [(0, 1), (1, 2), (1, 3), (2, 1), (2, 4), (4, 0)]);
+fn req_auto_108_a_nest_holds_each_wish_that_moves_what_is_on_top_once() {
+    // 0 under 1 under 2, and 1 under 3: the nest of the first wish holds every wish, each once, in the order
+    // found, and that of the last wish only itself.
+    let wished = [(0, 1), (1, 2), (2, 1), (1, 3)];
+    let nest = |at: usize| nest(&wished, at, &mut Budget::DEFAULT.meter()).unwrap();
+    assert_eq!(nest(0), [(0, 1), (1, 2), (1, 3), (2, 1)]);
     assert_eq!(nest(3), [(1, 3)]);
     assert_eq!(nest(9), []);
-    // A unit for each pair looked at: 6 for each of the 6 pairs in the nest.
-    let needed = (0..100).find(|&work| super::nest(&nested, 0, &mut Budget { max_work: work, ..Budget::DEFAULT }.meter()).is_ok());
-    assert_eq!(needed, Some(36));
-}
-
-#[test]
-fn req_auto_108_an_area_moves_only_with_the_smaller_areas_it_meets() {
-    // A blue area (0) with a smaller red one (1) beside it, which is no detail, where 2 red patches (2, 4) and
-    // a green one (3) meet: the blue area would sew after the 3 patches. Moving it after the red patches
-    // leaves the smaller red area, which follows it, under its edge, so it sews after the green patch alone.
-    let nest = Run { follow: vec![(0, 1)], ..run(&[BLUE, RED, RED, GREEN, RED], &[], &[(2, 0), (4, 0), (3, 0)]) };
-    let found = found(&nest);
-    assert_eq!(found.batches, [vec![3], vec![0], vec![1, 2, 4]]);
-    assert_eq!(found.granted, [(3, 0), (0, 1)]);
-    // The search counts the pair as inner: the wish of 3 before 0 moves 0.
-    assert_eq!(Search::new(&nest).inner, [vec![], vec![0], vec![], vec![], vec![]]);
+    // A unit for each wish looked at: 4 for each of the 4 wishes in the nest.
+    let needed = (0..100).find(|&work| super::nest(&wished, 0, &mut Budget { max_work: work, ..Budget::DEFAULT }.meter()).is_ok());
+    assert_eq!(needed, Some(16));
 }
 
 #[test]
@@ -284,7 +271,7 @@ fn req_auto_037_no_order_of_a_small_run_changes_thread_less_than_the_one_found()
             }
         }
         wished.retain(|(first, then)| first != then);
-        let run = Run { threads, before, wished, follow: Vec::new(), sewing: [None, RED, BLUE][draw(3)] };
+        let run = Run { threads, before, wished, sewing: [None, RED, BLUE][draw(3)] };
         let found = found(&run);
         let order: Vec<usize> = found.batches.iter().flatten().copied().collect();
         let place = |index: usize| order.iter().position(|&sewn| sewn == index).unwrap();
