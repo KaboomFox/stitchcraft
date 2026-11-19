@@ -2224,26 +2224,26 @@ less, and more, with the sum of each. The photos marked * are local:
 
 | Picture | Thickest, fills | Area | Bare | Likeness | Jump threads | Thread changes | Stitches | Small areas showing less, more |
 |---|---|---|---|---|---|---|---|---|
-| Dog on turf, 6 threads | 4.00, 4.00 | 137.25, 127.00 | 10, 21 | 814, 856 | 57, 60 | 8, 8 | 9,985, 9,975 | 3 of 80 (1.9 mm²), 13 (10.6 mm²) |
-| Dog on turf, 9 threads | 4.00, 4.00 | 150.75, 131.00 | 10, 10 | 779, 829 | 58, 67 | 12, 12 | 10,675, 10,711 | 8 of 98 (6.4 mm²), 25 (19.4 mm²) |
-| Running dog, 6 threads | 4.00, 4.00 | 129.00, 102.00 | 0, 3 | 898, 898 | 49, 54 | 8, 8 | 11,077, 10,776 | 8 of 65 (11.6 mm²), 20 (19.8 mm²) |
-| Running dog, 9 threads | 4.00, 4.00 | 176.50, 178.00 | 5, 2 | 921, 921 | 64, 72 | 11, 11 | 12,369, 12,552 | 7 of 86 (4.9 mm²), 17 (19.4 mm²) |
+| Dog on turf, 6 threads | 4.00, 4.00 | 137.25, 126.00 | 10, 21 | 814, 856 | 57, 61 | 8, 8 | 9,985, 9,999 | 2 of 80 (0.6 mm²), 12 (9.4 mm²) |
+| Dog on turf, 9 threads | 4.00, 4.00 | 150.75, 130.00 | 10, 10 | 779, 829 | 58, 66 | 12, 12 | 10,675, 10,697 | 7 of 98 (6.0 mm²), 24 (18.9 mm²) |
+| Running dog, 6 threads | 4.00, 4.00 | 129.00, 106.75 | 0, 1 | 898, 898 | 49, 56 | 8, 8 | 11,077, 10,853 | 9 of 65 (8.7 mm²), 14 (15.8 mm²) |
+| Running dog, 9 threads | 4.00, 4.00 | 176.50, 173.75 | 5, 2 | 921, 921 | 64, 71 | 11, 11 | 12,369, 12,546 | 7 of 86 (5.2 mm²), 16 (16.9 mm²) |
 | Marked patch, abutting | 3.95, 3.98 | 14.25, 14.25 | 0, 0 | 1000, 1000 | 1, 1 | 3, 3 | 4,077, 4,054 | none |
-| A magnolia * | 4.00, 4.00 | 441.75, 461.75 | 5, 6 | 480, 848 | 155, 335 | 9, 10 | 34,258, 36,888 | 107 of 1,982 (65.6 mm²), 267 (360.1 mm²) |
-| A coleus * | 4.22, 4.02 | 851.50, 902.25 | 6, 53 | 454, 839 | 237, 507 | 12, 13 | 56,886, 60,791 | 233 of 3,932 (140.0 mm²), 467 (624.7 mm²) |
+| A magnolia * | 4.00, 4.00 | 441.75, 470.50 | 5, 6 | 480, 848 | 155, 335 | 9, 10 | 34,258, 36,938 | 107 of 1,982 (65.1 mm²), 266 (359.7 mm²) |
+| A coleus * | 4.22, 4.01 | 851.50, 899.00 | 6, 53 | 454, 839 | 237, 511 | 12, 13 | 56,886, 60,741 | 231 of 3,932 (139.5 mm²), 461 (623.7 mm²) |
 | A greylag goose * | 4.00, 4.00 | 482.50, 473.25 | 7, 16 | 483, 822 | 95, 171 | 8, 10 | 36,668, 37,981 | 35 of 1,784 (18.0 mm²), 140 (211.7 mm²) |
 | A castle * | 4.00, 4.00 | 221.75, 228.50 | 1, 10 | 434, 779 | 54, 114 | 8, 9 | 26,201, 27,892 | 30 of 1,412 (26.5 mm²), 86 (125.6 mm²) |
 
 The machine file holds as many stitches as the plan. The dogs keep their thickest spots within the cap, and
-3 of them sew less area at 3 fills or more. The lines kept and the details moved cost the dogs 3 to 9 jump
-threads and the photos 60 to 270. More small areas show more than show less: the details now sew on top.
+all 4 sew less area at 3 fills or more. The lines kept and the details moved cost the dogs 4 to 8 jump
+threads and the photos 60 to 274. More small areas show more than show less: the details now sew on top.
 What got worse:
 
 - Each local photo changes thread once or twice more. A line kept sews after the fills it borders, which
   can bring its thread back. Which lines did it was not traced.
-- The coleus keeps a spot at 4.02 fills, where it kept 4.22, and `SC-W0913` names it. It also leaves one
-  sliver, and its bare share rises from 0.006 % to 0.053 %, within the cover's limit of 0.5 %.
-- 2 to 12 % of the small areas show less. On the running dog in 6 threads a patch of 16 mm² shows 2.2 mm²
+- The coleus keeps a spot at 4.01 fills, where it kept 4.22, and `SC-W0913` names it. It also leaves 2
+  slivers, and its bare share rises from 0.006 % to 0.053 %, within the cover's limit of 0.5 %.
+- 2 to 14 % of the small areas show less. On the running dog in 6 threads a patch of 16 mm² shows 2.2 mm²
   less: an area of 108 mm² beside it now sews after it. The search took another row of threads with as few
   changes, to grant wishes elsewhere, and that area's thread now sews later. A nest binds only what a wish
   moves, not a whole thread's batch that a change of row moves. Traced by the order of the 2 areas alone.

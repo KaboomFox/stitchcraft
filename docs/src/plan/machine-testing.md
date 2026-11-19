@@ -388,9 +388,9 @@ M13.45 and from after it, side by side:
 
 - The lines it keeps sew as running stitches over the patches. Do they read as the strands of fur and the
   pale strip above the nose of the photo, or as stray thread?
-- It leaves 3 jump threads more. Cut them by hand, and say whether an end pulls out.
+- It leaves 4 jump threads more. Cut them by hand, and say whether an end pulls out.
 - The cap limits every spot to 4 fills in both. Feel the areas at 3 fills or more: 137 mm² before and
-  127 mm² after. Is either stiffer?
+  126 mm² after. Is either stiffer?
 - On the running dog in 6 threads, the grey ring round the tan patch on its chest sews before the patch, so
   the tan lies on top. Is its edge whole, and does it read as tan from a metre away?
 
