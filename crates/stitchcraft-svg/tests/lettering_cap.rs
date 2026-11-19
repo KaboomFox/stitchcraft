@@ -5,13 +5,13 @@
 //! them, satin columns that overlap where they join, and no font file of anyone's is used.
 
 // Test code may unwrap, panic and index (clippy.toml allows it in tests, but not in their helpers).
-#![allow(clippy::unwrap_used, clippy::panic)]
+#![allow(clippy::unwrap_used, clippy::panic, clippy::cast_possible_truncation, clippy::cast_precision_loss)]
 
 use std::collections::BTreeSet;
 use std::rc::Rc;
 
 use stitchcraft_core::units::{MM_PER_SVG_PX, Mm, Point};
-use stitchcraft_core::{Budget, Code, ElementId};
+use stitchcraft_core::{Budget, Code, ElementId, math};
 use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, Hints, Join, Path, Segment, Shape, Subpath};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::thickness::{Measure, Thickness};
@@ -30,7 +30,7 @@ const COLUMN: &str = r#"inkstitch:satin_column="True" inkstitch:contour_underlay
 
 /// A satin column of the test font from `a` to `b`, `width` mm wide: its 2 rails.
 fn column(id: &str, (ax, ay): (f64, f64), (bx, by): (f64, f64), width: f64) -> String {
-    let length = (bx - ax).hypot(by - ay);
+    let length = math::hypot(bx - ax, by - ay);
     let (nx, ny) = (-(by - ay) / length * width / 2.0, (bx - ax) / length * width / 2.0);
     format!(
         r#"<path id="{id}" d="M {},{} L {},{} M {},{} L {},{}" {COLUMN}/>"#,
@@ -57,7 +57,7 @@ fn test_font() -> Rc<Font> {
         column("stem", (4.0, 60.4), (4.0, 70.0), 1.6)
     );
     let ray = |degrees: f64| {
-        let (s, c) = degrees.to_radians().sin_cos();
+        let (s, c) = math::sin_cos(degrees.to_radians());
         ((4.0 - 5.0 * c, 65.0 - 5.0 * s), (4.0 + 5.0 * c, 65.0 + 5.0 * s))
     };
     let x: String = [0.0, 60.0, 120.0]
