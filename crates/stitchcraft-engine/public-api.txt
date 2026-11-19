@@ -179,12 +179,17 @@ pub fn stitchcraft_engine::design::mark::Area::of(&stitchcraft_engine::design::S
 pub struct stitchcraft_engine::design::mark::Mark
 pub stitchcraft_engine::design::mark::Mark::id: stitchcraft_core::element::ElementId
 pub stitchcraft_engine::design::mark::Mark::shape: stitchcraft_engine::design::Shape
+pub struct stitchcraft_engine::design::mark::Taken
+pub stitchcraft_engine::design::mark::Taken::elements: alloc::vec::Vec<stitchcraft_engine::design::Element>
+pub stitchcraft_engine::design::mark::Taken::guides: alloc::vec::Vec<stitchcraft_engine::design::mark::Mark>
+pub stitchcraft_engine::design::mark::Taken::marks: alloc::vec::Vec<stitchcraft_engine::design::mark::Mark>
 pub const stitchcraft_engine::design::mark::FLAT: f64
+pub const stitchcraft_engine::design::mark::GUIDE: &str
 pub const stitchcraft_engine::design::mark::KEEP: &str
 pub fn stitchcraft_engine::design::mark::bounds(impl core::iter::traits::iterator::Iterator<Item = stitchcraft_engine::design::mark::frame::At>) -> core::option::Option<[f64; 4]>
 pub fn stitchcraft_engine::design::mark::flat(&stitchcraft_engine::design::Path, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::vec::Vec<alloc::vec::Vec<stitchcraft_engine::design::mark::frame::At>>, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_engine::design::mark::note<'n>(&'n str, &str) -> core::option::Option<&'n str>
-pub fn stitchcraft_engine::design::mark::taken_out(alloc::vec::Vec<stitchcraft_engine::design::Element>) -> (alloc::vec::Vec<stitchcraft_engine::design::Element>, alloc::vec::Vec<stitchcraft_engine::design::mark::Mark>)
+pub fn stitchcraft_engine::design::mark::taken_out(alloc::vec::Vec<stitchcraft_engine::design::Element>) -> stitchcraft_engine::design::mark::Taken
 pub enum stitchcraft_engine::design::Cap
 pub stitchcraft_engine::design::Cap::Butt
 pub stitchcraft_engine::design::Cap::Round
@@ -228,6 +233,7 @@ pub struct stitchcraft_engine::design::ClipShape
 pub stitchcraft_engine::design::ClipShape::path: stitchcraft_engine::design::Path
 pub stitchcraft_engine::design::ClipShape::rule: stitchcraft_engine::design::FillRule
 pub struct stitchcraft_engine::design::Design
+pub stitchcraft_engine::design::Design::guides: alloc::vec::Vec<stitchcraft_engine::design::mark::Mark>
 pub stitchcraft_engine::design::Design::marks: alloc::vec::Vec<stitchcraft_engine::design::mark::Mark>
 pub stitchcraft_engine::design::Design::settings: stitchcraft_engine::design::DesignSettings
 pub stitchcraft_engine::design::Design::sort_colours: bool
@@ -503,6 +509,7 @@ pub stitchcraft_engine::generators::guided::Guided::smoothness: f64
 pub stitchcraft_engine::generators::guided::Guided::spacing: f64
 pub stitchcraft_engine::generators::guided::Guided::stitching: stitchcraft_engine::generators::guided::RowStitching
 pub stitchcraft_engine::generators::guided::Guided::strategy: stitchcraft_engine::generators::guided::Strategy
+pub stitchcraft_engine::generators::guided::Guided::turns: bool
 pub stitchcraft_engine::generators::guided::Guided::travel: stitchcraft_engine::generators::tatami::sew::Travel
 pub stitchcraft_engine::generators::guided::Guided::underlay: alloc::vec::Vec<stitchcraft_engine::generators::tatami::sew::Layer>
 pub struct stitchcraft_engine::generators::guided::GuidedParams

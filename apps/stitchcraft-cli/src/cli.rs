@@ -343,9 +343,9 @@ pub struct ReadingArgs {
     /// times.
     #[arg(long = "keep", value_name = "AREA", value_parser = crate::keep::mark)]
     pub keep: Vec<(String, String)>,
-    /// Draw a guide whose rows the filled parts of the shapes digitized automatically that it crosses follow,
-    /// each sewn as a guided fill: 2 points or more as X,Y,X,Y… in percent of the box round the design's
-    /// shapes, joined by straight lines, such as 20,80,45,50,60,20 along a leaf
+    /// Draw a guide over the design: each filled part of a shape digitized automatically that it crosses
+    /// sews as a guided fill whose rows follow it. The guide is 2 points or more, X,Y,X,Y… in percent of the
+    /// box round the design's shapes, joined by straight lines, such as 20,80,45,50,60,20 along a leaf
     /// (docs/src/user/how-to/guide-the-rows.md). May be given several times.
     #[arg(long = "guide", value_name = "POINTS", value_parser = crate::guide::guide, allow_hyphen_values = true)]
     pub guide: Vec<(String, String)>,
