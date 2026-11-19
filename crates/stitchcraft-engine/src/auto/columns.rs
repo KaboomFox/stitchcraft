@@ -127,7 +127,7 @@ pub(in crate::auto) fn filled(part: &Polygon, bounds: &Bounds, meter: &mut Meter
         return Ok(as_filled(choose(&unmeasured, bounds)));
     }
     let Ok(Some(found)) = strips::columns(part, piece(part), &[], bounds.narrowest.get(), meter)? else { return Ok(None) };
-    let found = strips::bends(part, &found, meter)?;
+    let found = strips::bends(part, &found, (bounds.narrowest.get(), 0.0), meter)?;
     let edges = Edges::of(part, piece(part), meter)?;
     // A part without a centre line of any length is a dot, which is compact.
     let measures = measured(part, &found, &edges, meter)?.unwrap_or(unmeasured);
@@ -208,7 +208,7 @@ pub(super) fn columns(
         Some(chosen) => chosen,
         None => {
             // A column that turns through a corner where 2 strokes meet is cut there (`REQ-AUTO-115`).
-            let found = if cuts.is_empty() { strips::bends(part, &found, meter)? } else { found };
+            let found = if cuts.is_empty() { strips::bends(part, &found, (bounds.narrowest.get(), reach), meter)? } else { found };
             let Some(widths) = widths_of(part, &found, &edges, meter)? else { return Ok(Made::Unmade) };
             (found, widths, true)
         }

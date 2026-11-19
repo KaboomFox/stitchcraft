@@ -46,10 +46,43 @@ fn probe() {
         let j = joined(one, 1, &found[0]);
         eprintln!("  joined {:?}", j.as_ref().map(|(c, at)| (c.line.points.len(), *at, c.line.length())));
         if let Some((c, at)) = &j {
-            let r = cut(&part, c, Some(*at), &mut Budget::DEFAULT.meter()).unwrap();
+            let r = cut(&part, c, Some(*at), (0.5, 0.4), &mut Budget::DEFAULT.meter()).unwrap();
             eprintln!("  cut {}", r.is_some());
         }
-        let cut = bends(&part, &found, &mut Budget::DEFAULT.meter()).unwrap();
+        let cut = bends(&part, &found, (0.5, 0.4), &mut Budget::DEFAULT.meter()).unwrap();
         eprintln!("  after {}", cut.len());
     }
+}
+
+#[test]
+fn debug_letter() {
+    let (Some(set), Some(name)) = (std::env::var_os("BENDS_SET"), std::env::var_os("BENDS_LETTER")) else { return };
+    let text = std::fs::read_to_string(set).unwrap();
+    let mut rings: Vec<Vec<(f64, f64)>> = Vec::new();
+    let mut on = false;
+    for line in text.lines() {
+        let mut words = line.split_whitespace();
+        match words.next() {
+            Some("letter") => on = words.next() == name.to_str(),
+            Some("ring") if on => rings.push(
+                words
+                    .map(|w| {
+                        let (x, y) = w.split_once(',').unwrap();
+                        (x.parse().unwrap(), y.parse().unwrap())
+                    })
+                    .collect(),
+            ),
+            _ => {}
+        }
+    }
+    let holes: Vec<&[(f64, f64)]> = rings[1..].iter().map(Vec::as_slice).collect();
+    let part = part(&rings[0], &holes);
+    let perimeter: f64 = part.rings().map(|r| r.windows(2).map(|w| w[0].distance(w[1])).sum::<f64>()).sum();
+    let longest = (2.0 * part.area() / perimeter).max(0.1);
+    let found = columns(&part, longest, &[], 0.5, &mut Budget::DEFAULT.meter()).unwrap().unwrap().unwrap();
+    for (i, c) in found.iter().enumerate() {
+        eprintln!("column {i} under {:?} line {:?} .. {:?} closed {}", c.under, c.line.points.first(), c.line.points.last(), c.closed);
+    }
+    let cut = bends(&part, &found, (0.5, 0.4), &mut Budget::DEFAULT.meter()).unwrap();
+    eprintln!("after {}", cut.len());
 }
