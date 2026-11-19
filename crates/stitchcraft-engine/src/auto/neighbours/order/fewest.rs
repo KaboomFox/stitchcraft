@@ -18,12 +18,13 @@
 //!   grants more wishes. Then each wish that the found row of threads allows is granted, in the order the
 //!   wishes come, and the column waits for a later batch of its thread. The row allows a wish when it
 //!   still sews every element with it: it has the fewest changes of any, so no batch of it is then empty.
-//! - **Nests** (`REQ-AUTO-108`). A wish moves its second element later, and what sewed on top of that
-//!   element would then lie under it: a detail of a detail, or a column that borders it. So a wish goes with
-//!   its nest, the wishes that something sews after its second element, and theirs in turn, and a nest is
-//!   granted whole or not at all. Of 2 rows with as few changes, the search first takes the one that misses
-//!   fewer inner wishes, those that some other wish moves the first element of, so that what sews on top of
-//!   a detail stays on top wherever a row allows it.
+//! - **Nests** (`REQ-AUTO-108`). A wish moves its second element later, and what touched that element and
+//!   sewed on top of it would then lie under it. So each element has followers, which sew after it when it
+//!   moves: the smaller areas it meets, its details among them, and the columns that border it. A wish goes
+//!   with its nest, the pairs of its second element and each follower, and of each follower and its own,
+//!   and a nest is granted whole or not at all. Of 2 rows with as few changes, the search first takes the
+//!   one that misses fewer inner pairs, those of an element that a wish moves, so that what sews on top of a
+//!   detail stays on top wherever a row allows it.
 //!
 //! Rows that are equal in both are taken in the order they are found: the threads of the free elements in
 //! paint order.
@@ -52,6 +53,9 @@ pub(super) struct Run {
     pub(super) before: Vec<Vec<usize>>,
     /// The wishes: for each, the element that would sew first, and the one that would sew after it.
     pub(super) wished: Vec<(usize, usize)>,
+    /// The followers: for each, an element and one that sews after it once a wish moves the first, an area
+    /// smaller than it that it meets.
+    pub(super) follow: Vec<(usize, usize)>,
     /// The thread sewing when the run starts.
     pub(super) sewing: Thread,
 }
@@ -78,7 +82,7 @@ pub(super) fn fewest(run: &Run, meter: &mut Meter) -> Result<Found, Exhausted> {
     // A wish is granted with its nest, whole or not at all (`REQ-AUTO-108`).
     let mut granted = Vec::new();
     for at in 0..run.wished.len() {
-        let nest = nest(&run.wished, at, meter)?;
+        let nest = nest(run, at, meter)?;
         let wished = nest.iter().fold(before.clone(), |before, &(first, then)| with(before, first, then));
         if let Some(played) = search.play(&wished, &moves, meter)? {
             (before, batches) = (wished, played);
@@ -88,18 +92,18 @@ pub(super) fn fewest(run: &Run, meter: &mut Meter) -> Result<Found, Exhausted> {
     Ok(Found { batches, granted })
 }
 
-/// The nest of the wish at `at` of `wished`: that wish, each wish whose first element is the second element
-/// of a wish of the nest, and so on, in the order found, with `meter`'s work: a unit for each wish looked
-/// at.
-fn nest(wished: &[(usize, usize)], at: usize, meter: &mut Meter) -> Result<Vec<(usize, usize)>, Exhausted> {
-    let mut nest: Vec<(usize, usize)> = wished.get(at).copied().into_iter().collect();
+/// The nest of the wish at `at` of `run`'s: that wish, each wish and follower whose first element is the
+/// second element of a pair of the nest, and so on, in the order found, with `meter`'s work: a unit for each
+/// pair looked at.
+fn nest(run: &Run, at: usize, meter: &mut Meter) -> Result<Vec<(usize, usize)>, Exhausted> {
+    let mut nest: Vec<(usize, usize)> = run.wished.get(at).copied().into_iter().collect();
     let mut next = 0;
     while let Some(&(_, moved)) = nest.get(next) {
         next += 1;
-        for &wish in wished {
+        for &pair in run.wished.iter().chain(&run.follow) {
             meter.charge(1)?;
-            if wish.0 == moved && !nest.contains(&wish) {
-                nest.push(wish);
+            if pair.0 == moved && !nest.contains(&pair) {
+                nest.push(pair);
             }
         }
     }
@@ -154,7 +158,7 @@ struct State {
     sewn: usize,
     /// The thread sewing.
     thread: Thread,
-    /// How many times the thread changed, how many inner wishes are missed, and how many wishes.
+    /// How many times the thread changed, how many inner pairs are missed, and how many wishes.
     cost: [usize; 3],
     /// The row it continues, as its place among the states, and what it sews after that row.
     from: Option<(usize, Move)>,
@@ -168,8 +172,8 @@ struct Search<'r> {
     plain: BTreeMap<Thread, Vec<usize>>,
     /// For each element, the elements wished before it.
     wishes: Vec<Vec<usize>>,
-    /// For each element, the elements wished before it by an inner wish: one whose first element is the
-    /// second element of another wish.
+    /// For each element, the elements before it by an inner pair: a wish or a follower whose first element
+    /// is the second element of a wish.
     inner: Vec<Vec<usize>>,
 }
 
@@ -182,9 +186,12 @@ impl<'r> Search<'r> {
                 plain.entry(*first).or_default().push(index);
             }
         }
-        let (mut wishes, mut inner) = (vec![Vec::new(); run.threads.len()], vec![Vec::new(); run.threads.len()]);
+        let mut wishes = vec![Vec::new(); run.threads.len()];
         for &(first, then) in &run.wished {
             wishes = with(wishes, first, then);
+        }
+        let mut inner = vec![Vec::new(); run.threads.len()];
+        for &(first, then) in run.wished.iter().chain(&run.follow) {
             if run.wished.iter().any(|&(_, moved)| moved == first) {
                 inner = with(inner, first, then);
             }
@@ -301,7 +308,7 @@ impl<'r> Search<'r> {
         Ok(threads.len().saturating_sub(several))
     }
 
-    /// How many inner wishes and how many wishes `batches`, sewn one after another after the elements
+    /// How many inner pairs and how many wishes `batches`, sewn one after another after the elements
     /// `done`, miss: an element of theirs wished after one that isn't sewn by the end of its batch.
     fn missed(&self, mut done: Done, batches: &[Vec<usize>], meter: &mut Meter) -> Result<[usize; 2], Exhausted> {
         let mut missed = [0, 0];
@@ -319,7 +326,7 @@ impl<'r> Search<'r> {
         Ok(missed)
     }
 
-    /// The row of batches with the fewest thread changes, and of those the fewest inner wishes missed and
+    /// The row of batches with the fewest thread changes, and of those the fewest inner pairs missed and
     /// then the fewest wishes, as what sews after the batch of the thread sewing at the start.
     fn row(&self, meter: &mut Meter) -> Result<Vec<Move>, Exhausted> {
         let count = self.run.threads.len();
@@ -329,7 +336,7 @@ impl<'r> Search<'r> {
         let left = self.left(&done, meter)?;
         let mut best = BTreeMap::from([((done.clone(), self.run.sewing), 0_usize)]);
         let mut states = vec![State { done, sewn: first.len(), thread: self.run.sewing, cost: [0, inner, missed], from: None }];
-        // The row to go on from: the fewest changes with those still needed, then the fewest inner wishes
+        // The row to go on from: the fewest changes with those still needed, then the fewest inner pairs
         // missed and the fewest wishes, then the most changes made, which is nearest its end, then the row
         // found first.
         let mut open = BinaryHeap::from([Reverse((left, inner, missed, Reverse(0), 0))]);

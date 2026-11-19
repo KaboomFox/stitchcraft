@@ -116,6 +116,7 @@ pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, u
         wished: Vec::new(),
         last,
         details: Vec::new(),
+        meets: Vec::new(),
         closed: BTreeMap::new(),
         kept,
         unsought: None,
@@ -240,6 +241,9 @@ struct Order<'o> {
     /// shape it meets that is larger than it is, as that shape and the detail, in the order they were found:
     /// it sews after that shape where that costs no thread change.
     details: Vec<(usize, usize)>,
+    /// Each 2 automatic areas that meet, as the larger and the smaller, in the order they were found: the
+    /// smaller follows the larger when a detail's wish moves the larger (`REQ-AUTO-108`).
+    meets: Vec<(usize, usize)>,
     /// Whether each automatic area looked at is closed in, once found.
     closed: BTreeMap<usize, bool>,
     /// The elements whose neighbours need more work to find than the budget allows, which keep their place.
@@ -321,6 +325,12 @@ impl Order<'_> {
                 Beside::Border(fill, line) if shapes.column(line).is_some() => self.wished.push((fill, line)),
                 Beside::Border(fill, line) => self.borders.push((fill, line)),
                 Beside::Meet(first, second) => {
+                    let size = |shapes: &mut Shapes, index: usize| shapes.paint(index).map(|(_, parts)| area_of(parts));
+                    match (size(shapes, first), size(shapes, second)) {
+                        (Some(a), Some(b)) if a > b => self.meets.push((first, second)),
+                        (Some(a), Some(b)) if b > a => self.meets.push((second, first)),
+                        _ => {}
+                    }
                     if self.detail(shapes, second, first, meter)? {
                         self.details.push((first, second));
                     } else if self.detail(shapes, first, second, meter)? {
@@ -441,7 +451,8 @@ impl Order<'_> {
         }
         let place = |index: &usize| places.get(index).copied();
         let wished = self.wished.iter().chain(&self.details).filter_map(|(first, then)| place(first).zip(place(then))).collect();
-        fewest::Run { threads: run.iter().map(threads).collect(), before, wished, sewing }
+        let follow = self.meets.iter().filter_map(|(first, then)| place(first).zip(place(then))).collect();
+        fewest::Run { threads: run.iter().map(threads).collect(), before, wished, follow, sewing }
     }
 
     /// Puts the elements of `run`, a batch or a run, after those `sewing` holds, with `meter`'s work: of the
