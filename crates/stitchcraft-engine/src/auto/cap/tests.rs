@@ -59,7 +59,7 @@ fn rows(width: f64, apart: f64) -> Vec<(f64, f64)> {
 const NONE: &BTreeSet<ElementRef> = &BTreeSet::new();
 
 fn rules() -> Rules<'static> {
-    Rules { cap: 4.0, base: NONE, overlap: 0.0, shortest: 0.3, longest: 12.1 }
+    Rules { cap: 4.0, base: NONE, columns: NONE, overlap: 0.0, shortest: 0.3, longest: 12.1 }
 }
 
 /// Every element of `plan`, as digitizing made them all.
@@ -70,7 +70,7 @@ fn all(plan: &StitchPlan) -> BTreeSet<ElementRef> {
 /// `plan` capped with `rules`, its measure kept up to date, and the measure of what the cap left.
 fn cap(plan: &mut StitchPlan, rules: &Rules) -> (Option<Capped>, Thickness, Thickness) {
     let mut thickness = Thickness::of(plan, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
-    let capped = capped(plan, &mut thickness, rules, (&all(plan), NONE), &mut Budget::DEFAULT.meter()).unwrap();
+    let capped = capped(plan, &mut thickness, rules, &all(plan), &mut Budget::DEFAULT.meter()).unwrap();
     let again = Thickness::of(plan, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
     (capped, thickness, again)
 }
@@ -134,7 +134,7 @@ fn req_auto_100_only_the_elements_digitizing_made_lose_needle_points() {
     let was = sewn.clone();
     let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
     let made: BTreeSet<ElementRef> = ElementRef::from_index(1).into_iter().collect();
-    let capped = capped(&mut sewn, &mut thickness, &rules(), (&made, NONE), &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let capped = capped(&mut sewn, &mut thickness, &rules(), &made, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
     assert!(!capped.took(), "{capped:?}");
     assert_eq!(sewn, was);
 }
@@ -233,7 +233,7 @@ fn req_auto_101_the_cap_stops_when_the_work_runs_out() {
         plan(&[("under", Role::Top, zigzag(1.5, 0.25)), ("over", Role::Top, zigzag(1.5, 0.0625)), ("over", Role::Underlay, zigzag(1.5, 0.25))]);
     let thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
     let run = |max_work: u64| {
-        capped(&mut sewn.clone(), &mut thickness.clone(), &rules(), (&all(&sewn), NONE), &mut Budget { max_work, ..Budget::DEFAULT }.meter()).is_ok()
+        capped(&mut sewn.clone(), &mut thickness.clone(), &rules(), &all(&sewn), &mut Budget { max_work, ..Budget::DEFAULT }.meter()).is_ok()
     };
     let enough = (0..10_000_000u64).find(|work| run(*work)).unwrap();
     assert!((0..enough).all(|work| !run(work)), "{enough}");
@@ -450,8 +450,10 @@ fn rows_under(start: f64) -> StitchPlan {
 }
 
 #[test]
-fn req_auto_114_a_row_end_stays_where_the_later_thread_pulled_in_leaves_the_row_before_it_bare() {
-    let pull = Rules { overlap: 1.0, ..rules() };
+fn req_auto_114_a_row_end_stays_where_a_later_column_pulled_in_leaves_the_row_before_it_bare() {
+    // The zigzag is a satin column, whose stitches cover only as the fabric pulls it in.
+    let column: BTreeSet<ElementRef> = ElementRef::from_index(1).into_iter().collect();
+    let pull = Rules { overlap: 1.0, columns: &column, ..rules() };
     // The zigzag from x = 0.5, pulled in to x = 1.5, covers the last millimetre of each row's long stitch,
     // which turns into the joined stitch once the row's end goes: the ends at x = 4 go.
     let (capped, _, _) = cap(&mut rows_under(0.5), &pull);
@@ -459,7 +461,7 @@ fn req_auto_114_a_row_end_stays_where_the_later_thread_pulled_in_leaves_the_row_
     // From x = 2.2, pulled in to x = 3.2, it covers the row's last stitch but not the millimetre before it.
     let (capped, _, _) = cap(&mut rows_under(2.2), &pull);
     assert_eq!(capped.unwrap().times[1], 0);
-    // Judged unpulled, it would take them.
+    // As a fill's rows, which hide what they lie on, it takes them.
     let (capped, _, _) = cap(&mut rows_under(2.2), &rules());
     assert!(capped.unwrap().times[1] > 0);
 }

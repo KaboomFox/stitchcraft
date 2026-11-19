@@ -81,6 +81,7 @@ pub(crate) fn finished(
             let rules = thin::Rules {
                 cap: held.cap,
                 base: &base,
+                columns: &columns,
                 overlap: held.overlap,
                 shortest: profile.min_stitch.get(),
                 longest: profile.max_stitch.get(),
@@ -97,7 +98,7 @@ pub(crate) fn finished(
             let Some(thinned) = thinned else { return thickness };
             // The cap works on what the pass left, and keeps it when it runs out of work (`REQ-AUTO-101`).
             let (mut capped, mut kept) = (thinner.clone(), measure.clone());
-            let outcome = cap::capped(&mut capped, &mut kept, &rules, (&made, &columns), &mut budget.meter());
+            let outcome = cap::capped(&mut capped, &mut kept, &rules, &made, &mut budget.meter());
             let took = matches!(&outcome, Ok(Some(capped)) if capped.took());
             // What planning took, and what it left above the cap, is told whether or not it took anything:
             // the cap is what planning aims at, and the warning only what a person acts on (`REQ-AUTO-113`).
@@ -330,7 +331,7 @@ mod tests {
         let measure = used(&|meter| Thickness::of(&sewn, meter).is_ok());
         let thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
         let base = BTreeSet::new();
-        let rules = thin::Rules { cap: 4.0, base: &base, overlap: 1.0, shortest: 0.3, longest: 12.1 };
+        let rules = thin::Rules { cap: 4.0, base: &base, columns: &base, overlap: 1.0, shortest: 0.3, longest: 12.1 };
         let pass = used(&|meter| thin::thinned(&mut sewn.clone(), &mut thickness.clone(), &rules, meter).is_ok());
         assert!(pass > measure, "{pass} {measure}");
         let budget = Budget { max_work: measure, ..Budget::DEFAULT };

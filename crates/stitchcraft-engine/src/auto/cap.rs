@@ -11,10 +11,11 @@
 //!
 //! A point goes only where other stitches cover what its stitches covered: a stitch covers the places
 //! within half a thread of it, as the bare-fabric measure paints it, so what shows keeps its colour and no
-//! fabric is bared. Cover is judged as the fabric pulls (`REQ-AUTO-114`): a covering stitch counts shortened
-//! by the overlap of areas at each end where the thread turns, as the edges' cover is measured
-//! (`REQ-AUTO-007`). So the cap takes nothing within the overlap of the edge of the thread that covers it,
-//! where the fabric would show once pulled. The kinds go in this order, each through the plan from its end, so that a later shape
+//! fabric is bared. The cap changes nothing of a satin column (`REQ-AUTO-112`, `REQ-AUTO-114`): it takes none
+//! of its top stitches, and a column's stitch covers a place only as the fabric pulls the column in, shortened
+//! by the overlap of areas at the column's edges, as the edges' cover is measured (`REQ-AUTO-007`). The rows
+//! under a column's edge are what keeps it covered once pulled. And where taking a point makes a stitch
+//! beside it turn where it ran straight on, the part that the pull then moves in must stay covered. The kinds go in this order, each through the plan from its end, so that a later shape
 //! loses its thread before an earlier one is judged under it ([`Kind`]): underlay and travel under later
 //! top stitches, a shape's top under later shapes, and a shape's own top where it is doubled.
 //!
@@ -121,8 +122,8 @@ impl Capped {
 /// the cap of `rules`, and keeps the measure up to date; `None` when no spot is above the cap, or no needle
 /// point of the elements `made` is near one. The other
 /// elements' stitches, those a shape's settings sew as drawn, stay as they are, and cover and lay thread
-/// all the same. So do the top stitches of `columns`, the satin columns among the elements `made`
-/// (`REQ-AUTO-112`): their underlay is the cap's to take. A unit of work for each stitch
+/// all the same. So do the top stitches of the satin columns of `rules` (`REQ-AUTO-112`): their underlay is
+/// the cap's to take. A unit of work for each stitch
 /// and needle point looked at, each step along a stitch measured, and each top stitch looked at for a
 /// place's cover. A cap out of work may leave the plan and the measure part changed, so its caller works on
 /// copies and keeps what the last pass left.
@@ -130,12 +131,13 @@ pub(crate) fn capped(
     plan: &mut StitchPlan,
     thickness: &mut Thickness,
     rules: &Rules,
-    (made, columns): (&BTreeSet<ElementRef>, &BTreeSet<ElementRef>),
+    made: &BTreeSet<ElementRef>,
     meter: &mut Meter,
 ) -> Result<Option<Capped>, Exhausted> {
     if thickness.most(Measure::Fills).value <= rules.cap {
         return Ok(None);
     }
+    let columns = rules.columns;
     let sewn = thickness.sewn();
     meter.charge(units(sewn.len()))?;
     let element =
@@ -160,10 +162,11 @@ pub(crate) fn capped(
         let most: &mut f64 = longest.entry((element, stitch.role == Role::Top)).or_default();
         *most = most.max(stitch.length());
         if stitch.role == Role::Top && reach.touches(stitch) {
-            // Pulled in by the overlap at each end where the thread turns.
+            // A column's stitch, pulled in by the overlap at each end where the thread turns.
             let before = at.checked_sub(1).and_then(|before| sewn.get(before)).is_some_and(|before| straight_on(before, stitch));
             let after = sewn.get(at.saturating_add(1)).is_some_and(|after| straight_on(stitch, after));
-            let cut = |straight: bool| if straight { 0.0 } else { rules.overlap };
+            let column = element.is_some_and(|element| columns.contains(&element));
+            let cut = |straight: bool| if straight || !column { 0.0 } else { rules.overlap };
             if let Some(ribbon) = Ribbon::of((stitch.from, stitch.to), (cut(before), cut(after)), (stitch.block, stitch.index), element) {
                 ribbons.add(ribbon, meter)?;
             }
@@ -308,7 +311,7 @@ impl Cap<'_, '_> {
             self.ribbons.kill((block, at));
             self.ribbons.kill(after);
             // The joined stitch turns at both its ends.
-            if let Some(ribbon) = Ribbon::of((joined.from, joined.to), (overlap, overlap), after, element) {
+            if let Some(ribbon) = Ribbon::of((joined.from, joined.to), (0.0, 0.0), after, element) {
                 self.ribbons.add(ribbon, meter)?;
             }
         }

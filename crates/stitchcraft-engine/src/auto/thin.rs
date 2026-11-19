@@ -110,6 +110,10 @@ pub(crate) struct Rules<'r> {
     pub(crate) cap: f64,
     /// The base layer's pieces, by their places in the plan's elements.
     pub(crate) base: &'r BTreeSet<ElementRef>,
+    /// The satin columns that digitizing made, by their places in the plan's elements: their top stitches are
+    /// the surface a person sees, and the thread under their edges keeps those covered once the fabric pulls
+    /// them in (`REQ-AUTO-112`, `REQ-AUTO-114`).
+    pub(crate) columns: &'r BTreeSet<ElementRef>,
     /// How far a row's end may move back along its row, in millimetres: the overlap of areas.
     pub(crate) overlap: f64,
     /// The machine's shortest stitch, in millimetres, which no stitch the pass shortens goes under.
@@ -368,7 +372,10 @@ impl Pass<'_, '_> {
     /// Adds the top stitches that end at the entries of `run`, as they are now, to `cover`.
     fn covering(&self, cover: &mut Thickness, run: &[Entry], meter: &mut Meter) -> Result<(), Exhausted> {
         for &(block, at) in run {
-            if !self.stitch((block, at)).is_some_and(|(_, role, _)| role == Role::Top) {
+            // A satin column's thread hides no row end: a row's end under a column is the overlap that keeps the
+            // column's edge covered once the fabric pulls it in (`REQ-AUTO-114`).
+            let column = |element: Option<ElementRef>| element.is_some_and(|element| self.rules.columns.contains(&element));
+            if !self.stitch((block, at)).is_some_and(|(_, role, element)| role == Role::Top && !column(element)) {
                 continue;
             }
             if let Some(stitch) = self.beside((block, at), false, meter)?.and_then(|before| self.sewn(block, before, at)) {
