@@ -117,6 +117,10 @@ pub(crate) struct Rules<'r> {
     /// the surface a person sees, and the thread under their edges keeps those covered once the fabric pulls
     /// them in (`REQ-AUTO-112`, `REQ-AUTO-114`).
     pub(crate) columns: &'r BTreeSet<ElementRef>,
+    /// The satin columns of the lettering that digitizing placed, among `columns`, each with the pull its own
+    /// pull compensation makes up for: the cap judges their cover by it, and leaves them whole
+    /// (`REQ-AUTO-121` to `REQ-AUTO-123`).
+    pub(crate) lettering: &'r BTreeMap<ElementRef, super::cap::Pull>,
     /// How far a row's end may move back along its row, in millimetres: the overlap of areas.
     pub(crate) overlap: f64,
     /// The machine's shortest stitch, in millimetres, which no stitch the pass shortens goes under.

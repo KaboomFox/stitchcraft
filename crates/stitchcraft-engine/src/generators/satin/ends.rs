@@ -80,13 +80,23 @@ impl Piece {
 /// `min_stitch` of it are left out instead. The end takes the place of a needle point within `min_stitch`
 /// of it: the stitch to that point goes to the end instead, one stitch as before. Ink/Stitch adds the end
 /// as a stitch of its own, too short to sew here.
+#[cfg(test)]
 pub(crate) fn join(pieces: Vec<Piece>, travel: f64, min_stitch: f64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+    Ok(joined(pieces, travel, min_stitch, meter)?.0)
+}
+
+/// [`join`]'s run, and how many of its first needle points come before the top stitches' first: the
+/// underlays, the start and the needle's way to them, which a column sewn whole tags underlay
+/// (`REQ-AUTO-120`). With no top stitch sewn, every point counts.
+pub(crate) fn joined(pieces: Vec<Piece>, travel: f64, min_stitch: f64, meter: &mut Meter) -> Result<(Vec<Point>, usize), Exhausted> {
     let mut run: Vec<Point> = Vec::new();
+    let mut under: Option<usize> = None;
     // How many of the needle's last points only route it, and whether the last point that sews is an
     // underlay's or the start: those give way to a piece that starts too near them.
     let (mut routing, mut gives_way) = (0_usize, false);
     for piece in pieces {
         let needle = run.last().copied();
+        let top = matches!(piece, Piece::Top(_));
         let (points, way, sewn) = match piece {
             Piece::Sewn(points) => (points, false, true),
             Piece::Top(points) => (points, false, false),
@@ -101,7 +111,7 @@ pub(crate) fn join(pieces: Vec<Piece>, travel: f64, min_stitch: f64, meter: &mut
         };
         let Some(&first) = points.first() else { continue };
         // How many of the piece's first points the needle already stands for.
-        let mut skip = 0;
+        let (mut skip, mut moved) = (0, false);
         if !way {
             while routing > 0 && run.last().is_some_and(|needle| needle.distance(first) < min_stitch) {
                 run.pop();
@@ -110,7 +120,7 @@ pub(crate) fn join(pieces: Vec<Piece>, travel: f64, min_stitch: f64, meter: &mut
             if let Some(needle) = run.last_mut().filter(|needle| routing == 0 && needle.distance(first) < min_stitch) {
                 if gives_way {
                     *needle = first;
-                    skip = 1;
+                    (skip, moved) = (1, true);
                 } else {
                     let stays = *needle;
                     skip = points.iter().take_while(|point| point.distance(stays) < min_stitch).count();
@@ -121,6 +131,10 @@ pub(crate) fn join(pieces: Vec<Piece>, travel: f64, min_stitch: f64, meter: &mut
         if let Some(&needle) = run.last().filter(|_| skip == 0) {
             run.extend(evenly(needle, first, travel, meter)?);
         }
+        // The top stitches' first point: the needle where it moved there.
+        if top && under.is_none() {
+            under = Some(if moved { run.len().saturating_sub(1) } else { run.len() });
+        }
         run.extend(points.into_iter().skip(skip));
         if way {
             routing += run.len() - from;
@@ -128,7 +142,8 @@ pub(crate) fn join(pieces: Vec<Piece>, travel: f64, min_stitch: f64, meter: &mut
             (routing, gives_way) = (0, sewn);
         }
     }
-    Ok(run)
+    let under = under.unwrap_or(run.len());
+    Ok((run, under))
 }
 
 /// The points of `way` at least `min_stitch` from the needle at `needle` and from the point kept before

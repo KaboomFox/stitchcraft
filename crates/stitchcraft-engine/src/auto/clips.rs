@@ -91,7 +91,7 @@ mod tests {
         let path = Path { subpaths: vec![Subpath { start: p(x + side / 2.0, y), segments, closed: true }] };
         let shape = Shape::Fill { path, rule: FillRule::NonZero, gradient: None };
         let (id, thread) = (ElementId::new(id).unwrap(), Thread::new(Rgb::new(0, 0, 0)));
-        Element { id, name: None, shape, thread, params: ParamSet::default(), automatic, hints: Default::default(), clips }
+        Element { id, name: None, shape, thread, params: ParamSet::default(), automatic, lettered: None, hints: Default::default(), clips }
     }
 
     #[test]

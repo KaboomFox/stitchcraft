@@ -105,6 +105,7 @@ fn marked_patch(text: &str, field: &[(&str, &str)]) -> Design {
         thread: Thread::new(Rgb::new(0, 0, 200)),
         params: ParamSet::new(),
         automatic: true,
+        lettered: None,
         hints: Hints::default(),
         clips: Vec::new(),
     };

@@ -74,7 +74,7 @@
 //! neighbours, and the areas sewn before it reach under it.
 
 mod area;
-mod cap;
+pub(crate) mod cap;
 mod clips;
 mod columns;
 mod guides;
@@ -1020,7 +1020,7 @@ fn ring_subpath(ring: &[Point]) -> Option<Subpath> {
 /// It is cut to the element's clips, as the element would be (`REQ-GEN-005`).
 fn part(element: &Element, id: ElementId, shape: Shape, params: ParamSet) -> Element {
     let clips = element.clips.clone();
-    Element { id, name: element.name.clone(), shape, thread: element.thread.clone(), params, automatic: false, hints: Hints::default(), clips }
+    Element { id, name: element.name.clone(), shape, thread: element.thread.clone(), params, automatic: false, lettered: None, hints: Hints::default(), clips }
 }
 
 /// `params` without the settings that act after an element, and those settings.
@@ -1151,6 +1151,7 @@ mod tests {
             thread: stitchcraft_plan::Thread::new(stitchcraft_plan::Rgb::new(0, 0, 0)),
             params: ParamSet::default(),
             automatic: false,
+            lettered: None,
             hints: Hints::default(),
             clips: Vec::new(),
         };
@@ -1198,6 +1199,7 @@ mod tests {
             thread: stitchcraft_plan::Thread::new(stitchcraft_plan::Rgb::new(200, 30, 30)),
             params: settings.iter().copied().collect(),
             automatic: false,
+            lettered: None,
             hints: Hints::default(),
             clips: Vec::new(),
         };
@@ -1247,6 +1249,7 @@ mod tests {
             thread: stitchcraft_plan::Thread::new(stitchcraft_plan::Rgb::new(200, 30, 30)),
             params: ParamSet::new(),
             automatic: false,
+            lettered: None,
             hints: Hints::default(),
             clips: Vec::new(),
         };
@@ -1302,6 +1305,7 @@ mod tests {
             thread,
             params: ParamSet::default(),
             automatic: true,
+            lettered: None,
             hints: Default::default(),
             clips: Vec::new(),
         };

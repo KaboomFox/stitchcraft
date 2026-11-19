@@ -192,6 +192,7 @@ fn a_fill_s_settings_are_checked_before_fills_are_sewn() {
         thread: RED,
         params,
         automatic: false,
+        lettered: None,
         hints: Default::default(),
         clips: Vec::new(),
     };

@@ -127,6 +127,7 @@ fn shape(id: &str, x: f64) -> Element {
         thread: Thread::new(BLUE),
         params: ParamSet::new(),
         automatic: true,
+        lettered: None,
         hints: Hints::default(),
         clips: Vec::new(),
     }

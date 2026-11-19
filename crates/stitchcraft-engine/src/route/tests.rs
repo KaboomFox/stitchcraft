@@ -22,6 +22,7 @@ pub(super) fn element(id: &str, shape: Shape, params: &[(&str, &str)]) -> Elemen
         thread: Thread::new(Rgb::new(10, 20, 30)),
         params: params.iter().copied().collect(),
         automatic: false,
+        lettered: None,
         hints: Hints::default(),
         clips: Vec::new(),
     }

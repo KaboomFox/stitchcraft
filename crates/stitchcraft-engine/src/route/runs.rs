@@ -185,6 +185,7 @@ fn element(made: &Made, (strokes, elements): (&[Stroke], &[Element]), number: us
         thread: element.thread.clone(),
         params,
         automatic: false,
+        lettered: None,
         hints: Hints::default(),
         clips: Vec::new(),
     };

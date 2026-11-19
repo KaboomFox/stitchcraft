@@ -9,14 +9,14 @@
 //! them may sew well. Only a design with an automatic shape is measured, by the limits of its lowest
 //! one, as the base layer goes by that shape's settings.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Meter};
 use stitchcraft_plan::thickness::{Layer, Limits, Measure, Over, Report, Spot, Thickness};
 use stitchcraft_plan::{ElementRef, MachineProfile, StitchPlan};
 
 use super::AutoParams;
-use super::cap::{self, Capped};
+use super::cap::{self, Capped, Pull};
 use super::thin::{self, Thinned};
 
 /// How many of the shapes stacked at the thickest spot the warning names: those with the most thread.
@@ -57,13 +57,14 @@ pub(crate) fn held(rules: &AutoParams) -> Held {
 /// (`REQ-AUTO-074`, [`thin`]) and then capped there (`REQ-AUTO-100`, [`cap`]), and what is said of it: what
 /// the pass and the cap took (`SC-I1119`) and how thick the plan sews (`SC-W0913`). It is measured once, with
 /// `budget`'s work, and the pass and the cap have the work once more each. `base` names the base layer's
-/// pieces, `made` the elements that digitizing made, whose needle points alone the cap takes, and `columns`
-/// the satin columns among them, whose top stitches it leaves (`REQ-AUTO-112`), and `profile` is the
-/// machine's, whose stitches the pass keeps to.
+/// pieces, `made` the elements that digitizing made and the lettering it placed, whose needle points alone
+/// the cap takes, `columns` the satin columns among them, whose top stitches it leaves (`REQ-AUTO-112`), and
+/// `lettering` the lettering's columns, each with its pull (`REQ-AUTO-121`); `profile` is the machine's,
+/// whose stitches the pass keeps to.
 pub(crate) fn finished(
     plan: &mut StitchPlan,
     held: &Held,
-    (base, made, columns): (&[ElementId], &BTreeSet<ElementId>, &BTreeSet<ElementId>),
+    (base, made, columns, lettering): (&[ElementId], &BTreeSet<ElementId>, &BTreeSet<ElementId>, &BTreeMap<ElementId, Pull>),
     profile: &MachineProfile,
     budget: &Budget,
 ) -> Vec<Diagnostic> {
@@ -78,11 +79,18 @@ pub(crate) fn finished(
                 plan.elements.iter().enumerate().filter(|(_, id)| of(id)).filter_map(|(at, _)| ElementRef::from_index(at)).collect()
             };
             let (base, made, columns) = (refs(&|id| base.contains(id)), refs(&|id| made.contains(id)), refs(&|id| columns.contains(id)));
+            let lettering: BTreeMap<ElementRef, Pull> = plan
+                .elements
+                .iter()
+                .enumerate()
+                .filter_map(|(at, id)| Some((ElementRef::from_index(at)?, *lettering.get(id)?)))
+                .collect();
             let rules = thin::Rules {
                 cap: held.cap,
                 limit: held.limits.warn_fills,
                 base: &base,
                 columns: &columns,
+                lettering: &lettering,
                 overlap: held.overlap,
                 shortest: profile.min_stitch.get(),
                 longest: profile.max_stitch.get(),
@@ -116,6 +124,21 @@ pub(crate) fn finished(
     });
     said.extend(told(plan, measured, &held.limits, &mut meter));
     said
+}
+
+/// What is said of how thick `plan` sews against the limits `held`, with nothing taken: a design whose
+/// elements all sew by their own settings, a person's lettering among them (`REQ-AUTO-124`). It is measured
+/// with `budget`'s work.
+pub(crate) fn measured(plan: &StitchPlan, held: &Held, budget: &Budget) -> Vec<Diagnostic> {
+    let mut meter = budget.meter();
+    let measured = Thickness::of(plan, &mut meter);
+    told(plan, measured, &held.limits, &mut meter).into_iter().collect()
+}
+
+/// What a design holds to when no automatic shape gives its limits: the default settings of the rules
+/// (`REQ-AUTO-119`, `REQ-AUTO-124`).
+pub(crate) fn by_default() -> Option<Held> {
+    AutoParams::from_set(&stitchcraft_params::ParamSet::new()).ok().map(|read| held(&read.params))
 }
 
 /// What the note says when the pass ran out of work, for a cap of `cap` fills.
@@ -286,7 +309,7 @@ mod tests {
         // and `SC-I1119` what is left above the cap.
         let mut sewn = plan(4, 1);
         let held = Held { limits: Limits::DEFAULT, overlap: 1.0, cap: 3.0 };
-        let said = finished(&mut sewn, &held, (&[], &BTreeSet::new(), &BTreeSet::new()), stitchcraft_plan::profiles::REFERENCE, &Budget::DEFAULT);
+        let said = finished(&mut sewn, &held, (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new()), stitchcraft_plan::profiles::REFERENCE, &Budget::DEFAULT);
         let codes: Vec<Code> = said.iter().map(|said| said.code).collect();
         assert_eq!(codes, [Code::AutoThinned, Code::AutoThick]);
         assert!(said[0].message.contains("Left: ") && said[0].message.contains(" at 3 fills or more"), "{}", said[0].message);
@@ -315,13 +338,13 @@ mod tests {
         let mut kept = sewn.clone();
         let codes = |said: &[Diagnostic]| said.iter().map(|said| said.code).collect::<Vec<_>>();
         assert_eq!(
-            codes(&finished(&mut kept, &held, (&[], &BTreeSet::new(), &BTreeSet::new()), profile, &Budget::DEFAULT)),
+            codes(&finished(&mut kept, &held, (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new()), profile, &Budget::DEFAULT)),
             [Code::AutoThinned, Code::AutoThick]
         );
         assert_eq!(kept, sewn);
         // A plan within the cap is not gone through, and 2 fills say nothing.
         let (within, mut kept) = (plan(0, 2), plan(0, 2));
-        assert!(finished(&mut kept, &held, (&[], &BTreeSet::new(), &BTreeSet::new()), profile, &Budget::DEFAULT).is_empty());
+        assert!(finished(&mut kept, &held, (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new()), profile, &Budget::DEFAULT).is_empty());
         assert_eq!(kept, within);
         // With the work to measure it and not to thin it, the plan stays as it is, and SC-I1119 says so.
         let used = |work: &dyn Fn(&mut Meter) -> bool| {
@@ -332,12 +355,12 @@ mod tests {
         let measure = used(&|meter| Thickness::of(&sewn, meter).is_ok());
         let thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
         let base = BTreeSet::new();
-        let rules = thin::Rules { cap: 4.0, limit: 4.0, base: &base, columns: &base, overlap: 1.0, shortest: 0.3, longest: 12.1 };
+        let rules = thin::Rules { cap: 4.0, limit: 4.0, base: &base, columns: &base, lettering: &BTreeMap::new(), overlap: 1.0, shortest: 0.3, longest: 12.1 };
         let pass = used(&|meter| thin::thinned(&mut sewn.clone(), &mut thickness.clone(), &rules, meter).is_ok());
         assert!(pass > measure, "{pass} {measure}");
         let budget = Budget { max_work: measure, ..Budget::DEFAULT };
         let mut kept = sewn.clone();
-        let said = finished(&mut kept, &held, (&[], &BTreeSet::new(), &BTreeSet::new()), profile, &budget);
+        let said = finished(&mut kept, &held, (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new()), profile, &budget);
         assert_eq!(
             said.first().map(|said| (said.code, said.message.as_str())),
             Some((Code::AutoThinned, "No thread was taken from the spots above 4 fills: the last pass needs more work than the budget allows.")),

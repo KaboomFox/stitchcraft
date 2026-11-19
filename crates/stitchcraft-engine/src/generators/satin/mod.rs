@@ -392,12 +392,31 @@ pub fn satin_stitch(
     rng: &mut SplitMix64,
     meter: &mut Meter,
 ) -> Result<Stitched, Exhausted> {
-    settled(meter, |meter| {
+    Ok(sewn_whole(satin, params, pull, lengths, neighbours, hints, rng, meter)?.0)
+}
+
+/// [`satin_stitch`]'s stitches, and how many of the run's first needle points come before its top stitches:
+/// its underlays, which planning tags underlay (`REQ-AUTO-120`).
+#[allow(clippy::too_many_arguments)] // The column, how it is sewn, and where: each its own input.
+pub(crate) fn sewn_whole(
+    satin: &Satin,
+    params: &SatinParams,
+    pull: &PullParams,
+    lengths: SatinLengths,
+    neighbours: &Neighbours,
+    hints: &Hints,
+    rng: &mut SplitMix64,
+    meter: &mut Meter,
+) -> Result<(Stitched, usize), Exhausted> {
+    let mut under = 0;
+    let stitched = settled(meter, |meter| {
         let (column, mut warnings) = Column::new(satin, params, pull, lengths, rng, meter)?;
-        let sewn = column.sew(Layer::Whole, neighbours, hints, meter)?;
+        let (sewn, counted) = column.counted(Layer::Whole, neighbours, hints, meter)?;
         warnings.extend(sewn.warnings);
+        under = counted;
         Ok(Stitched { warnings, ..sewn })
-    })
+    })?;
+    Ok((stitched, under))
 }
 
 /// A satin column placed once: its sections, its top stitches and its underlays, from which [`Column::sew`]
@@ -493,10 +512,16 @@ impl Column {
     /// top stitches alone, from the rails' starts, end at its end position. A column left out whole sews
     /// nothing (`SC-W0215`).
     pub(crate) fn sew(&self, layer: Layer, neighbours: &Neighbours, hints: &Hints, meter: &mut Meter) -> Result<Stitched, Exhausted> {
+        Ok(self.counted(layer, neighbours, hints, meter)?.0)
+    }
+
+    /// [`Column::sew`]'s stitches, and how many of the run's first needle points come before its top
+    /// stitches ([`ends::joined`]): none when it sews nothing.
+    fn counted(&self, layer: Layer, neighbours: &Neighbours, hints: &Hints, meter: &mut Meter) -> Result<(Stitched, usize), Exhausted> {
         let nothing = Stitched { runs: Vec::new(), colours: Vec::new(), warnings: Vec::new() };
         let (params, min_stitch) = (&self.params, self.lengths.min_stitch.get());
         if self.sections.is_empty() {
-            return Ok(nothing);
+            return Ok((nothing, 0));
         }
         // Its top stitches alone have no centre walk before them, and run from the rails' starts.
         let (layers, mut top, odd, hints) = match layer {
@@ -533,13 +558,13 @@ impl Column {
             guides.pieces(layers, top, start, end, odd, meter)?
         };
         let mut warnings: Vec<Diagnostic> = lie::longest(pieces.iter().filter_map(ends::Piece::top)).into_iter().collect();
-        let run = ends::join(pieces, self.travel, min_stitch, meter)?;
+        let (run, under) = ends::joined(pieces, self.travel, min_stitch, meter)?;
         // A column in a run is left out whole or not at all (`Column::left_out`).
         if let Some(left_out) = too_small(self.across, &run, min_stitch).filter(|_| layer == Layer::Whole) {
             warnings.push(left_out);
-            return Ok(Stitched { warnings, ..nothing });
+            return Ok((Stitched { warnings, ..nothing }, 0));
         }
-        Ok(Stitched { runs: vec![run], colours: Vec::new(), warnings })
+        Ok((Stitched { runs: vec![run], colours: Vec::new(), warnings }, under))
     }
 }
 

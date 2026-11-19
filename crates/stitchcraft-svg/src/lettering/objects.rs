@@ -45,7 +45,7 @@ use std::collections::BTreeSet;
 
 use stitchcraft_core::units::Point;
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Meter, Severity};
-use stitchcraft_engine::design::{Clip, Design, Element, within_working_limit};
+use stitchcraft_engine::design::{Clip, Design, Element, Lettered, within_working_limit};
 use stitchcraft_plan::Thread;
 
 use super::pictures::{CLOSER, Choice, Found};
@@ -450,7 +450,8 @@ fn sewn_line(
         let thread = line.thread.clone().filter(|_| one_thread).unwrap_or_else(|| placed.thread.clone());
         let mut clips = placed.clips.clone();
         clips.extend(text.clips.iter().cloned());
-        elements.push(Element { id, name: text.name.clone(), thread, clips, ..placed });
+        // Digitizing placed it, so the cap may take its thread (`REQ-AUTO-119`).
+        elements.push(Element { id, name: text.name.clone(), thread, clips, lettered: Some(Lettered::Digitized), ..placed });
     }
     let smaller = (scale < full).then_some(Smaller { place, stated: line.length.is_some() });
     Ok(Sewn { tall: own * scale / 100.0, long, smaller })
