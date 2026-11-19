@@ -194,6 +194,17 @@ fn req_auto_074_row_ends_under_a_later_shape_move_back_by_the_overlap_where_a_sp
 }
 
 #[test]
+fn req_auto_114_a_satin_column_hides_no_row_end_of_the_pass() {
+    // The same seam, the later shape a satin column: the rows' ends under it keep its edge covered once the
+    // fabric pulls it in, and stay.
+    let mut sewn = seam(Role::Top, 0.25, true);
+    let column: BTreeSet<ElementRef> = ElementRef::from_index(1).into_iter().collect();
+    let (thinned, _, _) = thin(&mut sewn, &Rules { columns: &column, ..rules(NONE) });
+    assert_eq!(thinned.unwrap().times[3], 0);
+    assert!(right_ends(&sewn, Role::Top).iter().all(|x| *x == 6.0));
+}
+
+#[test]
 fn req_auto_074_the_base_layer_s_row_ends_move_first_and_only_the_base_layer_s() {
     let base: BTreeSet<ElementRef> = ElementRef::from_index(0).into_iter().collect();
     let mut sewn = seam(Role::Underlay, 0.8, true);
