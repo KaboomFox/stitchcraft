@@ -1797,81 +1797,88 @@ are the stitches of the fills under it and beside it. A column is an element tha
 stitch type is satin, which planning knows from the stitches each element generates. The rule reads that
 and the stitches' roles, and no picture, shape or limit of its own.
 
-The rule costs where columns pile up. With the cap at 4 the badges and TS-13A's half keep a spot at 4.16
-fills, TS-13C's half 4.06, the pear 4.04, the dogs 4.00 to 4.50, the magnolia 4.18 and the goose 4.87, where
-the cap brought each to 4.00 or below before. On every repository design the jump threads, the thread
-changes, the slivers and the likeness are those the cap gave before, and so is the bare share, but for
-TS-13A's half, where it falls from 0.0133 to 0.0118 %.
+**A column's edge.** Lowered to 3.5, the cap left TS-13C's face columns covering 0.982 of the edges under
+them, once pulled in, where `REQ-AUTO-007` holds them to 0.99. Two things took the overlap that the face's
+and the eyes' rows lay under the columns, which keeps a column's edge covered when the fabric pulls the
+column in. The last pass moved those rows' ends back from under the columns, and the cap took 44 points of
+them by its second kind, where it took 5 at 4. Either alone left the edges at 0.982 or 0.983. Both read a
+column's stitches where they are drawn. So since M13.46 (`REQ-AUTO-114`):
+
+- the last pass counts no satin column's thread as hiding a row's end;
+- the cap counts a column's top stitch as covering a place only as the fabric pulls it, shortened by the
+  overlap at each end where the thread turns by 10° or more, as `REQ-AUTO-007` measures;
+- where taking a point makes a stitch beside it turn where it ran straight on, the part that the pull then
+  moves in must stay covered.
+
+Judging every covering stitch as pulled, the fills' rows too, kept the overlap under every shape, but left the
+cap nearly nothing to take: at 4 the dogs sewed up to 5.63 fills. Only a column pulls in so hard that its
+edge needs the rows under it.
+
+**Where a joined stitch lies.** With the cap at 3.25, a stitch the cap joined across a bend of the ear's
+rows lay beside the shape for 1.7 mm, on another colour, where `REQ-AUTO-026` allows 1.5. And on TS-13E a
+stitch it joined measured 0.262 mm on the plan's own points, off the machine's grid, at least 0.3 mm on the
+grid, where `REQ-PLAN-002` holds every stitch to the machine's shortest. So a joined top stitch lays its
+thread only where its shape's own top thread or a later shape's lies, and its length is checked on the
+plan's points as well (`REQ-AUTO-100`).
 
 #### The cap's default
 
-With columns whole, every design was planned with the cap at 4, 3.75, 3.5, 3.25 and 3 on 2026-11-19: each
-repository picture, its bare share and likeness too, and the 4 traced photos. The default would be the
-lowest cap at which no column changes and nothing else is worse than at 4. No lower value passes, so the
-cap stays at 4 fills:
+With these rules every design was planned with the cap at 4, 3.75, 3.5, 3.25 and 3, and each was held to
+every requirement, with `auto_details_last` off (M13.48). 3.25 is the lowest at which every requirement holds.
+At 3 the cap joins the base layer's row ends, hidden under the top, across the rows that `REQ-AUTO-028`
+holds straight. A bare share that rises far under its limit doesn't count against a cap, and the spots that
+satin columns hold are reported, not counted. Measured on 2026-11-19, main's cap at 4 against the cap at
+3.25 with these rules:
 
-| Design | Thickest at 4 | At 3.75 | At 3.5 | Bare, % at 4 | At 3.75 | At 3.5 | At 3.5 fills or more, mm², at 4 | At 3.5 |
+| Design | Thickest at 4 | At 3.25 | At 3 fills or more, mm², at 4 | At 3.25 | Bare, % at 4 | At 3.25 | Stitches at 4 | At 3.25 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Badges | 4.16 | 4.16 | 4.16 | 0.0080 | 0.0080 | 0.0080 | 3.25 | 1.25 |
-| Lettered patch | 4.00 | 4.00 | 4.00 | 0.0029 | 0.0029 | 0.0029 | 0 | 0 |
-| TS-13A, digitized half | 4.16 | 4.16 | 4.16 | 0.0118 | 0.0118 | 0.0118 | 8.25 | 4.50 |
-| TS-13B, digitized half | 3.85 | 3.69 | 3.49 | 0.0657 | 0.0657 | 0.0657 | 0 | 0 |
-| TS-13C, digitized half | 4.06 | 4.15 | 3.71 | 0.0000 | 0.0000 | 0.0000 | 14.00 | 2.25 |
-| TS-13D, digitized half | 3.97 | 3.85 | 3.85 | 0.0004 | 0.0004 | 0.0005 | 7.50 | 0 |
-| Traced pear | 4.04 | 4.04 | 4.04 | 0.0003 | 0.0003 | 0.0003 | 3.50 | 2.00 |
-| Traced dog on turf, 6 threads | 4.36 | 4.36 | 4.37 | 0.0102 | 0.0102 | 0.0128 | 28.75 | 2.50 |
-| Traced dog on turf, 9 threads | 4.00 | 3.87 | 3.87 | 0.0101 | 0.0120 | 0.0140 | 24.25 | 0 |
-| Traced running dog, 6 threads | 4.02 | 4.02 | 3.87 | 0.0004 | 0.0017 | 0.0044 | 20.00 | 1.75 |
-| Traced running dog, 9 threads | 4.50 | 4.50 | 4.50 | 0.0050 | 0.0060 | 0.0116 | 45.75 | 5.75 |
-| Traced magnolia | 4.18 | 4.18 | 4.18 | 0.0057 | | | 75.00 | 2.00 |
-| Traced coleus | 4.22 | 4.22 | 4.22 | 0.0064 | | | 185.75 | 3.75 |
-| Traced goose | 4.87 | 4.87 | 4.87 | 0.0067 | | | 106.00 | 3.50 |
-| Traced building | 4.00 | 3.90 | 3.90 | 0.0009 | | | 34.75 | 0 |
+| Badges | 3.99 | 4.40 | 19.50 | 22.00 | 0.0080 | 0.0078 | 4,644 | 4,623 |
+| Lettered patch | 3.98 | 4.00 | 40.25 | 39.25 | 0.0029 | 0.0029 | 4,026 | 4,001 |
+| TS-13A, digitized half | 3.99 | 4.16 | 23.75 | 23.00 | 0.0133 | 0.0120 | 11,513 | 11,486 |
+| TS-13B, digitized half | 3.85 | 3.85 | 4.25 | 3.25 | 0.0657 | 0.0657 | 6,895 | 6,868 |
+| TS-13C, digitized half | 3.96 | 4.03 | 95.75 | 80.50 | 0.0000 | 0.0006 | 6,064 | 5,931 |
+| TS-13D, digitized half | 3.97 | 4.51 | 50.75 | 45.25 | 0.0004 | 0.0000 | 7,994 | 7,928 |
+| Traced pear | 3.86 | 4.20 | 13.00 | 11.25 | 0.0003 | 0.0003 | 4,660 | 4,631 |
+| Traced dog on turf, 6 threads | 4.00 | 4.77 | 131.25 | 57.75 | 0.0214 | 0.0384 | 10,068 | 9,519 |
+| Traced dog on turf, 9 threads | 4.00 | 4.00 | 149.00 | 63.50 | 0.0101 | 0.0383 | 10,742 | 10,098 |
+| Traced running dog, 6 threads | 4.00 | 4.64 | 129.00 | 56.50 | 0.0004 | 0.0109 | 11,077 | 10,648 |
+| Traced running dog, 9 threads | 4.00 | 5.25 | 176.50 | 99.50 | 0.0050 | 0.0206 | 12,369 | 11,810 |
+| Traced magnolia | 4.00 | 4.30 | 521.25 | 216.25 | 0.0056 | 0.0165 | 38,197 | 36,078 |
+| Traced coleus | 4.12 | 4.18 | 959.25 | 309.25 | 0.0408 | 0.0598 | 62,219 | 57,467 |
+| Traced goose | 4.00 | 4.37 | 489.25 | 164.00 | 0.0160 | 0.0220 | 38,352 | 36,053 |
 
-The other test pictures stay under 4 at every cap. At each cap the columns, the jumps, the jump threads, the
-thread changes, the slivers and the likeness of the repository's designs are those they have at 4, and the
-photos keep their jumps and thread changes. A lower cap makes these worse:
+On every design no column changes, where main's cap changed the columns of 11, and the jump threads, the
+thread changes, the slivers and the likeness are those of main's cap. The area at 3 fills or more falls by
+44 to 68 % on the dogs and the photos. The bare share rises on the dogs and the photos to 0.06 % at the
+most, under the cover's limit of 0.5 % (`auto_base_bare_percent`), with no sliver more. The thickest spots rise
+where satin columns hold them, which the cap leaves.
 
-- At 3.75, TS-13C's thickest spot rises from 4.06 to 4.15 fills, where the order in which the cap takes
-  points changes, and the bare share of 3 dogs rises by 0.0010 to 0.0020 points.
-- At 3.5, the cover of the edges under TS-13C's face outline and eye lines, pulled in by the overlap, falls
-  to 0.982, where `REQ-AUTO-007` holds it to 0.99: the cap joins the face's and the eyes' rows under the
-  columns that the overlap leaves there for the pull. The bare share rises on TS-13D's half and the 4 dogs,
-  by up to 0.0066 points, and one dog's thickest spot by 0.01 fills.
-- At 3.25 the coleus rises from 4.22 to 4.43 fills, and at 3 the bare share of the dog on turf in 9 threads
-  reaches 0.059 % and the magnolia 4.21 fills.
+**What holds a spot above the cap.** At 3.25 the thickest spot of each design above it, split by element,
+and the step that owns its cause. No rule was added for these here:
 
-A lower cap would bring the area at 3.5 fills or more down to 6 mm² or less on every design, and the area at
-3 fills or more by a quarter to a third on the dogs and the photos. What stops it is the cap's test of cover
-under later shapes, which reads the later stitches where they are drawn and not where the fabric pulls them.
-MC-8's ladder (TS-13F) sets the final value.
-
-**What holds a spot above the cap.** At 4 the thickest spot of each design above it, split by element:
-
-| Design | Thickest | Satin columns' top | Other top | Under | What lies there |
-|---|---:|---:|---:|---:|---|
-| Badges, TS-13A's badges | 4.16 | 2.88 to 2.91 | 1.00 | 0.25 to 0.28 | 2 columns of one ring meet over the red disc |
-| Lettered patch | 4.00 | 2.79 | 1.00 | 0.21 | 2 columns of the M meet over the field |
-| Traced pear | 4.04 | 2.37 | 1.52 | 0.15 | the stem's 2 columns over the fill |
-| Traced dog on turf, 6 threads | 4.36 | 3.33 | 0.78 | 0.25 | 2 columns of one shape meet over a fill |
-| Traced running dog, 6 threads | 4.02 | 3.07 | 0.96 | 0 | 2 columns of one shape meet over a fill |
-| Traced running dog, 9 threads | 4.50 | 2.88 | 1.21 | 0.41 | 3 columns cross over a fill |
-| Traced goose | 4.87 | 2.84 | 1.67 | 0.36 | 2 columns of one shape meet over 2 fills |
-| TS-13C, digitized half | 4.06 | 1.31 | 2.63 | 0.12 | the face's outline over the face and the hair, whose tops show |
-| Traced magnolia | 4.18 | 1.26 | 2.59 | 0.32 | a column over 2 fills whose tops show |
-| Traced coleus | 4.22 | 0 | 3.39 | 0.83 | 6 fills meet, each top shows, over travel that no later top covers whole |
-| Traced goose with M13.39's 3 marks | 5.09 | 0 | 4.65 | 0.44 | one fill lays 2.64 by itself, its rows over each other where its 2 parts meet, and 1.10 of another |
+| Design | Thickest | Satin columns' top | Other top | Under | What lies there | Owner |
+|---|---:|---:|---:|---:|---|---|
+| Badges, TS-13A's badges | 4.40, 4.16 | 2.91 to 3.43 | 0.81 to 1.00 | 0.16 to 0.25 | 2 columns of one ring meet over a fill | M13.47, joins |
+| Lettered patch | 4.00 | 2.79 | 1.00 | 0.21 | 2 columns of the M meet over the field | M13.47, joins |
+| Traced dog on turf, 6 threads | 4.77 | 3.33 | 1.19 | 0.25 | 2 columns of one shape meet over a fill | M13.47, joins |
+| Traced running dog, 6 threads | 4.64 | 2.88 | 1.76 | 0 | 2 columns of one shape meet over a fill | M13.47, joins |
+| TS-13D, digitized half | 4.51 | 2.84 | 1.23 | 0.44 | one column of a white ring, crowded at its inner edge, over the star and the navy | none yet: a bend |
+| Traced pear | 4.20 | 2.18 | 1.72 | 0.30 | the stem's 2 columns, of 2 shapes, over a fill | none yet: columns of 2 shapes over a fill |
+| Traced running dog, 9 threads | 5.25 | 2.88 | 1.96 | 0.41 | 3 columns of 3 shapes cross over a fill | none yet: columns of 2 shapes over a fill |
+| TS-13C, digitized half | 4.03 | 1.41 | 2.37 | 0.25 | the face's outline over the face and the hair, whose tops show | none yet: a column over a fill's turns |
+| Traced magnolia | 4.30 | 1.55 | 1.93 | 0.82 | a column over 2 fills whose tops show | none yet: a column over a fill's turns |
+| Traced coleus | 4.18 | 0 | 3.94 | 0.24 | one fill lays 2.89 by itself, its rows over each other where its 2 parts meet | none yet: a fill's own turns |
+| Traced goose | 4.37 | 0 | 4.12 | 0.25 | 4 fills meet, each top shows | none yet |
 
 On every repository design and dog the thread other than columns' tops is the cap or less, so the cap took
-what it may (`REQ-AUTO-073` holds them to it). The coleus and the marked goose keep spots of fills alone,
-whose top thread shows and which the cap's third kind didn't take. Each is left as the rules leave it, with no rule of its own.
+what it may (`REQ-AUTO-073` holds them to it). The coleus and the goose keep spots of fills alone, whose top
+thread shows and which the cap didn't take.
 
 #### The cap and the warning
 
 The cap is what planning aims at. The limits of `REQ-AUTO-061` are what a person acts on. A spot that satin
-columns hold stays above the cap, on 11 of the 24 designs at 4 and on nearly every design at a lower cap. The
-warning used to name the cap there, and it started at 3 fills, which nearly every design has somewhere, so
-it was said of nearly every design. Since M13.46 (`REQ-AUTO-113`):
+columns hold stays above the cap of 3.25 on 14 of the 20 repository designs. The warning used to name the cap there, and
+it started at 3 fills, which nearly every design has somewhere, so it was said of nearly every design. Since M13.46 (`REQ-AUTO-113`):
 
 - `SC-I1119` says what the last pass and the cap took and what is left above the cap, whenever a spot was
   above it, also when nothing could be taken.
@@ -1879,9 +1886,9 @@ it was said of nearly every design. Since M13.46 (`REQ-AUTO-113`):
   3. One layer of satin over a fill measures 2 to 3 fills and sews well, and 2 dense layers on a fill measure
   4 or more. The failing limit stays at 6.
 
-No digitized design of the repository warns now. TS-13A, D and E still do, at places of their halves as
-drawn, which the cap doesn't touch. Of the traced photos the goose warns, where 2 columns hold 1 mm² at 4
-fills or more.
+With the cap at 3.25 the warning comes on 3 of the traced dogs, where 2 columns of one shape meet over a fill
+on 1.75 to 8.75 mm² at 4 fills or more, and on none of the other digitized designs of the repository. TS-13A,
+D and E still warn, at places of their halves as drawn, which the cap doesn't touch.
 
 ## Likeness
 

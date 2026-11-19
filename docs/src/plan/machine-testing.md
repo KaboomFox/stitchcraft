@@ -311,7 +311,7 @@ M13.35 takes thread away where one shape piles it up by itself
 
 M13.35's cap takes needle points out of the plan where a spot still sews above the setting
 `auto_thick_cap_fills` ([the cap at the end of planning](../design/image-to-embroidery.md#the-cap-at-the-end-of-planning)).
-Since M13.46 it takes none of a satin column's top stitches
+Since M13.46 it is 3.25 fills, and it takes none of a satin column's top stitches nor the rows under its edges
 ([the cap and satin columns](../design/image-to-embroidery.md#the-cap-and-satin-columns)). The warning
 `SC-W0913` starts at 4 fills. TS-13F's ladder shows where the needle starts to struggle, and it sets the
 final value of both. The reference machine trims no jump thread within a colour, so snip them before
@@ -321,11 +321,11 @@ judging a spot. At MC-8, after the ladder:
   value and the limits of `SC-W0913`.
 - The cap took a base layer's and a fill's turns under later shapes on the traced dogs and on TS-13C's
   face. Is fabric showing where 2 patches meet there?
-- Where 2 satin columns of one shape meet over a fill, the cap leaves 4.0 to 4.5 fills, as on the
-  badges' blue rings and the running dog in 9 threads. Does the needle thump there, and are the columns'
-  edges whole?
-- If the ladder allows a cap below 4, look at TS-13C's face: at 3.5 the cap joins rows under the outline
-  that the overlap left there for the pull.
+- Where 2 satin columns of one shape meet over a fill, the cap leaves 4.0 to 4.8 fills, as on the
+  badges' blue rings, the lettered patch's M and the dogs. Does the needle thump there, and are the
+  columns' edges whole?
+- Do TS-13C's face outline and eye lines cover the face and the eyes to their edges, with no fabric showing
+  along their inner sides?
 
 M13.36 keeps a traced letter's counters open and its edges whole
 ([holes and edges of columns](../design/image-to-embroidery.md#holes-and-edges-of-columns)). At MC-8, on
