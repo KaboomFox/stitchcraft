@@ -161,8 +161,9 @@ fn req_auto_100_a_shape_s_own_top_where_it_is_doubled_goes_last() {
     let mut capped_plan = sewn.clone();
     let (capped, kept, measured) = cap(&mut capped_plan, &rules());
     let capped = capped.unwrap();
-    assert_eq!(capped.times, [0, 0, 22], "{capped:?}");
-    assert!((capped.taken[2] - 158.747_090_507).abs() < 1e-6, "{capped:?}");
+    // A joined stitch lays thread only where the zigzag's own does: 2 points at its turns stay.
+    assert_eq!(capped.times, [0, 0, 20], "{capped:?}");
+    assert!((capped.taken[2] - 143.808_390_956).abs() < 1e-6, "{capped:?}");
     assert!(measures_as(&kept, &measured));
     assert!(measured.most(Measure::Fills).value < Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap().most(Measure::Fills).value);
     assert!(kinds(&capped).starts_with(&format!("{:.1} mm of a shape's own doubled top stitches in ", capped.taken[2])));

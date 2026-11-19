@@ -135,11 +135,11 @@ fn req_auto_067_where_3_areas_meet_the_thread_as_sewn_is_one_overlap_deep() {
     // In the bar beside that edge, where no overlap lies: its fill, the ends of its rows and its outline.
     let beside: Vec<f64> = halves(6, 14).map(|y| at(10.5, y)).collect();
     assert!(beside.iter().all(|fills| *fills > 1.3 && *fills < 1.7), "{beside:?}");
-    // At the corner, 3.8 fills at the most: the 2 squares, the bar's overlap under them, the upper square's
-    // 0.4 mm under the lower one beside it, and their 2 outlines. A second whole overlap there would make
-    // it 4.8.
+    // At the corner, 3.8 fills at the most as sewn on 2026-11-16: the 2 squares, the bar's overlap under them,
+    // the upper square's 0.4 mm under the lower one beside it, and their 2 outlines. A second whole overlap
+    // there would make it 4.8. The cap of 3.25 fills (M13.46) takes it to 3.24.
     let corner = halves(18, 20).flat_map(|x| halves(18, 22).map(move |y| (x, y))).map(|(x, y)| at(x, y)).fold(0.0, f64::max);
-    assert!(corner > 3.5 && corner < 4.1, "{corner}");
+    assert!(corner > 3.0 && corner < 4.1, "{corner}");
 }
 
 #[test]

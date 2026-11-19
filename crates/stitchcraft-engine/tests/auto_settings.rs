@@ -97,7 +97,7 @@ fn req_auto_020_the_rules_settings_are_stitchcraft_s_own_and_no_stitch_type_read
         ("auto_thick_fail_fills", "6"),
         ("auto_thick_warn_points", "15"),
         ("auto_thick_fail_points", "30"),
-        ("auto_thick_cap_fills", "4"),
+        ("auto_thick_cap_fills", "3.25"),
     ];
     // And the switch that sews the details last, on since the cap holds the thickness (`REQ-AUTO-098`).
     let details = [("auto_details_last", "true")];

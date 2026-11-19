@@ -185,11 +185,11 @@ mod tests {
         // Each sheet's size, its conformance case's to the micrometre, and its stitches: what MC-8 sews, which
         // changes with any change to what a picture sews.
         let recorded = [
-            ("TS-13A", [126.001, 167.98], 23_894),
-            ("TS-13B", [110.594, 148.4], 14_543),
-            ("TS-13C", [111.397, 107.75], 10_313),
-            ("TS-13D", [89.8, 100.4], 19_457),
-            ("TS-13E", [23.999, 108.394], 5_939),
+            ("TS-13A", [126.001, 167.98], 23_862),
+            ("TS-13B", [110.594, 148.4], 14_511),
+            ("TS-13C", [111.397, 107.75], 10_229),
+            ("TS-13D", [89.8, 100.4], 19_399),
+            ("TS-13E", [23.999, 108.394], 5_932),
         ];
         let found: Vec<(&str, [f64; 2], usize)> = recorded
             .iter()

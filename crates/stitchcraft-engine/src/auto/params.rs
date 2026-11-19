@@ -296,7 +296,7 @@ params! {
         /// warning comes only at its own limit. A starting value for a 75/11 needle and 40-weight polyester
         /// thread, which a sew-out has to confirm. The design goes by the setting of its lowest automatic
         /// shape.
-        auto_thick_cap_fills: Number = "3.5", label "Most thread on a spot, in fills", range (1.0, 50.0),
+        auto_thick_cap_fills: Number = "3.25", label "Most thread on a spot, in fills", range (1.0, 50.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
         /// Whether a detail sews after the larger areas round it, where that costs no thread change: an

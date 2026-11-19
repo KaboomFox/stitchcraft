@@ -63,9 +63,9 @@ fn kept(plan: &StitchPlan, locks: bool) -> Vec<Vec<Stitch>> {
 }
 
 #[test]
-fn req_auto_099_the_cap_is_an_advanced_setting_of_4_fills() {
+fn req_auto_099_the_cap_is_an_advanced_setting_of_3_25_fills() {
     let spec = AutoParams::SPECS.iter().find(|spec| spec.key == CAP);
-    assert!(spec.is_some_and(|spec| spec.default == "4" && spec.group == ADVANCED), "{:?}", spec.map(|spec| (spec.default, spec.group)));
+    assert!(spec.is_some_and(|spec| spec.default == "3.25" && spec.group == ADVANCED), "{:?}", spec.map(|spec| (spec.default, spec.group)));
     // It sits beside the 4 limits of how thick a design sews, after them.
     let keys: Vec<&str> = AutoParams::SPECS.iter().map(|spec| spec.key).collect();
     let at = keys.iter().position(|key| *key == CAP).unwrap();
@@ -118,7 +118,7 @@ fn diag_sc_i1119_the_cap_says_what_it_took_of_each_kind_and_what_is_left() {
     let said: Vec<&str> = outcome.diagnostics.iter().filter(|said| said.code == Code::AutoThinned).map(|said| said.message.as_str()).collect();
     assert_eq!(said.len(), 1, "{:?}", outcome.diagnostics);
     assert!(said[0].contains(" fills or more. The last pass took ") && said[0].contains(", and the cap took "), "{}", said[0]);
-    assert!(said[0].contains("Left: ") && said[0].contains(" at 4 fills or more"), "{}", said[0]);
+    assert!(said[0].contains("Left: ") && said[0].contains(" at 3.25 fills or more"), "{}", said[0]);
 }
 
 /// Each column's id and its top stitches, as their 2 needle points.
