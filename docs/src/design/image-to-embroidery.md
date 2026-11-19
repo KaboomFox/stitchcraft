@@ -2194,6 +2194,38 @@ On, the pear takes 8.3 % more, the dog on turf in 6 threads 13.6 % more and the 
 **Open question.** Where a detail sews before a fill, the fill's rows and pull compensation reach about
 0.25 mm over its edge, and a later step could end them at the detail's edge.
 
+**Both on by default** (M13.45, `REQ-AUTO-103`). With the cap merged, the owner turned on details last and
+merging by likeness, at 0.85 ([merging by likeness](#merging-by-likeness)), on 2026-11-18. Each design of the
+repository but the traced dogs sews as before, stitch for stitch. Measured on 2026-11-19 at opt-level 2,
+main before M13.45 and then this step, with the area at 3 fills or more in mm², the bare share in
+thousandths of a percent and the likeness in thousandths. The photos marked * are local:
+
+| Picture | Thickest, fills | Area | Bare | Likeness | Jump threads | Thread changes | Stitches |
+|---|---|---|---|---|---|---|---|
+| Dog on turf, 6 threads | 4.00, 4.00 | 137.25, 124.25 | 10, 22 | 814, 856 | 57, 60 | 8, 8 | 9,985, 10,040 |
+| Dog on turf, 9 threads | 4.00, 4.00 | 150.75, 137.75 | 10, 11 | 779, 829 | 58, 61 | 12, 12 | 10,675, 10,659 |
+| Running dog, 6 threads | 4.00, 4.00 | 129.00, 100.75 | 0, 1 | 898, 898 | 49, 52 | 8, 8 | 11,077, 10,736 |
+| Running dog, 9 threads | 4.00, 3.99 | 176.50, 176.50 | 5, 1 | 921, 921 | 64, 69 | 11, 11 | 12,369, 12,528 |
+| A magnolia * | 4.00, 4.00 | 441.75, 466.50 | 5, 5 | 480, 846 | 155, 328 | 9, 10 | 34,258, 36,716 |
+| A coleus * | 4.22, 4.43 | 851.50, 955.75 | 6, 58 | 454, 838 | 237, 486 | 12, 13 | 56,886, 61,580 |
+| A greylag goose * | 4.00, 4.00 | 482.50, 465.25 | 7, 16 | 483, 824 | 95, 167 | 8, 10 | 36,668, 37,578 |
+| A castle * | 4.00, 4.00 | 221.75, 204.00 | 1, 10 | 434, 779 | 54, 113 | 8, 9 | 26,201, 27,406 |
+
+The machine file holds as many stitches as the plan. The dogs keep their thickest spots within the cap, and
+3 of them sew less area at 3 fills or more. The lines kept cost the dogs 3 to 5 jump threads and the photos 59
+to 249. What got worse:
+
+- Each local photo changes thread once or twice more. A line kept sews after the fills it borders, which
+  can bring its thread back. Which lines did it was not traced.
+- The coleus keeps a spot at 4.43 fills, 1.25 mm² above the cap, where it kept 4.22, and `SC-W0913` names it.
+  It also leaves one sliver, and its bare share rises from 0.006 % to 0.058 %, within the cover's limit of 0.5 %.
+
+Planning takes longer where lines are kept, since each line is measured as a part: by the clock on a shared
+machine, the coleus, the goose and the castle took 1.8 to 2.2 times as long. `conformance/perf.toml` records
+the dogs' counts.
+
+No limit was changed for these: each comes from the whole set.
+
 ### Runs in place of jumps
 
 Between 2 shapes of one thread the needle jumps, and a machine with one needle cuts no thread at a jump:
