@@ -147,6 +147,12 @@ impl Column {
         Column { rails, rungs, closed: false, walked: line.clone(), line, under, ring: None }
     }
 
+    /// An open column cut from another at a bend (`super::bends`): its `rails` and `rungs`, its centre
+    /// `line` and the line as `walked`, and the columns it ends `under` at its start, then its end.
+    pub(super) fn cut(rails: [Vec<Point>; 2], rungs: Vec<[Point; 2]>, line: Line, walked: Line, under: [Option<usize>; 2]) -> Column {
+        Column { rails, rungs, closed: false, line, walked, under, ring: None }
+    }
+
     /// The column the other way round: from its end to its start. A ring is itself.
     pub(crate) fn reversed(&self) -> Column {
         if self.closed {

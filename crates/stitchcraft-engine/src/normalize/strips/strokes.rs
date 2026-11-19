@@ -61,17 +61,17 @@ const TIE: f64 = 0.15;
 /// The tangent of 20°: an end whose points lie no farther apart along the stroke than this times its width
 /// is flat, as a column ends along an edge within 20° of square ([`super::columns`]), as a font's letter's
 /// foot does. Any other ends in a point, its stitches square to the stroke up to it.
-const FLAT: f64 = 0.363_970_234_266_202_4;
+pub(super) const FLAT: f64 = 0.363_970_234_266_202_4;
 
 /// The sine of 15°: 2 strokes whose lines cross more nearly parallel than this are not cut by a halving line.
-const CROSSING: f64 = 0.258_819_045_102_520_8;
+pub(super) const CROSSING: f64 = 0.258_819_045_102_520_8;
 
 /// The sine of 60°: 2 strokes that end alike at a join whose lines meet at a sharper angle than this, as at
 /// an apex of an A or the bottom of a V, are cut along the line that halves it. At a blunter one, as at an
 /// L's corner, cut so, each would end in a point at the corner's outside, and their tips and their pull
 /// compensation piled 4.3 fills of thread there on TS-13D's emblem, where its columns along their centre
 /// lines laid 4.1: the longer runs through instead, and the other stops against it.
-const APEX: f64 = 0.866_025_403_784_438_6;
+pub(super) const APEX: f64 = 0.866_025_403_784_438_6;
 
 /// How far a band reaches past its sides across the stroke, in millimetres, so that the part's own edge lies
 /// inside it: a ten-thousandth of a millimetre, which leaves a step that small where a piece's side leaves

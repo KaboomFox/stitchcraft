@@ -47,12 +47,14 @@ const T: [(f64, f64); 8] = [(0.0, 0.0), (0.7, 0.0), (0.7, 0.2), (0.45, 0.2), (0.
 
 #[test]
 fn req_auto_115_a_column_doesnt_turn_through_the_corner_where_2_strokes_meet() {
-    // A V's centre line runs from one top down to the foot and up to the other: one column, which turns
-    // through the foot, and its stitches fan round the turn. On main at M13.45 this V leans up to 37.9°,
-    // 36.0° and 36.1° at 6, 12 and 25 mm (2, 1 and 4 stitches past 30°), and Source Sans 3 Bold's V, whose
-    // column crowds more round its foot, is filled at 12 mm (SC-I0902). Cut where its strokes meet, each leg
-    // is a column of its own, its stitches across it, and the 2 meet along the line that halves the angle
-    // between them (REQ-AUTO-088).
+    // A V's centre lines meet at its foot: one runs down a leg into the foot, and the other's column ends
+    // under it there, so that the first turns through the foot and its stitches fan round the turn. On
+    // main at M13.45 this V leans up to 37.9°, 36.0° and 36.1° at 6, 12 and 25 mm below its legs' tops (2,
+    // 1 and 3 stitches past 30°), and Source Sans 3 Bold's V, whose column crowds more round its foot, is
+    // filled at 12 mm (SC-I0902). Cut where its strokes meet, each leg is a column of its own, its stitches
+    // across it, and the 2 meet along the line that halves the angle between them (REQ-AUTO-088). The tops
+    // are cut on the slant, 18° from square to the legs, and a column's end follows such an edge: a
+    // stitch there leans 30.2° at 25 mm on main as on the branch, which is no join's doing.
     for height in HEIGHTS {
         let design = letter("v", &V, height);
         let outcome = in_place(&design);
@@ -62,7 +64,7 @@ fn req_auto_115_a_column_doesnt_turn_through_the_corner_where_2_strokes_meet() {
         let placed = strokes::placed(&v_strokes(), (0.0, 0.0), height, 0.0);
         let leans = strokes::leans(&plan, "v", &placed, 0.4);
         assert!(leans.len() >= 20, "{height} mm: {} satin stitches", leans.len());
-        let leaning: Vec<_> = leans.iter().filter(|(_, degrees)| *degrees > 30.0).collect();
+        let leaning: Vec<_> = leans.iter().filter(|(at, degrees)| at.y() > 0.2 * height && *degrees > 30.0).collect();
         assert!(leaning.is_empty(), "{height} mm: {} of {} lean more than 30°: {leaning:?}", leaning.len(), leans.len());
     }
 }

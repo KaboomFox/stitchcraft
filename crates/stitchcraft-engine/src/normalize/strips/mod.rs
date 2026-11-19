@@ -39,9 +39,11 @@
 //! bumps ([`Bumps`]). Such a part cut from a broad one ends along each cut: its triangles with a corner on
 //! the cut lie in that end, as a cap's do ([`Role::Cut`]), and a line that reaches them ends there.
 
+mod bends;
 mod columns;
 mod strokes;
 
+pub(crate) use bends::bends;
 pub(crate) use columns::{Column, columns};
 pub(crate) use strokes::strokes;
 
