@@ -199,3 +199,16 @@ fn req_auto_100_a_joined_stitch_keeps_the_machine_s_shortest_on_the_plan_s_own_p
     let plan = stitchcraft_engine::plan(&capped(&design, "3"), sheet.profile, &stitchcraft_core::Budget::DEFAULT).plan.unwrap();
     assert_eq!(stitchcraft_plan::invariants::check(&plan, sheet.profile), Vec::new());
 }
+
+#[test]
+fn req_auto_100_a_joined_stitch_lays_thread_only_where_its_shape_s_or_a_later_shape_s_lies() {
+    // The ear: its fills' rows end along ragged edges. With the cap at 3 fills, a stitch joined across a bend
+    // of a row's end lay beside the shape for 1.725 mm, on another colour. A joined stitch lays its thread only
+    // where its shape's own top thread or a later shape's lies, and the ear keeps the one stitch astray that
+    // `REQ-AUTO-026` lists, under 1.5 mm.
+    let design = pictures::dog_shapes("dog-running-6", &["vc:5:fill", "vc:6:fill", "vc:28:fill", "vc:50:fill"]);
+    for cap in ["3", "3.25"] {
+        let astray = fabric::astray(&design, &in_place(&capped(&design, cap)).plan.unwrap());
+        assert!(astray.stitches.len() <= 1 && astray.longest < 1.5, "{cap}: {:?}, the longest {:.3} mm", astray.stitches, astray.longest);
+    }
+}
