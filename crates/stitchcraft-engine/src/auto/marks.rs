@@ -22,8 +22,7 @@ use std::cell::Cell;
 
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Meter};
 
-use crate::design::Mark;
-use crate::design::mark::{Area, bounds};
+use crate::design::mark::{Area, Mark, bounds};
 use crate::normalize::region::Polygon;
 
 /// The marks of a design as automatic digitizing tests parts against them, with what they kept.
@@ -160,4 +159,4 @@ fn kept(id: &ElementId, held: usize, specks: usize, lines: usize) -> Diagnostic 
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

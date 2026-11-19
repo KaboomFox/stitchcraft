@@ -59,7 +59,7 @@ fn req_auto_104_marks_are_taken_out_of_the_elements_one_for_each_object() {
         element("c", Some("stitch:text a"), fill(&BOX)),
     ];
     let (kept, marks) = taken_out(elements);
-    fn ids<'i>(ids: Vec<&'i ElementId>) -> Vec<&'i str> {
+    fn ids(ids: Vec<&ElementId>) -> Vec<&str> {
         ids.into_iter().map(ElementId::as_str).collect()
     }
     assert_eq!(ids(kept.iter().map(|element| &element.id).collect()), ["a", "c"]);

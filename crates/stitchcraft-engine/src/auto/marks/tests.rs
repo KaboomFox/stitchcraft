@@ -8,8 +8,22 @@ fn p(x: f64, y: f64) -> Point {
 }
 
 /// A mark `id` round the box from (`x0`, `y0`) to (`x1`, `y1`), drawn with a stroke and no fill.
-fn mark(id: &str, [x0, y0, x1, y1]: [f64; 4]) -> Mark {
-    let outline = Subpath { start: p(x0, y0), segments: [(x1, y0), (x1, y1), (x0, y1)].map(|(x, y)| Segment::Line(p(x, y))).to_vec(), closed: true };
+fn mark(id: &str, around: [f64; 4]) -> Mark {
+    edged(id, around, 1)
+}
+
+/// A mark `id` round the box from (`x0`, `y0`) to (`x1`, `y1`), each side cut into `n` segments, drawn with a
+/// stroke and no fill.
+pub(crate) fn edged(id: &str, [x0, y0, x1, y1]: [f64; 4], n: u32) -> Mark {
+    let step = |from: (f64, f64), to: (f64, f64)| {
+        (0..n).map(move |i| {
+            let t = f64::from(i) / f64::from(n);
+            (from.0 + (to.0 - from.0) * t, from.1 + (to.1 - from.1) * t)
+        })
+    };
+    let corners = [(x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)];
+    let ring: Vec<(f64, f64)> = corners.windows(2).flat_map(|pair| step(pair[0], pair[1])).collect();
+    let outline = Subpath { start: p(x0, y0), segments: ring.iter().skip(1).map(|&(x, y)| Segment::Line(p(x, y))).collect(), closed: true };
     let shape = Shape::Stroke { path: Path { subpaths: vec![outline] }, width: Mm::new(0.2).unwrap(), join: Join::Round, cap: Cap::Butt };
     Mark { id: ElementId::new(id).unwrap(), shape }
 }
@@ -94,7 +108,7 @@ fn diag_sc_i0916_a_mark_names_the_parts_it_holds_and_what_it_kept() {
 #[test]
 fn diag_sc_w0917_a_mark_that_keeps_nothing_is_named_with_why() {
     let empty = Mark { id: ElementId::new("flat").unwrap(), shape: Shape::stroke(Path { subpaths: Vec::new() }) };
-    let marks = Marks::of(&[mark("none", [0.0, 0.0, 10.0, 10.0]), empty.clone()], &Budget::DEFAULT);
+    let marks = Marks::of(&[mark("none", [0.0, 0.0, 10.0, 10.0]), empty], &Budget::DEFAULT);
     let said = marks.said(true);
     assert_eq!(said.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::AutoMarkUnused, Code::AutoMarkUnused]);
     assert!(said[0].message.starts_with("The mark `flat` is not used, and the design sews as without it: it encloses no area."), "{}", said[0]);

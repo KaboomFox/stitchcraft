@@ -8,8 +8,8 @@
 //! under one more key ([`KEY`]), so that a bug-report bundle records them and its replay keeps the same parts.
 
 use stitchcraft_core::ElementId;
-use stitchcraft_engine::design::mark::KEEP;
-use stitchcraft_engine::design::{Design, Mark};
+use stitchcraft_engine::design::Design;
+use stitchcraft_engine::design::mark::{KEEP, Mark};
 
 use crate::text::{rectangle, share};
 

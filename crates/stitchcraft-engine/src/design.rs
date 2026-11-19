@@ -20,7 +20,7 @@ use stitchcraft_plan::{Rgb, Thread};
 pub mod mark;
 mod turn;
 
-pub use mark::Mark;
+use mark::Mark;
 pub use turn::Turn;
 
 /// How far from the design's origin geometry may lie, in millimetres: the reach of machine-file
@@ -700,8 +700,16 @@ mod tests {
         let fill =
             Element { shape: Shape::Fill { path: quad, rule: FillRule::EvenOdd, gradient: None }, hints, clips, ..element("q", Path::default()) };
         let settings = DesignSettings { origin: Some(p(5.0, 5.0)), stop_position: Some(p(-1.0, 0.0)), ..DesignSettings::default() };
-        let design = Design::new(vec![element("c", curve), fill, element("l", line(p(-2.0, 1.0), p(3.0, 1.0)))], settings).unwrap();
+        let mut design = Design::new(vec![element("c", curve), fill, element("l", line(p(-2.0, 1.0), p(3.0, 1.0)))], settings).unwrap();
+        // Its marks move too, and keep their ids.
+        design.marks = vec![Mark { id: ElementId::new("m").unwrap(), shape: Shape::stroke(line(p(1.0, 1.0), p(2.0, 2.0))) }];
         let moved = design.moved([3.0, -2.0]).unwrap();
+        assert_eq!(moved.marks, [Mark { id: ElementId::new("m").unwrap(), shape: Shape::stroke(line(p(4.0, -1.0), p(5.0, 0.0))) }]);
+        // Given other elements, a design keeps its marks, its settings and its sorting of colours.
+        let sorted = Design { sort_colours: true, ..design.clone() };
+        let other = sorted.with_elements(vec![element("x", line(p(0.0, 0.0), p(1.0, 0.0)))]).unwrap();
+        assert_eq!((other.elements().len(), &other.marks, other.settings, other.sort_colours), (1, &design.marks, design.settings, true));
+        assert!(sorted.with_elements(vec![element("x", Path::default()), element("x", Path::default())]).is_err());
         // Every point, the hints' and the clips' among them.
         let points = |design: &Design| {
             let clips = |e: &Element| e.clips.iter().flat_map(Clip::points).collect::<Vec<_>>();

@@ -82,9 +82,14 @@ pub(super) fn reached(sewn: Vec<Sewn>, budget: &Budget) -> (Vec<Element>, Vec<Di
 
 /// `sewn`'s specks merged with `budget`, and what is said of them.
 fn merged(sewn: Vec<Sewn>, budget: &Budget) -> (Vec<Element>, Vec<Diagnostic>) {
+    kept(sewn, &Marks::default(), budget)
+}
+
+/// `sewn`'s specks merged with `budget` but those `marks` keep, and what is said of them.
+fn kept(sewn: Vec<Sewn>, marks: &Marks, budget: &Budget) -> (Vec<Element>, Vec<Diagnostic>) {
     let settings = DesignSettings::default();
     let mut shapes = Shapes::new(sewn, &settings, &Budget::DEFAULT);
-    let said = specks::merged(&mut shapes, &Marks::default(), budget);
+    let said = specks::merged(&mut shapes, marks, budget);
     (shapes.into_elements(), said)
 }
 
@@ -252,6 +257,24 @@ fn a_speck_whose_neighbours_need_more_work_than_its_budget_allows_is_left_out_an
     assert_eq!((said.code, said.element.as_ref().map(ElementId::as_str)), (Code::AutoSpeck, Some("speck")));
     assert_eq!(said.message, "Finding where to merge this speck needed more than the work budget of 10 units, so it is left out.");
     assert_eq!(elements.iter().map(|element| element.id.as_str()).collect::<Vec<_>>(), ["big"]);
+}
+
+#[test]
+fn req_auto_104_a_speck_a_mark_holds_stays_and_one_too_costly_to_test_merges_and_is_said_to() {
+    let sewn = || vec![area("big", (0.0, 0.0), (10.0, 10.0)), area("speck", (10.0, 0.0), (10.5, 0.5))];
+    let ids = |elements: &[Element]| elements.iter().map(|element| element.id.to_string()).collect::<Vec<_>>();
+    let near = |n| Marks::of(&[crate::auto::marks::tests::edged("eye", [9.9, -0.1, 10.6, 0.6], n)], &Budget::DEFAULT);
+    let (elements, said) = kept(sewn(), &near(1), &Budget::DEFAULT);
+    assert_eq!((ids(&elements), said.len()), (vec!["big".to_string(), "speck".to_string()], 0), "{said:?}");
+    // Its 5 points against a mark of 4,000 segments cost more than 1,000 units.
+    let (elements, said) = kept(sewn(), &near(1_000), &Budget { max_work: 1_000, ..Budget::DEFAULT });
+    assert_eq!(ids(&elements), ["big"]);
+    assert_eq!((said[0].code, said[0].element.as_ref().map(ElementId::as_str)), (Code::AutoKept, Some("speck")));
+    assert_eq!(
+        said[0].message,
+        "Finding whether a mark holds this speck needed more than the work budget of 1000 units, so it merges as if there were no mark."
+    );
+    assert_eq!(said[1].code, Code::AutoSpeck);
 }
 
 #[test]

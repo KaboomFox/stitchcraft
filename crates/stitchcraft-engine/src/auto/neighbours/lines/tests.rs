@@ -44,9 +44,29 @@ fn auto(id: &str, parts: &[Polygon], params: &[(&str, &str)]) -> Element {
 
 /// The ids of what `merged` gives, and what it says.
 fn run(elements: Vec<Element>, budget: &Budget) -> (Vec<String>, Vec<String>) {
+    marked(elements, &Marks::default(), budget)
+}
+
+/// The ids of what `merged` gives, its lines kept by `marks`, and what it says.
+fn marked(elements: Vec<Element>, marks: &Marks, budget: &Budget) -> (Vec<String>, Vec<String>) {
     let (flattened, rules) = flattened(elements);
-    let (out, _) = merged(flattened, &rules, NARROWEST, &Marks::default(), budget);
+    let (out, _) = merged(flattened, &rules, NARROWEST, marks, budget);
     (out.elements.iter().map(|(_, element)| element.id.to_string()).collect(), out.said.iter().map(ToString::to_string).collect())
+}
+
+#[test]
+fn req_auto_105_a_line_a_mark_holds_stays_and_an_area_too_costly_to_test_keeps_its_lines() {
+    let elements = || vec![auto("left", &[square((0.0, 0.0), (10.0, 10.0))], &[]), auto("line", &[strand(10.0)], &[])];
+    let near = |n| Marks::of(&[crate::auto::marks::tests::edged("strand", [9.9, -0.1, 10.8, 10.1], n)], &Budget::DEFAULT);
+    let (ids, said) = marked(elements(), &near(1), &Budget::DEFAULT);
+    assert_eq!((ids, said.len()), (vec!["left".to_string(), "line".to_string()], 0), "{said:?}");
+    // The line's 24 points against a mark of 4,000 segments cost more than 20,000 units.
+    let (ids, said) = marked(elements(), &near(1_000), &Budget { max_work: 20_000, ..Budget::DEFAULT });
+    assert_eq!(ids, ["left", "line"]);
+    assert_eq!(
+        said,
+        ["info SC-I0916: Finding which parts of this area a mark holds needed more than the work budget of 20000 units, so it keeps its thin lines."]
+    );
 }
 
 #[test]
