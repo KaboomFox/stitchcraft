@@ -228,8 +228,8 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
     // jump threads, and 2, 4, 4 and 8 moves.
     // With details last off by default again (M13.48), 60, 62, 49 and 64, and 3, 5, 3 and 9 moves.
     // With each outline its tolerance inside its fill's edge (REQ-AUTO-130, M13.43), outlines start elsewhere:
-    // 62, 64, 50 and 64.
-    let recorded = [("dog-on-turf-6", 3, 62), ("dog-on-turf-9", 5, 64), ("dog-running-6", 3, 50), ("dog-running-9", 9, 64)];
+    // 60, 62, 49 and 62.
+    let recorded = [("dog-on-turf-6", 3, 60), ("dog-on-turf-9", 5, 62), ("dog-running-6", 3, 49), ("dog-running-9", 9, 62)];
     let recorded = recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps));
     assert_eq!((found, apart), (listed, recorded.to_vec()), "the stitches astray, as found and as listed in ASTRAY, and the moves and jumps");
 }

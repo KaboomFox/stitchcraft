@@ -2141,8 +2141,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     narrower than twice the tolerance, the offset breaks into pieces, and that line keeps to its edge. An outline whose
     lines need more work to move in than the budget allows sews none, and `SC-I0904` says so.
   - No outline stitch lies on a neighbour on any repository picture. The pictures sew 66 stitches fewer to
-    12 more. The fills before the outlines end elsewhere. The dogs leave 0 to 2 jump threads more, and 3
-    rows of the running dog in 6 threads now show beside a line (`tests/auto_photos.rs`).
+    54 more. The fills before the outlines end elsewhere. The running dog in 9 threads leaves 2 jump threads
+    fewer, and 3 rows of the running dog in 6 threads now show beside a line (`tests/auto_photos.rs`).
 - M13.48: details last is off by default again (`REQ-AUTO-098`).
   - `auto_details_last` is off, and `auto_min_likeness` stays 0.85. On the traced dogs details last cost
     1, 4, 7 and 7 jump threads, each cut by hand, and their likeness didn't move. It comes back on by
