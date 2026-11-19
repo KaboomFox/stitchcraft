@@ -90,16 +90,16 @@ fn hundredths(value: f64) -> f64 {
 /// The designs whose thickest spot sews above the cap, with it in fills, as measured on 2026-11-19 with the
 /// cap at 3.25 (`REQ-AUTO-073`). The list only shrinks.
 const ABOVE: [(&str, f64); 10] = [
-    ("badges-abutting", 4.4),
-    ("badges-stacked", 4.4),
+    ("badges-abutting", 4.0),
+    ("badges-stacked", 4.0),
     ("button-abutting", 3.66),
     ("button-stacked", 3.52),
-    ("pear", 4.2),
-    ("lettered-patch", 4.0),
-    ("ts-13a", 4.16),
+    ("pear", 3.87),
+    ("lettered-patch", 3.98),
+    ("ts-13a", 3.99),
     ("ts-13b", 3.85),
-    ("ts-13c", 4.03),
-    ("ts-13d", 4.51),
+    ("ts-13c", 3.92),
+    ("ts-13d", 3.99),
 ];
 
 #[test]

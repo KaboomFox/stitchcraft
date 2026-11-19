@@ -319,9 +319,11 @@ impl Cap<'_, '_> {
             }
         };
         // A joined top stitch lays its thread only where its shape's own top thread or a later shape's lies: a
-        // stitch cut across a bend would show on a neighbour (`REQ-AUTO-026`).
+        // stitch cut across a bend would show on a neighbour (`REQ-AUTO-026`). A column's joined stitch runs
+        // between its edges, on the column, as the cap took it before columns were left whole.
         let covered = covered
-            && (kind == Kind::Hidden || self.ribbons.covers(&joined, |ribbon| ribbon.element == element || ribbon.at > after, whole, meter)?);
+            && (matches!(kind, Kind::Hidden | Kind::Column)
+                || self.ribbons.covers(&joined, |ribbon| ribbon.element == element || ribbon.at > after, false, meter)?);
         // The top stitches beside the 2 that ran straight on into them turn into the joined one, and the pull
         // moves their needle holes in: what they then leave must be covered too.
         let overlap = self.pass.rules.overlap;
