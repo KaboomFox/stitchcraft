@@ -81,7 +81,12 @@ fn req_auto_100_the_cap_only_takes_needle_points_out_and_bares_nothing() {
         // The cap lowers the thickest spot. What holds it above the cap is a satin column's top, which the cap
         // leaves (`REQ-AUTO-112`), and `tests/auto_peaks.rs` lists it.
         assert!(before.fills.value > 4.0, "{name}: {:.2}", before.fills.value);
-        assert!(after.fills.value < before.fills.value, "{name}: {:.2} fills at its thickest spot, {:.2} with the cap off", after.fills.value, before.fills.value);
+        assert!(
+            after.fills.value < before.fills.value,
+            "{name}: {:.2} fills at its thickest spot, {:.2} with the cap off",
+            after.fills.value,
+            before.fills.value
+        );
         // Every needle point left is one the plan had, in its order, but for the row ends the last pass moves:
         // no run is cut.
         assert_eq!(on.blocks.len(), off.blocks.len(), "{name}");
@@ -115,10 +120,13 @@ fn diag_sc_i1119_the_cap_says_what_it_took_of_each_kind_and_what_is_left() {
     assert!(said[0].contains("Left: ") && said[0].contains(" at 3.5 fills or more"), "{}", said[0]);
 }
 
+/// Each column's id and its top stitches, as their 2 needle points.
+type Tops = Vec<(String, Vec<[(f64, f64); 2]>)>;
+
 /// The top stitches of each of `columns` in `plan`, as their 2 needle points, in the plan's order.
-fn tops(plan: &StitchPlan, columns: &BTreeSet<String>) -> Vec<(String, Vec<[(f64, f64); 2]>)> {
+fn tops(plan: &StitchPlan, columns: &BTreeSet<String>) -> Tops {
     let id = |stitch: &Stitch| stitch.origin.element.and_then(|element| plan.elements.get(element.index())).map(ToString::to_string);
-    let mut each: Vec<(String, Vec<[(f64, f64); 2]>)> = columns.iter().map(|column| (column.clone(), Vec::new())).collect();
+    let mut each: Tops = columns.iter().map(|column| (column.clone(), Vec::new())).collect();
     for block in &plan.blocks {
         for pair in block.stitches.windows(2) {
             let (before, stitch) = (&pair[0], &pair[1]);
@@ -163,5 +171,26 @@ fn req_auto_112_the_cap_leaves_every_top_stitch_of_a_satin_column_as_digitizing_
         // Every top stitch of every column is where digitizing laid it: no needle point at its edge goes, and
         // no stitch turns from square to its column.
         assert_eq!(tops(&on, &columns), tops(&off, &columns), "{name}");
+    }
+}
+
+#[test]
+fn req_auto_113_the_cap_at_its_default_keeps_what_it_keeps_at_4_fills() {
+    let limits = rules();
+    assert_eq!(limits.auto_thick_cap_fills, 3.5);
+    for (name, design) in designs() {
+        let (low, four) = (in_place(&design).plan.unwrap(), in_place(&capped(&design, "4")).plan.unwrap());
+        let columns = fabric::columns(&design);
+        assert_eq!(tops(&low, &columns), tops(&four, &columns), "{name}");
+        let (at, was) = (low.stats(), four.stats());
+        assert_eq!((at.jumps, at.trims, at.color_changes), (was.jumps, was.trims, was.color_changes), "{name}");
+        assert!(at.stitches <= was.stitches, "{name}");
+        assert_eq!(fabric::astray(&design, &low).jumps.len(), fabric::astray(&design, &four).jumps.len(), "{name}");
+        let (thickest, before) = (fabric::thickness(&low, &Limits::DEFAULT).fills.value, fabric::thickness(&four, &Limits::DEFAULT).fills.value);
+        assert!(thickest <= before + 0.01, "{name}: {thickest:.2} fills, {before:.2} at 4");
+        let (cover, cover_four) = (fabric::cover(&design, &low, GAP), fabric::cover(&design, &four, GAP));
+        assert!(cover.bare_share() * 100.0 <= limits.auto_base_bare_percent, "{name}");
+        assert!(cover.slivers(&limits).len() <= cover_four.slivers(&limits).len(), "{name}");
+        assert!(fabric::likeness(&design, &low).likeness() >= fabric::likeness(&design, &four).likeness(), "{name}");
     }
 }

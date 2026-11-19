@@ -282,9 +282,9 @@ mod tests {
     fn req_auto_114_the_warning_never_names_the_cap() {
         // 5 fills, above the cap of 3 and at the warning's limit: the warning gives the limits a person acts on,
         // and `SC-I1119` what is left above the cap.
-        let sewn = plan(4, 1);
+        let mut sewn = plan(4, 1);
         let held = Held { limits: Limits::DEFAULT, overlap: 1.0, cap: 3.0 };
-        let said = finished(&mut sewn.clone(), &held, (&[], &BTreeSet::new(), &BTreeSet::new()), stitchcraft_plan::profiles::REFERENCE, &Budget::DEFAULT);
+        let said = finished(&mut sewn, &held, (&[], &BTreeSet::new(), &BTreeSet::new()), stitchcraft_plan::profiles::REFERENCE, &Budget::DEFAULT);
         let codes: Vec<Code> = said.iter().map(|said| said.code).collect();
         assert_eq!(codes, [Code::AutoThinned, Code::AutoThick]);
         assert!(said[0].message.contains("Left: ") && said[0].message.contains(" at 3 fills or more"), "{}", said[0].message);
@@ -312,7 +312,10 @@ mod tests {
         let sewn = plan(0, 5);
         let mut kept = sewn.clone();
         let codes = |said: &[Diagnostic]| said.iter().map(|said| said.code).collect::<Vec<_>>();
-        assert_eq!(codes(&finished(&mut kept, &held, (&[], &BTreeSet::new(), &BTreeSet::new()), profile, &Budget::DEFAULT)), [Code::AutoThinned, Code::AutoThick]);
+        assert_eq!(
+            codes(&finished(&mut kept, &held, (&[], &BTreeSet::new(), &BTreeSet::new()), profile, &Budget::DEFAULT)),
+            [Code::AutoThinned, Code::AutoThick]
+        );
         assert_eq!(kept, sewn);
         // A plan within the cap is not gone through, and 2 fills say nothing.
         let (within, mut kept) = (plan(0, 2), plan(0, 2));
