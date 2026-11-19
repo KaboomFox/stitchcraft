@@ -307,8 +307,8 @@ impl Cap<'_, '_> {
         };
         for (side, start) in [(before, false), (next, true)] {
             let Some(side) = side else { continue };
-            let length = side.length();
-            let t = if length > 0.0 { (overlap / length).min(1.0) } else { 0.0 };
+            // A stitch of no length gives no number, and the whole of it, its one place, is what moves.
+            let t = (overlap / side.length()).min(1.0);
             let part =
                 if start { SewnStitch { to: side.from.lerp(side.to, t), ..side } } else { SewnStitch { from: side.to.lerp(side.from, t), ..side } };
             if !self.ribbons.covers(&part, others, meter)? {
@@ -322,10 +322,10 @@ impl Cap<'_, '_> {
         if role == Role::Top {
             self.ribbons.kill((block, at));
             self.ribbons.kill(after);
-            // The joined stitch turns at both its ends.
-            if let Some(ribbon) = Ribbon::of((joined.from, joined.to), (0.0, 0.0), after, element) {
-                self.ribbons.add(ribbon, meter)?;
-            }
+            // The joined stitch, a stitch of the shape's own that no pull counts here, as no fill's is.
+            let ribbon =
+                Ribbon { from: joined.from, to: joined.to, whole: (joined.from, joined.to), cut: (0.0, 0.0), at: after, element, alive: true };
+            self.ribbons.add(ribbon, meter)?;
         }
         // The stitches beside it, pulled in where they now turn.
         for (side, start) in [(before, false), (next, true)] {
@@ -423,8 +423,9 @@ impl Ribbons {
 /// them.
 fn straight_on(first: &SewnStitch, next: &SewnStitch) -> bool {
     let (u, v) = ((first.to.x() - first.from.x(), first.to.y() - first.from.y()), (next.to.x() - next.from.x(), next.to.y() - next.from.y()));
+    // A stitch of no length gives no number, and no number runs straight on.
     let lengths = first.length() * next.length();
-    first.block == next.block && first.to == next.from && lengths > 0.0 && (u.0 * v.0 + u.1 * v.1) / lengths >= math::cos(STRAIGHT_ON.to_radians())
+    first.block == next.block && first.to == next.from && (u.0 * v.0 + u.1 * v.1) / lengths >= math::cos(STRAIGHT_ON.to_radians())
 }
 
 /// The stitch from `from` to `to` shortened by `start` at its start and `end` at its end, in millimetres, as

@@ -38,12 +38,12 @@ instructions = 1670000000
 [pictures.TS-13C]
 args = ["testsheet", "TS-13C"]
 golden = "conformance/golden/testsheets/TS-13C.pes"
-instructions = 1760000000
+instructions = 1912000000
 
 [pictures.TS-13D]
 args = ["testsheet", "TS-13D"]
 golden = "conformance/golden/testsheets/TS-13D.pes"
-instructions = 1454000000
+instructions = 1550000000
 
 [pictures.TS-13E]
 args = ["testsheet", "TS-13E"]
@@ -57,19 +57,19 @@ instructions = 640000000
 
 [pictures.dog-on-turf-6]
 args = ["export", "docs/fixtures/traced-dog-on-turf-6.vectorcraft", "--auto"]
-instructions = 18250000000
+instructions = 18666000000
 
 [pictures.dog-on-turf-9]
 args = ["export", "docs/fixtures/traced-dog-on-turf-9.vectorcraft", "--auto"]
-instructions = 20254000000
+instructions = 20690000000
 
 [pictures.dog-running-6]
 args = ["export", "docs/fixtures/traced-dog-running-6.vectorcraft", "--auto"]
-instructions = 20030000000
+instructions = 20462000000
 
 [pictures.dog-running-9]
 args = ["export", "docs/fixtures/traced-dog-running-9.vectorcraft", "--auto"]
-instructions = 23272000000
+instructions = 23780000000
 
 [pictures.pear]
 args = ["export", "docs/fixtures/traced-pear.vectorcraft", "--auto"]

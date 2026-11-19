@@ -422,6 +422,12 @@ why = "the ribbon that ends at the entry after the point is left out by the test
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/auto/cap.rs"
+mutant = "replace > with >= in Cap<'_, '_>::taken_out"
+line = "covered && (kind == Kind::Hidden || self.ribbons.covers(&joined, |ribbon| ribbon.element == element || ribbon.at > after, meter)?);"
+why = "the ribbon that ends at the entry after the point is the shape's own, since a top point joins 2 stitches of its shape, so the test before it counts it already"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/cap.rs"
 mutant = "replace / with * in cell"
 line = "(value / CELL).floor() as i64"
 why = "CELL is 1 mm, and a value divided by 1 is the value times 1"
