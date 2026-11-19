@@ -3435,6 +3435,15 @@ milestone = "M13"
 status = "planned"
 
 [[req]]
+id = "REQ-AUTO-112"
+area = "auto"
+level = "L2"
+statement = "The cap at the end of planning (REQ-AUTO-100) takes no needle point of a top stitch of a satin column that digitizing made: each of a column's top stitches stays where digitizing laid it, so the column keeps its edge and its stitches' angle to it (REQ-AUTO-017). A column's underlay and travel, and the stitches of every other shape under it or beside it, are the cap's to take as REQ-AUTO-100 says."
+rationale = "The cap's test of cover asks only whether the places along a needle point's 2 stitches lie within half a thread of other top thread. In a column, the stitches beside a point lie 0.4 mm apart or closer and always pass it, at an inner edge or a bend most of all, where they crowd. Measured on 2026-11-19 with the cap at 3 fills on TS-13C's and the lettered patch's digitized shapes, the cap took 95 points of columns: 46 of a column's own doubled stitches, each a point on one edge whose 2 stitches across became 1 stitch of 0.4 mm along the other edge, which notches the edge, and 49 under later shapes, whose joined stitches run 45 degrees across the column, which shows wherever the later shape's edge pulls in. At 4 fills the cap changed the columns of 10 of the 20 repository designs, a TS-13C column by 9 points. A satin column is the surface a person sees, so the simplest rule is the one taken: the cap takes none of its top stitches."
+milestone = "M13"
+status = "planned"
+
+[[req]]
 id = "REQ-AUTO-075"
 area = "auto"
 level = "L2"

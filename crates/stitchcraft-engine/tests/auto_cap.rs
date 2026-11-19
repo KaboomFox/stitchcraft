@@ -8,12 +8,16 @@
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
-use stitchcraft_core::Code;
-use stitchcraft_engine::auto::{ADVANCED, AutoParams};
-use stitchcraft_engine::design::{Design, Element};
+use std::collections::BTreeSet;
+
+use stitchcraft_core::{Budget, Code, math};
+use stitchcraft_engine::auto::{self, ADVANCED, AutoParams};
+use stitchcraft_engine::design::{Design, DesignSettings, Element};
+use stitchcraft_engine::generate::stitch_type_of;
 use stitchcraft_engine::testsheets::find;
+use stitchcraft_params::Family;
 use stitchcraft_plan::{Role, Stitch, StitchKind, StitchPlan};
-use stitchcraft_testkit::designs::{in_place, rules};
+use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, in_place, letter, polylines, rules, widened};
 use stitchcraft_testkit::fabric::{self, GAP, Limits};
 use stitchcraft_testkit::pictures;
 
@@ -109,4 +113,62 @@ fn diag_sc_i1119_the_cap_says_what_it_took_of_each_kind_and_what_is_left() {
     assert_eq!(said.len(), 1, "{:?}", outcome.diagnostics);
     assert!(said[0].contains(" fills or more. The last pass took ") && said[0].contains(", and the cap took "), "{}", said[0]);
     assert!(said[0].contains("Left: 0.0 mm² at 4 fills or more"), "{}", said[0]);
+}
+
+/// The ids of the satin columns that digitizing makes of `design`.
+fn columns(design: &Design) -> BTreeSet<String> {
+    let (elements, _) = auto::digitized(design, &Budget::DEFAULT);
+    let satin = |element: &&Element| stitch_type_of(element, &design.settings).is_some_and(|stitch_type| stitch_type.family() == Family::Satin);
+    elements.iter().filter(satin).map(|element| element.id.to_string()).collect()
+}
+
+/// The top stitches of each of `columns` in `plan`, as their 2 needle points, in the plan's order.
+fn tops(plan: &StitchPlan, columns: &BTreeSet<String>) -> Vec<(String, Vec<[(f64, f64); 2]>)> {
+    let id = |stitch: &Stitch| stitch.origin.element.and_then(|element| plan.elements.get(element.index())).map(ToString::to_string);
+    let mut each: Vec<(String, Vec<[(f64, f64); 2]>)> = columns.iter().map(|column| (column.clone(), Vec::new())).collect();
+    for block in &plan.blocks {
+        for pair in block.stitches.windows(2) {
+            let (before, stitch) = (&pair[0], &pair[1]);
+            let sewn = before.kind == StitchKind::Normal && stitch.kind == StitchKind::Normal && stitch.origin.role == Role::Top;
+            if let Some(at) = id(stitch).filter(|_| sewn).and_then(|id| each.iter().position(|(column, _)| *column == id)) {
+                each[at].1.push([(before.at.x(), before.at.y()), (stitch.at.x(), stitch.at.y())]);
+            }
+        }
+    }
+    each
+}
+
+/// A circle round the origin `radius` mm across, by 96 points.
+fn circle(radius: f64) -> Vec<(f64, f64)> {
+    (0..96).map(|k| f64::from(k) * std::f64::consts::TAU / 96.0).map(|t| (radius * math::cos(t), radius * math::sin(t))).collect()
+}
+
+/// The 2 drawn shapes of `REQ-AUTO-112`'s case: a ring of satin 4 mm wide on the edge of a disc 20 mm
+/// across, which reaches under it, and a T of strokes 2.5 mm wide over a plate, its bar and its stem meeting.
+fn drawn_columns() -> Vec<(&'static str, Design)> {
+    let disc = automatic(fill("disc", &[&circle(10.0)], &RED, &[]));
+    let edge = circle(10.0);
+    let ring = automatic(widened(along("ring", polylines(&[&[&edge[..], &edge[..1]].concat()]), &BLUE, &[]), 4.0));
+    let plate = automatic(fill("plate", &[&[(-4.0, -4.0), (13.0, -4.0), (13.0, 19.0), (-4.0, 19.0)]], &RED, &[]));
+    let t = automatic(fill("t", &[&letter('T', 15.0, 2.5)], &BLUE, &[]));
+    let design = |elements: Vec<Element>| Design::new(elements, DesignSettings::default()).unwrap();
+    vec![("ring over a disc", design(vec![disc, ring])), ("T over a plate", design(vec![plate, t]))]
+}
+
+#[test]
+fn req_auto_112_the_cap_leaves_every_top_stitch_of_a_satin_column_as_digitizing_laid_it() {
+    for (name, design) in drawn_columns() {
+        let columns = columns(&design);
+        assert!(!columns.is_empty(), "{name}: no column");
+        // A cap of 50 fills is above every spot, so nothing is taken. At 2, the cap takes thread wherever the
+        // column lies over the area under it, its inner edge and its parts' join among those places.
+        let off = in_place(&capped(&design, "50")).plan.unwrap();
+        let on = in_place(&capped(&design, "2")).plan.unwrap();
+        let thickest = fabric::thickness(&off, &Limits::DEFAULT).fills.value;
+        assert!(thickest > 2.0, "{name}: {thickest:.2} fills at its thickest spot with the cap off");
+        assert!(on.stats().stitches < off.stats().stitches, "{name}: the cap took nothing");
+        // Every top stitch of every column is where digitizing laid it: no needle point at its edge goes, and
+        // no stitch turns from square to its column.
+        assert_eq!(tops(&on, &columns), tops(&off, &columns), "{name}");
+    }
 }
