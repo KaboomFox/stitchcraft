@@ -287,14 +287,15 @@ params! {
         auto_thick_fail_points: Number = "30", label "Needle points that fail, per mm²", range (0.5, 200.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
-        /// The most fills of thread a spot of a millimetre sews. Where a spot sews more once the design is
-        /// planned, a last pass and then the cap take thread there that other stitches cover: travel, the
-        /// base layer, a shape's thread under later shapes, and a shape's own top stitches where they are
-        /// doubled. The cap adds no jump thread, and what shows keeps its colour. Where no more thread may go,
-        /// the warning of how thick the design sews names the spot. A starting value for a 75/11 needle and
-        /// 40-weight polyester thread, which a sew-out has to confirm. The design goes by the setting of its
-        /// lowest automatic shape.
-        auto_thick_cap_fills: Number = "4", label "Most thread on a spot, in fills", range (1.0, 50.0),
+        /// The most fills of thread a spot of a millimetre sews: what planning aims at. Where a spot sews
+        /// more once the design is planned, a last pass and then the cap take thread there that other
+        /// stitches cover: travel, the base layer, a shape's thread under later shapes, and a shape's own top
+        /// stitches where they are doubled. The cap leaves a satin column's top stitches as they are, adds no
+        /// jump thread, and what shows keeps its colour. A note says what is left above the cap, and the
+        /// warning comes only at its own limit. A starting value for a 75/11 needle and 40-weight polyester
+        /// thread, which a sew-out has to confirm. The design goes by the setting of its lowest automatic
+        /// shape.
+        auto_thick_cap_fills: Number = "3.5", label "Most thread on a spot, in fills", range (1.0, 50.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
         /// Whether a detail sews after the larger areas round it, where that costs no thread change: an

@@ -10,12 +10,10 @@
 
 use std::collections::BTreeSet;
 
-use stitchcraft_core::{Budget, Code, math};
-use stitchcraft_engine::auto::{self, ADVANCED, AutoParams};
+use stitchcraft_core::{Code, math};
+use stitchcraft_engine::auto::{ADVANCED, AutoParams};
 use stitchcraft_engine::design::{Design, DesignSettings, Element};
-use stitchcraft_engine::generate::stitch_type_of;
 use stitchcraft_engine::testsheets::find;
-use stitchcraft_params::Family;
 use stitchcraft_plan::{Role, Stitch, StitchKind, StitchPlan};
 use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, in_place, letter, polylines, rules, widened};
 use stitchcraft_testkit::fabric::{self, GAP, Limits};
@@ -64,9 +62,9 @@ fn kept(plan: &StitchPlan, locks: bool) -> Vec<Vec<Stitch>> {
 }
 
 #[test]
-fn req_auto_099_the_cap_is_an_advanced_setting_of_4_fills() {
+fn req_auto_099_the_cap_is_an_advanced_setting_of_3_5_fills() {
     let spec = AutoParams::SPECS.iter().find(|spec| spec.key == CAP);
-    assert!(spec.is_some_and(|spec| spec.default == "4" && spec.group == ADVANCED), "{:?}", spec.map(|spec| (spec.default, spec.group)));
+    assert!(spec.is_some_and(|spec| spec.default == "3.5" && spec.group == ADVANCED), "{:?}", spec.map(|spec| (spec.default, spec.group)));
     // It sits beside the 4 limits of how thick a design sews, after them.
     let keys: Vec<&str> = AutoParams::SPECS.iter().map(|spec| spec.key).collect();
     let at = keys.iter().position(|key| *key == CAP).unwrap();
@@ -80,8 +78,10 @@ fn req_auto_100_the_cap_only_takes_needle_points_out_and_bares_nothing() {
         // A cap of 50 fills is above every spot, so nothing is taken.
         let (on, off) = (in_place(&design).plan.unwrap(), in_place(&capped(&design, "50")).plan.unwrap());
         let (before, after) = (fabric::thickness(&off, &Limits::DEFAULT), fabric::thickness(&on, &Limits::DEFAULT));
+        // The cap lowers the thickest spot. What holds it above the cap is a satin column's top, which the cap
+        // leaves (`REQ-AUTO-112`), and `tests/auto_peaks.rs` lists it.
         assert!(before.fills.value > 4.0, "{name}: {:.2}", before.fills.value);
-        assert!(after.fills.value <= 4.0, "{name}: {:.2} fills at its thickest spot, {:.2} with the cap off", after.fills.value, before.fills.value);
+        assert!(after.fills.value < before.fills.value, "{name}: {:.2} fills at its thickest spot, {:.2} with the cap off", after.fills.value, before.fills.value);
         // Every needle point left is one the plan had, in its order, but for the row ends the last pass moves:
         // no run is cut.
         assert_eq!(on.blocks.len(), off.blocks.len(), "{name}");
@@ -106,20 +106,13 @@ fn req_auto_100_the_cap_only_takes_needle_points_out_and_bares_nothing() {
 
 #[test]
 fn diag_sc_i1119_the_cap_says_what_it_took_of_each_kind_and_what_is_left() {
-    // The traced pear: the last pass leaves it above 4 fills, and the cap takes the rest
-    // (`REQ-AUTO-101`).
+    // The traced pear: the last pass leaves it above the cap, and the cap takes what it may. A spot that a
+    // satin column holds is left above it (`REQ-AUTO-101`, `REQ-AUTO-112`).
     let outcome = in_place(&pictures::pear());
     let said: Vec<&str> = outcome.diagnostics.iter().filter(|said| said.code == Code::AutoThinned).map(|said| said.message.as_str()).collect();
     assert_eq!(said.len(), 1, "{:?}", outcome.diagnostics);
     assert!(said[0].contains(" fills or more. The last pass took ") && said[0].contains(", and the cap took "), "{}", said[0]);
-    assert!(said[0].contains("Left: 0.0 mm² at 4 fills or more"), "{}", said[0]);
-}
-
-/// The ids of the satin columns that digitizing makes of `design`.
-fn columns(design: &Design) -> BTreeSet<String> {
-    let (elements, _) = auto::digitized(design, &Budget::DEFAULT);
-    let satin = |element: &&Element| stitch_type_of(element, &design.settings).is_some_and(|stitch_type| stitch_type.family() == Family::Satin);
-    elements.iter().filter(satin).map(|element| element.id.to_string()).collect()
+    assert!(said[0].contains("Left: ") && said[0].contains(" at 3.5 fills or more"), "{}", said[0]);
 }
 
 /// The top stitches of each of `columns` in `plan`, as their 2 needle points, in the plan's order.
@@ -158,7 +151,7 @@ fn drawn_columns() -> Vec<(&'static str, Design)> {
 #[test]
 fn req_auto_112_the_cap_leaves_every_top_stitch_of_a_satin_column_as_digitizing_laid_it() {
     for (name, design) in drawn_columns() {
-        let columns = columns(&design);
+        let columns = fabric::columns(&design);
         assert!(!columns.is_empty(), "{name}: no column");
         // A cap of 50 fills is above every spot, so nothing is taken. At 2, the cap takes thread wherever the
         // column lies over the area under it, its inner edge and its parts' join among those places.

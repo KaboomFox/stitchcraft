@@ -1662,8 +1662,8 @@ point the cap leaves is one of the plan's, in the same order. The jumps, the tri
 are those of the plan. The cap reads roles, elements and places, whatever the picture shows. It takes
 needle points only of the elements that digitizing made. A shape with settings of its own keeps the
 stitches they give it, and its stitches cover and lay thread like the others. A test sheet's half as drawn sews so.
-Where a spot stays above the cap, `SC-W0913` says "Above the cap." after what is stacked there. `SC-I1119`
-says what the last pass took and then what each kind of the cap's gave.
+`SC-I1119` says what the last pass took and then what each kind of the cap's gave, and what is left above
+the cap ([The cap and the warning](#the-cap-and-the-warning)).
 
 The cap is `stitchcraft_engine::auto::cap`. It goes through the needle points whose stitch in or out comes
 within 1 mm of a spot above the cap, and judges cover by the top stitches within 2.5 mm of such a spot,
@@ -1673,10 +1673,10 @@ the last pass's measure up to date with the pass's own helpers, so the design is
 works on copies. When it runs out of work, the plan stays as the last pass left it, and `SC-I1119` says
 so.
 
-Where a satin column's points crowd in a bend, the third kind may take one. The stitch left then crosses
-part of the column only: on TS-13C's face outline it lies 14° from square, where `REQ-AUTO-017` holds the
-columns' rungs to 10°. Its places were covered twice over, so no colour changes, and MC-8 looks at it.
-That case plans the columns with the cap at 50 fills, as digitizing lays them.
+Until M13.46 the cap took a satin column's top stitches too. Where a column's points crowded in a bend,
+the third kind could take one, and the stitch left crossed part of the column only: on TS-13C's face
+outline it lay 14° from square, where `REQ-AUTO-017` holds the columns' rungs to 10°. Since M13.46 the cap
+takes none of a column's top stitches ([Satin columns stay whole](#satin-columns-stay-whole)).
 
 A joined stitch no longer than the longer of its 2 left the dogs at 4.02 to 4.18 fills: the next row's start
 lay too far for the stitch into a turn. With the element's own longest stitch as the bound they come to 4.00.
