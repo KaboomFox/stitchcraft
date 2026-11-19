@@ -4,7 +4,7 @@ A traced photo has hundreds of shapes. To mark one, guide its rows or give it an
 first have to find it. Each shape of a design digitized automatically has a name, and the notices, the
 report and VectorCraft's Layers panel all use it.
 
-## What a name says
+## The parts of a name
 
 A name gives the shape's thread, how it sews, and its number among the shapes of that thread that sew
 the same way:
@@ -53,7 +53,7 @@ under `shapes` in the order they sew. Each has its `name`, `element`, `thread`, 
 The sewing order is chosen again at every plan, and one edit can move many shapes in it. The report gives
 the order as this plan sews it.
 
-## When a shape's own Auto effect replaces its group's
+## A path's own Auto effect in an automatic group
 
 StitchCraft's Auto effect on a group makes everything in the group automatic with its settings. A path
 inside it with an Auto effect of its own sews by its own settings alone. VectorCraft stores an effect with

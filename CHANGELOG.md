@@ -8,8 +8,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - M13.25: names of shapes (`REQ-AUTO-125` to `REQ-AUTO-127`, `REQ-VC-033`, `REQ-VC-034`, `REQ-CLI-023`,
   `SC-W0920`).
   - Each automatic shape without a name is named by its thread, how it sews and its number among the shapes
-    of both from the Layers panel's top row: `Red fill (3)`. A shape keeps a name it has, and a name in use
-    is never given again.
+    of both from the Layers panel's top row: `Red fill (3)`. A shape keeps a name it has, and no shape gets a
+    name another shape has.
   - `stitch plan picture.png --traced` writes the names into the traced document, so VectorCraft's Layers
     panel shows them and its search finds them. A picture's bug-report bundle keeps them.
   - A notice about a shape names it before its id, `info SC-I0912 ("Red fill (3)", vc:63:fill): …`, and so

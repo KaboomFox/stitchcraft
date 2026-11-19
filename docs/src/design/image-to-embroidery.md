@@ -3176,9 +3176,9 @@ column (1)`, `Black line (12)`.
 - **The number** counts the shapes of that thread and that way of sewing in the Layers panel's order, from
   its top row, 1 first. The top row is the object drawn last. The number is written in brackets, so that a
   search for `fill (1)` doesn't also find `fill (12)`.
-- **A shape** is what the elements of one object make: their ids differ only in their last part
+- **A shape** is what the elements of one object make. Their ids differ only in their last part
   (`vc:6:fill` and `vc:6:stroke` are of `vc:6`), and the parts digitizing makes of them add `#` or `~`
-  and more to an element's id (`vc:6:fill#2`). Every part takes its shape's name.
+  and more to an element's id (`vc:6:fill#2`). A part has its shape's name.
 
 The longest name on the pictures measured was 18 characters with a hex code in place of the thread's name,
 and the longest thread name of the machine's palette has 15 (`Wisteria Violet`). A name then fits in 27.
@@ -3227,8 +3227,8 @@ name a shape in any message (`diag::called`): its name in quotes, then its eleme
 - **The traced document.** `stitch plan picture.png --traced FILE` writes each shape's name into its node,
   and changes nothing else in the document (`REQ-VC-033`). The design that is planned is that document, with its names,
   so planning `FILE` again sews the same stitches and says the same notices.
-- **The notices.** A notice about a shape names it, the reader's warnings too: a line of `stitch plan`
-  shows the name beside the id, `info SC-I0912 ("Red fill (3)", vc:63:fill): …` (`REQ-AUTO-127`). The
+- **The notices.** A notice about a shape names it, and so does a warning of the reader. A line of `stitch
+  plan` has the name before the id, `info SC-I0912 ("Red fill (3)", vc:63:fill): …` (`REQ-AUTO-127`). The
   shapes at `SC-W0913`'s thickest spot are named the same way, each in brackets: `("Red fill (3)",
   vc:63:fill) #ed171f 2.1`. `SC-I0916` and `SC-I0918` are about a mark and a guide, which they name by
   its id as before, and they count the parts they keep or steer.
@@ -3264,17 +3264,17 @@ The owner took the 6 recommendations of phase 1 on 2026-11-19:
   the name.
 - The number stands in brackets, so that a search finds one shape.
 - The shapes left out are named too, as `left out`, since notices name the background.
-- The layers aren't reordered: automatic digitizing cuts an area away under the areas over it in the
-  layers, so the layers' order is part of the design.
+- The layers keep their order. Automatic digitizing cuts an area away under the areas over it in the
+  layers, and the layers' order is part of the design.
 - A new code, `SC-W0920`, says that an Auto effect inside an automatic group replaces the group's settings,
   so that `stitch explain` can say what to do.
 
 ### What isn't built
 
 - `SC-I0916` and `SC-I0918` don't name the shapes whose parts a mark keeps or a guide steers. The marks
-  and the guides count parts as they are found, deep inside digitizing, before the shapes are named.
-- The VectorCraft plug-in's own previews don't show names: a document opened in VectorCraft has the names
-  `--traced` wrote, and a path the person draws later is named for each plan only.
+  and the guides count the parts in digitizing, before the shapes have names.
+- The VectorCraft plug-in's previews don't show names. A document opened in VectorCraft has the names
+  `--traced` wrote, and a path the person draws later has a name for each plan only.
 - VectorCraft's own Layers panel isn't changed.
 
 ## Pictures from the command line
