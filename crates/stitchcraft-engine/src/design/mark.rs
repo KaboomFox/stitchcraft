@@ -72,7 +72,7 @@ pub struct Taken {
 /// points of one path, its fill's closed: it is one mark or guide, its fill, or its stroke when the path is an
 /// open line, whose stroke's width is a mark's band.
 pub fn taken_out(elements: Vec<Element>) -> Taken {
-    let mut taken = Taken { elements: Vec::with_capacity(elements.len()), ..Taken::default() };
+    let mut taken = Taken::default();
     let mut last: Option<String> = None;
     for element in elements {
         let named = element.name.as_deref().map(str::to_string);

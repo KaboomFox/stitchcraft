@@ -128,3 +128,32 @@ fn req_auto_109_a_guide_over_a_detail_leaves_the_area_under_it_alone() {
     let (elements, _) = digitized(&both, &Budget::DEFAULT);
     assert_eq!(elements.iter().filter(|e| e.params.get("fill_method") == Some("guided_fill")).count(), 2, "{elements:?}");
 }
+
+#[test]
+fn req_auto_109_the_parts_of_one_area_that_follow_one_guide_are_one_element_after_the_others() {
+    // One red area of 4 squares in a row. The first guide crosses the first 2, the second the third, and
+    // the fourth follows none: it is the area's fill and keeps its name, and each guide's parts are one
+    // guided fill after it, numbered, in the order the guides are drawn.
+    let square = |x: f64| [(x, 0.0), (x + 10.0, 0.0), (x + 10.0, 10.0), (x, 10.0)];
+    let (a, b, c, d) = (square(0.0), square(15.0), square(30.0), square(45.0));
+    let area = automatic(fill("red", &[&a, &b, &c, &d], &RED, &[]));
+    let guides = vec![guide("first", &[(-1.0, 5.0), (12.0, 4.0), (26.0, 5.0)]), guide("second", &[(32.0, -1.0), (35.0, 5.0), (32.0, 11.0)])];
+    let guided = design(vec![area], guides);
+    let (elements, said) = digitized(&guided, &Budget::DEFAULT);
+    let fills: Vec<(&str, Option<&str>, usize, f64)> = elements
+        .iter()
+        .filter(|e| matches!(e.shape, Shape::Fill { .. }))
+        .map(|e| {
+            let start = e.hints.guide.as_ref().map_or(f64::NAN, |guide| guide.path.subpaths[0].start.x());
+            (e.id.as_str(), e.params.get("fill_method"), e.shape.path().subpaths.len(), start)
+        })
+        .collect();
+    let mut sorted = fills.clone();
+    sorted.sort_by(|x, y| x.0.cmp(y.0));
+    assert_eq!(sorted.len(), 3, "{fills:?}");
+    assert_eq!((sorted[0].0, sorted[0].1, sorted[0].2), ("red", None, 1), "{fills:?}");
+    assert_eq!((sorted[1].0, sorted[1].1, sorted[1].2, sorted[1].3), ("red#2", Some("guided_fill"), 2, -1.0), "{fills:?}");
+    assert_eq!((sorted[2].0, sorted[2].1, sorted[2].2, sorted[2].3), ("red#3", Some("guided_fill"), 1, 32.0), "{fills:?}");
+    let named: Vec<String> = said.iter().filter(|d| d.code.to_string() == "SC-I0918").map(|d| d.message.clone()).collect();
+    assert!(named[0].starts_with("2 filled parts of 1 automatic area") && named[1].starts_with("1 filled part of 1 automatic area"), "{named:?}");
+}
