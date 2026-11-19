@@ -127,7 +127,6 @@ pub(in crate::auto) fn filled(part: &Polygon, bounds: &Bounds, meter: &mut Meter
         return Ok(as_filled(choose(&unmeasured, bounds)));
     }
     let Ok(Some(found)) = strips::columns(part, piece(part), &[], bounds.narrowest.get(), meter)? else { return Ok(None) };
-    let found = strips::bends(part, &found, (bounds.narrowest.get(), 0.0), meter)?;
     let edges = Edges::of(part, piece(part), meter)?;
     // A part without a centre line of any length is a dot, which is compact.
     let measures = measured(part, &found, &edges, meter)?.unwrap_or(unmeasured);
@@ -135,6 +134,8 @@ pub(in crate::auto) fn filled(part: &Polygon, bounds: &Bounds, meter: &mut Meter
     if let Some(rule) = as_filled(rule) {
         return Ok(Some(rule));
     }
+    // A column that turns through a corner where 2 strokes meet is cut there (`REQ-AUTO-115`).
+    let found = strips::bends(part, &found, 0.0, &mut |column, meter| would_run(part, column, &edges, bounds.narrowest, meter), meter)?;
     if too_long(&found, bounds, meter)?.is_some() {
         return Ok(Some(RuleId::Refused));
     }
@@ -208,7 +209,11 @@ pub(super) fn columns(
         Some(chosen) => chosen,
         None => {
             // A column that turns through a corner where 2 strokes meet is cut there (`REQ-AUTO-115`).
-            let found = if cuts.is_empty() { strips::bends(part, &found, (bounds.narrowest.get(), reach), meter)? } else { found };
+            let found = if cuts.is_empty() {
+                strips::bends(part, &found, reach, &mut |column, meter| would_run(part, column, &edges, narrowest, meter), meter)?
+            } else {
+                found
+            };
             let Some(widths) = widths_of(part, &found, &edges, meter)? else { return Ok(Made::Unmade) };
             (found, widths, true)
         }
@@ -248,6 +253,14 @@ pub(super) fn columns(
         sewn.push(Sewn::Satin { path: drawn.path(), width, push, even, holes });
     }
     Ok(Made::Columns { sewn, rule, measures })
+}
+
+/// Whether `column` of `part`, whose edges `edges` holds, would run as a line too narrow for satin
+/// ([`runs`]) where `narrowest` is the narrowest satin column, with `meter`'s work: a column of no width
+/// would.
+fn would_run(part: &Polygon, column: &Column, edges: &Edges, narrowest: Mm, meter: &mut Meter) -> Result<bool, Exhausted> {
+    let widths = widths_of(part, std::slice::from_ref(column), edges, meter)?;
+    Ok(widths.and_then(|widths| widths.first().copied()).is_none_or(|measured| runs(measured, narrowest)))
 }
 
 /// How wide each of `found`, the columns of `part` whose edges `edges` holds, is ([`Width`]), with `meter`'s

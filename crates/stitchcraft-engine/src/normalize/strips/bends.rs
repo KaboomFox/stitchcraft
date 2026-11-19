@@ -74,24 +74,19 @@ const NEAR: f64 = 0.5;
 /// The most cuts a part's columns take: each cut makes one more column.
 const MOST_CUTS: usize = 64;
 
-macro_rules! trace {
-    ($($t:tt)*) => {
-        if std::env::var_os("BENDS_DEBUG").is_some() {
-            eprintln!($($t)*);
-        }
-    };
-}
-
 /// A way, with length 1.
 type Way = (f64, f64);
+
+/// Whether a column would run as a line along its middle, too narrow for satin, with a meter's work: the
+/// width rules of the caller's (`auto::columns`).
+pub(crate) type Runs<'a> = &'a mut dyn FnMut(&Column, &mut Meter) -> Result<bool, Exhausted>;
 
 /// `found`, the columns of `part` along its centre lines, each cut in 2 at each bend where 2 strokes meet
 /// (`REQ-AUTO-115`), with `meter`'s work. 2 columns of a line cut at a junction's middle where it turns
 /// sharply ([`super::columns`]) are first made one again and cut so, the halves in their places. Of a
 /// column cut at a bend, a half takes its place and the other comes last. A column that ended under one cut
 /// ends under the half nearer its end.
-pub(crate) fn bends(part: &Polygon, found: &[Column], (narrowest, pull): (f64, f64), meter: &mut Meter) -> Result<Vec<Column>, Exhausted> {
-    trace!("bends: {} columns, narrowest {narrowest}", found.len());
+pub(crate) fn bends(part: &Polygon, found: &[Column], pull: f64, runs: Runs<'_>, meter: &mut Meter) -> Result<Vec<Column>, Exhausted> {
     let mut columns = found.to_vec();
     // The pairs made one and cut again, which a half's end at the cut would find again.
     let mut done = BTreeSet::new();
@@ -102,12 +97,11 @@ pub(crate) fn bends(part: &Polygon, found: &[Column], (narrowest, pull): (f64, f
             let Some(y) = one.under.get(end).copied().flatten().filter(|&y| y != x && !done.contains(&(x.min(y), x.max(y)))) else { continue };
             let Some(other) = columns.get(y) else { continue };
             let Some((joined, at)) = joined(one, end, other) else {
-                trace!("pair {x} {end} under {y}: not joined");
                 continue;
             };
-            trace!("pair {x} {end} under {y}: joined at {at:.2}");
             let ends = ends_of(&columns, &[x, y]);
-            if let Some(halves) = cut(part, &joined, Some(at), &ends, (narrowest, pull), meter)? {
+            let ran = [runs(one, meter)?, runs(other, meter)?];
+            if let Some(halves) = cut(part, &joined, (Some(at), &ends), (pull, ran, &mut *runs), meter)? {
                 placed(&mut columns, halves, (x, y), meter)?;
                 done.insert((x.min(y), x.max(y)));
             }
@@ -119,7 +113,8 @@ pub(crate) fn bends(part: &Polygon, found: &[Column], (narrowest, pull): (f64, f
         meter.charge(1)?;
         let Some(column) = columns.get(k) else { break };
         let ends = ends_of(&columns, &[k]);
-        let Some(halves) = cut(part, column, None, &ends, (narrowest, pull), meter)? else {
+        let ran = runs(column, meter)?;
+        let Some(halves) = cut(part, column, (None, &ends), (pull, [ran, ran], &mut *runs), meter)? else {
             k += 1;
             continue;
         };
@@ -168,36 +163,21 @@ fn placed(columns: &mut [Column], halves: Halves, (k, l): (usize, usize), meter:
 /// when they don't meet so, or their outlines don't share the chord across `one`'s end.
 fn joined(one: &Column, end: usize, other: &Column) -> Option<(Column, f64)> {
     if one.closed || other.closed {
-        {
-            trace!("joined fail {}", line!());
-            return None;
-        }
+        return None;
     }
     let one = if end == 0 { one.reversed() } else { one.clone() };
-    let middle = *one.walked.points.last().or_else(|| {
-        trace!("joined fail {}", line!());
-        None
-    })?;
-    let at = other.walked.points.iter().position(|p| *p == middle).or_else(|| {
-        trace!("joined fail {}", line!());
-        None
-    })?;
+    let middle = *one.walked.points.last().or_else(|| None)?;
+    let at = other.walked.points.iter().position(|p| *p == middle).or_else(|| None)?;
     let before = Line { points: other.walked.points.get(..=at)?.to_vec(), closed: false }.length();
     let after = other.walked.length() - before;
     let width = other.outline().area() / other.line.length();
     if before.min(after) > LEGS * width {
-        {
-            trace!("joined fail {}", line!());
-            return None;
-        }
+        return None;
     }
     let other = if before <= after { other.clone() } else { other.reversed() };
     // Round `other`'s outline from each corner of the chord, away from the other corner, to its far end.
     let ring = other.outline().outline;
-    let ring = ring.get(..ring.len().saturating_sub(1)).or_else(|| {
-        trace!("joined fail {}", line!());
-        None
-    })?;
+    let ring = ring.get(..ring.len().saturating_sub(1)).or_else(|| None)?;
     let count = ring.len();
     let place = |p: &Point| ring.iter().position(|x| x == p);
     let (c0, c1) = (one.rails[0].last()?, one.rails[1].last()?);
@@ -207,10 +187,7 @@ fn joined(one: &Column, end: usize, other: &Column) -> Option<(Column, f64)> {
     } else if (i1 + 1) % count == i0 {
         1
     } else {
-        {
-            trace!("joined fail {}", line!());
-            return None;
-        }
+        return None;
     };
     let far = [other.rails[0].last()?, other.rails[1].last()?];
     let walk = |from: usize, step: usize| -> Option<(Vec<Point>, usize)> {
@@ -218,10 +195,7 @@ fn joined(one: &Column, end: usize, other: &Column) -> Option<(Column, f64)> {
         let mut k = from;
         for _ in 0..count {
             k = (k + step) % count;
-            let p = ring.get(k).or_else(|| {
-                trace!("joined fail {}", line!());
-                None
-            })?;
+            let p = ring.get(k).or_else(|| None)?;
             points.push(*p);
             if let Some(side) = far.iter().position(|f| *f == p) {
                 return Some((points, side));
@@ -229,14 +203,8 @@ fn joined(one: &Column, end: usize, other: &Column) -> Option<(Column, f64)> {
         }
         None
     };
-    let (on0, mut side0) = walk(i0, step).or_else(|| {
-        trace!("joined fail {}", line!());
-        None
-    })?;
-    let (on1, mut side1) = walk(i1, count - step).or_else(|| {
-        trace!("joined fail {}", line!());
-        None
-    })?;
+    let (on0, mut side0) = walk(i0, step).or_else(|| None)?;
+    let (on1, mut side1) = walk(i1, count - step).or_else(|| None)?;
     // A far end in a point, as a half cut at an apex has, is both rails' end: the side is the rail the walk
     // came along.
     if far[0] == far[1] {
@@ -245,10 +213,7 @@ fn joined(one: &Column, end: usize, other: &Column) -> Option<(Column, f64)> {
         side1 = 1 - side0;
     }
     if side0 == side1 {
-        {
-            trace!("joined fail {}", line!());
-            return None;
-        }
+        return None;
     }
     let mut rails = one.rails.clone();
     rails[0].extend(on0);
@@ -257,16 +222,10 @@ fn joined(one: &Column, end: usize, other: &Column) -> Option<(Column, f64)> {
     rungs.extend(other.rungs.iter().map(|&[x, y]| if side0 == 0 { [x, y] } else { [y, x] }));
     let at = one.line.length() + one.line.points.last().map_or(0.0, |last| last.distance(middle));
     let mut line = one.line.points.clone();
-    let from = other.line.points.iter().position(|p| *p == middle).or_else(|| {
-        trace!("joined fail {}", line!());
-        None
-    })?;
+    let from = other.line.points.iter().position(|p| *p == middle).or_else(|| None)?;
     line.extend(other.line.points.get(from..)?.iter().copied());
     let mut walked = one.walked.points.clone();
-    let from = other.walked.points.iter().position(|p| *p == middle).or_else(|| {
-        trace!("joined fail {}", line!());
-        None
-    })?;
+    let from = other.walked.points.iter().position(|p| *p == middle).or_else(|| None)?;
     walked.extend(other.walked.points.get(from + 1..)?.iter().copied());
     let under = [one.under[0], other.under[1]];
     Some((Column::cut(rails, rungs, Line { points: line, closed: false }, Line { points: walked, closed: false }, under), at))
@@ -319,9 +278,8 @@ struct Bend {
 fn cut(
     part: &Polygon,
     column: &Column,
-    near: Option<f64>,
-    ends: &[Point],
-    (narrowest, pull): (f64, f64),
+    (near, ends): (Option<f64>, &[Point]),
+    (pull, ran, runs): (f64, [bool; 2], Runs<'_>),
     meter: &mut Meter,
 ) -> Result<Option<Halves>, Exhausted> {
     if column.closed {
@@ -375,11 +333,9 @@ fn cut(
             continue;
         }
         let Some(notch) = notch(part, points, bend, width, meter)? else {
-            trace!("bend {} at {:?} cos {:.2} no notch", bend.at, points.get(bend.at), bend.cosine);
             continue;
         };
-        trace!("bend {} at {:?} cos {:.2} notch {notch:?}", bend.at, points.get(bend.at), bend.cosine);
-        if let Some(halves) = halves(part, column, bend, notch, (width, narrowest, pull), meter)? {
+        if let Some(halves) = halves(part, column, (bend, notch), (width, pull), (ran, &mut *runs), meter)? {
             return Ok(Some(halves));
         }
     }
@@ -447,31 +403,22 @@ fn round(corners: &[Point], j: usize, by: f64, meter: &mut Meter) -> Result<Opti
 fn halves(
     part: &Polygon,
     column: &Column,
-    bend: &Bend,
-    notch: Point,
-    (width, narrowest, reach): (f64, f64, f64),
+    (bend, notch): (&Bend, Point),
+    (width, reach): (f64, f64),
+    (ran, runs): ([bool; 2], Runs<'_>),
     meter: &mut Meter,
 ) -> Result<Option<Halves>, Exhausted> {
     let Some(&b) = column.line.points.get(bend.at) else {
-        {
-            trace!("halves fail {}", line!());
-            return Ok(None);
-        }
+        return Ok(None);
     };
     let [p, q] = bend.legs;
     let [into_first, into_second] = bend.ways;
     // An apex: the halves meet at 15° to 60°, and are cut along the line that halves the angle between them.
     if !(CROSSING..=APEX).contains(&cross(into_first, into_second).abs()) || dot(into_first, into_second) <= 0.0 {
-        {
-            trace!("halves fail {}", line!());
-            return Ok(None);
-        };
+        return Ok(None);
     }
     let Some(way) = unit_of((into_first.0 + into_second.0, into_first.1 + into_second.1)) else {
-        {
-            trace!("halves fail {}", line!());
-            return Ok(None);
-        }
+        return Ok(None);
     };
     // The rail the notch lies on is the inner one. A rail cuts across the tip of a notch narrower than a
     // thread (`super::columns`), and its point nearest the notch stands for it.
@@ -485,36 +432,23 @@ fn halves(
         }
     }
     let Some((inner, at)) = nearest.filter(|(distance, _, _)| *distance <= NEAR * width).map(|(_, r, i)| (r, i)) else {
-        trace!("no rail holds the notch: nearest {nearest:?}");
         return Ok(None);
     };
     let outer = 1 - inner;
     let Some(&notch) = column.rails.get(inner).and_then(|rail| rail.get(at)) else { return Ok(None) };
     let (Some(inside), Some(outside)) = (column.rails.get(inner), column.rails.get(outer)) else {
-        {
-            trace!("halves fail {}", line!());
-            return Ok(None);
-        }
+        return Ok(None);
     };
     if at == 0 || at + 1 >= inside.len() {
-        {
-            trace!("halves fail {}", line!());
-            return Ok(None);
-        };
+        return Ok(None);
     }
     meter.charge(u64::try_from(outside.len()).unwrap_or(u64::MAX))?;
     let Some((_, across)) = crossing(outside, notch, way, true) else {
-        {
-            trace!("halves fail {}", line!());
-            return Ok(None);
-        }
+        return Ok(None);
     };
     let middle = Point::new((notch.x() + across.x()) / 2.0, (notch.y() + across.y()) / 2.0).ok();
     if across.distance(notch) > 2.0 * LEGS * width || !middle.is_some_and(|middle| part.covers(middle)) {
-        {
-            trace!("halves fail {}", line!());
-            return Ok(None);
-        };
+        return Ok(None);
     }
     let start = |rail: &[Point], to: usize| rail.get(..=to).unwrap_or_default().to_vec();
     let finish = |rail: &[Point], from: usize| rail.get(from..).unwrap_or_default().to_vec();
@@ -562,10 +496,7 @@ fn halves(
     let line = &column.line.points;
     let walked = &column.walked.points;
     let Some(in_walked) = walked.iter().position(|&x| x == b) else {
-        {
-            trace!("halves fail {}", line!());
-            return Ok(None);
-        }
+        return Ok(None);
     };
     let positions = positions(column, meter)?;
     let kept = |keep: &dyn Fn(f64) -> bool| -> Vec<[Point; 2]> {
@@ -580,10 +511,7 @@ fn halves(
     let (Some((one_rails, one_rungs)), Some((two_rails, two_rungs))) =
         (square(first, swap(before), (p, into_first), meter)?, square(second, swap(after), (q, into_second), meter)?)
     else {
-        {
-            trace!("halves fail {}", line!());
-            return Ok(None);
-        };
+        return Ok(None);
     };
     let first_rails = order(one_rails);
     let first_rungs = swap(one_rungs);
@@ -593,10 +521,7 @@ fn halves(
     second_rungs.reverse();
     for (rails, rungs) in [(&first_rails, &first_rungs), (&second_rails, &second_rungs)] {
         if drawn::from_rails(rails.clone(), rungs.clone(), [0.0, 0.0], meter)?.is_err() {
-            {
-                trace!("halves fail {}", line!());
-                return Ok(None);
-            };
+            return Ok(None);
         }
     }
     let lines = (
@@ -609,12 +534,10 @@ fn halves(
     );
     let first = Column::cut(first_rails, first_rungs, lines.0, walks.0, [column.under[0], None]);
     let second = Column::cut(second_rails, second_rungs, lines.1, walks.1, [None, column.under[1]]);
-    // A half narrower than the narrowest satin column would run as a line: the column stays whole.
-    if [&first, &second].iter().any(|half| half.outline().area() < narrowest * half.line.length()) {
-        {
-            trace!("halves fail {}", line!());
-            return Ok(None);
-        };
+    // A cut changes no stroke from satin to a line or back, as a hairline that meets a stroke would: each
+    // half runs as a line where the column it was cut from, or joined from, did.
+    if [runs(&first, meter)?, runs(&second, meter)?] != ran {
+        return Ok(None);
     }
     Ok(Some(Halves { first, second }))
 }
@@ -668,10 +591,7 @@ fn square(
         for &x in rail {
             let at = along(x);
             if at < farthest - BACK {
-                {
-                    trace!("square fail {}", line!());
-                    return Ok(None);
-                };
+                return Ok(None);
             }
             farthest = farthest.max(at);
         }
