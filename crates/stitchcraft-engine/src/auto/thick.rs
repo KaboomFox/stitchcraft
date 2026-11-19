@@ -57,12 +57,13 @@ pub(crate) fn held(rules: &AutoParams) -> Held {
 /// (`REQ-AUTO-074`, [`thin`]) and then capped there (`REQ-AUTO-100`, [`cap`]), and what is said of it: what
 /// the pass and the cap took (`SC-I1119`) and how thick the plan sews (`SC-W0913`). It is measured once, with
 /// `budget`'s work, and the pass and the cap have the work once more each. `base` names the base layer's
-/// pieces and `made` the elements that digitizing made, whose needle points alone the cap takes, and
-/// `profile` is the machine's, whose stitches the pass keeps to.
+/// pieces, `made` the elements that digitizing made, whose needle points alone the cap takes, and `columns`
+/// the satin columns among them, whose top stitches it leaves (`REQ-AUTO-112`), and `profile` is the
+/// machine's, whose stitches the pass keeps to.
 pub(crate) fn finished(
     plan: &mut StitchPlan,
     held: &Held,
-    (base, made): (&[ElementId], &BTreeSet<ElementId>),
+    (base, made, columns): (&[ElementId], &BTreeSet<ElementId>, &BTreeSet<ElementId>),
     profile: &MachineProfile,
     budget: &Budget,
 ) -> Vec<Diagnostic> {
@@ -76,7 +77,7 @@ pub(crate) fn finished(
             let refs = |of: &dyn Fn(&ElementId) -> bool| -> BTreeSet<ElementRef> {
                 plan.elements.iter().enumerate().filter(|(_, id)| of(id)).filter_map(|(at, _)| ElementRef::from_index(at)).collect()
             };
-            let (base, made) = (refs(&|id| base.contains(id)), refs(&|id| made.contains(id)));
+            let (base, made, columns) = (refs(&|id| base.contains(id)), refs(&|id| made.contains(id)), refs(&|id| columns.contains(id)));
             let rules = thin::Rules {
                 cap: held.cap,
                 base: &base,
@@ -96,7 +97,7 @@ pub(crate) fn finished(
             let Some(thinned) = thinned else { return thickness };
             // The cap works on what the pass left, and keeps it when it runs out of work (`REQ-AUTO-101`).
             let (mut capped, mut kept) = (thinner.clone(), measure.clone());
-            let outcome = cap::capped(&mut capped, &mut kept, &rules, &made, &mut budget.meter());
+            let outcome = cap::capped(&mut capped, &mut kept, &rules, (&made, &columns), &mut budget.meter());
             let took = matches!(&outcome, Ok(Some(capped)) if capped.took());
             if thinned.took() || took || outcome.is_err() {
                 said.push(note(&thinned, &outcome, held.cap));

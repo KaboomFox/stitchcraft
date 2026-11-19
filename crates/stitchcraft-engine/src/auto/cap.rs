@@ -118,7 +118,8 @@ impl Capped {
 /// the cap of `rules`, and keeps the measure up to date; `None` when no spot is above the cap, or no needle
 /// point of the elements `made` is near one. The other
 /// elements' stitches, those a shape's settings sew as drawn, stay as they are, and cover and lay thread
-/// all the same. A unit of work for each stitch
+/// all the same. So do the top stitches of `columns`, the satin columns among the elements `made`
+/// (`REQ-AUTO-112`): their underlay is the cap's to take. A unit of work for each stitch
 /// and needle point looked at, each step along a stitch measured, and each top stitch looked at for a
 /// place's cover. A cap out of work may leave the plan and the measure part changed, so its caller works on
 /// copies and keeps what the last pass left.
@@ -126,7 +127,7 @@ pub(crate) fn capped(
     plan: &mut StitchPlan,
     thickness: &mut Thickness,
     rules: &Rules,
-    made: &BTreeSet<ElementRef>,
+    (made, columns): (&BTreeSet<ElementRef>, &BTreeSet<ElementRef>),
     meter: &mut Meter,
 ) -> Result<Option<Capped>, Exhausted> {
     if thickness.most(Measure::Fills).value <= rules.cap {
@@ -137,7 +138,12 @@ pub(crate) fn capped(
     let element =
         |stitch: &SewnStitch| plan.blocks.get(stitch.block).and_then(|block| block.stitches.get(stitch.index)).and_then(|entry| entry.origin.element);
     let near = thickness.near(rules.cap, NEAR, meter)?;
-    let points = candidates(sewn, &near, |stitch| element(stitch).is_some_and(|element| made.contains(&element)));
+    // A column's top stitches are the surface a person sees: the cap takes none of them, so it changes
+    // neither their angle nor their edge.
+    let takes = |stitch: &SewnStitch| {
+        element(stitch).is_some_and(|element| made.contains(&element) && !(stitch.role == Role::Top && columns.contains(&element)))
+    };
+    let points = candidates(sewn, &near, takes);
     // A design whose spots above the cap lie only in shapes sewn by their own settings has nothing the cap
     // may take, and the work of the cover is spared.
     if points.is_empty() {

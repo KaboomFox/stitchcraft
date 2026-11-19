@@ -70,7 +70,7 @@ fn all(plan: &StitchPlan) -> BTreeSet<ElementRef> {
 /// `plan` capped with `rules`, its measure kept up to date, and the measure of what the cap left.
 fn cap(plan: &mut StitchPlan, rules: &Rules) -> (Option<Capped>, Thickness, Thickness) {
     let mut thickness = Thickness::of(plan, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
-    let capped = capped(plan, &mut thickness, rules, &all(plan), &mut Budget::DEFAULT.meter()).unwrap();
+    let capped = capped(plan, &mut thickness, rules, (&all(plan), NONE), &mut Budget::DEFAULT.meter()).unwrap();
     let again = Thickness::of(plan, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
     (capped, thickness, again)
 }
@@ -134,7 +134,7 @@ fn req_auto_100_only_the_elements_digitizing_made_lose_needle_points() {
     let was = sewn.clone();
     let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
     let made: BTreeSet<ElementRef> = ElementRef::from_index(1).into_iter().collect();
-    let capped = capped(&mut sewn, &mut thickness, &rules(), &made, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let capped = capped(&mut sewn, &mut thickness, &rules(), (&made, NONE), &mut Budget::DEFAULT.meter()).unwrap().unwrap();
     assert!(!capped.took(), "{capped:?}");
     assert_eq!(sewn, was);
 }
@@ -233,7 +233,7 @@ fn req_auto_101_the_cap_stops_when_the_work_runs_out() {
         plan(&[("under", Role::Top, zigzag(1.5, 0.25)), ("over", Role::Top, zigzag(1.5, 0.0625)), ("over", Role::Underlay, zigzag(1.5, 0.25))]);
     let thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
     let run = |max_work: u64| {
-        capped(&mut sewn.clone(), &mut thickness.clone(), &rules(), &all(&sewn), &mut Budget { max_work, ..Budget::DEFAULT }.meter()).is_ok()
+        capped(&mut sewn.clone(), &mut thickness.clone(), &rules(), (&all(&sewn), NONE), &mut Budget { max_work, ..Budget::DEFAULT }.meter()).is_ok()
     };
     let enough = (0..10_000_000u64).find(|work| run(*work)).unwrap();
     assert!((0..enough).all(|work| !run(work)), "{enough}");
@@ -244,7 +244,7 @@ fn said(sewn: &StitchPlan, budget: &Budget) -> (Vec<Diagnostic>, StitchPlan) {
     let held = Held { limits: Limits::DEFAULT, overlap: 1.0, cap: 4.0 };
     let mut kept = sewn.clone();
     let made: BTreeSet<ElementId> = sewn.elements.iter().cloned().collect();
-    let said = finished(&mut kept, &held, (&[], &made), stitchcraft_plan::profiles::REFERENCE, budget);
+    let said = finished(&mut kept, &held, (&[], &made, &BTreeSet::new()), stitchcraft_plan::profiles::REFERENCE, budget);
     (said, kept)
 }
 
