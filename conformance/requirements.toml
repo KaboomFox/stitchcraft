@@ -3587,3 +3587,12 @@ rationale = "Measured on 2026-11-18, sewing the details last raised the thickest
 milestone = "M13"
 status = "active"
 
+
+[[req]]
+id = "REQ-AUTO-108"
+area = "auto"
+level = "L2"
+statement = "A detail moves to sew after a larger area it meets (REQ-AUTO-096) only together with what sews on top of it: the wishes of a nest go together or not at all. When the search for the fewest thread changes grants the wish that a detail sews after an area, it grants in the same step every wish that something sews after that detail, a detail of it or a satin column that borders it, and theirs in turn. When the row of threads can't grant them all, it grants none of them. So a detail's move never puts it after a detail or a column of its own that would sew after it."
+rationale = "Measured on 2026-11-19 with both settings on: on a traced dog a grey area that the darker fur closes in on moved to sew after the fur, and the tan patch inside it, which would cost a thread change to move, stayed where it was and lay under the grey's outline and rows. In the stitched preview the patch showed 6.0 mm² of tan where it showed 10.3 mm². Any picture with a detail inside a detail, a pupil in an eye or a window in a door, can do the same. Moving a nest whole, or not at all, needs no second plan and no measure of what shows."
+milestone = "M13"
+status = "active"

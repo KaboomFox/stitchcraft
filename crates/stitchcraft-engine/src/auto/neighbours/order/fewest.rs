@@ -18,6 +18,12 @@
 //!   grants more wishes. Then each wish that the found row of threads allows is granted, in the order the
 //!   wishes come, and the column waits for a later batch of its thread. The row allows a wish when it
 //!   still sews every element with it: it has the fewest changes of any, so no batch of it is then empty.
+//! - **Nests** (`REQ-AUTO-108`). A wish moves its second element later, and what sewed on top of that
+//!   element would then lie under it: a detail of a detail, or a column that borders it. So a wish goes with
+//!   its nest, the wishes that something sews after its second element, and theirs in turn, and a nest is
+//!   granted whole or not at all. Of 2 rows with as few changes, the search first takes the one that misses
+//!   fewer inner wishes, those that some other wish moves the first element of, so that what sews on top of
+//!   a detail stays on top wherever a row allows it.
 //!
 //! Rows that are equal in both are taken in the order they are found: the threads of the free elements in
 //! paint order.
@@ -69,15 +75,35 @@ pub(super) fn fewest(run: &Run, meter: &mut Meter) -> Result<Found, Exhausted> {
     let mut batches = search.play(&before, &moves, meter)?.unwrap_or_default();
     // Each wish in turn, kept when the row still sews every element. A wish that a rule or a wish before it
     // forbids makes elements wait for each other, and no row sews those.
+    // A wish is granted with its nest, whole or not at all (`REQ-AUTO-108`).
     let mut granted = Vec::new();
-    for &(first, then) in &run.wished {
-        let wished = with(before.clone(), first, then);
+    for at in 0..run.wished.len() {
+        let nest = nest(&run.wished, at, meter)?;
+        let wished = nest.iter().fold(before.clone(), |before, &(first, then)| with(before, first, then));
         if let Some(played) = search.play(&wished, &moves, meter)? {
             (before, batches) = (wished, played);
-            granted.push((first, then));
+            granted.extend(nest.into_iter().filter(|wish| !granted.contains(wish)).collect::<Vec<_>>());
         }
     }
     Ok(Found { batches, granted })
+}
+
+/// The nest of the wish at `at` of `wished`: that wish, each wish whose first element is the second element
+/// of a wish of the nest, and so on, in the order found, with `meter`'s work: a unit for each wish looked
+/// at.
+fn nest(wished: &[(usize, usize)], at: usize, meter: &mut Meter) -> Result<Vec<(usize, usize)>, Exhausted> {
+    let mut nest: Vec<(usize, usize)> = wished.get(at).copied().into_iter().collect();
+    let mut next = 0;
+    while let Some(&(_, moved)) = nest.get(next) {
+        next += 1;
+        for &wish in wished {
+            meter.charge(1)?;
+            if wish.0 == moved && !nest.contains(&wish) {
+                nest.push(wish);
+            }
+        }
+    }
+    Ok(nest)
 }
 
 /// `before` with `first` among the elements that sew before `then`.
@@ -128,8 +154,8 @@ struct State {
     sewn: usize,
     /// The thread sewing.
     thread: Thread,
-    /// How many times the thread changed, and how many wishes are missed.
-    cost: [usize; 2],
+    /// How many times the thread changed, how many inner wishes are missed, and how many wishes.
+    cost: [usize; 3],
     /// The row it continues, as its place among the states, and what it sews after that row.
     from: Option<(usize, Move)>,
 }
@@ -142,6 +168,9 @@ struct Search<'r> {
     plain: BTreeMap<Thread, Vec<usize>>,
     /// For each element, the elements wished before it.
     wishes: Vec<Vec<usize>>,
+    /// For each element, the elements wished before it by an inner wish: one whose first element is the
+    /// second element of another wish.
+    inner: Vec<Vec<usize>>,
 }
 
 impl<'r> Search<'r> {
@@ -153,11 +182,14 @@ impl<'r> Search<'r> {
                 plain.entry(*first).or_default().push(index);
             }
         }
-        let mut wishes = vec![Vec::new(); run.threads.len()];
+        let (mut wishes, mut inner) = (vec![Vec::new(); run.threads.len()], vec![Vec::new(); run.threads.len()]);
         for &(first, then) in &run.wished {
             wishes = with(wishes, first, then);
+            if run.wished.iter().any(|&(_, moved)| moved == first) {
+                inner = with(inner, first, then);
+            }
         }
-        Search { run, plain, wishes }
+        Search { run, plain, wishes, inner }
     }
 
     /// Whether element `index` is free to sew by `before`, the elements `done` sewn: not sewn itself, and
@@ -269,36 +301,39 @@ impl<'r> Search<'r> {
         Ok(threads.len().saturating_sub(several))
     }
 
-    /// How many wishes `batches`, sewn one after another after the elements `done`, miss: an element of
-    /// theirs wished after one that isn't sewn by the end of its batch.
-    fn missed(&self, mut done: Done, batches: &[Vec<usize>], meter: &mut Meter) -> Result<usize, Exhausted> {
-        let mut missed = 0;
+    /// How many inner wishes and how many wishes `batches`, sewn one after another after the elements
+    /// `done`, miss: an element of theirs wished after one that isn't sewn by the end of its batch.
+    fn missed(&self, mut done: Done, batches: &[Vec<usize>], meter: &mut Meter) -> Result<[usize; 2], Exhausted> {
+        let mut missed = [0, 0];
         for batch in batches {
             for &index in batch {
                 done.add(index);
             }
-            for &earlier in batch.iter().filter_map(|&index| self.wishes.get(index)).flatten() {
-                meter.charge(1)?;
-                missed += usize::from(!done.has(earlier));
+            for (count, wishes) in missed.iter_mut().zip([&self.inner, &self.wishes]) {
+                for &earlier in batch.iter().filter_map(|&index| wishes.get(index)).flatten() {
+                    meter.charge(1)?;
+                    *count += usize::from(!done.has(earlier));
+                }
             }
         }
         Ok(missed)
     }
 
-    /// The row of batches with the fewest thread changes, and of those the fewest wishes missed, as what
-    /// sews after the batch of the thread sewing at the start.
+    /// The row of batches with the fewest thread changes, and of those the fewest inner wishes missed and
+    /// then the fewest wishes, as what sews after the batch of the thread sewing at the start.
     fn row(&self, meter: &mut Meter) -> Result<Vec<Move>, Exhausted> {
         let count = self.run.threads.len();
         let mut done = Done::none(count);
         let first = self.batch(&self.run.before, &mut done, self.run.sewing, meter)?;
-        let missed = self.missed(Done::none(count), std::slice::from_ref(&first), meter)?;
+        let [inner, missed] = self.missed(Done::none(count), std::slice::from_ref(&first), meter)?;
         let left = self.left(&done, meter)?;
         let mut best = BTreeMap::from([((done.clone(), self.run.sewing), 0_usize)]);
-        let mut states = vec![State { done, sewn: first.len(), thread: self.run.sewing, cost: [0, missed], from: None }];
-        // The row to go on from: the fewest changes with those still needed, then the fewest wishes missed,
-        // then the most changes made, which is nearest its end, then the row found first.
-        let mut open = BinaryHeap::from([Reverse((left, missed, Reverse(0), 0))]);
-        while let Some(Reverse((_, _, _, at))) = open.pop() {
+        let mut states = vec![State { done, sewn: first.len(), thread: self.run.sewing, cost: [0, inner, missed], from: None }];
+        // The row to go on from: the fewest changes with those still needed, then the fewest inner wishes
+        // missed and the fewest wishes, then the most changes made, which is nearest its end, then the row
+        // found first.
+        let mut open = BinaryHeap::from([Reverse((left, inner, missed, Reverse(0), 0))]);
+        while let Some(Reverse((_, _, _, _, at))) = open.pop() {
             let Some(State { done, sewn, thread, cost, .. }) = states.get(at) else { continue };
             let (done, sewn, thread, cost) = (done.clone(), *sewn, *thread, *cost);
             // A row that a better one to the same elements and thread was found after is left.
@@ -312,15 +347,16 @@ impl<'r> Search<'r> {
                 meter.charge(STATE)?;
                 let (mut next, mut sewing) = (done.clone(), thread);
                 let Some(batches) = self.step(&self.run.before, &mut next, &mut sewing, step, meter)? else { continue };
-                let [changes, missed] = cost;
-                let cost = [changes + usize::from(self.starts(step) != thread), missed + self.missed(done.clone(), &batches, meter)?];
+                let [changes, inner, missed] = cost;
+                let [more_inner, more] = self.missed(done.clone(), &batches, meter)?;
+                let cost = [changes + usize::from(self.starts(step) != thread), inner + more_inner, missed + more];
                 let known = best.get(&(next.clone(), sewing)).and_then(|&known| states.get(known)).map(|known| known.cost);
                 if known.is_some_and(|known| known <= cost) {
                     continue;
                 }
                 let left = self.left(&next, meter)?;
                 best.insert((next.clone(), sewing), states.len());
-                open.push(Reverse((cost[0] + left, cost[1], Reverse(cost[0]), states.len())));
+                open.push(Reverse((cost[0] + left, cost[1], cost[2], Reverse(cost[0]), states.len())));
                 let sewn = sewn + batches.iter().map(Vec::len).sum::<usize>();
                 states.push(State { done: next, sewn, thread: sewing, cost, from: Some((at, step)) });
             }
