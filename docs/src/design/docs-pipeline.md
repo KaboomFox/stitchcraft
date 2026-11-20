@@ -123,14 +123,14 @@ A UI shot can show a panel instead, `panel = "Layers"`, which its menu path Wind
 picture is the dock column right of the canvas, at its default width, which is what a person gets.
 `commands` run in the window first, over its control channel, for what a person does with a click that the
 accessibility tree doesn't reach: `ui.layersExpand` opens the rows inside the layers, as their triangles
-do. The probe then checks what the panel says, beside its pixels: each row in the dock column must carry,
-in the tree, its shape's whole name, as the engine's `names` gives it, and a name cut short fails the shot.
-VectorCraft paints a row's name without a node of its own in the tree, as read in its source at
-`3f8d7a0`. When the tree gives no text for the rows, the record says so and the picture is kept.
+do. The probe then checks what the panel says, beside its pixels. In the tree, each row's text is its
+shape's whole name as the engine's `names` gives it. A name cut short fails the shot. VectorCraft paints a row's
+name without a node of its own in the tree, as read in its source at `3f8d7a0`. When the tree doesn't
+hold the rows' text, the record says so and the picture is kept.
 
-A shot's document can be a traced picture, as a person makes one: `stitch` holds `stitch plan`'s
-arguments, with a picture of the repository and `--traced FILE`, and the shot traces the picture with the
-pinned command line and opens the traced document, its shapes named, before its `steps`. The
+A shot's document can be a traced picture. `stitch` holds `stitch plan`'s arguments, with a picture of the
+repository and `--traced FILE`. The pinned command line traces the picture as a person's would, and the
+shot's run opens the traced document with its shapes' names, and then draws its `steps` on it. The
 `vectorcraft-layers-names` shot traces the pear photo so, and shows its names in the Layers panel.
 
 A render shot can keep its document as a file of the repository, `document`, for the pages that sew it:
