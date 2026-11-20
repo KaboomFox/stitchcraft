@@ -16,7 +16,8 @@
 //!    aligned.
 //! 2. The scale asked for is kept within the heights the font sews at (`SC-W1106`), and every glyph's
 //!    elements are moved to their place and scaled about the first line's start, with the widths of their
-//!    strokes. Their settings stay as the font's author set them. Along a path (the module `along`), each
+//!    strokes. Their settings stay as the font's author set them, but that `widen_percent` widens each satin
+//!    column by adding to its pull compensation (`REQ-FONT-024`, [`WIDEN_PERCENT`]). Along a path (the module `along`), each
 //!    glyph is moved to its seat on the path and turned the way the path runs under it.
 //! 3. In a font whose `auto_satin` is on, the engine's routing joins the text's satin columns and strokes in
 //!    their order and without trims, as Ink/Stitch's lettering does. Each piece of the route sews at the end
@@ -40,7 +41,10 @@ use std::collections::{BTreeMap, BTreeSet};
 use stitchcraft_core::units::{Mm, Point};
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Meter, Severity};
 use stitchcraft_engine::design::{Clip, ClipShape, Design, DesignSettings, Element, Lettered, Shape};
+use stitchcraft_engine::generators::pull::PullParams;
+use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::route::{Options, Route, Tool, route};
+use stitchcraft_params::{Value, toggle};
 
 use crate::font::{Direction, Font, Glyph};
 pub use along::{Along, TextPosition, VerticalPosition};
@@ -105,6 +109,9 @@ pub struct Lettering {
     pub trim: Trim,
     /// `color_sort`: which elements of a font that sorts its colours sew sorted.
     pub color_sort: ColourSort,
+    /// `widen_percent`, StitchCraft's own: how much wider each satin column sews, in percent of its width on
+    /// each side, from 0 to [`WIDEST`].
+    pub widen_percent: f64,
 }
 
 impl Default for Lettering {
@@ -118,6 +125,7 @@ impl Default for Lettering {
             back_and_forth: true,
             trim: Trim::Off,
             color_sort: ColourSort::Off,
+            widen_percent: 0.0,
         }
     }
 }
@@ -137,6 +145,7 @@ impl Lettering {
             "back_and_forth" => value.parse::<bool>().map(|on| self.back_and_forth = on).is_ok(),
             "trim" => Trim::named(value).map(|trim| self.trim = trim).is_some(),
             "color_sort" => ColourSort::named(value).map(|sort| self.color_sort = sort).is_some(),
+            "widen_percent" => number().map(|percent| self.widen_percent = percent).is_some(),
             _ => false,
         }
     }
@@ -237,9 +246,34 @@ pub const VERTICAL_TEXT_POSITION: Setting = Setting {
     does: "Which part of the text lies on its path: its lowest point, so that it stands on the path (top), its first line's baseline,            or its highest point, so that it hangs from the path (bottom)",
 };
 
-/// Every setting of lettering: those Ink/Stitch's batch lettering lists, in its order, then the one its lettering window has.
-pub const SETTINGS: [Setting; 10] =
-    [SCALE, COLOR_SORT, TRIM, TEXT_ALIGN, LETTER_SPACING, WORD_SPACING, LINE_HEIGHT, TEXT_POSITION, VERTICAL_TEXT_POSITION, BACK_AND_FORTH];
+/// The most `widen_percent` widens a column, in percent of its width on each side: a column then sews twice
+/// as wide as drawn.
+pub const WIDEST: f64 = 50.0;
+
+/// `widen_percent`, StitchCraft's own (`REQ-FONT-024`).
+pub const WIDEN_PERCENT: Setting = Setting {
+    name: "widen_percent",
+    takes: "PERCENT",
+    default: "0",
+    does: "How much wider each satin column of the text sews, in percent of its width on each side, from 0 to 50: bolder letters from a font \
+           of light strokes. Running stitches and fills stay as they are. A value outside 0 to 50 is set at the nearest, with a warning",
+};
+
+/// Every setting of lettering: those Ink/Stitch's batch lettering lists, in its order, then the one its lettering window has, then
+/// StitchCraft's own.
+pub const SETTINGS: [Setting; 11] = [
+    SCALE,
+    COLOR_SORT,
+    TRIM,
+    TEXT_ALIGN,
+    LETTER_SPACING,
+    WORD_SPACING,
+    LINE_HEIGHT,
+    TEXT_POSITION,
+    VERTICAL_TEXT_POSITION,
+    BACK_AND_FORTH,
+    WIDEN_PERCENT,
+];
 
 /// A glyph of a text set, where it lies.
 #[derive(Clone, Debug, PartialEq)]
@@ -304,6 +338,7 @@ fn set_on(font: &Font, text: &str, how: &Lettering, along: Option<&Along>, budge
     }
     let mut warnings = Vec::new();
     let scale = scaled(font, how.scale, &mut warnings);
+    let widen = widening(how.widen_percent, &mut warnings);
     if !laid.missing.is_empty() {
         warnings.push(missing(font, &laid.missing));
     }
@@ -345,6 +380,7 @@ fn set_on(font: &Font, text: &str, how: &Lettering, along: Option<&Along>, budge
         let Some(spot) = laid.spots.get(index) else { continue };
         for element in spot.glyph.design.elements() {
             let element = placed(element, at, spot, factor, seat(index), &mut meter).map_err(|e| e.unwrap_or_else(|| exhausted(budget)))?;
+            let element = widened(element, widen);
             elements.push(Sewn { glyph: at, line: spot.line, word: spot.word, element });
         }
     }
@@ -484,6 +520,47 @@ fn missing(font: &Font, missing: &BTreeSet<char>) -> Diagnostic {
     let message = format!("The font `{}` has no glyph for {}. Each {sewn}.", font.folder, named.join(", "));
     Diagnostic::new(Code::CharacterNotInFont, message)
         .with_fix(Fix::Hint("Choose a font that has the characters, or write the text without them.".to_string()))
+}
+
+/// The `widen_percent` `asked` for, within 0 to [`WIDEST`], with `SC-W0102` in `warnings` when it lay outside, as
+/// the parameters' registry clamps a value. A value that is no number is none.
+fn widening(asked: f64, warnings: &mut Vec<Diagnostic>) -> f64 {
+    let held = if asked > WIDEST {
+        WIDEST
+    } else if asked > 0.0 {
+        asked
+    } else {
+        0.0
+    };
+    if held != asked {
+        let message = format!("`{}` is {asked}, outside 0 to {WIDEST} %; {held} % is used.", WIDEN_PERCENT.name);
+        let fix = format!("Choose a widening from 0 to {WIDEST} %.");
+        warnings.push(Diagnostic::new(Code::ParamClamped, message).with_fix(Fix::Hint(fix)));
+    }
+    held
+}
+
+/// The setting of a satin column that widens it by a share of its width: Ink/Stitch's name.
+const PULL_PERCENT: &str = "pull_compensation_percent";
+
+/// `element` widened by `percent` of its width on each side when it is a satin column (`REQ-FONT-024`): its
+/// pull compensation in percent, the glyph's own or none, gains `percent` on each side. Any other element,
+/// and every element when `percent` is 0, stays as it is. So does a column whose own value doesn't read,
+/// which the planner then refuses with `SC-E0101`.
+fn widened(mut element: Element, percent: f64) -> Element {
+    let satin = element.params.get(SATIN_COLUMN).and_then(toggle).unwrap_or(false);
+    if percent <= 0.0 || !satin {
+        return element;
+    }
+    let own = element.params.get(PULL_PERCENT).unwrap_or_default();
+    let read = PullParams::SPECS.iter().find(|spec| spec.key == PULL_PERCENT).and_then(|spec| spec.kind.parse(own));
+    let [a, b] = match read {
+        _ if own.trim().is_empty() => [0.0, 0.0],
+        Some((Value::PercentPair(Some(pair)), _)) => pair,
+        _ => return element,
+    };
+    element.params.set(PULL_PERCENT, Value::PercentPair(Some([a + percent, b + percent])).to_raw());
+    element
 }
 
 /// `element` of the glyph at `spot`, the `at`-th sewn, in its place and scaled by `factor`, charging `meter`:

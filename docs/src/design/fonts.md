@@ -323,7 +323,7 @@ The text becomes a design, which every host plans as it plans any other. Its ele
 
 **The settings** are named as Ink/Stitch names them. Its batch lettering has `scale`, `color_sort`, `trim`,
 `text_align`, `letter_spacing`, `word_spacing`, `line_height`, `text_position` and `vertical_text_position`,
-and its lettering window has `back_and_forth`. `lettering::SETTINGS` declares each once with its help, and
+and its lettering window has `back_and_forth`. `widen_percent` is StitchCraft's own (M14.9). `lettering::SETTINGS` declares each once with its help, and
 the options of `stitch lettering` take their help from it ([command line](../user/reference/cli.md)).
 
 ### Along a path
@@ -864,8 +864,9 @@ coverage and stitches. TS-15 sews 3 ported fonts beside the fonts digitized by h
   the owner's word on their credit.
 - **A third font, for bold letters under 12.5 mm** (M14.8). Barstitch Bold sews capital letters from 12.5
   mm, and Small Font is the only font below that
-  ([the gap](image-to-embroidery.md#the-font-chosen-by-the-letters-weight)). The recommendation is to wait
-  for the sew-out of both fonts at 10 and 15 mm, and then to choose among the fonts the table there names.
+  ([the gap](image-to-embroidery.md#the-font-chosen-by-the-letters-weight)). M14.9 measured the fonts of
+  Ink/Stitch's library and found none for 9 to 12 mm by its own range. The recommendation is Small Font
+  widened ([bold letters under the bold font's heights](image-to-embroidery.md#bold-letters-under-the-bold-fonts-heights)).
 - **The font's name typed, or chosen from a list** (M14.4). The Lettering effect's dialog takes the font's
   name as text. The recommendation, taken, is to keep the text field while one font is built in, since a
   document then sews the same in every build and from `stitch`. A list is easier with many fonts, and

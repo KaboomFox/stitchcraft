@@ -3001,9 +3001,143 @@ reads, light as it is.
 default font. A bold `font-weight` doesn't choose the bold font: type set at 12 points is 3 mm tall, far
 under what the bold font sews, and a document made before this step would sew otherwise than it did.
 
-**Left for later.** An embolden setting that widens a font's satin columns would sew bold letters under
-12.5 mm without a third font. It can close the counters of letters such as A and B, so it waits for a sew-out. The effect's dialog has
+**Left for later.** Bold letters under 12.5 mm, which M14.9 measured and plans to widen
+([below](#bold-letters-under-the-bold-fonts-heights)). The effect's dialog has
 no list of fonts.
+
+### Bold letters under the bold font's heights
+
+Barstitch Bold sews capital letters from 12.5 mm, the least scale its `font.json` gives, 0.5, times
+the 25.0 mm it draws them at. Lettering keeps a scale within the font's `min_scale` and `max_scale` with
+`SC-W1106`. Lettering on patches is often 6 to 12 mm tall and bold, and
+there a marker or a bold text object gets Small Font's strokes whatever the drawing's weight. M14.9
+measured the gap on the 62 letters and digits of both fonts, and 4 ways to close it, on 2026-11-20. The
+probes are kept outside the repository, beside the hand-off of the step.
+
+**The measures**, of each letter set alone and on a field 3 mm round it, with M13.50's cap:
+
+- the stroke as sewn, the median length of the satin columns' top stitches with their pull compensation,
+  given in millimetres and in heights of the capital letters;
+- the narrowest column: the least of a letter's columns' median widths;
+- counters: the holes in the thread's cover, 0.5 fills or more on a grid of 0.1 mm, against those the
+  font sews at a large height. A counter is open to read when a circle 1 mm wide fits it, the narrowest
+  satin column of digitizing;
+- letters that run together: the parts of the cover of a sheet of 9 lines against the letters on them;
+- the thickest spot, and the area at 4 fills or more on the field.
+
+**Today.** Small Font sews every letter at every height from 5 to 14 mm. No stitch is under 0.3 mm, and no
+letter's columns run into the next letter's. Its pull compensation, 0.2 mm on each side, is the same at every
+height, so it sews heavier for its height the smaller it is set. Of the 22 counters of its letters:
+
+| Capitals, mm | Stroke sewn, mm | Of the height | Narrowest column, mm | Counters open to read | Thickest, alone and on a field | On a field at 4 fills or more, mm² |
+|---:|---:|---:|---:|---:|---|---:|
+| 5 | 1.01 | 0.20 | 0.87 | 3, the A's closed | 3.65 and 4.90 | 2.0 |
+| 6 | 1.12 | 0.19 | 0.96 | 8 | 4.21 and 5.09 | 3.2 |
+| 7 | 1.25 | 0.18 | 1.05 | 16 | 3.95 and 5.03 | 2.8 |
+| 8 | 1.38 | 0.17 | 1.15 | 16 | 3.72 and 5.16 | 4.0 |
+| 9 | 1.51 | 0.17 | 1.24 | 19 | 3.93 and 5.14 | 4.0 |
+| 10 | 1.63 | 0.16 | 1.33 | 21 | 3.93 and 5.22 | 6.8 |
+| 11 | 1.74 | 0.16 | 1.43 | 22 | 3.76 and 5.05 | 8.5 |
+| 12 | 1.85 | 0.15 | 1.52 | 22 | 4.35 and 4.99 | 13.5 |
+| 14 | 2.08 | 0.15 | 1.71 | 22 | 3.80 and 4.94 | 14.2 |
+
+Barstitch Bold at 13 mm sews strokes 3.06 mm wide, 0.24 of the height, with 19 of its 21 counters open to
+read, 5.78 fills at its thickest on a field and 64 mm² at 4 fills or more. 18 of the 64 letters of the
+sheet touch the next one there, 8 at 16 mm. The font's spacing is drawn tight, and its 0.3 mm of pull
+compensation on each side closes it at its least height.
+
+So the gap is narrower than the heights say. At 6 mm Small Font sews strokes 0.19 of the height wide, as
+heavy for their height as the traced block letters are drawn (0.18). The difference grows with the height,
+to 0.15 against Barstitch Bold's 0.24 at 12 mm.
+
+**The candidates.** Each was planned at every height from 5 to 14 mm. At 6, 8, 10 and 12 mm, stroke
+in heights, counters open to read (of 21 for Barstitch Bold, 22 for Small Font), counters closed, the area at
+4 fills or more on a field, and the letters of 64 that touch the next:
+
+| Candidate | 6 mm | 8 mm | 10 mm | 12 mm |
+|---|---|---|---|---|
+| Today, Small Font | 0.19, 8, none, 3, none | 0.17, 16, none, 4, none | 0.16, 21, none, 7, none | 0.15, 22, none, 14, none |
+| A, Barstitch Bold set below its least scale | 0.29, 0, 7 closed, 50, 54 | 0.26, 4, a and e, 41, 49 | 0.25, 15, none, 56, 40 | 0.24, 18, none, 57, 24 |
+| A2, as A with its pull compensation scaled with the height | 0.24, 0, A a e, 17, 52 | 0.24, 3, none, 29, 40 | 0.24, 17, none, 40, 35 | 0.24, 18, none, 58, 24 |
+| B, Small Font with columns widened 33 % | 0.26, 3, A e 4, 35, 2 | 0.25, 14, the 4, 44, none | 0.24, 18, none, 62, none | 0.23, 20, none, 84, none |
+| B2, Small Font with columns widened 20 % | 0.23, 3, A and 4, 17, none | 0.22, 16, none, 22, none | 0.21, 19, none, 39, none | 0.20, 21, none, 48, none |
+
+A column widened by a percent gains that part of its width on each side, the effect of Ink/Stitch's
+`pull_compensation_percent` added to the glyph's own. Every candidate sews its columns 1 mm wide or more
+from 6 mm up and its stitches 0.3 mm long or more, and every letter plans. The thickest spot on a field stays between 5.0 and 5.9
+fills in all of them. Barstitch Bold sews 5.78 at 13 mm today.
+
+Where each fails:
+
+- **A and A2** run the letters together. Barstitch Bold's letters touch at 13 mm already, and below it
+  more of them do: 35 of 64 at 10 mm with A2, 40 at 8 mm. The counters of a and e close under 9 mm in A, and
+  in A2 every counter is still a hole down to 7 mm but under 1 mm wide, too small to read once sewn. A
+  wider letter spacing would part the letters and make the word longer than the traced one it replaces.
+- **B** closes the 4's counter at 8 and 9 mm, and leaves 14 counters of 22 open to read at 8 mm against
+  16 today. It doubles the area at 4 fills or more against B2.
+- **B2** keeps today's counters from 8 mm up, 16 of 22 at 8 mm and 21 at 12 mm, and keeps the letters
+  apart. Under 8 mm it closes the A and the 4 and leaves 3 of 22 open to read at 6 mm, against 8 today. It
+  is a little lighter than Barstitch Bold, 0.20 to 0.22 of the height against 0.24.
+
+**A third font.** Ink/Stitch's library, read at `c7e3a05`, has no bold font for 6 to 12 mm. Its small fonts
+end at 8.4 to 9.0 mm by their own ranges, and its medium ones start at 9 to 12. Glacial Tiny 60 AGS (OFL)
+is the boldest small one, strokes sewn 0.22 of the height at its greatest size, 8.4 mm by its range, and sews 5.4 fills at
+its thickest alone and 6.8 on a field, with 559 mm² at 4 fills or more on a field at that size. Excalibur
+Small says it is in the public domain, and its narrowest columns sew 0.53 mm wide. None of them was measured for weight
+by M14.8's measure, and none is a better start than the 2 fonts built in.
+
+**What the trade does.** Digitizers put the narrowest satin column at about 1 mm, the needle's width,
+and 1.5 mm in a font made for embroidery
+([ASI](https://members.asicentral.com/news/how-to/may-2018/keep-your-small-letters-crisp/),
+[ZSK](https://www.zsk.de/en/services/how-to-overview/small-embroideries.php),
+[Embrilliance](https://embrilliance.com/Help/Platform%20Win%201169/digitizingtipsforfontcreation.htm)).
+Columns of small letters are widened, the counters opened and the underlay left out or kept to a centre
+walk
+([Impressions](https://impressionsmagazine.com/how-to-digitize-small-lettering/)). A quarter inch, 6 mm, is
+the usual least height of text in 40-weight thread, and finer thread or a run-stitch font goes below it, a
+continuous run at about 3 mm
+([Ignition Drawing](https://www.ignitiondrawing.com/blog/Small-Lettering-Guide-Part-2)). A font's least
+size, such as 6 mm for a serif text font, is given with the font
+([Hatch](https://blog.hatchembroidery.com/choosing-the-right-size-embroidery-lettering-for-your-project/)).
+No source gives a least size for counters. The 1 mm used here is the narrowest column's.
+
+**The design** (`REQ-FONT-024`, `REQ-AUTO-140`, `REQ-AUTO-141`). The setting is built, and off by default.
+The 2 automatic choices wait for the owner's sew-out to confirm their limits:
+
+- **`widen_percent`**, a lettering setting of StitchCraft's own beside Ink/Stitch's, from 0 to 50 and 0 by
+  default. With 20, a satin column 1 mm wide sews 0.2 mm wider on each side: lettering adds the value
+  to the `pull_compensation_percent` of every satin column it places. Running stitches and fills don't
+  change, and a value outside 0 to 50 is set at the nearest with `SC-W0102`, as the parameters' registry
+  holds a value in its range. A glyph's own value that doesn't read stays, for the planner to refuse. At 0
+  a text sews as it did before. `stitch lettering --widen-percent`, the Lettering effect's dialog and its
+  record take it by that name.
+- **A marker** with letters bolder than their font and too small for a bolder one has its text widened.
+  The percent is 50 × (the letters' weight over the font's, less 1), rounded and at most 20. A widening under 5 % is left out. Letters under 8 mm are set as today,
+  since a widened Small Font closes its counters there. `SC-I1118` gives the percent, or says why
+  the letters aren't widened.
+- **A bold text object** that the bold font can't sew at its height sews in the default font widened as
+  far toward the bold font's weight, with the same limits and the same note.
+
+B2 opens as many counters as today's Small Font from 8 mm up, measured on all 62 letters and digits, and
+that sets the 2 limits, 20 % and 8 mm. A sew-out confirms them or moves them, as it does a profile's values.
+
+**The build's numbers.** Measured on 2026-11-20 with the setting itself, on Small Font's 62 letters and
+digits. Each cell gives the stroke in heights, the narrowest column in mm, counters open to read of 22, the
+thickest spot alone and on a field in fills, and the area at 4 fills or more on a field in mm²:
+
+| widen_percent | 8 mm | 10 mm | 12 mm |
+|---|---|---|---|
+| 0, today | 0.17, 1.15, 16, 3.72 and 5.16, 4 | 0.16, 1.33, 21, 3.93 and 5.22, 7 | 0.15, 1.52, 22, 4.35 and 4.99, 14 |
+| 10 | 0.20, 1.30, 16, 4.04 and 5.14, 10 | 0.19, 1.52, 19, 4.50 and 5.24, 19 | 0.18, 1.74, 21, 4.25 and 5.34, 27 |
+| 20 | 0.22, 1.45, 16, 4.25 and 5.24, 22 | 0.21, 1.71, 19, 4.13 and 5.27, 39 | 0.20, 1.97, 21, 4.31 and 5.30, 48 |
+
+They match prototype B2. Small Font's glyphs don't set a pull compensation in percent, so the prototype's
+value equals the setting's. All 22 counters of the set are holes in the thread, though the A, the B, the a, the e and the 4 keep
+theirs under 1 mm, and at 8 mm and 20 % the R joins them. The 64 letters stand apart, and the narrowest gap
+between 2 letters falls from 1.5 to 1.0 mm at 8 mm. Every stitch is 0.3 mm or longer.
+
+**A finding for the sew-out.** Barstitch Bold's letters touch at its least heights today, as measured
+above. This step leaves its spacing as it is, and MC-8 shows whether the touching shows in thread.
 
 ### Decisions for the owner
 
@@ -3027,8 +3161,12 @@ Each has a recommendation, which the step took.
   height, with a note. The other choices are to leave them traced, which sews badly under 10 mm, and to
   set them in the bold font at 12.5 mm, taller than the picture has them. Recommended, and taken: the light
   font and the note.
-- **A third font for that gap**, or an embolden setting, waits for the sew-out of both fonts
-  ([fonts](fonts.md#decisions-for-the-owner)).
+- **Bold letters from 8 to 12.5 mm** (M14.9). The recommendation is Small Font with its columns widened
+  ([bold letters under the bold font's heights](#bold-letters-under-the-bold-fonts-heights)), by at most 20 %
+  and from 8 mm. Its counters open as today's do, and its letters stand apart. Barstitch
+  Bold set below its least height is bolder and runs its letters together. A third font from Ink/Stitch's
+  library is the other choice, and none of them sews at 9 to 12 mm by its own range. MC-8 sews the
+  candidates side by side.
 - **A text object's bold `font-weight` doesn't choose the bold font.** Recommended, and taken: the effect
   sews in the font it names or in the default, so documents sew as they did.
 

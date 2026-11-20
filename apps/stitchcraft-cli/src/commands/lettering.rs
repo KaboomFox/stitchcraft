@@ -63,6 +63,7 @@ pub fn run(args: &LetteringArgs) -> Outcome {
         back_and_forth: args.back_and_forth,
         trim: args.trim,
         color_sort: args.color_sort,
+        widen_percent: args.widen_percent,
     };
     let mut said = font.warnings.clone();
     let along = match args.path.as_deref().map(|file| outline(file, &mut said)).transpose() {

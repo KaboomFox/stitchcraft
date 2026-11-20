@@ -158,6 +158,9 @@ pub struct LetteringArgs {
     #[arg(long, value_name = lettering::BACK_AND_FORTH.takes, action = clap::ArgAction::Set, default_value = lettering::BACK_AND_FORTH.default, help = lettering::BACK_AND_FORTH.does)]
     #[allow(missing_docs)] // Its help is the setting's own, above.
     pub back_and_forth: bool,
+    #[arg(long, value_name = lettering::WIDEN_PERCENT.takes, value_parser = number, default_value = lettering::WIDEN_PERCENT.default, allow_hyphen_values = true, help = lettering::WIDEN_PERCENT.does)]
+    #[allow(missing_docs)] // Its help is the setting's own, above.
+    pub widen_percent: f64,
     /// Set the text along a path of this SVG file, in the file's place on its page: the path labelled
     /// `batch lettering`, as Ink/Stitch's batch lettering takes it, or else the file's first path that
     /// paints. The text follows the path's first subpath.

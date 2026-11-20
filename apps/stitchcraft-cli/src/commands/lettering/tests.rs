@@ -58,6 +58,7 @@ fn args(text: &str, font: &Path, output: PathBuf) -> LetteringArgs {
         trim: Trim::Off,
         color_sort: ColourSort::Off,
         back_and_forth: true,
+        widen_percent: 0.0,
         path: None,
         text_position: TextPosition::Left,
         vertical_text_position: VerticalPosition::Top,

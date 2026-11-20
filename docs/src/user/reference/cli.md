@@ -193,6 +193,11 @@ Options:
           [default: true]
           [possible values: true, false]
 
+      --widen-percent <PERCENT>
+          How much wider each satin column of the text sews, in percent of its width on each side, from 0 to 50: bolder letters from a font of light strokes. Running stitches and fills stay as they are. A value outside 0 to 50 is set at the nearest, with a warning
+          
+          [default: 0]
+
       --path <FILE>
           Set the text along a path of this SVG file, in the file's place on its page: the path labelled `batch lettering`, as Ink/Stitch's batch lettering takes it, or else the file's first path that paints. The text follows the path's first subpath
 

@@ -25,6 +25,18 @@ line = "let from_left = before.is_none_or(|before| before < place);"
 why = "each column is sewn once, so the place of the column before is never this column's place"
 
 [[equivalent]]
+file = "crates/stitchcraft-svg/src/lettering/mod.rs"
+mutant = "replace > with >= in widening"
+line = "let held = if asked > WIDEST {"
+why = "at exactly WIDEST both branches hold WIDEST, so the widening and the warning are the same"
+
+[[equivalent]]
+file = "crates/stitchcraft-svg/src/lettering/mod.rs"
+mutant = "replace > with >= in widening"
+line = "} else if asked > 0.0 {"
+why = "at 0 or -0 both branches hold a zero that equals the value asked, so no warning is said and widened leaves every element as it is"
+
+[[equivalent]]
 file = "crates/stitchcraft-svg/src/path.rs"
 mutant = "replace < with <= in arc"
 line = "if large_arc && turn < FRAC_PI_2 {"

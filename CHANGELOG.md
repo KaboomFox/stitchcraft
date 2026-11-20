@@ -5,6 +5,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M14.9: `widen_percent`, a lettering setting that widens every satin column of a text by a percent of its
+  width on each side, 0 to 50 and 0 by default (`REQ-FONT-024`). `stitch lettering --widen-percent`, the
+  Lettering effect's dialog and its record take it. At 0 every design sews as before. Markers and
+  text objects don't set it yet: `REQ-AUTO-140` and `REQ-AUTO-141` wait for the MC-8 sew-out.
 - M13.50: the thickness cap covers lettering (`REQ-AUTO-119` to `REQ-AUTO-124`, `SC-W0913`).
   - The last pass and the cap now take needle points of the lettering that automatic digitizing places,
     marked text and text objects. They keep every column's top stitch where the font puts it. The cap takes a
