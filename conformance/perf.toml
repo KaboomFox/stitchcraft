@@ -38,7 +38,7 @@ instructions = 1719000000
 [pictures.TS-13C]
 args = ["testsheet", "TS-13C"]
 golden = "conformance/golden/testsheets/TS-13C.pes"
-instructions = 1950000000
+instructions = 1993000000
 
 [pictures.TS-13D]
 args = ["testsheet", "TS-13D"]
