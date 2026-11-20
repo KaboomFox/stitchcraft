@@ -4,10 +4,9 @@
 //! kept, an edge 2 areas share smoothed once, and no outline made to cross itself or another. The designs
 //! are drawn here in code with a known wobble: a saw-tooth 0.06 mm high, a tooth every 0.5 mm.
 //!
-//! The requirements are planned, and the cases that need the pass are ignored as planned until M13.52
-//! builds it (`docs/src/design/image-to-embroidery.md` › Smoothing in StitchCraft). M13.52 removes their
-//! `#[ignore]`, adds `SC-I0921` to the diagnostics registry, and renames the case of its message
-//! `diag_sc_i0921_…`. The case of an area with no setting passes today, and guards the outline as drawn.
+//! The pass is `stitchcraft_engine::auto`'s `smooth` module (`docs/src/design/image-to-embroidery.md` ›
+//! Smoothing in StitchCraft). The setting is 0 by default, and the cases of an area with no setting, or with
+//! the setting at 0, guard the outline as drawn.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(
@@ -19,10 +18,11 @@
     clippy::cast_precision_loss
 )]
 
-use stitchcraft_core::{Budget, Diagnostic};
+use stitchcraft_core::{Budget, Diagnostic, Fix};
 use stitchcraft_engine::auto::digitized;
 use stitchcraft_engine::design::{Design, DesignSettings, Element, Segment, Shape};
-use stitchcraft_testkit::designs::{BLUE, RED, automatic, fill, unbased};
+use stitchcraft_testkit::designs::{BLUE, RED, automatic, fill, planned, unbased};
+use stitchcraft_testkit::fabric::{GAP, cover};
 
 /// The setting the cases set: how far an outline may move when it is smoothed, in millimetres.
 const SMOOTH: &str = "auto_smooth_mm";
@@ -125,7 +125,6 @@ fn cross(a: (f64, f64), b: (f64, f64), c: (f64, f64), d: (f64, f64)) -> bool {
 }
 
 #[test]
-#[ignore = "planned: M13.52 builds the smoothing pass"]
 fn req_auto_131_an_outline_is_smoothed_within_the_setting_and_keeps_its_corners() {
     let drawn = bottom("a", &[(SMOOTH, "0.2")], false);
     let (elements, _) = sewn(vec![drawn.clone()]);
@@ -147,7 +146,6 @@ fn req_auto_131_an_outline_is_smoothed_within_the_setting_and_keeps_its_corners(
 }
 
 #[test]
-#[ignore = "planned: M13.52 builds the smoothing pass"]
 fn req_auto_132_an_edge_2_areas_share_is_smoothed_once_and_they_still_meet() {
     let params = [(SMOOTH, "0.2")];
     let (elements, _) = sewn(vec![bottom("a", &params, false), top("b", &params)]);
@@ -165,7 +163,6 @@ fn req_auto_132_an_edge_2_areas_share_is_smoothed_once_and_they_still_meet() {
 }
 
 #[test]
-#[ignore = "planned: M13.52 builds the smoothing pass"]
 fn req_auto_133_an_edge_shared_with_an_area_set_off_stays_as_drawn() {
     let (lower, upper) = (bottom("a", &[(SMOOTH, "0.2")], true), top("b", &[(SMOOTH, "0")]));
     let drawn = on_the_edge(&outline(std::slice::from_ref(&lower), "a"));
@@ -188,7 +185,6 @@ fn req_auto_133_an_area_with_no_setting_sews_its_outline_as_drawn() {
 }
 
 #[test]
-#[ignore = "planned: M13.52 builds the smoothing pass"]
 fn req_auto_134_a_smoothed_outline_never_crosses_itself() {
     // A strip 0.6 mm tall whose top is the saw-tooth, filled whole and smoothed at 0.4 mm: more than half the
     // strip's height, so that its 2 long sides could meet.
@@ -208,8 +204,7 @@ fn req_auto_134_a_smoothed_outline_never_crosses_itself() {
 }
 
 #[test]
-#[ignore = "planned: M13.52 builds the smoothing pass"]
-fn req_auto_133_sc_i0921_says_the_outline_points_before_and_after() {
+fn diag_sc_i0921_says_the_outline_points_before_and_after() {
     let params = [(SMOOTH, "0.2")];
     let (lower, upper) = (bottom("a", &params, true), top("b", &params));
     let drawn = outline(std::slice::from_ref(&lower), "a").len() + outline(std::slice::from_ref(&upper), "b").len();
@@ -219,4 +214,102 @@ fn req_auto_133_sc_i0921_says_the_outline_points_before_and_after() {
     assert_eq!(notices.len(), 1, "{said:?}");
     // The 2 areas' outlines are drawn with 205 points, the shared edge counted once for each area.
     assert!(notices[0].contains("205"), "{}", notices[0]);
+    let notice = said.iter().find(|d| d.code.to_string() == "SC-I0921").unwrap();
+    assert_eq!(
+        notice.to_string(),
+        "info SC-I0921: The outlines of 2 automatic areas were smoothed within 0.2 mm: they are drawn with 19 points, where they had 205."
+    );
+    assert_eq!(
+        notice.fix,
+        Some(Fix::Hint("Smoothing changes which parts sew as satin columns. To sew the outlines as drawn, set auto_smooth_mm to 0.".to_string()))
+    );
+    assert_eq!(notice.element, None);
+}
+
+#[test]
+fn req_auto_133_a_setting_of_0_digitizes_as_without_the_setting() {
+    // The same areas with the setting at 0 and with no setting digitize to the same elements, and say the same.
+    let unset = sewn(vec![bottom("a", &[], true), top("b", &[])]);
+    let off = sewn(vec![bottom("a", &[(SMOOTH, "0")], true), top("b", &[(SMOOTH, "0")])]);
+    let strip = |elements: Vec<Element>| -> Vec<Shape> { elements.into_iter().map(|element| element.shape).collect() };
+    assert_eq!(strip(off.0), strip(unset.0));
+    assert_eq!(off.1, unset.1);
+}
+
+/// The points of the outline of `id` among `elements`, sorted: the same outline drawn from another start or
+/// the other way round has the same points.
+fn sorted(elements: &[Element], id: &str) -> Vec<(u64, u64)> {
+    let mut points: Vec<(u64, u64)> = outline(elements, id).into_iter().map(|(x, y)| ((x + 0.0).to_bits(), (y + 0.0).to_bits())).collect();
+    points.sort_unstable();
+    points.dedup();
+    points
+}
+
+#[test]
+fn req_auto_131_a_ring_smooths_the_same_from_any_start_and_either_way_round() {
+    // The lower area of the cases, its saw-tooth on top and on its right, drawn from 3 starts and both ways.
+    let Shape::Fill { path, .. } = bottom("a", &[], true).shape else { panic!("a fill") };
+    let subpath = &path.subpaths[0];
+    let ring: Vec<(f64, f64)> =
+        std::iter::once(subpath.start).chain(subpath.segments.iter().map(|segment| segment.end())).map(|p| (p.x(), p.y())).collect();
+    let ring: Vec<(f64, f64)> = if ring.first() == ring.last() { ring[..ring.len() - 1].to_vec() } else { ring };
+    let smoothed = |points: &[(f64, f64)]| {
+        let (elements, _) = sewn(vec![automatic(fill("a", &[points], &RED, &[(SMOOTH, "0.2")]))]);
+        sorted(&elements, "a")
+    };
+    let first = smoothed(&ring);
+    assert!(first.len() < 30, "{} points", first.len());
+    for start in [1, 17, 60] {
+        let mut turned = ring.clone();
+        turned.rotate_left(start);
+        assert_eq!(smoothed(&turned), first, "from point {start}");
+        turned.reverse();
+        assert_eq!(smoothed(&turned), first, "from point {start}, the other way round");
+    }
+}
+
+#[test]
+fn req_auto_131_smoothing_the_same_design_twice_gives_the_same_outlines() {
+    let elements = || vec![bottom("a", &[(SMOOTH, "0.3")], true), top("b", &[(SMOOTH, "0.2")])];
+    let (once, said_once) = sewn(elements());
+    let (twice, said_twice) = sewn(elements());
+    assert_eq!(once, twice);
+    assert_eq!(said_once, said_twice);
+}
+
+/// The area a ring through `points` encloses.
+fn area(points: &[(f64, f64)]) -> f64 {
+    let closed: Vec<(f64, f64)> = points.iter().copied().chain(points.first().copied()).collect();
+    closed.windows(2).map(|pair| pair[0].0 * pair[1].1 - pair[1].0 * pair[0].1).sum::<f64>().abs() / 2.0
+}
+
+#[test]
+fn req_auto_131_a_small_ring_keeps_its_area_within_a_tenth() {
+    // A disc 1.2 mm across drawn with 48 points, every other one 0.05 mm out: smoothed by a Gaussian of 0.5 mm,
+    // most of the length round it, it would shrink to a speck. The area bound keeps it.
+    let disc: Vec<(f64, f64)> = (0..48)
+        .map(|i| {
+            let angle = std::f64::consts::TAU * f64::from(i) / 48.0;
+            let radius = if i % 2 == 0 { 0.6 } else { 0.65 };
+            (5.0 + radius * angle.cos(), 5.0 + radius * angle.sin())
+        })
+        .collect();
+    let (elements, _) = sewn(vec![automatic(fill("d", &[&disc], &RED, &[(SMOOTH, "0.5"), ("auto_stitch", "fill")]))]);
+    let smoothed = outline(&elements, "d");
+    let (before, after) = (area(&disc), area(&smoothed));
+    assert!(smoothed.len() >= 3, "{smoothed:?}");
+    assert!((after - before).abs() <= 0.1 * before, "the disc's area went from {before} to {after} mm²");
+}
+
+#[test]
+fn req_auto_132_smoothed_neighbours_leave_no_more_fabric_bare_than_as_drawn() {
+    // The 2 areas of the cases, planned as drawn and smoothed: the bare fabric between them is no more.
+    let bare = |setting: &str| {
+        let elements = design(vec![bottom("a", &[(SMOOTH, setting)], true), top("b", &[(SMOOTH, setting)])]).elements().to_vec();
+        let drawn = Design::new(elements.clone(), DesignSettings::default()).unwrap();
+        let plan = planned(elements).plan.unwrap();
+        cover(&drawn, &plan, GAP).bare
+    };
+    let (as_drawn, smoothed) = (bare("0"), bare("0.2"));
+    assert!(smoothed <= as_drawn + 1e-9, "{as_drawn} mm² bare as drawn, {smoothed} mm² smoothed");
 }
