@@ -107,7 +107,7 @@ mod tests {
                     assert!(options.iter().all(|option| Lettering::default().take(name, option)), "{name}");
                 }
                 Schema::Number { min, max, default } => {
-                    assert!(min < default && default < max || *default == 0.0 && *min <= 0.0 && *max > 0.0, "{name}")
+                    assert!(min < default && default < max || *default == 0.0 && *min <= 0.0 && *max > 0.0, "{name}");
                 }
                 Schema::Bool { default } => assert_eq!((*name, *default), ("back_and_forth", true)),
                 Schema::Text { default, max_length } => assert_eq!((*name, *default, *max_length), ("font", "", 128)),

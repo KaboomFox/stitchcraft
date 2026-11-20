@@ -3131,13 +3131,13 @@ thickest spot alone and on a field in fills, and the area at 4 fills or more on 
 | 10 | 0.20, 1.30, 16, 4.04 and 5.14, 10 | 0.19, 1.52, 19, 4.50 and 5.24, 19 | 0.18, 1.74, 21, 4.25 and 5.34, 27 |
 | 20 | 0.22, 1.45, 16, 4.25 and 5.24, 22 | 0.21, 1.71, 19, 4.13 and 5.27, 39 | 0.20, 1.97, 21, 4.31 and 5.30, 48 |
 
-They match prototype B2, since Small Font's glyphs set no pull compensation in percent, so adding to it and
-setting it sew alike. No counter closes, and the ones under 1 mm are those of the A, the B, the a, the e
-and the 4, with the R's at 8 mm and 20 %. No letter of the 64 touches the next, and the narrowest gap
-between 2 letters falls from 1.5 to 1.0 mm at 8 mm. No stitch is shorter than 0.3 mm.
+They match prototype B2. Small Font's glyphs don't set a pull compensation in percent, so the prototype's
+value equals the setting's. All 22 counters of the set are holes in the thread, though the A, the B, the a, the e and the 4 keep
+theirs under 1 mm, and at 8 mm and 20 % the R joins them. The 64 letters stand apart, and the narrowest gap
+between 2 letters falls from 1.5 to 1.0 mm at 8 mm. Every stitch is 0.3 mm or longer.
 
 **A finding for the sew-out.** Barstitch Bold's letters touch at its least heights today, as measured
-above. Nothing here changes its spacing: MC-8 shows whether the touching shows in thread.
+above. This step leaves its spacing as it is, and MC-8 shows whether the touching shows in thread.
 
 ### Decisions for the owner
 

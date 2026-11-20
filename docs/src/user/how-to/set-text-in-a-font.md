@@ -50,8 +50,8 @@ stitch lettering "Hexmira" --font fonts/small_font --height 10 --widen-percent 2
 ```
 
 At 20, Small Font's strokes sew about a fifth of the letters' height wide, as heavy as a bold font's. Running
-stitches and fills sew as they are. The small counters close first: under 8 mm the holes of the A and the 4
-fill with thread, so keep to 8 mm or taller, or widen less. Look at the preview before you
+stitches and fills sew as they are. Under 8 mm the small holes of the A and the 4 fill with thread first.
+Keep widened letters 8 mm tall or taller. Look at the preview before you
 sew. A value outside 0 to 50 is set at the nearest, with `SC-W0102`.
 
 ## Space and align the text
