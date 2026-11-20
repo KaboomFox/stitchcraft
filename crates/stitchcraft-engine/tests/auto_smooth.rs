@@ -291,7 +291,10 @@ fn req_auto_131_a_small_ring_keeps_its_area_within_a_tenth() {
         .map(|i| {
             let angle = std::f64::consts::TAU * f64::from(i) / 48.0;
             let radius = if i % 2 == 0 { 0.6 } else { 0.65 };
-            (5.0 + radius * angle.cos(), 5.0 + radius * angle.sin())
+            {
+                let (sin, cos) = stitchcraft_core::math::sin_cos(angle);
+                (5.0 + radius * cos, 5.0 + radius * sin)
+            }
         })
         .collect();
     let (elements, _) = sewn(vec![automatic(fill("d", &[&disc], &RED, &[(SMOOTH, "0.5"), ("auto_stitch", "fill")]))]);

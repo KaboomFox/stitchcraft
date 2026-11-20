@@ -519,7 +519,9 @@ impl Pass {
             let line = match deviation {
                 Some(deviation) => {
                     let (drawn, closed) = (&edge.drawn, edge.closed);
-                    Some(charged(&mut self.meters, &edge.owners, |meter| smoothed(drawn, closed, tolerance, deviation, meter))?)
+                    let line = charged(&mut self.meters, &edge.owners, |meter| smoothed(drawn, closed, tolerance, deviation, meter))?;
+                    // A line that smoothing leaves as it was, a straight side, stays as drawn, curves and all.
+                    (line != *drawn).then_some(line)
                 }
                 None => None,
             };
