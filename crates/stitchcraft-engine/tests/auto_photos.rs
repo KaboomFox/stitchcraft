@@ -112,18 +112,16 @@ const INSET: &str = "A row of an automatic fill shows on another colour for 1 mm
 /// With the cap at 3.25 (M13.46), the row of `vc:68:fill` on the dog on turf in 6 threads, and of `vc:78:fill`
 /// on the one in 9, ends 1 mm sooner, where the cap joined its end: each shows for 1.4 and 1.75 mm.
 /// M13.43 runs each outline its tolerance inside its fill's edge (REQ-AUTO-130): the 4 stitches of outlines no
-/// longer show, the 2 rows of the dog on turf in 9 threads are sewn the other way, and 3 rows of the running dog
-/// in 6 threads show ([`INSET`]): 11, none of them an outline's.
-const ASTRAY: [Astray; 11] = [
+/// longer show, the 2 rows of `vc:6:fill` on the dog on turf in 9 threads are sewn the other way, a row of the
+/// running dog in 6 threads shows ([`INSET`]), and the row of `vc:21:fill` on the running dog in 9 no longer
+/// does: 8, none of them an outline's.
+const ASTRAY: [Astray; 8] = [
     Astray { dog: "dog-on-turf-6", element: "vc:68:fill", stitch: [(45.58, 74.75), (44.18, 74.82)], length: 1.4, cause: MOVED, step: "M13.38" },
     Astray { dog: "dog-on-turf-6", element: "vc:68:fill", stitch: [(45.0, 74.25), (42.3, 74.26)], length: 2.7, cause: MOVED, step: "M13.38" },
     Astray { dog: "dog-on-turf-9", element: "vc:6:fill", stitch: [(55.22, 44.25), (53.0, 44.25)], length: 2.22, cause: ACROSS, step: "M13.38" },
     Astray { dog: "dog-on-turf-9", element: "vc:6:fill", stitch: [(52.0, 44.0), (56.0, 44.0)], length: 4.0, cause: ACROSS, step: "M13.38" },
     Astray { dog: "dog-on-turf-9", element: "vc:78:fill", stitch: [(45.92, 74.75), (44.18, 74.82)], length: 1.75, cause: REORDERED, step: "M13.38" },
-    Astray { dog: "dog-running-6", element: "vc:3:fill", stitch: [(48.0, 21.0), (44.0, 21.0)], length: 4.0, cause: INSET, step: "M13.38" },
     Astray { dog: "dog-running-6", element: "vc:9:fill", stitch: [(56.0, 32.0), (53.99, 31.98)], length: 2.01, cause: INSET, step: "M13.38" },
-    Astray { dog: "dog-running-6", element: "vc:5:fill", stitch: [(32.0, 24.0), (34.01, 24.01)], length: 2.01, cause: INSET, step: "M13.38" },
-    Astray { dog: "dog-running-9", element: "vc:21:fill", stitch: [(49.31, 51.51), (46.0, 51.5)], length: 3.31, cause: MOVED, step: "M13.38" },
     Astray { dog: "dog-running-9", element: "vc:52:fill", stitch: [(60.0, 74.0), (64.0, 74.0)], length: 4.0, cause: ACROSS, step: "M13.38" },
     Astray { dog: "dog-running-9", element: "vc:33:fill#2", stitch: [(55.64, 34.0), (54.3, 32.39)], length: 2.1, cause: LINES, step: "M13.38" },
 ];
@@ -230,8 +228,8 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
     // jump threads, and 2, 4, 4 and 8 moves.
     // With details last off by default again (M13.48), 60, 62, 49 and 64, and 3, 5, 3 and 9 moves.
     // With each outline its tolerance inside its fill's edge (REQ-AUTO-130, M13.43), outlines start elsewhere:
-    // 60, 62, 49 and 62.
-    let recorded = [("dog-on-turf-6", 3, 60), ("dog-on-turf-9", 5, 62), ("dog-running-6", 3, 49), ("dog-running-9", 9, 62)];
+    // 60, 62, 48 and 63, and the running dog in 9 threads shows 10 moves.
+    let recorded = [("dog-on-turf-6", 3, 60), ("dog-on-turf-9", 5, 62), ("dog-running-6", 3, 48), ("dog-running-9", 10, 63)];
     let recorded = recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps));
     assert_eq!((found, apart), (listed, recorded.to_vec()), "the stitches astray, as found and as listed in ASTRAY, and the moves and jumps");
 }

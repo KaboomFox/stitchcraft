@@ -2167,9 +2167,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     outward corner and an arc joins them at an inward one. Where the line folds over itself, as round a bar
     narrower than twice the tolerance, it goes straight across the fold. An outline whose lines need more work to move
     in than the budget allows sews none, and `SC-I0904` says so.
-  - No outline stitch lies on a neighbour on any repository picture. The pictures sew 66 stitches fewer to
-    54 more. The fills before the outlines end elsewhere. The running dog in 9 threads leaves 2 jump threads
-    fewer, and 3 rows of the running dog in 6 threads now show beside a line (`tests/auto_photos.rs`).
+  - No outline stitch lies on a neighbour on any repository picture. The pictures sew 55 stitches fewer to
+    49 more. The fills before the outlines end elsewhere. The running dogs leave a jump thread fewer each,
+    and a row of the running dog in 6 threads now shows beside a line (`tests/auto_photos.rs`). Planning
+    costs the same to within 0.2 %.
 - M13.48: details last is off by default again (`REQ-AUTO-098`).
   - `auto_details_last` is off, and `auto_min_likeness` stays 0.85. On the traced dogs details last cost
     1, 4, 7 and 7 jump threads, each cut by hand, and their likeness didn't move. It comes back on by
@@ -3462,8 +3463,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ### Golden files
 - Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes`, `TS-13C.pes` and `TS-13E.pes` (M13.43,
   an outline inside its fill's edge). Each outline of an automatic fill runs 0.1 mm inside the fill's edge.
-  The sheets sew 23,908, 14,522, 10,326 and 5,940 stitches, where they sewed 23,890, 14,543, 10,320 and
-  5,939. TS-13A and TS-13C are 0.1 mm shorter, 167.88 and 107.64 mm tall: their lowest outlines lie 0.1 mm
+  The sheets sew 23,892, 14,492, 10,229 and 5,932 stitches, where they sewed 23,861, 14,511, 10,235 and
+  5,932. TS-13A and TS-13C are 0.09 and 0.1 mm shorter, 167.89 and 107.65 mm tall: their lowest outlines lie
   further in. Their jumps are as they were.
 - Changed `conformance/golden/testsheets/TS-13B.pes` and `TS-13D.pes` (M13.37, traced letters sewn as
   strokes). In the digitized half of each, a part drawn in straight strokes sews a column along each
