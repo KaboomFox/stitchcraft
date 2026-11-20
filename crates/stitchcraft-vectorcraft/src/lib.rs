@@ -37,6 +37,7 @@ mod container;
 mod data;
 mod document;
 mod effect;
+pub mod expanded;
 pub mod filter;
 mod geometry;
 mod gradient;

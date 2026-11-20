@@ -4,6 +4,7 @@
 pub mod bug_report;
 pub mod convert;
 pub mod cutout;
+pub mod expand;
 pub mod explain;
 pub mod inspect;
 pub mod lettering;

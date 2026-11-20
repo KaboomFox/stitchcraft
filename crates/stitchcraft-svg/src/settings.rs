@@ -86,7 +86,9 @@ impl Found {
                 Err(_) => {
                     self.cap.remove(name);
                     return Some((
-                        format!("StitchCraft's design setting `{name}`, \"{text}\", is not a value it takes; it is ignored, and the Auto effect's default is used."),
+                        format!(
+                            "StitchCraft's design setting `{name}`, \"{text}\", is not a value it takes; it is ignored, and the Auto effect's default is used."
+                        ),
                         None,
                     ));
                 }

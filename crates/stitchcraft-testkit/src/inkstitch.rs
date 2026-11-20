@@ -13,8 +13,8 @@
 
 use stitchcraft_engine::design::{DesignSettings, Element};
 use stitchcraft_engine::testsheets::Cloned;
-pub use stitchcraft_svg::written::{MARGIN, data, sewn_alike};
 use stitchcraft_svg::written::{self, Options, Params};
+pub use stitchcraft_svg::written::{MARGIN, data, sewn_alike};
 
 /// `elements`, in order, as an SVG file that Ink/Stitch reads, with the design's `settings`; or why they
 /// can't be: no element has a point, or an element has a parameter of StitchCraft's own that a stitch type
@@ -41,9 +41,9 @@ mod tests {
     use stitchcraft_core::{Budget, Mm};
     use stitchcraft_engine::design::{Cap, Clip, FillRule, Hints, Join, Path, Segment, Shape, Subpath, Turn};
     use stitchcraft_engine::generators::tatami::TURN_STITCHES;
-    use stitchcraft_svg::version::CURRENT;
     use stitchcraft_engine::testsheets;
     use stitchcraft_plan::Rgb;
+    use stitchcraft_svg::version::CURRENT;
 
     use super::*;
     use crate::designs::{BLUE, RED, along, capped, fill, p, polylines, rings, widened};

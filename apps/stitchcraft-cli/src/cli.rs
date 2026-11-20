@@ -41,6 +41,11 @@ pub enum Command {
     /// command line first.
     #[command(visible_alias = "export")]
     Plan(PlanArgs),
+    /// Expand an automatic design: write it as the ordinary shapes automatic digitizing makes of it, each
+    /// with its own StitchCraft effect, to edit one by one. A VectorCraft document keeps its traced shapes,
+    /// hidden and locked, under a new group of the parts; an SVG file has the parts alone. The expanded
+    /// design sews as the automatic one did, and no longer changes with the picture or the Auto effect.
+    Expand(ExpandArgs),
     /// Set a text in an embroidery font, a folder in Ink/Stitch's font format, plan it for a machine and
     /// write the machine file, with a picture if asked.
     Lettering(LetteringArgs),
@@ -70,6 +75,29 @@ pub enum Command {
     /// The bundle is one file to attach to an issue, and it holds the design. With --replay, plan a
     /// bundle's design again and compare; the exit status is 1 when it does not reproduce.
     BugReport(BugReportArgs),
+}
+
+/// `stitch expand`.
+#[derive(Debug, Args)]
+pub struct ExpandArgs {
+    /// The design: a VectorCraft document (.vectorcraft), an SVG file, or a picture (.png, .jpg or .jpeg),
+    /// which VectorCraft's command line traces first, as `stitch plan` traces it. Every shape without
+    /// settings is digitized automatically, as `stitch plan --auto` digitizes it.
+    pub design: PathBuf,
+    /// The expanded design to write: a VectorCraft document (.vectorcraft), from a VectorCraft document or a
+    /// picture, or an SVG file with Ink/Stitch's attributes (.svg).
+    #[arg(long, short)]
+    pub output: PathBuf,
+    /// The machine profile whose threads name the parts (see `stitch profiles`); by default the one a
+    /// VectorCraft document keeps, or else the reference machine. The document written keeps it.
+    #[arg(long, short)]
+    pub profile: Option<String>,
+    /// How the design is read.
+    #[command(flatten)]
+    pub reading: ReadingArgs,
+    /// How a picture is traced.
+    #[command(flatten)]
+    pub tracing: TracingArgs,
 }
 
 /// `stitch plan`.

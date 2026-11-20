@@ -127,7 +127,13 @@ pub(crate) fn kept(plugin_data: Option<&Value>, warnings: &mut Vec<Diagnostic>) 
 /// `data`, as the reader reads it: `None` when it keeps none of its values, or one that doesn't read.
 pub fn kept_cap(data: &Value) -> Option<Held> {
     let entries = data.as_object()?;
-    let cap: ParamSet = entries.iter().filter(|(name, _)| Held::KEYS.contains(&name.as_str())).map(|(name, value)| Some((name.as_str(), crate::values::text(value)?))).collect::<Option<Vec<_>>>()?.into_iter().collect();
+    let cap: ParamSet = entries
+        .iter()
+        .filter(|(name, _)| Held::KEYS.contains(&name.as_str()))
+        .map(|(name, value)| Some((name.as_str(), crate::values::text(value)?)))
+        .collect::<Option<Vec<_>>>()?
+        .into_iter()
+        .collect();
     if cap.iter().next().is_none() {
         return None;
     }
