@@ -156,7 +156,7 @@ custom locks, and `fill_method` leaves out Ink/Stitch's legacy fill, which Stitc
 (`REQ-FILL-005`). `satin_column` belongs to the effect, which sets it from its family. From M13.26 the fill's dialog
 has `turn_stitches`, the switch that automatic digitizing sets on its own fills, and every stitch effect's
 dialog `digitized_as`, last of the settings every element shares: VectorCraft admits an effect record only
-with the parameters its manifest takes, and an expanded part carries both (`REQ-VC-035`,
+with the parameters its manifest takes, and an expanded part sets both (`REQ-VC-035`,
 [Expand](image-to-embroidery.md#expand)). The Auto effect's dialog
 leaves out the settings of the registry's Advanced group, which are
 the bounds of the rules and the 2 limits of the cover's measure (M13.21), the base layer's offset, and

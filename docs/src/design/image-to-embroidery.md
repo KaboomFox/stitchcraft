@@ -3190,7 +3190,7 @@ into a VectorCraft document, read back from the document it writes.
 | TS-13A to TS-13D, digitized halves | 22 to 78 | bit for bit | bit for bit | |
 | TS-13E, digitized half | 34 | bit for bit | within 6.4e-14 mm | |
 
-A VectorCraft document keeps points in points, so a part's millimetres read back to within a unit in their
+A VectorCraft document keeps points in points. A part's millimetres read back to within a unit in their
 last place. Most products of a float and a point's size can't be written to read back exactly. The 2 dogs
 on turf sew the same few needle points otherwise at the engine when every point of their expanded design
 moves by a unit in its last place, so a fill's row there lies on a rounding's edge. Every other plan is the
@@ -3201,13 +3201,13 @@ deleted, and the other parts whose stitches changed were counted. On the badges,
 to 3 change: the outline that sews with the fill and the part sewn next, which starts nearest where it ends.
 On the traced dogs 13 to 97 of 150 to 192 parts change. The cap at the end of planning accounts for most of
 them: it thins the plan where it sews thick, and an edited part changes where that is. With the cap out of
-reach, the turn changes no other part on the 9-thread dog on turf, and 18 on the 9-thread running dog, the
-parts the thread runs under and the next ones. A person who wants a part left alone by the cap sets its
+reach, the turn doesn't change another part on the 9-thread dog on turf, and changes 18 on the 9-thread
+running dog: the parts the needle sews under between 2 parts, and the next ones. A person who wants a part left alone by the cap sets its
 `digitized_as` to `no`.
 
 Stitched previews of the running dog, the lettered patch and TS-13C, automatic beside expanded beside
-expanded with its largest fill turned, show the first 2 alike. No golden file changes: what sews by default
-is the same.
+expanded with its largest fill turned, show the first 2 alike. The golden files stay as they were, since every
+design sews as before.
 
 ### What isn't built
 

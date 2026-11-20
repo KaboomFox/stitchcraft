@@ -1,15 +1,15 @@
 # Expand an automatic design
 
-StitchCraft digitizes a traced picture automatically: it chooses each shape's stitches, and it chooses
-them again whenever the picture, a mark, a guide or the Auto effect's settings change. Marks, guides and
+StitchCraft digitizes a traced picture automatically. It chooses each shape's stitches again whenever the
+picture, a mark, a guide or the Auto effect's settings change. Marks, guides and
 names steer it. When none of them gives you what you want, expand the design. It becomes ordinary shapes,
 each with its own StitchCraft effect, which you edit one by one, as other embroidery software leaves a
 design it digitized.
 
 ## When to expand
 
-Expand once the automatic design is close, and what is left is a change to one part: another angle for a
-fill, another stitch type, a part you don't want. Steer the design first with
+Expand once the automatic design is close, and what is left is a change to a part, such as another angle
+for a fill or a part you don't want. Steer the design first with
 [marks](keep-small-parts.md), [guides](guide-the-rows.md) and the Auto effect's settings, since those stay
 live and an expanded design doesn't follow them.
 
@@ -33,7 +33,7 @@ path for each part, in the order they sew, each named as the notices name its sh
 - Each part has the effect and the settings it sewed with: the fill's angle, row spacing and underlay, a
   column's width and pull compensation, a line's repeats.
 - Each part's `digitized_as` says it sews as automatic digitizing made it, and the design keeps the limits
-  of how thick it sews. So the thread runs under later shapes between parts in place of a jump, and the
+  of how thick it sews. So the needle sews under later shapes between parts in place of a jump, and the
   cap thins the design where it sews too thick. Planned, the expanded design sews as the automatic one
   did, stitch for stitch.
 
@@ -44,7 +44,8 @@ and the thread jumps to it and from it.
 
 The expanded design no longer updates itself. Changing the picture, a mark, a guide or the Auto effect
 changes nothing in it, and a part you edit sews as its own settings say. Editing one part can change the
-part sewn after it, which starts nearest where it ends, and the parts the cap thins where they lie over it.
+part sewn after it, which starts nearest where it ends. The cap can thin other parts elsewhere, where the
+edit changes how thick the design sews.
 
 Lettering becomes the columns it sews, and you can't edit its text as text. `SC-W0922` names it, and any
 shape that needed more work than the budget allows.

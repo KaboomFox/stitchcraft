@@ -386,7 +386,7 @@ no turn, and doesn't write a file for JSON that isn't a number. Ink/Stitch also 
 there, which names the threads in its own lists and print-outs and doesn't change what the adapter sews,
 and the file's version (below). `SC-W0802` names any other element of Ink/Stitch's there.
 
-A file `stitch expand` writes also keeps what the cap holds its parts to, by the names of the Auto effect's
+A file `stitch expand` writes also keeps the cap's limits for its parts, by the names of the Auto effect's
 settings, such as `auto_thick_cap_fills` (M13.26). They are StitchCraft's own, which Ink/Stitch passes over,
 and `SC-W0802` names a value that doesn't read ([Expand](image-to-embroidery.md#expand)).
 

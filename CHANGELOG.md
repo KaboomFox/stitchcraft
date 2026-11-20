@@ -12,8 +12,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   or `lettering`), and the cap's limits kept as design settings make the expanded design sew as the
   automatic one did: bit for bit on the 13 designs of the set at the engine and through an SVG file.
   `SC-W0922` names what Expand couldn't keep. The fill effect's dialog shows `turn_stitches`, and every
-  effect's `digitized_as` (`REQ-VC-035`). The SVG writer of the Ink/Stitch differential moved from the test
-  kit to `stitchcraft_svg::written`, which `stitch expand` writes with. What sews by default doesn't change.
+  effect's `digitized_as` (`REQ-VC-035`). `stitch expand` writes an SVG file with the writer of the Ink/Stitch
+  differential, moved from the test kit to `stitchcraft_svg::written`. Every design sews as before.
 - M14.9: `widen_percent`, a lettering setting that widens every satin column of a text by a percent of its
   width on each side, 0 to 50 and 0 by default (`REQ-FONT-024`). `stitch lettering --widen-percent`, the
   Lettering effect's dialog and its record take it. At 0 every design sews as before. Markers and
