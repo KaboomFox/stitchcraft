@@ -158,6 +158,17 @@ and in Barstitch Bold. `stitch lettering "MATCH" --font FOLDER --height 15` sets
 - Do Barstitch Bold's wide columns pull the fabric in, or sew too thick where 2 strokes meet?
 - At 10 mm, where only Small Font sews, is the word too light beside the traced one?
 
+M14.9 plans bold lettering under the heights Barstitch Bold sews
+([design](../design/image-to-embroidery.md#bold-letters-under-the-bold-fonts-heights)). At MC-8, sew the
+made-up word Hexmira at 8 and at 10 mm, each alone and on a cream field 3 mm round it, in 4 ways side by
+side: Small Font as today, Small Font widened by 20 % (`--widen-percent 20` once built, or the probe's
+file), Barstitch Bold set at that height, and Barstitch Bold with its pull compensation scaled to the height.
+
+- Which reads as bold as the traced block letters of the lettered patch?
+- Are the counters of the a, the e and the R open, or filled with thread?
+- Do Barstitch Bold's letters touch, and does a word in it still read?
+- Is the widened Small Font stiff or thick where its strokes meet, against today's?
+
 MC-8 also sews one of the owner's traced dogs, `docs/fixtures/traced-dog-running-9.vectorcraft`, 100 mm
 tall: `stitch plan docs/fixtures/traced-dog-running-9.vectorcraft --auto -o dog.pes`. Does the fur read as
 fur, the face and the eyes as hers, and do its 83 jump threads, which the PE800 doesn't cut, take long to

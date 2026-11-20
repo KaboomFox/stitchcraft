@@ -592,6 +592,15 @@ milestone = "M14"
 status = "active"
 
 [[req]]
+id = "REQ-FONT-024"
+area = "fonts"
+level = "L2"
+statement = "Lettering's setting widen_percent, StitchCraft's own, from 0 to 50 and 0 by default, widens every satin column of the text by that percent of its width on each side: lettering sets the glyph's pull_compensation_percent plus widen_percent on each satin column it places. Running stitches and fills are not changed. A value outside 0 to 50 is set at the nearest, with a warning that names widen_percent and the range. Lettering::take reads it by that name, so stitch lettering and the Lettering effect's record take it."
+rationale = "Small Font's columns, widened, sew bold letters at heights where no bold font sews (M14.9): a fifth of the width on each side keeps every counter that Small Font keeps today from 8 mm up, on its 62 letters and digits. Pull compensation is how Ink/Stitch's fonts already widen a column as it sews, so the glyphs stay as their authors drew them."
+milestone = "M14"
+status = "planned"
+
+[[req]]
 id = "REQ-SVG-009"
 area = "svg"
 level = "L2"
@@ -3695,6 +3704,24 @@ statement = "A text object (REQ-AUTO-069) is bold when its first line that shows
 rationale = "A text object has no traced letters to measure, but a drawing that sets a word bold asks for heavy letters, and the bold font gives them. A typeface's name, such as Arial, names no embroidery font, and matching it to one by its name would choose by accident. A line that the bold font can't sew at its height keeps the default font, and the note says from what size the bold font sews, since lettering set taller than the drawing has it would run over its neighbours."
 milestone = "M14"
 status = "active"
+
+[[req]]
+id = "REQ-AUTO-140"
+area = "auto"
+level = "L2"
+statement = "A text marker that names no font, whose letters are bolder than the font chosen for them (REQ-AUTO-081), is set with widen_percent (REQ-FONT-024) of 50 times the letters' weight over the font's, less 1, rounded to a whole percent and at most 20, when that is 5 or more and the letters are 8 mm tall or more. SC-I1118 says the text is widened by that percent. Letters under 8 mm are not widened, and SC-I1118 says the font closes its counters widened under 8 mm. A marker that names a font, and letters that the bold font sews at their height, are set as before."
+rationale = "Bold letters 8 to 12.5 mm tall, under the heights Barstitch Bold sews, were set in Small Font's light strokes. Measured on 2026-11-20 on the 62 letters and digits, Small Font widened by 20 % sews strokes 0.20 to 0.22 of the height wide, keeps today's counters from 8 mm up and keeps the letters apart, where Barstitch Bold set smaller runs its letters together. Under 8 mm Small Font sews heavier for its height (0.19 at 6 mm), and widened it closes the A's and the 4's counters. The 2 limits are starting values for the machine checkpoint to confirm."
+milestone = "M14"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-141"
+area = "auto"
+level = "L2"
+statement = "A bold text object (REQ-AUTO-082) whose lines the bold font can't sew at their height, all of them 8 mm tall or more, sews in the default font with widen_percent of 50 times the bold font's weight over the default font's, less 1, rounded and at most 20, and SC-I1118 says so. Under 8 mm it sews as before, unwidened, and the note says why."
+rationale = "A drawing that sets a word bold asks for heavy letters at any size it is drawn, and the bold font sews only from 12.5 mm. The default font widened gives bold letters under that, by the limits of REQ-AUTO-140."
+milestone = "M14"
+status = "planned"
 
 [[req]]
 id = "REQ-AUTO-083"
