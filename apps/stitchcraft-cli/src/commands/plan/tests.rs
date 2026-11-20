@@ -159,6 +159,61 @@ fn req_auto_030_stitch_plan_sets_the_rules_settings_and_a_style_on_every_automat
     assert!(out.status == Status::DesignErrors && out.stderr.contains("SC-E0101"), "{}", out.stderr);
 }
 
+/// `stitch plan T.svg --auto` with `options`, parsed, for the cases of the styles.
+fn plan_t(dir: &TempDir, design: &str, options: &[&str]) -> Result<PlanArgs, clap::Error> {
+    use clap::Parser;
+
+    use crate::cli::{Cli, Command};
+
+    let (svg, output) = (dir.join("t.svg"), dir.join("t.pes"));
+    std::fs::write(&svg, design).unwrap();
+    let (svg, output) = (svg.to_str().unwrap().to_string(), output.to_str().unwrap().to_string());
+    let cli = Cli::try_parse_from(["stitch", "plan", svg.as_str(), "-o", output.as_str(), "--auto"].into_iter().chain(options.iter().copied()))?;
+    let Command::Plan(args) = cli.command else { panic!("not a plan") };
+    Ok(args)
+}
+
+#[test]
+fn req_auto_150_the_style_is_the_persons_choice_and_none_is_guessed() {
+    let dir = TempDir::new("plan-style-chosen");
+    // There is no `auto` style: it is refused, as any other name, with the list of styles.
+    let refused = plan_t(&dir, THICK_AND_THIN, &["--style", "auto"]).unwrap_err().to_string();
+    assert!(refused.contains("`auto` isn't a style: the styles are logo, photo"), "{refused}");
+    // Without the option no setting is set, so every automatic shape has the rules' defaults, the photo
+    // style's: the T is filled as uneven, as with `--style photo`.
+    assert!(plan_t(&dir, THICK_AND_THIN, &[]).unwrap().reading.rules().is_empty());
+    let rule = |options: &[&str]| {
+        let out = run(&plan_t(&dir, THICK_AND_THIN, options).unwrap());
+        out.stderr.lines().find(|line| line.contains("SC-I0912")).unwrap().to_string()
+    };
+    assert!(rule(&[]).contains("the rule uneven ("));
+    assert_eq!(rule(&[]), rule(&["--style", "photo"]));
+}
+
+/// A rectangle 20 mm by 10 mm: an area that both styles sew alike.
+const PLAIN: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" width="30mm" height="30mm" viewBox="0 0 30 30"><rect id="r" x="5" y="5" width="20" height="10" fill="red"/></svg>"#;
+
+#[test]
+#[ignore = "planned: M13.42 builds the notice that the style changes how a design sews"]
+fn req_auto_151_stitch_plan_says_when_the_other_style_would_sew_a_design_otherwise() {
+    let dir = TempDir::new("plan-style-notice");
+    let notice = |design: &str, options: &[&str]| {
+        let out = run(&plan_t(&dir, design, options).unwrap());
+        assert_eq!(out.status, Status::Done, "{}", out.stderr);
+        out.stderr.lines().filter(|line| line.contains("`--style logo`") || line.contains("`--style photo`")).map(str::to_string).collect::<Vec<_>>()
+    };
+    // In the photo style, the defaults, the uneven T is filled: one notice counts it and names the logo style.
+    let photo = notice(THICK_AND_THIN, &[]);
+    assert_eq!(photo.len(), 1, "{photo:?}");
+    assert!(photo[0].starts_with("info SC-I") && photo[0].contains("1 part filled as uneven") && photo[0].contains("`--style logo`"), "{photo:?}");
+    // In the logo style it keeps its columns: the notice names the photo style, which would fill it.
+    let logo = notice(THICK_AND_THIN, &["--style", "logo"]);
+    assert_eq!(logo.len(), 1, "{logo:?}");
+    assert!(logo[0].contains("1 part that the photo style fills") && logo[0].contains("`--style photo`"), "{logo:?}");
+    // A rectangle sews alike in both styles, and nothing is said.
+    assert!(notice(PLAIN, &[]).is_empty() && notice(PLAIN, &["--style", "logo"]).is_empty());
+}
+
 /// Red, blue and red squares 10 mm apart, without settings: tatami fills, as Ink/Stitch sews them.
 const SQUARES: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm" viewBox="0 0 100 100"><rect id="r1" x="0" y="0" width="10" height="10" fill="red"/><rect id="b" x="20" y="0" width="10" height="10" fill="blue"/><rect id="r2" x="40" y="0" width="10" height="10" fill="red"/></svg>"#;
 
