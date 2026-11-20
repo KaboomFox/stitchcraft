@@ -33,8 +33,8 @@ fn ring(width: f64, params: &[(&str, &str)]) -> Element {
     let circle = |r: f64, turn: f64| -> Vec<(f64, f64)> {
         (0..180)
             .map(|k| {
-                let a = turn * f64::from(k) * std::f64::consts::TAU / 180.0;
-                (40.0 + r * a.cos(), 40.0 + r * a.sin())
+                let (sin, cos) = stitchcraft_core::math::sin_cos(turn * f64::from(k) * std::f64::consts::TAU / 180.0);
+                (40.0 + r * cos, 40.0 + r * sin)
             })
             .collect()
     };
