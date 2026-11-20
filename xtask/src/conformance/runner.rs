@@ -9,7 +9,7 @@ use stitchcraft_engine::testsheets;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, invariants, profiles};
 use stitchcraft_render::{Settings, Style};
 
-use super::cases::{DataCase, MODELS_ONLY, RELEASE_ONLY, RustCase, SheetExpect, Spec, Subject};
+use super::cases::{DataCase, MODELS_ONLY, PLANNED, RELEASE_ONLY, RustCase, SheetExpect, Spec, Subject};
 use super::{centre_lines, differential, font, fonts, oracle, routing};
 use crate::util;
 
@@ -286,11 +286,12 @@ fn judged(runs: Option<&[Verdict<'_>]>) -> (Vec<String>, Option<String>) {
         return (vec!["the test failed (run `cargo test` for details)".to_string()], None);
     }
     let reasons: Vec<&str> = runs.iter().filter_map(|verdict| if let Verdict::Ignored(reason) = verdict { Some(*reason) } else { None }).collect();
-    match reasons.iter().find(|reason| !reason.starts_with(MODELS_ONLY) && !reason.starts_with(RELEASE_ONLY)) {
+    match reasons.iter().find(|reason| ![MODELS_ONLY, RELEASE_ONLY, PLANNED].iter().any(|start| reason.starts_with(start))) {
         Some(reason) => {
             let why = if reason.is_empty() { String::new() } else { format!(" (\"{reason}\")") };
-            let failure =
-                format!("it is ignored{why}: a case may be ignored only as \"{MODELS_ONLY}…\", or in the debug build as \"{RELEASE_ONLY}…\"");
+            let failure = format!(
+                "it is ignored{why}: a case may be ignored only as \"{MODELS_ONLY}…\" or \"{PLANNED}…\", or in the debug build as \"{RELEASE_ONLY}…\""
+            );
             (vec![failure], None)
         }
         None if runs.contains(&Verdict::Passed) => (Vec::new(), None),
@@ -346,11 +347,16 @@ test diag_sc_e0701_too_wide ... ignored
         let (failures, skipped) = judged(Some(&[Verdict::Ignored("too slow")]));
         assert_eq!(
             failures,
-            ["it is ignored (\"too slow\"): a case may be ignored only as \"models only: …\", or in the debug build as \"release only: …\""]
+            [
+                "it is ignored (\"too slow\"): a case may be ignored only as \"models only: …\" or \"planned: …\", or in the debug build as \"release only: …\""
+            ]
         );
         assert_eq!(skipped, None);
         let (failures, _) = judged(Some(&[models, Verdict::Ignored("")]));
-        assert_eq!(failures, ["it is ignored: a case may be ignored only as \"models only: …\", or in the debug build as \"release only: …\""]);
+        assert_eq!(
+            failures,
+            ["it is ignored: a case may be ignored only as \"models only: …\" or \"planned: …\", or in the debug build as \"release only: …\""]
+        );
     }
 
     #[test]
@@ -365,11 +371,23 @@ test diag_sc_e0701_too_wide ... ignored
         let (failures, skipped) = judged(Some(&[Verdict::Ignored("too slow")]));
         assert_eq!(
             failures,
-            ["it is ignored (\"too slow\"): a case may be ignored only as \"models only: …\", or in the debug build as \"release only: …\""]
+            [
+                "it is ignored (\"too slow\"): a case may be ignored only as \"models only: …\" or \"planned: …\", or in the debug build as \"release only: …\""
+            ]
         );
         assert_eq!(skipped, None);
         let (failures, _) = judged(Some(&[release, Verdict::Ignored("")]));
-        assert_eq!(failures, ["it is ignored: a case may be ignored only as \"models only: …\", or in the debug build as \"release only: …\""]);
+        assert_eq!(
+            failures,
+            ["it is ignored: a case may be ignored only as \"models only: …\" or \"planned: …\", or in the debug build as \"release only: …\""]
+        );
         assert_eq!(judged(None).0, ["did not run (is it a #[test]? does it compile?)"]);
+    }
+
+    #[test]
+    fn a_case_ignored_as_planned_is_left_out_until_its_requirement_is_built() {
+        let planned = Verdict::Ignored("planned: M13.52 builds the smoothing pass");
+        assert_eq!(judged(Some(&[planned])), (Vec::new(), Some("planned: M13.52 builds the smoothing pass".to_string())));
+        assert_eq!(judged(Some(&[planned, Verdict::Failed])).0, ["the test failed (run `cargo test` for details)"]);
     }
 }

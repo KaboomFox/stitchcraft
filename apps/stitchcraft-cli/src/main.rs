@@ -155,11 +155,16 @@ mod tests {
         let Command::Lettering(args) = parse(&["lettering", "Hi", "--font", "f", "-o", "hi.pes", "--height", "8"]).unwrap().command else {
             panic!("`stitch lettering`")
         };
-        assert_eq!(args.height, Some(8.0));
+        assert_eq!((args.height, args.widen_percent), (Some(8.0), 0.0));
+        let Command::Lettering(args) = parse(&["lettering", "Hi", "--font", "f", "-o", "hi.pes", "--widen-percent", "20"]).unwrap().command else {
+            panic!("`stitch lettering`")
+        };
+        assert_eq!(args.widen_percent, 20.0);
         // A number that is none, an alignment that is none, and a size given twice.
         let refused = |more: &[&str]| parse(&[["lettering", "Hi", "--font", "f", "-o", "hi.pes"].as_slice(), more].concat()).unwrap_err().to_string();
         assert!(refused(&["--scale", "inf"]).contains("`inf` isn't a number"));
         assert!(refused(&["--letter-spacing", "wide"]).contains("`wide` isn't a number"));
+        assert!(refused(&["--widen-percent", "bold"]).contains("`bold` isn't a number"));
         assert!(refused(&["--align", "centre"]).contains("`centre` isn't an alignment: they are left, center, right, block, letterspacing"));
         assert!(refused(&["--scale", "100", "--height", "8"]).contains("cannot be used with"));
         // The help of each setting's option is the setting's own.
@@ -221,6 +226,16 @@ mod tests {
         assert!(args.tracing.given());
         let Command::Plan(args) = parse(&["plan", "badge.png", "-o", "badge.pes"]).unwrap().command else { panic!("`stitch plan`") };
         assert!(!args.tracing.given());
+    }
+
+    #[test]
+    fn req_cli_024_fewer_points_is_off_unless_given() {
+        let Command::Plan(args) = parse(&["plan", "badge.png", "-o", "badge.pes"]).unwrap().command else { panic!("`stitch plan`") };
+        assert!(!args.tracing.fewer_points);
+        let Command::Plan(args) = parse(&["plan", "badge.png", "-o", "badge.pes", "--fewer-points"]).unwrap().command else {
+            panic!("`stitch plan`")
+        };
+        assert!(args.tracing.fewer_points && args.tracing.given());
     }
 
     #[test]

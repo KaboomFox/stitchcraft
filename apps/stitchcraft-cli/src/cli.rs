@@ -158,6 +158,9 @@ pub struct LetteringArgs {
     #[arg(long, value_name = lettering::BACK_AND_FORTH.takes, action = clap::ArgAction::Set, default_value = lettering::BACK_AND_FORTH.default, help = lettering::BACK_AND_FORTH.does)]
     #[allow(missing_docs)] // Its help is the setting's own, above.
     pub back_and_forth: bool,
+    #[arg(long, value_name = lettering::WIDEN_PERCENT.takes, value_parser = number, default_value = lettering::WIDEN_PERCENT.default, allow_hyphen_values = true, help = lettering::WIDEN_PERCENT.does)]
+    #[allow(missing_docs)] // Its help is the setting's own, above.
+    pub widen_percent: f64,
     /// Set the text along a path of this SVG file, in the file's place on its page: the path labelled
     /// `batch lettering`, as Ink/Stitch's batch lettering takes it, or else the file's first path that
     /// paints. The text follows the path's first subpath.
@@ -286,6 +289,11 @@ pub struct TracingArgs {
     /// of the machine's threads, 2 to 256; by default 6.
     #[arg(long, value_name = "N", value_parser = clap::value_parser!(u32).range(2..=256))]
     pub colours: Option<u32>,
+    /// Trace a picture with fewer points: Image Trace's Paths and Corners at their lowest, which draw its
+    /// outlines with about a third fewer anchors and fewer jags. Off by default, since it changes how many
+    /// shapes of a traced picture sew.
+    #[arg(long)]
+    pub fewer_points: bool,
     /// Also write the document VectorCraft traced a picture into (.vectorcraft), to correct the trace in
     /// VectorCraft.
     #[arg(long, value_name = "FILE")]
@@ -295,8 +303,8 @@ pub struct TracingArgs {
 impl TracingArgs {
     /// Whether any option is given, which only a picture takes.
     pub fn given(&self) -> bool {
-        let TracingArgs { vectorcraft_cli, size, colours, traced } = self;
-        vectorcraft_cli.is_some() || size.is_some() || colours.is_some() || traced.is_some()
+        let TracingArgs { vectorcraft_cli, size, colours, fewer_points, traced } = self;
+        vectorcraft_cli.is_some() || size.is_some() || colours.is_some() || *fewer_points || traced.is_some()
     }
 }
 

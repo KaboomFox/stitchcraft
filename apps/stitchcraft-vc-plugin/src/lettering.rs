@@ -16,7 +16,9 @@
 //! the fonts built in would make the manifest differ from build to build, and VectorCraft checks a record's
 //! value against the manifest of the plug-in installed.
 
-use stitchcraft_svg::lettering::{BACK_AND_FORTH, COLOR_SORT, LETTER_SPACING, LINE_HEIGHT, SCALE, SETTINGS, Setting, TEXT_ALIGN, TRIM, WORD_SPACING};
+use stitchcraft_svg::lettering::{
+    BACK_AND_FORTH, COLOR_SORT, LETTER_SPACING, LINE_HEIGHT, SCALE, SETTINGS, Setting, TEXT_ALIGN, TRIM, WIDEN_PERCENT, WIDEST, WORD_SPACING,
+};
 use stitchcraft_vectorcraft::lettering::{DEFAULT_FONT, FONT};
 
 use crate::dialog::own;
@@ -32,7 +34,7 @@ const MAX_FONT_CHARS: usize = 128;
 /// The settings of lettering the dialog shows, in its order, each with its row's label, and for a number
 /// its unit and the range the dialog takes. The 2 that place a text along a path are not among them: a text
 /// object's own place is where it sews.
-const ROWS: [(Setting, &str, &str, f64, f64); 8] = [
+const ROWS: [(Setting, &str, &str, f64, f64); 9] = [
     (SCALE, "Size", "%", 1.0, 1_000.0),
     (TEXT_ALIGN, "Align", "", 0.0, 0.0),
     (LETTER_SPACING, "Letter spacing", "mm", -100.0, 100.0),
@@ -41,6 +43,7 @@ const ROWS: [(Setting, &str, &str, f64, f64); 8] = [
     (BACK_AND_FORTH, "Sew lines back and forth", "", 0.0, 0.0),
     (COLOR_SORT, "Sort colours", "", 0.0, 0.0),
     (TRIM, "Trim", "", 0.0, 0.0),
+    (WIDEN_PERCENT, "Widen columns", "%", 0.0, WIDEST),
 ];
 
 /// The effect's dialog: the font, then lettering's settings by Ink/Stitch's names, each with lettering's
@@ -84,7 +87,10 @@ mod tests {
     fn req_vc_027_the_dialog_s_settings_are_lettering_s_own_at_its_defaults() {
         let rows = options();
         let names: Vec<&str> = rows.iter().map(|(name, _)| *name).collect();
-        assert_eq!(names, ["font", "scale", "text_align", "letter_spacing", "word_spacing", "line_height", "back_and_forth", "color_sort", "trim"]);
+        assert_eq!(
+            names,
+            ["font", "scale", "text_align", "letter_spacing", "word_spacing", "line_height", "back_and_forth", "color_sort", "trim", "widen_percent"]
+        );
         // Each default, given to lettering by its name, leaves lettering's defaults as they are.
         let mut how = Lettering::default();
         for (name, param) in rows.iter().skip(1) {
@@ -100,7 +106,9 @@ mod tests {
                     assert!(options.contains(default), "{name}");
                     assert!(options.iter().all(|option| Lettering::default().take(name, option)), "{name}");
                 }
-                Schema::Number { min, max, default } => assert!(min < default && default < max || *default == 0.0 && *min < 0.0, "{name}"),
+                Schema::Number { min, max, default } => {
+                    assert!(min < default && default < max || *default == 0.0 && *min <= 0.0 && *max > 0.0, "{name}");
+                }
                 Schema::Bool { default } => assert_eq!((*name, *default), ("back_and_forth", true)),
                 Schema::Text { default, max_length } => assert_eq!((*name, *default, *max_length), ("font", "", 128)),
                 Schema::Int { .. } => panic!("{name}"),
@@ -110,7 +118,7 @@ mod tests {
         let toggles: Vec<&str> = rows.iter().filter(|(_, param)| matches!(param.schema, Schema::Bool { .. })).map(|(name, _)| *name).collect();
         assert_eq!(toggles, ["back_and_forth"]);
         let units: Vec<Option<&str>> = rows.iter().map(|(_, param)| param.ui.unit).collect();
-        assert_eq!(units, [None, Some("%"), None, Some("mm"), Some("mm"), Some("mm"), None, None, None]);
+        assert_eq!(units, [None, Some("%"), None, Some("mm"), Some("mm"), Some("mm"), None, None, None, Some("%")]);
         // Trims stay off unless asked for, for a machine that cuts no thread.
         let trim = rows.iter().find(|(name, _)| *name == "trim").unwrap();
         assert_eq!(trim.1.schema.default_value(), json!("off"));

@@ -576,7 +576,7 @@ fn req_font_020_the_settings_are_named_as_ink_stitch_names_them() {
     let settings: Vec<(&str, &str, &str)> = SETTINGS.iter().map(|setting| (setting.name, setting.takes, setting.default)).collect();
     assert_eq!(settings[..3], [("scale", "PERCENT", "100"), ("color_sort", "off|all|line|word", "off"), ("trim", "off|line|word|glyph", "off")]);
     assert_eq!(
-        settings[7..],
+        settings[7..10],
         [
             ("text_position", "left|center|right|stretch", "left"),
             ("vertical_text_position", "top|baseline|bottom", "top"),

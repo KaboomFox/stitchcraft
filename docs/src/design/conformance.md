@@ -463,8 +463,8 @@ fn req_auto_025_digitized_dogs_leave_no_patch_of_fabric_bare() { … }
 ```
 
 The runner, which runs the debug build, lists such a case as skipped with its reason (⏭ in the report),
-and CI doesn't fail on it as on a missing tool: the release step runs it. A case ignored any other way
-fails, so that no case hides behind `#[ignore]`. `--check` finds each release-only case by its attribute.
+and CI doesn't fail on it as on a missing tool: the release step runs it. A case ignored any other way,
+but as [planned](#cases-of-planned-requirements), fails, so that no case hides behind `#[ignore]`. `--check` finds each release-only case by its attribute.
 Its file must be a test target of its own, `<package>/tests/<target>.rs`, and a line of
 `.github/workflows/ci.yml` must run `cargo test --release … -p <package> --test <target>`. A case ignored
 as release only in every build fails `--check` too, as the release build would leave it out as well. Each
@@ -490,13 +490,29 @@ says which of the 2 sources it used. From either, a file must match its pin befo
 2 sums (ADR-0019, decision 5). The cases then check it against that sum and compare its outputs with the
 fixtures, and the job leaves `stitch plan --subject` end to end out with a warning. The runner lists a
 models-only case as skipped with its reason (⏭ in the report), and CI doesn't fail on it as on a missing
-tool: the models' job runs it. A case ignored for any other reason fails, so that no case hides behind
-`#[ignore]`. `--check` finds each models-only case by its attribute: its file must be a test target of its
+tool: the models' job runs it. A case ignored for any other reason, but as planned, fails, so that no case
+hides behind `#[ignore]`. `--check` finds each models-only case by its attribute: its file must be a test target of its
 own, `<package>/tests/<target>.rs`, and a line of `models.yml` must run
 `cargo test … -p <package> --test <target>` with `--ignored`. `stitch`'s `tests/picture.rs` has a harness of its own, which prints the same reason
 for its models-only case, so that case has no attribute for `--check` to find. Each requirement still needs a case that runs everywhere. `REQ-CLI-019`'s is
 the cut-out of each photo from the models' outputs saved as fixtures, which the models' job checks tract
 still gives.
+
+### Cases of planned requirements
+
+A step may write a requirement's cases before the code that makes them pass, and another step builds it.
+The requirement stays `planned`, and each of its cases that fails until then is ignored in every build,
+with a reason of a fixed form that names the step that builds it:
+
+```rust
+#[test]
+#[ignore = "planned: M13.52 builds the smoothing pass"]
+fn req_auto_131_an_outline_is_smoothed_within_the_setting_and_keeps_its_corners() { … }
+```
+
+The runner lists such a case as skipped with its reason, and CI doesn't fail on it. `--check` fails for a
+case ignored as planned whose requirement is not `planned`. So the step that makes the requirement
+`active` removes the attribute, and the case runs from then on.
 
 `cargo xtask conformance --bless <case>` rewrites a data case's golden files. CI refuses a pull request
 that changes files under `conformance/golden/` unless it carries the `golden-change` label and a line in

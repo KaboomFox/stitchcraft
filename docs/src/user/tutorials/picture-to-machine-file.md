@@ -93,7 +93,10 @@ It traces the picture in your machine's threads with VectorCraft's command line,
 2. Then it digitizes the shapes as `--auto` does. It fits the picture into your hoop unless `--size` gives the
 length of its longer side in millimetres, background included. Image Trace keeps at most `--colours` colours,
 6 unless you say otherwise. Count the background's colour too: the badge has 3 colours on white, so 4 keeps
-any colour between them out. `--traced` keeps the document VectorCraft traced, which you can open in
+any colour between them out. `--fewer-points` sets Image Trace's Paths and Corners to 0, which draw the
+shapes with about a third fewer points and fewer jags thread can't show. It is off by default, since it
+also changes how many shapes sew, and it rounds the corners of a logo. To trace by hand as `stitch` does
+with it, set both to 0 under **Advanced** in step 3. `--traced` keeps the document VectorCraft traced, which you can open in
 VectorCraft to correct the trace and then digitize as above. Each of its shapes has the name the notices
 give it ([find a shape by its name](../how-to/find-a-shape.md)). When `stitch` can't start VectorCraft's command
 line, it says so with `SC-E0815`, and you trace the picture in VectorCraft instead. For a photo, `--subject` cuts
