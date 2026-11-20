@@ -1811,7 +1811,7 @@ at 3 fills or more and the thickest spot are as `fabric::thickness` measures the
 | Traced magnolia, photo | 217.5, 216.5, 210.5, 189.3 | 4.22 at each | 0.68, 0.86, 0.91, 0.94 | 2,880 at each |
 | Traced coleus, photo | 306.3, 306.8, 306.8, 303.8 | 4.16 at each | 3.94, 3.93, 3.94, 3.98 | 82 at each |
 | Greylag goose, photo | 156.8, 158.0, 155.5, 154.5 | 4.37 at each | 1.03, 1.09, 1.11, 1.07 | 2,373, 2,374, 2,374, 2,374 |
-| Traced castle, photo | MESPELBRUNN |
+| Traced castle, photo | 91.8, 91.8, 90.8, 90.8 | 3.82 at each | 0.82 at each | 1,939 at each |
 
 The badge, the round patch and the marked patch sew alike at every value, since no part's column edges
 their areas. The likeness doesn't change on any picture, the stitches change by less than 1 %, and the jump
@@ -1819,18 +1819,19 @@ threads by one at the most. The default's numbers are those M13.53 measured on m
 
 What the numbers can say:
 
-- **Less thread where columns edge fills.** At 0.4 mm the area at 3 fills falls on 7 of the 10 traced
-  pictures, most on the patch, whose letters are columns over a field. The others change by 2 mm² or less,
-  and M13.53 put this measure's noise at 8.5 mm². At 0.2 mm it falls further on all but the running dog in
-  6 threads, which rises 2.8 mm² and gains a stitch astray.
+- **Less thread where columns edge fills.** At 0.4 mm the area at 3 fills falls on 9 of the 10 traced
+  pictures, most on the patch, whose letters are columns over a field, and rises 0.5 mm² on the coleus. On
+  the running dog in 6 threads, the goose and the castle it changes by 1.3 mm² or less, within this
+  measure's noise, which M13.53 put at 8.5 mm². At 0.2 mm it falls further on all but the running dog in 6
+  threads, which rises 2.8 mm² and gains a stitch astray.
 - **The thickest spot** falls 0.25 fills on the patch and 0.1 to 0.2 on the pear. It rises 0.06 to 0.12 on
   the dog on turf in 6 threads, under the cap's limit at every value.
 - **The bare fabric can't say how little is enough.** The measure lays every stitch where the plan puts
   it, and no thread pulls in. It finds no gap at any value, as it found none with no overlap at all in
   M13.53. Its small rises, up to 0.18 mm² on the running dog in 9 threads, are slivers between an area and
   a column as planned, which the pull can only widen. A sew-out has to show where fabric opens.
-- **The cost to plan** is one more pass of geometry for each area beside a part's column. The dogs took 10
-  to 25 % longer. The photos' times varied by up to half between runs in no order, which is the noise of
+- **The cost to plan** is one more pass of geometry for each area beside a part's column. The dogs took 6
+  to 23 % longer. The photos' times varied by up to half between runs in no order, which is the noise of
   a machine shared with other builds.
 
 The sew-out ([machine testing](../plan/machine-testing.md)) sews a test piece of fills edged by columns
