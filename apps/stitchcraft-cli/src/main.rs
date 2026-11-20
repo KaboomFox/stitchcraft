@@ -224,6 +224,14 @@ mod tests {
     }
 
     #[test]
+    fn req_cli_024_fewer_points_is_off_unless_given() {
+        let Command::Plan(args) = parse(&["plan", "badge.png", "-o", "badge.pes"]).unwrap().command else { panic!("`stitch plan`") };
+        assert!(!args.tracing.fewer_points);
+        let Command::Plan(args) = parse(&["plan", "badge.png", "-o", "badge.pes", "--fewer-points"]).unwrap().command else { panic!("`stitch plan`") };
+        assert!(args.tracing.fewer_points && args.tracing.given());
+    }
+
+    #[test]
     fn the_colours_help_says_the_default_a_trace_takes() {
         use clap::CommandFactory;
         let mut cli = Cli::command();

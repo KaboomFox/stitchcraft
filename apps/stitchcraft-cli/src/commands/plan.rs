@@ -320,7 +320,7 @@ pub fn run_with(args: &PlanArgs, models: &Provider) -> Outcome {
 fn traced(args: &PlanArgs, profile: &MachineProfile, bytes: &[u8], cut: Option<&Subject>) -> Result<Vec<u8>, Outcome> {
     let tracing = &args.tracing;
     let name = args.design.file_name().map_or_else(String::new, |name| name.to_string_lossy().into_owned());
-    let fitting = trace::Fitting::for_style(args.reading.style);
+    let fitting = if tracing.fewer_points { trace::Fitting::Fewest } else { trace::Fitting::Defaults };
     let steps = trace::steps(&name, bytes, profile, tracing.size, tracing.colours.unwrap_or(trace::COLOURS), fitting);
     let scratch = Scratch::beside(&args.output)
         .map_err(|error| Outcome::unwritten("", &Unwritten { path: args.output.clone(), error, written: Vec::new() }))?;

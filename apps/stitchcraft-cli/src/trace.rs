@@ -8,7 +8,7 @@
 //! line is the `stitch` app's.
 //!
 //! **The steps** ([`steps`]) are the compatibility gate's `trace` case's, which the user takes by hand in
-//! the tutorial, but for the fitting below: the machine's threads, as `stitch palette` writes them, loaded as a swatch library; the
+//! the tutorial: the machine's threads, as `stitch palette` writes them, loaded as a swatch library; the
 //! picture placed from its bytes; Image Trace in colour with that library's colours as they are, by the
 //! Abutting method, so that the shapes share their edges; and Expand, which keeps the paths. The picture is
 //! fitted, its aspect kept, inside a square `--size` millimetres across, or else inside the machine's hoop
@@ -20,11 +20,12 @@
 //! outline with more points than thread can show: a staircase of pixels keeps its steps as corners, and
 //! each curve follows the pixels closely. Measured on the repository's traced pictures, Paths [`PATHS`] and
 //! Corners [`CORNERS`] draw them with about a third fewer anchors and fewer jags, for the same colour error
-//! against the picture and the same likeness, and the tracer still fits each edge once for both shapes
-//! that share it (`REQ-CLI-024`; `docs/src/design/image-to-embroidery.md` › Outlines thread can't show).
-//! Noise and Snap Curves To Lines stay at Image Trace's defaults. The `logo` style keeps every fitting
-//! option at its default: a logo's corners are drawn, Corners 0 would round each turn under 90°, and no
-//! traced logo was measured. Every VectorCraft release the compatibility gate supports reads both options.
+//! against the picture, and the tracer still fits each edge once for both shapes that share it. They are
+//! sent only with `--fewer-points`, for every style, since the stitch rule a shape gets still reacts to how
+//! its outline is drawn: on the traced dogs a third to a half of the shapes change their rule, and more of
+//! the design sews thick (`REQ-CLI-024`; `docs/src/design/image-to-embroidery.md` › Outlines thread can't
+//! show). Without it the steps leave every fitting option at Image Trace's default. Every VectorCraft
+//! release the compatibility gate supports reads both options.
 //!
 //! **Why the margin.** A picture's shapes reach its edge, and digitized automatically, a satin column along
 //! the edge sews past it: its stitches reach past its rails by their pull compensation
@@ -51,7 +52,6 @@ use std::process::{Command, Stdio};
 
 use serde_json::{Value, json};
 use stitchcraft_core::{Code, Diagnostic, Fix, Mm};
-use stitchcraft_engine::auto::rules::{LOGO, Preset};
 use stitchcraft_plan::MachineProfile;
 
 use crate::commands::{palette, printable};
@@ -67,18 +67,11 @@ pub const CORNERS: u32 = 0;
 /// How Image Trace fits the outlines of a picture `stitch plan` traces ([the module](self)).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Fitting {
-    /// With the fewest points that keep the picture: Paths [`PATHS`] and Corners [`CORNERS`].
+    /// With the fewest points that keep the picture: Paths [`PATHS`] and Corners [`CORNERS`], as
+    /// `--fewer-points` asks.
     Fewest,
-    /// With Image Trace's defaults, which keep a drawn corner: for the `logo` style.
+    /// With Image Trace's defaults: no fitting option is sent. Without `--fewer-points`.
     Defaults,
-}
-
-impl Fitting {
-    /// The fitting for a picture digitized in the style `style`: [`Fitting::Defaults`] for the `logo` style,
-    /// and [`Fitting::Fewest`] for any other or none.
-    pub fn for_style(style: Option<&Preset>) -> Self {
-        if style.is_some_and(|preset| preset.name == LOGO) { Self::Defaults } else { Self::Fewest }
-    }
 }
 
 /// The extensions of the pictures `stitch plan` traces, in any case.
@@ -202,7 +195,6 @@ fn said(stderr: &[u8]) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use stitchcraft_engine::auto::rules::PRESETS;
     use stitchcraft_plan::profiles::{BROTHER_PE800_4X4, REFERENCE};
     use stitchcraft_testkit::temp::TempDir;
 
@@ -255,11 +247,6 @@ mod tests {
         assert_eq!(defaults[2]["params"]["params"].as_object_mut().unwrap().len(), 5);
         defaults[2]["params"]["params"] = expected;
         assert_eq!(defaults, fewest);
-        // The `logo` style keeps every fitting option at its default, and any other style, or none, fits
-        // with the fewest points.
-        let style = |name: &str| PRESETS.iter().find(|preset| preset.name == name);
-        assert_eq!(Fitting::for_style(style("logo")), Fitting::Defaults);
-        assert_eq!([Fitting::for_style(style("photo")), Fitting::for_style(None)], [Fitting::Fewest; 2]);
     }
 
     #[test]

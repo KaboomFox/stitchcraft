@@ -190,13 +190,10 @@ pub struct Preset {
     pub values: &'static [(&'static str, &'static str)],
 }
 
-/// The name of the style for flat art drawn in strokes, such as a logo: the first of [`PRESETS`].
-pub const LOGO: &str = "logo";
-
 /// The presets. Each names values of the settings that lean the rules, and no rule of its own.
 pub const PRESETS: [Preset; 2] = [
     Preset {
-        name: LOGO,
+        name: "logo",
         help: "Flat art drawn in strokes, such as a logo, lettering or an ink drawing: more parts sew as satin columns, a part of \
                several strokes keeps its columns though its width varies, and a thin line sews as a line.",
         values: &[(PREFER, "satin"), (FILL_UNEVEN, "false")],
