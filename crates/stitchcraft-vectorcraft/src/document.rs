@@ -1162,7 +1162,7 @@ impl Reader<'_> {
         }
         let id = ElementId::new(format!("vc:{label}:{what}"))
             .map_err(|e| Diagnostic::new(Code::InternalCheckFailed, format!("The VectorCraft object `vc:{label}` makes no element id: {e}.")))?;
-        self.elements.push(Element { id, name: node.name.clone(), shape, thread, params, automatic, hints, clips: Vec::new() });
+        self.elements.push(Element { id, name: node.name.clone(), shape, thread, params, automatic, lettered: None, hints, clips: Vec::new() });
         Ok(())
     }
 

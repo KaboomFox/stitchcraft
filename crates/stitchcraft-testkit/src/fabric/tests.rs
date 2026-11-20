@@ -49,6 +49,20 @@ fn rows(left: f64, right: f64, top: f64, bottom: f64) -> Run {
         .collect()
 }
 
+#[test]
+fn the_sheets_thick_area_counts_from_3_fills_whatever_the_warnings_limit() {
+    // 3 layers of rows 0.25 mm apart sew between 3 and 4 fills: under the warning's limit of 4, where the
+    // sheet's row read 0, and thick by the sheet's measure.
+    let thrice: Run = (0..3).flat_map(|_| rows(0.0, 10.0, 0.0, 10.0)).collect();
+    let sewn = plan(&[(&RED, thrice)]);
+    let report = thickness(&sewn, &Limits::DEFAULT);
+    assert!(report.fills.value > THICK_FILLS && report.fills.value < Limits::DEFAULT.warn_fills, "{}", report.fills.value);
+    assert_eq!(report.thick.area, 0.0);
+    assert!(thick_area(&sewn) > 50.0, "{}", thick_area(&sewn));
+    // One layer is under 3 fills: nothing is thick.
+    assert_eq!(thick_area(&plan(&[(&RED, rows(0.0, 10.0, 0.0, 10.0))])), 0.0);
+}
+
 /// A design of `elements`, its origin where the coordinates are.
 fn design(elements: Vec<Element>) -> Design {
     Design::new(elements, DesignSettings { origin: Some(p(0.0, 0.0)), ..DesignSettings::default() }).unwrap()

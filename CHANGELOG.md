@@ -5,6 +5,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.50: the thickness cap covers lettering (`REQ-AUTO-119` to `REQ-AUTO-124`, `SC-W0913`).
+  - The last pass and the cap now take needle points of the lettering that automatic digitizing places,
+    marked text and text objects. They keep every column's top stitch where the font puts it. The cap takes a
+    column's underlay where another column covers it too. It also takes the running stitches under a column,
+    which covers them as far as its own pull compensation pulls it. The last resort and the last pass leave
+    lettering's columns whole. Barstitch Bold's thickest joins sew 0.5 to 1.0
+    fills less, 4.13 to 4.72 alone and 5.79 to 5.96 on a field. Small Font on a field and the marked patch
+    sew as before, up to 5.35 and 4.53.
+  - A lettering column sewn whole tags its underlay as underlay in the plan.
+  - A design of a person's own lettering is measured by the default limits and warned of, and nothing is
+    taken from it.
+  - The mark planning reads is `Element::lettered` (`Lettered::Set` or `Lettered::Digitized`).
+  - The before and after sheet measures its row of the area at 3 fills or more at 3 fills again
+    (`fabric::THICK_FILLS`). Measured at the warning's limit, which M13.46 raised to 4, it read 0 on every
+    picture.
 - M13.25: names of shapes (`REQ-AUTO-125` to `REQ-AUTO-127`, `REQ-VC-033`, `REQ-VC-034`, `REQ-CLI-023`,
   `SC-W0920`).
   - Each automatic shape without a name is named by its thread, how it sews and its number among the shapes

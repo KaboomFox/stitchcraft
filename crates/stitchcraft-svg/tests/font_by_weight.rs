@@ -69,6 +69,7 @@ fn element(id: &str, name: Option<&str>, shape: Shape, colour: Rgb) -> Element {
         thread: Thread::new(colour),
         params: ParamSet::new(),
         automatic: true,
+        lettered: None,
         hints: Hints::default(),
         clips: Vec::new(),
     }

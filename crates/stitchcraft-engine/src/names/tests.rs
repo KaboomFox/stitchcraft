@@ -27,6 +27,7 @@ fn fill(id: &str, colour: Rgb, automatic: bool) -> Element {
         automatic,
         hints: Hints::default(),
         clips: Vec::new(),
+        lettered: None,
     }
 }
 

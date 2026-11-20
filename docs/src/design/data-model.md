@@ -46,6 +46,7 @@ pub struct Element {
     pub thread: Thread,
     pub params: ParamSet,            // as the host stores them; validated against the registry when planned
     pub automatic: bool,             // since M13.1: a shape without settings, read with --auto, whose stitches StitchCraft chooses
+    pub lettered: Option<Lettered>,  // since M13.50: lettering set in a font (Set) or placed by digitizing (Digitized); no file holds it
     pub hints: Hints,                // since M8.4: where its design says it starts and ends, the point it aims at, its guide
     pub clips: Vec<Clip>,            // since M8.5: it sews only what lies inside every one (REQ-GEN-005)
 }

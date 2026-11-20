@@ -256,10 +256,26 @@ pub struct Element {
     /// read with `--auto`. Its `params` then choose no stitch type; those that every stitch type shares, such
     /// as the trim after it that an Ink/Stitch command asks for, still apply.
     pub automatic: bool,
+    /// Whether it is lettering, and whose (`REQ-AUTO-119`, `REQ-AUTO-124`): `None` for every other element. No
+    /// file says so: the passes that set lettering mark the elements they place.
+    pub lettered: Option<Lettered>,
     /// Where it starts and ends, and the point it aims at, when the design gives them (`REQ-GEN-001`).
     pub hints: Hints,
     /// The areas it is cut to: it sews only what lies inside every one (`REQ-GEN-005`). None cuts nothing.
     pub clips: Vec<Clip>,
+}
+
+/// Whose lettering an element is ([`Element::lettered`]). Both sew by their font's settings. Planning
+/// measures a design that has either for its thickness (`SC-W0913`), and the cap at the end of planning
+/// takes thread only from lettering that automatic digitizing placed (`docs/src/design/image-to-embroidery.md`
+/// › The cap and lettering).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Lettered {
+    /// Set in a font as a person asked: planning changes nothing of it.
+    Set,
+    /// Placed by automatic digitizing, for the text a marker names in a picture or a text object it letters:
+    /// in the reach of the last pass and the cap, as the shapes digitizing made are.
+    Digitized,
 }
 
 /// An area an element is cut to, as an SVG file's clip path or a VectorCraft document's clipping object cuts
@@ -661,6 +677,7 @@ mod tests {
             thread: Thread::new(Rgb::new(0, 0, 0)),
             params: ParamSet::new(),
             automatic: false,
+            lettered: None,
             hints: Default::default(),
             clips: Vec::new(),
         }

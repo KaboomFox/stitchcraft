@@ -165,6 +165,7 @@ fn pieces(shapes: &mut Shapes, rules: &AutoParams, taken: &mut Labels, meter: &m
             thread: thread.clone(),
             params: params.clone(),
             automatic: false,
+            lettered: None,
             hints: Hints::default(),
             clips: Vec::new(),
         });

@@ -58,8 +58,11 @@ fn rows(width: f64, apart: f64) -> Vec<(f64, f64)> {
 
 const NONE: &BTreeSet<ElementRef> = &BTreeSet::new();
 
+/// No lettering's columns.
+const NO_PULL: &BTreeMap<ElementRef, crate::auto::cap::Pull> = &BTreeMap::new();
+
 fn rules() -> Rules<'static> {
-    Rules { cap: 4.0, limit: 4.0, base: NONE, columns: NONE, overlap: 0.0, shortest: 0.3, longest: 12.1 }
+    Rules { cap: 4.0, limit: 4.0, base: NONE, columns: NONE, lettering: NO_PULL, overlap: 0.0, shortest: 0.3, longest: 12.1 }
 }
 
 /// Every element of `plan`, as digitizing made them all.
@@ -246,8 +249,14 @@ fn said(sewn: &StitchPlan, budget: &Budget) -> (Vec<Diagnostic>, StitchPlan) {
     let held = Held { limits: Limits::DEFAULT, overlap: 0.0, cap: 4.0 };
     let mut kept = sewn.clone();
     let made: BTreeSet<ElementId> = sewn.elements.iter().cloned().collect();
-    let said =
-        finished(&mut kept, &held, (&[], &made, &BTreeSet::new()), stitchcraft_plan::profiles::REFERENCE, &crate::names::Names::default(), budget);
+    let said = finished(
+        &mut kept,
+        &held,
+        (&[], &made, &BTreeSet::new(), &BTreeMap::new()),
+        stitchcraft_plan::profiles::REFERENCE,
+        &crate::names::Names::default(),
+        budget,
+    );
     (said, kept)
 }
 
@@ -544,4 +553,73 @@ fn req_auto_112_the_last_resort_takes_no_point_of_a_column_that_digitizing_did_n
     let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
     let capped = capped(&mut sewn, &mut thickness, &rules, &made, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
     assert!(capped.times[3] > 0, "{capped:?}");
+}
+
+#[test]
+fn req_auto_121_a_lettering_column_s_pull_is_its_own_compensation_and_0_2_mm_at_least() {
+    // 0.3 mm and 10 % of a stitch 2 mm long.
+    assert!((Pull { mm: 0.3, share: 0.1 }.at(2.0) - 0.5).abs() < 1e-12);
+    assert!((Pull { mm: 0.0, share: 0.0 }.at(5.0) - LEAST_PULL).abs() < 1e-12);
+    // The larger of the 2 sides' each: 0.3 mm and 20 %.
+    let set: stitchcraft_params::ParamSet = [("pull_compensation_mm", "0.1 0.3"), ("pull_compensation_percent", "20 10")].into_iter().collect();
+    let pull = Pull::of(&crate::generators::pull::PullParams::from_set(&set).unwrap().params);
+    assert_eq!(pull, Pull { mm: 0.3, share: 0.2 });
+}
+
+/// The elements at `indices`, each a lettering column pulled in by `mm`.
+fn lettering(indices: &[usize], mm: f64) -> BTreeMap<ElementRef, Pull> {
+    indices.iter().filter_map(|index| ElementRef::from_index(*index)).map(|element| (element, Pull { mm, share: 0.0 })).collect()
+}
+
+/// A zigzag `width` wide from x = `left`, as [`zigzag`] draws it.
+fn zigzag_from(left: f64, width: f64, apart: f64) -> Vec<(f64, f64)> {
+    zigzag(width, apart).into_iter().map(|(x, y)| (x + left, y)).collect()
+}
+
+#[test]
+fn req_auto_122_a_lettering_column_s_underlay_goes_only_where_another_lettering_column_covers_it() {
+    // A column's underlay, 2 mm wide inside its 4 mm, under its own top stitches: 5 fills.
+    let own = || vec![("column", Role::Underlay, zigzag_from(1.0, 2.0, 0.25)), ("column", Role::Top, zigzag(4.0, 0.0625))];
+    let columns: BTreeSet<ElementRef> = (0..2).filter_map(ElementRef::from_index).collect();
+    let (one, both) = (lettering(&[0], 0.2), lettering(&[0, 1], 0.2));
+    // A lettering column's own top holds its underlay up: it stays.
+    let sewn = plan(&own());
+    let mut kept = sewn.clone();
+    let (capped, _, _) = cap(&mut kept, &Rules { columns: &columns, lettering: &one, ..rules() });
+    assert!(capped.as_ref().is_none_or(|capped| capped.times[0] == 0), "{capped:?}");
+    assert_eq!(count(&kept, Role::Underlay), count(&sewn, Role::Underlay));
+    // Another lettering column over it as well: it goes.
+    let mut crossed = own();
+    crossed.push(("other", Role::Top, zigzag(4.0, 0.0625)));
+    let sewn = plan(&crossed);
+    let mut capped_plan = sewn.clone();
+    let (capped, _, _) = cap(&mut capped_plan, &Rules { columns: &columns, lettering: &both, ..rules() });
+    assert!(capped.unwrap().times[0] > 0);
+    assert!(count(&capped_plan, Role::Underlay) < count(&sewn, Role::Underlay));
+    // A column that isn't lettering loses its underlay under its own top.
+    let mut capped_plan = plan(&own());
+    let (capped, _, _) = cap(&mut capped_plan, &Rules { columns: &columns, ..rules() });
+    assert!(capped.unwrap().times[0] > 0);
+}
+
+#[test]
+fn req_auto_121_above_the_warning_s_limit_a_lettering_column_still_covers_only_as_pulled_in() {
+    // A running stitch 3.8 mm wide, its points 0.5 mm apart, under a column 4 mm wide sewn after it: above 4
+    // fills, where the cap judges cover as sewn. Its turns lie 0.1 mm inside the column's edges, and a thread
+    // 0.4 mm thick: a column pulled in by 0.6 mm leaves them bare.
+    let sewn = plan(&[("run", Role::Top, zigzag_from(0.1, 3.8, 0.5)), ("column", Role::Top, zigzag(4.0, 0.0625))]);
+    let column: BTreeSet<ElementRef> = ElementRef::from_index(1).into_iter().collect();
+    let pulled = lettering(&[1], 0.6);
+    let thickest = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap().most(Measure::Fills).value;
+    assert!(thickest > 4.0, "{thickest}");
+    // A lettering column, pulled in, leaves the turns bare: they stay.
+    let mut kept = sewn.clone();
+    let (capped, _, _) = cap(&mut kept, &Rules { columns: &column, lettering: &pulled, ..rules() });
+    assert!(capped.as_ref().is_none_or(|capped| !capped.took()), "{capped:?}");
+    assert_eq!(kept, sewn);
+    // Another column, judged as sewn, covers them: they go.
+    let mut capped_plan = sewn.clone();
+    let (capped, _, _) = cap(&mut capped_plan, &Rules { columns: &column, ..rules() });
+    assert!(capped.unwrap().took());
+    assert!(count(&capped_plan, Role::Top) < count(&sewn, Role::Top));
 }

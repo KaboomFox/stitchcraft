@@ -5,7 +5,7 @@
 //!
 //! Why it is an example of the testkit: the sheet's numbers must be the ones the cases assert
 //! (`tests/auto_photos.rs`, `tests/auto_fabric.rs`, `tests/auto_likeness.rs`), so they come from the same
-//! functions, [`fabric::astray`], [`fabric::cover`], [`fabric::thickness`], [`fabric::likeness`] and the plan's
+//! functions, [`fabric::astray`], [`fabric::cover`], [`fabric::thickness`], [`fabric::thick_area`], [`fabric::likeness`] and the plan's
 //! own counts, and no script measures a plan a second way.
 //!
 //! The pictures are the traced photos the cases measure ([`pictures::dogs`], [`pictures::pear`]), a lettered
@@ -34,6 +34,10 @@ use stitchcraft_testkit::pictures;
 /// stitches and keeps a preview's 2 sets of pictures to a few megabytes.
 const SCALE: f32 = 5.0;
 
+/// The heading of the row of the area at [`fabric::THICK_FILLS`] or more, filled in from it where the
+/// measures are written.
+const THICK: &str = "At {} fills or more, mm²";
+
 /// What the sheet's table shows of a picture, in its order: the key in `numbers.json`, the column's heading,
 /// and whether more of it is worse. More stitches are neither better nor worse.
 const MEASURES: [(&str, &str, bool); 11] = [
@@ -45,7 +49,7 @@ const MEASURES: [(&str, &str, bool); 11] = [
     ("slivers", "Slivers", true),
     ("bare_percent", "Bare, % of the design", true),
     ("thickest_fills", "Thickest spot, fills", true),
-    ("thick_mm2", "At 3 fills or more, mm²", true),
+    ("thick_mm2", THICK, true),
     ("needle_points", "Most needle points per mm²", true),
     ("detail_lost_percent", "Detail lost, % of each colour's parts", true),
 ];
@@ -110,7 +114,7 @@ fn measured(design: &Design, plan: &StitchPlan) -> [f64; 11] {
         count(cover.slivers(&rules()).len()),
         cover.bare_share() * 100.0,
         thickness.fills.value,
-        thickness.thick.area,
+        fabric::thick_area(plan),
         thickness.points.value,
         (1.0 - likeness.likeness()) * 100.0,
     ]
@@ -185,7 +189,10 @@ fn main() -> ExitCode {
     std::panic::set_hook(Box::new(|_| {}));
     let measures: Vec<String> = MEASURES
         .iter()
-        .map(|(key, label, worse)| format!("  {{\"key\": {}, \"label\": {}, \"more_is_worse\": {worse}}}", quoted(key), quoted(label)))
+        .map(|(key, label, worse)| {
+            let label = label.replace("{}", &fabric::THICK_FILLS.to_string());
+            format!("  {{\"key\": {}, \"label\": {}, \"more_is_worse\": {worse}}}", quoted(key), quoted(&label))
+        })
         .collect();
     let mut entries = Vec::new();
     for (name, design) in standard() {

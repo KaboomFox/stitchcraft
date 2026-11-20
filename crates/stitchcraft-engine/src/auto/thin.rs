@@ -117,6 +117,10 @@ pub(crate) struct Rules<'r> {
     /// the surface a person sees, and the thread under their edges keeps those covered once the fabric pulls
     /// them in (`REQ-AUTO-112`, `REQ-AUTO-114`).
     pub(crate) columns: &'r BTreeSet<ElementRef>,
+    /// The satin columns of the lettering that digitizing placed, among `columns`, each with the pull its own
+    /// pull compensation makes up for: the cap judges their cover by it, and leaves them whole
+    /// (`REQ-AUTO-121` to `REQ-AUTO-123`).
+    pub(crate) lettering: &'r BTreeMap<ElementRef, super::cap::Pull>,
     /// How far a row's end may move back along its row, in millimetres: the overlap of areas.
     pub(crate) overlap: f64,
     /// The machine's shortest stitch, in millimetres, which no stitch the pass shortens goes under.
@@ -413,9 +417,11 @@ impl Pass<'_, '_> {
     fn row_end(&mut self, (block, at): Entry, kind: Kind, cover: &[Thickness; 2], meter: &mut Meter) -> Result<(), Exhausted> {
         let Some((end, role, element)) = self.stitch((block, at)) else { return Ok(()) };
         let based = element.is_some_and(|element| self.rules.base.contains(&element));
+        // A lettering column's stitches are the font's drawing, and keep their ends (`REQ-AUTO-123`).
+        let lettered = element.is_some_and(|element| self.rules.lettering.contains_key(&element));
         let wanted = match kind {
             Kind::Base => based && role == Role::Underlay,
-            _ => !based && role == Role::Top,
+            _ => !based && !lettered && role == Role::Top,
         };
         if !wanted {
             return Ok(());

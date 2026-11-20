@@ -452,6 +452,7 @@ fn automatic(id: &str, shape: Shape, thread: &Thread) -> Result<Element, SheetEr
         thread: thread.clone(),
         params: ParamSet::default(),
         automatic: true,
+        lettered: None,
         hints: Hints::default(),
         clips: Vec::new(),
     })

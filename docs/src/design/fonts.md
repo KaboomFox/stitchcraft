@@ -250,7 +250,9 @@ reference machine with a hoop 400 mm a side.
 host (M14.2, `REQ-FONT-009` to `REQ-FONT-014`). `set_along` sets it along a path (M14.3, `REQ-FONT-015` to
 `REQ-FONT-020`). Both follow Ink/Stitch's lettering, read at `d59c9ab` (`lib/lettering/font.py`,
 `font_variant.py`, `lib/extensions/batch_lettering.py` and `lettering_along_path.py`) and run as a black box.
-The text becomes a design, which every host plans as it plans any other.
+The text becomes a design, which every host plans as it plans any other. Its elements are marked
+`Lettered::Set`, and the passes of automatic digitizing that place lettering mark theirs
+`Lettered::Digitized` ([the cap and lettering](image-to-embroidery.md#the-cap-and-lettering)).
 
 - **Lines and words.** The text is read in Unicode's NFC, as glyphs are named. A line ends at a line feed
   and loses the spaces at its ends. Its words lie between its spaces, and between 2 spaces in a row lies an
