@@ -3016,8 +3016,8 @@ probes are kept outside the repository, beside the hand-off of the step.
 
 **The measures**, of each letter set alone and on a field 3 mm round it, with M13.50's cap:
 
-- the stroke as sewn: the median length of the satin columns' top stitches, which pull compensation
-  widens, in millimetres and in heights of the capital letters;
+- the stroke as sewn, the median length of the satin columns' top stitches with their pull compensation,
+  given in millimetres and in heights of the capital letters;
 - the narrowest column: the least of a letter's columns' median widths;
 - counters: the holes in the thread's cover, 0.5 fills or more on a grid of 0.1 mm, against those the
   font sews at a large height. A counter is open to read when a circle 1 mm wide fits it, the narrowest
@@ -3057,14 +3057,14 @@ in heights, counters open to read (of 21 for Barstitch Bold, 22 for Small Font),
 | Candidate | 6 mm | 8 mm | 10 mm | 12 mm |
 |---|---|---|---|---|
 | Today, Small Font | 0.19, 8, none, 3, none | 0.17, 16, none, 4, none | 0.16, 21, none, 7, none | 0.15, 22, none, 14, none |
-| A: Barstitch Bold set below its least scale | 0.29, 0, 7 closed, 50, 54 | 0.26, 4, a and e, 41, 49 | 0.25, 15, none, 56, 40 | 0.24, 18, none, 57, 24 |
-| A2: as A, its pull compensation scaled with the height | 0.24, 0, A a e, 17, 52 | 0.24, 3, none, 29, 40 | 0.24, 17, none, 40, 35 | 0.24, 18, none, 58, 24 |
-| B: Small Font, columns widened 33 % | 0.26, 3, A e 4, 35, 2 | 0.25, 14, the 4, 44, none | 0.24, 18, none, 62, none | 0.23, 20, none, 84, none |
-| B2: Small Font, columns widened 20 % | 0.23, 3, A and 4, 17, none | 0.22, 16, none, 22, none | 0.21, 19, none, 39, none | 0.20, 21, none, 48, none |
+| A, Barstitch Bold set below its least scale | 0.29, 0, 7 closed, 50, 54 | 0.26, 4, a and e, 41, 49 | 0.25, 15, none, 56, 40 | 0.24, 18, none, 57, 24 |
+| A2, as A with its pull compensation scaled with the height | 0.24, 0, A a e, 17, 52 | 0.24, 3, none, 29, 40 | 0.24, 17, none, 40, 35 | 0.24, 18, none, 58, 24 |
+| B, Small Font with columns widened 33 % | 0.26, 3, A e 4, 35, 2 | 0.25, 14, the 4, 44, none | 0.24, 18, none, 62, none | 0.23, 20, none, 84, none |
+| B2, Small Font with columns widened 20 % | 0.23, 3, A and 4, 17, none | 0.22, 16, none, 22, none | 0.21, 19, none, 39, none | 0.20, 21, none, 48, none |
 
 A column widened by a percent gains that part of its width on each side, the effect of Ink/Stitch's
-`pull_compensation_percent` added to the glyph's own. No candidate leaves a column under 1 mm from 6 mm up
-or a stitch under 0.3 mm, and every letter plans. The thickest spot on a field stays between 5.0 and 5.9
+`pull_compensation_percent` added to the glyph's own. Every candidate sews its columns 1 mm wide or more
+from 6 mm up and its stitches 0.3 mm long or more, and every letter plans. The thickest spot on a field stays between 5.0 and 5.9
 fills in all of them. Barstitch Bold sews 5.78 at 13 mm today.
 
 Where each fails:
@@ -3105,20 +3105,19 @@ No source gives a least size for counters. The 1 mm used here is the narrowest c
 confirm:
 
 - **`widen_percent`**, a lettering setting of StitchCraft's own beside Ink/Stitch's, from 0 to 50 and 0 by
-  default. Every satin column of the text gains that percent of its width on each side, set as
-  `pull_compensation_percent` on top of the glyph's own. Running stitches and fills don't change. A value
-  outside 0 to 50 is set at the nearest with a warning. `stitch lettering --widen-percent` and the
+  default. With 20, a satin column 1 mm wide sews 0.2 mm wider on each side: lettering adds the value
+  to the `pull_compensation_percent` of every satin column it places. Running stitches and fills don't
+  change, and a value outside 0 to 50 is set at the nearest with a warning. `stitch lettering --widen-percent` and the
   Lettering effect's record take it by that name.
-- **A marker** whose letters are bolder than the font chosen for them, and too small for a bolder font
-  that sews at their height, is set widened: by 50 × (the letters' weight over the font's, less 1)
-  percent, rounded, at most 20. A widening under 5 % is left out. Letters under 8 mm are set as today,
-  since a widened Small Font closes its counters there. `SC-I1118` names the widening, or says why
-  there is none.
+- **A marker** with letters bolder than their font and too small for a bolder one has its text widened.
+  The percent is 50 × (the letters' weight over the font's, less 1), rounded and at most 20. A widening under 5 % is left out. Letters under 8 mm are set as today,
+  since a widened Small Font closes its counters there. `SC-I1118` gives the percent, or says why
+  the letters aren't widened.
 - **A bold text object** that the bold font can't sew at its height sews in the default font widened as
   far toward the bold font's weight, with the same limits and the same note.
 
-The 2 limits, 20 % and 8 mm, are where B2's counters stay as they are today on the whole letter set.
-They are values to confirm by a sew-out, as a profile's are, and the sew-out may move them.
+B2 opens as many counters as today's Small Font from 8 mm up, measured on all 62 letters and digits, and
+that sets the 2 limits, 20 % and 8 mm. A sew-out confirms them or moves them, as it does a profile's values.
 
 ### Decisions for the owner
 
@@ -3144,7 +3143,7 @@ Each has a recommendation, which the step took.
   font and the note.
 - **Bold letters from 8 to 12.5 mm** (M14.9). The recommendation is Small Font with its columns widened
   ([bold letters under the bold font's heights](#bold-letters-under-the-bold-fonts-heights)), by at most 20 %
-  and from 8 mm. It keeps every counter that Small Font keeps today, and the letters apart. Barstitch
+  and from 8 mm. Its counters open as today's do, and its letters stand apart. Barstitch
   Bold set below its least height is bolder and runs its letters together. A third font from Ink/Stitch's
   library is the other choice, and none of them sews at 9 to 12 mm by its own range. MC-8 sews the
   candidates side by side.
