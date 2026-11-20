@@ -96,6 +96,14 @@ pub const START_AT_NEAREST_POINT: &str = "start_at_nearest_point";
 /// digitizing turns off: its order starts the next element near the column's end already.
 pub const END_AT_NEAREST_POINT: &str = "end_at_nearest_point";
 
+/// The keys of the settings that split a satin column's long stitches: how, by how much a split moves at
+/// random, and whether the splits start at a random place. Automatic digitizing sets them on a wide column.
+pub const SPLIT_METHOD: &str = "split_method";
+/// See [`SPLIT_METHOD`].
+pub const RANDOM_SPLIT_JITTER_PERCENT: &str = "random_split_jitter_percent";
+/// See [`SPLIT_METHOD`].
+pub const RANDOM_SPLIT_PHASE: &str = "random_split_phase";
+
 /// The stitch types of satin columns, one per method.
 const SATINS: &[StitchType] = &[StitchType::SatinColumn, StitchType::EStitch, StitchType::SStitch, StitchType::SatinZigzag];
 

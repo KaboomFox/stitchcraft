@@ -41,6 +41,7 @@ use super::columns::{self, Columns, Made};
 use super::marks::Marks;
 use super::rules::{Asked, Bounds, Breadth, Fired, Measures, RuleId, choose};
 use super::split;
+use super::wide::{self, Tried};
 use super::{AutoParams, Open, no_area};
 use crate::normalize::region::Polygon;
 use crate::normalize::region::ops::{self, area_of};
@@ -167,7 +168,7 @@ fn sort(
         Found::Columns => match columns::columns(&part, bounds, by.rules, sorting.cuts(), by.open, meter)? {
             Made::Columns { sewn, rule, measures } => {
                 sorted.fired.push(fired(rule, Some(measures)));
-                sorted.along.push(Along::Columns(Columns { part, sewn }));
+                sorted.along.push(Along::Columns(Columns { part, sewn, wide: false }));
             }
             Made::Filled(RuleId::Uneven, measures) if !matches!(sorting, Sorting::Tail(_)) => {
                 sorted.fired.push(fired(RuleId::Uneven, measures));
@@ -197,6 +198,15 @@ fn sort(
             Made::Broken => kept(sorted, part, broken(id, LOST_COLUMNS)),
         },
         Found::Broad(measures) if matches!(sorting, Sorting::Part) => {
+            match wide::tried(id, &part, bounds, by, meter)? {
+                Tried::Wide(wide) => {
+                    sorted.fired.push(fired(RuleId::Wide, Some(wide.measures)));
+                    sorted.along.push(Along::Columns(Columns { part, sewn: wide.sewn, wide: true }));
+                    return Ok(());
+                }
+                Tried::Refused(said) => sorted.said.push(said),
+                Tried::Not => {}
+            }
             sorted.fired.push(fired(RuleId::Area, Some(measures)));
             let (broad, keep) = (bounds.max_satin.get(), bounds.min_fill);
             let Some(split) = split::split(&part, broad, keep, bounds.min_area, meter)? else { return unsplit(sorted, part, id) };
@@ -1108,5 +1118,32 @@ mod tests {
         let part = Polygon { outline: Vec::new(), holes: Vec::new() };
         let edges = Edges::of(&part, 1.0, &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!(edges.nearest(Point::ORIGIN, &mut Budget::DEFAULT.meter()), Ok(f64::INFINITY));
+    }
+
+    #[test]
+    fn req_auto_152_a_whole_broad_part_is_sorted_as_a_wide_column_or_refused_with_its_reason() {
+        let rules = AutoParams::from_set(&[("auto_max_split_satin_width_mm", "10")].into_iter().collect()).unwrap().params;
+        let bounds = Bounds::of(&rules, Mm::new(1.0).unwrap());
+        let area = ElementId::new("area").unwrap();
+        // A bar 8.5 mm wide is one wide column.
+        let bar = outline(&[(0.0, 0.0), (40.0, 0.0), (40.0, 8.5), (0.0, 8.5)]);
+        let wide = sorted(&area, vec![bar.clone()], &bounds, by(&rules), &mut Budget::DEFAULT.meter()).unwrap();
+        let [Along::Columns(columns)] = wide.along.as_slice() else { panic!("{:?}", wide.along) };
+        assert!(columns.wide && columns.part == bar && columns.sewn.len() == 1 && wide.filled.is_empty() && wide.said.is_empty());
+        assert_eq!(wide.fired.iter().map(|fired| fired.rule).collect::<Vec<_>>(), [RuleId::Wide]);
+        // A band 8.5 mm wide bent tightly round a point 3 mm inside it crowds its inner rail: it is an area, and
+        // says why.
+        let turn = 1.5 * std::f64::consts::PI;
+        let arc = |r: f64, from: f64, by: f64| -> Vec<(f64, f64)> {
+            (0..=48).map(|i| sin_cos(from + by * f64::from(i) / 48.0)).map(|(sin, cos)| (r * cos, r * sin)).collect()
+        };
+        let mut bent = arc(11.5, 0.0, turn);
+        bent.extend(arc(3.0, turn, -turn));
+        let bend = outline(&bent);
+        let refused = sorted(&area, vec![bend], &bounds, by(&rules), &mut Budget::DEFAULT.meter()).unwrap();
+        assert!(refused.along.is_empty() && !refused.filled.is_empty(), "{:?}", refused.along);
+        assert_eq!(refused.fired.first().map(|fired| fired.rule), Some(RuleId::Area));
+        let [said] = refused.said.as_slice() else { panic!("{:?}", refused.said) };
+        assert!(said.code == Code::AutoSatinFilled && said.message.contains("of one edge to 1 mm of the other"), "{said}");
     }
 }

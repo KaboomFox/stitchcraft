@@ -164,8 +164,8 @@ is there.
 - **A column.** Any other part sews as satin columns between its own edges, as a letter, a leaf, a ring and a
   tapering stroke do.
 
-A satin stitch longer than 7 mm lies loose, so a part whose column would sew one is filled instead. A part
-that is filled is filled whole under the shapes that fill its holes, and they sew on it.
+A satin stitch longer than 7 mm lies loose, so a part whose column would sew one is filled instead, unless
+[wide columns](#wide-columns) are on. A part that is filled is filled whole under the shapes that fill its holes, and they sew on it.
 
 A letter's counter, such as the hole in an A or an O, shows the fabric or the field under it where a disc
 0.8 mm across fits in it and nothing drawn later lies over it: the columns round it end their stitches on
@@ -489,6 +489,30 @@ fewer stitches under 0.5 mm and planned in about half the time. On flat art or a
 little. On a picture with many thin traced lines it can merge some of them into their neighbours.
 [Image to embroidery](../../design/image-to-embroidery.md#the-builds-numbers) gives the numbers for each
 test picture.
+
+### Wide columns
+
+A border, a ring or a bar between 7 and 10 mm wide is filled by default. **Widest split satin column**
+(`auto_max_split_satin_width_mm`) sews such a part as one satin column instead, its stitches split into
+pieces no longer than 7 mm:
+
+```sh
+stitch plan border.svg --auto -o border.pes --set auto_max_split_satin_width_mm=10
+```
+
+A part sews so when it is wider than a satin column somewhere and no wider than the setting anywhere. It
+also has to be a good column, with one centre line along which its width varies little, whose stitches
+don't crowd on one edge. A line drawn that wide sews so too. An L, a T, a fork or a wedge that widens from 7 to 10 mm
+stays a fill. The splits fall at random places along each stitch, so that their needle holes don't sew a
+seam down the middle of the column. On a shape that sets `split_method` or `max_stitch_length_mm` itself, its value is used.
+
+Use it where a wide border should shine as satin does, for a frame round a patch or a band of colour in a
+logo. It has a cost. A split column sews about half as much thread again as the fill it replaces, and it
+sews thicker where a ring closes over its first stitches. It is off by default, its default the widest
+satin column, at which no part is wide, and no style turns it on. The trade sews split satin up to about 10
+mm wide. The setting goes up to 12 mm, and wider columns sew thicker still. The machine checkpoint MC-8 sews
+bars and rings 6, 8 and 10 mm wide both ways before the default can change. The traced pictures and the
+designs in the repository sew the same with it on: their parts that wide are blobs, branch, or crowd.
 
 ### Changing the choice
 
