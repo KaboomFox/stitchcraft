@@ -70,9 +70,8 @@ pub const DOCUMENT: &str = "document";
 pub const PICTURE: &str = "picture";
 /// The most warnings VectorCraft shows of an export (`MAX_WARNINGS` in its `crates/plugins/src/export.rs`).
 pub const MAX_WARNINGS: usize = 100;
-/// The most characters VectorCraft shows of one warning (`MAX_WARNING_CHARS` in the same file). It cuts a
-/// longer one there, in the middle of a word.
-pub const MAX_WARNING_CHARS: usize = 500;
+/// The most characters VectorCraft shows of one warning, which the engine keeps its longest warning to.
+pub const MAX_WARNING_CHARS: usize = stitchcraft_engine::auto::WARNING_CHARS;
 
 /// An exporter's dialog: [`AUTO`], then the machine's [`PROFILE`]: [`DOCUMENT`], by default, or one of the
 /// built-in profiles.
@@ -391,7 +390,8 @@ mod tests {
         });
         let (bytes, said) = stitch_export(&input, Reading { auto: true, ..Reading::default() }, REFERENCE, FormatId::PesV1, "line");
         assert_eq!(file(&auto), (base64(&bytes), said));
-        let rule = "info SC-I0912 (vc:2:stroke): This shape sews by the rule column (3 mm wide).";
+        // The shape is named as the Layers panel shows it (`REQ-AUTO-127`).
+        let rule = "info SC-I0912 (\"Black column (1)\", vc:2:stroke): This shape sews by the rule column (3 mm wide).";
         assert_eq!(file(&auto).1, ["info SC-I0901: 1 shape is digitized automatically: it sews as a satin column.", rule]);
         assert_ne!(file(&auto).0, file(&plain).0);
     }

@@ -38,6 +38,7 @@ pub stitchcraft_core::diag::Code::AutoLayers
 pub stitchcraft_core::diag::Code::AutoLineMerged
 pub stitchcraft_core::diag::Code::AutoMarkUnused
 pub stitchcraft_core::diag::Code::AutoOrder
+pub stitchcraft_core::diag::Code::AutoOwnReplaces
 pub stitchcraft_core::diag::Code::AutoRule
 pub stitchcraft_core::diag::Code::AutoRunsLeft
 pub stitchcraft_core::diag::Code::AutoSatinFilled
@@ -205,6 +206,7 @@ pub stitchcraft_core::diag::Diagnostic::code: stitchcraft_core::diag::Code
 pub stitchcraft_core::diag::Diagnostic::element: core::option::Option<stitchcraft_core::element::ElementId>
 pub stitchcraft_core::diag::Diagnostic::fix: core::option::Option<stitchcraft_core::diag::Fix>
 pub stitchcraft_core::diag::Diagnostic::message: alloc::string::String
+pub stitchcraft_core::diag::Diagnostic::name: core::option::Option<alloc::boxed::Box<str>>
 impl stitchcraft_core::diag::Diagnostic
 pub fn stitchcraft_core::diag::Diagnostic::headline(&self) -> alloc::string::String
 pub fn stitchcraft_core::diag::Diagnostic::located(self, stitchcraft_core::units::Point) -> Self
@@ -215,6 +217,7 @@ pub fn stitchcraft_core::diag::Diagnostic::with_element(self, stitchcraft_core::
 pub fn stitchcraft_core::diag::Diagnostic::with_fix(self, stitchcraft_core::diag::Fix) -> Self
 impl core::fmt::Display for stitchcraft_core::diag::Diagnostic
 pub fn stitchcraft_core::diag::Diagnostic::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+pub fn stitchcraft_core::diag::called(core::option::Option<&str>, &stitchcraft_core::element::ElementId) -> alloc::string::String
 pub mod stitchcraft_core::element
 pub enum stitchcraft_core::element::ElementIdError
 pub stitchcraft_core::element::ElementIdError::ControlCharacter
@@ -330,6 +333,7 @@ pub stitchcraft_core::Code::AutoLayers
 pub stitchcraft_core::Code::AutoLineMerged
 pub stitchcraft_core::Code::AutoMarkUnused
 pub stitchcraft_core::Code::AutoOrder
+pub stitchcraft_core::Code::AutoOwnReplaces
 pub stitchcraft_core::Code::AutoRule
 pub stitchcraft_core::Code::AutoRunsLeft
 pub stitchcraft_core::Code::AutoSatinFilled
@@ -517,6 +521,7 @@ pub stitchcraft_core::Diagnostic::code: stitchcraft_core::diag::Code
 pub stitchcraft_core::Diagnostic::element: core::option::Option<stitchcraft_core::element::ElementId>
 pub stitchcraft_core::Diagnostic::fix: core::option::Option<stitchcraft_core::diag::Fix>
 pub stitchcraft_core::Diagnostic::message: alloc::string::String
+pub stitchcraft_core::Diagnostic::name: core::option::Option<alloc::boxed::Box<str>>
 impl stitchcraft_core::diag::Diagnostic
 pub fn stitchcraft_core::diag::Diagnostic::headline(&self) -> alloc::string::String
 pub fn stitchcraft_core::diag::Diagnostic::located(self, stitchcraft_core::units::Point) -> Self

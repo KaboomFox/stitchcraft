@@ -24,6 +24,7 @@ pub mod generate;
 pub mod generators;
 pub mod locks;
 mod moves;
+pub mod names;
 pub mod normalize;
 mod pipeline;
 pub mod registry;

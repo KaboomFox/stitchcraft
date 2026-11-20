@@ -80,7 +80,9 @@ fn diag_sc_w0913_a_design_digitized_automatically_is_told_where_it_sews_thick_an
     let left = fabric::thickness(outcome.plan.as_ref().unwrap(), &Limits::DEFAULT).fills.value;
     assert!(left > 2.0 && left <= report.fills.value, "{left} {}", report.fills.value);
     assert!(said[0].message.starts_with(&format!("Thread is up to {left:.1} fills thick at ")), "{}", said[0].message);
-    assert!(said[0].message.contains("`left`") && said[0].message.contains("`right`"), "{}", said[0].message);
+    // The shapes stacked there are named as the Layers panel shows them, before their ids (`REQ-AUTO-127`).
+    let left = outcome.names.name_of("left").unwrap();
+    assert!(said[0].message.contains(&format!("({left:?}, left)")) && said[0].message.contains(", right)"), "{}", said[0].message);
     // And held to 2 needle points in a square millimetre, the ends of the rows are.
     assert_eq!(thick(&planned(&shapes(&[("auto_thick_warn_points", "2")]))).len(), 1);
 }
