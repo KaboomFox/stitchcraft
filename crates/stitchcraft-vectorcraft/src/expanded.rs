@@ -20,7 +20,9 @@
 //!
 //! **What it can't write.** A clipping object for a part's clips: the part is written whole, and a warning
 //! names it (`SC-W0922`). Points go through VectorCraft's points and back, so they read to within a unit in
-//! their last place, which a case of the whole set holds to 0.001 mm.
+//! their last place: most products of a float and the points' size in millimetres can't be written so that
+//! they read back exactly. A plan can move with a point a unit off, by a few needle points of 10,000 on 2 of
+//! the traced dogs (`docs/src/design/image-to-embroidery.md` › Expand).
 
 use serde_json::{Map, Number, Value, json};
 use stitchcraft_core::units::MM_PER_POINT;
@@ -32,6 +34,7 @@ use stitchcraft_params::Family;
 use stitchcraft_plan::MachineProfile;
 
 use crate::filter::{gradient, path_data, solid};
+use crate::geometry::in_points;
 use crate::settings::{SETTINGS_FILTER, kept_data};
 use crate::{container, effect_id, plugin_id};
 
@@ -122,10 +125,9 @@ pub fn written(document: &[u8], original: &Design, expanded: &Design, machine: &
                 (at, 0, format!("\"pluginData\": {{{quoted}: {data}}}{comma}"))
             }
         },
-        (None, None, None) => match span(1) {
-            Some((open, close)) => (open, close - open, format!("{{\"pluginData\": {{{quoted}: {data}}}}}")),
-            None => (document_at + 1, 0, format!("\"unknown\": {{\"pluginData\": {{{quoted}: {data}}}}}, ")),
-        },
+        // Foreign data that isn't an object is a document VectorCraft doesn't open.
+        (None, None, None) if span(1).is_some() => return Err(broken()),
+        (None, None, None) => (document_at + 1, 0, format!("\"unknown\": {{\"pluginData\": {{{quoted}: {data}}}}}, ")),
     });
     let mut out = spliced(json, edits).ok_or_else(broken)?;
     out.extend_from_slice(after);
@@ -201,7 +203,8 @@ fn part(element: &Element, design: &Design, next: &mut u64) -> Value {
             if let (Some(limit), Some(stroke)) = (limit, stroke.as_object_mut()) {
                 stroke.insert("miter_limit".to_string(), json!(limit));
             }
-            // A stroke no wider than 0 isn't drawn: a fill of the thread's paint gives it its thread.
+            // A stroke no wider than 0 isn't drawn: a fill of the thread's paint gives it its thread, and its
+            // corners and ends are read as a stroke's without a style.
             let filled = (width.get() <= 0.0).then(|| json!({"kind": "fill", "paint": paint}));
             (filled.into_iter().chain([stroke]).collect(), None)
         }
@@ -230,7 +233,7 @@ fn part(element: &Element, design: &Design, next: &mut u64) -> Value {
 
 /// A marker named `name` at `at`: a path of one anchor there, which places it.
 fn marker(name: &str, at: Point, next: &mut u64) -> Value {
-    let one = [at.x() / MM_PER_POINT, at.y() / MM_PER_POINT];
+    let one = in_points(at);
     let data = json!({"subpaths": [{"anchors": [{"p": one}], "closed": false}]});
     json!({"id": take(next), "name": name, "kind": {"type": "path", "path": data}})
 }
