@@ -40,6 +40,8 @@ macro_rules! auto_codes {
         /// with 2 sides, or where one of its columns, drawn with its rails and rungs, would be read back
         /// otherwise, or when a column would sew a stitch between its rails longer than the widest satin column,
         /// as at the corners of a square ring: such a stitch lies loose. The part stays in the area's fill.
+        /// With `auto_max_split_satin_width_mm` raised, a wider part that could be one satin column with
+        /// split stitches says so too when its column can't be drawn or crowds its stitches on one edge.
         ///
         /// The message says which. To sew it as satin columns, draw the line with gentler turns or narrower, or
         /// the part with smoother edges, or draw the columns with 2 rails each and give them settings.

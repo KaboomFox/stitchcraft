@@ -383,18 +383,19 @@ lettered patch (kit item 15):
   rule of the cap may take a column's top from lettering.
 - Press each word with a thumb. Is it stiffer where the columns meet than along a stroke?
 
-M13.54 plans wide columns: a bar or a ring between 7 and 10 mm wide, sewn as one satin column whose
+M13.54 builds wide columns: a bar or a ring between 7 and 10 mm wide, sewn as one satin column whose
 stitches split at 7 mm ([wide columns](../design/image-to-embroidery.md#wide-columns)). It is off by default,
 and doesn't change any picture of the set. At MC-8, sew a bar 50 mm long and a ring 40 mm across its middle, each
 at 6, 8 and 10 mm wide, once with `auto_max_split_satin_width_mm` at 10 mm and once without it, side by
-side. At 6 mm both are satin columns, so that row shows the column the wider ones are measured against.
+side, in the 4 × 4 in hoop (`brother-pe800-4x4`): 12 files, each made with
+`stitch plan SHAPE.svg --auto -p brother-pe800-4x4 [--set auto_max_split_satin_width_mm=10]`. At 6 mm both are satin columns, so that row shows the column the wider ones are measured against.
 Without the setting the 8 and 10 mm ones are filled.
 
 - Does the split satin read as satin from a metre away, or as a fill? Does it read better than the fill
   beside it?
 - Look along each split column: do its needle points fall in a line, or in a ladder of short diagonals?
-- Press each shape with a thumb. The split columns sew 3.7 to 4.0 fills at their thickest, where a ring
-  closes, against 2.6 for the fills. Is that spot stiff, or does the needle thump there?
+- Press each shape with a thumb. The split rings sew 3.5 to 3.8 fills at their thickest, where a ring
+  closes, and the 10 mm ring along the inner third of its band, against 2.2 to 2.5 for the fills. Is that spot stiff, or does the needle thump there?
 - Do the ring's split stitches crowd on its inner edge, and does fabric show at the outer one?
 
 M13.18 merges the thin lines of a traced photo into the patches beside them
