@@ -4,15 +4,16 @@
 //! split at 7 mm, at a random phase so that the needle points of neighbouring stitches don't line up. The
 //! designs are drawn here in code: bars, rings and strokes of known widths.
 //!
-//! The requirements are planned, and the cases that need the rule are ignored as planned until M13.54's
-//! build makes them pass (`docs/src/design/image-to-embroidery.md` › Wide columns). The build removes their
-//! `#[ignore]`. The cases of parts the rule leaves alone pass today, and guard what stays as it is.
+//! The setting is off by default, so the cases that need the rule raise it to 10 mm, and the cases without it
+//! guard that every design sews as before (`docs/src/design/image-to-embroidery.md` › Wide columns). The
+//! bound is compared within its tolerance, `WIDE_TOLERANCE`, which every case at the bound uses.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
 use stitchcraft_core::{Budget, Code, Diagnostic};
 use stitchcraft_engine::auto::digitized;
+use stitchcraft_engine::auto::rules::WIDE_TOLERANCE;
 use stitchcraft_engine::design::{Design, DesignSettings, Element, Shape};
 use stitchcraft_testkit::designs::{BLUE, RED, automatic, fill, line, unbased};
 
@@ -97,6 +98,20 @@ fn req_auto_152_without_the_setting_a_bar_8_5_mm_wide_is_filled() {
 fn req_auto_152_a_bar_wider_than_the_bound_is_filled() {
     let (out, _) = sewn(vec![bar(10.5, &[(WIDEST_SPLIT, "10")])]);
     assert!(out.iter().all(|e| matches!(e.shape, Shape::Fill { .. })), "{out:?}");
+}
+
+#[test]
+fn req_auto_152_the_bound_holds_within_its_tolerance() {
+    let (at, _) = sewn(vec![bar(10.0 + WIDE_TOLERANCE, &[(WIDEST_SPLIT, "10")])]);
+    assert!(at.len() == 1 && split(&at[0]), "{at:?}");
+    let (over, _) = sewn(vec![bar(10.01 + WIDE_TOLERANCE, &[(WIDEST_SPLIT, "10")])]);
+    assert!(over.iter().all(|e| matches!(e.shape, Shape::Fill { .. })), "{over:?}");
+    // A stroke too.
+    let stroke =
+        |width: f64| stitchcraft_testkit::designs::widened(automatic(line("border", (0.0, 0.0), 50.0, &RED, &[(WIDEST_SPLIT, "10")])), width);
+    let (at, _) = sewn(vec![stroke(10.0 + WIDE_TOLERANCE)]);
+    let (over, _) = sewn(vec![stroke(10.01 + WIDE_TOLERANCE)]);
+    assert!(at.len() == 1 && split(&at[0]) && over.iter().all(|e| matches!(e.shape, Shape::Fill { .. })), "{at:?} {over:?}");
 }
 
 #[test]
