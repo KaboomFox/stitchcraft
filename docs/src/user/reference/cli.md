@@ -13,7 +13,7 @@ Usage: stitch <COMMAND>
 
 Commands:
   plan        Plan a design, an SVG file or a VectorCraft document, for a machine and write the machine file, with a picture and a report if asked. A picture, a PNG or JPEG file, is traced with VectorCraft's command line first [alias: export]
-  expand      Expand an automatic design: write it as the ordinary shapes automatic digitizing makes of it, each with its own StitchCraft effect, to edit one by one. A VectorCraft document keeps its traced shapes, hidden and locked, under a new group of the parts; an SVG file has the parts alone. The expanded design sews as the automatic one did, and no longer changes with the picture or the Auto effect
+  expand      Expand an automatic design: write it as the ordinary shapes automatic digitizing makes of it, each with its own StitchCraft effect, to edit one by one. A VectorCraft document keeps its traced shapes, hidden and locked, under a new group of the parts. An SVG file has the parts alone. The expanded design sews as the automatic one did, and no longer changes with the picture or the Auto effect
   lettering   Set a text in an embroidery font, a folder in Ink/Stitch's font format, plan it for a machine and write the machine file, with a picture if asked
   testsheet   Write a machine-checkpoint test sheet (docs/src/plan/machine-testing.md)
   inspect     Read a machine file (PES, PEC or DST) and describe it: size, stitches, threads, stitch lengths
@@ -127,7 +127,7 @@ Options:
 ## stitch expand
 
 ```text
-Expand an automatic design: write it as the ordinary shapes automatic digitizing makes of it, each with its own StitchCraft effect, to edit one by one. A VectorCraft document keeps its traced shapes, hidden and locked, under a new group of the parts; an SVG file has the parts alone. The expanded design sews as the automatic one did, and no longer changes with the picture or the Auto effect
+Expand an automatic design: write it as the ordinary shapes automatic digitizing makes of it, each with its own StitchCraft effect, to edit one by one. A VectorCraft document keeps its traced shapes, hidden and locked, under a new group of the parts. An SVG file has the parts alone. The expanded design sews as the automatic one did, and no longer changes with the picture or the Auto effect
 
 Usage: stitch expand [OPTIONS] --output <OUTPUT> <DESIGN>
 

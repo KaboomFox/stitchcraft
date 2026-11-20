@@ -59,7 +59,8 @@ pub fn written(document: &[u8], original: &Design, expanded: &Design, machine: &
     let (whole, compressed) = container::whole(document, &mut meter)?;
     let end = whole.iter().position(|&b| b == 0).map_or(whole.len(), |nul| nul.saturating_sub(1));
     let (json, after) = whole.split_at_checked(end).unwrap_or((&whole, &[]));
-    meter.charge(u64::try_from(json.len()).unwrap_or(u64::MAX)).map_err(|exhausted| exhausted.diagnostic(budget, None))?;
+    let work = json.len().saturating_add(expanded.elements().len());
+    meter.charge(u64::try_from(work).unwrap_or(u64::MAX)).map_err(|exhausted| exhausted.diagnostic(budget, None))?;
     let filter = plugin_id(SETTINGS_FILTER);
     let scanned = scan(json, &filter).ok_or_else(broken)?;
     // The objects that hold the automatic design's shapes, by the ids its elements are read with.
@@ -71,7 +72,6 @@ pub fn written(document: &[u8], original: &Design, expanded: &Design, machine: &
     let mut warnings = Vec::new();
     let mut parts = Vec::with_capacity(expanded.elements().len());
     for element in expanded.elements() {
-        meter.charge(1).map_err(|exhausted| exhausted.diagnostic(budget, None))?;
         if !element.clips.is_empty() {
             warnings.push(unclipped(element));
         }

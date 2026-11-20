@@ -134,9 +134,7 @@ pub fn kept_cap(data: &Value) -> Option<Held> {
         .collect::<Option<Vec<_>>>()?
         .into_iter()
         .collect();
-    if cap.iter().next().is_none() {
-        return None;
-    }
+    cap.iter().next()?;
     Held::of(&cap).ok()
 }
 

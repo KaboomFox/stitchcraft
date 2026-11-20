@@ -71,7 +71,7 @@ fn req_auto_143_the_cap_goes_by_the_lowest_automatic_shape_then_by_the_design_s_
 #[test]
 fn held_reads_the_auto_effect_s_names_and_writes_them_as_they_read() {
     let held = Held { cap: 3.5, overlap: 0.75, ..thick::by_default().unwrap() };
-    let set: ParamSet = held.values().iter().map(|(key, value)| (*key, value.as_str())).chain([("angle", "abc")]).collect();
+    let set: ParamSet = held.values().iter().map(|(key, value)| (*key, value.as_str())).chain([("angle", "abc"), ("auto_stitch", "bogus")]).collect();
     assert_eq!(Held::of(&set), Ok(held));
     assert_eq!(held.values().map(|(key, _)| key), Held::KEYS);
     assert_eq!(held.values()[4].1, "3.5");
@@ -128,6 +128,9 @@ fn req_auto_142_an_automatic_square_expands_to_named_parts_set_as_digitizing_mad
         assert!(matches!(element.params.get(DIGITIZED_AS), Some(PART | BASE)), "{}", element.id);
         assert!(element.name.as_deref().is_some_and(|name| !name.is_empty()), "{} {:?} {:?}", element.id, element.name, element.params);
     }
+    // A piece of the base layer is named after its thread.
+    let base = expanded.elements().iter().find(|element| element.params.get(DIGITIZED_AS) == Some(BASE)).unwrap();
+    assert!(base.name.as_deref().is_some_and(|name| name.ends_with(" base layer (1)")), "{:?}", base.name);
     // The design keeps the limits of its lowest automatic shape, with its overlap.
     assert_eq!(expanded.settings.cap.map(|cap| cap.overlap), Some(0.5));
 }
@@ -135,9 +138,12 @@ fn req_auto_142_an_automatic_square_expands_to_named_parts_set_as_digitizing_mad
 #[test]
 fn req_auto_144_a_shape_digitizing_has_no_work_for_is_named_as_left_out() {
     let red = Element { automatic: true, ..square("vc:1", (0.0, 0.0), 20.0, RED, &[]) };
-    let design = Design::new(vec![red], DesignSettings::default()).unwrap();
+    let blue = Element { automatic: true, ..square("vc:2", (30.0, 0.0), 20.0, BLUE, &[]) };
+    let design = Design::new(vec![red, blue], DesignSettings::default()).unwrap();
     let (expanded, said) = expand(&design, REFERENCE, &Budget { max_work: 1, ..Budget::DEFAULT }).unwrap();
     assert!(expanded.elements().is_empty());
     let lost = said.iter().find(|said| said.code == Code::AutoExpandLost).unwrap();
-    assert!(lost.message.contains("`vc:1` needed more work"), "{}", lost.message);
+    assert!(lost.message.contains("`vc:1` and `vc:2` needed more work"), "{}", lost.message);
+    // Naming the shapes needs more work too, and is said once, of no shape.
+    assert!(said.iter().any(|said| said.code == Code::BudgetExhausted && said.element.is_none()), "{said:?}");
 }

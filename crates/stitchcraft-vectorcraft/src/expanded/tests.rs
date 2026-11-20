@@ -87,9 +87,9 @@ fn req_cli_025_what_a_document_keeps_already_is_replaced_and_its_other_data_stay
         String::new(),
         r#""unknown": {}, "#.to_string(),
         r#""unknown": {"pluginData": []}, "#.to_string(),
-        format!(r#""unknown": {{"pluginData": {{{other}}}}}, "#),
+        format!(r#""unknown": {{"pluginData": {{{other}}}}}, "keywords": ["a", [1, [2]]], "#),
         format!(r#""unknown": {{"pluginData": {{"{filter}": {{"collapse_len_mm": 9}}, {other}}}}}, "#),
-        format!(r#""unknown": {{"pluginData": {{}}}}, "#),
+        r#""unknown": {"pluginData": {}}, "#.to_string(),
     ] {
         let (expanded, _, written) = round_trip(&traced(&extra));
         let read = crate::read(written.as_bytes(), &Budget::DEFAULT).unwrap();
@@ -106,7 +106,10 @@ fn req_cli_025_what_a_document_keeps_already_is_replaced_and_its_other_data_stay
 
 #[test]
 fn req_cli_025_a_top_object_s_own_visible_and_locked_are_set_and_not_repeated() {
-    let text = document("", &format!(r#"{{"visible": true, "id": 3, "locked": false, "kind": {{"type": "group", "children": [{}]}}}}"#, square(4, 0.0, 0.0)));
+    let text = document(
+        "",
+        &format!(r#"{{"visible": true, "id": 3, "locked": false, "kind": {{"type": "group", "children": [{}]}}}}"#, square(4, 0.0, 0.0)),
+    );
     let (_, back, written) = round_trip(&text);
     assert!(written.contains(r#"{"visible": false, "id": 3, "locked": true, "kind""#), "{written}");
     assert!(!back.elements().is_empty());
@@ -148,16 +151,37 @@ fn req_cli_025_a_part_with_hints_is_grouped_with_its_markers_and_a_thin_line_kee
         hints: Hints::default(),
         ..fill.clone()
     };
+    // Strokes with each corner and each end keep them.
+    let styled = |id: &str, join: Join, cap: Cap| Element {
+        id: ElementId::new(id).unwrap(),
+        shape: Shape::Stroke { path: path(&[(0.0, 30.0), (5.0, 35.0), (10.0, 30.0)]), width: Mm::new(0.5).unwrap(), join, cap },
+        ..thin.clone()
+    };
+    let styles = [(Join::Round, Cap::Round), (Join::Bevel, Cap::Butt), (Join::Miter { limit: 3.0 }, Cap::Square)];
+    let strokes: Vec<Element> = styles.iter().enumerate().map(|(k, (join, cap))| styled(&format!("vc:4:s{k}"), *join, *cap)).collect();
     let settings = DesignSettings { origin: Some(at(5.0, 5.0)), stop_position: Some(at(0.0, 0.0)), ..DesignSettings::default() };
-    let expanded = Design::new(vec![fill, thin], settings).unwrap();
+    let expanded = Design::new([fill, thin].into_iter().chain(strokes).collect(), settings).unwrap();
     // The traced document's origin and stop position were in its traced group.
-    let marker = |id: u32, name: &str| format!(r#"{{"id": {id}, "name": "{name}", "kind": {{"type": "path", "path": {{"subpaths": [{{"anchors": [{{"p": [0, 0]}}]}}]}}}}}}"#);
-    let text = document("", &format!(r#"{{"id": 3, "kind": {{"type": "group", "children": [{}, {}, {}]}}}}"#, square(4, 0.0, 0.0), marker(7, "stitch:origin"), marker(8, "stitch:stop-position")));
+    let marker = |id: u32, name: &str| {
+        format!(r#"{{"id": {id}, "name": "{name}", "kind": {{"type": "path", "path": {{"subpaths": [{{"anchors": [{{"p": [0, 0]}}]}}]}}}}}}"#)
+    };
+    let text = document(
+        "",
+        &format!(
+            r#"{{"id": 3, "kind": {{"type": "group", "children": [{}, {}, {}]}}}}"#,
+            square(4, 0.0, 0.0),
+            marker(7, "stitch:origin"),
+            marker(8, "stitch:stop-position")
+        ),
+    );
     let original = crate::read(text.as_bytes(), &Budget::DEFAULT).unwrap().design;
     let written = written(text.as_bytes(), &original, &expanded, REFERENCE, &Budget::DEFAULT).unwrap();
     let back = crate::read(&written.document, &Budget::DEFAULT).unwrap();
     let elements = back.design.elements();
-    assert_eq!(elements.len(), 2, "{:?}", back.warnings);
+    assert_eq!(elements.len(), 5, "{:?}", back.warnings);
+    for (element, (join, cap)) in elements[2..].iter().zip(styles) {
+        assert!(matches!(element.shape, Shape::Stroke { join: j, cap: c, .. } if j == join && c == cap), "{:?}", element.shape);
+    }
     let read = &elements[0].hints;
     let close = |a: Option<Point>, b: Option<Point>| a.zip(b).is_some_and(|(a, b)| a.distance(b) < 1e-9);
     assert!(close(read.start, hints.start) && close(read.end, hints.end) && close(read.target, hints.target), "{read:?}");
@@ -200,7 +224,15 @@ fn a_document_that_isn_t_json_as_vectorcraft_writes_it_is_an_error_and_a_compres
     let original = read_with(text.as_bytes(), &Budget::DEFAULT, Reading { auto: true, ..Reading::default() }).unwrap().design;
     let (expanded, _) = expand(&original, REFERENCE, &Budget::DEFAULT).unwrap();
     let code = |bytes: &[u8]| written(bytes, &original, &expanded, REFERENCE, &Budget::DEFAULT).map(|_| ()).map_err(|said| said.code);
-    for broken in [r#"{"document": {"unknown": 5, "layers": [{"kind": {"children": []}}]}}"#, r#"{"document": {"layers": [}"#, r#"{"a": ["#, r#"{"document": {"layers": []}}"#, r#"{"layers": [{"kind": {"children": []}}]}"#, "\u{ff}"] {
+    for broken in [
+        "[1]",
+        r#"{"document": {"unknown": 5, "layers": [{"kind": {"children": []}}]}}"#,
+        r#"{"document": {"layers": [}"#,
+        r#"{"a": ["#,
+        r#"{"document": {"layers": []}}"#,
+        r#"{"layers": [{"kind": {"children": []}}]}"#,
+        "\u{ff}",
+    ] {
         assert_eq!(code(broken.as_bytes()), Err(Code::InternalCheckFailed), "{broken}");
     }
     let budget = Budget { max_work: 10, ..Budget::DEFAULT };
@@ -218,7 +250,9 @@ fn a_document_that_isn_t_json_as_vectorcraft_writes_it_is_an_error_and_a_compres
     let empty = document("", "");
     let none = Design::new(Vec::new(), DesignSettings::default()).unwrap();
     let out = written(empty.as_bytes(), &none, &none, REFERENCE, &Budget::DEFAULT).unwrap().document;
-    assert!(String::from_utf8(out).unwrap().contains(&format!(r#""children": [{{"id":2,"kind":{{"children":[],"type":"group"}},"name":"{GROUP}"}}]"#)));
+    assert!(
+        String::from_utf8(out).unwrap().contains(&format!(r#""children": [{{"id":2,"kind":{{"children":[],"type":"group"}},"name":"{GROUP}"}}]"#))
+    );
 }
 
 #[test]
