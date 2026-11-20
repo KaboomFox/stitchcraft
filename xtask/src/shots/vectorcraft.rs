@@ -37,6 +37,10 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 use serde_json::{Value, json};
+use stitchcraft_cli::commands::plan::{Source, sew};
+use stitchcraft_engine::design::Reading;
+use stitchcraft_plan::FormatId;
+use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_vc_plugin::manifest::Schema;
 use stitchcraft_vc_plugin::{Module, dialog};
 
@@ -58,6 +62,8 @@ const TOLERANCE: u8 = 8;
 const TILE: usize = 16;
 /// How many of a [`TILE`]'s pixels may differ by more than [`TOLERANCE`].
 const PER_TILE: u32 = 8;
+/// The panels a `vectorcraft-ui` shot can show: those in the dock column, whose picture is the column.
+const PANELS: [&str; 1] = ["Layers"];
 /// Where the shots' documents and pictures, and the window's records, are made.
 const OUT: &str = "target/shots-vectorcraft";
 /// The drawing that ends a `vectorcraft-ui` shot's run, in its folder: a render shot's is its picture.
@@ -141,8 +147,17 @@ fn problems(shot: &Shot) -> Vec<String> {
     if shot.picture.is_some() {
         found.push("`picture` is a picture shot's".to_string());
     }
-    if shot.kind == RENDER && (!shot.menu.is_empty() || shot.dialog.is_some()) {
-        found.push("`menu` and `dialog` are a vectorcraft-ui shot's".to_string());
+    if shot.kind == RENDER && (!shot.menu.is_empty() || shot.dialog.is_some() || shot.panel.is_some() || !shot.commands.is_empty()) {
+        found.push("`menu`, `dialog`, `panel` and `commands` are a vectorcraft-ui shot's".to_string());
+    }
+    if !shot.stitch.is_empty() {
+        match scenario::traces(&shot.stitch) {
+            Ok((picture, _)) if !util::root().join(&picture).is_file() => {
+                found.push(format!("it traces `{}`, which is no file of the repository", picture.display()));
+            }
+            Ok(_) => {}
+            Err(e) => found.push(e),
+        }
     }
     match shot.document.as_deref() {
         Some(_) if shot.kind == UI => found.push("`document` is a vectorcraft-render shot's".to_string()),
@@ -160,6 +175,19 @@ fn problems(shot: &Shot) -> Vec<String> {
             Some(name) if live_effect(name).is_none() => found.push(format!("`dialog = \"{name}\"` names no live effect")),
             Some(name) if !shot.plugins.iter().any(|m| m == name) => found.push(format!("its dialog is `{name}`'s, which it doesn't install")),
             _ => {}
+        }
+        match shot.panel.as_deref() {
+            Some(_) if shot.dialog.is_some() => found.push("a shot shows a `dialog` or a `panel`, not both".to_string()),
+            Some(name) if !PANELS.contains(&name) => found.push(format!("`panel = \"{name}\"` is none of the panels it can show: {PANELS:?}")),
+            Some(name) if shot.menu.first().map(String::as_str) != Some("Window") || shot.menu.last().map(String::as_str) != Some(name) => {
+                found.push(format!("its menu presses Window and then the row `{name}`, which shows the panel"));
+            }
+            _ => {}
+        }
+        for step in &shot.commands {
+            if let Err(e) = step.command() {
+                found.push(e);
+            }
         }
     }
     found
@@ -201,14 +229,26 @@ fn make(root: &Path, shots: &[&Shot], check_only: bool, findings: &mut Findings)
         std::fs::remove_dir_all(&out).map_err(|e| format!("{OUT}: {e}"))?;
     }
     let mut ui = Vec::new();
+    let cli = fetched.root.join("bin/vectorcraft-cli");
     for shot in shots {
         let dir = out.join(&shot.id);
         let (document, picture) = (format!("{}.vectorcraft", shot.id), format!("{}.png", shot.id));
+        // A traced picture is the document VectorCraft opens, its shapes named by `stitch plan`.
+        let open = if shot.stitch.is_empty() {
+            None
+        } else {
+            match scenario::trace_picture(root, &shot.stitch, &cli, &dir) {
+                Ok(traced) => Some(traced),
+                Err(e) => {
+                    findings.error(format!("shot `{}`: {e}", shot.id));
+                    continue;
+                }
+            }
+        };
         let mut steps = shot.steps.clone();
         steps.push(Step::exporting(&document));
         steps.push(Step::exporting(if shot.kind == RENDER { &picture } else { CANVAS }));
-        let run = Run { plugins: shot.plugins.clone(), steps, scale: shot.scale.map(f64::from), ..Run::default() };
-        let cli = fetched.root.join("bin/vectorcraft-cli");
+        let run = Run { open, plugins: shot.plugins.clone(), steps, scale: shot.scale.map(f64::from), ..Run::default() };
         if let Err(e) = scenario::draw(&run, &cli, &modules, &dir) {
             findings.error(format!("shot `{}`: {e}", shot.id));
         } else if shot.kind == RENDER {
@@ -312,16 +352,35 @@ fn job(shot: &Shot, document: &Path, modules: &Path, picture: &Path, profile: Op
             (json!(window::DIALOG_WINDOW), json!({ "row": manifest.name, "params": params }))
         }
     };
+    let panel = match shot.panel.as_deref() {
+        None => Value::Null,
+        Some(name) => json!({ "name": name, "rows": shape_names(document)? }),
+    };
+    let commands: Vec<Value> =
+        shot.commands.iter().map(|step| step.command().map(|(id, params)| json!({ "command": id, "params": params }))).collect::<Result<_, _>>()?;
     Ok(json!({
         "id": shot.id,
         "document": document.to_string_lossy(),
         "plugins": plugins,
         "profile": profile.map(Path::to_string_lossy),
+        "commands": commands,
         "menu": shot.menu,
         "window": window,
         "dialog": dialog,
+        "panel": panel,
         "picture": picture.to_string_lossy(),
     }))
+}
+
+/// The names of the shapes of the VectorCraft document at `document`, as planning names them, in the
+/// sewing order: the shapes' own names, which `stitch plan --traced` wrote, and for an automatic shape
+/// without one the name the engine's `names` gives it (docs/src/design/image-to-embroidery.md › Names of
+/// shapes). The Layers panel's rows show them, and the window probe checks that they carry them whole.
+fn shape_names(document: &Path) -> Result<Vec<String>, String> {
+    let bytes = util::read_bytes(document)?;
+    let reading = Reading { auto: true, ..Reading::default() };
+    let sewn = sew(Source::VectorCraft, &bytes, (reading, &[]), REFERENCE, FormatId::PesV1, "panel");
+    Ok(sewn.names.sewing_order().into_iter().filter_map(|shape| shape.name.clone()).collect())
 }
 
 /// The module of the live effect `name` names, whose dialog a shot can show: a stitch family's, or the Auto

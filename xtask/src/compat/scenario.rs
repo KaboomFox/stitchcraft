@@ -326,6 +326,15 @@ impl Step {
         Step { cmd: None, apply: None, params: None, export: Some(file.to_string()), fails: None }
     }
 
+    /// The command the step runs and its parameters, when it is a command, as VectorCraft's control channel
+    /// takes it; or why it isn't one.
+    pub(crate) fn command(&self) -> Result<(&str, Value), String> {
+        match self.action()? {
+            Action::Command(id, params) => Ok((id, params)),
+            Action::Apply(..) | Action::Export(_) => Err("a step VectorCraft's window runs is a command, `cmd`".to_string()),
+        }
+    }
+
     /// Whether the step reads: exactly one of `cmd`, `apply` and `export`, a family that is one, parameters
     /// only for the first two, and a code of an error that `fails` only for an export.
     pub(crate) fn check(&self) -> Result<(), String> {
@@ -671,6 +680,36 @@ pub fn run(scenario: &Scenario, cli: &Path, plugins: &Path, out: &Path) -> Vec<S
 pub(crate) fn draw(run: &Run, cli: &Path, plugins: &Path, out: &Path) -> Result<(), String> {
     std::fs::create_dir_all(out).map_err(|e| format!("{}: {e}", util::rel(out)))?;
     run_once(run, 1, cli, plugins, out, &mut Ran::default(), None)
+}
+
+/// What `words`, `stitch plan`'s arguments, trace: the picture it reads, and the file name of the document
+/// it writes with `--traced`, which VectorCraft then opens; or why they trace nothing. They name no
+/// `--vectorcraft-cli`, since the one under test traces.
+pub(crate) fn traces(words: &[String]) -> Result<(PathBuf, String), String> {
+    let args = plan_args(words)?;
+    if args.tracing.vectorcraft_cli.is_some() {
+        return Err("`stitch` traces with the pinned `vectorcraft-cli`, and names none".to_string());
+    }
+    let traced = args.tracing.traced.ok_or("`stitch plan` writes the traced document it opens: give it `--traced FILE`")?;
+    match traced.to_str() {
+        Some(file) if Path::new(file).file_name() == Some(traced.as_os_str()) && extension(file) == Some("vectorcraft") => {
+            Ok((args.design, file.to_string()))
+        }
+        _ => Err(format!("`--traced {}` is not the name of a `.vectorcraft` file", traced.display())),
+    }
+}
+
+/// Traces the picture of the repository at `root` that `words`, `stitch plan`'s arguments, read
+/// ([`traces`]), with the `vectorcraft-cli` at `cli`, into `out`, where the picture is copied under its file
+/// name: the traced document's file name there, with its shapes' names in it.
+pub(crate) fn trace_picture(root: &Path, words: &[String], cli: &Path, out: &Path) -> Result<String, String> {
+    let (design, traced) = traces(words)?;
+    let name = design.file_name().map(|name| name.to_string_lossy().into_owned()).ok_or(format!("`{}` is not a file", design.display()))?;
+    std::fs::create_dir_all(out).map_err(|e| format!("{}: {e}", util::rel(out)))?;
+    std::fs::copy(root.join(&design), out.join(&name)).map_err(|e| format!("{}: {e}", design.display()))?;
+    let stitch = words.iter().map(|word| if Path::new(word) == design { name.clone() } else { word.clone() }).collect();
+    stitch_once(&Run { stitch, ..Run::default() }, 1, cli, out)?;
+    Ok(traced)
 }
 
 /// Installs `modules`, from `plugins`, into `profile`: a folder of VectorCraft's preferences ([`PROFILE`]),
