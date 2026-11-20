@@ -266,7 +266,7 @@ sets them. The notice counts 2 things:
   keeps some of them for the picture's likeness, so the notice says that they may merge.
 - **Parts.** Each part is decided again from the measures that decided it, under the other style's
   bounds. A part filled here that the other style sews as satin columns counts with its rule, and a part
-  sewn as columns that the other style fills counts as such.
+  sewn as columns that the other style fills counts too.
 
 The notice names the other style and its settings, and says nothing else: no opinion of which style is
 right, and nothing of what the picture shows. A design whose counts are all 0 gets none. It changes no
@@ -281,8 +281,8 @@ longer in the logo style, where the runs' noise is about 7 %. Every machine file
 byte. A label on fur and a building's photo planned with `SC-E0101` in the logo style, before the notice
 too.
 
-**What it says on the set.** The notice is silent on 6 pictures: the even badge, house and shield, the sky
-of flat bands, the badge with a soft gradient and the traced badge, which sew alike in both styles. On the
+**What it says on the set.** The notice is silent on the 6 pictures that sew alike in both styles. Among them
+are 3 drawn in an even pen and the traced badge. On the
 other 22 it speaks in both styles, and its direction is right. Flat art planned as a photo hears that 1 to 5
 of its parts, filled by the rule uneven or compact, would keep their columns, and a traced dog planned as a
 logo hears that 39 to 52 of its parts would be filled and 14 to 30 of its lines may merge. Its counts

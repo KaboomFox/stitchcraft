@@ -519,8 +519,8 @@ part its own settings in VectorCraft, or hold its lines with a mark (`--keep`).
 When the other style would sew the design otherwise, planning says so once
 ([`SC-I0923`](../reference/diagnostics.md#sc-i0923)). It counts the thin lines merged or kept and the
 parts filled or sewn as satin columns that the other style would sew another way, and names that style.
-The notice changes nothing, and it doesn't say which style is right: plan the design in the other style
-and compare the previews. A design that both styles sew alike gets no notice.
+The notice doesn't change what sews, and it doesn't say which style is right: plan the design in the other
+style and compare the previews. A design that both styles sew alike doesn't get it.
 
 ### Settings
 
