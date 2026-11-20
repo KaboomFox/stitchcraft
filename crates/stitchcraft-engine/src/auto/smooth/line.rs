@@ -97,9 +97,10 @@ pub(super) fn corners(points: &[Point], closed: bool, reach: f64, meter: &mut Me
         }
     }
     // Round a closed line, a run that ends at its last point goes on into the one that starts at its first.
-    let wraps = turn(0).is_some()
-        && runs.last().is_some_and(|&(last, _, _)| last + 1 == points.len() && close(last, points.len()));
-    if closed && runs.len() > 1 && wraps
+    let wraps = turn(0).is_some() && runs.last().is_some_and(|&(last, _, _)| last + 1 == points.len() && close(last, points.len()));
+    if closed
+        && runs.len() > 1
+        && wraps
         && let Some((_, last_sharpest, last_least)) = runs.pop()
         && let Some(first) = runs.first_mut()
         && last_least < first.2
@@ -155,7 +156,7 @@ pub(super) fn blurred(samples: &[Point], closed: bool, deviation: f64, meter: &m
     if deviation < 0.25 {
         return Ok(Some(samples.to_vec()));
     }
-    let reach = (3.0 * deviation).ceil().min(samples.len() as f64 * 4.0 + 1.0) as i64;
+    let reach = whole((3.0 * deviation).ceil().min(samples.len() as f64 * 4.0 + 1.0));
     meter.charge(units(samples.len()).saturating_mul(units(usize::try_from(2 * reach + 1).unwrap_or(usize::MAX))))?;
     let weights: Vec<f64> = (-reach..=reach).map(|k| math::exp(-((k * k) as f64) / (2.0 * deviation * deviation))).collect();
     let sum: f64 = weights.iter().sum();
@@ -294,9 +295,16 @@ fn cross((a, b): (Point, Point), (c, d): (Point, Point)) -> bool {
     side(a, b, c) * side(a, b, d) < 0.0 && side(c, d, a) * side(c, d, b) < 0.0
 }
 
-/// The cell of the grid that holds `p`.
+/// `value`, a whole number, as an integer: the reach of a Gaussian or a cell of the grid, which a design's
+/// working limit keeps far inside `i64`'s range. A value out of the range saturates.
+#[allow(clippy::cast_possible_truncation, reason = "a whole number within the working limit; `as` saturates")]
+fn whole(value: f64) -> i64 {
+    value as i64
+}
+
+/// The cell of the grid that holds the point (`x`, `y`).
 fn cell(x: f64, y: f64) -> (i64, i64) {
-    ((x / CELL).floor() as i64, (y / CELL).floor() as i64)
+    (whole((x / CELL).floor()), whole((y / CELL).floor()))
 }
 
 /// The lines among `lines` that cross themselves or another of them, each line a polyline of segments with

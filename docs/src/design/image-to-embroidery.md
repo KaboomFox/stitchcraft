@@ -4054,8 +4054,8 @@ drawn at 10 pixels per mm.
 
 ### The setting and the notice
 
-- **`auto_smooth_mm`**, a length from 0 to 1 mm in the Auto effect's main section, labelled "Smooth
-  outlines". 0 is off and the default, for a document and for a picture `stitch plan` traces alike. A
+- **`auto_smooth_mm`**, a length from 0 to 1 mm among the Advanced settings, labelled "Smooth
+  outlines". The Auto effect's dialog holds 12 rows, so it has none. 0 is off and the default, for a document and for a picture `stitch plan` traces alike. A
   person sets it with `--set auto_smooth_mm=0.2`. 0.2 mm is half a thread: on every picture of the set it
   cut short stitches, with nothing moved that thread shows.
 - **`SC-I0921`**, info, once for the design: "The outlines of 107 automatic areas were smoothed within
@@ -4078,11 +4078,17 @@ On 2026-11-20 the owner decided:
 4. **Traced letters that flip.** Not these steps': a later step looks at the columns' rule for a stem that
    leans by a pixel.
 
-### What isn't built
+### What M13.52 built
 
-The pass, its setting and its notice are M13.52's. The prototype had no area bound, and lost small shapes
-of the photos at 0.4 mm and over. The cases in `crates/stitchcraft-engine/tests/auto_smooth.rs` that need
-the pass are ignored as planned ([conformance](conformance.md#cases-of-planned-requirements)) until then.
+The pass is the engine's `auto::smooth` module, run on the automatic areas after their clips and before the
+background and the layers. Its cases are in `crates/stitchcraft-engine/tests/auto_smooth.rs` and in the
+module's own tests. 2 things differ from the rule above:
+
+- **Corners next to each other.** The 4 corners of a rectangle are 4 points next to each other in its outline.
+  A run of turning points goes on only while they lie no farther apart along the line than 4 times the
+  setting, so a thin strip's 2 ends each count as one turn, and a rectangle keeps its 4 corners.
+- **An edge that keeps its line.** An edge whose smoothed line has the same points as drawn, such as a
+  straight side, keeps its segments, curves and all.
 
 ## Subject cut-out
 

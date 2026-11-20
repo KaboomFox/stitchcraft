@@ -48,6 +48,9 @@ const SAMPLES: f64 = 5.0;
 /// A point as its exact coordinates, for finding the same point in 2 outlines. `-0.0` is `0.0`.
 type At = (u64, u64);
 
+/// The elements whose rings draw each segment, by its key ([`Step::key`]), as many times as they do.
+type Owners = BTreeMap<Vec<At>, Vec<usize>>;
+
 /// The exact coordinates of `p`.
 fn at(p: Point) -> At {
     ((p.x() + 0.0).to_bits(), (p.y() + 0.0).to_bits())
@@ -246,7 +249,9 @@ fn notice(settings: &BTreeMap<usize, f64>, frozen: &BTreeSet<usize>, (before, af
     let mut message = match smoothed.len() {
         0 => String::new(),
         1 => format!("The outline of 1 automatic area was smoothed within {within} mm: it is drawn with {after} points, where it had {before}."),
-        n => format!("The outlines of {n} automatic areas were smoothed within {within} mm: they are drawn with {after} points, where they had {before}."),
+        n => format!(
+            "The outlines of {n} automatic areas were smoothed within {within} mm: they are drawn with {after} points, where they had {before}."
+        ),
     };
     let names: Vec<String> = frozen.iter().filter_map(|index| elements.get(*index)).map(|element| format!("`{}`", element.id)).collect();
     if let Some((last, rest)) = names.split_last() {
@@ -281,10 +286,15 @@ fn charged<T>(meters: &mut BTreeMap<usize, Meter>, owners: &[usize], work: impl 
 
 /// The rings of the areas with `settings`, and the elements whose rings draw each segment, the fills beside
 /// them too, as many times as they do, charged to each area's meter among `meters`, or else to `rest`.
-fn rings(design: &Design, settings: &BTreeMap<usize, f64>, meters: &mut BTreeMap<usize, Meter>, rest: &mut Meter) -> Result<(Vec<Ring>, BTreeMap<Vec<At>, Vec<usize>>), Ran> {
+fn rings(
+    design: &Design,
+    settings: &BTreeMap<usize, f64>,
+    meters: &mut BTreeMap<usize, Meter>,
+    rest: &mut Meter,
+) -> Result<(Vec<Ring>, Owners), Ran> {
     let elements = design.elements();
     let mut rings = Vec::new();
-    let mut owners: BTreeMap<Vec<At>, Vec<usize>> = BTreeMap::new();
+    let mut owners: Owners = BTreeMap::new();
     for &element in settings.keys() {
         let Some(Shape::Fill { path, .. }) = elements.get(element).map(|element| &element.shape) else { continue };
         // A frozen area's segments are found on the work of the shapes beside the areas.
@@ -319,7 +329,7 @@ fn rings(design: &Design, settings: &BTreeMap<usize, f64>, meters: &mut BTreeMap
 /// The steps of `ring` cut into its stretches along edges, each with whether it is the whole ring: at each
 /// point where 3 or more segments meet, or where the elements that draw the segment before and after it
 /// differ. A unit of work for each step.
-fn stretches(ring: &Ring, owners: &BTreeMap<Vec<At>, Vec<usize>>, degree: &BTreeMap<At, usize>, meter: &mut Meter) -> Result<Vec<(Vec<usize>, bool)>, Exhausted> {
+fn stretches(ring: &Ring, owners: &Owners, degree: &BTreeMap<At, usize>, meter: &mut Meter) -> Result<Vec<(Vec<usize>, bool)>, Exhausted> {
     let n = ring.steps.len();
     meter.charge(units(n))?;
     let owners_of = |i: usize| ring.keys.get(i).and_then(|key| owners.get(key));
@@ -402,7 +412,7 @@ fn flattened(steps: &[Step], closed: bool, meter: &mut Meter) -> Result<Vec<Poin
 #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "a finite count, at least 1, capped below usize's limit")]
 fn samples(length: f64, tolerance: f64) -> Option<usize> {
     let count = (length / (tolerance / SAMPLES)).ceil();
-    (count.is_finite() && count >= 1.0 && count < 1e12).then_some(count as usize)
+    (1.0..1e12).contains(&count).then_some(count as usize)
 }
 
 /// The piece of a line `drawn` smoothed with `deviation` millimetres, moved no farther than `tolerance`: the
@@ -484,7 +494,8 @@ fn attempt(design: &Design, settings: &BTreeMap<usize, f64>, frozen: &BTreeSet<u
                 None => {
                     let drawn = flattened(&steps, closed, meter).map_err(|_| Ran::Out(ring.element))?;
                     let edge_owners = owners.get(&id).cloned().unwrap_or_default();
-                    let tolerance = edge_owners.iter().map(|owner| active.get(owner).copied()).try_fold(f64::INFINITY, |least, s| Some(least.min(s?)));
+                    let tolerance =
+                        edge_owners.iter().map(|owner| active.get(owner).copied()).try_fold(f64::INFINITY, |least, s| Some(least.min(s?)));
                     pass.edges.push(Edge { owners: edge_owners, closed, drawn, tolerance, shrinks: 0, halvings: 0, line: None });
                     ids.insert(id, pass.edges.len() - 1);
                     pass.edges.len() - 1
@@ -603,7 +614,12 @@ impl Pass {
                 .collect();
             let Some(meter) = self.meters.get_mut(&element) else { continue };
             let found = line::crossing(&lines, meter).map_err(|_| Ran::Out(element))?;
-            crossing.extend(found.into_iter().filter_map(|line| edges.get(line).copied()).filter(|&edge| self.edges.get(edge).is_some_and(|edge| edge.line.is_some())));
+            crossing.extend(
+                found
+                    .into_iter()
+                    .filter_map(|line| edges.get(line).copied())
+                    .filter(|&edge| self.edges.get(edge).is_some_and(|edge| edge.line.is_some())),
+            );
         }
         Ok(crossing)
     }

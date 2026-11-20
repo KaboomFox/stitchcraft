@@ -1,5 +1,7 @@
 //! The smoothing pass's own cases: its work budget, the shapes beside the areas, and the geometry of a line.
 
+#![allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss)]
+
 use stitchcraft_core::ElementId;
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::{Rgb, Thread};

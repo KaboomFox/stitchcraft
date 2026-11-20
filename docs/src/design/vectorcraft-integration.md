@@ -157,7 +157,8 @@ custom locks, and `fill_method` leaves out Ink/Stitch's legacy fill, which Stitc
 automatic digitizing sets on its own fills, is left out of the fill's dialog. The Auto effect's dialog
 leaves out the settings of the registry's Advanced group, which are
 the bounds of the rules and the 2 limits of the cover's measure (M13.21), the base layer's offset, and
-the 4 limits of how thick a design sews (M13.29).
+the 4 limits of how thick a design sews (M13.29), and how far outlines are smoothed (M13.52), which is off
+unless `--set` asks for it.
 The switch that sews an outline round each fill has a row since M13.28, in the offset's place. The dialog
 opens with
 the group that declares the family's method. The groups only the family uses, for its default method, come
