@@ -28,11 +28,12 @@ Open the group's row with its triangle to see the shapes' rows. Here is the trac
 VectorCraft shows it at the panel's default width:
 
 <!-- shot: vectorcraft-layers-names -->
-![VectorCraft's Layers panel at its default width with the traced pear. It shows Layer 1, its group, open, and a row for each of the 6 shapes. Fill 1, Dark Olive, Fill 1, Russet Brown, Fill 1, Mint Green and Left out 1, White show whole. Column 1, Dark Olive loses its closing bracket at the row's end, and Column 1, Russet Brown shows only its first 18 characters, without its number and with no ellipsis.](../../images/generated/vectorcraft-layers-names.png)
+![VectorCraft's Layers panel at its default width with the traced pear. It shows Layer 1, its group, open, and a row for each of the 6 shapes, each name starting with how the shape sews and its number. Fill 1, Dark Olive, Column 1, Dark Olive, Fill 1, Russet Brown, Fill 1, Mint Green and Left out 1, White show whole. Column 1, Russet Brown shows its first 20 characters, Column 1, Russet Bro, with no ellipsis: its kind and number show, and the end of its thread's name is cut.](../../images/generated/vectorcraft-layers-names.png)
 <!-- /shot -->
 
-At the panel's default width a row shows about 20 characters. Longer names lose their end, and with it
-the number. Here `Column 1, Russet Brown` shows only its first 18 characters. Widen the panel to read it whole.
+At the panel's default width a row shows about 20 characters. Longer names lose the end of the thread's
+name, and keep how the shape sews and its number. Here `Column 1, Russet Brown` shows as `Column 1, Russet
+Bro`. Widen the panel to read it whole.
 Search All still finds it by its whole name.
 
 The names are written once, when the picture is traced, and are then the shapes' own names, as a name

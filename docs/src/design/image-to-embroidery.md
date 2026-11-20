@@ -3948,7 +3948,9 @@ Seen on 2026-11-20 in VectorCraft's own window, by the pinned release on CI (the
 `vectorcraft-layers-names`): at the panel's default width, a row of a shape in the traced group shows about
 20 characters, and cuts the rest with no `…`. With the thread first, `Dark Olive column (1)`, of 21, lost
 its closing bracket, and `Russet Brown column (1)`, of 23, showed only its first 18, without its number.
-So the kind and the number come first ([the parts of a name](#the-parts-of-a-name)). The
+So the kind and the number come first ([the parts of a name](#the-parts-of-a-name)). In the shot of the
+same pear with the kind first, 5 of the 6 names show whole, and `Column 1, Russet Brown` shows its first
+20 characters, `Column 1, Russet Bro`. The
 accessibility tree doesn't give the rows' text. The probe says so and keeps the picture. Not checked: whether a
 person can read the names at the panel's smallest row size.
 
