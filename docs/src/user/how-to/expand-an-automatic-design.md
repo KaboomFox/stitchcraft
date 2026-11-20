@@ -25,8 +25,8 @@ file for Inkscape and Ink/Stitch, name the output `.svg`.
 
 Open the document in VectorCraft. At the top of its layer is a new group, Expanded embroidery, with a
 path for each part, in the order they sew, each named as the notices name its shape:
-`Red fill (3)`, `Deep Gold column (1)`. A piece of the base layer is named after its thread, such as
-`Red base layer (1)`.
+`Fill 3, Red`, `Column 1, Deep Gold`. A piece of the base layer is named after its thread, such as
+`Base layer 1, Red`.
 
 ## What you get
 

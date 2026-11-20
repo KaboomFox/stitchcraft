@@ -189,32 +189,32 @@ mod tests {
             {"id": 9, "name": "Lakeside"},
             {}
         ]}}], "swatches": [{"id": 3}]}"#;
-        let names = [(3, "White left out (1)"), (4, "Red \"fill\" (1)"), (6, "Red fill (2)"), (9, "Blue fill (1)"), (1, "Layer")];
+        let names = [(3, "Left out 1, White"), (4, "Red \"fill\" (1)"), (6, "Fill 2, Red"), (9, "Fill 1, Blue"), (1, "Layer")];
         let want = document
-            .replace(r#"{"id": 3, "kind""#, r#"{"name": "White left out (1)", "id": 3, "kind""#)
+            .replace(r#"{"id": 3, "kind""#, r#"{"name": "Left out 1, White", "id": 3, "kind""#)
             .replace(r#"{"id": 4}"#, r#"{"name": "Red \"fill\" (1)", "id": 4}"#)
-            .replace(r#"{"name": null, "id": 6"#, r#"{"name": "Red fill (2)", "id": 6"#);
+            .replace(r#"{"name": null, "id": 6"#, r#"{"name": "Fill 2, Red", "id": 6"#);
         assert_eq!(written(document, &names).unwrap(), want);
         // The white space before the first key is kept, and an empty object takes its name alone.
-        let names = [(2, "Red fill (1)"), (5, "Blue fill (1)")];
+        let names = [(2, "Fill 1, Red"), (5, "Fill 1, Blue")];
         let pretty = "{\"children\": [\n  {\n    \"id\": 2\n  }, {\"id\": 5}]}";
         assert_eq!(
             written(pretty, &names).unwrap(),
-            "{\"children\": [\n  {\n    \"name\": \"Red fill (1)\",\n    \"id\": 2\n  }, {\"name\": \"Blue fill (1)\", \"id\": 5}]}"
+            "{\"children\": [\n  {\n    \"name\": \"Fill 1, Red\",\n    \"id\": 2\n  }, {\"name\": \"Fill 1, Blue\", \"id\": 5}]}"
         );
         assert_eq!(written(r#"{"children": [{}]}"#, &names).unwrap(), r#"{"children": [{}]}"#);
         // An object with a name of another kind keeps it, and one with other texts is named.
         let kinds = r#"{"children": [{"id": 2, "name": 12}, {"id": 5, "type": "path", "on": true}]}"#;
-        let want = r#"{"children": [{"id": 2, "name": 12}, {"name": "Blue fill (1)", "id": 5, "type": "path", "on": true}]}"#;
+        let want = r#"{"children": [{"id": 2, "name": 12}, {"name": "Fill 1, Blue", "id": 5, "type": "path", "on": true}]}"#;
         assert_eq!(written(kinds, &names).unwrap(), want);
     }
 
     #[test]
     fn req_vc_033_a_compressed_document_stays_compressed_and_the_data_after_its_json_stays() {
         use std::io::{Read, Write};
-        let names = BTreeMap::from([(2, "Red fill (1)".to_string())]);
+        let names = BTreeMap::from([(2, "Fill 1, Red".to_string())]);
         let document = b"{\"children\": [{\"id\": 2}]}\n\0VCBLOBS\0\xff\x00data";
-        let want = b"{\"children\": [{\"name\": \"Red fill (1)\", \"id\": 2}]}\n\0VCBLOBS\0\xff\x00data";
+        let want = b"{\"children\": [{\"name\": \"Fill 1, Red\", \"id\": 2}]}\n\0VCBLOBS\0\xff\x00data";
         assert_eq!(named(document, &names, &Budget::DEFAULT).unwrap(), want);
         let mut encoder = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
         encoder.write_all(document).unwrap();

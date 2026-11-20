@@ -64,8 +64,14 @@ fn listed(names: &Names) -> Vec<(Option<&str>, &str, Kind, Option<usize>)> {
 }
 
 #[test]
-fn req_auto_125_a_name_is_the_thread_how_the_shape_sews_and_its_number_in_brackets() {
-    assert_eq!(name("Red", Kind::Fill, 3), "Red fill (3)");
+fn req_auto_125_a_name_is_how_the_shape_sews_its_number_and_its_thread_last() {
+    assert_eq!(name("Red", Kind::Fill, 3), "Fill 3, Red");
+    assert_eq!(name("Russet Brown", Kind::Column, 12), "Column 12, Russet Brown");
+    assert_eq!([name("White", Kind::LeftOut, 1), name("#010203", Kind::Line, 1)], ["Left out 1, White", "Line 1, #010203"]);
+    assert_eq!(base_name("Red", 2), "Base layer 2, Red");
+    // A search for one number, with its comma, doesn't find a longer one.
+    assert!(!name("Red", Kind::Fill, 12).to_lowercase().contains("fill 1,"));
+    assert_eq!(called("", 1, "Red"), " 1, Red");
     let labels = [Kind::Fill, Kind::Column, Kind::Line, Kind::LeftOut].map(Kind::label);
     assert_eq!(labels, ["fill", "column", "line", "left out"]);
     let kinds = [Some(StitchType::SatinColumn), Some(StitchType::ZigzagStitch), Some(StitchType::RunningStitch), Some(StitchType::RippleStitch)];
@@ -117,16 +123,16 @@ fn req_auto_125_shapes_are_numbered_by_thread_and_kind_from_the_layers_panel_s_t
     let order = ["base", "vc:3:fill", "vc:1:fill", "vc:2:fill", "vc:4:stroke", "vc:2:fill#2", "vc:5:fill", "vc:5:stroke"];
     let names = given(&design, &sewn, &order);
     let red = thread_name(&Thread::new(RED), palette());
-    let called = |kind: &str, n: u8| format!("{red} {kind} ({n})");
-    let (fill1, fill2, column1, column2) = (called("fill", 1), called("fill", 2), called("column", 1), called("column", 2));
-    let left = called("left out", 1);
+    let called = |kind: &str, n: u8| format!("{kind} {n}, {red}");
+    let (fill1, fill2, column1, column2) = (called("Fill", 1), called("Fill", 2), called("Column", 1), called("Column", 2));
+    let left = called("Left out", 1);
     assert_eq!(
         listed(&names),
         [
             (Some(left.as_str()), "vc:6", Kind::LeftOut, None),
             (Some(fill1.as_str()), "vc:5", Kind::Fill, Some(5)),
             (Some(column1.as_str()), "vc:4", Kind::Column, Some(4)),
-            (Some("#1e1ec8 fill (1)"), "vc:3", Kind::Fill, Some(1)),
+            (Some("Fill 1, #1e1ec8"), "vc:3", Kind::Fill, Some(1)),
             (Some(column2.as_str()), "vc:2", Kind::Column, Some(3)),
             (Some(fill2.as_str()), "vc:1", Kind::Fill, Some(2)),
         ]
@@ -164,7 +170,7 @@ fn req_auto_126_own_names_are_kept_and_never_given_again() {
     let sewn = design.elements().to_vec();
     let names = given(&design, &sewn, &[]);
     let red = thread_name(&Thread::new(RED), palette());
-    let (first, second) = (format!("{red} fill (1)"), format!("{red} fill (2)"));
+    let (first, second) = (format!("Fill 1, {red}"), format!("Fill 2, {red}"));
     let listed: Vec<Option<&str>> = names.shapes.iter().map(|shape| shape.name.as_deref()).collect();
     // The shape with settings and no name has none.
     assert_eq!(listed, [Some(first.as_str()), None, Some("Lakeside"), Some(second.as_str())]);
@@ -180,6 +186,20 @@ fn req_auto_126_own_names_are_kept_and_never_given_again() {
 }
 
 #[test]
+fn req_auto_126_names_an_older_version_gave_are_kept_and_skipped_as_any_other() {
+    // A document planned by a version that put the thread first, then given a new red area.
+    let red = thread_name(&Thread::new(RED), palette());
+    let (old, taken) = (format!("{red} fill (1)"), format!("Fill 1, {red}"));
+    let design = design(vec![fill("vc:1:fill", RED, true), named(fill("vc:2:fill", RED, true), &old), named(fill("vc:3:fill", RED, true), &taken)]);
+    let sewn = design.elements().to_vec();
+    let names = given(&design, &sewn, &[]);
+    let listed: Vec<Option<&str>> = names.shapes.iter().map(|shape| shape.name.as_deref()).collect();
+    // Nothing is renamed, and the new area takes the first number free in the new form.
+    let new = format!("Fill 2, {red}");
+    assert_eq!(listed, [Some(taken.as_str()), Some(old.as_str()), Some(new.as_str())]);
+}
+
+#[test]
 fn req_auto_125_naming_needs_work_at_each_step() {
     let design = design(vec![fill("vc:1:fill", RED, true), named(fill("vc:2:fill", RED, true), &name("#c81e1e", Kind::Fill, 1))]);
     let sewn = design.elements().to_vec();
@@ -191,7 +211,7 @@ fn req_auto_125_naming_needs_work_at_each_step() {
         assert!(Names::given(&design, (&sewn, &[], &order), palette(), &mut budget.meter()).is_err(), "{work}");
     }
     let names = Names::given(&design, (&sewn, &[], &order), palette(), &mut Budget { max_work: 8, ..Budget::DEFAULT }.meter()).unwrap();
-    assert_eq!(names.name_of("vc:1:fill"), Some("#c81e1e fill (2)"));
+    assert_eq!(names.name_of("vc:1:fill"), Some("Fill 2, #c81e1e"));
 }
 
 #[test]

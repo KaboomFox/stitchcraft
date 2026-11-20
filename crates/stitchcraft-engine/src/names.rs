@@ -4,8 +4,8 @@
 //!
 //! **Why names.** A traced photo has hundreds of shapes, and every manual control (a mark, a guide, a
 //! shape's own effect) starts with finding the shape. A notice named it by its element id, a number the
-//! Layers panel never shows. So planning gives each automatic shape without a name a name of its thread, how
-//! it sews and its number, [`name`] makes it, and `stitchcraft_core::diag::called` writes it in every message.
+//! Layers panel never shows. So planning gives each automatic shape without a name a name of how it sews, its
+//! number and its thread, [`name`] makes it, and `stitchcraft_core::diag::called` writes it in every message.
 //!
 //! **Why the Layers panel's order.** The sewing order is chosen again at every plan, and one deleted shape
 //! moves shapes far from it: a number counted in it renamed up to 3 in 4 of the other shapes of a traced
@@ -71,10 +71,25 @@ impl Kind {
     }
 }
 
-/// The name of the `number`-th shape of a thread named `thread` that sews as `kind`: `Red fill (3)`. The
-/// number stands in brackets, so that the Layers panel's search for `fill (1)` doesn't find `fill (12)`.
+/// The name of the `number`-th shape of a thread named `thread` that sews as `kind`: `Fill 3, Red`.
 pub fn name(thread: &str, kind: Kind, number: usize) -> String {
-    format!("{thread} {} ({number})", kind.label())
+    called(kind.label(), number, thread)
+}
+
+/// The name of the `number`-th piece of the base layer of a thread named `thread`, which is of no shape:
+/// `Base layer 1, Red` (`REQ-AUTO-142`).
+pub(crate) fn base_name(thread: &str, number: usize) -> String {
+    called("base layer", number, thread)
+}
+
+/// A name of what `word` says, with a capital, its `number` and the thread last: `Column 1, Russet Brown`.
+/// The Layers panel cuts a long name's end off, so what tells 2 shapes of one thread apart comes first,
+/// and the thread, which the row's picture shows by its colour, is what is cut. The comma ends the number,
+/// so that the Layers panel's search for `fill 1,` doesn't find `Fill 12, Red`.
+fn called(word: &str, number: usize, thread: &str) -> String {
+    let mut letters = word.chars();
+    let first: String = letters.next().map(|letter| letter.to_uppercase().collect()).unwrap_or_default();
+    format!("{first}{} {number}, {thread}", letters.as_str())
 }
 
 /// The name a thread is called by in a shape's name: its own, or the name of the machine palette's thread of

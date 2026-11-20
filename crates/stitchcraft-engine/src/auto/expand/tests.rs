@@ -130,7 +130,7 @@ fn req_auto_142_an_automatic_square_expands_to_named_parts_set_as_digitizing_mad
     }
     // A piece of the base layer is named after its thread.
     let base = expanded.elements().iter().find(|element| element.params.get(DIGITIZED_AS) == Some(BASE)).unwrap();
-    assert!(base.name.as_deref().is_some_and(|name| name.ends_with(" base layer (1)")), "{:?}", base.name);
+    assert!(base.name.as_deref().is_some_and(|name| name.starts_with("Base layer 1, ")), "{:?}", base.name);
     // The design keeps the limits of its lowest automatic shape, with its overlap.
     assert_eq!(expanded.settings.cap.map(|cap| cap.overlap), Some(0.5));
 }

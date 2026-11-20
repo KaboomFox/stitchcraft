@@ -197,7 +197,7 @@ fn a_panel_shot_s_job_gives_the_names_of_the_document_s_shapes_and_the_window_s_
     let sewn = sew(Source::VectorCraft, &bytes, (Reading { auto: true, ..Reading::default() }, &[]), REFERENCE, FormatId::PesV1, "pear");
     let named: Vec<String> = sewn.names.sewing_order().into_iter().filter_map(|shape| shape.name.clone()).collect();
     assert_eq!(rows, named);
-    assert!(rows.len() >= 4 && rows.iter().any(|row| row.ends_with(" fill (1)")), "{rows:?}");
+    assert!(rows.len() >= 4 && rows.iter().any(|row| row.starts_with("Fill 1, ")), "{rows:?}");
     println!("the pear's names: {rows:?}");
     // A shot without a panel names no rows, and one whose document doesn't read says why.
     let menu = shot(UI, "menu = [\"Effect\", \"Plug-ins\"]");

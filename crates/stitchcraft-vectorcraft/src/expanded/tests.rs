@@ -136,7 +136,7 @@ fn req_cli_025_a_part_with_hints_is_grouped_with_its_markers_and_a_thin_line_kee
     };
     let fill = Element {
         id: ElementId::new("vc:4:fill").unwrap(),
-        name: Some("Red fill (1)".to_string()),
+        name: Some("Fill 1, Red".to_string()),
         shape: Shape::Fill { path: path(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)]), rule: FillRule::EvenOdd, gradient: None },
         thread: Thread::new(stitchcraft_plan::Rgb::new(200, 0, 0)),
         params: [("fill_method", "guided_fill"), ("digitized_as", "part")].into_iter().collect(),
