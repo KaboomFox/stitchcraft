@@ -27,8 +27,12 @@ Open the group's row with its triangle to see the shapes' rows. Here is the trac
 VectorCraft shows it at the panel's default width:
 
 <!-- shot: vectorcraft-layers-names -->
-![VectorCraft's Layers panel with the traced pear. Under Layer 1 and its group, open, each shape has a row with its name, such as Mint Green fill (1), Russet Brown column (1) and White left out (1).](../../images/generated/vectorcraft-layers-names.png)
+![VectorCraft's Layers panel at its default width with the traced pear. It shows Layer 1, its group, open, and a row for each of the 6 shapes. Dark Olive fill (1), Russet Brown fill (1), Mint Green fill (1) and White left out (1) show whole. Dark Olive column (1) loses its closing bracket at the row's end, and Russet Brown column (1) is cut after colum, without its number and with no ellipsis.](../../images/generated/vectorcraft-layers-names.png)
 <!-- /shot -->
+
+At the panel's default width a row shows about 20 characters. Longer names lose their end, and with it
+the number. Here `Russet Brown column (1)` reads `Russet Brown colum`. Widen the panel to read it whole.
+Search All still finds it by its whole name.
 
 The names are written once, when the picture is traced, and are then the shapes' own names, as a name
 you give a shape is. StitchCraft never renames a shape that has a name. Rename any you like. A shape you
