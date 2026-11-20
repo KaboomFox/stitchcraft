@@ -2029,7 +2029,7 @@ words with the rules above and with the last resort, against the rules alone:
 
 Moving today's letters 0.05 mm, the noise of these measures, bares 12 joins more and makes the line between 2 columns longer at 10. The
 rules' 16 barer joins are 0.0025 mm² more at the median and 0.06 mm² at the most, on Barstitch Bold's 6 and
-e at 32.5 mm on a field. What bared them is for the build to find. In the stitched previews the last resort ragged the inner edge of an S and an 8 and changed the angle of
+e at 32.5 mm on a field. In the stitched previews the last resort ragged the inner edge of an S and an 8 and changed the angle of
 an X's crossing, a Z's corner and an M's top. The owner chose lettering for how it looks. And on a field it
 leaves the thickest spots above the limit all the same, where the field and 2 columns' tops make 3.0 to 3.8
 fills by themselves.
@@ -2055,6 +2055,20 @@ prototype. The jumps, the jump threads, 210 in all, and the trims are those of t
 the plans have 0.8 % fewer stitches. Planning every design together took 5.0 s, against 4.5 s today, on the
 shared machine at opt-level 1. A set of 62 letters alone had no cap to run before, and now takes 7 to 95 ms
 more.
+
+The look of the 1,444 joins, by M13.49's measures of the stitched letters, against `main` moved 0.05 mm:
+
+| Joins worse, of 1,444 | Moved 0.05 mm | Built |
+|---|---:|---:|
+| More fabric bare | 12 | 16 |
+| A longer line between 2 columns' stitches | 10 | 14 |
+| A raggeder edge, of about 1,000 | 10 | 22 |
+
+The built letters bare no join by more than 0.03 mm², and 0.0003 mm² at the median. All the worse joins are
+Barstitch Bold's, 6 of the barer ones on its e and 4 on its 6. At 32.5 mm on a field the cap took 10 needle
+points of the e's running stitches under its columns, and 8 of the 6's. M13.47's lean changed at 328 joins, 242 of them less: it
+reads the running stitches, which lie hidden under the columns. The previews of 17 letters in each font at 2
+heights on a field, and of the marked patch, look as today's.
 
 The rules leave Small Font as it was. Its thickest spots are 2 columns' tops, the field and the base
 layer, and a centre walk along each column, and none of those may go. The marked patch keeps its spot of 4.53
