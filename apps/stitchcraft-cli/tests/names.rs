@@ -49,10 +49,10 @@ fn req_auto_125_an_automatic_shape_is_named_by_its_thread_how_it_sews_and_its_nu
     let (out, report) = planned("named", &[]);
     let said = text(&out.stderr);
     for line in [
-        r#"info SC-I0912 ("Red fill (1)", vc:6:fill): This shape sews by the rule area."#,
-        r#"info SC-I0912 ("Blue fill (1)", vc:9:fill): This shape sews by the rule area."#,
-        r#"info SC-I0912 ("Deep Gold fill (1)", vc:12:fill): This shape sews by the rule area."#,
-        r#"warning SC-W0906 ("White left out (1)", vc:3:fill): "#,
+        r#"info SC-I0912 ("Fill 1, Red", vc:6:fill): This shape sews by the rule area."#,
+        r#"info SC-I0912 ("Fill 1, Blue", vc:9:fill): This shape sews by the rule area."#,
+        r#"info SC-I0912 ("Fill 1, Deep Gold", vc:12:fill): This shape sews by the rule area."#,
+        r#"warning SC-W0906 ("Left out 1, White", vc:3:fill): "#,
     ] {
         assert!(said.contains(line), "{line} in {said}");
     }
@@ -64,10 +64,10 @@ fn req_auto_125_an_automatic_shape_is_named_by_its_thread_how_it_sews_and_its_nu
     assert_eq!(
         report["shapes"],
         json!([
-            shape("Red fill (1)", "vc:6", "#ed171f", "fill", json!(1)),
-            shape("Blue fill (1)", "vc:9", "#0a55a3", "fill", json!(2)),
-            shape("Deep Gold fill (1)", "vc:12", "#e8a900", "fill", json!(3)),
-            shape("White left out (1)", "vc:3", "#f0f0f0", "left out", Value::Null),
+            shape("Fill 1, Red", "vc:6", "#ed171f", "fill", json!(1)),
+            shape("Fill 1, Blue", "vc:9", "#0a55a3", "fill", json!(2)),
+            shape("Fill 1, Deep Gold", "vc:12", "#e8a900", "fill", json!(3)),
+            shape("Left out 1, White", "vc:3", "#f0f0f0", "left out", Value::Null),
         ])
     );
 }
@@ -76,12 +76,12 @@ fn req_auto_125_an_automatic_shape_is_named_by_its_thread_how_it_sews_and_its_nu
 fn req_auto_126_a_shape_s_own_name_is_kept_and_a_name_in_use_is_not_given_again() {
     // The person named the blue area, and gave the gold one the name the red one would get: the red one
     // takes the next number.
-    let (out, _) = planned("kept", &[(9, "Lakeside blue"), (12, "Red fill (1)")]);
+    let (out, _) = planned("kept", &[(9, "Lakeside blue"), (12, "Fill 1, Red")]);
     let said = text(&out.stderr);
     for line in [
-        r#"info SC-I0912 ("Red fill (2)", vc:6:fill): "#,
+        r#"info SC-I0912 ("Fill 2, Red", vc:6:fill): "#,
         r#"info SC-I0912 ("Lakeside blue", vc:9:fill): "#,
-        r#"info SC-I0912 ("Red fill (1)", vc:12:fill): "#,
+        r#"info SC-I0912 ("Fill 1, Red", vc:12:fill): "#,
     ] {
         assert!(said.contains(line), "{line} in {said}");
     }
@@ -92,7 +92,7 @@ fn req_cli_023_the_report_names_the_shape_of_each_diagnostic() {
     let (_, report) = planned("report", &[]);
     let diagnostics = report["diagnostics"].as_array().unwrap();
     let rule = diagnostics.iter().find(|d| d["code"] == "SC-I0912" && d["element"] == "vc:6:fill").unwrap();
-    assert_eq!(rule["name"], "Red fill (1)", "{rule}");
+    assert_eq!(rule["name"], "Fill 1, Red", "{rule}");
     // A diagnostic of the whole design names no shape.
     let summary = diagnostics.iter().find(|d| d["code"] == "SC-I0901").unwrap();
     assert_eq!(summary.get("name"), None, "{summary}");

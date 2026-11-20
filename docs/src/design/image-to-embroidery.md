@@ -3946,16 +3946,16 @@ window wasn't run: VectorCraft isn't built here.
 
 Seen on 2026-11-20 in VectorCraft's own window, by the pinned release on CI (the shot
 `vectorcraft-layers-names`): at the panel's default width, a row of a shape in the traced group shows about
-20 characters. `Dark Olive column (1)`, of 21, loses its closing bracket, and `Russet Brown column (1)`, of
+20 characters. `Column 1, Dark Olive`, of 21, loses its closing bracket, and `Column 1, Russet Brown`, of
 23, shows only its first 18, with no `…`. The accessibility tree doesn't give the rows' text. The probe says so
 and keeps the picture. The longest names on the repository's traced documents, the pear and the 4
-dogs, have 23 characters (`Russet Brown column (1)`, `Dark Brown left out (1)`). Not checked: whether a
+dogs, have 23 characters (`Column 1, Russet Brown`, `Left out 1, Dark Brown`). Not checked: whether a
 person can read the names at the panel's smallest row size.
 
 ### The parts of a name
 
-A name tells a person the thread, how the shape sews and which one of them it is: `Red fill (3)`, `Deep Gold
-column (1)`, `Black line (12)`.
+A name tells a person the thread, how the shape sews and which one of them it is: `Fill 3, Red`, `Deep Gold
+column (1)`, `Line 12, Black`.
 
 - **The thread** is the thread's name. A traced shape's colour is one of the machine's threads exactly,
   since the trace uses the library's colours as they are, so its name is the palette's name of that colour.
@@ -4035,15 +4035,15 @@ none, and it is named, for that plan only, by the same rule with the next free n
 
 One function of the engine makes a name (`names::name`), and one of `stitchcraft-core` gives the words that
 name a shape in any message (`diag::called`): its name in quotes, then its element id for a bug report,
-`"Red fill (3)", vc:63:fill`. Planning gives each diagnostic about a shape with a name that name
+`"Fill 3, Red", vc:63:fill`. Planning gives each diagnostic about a shape with a name that name
 (`Diagnostic::name`), and its headline shows it. Every place below uses them.
 
 - **The traced document.** `stitch plan picture.png --traced FILE` writes each shape's name into its node,
   and changes nothing else in the document (`REQ-VC-033`). The design that is planned is that document, with its names,
   so planning `FILE` again sews the same stitches and says the same notices.
 - **The notices.** A notice about a shape names it, and so does a warning of the reader. A line of `stitch
-  plan` has the name before the id, `info SC-I0912 ("Red fill (3)", vc:63:fill): …` (`REQ-AUTO-127`). The
-  shapes at `SC-W0913`'s thickest spot are named the same way, each in brackets: `("Red fill (3)",
+  plan` has the name before the id, `info SC-I0912 ("Fill 3, Red", vc:63:fill): …` (`REQ-AUTO-127`). The
+  shapes at `SC-W0913`'s thickest spot are named the same way, each in brackets: `("Fill 3, Red",
   vc:63:fill) #ed171f 2.1`. `SC-I0916` and `SC-I0918` are about a mark and a guide, which they name by
   its id as before, and they count the parts they keep or steer.
 - **The report.** Each diagnostic with an element has its `name` too, and a list `shapes` gives each shape's

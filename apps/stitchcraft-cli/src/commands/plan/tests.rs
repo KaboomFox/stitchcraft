@@ -96,7 +96,7 @@ fn req_auto_001_stitch_plan_auto_digitizes_the_shapes_without_settings() {
     let out = run(&PlanArgs { reading: ReadingArgs { auto: true, ..ReadingArgs::default() }, ..args(design.clone(), auto.clone()) });
     assert_eq!(out.status, Status::Done, "{}", out.stderr);
     // The shape is named by its colour, which none of the machine's threads has (`REQ-AUTO-125`).
-    let rule = "info SC-I0912 (\"#ff0000 column (1)\", svg:line:stroke): This shape sews by the rule column (3 mm wide).\n";
+    let rule = "info SC-I0912 (\"Column 1, #ff0000\", svg:line:stroke): This shape sews by the rule column (3 mm wide).\n";
     assert_eq!(out.stderr, format!("info SC-I0901: 1 shape is digitized automatically: it sews as a satin column.\n{rule}"));
     // Without the switch, the line runs, as it did before.
     let out = run(&args(design, plain.clone()));
@@ -129,7 +129,7 @@ fn req_auto_030_stitch_plan_sets_the_rules_settings_and_a_style_on_every_automat
     };
     // By default the T is uneven, and filled. The logo style keeps its 2 columns, and so does the switch
     // alone. The photo style is the defaults.
-    assert!(said(&[]).starts_with("info SC-I0912 (\"#ff0000 fill (1)\", svg:t:fill): This shape sews by the rule uneven ("), "{}", said(&[]));
+    assert!(said(&[]).starts_with("info SC-I0912 (\"Fill 1, #ff0000\", svg:t:fill): This shape sews by the rule uneven ("), "{}", said(&[]));
     assert!(said(&["--style", "logo"]).contains("the rule column ("));
     assert!(said(&["--set", "auto_fill_uneven=false"]).contains("the rule column ("));
     assert!(said(&["--style", "photo"]).contains("the rule uneven ("));

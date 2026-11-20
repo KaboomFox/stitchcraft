@@ -226,7 +226,7 @@ fn req_cli_012_stitch_plan_traces_a_picture_with_vectorcraft_s_command_line_and_
     // picture's name.
     let traced = std::fs::read(TRACED).unwrap();
     let written = std::fs::read(dir.join("traced.vectorcraft")).unwrap();
-    assert!(written.len() > traced.len() && String::from_utf8_lossy(&written).contains(r#""name": "Red fill (1)","#));
+    assert!(written.len() > traced.len() && String::from_utf8_lossy(&written).contains(r#""name": "Fill 1, Red","#));
     let again = TempDir::new("picture-traced-again");
     std::fs::write(again.join("badge.vectorcraft"), &traced).unwrap();
     let planned = Command::new(env!("CARGO_BIN_EXE_stitch"))
@@ -278,7 +278,7 @@ fn req_vc_033_the_traced_document_names_each_shape_and_changes_nothing_else() {
             (node["id"].as_u64().unwrap(), node.as_object_mut().unwrap().remove("name").map(|n| n.as_str().unwrap().to_string()).unwrap_or_default())
         })
         .collect();
-    assert_eq!(names, [(3, "White left out (1)".into()), (6, "Red fill (1)".into()), (9, "Blue fill (1)".into()), (12, "Deep Gold fill (1)".into())]);
+    assert_eq!(names, [(3, "Left out 1, White".into()), (6, "Fill 1, Red".into()), (9, "Fill 1, Blue".into()), (12, "Fill 1, Deep Gold".into())]);
     // Without the names, it is the document VectorCraft saved.
     let traced: Value = serde_json::from_slice(&std::fs::read(TRACED).unwrap()).unwrap();
     assert_eq!(written, traced);
@@ -294,7 +294,7 @@ fn req_vc_033_the_traced_document_names_each_shape_and_changes_nothing_else() {
     assert_eq!(planned.status.code(), Some(0), "{}", text(&planned.stderr));
     assert_eq!(std::fs::read(dir.join("badge.pes")).unwrap(), std::fs::read(again.join("badge.pes")).unwrap());
     assert_eq!(text(&out.stderr), text(&planned.stderr));
-    assert!(text(&out.stderr).contains(r#"info SC-I0912 ("Red fill (1)", vc:6:fill): "#), "{}", text(&out.stderr));
+    assert!(text(&out.stderr).contains(r#"info SC-I0912 ("Fill 1, Red", vc:6:fill): "#), "{}", text(&out.stderr));
 }
 
 fn req_cli_012_the_picture_is_traced_for_the_machine_at_the_size_and_in_the_colours_asked() {

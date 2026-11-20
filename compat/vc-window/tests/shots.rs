@@ -356,16 +356,16 @@ fn row(app: &App, label: &str) -> Result<Element, String> {
 
 #[test]
 fn a_panel_s_rows_carry_their_whole_names_or_the_tree_gives_no_text_for_them() {
-    let rows = ["Fern Green fill (1)", "Light Grey left out (1)"];
-    let said = rows_said(&rows, &["Layers", "Light Grey left out (1)", "Fern Green fill (1)"]).unwrap();
+    let rows = ["Fill 1, Fern Green", "Left out 1, Light Grey"];
+    let said = rows_said(&rows, &["Layers", "Left out 1, Light Grey", "Fill 1, Fern Green"]).unwrap();
     assert!(said.starts_with("each of the 2 rows carries its shape's whole name"), "{said}");
     let said = rows_said(&rows, &["Layers", "Search All"]).unwrap();
     assert!(said.starts_with("the tree gives no text for its rows: none of the 2"), "{said}");
     for cut in ["Fern Green fi", "Fern Green fill…", "Fern Green..."] {
-        let wrong = rows_said(&rows, &[cut, "Light Grey left out (1)"]).unwrap_err();
-        assert!(wrong.contains(&format!("{cut:?} for \"Fern Green fill (1)\"")), "{wrong}");
+        let wrong = rows_said(&rows, &[cut, "Left out 1, Light Grey"]).unwrap_err();
+        assert!(wrong.contains(&format!("{cut:?} for \"Fill 1, Fern Green\"")), "{wrong}");
     }
-    let wrong = rows_said(&rows, &["Light Grey left out (1)"]).unwrap_err();
-    assert!(wrong.contains("names missing [\"Fern Green fill (1)\"]"), "{wrong}");
+    let wrong = rows_said(&rows, &["Left out 1, Light Grey"]).unwrap_err();
+    assert!(wrong.contains("names missing [\"Fill 1, Fern Green\"]"), "{wrong}");
     assert!(rows_said(&[], &["Layers"]).is_ok(), "a document without names checks nothing");
 }
