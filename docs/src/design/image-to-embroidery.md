@@ -808,9 +808,13 @@ the tolerance in. An inward corner becomes a curve round it at that distance, wh
 keeps its point. Rings stay rings, and a line shorter than 3 mm is left out, as on the edge. Where the area
 is narrower than twice the distance, such as at a narrow neck, the offset breaks into pieces. The running
 stitch would join those pieces by straight stitches across whatever lies between them. Such a line keeps to
-the edge, as does a line whose offset comes to nothing. The thread is 0.4 mm wide, so it still reaches
-0.1 mm past the edge, and the fill's rows reach under the neighbour as before. The offset cuts the ring of
-curves round the line where it crosses itself, which takes 67,252 units of work for a square. An outline
+the edge. The thread is 0.4 mm wide, so it still covers 0.1 mm past the edge, and the fill's rows still
+lie under the neighbour by the overlap. The offset cuts the ring of curves round the line where it crosses itself,
+work that grows with the square of the line's sides: offset whole, the traced dogs took 7 to 10 % more work
+to plan and the pear twice as much. So a line is offset 32 sides at a time, in windows that meet at the
+middles of sides, where both offsets reach the same point. A window that doesn't move in as one curve from
+beside its start to beside its end leaves the whole line on its edge. A window doesn't find a neck that
+lies between 2 windows, and there the line lies inside the area unless the neck is narrower than the distance. An outline
 whose lines need more than the budget sews none, and says so
 with SC-I0904.
 

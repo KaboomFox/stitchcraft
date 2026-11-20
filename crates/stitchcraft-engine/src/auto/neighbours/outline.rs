@@ -64,6 +64,16 @@ pub(super) const BRIDGE: f64 = 25.0;
 /// more each, and leaving out those longer than 12 mm by 6 to 12 % for 1 to 3 more.
 pub(super) const FILL_BRIDGE: f64 = 12.0;
 
+/// The most sides of an edge offset at once when an outline moves in (`REQ-AUTO-130`). The offset cuts the
+/// ring of curves round a line against itself, work that grows with the square of its sides, so a long
+/// edge is offset a window at a time: a traced picture's fills cost 7 to 10 % more to plan offset whole,
+/// and a pear drawn in smooth curves twice as much. A window sees a neck only within itself.
+const WINDOW: usize = 32;
+
+/// A window's offset starts and ends beside the window's ends when they lie no farther from them than
+/// this share of the distance more than the distance itself.
+const BESIDE: f64 = 1.001;
+
 /// For each automatic area of `shapes` whose edge shows somewhere, in the order they sew, its id and the lines
 /// of its outline, each area with `budget`'s work to itself; and `SC-I0904` for each area that needed more,
 /// which sews no outline.
@@ -254,34 +264,77 @@ pub(in crate::auto) fn ending_near(mut lines: Vec<Line>, target: &Approach, budg
 
 /// `lines`, the outline of the area `id` along its edge as [`outlines`] found it, moved `by` into the area
 /// (`REQ-AUTO-130`), with `budget`'s work: each line offset towards the area with round joins, a ring as a
-/// ring. A line whose offset falls apart or comes to nothing keeps to its edge: where the area is narrower
-/// than twice `by`, the offset leaves a stretch out, and the pieces left would be joined by straight
-/// stitches across whatever lies between them. A line shorter than [`SHORTEST`] is left out. A
-/// ring's line runs as the ring does, so the area lies on its right with y up, the outline's clockwise and
-/// a hole's the other way. An outline that needs more work is not sewn, and `Err` says so (`SC-I0904`).
+/// ring, in windows of [`WINDOW`] sides. A line keeps to its edge where the offset of a window is not one
+/// curve from beside the window's start to beside its end: where the area is narrower than twice `by`, the
+/// offset leaves a stretch out, and the pieces left would be joined by straight stitches across whatever
+/// lies between them. A line shorter than [`SHORTEST`] is left out. A ring's line runs as the ring does, so
+/// the area lies on its right with y up, the outline's clockwise and a hole's the other way. An outline that
+/// needs more work is not sewn, and `Err` says so (`SC-I0904`).
 pub(in crate::auto) fn inset(lines: Vec<Line>, by: f64, budget: &Budget, id: &ElementId) -> Result<Vec<Line>, Diagnostic> {
     let mut meter = budget.meter();
     let mut moved = Vec::with_capacity(lines.len());
     for line in lines {
         let edge = if line.closed { opened(&line.points) } else { line.points.clone() };
-        let offset = offset::offset(&edge, -by, Join::Round, &mut meter).map_err(|_| {
+        let curve = offset_in_windows(&edge, by, &mut meter).map_err(|_| {
             let (finding, consequence) = ("where this area's outline runs inside its edge", "it sews no outline");
             Failed::Work.said(Code::AutoUnder, finding, consequence, budget.max_work, id.clone())
         })?;
-        match offset {
-            // A ring's offset that is one curve runs round from the opening to it again, its last point its
-            // first: the offset cuts no stretch out of it, or joins round where it does.
-            Offset::Line(mut curve) => {
+        moved.push(match curve {
+            // A ring's offset runs round from beside the opening to beside it again: its last point is its
+            // first.
+            Some(mut curve) => {
                 if line.closed {
                     curve.pop();
                 }
-                moved.push(Line { points: curve, closed: line.closed });
+                Line { points: curve, closed: line.closed }
             }
-            Offset::Apart(_) | Offset::Empty => moved.push(line),
-        }
+            None => line,
+        });
     }
     moved.retain(|line| line.length() >= SHORTEST);
     Ok(moved)
+}
+
+/// The line `edge` offset `by` to its right with y up, with round joins, a window of [`WINDOW`] sides at a
+/// time, with `meter`'s work; `None` where a window's offset is not one curve from beside its start to
+/// beside its end. The windows meet at the middles of sides, where both offsets reach the same point.
+fn offset_in_windows(edge: &[Point], by: f64, meter: &mut Meter) -> Result<Option<Vec<Point>>, Exhausted> {
+    let mut curve: Vec<Point> = Vec::new();
+    for window in windows(edge) {
+        let Offset::Line(piece) = offset::offset(&window, -by, Join::Round, meter)? else { return Ok(None) };
+        let beside = |p: Option<&Point>, q: Option<&Point>| p.zip(q).is_some_and(|(p, q)| p.distance(*q) <= by * BESIDE);
+        if !beside(piece.first(), window.first()) || !beside(piece.last(), window.last()) {
+            return Ok(None);
+        }
+        // The window before ended where this one starts.
+        let again = curve.last().zip(piece.first()).is_some_and(|(p, q)| p.distance(*q) < by * (BESIDE - 1.0));
+        curve.extend(piece.into_iter().skip(usize::from(again)));
+    }
+    Ok(Some(curve))
+}
+
+/// The line `points` cut into windows of [`WINDOW`] sides, each but the first starting at the middle of the
+/// side where the one before ends.
+fn windows(points: &[Point]) -> Vec<Vec<Point>> {
+    let mut windows = Vec::new();
+    let mut window: Vec<Point> = Vec::new();
+    for (k, pair) in points.windows(2).enumerate() {
+        let (Some(&a), Some(&b)) = (pair.first(), pair.last()) else { continue };
+        if window.is_empty() {
+            window.push(a);
+        }
+        if (k + 1) % WINDOW == 0 && k + 2 < points.len() {
+            let middle = a.lerp(b, 0.5);
+            window.push(middle);
+            windows.push(std::mem::replace(&mut window, vec![middle]));
+        }
+        window.push(b);
+    }
+    if window.is_empty() {
+        window.extend(points.first());
+    }
+    windows.push(window);
+    windows
 }
 
 /// The ring `points`, its last point joined to its first, as an open line from the middle of its longest
@@ -587,15 +640,12 @@ mod tests {
         assert!(around.iter().all(|&(x, y)| (-0.1 - 1e-9..=10.1 + 1e-9).contains(&x) && (-0.1 - 1e-9..=10.1 + 1e-9).contains(&y)));
         // An open line moves to its right with y up, and is left out when it comes to less than 3 mm.
         assert_eq!(moved_in(vec![open(&[(0.0, 0.0), (0.0, 3.0)]), open(&[(5.0, 0.0), (5.0, 2.999)])]), [(vec![(0.1, 0.0), (0.1, 3.0)], false)]);
-        // A ring with a bar narrower than twice the distance loses the bar, even where it was opened along the
-        // bar, and closes round the rest. A ring narrower than that throughout, which moves in to nothing, keeps
-        // to its edge, and so does one whose offset falls apart, 2 squares joined by a neck 0.15 mm wide: the
-        // 2 rings it moves in to would be joined by a straight stitch. A ring of no points is left out.
+        // A ring narrower than twice the distance somewhere keeps to its edge: one with a bar 0.15 mm wide,
+        // opened along the bar, whose offset leaves the bar out; one narrower than that throughout, which moves
+        // in to nothing; and 2 squares joined by a neck 0.15 mm wide, which move in to 2 rings that a straight
+        // stitch would join. A ring of no points is left out.
         let flagged = [(0.0, 0.0), (0.0, 5.0), (2.5, 5.0), (2.5, 15.0), (2.65, 15.0), (2.65, 5.0), (5.0, 5.0), (5.0, 0.0)];
-        let lines = moved_in(vec![ring(&flagged)]);
-        let flag = &lines[0].0;
-        assert_eq!((lines.len(), lines[0].1), (1, true), "{lines:?}");
-        assert!(flag.iter().all(|&(x, y)| (0.1..=4.9).contains(&x) && (0.1..4.95).contains(&y)), "{flag:?}");
+        assert_eq!(moved_in(vec![ring(&flagged)]), [(flagged.to_vec(), true)]);
         let bar = [(0.0, 0.0), (0.0, 10.0), (0.15, 10.0), (0.15, 0.0)];
         assert_eq!(moved_in(vec![ring(&bar), ring(&[])]), [(bar.to_vec(), true)]);
         let dumbbell = [
@@ -613,6 +663,19 @@ mod tests {
             (5.0, 0.0),
         ];
         assert_eq!(moved_in(vec![ring(&dumbbell)]), [(dumbbell.to_vec(), true)]);
+        // A ring of 100 sides, a polygon round a circle 10 mm across clockwise with y up, moves in a window of
+        // 32 sides at a time: every point of it lies 0.1 mm inside, and the windows meet without a point twice.
+        let round: Vec<(f64, f64)> = (0..100)
+            .map(|k| stitchcraft_core::math::sin_cos(-f64::from(k) * std::f64::consts::TAU / 100.0))
+            .map(|(sin, cos)| (5.0 * cos, 5.0 * sin))
+            .collect();
+        let rings = moved_in(vec![ring(&round)]);
+        let side = |(x, y): (f64, f64)| {
+            let near = |k: usize| distance_to_segment(p(x, y), p(round[k].0, round[k].1), p(round[(k + 1) % 100].0, round[(k + 1) % 100].1));
+            (0..100).map(near).fold(f64::INFINITY, f64::min)
+        };
+        assert_eq!((rings.len(), rings[0].1, rings[0].0.len()), (1, true, 104));
+        assert!(rings[0].0.iter().all(|&q| (side(q) - 0.1).abs() < 2e-3), "{rings:?}");
     }
 
     #[test]
