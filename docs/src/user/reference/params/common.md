@@ -215,3 +215,19 @@ read it, and sews each element's underlay just before its own top stitches.
 - **Default:** `false`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
+
+## Digitized
+
+### `digitized_as`
+
+**Digitized as.** Sew this element as automatic digitizing made it. Expand sets it on each part of the design it
+expands, so the expanded design sews as the automatic one did. Between 2 elements set to a part,
+the needle runs under the shapes sewn after them in place of a jump. The cap at the end of planning
+thins them where the design sews too thick, by the design's limits. Every stitch of a piece of the
+base layer is underlay. Lettering keeps the lettering's underlay and pull. Set it to `no` on a
+part to sew it as a shape set by hand. Ink/Stitch doesn't read it.
+
+- **Accepts:** one of `no` (Set by hand), `part` (A part digitizing made), `base` (A piece of the base layer), `lettering` (Lettering digitizing placed)
+- **Default:** `no`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version

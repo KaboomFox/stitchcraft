@@ -873,6 +873,23 @@
         "stability": "stable"
       }
     },
+    "digitized_as": {
+      "default": "no",
+      "description": "Sew this element as automatic digitizing made it. Expand sets it on each part of the design it expands, so the expanded design sews as the automatic one did. Between 2 elements set to a part, the needle runs under the shapes sewn after them in place of a jump. The cap at the end of planning thins them where the design sews too thick, by the design's limits. Every stitch of a piece of the base layer is underlay. Lettering keeps the lettering's underlay and pull. Set it to `no` on a part to sew it as a shape set by hand. Ink/Stitch doesn't read it.",
+      "enum": [
+        "no",
+        "part",
+        "base",
+        "lettering"
+      ],
+      "title": "Digitized as",
+      "type": "string",
+      "x-stitchcraft": {
+        "group": "Digitized",
+        "origin": "stitchcraft",
+        "stability": "experimental"
+      }
+    },
     "enable_random_stitch_length": {
       "default": false,
       "description": "Vary the stitch lengths at random instead of spreading them evenly, or in a tatami fill, instead of placing the needle points on the stagger grid. Lines and rows sewn close together then do not line their needle holes up, which avoids moiré patterns.",
@@ -3216,7 +3233,8 @@
           "min_jump_stitch_length_mm",
           "max_stitch_length_mm",
           "random_seed",
-          "underlays_first"
+          "underlays_first",
+          "digitized_as"
         ],
         "name": "CommonParams",
         "title": "Common parameters"

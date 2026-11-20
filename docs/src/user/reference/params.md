@@ -49,7 +49,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 
 | Group | Parameters | Applies to |
 |---|---|---|
-| [Common parameters](params/common.md) | 17 | every stitch type |
+| [Common parameters](params/common.md) | 18 | every stitch type |
 | [Stroke parameters](params/stroke.md) | 1 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
 | [Running parameters](params/running.md) | 4 | Running stitch, Ripple stitch |
 | [Repeat parameters](params/repeat.md) | 2 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
@@ -123,6 +123,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`cross_rotation`](params/cross.md#cross_rotation) | Grid rotation | Cross parameters |
 | [`cross_stitch_method`](params/cross.md#cross_stitch_method) | Cross | Cross parameters |
 | [`cross_thread_count`](params/cross.md#cross_thread_count) | Threads | Cross parameters |
+| [`digitized_as`](params/common.md#digitized_as) | Digitized as | Common parameters |
 | [`enable_random_stitch_length`](params/running.md#enable_random_stitch_length) | Random stitch length | Running parameters |
 | [`end_at_nearest_point`](params/satin.md#end_at_nearest_point) | End at nearest point | Satin parameters |
 | [`end_row_spacing_mm`](params/tatami.md#end_row_spacing_mm) | End row spacing | Tatami parameters |
