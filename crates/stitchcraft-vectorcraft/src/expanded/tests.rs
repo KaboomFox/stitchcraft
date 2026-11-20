@@ -267,3 +267,71 @@ fn a_setting_is_written_as_the_value_vectorcraft_s_dialog_holds() {
     assert_eq!(object_of("vc:12:fill#2"), Some(12));
     assert_eq!((object_of("vc:#3:fill"), object_of("svg:path")), (None, None));
 }
+
+#[test]
+fn the_scan_finds_the_layers_objects_their_ids_and_the_document_s_keys() {
+    let text = r#"{"document": {"next_id": 12, "layers": [{"id": 1, "next_id": 3, "kind": {"children": [
+        {"id": 3, "kind": {"children": [{"id": 4, "visible": true}, {"id": 5, "note": "six", "name": "five"}]}},
+        {"locked": false, "id": 6, "visible": true, "a": ["x", 1, [2]]}
+    ]}}, {"id": 2, "kind": {"children": []}}], "title": "a \"b\" \\"}}"#;
+    let scanned = scan(text.as_bytes(), "f").unwrap();
+    // The layers' 2 objects, each with the ids inside it, and the 2 layers' lists: no nested list is a layer's.
+    let tops: Vec<(Vec<u64>, Option<(usize, usize)>, Option<(usize, usize)>)> =
+        scanned.tops.iter().map(|top| (top.ids.clone(), top.visible, top.locked)).collect();
+    let at = |what: &str| text.find(what).unwrap();
+    assert_eq!(tops[0], (vec![3, 4, 5], None, None));
+    assert_eq!(scanned.tops[0].names, ["five"]);
+    assert_eq!(tops[1], (vec![6], Some((at(r#"true, "a""#), 4)), Some((at("false"), 5))));
+    assert_eq!((scanned.tops[0].open, scanned.tops[1].open), (at(r#"{"id": 3"#), at(r#"{"locked""#)));
+    let layers: Vec<(usize, bool)> = scanned.layers.iter().map(|layer| (layer.close, layer.empty)).collect();
+    assert_eq!(layers, [(at("]}}, {\"id\": 2"), false), (at("]}}], \"title\""), true)]);
+    // The document's own `next_id`, not a layer's, and the largest id.
+    assert_eq!((scanned.next_id, scanned.largest), (Some((at("12"), 2, 12)), 6));
+    assert_eq!(scanned.spans.iter().find(|(kept, _)| *kept == 0).map(|(_, span)| span.0), Some(at(r#"{"next_id""#)));
+    // A string or a number in a layer's list is in it, and a document of a token alone reads.
+    let listed = |inside: &str| scan(format!(r#"{{"layers": [{{"kind": {{"children": [{inside}]}}}}]}}"#).as_bytes(), "f").unwrap().layers[0].empty;
+    assert_eq!((listed(r#""a""#), listed("1"), listed("")), (false, false, true));
+    assert!(scan(b"5", "f").is_some());
+    // Brackets that don't match aren't JSON.
+    for broken in [&b"{]"[..], b"[}", b"{\"a\": [}", b"[1"] {
+        assert!(scan(broken, "f").is_none(), "{}", String::from_utf8_lossy(broken));
+    }
+    assert_eq!(string_end(br#""a\"b""#, 0), Some(5));
+    assert_eq!(string_end(br#""a"#, 0), None);
+}
+
+#[test]
+fn req_cli_025_the_group_goes_in_the_layer_of_the_first_hidden_object() {
+    let first = r#"{"id": 1, "kind": {"type": "layer", "children": [{"id": 20, "name": "stitch:route-start", "kind": {"type": "path", "path": {"subpaths": []}}}]}}"#;
+    let second = format!(r#"{{"id": 2, "kind": {{"type": "layer", "children": [{}]}}}}"#, square(4, 0.0, 0.0));
+    let text = format!(r#"{{"format": "vectorcraft", "version": 4, "document": {{"version": 1, "layers": [{first}, {second}]}}}}"#);
+    let (expanded, back, written) = round_trip(&text);
+    assert_eq!(back.elements().len(), expanded.elements().len());
+    let group = written.find(GROUP).unwrap();
+    assert!(group > written.find(r#""id": 2, "kind""#).unwrap(), "{written}");
+}
+
+#[test]
+fn req_cli_025_an_origin_is_written_only_in_place_of_a_marker_the_hidden_objects_held() {
+    let at = Point::new(5.0, 5.0).unwrap();
+    let marker = r#"{"id": 7, "name": "stitch:origin", "kind": {"type": "path", "path": {"subpaths": [{"anchors": [{"p": [0, 0]}]}]}}}"#;
+    let grouped = format!(r#"{{"id": 3, "kind": {{"type": "group", "children": [{}, {marker}]}}}}"#, square(4, 0.0, 0.0));
+    let apart = format!("{}, {marker}", square(4, 0.0, 0.0));
+    // (the objects, whether the document has a marker, whether a hidden object holds it)
+    for (objects, marked, held) in [(square(4, 0.0, 0.0), false, false), (apart, true, false), (grouped, true, true)] {
+        let text = document("", &objects);
+        let original = read_with(text.as_bytes(), &Budget::DEFAULT, Reading { auto: true, ..Reading::default() }).unwrap().design;
+        let (expanded, _) = expand(&original, REFERENCE, &Budget::DEFAULT).unwrap();
+        let expanded = Design::new(expanded.elements().to_vec(), DesignSettings { origin: Some(at), ..expanded.settings }).unwrap();
+        // Nothing hidden: the document's own marker places the origin, and no other is added.
+        let none = Design::new(Vec::new(), DesignSettings::default()).unwrap();
+        let unhidden = written(text.as_bytes(), &none, &expanded, REFERENCE, &Budget::DEFAULT).unwrap();
+        assert_eq!(String::from_utf8(unhidden.document).unwrap().matches("stitch:origin").count(), usize::from(marked));
+        // A marker in a hidden object is written again, and one that stays shown isn't.
+        let hidden = written(text.as_bytes(), &original, &expanded, REFERENCE, &Budget::DEFAULT).unwrap();
+        let count = String::from_utf8(hidden.document.clone()).unwrap().matches("stitch:origin").count();
+        assert_eq!(count, usize::from(marked) + usize::from(held), "{objects}");
+        let back = crate::read(&hidden.document, &Budget::DEFAULT).unwrap();
+        assert_eq!(back.design.settings.origin.is_some(), marked, "{:?}", back.warnings);
+    }
+}

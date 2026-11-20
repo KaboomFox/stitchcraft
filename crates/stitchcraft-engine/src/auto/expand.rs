@@ -147,7 +147,7 @@ pub fn expand(design: &Design, profile: &MachineProfile, budget: &Budget) -> Res
         };
         let own = element.name.clone().or_else(|| names.name_of(element.id.as_str()).map(str::to_string));
         let name = own.or_else(|| base.contains(&element.id).then(piece));
-        parts.push(Element { name, params, automatic: false, lettered: None, ..element.clone() });
+        parts.push(Element { name, params, lettered: None, ..element.clone() });
     }
     let mut left_out: Vec<String> = Vec::new();
     for said in diagnostics.iter().filter(|said| said.code == Code::BudgetExhausted) {

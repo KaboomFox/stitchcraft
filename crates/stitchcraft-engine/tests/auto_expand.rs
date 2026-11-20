@@ -106,7 +106,7 @@ fn req_auto_142_an_expanded_design_has_ordinary_elements_named_after_their_shape
     for (name, design) in designs() {
         let (expanded, _) = expanded(&design);
         for element in expanded.elements() {
-            assert!(!element.automatic, "{name}: {} is automatic", element.id);
+            assert!(!element.automatic && element.lettered.is_none(), "{name}: {} is automatic or lettered", element.id);
             assert!(element.params.iter().all(|(key, _)| !key.starts_with("auto_")), "{name}: {} keeps a setting of the Auto effect", element.id);
             // Each part is named after its shape, as the notices name it, so the person finds it in the Layers
             // panel. The lettering keeps the name it had, none here.

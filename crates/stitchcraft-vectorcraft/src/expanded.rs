@@ -80,7 +80,7 @@ pub fn written(document: &[u8], original: &Design, expanded: &Design, machine: &
     // The origin and the stop position, when the hidden objects held their markers.
     let markers = [("stitch:origin", expanded.settings.origin), ("stitch:stop-position", expanded.settings.stop_position)];
     for (name, at) in markers {
-        let held = at.is_some() && !hidden.is_empty() && json_holds(json, name);
+        let held = hidden.iter().any(|top| top.names.iter().any(|named| named == name));
         if let Some(at) = at.filter(|_| held) {
             parts.push(marker(name, at, &mut next));
         }
@@ -150,12 +150,6 @@ fn unclipped(element: &Element) -> Diagnostic {
 /// The number of the object the element `id` is read from: the label after `vc:`, when it is a number.
 fn object_of(id: &str) -> Option<u64> {
     id.strip_prefix("vc:")?.split([':', '#', '~']).next()?.parse().ok()
-}
-
-/// Whether `json` names an object `name`, in any place.
-fn json_holds(json: &[u8], name: &str) -> bool {
-    let quoted = format!("\"{name}\"");
-    json.windows(quoted.len()).any(|window| window == quoted.as_bytes())
 }
 
 /// The next id, which is then taken.
@@ -277,6 +271,8 @@ struct Top {
     open: usize,
     /// The ids of it and of everything inside it.
     ids: Vec<u64>,
+    /// The names of it and of everything inside it.
+    names: Vec<String>,
     /// Where its `visible` value is, and how long, when it has one.
     visible: Option<(usize, usize)>,
     /// Where its `locked` value is, and how long, when it has one.
@@ -383,7 +379,13 @@ fn scan(json: &[u8], filter: &str) -> Option<Scanned> {
                 match stack.last_mut() {
                     Some(Frame::Object { key: key @ None, .. }) => *key = Some(content.to_string()),
                     Some(Frame::List { items, .. }) => *items += 1,
-                    _ => found.spans.extend(kept(&path).map(|at| (at, (i, end + 1)))),
+                    Some(Frame::Object { key: Some(key), top, .. }) => {
+                        if let Some(place) = top.and_then(|top| found.tops.get_mut(top)).filter(|_| key == "name") {
+                            place.names.push(content.to_string());
+                        }
+                        found.spans.extend(kept(&path).map(|at| (at, (i, end + 1))));
+                    }
+                    None => {}
                 }
                 i = end;
             }
