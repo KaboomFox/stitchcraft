@@ -85,7 +85,7 @@ fn a_vectorcraft_shot_is_declared_with_its_kind_s_fields() {
             "its steps export nothing: the shot exports what it shows",
             "`apply = \"lace\"` names no stitch family",
             "`sheet`, `elements`, `fixture`, `panels`, `allow` and `style` are a stitch shot's",
-            "`menu` and `dialog` are a vectorcraft-ui shot's",
+            "`menu`, `dialog`, `panel` and `commands` are a vectorcraft-ui shot's",
         ]
     );
     // VectorCraft keeps a module's last error only until its next success: one apply a family.
@@ -167,12 +167,14 @@ fn a_panel_shot_traces_a_picture_and_presses_the_panel_s_row_of_the_window_menu(
     // What it traces: a picture of the repository, into a `.vectorcraft` file of the shot's folder, with the
     // pinned command line.
     let tracing = |args: &str| problems(&shot(RENDER, &format!("stitch = [\"plan\", {args}]")));
-    assert_eq!(tracing("\"docs/no-such.png\", \"-o\", \"a.pes\", \"--traced\", \"a.vectorcraft\""), [
-        "it traces `docs/no-such.png`, which is no file of the repository"
-    ]);
-    assert_eq!(tracing("\"docs/fixtures/dog-on-turf-cutout.png\", \"-o\", \"a.pes\""), [
-        "`stitch plan` writes the traced document it opens: give it `--traced FILE`"
-    ]);
+    assert_eq!(
+        tracing("\"docs/no-such.png\", \"-o\", \"a.pes\", \"--traced\", \"a.vectorcraft\""),
+        ["it traces `docs/no-such.png`, which is no file of the repository"]
+    );
+    assert_eq!(
+        tracing("\"docs/fixtures/dog-on-turf-cutout.png\", \"-o\", \"a.pes\""),
+        ["`stitch plan` writes the traced document it opens: give it `--traced FILE`"]
+    );
     for traced in ["d/a.vectorcraft", "a.svg"] {
         let args = format!("\"docs/fixtures/dog-on-turf-cutout.png\", \"-o\", \"a.pes\", \"--traced\", \"{traced}\"");
         assert_eq!(tracing(&args), [format!("`--traced {traced}` is not the name of a `.vectorcraft` file")]);

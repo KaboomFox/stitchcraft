@@ -356,11 +356,8 @@ fn job(shot: &Shot, document: &Path, modules: &Path, picture: &Path, profile: Op
         None => Value::Null,
         Some(name) => json!({ "name": name, "rows": shape_names(document)? }),
     };
-    let commands: Vec<Value> = shot
-        .commands
-        .iter()
-        .map(|step| step.command().map(|(id, params)| json!({ "command": id, "params": params })))
-        .collect::<Result<_, _>>()?;
+    let commands: Vec<Value> =
+        shot.commands.iter().map(|step| step.command().map(|(id, params)| json!({ "command": id, "params": params }))).collect::<Result<_, _>>()?;
     Ok(json!({
         "id": shot.id,
         "document": document.to_string_lossy(),

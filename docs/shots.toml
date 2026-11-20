@@ -1256,7 +1256,7 @@ stitch = ["plan", "docs/src/images/generated/auto-pear-photo.png", "-o", "pear.p
 commands = [{ cmd = "ui.layersExpand" }]
 menu = ["Window", "Layers"]
 panel = "Layers"
-alt = "ALT"
+alt = "VectorCraft's Layers panel with the traced pear. Under Layer 1 and its group, open, each shape has a row with its name, such as Mint Green fill (1), Russet Brown column (1) and White left out (1)."
 
 [[shot]]
 id = "vectorcraft-fill-dialog"

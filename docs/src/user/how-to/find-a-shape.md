@@ -27,6 +27,7 @@ Open the group's row with its triangle to see the shapes' rows. Here is the trac
 VectorCraft shows it at the panel's default width:
 
 <!-- shot: vectorcraft-layers-names -->
+![VectorCraft's Layers panel with the traced pear. Under Layer 1 and its group, open, each shape has a row with its name, such as Mint Green fill (1), Russet Brown column (1) and White left out (1).](../../images/generated/vectorcraft-layers-names.png)
 <!-- /shot -->
 
 The names are written once, when the picture is traced, and are then the shapes' own names, as a name
