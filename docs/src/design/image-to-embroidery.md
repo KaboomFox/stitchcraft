@@ -3774,8 +3774,8 @@ doesn't lose detail by that measure, and its colour error shows the loss.
 - **Snap Curves To Lines** moves each measure by less than 2 neighbouring values of Paths or Corners do.
 
 **Built (M13.51).** `stitch plan --fewer-points` sends Paths 0 and Corners 0 for a picture it traces, in
-every style. Noise stays 25. Without the option, the default, `stitch plan` sends no fitting option, as
-before M13.51. Corners 0 rounds each turn under 90° of a drawn logo, such as an octagon's, so a person
+every style. Noise stays 25. Without the option, the default, `stitch plan` doesn't send a fitting option,
+as before M13.51. Corners 0 rounds each turn under 90° of a drawn logo, such as an octagon's, so a person
 leaves the option out for a logo.
 
 Each picture was traced from its source by VectorCraft 0.24.1's command line with the defaults and with
@@ -3815,8 +3815,8 @@ fills of thread or more:
 - **Rules.** 29 to 50 of each dog's 69 to 92 shapes sew by another rule, as the shapes' outlines change.
   The pear's shapes sew as they did.
 
-**Why the option is off by default.** The fewer points don't make a design better to the eye: the
-previews of the dogs with and without the options look alike, with other jumps. And they change how a
+**Off by default.** The previews of the dogs with and without the options look alike to the eye, with
+other jumps, and the options change how a
 traced picture sews far more than its outlines change. A shape's stitch rule reacts to how its outline
 is drawn, so a third to a half of each dog's shapes sew by another rule, more of the design sews thick,
 and one dog passes the warning's limit. Until that rule is steady against how an outline is drawn, which
