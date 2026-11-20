@@ -363,8 +363,8 @@ in each built-in font on a field, VOLKAR in Barstitch Bold 12.5 mm tall and Hexm
 tall, each marked on a cream field 3 mm round it, from `main` and from M13.50 side by side, and the marked
 lettered patch (kit item 15):
 
-- Barstitch Bold's joins sew 0.6 to 1.0 fills less on M13.50, with its hidden running stitches and its
-  underlay where 2 columns overlap taken. Does the needle thump less at the K's, the X's and the W's joins?
+- Barstitch Bold's joins sew 0.5 to 1.0 fills less on M13.50, with the running stitches hidden under its
+  columns taken. Does the needle thump less at the K's, the X's and the W's joins?
   Do the joins still look closed, with no fabric or field between the columns?
 - Small Font's joins and the patch's M sew as on `main`, 4.5 to 5.4 fills over the field. Does the
   needle thump there, or the thread shred? If so, the field under the letters is what MC-8 changes, since no

@@ -10,7 +10,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     marked text and text objects. They keep every column's top stitch where the font puts it. The cap takes a
     column's underlay where another column covers it too. It also takes the running stitches under a column,
     which covers them as far as its own pull compensation pulls it. The last resort and the last pass leave
-    lettering's columns whole. CHANGELOG_NUMBERS
+    lettering's columns whole. Barstitch Bold's thickest joins sew 0.5 to 1.0
+    fills less, 4.13 to 4.72 alone and 5.79 to 5.96 on a field. Small Font on a field and the marked patch
+    sew as before, up to 5.35 and 4.53.
   - A lettering column sewn whole tags its underlay as underlay in the plan.
   - A design of a person's own lettering is measured by the default limits and warned of, and nothing is
     taken from it.

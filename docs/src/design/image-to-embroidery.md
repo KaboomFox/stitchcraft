@@ -2034,22 +2034,27 @@ an X's crossing, a Z's corner and an M's top. The owner chose lettering for how 
 leaves the thickest spots above the limit all the same, where the field and 2 columns' tops make 3.0 to 3.8
 fills by themselves.
 
-**Measured** with a prototype of these rules on M13.46's branch, on 2026-11-19:
+**Measured** on the build, on 2026-11-20, against `main` at M13.46's merge, over the same sets:
 
-| Set | Thickest today | Prototype | At 3 fills or more today, mm² | Prototype | At 4 or more today | Prototype |
+| Set | Thickest today | Built | At 3 fills or more today, mm² | Built | At 4 or more today | Built |
 |---|---:|---:|---:|---:|---:|---:|
 | Small Font alone | 3.72 to 4.28 | 3.71 to 3.85 | 21 | 16 | 0 | 0 |
-| Small Font on a field | 4.87 to 5.35 | 4.87 to 5.35 | 2,049 | 2,038 | 20.0 | 17.5 |
-| Barstitch Bold alone | 4.99 to 5.36 | 4.13 to 4.68 | 568 | 263 | 14.5 | 4.8 |
-| Barstitch Bold on a field | 6.31 to 6.67 | 5.47 to 5.74 | 7,468 | 6,954 | 677.7 | 287.5 |
-| Made-up words, Barstitch Bold, on a field | 5.95 to 6.60 | 5.15 to 5.79 | 1,070 | 999 | 138.2 | 37.8 |
+| Small Font on a field | 4.87 to 5.35 | 4.87 to 5.35 | 2,048 | 2,038 | 20.0 | 19.0 |
+| Barstitch Bold alone | 4.99 to 5.36 | 4.13 to 4.72 | 568 | 266 | 14.5 | 4.8 |
+| Barstitch Bold on a field | 6.31 to 6.67 | 5.79 to 5.96 | 7,467 | 7,015 | 677.8 | 325.0 |
+| Made-up words, Barstitch Bold, on a field | 5.95 to 6.60 | 5.15 to 6.10 | 1,071 | 1,016 | 138.0 | 53.2 |
 | The marked patch | 4.53 | 4.53 | 75.25 | 75.00 | 0 | 0 |
 | TS-13B's words marked | 4.16 | 3.68 | 11.00 | 2.50 | 0 | 0 |
 
-No column's top stitch moved, and the jump threads, the thread changes and the trims are those of today on
-every design. The plans have 0.9 % fewer stitches. Planning took as long within the shared machine's noise,
-5.1 s today and 4.7 s with the prototype over every design together. The sets of letters alone, which
-had no cap to run before, took 20 to 100 ms more for their 62 letters.
+No column's top stitch moved on any letter, word or picture. The cap took 3,936 mm of the font's running
+stitches under later columns, and the last pass shortened the locks at jumps. It took
+3 needle points of a column's underlay. The prototype took 790 mm of underlay, since it counted any later
+element's top over it, the font's running stitches too, where the build counts another column's only
+(`REQ-AUTO-122`). So Barstitch Bold on a field sews 0.2 to 0.3 fills more at its thickest than on the
+prototype. The jumps, the jump threads, 210 in all, and the trims are those of today on every design, and
+the plans have 0.8 % fewer stitches. Planning every design together took 5.0 s, against 4.5 s today, on the
+shared machine at opt-level 1. A set of 62 letters alone had no cap to run before, and now takes 7 to 95 ms
+more.
 
 The rules leave Small Font as it was. Its thickest spots are 2 columns' tops, the field and the base
 layer, and a centre walk along each column, and none of those may go. The marked patch keeps its spot of 4.53

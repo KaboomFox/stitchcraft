@@ -109,7 +109,9 @@ the running stitches under a column. It never moves a column's stitches. The let
 draws them, and it leaves a column's underlay where no other column lies over it.
 
 Letters on a field, such as a patch's word, sew thicker than letters on bare fabric: the field and its base
-layer lie under every join. LETTER_NUMBERS `SC-W0913` then names the join and the threads stacked there.
+layer lie under every join. In the built-in fonts, Barstitch Bold's joins sew up to 4.7 fills alone and
+6.1 on a field, and Small Font's up to 3.9 and 5.4. `SC-W0913` then names the join and the threads stacked
+there.
 It means the spot is thicker than the limit of 4 fills, not that the design is wrong. Sew a test piece of
 the word first, slowly. To compare, sew the patch both ways once: with the word marked and with the
 letters left traced. A lighter field under marked text may come as a setting, once a sew-out shows it is
