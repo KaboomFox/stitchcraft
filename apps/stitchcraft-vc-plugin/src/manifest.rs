@@ -25,7 +25,9 @@
 //! locks, since the dialog doesn't hold that text, and the methods StitchCraft sews as another: Ink/Stitch's
 //! legacy fill, sewn as a tatami fill (`REQ-FILL-005`). `satin_column` is set by the effect itself, by which
 //! family it is ([`SATIN_COLUMN`]). `turn_stitches`, StitchCraft's own switch that automatic digitizing sets on
-//! its fills, is left out ([`TURN_STITCHES`]): a fill sewn by its own settings keeps the switch off.
+//! its fills, and `digitized_as`, which Expand sets on each part, are declared like the rest
+//! (`REQ-VC-035`): VectorCraft admits a filter's new effect record only with the parameters its manifest
+//! takes, and an expanded part carries both.
 //!
 //! **How many.** VectorCraft 0.12 and 0.13 take 64 parameters. From 0.14 a manifest holds up to 256, at most
 //! 64 of them outside groups, and every setting here is in its registry group. So a manifest of more than 64
@@ -72,7 +74,6 @@ use stitchcraft_engine::common::CommonParams;
 use stitchcraft_engine::generate::sewn_as;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::generators::tartan::SETT;
-use stitchcraft_engine::generators::tatami::TURN_STITCHES;
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_params::{Empty, Family, Kind, ParamGroup, ParamSpec, StitchType, Value as Parsed, find_for};
 use stitchcraft_plan::FormatId;
@@ -480,7 +481,7 @@ fn params_of(registry: &[&ParamGroup], family: Family) -> Vec<(&'static str, Par
     groups.sort_by_key(|group| place(group, family, default));
     let mut params: Vec<(&'static str, Param)> = Vec::new();
     for group in groups {
-        let declared = |spec: &&ParamSpec| ![SATIN_COLUMN, TURN_STITCHES].contains(&spec.key) && spec.applies_to.iter().any(|t| t.family() == family);
+        let declared = |spec: &&ParamSpec| spec.key != SATIN_COLUMN && spec.applies_to.iter().any(|t| t.family() == family);
         for spec in group.specs.iter().filter(declared) {
             let spec = spec.in_family(family);
             let Some(schema) = schema(&spec, group.specs) else { continue };

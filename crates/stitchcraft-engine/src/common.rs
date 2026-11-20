@@ -10,7 +10,7 @@
 //! (`crate::underlays_first`, ADR-0018).
 
 use stitchcraft_core::Mm;
-use stitchcraft_params::{Family, Origin, Stability, StitchType, params};
+use stitchcraft_params::{ChoiceOption, Family, Origin, Stability, StitchType, params};
 
 use crate::locks::{LARGEST_SCALE_PERCENT, LOCKS, SIZED_IN_MM, SIZED_IN_PERCENT};
 
@@ -45,6 +45,27 @@ pub const MAX_STITCH_LENGTH: &str = "max_stitch_length_mm";
 /// The key of the setting that sews an element's underlay with those of the elements next to it that set
 /// it too, before their top stitches (`crate::underlays_first`).
 pub const UNDERLAYS_FIRST: &str = "underlays_first";
+
+/// The key of the setting that says an element sews as automatic digitizing made it (`REQ-AUTO-143`):
+/// Expand sets it on each part ([`crate::auto::expand`]), and planning reads it from any element.
+pub const DIGITIZED_AS: &str = "digitized_as";
+
+/// The value of [`DIGITIZED_AS`] for an element set by hand, its default.
+pub const NOT_DIGITIZED: &str = "no";
+/// The value of [`DIGITIZED_AS`] for an element that sews as a part digitizing made.
+pub const PART: &str = "part";
+/// The value of [`DIGITIZED_AS`] for a piece of the base layer: a part whose stitches are all underlay.
+pub const BASE: &str = "base";
+/// The value of [`DIGITIZED_AS`] for lettering that digitizing placed.
+pub const LETTERING: &str = "lettering";
+
+/// What [`DIGITIZED_AS`] says of an element, by the ids a design stores.
+pub const DIGITIZED: &[ChoiceOption] = &[
+    ChoiceOption::new(NOT_DIGITIZED, "Set by hand"),
+    ChoiceOption::new(PART, "A part digitizing made"),
+    ChoiceOption::new(BASE, "A piece of the base layer"),
+    ChoiceOption::new(LETTERING, "Lettering digitizing placed"),
+];
 
 /// The stitch types with a longest stitch: manual stitch and satin columns, whatever their method, split
 /// longer stitches, a tatami fill sews its rows in stitches that long, a contour fill its rings and a guided
@@ -189,6 +210,16 @@ params! {
         /// elements sewn together, and an element alone sews as it does without this. Ink/Stitch doesn't
         /// read it, and sews each element's underlay just before its own top stitches.
         underlays_first: Toggle = "false", label "Underlays first", origin Origin::StitchCraft, stability Stability::Experimental;
+    }
+
+    "Digitized" {
+        /// Sew this element as automatic digitizing made it. Expand sets it on each part of the design it
+        /// expands, so the expanded design sews as the automatic one did. Between 2 elements set to a part,
+        /// the needle runs under the shapes sewn after them in place of a jump. The cap at the end of planning
+        /// thins them where the design sews too thick, by the design's limits. Every stitch of a piece of the
+        /// base layer is underlay. Lettering keeps the lettering's underlay and pull. Set it to `no` on a
+        /// part to sew it as a shape set by hand. Ink/Stitch doesn't read it.
+        digitized_as: Choice = "no", label "Digitized as", choices DIGITIZED, origin Origin::StitchCraft, stability Stability::Experimental;
     }
 }
 

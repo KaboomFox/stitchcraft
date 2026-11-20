@@ -313,6 +313,20 @@ pub fn stitchcraft_svg::lettering::set_along(&stitchcraft_svg::font::Font, &str,
 pub mod stitchcraft_svg::version
 pub const stitchcraft_svg::version::APPLIED: [(&str, &str); 8]
 pub const stitchcraft_svg::version::CURRENT: i64
+pub mod stitchcraft_svg::written
+pub enum stitchcraft_svg::written::Params
+pub stitchcraft_svg::written::Params::All
+pub stitchcraft_svg::written::Params::InkStitch
+pub struct stitchcraft_svg::written::Options<'c>
+pub stitchcraft_svg::written::Options::clones: &'c [stitchcraft_engine::testsheets::Cloned]
+pub stitchcraft_svg::written::Options::params: stitchcraft_svg::written::Params
+pub stitchcraft_svg::written::Options::styled: bool
+impl stitchcraft_svg::written::Options<'_>
+pub const stitchcraft_svg::written::Options<'_>::EXPANDED: stitchcraft_svg::written::Options<'static>
+pub const stitchcraft_svg::written::MARGIN: f64
+pub fn stitchcraft_svg::written::data(&stitchcraft_engine::design::Path) -> alloc::string::String
+pub fn stitchcraft_svg::written::sewn_alike(&[stitchcraft_engine::design::Element]) -> alloc::vec::Vec<stitchcraft_engine::design::Element>
+pub fn stitchcraft_svg::written::svg(&[stitchcraft_engine::design::Element], &stitchcraft_engine::design::DesignSettings, &stitchcraft_svg::written::Options<'_>) -> core::result::Result<alloc::string::String, alloc::string::String>
 pub struct stitchcraft_svg::Svg
 pub stitchcraft_svg::Svg::design: stitchcraft_engine::design::Design
 pub stitchcraft_svg::Svg::texts: alloc::vec::Vec<stitchcraft_svg::lettering::objects::Waiting>

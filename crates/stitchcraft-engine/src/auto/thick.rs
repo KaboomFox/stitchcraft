@@ -16,9 +16,11 @@ use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Mete
 use stitchcraft_plan::thickness::{Layer, Limits, Measure, Over, Report, Spot, Thickness};
 use stitchcraft_plan::{ElementRef, MachineProfile, StitchPlan};
 
-use super::AutoParams;
+use stitchcraft_params::ParamSet;
+
 use super::cap::{self, Capped, Pull};
 use super::thin::{self, Thinned};
+use super::{AutoParams, OVERLAP};
 use crate::names::Names;
 
 /// How many of the shapes stacked at the thickest spot the warning names at the most: those with the most
@@ -44,15 +46,47 @@ pub(crate) fn limits(rules: &AutoParams) -> Limits {
 }
 
 /// What a design digitized automatically is held to: the limits of its thickness and the overlap of its
-/// areas, by its lowest automatic shape's settings.
+/// areas, by its lowest automatic shape's settings. An expanded design keeps them as a design setting
+/// ([`DesignSettings::cap`](crate::design::DesignSettings::cap)), by the names of the Auto effect's settings
+/// ([`Held::KEYS`]), so that its parts are thinned as the automatic design's were (`REQ-AUTO-143`).
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct Held {
+pub struct Held {
     /// The limits of its thickness.
-    pub(crate) limits: Limits,
+    pub limits: Limits,
     /// How far an area reaches under its neighbours, in millimetres (`auto_overlap_mm`).
-    pub(crate) overlap: f64,
+    pub overlap: f64,
     /// The most fills of thread a spot of a millimetre sews (`auto_thick_cap_fills`, `REQ-AUTO-099`).
-    pub(crate) cap: f64,
+    pub cap: f64,
+}
+
+impl Held {
+    /// The settings of the Auto effect that say what a design is held to, in the order [`Held::values`]
+    /// gives them.
+    pub const KEYS: [&str; 6] =
+        ["auto_thick_warn_fills", "auto_thick_fail_fills", "auto_thick_warn_points", "auto_thick_fail_points", "auto_thick_cap_fills", OVERLAP];
+
+    /// What `set` holds a design to: its settings among [`Held::KEYS`], read as the Auto effect reads them,
+    /// each it leaves out at its default. The others are passed over. An error names each value that
+    /// doesn't read.
+    pub fn of(set: &ParamSet) -> Result<Held, Vec<Diagnostic>> {
+        let own: ParamSet = set.iter().filter(|(key, _)| Held::KEYS.contains(key)).collect();
+        AutoParams::from_set(&own).map(|read| held(&read.params))
+    }
+
+    /// Its values as a design keeps them, each with its key ([`Held::KEYS`]), written as the shortest
+    /// decimals that read back as they are.
+    pub fn values(&self) -> [(&'static str, String); 6] {
+        let Limits { warn_fills, fail_fills, warn_points, fail_points } = self.limits;
+        let [a, b, c, d, e, f] = Held::KEYS;
+        [
+            (a, warn_fills.to_string()),
+            (b, fail_fills.to_string()),
+            (c, warn_points.to_string()),
+            (d, fail_points.to_string()),
+            (e, self.cap.to_string()),
+            (f, self.overlap.to_string()),
+        ]
+    }
 }
 
 /// What `rules` hold a design to.
@@ -142,7 +176,7 @@ pub(crate) fn measured(plan: &StitchPlan, held: &Held, names: &Names, budget: &B
 /// What a design holds to when no automatic shape gives its limits: the default settings of the rules
 /// (`REQ-AUTO-119`, `REQ-AUTO-124`).
 pub(crate) fn by_default() -> Option<Held> {
-    AutoParams::from_set(&stitchcraft_params::ParamSet::new()).ok().map(|read| held(&read.params))
+    AutoParams::from_set(&ParamSet::new()).ok().map(|read| held(&read.params))
 }
 
 /// What the note says when the pass ran out of work, for a cap of `cap` fills.

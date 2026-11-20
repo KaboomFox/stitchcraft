@@ -90,6 +90,7 @@ pub struct DesignSettings {          // since M3.8; read from an Ink/Stitch file
     pub stop_position: Option<Point>,// where the frame moves before each stop; None: it stays
     pub min_satin_stroke_width: Mm,  // 1 mm: a satin column drawn as one path no wider is sewn as a stroke (M4.8)
     pub rotate_on_export: Turn,      // the plan turned about the hoop's centre as it is written (M8.9); none by default
+    pub cap: Option<auto::Held>,     // what the cap holds the parts digitizing made to, which Expand keeps (M13.26)
 }
 
 pub enum Shape {
@@ -137,6 +138,12 @@ A host reads 3 of the settings by Ink/Stitch's names, `collapse_len_mm`, `min_st
 for StitchCraft's Design Settings filter. `SETTINGS` lists them with the label and help that filter's
 dialog shows, and `Setting::get` and `Setting::set` read and write each in millimetres. A shortest stitch
 of 0 is `None`, which leaves it to the machine.
+
+From M13.26 a design also keeps what the cap at the end of planning holds the elements digitizing made to:
+the limits of its thickness and the overlap of its areas, by the names of the Auto effect's settings
+(`auto::Held::KEYS`). Expand writes them from the lowest automatic shape, and both hosts read them where
+they read the other settings ([Expand](image-to-embroidery.md#expand)). `None` leaves them to the lowest
+automatic shape, or to the Auto effect's defaults.
 
 A stroke's width and join, since M4.8, are as the host draws them: in SVG, `stroke-width` scaled by the
 transforms, and `stroke-linejoin` with `stroke-miterlimit` ([SVG input](svg-input.md#stroke-width-and-join)).

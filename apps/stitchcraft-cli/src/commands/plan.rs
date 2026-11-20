@@ -149,6 +149,17 @@ pub fn sew(
     format: FormatId,
     name: &str,
 ) -> Sewn {
+    let (design, warnings) = match read_design(source, design, (reading, rules)) {
+        Ok(read) => read,
+        Err(unreadable) => return Sewn { diagnostics: vec![unreadable], plan: None, file: None, back: None, names: Names::default() },
+    };
+    sew_design(&design, warnings, profile, format, name)
+}
+
+/// The design file `design`, of the kind `source`, read as `reading` asks, with the marks, guides and texts
+/// `rules` gives and the rules' settings set on its automatic shapes, and what was said of it: what `stitch
+/// plan` sews, and `stitch expand` expands. The error is the reader's, a file that can't be read.
+pub fn read_design(source: Source, design: &[u8], (reading, rules): (Reading, &[(String, String)])) -> Result<(Design, Vec<Diagnostic>), Diagnostic> {
     // The marks of `--text` came with the rules (`REQ-CLI-020`): their letters are replaced before the
     // rules' settings are set on what is left.
     // So did the marks of `--keep` (`REQ-CLI-021`), given to the design as read, in percent of its box.
@@ -159,18 +170,13 @@ pub fn sew(
     let marks: Vec<&str> = marks.iter().map(|(_, mark)| mark.as_str()).collect();
     let keeps: Vec<&str> = keeps.iter().map(|(_, mark)| mark.as_str()).collect();
     let guides: Vec<&str> = guides.iter().map(|(_, guide)| guide.as_str()).collect();
-    let read = source.read(design, reading).and_then(|(design, mut warnings)| {
+    source.read(design, reading).and_then(|(design, mut warnings)| {
         let design = crate::guide::guided(crate::keep::kept(design, &keeps), &guides);
         let (design, said) =
             if marks.is_empty() { (design, Vec::new()) } else { crate::text::replaced(design, &marks, &mut FolderFonts::from_env())? };
         warnings.extend(said);
         Ok((design.automatic_with(&rules), warnings))
-    });
-    let (design, warnings) = match read {
-        Ok(read) => read,
-        Err(unreadable) => return Sewn { diagnostics: vec![unreadable], plan: None, file: None, back: None, names: Names::default() },
-    };
-    sew_design(&design, warnings, profile, format, name)
+    })
 }
 
 /// `design`, of which `warnings` were said, planned for `profile` and written in `format`, with `name` as the

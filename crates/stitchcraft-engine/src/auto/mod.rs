@@ -77,16 +77,19 @@ mod area;
 pub(crate) mod cap;
 mod clips;
 mod columns;
+mod expand;
 mod guides;
 mod marks;
 mod narrow;
 mod neighbours;
 mod params;
 pub mod rules;
+mod smooth;
 mod split;
 pub(crate) mod thick;
 mod thin;
 
+pub use expand::expand;
 use guides::Guides;
 use marks::Marks;
 #[cfg(test)]
@@ -98,7 +101,7 @@ pub use params::{
     MAX_UNEVENNESS, MIN_AREA, MIN_FILL_WIDTH, MIN_LIKENESS, MIN_LINE_UNEVENNESS, MIN_SLENDERNESS, MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, STITCH,
 };
 use rules::{Asked, Bounds, Fired, Measures, RuleId};
-pub use thick::WARNING_CHARS;
+pub use thick::{Held, WARNING_CHARS};
 
 use std::borrow::Cow;
 use std::collections::BTreeSet;
@@ -443,7 +446,11 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     let automatic = design.elements().iter().any(|element| element.automatic);
     if !design.sort_colours && !automatic {
         let diagnostics = marks::unused_all(&design.marks, &design.guides);
-        return Sewing { elements: Cow::Borrowed(design.elements()), diagnostics, base: Vec::new(), made: BTreeSet::new(), limits: None };
+        let (mut base, mut made) = (Vec::new(), BTreeSet::new());
+        // The elements set as digitizing's own sew as it made them (`REQ-AUTO-143`).
+        let elements = expand::marked(Cow::Borrowed(design.elements()), &mut base, &mut made);
+        let limits = expand::limits(None, &made, &design.settings);
+        return Sewing { elements, diagnostics, base, made, limits };
     }
     let mut diagnostics = Vec::new();
     // Each mark's area and each guide's line are read once, before the shapes are cut to their clips.
@@ -456,6 +463,10 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     // setting that doesn't read, which sews nothing.
     let rules: Vec<Option<AutoParams>> =
         elements.iter().map(|element| if element.automatic { read(element, &mut diagnostics) } else { None }).collect();
+    // The outlines of the areas that ask for it are smoothed before anything is measured (`REQ-AUTO-131`).
+    let smoothed = smooth::outlines(design, &rules, budget, &mut diagnostics);
+    let design = smoothed.as_ref().unwrap_or(design);
+    let elements = design.elements();
     // The ids given out: the design's, then each part's that a stroke of several subpaths adds. A design's
     // ids are unique (`Design::new`), so each is taken as it is, which costs no work and cannot fail.
     let mut taken = Labels::default();
@@ -535,11 +546,15 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     diagnostics.splice(0..0, counts.said());
     let set: BTreeSet<&ElementId> = elements.iter().filter(|element| !element.automatic).map(|element| &element.id).collect();
     let mut elements = beside.elements;
-    let made: BTreeSet<ElementId> = elements.iter().filter(|element| !set.contains(&element.id)).map(|element| element.id.clone()).collect();
+    let mut made: BTreeSet<ElementId> = elements.iter().filter(|element| !set.contains(&element.id)).map(|element| element.id.clone()).collect();
     for element in elements.iter_mut().filter(|element| made.contains(&element.id)) {
         small_locks(&mut element.params);
     }
-    Sewing { elements: Cow::Owned(elements), diagnostics, base: beside.base, made, limits }
+    // The elements with settings that are set as digitizing's own sew as it made them too (`REQ-AUTO-143`).
+    let mut base = beside.base;
+    let elements = expand::marked(Cow::Owned(elements), &mut base, &mut made);
+    let limits = expand::limits(limits, &made, &design.settings);
+    Sewing { elements, diagnostics, base, made, limits }
 }
 
 /// `design` as automatic digitizing sews its colours: each thin line that merges into a neighbour
@@ -556,6 +571,9 @@ pub fn as_merged(design: &Design, budget: &Budget) -> Result<Design, Diagnostic>
     let elements = cut.elements();
     let rules: Vec<Option<AutoParams>> =
         elements.iter().map(|element| if element.automatic { read(element, &mut diagnostics) } else { None }).collect();
+    let smoothed = smooth::outlines(cut, &rules, budget, &mut diagnostics);
+    let cut = smoothed.as_ref().unwrap_or(cut);
+    let elements = cut.elements();
     let background = neighbours::background(cut, rules.first().and_then(Option::as_ref), budget);
     let layers = neighbours::flattened(cut, &rules, matches!(background, Some(Background::Found)), budget);
     let marks = Marks::of(&design.marks, budget);

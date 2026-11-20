@@ -270,6 +270,27 @@ macro_rules! auto_codes {
         /// its default that the path's own effect sets otherwise, with both values. To sew the path by the
         /// group's settings, remove its own Auto effect. To keep it, set those settings on it too.
         AutoOwnReplaces = "SC-W0920", Warning, "Own Auto settings replace the group's";
+
+        /// The outlines of automatic areas were smoothed before they were digitized, as their setting
+        /// `auto_smooth_mm` asks. Each point moved no farther than the setting, the corners stayed, an edge 2
+        /// areas share was smoothed once, and no ring's area changed by more than a tenth. Smoothing cuts short
+        /// stitches at ragged edges, but it also changes which parts sew as satin columns.
+        ///
+        /// The message gives how many areas were smoothed, within which setting, and how many points their
+        /// outlines need within 0.02 mm as drawn and as smoothed, and names any area whose smoothing needed
+        /// more work than the budget allows, which keeps its outline. To sew the outlines as drawn, set
+        /// `auto_smooth_mm` to 0.
+        AutoSmoothed = "SC-I0921", Info, "Outlines smoothed";
+
+        /// Expand made an automatic design the ordinary elements digitizing makes of it, and some of it
+        /// couldn't stay as it was. The lettering of a text, placed for a marker or set in a font, became the
+        /// columns it sews: they sew as before, but the text can't be edited as text, and lettering set in a
+        /// font no longer marks its underlay as lettering does. A shape whose digitizing needed more work than
+        /// the budget allows sews nothing, in the automatic design and in the expanded one.
+        ///
+        /// The message names each such shape, as the notices name it. To change a text, edit it in the
+        /// automatic design, which stays hidden under the expanded parts, and expand it again.
+        AutoExpandLost = "SC-W0922", Warning, "What Expand couldn't keep";
         } }
     };
 }

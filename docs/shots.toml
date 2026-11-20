@@ -1228,6 +1228,12 @@ alt = "The patch as it will sew. A red fill with rows at 45 degrees has a blue s
 # rows, through the accessibility tree. The picture shows the menus open, or with `dialog = "<module>"` the
 # dialog of that live effect, a stitch family's or `auto`, the Auto effect's, in a window tall enough for
 # it, which must show a row for each of the module's parameters: its label, and the control of its type.
+# With `panel = "Layers"` and the menu path Window, Layers, it shows that panel at its default width,
+# cropped to the dock column, and each row must carry its shape's whole name in the accessibility tree
+# unless the tree gives no text for the rows. `commands` run in the window first, over its control
+# channel, for what a person does with a click the tree doesn't reach. A shot with `stitch`, `stitch
+# plan`'s arguments with `--traced FILE`, traces a picture of the repository with the pinned command line
+# and opens the traced document, its shapes named, before `steps`.
 
 [[shot]]
 id = "vectorcraft-plugins-menu"
@@ -1240,6 +1246,17 @@ steps = [
 ]
 menu = ["Effect", "Plug-ins"]
 alt = "VectorCraft's Effect menu, open at Plug-ins, which lists StitchCraft Fill, StitchCraft Satin and StitchCraft Stroke."
+
+[[shot]]
+id = "vectorcraft-layers-names"
+kind = "vectorcraft-ui"
+# The pear photo traced as the fixture traced-pear.vectorcraft was (docs/fixtures/README.md), its shapes
+# named by `stitch plan --traced`, and its group's rows open, as its triangle opens them.
+stitch = ["plan", "docs/src/images/generated/auto-pear-photo.png", "-o", "pear.pes", "--colours", "4", "--size", "90", "--traced", "pear.vectorcraft"]
+commands = [{ cmd = "ui.layersExpand" }]
+menu = ["Window", "Layers"]
+panel = "Layers"
+alt = "VectorCraft's Layers panel at its default width with the traced pear. It shows Layer 1, its group, open, and a row for each of the 6 shapes. Dark Olive fill (1), Russet Brown fill (1), Mint Green fill (1) and White left out (1) show whole. Dark Olive column (1) loses its closing bracket at the row's end, and Russet Brown column (1) shows only its first 18 characters, without its number and with no ellipsis."
 
 [[shot]]
 id = "vectorcraft-fill-dialog"

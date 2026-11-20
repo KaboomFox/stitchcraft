@@ -40,6 +40,18 @@ fn req_vc_002_each_family_s_manifest_is_one_vectorcraft_accepts() {
 }
 
 #[test]
+fn req_vc_035_each_effect_declares_what_an_expanded_part_sets() {
+    // VectorCraft admits a filter's new effect record with the parameters its manifest takes, so each
+    // effect declares the settings an expanded part carries (docs/src/design/image-to-embroidery.md › Expand).
+    for each in Family::ALL {
+        let manifest = family(*each);
+        assert!(manifest.params.iter().any(|(key, _)| *key == "digitized_as"), "{each:?}");
+        assert_eq!(validate(&text(&manifest)), Ok(()), "{each:?}");
+    }
+    assert!(family(Family::Fill).params.iter().any(|(key, _)| *key == stitchcraft_engine::generators::tatami::TURN_STITCHES));
+}
+
+#[test]
 fn req_vc_011_each_exporter_s_manifest_is_one_vectorcraft_accepts() {
     let profiles: Vec<&str> = BUILTIN.iter().map(|profile| profile.id).collect();
     for format in FormatId::ALL {
@@ -75,10 +87,10 @@ fn req_vc_016_the_auto_effect_s_dialog_holds_the_rules_settings_and_its_preview_
     assert_eq!(keys, [&shape[..], &neighbours[..], &base[..], &[PREVIEW_LEVEL]].concat());
     // The advanced settings, the rules' bounds (the least unevenness of a thin line that merges among them, M13.18, and the
     // least likeness that merging keeps, M13.44), the base layer's offset, the 2 limits of the cover's check and the 4
-    // of how thick the design sews (M13.29) with its cap (M13.35), and the switch that sews the details last (M13.40), have no row: the dialog holds 12 rows, one fewer than the 13 that made it 3 px taller than its window. The
+    // of how thick the design sews (M13.29) with its cap (M13.35), the switch that sews the details last (M13.40) and the smoothing of outlines (M13.52), have no row: the dialog holds 12 rows, one fewer than the 13 that made it 3 px taller than its window. The
     // outline's switch has a row (M13.28), and the offset, the base layer's finest adjustment, gave it its place.
     let advanced: Vec<&str> = AutoParams::SPECS.iter().filter(|spec| spec.group == ADVANCED).map(|spec| spec.key).collect();
-    assert_eq!(advanced.len(), 19);
+    assert_eq!(advanced.len(), 20);
     assert!(advanced.contains(&MIN_AREA) && advanced.iter().all(|key| !keys.contains(key)), "{advanced:?}");
     assert_eq!(keys.len() + advanced.len(), AutoParams::SPECS.len() + 1);
     // Each setting's row has the registry's label, unit, section, help and page, and always shows: the
@@ -132,12 +144,15 @@ fn req_vc_002_the_dialog_opens_with_the_method_and_ends_with_the_settings_every_
     assert_eq!(fill[..3], ["fill", "fill_method", "angle"]);
     assert!(place(&fill, "underlay_underpath") < place(&fill, "running_stitch_length_mm"));
     assert!(place(&fill, "pull_compensation_mm") < place(&fill, "ties"));
-    assert_eq!(fill[fill.len() - 3..], ["max_stitch_length_mm", "underlays_first", PREVIEW_LEVEL]);
-    // Every family's dialog ends with the sewing order, StitchCraft's own toggle, off by default (M10.15).
+    assert_eq!(fill[fill.len() - 4..], ["max_stitch_length_mm", "underlays_first", "digitized_as", PREVIEW_LEVEL]);
+    // Every family's dialog ends with the sewing order, StitchCraft's own toggle, off by default (M10.15), and
+    // what an element digitizing made sews as (M13.26), no by default.
     for each in Family::ALL {
         let params = family(*each).params;
-        let order = params.iter().rev().nth(1).map(|(key, param)| (*key, param.schema.clone(), param.ui.group, param.ui.label));
+        let order = params.iter().rev().nth(2).map(|(key, param)| (*key, param.schema.clone(), param.ui.group, param.ui.label));
         assert_eq!(order, Some(("underlays_first", Schema::Bool { default: false }, Some("Sewing order"), Some("Underlays first"))), "{each:?}");
+        let digitized = params.iter().rev().nth(1).map(|(key, param)| (*key, param.schema.default_value(), param.ui.group, param.ui.label));
+        assert_eq!(digitized, Some(("digitized_as", serde_json::json!("no"), Some("Digitized"), Some("Digitized as"))), "{each:?}");
     }
     let stroke = keys(Family::Stroke);
     assert_eq!(stroke[..3], ["stroke_method", "repeats", "bean_stitch_repeats"]);
@@ -183,11 +198,11 @@ fn req_vc_021_the_fill_dialog_holds_a_tartan_s_sett_as_text_after_its_method() {
     assert_eq!((texts(&family(Family::Stroke)), texts(&family(Family::Satin))), (0, 0));
     // From M10.10 the dialog holds 65, the guided fill's strategy among them: more than the 64 that VectorCraft
     // 0.12 and 0.13 take, which refuse the fill effect for its text anyway. From 0.14 a manifest holds 256, at
-    // most 64 outside groups, and every one of these is in a group. M13.16's `turn_stitches`, which automatic
-    // digitizing sets on its own fills, stays left out.
-    assert_eq!(keys.len(), limits::MAX_PARAMS_BEFORE_0_14 + 1);
+    // most 64 outside groups, and every one of these is in a group. From M13.26 it holds M13.16's
+    // `turn_stitches`, which automatic digitizing sets on its own fills, and `digitized_as` (`REQ-VC-035`).
+    assert_eq!(keys.len(), limits::MAX_PARAMS_BEFORE_0_14 + 3);
     assert!(fill.params.iter().all(|(_, param)| param.ui.group.is_some()));
-    assert!(!keys.contains(&"turn_stitches") && stitchcraft_params::find(PARAMETERS, "turn_stitches").is_some());
+    assert!(keys.contains(&"turn_stitches") && keys.contains(&"digitized_as"));
     validate(&serde_json::to_vec(&fill).unwrap()).unwrap();
     // The other families' effects install in 0.12 and 0.13 too, and stay within their 64.
     for each in [Family::Stroke, Family::Satin] {

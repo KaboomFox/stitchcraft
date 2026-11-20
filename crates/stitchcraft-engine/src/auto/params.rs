@@ -307,6 +307,15 @@ params! {
         /// mark must keep its edge clear. The design goes by the setting of its lowest automatic shape.
         auto_details_last: Toggle = "false", label "Details sew last",
             origin Origin::StitchCraft, stability Stability::Experimental;
+
+        /// How far a point of an area's outline may move when the outline is smoothed, before anything is
+        /// digitized. A traced outline wobbles by less than a thread is wide, and the wobble sews short
+        /// stitches and ragged edges. Corners stay, an edge 2 areas share is smoothed once so that no gap
+        /// opens, and a ring's area changes by a tenth at most. 0, the default, sews every outline as drawn.
+        /// 0.2 mm, half a thread, cut short stitches on every traced picture measured, but it also changes
+        /// which parts sew as satin columns, and not always for the better.
+        auto_smooth_mm: Length = "0", label "Smooth outlines", range (0.0, 1.0),
+            origin Origin::StitchCraft, stability Stability::Experimental;
     }
 }
 
@@ -341,11 +350,11 @@ mod tests {
         ];
         let cover = ["auto_base_offset_mm", "auto_base_rows", "auto_base_sliver_mm2", "auto_base_bare_percent"];
         let thick = ["auto_thick_warn_fills", "auto_thick_fail_fills", "auto_thick_warn_points", "auto_thick_fail_points", "auto_thick_cap_fills"];
-        assert_eq!(keys, [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..], &thick[..], &[DETAILS_LAST]].concat());
-        // The bounds, the base layer's offset and rows, the 2 limits of the cover's check, the 4 limits of the thickness and its cap, and the switch of the details
+        assert_eq!(keys, [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..], &thick[..], &[DETAILS_LAST, "auto_smooth_mm"]].concat());
+        // The bounds, the base layer's offset and rows, the 2 limits of the cover's check, the 4 limits of the thickness and its cap, the switch of the details and the smoothing
         // are the advanced settings, which no dialog shows.
         let advanced: Vec<&str> = AutoParams::SPECS.iter().filter(|spec| spec.group == ADVANCED).map(|spec| spec.key).collect();
-        assert_eq!(advanced, [&bounds[..], &cover[..], &thick[..], &[DETAILS_LAST]].concat());
+        assert_eq!(advanced, [&bounds[..], &cover[..], &thick[..], &[DETAILS_LAST, "auto_smooth_mm"]].concat());
     }
 
     #[test]

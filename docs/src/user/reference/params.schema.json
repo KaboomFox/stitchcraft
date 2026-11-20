@@ -362,6 +362,21 @@
         "unit": "mm"
       }
     },
+    "auto_smooth_mm": {
+      "default": 0.0,
+      "description": "How far a point of an area's outline may move when the outline is smoothed, before anything is digitized. A traced outline wobbles by less than a thread is wide, and the wobble sews short stitches and ragged edges. Corners stay, an edge 2 areas share is smoothed once so that no gap opens, and a ring's area changes by a tenth at most. 0, the default, sews every outline as drawn. 0.2 mm, half a thread, cut short stitches on every traced picture measured, but it also changes which parts sew as satin columns, and not always for the better.",
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Smooth outlines",
+      "type": "number",
+      "x-stitchcraft": {
+        "automatic": true,
+        "group": "Advanced",
+        "origin": "stitchcraft",
+        "stability": "experimental",
+        "unit": "mm"
+      }
+    },
     "auto_stitch": {
       "default": "auto",
       "description": "The stitch the shape sews as. Left at `auto`, each part of it sews by the first rule that it matches, from its geometry. `run` sews every part as a running stitch along its centre lines, `satin` sews each part no wider than the widest satin column as satin columns along them, and `fill` fills the shape whole. A part that can't sew as asked goes by the rules: a speck, a part without a centre line, and for `satin` a part too narrow or too wide for a column.",
@@ -871,6 +886,23 @@
         "group": "Crosses",
         "origin": "inkstitch",
         "stability": "stable"
+      }
+    },
+    "digitized_as": {
+      "default": "no",
+      "description": "Sew this element as automatic digitizing made it. Expand sets it on each part of the design it expands, so the expanded design sews as the automatic one did. Between 2 elements set to a part, the needle runs under the shapes sewn after them in place of a jump. The cap at the end of planning thins them where the design sews too thick, by the design's limits. Every stitch of a piece of the base layer is underlay. Lettering keeps the lettering's underlay and pull. Set it to `no` on a part to sew it as a shape set by hand. Ink/Stitch doesn't read it.",
+      "enum": [
+        "no",
+        "part",
+        "base",
+        "lettering"
+      ],
+      "title": "Digitized as",
+      "type": "string",
+      "x-stitchcraft": {
+        "group": "Digitized",
+        "origin": "stitchcraft",
+        "stability": "experimental"
       }
     },
     "enable_random_stitch_length": {
@@ -3216,7 +3248,8 @@
           "min_jump_stitch_length_mm",
           "max_stitch_length_mm",
           "random_seed",
-          "underlays_first"
+          "underlays_first",
+          "digitized_as"
         ],
         "name": "CommonParams",
         "title": "Common parameters"
@@ -3455,7 +3488,8 @@
           "auto_thick_warn_points",
           "auto_thick_fail_points",
           "auto_thick_cap_fills",
-          "auto_details_last"
+          "auto_details_last",
+          "auto_smooth_mm"
         ],
         "name": "AutoParams",
         "title": "Auto parameters"

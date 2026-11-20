@@ -324,7 +324,8 @@ version. A case may name a test sheet drawn as a design instead (`sheet`). With 
 judge only the sheet's elements whose ids start with it. Both programs sew an SVG file
 of the elements StitchCraft sews the sheet with, written with their parameters, their start, end and
 target positions as Ink/Stitch's commands and their clips as clip paths, the design's origin and stop
-position as commands too, and its turn on export (`stitchcraft_testkit::inkstitch`), which StitchCraft's
+position as commands too, and its turn on export (`stitchcraft_testkit::inkstitch`, by the writer `stitch expand`
+writes an SVG file with, `stitchcraft_svg::written`), which StitchCraft's
 reader reads back unchanged (`REQ-PRM-003`). An element's guide line and anchor line are paths beside it
 in its own group, each started with Ink/Stitch's marker, the guide with its stroke and its settings. The file leaves out an element that sets a setting of
 StitchCraft's own that its stitch type reads, which Ink/Stitch would pass over and sew otherwise
