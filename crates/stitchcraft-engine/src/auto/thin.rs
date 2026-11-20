@@ -102,6 +102,10 @@ impl Thinned {
     }
 }
 
+/// An outline's fill, by its place in the plan's elements, and the edge of the fill that the outline follows,
+/// as lines of points.
+pub(crate) type Followed = (Option<ElementRef>, Vec<Vec<Point>>);
+
 /// What the pass, and the cap after it, need to know of a design.
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct Rules<'r> {
@@ -117,9 +121,10 @@ pub(crate) struct Rules<'r> {
     /// the surface a person sees, and the thread under their edges keeps those covered once the fabric pulls
     /// them in (`REQ-AUTO-112`, `REQ-AUTO-114`).
     pub(crate) columns: &'r BTreeSet<ElementRef>,
-    /// The outlines that digitizing made, by their places in the plan's elements, each with the edge of its
-    /// fill that it follows: their run is laid to show, as a column's top stitches are (`REQ-AUTO-112`).
-    pub(crate) outlines: &'r BTreeMap<ElementRef, Vec<Vec<Point>>>,
+    /// The outlines that digitizing made, by their places in the plan's elements, each with its fill and the
+    /// edge of the fill that it follows: their run is laid to show, as a column's top stitches are
+    /// (`REQ-AUTO-112`).
+    pub(crate) outlines: &'r BTreeMap<ElementRef, Followed>,
     /// The satin columns of the lettering that digitizing placed, among `columns`, each with the pull its own
     /// pull compensation makes up for: the cap judges their cover by it, and leaves them whole
     /// (`REQ-AUTO-121` to `REQ-AUTO-123`).

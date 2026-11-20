@@ -57,7 +57,7 @@ fn rows(width: f64, apart: f64) -> Vec<(f64, f64)> {
 }
 
 const NONE: &BTreeSet<ElementRef> = &BTreeSet::new();
-const NO_EDGES: &BTreeMap<ElementRef, Vec<Vec<Point>>> = &BTreeMap::new();
+const NO_EDGES: &BTreeMap<ElementRef, crate::auto::thin::Followed> = &BTreeMap::new();
 
 /// No lettering's columns.
 const NO_PULL: &BTreeMap<ElementRef, crate::auto::cap::Pull> = &BTreeMap::new();
@@ -509,6 +509,48 @@ fn req_auto_112_a_column_s_points_go_only_above_the_warning_s_limit_and_until_it
     let mut kept = plan(&[("column", Role::Top, points)]);
     let (capped, _, _) = cap(&mut kept, &Rules { limit: 50.0, ..as_column });
     assert!(capped.is_none_or(|capped| capped.times == [0; 4]));
+}
+
+#[test]
+fn req_auto_112_an_outline_s_points_go_only_above_the_warning_s_limit_and_only_on_its_fill() {
+    // An outline that digitizing made runs the same zigzag 5 times: 5 fills. Round it, the edge it follows.
+    let points: Vec<(f64, f64)> = (0..5).flat_map(|_| zigzag(4.0, 0.25)).collect();
+    let ring = vec![p(-1.0, -1.0), p(-1.0, 5.0), p(5.0, 5.0), p(5.0, -1.0), p(-1.0, -1.0)];
+    let outline = |edge: Vec<Vec<Point>>| -> BTreeMap<ElementRef, crate::auto::thin::Followed> {
+        ElementRef::from_index(0).map(|at| (at, (None, edge))).into_iter().collect()
+    };
+    let round = outline(vec![ring]);
+    let as_outline = Rules { cap: 3.0, limit: 4.0, outlines: &round, ..rules() };
+    let (capped, _, measured) = cap(&mut plan(&[("outline", Role::Top, points.clone())]), &as_outline);
+    let capped = capped.unwrap();
+    assert!(capped.times[..3] == [0, 0, 0] && capped.times[3] > 0, "{capped:?}");
+    let left = measured.most(Measure::Fills).value;
+    assert!(left <= 4.0 && left > 3.5, "{left}");
+    assert!(kinds(&capped).contains("of shown top stitches, satin columns' and outlines', above the warning's limit"), "{}", kinds(&capped));
+    // Under the warning's limit the outline stays as it is.
+    let (capped, _, _) = cap(&mut plan(&[("outline", Role::Top, points.clone())]), &Rules { limit: 50.0, ..as_outline });
+    assert!(capped.is_none_or(|capped| capped.times == [0; 4]));
+    // Where every stitch joined would cross its edge onto the neighbour, the outline keeps its points.
+    let across = outline((0..=16).map(|k| vec![p(-1.0, f64::from(k) * 0.25 + 0.125), p(5.0, f64::from(k) * 0.25 + 0.125)]).collect());
+    let (capped, _, measured) = cap(&mut plan(&[("outline", Role::Top, points)]), &Rules { outlines: &across, ..as_outline });
+    assert!(capped.as_ref().is_none_or(|capped| capped.times[3] == 0), "{capped:?}");
+    assert!(measured.most(Measure::Fills).value > 4.0);
+}
+
+#[test]
+fn req_auto_112_a_stitch_crosses_an_edge_where_their_ends_lie_on_opposite_sides() {
+    let edge = [vec![p(0.0, 0.0), p(2.0, 0.0), p(2.0, 2.0)]];
+    let crossing = |from: (f64, f64), to: (f64, f64)| crosses(&edge, (p(from.0, from.1), p(to.0, to.1)), &mut Budget::DEFAULT.meter()).unwrap();
+    assert!(crossing((1.0, -1.0), (1.0, 1.0)));
+    // Touching a side between its ends, or at a corner, crosses; ending on it, or running beside it, does not.
+    assert!(crossing((0.0, -1.0), (0.0, 1.0)));
+    assert!(crossing((1.0, -1.0), (3.0, 1.0)));
+    assert!(!crossing((1.0, -1.0), (1.0, 0.0)));
+    assert!(!crossing((0.0, 1.0), (1.0, 1.0)));
+    assert!(!crossing((3.0, 0.0), (3.0, 1.0)));
+    // A unit of work for each side.
+    assert!(crosses(&edge, (p(1.0, 1.0), p(1.5, 1.0)), &mut Budget { max_work: 2, ..Budget::DEFAULT }.meter()).is_ok());
+    assert!(crosses(&edge, (p(1.0, 1.0), p(1.5, 1.0)), &mut Budget { max_work: 1, ..Budget::DEFAULT }.meter()).is_err());
 }
 
 #[test]

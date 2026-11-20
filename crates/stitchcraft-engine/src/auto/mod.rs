@@ -430,9 +430,9 @@ pub(crate) struct Sewing<'d> {
     pub(crate) outlines: Edges,
 }
 
-/// The outlines that digitizing made, each with the edge of its fill that it follows, as lines of points: a
-/// ring's last point is its first.
-pub(crate) type Edges = BTreeMap<ElementId, Vec<Vec<Point>>>;
+/// The outlines that digitizing made, each with its fill and the edge of the fill that it follows, as lines of
+/// points: a ring's last point is its first.
+pub(crate) type Edges = BTreeMap<ElementId, (ElementId, Vec<Vec<Point>>)>;
 
 /// Whether a hole of an area may be kept open ([`OPEN_HOLE`]), given the box round it and `meter` to charge.
 pub(crate) type Open<'o> = dyn Fn(Rect, &mut Meter) -> Result<bool, Exhausted> + 'o;
@@ -641,7 +641,7 @@ fn outline_after(
     // A name that fits by construction ([`numbered`]); an outline without one is left out.
     let named = numbered(id, 2).and_then(|name| taken.claim(name.as_str().to_string(), &mut budget.meter()).ok());
     let name = named.and_then(|name| ElementId::new(name).ok())?;
-    edges.insert(name.clone(), edge);
+    edges.insert(name.clone(), (id.clone(), edge));
     let (rest, after) = split_after(&fill.params);
     fill.params = rest.clone();
     let mut params: ParamSet = rest.iter().filter(|(key, _)| ![TURN_STITCHES, ANGLE].contains(key)).collect();

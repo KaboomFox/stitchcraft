@@ -12,7 +12,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use stitchcraft_core::diag::called;
-use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Meter, Point};
+use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Meter};
 use stitchcraft_plan::thickness::{Layer, Limits, Measure, Over, Report, Spot, Thickness};
 use stitchcraft_plan::{ElementRef, MachineProfile, StitchPlan};
 
@@ -88,8 +88,13 @@ pub(crate) fn finished(
                 plan.elements.iter().enumerate().filter(|(_, id)| of(id)).filter_map(|(at, _)| ElementRef::from_index(at)).collect()
             };
             let (base, made, columns) = (refs(&|id| base.contains(id)), refs(&|id| made.contains(id)), refs(&|id| columns.contains(id)));
-            let outlines: BTreeMap<ElementRef, Vec<Vec<Point>>> =
-                plan.elements.iter().enumerate().filter_map(|(at, id)| Some((ElementRef::from_index(at)?, outlines.get(id)?.clone()))).collect();
+            let place = |id: &ElementId| plan.elements.iter().position(|other| other == id).and_then(ElementRef::from_index);
+            let outlines: BTreeMap<ElementRef, thin::Followed> = plan
+                .elements
+                .iter()
+                .enumerate()
+                .filter_map(|(at, id)| outlines.get(id).and_then(|(fill, edge)| Some((ElementRef::from_index(at)?, (place(fill), edge.clone())))))
+                .collect();
             let lettering: BTreeMap<ElementRef, Pull> =
                 plan.elements.iter().enumerate().filter_map(|(at, id)| Some((ElementRef::from_index(at)?, *lettering.get(id)?))).collect();
             let rules = thin::Rules {

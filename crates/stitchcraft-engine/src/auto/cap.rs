@@ -363,6 +363,7 @@ impl Cap<'_, '_> {
         // left whole.
         let whole = hot;
         let after = (block, to);
+        let outline = element.and_then(|element| self.pass.rules.outlines.get(&element));
         let covered = match kind {
             Kind::Hidden => {
                 // A lettering column's underlay holds its top up, and goes only where another of the
@@ -378,7 +379,13 @@ impl Cap<'_, '_> {
                 self.ribbons.covers(&into, counts, false, meter)? && self.ribbons.covers(&out, counts, false, meter)?
             }
             Kind::Doubled | Kind::Shown => {
-                let counts = |ribbon: &Ribbon| ribbon.at != (block, at) && ribbon.at != after && (ribbon.element == element || ribbon.at > after);
+                // An outline lies on its fill, in the fill's thread: the fill's rows cover what it covered too.
+                let fill = outline.and_then(|(fill, _)| *fill);
+                let counts = |ribbon: &Ribbon| {
+                    ribbon.at != (block, at)
+                        && ribbon.at != after
+                        && (ribbon.element == element || ribbon.at > after || (fill.is_some() && ribbon.element == fill))
+                };
                 self.ribbons.covers(&into, counts, whole, meter)? && self.ribbons.covers(&out, counts, whole, meter)?
             }
         };
@@ -420,8 +427,8 @@ impl Cap<'_, '_> {
         }
         let change = Change::of(&into, &joined);
         // An outline's joined stitch lies on its fill: it crosses none of the edge the outline follows.
-        let astray = match element.and_then(|element| self.pass.rules.outlines.get(&element)) {
-            Some(edge) => crosses(edge, (joined.from, joined.to), meter)?,
+        let astray = match outline {
+            Some((_, edge)) => crosses(edge, (joined.from, joined.to), meter)?,
             None => false,
         };
         if !covered || astray {

@@ -64,7 +64,7 @@ fn columns(from: f64, width: f64) -> Vec<(f64, f64)> {
 }
 
 const NONE: &BTreeSet<ElementRef> = &BTreeSet::new();
-const NO_EDGES: &BTreeMap<ElementRef, Vec<Vec<Point>>> = &BTreeMap::new();
+const NO_EDGES: &BTreeMap<ElementRef, Followed> = &BTreeMap::new();
 
 /// No lettering's columns.
 const NO_PULL: &BTreeMap<ElementRef, crate::auto::cap::Pull> = &BTreeMap::new();
