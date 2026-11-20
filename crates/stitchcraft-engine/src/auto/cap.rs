@@ -293,19 +293,23 @@ impl Cap<'_, '_> {
     /// Takes satin columns' top points out of `points` while a spot sews above the warning's limit, one at a
     /// time: of those that may go and lower the thickest spot by half as much as the one that lowers it most,
     /// or more, the one whose joined stitch runs across the column, not along an edge, and turns least from the
-    /// stitch into it. A unit of work for each point looked at each time.
+    /// stitch into it. A unit of work for each point looked at each time. Only a point whose stitches lay
+    /// thread at the thickest spot can lower it, and only such a point is judged further, so that each point
+    /// taken costs the work of the points round its spot, not of every point near a spot above the limit
+    /// (`REQ-AUTO-101`).
     fn last_resort(&mut self, mut points: Vec<Entry>, meter: &mut Meter) -> Result<(), Exhausted> {
         while self.above(self.pass.rules.limit, meter)? {
+            let spot = self.pass.thickness.most(Measure::Fills).at;
             let mut may = Vec::new();
             for &point in &points {
                 meter.charge(1)?;
-                if let Some(change) = self.taken_out(point, Kind::Column, true, true, meter)? {
+                if let Some(change) = self.taken_out(point, Kind::Column, true, Some(spot), meter)? {
                     may.push((change, point));
                 }
             }
             let Some(point) = chosen(&may) else { break };
             points.retain(|other| *other != point);
-            self.taken_out(point, Kind::Column, true, false, meter)?;
+            self.taken_out(point, Kind::Column, true, None, meter)?;
         }
         Ok(())
     }
@@ -315,7 +319,7 @@ impl Cap<'_, '_> {
         let mut count = 0;
         for &point in points.iter().rev() {
             meter.charge(1)?;
-            if !self.pass.gone.contains(&point) && self.taken_out(point, kind, last, false, meter)?.is_some() {
+            if !self.pass.gone.contains(&point) && self.taken_out(point, kind, last, None, meter)?.is_some() {
                 count += 1;
             }
         }
@@ -323,8 +327,10 @@ impl Cap<'_, '_> {
     }
 
     /// Takes the needle point at entry `(block, at)` out of its run when it is of `kind` and may go, its 2
-    /// stitches become one, and says how that changes the stitch into it; only says so when `asked`.
-    fn taken_out(&mut self, (block, at): Entry, kind: Kind, hot: bool, asked: bool, meter: &mut Meter) -> Result<Option<Change>, Exhausted> {
+    /// stitches become one, and says how that changes the stitch into it; only says so when `asked`, with
+    /// how much it lowers that spot, the thickest. A point whose 2 stitches pass farther than [`NEAR`] from
+    /// the spot asked of lays no thread there, and lowers it by nothing: it isn't judged.
+    fn taken_out(&mut self, (block, at): Entry, kind: Kind, hot: bool, asked: Option<Point>, meter: &mut Meter) -> Result<Option<Change>, Exhausted> {
         let pass = &self.pass;
         let Some((_, role, element)) = pass.stitch((block, at)) else { return Ok(None) };
         // A point taken out is no stitch any more (`Pass::stitch`).
@@ -336,6 +342,12 @@ impl Cap<'_, '_> {
         // An underlay or travel point goes between 2 stitches of either, a top point between 2 of its shape.
         let fits = if kind == Kind::Hidden { kind.takes(next) } else { next == Role::Top && next_element == element };
         let (Some(into), Some(out)) = (pass.sewn(block, from, at), pass.sewn(block, at, to)) else { return Ok(None) };
+        if let Some(spot) = asked {
+            let place = pass.thickness.placed(spot);
+            if [&into, &out].iter().all(|stitch| to_side(place, stitch.from, stitch.to) > NEAR) {
+                return Ok(None);
+            }
+        }
         if !fits || into.from_role == Role::Lock {
             return Ok(None);
         }
@@ -421,9 +433,8 @@ impl Cap<'_, '_> {
         if !covered {
             return Ok(None);
         }
-        if asked {
+        if let Some(spot) = asked {
             // How much it lowers the thickest spot: the measure with the joined stitch, and back.
-            let spot = self.pass.thickness.most(Measure::Fills).at;
             let was = self.pass.thickness.at(Measure::Fills, spot);
             let thickness = &mut *self.pass.thickness;
             for stitch in [into, out] {
