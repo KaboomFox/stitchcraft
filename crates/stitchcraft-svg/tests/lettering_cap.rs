@@ -47,10 +47,13 @@ fn column(id: &str, (ax, ay): (f64, f64), (bx, by): (f64, f64), width: f64) -> S
 
 /// The test font, 10 mm tall, its baseline 70 mm down, every glyph 9 mm wide:
 /// - `t`: a running stitch under its bar, straight for 2.2 mm and then zigzagging, the bar, a column 1.6 mm wide across the top, and the
-///   stem, as wide, whose end reaches 1.2 mm under the bar, sewn in that order;
+///   stem, as wide, whose end reaches 1.2 mm under the bar, sewn in that order. The zigzag steps 0.5 mm along
+///   the bar, so that 2 of its stitches joined make 1 mm, shorter than the running stitch's longest: the cap
+///   joins no 2 stitches into one longer than that (`REQ-AUTO-100`), and the lock that ties the running
+///   stitch in cuts its straight part at 1.6 mm;
 /// - `x`: 3 columns 1.6 mm wide and 10 long that cross at one point, 60° apart.
 fn test_font() -> Rc<Font> {
-    let zigzag = r#"<path id="run" d="M 0.4,60.8 L 2.6,60.8 L 3.6,61.1 L 4.6,60.5 L 5.6,61.1 L 6.6,60.5 L 7.4,61.1" style="fill:none;stroke:#000000;stroke-width:0.4"/>"#;
+    let zigzag = r#"<path id="run" d="M 0.4,60.8 L 2.6,60.8 L 3.1,61.1 L 3.6,60.5 L 4.1,61.1 L 4.6,60.5 L 5.1,61.1 L 5.6,60.5 L 6.1,61.1 L 6.6,60.5 L 7.1,61.1" style="fill:none;stroke:#000000;stroke-width:0.4"/>"#;
     let t = format!(
         r#"<g inkscape:groupmode="layer" inkscape:label="GlyphLayer-t" style="display:none">{zigzag}{}{}</g>"#,
         column("bar", (0.0, 60.8), (8.0, 60.8), 1.6),
@@ -179,8 +182,11 @@ fn req_auto_120_a_satin_column_sewn_whole_tags_its_underlay() {
 fn req_auto_121_a_lettering_column_covers_as_its_own_pull_compensation_pulls_it() {
     // The running stitch under the bar turns at each needle point, and the bar, 1.6 mm wide, covers it once
     // pulled in by 0.2 mm on each side. Pulled in by the overlap of areas, 1 mm, it would cover nothing.
+    // Beyond the stem, from 6 mm across the letter on, only the bar covers the running stitch.
     let (capped, free) = capped_and_not("t");
-    let run = |plan: &StitchPlan| points(plan, |id| lettered(id) && id.contains("run")).into_iter().filter(|(_, role, _)| *role == Role::Top).count();
+    let run = |plan: &StitchPlan| {
+        points(plan, |id| lettered(id) && id.contains("run")).into_iter().filter(|(_, role, p)| *role == Role::Top && p.x() - 6.0 > 6.0).count()
+    };
     assert!(run(&capped) < run(&free), "the bar hides its running stitch's turns: {} of {}", run(&capped), run(&free));
 }
 

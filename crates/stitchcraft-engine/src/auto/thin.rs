@@ -417,9 +417,11 @@ impl Pass<'_, '_> {
     fn row_end(&mut self, (block, at): Entry, kind: Kind, cover: &[Thickness; 2], meter: &mut Meter) -> Result<(), Exhausted> {
         let Some((end, role, element)) = self.stitch((block, at)) else { return Ok(()) };
         let based = element.is_some_and(|element| self.rules.base.contains(&element));
+        // A lettering column's stitches are the font's drawing, and keep their ends (`REQ-AUTO-123`).
+        let lettered = element.is_some_and(|element| self.rules.lettering.contains_key(&element));
         let wanted = match kind {
             Kind::Base => based && role == Role::Underlay,
-            _ => !based && role == Role::Top,
+            _ => !based && !lettered && role == Role::Top,
         };
         if !wanted {
             return Ok(());
