@@ -6,12 +6,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 
 ### Added
 - M13.50: the thickness cap covers lettering (`REQ-AUTO-119` to `REQ-AUTO-124`, `SC-W0913`).
-  - Lettering that automatic digitizing places, marked text and text objects, is in the reach of the last
-    pass and the cap. No column's top stitch moves: the cap takes a column's underlay only where another column
-    covers it too, and the running stitches under a column, judging the column's cover by its own pull
-    compensation. The last resort takes no lettering column's top, and the last pass moves no end of its
-    stitches. CHANGELOG_NUMBERS
-  - A lettering column sewn whole tags its underlay underlay in the plan.
+  - The last pass and the cap now take needle points of the lettering that automatic digitizing places,
+    marked text and text objects. They keep every column's top stitch where the font puts it. The cap takes a
+    column's underlay where another column covers it too. It also takes the running stitches under a column,
+    which covers them as far as its own pull compensation pulls it. The last resort and the last pass leave
+    lettering's columns whole. CHANGELOG_NUMBERS
+  - A lettering column sewn whole tags its underlay as underlay in the plan.
   - A design of a person's own lettering is measured by the default limits and warned of, and nothing is
     taken from it.
   - The mark planning reads is `Element::lettered` (`Lettered::Set` or `Lettered::Digitized`).

@@ -105,7 +105,7 @@ A font overlaps its columns where they join, so that the fabric doesn't show bet
 pulls them in. Where 2 columns meet, their stitches lie on each other, with their underlay and the running
 stitches between them. The cap on thread ([automatic digitizing](../stitches/automatic.md#how-thick-it-sews))
 takes from marked text what other stitches cover: a column's underlay where another column covers it, and
-the running stitches under a column. It never moves a column's stitches, so the letters look as the font
+the running stitches under a column. It never moves a column's stitches. The letters look as the font
 draws them, and it leaves a column's underlay where no other column lies over it.
 
 Letters on a field, such as a patch's word, sew thicker than letters on bare fabric: the field and its base
