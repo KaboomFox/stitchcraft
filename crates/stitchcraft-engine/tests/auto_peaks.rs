@@ -114,7 +114,7 @@ fn req_auto_073_a_spot_of_a_digitized_picture_sews_above_the_cap_only_on_satin_c
     for (name, design) in designs() {
         let outcome = in_place(&design);
         let plan = outcome.plan.unwrap_or_else(|| panic!("{name}: {:?}", outcome.diagnostics));
-        let (thickest, columns) = fabric::thickest(&plan, &fabric::columns(&design));
+        let (thickest, columns) = fabric::thickest(&plan, &fabric::shown_on_top(&design));
         // No spot above the warning's limit: there the cap takes columns' points too, as a last resort.
         assert!(thickest <= limit + 1e-9, "{name}: {thickest:.2} fills");
         if thickest > cap {
@@ -167,7 +167,7 @@ fn req_auto_103_with_lines_kept_and_details_last_each_design_sews_above_the_cap_
         let design = with(&design, &reordered);
         let on = in_place(&design).plan.unwrap();
         let off = in_place(&with(&design, &[("auto_thick_cap_fills", "50")])).plan.unwrap();
-        let (thickest, columns) = fabric::thickest(&on, &fabric::columns(&design));
+        let (thickest, columns) = fabric::thickest(&on, &fabric::shown_on_top(&design));
         if thickest - columns > cap || thickest > limit + 1e-9 {
             above.push((name.clone(), hundredths(thickest), hundredths(columns)));
         }

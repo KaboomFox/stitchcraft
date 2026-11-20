@@ -80,15 +80,16 @@ pub(crate) enum Kind {
     /// A shape's top point, when its own other top stitches and those of shapes sewn after it cover all that
     /// its 2 stitches covered: it shows, so it goes last, and only where it is doubled.
     Doubled,
-    /// A satin column's top point, as a last resort where a spot still sews above the warning's limit: as a
-    /// shape's own doubled top, one point at a time, of those that lower the thickest spot, the one that
-    /// changes the column least (`REQ-AUTO-112`).
-    Column,
+    /// A top point of thread that digitizing lays to show, a satin column's or an outline's, as a last resort
+    /// where a spot still sews above the warning's limit: as a shape's own doubled top, one point at a time, of
+    /// those that lower the thickest spot, the one that changes its line least (`REQ-AUTO-112`). An outline's
+    /// joined stitch stays on its fill's side of the edge it follows (`REQ-AUTO-130`).
+    Shown,
 }
 
 impl Kind {
     /// Every kind, in order.
-    const ALL: [Kind; 4] = [Kind::Hidden, Kind::Under, Kind::Doubled, Kind::Column];
+    const ALL: [Kind; 4] = [Kind::Hidden, Kind::Under, Kind::Doubled, Kind::Shown];
 
     /// Its place among [`Kind::ALL`].
     const fn at(self) -> usize {
@@ -96,7 +97,7 @@ impl Kind {
             Kind::Hidden => 0,
             Kind::Under => 1,
             Kind::Doubled => 2,
-            Kind::Column => 3,
+            Kind::Shown => 3,
         }
     }
 
@@ -104,7 +105,7 @@ impl Kind {
     fn takes(self, role: Role) -> bool {
         match self {
             Kind::Hidden => matches!(role, Role::Underlay | Role::Travel),
-            Kind::Under | Kind::Doubled | Kind::Column => role == Role::Top,
+            Kind::Under | Kind::Doubled | Kind::Shown => role == Role::Top,
         }
     }
 }
@@ -148,22 +149,20 @@ pub(crate) fn capped(
     if thickness.most(Measure::Fills).value <= rules.cap {
         return Ok(None);
     }
-    let columns = rules.columns;
+    let (columns, outlines) = (rules.columns, rules.outlines);
+    let shown = |element: &ElementRef| columns.contains(element) || outlines.contains_key(element);
     let sewn = thickness.sewn();
     meter.charge(units(sewn.len()))?;
     let element =
         |stitch: &SewnStitch| plan.blocks.get(stitch.block).and_then(|block| block.stitches.get(stitch.index)).and_then(|entry| entry.origin.element);
     let near = thickness.near(rules.cap, NEAR, meter)?;
-    // A column's top stitches are the surface a person sees: the cap takes none of them, so it changes
-    // neither their angle nor their edge.
-    let takes = |stitch: &SewnStitch| {
-        element(stitch).is_some_and(|element| made.contains(&element) && !(stitch.role == Role::Top && columns.contains(&element)))
-    };
+    // A column's top stitches and an outline's run are the surface a person sees: the cap takes none of them,
+    // so it changes neither a column's angle nor an edge.
+    let takes =
+        |stitch: &SewnStitch| element(stitch).is_some_and(|element| made.contains(&element) && !(stitch.role == Role::Top && shown(&element)));
     let points = candidates(sewn, &near, takes);
-    // Where a spot still sews above the warning's limit, a column's top points near it are the last resort.
-    let column = |stitch: &SewnStitch| {
-        element(stitch).is_some_and(|element| made.contains(&element) && stitch.role == Role::Top && columns.contains(&element))
-    };
+    // Where a spot still sews above the warning's limit, the shown top points near it are the last resort.
+    let column = |stitch: &SewnStitch| element(stitch).is_some_and(|element| made.contains(&element) && stitch.role == Role::Top && shown(&element));
     let (last, hottest) = if thickness.most(Measure::Fills).value > rules.limit {
         let near = thickness.near(rules.limit, NEAR, meter)?;
         (candidates(sewn, &near, column), candidates(sewn, &near, takes))
@@ -248,7 +247,8 @@ impl Cap<'_, '_> {
         Ok(self.pass.thickness.most(Measure::Fills).value > limit)
     }
 
-    /// Takes satin columns' top points out of `points` while a spot sews above the warning's limit, one at a
+    /// Takes shown top points, satin columns' and outlines', out of `points` while a spot sews above the
+    /// warning's limit, one at a
     /// time: of those that may go and lower the thickest spot by half as much as the one that lowers it most,
     /// or more, the one whose joined stitch runs across the column, not along an edge, and turns least from the
     /// stitch into it. A unit of work for each point looked at each time.
@@ -257,13 +257,13 @@ impl Cap<'_, '_> {
             let mut may = Vec::new();
             for &point in &points {
                 meter.charge(1)?;
-                if let Some(change) = self.taken_out(point, Kind::Column, true, true, meter)? {
+                if let Some(change) = self.taken_out(point, Kind::Shown, true, true, meter)? {
                     may.push((change, point));
                 }
             }
             let Some(point) = chosen(&may) else { break };
             points.retain(|other| *other != point);
-            self.taken_out(point, Kind::Column, true, false, meter)?;
+            self.taken_out(point, Kind::Shown, true, false, meter)?;
         }
         Ok(())
     }
@@ -326,7 +326,7 @@ impl Cap<'_, '_> {
                 let counts = |ribbon: &Ribbon| ribbon.at > after && ribbon.element != element;
                 self.ribbons.covers(&into, counts, false, meter)? && self.ribbons.covers(&out, counts, false, meter)?
             }
-            Kind::Doubled | Kind::Column => {
+            Kind::Doubled | Kind::Shown => {
                 let counts = |ribbon: &Ribbon| ribbon.at != (block, at) && ribbon.at != after && (ribbon.element == element || ribbon.at > after);
                 self.ribbons.covers(&into, counts, whole, meter)? && self.ribbons.covers(&out, counts, whole, meter)?
             }
@@ -368,7 +368,12 @@ impl Cap<'_, '_> {
             }
         }
         let change = Change::of(&into, &joined);
-        if !covered {
+        // An outline's joined stitch lies on its fill: it crosses none of the edge the outline follows.
+        let astray = match element.and_then(|element| self.pass.rules.outlines.get(&element)) {
+            Some(edge) => crosses(edge, (joined.from, joined.to), meter)?,
+            None => false,
+        };
+        if !covered || astray {
             return Ok(None);
         }
         if asked {
@@ -394,8 +399,10 @@ impl Cap<'_, '_> {
         if role == Role::Top {
             self.ribbons.kill((block, at));
             self.ribbons.kill(after);
-            // The joined stitch: a fill's, which no pull counts, or a column's, which turns at both its ends.
-            let cut = if kind == Kind::Column { (overlap, overlap) } else { (0.0, 0.0) };
+            // The joined stitch: a fill's or an outline's, which no pull counts, or a column's, which turns at both
+            // its ends.
+            let column = element.is_some_and(|element| self.pass.rules.columns.contains(&element));
+            let cut = if kind == Kind::Shown && column { (overlap, overlap) } else { (0.0, 0.0) };
             self.ribbons.add(Ribbon::of((joined.from, joined.to), cut, after, element), meter)?;
         }
         // The stitches beside it, pulled in where they now turn.
@@ -533,6 +540,24 @@ impl Ribbons {
     }
 }
 
+/// Whether the stitch `(from, to)` crosses a side of `edge`, lines of points, or touches one between its own
+/// ends, with `meter`'s work, a unit for each side.
+fn crosses(edge: &[Vec<Point>], (from, to): (Point, Point), meter: &mut Meter) -> Result<bool, Exhausted> {
+    let side = |a: Point, b: Point, p: Point| (b.x() - a.x()) * (p.y() - a.y()) - (b.y() - a.y()) * (p.x() - a.x());
+    for line in edge {
+        for pair in line.windows(2) {
+            meter.charge(1)?;
+            let (Some(&a), Some(&b)) = (pair.first(), pair.last()) else { continue };
+            // The 2 cross where the side's ends lie on opposite sides of the stitch, or on it, and the stitch's
+            // ends on opposite sides of the side.
+            if side(from, to, a) * side(from, to, b) <= 0.0 && side(a, b, from) * side(a, b, to) < 0.0 {
+                return Ok(true);
+            }
+        }
+    }
+    Ok(false)
+}
+
 /// Whether the thread runs straight on from `first` into `next`, the stitch sewn after it: from where it ends,
 /// turning by less than [`STRAIGHT_ON`], so that the pull of the fabric doesn't move the needle hole between
 /// them.
@@ -573,7 +598,7 @@ pub(crate) fn kinds(capped: &Capped) -> String {
         "underlay and travel",
         "top stitches under later shapes",
         "a shape's own doubled top stitches",
-        "satin columns' top stitches above the warning's limit",
+        "shown top stitches, satin columns' and outlines', above the warning's limit",
     ];
     let said: Vec<String> = Kind::ALL
         .iter()

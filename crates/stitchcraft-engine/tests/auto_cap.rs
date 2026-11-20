@@ -169,7 +169,7 @@ fn drawn_columns() -> Vec<(&'static str, Design)> {
 #[test]
 fn req_auto_112_below_the_warning_s_limit_the_cap_leaves_every_top_stitch_of_a_satin_column_as_digitizing_laid_it() {
     for (name, design) in drawn_columns() {
-        let columns = fabric::columns(&design);
+        let columns = fabric::shown_on_top(&design);
         assert!(!columns.is_empty(), "{name}: no column");
         // A cap of 50 fills is above every spot, so nothing is taken. At 2, the cap takes thread wherever the
         // column lies over the area under it, its inner edge and its parts' join among those places. With the
@@ -251,7 +251,7 @@ fn req_auto_112_above_the_warning_s_limit_the_cap_takes_column_points_at_the_spo
     let plate = automatic(fill("plate", &[&[(-2.0, -2.0), (22.0, -2.0), (22.0, 22.0), (-2.0, 22.0)]], &RED, &[]));
     let cross = automatic(fill("x", &[&x], &BLUE, &[]));
     let design = Design::new(vec![plate, cross], DesignSettings::default()).unwrap();
-    let columns = fabric::columns(&design);
+    let columns = fabric::shown_on_top(&design);
     assert!(columns.len() >= 2, "{columns:?}");
     let limit = rules().auto_thick_warn_fills;
     let (on, off) = (in_place(&design).plan.unwrap(), in_place(&capped(&design, "50")).plan.unwrap());

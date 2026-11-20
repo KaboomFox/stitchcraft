@@ -101,7 +101,7 @@ use rules::{Asked, Bounds, Fired, Measures, RuleId};
 pub use thick::WARNING_CHARS;
 
 use std::borrow::Cow;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Labels, Meter, Mm, Point, Rect};
 use stitchcraft_params::{Family, ParamSet, StitchType, Validated};
@@ -392,6 +392,16 @@ pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>
     (elements, diagnostics)
 }
 
+/// The ids of the elements that automatic digitizing makes of `design`, with `budget`'s work, whose top thread
+/// it lays to show: its satin columns' and its outlines' (`REQ-AUTO-112`). The cap at the end of planning
+/// leaves that thread as digitizing laid it below the warning's limit, and a spot's thread other than it is
+/// what fills alone lay there (`REQ-AUTO-073`).
+pub fn shown(design: &Design, budget: &Budget) -> BTreeSet<ElementId> {
+    let Sewing { elements, made, outlines, .. } = sewing(design, budget);
+    let satin = |element: &Element| crate::generate::stitch_type_of(element, &design.settings).is_some_and(|stitch_type| stitch_type.family() == Family::Satin);
+    elements.iter().filter(|element| made.contains(&element.id) && (satin(element) || outlines.contains_key(&element.id))).map(|element| element.id.clone()).collect()
+}
+
 /// What [`sewing`] makes of a design.
 pub(crate) struct Sewing<'d> {
     /// The elements as they are generated, in the order they sew.
@@ -408,7 +418,15 @@ pub(crate) struct Sewing<'d> {
     /// every element but those with settings. Planning runs the thread under later shapes between them
     /// where it would jump (`REQ-AUTO-053`).
     pub(crate) made: BTreeSet<ElementId>,
+    /// The outlines among them, each with the edge of its fill that it follows (`REQ-AUTO-051`): their run is
+    /// laid to show, and the cap takes a point of it only as a last resort, joining 2 stitches only on the
+    /// fill's side of that edge (`REQ-AUTO-112`).
+    pub(crate) outlines: Edges,
 }
+
+/// The outlines that digitizing made, each with the edge of its fill that it follows, as lines of points: a
+/// ring's last point is its first.
+pub(crate) type Edges = BTreeMap<ElementId, Vec<Vec<Point>>>;
 
 /// Whether a hole of an area may be kept open ([`OPEN_HOLE`]), given the box round it and `meter` to charge.
 pub(crate) type Open<'o> = dyn Fn(Rect, &mut Meter) -> Result<bool, Exhausted> + 'o;
@@ -443,7 +461,14 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     let automatic = design.elements().iter().any(|element| element.automatic);
     if !design.sort_colours && !automatic {
         let diagnostics = marks::unused_all(&design.marks, &design.guides);
-        return Sewing { elements: Cow::Borrowed(design.elements()), diagnostics, base: Vec::new(), made: BTreeSet::new(), limits: None };
+        return Sewing {
+            elements: Cow::Borrowed(design.elements()),
+            diagnostics,
+            base: Vec::new(),
+            made: BTreeSet::new(),
+            outlines: Edges::new(),
+            limits: None,
+        };
     }
     let mut diagnostics = Vec::new();
     // Each mark's area and each guide's line are read once, before the shapes are cut to their clips.
@@ -524,8 +549,9 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     let mut beside = neighbours::beside(sewn, &design.settings, budget, how, base.map(|rules| (rules, &mut taken)));
     diagnostics.extend(std::mem::take(&mut beside.said));
     diagnostics.extend(marks.said(automatic));
+    let mut outlines = Edges::new();
     for (id, lines) in std::mem::take(&mut beside.outlines) {
-        diagnostics.extend(outline_after(&mut beside.elements, &id, lines, &mut taken, &design.settings, budget));
+        diagnostics.extend(outline_after(&mut beside.elements, &id, lines, (&mut taken, &mut outlines), &design.settings, budget));
     }
     // Of the shapes digitized, those that sew: the areas sewn after one may cover it whole.
     let mut counts = Counts::default();
@@ -539,7 +565,7 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     for element in elements.iter_mut().filter(|element| made.contains(&element.id)) {
         small_locks(&mut element.params);
     }
-    Sewing { elements: Cow::Owned(elements), diagnostics, base: beside.base, made, limits }
+    Sewing { elements: Cow::Owned(elements), diagnostics, base: beside.base, made, outlines, limits }
 }
 
 /// `design` as automatic digitizing sews its colours: each thin line that merges into a neighbour
@@ -577,7 +603,7 @@ pub fn as_merged(design: &Design, budget: &Budget) -> Result<Design, Diagnostic>
 
 /// Adds the outline of the fill `id` among `elements` after it, when it still sews: a running stitch along
 /// `lines` in the fill's thread, named after the fill with `#2`, or the next name free among `taken`, found
-/// with `budget`'s work. It has the fill's settings but those of a fill, keeps to the edge within
+/// with `budget`'s work, and kept in `edges` with `lines`, the edge it follows. It has the fill's settings but those of a fill, keeps to the edge within
 /// [`OUTLINE_TOLERANCE`] unless the fill sets a tolerance, and takes over a trim or a stop after the fill,
 /// which follows the last element of a shape. Its last line ends nearest where the element after the fill
 /// starts, in a design with `settings` ([`neighbours::ending_near`]), each with `budget`'s work to itself; an
@@ -586,12 +612,13 @@ fn outline_after(
     elements: &mut Vec<Element>,
     id: &ElementId,
     lines: Vec<Line>,
-    taken: &mut Labels,
+    (taken, edges): (&mut Labels, &mut Edges),
     settings: &DesignSettings,
     budget: &Budget,
 ) -> Option<Diagnostic> {
     let at = elements.iter().position(|element| element.id == *id)?;
     // The outline runs its tolerance inside the edge, so that its stitches keep to the area (REQ-AUTO-130).
+    let edge: Vec<Vec<Point>> = lines.iter().map(|line| line.points.iter().chain(line.closed.then(|| line.points.first()).flatten()).copied().collect()).collect();
     let set = elements.get(at).and_then(|fill| fill.params.get(TOLERANCE)).and_then(|by| by.parse::<f64>().ok());
     let target = elements.get(at + 1).and_then(|next| approach(next, settings, budget));
     let ended = neighbours::inset(lines, set.unwrap_or(OUTLINE_TOLERANCE.get()), budget, id).and_then(|lines| match &target {
@@ -607,6 +634,7 @@ fn outline_after(
     // A name that fits by construction ([`numbered`]); an outline without one is left out.
     let named = numbered(id, 2).and_then(|name| taken.claim(name.as_str().to_string(), &mut budget.meter()).ok());
     let name = named.and_then(|name| ElementId::new(name).ok())?;
+    edges.insert(name.clone(), edge);
     let (rest, after) = split_after(&fill.params);
     fill.params = rest.clone();
     let mut params: ParamSet = rest.iter().filter(|(key, _)| ![TURN_STITCHES, ANGLE].contains(key)).collect();
@@ -1212,7 +1240,7 @@ mod tests {
         let mut taken = Labels::default();
         let (design, budget) = (DesignSettings::default(), Budget::DEFAULT);
         let (a, b) = (elements[0].id.clone(), elements[1].id.clone());
-        assert_eq!(outline_after(&mut elements, &a, vec![ring, side.clone()], &mut taken, &design, &budget), None);
+        assert_eq!(outline_after(&mut elements, &a, vec![ring, side.clone()], (&mut taken, &mut Edges::new()), &design, &budget), None);
         let ids: Vec<&str> = elements.iter().map(|element| element.id.as_str()).collect();
         assert_eq!(ids, ["a", "a#2", "b"]);
         // The outline is a line a thread wide along both lines, in the fill's thread, with the fill's settings
@@ -1229,17 +1257,17 @@ mod tests {
         assert_eq!(outline.params.iter().collect::<Vec<_>>(), [(OVERLAP, "0.5"), (TOLERANCE, "0.1"), (TRIM_AFTER, "true")]);
         assert_eq!(filled.params.iter().collect::<Vec<_>>(), [(ANGLE, "30"), (OVERLAP, "0.5"), (TURN_STITCHES, "true")]);
         // A name another element has steps aside, and a fill that no longer sews has no outline.
-        assert_eq!(outline_after(&mut elements, &a, vec![side.clone()], &mut taken, &design, &budget), None);
+        assert_eq!(outline_after(&mut elements, &a, vec![side.clone()], (&mut taken, &mut Edges::new()), &design, &budget), None);
         assert_eq!(elements[1].id.as_str(), "a#2~2");
         // That one is followed by an outline, a line, which offers its first point: the side ends at its end
         // nearest that, turned round.
         let Shape::Stroke { path, .. } = &elements[1].shape else { panic!("{:?}", elements[1].shape) };
         assert_eq!(path.subpaths[0].start, p(30.0, -0.1));
         let gone = ElementId::new("gone").unwrap();
-        assert_eq!(outline_after(&mut elements, &gone, vec![side.clone()], &mut taken, &design, &budget), None);
+        assert_eq!(outline_after(&mut elements, &gone, vec![side.clone()], (&mut taken, &mut Edges::new()), &design, &budget), None);
         // The last element's outline ends where its lines do, and needs no work to find that: a unit moves its
         // one side in. It keeps the tolerance its fill sets.
-        assert_eq!(outline_after(&mut elements, &b, vec![side], &mut taken, &design, &Budget { max_work: 1, ..Budget::DEFAULT }), None);
+        assert_eq!(outline_after(&mut elements, &b, vec![side], (&mut taken, &mut Edges::new()), &design, &Budget { max_work: 1, ..Budget::DEFAULT }), None);
         assert_eq!(elements.iter().map(|element| element.id.as_str()).collect::<Vec<_>>(), ["a", "a#2~2", "a#2", "b", "b#2"]);
         assert_eq!(elements[4].params.get(TOLERANCE), Some("0.3"));
     }
@@ -1265,7 +1293,7 @@ mod tests {
             let mut elements = vec![fill("a"), fill("b")];
             let id = elements[0].id.clone();
             let budget = Budget { max_work: work, ..Budget::DEFAULT };
-            (outline_after(&mut elements, &id, vec![ring.clone()], &mut Labels::default(), &DesignSettings::default(), &budget), elements.len())
+            (outline_after(&mut elements, &id, vec![ring.clone()], (&mut Labels::default(), &mut Edges::new()), &DesignSettings::default(), &budget), elements.len())
         };
         assert_eq!(after(9), (None, 3));
         let (said, sewn) = after(8);

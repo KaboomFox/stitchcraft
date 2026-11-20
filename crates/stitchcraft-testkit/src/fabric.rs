@@ -46,7 +46,6 @@ use std::collections::BTreeSet;
 use stitchcraft_core::{Budget, Code, Point, Rect};
 use stitchcraft_engine::auto;
 use stitchcraft_engine::design::{Cap, Clip, Design, Element, Join, Shape};
-use stitchcraft_engine::generate::stitch_type_of;
 use stitchcraft_engine::normalize::{region, stroke};
 use stitchcraft_params::Family;
 use stitchcraft_plan::{Rgb, Role, SewnStitch, StitchKind, StitchPlan};
@@ -63,26 +62,26 @@ pub use likeness::{Likeness, likeness};
 pub use shown::{NOTCH, Shown, shown};
 pub use stitchcraft_plan::thickness::{Limits, Measure, Report, Thickness};
 
-/// The ids of the satin columns that automatic digitizing makes of `design`: the cap at the end of planning
-/// leaves their top stitches as digitizing laid them (`REQ-AUTO-112`).
-pub fn columns(design: &Design) -> BTreeSet<String> {
-    let (elements, _) = auto::digitized(design, &Budget::DEFAULT);
-    let satin = |element: &&Element| stitch_type_of(element, &design.settings).is_some_and(|stitch_type| stitch_type.family() == Family::Satin);
-    elements.iter().filter(satin).map(|element| element.id.to_string()).collect()
+/// The ids of the elements whose top thread automatic digitizing lays to show in `design`, its satin columns'
+/// and its outlines' (`auto::shown`, `REQ-AUTO-112`): what is left of a spot's thread without theirs is what
+/// fills alone lay there (`REQ-AUTO-073`).
+pub fn shown_on_top(design: &Design) -> BTreeSet<String> {
+    auto::shown(design, &Budget::DEFAULT).iter().map(ToString::to_string).collect()
 }
 
 /// The fills of thread at the thickest spot of `plan`, and of them the fills that the top stitches of
-/// `columns` lay there (`REQ-AUTO-073`).
+/// `shown`, the elements whose top thread digitizing lays to show ([`shown_on_top`]), lay there
+/// (`REQ-AUTO-073`).
 ///
 /// # Panics
 ///
 /// When the plan sews no stitch, or is too large to measure.
-pub fn thickest(plan: &StitchPlan, columns: &BTreeSet<String>) -> (f64, f64) {
+pub fn thickest(plan: &StitchPlan, shown: &BTreeSet<String>) -> (f64, f64) {
     let report = thickness(plan, &Limits::DEFAULT);
-    let column = |layer: &&stitchcraft_plan::thickness::Layer| {
-        layer.element.and_then(|element| plan.elements.get(element.index())).is_some_and(|id| columns.contains(id.as_str()))
+    let on_top = |layer: &&stitchcraft_plan::thickness::Layer| {
+        layer.element.and_then(|element| plan.elements.get(element.index())).is_some_and(|id| shown.contains(id.as_str()))
     };
-    (report.fills.value, report.stack.iter().filter(column).map(|layer| layer.top).sum())
+    (report.fills.value, report.stack.iter().filter(on_top).map(|layer| layer.top).sum())
 }
 
 /// How thick `plan` sews against `limits`, with the default budget's work.

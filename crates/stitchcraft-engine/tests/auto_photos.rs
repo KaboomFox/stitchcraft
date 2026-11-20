@@ -339,7 +339,7 @@ fn req_auto_102_digitized_dogs_sew_above_the_cap_only_on_satin_columns() {
     let above: Vec<(String, f64, f64)> = planned()
         .iter()
         .map(|(name, design, plan)| {
-            let (thickest, columns) = fabric::thickest(plan, &fabric::columns(design));
+            let (thickest, columns) = fabric::thickest(plan, &fabric::shown_on_top(design));
             (name.clone(), thickest, columns)
         })
         .filter(|(_, thickest, columns)| thickest - columns > cap || *thickest > limit + 1e-9)
@@ -366,7 +366,7 @@ fn req_auto_103_digitized_dogs_with_lines_kept_and_details_last_sew_above_the_ca
             element.params.set(auto::DETAILS_LAST, "true");
         }
         let plan = in_place(&Design::new(elements, design.settings).unwrap()).plan.unwrap();
-        let (thickest, columns) = fabric::thickest(&plan, &fabric::columns(design));
+        let (thickest, columns) = fabric::thickest(&plan, &fabric::shown_on_top(design));
         if thickest - columns > rules().auto_thick_cap_fills || thickest > rules().auto_thick_warn_fills + 1e-9 {
             above.push((name.clone(), thickest, columns));
         }

@@ -57,9 +57,10 @@ fn rows(width: f64, apart: f64) -> Vec<(f64, f64)> {
 }
 
 const NONE: &BTreeSet<ElementRef> = &BTreeSet::new();
+const NO_EDGES: &BTreeMap<ElementRef, Vec<Vec<Point>>> = &BTreeMap::new();
 
 fn rules() -> Rules<'static> {
-    Rules { cap: 4.0, limit: 4.0, base: NONE, columns: NONE, overlap: 0.0, shortest: 0.3, longest: 12.1 }
+    Rules { cap: 4.0, limit: 4.0, base: NONE, columns: NONE, outlines: NO_EDGES, overlap: 0.0, shortest: 0.3, longest: 12.1 }
 }
 
 /// Every element of `plan`, as digitizing made them all.
@@ -247,7 +248,7 @@ fn said(sewn: &StitchPlan, budget: &Budget) -> (Vec<Diagnostic>, StitchPlan) {
     let mut kept = sewn.clone();
     let made: BTreeSet<ElementId> = sewn.elements.iter().cloned().collect();
     let said =
-        finished(&mut kept, &held, (&[], &made, &BTreeSet::new()), stitchcraft_plan::profiles::REFERENCE, &crate::names::Names::default(), budget);
+        finished(&mut kept, &held, (&[], &made, &BTreeSet::new(), &BTreeMap::new()), stitchcraft_plan::profiles::REFERENCE, &crate::names::Names::default(), budget);
     (said, kept)
 }
 

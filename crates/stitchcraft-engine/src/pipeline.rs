@@ -55,7 +55,7 @@ pub struct PlanOutcome {
 /// work to itself, and the stitches the elements before it left; assembling and finalizing have the work
 /// once more, and the design `budget`'s stitches.
 pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanOutcome {
-    let Sewing { elements, mut diagnostics, base, made, limits } = sewing(design, budget);
+    let Sewing { elements, mut diagnostics, base, made, outlines, limits } = sewing(design, budget);
     let candidates: Vec<Candidate> = elements.iter().map(|element| Candidate::of(element, &design.settings)).collect();
     let (steps, lone) = steps(&candidates);
     diagnostics.extend(lone.into_iter().filter_map(|(k, why)| elements.get(k).map(|element| alone(element, why))));
@@ -129,7 +129,7 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
             // A design digitized automatically is thinned where a spot sews above the cap (`REQ-AUTO-074`),
             // told where it sews thick (`SC-W0913`), and is written.
             if let (Some(held), Some(plan)) = (limits, plan.as_mut()) {
-                diagnostics.extend(thick::finished(plan, &held, (&base, &made, &columns), profile, &names, budget));
+                diagnostics.extend(thick::finished(plan, &held, (&base, &made, &columns, &outlines), profile, &names, budget));
             }
             plan
         }

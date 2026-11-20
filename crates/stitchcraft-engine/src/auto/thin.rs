@@ -117,6 +117,9 @@ pub(crate) struct Rules<'r> {
     /// the surface a person sees, and the thread under their edges keeps those covered once the fabric pulls
     /// them in (`REQ-AUTO-112`, `REQ-AUTO-114`).
     pub(crate) columns: &'r BTreeSet<ElementRef>,
+    /// The outlines that digitizing made, by their places in the plan's elements, each with the edge of its
+    /// fill that it follows: their run is laid to show, as a column's top stitches are (`REQ-AUTO-112`).
+    pub(crate) outlines: &'r BTreeMap<ElementRef, Vec<Vec<Point>>>,
     /// How far a row's end may move back along its row, in millimetres: the overlap of areas.
     pub(crate) overlap: f64,
     /// The machine's shortest stitch, in millimetres, which no stitch the pass shortens goes under.
