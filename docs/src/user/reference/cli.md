@@ -98,6 +98,9 @@ Options:
       --colours <N>
           How many colours a picture has, its background included: Image Trace traces it in at most that many of the machine's threads, 2 to 256; by default 6
 
+      --fewer-points
+          Trace a picture with fewer points: Image Trace's Paths and Corners at their lowest, which draw its outlines with about a third fewer anchors and fewer jags. Off by default, since it changes how many shapes of a traced picture sew
+
       --traced <FILE>
           Also write the document VectorCraft traced a picture into (.vectorcraft), to correct the trace in VectorCraft
 

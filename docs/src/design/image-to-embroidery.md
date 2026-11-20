@@ -3775,7 +3775,8 @@ It gives it 4 steps on standard input, where a picture of any size fits. They ar
 2. `file.place` places the picture's bytes, fitted inside a square `--size` millimetres across, or else
    inside the machine's hoop 0.5 mm in from each side, its aspect kept.
 3. `imageTrace.make` traces it in colour with the library's colours as they are, at most `--colours` of
-   them, by the Abutting method, so that the shapes share their edges.
+   them, by the Abutting method, so that the shapes share their edges. With `--fewer-points` it fits their
+   outlines with fewer points ([the tracer's options](#the-tracers-options)).
 4. `imageTrace.expand` keeps the paths, without the picture.
 
 VectorCraft saves the document into a folder of the command's own beside the machine file, named as
@@ -3808,6 +3809,280 @@ the report.
 StitchCraft traces nothing itself. A tracer of its own would repeat VectorCraft's, which a harness
 measures. It would also trace a picture otherwise than VectorCraft does, and the command line would then
 sew it unlike the tutorial's flow.
+
+## Outlines thread can't show
+
+Roadmap step M13.51 measured the outlines of traced pictures and gives `stitch plan` an option,
+`--fewer-points`, off by default, that asks Image Trace for fitting options of its own (`REQ-CLI-024`). Step M13.52 builds the smoothing pass that this
+section describes, as a setting off by default (`REQ-AUTO-131` to `REQ-AUTO-134`, planned), and adds the
+notice `SC-I0921`.
+
+The owner, on 2026-11-19: "often time there are too many points and you need to simplify the number of
+points in the shape". She simplifies traced shapes by hand in a drawing program before she sews them. The
+trade treats it as a fault: clusters of tiny points sew dense spots and ragged edges. Wilcom's
+[Smooth Curves](https://docs.wilcom.com/embroiderystudio/e4/en/MainHelp/Automatic/vectors/Smoothing_curves.htm)
+and Bernina's [Smooth curves](https://softwarehelp.bernina.com/en/MainHelp/PART_Modifying/edit_objects/Smooth_curves.htm)
+each take one precision value. A higher value leaves fewer points, which follow the outline less closely.
+
+### The points and wobble of traced outlines
+
+Every traced picture of the repository was measured, with a traced lettered patch and 4 traced photos kept
+outside it. The test sheets' traced halves are drawn exactly in code and have no wobble. A thread is
+0.4 mm wide.
+
+| Picture | Shapes | Anchors | Anchors per mm | Most on one subpath | Points needed within 0.1 mm | Jags per 10 mm | Teeth per 10 mm |
+|---|---|---|---|---|---|---|---|
+| The pear | 6 | 592 | 0.51 | 267 | 13 % | 0.57 | 2.28 |
+| Dog on turf, 6 threads | 97 | 1,902 | 0.81 | 146 | 12 % | 0.75 | 1.74 |
+| Dog on turf, 9 threads | 115 | 2,096 | 0.84 | 161 | 11 % | 0.67 | 1.82 |
+| Dog running, 6 threads | 83 | 1,827 | 0.75 | 115 | 11 % | 0.46 | 1.45 |
+| Dog running, 9 threads | 107 | 2,090 | 0.74 | 91 | 11 % | 0.45 | 1.46 |
+| Lettered patch, traced | 37 | 3,230 | 0.75 | 176 | 7 % | 1.55 | 0.53 |
+| Photo of a flower | 2,014 | 51,613 | 3.07 | 1,905 | 9 % | 8.08 | 2.81 |
+| Photo of a leafy plant | 3,985 | 118,672 | 3.74 | 1,132 | 11 % | 14.84 | 3.07 |
+| Photo of a bird | 1,813 | 68,099 | 3.49 | 3,629 | 10 % | 11.14 | 3.15 |
+| Photo of a building | 1,444 | 63,361 | 4.14 | 3,932 | 12 % | 16.58 | 2.18 |
+
+- **The shapes share their edges exactly.** Image Trace's Abutting method gives 2 neighbours the same
+  anchors along the edge they share. Of the pear's 294 distinct anchors, 282 belong to 2 shapes and 8 to 3,
+  where 3 colours meet. The edges coincide to less than a micrometre. 69 % of the pear's outline length
+  and 89 to 99 % of the others' lies along another shape.
+- **Few points draw what thread shows.** The column of points needed counts the points of a polyline
+  that stays within 0.1 mm of the outline flattened ([Douglas and Peucker, 1973](https://doi.org/10.3138/FM57-6770-U75U-7727)),
+  as a share of the flattened outline's points.
+- **A jag** is a turn of 20° or more that turns back within 0.4 mm along the outline, measured on the
+  outline resampled every 0.05 mm, the direction taken over 0.1 mm. Thread is wider than a jag.
+  **A tooth** turns back within 0.4 to 1.6 mm, and thread shows it.
+- **The pear's ragged colour edges are teeth.** Its photo's pixel is 0.28 mm. Where one band of colour
+  meets the next in a gradient, the trace follows a staircase of 3 to 5 pixels, and its teeth stand 0.5 to
+  1.5 mm tall.
+
+**What the wobble costs.** The planner's rules read an outline's points. The traced dogs, given as the
+same outlines flattened to polylines within 0.005 mm, sew 16 to 22 of their 69 to 92 shapes by another
+rule, most of them `refused` for columns where the curves gave columns. Today the 4 dogs sew 12,659
+stitches under 0.5 mm, 29 % of their stitches, and lay 12 stitches astray. A move of the whole picture by
+0.05 mm in x and y, the shift test of M13.47, changes the rule of no shape on any of these pictures.
+
+**Traced letters flip for another reason.** M13.47 found traced letters sewn as fills where the same
+letters drawn exactly sew as columns. Its 558 letters, 3 typefaces at 6, 12 and 25 mm, each traced from a
+render of 40 pixels per mm, were measured. 32 letters sew by another rule than their exact outlines. The
+H of the sans-serif bold at 12 mm is refused for columns because its stems' inner edges lean 0.025 mm over
+4.5 mm. That edge is a straight line, and smoothing leaves a straight line where it is. Smoothed at 0.1 and 0.2 mm, 55 and 46 traced letters
+sew by another rule than their exact outlines smoothed the same way, and smoothing alone changes the rule
+of about 50 exact letters. A block H, T and L drawn with one jog of 0.025, 0.05 or 0.1 mm at an inner
+corner sew as columns, as they do without the jog. A leaning stem belongs to the columns' design, and
+smoothing doesn't fix it.
+
+### The tracer's options
+
+`stitch plan picture.png` asks Image Trace for its mode, palette, colours and method, and leaves its
+fitting options at their defaults, which are Paths 50, Corners 75 and Noise 25, with Snap Curves To Lines
+off. The tracer fits an edge once for both shapes that share it. Its options smooth an edge without
+opening a gap. The pear and the 4 dogs were traced again from their sources by VectorCraft 0.24.1's command line, once for each value,
+and planned by `main` at `00b45915`. The counts are the 5 pictures' together:
+
+| Options | Anchors | Jags per 10 mm | Teeth per 10 mm | Colour error | Stitches under 0.5 mm | Astray | Jump threads | Detail lost | Shapes |
+|---|---|---|---|---|---|---|---|---|---|
+| Defaults (50, 75, 25, off) | 8,507 | 0.58 | 1.75 | 30.1 | 13,430 | 12 | 237 | 9.9 % | 408 |
+| Paths 0 | 7,070 | 0.58 | 1.76 | 30.1 | 13,106 | 17 | 221 | 9.9 % | 408 |
+| Paths 25 | 7,505 | 0.58 | 1.75 | 29.9 | 13,380 | 17 | 222 | 9.9 % | 408 |
+| Paths 100 | 16,469 | 1.08 | 1.70 | 29.5 | 13,825 | 2 | 233 | 10.4 % | 408 |
+| Corners 0 | 8,037 | 0.39 | 1.41 | 30.2 | 13,594 | 11 | 215 | 10.0 % | 408 |
+| Corners 25 | 8,011 | 0.38 | 1.43 | 30.2 | 13,319 | 7 | 217 | 10.1 % | 408 |
+| Corners 100 | 9,678 | 1.09 | 2.06 | 29.9 | 13,722 | 7 | 237 | 9.6 % | 408 |
+| Noise 10 | 10,832 | 0.74 | 1.88 | 28.5 | 14,002 | 44 | 285 | 12.6 % | 702 |
+| Noise 50 | 7,166 | 0.52 | 1.68 | 31.4 | 12,817 | 11 | 196 | 2.2 % | 276 |
+| Noise 200 | 4,841 | 0.40 | 1.50 | 36.7 | 10,081 | 2 | 73 | 0.0 % | 115 |
+| Snap Curves To Lines | 8,466 | 0.58 | 1.72 | 30.2 | 13,188 | 10 | 232 | 9.9 % | 408 |
+| Paths 25, Corners 25 | 6,307 | 0.29 | 1.24 | 30.0 | 13,112 | 8 | 220 | 10.2 % | 408 |
+| Paths 0, Corners 0 | 5,336 | 0.23 | 1.06 | 30.2 | 13,190 | 13 | 218 | 9.8 % | 408 |
+
+The colour error is the mean distance in RGB between the trace and its source picture, over the picture's
+pixels. Detail lost is the likeness measure's, against the trace itself. A trace that drops shapes
+doesn't lose detail by that measure, and its colour error shows the loss.
+
+- **Paths** sets how closely a curve follows the pixels: within 0.08 pixels at 100, 0.33 at 50 and 0.78
+  at 0. At 0 it saves 17 % of the anchors and changes nothing else.
+- **Corners** sets the turn that makes a corner: 90° at 0, 49° at 75 and 35° at 100. Each step of a
+  staircase turns about 90°. The default keeps a staircase as corners. At 0 or 25 the jags fall by a
+  third.
+- **Noise** is the size in pixels below which an area is dropped. Raised, it drops the dogs' small shapes and
+  their detail with them: the colour error rises by 1.4 at 50 and 6.6 at 200. Lowered to 10, it adds 294
+  shapes and 32 stitches astray.
+- **Snap Curves To Lines** moves each measure by less than 2 neighbouring values of Paths or Corners do.
+
+**Built (M13.51).** `stitch plan --fewer-points` sends Paths 0 and Corners 0 for a picture it traces, in
+every style. Noise stays 25. Without the option, the default, `stitch plan` doesn't send a fitting option,
+as before M13.51. Corners 0 rounds each turn under 90° of a drawn logo, such as an octagon's, so a person
+leaves the option out for a logo.
+
+Each picture was traced from its source by VectorCraft 0.24.1's command line with the defaults and with
+the 2 options, and planned by this step's code. The pictures are the pear, the 4 dogs, the badge of the
+compatibility gate drawn flat and a stitched preview of the lettered patch, traced as a photo of it.
+Each cell gives the trace with the defaults, then with the options. Area at 3 fills is the area under 3
+fills of thread or more:
+
+| Measure | Pear | Dog on turf, 6 | Dog on turf, 9 | Dog running, 6 | Dog running, 9 | Badge | Lettered patch |
+|---|---|---|---|---|---|---|---|
+| shapes traced | 6 to 6 | 97 to 97 | 115 to 115 | 83 to 83 | 107 to 107 | 12 to 12 | 749 to 749 |
+| anchors | 592 to 346 | 1902 to 1195 | 2096 to 1361 | 1827 to 1126 | 2090 to 1308 | 754 to 326 | 13642 to 9800 |
+| jags/10mm | 0.57 to 0.13 | 0.75 to 0.24 | 0.67 to 0.35 | 0.46 to 0.2 | 0.45 to 0.22 | 0.21 to 0.1 | 0.4 to 0.19 |
+| teeth/10mm | 2.28 to 1.66 | 1.74 to 1.04 | 1.82 to 1.11 | 1.45 to 0.72 | 1.46 to 0.75 | 0.52 to 0.07 | 0.43 to 0.36 |
+| colour error | 23.5 to 23.6 | 29.9 to 30.5 | 29.1 to 29.4 | 36.0 to 35.5 | 31.8 to 31.9 | 13.7 to 14.1 | 74.1 to 74.6 |
+| stitches | 4628 to 4551 | 9530 to 9459 | 10100 to 9859 | 10630 to 10240 | 11779 to 11849 | 3144 to 3726 | 16683 to 16964 |
+| Stitches under 0.5 mm | 757 to 735 | 2582 to 2609 | 2797 to 2727 | 2969 to 2828 | 3263 to 3357 | 355 to 568 | 2196 to 2203 |
+| jump threads | 2 to 2 | 60 to 53 | 62 to 60 | 49 to 48 | 64 to 55 | 11 to 8 | 354 to 321 |
+| thread changes | 2 to 2 | 8 to 7 | 12 to 11 | 8 to 8 | 11 to 11 | 2 to 3 | 8 to 8 |
+| thickest fills | 3.99 to 3.81 | 3.87 to 4.0 | 3.97 to 3.96 | 3.92 to 4.04 | 3.98 to 3.99 | 4.0 to 3.98 | 3.92 to 4.0 |
+| Area at 3 fills (mm²) | 10.5 to 9.0 | 54.2 to 74.5 | 63.8 to 80.5 | 53.5 to 70.5 | 94.0 to 114.2 | 32.8 to 21.8 | 31.8 to 101.2 |
+| bare % | 0.0 to 0.0 | 0.04 to 0.02 | 0.04 to 0.01 | 0.01 to 0.0 | 0.02 to 0.01 | 1.06 to 0.29 | 1.23 to 1.96 |
+| astray | 0 to 0 | 4 to 5 | 3 to 3 | 1 to 3 | 4 to 2 | 13 to 21 | 90 to 118 |
+| detail lost % | 0.0 to 0.0 | 14.4 to 13.9 | 17.1 to 16.1 | 10.2 to 10.8 | 7.9 to 8.0 | 25.0 to 6.2 | 16.3 to 16.3 |
+| Parts sewn | 9 to 10 | 156 to 148 | 174 to 177 | 149 to 138 | 191 to 178 | 22 to 22 | 428 to 472 |
+| Time to plan (s) | 0.5 to 0.5 | 4.2 to 2.6 | 5.7 to 4.7 | 5.4 to 4.2 | 6.0 to 6.5 | 0.3 to 0.3 | 14.0 to 11.7 |
+| shapes whose rule changes | 0 of 5 | 40 of 78 | 50 of 90 | 29 of 69 | 35 of 92 | 5 of 9 | 69 of 550 |
+
+- **Better.** The anchors fall by 28 to 57 %, the jags by 48 to 77 % and the teeth by 16 to 87 %. The dogs
+  sew 1.5 % fewer stitches and leave 8 % fewer jump threads, and the colour error and the detail lost
+  stay within 1 of what they were. Every picture traces into the same shapes, so no shape is lost. The
+  badge's ring keeps more of its likeness, since it is traced as a ring of even width.
+- **Worse.** The dogs have 28 % more area at 3 fills, 340 mm² where they had 266, and one of them sews
+  4.04 fills at its thickest spot, past the 4 fills where the warning starts. The lettered patch has 3
+  times the area at 3 fills, and 118 stitches astray where it had 90. The badge, flat art traced without
+  the `logo` style, sews 18 % more stitches and 60 % more short ones.
+- **Rules.** 29 to 50 of each dog's 69 to 92 shapes sew by another rule, as the shapes' outlines change.
+  The pear's shapes sew as they did.
+
+**Off by default.** The previews of the dogs with and without the options look alike to the eye, with
+other jumps, and the options change how a
+traced picture sews far more than its outlines change. A shape's stitch rule reacts to how its outline
+is drawn, so a third to a half of each dog's shapes sew by another rule, more of the design sews thick,
+and one dog passes the warning's limit. Until that rule is steady against how an outline is drawn, which
+step M13.53 takes up, the fewer points aren't a gain a person gets for free. They wait for M13.53 to be
+measured again, and turned on by default if they then show a clear gain.
+
+The committed traces of the pear and the dogs are not traced again: they are the inputs of their own
+cases, and this step changes only what `stitch plan` asks the tracer.
+
+### Smoothing in StitchCraft
+
+The tracer's options reach only pictures `stitch plan` traces itself. A document traced in VectorCraft by
+hand, or by another tracer, reaches StitchCraft as it is. The pass below smooths an automatic area's
+outline at a tolerance, before anything is digitized. M13.52 builds it. The numbers below are a prototype's,
+measured in M13.51 on traces made with the tracer's defaults.
+
+**The rule.** The setting `auto_smooth_mm` is how far a point of an outline may move. 0 turns the pass off.
+
+1. **Edges.** The outlines of the automatic areas whose setting is on are cut into edges at their
+   junctions: a point where 3 or more edges meet. A segment is the same in 2 outlines when its ends and
+   control points are, either way round, so an edge 2 areas share is one edge. An edge shared with an
+   area whose setting is 0, or with a shape with settings, stays as drawn. An edge 2 areas share is
+   smoothed at the smaller of their settings.
+2. **Corners.** Its corners cut an edge again. A corner is a point where the outline's direction
+   over 4 times the tolerance before it and after it differs by 60° or more, the sharpest point of each
+   run of such points. Junctions and corners stay where they are. A staircase of pixels smaller than the
+   tolerance turns both ways within that span, and so has no corner.
+3. **Smoothing.** Each piece between fixed points is resampled every fifth of the tolerance and smoothed
+   by a Gaussian whose deviation is the tolerance, measured along the piece. The piece is reflected through
+   each fixed end, so that the ends stay. The smoothed piece may lie no farther than the tolerance from the
+   piece as drawn, nor the piece as drawn from it (their Hausdorff distance). Where it would, or where a
+   ring would gain or lose more than 10 % of its area, the deviation shrinks by 0.7, up to 8 times, and
+   then the piece stays as drawn.
+4. **Crossings.** An edge whose smoothed line would cross another line is smoothed again with half the
+   deviation. That repeats until the line crosses none, and at last the edge stays as drawn.
+5. **Fewer points.** The smoothed edge is drawn with the fewest of its points that stay within 0.02 mm
+   of it, and every area along it takes that line.
+
+Every area that shares an edge has the same line along it, so no gap or overlap opens between them. The
+pass charges the element's budget for each point it resamples and each pair of segments it tests for a
+crossing. An area whose pass needs more keeps its outline, and `SC-I0921` names it.
+
+**The literature.** Douglas and Peucker keep the points that lie farthest from a chord, so they keep the
+tips of jags, and cut points without smoothing. Visvalingam and Whyatt
+([1993](https://eprints.lancs.ac.uk/id/eprint/135032)) remove the point whose triangle with its
+neighbours has the least area, one point after another, and leave outlines less jagged. Saalfeld
+([1999](https://www.bohrium.com/paper-details/topologically-consistent-line-simplification-with-the-douglas-peucker-algorithm/811959494144688129-144))
+showed that removing points can make a line cross another, and gave tests that keep it from doing so.
+PostGIS's [ST_CoverageSimplify](https://postgis.net/docs/ST_CoverageSimplify.html) simplifies the edges a
+set of polygons shares, each once, with a variant of Visvalingam and Whyatt, so that the polygons still
+cover their area without gaps: the shared edges of the rule are the same idea. A Gaussian along a curve
+is the smoothing of curvature scale space
+([Mokhtarian and Mackworth, 1992](https://www.cs.ubc.ca/~mack/Publications/b2hd-IEEE-PAMI92.html)). It
+pulls a convex curve inward by about the deviation squared over twice its radius, under 0.01 mm for a
+radius of 2 mm at 0.2 mm. The rule uses the Gaussian because it averages a jag away, where a method that
+keeps points keeps its tip.
+
+**VectorCraft's Simplify.** `object.path.simplify` refits each path, or each run of selected segments
+between anchors that stay
+([its MCP guide](https://github.com/storytold/vectorcraft/blob/main/docs/mcp.md#simplify)). It refits a
+path on its own, and its guide doesn't say that a run refits the same way in both directions, so the 2
+shapes of a shared edge can take 2 different lines. `stitch plan doc.vectorcraft` also runs without
+VectorCraft. The pass is StitchCraft's. A Simplify that refits the edges a selection's shapes share once
+is a candidate for the plug-in features RFC.
+
+### The prototype's numbers
+
+The prototype is a script of the step's notes, written from the rule above without the 10 % area bound.
+It smoothed each picture at 4 tolerances, and `main` at `00b45915` planned the results. Points are those
+needed within 0.02 mm, each shared edge counted once. Short stitches and stitches are the change from the
+pictures as traced. Recoloured is the share of the picture's area whose colour the smoothing changed,
+drawn at 10 pixels per mm.
+
+| Tolerance | Points, 4 dogs | Points, 4 photos | Jags, dogs | Jags, photos | Teeth, dogs | Short stitches, dogs | Stitches, dogs | Short stitches, pear | Short stitches, patch | Recoloured, dogs | Recoloured, photos | Dogs' shapes whose area moved over 10 % | Photos' shapes lost |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 0.1 mm | 11,481 to 11,647 | 224,528 to 177,423 | 0.58 to 0.71 | 12.7 to 8.0 | 1.62 to 1.70 | -1 % | -0.3 % | +3 % | -13 % | 1.5 to 1.8 % | 2.8 to 6.0 % | 0 | 0 |
+| 0.2 mm | 11,481 to 11,727 | 224,528 to 144,448 | 0.58 to 0.58 | 12.7 to 4.1 | 1.62 to 1.37 | -3 % | -1.7 % | -6 % | -12 % | 1.8 to 2.2 % | 4.0 to 8.7 % | 0 | 0 |
+| 0.4 mm | 11,481 to 10,659 | 224,528 to 113,794 | 0.58 to 0.23 | 12.7 to 1.8 | 1.62 to 0.69 | -6 % | -2.9 % | -15 % | -13 % | 3.0 to 3.9 % | 5.9 to 12.7 % | 14 | 41 |
+| 0.8 mm | 11,481 to 8,838 | 224,528 to 85,922 | 0.58 to 0.06 | 12.7 to 1.0 | 1.62 to 0.24 | -16 % | -8.7 % | -21 % | -15 % | 6.1 to 7.6 % | 8.3 to 17.8 % | 136 | 1287 |
+
+- **At 0.1 and 0.2 mm** nothing moves farther than half a thread. The photos, traced at 3 to 4 anchors per
+  mm, need 21 % fewer points at 0.1 mm and 36 % fewer at 0.2 mm, and at 0.2 mm their jags fall from 12.7 to 4.1 in every 10 mm.
+  Planned at 0.2 mm, the 4 photos sew 7 % fewer stitches and 18 to 24 % fewer stitches under 0.5 mm, with as many jumps, and plan in 18 to 59 % less time. Their fabric measures, stitches astray and likeness, were not run: each takes hours on the shared machine. The dogs and the pear, already fitted as curves at under 1 anchor per mm, need as many
+  points as before, and sew 3 and 6 % fewer short stitches at 0.2 mm. The traced lettered patch sews 12 % fewer and 4
+  more of its parts as satin columns.
+- **At 0.4 mm** the jags and teeth of the dogs halve, and the outlines move as far as a thread is wide.
+- **At 0.8 mm** the pear's teeth are gone in the step's pictures, but 7 % of the dogs' area
+  changes colour and 136 of their shapes grow or shrink by more than 10 %. The photos lose 1,287 small
+  shapes, which the area bound keeps.
+- **Rules.** The dogs sew 17 to 29 of their shapes by another rule at 0.1 and 0.2 mm, about as many as the
+  same outlines flattened, with more columns (48 to 59 at 0.2 mm) and as many refused. The shift test
+  doesn't change a rule at 0.2 mm either. At 0.4 mm 104 parts are refused where 85 are today. Not every changed rule is better: on the flower photo at 0.2 mm, a petal's part that was filled sews
+  as a column whose stitches fan along an edge still ragged at a thread's scale.
+- **Points on the dogs.** The tracer has already fitted their outlines as curves. The pass draws a smoothed
+  curve with straight lines within 0.02 mm, which takes as many points. The tracer's Paths 0 and Corners 0
+  are what cuts their points.
+
+### The setting and the notice
+
+- **`auto_smooth_mm`**, a length from 0 to 1 mm in the Auto effect's main section, labelled "Smooth
+  outlines". 0 is off and the default, for a document and for a picture `stitch plan` traces alike. A
+  person sets it with `--set auto_smooth_mm=0.2`. 0.2 mm is half a thread: on every picture of the set it
+  cut short stitches, with nothing moved that thread shows.
+- **`SC-I0921`**, info, once for the design: "The outlines of 107 automatic areas were smoothed within
+  0.2 mm: they are drawn with 3,126 points, where 3,067 drew them within 0.02 mm." It names the areas
+  whose pass needed more than the budget, which keep their outlines.
+- **Shapes a person drew.** VectorCraft's Expand leaves plain paths, so a document doesn't say which of
+  its shapes were traced. StitchCraft never smooths a document's shapes unless the setting asks, and never a shape with
+  settings. An edge such a shape shares stays as drawn on both sides.
+
+### The owner's decisions
+
+On 2026-11-20 the owner decided:
+
+1. **The tracer's options.** Paths 0 and Corners 0 as an option of `stitch plan`, off by default, as for
+   the smoothing pass. M13.51 built it.
+2. **The smoothing pass.** Off by default everywhere, pictures `stitch plan` traces included, and built all
+   the same as a setting (M13.52).
+3. **The pear's teeth.** Thread shows them, so no default removes them. A person who wants a clean edge
+   between 2 bands of colour sets `auto_smooth_mm` to 0.8 mm once M13.52 builds it.
+4. **Traced letters that flip.** Not these steps': a later step looks at the columns' rule for a stem that
+   leans by a pixel.
+
+### What isn't built
+
+The pass, its setting and its notice are M13.52's. The prototype had no area bound, and lost small shapes
+of the photos at 0.4 mm and over. The cases in `crates/stitchcraft-engine/tests/auto_smooth.rs` that need
+the pass are ignored as planned ([conformance](conformance.md#cases-of-planned-requirements)) until then.
 
 ## Subject cut-out
 

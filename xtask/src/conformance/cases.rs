@@ -297,6 +297,9 @@ pub struct RustCase {
     /// Why the tests' debug build leaves it out when it runs only in the release build: the reason its
     /// `#[cfg_attr(debug_assertions, ignore = "…")]` gives, which starts with [`RELEASE_ONLY`].
     pub release_only: Option<String>,
+    /// Why it is ignored in every build when it is the case of a requirement not built yet: the reason its
+    /// `#[ignore = "…"]` gives, which starts with [`PLANNED`].
+    pub planned: Option<String>,
 }
 
 /// How the reason a case ignored in every build gives starts when it needs the subject cut-out's models,
@@ -308,6 +311,12 @@ pub const MODELS_ONLY: &str = "models only: ";
 /// build, which a step of CI runs: `ignore = "release only: CI's perf job runs tests/auto_photos.rs"`. A
 /// case may be ignored for no other reason (`docs/src/design/conformance.md` › Cases in the release build).
 pub const RELEASE_ONLY: &str = "release only: ";
+
+/// How the reason a case ignored in every build gives starts when it is the case of a `planned` requirement,
+/// written before the code that makes it pass: `ignore = "planned: M13.52 builds the smoothing pass"`. The
+/// code's step removes the attribute when it makes the requirement `active` (`docs/src/design/conformance.md`
+/// › Cases of planned requirements).
+pub const PLANNED: &str = "planned: ";
 
 /// Every `fn req_…` and `fn diag_…` in the workspace's crates and apps, in file order.
 pub fn discover_rust_cases(root: &Path, findings: &mut Findings) -> Vec<RustCase> {
@@ -327,8 +336,9 @@ pub fn discover_rust_cases(root: &Path, findings: &mut Findings) -> Vec<RustCase
                 }
                 let release_only = release_only(before);
                 let models_only = models_only(before);
+                let planned = planned(before);
                 match requirement_of_test(name).or_else(|| code_of_test(name)) {
-                    Some(covers) => cases.push(RustCase { name: name.to_string(), covers, file, models_only, release_only }),
+                    Some(covers) => cases.push(RustCase { name: name.to_string(), covers, file, models_only, release_only, planned }),
                     None if name.starts_with("req_") => {
                         findings.error(format!("{file}: `{name}` starts with req_ but names no requirement (req_<area>_<nnn>_<what>)"));
                     }
@@ -351,6 +361,15 @@ fn models_only(before: &[&str]) -> Option<String> {
     attributes(before).find_map(|line| {
         let reason = line.strip_prefix("#[ignore = \"")?.strip_suffix("\"]")?;
         reason.starts_with(MODELS_ONLY).then(|| reason.to_string())
+    })
+}
+
+/// The reason the attributes just above a function, the end of `before`, give for ignoring it when it starts
+/// with [`PLANNED`]: `#[ignore = "planned: …"]`.
+fn planned(before: &[&str]) -> Option<String> {
+    attributes(before).find_map(|line| {
+        let reason = line.strip_prefix("#[ignore = \"")?.strip_suffix("\"]")?;
+        reason.starts_with(PLANNED).then(|| reason.to_string())
     })
 }
 
@@ -433,6 +452,17 @@ mod tests {
         let further = [attribute.as_str(), "fn helper() {}", "#[test]"];
         for before in [&elsewhere[..], &further[..], &[][..]] {
             assert_eq!(models_only(before), None, "{before:?}");
+        }
+    }
+
+    #[test]
+    fn a_case_ignored_as_planned_says_what_builds_it() {
+        let reason = "planned: M13.52 builds the smoothing pass";
+        let attribute = format!("#[ignore = \"{reason}\"]");
+        assert_eq!(planned(&["#[test]", attribute.as_str()]).as_deref(), Some(reason));
+        // Another reason, or none, makes no planned case.
+        for before in [&["#[ignore = \"models only: the models job runs tests/models.rs\"]", "#[test]"][..], &["#[test]"][..]] {
+            assert_eq!(planned(before), None, "{before:?}");
         }
     }
 

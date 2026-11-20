@@ -2189,6 +2189,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.51: fewer points from the tracer, an option off by default (`REQ-CLI-024`).
+  - `stitch plan picture.png --fewer-points` asks Image Trace for Paths 0 and Corners 0, which draw the
+    outlines of the pear and the 4 traced dogs with 35 to 42 % fewer anchors and half the jags, for the same
+    colour error. The dogs then sew 1.5 % fewer stitches and leave 8 % fewer jump threads, but their area at
+    3 fills grows by 28 %, so the option is off until M13.53. Without it `stitch plan` traces as before.
+  - The smoothing pass of the same evidence, `REQ-AUTO-131` to `REQ-AUTO-134`, is step M13.52, off by
+    default. Its cases are ignored as planned, a reason `cargo xtask conformance` now accepts for the case
+    of a planned requirement alone.
 - M13.48: details last is off by default again (`REQ-AUTO-098`).
   - `auto_details_last` is off, and `auto_min_likeness` stays 0.85. On the traced dogs details last cost
     1, 4, 7 and 7 jump threads, each cut by hand, and their likeness didn't move. It comes back on by

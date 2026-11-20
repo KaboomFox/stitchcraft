@@ -289,6 +289,11 @@ pub struct TracingArgs {
     /// of the machine's threads, 2 to 256; by default 6.
     #[arg(long, value_name = "N", value_parser = clap::value_parser!(u32).range(2..=256))]
     pub colours: Option<u32>,
+    /// Trace a picture with fewer points: Image Trace's Paths and Corners at their lowest, which draw its
+    /// outlines with about a third fewer anchors and fewer jags. Off by default, since it changes how many
+    /// shapes of a traced picture sew.
+    #[arg(long)]
+    pub fewer_points: bool,
     /// Also write the document VectorCraft traced a picture into (.vectorcraft), to correct the trace in
     /// VectorCraft.
     #[arg(long, value_name = "FILE")]
@@ -298,8 +303,8 @@ pub struct TracingArgs {
 impl TracingArgs {
     /// Whether any option is given, which only a picture takes.
     pub fn given(&self) -> bool {
-        let TracingArgs { vectorcraft_cli, size, colours, traced } = self;
-        vectorcraft_cli.is_some() || size.is_some() || colours.is_some() || traced.is_some()
+        let TracingArgs { vectorcraft_cli, size, colours, fewer_points, traced } = self;
+        vectorcraft_cli.is_some() || size.is_some() || colours.is_some() || *fewer_points || traced.is_some()
     }
 }
 

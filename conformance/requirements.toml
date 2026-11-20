@@ -2886,6 +2886,15 @@ rationale = "A picture traced by the command line never opens in an editor where
 milestone = "M13"
 status = "active"
 
+
+[[req]]
+id = "REQ-CLI-024"
+area = "cli"
+level = "L1"
+statement = "When `stitch plan` traces a picture (REQ-CLI-012) with `--fewer-points`, `imageTrace.make` is also given Paths 0 and Corners 0, in every style, and Noise and Snap Curves To Lines stay at Image Trace's defaults. Without the option, which is the default, it is given no fitting option, in every style: the steps are those sent before the option existed."
+rationale = "Measured on the traced pear and the 4 traced dogs, Paths 0 and Corners 0 give 37 % fewer anchors, 60 % fewer jags thread can't show and 39 % fewer teeth, for the same colour error against the picture, and the tracer still fits an edge once for both shapes that share it. They also change the stitch rule of 29 to 50 of a dog's 69 to 92 shapes and raise its area at 3 fills or more by 28 %, so they are an option until M13.53 makes the rule steady against how an outline is drawn."
+milestone = "M13"
+status = "active"
 [[req]]
 id = "REQ-CLI-023"
 area = "cli"
@@ -3048,6 +3057,42 @@ rationale = "A plug-in has no canvas tool in VectorCraft 0.23.0, so a person dra
 milestone = "M13"
 status = "active"
 
+
+[[req]]
+id = "REQ-AUTO-131"
+area = "auto"
+level = "L2"
+statement = "An automatic area whose `auto_smooth_mm` is more than 0 has its outline smoothed before it is digitized. The outline is cut into edges at its junctions and at its corners: a corner is a point where the outline's direction over 4 times the setting before it and after it differs by 60° or more, the sharpest of each run of such points. Junctions and corners stay where they are. Each piece between them is smoothed by a Gaussian whose deviation is the setting, along its length, and no point of the smoothed piece lies farther than the setting from the piece as drawn, nor any point of the piece as drawn farther from the smoothed one: where it would, the deviation shrinks, down to none. The same holds where a ring of the outline would gain or lose more than 10 % of its area, so that no speck or narrow part vanishes. The smoothed edge is drawn with the fewest of its points that stay within 0.02 mm of it. A setting of 0 leaves the outline as drawn. The pass charges the element's budget for each point it resamples and each pair of segments it tests, and an area whose pass needs more keeps its outline, which SC-I0921 says."
+rationale = "A traced outline carries many points and wobbles by less than a thread 0.4 mm wide is: the dogs' 9 to 13 % of the flattened points draw the outline within 0.1 mm, and the traced photos turn back and forth 8 to 17 times in every 10 mm. Thread can't show that wobble, and it sews short stitches and ragged edges. Embroidery software smooths outlines with one precision value, as Wilcom's and Bernina's Smooth Curves do. Corners kept by an angle measured at the setting's scale keep a shape's drawn corners and smooth a staircase of pixels."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-132"
+area = "auto"
+level = "L2"
+statement = "An edge that 2 automatic areas share is smoothed once, and both areas take the same smoothed line, so that no gap or overlap opens between them. A segment is the same in 2 outlines when its ends and control points are, either way round, and a point where 3 or more edges meet, or where 2 outlines part, is a junction that stays. The edge is smoothed at the smaller of the 2 areas' settings."
+rationale = "Image Trace's Abutting method gives 2 neighbours the same anchors along the edge they share: 282 of the traced pear's 294 distinct anchors belong to 2 shapes. Each outline smoothed on its own would move a shared edge one way for one shape and another way for the other, as VectorCraft's Simplify does when run on each traced shape, and open slivers that sew bare or twice."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-133"
+area = "auto"
+level = "L2"
+statement = "Smoothing is off unless asked for: `auto_smooth_mm` is 0 by default, for a document and for a picture `stitch plan` traces alike. A person sets it with `--set`, a shape's own setting or the Auto effect's row. A shape with settings is never smoothed, and an edge an automatic area shares with an area whose setting is 0, or with a shape with settings, stays as drawn on both sides. SC-I0921 says, once for the design, how many outline points the smoothed areas had and how many they have, and names the areas whose pass needed more than the budget."
+rationale = "A shape a person drew is left as drawn unless the person asks: StitchCraft can't tell a traced shape from a drawn one in a document, since Expand leaves no mark of the trace. The owner chose, on 2026-11-20, to leave it off for traced pictures too. Measured on the whole set at 0.2 mm, half a thread, every traced picture sewed fewer stitches under 0.5 mm (3 % on the traced dogs, 6 % on the pear, 12 % on a traced lettered patch and 18 to 24 % on 4 traced photos), and no outline moved farther than a thread can show. A person chooses another amount, as the precision of other embroidery software's Smooth Curves is chosen. The notice shows what changed, as the points before and after."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-134"
+area = "auto"
+level = "L2"
+statement = "A smoothed outline crosses neither itself nor another edge. An edge whose smoothed line would cross one is smoothed again with half the deviation, until it crosses none, or at last stays as drawn, and every area that shares it takes that line."
+rationale = "A narrow part, a tooth or a strip thinner than twice the setting can fold over when both its sides move by the setting. Removing points can make a line cross another (Saalfeld, 1999), and a fill can't sew a region that crosses itself."
+milestone = "M13"
+status = "planned"
 [[req]]
 id = "REQ-AUTO-009"
 area = "auto"
