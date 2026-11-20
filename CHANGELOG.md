@@ -2170,6 +2170,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.43: an automatic fill's outline stays on its fill (`REQ-AUTO-130`).
+  - A stitch is straight, and an outline that followed its fill's edge within 0.1 mm laid a stitch up to
+    0.25 mm on the neighbour where the edge bends away from the fill, or across an inward corner that the
+    shortest stitch passed over. On the 4 traced dogs 4 of the 12 stitches astray were such stitches.
+  - Each line of an outline now runs its tolerance inside the fill's edge, so that each stitch lies between
+    the edge and twice the tolerance in. Each side moves in, the moved sides meet where they cross at an
+    outward corner and an arc joins them at an inward one. Where the line folds over itself, as round a bar
+    narrower than twice the tolerance, it goes straight across the fold. An outline whose lines need more work to move
+    in than the budget allows sews none, and `SC-I0904` says so.
+  - No outline stitch lies on a neighbour on any repository picture. The pictures sew 55 stitches fewer to
+    49 more. The fills before the outlines end elsewhere. The running dogs leave a jump thread fewer each,
+    and a row of the running dog in 6 threads now shows beside a line (`tests/auto_photos.rs`). Planning
+    costs the same to within 0.2 %.
 - M13.48: details last is off by default again (`REQ-AUTO-098`).
   - `auto_details_last` is off, and `auto_min_likeness` stays 0.85. On the traced dogs details last cost
     1, 4, 7 and 7 jump threads, each cut by hand, and their likeness didn't move. It comes back on by
@@ -3460,6 +3473,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes`, `TS-13C.pes` and `TS-13E.pes` (M13.43,
+  an outline inside its fill's edge). Each outline of an automatic fill runs 0.1 mm inside the fill's edge.
+  The sheets sew 23,892, 14,492, 10,229 and 5,932 stitches, where they sewed 23,861, 14,511, 10,235 and
+  5,932. TS-13A and TS-13C are 0.09 and 0.1 mm shorter, 167.89 and 107.65 mm tall: their lowest outlines lie
+  further in. Their jumps are as they were.
 - Changed `conformance/golden/testsheets/TS-13B.pes` and `TS-13D.pes` (M13.37, traced letters sewn as
   strokes). In the digitized half of each, a part drawn in straight strokes sews a column along each
   stroke. TS-13B's letters and TS-13D's white frames now sew so. The sheets sew 14,543 and 19,458 stitches,

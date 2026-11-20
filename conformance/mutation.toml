@@ -589,6 +589,36 @@ line = "while at < stretches {"
 why = "at counts 0.5, 1.5 and so on, and stretches is a whole number, so the 2 are never equal and the loop ends at the same place"
 
 [[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/neighbours/outline.rs"
+mutant = "replace > with >= in moved_right"
+line = "} else if turn > STRAIGHT || ahead < 0.0 {"
+why = "a turn of exactly STRAIGHT, 1e-12, is a corner so slight that its arc of no steps and the line going straight on put their points within 1e-12 mm of each other"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/neighbours/outline.rs"
+mutant = "replace < with <= in moved_right"
+line = "} else if turn > STRAIGHT || ahead < 0.0 {"
+why = "this branch has a turn of at most 1e-12 between 2 directions a millimetre long, which are then parallel or opposite, so how far the one goes ahead along the other is about 1 or -1, never 0"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/neighbours/outline.rs"
+mutant = "replace > with >= in arc"
+line = "let middle = if length > STRAIGHT { (x / length, y / length) } else { forward };"
+why = "the 2 directions are a millimetre long and at most half a turn apart, so their sum is 0 for a half turn and otherwise far longer than 1e-12, unless the turn is within 1e-12 of a half, where the middle is the forward direction either way"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/neighbours/outline.rs"
+mutant = "replace + with * in arc"
+line = "arc(curve, corner, (from, middle), forward, by, depth + 1);"
+why = "an arc is at most half a turn, and halving it 4 times leaves steps of 11.25 degrees, whose cosine is above ARC_STEP: the steps stop the halving by the 4th, so the depth never does, and it is a guard for directions that aren't finite"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/neighbours/outline.rs"
+mutant = "replace + with * in arc"
+line = "arc(curve, corner, (middle, to), forward, by, depth + 1);"
+why = "an arc is at most half a turn, and halving it 4 times leaves steps of 11.25 degrees, whose cosine is above ARC_STEP: the steps stop the halving by the 4th, so the depth never does, and it is a guard for directions that aren't finite"
+
+[[equivalent]]
 file = "crates/stitchcraft-engine/src/auto/neighbours/layers.rs"
 mutant = "replace > with >= in details"
 line = "if other != index && filling.len() > first {"

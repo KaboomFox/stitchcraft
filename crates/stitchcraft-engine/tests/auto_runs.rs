@@ -47,16 +47,17 @@ fn req_auto_053_the_needle_runs_from_one_shape_to_the_next_under_a_shape_sewn_la
     // The red thread sews both squares without a jump between them: the plan jumps to its first stitch and
     // at its one thread change, the machine is left no jump thread, and nothing shows where it should not.
     assert_eq!((left(&design, &plan), plan.stats().color_changes), ((2, 0, 0), 1));
-    // The run is the right square's, 7 stitches of 2.375 mm from where the left square's outline ends, at
-    // the bar's upper edge, to 2.375 mm before the right square's first stitch, under the bar all the way.
+    // The run is the right square's, 7 stitches of 2.3875 mm from where the left square's outline ends, 0.1 mm
+    // inside the corner of the square and the bar's upper edge (REQ-AUTO-130), to 2.3875 mm before the right
+    // square's first stitch, under the bar all the way.
     let run = runs(&plan);
     let id = |stitch: &SewnStitch| plan.element(plan.blocks[stitch.block].stitches[stitch.index].origin.element.unwrap()).unwrap().as_str();
     assert_eq!(run.iter().map(id).collect::<Vec<_>>(), ["right"; 7]);
     assert!(run.windows(2).all(|pair| pair[0].to == pair[1].from && pair[0].block == pair[1].block));
     let (first, last) = (run[0], run[6]);
-    assert_eq!((first.from.x(), first.from.y(), first.from_role), (10.0, 8.0, Role::Top));
-    assert!((last.to.x() - 26.625).abs() < 1e-9 && (7.9..8.1).contains(&last.to.y()), "{last:?}");
-    assert!(run.iter().all(|stitch| (stitch.from.distance(stitch.to) - 2.375).abs() < 1e-3), "{run:?}");
+    assert!(first.from.distance(stitchcraft_core::Point::new(9.9, 8.1).unwrap()) < 1e-9 && first.from_role == Role::Top, "{first:?}");
+    assert!((last.to.x() - 26.6125).abs() < 1e-9 && (7.9..8.1).contains(&last.to.y()), "{last:?}");
+    assert!(run.iter().all(|stitch| (stitch.from.distance(stitch.to) - 2.3875).abs() < 1e-3), "{run:?}");
     // The same design sews the same.
     assert_eq!(in_place(&design).plan.unwrap(), plan);
     // Without the bar nothing covers a way. The thread jumps from one square to the other, and so does the

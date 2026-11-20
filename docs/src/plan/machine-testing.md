@@ -390,6 +390,14 @@ one along its middle, each beside the same picture without guides:
 - The base layer under a guided part lies at `auto_fill_angle`. Does it show through between the bent rows?
 - The rest of the picture sews in another order. Feel for thick spots near the guided parts.
 
+M13.43 runs each outline of an automatic fill its tolerance, 0.1 mm, inside the fill's edge
+([an outline round a fill](../design/image-to-embroidery.md#an-outline-round-a-fill)). At MC-8, sew a
+traced dog beside the same dog sewn before M13.43:
+
+- Look along the edges where 2 colours meet on a curve or at an inward corner. Does a thread of the wrong
+  colour still show on the neighbour?
+- The outline lies 0.1 mm further in. On dark fabric, does fabric show between it and the neighbour?
+
 M13.40 sews a detail after the fills round it where that costs no thread change, when the design has
 `auto_details_last` on ([details last](../design/image-to-embroidery.md#details-last)). It landed off,
 M13.45 turned it on by default, and M13.48 turned it off again. At MC-8, sew a traced dog with it off and on,

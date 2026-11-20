@@ -73,13 +73,13 @@ const LINES: &str = "A narrow part sews 2 lines as one running stitch. The needl
 /// Why a row of a fill shows on another colour beside a line.
 const ACROSS: &str = "A row of an automatic fill shows on another colour for 1 mm or more, since M13.30. Where 2 areas lie beside a line of fur, the one sewn first now sews the line's part alone, and the area beyond the line gives it up (REQ-AUTO-067). A row along that part then shows beside the line, where a row of the area beyond covered it before. Each such row was traced: its middle or an end lies on the part of a running line 0.5 to 0.8 mm wide, whose thread is 0.4 mm wide.";
 
-/// Why a stitch of an outline shows on another colour.
-const OUTLINE: &str = "A stitch of a fill's outline (REQ-AUTO-051) shows on another colour for 1 mm or more. The outline is one ring round its fill, and the stitch lies along it, its ends within 0.15 mm of the ring. The fill is a thin, ragged shape of a traced photo beside others of its kind. What lies beside the ring there was not traced.";
-
 /// Why a stitch shows on another colour since both settings that reorder the blocks are on.
 const REORDERED: &str = "A row of an automatic fill, or a stitch of a fill's outline, shows on another colour for 1 mm or more since M13.45 turned on the setting that keeps thin lines (REQ-AUTO-095). The blocks sew in another order, so the fill starts, ends and turns elsewhere. Not traced further.";
 
 const MOVED: &str = "A row of an automatic fill shows on another colour for 1 mm or more. The same fill had a row astray a row or 2 away before M13.18 merged the ragged thin lines beside it into their neighbours (REQ-AUTO-090), which moved its rows. Not traced further.";
+
+/// Why a row of a fill shows on another colour since its outline runs inside its edge.
+const INSET: &str = "A row of an automatic fill shows on another colour for 1 mm or more since M13.43 moved each outline its tolerance inside its fill's edge (REQ-AUTO-130). The outline starts elsewhere, so the fill before it ends elsewhere and sews its rows in another order. Not traced further.";
 
 /// Every stitch of the dogs astray today. The case fails when another stitch is astray, and when one of these
 /// no longer is, so the list shrinks as each is fixed. M13.18 merged the ragged thin lines into their
@@ -111,25 +111,18 @@ const MOVED: &str = "A row of an automatic fill shows on another colour for 1 mm
 /// running dogs' outlines are sewn as before M13.45, and the row of the dog on turf in 9 threads the other way.
 /// With the cap at 3.25 (M13.46), the row of `vc:68:fill` on the dog on turf in 6 threads, and of `vc:78:fill`
 /// on the one in 9, ends 1 mm sooner, where the cap joined its end: each shows for 1.4 and 1.75 mm.
-const ASTRAY: [Astray; 12] = [
+/// M13.43 runs each outline its tolerance inside its fill's edge (REQ-AUTO-130): the 4 stitches of outlines no
+/// longer show, the 2 rows of `vc:6:fill` on the dog on turf in 9 threads are sewn the other way, a row of the
+/// running dog in 6 threads shows ([`INSET`]), and the row of `vc:21:fill` on the running dog in 9 no longer
+/// does: 8, none of them an outline's.
+const ASTRAY: [Astray; 8] = [
     Astray { dog: "dog-on-turf-6", element: "vc:68:fill", stitch: [(45.58, 74.75), (44.18, 74.82)], length: 1.4, cause: MOVED, step: "M13.38" },
     Astray { dog: "dog-on-turf-6", element: "vc:68:fill", stitch: [(45.0, 74.25), (42.3, 74.26)], length: 2.7, cause: MOVED, step: "M13.38" },
-    Astray { dog: "dog-on-turf-6", element: "vc:71:fill#2", stitch: [(51.96, 22.56), (51.83, 24.9)], length: 2.34, cause: OUTLINE, step: "M13.38" },
-    Astray { dog: "dog-on-turf-6", element: "vc:81:fill#2", stitch: [(49.08, 80.85), (49.52, 82.56)], length: 1.76, cause: OUTLINE, step: "M13.38" },
-    Astray { dog: "dog-on-turf-9", element: "vc:6:fill", stitch: [(53.0, 44.25), (55.14, 44.25)], length: 2.14, cause: ACROSS, step: "M13.38" },
-    Astray { dog: "dog-on-turf-9", element: "vc:6:fill", stitch: [(56.0, 44.0), (52.0, 44.0)], length: 4.0, cause: ACROSS, step: "M13.38" },
+    Astray { dog: "dog-on-turf-9", element: "vc:6:fill", stitch: [(55.22, 44.25), (53.0, 44.25)], length: 2.22, cause: ACROSS, step: "M13.38" },
+    Astray { dog: "dog-on-turf-9", element: "vc:6:fill", stitch: [(52.0, 44.0), (56.0, 44.0)], length: 4.0, cause: ACROSS, step: "M13.38" },
     Astray { dog: "dog-on-turf-9", element: "vc:78:fill", stitch: [(45.92, 74.75), (44.18, 74.82)], length: 1.75, cause: REORDERED, step: "M13.38" },
-    Astray { dog: "dog-running-6", element: "vc:26:fill#2", stitch: [(41.19, 4.89), (38.98, 4.59)], length: 2.24, cause: OUTLINE, step: "M13.38" },
-    Astray { dog: "dog-running-9", element: "vc:21:fill", stitch: [(49.31, 51.51), (46.0, 51.5)], length: 3.31, cause: MOVED, step: "M13.38" },
+    Astray { dog: "dog-running-6", element: "vc:9:fill", stitch: [(56.0, 32.0), (53.99, 31.98)], length: 2.01, cause: INSET, step: "M13.38" },
     Astray { dog: "dog-running-9", element: "vc:52:fill", stitch: [(60.0, 74.0), (64.0, 74.0)], length: 4.0, cause: ACROSS, step: "M13.38" },
-    Astray {
-        dog: "dog-running-9",
-        element: "vc:43:fill#2~2",
-        stitch: [(51.81, 61.71), (50.01, 61.42)],
-        length: 1.82,
-        cause: OUTLINE,
-        step: "M13.38",
-    },
     Astray { dog: "dog-running-9", element: "vc:33:fill#2", stitch: [(55.64, 34.0), (54.3, 32.39)], length: 2.1, cause: LINES, step: "M13.38" },
 ];
 
@@ -234,7 +227,9 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
     // With lines kept and details last by default (M13.45), the blocks sew in another order: 61, 66, 56 and 71
     // jump threads, and 2, 4, 4 and 8 moves.
     // With details last off by default again (M13.48), 60, 62, 49 and 64, and 3, 5, 3 and 9 moves.
-    let recorded = [("dog-on-turf-6", 3, 60), ("dog-on-turf-9", 5, 62), ("dog-running-6", 3, 49), ("dog-running-9", 9, 64)];
+    // With each outline its tolerance inside its fill's edge (REQ-AUTO-130, M13.43), outlines start elsewhere:
+    // 60, 62, 48 and 63, and the running dog in 9 threads shows 10 moves.
+    let recorded = [("dog-on-turf-6", 3, 60), ("dog-on-turf-9", 5, 62), ("dog-running-6", 3, 48), ("dog-running-9", 10, 63)];
     let recorded = recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps));
     assert_eq!((found, apart), (listed, recorded.to_vec()), "the stitches astray, as found and as listed in ASTRAY, and the moves and jumps");
 }

@@ -8,9 +8,10 @@
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
+use stitchcraft_core::Point;
 use stitchcraft_engine::design::{Design, DesignSettings};
-use stitchcraft_plan::StitchPlan;
-use stitchcraft_testkit::designs::{RED, automatic, fill, in_place, rules};
+use stitchcraft_plan::{Role, StitchPlan};
+use stitchcraft_testkit::designs::{BLUE, RED, automatic, fill, in_place, outlined, rules, unbased};
 use stitchcraft_testkit::fabric::{self, ASTRAY};
 use stitchcraft_testkit::pictures::{self, Trace};
 
@@ -84,7 +85,8 @@ fn req_auto_026_digitized_pictures_lay_no_thread_that_shows_where_it_should_not(
     // With an outline after each fill (REQ-AUTO-051, REQ-AUTO-052) the paw left one and the ear 3, where they
     // left none and one: the paw's fill is 2 parts of one shape, each with an outline of its own, and in the
     // ear 2 such outlines and the rings of one outline lie apart. The needle now runs from one outline to the
-    // next under the part sewn later (REQ-AUTO-053): the paw leaves none and the ear 2.
+    // next under the part sewn later (REQ-AUTO-053): the paw leaves none and the ear 2. With each outline its
+    // tolerance inside its fill's edge (REQ-AUTO-130), the ear's outlines start elsewhere and it leaves none.
     let recorded = [
         ("stripes", 0, 0),
         ("badge-abutting", 0, 0),
@@ -98,7 +100,93 @@ fn req_auto_026_digitized_pictures_lay_no_thread_that_shows_where_it_should_not(
         ("strand", 0, 0),
         ("pear", 0, 2),
         ("paw", 0, 0),
-        ("ear", 1, 2),
+        ("ear", 1, 0),
     ];
     assert_eq!(apart, recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps)));
+}
+
+/// How far `p` lies inside the closed ring `ring`, in millimetres: its distance from the nearest side, or 0
+/// when it lies outside.
+fn inside_by(p: Point, ring: &[(f64, f64)]) -> f64 {
+    let sides = || ring.iter().zip(ring.iter().cycle().skip(1));
+    let crossings = sides()
+        .filter(|((_, ay), (_, by))| (*ay > p.y()) != (*by > p.y()))
+        .filter(|((ax, ay), (bx, by))| p.x() < ax + (p.y() - ay) * (bx - ax) / (by - ay))
+        .count();
+    if crossings % 2 == 0 {
+        return 0.0;
+    }
+    let to_side = |((ax, ay), (bx, by)): (&(f64, f64), &(f64, f64))| {
+        let (dx, dy) = (bx - ax, by - ay);
+        let t = (((p.x() - ax) * dx + (p.y() - ay) * dy) / (dx * dx + dy * dy)).clamp(0.0, 1.0);
+        stitchcraft_core::math::hypot(ax + t * dx - p.x(), ay + t * dy - p.y())
+    };
+    sides().map(to_side).fold(f64::INFINITY, f64::min)
+}
+
+/// The stitches of the outline of `plan`'s element `id`, each from its needle point to the next.
+fn outline_stitches(plan: &StitchPlan, id: &str) -> Vec<[Point; 2]> {
+    let of = |stitch: &stitchcraft_plan::SewnStitch| {
+        let entry = plan.blocks[stitch.block].stitches[stitch.index].origin.element?;
+        plan.elements.get(entry.index()).map(|element| element.as_str() == format!("{id}#2"))
+    };
+    plan.sewn_stitches().iter().filter(|stitch| stitch.role == Role::Top && of(stitch) == Some(true)).map(|stitch| [stitch.from, stitch.to]).collect()
+}
+
+/// A case of an outline beside a neighbour: its name, the neighbour as drawn and as it shows, and the area's
+/// rings.
+type Drawn<'a> = (&'a str, Vec<(f64, f64)>, Vec<(f64, f64)>, Vec<&'a [(f64, f64)]>);
+
+/// A ring of `n` points `r` millimetres from `(x, y)`, the first at angle 0, clockwise on screen.
+fn circle((x, y): (f64, f64), r: f64, n: u32) -> Vec<(f64, f64)> {
+    (0..n)
+        .map(|k| f64::from(k) * std::f64::consts::TAU / f64::from(n))
+        .map(stitchcraft_core::math::sin_cos)
+        .map(|(sin, cos)| (x + r * cos, y + r * sin))
+        .collect()
+}
+
+#[test]
+fn req_auto_130_an_outline_s_stitches_lie_on_its_own_fill_where_its_edge_bends_or_turns() {
+    // Each design: a blue neighbour sewn first, and a red area beside it whose edge along the neighbour shows,
+    // so that the red one's outline runs along it. A disc beside its ring: the ring's inner edge bends away
+    // from the ring. An L whose corner a square fills. A square with a notch 4 mm wide that a blue block
+    // fills, one of the notch's inner corners cut by 0.2 mm, so that its 2 corners lie closer together than
+    // the shortest stitch, 0.3 mm, and the stitch from the first of them goes on along the notch's floor.
+    // The disc's half that lies in the bite, and the bite's half circle drawn the other way round.
+    let disc = circle((15.0, 0.0), 5.0, 360);
+    let mut bitten = vec![(0.0, 0.0)];
+    bitten.extend(disc.iter().skip(1).take(179).rev());
+    bitten.extend([(30.0, 0.0), (30.0, 20.0), (0.0, 20.0)]);
+    let square = [(10.0, 0.0), (20.0, 0.0), (20.0, 10.0), (10.0, 10.0)];
+    let l = [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (20.0, 10.0), (20.0, 20.0), (0.0, 20.0)];
+    let notch = [(8.0, 0.0), (12.0, 0.0), (12.0, 6.0), (8.2, 6.0), (8.0, 5.8)];
+    let notched = [(0.0, 0.0), (8.0, 0.0), (8.0, 5.8), (8.2, 6.0), (12.0, 6.0), (12.0, 0.0), (20.0, 0.0), (20.0, 20.0), (0.0, 20.0)];
+    // Each neighbour as drawn reaches 0.5 mm under the red area, so that it sews first (REQ-AUTO-010), and as
+    // it shows.
+    let designs: [Drawn; 3] = [
+        ("disc in a bite", circle((15.0, 0.0), 5.5, 360), disc.clone(), vec![&bitten]),
+        ("corner", vec![(9.5, 0.0), (20.0, 0.0), (20.0, 10.5), (9.5, 10.5)], square.to_vec(), vec![&l]),
+        ("notch", vec![(7.5, 0.0), (12.5, 0.0), (12.5, 6.5), (7.5, 6.5)], notch.to_vec(), vec![&notched]),
+    ];
+    let mut wrong = Vec::new();
+    for (name, drawn, neighbour, area) in designs {
+        let elements = unbased(vec![outlined(fill("blue", &[&drawn], &BLUE, &[])), outlined(fill("red", &area, &RED, &[]))]);
+        let design = Design::new(elements, DesignSettings::default()).unwrap();
+        let outcome = in_place(&design);
+        let plan = outcome.plan.unwrap();
+        let stitches = outline_stitches(&plan, "red");
+        assert!(!stitches.is_empty(), "{name}: no outline among {:?}, {:?}", plan.elements, outcome.diagnostics);
+        // No point of an outline's stitch lies on the neighbour, and no stitch shows on it.
+        let deepest = stitches
+            .iter()
+            .flat_map(|[a, b]| (0..=20).map(|k| a.lerp(*b, f64::from(k) / 20.0)))
+            .map(|p| inside_by(p, &neighbour))
+            .fold(0.0, f64::max);
+        let astray = fabric::astray(&design, &plan);
+        if deepest > 0.005 || !astray.stitches.is_empty() {
+            wrong.push(format!("{name}: {deepest:.3} mm on the neighbour, {:?} astray", astray.stitches));
+        }
+    }
+    assert!(wrong.is_empty(), "{wrong:#?}");
 }

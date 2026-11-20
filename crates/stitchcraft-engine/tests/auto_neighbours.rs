@@ -952,9 +952,10 @@ fn req_auto_051_a_design_sews_an_outline_round_each_fill_where_its_edge_shows_un
     };
     // The red square's outline leaves out the edge the blue one covers, by the overlap the red one reaches under
     // it, which is longer than the 25 mm an outline sews through (REQ-AUTO-052): 3 sides, 90 mm. The blue
-    // square's runs all the way round, its ring's 4 corners closed.
+    // square's runs all the way round, its ring closed. Each runs 0.1 mm inside its edge (REQ-AUTO-130), and
+    // the ring starts at the middle of a side: 104 mm to its last corner, 29.8 mm on a side.
     assert_eq!(lines("red#2"), (vec![(90.0, false)], RED));
-    assert_eq!(lines("blue#2"), (vec![(90.0, true)], BLUE));
+    assert_eq!(lines("blue#2"), (vec![(104.0, true)], BLUE));
     assert!(said.iter().all(|said| said.severity() == stitchcraft_core::Severity::Info), "{said:?}");
     // It plans without a warning, each outline's stitches after its fill's, and with the one thread change
     // the fills have.

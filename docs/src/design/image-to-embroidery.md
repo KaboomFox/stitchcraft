@@ -798,6 +798,33 @@ badge's moon was outlined with 12 sides. An outline has a tolerance of `auto::OU
 0.1 mm, unless its shape sets `running_stitch_tolerance_mm`. Its stitches are then shorter where the edge
 bends, never shorter than the machine's shortest stitch, and the moon has 18 sides.
 
+An outline's stitches lie on its own fill (M13.43, `REQ-AUTO-130`). A stitch is straight, and a running
+stitch keeps within its tolerance on both sides of its path. Where the edge bends away from the area, a
+stitch along it lay up to the tolerance on the neighbour. Across an inward corner that the shortest stitch
+passed over, it lay further on it. Where the neighbour has another colour, that is a thread of the wrong
+colour on it. So each line of an outline is moved into the area by the tolerance it keeps to, and its
+stitches keep within the tolerance of that line: each lies between the edge and twice the tolerance in.
+Each side moves that far towards the area. At an outward corner the 2 moved sides meet where they cross, so
+the corner keeps its point. At an inward corner an arc round the corner at that distance joins them, in
+steps of at most 22.5 degrees. Where a side is so short that its moved line would end before it starts,
+the side is left out and the sides beside it meet. Rings are opened at the middle of their longest side,
+where they don't turn, then moved and closed again. The line folds over itself where such a side starts
+at an arc or is the first, or where the sides beside it don't cross, as round a bar narrower than twice the
+distance. There it goes straight from the end of the moved side before the fold to the start of the one
+after it, inside the bar. A last side whose moved line would end before it starts ends on the edge. A line
+shorter than 3 mm is left out, as on the edge. The thread is 0.4 mm wide, so it
+still covers 0.1 mm past the edge, and the fill's rows still lie under the neighbour by the overlap.
+
+The engine's offset curve would find more: it cuts the ring of curves round a line where it crosses itself,
+and so finds where 2 stretches of an edge come within twice the distance of each other. That work grows
+with the square of the line's sides. Offset whole, the traced dogs took 7 to 10 % more work to plan and the
+pear twice as much, and in windows of 32 sides still 8 to 12 %, past what VectorCraft allows a test sheet.
+Moving each side costs a few units a side. A neck narrower than the distance is not found, and there the
+moved line lies past the neck's far side by less than the distance, as a stitch lay before. An outline
+whose lines need more than the budget, a unit for each side and for each corner looked at, sews none, and
+says so
+with SC-I0904.
+
 An outline is sewn with as few jumps as its lines allow (`REQ-AUTO-052`). A traced area's edge is hidden
 wherever a neighbour sewn later touches it, often for a few millimetres, and each hidden stretch parted 2
 lines by a jump. The outline now sews through a hidden stretch of `BRIDGE`, 25 mm, or less, along the edge

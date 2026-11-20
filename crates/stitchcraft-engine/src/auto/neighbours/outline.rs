@@ -29,6 +29,10 @@
 //!   element after it. The outline's last line is the one with an end, or a corner when it is a ring, nearest
 //!   where the element sewn next starts, and it ends there ([`ending_near`]). A ring starts and ends at one
 //!   point, so a fill outlined whole is left where it would be left without its outline.
+//! - **Inside the edge.** A stitch is straight, and along an edge that bends away from the area it lay up
+//!   to its tolerance on the neighbour. So each line moves its tolerance into the area before it is sewn
+//!   (`REQ-AUTO-130`, [`inset`]): each side moves, an outward corner where the moved sides cross, an inward
+//!   one rounded. Where a line folds over itself, round a bar too narrow for it, it goes straight across.
 //! - **Work.** Each area has the budget's work to itself: a unit for each shape it looks past, the work of
 //!   growing those near, and for each piece a unit for each corner of the shapes whose bounds hold its middle.
 //!   Finding where an outline ends costs a unit for each corner of what the next element offers, for each end
@@ -61,6 +65,17 @@ pub(super) const BRIDGE: f64 = 25.0;
 /// stretch under a later fill took their area at 3 fills or more down by 12 to 19 % for 3 to 11 jump threads
 /// more each, and leaving out those longer than 12 mm by 6 to 12 % for 1 to 3 more.
 pub(super) const FILL_BRIDGE: f64 = 12.0;
+
+/// The sine of the turn below which 2 sides of a line run straight on when an outline moves in
+/// (`REQ-AUTO-130`).
+const STRAIGHT: f64 = 1e-12;
+
+/// The cosine of the widest step of an arc round an inward corner when an outline moves in: 22.5 degrees,
+/// 0.04 mm off the arc at the distance 0.1 mm.
+const ARC_STEP: f64 = 0.923_879_532_511_286_7;
+
+/// The most times a step of an arc is halved: a half turn takes 3.
+const ARC_DEPTH: u32 = 4;
 
 /// For each automatic area of `shapes` whose edge shows somewhere, in the order they sew, its id and the lines
 /// of its outline, each area with `budget`'s work to itself; and `SC-I0904` for each area that needed more,
@@ -248,6 +263,164 @@ pub(in crate::auto) fn ending_near(mut lines: Vec<Line>, target: &Approach, budg
     }
     lines.push(last);
     Ok(lines)
+}
+
+/// `lines`, the outline of the area `id` along its edge as [`outlines`] found it, moved `by` into the area
+/// (`REQ-AUTO-130`), with `budget`'s work ([`moved_right`]). A ring stays a ring, and a line of no side keeps
+/// to its edge. A line shorter than [`SHORTEST`] is left out. A ring's line runs as the ring
+/// does, so the area lies on its right with y up, the outline's clockwise and a hole's the other way. An
+/// outline that needs more work is not sewn, and `Err` says so (`SC-I0904`).
+pub(in crate::auto) fn inset(lines: Vec<Line>, by: f64, budget: &Budget, id: &ElementId) -> Result<Vec<Line>, Diagnostic> {
+    let mut meter = budget.meter();
+    let mut moved = Vec::with_capacity(lines.len());
+    for line in lines {
+        let edge = if line.closed { opened(&line.points) } else { line.points.clone() };
+        let curve = moved_right(&edge, by, &mut meter).map_err(|_| {
+            let (finding, consequence) = ("where this area's outline runs inside its edge", "it sews no outline");
+            Failed::Work.said(Code::AutoUnder, finding, consequence, budget.max_work, id.clone())
+        })?;
+        moved.push(match curve {
+            // A ring's line runs from beside the opening round to beside it again: its last point is its first.
+            Some(mut curve) => {
+                if line.closed {
+                    curve.pop();
+                }
+                Line { points: curve, closed: line.closed }
+            }
+            None => line,
+        });
+    }
+    moved.retain(|line| line.length() >= SHORTEST);
+    Ok(moved)
+}
+
+/// A side of a line: where it starts and ends, its direction, and its normal to the right with y up, both
+/// a millimetre long.
+#[derive(Clone, Copy)]
+struct Side {
+    from: Point,
+    to: Point,
+    along: (f64, f64),
+    right: (f64, f64),
+}
+
+/// `p` moved `by` millimetres along `normal`.
+fn shifted(p: Point, (x, y): (f64, f64), by: f64) -> Point {
+    Point::new(p.x() + x * by, p.y() + y * by).unwrap_or(p)
+}
+
+/// The line `points` moved `by` to its right with y up, with `meter`'s work, a unit for each side: each
+/// side moved, the moved sides of a corner that turns right meeting where they cross, and those of a corner
+/// that turns left joined by an arc round the corner `by` from it. A side whose moved line falls behind the
+/// point where it would start is left out, and its neighbours meet. Where that side starts at an arc or is
+/// the first, or where the sides beside it don't turn right, the line folds over itself: it goes straight
+/// from the end of the moved side before the fold to the start of the one after it. A last side whose moved
+/// line ends behind its start ends on the edge. `None` where the line has no side.
+fn moved_right(points: &[Point], by: f64, meter: &mut Meter) -> Result<Option<Vec<Point>>, Exhausted> {
+    let mut sides = Vec::with_capacity(points.len());
+    for pair in points.windows(2) {
+        meter.charge(1)?;
+        let (Some(&from), Some(&to)) = (pair.first(), pair.last()) else { continue };
+        let length = from.distance(to);
+        if length > 0.0 {
+            let along = ((to.x() - from.x()) / length, (to.y() - from.y()) / length);
+            sides.push(Side { from, to, along, right: (along.1, -along.0) });
+        }
+    }
+    let Some(&first) = sides.first() else { return Ok(None) };
+    let mut curve = vec![shifted(first.from, first.right, by)];
+    // The sides kept so far: each, where on the curve its moved line starts, and whether that is an arc's end.
+    let mut kept: Vec<(Side, usize, bool)> = vec![(first, 0, false)];
+    for &side in sides.iter().skip(1) {
+        let mut dropped = false;
+        loop {
+            meter.charge(1)?;
+            let Some(&(top, at, arced)) = kept.last() else { break };
+            let start = curve.get(at).copied().unwrap_or(top.from);
+            let turn = top.along.0 * side.along.1 - top.along.1 * side.along.0;
+            let ahead = top.along.0 * side.along.0 + top.along.1 * side.along.1;
+            let folds = if turn >= -STRAIGHT {
+                if dropped {
+                    // The sides beside one left out don't cross.
+                    true
+                } else if turn > STRAIGHT || ahead < 0.0 {
+                    // A left turn, or straight back: round the corner.
+                    curve.truncate(at + 1);
+                    curve.push(shifted(side.from, top.right, by));
+                    arc(&mut curve, side.from, (top.right, side.right), top.along, by, 0);
+                    curve.push(shifted(side.from, side.right, by));
+                    kept.push((side, curve.len() - 1, true));
+                    false
+                } else {
+                    // Straight on: the side goes on along the same moved line.
+                    kept.push((side, at, arced));
+                    false
+                }
+            } else {
+                // A right turn: the 2 moved lines cross. A side whose crossing lies behind its start is left
+                // out, unless it starts at an arc or is the first.
+                let next = shifted(side.from, side.right, by);
+                let across = ((next.x() - start.x()) * side.along.1 - (next.y() - start.y()) * side.along.0) / turn;
+                if across >= 0.0 {
+                    curve.truncate(at + 1);
+                    curve.push(Point::new(start.x() + top.along.0 * across, start.y() + top.along.1 * across).unwrap_or(next));
+                    kept.push((side, curve.len() - 1, false));
+                    false
+                } else if arced || kept.len() == 1 {
+                    true
+                } else {
+                    kept.pop();
+                    curve.truncate(at);
+                    dropped = true;
+                    continue;
+                }
+            };
+            if folds {
+                // The line folds over itself: from the end of the moved side before the fold straight to the
+                // start of the one after it, which starts afresh.
+                curve.truncate(at + 1);
+                curve.push(shifted(top.to, top.right, by));
+                curve.push(shifted(side.from, side.right, by));
+                kept = vec![(side, curve.len() - 1, false)];
+            }
+            break;
+        }
+    }
+    let Some(&(last, at, _)) = kept.last() else { return Ok(Some(curve)) };
+    let start = curve.get(at).copied().unwrap_or(last.from);
+    let moved = shifted(last.to, last.right, by);
+    // A last side whose moved line ends behind its start ends on the edge.
+    let end = if (moved.x() - start.x()) * last.along.0 + (moved.y() - start.y()) * last.along.1 < 0.0 { last.to } else { moved };
+    curve.truncate(at + 1);
+    curve.push(end);
+    Ok(Some(curve))
+}
+
+/// Adds to `curve` the points of the arc round `corner`, `by` from it, between the directions `from` and
+/// `to`, turning left, each step no wider than [`ARC_STEP`]: halved, through `forward` when the 2 are
+/// opposite, `depth` halvings so far.
+fn arc(curve: &mut Vec<Point>, corner: Point, (from, to): ((f64, f64), (f64, f64)), forward: (f64, f64), by: f64, depth: u32) {
+    if from.0 * to.0 + from.1 * to.1 >= ARC_STEP || depth >= ARC_DEPTH {
+        return;
+    }
+    let (x, y) = (from.0 + to.0, from.1 + to.1);
+    let length = stitchcraft_core::math::hypot(x, y);
+    let middle = if length > STRAIGHT { (x / length, y / length) } else { forward };
+    arc(curve, corner, (from, middle), forward, by, depth + 1);
+    curve.push(shifted(corner, middle, by));
+    arc(curve, corner, (middle, to), forward, by, depth + 1);
+}
+
+/// The ring `points`, its last point joined to its first, as an open line from the middle of its longest
+/// side round to it again: a start where the ring doesn't turn, so that its offset needs no join there.
+fn opened(points: &[Point]) -> Vec<Point> {
+    let count = points.len();
+    let side = |k: usize| points.get(k).zip(points.get((k + 1) % count)).map(|(&a, &b)| (k, a, b));
+    let longer =
+        |best: (usize, Point, Point), next: (usize, Point, Point)| if next.1.distance(next.2) > best.1.distance(best.2) { next } else { best };
+    let Some((k, a, b)) = (0..count).filter_map(side).reduce(longer) else { return points.to_vec() };
+    let middle = a.lerp(b, 0.5);
+    std::iter::once(middle).chain(points.iter().cycle().skip(k + 1).take(count).copied()).chain([middle]).collect()
 }
 
 /// How far `p` is from where `target` lets an element start, in millimetres: its point, or the nearest point
@@ -506,6 +679,120 @@ mod tests {
         assert!((0..80).all(|work| with(work).is_err()));
         // A point costs nothing.
         assert!(ending_near(lines(), &Approach::Point(p(0.0, 0.0)), &Budget { max_work: 0, ..Budget::DEFAULT }, &id).is_ok());
+    }
+
+    /// `lines` moved 0.1 mm in with the default budget: each line's points, rounded to the micrometre, and
+    /// whether it closes.
+    fn moved_in(lines: Vec<Line>) -> Vec<(Vec<(f64, f64)>, bool)> {
+        let id = ElementId::new("a").unwrap();
+        let micrometres = |v: f64| (v * 1000.0).round() / 1000.0;
+        let moved = inset(lines, 0.1, &Budget::DEFAULT, &id).unwrap();
+        moved.into_iter().map(|line| (line.points.iter().map(|q| (micrometres(q.x()), micrometres(q.y()))).collect(), line.closed)).collect()
+    }
+
+    fn ring(points: &[(f64, f64)]) -> Line {
+        Line { points: points.iter().map(|&(x, y)| p(x, y)).collect(), closed: true }
+    }
+
+    fn open(points: &[(f64, f64)]) -> Line {
+        Line { points: points.iter().map(|&(x, y)| p(x, y)).collect(), closed: false }
+    }
+
+    #[test]
+    fn req_auto_130_an_outline_runs_its_tolerance_inside_its_area_s_edge() {
+        // A square's outline, clockwise with y up, moves in and closes, its corners square: it starts at the
+        // middle of its longest side, the first, where its offset needs no join. A hole's, the other way,
+        // moves out, into the area round it, its corners round.
+        let square = [(0.0, 0.0), (0.0, 10.0), (10.0, 10.0), (10.0, 0.0)];
+        let inside = [(0.1, 5.0), (0.1, 9.9), (9.9, 9.9), (9.9, 0.1), (0.1, 0.1), (0.1, 5.0)];
+        assert_eq!(moved_in(vec![ring(&square)]), [(inside[..5].to_vec(), true)]);
+        let hole: Vec<(f64, f64)> = square.iter().rev().copied().collect();
+        let rings = moved_in(vec![ring(&hole)]);
+        let around = &rings[0].0;
+        assert_eq!((rings.len(), rings[0].1), (1, true));
+        assert_eq!((around.first(), around.len()), (Some(&(10.1, 5.0)), 29));
+        assert!(around.iter().all(|&(x, y)| (-0.1 - 1e-9..=10.1 + 1e-9).contains(&x) && (-0.1 - 1e-9..=10.1 + 1e-9).contains(&y)));
+        // An open line moves to its right with y up, and is left out when it comes to less than 3 mm.
+        assert_eq!(moved_in(vec![open(&[(0.0, 0.0), (0.0, 3.0)]), open(&[(5.0, 0.0), (5.0, 2.999)])]), [(vec![(0.1, 0.0), (0.1, 3.0)], false)]);
+        // A point where a line goes straight on adds none. Where it turns straight back, the line rounds the
+        // end in a half circle 0.1 mm from it.
+        assert_eq!(moved_in(vec![open(&[(0.0, 0.0), (0.0, 1.0), (0.0, 3.0)])]), [(vec![(0.1, 0.0), (0.1, 3.0)], false)]);
+        let back = moved_in(vec![open(&[(0.0, 0.0), (0.0, 5.0), (0.0, 2.0)])]);
+        let (first, last) = (back[0].0[0], *back[0].0.last().unwrap());
+        assert_eq!((back.len(), first, last, back[0].0.len() > 6), (1, (0.1, 0.0), (-0.1, 2.0), true));
+        assert!(back[0].0[1..back[0].0.len() - 1].iter().all(|&(x, y)| (stitchcraft_core::math::hypot(x, y - 5.0) - 0.1).abs() < 2e-3), "{back:?}");
+        // The half circle takes steps of 22.5 degrees, and of 11.25 where a step of 22.5 falls short of
+        // `ARC_STEP` by its rounding: 11 points between its ends. A line going straight back along x rounds its
+        // end too, and a point given twice adds nothing.
+        assert_eq!(back[0].0.len(), 15);
+        let along_x = moved_in(vec![open(&[(0.0, 0.0), (5.0, 0.0), (2.0, 0.0)])]);
+        assert_eq!((along_x[0].0.len(), along_x[0].0[0], *along_x[0].0.last().unwrap()), (15, (0.0, -0.1), (2.0, 0.1)));
+        assert_eq!(moved_in(vec![open(&[(0.0, 0.0), (0.0, 0.0), (0.0, 3.0)])]), [(vec![(0.1, 0.0), (0.1, 3.0)], false)]);
+        // A last side whose moved line would end behind its start ends on the edge. Where the line folds over
+        // itself, it goes straight from the end of the moved side before the fold to the start of the one after
+        // it: where its first side, or a side after an arc, moves in to nothing, and where the 2 sides of a bar
+        // narrower than twice the distance, moved, pass each other.
+        assert_eq!(moved_in(vec![open(&[(0.0, 0.0), (0.0, 5.0), (0.05, 5.0)])]), [(vec![(0.1, 0.0), (0.1, 4.9), (0.05, 5.0)], false)]);
+        assert_eq!(moved_in(vec![open(&[(0.0, 0.0), (5.0, 0.0), (5.0, -0.05)])]), [(vec![(0.0, -0.1), (4.9, -0.1), (5.0, -0.05)], false)]);
+        let first = vec![(0.0, -0.1), (0.05, -0.1), (-0.05, 0.0), (-0.05, -5.0)];
+        assert_eq!(moved_in(vec![open(&[(0.0, 0.0), (0.05, 0.0), (0.05, -5.0)])]), [(first, false)]);
+        let arced = moved_in(vec![open(&[(0.0, 0.0), (0.0, 5.0), (-0.05, 5.0), (-0.05, 10.0)])]);
+        assert_eq!(arced[0].0[arced[0].0.len() - 4..], [(0.0, 5.1), (-0.05, 5.1), (0.05, 5.0), (0.05, 10.0)]);
+        let flagged = [(0.0, 0.0), (0.0, 5.0), (2.5, 5.0), (2.5, 15.0), (2.65, 15.0), (2.65, 5.0), (5.0, 5.0), (5.0, 0.0)];
+        let flag = moved_in(vec![ring(&flagged)]);
+        assert_eq!(flag[0].0[..4], [(2.6, 10.0), (2.6, 15.0), (2.55, 15.0), (2.55, 5.0)]);
+        let bar = [(0.0, 0.0), (0.0, 10.0), (0.15, 10.0), (0.15, 0.0)];
+        assert_eq!(moved_in(vec![ring(&bar), ring(&[])]), [(vec![(0.1, 5.0), (0.1, 10.0), (0.05, 10.0), (0.05, 0.0), (0.1, 0.0)], true)]);
+        // 2 squares joined by a neck 0.15 mm wide move in as one ring: along the neck, the 2 moved sides pass
+        // each other and lie inside it, 2.5 and 2.55 mm up, rounding its 4 inward corners.
+        let dumbbell = [
+            (0.0, 0.0),
+            (0.0, 5.0),
+            (5.0, 5.0),
+            (5.0, 2.6),
+            (7.0, 2.6),
+            (7.0, 5.0),
+            (12.0, 5.0),
+            (12.0, 0.0),
+            (7.0, 0.0),
+            (7.0, 2.45),
+            (5.0, 2.45),
+            (5.0, 0.0),
+        ];
+        let rings = moved_in(vec![ring(&dumbbell)]);
+        assert_eq!((rings.len(), rings[0].1), (1, true));
+        let neck: Vec<f64> = rings[0].0.iter().filter(|&&(x, _)| (5.0..=7.0).contains(&x)).map(|&(_, y)| y).collect();
+        assert!(neck.len() >= 4 && neck.iter().all(|y| (2.45..=2.6).contains(y)), "{rings:?}");
+        // A ring of 100 sides, a polygon round a circle 10 mm across clockwise with y up: every point of it lies
+        // 0.1 mm inside.
+        let round: Vec<(f64, f64)> = (0..100)
+            .map(|k| stitchcraft_core::math::sin_cos(-f64::from(k) * std::f64::consts::TAU / 100.0))
+            .map(|(sin, cos)| (5.0 * cos, 5.0 * sin))
+            .collect();
+        let rings = moved_in(vec![ring(&round)]);
+        let side = |(x, y): (f64, f64)| {
+            let near = |k: usize| distance_to_segment(p(x, y), p(round[k].0, round[k].1), p(round[(k + 1) % 100].0, round[(k + 1) % 100].1));
+            (0..100).map(near).fold(f64::INFINITY, f64::min)
+        };
+        assert_eq!((rings.len(), rings[0].1, rings[0].0.len()), (1, true, 101));
+        assert!(rings[0].0.iter().all(|&q| (side(q) - 0.1).abs() < 2e-3), "{rings:?}");
+    }
+
+    #[test]
+    fn req_auto_130_an_outline_that_needs_more_work_to_move_in_than_its_budget_allows_says_so() {
+        let id = ElementId::new("a").unwrap();
+        let with = |work: u64| {
+            inset(vec![ring(&[(0.0, 0.0), (0.0, 10.0), (10.0, 10.0), (10.0, 0.0)])], 0.1, &Budget { max_work: work, ..Budget::DEFAULT }, &id)
+        };
+        assert!(with(9).is_ok());
+        // Short of a unit for each side, and short of one more for each corner.
+        assert!(with(4).is_err());
+        let said = with(8).unwrap_err();
+        assert_eq!(
+            said.to_string(),
+            "info SC-I0904: Finding where this area's outline runs inside its edge needed more than the work budget of 8 units, so it sews no \
+             outline."
+        );
     }
 
     #[test]
