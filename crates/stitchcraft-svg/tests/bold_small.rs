@@ -133,6 +133,12 @@ fn req_font_024_widen_percent_adds_to_the_glyphs_own_pull_compensation_on_each_s
     assert_eq!(percents(&with_own("10 -5"), "20"), [Some("30 15".to_string())]);
     assert_eq!(percents(&with_own(""), "12.5"), [Some("12.5".to_string())]);
     assert_eq!(percents(&columns("c"), "7"), [Some("7".to_string())]);
+    // At 0 a column keeps its own value, here none, and a running stitch never gains one.
+    assert_eq!(percents(&columns("c"), "0"), [None]);
+    let mut how = Lettering::default();
+    how.take("widen_percent", "20");
+    let set = lettering::set(&columns("c"), "r", &how, &Budget::DEFAULT).unwrap();
+    assert!(set.design.elements().iter().all(|e| e.params.get("pull_compensation_percent").is_none()));
     // A value the planner reads as out of its range is widened from where the planner holds it.
     assert_eq!(percents(&with_own("150"), "20"), [Some("120".to_string())]);
     // A value that doesn't read is left for the planner to refuse with SC-E0101.
