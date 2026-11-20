@@ -15,6 +15,7 @@ fn element(shape: Shape, params: &[(&str, &str)]) -> Element {
         thread,
         params: params.iter().copied().collect(),
         automatic: false,
+        lettered: None,
         hints: Default::default(),
         clips: Vec::new(),
     }

@@ -34,11 +34,12 @@ fn sewn(id: &str, colour: Rgb, stitch_type: StitchType, groups: Vec<Vec<Point>>)
         thread: Thread::new(colour),
         params: ParamSet::new(),
         automatic: false,
+        lettered: None,
         hints: Hints::default(),
         clips: Vec::new(),
     };
     let common = CommonParams::from_set(&ParamSet::new()).unwrap().params;
-    (element, Generated { common, stitch_type, groups, colours: Vec::new(), min_stitch: Mm::from_tenths(5), layer: Layer::Whole })
+    (element, Generated { common, stitch_type, groups, colours: Vec::new(), min_stitch: Mm::from_tenths(5), layer: Layer::Whole, underlay_points: 0 })
 }
 
 fn fill(id: &str, colour: Rgb, groups: Vec<Vec<Point>>) -> (Element, Generated) {

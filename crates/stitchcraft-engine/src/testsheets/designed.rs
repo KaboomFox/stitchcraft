@@ -264,6 +264,7 @@ impl Drawing {
             thread: thread.clone(),
             params: params.iter().copied().collect::<ParamSet>(),
             automatic: false,
+            lettered: None,
             hints: Hints::default(),
             clips: Vec::new(),
         });

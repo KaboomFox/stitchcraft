@@ -85,6 +85,21 @@ pub fn thickest(plan: &StitchPlan, columns: &BTreeSet<String>) -> (f64, f64) {
     (report.fills.value, report.stack.iter().filter(column).map(|layer| layer.top).sum())
 }
 
+/// The fills of thread from which the before and after sheet counts a spot thick
+/// (`docs/src/design/before-after-sheet.md`). One layer of satin over a fill sews 2 to 3 fills, so the area at
+/// 3 or more is what a cap lowers. It is fixed, not the warning's limit, which M13.46 raised to 4: at 4 the
+/// row read 0 on every picture and could show no change.
+pub const THICK_FILLS: f64 = 3.0;
+
+/// The area of `plan` that sews [`THICK_FILLS`] or more, in square millimetres.
+///
+/// # Panics
+///
+/// When the plan sews no stitch, or is too large to measure.
+pub fn thick_area(plan: &StitchPlan) -> f64 {
+    thickness(plan, &Limits { warn_fills: THICK_FILLS, ..Limits::DEFAULT }).thick.area
+}
+
 /// How thick `plan` sews against `limits`, with the default budget's work.
 ///
 /// # Panics

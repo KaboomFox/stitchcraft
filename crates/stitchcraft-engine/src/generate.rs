@@ -58,7 +58,7 @@ use crate::generators::pull::PullParams;
 use crate::generators::ripple::{self, Ripple, RippleParams, ripple_stitch};
 use crate::generators::running::raised;
 use crate::generators::running::{RunningParams, running_stitch};
-use crate::generators::satin::{self, SATIN_COLUMN, SatinLengths, SatinParams, satin_stitch};
+use crate::generators::satin::{self, SATIN_COLUMN, SatinLengths, SatinParams, sewn_whole};
 use crate::generators::tartan::{self, Tartan, TartanParams, tartan_fill};
 use crate::generators::tatami::TatamiParams;
 use crate::generators::tatami::rows::Segment;
@@ -152,6 +152,10 @@ pub struct Generated {
     /// underlays first (`crate::underlays_first`). Assembly tags an underlay's stitches underlay, and puts
     /// the element's trim and stop after its top stitches.
     pub layer: Layer,
+    /// How many of its first group's first needle points are underlay, sewn in one step with its top
+    /// stitches: a satin column's underlays sewn whole, which assembly tags underlay for lettering as it tags
+    /// an underlay's layer (`REQ-AUTO-120`). 0 for every other element.
+    pub underlay_points: usize,
 }
 
 /// What generating one element gives.
@@ -360,11 +364,15 @@ fn sew(
 ) -> Result<Option<Generated>, Exhausted> {
     let Some(Prepared { region, common, sewing }) = prepare(element, settings, profile, diagnostics, meter)? else { return Ok(None) };
     let mut rng = SplitMix64::for_element(element.id.as_str(), common.as_ref().and_then(|common| common.random_seed));
+    let mut underlay_points = 0;
     let stitched = match &element.shape {
         Shape::Fill { .. } => fill(&sewing, neighbours, &region, &mut rng, diagnostics, meter)?,
         Shape::Stroke { path, width, join, .. } if sewing.stitch_type.family() == Family::Satin => {
             clip_not_applied(element, diagnostics);
-            satin_column(&sewing, neighbours, (path, *width, *join), &mut rng, diagnostics, meter)?
+            satin_column(&sewing, neighbours, (path, *width, *join), &mut rng, diagnostics, meter)?.map(|(stitched, under)| {
+                underlay_points = under;
+                stitched
+            })
         }
         // A ripple stitch cuts its own stitches to its clips, and routes the pieces (`REQ-RIP-017`).
         Shape::Stroke { path, .. } if sewing.stitch_type == StitchType::RippleStitch => {
@@ -377,7 +385,8 @@ fn sew(
     };
     let (Some(common), Some(Shared { min_stitch, .. }), Some(stitched)) = (common, sewing.shared, stitched) else { return Ok(None) };
     diagnostics.extend(stitched.warnings);
-    Ok(Some(Generated { common, stitch_type: sewing.stitch_type, groups: stitched.runs, colours: stitched.colours, min_stitch, layer: Layer::Whole }))
+    let (groups, colours) = (stitched.runs, stitched.colours);
+    Ok(Some(Generated { common, stitch_type: sewing.stitch_type, groups, colours, min_stitch, layer: Layer::Whole, underlay_points }))
 }
 
 /// `SC-W0217` in `diagnostics` when `element`, a satin column, is cut to clip paths, which StitchCraft doesn't
@@ -971,7 +980,7 @@ fn fill_pull(pull: &PullParams, diagnostics: &mut Vec<Diagnostic>) -> Pull {
 
 /// A satin column's stitches as `sewing` says, between its `neighbours`, varied at random by its `rng`, or
 /// `None` when it is skipped: its path is `width` wide with `join` at its corners when it is its centre
-/// line ([`SatinRead`]).
+/// line ([`SatinRead`]), and how many of its first needle points are its underlays'.
 fn satin_column(
     sewing: &Sewing,
     neighbours: &Neighbours,
@@ -979,9 +988,9 @@ fn satin_column(
     rng: &mut SplitMix64,
     diagnostics: &mut Vec<Diagnostic>,
     meter: &mut Meter,
-) -> Result<Option<Stitched>, Exhausted> {
+) -> Result<Option<(Stitched, usize)>, Exhausted> {
     let Some(SatinRead { rails, params, pull, lengths }) = SatinRead::read(sewing, shape, diagnostics, meter)? else { return Ok(None) };
-    Ok(Some(satin_stitch(&rails, &params, &pull, lengths, neighbours, &sewing.hints, rng, meter)?))
+    Ok(Some(sewn_whole(&rails, &params, &pull, lengths, neighbours, &sewing.hints, rng, meter)?))
 }
 
 /// A satin column's settings, read as its `satin_method` reads them, and its rails: what its generator sews

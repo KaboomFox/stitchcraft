@@ -41,6 +41,7 @@ pub(super) fn filled(id: &str, parts: &[Polygon]) -> Element {
         thread: Thread::new(Rgb::new(0, 0, 0)),
         params: ParamSet::default(),
         automatic: false,
+        lettered: None,
         hints: Default::default(),
         clips: Vec::new(),
     }
@@ -212,6 +213,7 @@ fn a_column_whose_area_needs_more_work_than_its_budget_allows_is_said_and_reache
         thread: Thread::new(Rgb::new(0, 0, 0)),
         params: [("satin_column", "true")].into_iter().collect(),
         automatic: false,
+        lettered: None,
         hints: Default::default(),
         clips: Vec::new(),
     };

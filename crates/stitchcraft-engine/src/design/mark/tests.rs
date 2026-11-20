@@ -31,6 +31,7 @@ fn element(id: &str, name: Option<&str>, shape: Shape) -> Element {
         thread: Thread::new(Rgb::new(0, 255, 0)),
         params: ParamSet::default(),
         automatic: true,
+        lettered: None,
         hints: Hints::default(),
         clips: Vec::new(),
     }

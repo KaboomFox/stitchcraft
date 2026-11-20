@@ -31,6 +31,7 @@ fn elements(path: &Path) -> Vec<(String, Element)> {
         thread: RED,
         params: params.iter().copied().collect::<ParamSet>(),
         automatic: false,
+        lettered: None,
         hints: Default::default(),
         clips: Vec::new(),
     };

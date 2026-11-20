@@ -27,11 +27,13 @@ use stitchcraft_params::Family;
 use stitchcraft_plan::{MachineProfile, StitchPlan};
 
 use crate::assemble::{Assembled, assemble_routed};
+use crate::auto::cap::Pull;
 use crate::auto::{Sewing, sewing, thick};
-use crate::design::{Design, Element};
+use crate::design::{Design, Element, Lettered};
 use crate::finalize::{Finalized, finalize};
 use crate::generate::layered::{Layered, underlay};
 use crate::generate::{Generated, Generation, approach, generate_with};
+use crate::generators::pull::PullParams;
 use crate::generators::{Layer, Neighbours};
 use crate::moves::Routing;
 use crate::names::Names;
@@ -103,12 +105,22 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
         let layer = |sewn: Generated| if base.contains(&element.id) { Generated { layer: Layer::Base, ..sewn } } else { sewn };
         generated.extend(sewn.map(|sewn| (element, layer(sewn))));
     }
-    // The satin columns that digitizing made: the cap at the end of planning leaves their top stitches as they
-    // are (`REQ-AUTO-112`).
-    let columns: BTreeSet<ElementId> = generated
+    // The lettering that digitizing placed is in the cap's reach, as the elements it made are (`REQ-AUTO-119`).
+    // A design with lettering is measured, by the rules' default limits when no automatic shape sets them,
+    // and one with nothing in the cap's reach only measured (`REQ-AUTO-124`).
+    let reach: BTreeSet<ElementId> = made
         .iter()
-        .filter(|(element, sewn)| sewn.stitch_type.family() == Family::Satin && made.contains(&element.id))
-        .map(|(element, _)| element.id.clone())
+        .cloned()
+        .chain(elements.iter().filter(|element| element.lettered == Some(Lettered::Digitized)).map(|element| element.id.clone()))
+        .collect();
+    let limits = limits.or_else(|| if elements.iter().any(|element| element.lettered.is_some()) { thick::by_default() } else { None });
+    // The satin columns in the cap's reach: it leaves their top stitches as they are (`REQ-AUTO-112`). Those of
+    // the lettering are pulled in by their own pull compensation (`REQ-AUTO-121`).
+    let satins = || generated.iter().filter(|(element, sewn)| sewn.stitch_type.family() == Family::Satin && reach.contains(&element.id));
+    let columns: BTreeSet<ElementId> = satins().map(|(element, _)| element.id.clone()).collect();
+    let lettering: BTreeMap<ElementId, Pull> = satins()
+        .filter(|(element, _)| element.lettered == Some(Lettered::Digitized))
+        .filter_map(|(element, _)| Some((element.id.clone(), Pull::of(&PullParams::from_set(&element.params).ok()?.params))))
         .collect();
     let names = named(design, (&elements, &base, &generated), profile, budget, &mut diagnostics);
     let mut meter = budget.meter();
@@ -128,8 +140,12 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
             diagnostics.extend(said);
             // A design digitized automatically is thinned where a spot sews above the cap (`REQ-AUTO-074`),
             // told where it sews thick (`SC-W0913`), and is written.
-            if let (Some(held), Some(plan)) = (limits, plan.as_mut()) {
-                diagnostics.extend(thick::finished(plan, &held, (&base, &made, &columns), profile, &names, budget));
+            match (limits, plan.as_mut()) {
+                (Some(held), Some(plan)) if reach.is_empty() => diagnostics.extend(thick::measured(plan, &held, &names, budget)),
+                (Some(held), Some(plan)) => {
+                    diagnostics.extend(thick::finished(plan, &held, (&base, &reach, &columns, &lettering), profile, &names, budget));
+                }
+                _ => {}
             }
             plan
         }

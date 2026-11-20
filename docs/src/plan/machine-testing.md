@@ -357,6 +357,20 @@ traced lettered patch (kit item 14) with the patch with its word as text (item 1
 - TS-13D's emblems sew their white frames as columns along their sides, where they were filled. Do the
   frames' corners sew cleanly, and is the stacked emblem's white ring, 4.23 fills at its thickest, stiff?
 
+M13.50 brings lettering that automatic digitizing places into the cap's reach
+([the cap and lettering](../design/image-to-embroidery.md#the-cap-and-lettering)). At MC-8, sew a made-up word
+in each built-in font on a field, VOLKAR in Barstitch Bold 12.5 mm tall and Hexmira in Small Font 7.6 mm
+tall, each marked on a cream field 3 mm round it, from `main` and from M13.50 side by side, and the marked
+lettered patch (kit item 15):
+
+- Barstitch Bold's joins sew 0.5 to 1.0 fills less on M13.50, with the running stitches hidden under its
+  columns taken. Does the needle thump less at the K's, the X's and the W's joins?
+  Do the joins still look closed, with no fabric or field between the columns?
+- Small Font's joins and the patch's M sew as on `main`, 4.5 to 5.4 fills over the field. Does the
+  needle thump there, or the thread shred? If so, the field under the letters is what MC-8 changes, since no
+  rule of the cap may take a column's top from lettering.
+- Press each word with a thumb. Is it stiffer where the columns meet than along a stroke?
+
 M13.18 merges the thin lines of a traced photo into the patches beside them
 ([neighbours](../design/image-to-embroidery.md#neighbours)). It changes what the traced dogs sew, and no
 test sheet. At MC-8, sew the running dog in 9 threads from `main` before M13.18 and from after it, side by

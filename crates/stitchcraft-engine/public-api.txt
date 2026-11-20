@@ -206,6 +206,9 @@ pub stitchcraft_engine::design::Join::Miter::limit: f64
 pub stitchcraft_engine::design::Join::Round
 impl stitchcraft_engine::design::Join
 pub const stitchcraft_engine::design::Join::UNSET: stitchcraft_engine::design::Join
+pub enum stitchcraft_engine::design::Lettered
+pub stitchcraft_engine::design::Lettered::Digitized
+pub stitchcraft_engine::design::Lettered::Set
 pub enum stitchcraft_engine::design::Segment
 pub stitchcraft_engine::design::Segment::Cubic(stitchcraft_core::units::Point, stitchcraft_core::units::Point, stitchcraft_core::units::Point)
 pub stitchcraft_engine::design::Segment::Line(stitchcraft_core::units::Point)
@@ -264,6 +267,7 @@ pub stitchcraft_engine::design::Element::automatic: bool
 pub stitchcraft_engine::design::Element::clips: alloc::vec::Vec<stitchcraft_engine::design::Clip>
 pub stitchcraft_engine::design::Element::hints: stitchcraft_engine::design::Hints
 pub stitchcraft_engine::design::Element::id: stitchcraft_core::element::ElementId
+pub stitchcraft_engine::design::Element::lettered: core::option::Option<stitchcraft_engine::design::Lettered>
 pub stitchcraft_engine::design::Element::name: core::option::Option<alloc::string::String>
 pub stitchcraft_engine::design::Element::params: stitchcraft_params::set::ParamSet
 pub stitchcraft_engine::design::Element::shape: stitchcraft_engine::design::Shape
@@ -352,6 +356,7 @@ pub stitchcraft_engine::generate::Generated::groups: alloc::vec::Vec<alloc::vec:
 pub stitchcraft_engine::generate::Generated::layer: stitchcraft_engine::generators::Layer
 pub stitchcraft_engine::generate::Generated::min_stitch: stitchcraft_core::units::Mm
 pub stitchcraft_engine::generate::Generated::stitch_type: stitchcraft_params::stitch_type::StitchType
+pub stitchcraft_engine::generate::Generated::underlay_points: usize
 pub struct stitchcraft_engine::generate::Generation
 pub stitchcraft_engine::generate::Generation::diagnostics: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
 pub stitchcraft_engine::generate::Generation::generated: core::option::Option<stitchcraft_engine::generate::Generated>
