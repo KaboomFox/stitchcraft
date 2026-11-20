@@ -47,6 +47,7 @@ const PICTURE: &[u8] = b"\x89PNG\r\n\x1a\n a badge";
 
 /// The tests, by name.
 const TESTS: &[(&str, fn())] = &[
+    ("req_cli_025_stitch_expand_traces_a_picture_first", req_cli_025_stitch_expand_traces_a_picture_first),
     (
         "req_cli_012_stitch_plan_traces_a_picture_with_vectorcraft_s_command_line_and_sews_it_digitized_automatically",
         req_cli_012_stitch_plan_traces_a_picture_with_vectorcraft_s_command_line_and_sews_it_digitized_automatically,
@@ -241,6 +242,25 @@ fn req_cli_012_stitch_plan_traces_a_picture_with_vectorcraft_s_command_line_and_
     assert!(stdout.starts_with("badge.png\n") && stdout.ends_with("  report    badge.json\n  traced    traced.vectorcraft\n"), "{stdout}");
     let report: Value = serde_json::from_slice(&std::fs::read(dir.join("badge.json")).unwrap()).unwrap();
     assert_eq!((&report["design"], &report["profile"]), (&json!("badge.png"), &json!(REFERENCE.id)));
+}
+
+fn req_cli_025_stitch_expand_traces_a_picture_first() {
+    let dir = folder("expand", "badge.png");
+    let args = ["expand", "badge.png", "-o", "badge.vectorcraft", "--traced", "traced.vectorcraft"];
+    let (out, kept) = stitch(dir.path(), &args, None);
+    assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
+    assert!(kept.is_some());
+    // The traced document is written as VectorCraft saved it, and the expanded one is it with its parts.
+    assert_eq!(std::fs::read(dir.join("traced.vectorcraft")).unwrap(), std::fs::read(TRACED).unwrap());
+    let expanded = text(&std::fs::read(dir.join("badge.vectorcraft")).unwrap());
+    assert!(expanded.contains(r#""name":"Expanded embroidery""#), "{expanded}");
+    assert!(text(&out.stdout).starts_with("badge.png · expanded into 7 parts → badge.vectorcraft"), "{}", text(&out.stdout));
+    // When VectorCraft fails, nothing is written, and what it said is.
+    let failed = folder("expand-fails", "badge.png");
+    let (out, _) = stitch(failed.path(), &["expand", "badge.png", "-o", "badge.svg"], Some(FAILS));
+    assert_eq!(out.status.code(), Some(1));
+    assert!(text(&out.stderr).contains("error SC-E0816"), "{}", text(&out.stderr));
+    assert_eq!(left(failed.path()), ["badge.png"]);
 }
 
 fn req_vc_033_the_traced_document_names_each_shape_and_changes_nothing_else() {

@@ -47,3 +47,23 @@ fn req_cli_025_an_expanded_document_sews_as_the_automatic_design() {
         assert!(std::fs::read(dir.join(&planned)).unwrap() == std::fs::read(dir.join("automatic.pes")).unwrap(), "{written} sews otherwise");
     }
 }
+
+#[test]
+fn req_cli_025_what_stitch_expand_can_t_write_is_a_usage_error() {
+    let dir = TempDir::new("expand-usage");
+    std::fs::copy(TRACED, dir.join("badge.vectorcraft")).unwrap();
+    std::fs::write(dir.join("badge.svg"), "<svg xmlns=\"http://www.w3.org/2000/svg\"/>").unwrap();
+    for (args, said) in [
+        (&["expand", "badge.vectorcraft", "-o", "badge.pes"][..], "cannot tell what to write as `badge.pes`: name it .vectorcraft or .svg"),
+        (&["expand", "badge.vectorcraft", "-o", "x.svg", "--size", "50"][..], "--vectorcraft-cli, --size, --colours and --traced are for a picture"),
+        (&["expand", "badge.svg", "-o", "x.vectorcraft"][..], "a VectorCraft document is written from a VectorCraft document or a picture"),
+    ] {
+        let out = stitch(dir.path(), args);
+        assert_eq!(out.status.code(), Some(2), "{args:?}");
+        assert!(text(&out.stderr).contains(said), "{}", text(&out.stderr));
+    }
+    // A design with nothing to expand is refused, and nothing is written.
+    let out = stitch(dir.path(), &["expand", "badge.svg", "-o", "x.svg"]);
+    assert_eq!(out.status.code(), Some(1), "{}", text(&out.stderr));
+    assert!(text(&out.stderr).contains("The design has nothing to expand") && !dir.join("x.svg").exists(), "{}", text(&out.stderr));
+}

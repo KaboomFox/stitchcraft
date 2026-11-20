@@ -99,6 +99,10 @@ pub fn run(args: &ExpandArgs) -> Outcome {
         Err(bug) => return Outcome::refuse(String::new(), &[bug]),
     };
     said.extend(digitized);
+    if expanded.elements().is_empty() {
+        said.push(Diagnostic::new(Code::NothingToStitch, "The design has nothing to expand: it has no shapes, or every one was left out."));
+        return Outcome::refuse(String::new(), &said);
+    }
     let written = match output {
         Output::VectorCraft => stitchcraft_vectorcraft::expanded::written(&document, &design, &expanded, profile, &budget).map(|written| {
             said.extend(written.warnings);

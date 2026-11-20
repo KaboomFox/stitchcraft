@@ -66,7 +66,7 @@ pub fn written(document: &[u8], original: &Design, expanded: &Design, machine: &
     // The objects that hold the automatic design's shapes, by the ids its elements are read with.
     let sewn: Vec<u64> = original.elements().iter().filter_map(|element| object_of(element.id.as_str())).collect();
     let hidden: Vec<&Top> = scanned.tops.iter().filter(|top| top.ids.iter().any(|id| sewn.contains(id))).collect();
-    let layer = hidden.first().and_then(|top| scanned.layers.iter().find(|layer| layer.close > top.open)).or(scanned.layers.first());
+    let layer = hidden.first().and_then(|top| scanned.layers.get(top.layer)).or(scanned.layers.first());
     let Some(layer) = layer else { return Err(broken()) };
     let mut next = scanned.next_id.map_or(1, |(_, _, id)| id).max(scanned.largest.saturating_add(1));
     let mut warnings = Vec::new();
@@ -269,6 +269,8 @@ fn spliced(json: &[u8], mut edits: Vec<(usize, usize, String)>) -> Option<Vec<u8
 struct Top {
     /// Where its opening brace is.
     open: usize,
+    /// Its layer's place among the layers.
+    layer: usize,
     /// The ids of it and of everything inside it.
     ids: Vec<u64>,
     /// The names of it and of everything inside it.
@@ -352,7 +354,7 @@ fn scan(json: &[u8], filter: &str) -> Option<Scanned> {
                 } else {
                     let is_top = in_children && byte == b'{';
                     let top = if is_top {
-                        found.tops.push(Top { open: i, ..Top::default() });
+                        found.tops.push(Top { open: i, layer: found.layers.len(), ..Top::default() });
                         Some(found.tops.len() - 1)
                     } else {
                         top

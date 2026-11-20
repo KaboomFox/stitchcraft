@@ -90,6 +90,8 @@ fn req_cli_025_what_a_document_keeps_already_is_replaced_and_its_other_data_stay
         format!(r#""unknown": {{"pluginData": {{{other}}}}}, "keywords": ["a", [1, [2]]], "#),
         format!(r#""unknown": {{"pluginData": {{"{filter}": {{"collapse_len_mm": 9}}, {other}}}}}, "#),
         r#""unknown": {"pluginData": {}}, "#.to_string(),
+        r#""unknown": {"pluginData": 5}, "#.to_string(),
+        format!(r#""unknown": {{"pluginData": {{"{filter}": "old"}}}}, "#),
     ] {
         let (expanded, _, written) = round_trip(&traced(&extra));
         let read = crate::read(written.as_bytes(), &Budget::DEFAULT).unwrap();
@@ -271,7 +273,7 @@ fn a_setting_is_written_as_the_value_vectorcraft_s_dialog_holds() {
 #[test]
 fn the_scan_finds_the_layers_objects_their_ids_and_the_document_s_keys() {
     let text = r#"{"document": {"next_id": 12, "layers": [{"id": 1, "next_id": 3, "kind": {"children": [
-        {"id": 3, "kind": {"children": [{"id": 4, "visible": true}, {"id": 5, "note": "six", "name": "five"}]}},
+        {"id": 3, "kind": {"children": [{"id": 4, "visible": true, "locked": true}, {"id": 5, "note": "six", "name": "five"}]}},
         {"locked": false, "id": 6, "visible": true, "a": ["x", 1, [2]]}
     ]}}, {"id": 2, "kind": {"children": []}}], "title": "a \"b\" \\"}}"#;
     let scanned = scan(text.as_bytes(), "f").unwrap();
@@ -280,6 +282,7 @@ fn the_scan_finds_the_layers_objects_their_ids_and_the_document_s_keys() {
     let top = |k: usize| (scanned.tops[k].ids.clone(), scanned.tops[k].visible, scanned.tops[k].locked);
     assert_eq!(top(0), (vec![3, 4, 5], None, None));
     assert_eq!(top(1), (vec![6], Some((at(r#"true, "a""#), 4)), Some((at("false"), 5))));
+    assert_eq!((scanned.tops[0].layer, scanned.tops[1].layer), (0, 0));
     assert_eq!(scanned.tops[0].names, ["five"]);
     assert_eq!((scanned.tops[0].open, scanned.tops[1].open), (at(r#"{"id": 3"#), at(r#"{"locked""#)));
     let layers: Vec<(usize, bool)> = scanned.layers.iter().map(|layer| (layer.close, layer.empty)).collect();
