@@ -2162,10 +2162,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - A stitch is straight, and an outline that followed its fill's edge within 0.1 mm laid a stitch up to
     0.25 mm on the neighbour where the edge bends away from the fill, or across an inward corner that the
     shortest stitch passed over. On the 4 traced dogs 4 of the 12 stitches astray were such stitches.
-  - Each line of an outline now runs its tolerance inside the fill's edge, offset towards the fill with
-    round joins, so that each stitch lies between the edge and twice the tolerance in. Where the fill is
-    narrower than twice the tolerance, the offset breaks into pieces, and that line keeps to its edge. An outline whose
-    lines need more work to move in than the budget allows sews none, and `SC-I0904` says so.
+  - Each line of an outline now runs its tolerance inside the fill's edge, so that each stitch lies between
+    the edge and twice the tolerance in. Each side moves in, the moved sides meet where they cross at an
+    outward corner and an arc joins them at an inward one. Where the line folds over itself, as round a bar
+    narrower than twice the tolerance, it goes straight across the fold. An outline whose lines need more work to move
+    in than the budget allows sews none, and `SC-I0904` says so.
   - No outline stitch lies on a neighbour on any repository picture. The pictures sew 66 stitches fewer to
     54 more. The fills before the outlines end elsewhere. The running dog in 9 threads leaves 2 jump threads
     fewer, and 3 rows of the running dog in 6 threads now show beside a line (`tests/auto_photos.rs`).

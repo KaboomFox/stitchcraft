@@ -29,6 +29,10 @@
 //!   element after it. The outline's last line is the one with an end, or a corner when it is a ring, nearest
 //!   where the element sewn next starts, and it ends there ([`ending_near`]). A ring starts and ends at one
 //!   point, so a fill outlined whole is left where it would be left without its outline.
+//! - **Inside the edge.** A stitch is straight, and along an edge that bends away from the area it lay up
+//!   to its tolerance on the neighbour. So each line moves its tolerance into the area before it is sewn
+//!   (`REQ-AUTO-130`, [`inset`]): each side moves, an outward corner where the moved sides cross, an inward
+//!   one rounded. Where a line folds over itself, round a bar too narrow for it, it goes straight across.
 //! - **Work.** Each area has the budget's work to itself: a unit for each shape it looks past, the work of
 //!   growing those near, and for each piece a unit for each corner of the shapes whose bounds hold its middle.
 //!   Finding where an outline ends costs a unit for each corner of what the next element offers, for each end
@@ -262,8 +266,8 @@ pub(in crate::auto) fn ending_near(mut lines: Vec<Line>, target: &Approach, budg
 }
 
 /// `lines`, the outline of the area `id` along its edge as [`outlines`] found it, moved `by` into the area
-/// (`REQ-AUTO-130`), with `budget`'s work ([`moved_right`]). A ring stays a ring, and a line that can't be
-/// moved keeps to its edge. A line shorter than [`SHORTEST`] is left out. A ring's line runs as the ring
+/// (`REQ-AUTO-130`), with `budget`'s work ([`moved_right`]). A ring stays a ring, and a line of no side keeps
+/// to its edge. A line shorter than [`SHORTEST`] is left out. A ring's line runs as the ring
 /// does, so the area lies on its right with y up, the outline's clockwise and a hole's the other way. An
 /// outline that needs more work is not sewn, and `Err` says so (`SC-I0904`).
 pub(in crate::auto) fn inset(lines: Vec<Line>, by: f64, budget: &Budget, id: &ElementId) -> Result<Vec<Line>, Diagnostic> {
@@ -308,9 +312,10 @@ fn shifted(p: Point, (x, y): (f64, f64), by: f64) -> Point {
 /// The line `points` moved `by` to its right with y up, with `meter`'s work, a unit for each side: each
 /// side moved, the moved sides of a corner that turns right meeting where they cross, and those of a corner
 /// that turns left joined by an arc round the corner `by` from it. A side whose moved line falls behind the
-/// point where it would start is left out, and its neighbours meet. `None` where the line has no side, where
-/// its first or last side would be left out, where a side left out starts at an arc, or where the sides on
-/// both sides of one left out don't turn right.
+/// point where it would start is left out, and its neighbours meet. Where that side starts at an arc or is
+/// the first, or where the sides beside it don't turn right, the line folds over itself: it goes straight
+/// from the end of the moved side before the fold to the start of the one after it. A last side whose moved
+/// line ends behind its start ends on the edge. `None` where the line has no side.
 fn moved_right(points: &[Point], by: f64, meter: &mut Meter) -> Result<Option<Vec<Point>>, Exhausted> {
     let mut sides = Vec::with_capacity(points.len());
     for pair in points.windows(2) {
@@ -330,49 +335,62 @@ fn moved_right(points: &[Point], by: f64, meter: &mut Meter) -> Result<Option<Ve
         let mut dropped = false;
         loop {
             meter.charge(1)?;
-            let (Some(&(top, at, arced)), Some(&start)) = (kept.last(), curve.get(kept.last().map_or(0, |k| k.1))) else { return Ok(None) };
+            let Some(&(top, at, arced)) = kept.last() else { break };
+            let start = curve.get(at).copied().unwrap_or(top.from);
             let turn = top.along.0 * side.along.1 - top.along.1 * side.along.0;
             let ahead = top.along.0 * side.along.0 + top.along.1 * side.along.1;
-            if dropped && turn >= -STRAIGHT {
-                // The sides on both sides of one left out don't cross: the line folds over itself there.
-                return Ok(None);
-            }
-            if turn > STRAIGHT || (turn >= -STRAIGHT && ahead < 0.0) {
-                // A left turn, or straight back: round the corner.
+            let folds = if turn >= -STRAIGHT {
+                if dropped {
+                    // The sides beside one left out don't cross.
+                    true
+                } else if turn > STRAIGHT || ahead < 0.0 {
+                    // A left turn, or straight back: round the corner.
+                    curve.truncate(at + 1);
+                    curve.push(shifted(side.from, top.right, by));
+                    arc(&mut curve, side.from, (top.right, side.right), top.along, by, 0);
+                    curve.push(shifted(side.from, side.right, by));
+                    kept.push((side, curve.len() - 1, true));
+                    false
+                } else {
+                    // Straight on: the side goes on along the same moved line.
+                    kept.push((side, at, arced));
+                    false
+                }
+            } else {
+                // A right turn: the 2 moved lines cross. A side whose crossing lies behind its start is left
+                // out, unless it starts at an arc or is the first.
+                let next = shifted(side.from, side.right, by);
+                let across = ((next.x() - start.x()) * side.along.1 - (next.y() - start.y()) * side.along.0) / turn;
+                if across >= 0.0 {
+                    curve.truncate(at + 1);
+                    curve.push(Point::new(start.x() + top.along.0 * across, start.y() + top.along.1 * across).unwrap_or(next));
+                    kept.push((side, curve.len() - 1, false));
+                    false
+                } else if arced || kept.len() == 1 {
+                    true
+                } else {
+                    kept.pop();
+                    curve.truncate(at);
+                    dropped = true;
+                    continue;
+                }
+            };
+            if folds {
+                // The line folds over itself: from the end of the moved side before the fold straight to the
+                // start of the one after it, which starts afresh.
                 curve.truncate(at + 1);
-                curve.push(shifted(side.from, top.right, by));
-                arc(&mut curve, side.from, (top.right, side.right), top.along, by, 0);
+                curve.push(shifted(top.to, top.right, by));
                 curve.push(shifted(side.from, side.right, by));
-                kept.push((side, curve.len() - 1, true));
-                break;
+                kept = vec![(side, curve.len() - 1, false)];
             }
-            if turn >= -STRAIGHT {
-                // Straight on: the side goes on along the same moved line.
-                kept.push((side, at, arced));
-                break;
-            }
-            // A right turn: the 2 moved lines cross. A side whose crossing lies behind its start is left out.
-            let next = shifted(side.from, side.right, by);
-            let across = ((next.x() - start.x()) * side.along.1 - (next.y() - start.y()) * side.along.0) / turn;
-            if across >= 0.0 {
-                curve.truncate(at + 1);
-                curve.push(Point::new(start.x() + top.along.0 * across, start.y() + top.along.1 * across).unwrap_or(next));
-                kept.push((side, curve.len() - 1, false));
-                break;
-            }
-            kept.pop();
-            if arced || kept.is_empty() {
-                return Ok(None);
-            }
-            curve.truncate(at);
-            dropped = true;
+            break;
         }
     }
-    let (Some(&(last, at, _)), Some(&start)) = (kept.last(), curve.get(kept.last().map_or(0, |k| k.1))) else { return Ok(None) };
-    let end = shifted(last.to, last.right, by);
-    if (end.x() - start.x()) * last.along.0 + (end.y() - start.y()) * last.along.1 < 0.0 {
-        return Ok(None);
-    }
+    let Some(&(last, at, _)) = kept.last() else { return Ok(Some(curve)) };
+    let start = curve.get(at).copied().unwrap_or(last.from);
+    let moved = shifted(last.to, last.right, by);
+    // A last side whose moved line ends behind its start ends on the edge.
+    let end = if (moved.x() - start.x()) * last.along.0 + (moved.y() - start.y()) * last.along.1 < 0.0 { last.to } else { moved };
     curve.truncate(at + 1);
     curve.push(end);
     Ok(Some(curve))
@@ -703,21 +721,20 @@ mod tests {
         let (first, last) = (back[0].0[0], *back[0].0.last().unwrap());
         assert_eq!((back.len(), first, last, back[0].0.len() > 6), (1, (0.1, 0.0), (-0.1, 2.0), true));
         assert!(back[0].0[1..back[0].0.len() - 1].iter().all(|&(x, y)| (stitchcraft_core::math::hypot(x, y - 5.0) - 0.1).abs() < 2e-3), "{back:?}");
-        // A line keeps to its edge where its first or last side moves in to nothing, and where a side that
-        // does, after an arc, would part the arc from the side after it.
-        for edge in [
-            &[(0.0, 0.0), (0.0, 5.0), (0.05, 5.0)][..],
-            &[(0.0, 0.0), (0.05, 0.0), (0.05, -5.0)],
-            &[(0.0, 0.0), (0.0, 5.0), (-0.05, 5.0), (-0.05, 10.0)],
-        ] {
-            assert_eq!(moved_in(vec![open(edge)]), [(edge.to_vec(), false)]);
-        }
-        // A ring with a bar 0.15 mm wide keeps to its edge: the bar's end moves in to nothing, and its 2 sides,
-        // moved, don't meet. So does a ring narrower than that throughout. A ring of no points is left out.
+        // A last side whose moved line would end behind its start ends on the edge. Where the line folds over
+        // itself, it goes straight from the end of the moved side before the fold to the start of the one after
+        // it: where its first side, or a side after an arc, moves in to nothing, and where the 2 sides of a bar
+        // narrower than twice the distance, moved, pass each other.
+        assert_eq!(moved_in(vec![open(&[(0.0, 0.0), (0.0, 5.0), (0.05, 5.0)])]), [(vec![(0.1, 0.0), (0.1, 4.9), (0.05, 5.0)], false)]);
+        let first = vec![(0.0, -0.1), (0.05, -0.1), (-0.05, 0.0), (-0.05, -5.0)];
+        assert_eq!(moved_in(vec![open(&[(0.0, 0.0), (0.05, 0.0), (0.05, -5.0)])]), [(first, false)]);
+        let arced = moved_in(vec![open(&[(0.0, 0.0), (0.0, 5.0), (-0.05, 5.0), (-0.05, 10.0)])]);
+        assert_eq!(arced[0].0[arced[0].0.len() - 4..], [(0.0, 5.1), (-0.05, 5.1), (0.05, 5.0), (0.05, 10.0)]);
         let flagged = [(0.0, 0.0), (0.0, 5.0), (2.5, 5.0), (2.5, 15.0), (2.65, 15.0), (2.65, 5.0), (5.0, 5.0), (5.0, 0.0)];
-        assert_eq!(moved_in(vec![ring(&flagged)]), [(flagged.to_vec(), true)]);
+        let flag = moved_in(vec![ring(&flagged)]);
+        assert_eq!(flag[0].0[..4], [(2.6, 10.0), (2.6, 15.0), (2.55, 15.0), (2.55, 5.0)]);
         let bar = [(0.0, 0.0), (0.0, 10.0), (0.15, 10.0), (0.15, 0.0)];
-        assert_eq!(moved_in(vec![ring(&bar), ring(&[])]), [(bar.to_vec(), true)]);
+        assert_eq!(moved_in(vec![ring(&bar), ring(&[])]), [(vec![(0.1, 5.0), (0.1, 10.0), (0.05, 10.0), (0.05, 0.0), (0.1, 0.0)], true)]);
         // 2 squares joined by a neck 0.15 mm wide move in as one ring: along the neck, the 2 moved sides pass
         // each other and lie inside it, 2.5 and 2.55 mm up, rounding its 4 inward corners.
         let dumbbell = [
