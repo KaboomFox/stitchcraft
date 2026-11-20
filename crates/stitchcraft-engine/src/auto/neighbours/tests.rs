@@ -573,6 +573,31 @@ fn a_rail_is_run_along_where_shapes_cover_more_than_half_of_its_length() {
 }
 
 #[test]
+fn req_auto_029_a_column_sews_the_overlap_past_a_rail_and_keeps_the_other_rails_own_pull_compensation() {
+    let settings = DesignSettings::default();
+    let past = |pull: Option<&str>, under: [bool; 2]| {
+        let mut column = column_made(None);
+        if let Some(pull) = pull {
+            column.element.params.set(PULL_COMPENSATION, pull);
+        }
+        let mut shapes = Shapes::new(vec![column], &settings, &Budget::DEFAULT);
+        shapes.reach_past(0, under, 1.5);
+        shapes.elements[0].params.get(PULL_COMPENSATION).map(str::to_string)
+    };
+    let past = |pull: Option<&str>, under: [bool; 2]| past(pull, under).unwrap();
+    // One length is each rail's, and a column with none has 0 on each.
+    assert_eq!(past(Some("0.4"), [true, false]), "1.5 0.4");
+    assert_eq!(past(None, [false, true]), "0 1.5");
+    // A length for each rail: the rail it sews past takes the overlap, and the other keeps its own.
+    assert_eq!(past(Some("0 0.4"), [true, false]), "1.5 0.4");
+    assert_eq!(past(Some("0 0.4"), [false, true]), "0 1.5");
+    assert_eq!(past(Some("0.2 0.4"), [true, true]), "1.5 1.5");
+    // A pull compensation that doesn't read, or out of its range, stays as it is, for planning to say so.
+    assert_eq!(past(Some("0 0.4 1"), [true, false]), "0 0.4 1");
+    assert_eq!(past(Some("20"), [true, false]), "20");
+}
+
+#[test]
 fn a_columns_rails_are_found_once_for_what_it_paints_and_where_it_sews_past_a_rail() {
     let settings = DesignSettings::default();
     let mut shapes = Shapes::new(vec![column_made(None)], &settings, &Budget::DEFAULT);

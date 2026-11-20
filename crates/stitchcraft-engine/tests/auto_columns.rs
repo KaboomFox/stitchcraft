@@ -7,7 +7,7 @@
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
 use stitchcraft_core::math::{self, sin_cos};
-use stitchcraft_core::{Budget, Mm, Point};
+use stitchcraft_core::{Budget, Code, Mm, Point};
 use stitchcraft_engine::auto::{
     CONTOUR_FROM, CROWDED_CLOSER_THAN, CROWDED_INSETS, Digitized, EDGE_REACH, OPEN_HOLE, Stitches, ZIGZAG_ABOVE, digitize, digitized,
 };
@@ -396,6 +396,28 @@ fn req_auto_084_a_column_along_a_hole_wide_enough_to_read_has_no_pull_compensati
         let open = reach_of(elements);
         assert!(open.len() == 1 && open[0] != reach.to_string(), "{open:?}");
     }
+}
+
+#[test]
+fn req_auto_029_a_column_along_a_hole_kept_open_sews_under_a_shape_beside_it_and_keeps_no_pull_compensation_on_the_hole() {
+    let reach = rules().auto_pull_compensation_mm.get();
+    // A frame 40 mm by 5 round a slot 1 mm high, and a band drawn after it along its top: no shape drawn later
+    // meets the slot, which the frame's columns keep open, and the column along the frame's top sews 1 mm
+    // under the band. Each column has a length for each rail, the overlap or its own compensation.
+    let frame = automatic(fill("frame", &[&rectangle((0.0, 0.0), (40.0, 5.0)), &rectangle((2.0, 3.0), (38.0, 2.0))], &RED, &[]));
+    let band = automatic(shape("band", &rectangle((0.0, 5.0), (40.0, 10.0))));
+    let design = Design::new(vec![frame.clone(), band.clone()], DesignSettings::default()).unwrap();
+    let (made, _) = digitized(&design, &Budget::DEFAULT);
+    let pulls: Vec<&str> = made.iter().filter(|element| element.id.as_str().starts_with("frame")).filter_map(|column| setting(column, PULL_COMPENSATION)).collect();
+    let overlap = rules().auto_overlap_mm.get();
+    let (along_hole, under_band) = (format!("{reach} 0"), format!("{overlap} 0"));
+    assert_eq!(pulls.len(), 4, "{pulls:?}");
+    assert_eq!(pulls.iter().filter(|pull| **pull == along_hole).count(), 3, "{pulls:?}");
+    assert_eq!(pulls.iter().filter(|pull| **pull == under_band).count(), 1, "{pulls:?}");
+    // The design plans with no setting that doesn't read.
+    let outcome = planned(vec![frame, band]);
+    assert!(outcome.diagnostics.iter().all(|said| said.code != Code::ParamInvalid), "{:?}", messages(&outcome));
+    assert!(outcome.plan.is_some());
 }
 
 #[test]
