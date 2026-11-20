@@ -40,6 +40,19 @@ fn req_vc_002_each_family_s_manifest_is_one_vectorcraft_accepts() {
 }
 
 #[test]
+#[ignore = "planned: M13.26 builds Expand"]
+fn req_vc_035_each_effect_declares_what_an_expanded_part_sets() {
+    // VectorCraft admits a filter's new effect record with the parameters its manifest takes, so each
+    // effect declares the settings an expanded part carries (docs/src/design/image-to-embroidery.md › Expand).
+    for each in Family::ALL {
+        let manifest = family(*each);
+        assert!(manifest.params.iter().any(|(key, _)| *key == "digitized_as"), "{each:?}");
+        assert_eq!(validate(&text(&manifest)), Ok(()), "{each:?}");
+    }
+    assert!(family(Family::Fill).params.iter().any(|(key, _)| *key == TURN_STITCHES));
+}
+
+#[test]
 fn req_vc_011_each_exporter_s_manifest_is_one_vectorcraft_accepts() {
     let profiles: Vec<&str> = BUILTIN.iter().map(|profile| profile.id).collect();
     for format in FormatId::ALL {

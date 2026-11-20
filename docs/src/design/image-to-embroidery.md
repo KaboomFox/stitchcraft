@@ -3761,6 +3761,191 @@ The owner took the 6 recommendations of phase 1 on 2026-11-19:
   `--traced` wrote, and a path the person draws later has a name for each plan only.
 - VectorCraft's own Layers panel isn't changed.
 
+## Expand
+
+Expand (M13.26) is the other way out of automatic digitizing. Marks, guides and names steer a design while
+it stays automatic. When no control gives what a person wants, Expand makes the design ordinary elements
+with ordinary effects, which the person edits one by one, as the automatic digitizing of other embroidery
+software leaves a design. The expanded design sews as the automatic one sewed, and it no longer changes
+when the picture, its marks or the Auto effect's settings change. Phase 1 recorded this decision on
+2026-11-20, with a prototype measured on 13 designs of the set of pictures. The build is a later phase.
+
+### The decision
+
+Planning already turns every automatic element into ordinary elements before anything is generated
+([automatic elements](#automatic-elements)). Expand writes those elements out, each with the settings that
+say what it sews, and every later plan reads them as shapes set by hand. A second digitizer, or a
+translation of the rules into other settings, isn't needed: the elements are the ones the automatic plan
+sews.
+
+Planning does more after digitizing, by which elements digitizing made, and no setting of an element says
+so today. Between 2 elements that digitizing made, the needle runs under later shapes in place of a jump
+(`REQ-AUTO-053`). Every stitch of the base layer is underlay (`REQ-AUTO-028`). The cap at the end of
+planning thins the elements digitizing made and the lettering it placed, with the limits of the lowest
+automatic shape (`REQ-AUTO-074`).
+
+Expand keeps them with one new setting common to every stitch effect, `digitized_as`: `no`, the default,
+for a shape set by hand, `part` for an element that sews as digitizing made it, and `base` for a piece of
+the base layer. Planning reads it from any element, so a person can also set it by hand, or turn it off
+on a part. The cap's limits become design settings, kept with the document as its machine is
+([design settings](vectorcraft-integration.md#design-settings-and-machine-kept-with-the-document)). With
+them the expanded design plans to the automatic plan exactly (`REQ-AUTO-142`, `REQ-AUTO-143`).
+
+### The parts and their settings
+
+Each part is an object, in the order the parts sew, and each object's effect is its family's
+([parameter registry](params.md)). Ink/Stitch's names are used where its parameters are the
+interoperability contract.
+
+| What digitizing makes | The ordinary element | Its settings |
+|---|---|---|
+| An area's fill, with its angle, underlay and overlap | the area as digitizing sews it, which reaches under the shapes sewn after it and holds the specks merged into it | the fill effect, tatami, with `angle`, `row_spacing_mm`, `max_stitch_length_mm`, `staggers`, `underpath`, `fill_underlay` and `turn_stitches` |
+| A satin column | a line along the column's centre, as wide as the column (`REQ-SAT-016`) | the satin effect with `satin_column`, the underlay of its width, `pull_compensation_mm`, `push_compensation_mm`, the short stitches and the nearest start and end |
+| A line, a narrow part and an outline | a line along the path the stitches follow | the stroke effect, with `bean_stitch_repeats` for a triple run and `running_stitch_tolerance_mm` |
+| A guided fill (`REQ-AUTO-109`) | the fill, and its guide line grouped with it | the fill effect, guided |
+| Lettering it placed | the letters' columns and lines, as they sew | as a satin column and a line |
+| A part left out, the background or a speck | nothing | none |
+| A piece of the base layer | a fill under the details | the fill effect, with `digitized_as` = `base` |
+| The run from one part to the next | nothing: planning finds it | `digitized_as` = `part` on both |
+| The cap's thinning | nothing: planning thins the plan | `digitized_as` = `part`, and the design's limits |
+| The sewing order | the objects' order | none |
+| The lock stitches of a small part | | `lock_start`, `lock_end` and their scales |
+
+The prototype counted the settings the parts carry on the 13 designs below. Every one is in the
+parameters registry. Ink/Stitch has all but `turn_stitches`. The fill effect's dialog leaves
+`turn_stitches` out, and VectorCraft admits only the parameters a manifest declares. The dialog needs
+the row. 2 elements also carried `auto_fill_outline`, a setting of the Auto effect. Expand drops every
+`auto_` key.
+
+Each part takes its shape's name ([names of shapes](#names-of-shapes)), numbered as the notices number
+the parts. What Expand can't keep is said by a coded warning, and nothing is dropped silently:
+
+- The lettering it placed becomes columns, and its text can't be edited as text.
+- An SVG file sewn by Ink/Stitch loses `digitized_as` and the design's limits, so Ink/Stitch sews it with
+  jumps and without the cap.
+- A guided fill's guide is left out where the writer can't group it with its fill.
+- A shape that needs more work than the budget allows is left out, as planning leaves it out
+  (`SC-E0004`).
+
+### Expand on the command line and in VectorCraft
+
+**The command line.** `stitch expand picture.vectorcraft -o expanded.vectorcraft` writes the documented
+`.vectorcraft` format, and `-o expanded.svg` an SVG file with Ink/Stitch's attributes. The traced group
+stays in the document, hidden and locked, below a new group of the expanded parts, as Image Trace keeps
+the source image beside its paths. The document stays the one VectorCraft saved but for these 2 groups, as
+`--traced` keeps it but for the names ([names](#names-of-shapes)). A picture given to `stitch expand` is
+traced first, as `stitch plan` traces it.
+
+**VectorCraft, today.** In one undo step, a filter may replace the selected paths with new objects that
+have StitchCraft's effect records, as Stroke to Satin does
+([tools](vectorcraft-integration.md#tools-stroke-to-satin-and-test-sheet)). An Expand filter can't work
+today:
+
+- A filter reads a path's own effects alone ([routing filters](vectorcraft-integration.md#tools-the-routing-filters)).
+  The Auto effect is usually on the traced group, so the filter can't read the rules' settings.
+- Digitizing a design takes an export's work. TS-13A to TS-13C took 7.9 to 8.0 billion instructions to
+  export, where a heavy filter gets 1 billion, and a traced photo needs 51 to 69 billion
+  ([P10](rfc-vectorcraft-abi-v2.md#p10-an-export-budget-that-fits-a-traced-photo)).
+
+So in VectorCraft a person runs `stitch expand` and opens the document it writes. The smallest change to
+ask of VectorCraft, through the [plug-in features RFC](rfc-vectorcraft-abi-v2.md), is
+[P11](rfc-vectorcraft-abi-v2.md#p11-the-effects-of-a-paths-groups-in-a-filter). With it a filter reads the
+effects of the groups round each path. A heavy filter needs P10's budget as well. A filter
+can't make a group either, which a guided fill's guide needs. That is a later ask, and until then an
+Expand filter leaves the guide out and says so.
+
+### How faithful it is
+
+**Measured** on 2026-11-20 with the prototype, `main` at `ebbdd62a`, built at opt-level 2. Each design is
+planned automatic, then expanded with ordinary effects alone, without `digitized_as` and the cap's
+limits, and planned again with the same origin:
+
+| Design | Stitches | Jumps | Jump threads | Thickest, fills | At 3 fills or more, mm² | Needle points as with the cap off |
+|---|---:|---:|---:|---:|---:|---|
+| Dog on turf, 6 threads | 9,530 → 10,219 | 69 → 78 | 60 → 69 | 3.87 → 5.09 | 54.25 → 138.00 | no |
+| Dog on turf, 9 threads | 10,100 → 10,887 | 75 → 82 | 62 → 69 | 3.97 → 5.13 | 63.75 → 151.50 | no |
+| Dog running, 6 threads | 10,630 → 11,169 | 58 → 69 | 49 → 60 | 3.92 → 4.96 | 53.50 → 128.75 | no |
+| Dog running, 9 threads | 11,779 → 12,674 | 76 → 92 | 64 → 80 | 3.98 → 5.85 | 94.00 → 190.50 | no |
+| Pear | 4,628 → 4,674 | 5 → 6 | 2 → 3 | 3.99 → 4.35 | 10.50 → 13.50 | no |
+| Lettered patch | 4,000 → 4,033 | 11 → 12 | 8 → 9 | 3.98 → 4.00 | 38.75 → 40.50 | no |
+| Badges | 4,619 → 4,655 | 7 | 4 | 4.00 → 4.56 | 18.25 → 24.75 | yes |
+| Emblem | 4,992 → 4,997 | 6 | 2 | 3.25 → 3.57 | 0.00 → 1.25 | yes |
+| TS-13A, digitized half | 11,484 → 11,522 | 21 | 18 | 3.99 → 4.29 | 19.50 → 26.50 | yes |
+| TS-13B, digitized half | 6,868 → 6,913 | 51 → 54 | 46 → 49 | 3.85 | 3.25 → 4.25 | no |
+| TS-13C, digitized half | 5,949 → 6,081 | 18 → 20 | 13 → 15 | 3.92 → 4.54 | 83.75 → 104.25 | no |
+| TS-13D, digitized half | 7,928 → 8,012 | 16 | 12 | 3.97 → 4.73 | 41.50 → 53.25 | yes |
+| TS-13E, digitized half | 2,712 → 2,716 | 8 | 5 | 3.24 → 3.39 | 2.50 | yes |
+
+On every design the thread changes, the order of the elements, the stitches astray and the likeness are
+the same. Bare fabric is the same or less. With the cap off in the automatic plan, 5 designs have every
+needle point the same, in the same order, and differ only in the base layer's stitches, which are
+underlay in the automatic plan and top stitches once expanded (187 to 1,085 a design). The other 8 jump
+where the automatic plan runs under later shapes, 1 to 16 jumps more, with 2 to 128 needle points
+different round them. So the cap and the runs account for every difference measured, and the base layer
+for every difference of the stitches' parts.
+
+**The tolerance.** With `digitized_as` and the design's limits, the expanded design's plan is the automatic
+plan. It has the same threads. Each stitch lies at the same point, with the same kind and part, in the
+same order. So the machine file is the same byte for byte. The planning functions are deterministic and get the same
+elements and the same 3 sets. The requirement holds the 2 plans to the bit. A document written out reads its points
+back to within a unit in the last place of a point (`stitchcraft_vectorcraft::filter`). A fill's rows
+could then fall on the other side of a rounding. The case of a written document checks every
+needle point to within 0.001 mm, with the same count, kinds, threads and order. A person's edit breaks it.
+So does a format that can't store a part's settings, and a guide that a filter can't group with its fill.
+
+Stitched previews of a traced dog, the lettered patch and TS-13C, automatic beside expanded with
+ordinary effects alone, show the extra jump threads, such as one along TS-13C's balloon string.
+
+### Other embroidery software
+
+- Wilcom EmbroideryStudio's Auto-Digitize makes objects of chosen kinds, Tatami Fill, Turning Satin,
+  Centerline Run and Outline Run, with the current properties, and a person then edits their properties,
+  stitch angles, entry and exit points and sequence
+  ([Auto-digitize individual shapes](https://docs.wilcom.com/embroiderystudio/28/en/OnlineHelp/Automatic/automatic/automatic-11.htm)).
+  Its Smart Design sets the sequence by closest join, and the person reorders colours and turns underlay
+  on or off ([Auto-digitize entire designs](https://docs.wilcom.com/embroiderystudio/27/en/OnlineHelp/Automatic/automatic/automatic-10.htm)).
+  The pages describe one run from the artwork to the objects, and describe no link that updates them.
+- Hatch Embroidery's Auto-Digitize leaves objects that a person reshapes, gives another fill type in Object
+  Properties and orders in the Sequence tab ([a user guide](https://makerspaces.northeastern.edu/create/library/embroidery-2-diy-training-using-hatch-auto-digitize/)).
+- Brother PE-Design's Auto Punch sets, before it converts, which areas sew and which become lines, and is
+  run again with Retry after a change
+  ([PE-Design 8 manual, p. 128](https://www.manualsdir.com/manuals/377010/brother-pe-design-8.html?page=128)).
+- Ink/Stitch has no automatic digitizing of a picture. Its Jump to Stroke tool makes the jumps between
+  elements running stitches placed under the following stitches
+  ([stroke tools](https://inkstitch.org/docs/stroke-tools/)), which is how `digitized_as` = `part` sews.
+
+A person coming from them finds the same objects with properties, in an order that is the sewing order,
+which they edit freely. What differs: the expanded fills already reach under their neighbours and have a
+base layer under them, and planning keeps the runs under later shapes and the cap while the parts keep
+`digitized_as`.
+
+### Decisions for the owner
+
+Each with the recommendation of phase 1:
+
+1. **One setting, `digitized_as`, for what ordinary effects can't say.** Recommended. The other way is
+   to freeze each run as a stroke, as Ink/Stitch's Jump to Stroke does. The cap would then be lost
+   with a warning. On the dogs that raises the area at 3 fills or more 2 to 2.6 times, and a run frozen in place
+   no longer lies under the shape a person moves.
+2. **The traced group stays, hidden and locked, under the expanded parts.** Recommended, so the person can
+   compare and go back. The other way deletes it.
+3. **Lettering placed for a marker becomes its columns.** Recommended, since they are what sewed. The other
+   way writes a text object with the lettering effect. A person can then edit its text. The lettering's
+   own rules sew it, and their stitches can differ from the automatic plan's.
+4. **The command line first, VectorCraft through P11.** Recommended. A `.vectorcraft` exporter would
+   write a second document, and a filter can't run until P11 and P10 are in VectorCraft.
+5. **The cap's limits as design settings.** Recommended. The other way keeps them on each part, where
+   the parts could disagree.
+6. **The name.** VectorCraft's Object › Expand already makes an Image Trace object plain paths.
+   Recommended: `stitch expand` on the command line, and Expand Embroidery in VectorCraft's menus, so
+   that the 2 commands aren't mistaken for each other.
+
+### What isn't built
+
+Everything: `stitch expand`, `digitized_as`, the design settings of the cap, the writer of the expanded
+document and the SVG file, and the warning, whose number the build phase takes. Its requirements are
+`REQ-AUTO-142` to `REQ-AUTO-144`, `REQ-CLI-025` and `REQ-VC-035`, each with a case kept as planned.
+
 ## Pictures from the command line
 
 `stitch plan picture.png` and `stitch export picture.png` trace the picture with VectorCraft's command line,
