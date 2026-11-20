@@ -41,7 +41,7 @@
 use stitchcraft_core::{Code, Diagnostic, ElementId, Exhausted, Fix, Meter, Mm, Point, Rect};
 
 use super::narrow::{Edges, farthest, piece, reach, spread, widest, width, within};
-use super::rules::{Bounds, Breadth, MOST_CROWDING, Measures, RuleId, choose, crowds, fills};
+use super::rules::{Asked, Bounds, Breadth, MOST_CROWDING, Measures, RuleId, choose, crowds, fills};
 use super::{AutoParams, Open, at_most};
 use crate::design::Path;
 use crate::generators::mm;
@@ -57,6 +57,8 @@ pub(super) struct Columns {
     pub(super) part: Polygon,
     /// Its columns, in the order they are sewn.
     pub(super) sewn: Vec<Sewn>,
+    /// Whether it is a wide part, whose column's stitches are split (`auto::wide`).
+    pub(super) wide: bool,
 }
 
 /// A column of a part as it is sewn.
@@ -123,9 +125,26 @@ pub(in crate::auto) fn filled(part: &Polygon, bounds: &Bounds, meter: &mut Meter
     let Some(breadth) = bounds.breadth_of(part, meter)? else { return Ok(None) };
     let unmeasured = Measures::of_breadth(part.area(), breadth);
     let as_filled = |rule: RuleId| fills(rule, bounds).then_some(rule);
+    // A wide part sews along its middle, as a column does (`auto::wide`).
+    if breadth == Breadth::Broad
+        && let Some(wide) = bounds.wide().filter(|_| bounds.asked != Asked::Fill)
+        && within(part, wide.max_satin, meter)? == Some(true)
+        && judged(part, &wide, meter)?.is_none()
+    {
+        return Ok(None);
+    }
     if breadth != Breadth::Medium {
         return Ok(as_filled(choose(&unmeasured, bounds)));
     }
+    judged(part, bounds, meter)
+}
+
+/// The rule by which the rules fill `part`, no wider than a satin column of `bounds`, judged by its columns,
+/// with `meter`'s work, as [`filled`] says. A wide part's bounds ([`Bounds::wide`]) also fill a part of
+/// several lines or of an uneven width, as an area.
+fn judged(part: &Polygon, bounds: &Bounds, meter: &mut Meter) -> Result<Option<RuleId>, Exhausted> {
+    let unmeasured = Measures::of_breadth(part.area(), Breadth::Medium);
+    let as_filled = |rule: RuleId| fills(rule, bounds).then_some(rule);
     let Ok(Some(found)) = strips::columns(part, piece(part), &[], bounds.narrowest.get(), meter)? else { return Ok(None) };
     let edges = Edges::of(part, piece(part), meter)?;
     // A part without a centre line of any length is a dot, which is compact.
@@ -133,6 +152,9 @@ pub(in crate::auto) fn filled(part: &Polygon, bounds: &Bounds, meter: &mut Meter
     let rule = choose(&measures, bounds);
     if let Some(rule) = as_filled(rule) {
         return Ok(Some(rule));
+    }
+    if bounds.splits && !bounds.one_even_line(measures.lines, measures.unevenness) {
+        return Ok(Some(RuleId::Area));
     }
     if too_long(&found, bounds, meter)?.is_some() {
         return Ok(Some(RuleId::Refused));

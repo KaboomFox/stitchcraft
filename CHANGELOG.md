@@ -5,6 +5,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.54: wide columns, a setting off by default (`REQ-AUTO-152` to `REQ-AUTO-156`).
+  - `auto_max_split_satin_width_mm`, an advanced setting from 7 to 12 mm. Raised, a part of an automatic area
+    wider than a satin column somewhere and no wider than the setting anywhere, within 0.05 mm, sews as one
+    satin column when it has one centre line, an even width and stitches that don't crowd. A line that wide
+    sews so too. Its stitches split at 7 mm at a random phase with 10 % jitter, so that their needle holes
+    don't line up, and the rule `wide` (`SC-I0912`) names it. A refused wide part says why (`SC-I0902`).
+  - At 7 mm, the default, the rule is off, and no style sets it. Every design sews as before, and every
+    golden file stays. Raised to 10 mm, the 13 designs and the 4 local photos sew the same stitches.
+    On a drawn bar, ring, arch and stroked circle 8.5 mm wide the columns sew 23.2 m of thread where the
+    fills sew 15.2 m, 3.73 fills at the thickest spot against 2.63, and 146 stitches under 0.5 mm against 902.
 - M13.42: the style of digitizing stays the person's choice (`REQ-AUTO-150`). Measured on 28 pictures, no
   measure of a picture or of its trace chose between `logo` and `photo` without misstyling 4 or more, so
   there is no `auto` style. A notice, `SC-I0923` (`REQ-AUTO-151`), says when the other style would sew the
