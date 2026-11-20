@@ -3617,8 +3617,8 @@ doesn't lose detail by that measure, and its colour error shows the loss.
 - **Snap Curves To Lines** moves each measure by less than 2 neighbouring values of Paths or Corners do.
 
 **Built (M13.51).** Paths 0 and Corners 0 for every picture `stitch plan` traces, but those with the `logo`
-style, which keeps the tracer's defaults: a logo's corners are drawn, and Corners 0 would round every turn
-under 90°, such as an octagon's. No traced logo with its source was measured, so the `logo` style keeps the
+style, which keeps the tracer's defaults. Corners 0 would round each turn of a drawn logo under 90°, such as
+an octagon's. No traced logo with its source was measured, so the `logo` style keeps the
 defaults until one is. Noise stays 25.
 
 Each picture was traced from its source by VectorCraft 0.24.1's command line with the defaults and with
@@ -3651,7 +3651,7 @@ fills of thread or more:
   sew 1.5 % fewer stitches and leave 8 % fewer jump threads, and the colour error and the detail lost
   stay within 1 of what they were. Every picture traces into the same shapes, so no shape is lost. The
   badge's ring keeps more of its likeness, since it is traced as a ring of even width.
-- **Worse.** The dogs have 28 % more area at 3 fills, 340 mm² where they had 266, and one of them reaches
+- **Worse.** The dogs have 28 % more area at 3 fills, 340 mm² where they had 266, and one of them sews
   4.04 fills at its thickest spot, past the 4 fills where the warning starts. The lettered patch has 3
   times the area at 3 fills, and 118 stitches astray where it had 90. The badge, flat art traced without
   the `logo` style, sews 18 % more stitches and 60 % more short ones.

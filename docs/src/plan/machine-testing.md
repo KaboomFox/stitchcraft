@@ -370,8 +370,8 @@ side:
   over 3 or 4 other fills. Does the needle thump there, or the thread fray?
 
 M13.51 asks Image Trace for Paths 0 and Corners 0 when `stitch plan` traces a picture
-([the tracer's options](../design/image-to-embroidery.md#the-tracers-options)). It changes no test sheet
-and no committed trace. At MC-8, trace the dog on turf's cut-out in 6 threads with `stitch plan` from
+([the tracer's options](../design/image-to-embroidery.md#the-tracers-options)). It doesn't change a test sheet
+or a committed trace. At MC-8, trace the dog on turf's cut-out in 6 threads with `stitch plan` from
 `main` before M13.51 and from after it, and sew both side by side:
 
 - The outlines have about a third fewer points and half the jags. Are the edges between patches of fur

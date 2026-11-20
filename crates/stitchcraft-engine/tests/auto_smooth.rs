@@ -10,7 +10,14 @@
 //! `diag_sc_i0921_…`. The case of an area with no setting passes today, and guards the outline as drawn.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
-#![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
+#![allow(
+    clippy::unwrap_used,
+    clippy::panic,
+    clippy::indexing_slicing,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss
+)]
 
 use stitchcraft_core::{Budget, Diagnostic};
 use stitchcraft_engine::auto::digitized;
@@ -97,7 +104,10 @@ fn distance(p: (f64, f64), line: &[(f64, f64)]) -> f64 {
             let (dx, dy) = (bx - ax, by - ay);
             let length2 = dx * dx + dy * dy;
             let t = if length2 > 0.0 { (((p.0 - ax) * dx + (p.1 - ay) * dy) / length2).clamp(0.0, 1.0) } else { 0.0 };
-            (p.0 - ax - t * dx).hypot(p.1 - ay - t * dy)
+            {
+                let (ex, ey) = (p.0 - ax - t * dx, p.1 - ay - t * dy);
+                (ex * ex + ey * ey).sqrt()
+            }
         })
         .fold(f64::INFINITY, f64::min)
 }
@@ -126,7 +136,10 @@ fn req_auto_131_an_outline_is_smoothed_within_the_setting_and_keeps_its_corners(
         assert!(distance(p, &closed) <= 0.2 + 1e-9, "{p:?} lies {} mm from the drawn outline", distance(p, &closed));
     }
     for corner in [(0.0, 0.0), (20.0, 0.0), (0.0, 10.0)] {
-        assert!(smoothed.iter().any(|&p| (p.0 - corner.0).hypot(p.1 - corner.1) < 1e-9), "the corner {corner:?} moved: {smoothed:?}");
+        assert!(
+            smoothed.iter().any(|&p| (p.0 - corner.0).abs() < 1e-9 && (p.1 - corner.1).abs() < 1e-9),
+            "the corner {corner:?} moved: {smoothed:?}"
+        );
     }
     // The saw-tooth's 75 points away from its ends become a line or a few points along it.
     assert_eq!(on_the_edge(&original).len(), 75);
