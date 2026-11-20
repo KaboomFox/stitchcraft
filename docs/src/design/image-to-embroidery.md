@@ -207,6 +207,97 @@ so far, and becomes a value of the profile with the step that splits the stitche
 A style is a named set of values of these settings, and no rule of its own: `stitch plan --style logo` for
 flat art drawn in strokes, and `--style photo` for a traced photo, which is the defaults.
 
+### Choosing a style
+
+The style stays the person's choice (`REQ-AUTO-150`, M13.42). An `auto` style would choose `logo` or `photo`
+from the picture's own measures, and no measure tried chooses well on a varied set. This section keeps
+the evidence, measured on 2026-11-20 on `main` at `6c565e4c`.
+
+**What the choice changes.** The 2 styles differ in 2 settings. `auto_prefer` of `satin` leans 3 bounds
+towards columns. `auto_fill_uneven` off keeps the columns of an uneven part and sews each ragged thin line
+as a line where `photo` merges it into its neighbour. So the wrong style costs:
+
+| Picture | In its own style | In the other |
+|---|---|---|
+| A traced photo | its thin lines merge, and it sews thin | `logo`: 2 to 11 times the area at 3 fills, up to 7.1 fills, the cap out of budget (`SC-W0913`) |
+| Flat art, lettering or a drawing | its lines and columns sew as drawn | `photo`: up to 20 % of its detail lost, as lines merge into fills (`SC-I0915`) |
+
+Some designs sew alike in both: a badge of broad flat shapes, a drawing of even lines or a sky of flat
+bands doesn't change any part's rule. The 4 traced dogs keep 1 to 5 % less of their detail in `photo`, so neither
+style is better on every count.
+
+**The set.** 25 pictures of known style and 3 undecided ones. Drawn in code for this step: flat art in an
+even pen, flat art with hard bands of shade, photo-like pictures with soft edges and grain, 2 drawings in an
+uneven pen, lettering on a field, and 2 flat pictures photographed, with light that falls off and grain. A
+person picks `logo` for the flat art, the drawings, the lettering and the photographed art, and `photo`
+for the soft pictures. A person can't place 3: a badge with a soft gradient, and 2 pictures that are half photo and half
+flat art. The repository adds the 4 traced dogs, the pear, the traced badge and the lettered patch, and 4
+traced photos of flowers, a bird and a building were measured locally. Each was traced by VectorCraft
+0.24.1 in 6 colours, 100 mm across, from 1,000 and 500 pixels.
+
+**The measures.** None separates the 2 groups:
+
+- **Flat colour in the picture**, the share of pixels whose neighbours match within 3 levels: 0.80 to 0.96
+  for drawn flat art, as a JPEG too, and 0.29 at most for the photo-like pictures. A photographed badge
+  reads 0.001, and a dog cut out of its photo on a white ground reads 0.64, so both get the wrong style.
+- **Flat colour in the subject**, the ground's colour left out: the dog reads 0.03, but a drawing in an
+  uneven pen reads 0.43 from 1,000 pixels and 0.10 from 500, below a furry picture's 0.25.
+- **Thin lines drawn evenly**, the roadmap's example: a trace draws every thin line ragged, a pen line
+  too. Every picture had 0 to 0.006 of its thin-line area even, and the even shield's 4 lines were the only exception.
+- **Small parts**, the share of parts under 2 mm²: 0 to 0.88 for flat art and 0.04 to 0.97 for photos.
+  The running dog reads 0.07 at 100 mm, 0.46 at 60 mm and 0 at 150 mm.
+- **Uneven parts**, the share of area in parts of several centre lines whose width varies by more than
+  0.3: 0.38 for a hand-drawn flower, 0.77 from 500 pixels, and 0 to 0.26 for 5 of the photos.
+
+Even thin lines tell nothing apart. A bound on flat colour, of the picture or of its subject, misstyles 4
+of the 19 pictures with a source to measure, and a bound on small or uneven parts 6 or 7 of the 25. Each
+bound moves with the picture's pixels and size. Which style sews a picture better can flip too: a lettered disc sewed
+572 mm² at 3 fills in `logo` and 87 in `photo` from 1,000 pixels, and 73 and 351 from 500. A picture of
+both kinds, such as a label on a photo, wants `logo` on the label and `photo` on the rest, which one style
+can't give. Shape settings, marks (`--keep`) and Expand serve such a picture.
+
+**What is said instead.** One notice, `SC-I0923` (`REQ-AUTO-151`, `auto::style`), tells the person that the
+choice matters for this design and which way the other style goes. The other style is the preset whose
+`auto_fill_uneven` differs from the shape's, with its values set over the shape's settings as `--style`
+sets them. The notice counts 2 things:
+
+- **Thin lines.** In the photo style, the lines that merged into their neighbours. In the logo style, the
+  ragged thin lines that merging would take, found as merging finds them, which stay as they are. A merge
+  keeps some of them for the picture's likeness, so the notice says that they may merge.
+- **Parts.** Each part is decided again from the measures that decided it, under the other style's
+  bounds. A part filled here that the other style sews as satin columns counts with its rule, and a part
+  sewn as columns that the other style fills counts too.
+
+The notice names the other style and its settings, and says nothing else: no opinion of which style is
+right, and nothing of what the picture shows. A design whose counts are all 0 gets none. It changes no
+stitch. The count of the parts plans nothing again, so it leaves out how a fill splits off its narrow
+pieces, which `auto_prefer` leans too, and the lines that a merge keeps for the picture's likeness.
+
+**What it costs.** The photo style adds a unit of work for each part and no geometry. The logo style
+measures the thin parts of each area once more, as merging would. On the 28 pictures, each planned 3
+times in each style before and after the notice, the fastest plans took 3.5 % longer in all in the logo
+style and 1.6 % less in the photo style. The time goes to the 4 large traced photos, which took 1 to 8 %
+longer in the logo style, where the runs' noise is about 7 %. Every machine file was the same byte for
+byte. A label on fur and a building's photo planned with `SC-E0101` in the logo style, before the notice
+too.
+
+**What it says on the set.** The notice is silent on the 6 pictures that sew alike in both styles. Among them
+are 3 drawn in an even pen and the traced badge. On the
+other 22 it speaks in both styles, and its direction is right. Flat art planned as a photo hears that 1 to 5
+of its parts, filled by the rule uneven or compact, would keep their columns, and a traced dog planned as a
+logo hears that 39 to 52 of its parts would be filled and 14 to 30 of its lines may merge. Its counts
+mislead:
+
+- **A count is no weight.** The lettered disc hears of 1 part in each style, though that part, its ring,
+  was 572 mm² at 3 fills in `logo` and 87 in `photo`. The lettered patch hears of 5 parts, and the
+  lettered sign of 2, where under 2 % of their area sews by another rule.
+- **Lines that may merge outnumber those that merge.** The soft fruit in `logo` hears of 14 lines, and 6
+  merge in `photo`. The furry picture hears of 234, and 108 merge.
+
+So the notice says that the choice matters and which way the other style goes, not how much it costs.
+The previews and `SC-W0913` tell that.
+
+
 ### The grounds of the bounds
 
 The narrowest and the widest satin column are established: digitizing manuals put the narrowest satin at 1
