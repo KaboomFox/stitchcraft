@@ -369,6 +369,16 @@ side:
 - The dog on turf in 9 threads sews 0.31 fills more at its thickest spot, 4.8 fills, where a satin column or a fill lies
   over 3 or 4 other fills. Does the needle thump there, or the thread fray?
 
+M13.51 asks Image Trace for Paths 0 and Corners 0 when `stitch plan` traces a picture
+([the tracer's options](../design/image-to-embroidery.md#the-tracers-options)). It changes no test sheet
+and no committed trace. At MC-8, trace the dog on turf's cut-out in 6 threads with `stitch plan` from
+`main` before M13.51 and from after it, and sew both side by side:
+
+- The outlines have about a third fewer points and half the jags. Are the edges between patches of fur
+  smoother, and does the dog still read as the photo does?
+- It has 28 % more area under 3 fills of thread or more. Feel both for stiff spots, and note where the
+  newer one is stiffer.
+
 M13.39 keeps the parts a person marks ([marks that keep parts](../design/image-to-embroidery.md#marks-that-keep-parts)).
 Without a mark nothing sews differently. At MC-8, sew a traced dog with a `stitch:keep` mark round each eye
 and its nose, beside the same dog without marks:
