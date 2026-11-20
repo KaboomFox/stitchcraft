@@ -710,7 +710,7 @@ mod tests {
         let rings = moved_in(vec![ring(&hole)]);
         let around = &rings[0].0;
         assert_eq!((rings.len(), rings[0].1), (1, true));
-        assert_eq!((around.first(), around.len() > 8), (Some(&(10.1, 5.0)), true));
+        assert_eq!((around.first(), around.len()), (Some(&(10.1, 5.0)), 29));
         assert!(around.iter().all(|&(x, y)| (-0.1 - 1e-9..=10.1 + 1e-9).contains(&x) && (-0.1 - 1e-9..=10.1 + 1e-9).contains(&y)));
         // An open line moves to its right with y up, and is left out when it comes to less than 3 mm.
         assert_eq!(moved_in(vec![open(&[(0.0, 0.0), (0.0, 3.0)]), open(&[(5.0, 0.0), (5.0, 2.999)])]), [(vec![(0.1, 0.0), (0.1, 3.0)], false)]);
@@ -721,11 +721,19 @@ mod tests {
         let (first, last) = (back[0].0[0], *back[0].0.last().unwrap());
         assert_eq!((back.len(), first, last, back[0].0.len() > 6), (1, (0.1, 0.0), (-0.1, 2.0), true));
         assert!(back[0].0[1..back[0].0.len() - 1].iter().all(|&(x, y)| (stitchcraft_core::math::hypot(x, y - 5.0) - 0.1).abs() < 2e-3), "{back:?}");
+        // The half circle takes steps of 22.5 degrees, and of 11.25 where a step of 22.5 falls short of
+        // `ARC_STEP` by its rounding: 11 points between its ends. A line going straight back along x rounds its
+        // end too, and a point given twice adds nothing.
+        assert_eq!(back[0].0.len(), 15);
+        let along_x = moved_in(vec![open(&[(0.0, 0.0), (5.0, 0.0), (2.0, 0.0)])]);
+        assert_eq!((along_x[0].0.len(), along_x[0].0[0], *along_x[0].0.last().unwrap()), (15, (0.0, -0.1), (2.0, 0.1)));
+        assert_eq!(moved_in(vec![open(&[(0.0, 0.0), (0.0, 0.0), (0.0, 3.0)])]), [(vec![(0.1, 0.0), (0.1, 3.0)], false)]);
         // A last side whose moved line would end behind its start ends on the edge. Where the line folds over
         // itself, it goes straight from the end of the moved side before the fold to the start of the one after
         // it: where its first side, or a side after an arc, moves in to nothing, and where the 2 sides of a bar
         // narrower than twice the distance, moved, pass each other.
         assert_eq!(moved_in(vec![open(&[(0.0, 0.0), (0.0, 5.0), (0.05, 5.0)])]), [(vec![(0.1, 0.0), (0.1, 4.9), (0.05, 5.0)], false)]);
+        assert_eq!(moved_in(vec![open(&[(0.0, 0.0), (5.0, 0.0), (5.0, -0.05)])]), [(vec![(0.0, -0.1), (4.9, -0.1), (5.0, -0.05)], false)]);
         let first = vec![(0.0, -0.1), (0.05, -0.1), (-0.05, 0.0), (-0.05, -5.0)];
         assert_eq!(moved_in(vec![open(&[(0.0, 0.0), (0.05, 0.0), (0.05, -5.0)])]), [(first, false)]);
         let arced = moved_in(vec![open(&[(0.0, 0.0), (0.0, 5.0), (-0.05, 5.0), (-0.05, 10.0)])]);
