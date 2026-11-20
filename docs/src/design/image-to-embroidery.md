@@ -2848,6 +2848,920 @@ under what the bold font sews, and a document made before this step would sew ot
 12.5 mm without a third font. It can close the counters of letters such as A and B, so it waits for a sew-out. The effect's dialog has
 no list of fonts.
 
+### Decisions for the owner
+
+Each has a recommendation, which the step took.
+
+- **A name marks the text.** The marker is a shape or a line with a name, as every other marker in a
+  VectorCraft document is. A dialog of its own would need a filter, and a filter can't keep a shape's
+  settings before VectorCraft 0.15. Recommended: the name.
+- **A line through the letters for an arc.** The other choice is to find the arc from the letters, which
+  can't tell which way they stand. Recommended: the drawn line.
+- **Letters no font sews as tall** are set at the nearest height the font sews, with 2 warnings. The other
+  choice leaves them traced. Recommended: lettering, since small traced letters are the ones that sew
+  worst.
+- **The limits of the spacing**, half a height wider and a tenth narrower, are starting values that no
+  sew-out has confirmed. MC-10 sews a patch both ways.
+- **`--text` in percent of the design's box.** Pixels of the picture are the other choice, and need the
+  picture's size, which `stitch` doesn't read today. Recommended: percent.
+- **A bolder font built in.** Decided on 2026-11-16: the owner asked for one, and M14.8 built in
+  Barstitch Bold.
+- **Bold letters from 6 to 12.5 mm**, which the bold font doesn't sew, are set in Small Font at their own
+  height, with a note. The other choices are to leave them traced, which sews badly under 10 mm, and to
+  set them in the bold font at 12.5 mm, taller than the picture has them. Recommended, and taken: the light
+  font and the note.
+- **A third font for that gap**, or an embolden setting, waits for the sew-out of both fonts
+  ([fonts](fonts.md#decisions-for-the-owner)).
+- **A text object's bold `font-weight` doesn't choose the bold font.** Recommended, and taken: the effect
+  sews in the font it names or in the default, so documents sew as they did.
+
+### What isn't built
+
+- The Auto effect's preview in VectorCraft still draws the traced letters. A live effect is given one
+  object and no name ([RFC](rfc-vectorcraft-abi-v2.md), P6). The exported file and its preview picture
+  have the lettering.
+- A marker has one line of text. 2 lines take 2 markers.
+- A font is matched to the letters' weight, among 2 fonts. The letters' style, such as italic or script, doesn't choose a font yet.
+- The emblem's numbers are from a document traced earlier, kept outside the repository. A case in the
+  repository waits for a traced picture with lettered arcs among the fixtures.
+
+## Marks that keep parts
+
+Automatic digitizing decides by geometry and measures alone which small shapes are specks to merge (step 4 of
+[Neighbours](#neighbours)) and which thin lines merge into their neighbours (step 3, and
+[merging by likeness](#merging-by-likeness)). [Details last](#details-last) decides by geometry too which parts
+sew last. Geometry can't know which small part a person cares about. The same speck is noise in one picture and
+the point of another, such as a bird's eye or the dot over a letter, and in other pictures a flower's centre or
+a window. M13.39 lets the person say so with a mark, which works on any subject and names none.
+
+### The rule
+
+A mark is an area of the design. Automatic digitizing sews the parts that lie wholly inside it by their width,
+where it would merge them, and changes nothing else (`REQ-AUTO-104` to `REQ-AUTO-107`).
+
+- **Which parts.** The parts of the automatic areas as the layers leave them once flattened (step 2), each one
+  connected piece of one area with its holes. The speck and line steps look at these pieces. A part is inside
+  a mark when every point of its outline is, flattened within 0.05 mm as a text marker's subpaths are.
+- **Specks.** Automatic digitizing doesn't merge a marked speck into the area beside it, or leave it out. It
+  sews by its width, as a larger part does. Narrower than the narrowest satin stroke everywhere, it is a
+  running stitch along its middle, and wider, satin columns or a fill. A speck of 0.8 mm², 1.6 mm by 0.5 mm,
+  sews a running stitch 1.6 mm long.
+- **Thin lines.** A marked thin line sews as a line in its own thread, whatever the likeness bound
+  (`auto_min_likeness`).
+- **Colour.** Merged, a part sews in its neighbour's thread, and marked, in its own. The threads of a picture
+  are the trace's, and a mark doesn't change them.
+- **Partly inside.** Automatic digitizing decides a part that crosses the mark's edge as if there were no mark,
+  since a part cut at the mark's edge would sew an edge the picture doesn't have. A person who wants it drawn
+  draws the mark larger.
+- **Left alone.** The rules of the background, the flattened layers, the widths, the order, the overlaps, the
+  base layer and the cap on thickness go as without a mark. The order they find can differ, since every part
+  sewn is a shape more ([what marks sew](#what-marks-sew)). A marked part reaches under its neighbours, and
+  they reach under it, as for any part. A speck or a line outside the mark may still merge into it. Details
+  last stays its own setting: a marked detail sews last when `auto_details_last` is on, as it would unmarked.
+  The mark doesn't name a stitch. For another stitch, a person gives the part its own effect, as for any
+  shape.
+
+One mark covers what the row of M13.39 asked: a marked part's lines and specks don't merge, and it sews by the
+rule of its width. A second mark, to merge what the rules sew, isn't proposed, since the pictures measured
+didn't need one.
+
+### Drawing a mark
+
+A mark is a shape named `stitch:keep`, or `stitch:keep` and a note of the person's own, such as `stitch:keep
+left eye`. The name is read as every marker's: in any case, after any white space. Its area is read as a
+[text marker's](#the-marker) is, by the same code. A closed shape's area is what its outline encloses. For an
+open line with a stroke, it is the band within half the stroke's width of the line, between its ends. A line suits a whisker or a twig. The mark needs a
+fill or a stroke, since a reader is given only objects that paint, and a rectangle or an ellipse drawn with a
+stroke and no fill shows the picture under it. It is never sewn.
+
+- **In VectorCraft**, the person draws the mark with VectorCraft's own tools over the traced picture and names
+  it in the Layers panel. VectorCraft 0.23.0 gives a plug-in no canvas tool. A group or a layer so named is not
+  a mark, and `SC-W0807` says so (`REQ-VC-031`).
+- **In an SVG file**, the mark is an element whose `inkscape:label` is the name.
+- **From the command line**, `--keep LEFT,TOP,WIDTH,HEIGHT` marks a rectangle in percent of the box round the
+  design's shapes, as `--text` does, read by the same code (`REQ-CLI-021`). The marks are named `keep-1`,
+  `keep-2` and so on, and a bug-report bundle keeps them with the rules' settings.
+
+```sh
+stitch plan bird.png -o bird.pes --keep '62,18,6,5'
+```
+
+**Read when the design is planned.** The roadmap's row planned an Apply Marks command. Instead a reader takes
+the marks out of the design's elements and gives them to the design, as it reads text markers, so `stitch`,
+File › Export and the bug report each read them on every plan. A command would copy what the names already say,
+and its result would go stale when the picture is traced again. The Auto effect's preview shows each shape
+alone and doesn't merge, so it looks the same with a mark or without one
+([previews](#previews-in-vectorcraft)).
+
+### Where it runs
+
+The readers take each mark out of the design's elements and give it to the design, with its id
+(`stitchcraft_engine::design::mark::Mark`, `mark::taken_out`). An object painted with a fill and a stroke
+is read as 2 elements of one path, and is one mark. The reading of a marker's area lies in the engine
+(`design::mark::Area`), and the text markers of `stitchcraft_svg::lettering::pictures` use it from there.
+Planning reads each mark's area once (`auto::marks`), with the budget's work to itself. Automatic
+digitizing tests a part against the marks where a step would take the part away: in the width rules, which
+leave a speck in its area's fill (`auto::narrow`), and in the steps of thin lines (`auto::neighbours::lines`)
+and of specks (`auto::neighbours::specks`). The step of thin lines tests every part of every automatic
+area, so that each mark knows what it holds. Testing a part costs a unit for each mark, and where the box
+round the part lies in the box round the mark, a unit for each of the part's points and each segment of
+the mark, charged to the budget that step has for the part. A part that needs more is decided as if there
+were no mark, and `SC-I0916` says so. Without marks, nothing is tested and nothing is charged.
+
+`SC-I0916` names each mark with the parts that lie wholly inside it, and how many of them sew that would have
+merged, as specks and as thin lines. `SC-W0917` names a mark that encloses no area, a mark with no part wholly
+inside it and a mark in a design without an automatic shape, which then sews as without it.
+
+### What marks sew
+
+Measured on 2026-11-19 with the build, on `main` with M13.35's cap and before M13.45, so with both
+`auto_min_likeness` and `auto_details_last` off (`stitch plan --auto`'s numbers, as M13.41's
+measure and M13.29's count them, and the stitches of the PES file read back). No picture is a goal: one
+procedure marked each, never an eye. Each picture was planned without marks. Its 3 largest parts that the
+plan loses ([likeness](#likeness)) were then each marked by the box round them, grown by 0.5 mm, as a person
+draws a rectangle round an eye. A picture that loses none was marked round its 3 smallest parts, and TS-13A
+round 3 of the specks it merges.
+
+| Picture | Marks | Likeness | Parts kept | Thickest spot, fills | At 3 fills or more, mm² | Jump threads | Thread changes | Stitches | Export's count | Specks merged | `SC-I0915` notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Dog on turf, 6 threads | none | 0.814 | 75 of 97 | 4.00 | 137.25 | 57 | 8 | 9,985 | 9,985 | 0 | 22 |
+|  | 3 | 0.832 | 78 of 97 | 4.00 | 130.50 | 59 | 8 | 10,045 | 10,045 | 0 | 19 |
+| Dog on turf, 9 threads | none | 0.779 | 83 of 111 | 4.00 | 150.75 | 58 | 12 | 10,675 | 10,675 | 0 | 29 |
+|  | 3 | 0.814 | 87 of 111 | 4.00 | 154.75 | 62 | 12 | 10,856 | 10,856 | 0 | 25 |
+| Running dog, 6 threads | none | 0.898 | 66 of 77 | 4.00 | 129.00 | 49 | 8 | 11,077 | 11,077 | 0 | 14 |
+|  | 3 | 0.942 | 69 of 77 | 4.00 | 134.50 | 52 | 8 | 11,170 | 11,170 | 0 | 11 |
+| Running dog, 9 threads | none | 0.921 | 88 of 100 | 4.00 | 176.50 | 64 | 11 | 12,369 | 12,369 | 0 | 15 |
+|  | 3 | 0.938 | 91 of 100 | 4.00 | 190.00 | 67 | 12 | 12,473 | 12,473 | 0 | 12 |
+| Pear | none | 1.000 | 5 of 5 | 3.86 | 13.00 | 2 | 2 | 4,660 | 4,660 | 0 | 0 |
+|  | 3 | 1.000 | 5 of 5 | 3.86 | 13.00 | 2 | 2 | 4,660 | 4,660 | 0 | 0 |
+| Lettered patch | none | 1.000 | 8 of 8 | 3.98 | 40.25 | 8 | 2 | 4,026 | 4,026 | 0 | 0 |
+|  | 3 | 1.000 | 8 of 8 | 3.98 | 40.25 | 8 | 2 | 4,026 | 4,026 | 0 | 0 |
+| TS-13A | none | 1.000 | 16 of 16 | 3.99 | 23.75 | 18 | 2 | 11,513 | 11,513 | 7 | 0 |
+|  | 3 | 1.000 | 16 of 16 | 3.99 | 23.75 | 23 | 3 | 11,563 | 11,563 | 0 | 0 |
+| TS-13B | none | 1.000 | 31 of 31 | 3.85 | 4.25 | 46 | 4 | 6,895 | 6,895 | 0 | 0 |
+|  | 3 | 1.000 | 31 of 31 | 3.85 | 4.25 | 46 | 4 | 6,895 | 6,895 | 0 | 0 |
+| TS-13C | none | 1.000 | 11 of 11 | 3.96 | 95.75 | 13 | 4 | 6,064 | 6,064 | 0 | 0 |
+|  | 3 | 1.000 | 11 of 11 | 3.96 | 95.75 | 13 | 4 | 6,064 | 6,064 | 0 | 0 |
+| TS-13D | none | 1.000 | 14 of 14 | 3.97 | 50.75 | 12 | 3 | 7,994 | 7,994 | 0 | 0 |
+|  | 3 | 1.000 | 14 of 14 | 3.97 | 50.75 | 12 | 3 | 7,994 | 7,994 | 0 | 0 |
+| TS-13E | none | 1.000 | 18 of 18 | 3.39 | 2.50 | 5 | 2 | 2,716 | 2,716 | 0 | 0 |
+|  | 3 | 1.000 | 18 of 18 | 3.39 | 2.50 | 5 | 2 | 2,716 | 2,716 | 0 | 0 |
+| Badge, abutting | none | 1.000 | 3 of 3 | 3.01 | 0.00 | 0 | 2 | 3,431 | 3,431 | 0 | 0 |
+|  | 3 | 1.000 | 3 of 3 | 3.01 | 0.00 | 0 | 2 | 3,431 | 3,431 | 0 | 0 |
+| Badge, stacked | none | 1.000 | 3 of 3 | 3.01 | 0.00 | 0 | 2 | 3,431 | 3,431 | 0 | 0 |
+|  | 3 | 1.000 | 3 of 3 | 3.01 | 0.00 | 0 | 2 | 3,431 | 3,431 | 0 | 0 |
+| Emblem, abutting | none | 1.000 | 6 of 6 | 3.57 | 1.25 | 2 | 3 | 4,997 | 4,997 | 0 | 0 |
+|  | 3 | 1.000 | 6 of 6 | 3.57 | 1.25 | 2 | 3 | 4,997 | 4,997 | 0 | 0 |
+| Emblem, stacked | none | 1.000 | 6 of 6 | 3.39 | 1.00 | 2 | 3 | 4,998 | 4,998 | 0 | 0 |
+|  | 3 | 1.000 | 6 of 6 | 3.39 | 1.00 | 2 | 3 | 4,998 | 4,998 | 0 | 0 |
+| Button | none | 1.000 | 9 of 9 | 3.96 | 2.75 | 0 | 2 | 1,847 | 1,847 | 0 | 0 |
+|  | 3 | 1.000 | 9 of 9 | 3.96 | 2.75 | 0 | 2 | 1,847 | 1,847 | 0 | 0 |
+| Marked patch | none | 1.000 | 5 of 5 | 3.95 | 14.25 | 1 | 3 | 4,077 | 4,077 | 0 | 0 |
+|  | 3 | 1.000 | 5 of 5 | 3.95 | 14.25 | 1 | 3 | 4,077 | 4,077 | 0 | 0 |
+| Magnolia | none | 0.480 | 233 of 496 | 4.00 | 441.75 | 155 | 9 | 34,258 | 34,258 | 1,522 | 277 |
+|  | 3 | 0.504 | 246 of 496 | 4.00 | 490.25 | 184 | 9 | 35,092 | 35,092 | 1,441 | 264 |
+| Coleus | none | 0.454 | 395 of 841 | 4.22 | 851.50 | 237 | 12 | 56,886 | 56,886 | 3,250 | 487 |
+|  | 3 | 0.461 | 401 of 841 | 4.22 | 877.25 | 282 | 12 | 57,527 | 57,527 | 3,175 | 480 |
+| Goose | none | 0.483 | 167 of 342 | 4.00 | 482.50 | 95 | 8 | 36,668 | 36,668 | 1,486 | 184 |
+|  | 3 | 0.493 | 171 of 342 | 5.09 | 492.75 | 114 | 8 | 37,160 | 37,160 | 1,453 | 180 |
+| Castle | none | 0.434 | 81 of 191 | 4.00 | 221.75 | 54 | 8 | 26,201 | 26,201 | 1,334 | 116 |
+|  | 3 | 0.449 | 85 of 191 | 4.00 | 230.25 | 69 | 8 | 26,715 | 26,715 | 1,302 | 112 |
+
+- **The marked parts sew.** Of the 48 parts the likeness measure finds inside the marks of the dogs and the
+  photos, 47 sew. The other, a part of 5 mm² in the goose, sews as a line that shows less than half its area. Each photo's
+  likeness rises, by 0.007 for the coleus to 0.044 for the running dog in 6 threads.
+- **The pictures whose marks merge nothing sew as without them,** stitch for stitch: the pear, the lettered
+  patch, TS-13B to TS-13E, the badges and emblems traced either way, the button and the marked patch. No part
+  lies wholly inside a mark of the lettered patch or inside any of TS-13C's 3, since the part the likeness
+  measure sees is a piece of a larger area, and `SC-W0917` says so. TS-13A sews all 7 of its marked specks
+  as short running stitches, with 5 more jump threads, 1 more thread change and 50 more stitches. 96 of its stitches far from the marks
+  start or end elsewhere.
+- **Outside the marks, a traced photo sews in another order.** Each marked part is an element of its own,
+  and the order of the whole design ([sewing order](#sewing-order)) is found again. Of the stitches more than
+  2 mm from every mark, 51 to 1,394 of a dog and 1,629 to 7,468 of a photo start or end elsewhere. So the
+  area at 3 fills or more moves both ways, from 6.75 mm² less on the dog on turf in 6 threads to 48.5 mm²
+  more on the magnolia.
+- **The cap holds but for one spot.** Every picture sews at most 4 fills where it did, but the goose: a
+  spot about 19 mm from its marks sews 5.09 fills, where one shape of grass lays 2.6 fills by itself, and
+  `SC-W0913` names it "above the cap". The coleus sews 4.22 fills with marks and without them.
+- **Marked specks cost jump threads.** The boxes round the parts of a traced photo take in specks of the
+  trace's noise too: 32 to 84 of them in a photo's 3 marks, and 4 to 13 thin lines. They cost the photos 15
+  to 45 jump threads. The dogs' marks took in no speck, and cost 2 to 4.
+- **What it costs to plan.** Without marks nothing is tested, and every picture sews as on `main`. With
+  the pear's 3 marks, `stitch export --keep` took 1,074,680 instructions more of 3.18 billion (0.03 %),
+  testing every part of every area against the marks, and wrote the same file. With the marks of the
+  running dog in 6 threads it took 3.4 % more, 29.38 billion, for the parts that now sew and the new order
+  (callgrind, a build at opt-level 1).
+
+### Decisions
+
+The owner's choices of 2026-11-18, each the one recommended. The owner confirmed the 4th, that marks keep
+specks too, on 2026-11-18.
+
+- **One mark, `stitch:keep`.** The row asked that a marked part's lines and specks don't merge, and that it
+  sews by its own rule. That is one rule, so one mark does both. Other names were `stitch:detail`, which
+  suggests the order of [details last](#details-last) that a mark doesn't change, and `stitch:favour`, which
+  doesn't say what it does. Chosen: `stitch:keep`.
+- **Read when planned, with no Apply Marks command,** as text markers are. Chosen: no command.
+- **Wholly inside.** Automatic digitizing decides a part crossing the mark's edge as if it were unmarked. One other
+  choice sews a part when most of it is inside, which is a guess. Another cuts a part at the edge, which sews an
+  edge the picture doesn't have. Chosen: wholly inside, as text markers take their letters.
+- **Marks sew specks too.** The row asked that a marked part's specks don't merge, and a dot under 1 mm², such
+  as the light in an eye, is a speck. A mark also takes in the specks of a trace's noise, which cost the photos
+  7 to 39 jump threads and no likeness. The other choice sews marked thin lines and merges specks.
+  Chosen: sew specks, since a mark is the person's word. `SC-I0916` counts the specks, so a person can
+  draw a tighter mark.
+- **A marked speck sews by its width,** usually a short running stitch. The other choice is a fill, which sews
+  a knot under 1 mm². Chosen: by its width.
+- **The rest of a photo may sew in another order.** Each marked part is a shape more to order. Holding the
+  rest of the order fixed would need a second order for marked designs. Chosen: accept it, and let
+  M13.35's cap bound the thickness, as for details last and likeness.
+- **Details last stays its own setting.** A mark could also sew its parts last. That moves fills, which can
+  thicken a spot elsewhere, as M13.40 measured. Chosen: leave the order alone until the cap is merged and
+  `auto_details_last` is turned on.
+
+### What isn't built
+
+- The Auto effect's preview in VectorCraft shows each shape alone, so it can't show what a mark sews. The
+  exported file and its preview picture do.
+- A mark that merges what the rules sew, or that names a stitch.
+
+## A guide on one shape
+
+Automatic digitizing chooses the rows of each fill by geometry: every fill has the rows of `auto_fill_angle`.
+No rule can know the form that the rows of fur or a ribbon follow. The person draws it. Before M13.24 a guided fill needed the shape taken out of automatic digitizing by hand,
+which lost its overlaps with its neighbours, the base layer under it and its place in the sewing order. A
+guide keeps all of them, and works on any subject without naming one.
+
+### The rule
+
+A guide is a line the person draws over the picture. Each filled part of an automatic area that the line
+crosses sews as a guided fill whose rows follow it. The other parts and the steps after them sew as
+without the guide (`REQ-AUTO-109` to `REQ-AUTO-111`).
+
+- **Which parts.** The parts the rules by width leave filled ([stitch types by width](#stitch-types-by-width)):
+  the broad parts of an area, its compact and uneven parts, and the broad pieces of a part split by width. A
+  part follows a guide when a stretch of the guide's line lies inside it where the area shows. An area
+  digitized whole under the details that fill its holes ([neighbours](#neighbours), `REQ-AUTO-023`) shows only round them, so a
+  guide drawn over a detail steers the detail and leaves the area under it alone. Specks, under the smallest area
+  `auto_min_area_mm2`, stay in the area's fill and merge as before.
+- **The parts it crosses.** Unlike a mark, which keeps the parts lying wholly inside it, the guide steers the
+  parts it crosses. The guided fill lengthens the guide straight on at both ends until its rows cover
+  the whole part ([guided fill](algorithms/guided.md)). A guide that crosses only a corner of a large part steers all of
+  it. The person sees that in the exported file's preview and draws the guide again.
+- **Parts sewn along their middles keep their stitches.** A satin column already lays its stitches across
+  its width, which follows the part's form, and a running stitch follows its centre line. Such a part
+  sews the same stitches when a guide crosses it, and `SC-I0918` counts it.
+- **2 guides on one part.** The part follows the guide drawn last, the one a person sees on top. Blending
+  2 guides would guess what the person meant.
+- **One element for each area and guide.** The parts of one area that follow one guide are one element,
+  since a guided fill sews several parts nearest the needle first. These elements come after the area's
+  other elements, its fill and its parts sewn along their middles, in the order the guides are drawn, so
+  that the other elements keep their names. The first element of an area keeps its name and the others are
+  numbered, so a guided fill is the area's own element when nothing else of the area sews. The area keeps
+  its thread.
+- **Left alone.** The background, the flattened layers, the specks and the thin lines go as without a guide,
+  and so do the rules by width, the overlaps, the base layer and the cap on thickness. The guided fill takes
+  its own defaults and the area's other settings. The base
+  layer keeps its rows across `auto_fill_angle`, so under a guided fill it lies at an angle that changes
+  along the rows. Each element a guide makes is a shape more to order, so the order can change
+  ([what guides sew](#what-guides-sew)).
+
+### The guide's line
+
+The guide's line is its first subpath, as a guided fill reads its guide with the copy strategy, its
+default. Its stroke's width is ignored. A closed guide is opened where it
+closes, as a guided fill opens it. Other subpaths are ignored.
+
+### Drawing a guide
+
+A guide is a shape named `stitch:guide`, or `stitch:guide` and a note of the person's own, such as
+`stitch:guide left petal`. The name is read as a mark's, by the same code (`design::mark::note`), and the
+readers take guides out of the elements beside the marks (`mark::taken_out`). It is never sewn.
+
+- **In VectorCraft**, the person draws the guide with the Pen or Pencil tool over the traced picture and
+  names it in the Layers panel. VectorCraft 0.23.0 gives a plug-in no canvas tool. `stitch:guide` is the
+  name VectorCraft documents already give a guide grouped with the shapes it steers ([the markers
+  table](vectorcraft-integration.md)). A path so named keeps that meaning for shapes with settings, and is
+  also a guide of the design for every automatic area it crosses, wherever it lies in the layers. A traced
+  picture lies in one layer, and a person draws all its guides in that layer. A guide its group doesn't use is no
+  longer said to be unused (`SC-W0807`) when the design has an automatic shape, and an automatic shape
+  grouped with a guide alone is no longer told that its markers are unused. `SC-W0919` names a guide that
+  steers nothing (`REQ-VC-032`).
+- **In an SVG file**, the guide is a path whose `inkscape:label` is the name. Ink/Stitch's guide line, a
+  path with its marker grouped with a shape, keeps its Ink/Stitch meaning and guides only that group.
+- **From the command line**, `--guide X,Y,X,Y…` draws a guide through 2 points or more, in percent of the
+  box round the design's shapes as `--keep` reads its numbers, joined by straight lines. A few points
+  serve, since the guided fill smooths its rows. The guides are named `guide-1`, `guide-2` and so on, and a
+  bug-report bundle keeps them with the rules' settings (`REQ-CLI-022`).
+
+```sh
+stitch plan leaf.png -o leaf.pes --guide '20,80,45,50,60,20'
+```
+
+**What the notices say.** `SC-I0918` names each guide with the areas and the number of parts that follow
+it, and the parts it crosses that keep their stitches. `SC-W0919` names a guide that crosses no filled
+part of an automatic area, whose line has no length, or that is in a design with no automatic shape. The
+design then sews as without it. The Auto effect's preview in VectorCraft draws straight rows until a live
+effect is given its document's other objects (the [RFC](rfc-vectorcraft-abi-v2.md)'s P6). The exported
+file and its preview picture follow the guide.
+
+### Where it runs
+
+Planning reads each guide's line once, beside the marks (`auto::marks`). In the rules by width
+(`auto::sewn`), each filled part that is no speck is tested against the guides' lines, as a running
+stitch is cut to its clips (`normalize::region::cut::inside`). Each pair of a segment of a line and a side
+of the part costs a unit of work of the area's element. A design without guides tests
+nothing. The guided fill then sews as it does for a shape set by hand.
+
+### What guides sew
+
+Measured on 2026-11-19 with the build on `main` at `7486520b`, built at opt-level 1, by the numbers of
+M13.41's measure and M13.29's count, and the stitches of the PES file read back. No picture is a goal: one
+procedure drew every guide, never a form, and phase 1's prototype measured the same guides. Each picture
+was planned without guides. Its 3 largest filled parts were then each given a guide along their longest
+axis, the line between the 2 points of the part's outline farthest apart, bent so that its middle lies a
+fifth of its length to the left, through 25 points. A guide drawn so crosses other parts too, as a person's
+would. The last column counts, among the elements of the areas that the guides miss, those that sew the
+same stitches as without guides.
+
+| Picture | Guides | Parts that follow | Likeness | Thickest spot, fills | At 3 fills or more, mm² | Bare, % | Slivers | Jump threads | Thread changes | Stitches | Export's count | Other areas' elements the same |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Dog on turf, 6 threads | none |  | 0.856 | 4.00 | 131.25 | 0.021 | 0 | 60 | 8 | 10,068 | 10,068 |  |
+|  | 3 | 16 in 16 areas | 0.856 | 4.00 | 144.00 | 0.030 | 0 | 55 | 9 | 10,374 | 10,374 | 35 of 117 |
+| Dog on turf, 9 threads | none |  | 0.829 | 4.00 | 149.00 | 0.010 | 0 | 62 | 12 | 10,742 | 10,742 |  |
+|  | 3 | 13 in 13 areas | 0.829 | 4.00 | 164.25 | 0.015 | 0 | 59 | 12 | 11,167 | 11,167 | 68 of 143 |
+| Running dog, 6 threads | none |  | 0.898 | 4.00 | 129.00 | 0.000 | 0 | 49 | 8 | 11,077 | 11,077 |  |
+|  | 3 | 15 in 15 areas | 0.898 | 4.00 | 139.50 | 0.005 | 0 | 46 | 11 | 11,422 | 11,422 | 62 of 117 |
+| Running dog, 9 threads | none |  | 0.921 | 4.00 | 176.50 | 0.005 | 0 | 64 | 11 | 12,369 | 12,369 |  |
+|  | 3 | 8 in 8 areas | 0.921 | 4.00 | 213.75 | 0.014 | 0 | 63 | 13 | 12,659 | 12,659 | 56 of 174 |
+| Pear | none |  | 1.000 | 3.86 | 13.00 | 0.000 | 0 | 2 | 2 | 4,660 | 4,660 |  |
+|  | 3 | 5 in 4 areas | 1.000 | 4.00 | 16.75 | 0.007 | 0 | 3 | 2 | 5,218 | 5,218 | 2 of 3 |
+| Lettered patch | none |  | 1.000 | 3.98 | 40.25 | 0.003 | 0 | 8 | 2 | 4,026 | 4,026 |  |
+|  | 3 | 1 in 1 area | 1.000 | 3.98 | 49.75 | 0.002 | 0 | 8 | 2 | 4,328 | 4,328 | 13 of 15 |
+| TS-13A | none |  | 1.000 | 3.99 | 23.75 | 0.013 | 1 | 18 | 2 | 11,513 | 11,513 |  |
+|  | 3 | 5 in 5 areas | 1.000 | 3.99 | 24.00 | 0.014 | 1 | 18 | 2 | 12,021 | 12,021 | 30 of 30 |
+| TS-13B | none |  | 1.000 | 3.85 | 4.25 | 0.066 | 0 | 46 | 4 | 6,895 | 6,895 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.85 | 3.25 | 0.066 | 0 | 46 | 4 | 7,035 | 7,035 | 72 of 72 |
+| TS-13C | none |  | 1.000 | 3.96 | 95.75 | 0.000 | 0 | 13 | 4 | 6,064 | 6,064 |  |
+|  | 3 | 5 in 4 areas | 1.000 | 3.99 | 107.25 | 0.005 | 0 | 15 | 4 | 6,368 | 6,368 | 14 of 18 |
+| TS-13D | none |  | 1.000 | 3.97 | 50.75 | 0.000 | 0 | 12 | 3 | 7,994 | 7,994 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.99 | 101.00 | 0.000 | 0 | 12 | 3 | 9,008 | 9,008 | 17 of 19 |
+| TS-13E | none |  | 1.000 | 3.39 | 2.50 | 0.000 | 0 | 5 | 2 | 2,716 | 2,716 |  |
+|  | 3 | 7 in 7 areas | 1.000 | 3.41 | 2.75 | 0.018 | 0 | 5 | 2 | 3,023 | 3,023 | 22 of 22 |
+| Badge, abutting | none |  | 1.000 | 3.01 | 0.00 | 0.000 | 0 | 0 | 2 | 3,431 | 3,431 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.22 | 0.00 | 0.010 | 0 | 0 | 2 | 3,957 | 3,957 | 1 of 1 |
+| Badge, stacked | none |  | 1.000 | 3.01 | 0.00 | 0.000 | 0 | 0 | 2 | 3,431 | 3,431 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.22 | 0.00 | 0.010 | 0 | 0 | 2 | 3,957 | 3,957 | 1 of 1 |
+| Emblem, abutting | none |  | 1.000 | 3.57 | 1.25 | 0.000 | 0 | 2 | 3 | 4,997 | 4,997 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.62 | 3.00 | 0.000 | 0 | 2 | 3 | 6,188 | 6,188 | 4 of 4 |
+| Emblem, stacked | none |  | 1.000 | 3.39 | 1.00 | 0.000 | 0 | 2 | 3 | 4,998 | 4,998 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.71 | 1.00 | 0.000 | 0 | 2 | 3 | 6,153 | 6,153 | 4 of 4 |
+| Button | none |  | 1.000 | 3.96 | 2.75 | 0.000 | 0 | 0 | 2 | 1,847 | 1,847 |  |
+|  | 3 | 4 in 4 areas | 1.000 | 4.00 | 2.25 | 0.009 | 0 | 0 | 2 | 2,014 | 2,014 | 10 of 10 |
+| Marked patch | none |  | 1.000 | 3.95 | 14.25 | 0.000 | 0 | 1 | 3 | 4,077 | 4,077 |  |
+|  | 3 | 3 in 3 areas | 1.000 | 3.97 | 15.25 | 0.005 | 0 | 1 | 3 | 4,503 | 4,503 | 2 of 6 |
+| Magnolia | none |  | 0.849 | 4.00 (above the cap) | 521.25 | 0.006 | 0 | 313 | 10 | 38,197 | 38,197 |  |
+|  | 3 | 26 in 25 areas | 0.848 | 4.00 | 603.00 | 0.005 | 0 | 302 | 10 | 39,946 | 39,946 | 289 of 560 |
+| Coleus | none |  | 0.841 | 4.12 (above the cap) | 959.25 | 0.041 | 1 | 473 | 13 | 62,219 | 62,219 |  |
+|  | 3 | 15 in 15 areas | 0.842 | 4.01 (above the cap) | 977.25 | 0.041 | 1 | 459 | 13 | 62,249 | 62,249 | 424 of 1020 |
+| Goose | none |  | 0.820 | 4.00 | 489.25 | 0.016 | 0 | 170 | 10 | 38,352 | 38,352 |  |
+|  | 3 | 10 in 9 areas | 0.820 | 4.00 | 549.25 | 0.014 | 0 | 169 | 10 | 39,509 | 39,509 | 270 of 384 |
+| Castle | none |  | 0.779 | 4.00 | 255.75 | 0.010 | 0 | 104 | 9 | 28,526 | 28,526 |  |
+|  | 3 | 7 in 6 areas | 0.779 | 4.00 | 280.00 | 0.009 | 0 | 102 | 9 | 29,395 | 29,395 | 122 of 210 |
+
+- **The parts follow their guides.** Each guide steered up to 16 filled parts, the parts it was drawn along
+  and those it crossed on the way. The rows bend with the guide in the preview pictures, and the export
+  sews what the plan says, stitch for stitch.
+- **The repository's drawn designs sew the rest as before.** TS-13A, TS-13B, TS-13E, the badges, the
+  emblems and the button sew the same stitches in every element of the areas the guides miss. Elsewhere
+  the order changes. Each element a guide makes is a shape more to order, so the rest of a traced photo or
+  dog starts and ends elsewhere. Thread changes rise by up to 3, on the running dog in 6 threads.
+- **The cap holds.** No guided picture sews above 4 fills where `main` doesn't, and the coleus, which sews
+  4.12 fills on `main`, sews 4.01. The prototype sewed the goose at 4.02 and the castle at 4.28, where
+  parts of one area that rounding left a hair apart each reached under the other once a guide made them 2
+  elements. Such fills stay one area for the overlaps (`REQ-AUTO-110`). The area at 3 fills or more grows
+  on most pictures, by up to 82 mm² of the magnolia's 521 and 50 mm² on TS-13D, since a guided fill sews
+  more stitches than the tatami fill it replaces: its copies lie closer where the guide bends.
+- **The fabric is covered as before.** The prototype left up to 0.23 % of a design bare, at the edges where the
+  guided rows ended square on: automatic digitizing keeps a fill's turns as stitches (`turn_stitches`), and
+  the guided fill didn't read it, so every second row started a needle point inside the edge. It reads it
+  now ([guided fill](algorithms/guided.md#sewing-the-lines)). What is left is at most 0.018 % more of a
+  design, on TS-13E, and 0.009 % on a dog, where a few rows meet the outline at a slant and end short of
+  it, far under the limit of 0.15 %.
+- **A guide over a detail leaves the area under it alone.** The badge's preview showed a guide drawn over
+  its disc steering the field round it too, since the field is digitized whole under the disc. The guide's
+  line is now tested where the area shows.
+- **The likeness doesn't move,** by at most 0.001, since a guide doesn't change a part's colour or place.
+- **What it costs to plan.** The guided fills cost more or less than tatami fills by their stitches, and the
+  test against the guides is a small share of it. With the prototype, planned and measured with its 3
+  guides, the pear took 1.2 % more instructions than without them, and the running dog in 6 threads 4.1 %
+  less (callgrind, opt-level 1).
+
+### Decisions for the owner
+
+Each with the recommendation, which the step took on 2026-11-19. The roadmap's row no longer
+says the area is grouped with the guide.
+
+- **Which parts follow: those the guide crosses.** The roadmap's row planned an area grouped with the guide.
+  A traced picture is hundreds of shapes in one layer, and a person can't easily group one of them, and in
+  VectorCraft a guide in that layer is already grouped with all of them. The other choices are the parts
+  wholly inside the guide's stroke, read as a mark's band, which leaves out the large parts whose rows show
+  most, and the parts of the shapes grouped with it. Recommended: the parts it crosses, drawn over the
+  picture as a mark is.
+- **One name, `stitch:guide`.** VectorCraft documents already name a guide so. The other choice is a name
+  of its own, such as `stitch:rows`, which would keep the 2 readings apart but gives a person 2 names for
+  one idea. Recommended: one name, with both readings.
+- **The guide drawn last steers** a part that 2 cross. The other choices, the guide nearest the part's
+  middle or the one with the longest stretch inside it, are guesses a person can't see. Recommended: the
+  last drawn.
+- **Columns and running stitches keep their stitches.** The other choice sews a crossed part no wider than
+  a satin column as a guided fill too. A column's stitches already follow its form. Recommended: keep them.
+- **No setting, the guided fill's defaults.** The guide is enough, as the row says. A person who wants
+  other rows gives the shape its own effect, as for any shape. Recommended: no setting.
+- **The rest of a photo may sew in another order,** as for marks. Each element a guide makes is a shape
+  more to order. Recommended: accept it, and let M13.35's cap bound the thickness.
+
+### What isn't built
+
+- A guide that steers satin columns. Their stitches already lie across the part's width.
+- A guide with an area, which would steer only the parts inside it, or a guide's stroke read as a band.
+  The prototype's guides did their work without them.
+- Turning the base layer to follow a guided fill.
+
+## Names of shapes
+
+A traced photo has hundreds of shapes, and every manual control starts with the same question: which shape
+is this? A mark ([marks that keep parts](#marks-that-keep-parts)), a guide (M13.24) and a shape's own
+effect all need the person to find the shape in VectorCraft. Today a notice names a shape by its element
+id, `vc:63:fill`, which is the number VectorCraft keeps in the file. The Layers panel never shows that
+number. Roadmap step M13.25 gives each shape of a traced design a name that the Layers panel, the notices
+and the report all show (`REQ-AUTO-125` to `REQ-AUTO-127`, `REQ-VC-033`, `REQ-CLI-023`), and says when a
+path's own Auto effect replaces its group's (`REQ-VC-034`, `SC-W0920`). The engine's `names` module
+builds the names.
+
+### What VectorCraft shows
+
+Read in VectorCraft's source at `3f8d7a0`, its `.vectorcraft` format and the Layers panel's code. The app's
+window wasn't run: VectorCraft isn't built here.
+
+- **A row shows the object's name.** A node of a `.vectorcraft` document has an optional `name`. The Layers
+  panel shows `Node::display_name()` (`crates/doc`): the name when there is one, else the kind in angle
+  brackets, `<Compound Path>`, `<Path>` or `<Group>`. In a traced document no node has a name. It is a
+  layer with one group in it, and in the group a compound path or a path for each shape. So a traced photo shows hundreds of rows
+  that read `<Compound Path>`.
+- **Search All finds by name.** The panel's search keeps the rows whose shown name, in lower case, contains
+  what the person typed (`list_rows` in `crates/ui-egui/src/panels/layers.rs`). A name written into the file
+  is what a person can search for. A query matches inside longer names, so `red fill 1` also finds
+  `red fill 12`.
+- **A long name is cut at the row's end.** The panel paints the name clipped to the row, which loses its
+  right end on a narrow panel. VectorCraft keeps at most 255 characters of a name.
+- **A name stays a name.** StitchCraft's reader gives an element its node's name already (`Element::name`),
+  and a name that begins with `stitch:` is a marker. A name StitchCraft writes must never begin with it.
+
+Not checked without the app's window: how many characters fit a row at the panel's default width, and
+whether a person can read the names at the panel's smallest row size.
+
+### The parts of a name
+
+A name tells a person the thread, how the shape sews and which one of them it is: `Red fill (3)`, `Deep Gold
+column (1)`, `Black line (12)`.
+
+- **The thread** is the thread's name. A traced shape's colour is one of the machine's threads exactly,
+  since the trace uses the library's colours as they are, so its name is the palette's name of that colour.
+  A colour that no thread of the palette has is written as its hex code, `#7d6f00`.
+- **How it sews** is the way the shape's main part sews: the part that keeps the id of its lowest element,
+  which is an area's fill, or its first narrow part when nothing of it is filled, or a stroke's first
+  column. A shape none of whose parts keeps that id goes by its first part in the sewing order. A fill of
+  any method is `fill`, a satin column is `column`, and a running stitch or another stroke is `line`. A
+  shape that sews nothing is `left out`, as the background the design leaves out is (`SC-W0906`), and so
+  is one merged whole into its neighbours.
+- **The number** counts the shapes of that thread and that way of sewing in the Layers panel's order, from
+  its top row, 1 first. The top row is the object drawn last. The number is written in brackets, so that a
+  search for `fill (1)` doesn't also find `fill (12)`.
+- **A shape** is what the elements of one object make. Their ids differ only in their last part
+  (`vc:6:fill` and `vc:6:stroke` are of `vc:6`), and the parts digitizing makes of them add `#` or `~`
+  and more to an element's id (`vc:6:fill#2`). A part has its shape's name.
+
+The longest name on the pictures measured was 18 characters with a hex code in place of the thread's name,
+and the longest thread name of the machine's palette has 15 (`Wisteria Violet`). A name then fits in 27.
+
+**Where it sews.** A name doesn't say where the shape is in the sewing order. The order is chosen again at
+every plan, and one small edit moves many shapes in it, as the measures below show. So the report lists
+the shapes in their sewing order at each plan, each with its place, which the name doesn't give.
+
+### How stable names are
+
+Measured on 2026-11-19 with a probe test (not committed), on the repository's traced badge, pear and 2
+dogs and on 2 of the 4 local photos, a magnolia and a coleus. Each design was read with
+`--auto`, digitized, and for the first 4 also planned on the reference machine. Then each of 9 shapes,
+spread through it, was deleted, or painted in another of the design's colours, and the names were made again.
+A count is of the other shapes whose names changed.
+
+Planned twice unchanged, every design gave the same names: digitizing is deterministic.
+
+| Number counted | Badge (3) | Pear (5) | Dog on turf (78) | Dog running (92) |
+| --- | --- | --- | --- | --- |
+| In the whole sewing order | 0 to 2 | 0 to 3 | 30 to 60 | 18 to 70 |
+| By thread in the sewing order | 0 to 2 | 0 to 2 | 7 to 54 | 1 to 32 |
+| By thread and kind in the sewing order | 0 | 0 | 3 to 25 | 1 to 29 |
+| By thread and kind in the Layers panel's order | 0 | 0 | 5 on average | 4 on average |
+
+The first 3 rows are for the deletion of 4 shapes. Deleting one shape reorders the sewing of shapes far from
+it, and a name with its place in the sewing order changes for up to 3 in 4 of the others. A number in the
+Layers panel's order changes only for the shapes of the same thread and kind below the one deleted.
+
+On the local photos, numbered by thread and kind in the Layers panel's order, a deletion renamed 23 of the
+magnolia's 424 other shapes on average. With the number counted by thread alone, without the kind, it renamed
+45. The magnolia and the coleus, of 704 shapes, gave the same names when digitized twice.
+
+The names as built were measured on 2026-11-19 with a probe test (not committed) that planned each design
+on the reference machine, at opt-level 2, and then planned it again with each of 4 shapes deleted, spread
+through it. Here every shape counts, those merged whole into their neighbours too, which are `left out`.
+
+| Design | Shapes | Longest name | Others renamed by a deletion | Plan |
+| --- | --- | --- | --- | --- |
+| Badge | 4 | 18 | 0 | under 0.1 s |
+| Pear | 6 | 23 | 0 | 0.2 s |
+| Dog on turf, 6 threads | 97 | 22 | 0 to 10 | 2 s |
+| Dog running, 9 threads | 107 | 22 | 0 to 2 | 2 to 3 s |
+| Magnolia | 2,014 | 26 | 84 to 430 | 43 to 69 s |
+| Coleus | 3,985 | 25 | 176 to 631 | 84 to 104 s |
+| Goose | 1,813 | 27 | 23 to 362 | 104 to 136 s |
+| Building | 1,444 | 26 | 10 to 289 | 100 to 111 s |
+
+Every design gave the same names when planned twice, and no thread was named by its hex code: the traced
+colours are the machine's threads. On a photo a deletion renames up to a fifth of the other shapes. A
+deleted shape changes which specks and thin lines merge into their neighbours, so shapes move between `fill`
+and `left out`, and the numbers of their thread below them move with them. Naming is one pass over the
+elements and the steps, and isn't timed apart from planning. The trace's own time wasn't measured, since
+VectorCraft isn't built here.
+
+So the names are written once, when the picture is traced, and are then the shapes' own names, as a name a
+person gives one is. StitchCraft never renames a shape that has a name. A shape the person draws later has
+none, and it is named, for that plan only, by the same rule with the next free number.
+
+### Places that show the names
+
+One function of the engine makes a name (`names::name`), and one of `stitchcraft-core` gives the words that
+name a shape in any message (`diag::called`): its name in quotes, then its element id for a bug report,
+`"Red fill (3)", vc:63:fill`. Planning gives each diagnostic about a shape with a name that name
+(`Diagnostic::name`), and its headline shows it. Every place below uses them.
+
+- **The traced document.** `stitch plan picture.png --traced FILE` writes each shape's name into its node,
+  and changes nothing else in the document (`REQ-VC-033`). The design that is planned is that document, with its names,
+  so planning `FILE` again sews the same stitches and says the same notices.
+- **The notices.** A notice about a shape names it, and so does a warning of the reader. A line of `stitch
+  plan` has the name before the id, `info SC-I0912 ("Red fill (3)", vc:63:fill): …` (`REQ-AUTO-127`). The
+  shapes at `SC-W0913`'s thickest spot are named the same way, each in brackets: `("Red fill (3)",
+  vc:63:fill) #ed171f 2.1`. `SC-I0916` and `SC-I0918` are about a mark and a guide, which they name by
+  its id as before, and they count the parts they keep or steer.
+- **The report.** Each diagnostic with an element has its `name` too, and a list `shapes` gives each shape's
+  name, id, thread, kind and place in the sewing order (`REQ-CLI-023`).
+- **The bug-report bundle** of a picture keeps the traced document with its names. A replay then names the
+  shapes as the run did.
+
+### A path's own Auto effect inside an automatic group
+
+A group's Auto effect makes everything inside it automatic with its settings. A path inside with an Auto
+effect of its own sews by its own settings alone (`REQ-VC-016`), since the nearest effects say how a path
+sews. VectorCraft writes an effect with every parameter, its defaults included (`merged_params` in its
+`crates/effects`, read at `3f8d7a0`), so the path's own effect stores every setting, and the reader can't
+tell a setting the person chose from one left at its default. The group's settings can't be merged under
+the path's.
+
+The roadmap row said this happens without a word. A case showed that `SC-W0807` said it, in the
+words for StitchCraft effects that reach a path from 2 levels: "it is sewn as the nearest say". A person
+learns from them neither which of the group's settings the path loses nor which path it is, since an unnamed
+path is only "the object" with its id. The warning `SC-W0920` is said in place of `SC-W0807` where an
+Auto effect lies inside an automatic group, with the path's name and both values of every group setting
+that the path's own effect sets otherwise, leaving out those the group keeps at their defaults
+(`REQ-VC-034`). The stitches stay as they are today.
+
+### Decisions taken
+
+The owner took the 6 recommendations of phase 1 on 2026-11-19:
+
+- Names are written once, at the trace, and kept as the shapes' own names. Names made again at every plan
+  would follow the sewing order and change for many shapes after each edit.
+- The number counts in the Layers panel's order, and the report gives the place in the sewing order beside
+  the name.
+- The number stands in brackets, so that a search finds one shape.
+- The shapes left out are named too, as `left out`, since notices name the background.
+- The layers keep their order. Automatic digitizing cuts an area away under the areas over it in the
+  layers, and the layers' order is part of the design.
+- A new code, `SC-W0920`, says that an Auto effect inside an automatic group replaces the group's settings,
+  so that `stitch explain` can say what to do.
+
+### What isn't built
+
+- `SC-I0916` and `SC-I0918` don't name the shapes whose parts a mark keeps or a guide steers. The marks
+  and the guides count the parts in digitizing, before the shapes have names.
+- The VectorCraft plug-in's previews don't show names. A document opened in VectorCraft has the names
+  `--traced` wrote, and a path the person draws later has a name for each plan only.
+- VectorCraft's own Layers panel isn't changed.
+
+## Pictures from the command line
+
+`stitch plan picture.png` and `stitch export picture.png` trace the picture with VectorCraft's command line,
+as spike M13.9 decided ([ADR-0015](adr/0015-pictures-traced-by-vectorcraft.md)) and M13.10 built
+(`REQ-CLI-012`, `REQ-CLI-013`). A design whose extension is `.png`, `.jpg` or `.jpeg`, in any case, is a
+picture. VectorCraft publishes `vectorcraft-cli` with each release, and `stitch` runs the one
+`--vectorcraft-cli` names, or else the one on the `PATH`:
+
+```sh
+vectorcraft-cli run --commands - --export FOLDER/traced.vectorcraft
+```
+
+It gives it 4 steps on standard input, where a picture of any size fits. They are the compatibility gate's
+`trace` case's:
+
+1. `swatch.library.load` loads the threads `stitch palette` writes for the machine as a swatch library.
+2. `file.place` places the picture's bytes, fitted inside a square `--size` millimetres across, or else
+   inside the machine's hoop 0.5 mm in from each side, its aspect kept.
+3. `imageTrace.make` traces it in colour with the library's colours as they are, at most `--colours` of
+   them, by the Abutting method, so that the shapes share their edges. It fits their outlines with Paths 0
+   and Corners 0, unless `--style logo` is given ([the tracer's options](#the-tracers-options)).
+4. `imageTrace.expand` keeps the paths, without the picture.
+
+VectorCraft saves the document into a folder of the command's own beside the machine file, named as
+`stitch`'s temporary files are, and the folder is removed once the document is read. It runs with
+`VECTORCRAFT_NO_PREFS` set, so that it neither reads nor writes the user's VectorCraft preferences, and a
+picture traces the same for everyone. The document is then the design. It is read with `--auto`, planned for
+the machine `--profile` names or else the reference machine, and named after the picture. `--traced` writes
+it beside the machine file, to correct the trace in VectorCraft. A bug-report bundle keeps it too, so that a
+replay doesn't need VectorCraft.
+
+**The picture's size.** VectorCraft places a picture at its own resolution, or 72 pixels to the inch when
+its file says none, so a logo a few hundred pixels across would sew larger than any hoop. `stitch` fits the
+picture into the machine's hoop unless `--size` gives the length of its longer side. The size is the
+picture's, its background included, and the shapes left once the background is out sew smaller. Fitted to
+the hoop, the picture keeps 0.5 mm from each side: a shape along its edge sews as a satin column, whose
+stitches reach 0.4 mm past its rails, its pull compensation, from rails that may lie up to the tolerance
+shapes meet within outside the shape. Fitted to the hoop itself, a picture whose shapes reach its sides
+would sew past the hoop, which `SC-E0701` refuses.
+
+**How many colours.** Image Trace keeps at most `--colours` of the library's colours, 6 unless it says
+otherwise, as in its own panel. The count takes in the background's colour. A picture with smooth edges, or a
+JPEG file, has colours between its shapes' colours, which may trace as threads of their own. A `--colours`
+equal to the number of colours the picture has keeps them out. A badge in 3 colours on white traces in 4.
+
+**When VectorCraft can't trace.** A command line that can't be started, missing from the `PATH` or from
+the path named, is `SC-E0815`, which says how to install it, or to trace the picture in VectorCraft. One
+that fails or doesn't save the document is `SC-E0816`, which ends with what it said. Then nothing is written but
+the report.
+
+StitchCraft traces nothing itself. A tracer of its own would repeat VectorCraft's, which a harness
+measures. It would also trace a picture otherwise than VectorCraft does, and the command line would then
+sew it unlike the tutorial's flow.
+
+## Outlines thread can't show
+
+Roadmap step M13.51 measured the outlines of traced pictures and gives Image Trace fitting options of its
+own for the pictures `stitch plan` traces (`REQ-CLI-024`). Step M13.52 builds the smoothing pass that this
+section describes, as a setting off by default (`REQ-AUTO-131` to `REQ-AUTO-134`, planned), and adds the
+notice `SC-I0921`.
+
+The owner, on 2026-11-19: "often time there are too many points and you need to simplify the number of
+points in the shape". She simplifies traced shapes by hand in a drawing program before she sews them. The
+trade treats it as a fault: clusters of tiny points sew dense spots and ragged edges. Wilcom's
+[Smooth Curves](https://docs.wilcom.com/embroiderystudio/e4/en/MainHelp/Automatic/vectors/Smoothing_curves.htm)
+and Bernina's [Smooth curves](https://softwarehelp.bernina.com/en/MainHelp/PART_Modifying/edit_objects/Smooth_curves.htm)
+each take one precision value. A higher value leaves fewer points, which follow the outline less closely.
+
+### The points and wobble of traced outlines
+
+Every traced picture of the repository was measured, with a traced lettered patch and 4 traced photos kept
+outside it. The test sheets' traced halves are drawn exactly in code and have no wobble. A thread is
+0.4 mm wide.
+
+| Picture | Shapes | Anchors | Anchors per mm | Most on one subpath | Points needed within 0.1 mm | Jags per 10 mm | Teeth per 10 mm |
+|---|---|---|---|---|---|---|---|
+| The pear | 6 | 592 | 0.51 | 267 | 13 % | 0.57 | 2.28 |
+| Dog on turf, 6 threads | 97 | 1,902 | 0.81 | 146 | 12 % | 0.75 | 1.74 |
+| Dog on turf, 9 threads | 115 | 2,096 | 0.84 | 161 | 11 % | 0.67 | 1.82 |
+| Dog running, 6 threads | 83 | 1,827 | 0.75 | 115 | 11 % | 0.46 | 1.45 |
+| Dog running, 9 threads | 107 | 2,090 | 0.74 | 91 | 11 % | 0.45 | 1.46 |
+| Lettered patch, traced | 37 | 3,230 | 0.75 | 176 | 7 % | 1.55 | 0.53 |
+| Photo of a flower | 2,014 | 51,613 | 3.07 | 1,905 | 9 % | 8.08 | 2.81 |
+| Photo of a leafy plant | 3,985 | 118,672 | 3.74 | 1,132 | 11 % | 14.84 | 3.07 |
+| Photo of a bird | 1,813 | 68,099 | 3.49 | 3,629 | 10 % | 11.14 | 3.15 |
+| Photo of a building | 1,444 | 63,361 | 4.14 | 3,932 | 12 % | 16.58 | 2.18 |
+
+- **The shapes share their edges exactly.** Image Trace's Abutting method gives 2 neighbours the same
+  anchors along the edge they share. Of the pear's 294 distinct anchors, 282 belong to 2 shapes and 8 to 3,
+  where 3 colours meet. The edges coincide to less than a micrometre. 69 % of the pear's outline length
+  and 89 to 99 % of the others' lies along another shape.
+- **Few points draw what thread shows.** The column of points needed counts the points of a polyline
+  that stays within 0.1 mm of the outline flattened ([Douglas and Peucker, 1973](https://doi.org/10.3138/FM57-6770-U75U-7727)),
+  as a share of the flattened outline's points.
+- **A jag** is a turn of 20° or more that turns back within 0.4 mm along the outline, measured on the
+  outline resampled every 0.05 mm, the direction taken over 0.1 mm. Thread is wider than a jag.
+  **A tooth** turns back within 0.4 to 1.6 mm, and thread shows it.
+- **The pear's ragged colour edges are teeth.** Its photo's pixel is 0.28 mm. Where one band of colour
+  meets the next in a gradient, the trace follows a staircase of 3 to 5 pixels, and its teeth stand 0.5 to
+  1.5 mm tall.
+
+**What the wobble costs.** The planner's rules read an outline's points. The traced dogs, given as the
+same outlines flattened to polylines within 0.005 mm, sew 16 to 22 of their 69 to 92 shapes by another
+rule, most of them `refused` for columns where the curves gave columns. Today the 4 dogs sew 12,659
+stitches under 0.5 mm, 29 % of their stitches, and lay 12 stitches astray. A move of the whole picture by
+0.05 mm in x and y, the shift test of M13.47, changes the rule of no shape on any of these pictures.
+
+**Traced letters flip for another reason.** M13.47 found traced letters sewn as fills where the same
+letters drawn exactly sew as columns. Its 558 letters, 3 typefaces at 6, 12 and 25 mm, each traced from a
+render of 40 pixels per mm, were measured. 32 letters sew by another rule than their exact outlines. The
+H of the sans-serif bold at 12 mm is refused for columns because its stems' inner edges lean 0.025 mm over
+4.5 mm. That edge is a straight line, and smoothing leaves a straight line where it is. Smoothed at 0.1 and 0.2 mm, 55 and 46 traced letters
+sew by another rule than their exact outlines smoothed the same way, and smoothing alone changes the rule
+of about 50 exact letters. A block H, T and L drawn with one jog of 0.025, 0.05 or 0.1 mm at an inner
+corner sew as columns, as they do without the jog. A leaning stem belongs to the columns' design, and
+smoothing doesn't fix it.
+
+### The tracer's options
+
+`stitch plan picture.png` asks Image Trace for its mode, palette, colours and method, and leaves its
+fitting options at their defaults, which are Paths 50, Corners 75 and Noise 25, with Snap Curves To Lines
+off. The tracer fits an edge once for both shapes that share it. Its options smooth an edge without
+opening a gap. The pear and the 4 dogs were traced again from their sources by VectorCraft 0.24.1's command line, once for each value,
+and planned by `main` at `00b45915`. The counts are the 5 pictures' together:
+
+| Options | Anchors | Jags per 10 mm | Teeth per 10 mm | Colour error | Stitches under 0.5 mm | Astray | Jump threads | Detail lost | Shapes |
+|---|---|---|---|---|---|---|---|---|---|
+| Defaults (50, 75, 25, off) | 8,507 | 0.58 | 1.75 | 30.1 | 13,430 | 12 | 237 | 9.9 % | 408 |
+| Paths 0 | 7,070 | 0.58 | 1.76 | 30.1 | 13,106 | 17 | 221 | 9.9 % | 408 |
+| Paths 25 | 7,505 | 0.58 | 1.75 | 29.9 | 13,380 | 17 | 222 | 9.9 % | 408 |
+| Paths 100 | 16,469 | 1.08 | 1.70 | 29.5 | 13,825 | 2 | 233 | 10.4 % | 408 |
+| Corners 0 | 8,037 | 0.39 | 1.41 | 30.2 | 13,594 | 11 | 215 | 10.0 % | 408 |
+| Corners 25 | 8,011 | 0.38 | 1.43 | 30.2 | 13,319 | 7 | 217 | 10.1 % | 408 |
+| Corners 100 | 9,678 | 1.09 | 2.06 | 29.9 | 13,722 | 7 | 237 | 9.6 % | 408 |
+| Noise 10 | 10,832 | 0.74 | 1.88 | 28.5 | 14,002 | 44 | 285 | 12.6 % | 702 |
+| Noise 50 | 7,166 | 0.52 | 1.68 | 31.4 | 12,817 | 11 | 196 | 2.2 % | 276 |
+| Noise 200 | 4,841 | 0.40 | 1.50 | 36.7 | 10,081 | 2 | 73 | 0.0 % | 115 |
+| Snap Curves To Lines | 8,466 | 0.58 | 1.72 | 30.2 | 13,188 | 10 | 232 | 9.9 % | 408 |
+| Paths 25, Corners 25 | 6,307 | 0.29 | 1.24 | 30.0 | 13,112 | 8 | 220 | 10.2 % | 408 |
+| Paths 0, Corners 0 | 5,336 | 0.23 | 1.06 | 30.2 | 13,190 | 13 | 218 | 9.8 % | 408 |
+
+The colour error is the mean distance in RGB between the trace and its source picture, over the picture's
+pixels. Detail lost is the likeness measure's, against the trace itself. A trace that drops shapes
+doesn't lose detail by that measure, and its colour error shows the loss.
+
+- **Paths** sets how closely a curve follows the pixels: within 0.08 pixels at 100, 0.33 at 50 and 0.78
+  at 0. At 0 it saves 17 % of the anchors and changes nothing else.
+- **Corners** sets the turn that makes a corner: 90° at 0, 49° at 75 and 35° at 100. Each step of a
+  staircase turns about 90°. The default keeps a staircase as corners. At 0 or 25 the jags fall by a
+  third.
+- **Noise** is the size in pixels below which an area is dropped. Raised, it drops the dogs' small shapes and
+  their detail with them: the colour error rises by 1.4 at 50 and 6.6 at 200. Lowered to 10, it adds 294
+  shapes and 32 stitches astray.
+- **Snap Curves To Lines** moves each measure by less than 2 neighbouring values of Paths or Corners do.
+
+**Built (M13.51).** Paths 0 and Corners 0 for every picture `stitch plan` traces, but those with the `logo`
+style, which keeps the tracer's defaults: a logo's corners are drawn, and Corners 0 would round every turn
+under 90°, such as an octagon's. No traced logo with its source was measured, so the `logo` style keeps the
+defaults until one is. Noise stays 25.
+
+Each picture was traced from its source by VectorCraft 0.24.1's command line with the defaults and with
+the 2 options, and planned by this step's code. The pictures are the pear, the 4 dogs, the badge of the
+compatibility gate drawn flat and a stitched preview of the lettered patch, traced as a photo of it.
+Each cell gives the trace with the defaults, then with the options. Area at 3 fills is the area under 3
+fills of thread or more:
+
+| Measure | Pear | Dog on turf, 6 | Dog on turf, 9 | Dog running, 6 | Dog running, 9 | Badge | Lettered patch |
+|---|---|---|---|---|---|---|---|
+| shapes traced | 6 to 6 | 97 to 97 | 115 to 115 | 83 to 83 | 107 to 107 | 12 to 12 | 749 to 749 |
+| anchors | 592 to 346 | 1902 to 1195 | 2096 to 1361 | 1827 to 1126 | 2090 to 1308 | 754 to 326 | 13642 to 9800 |
+| jags/10mm | 0.57 to 0.13 | 0.75 to 0.24 | 0.67 to 0.35 | 0.46 to 0.2 | 0.45 to 0.22 | 0.21 to 0.1 | 0.4 to 0.19 |
+| teeth/10mm | 2.28 to 1.66 | 1.74 to 1.04 | 1.82 to 1.11 | 1.45 to 0.72 | 1.46 to 0.75 | 0.52 to 0.07 | 0.43 to 0.36 |
+| colour error | 23.5 to 23.6 | 29.9 to 30.5 | 29.1 to 29.4 | 36.0 to 35.5 | 31.8 to 31.9 | 13.7 to 14.1 | 74.1 to 74.6 |
+| stitches | 4628 to 4551 | 9530 to 9459 | 10100 to 9859 | 10630 to 10240 | 11779 to 11849 | 3144 to 3726 | 16683 to 16964 |
+| Stitches under 0.5 mm | 757 to 735 | 2582 to 2609 | 2797 to 2727 | 2969 to 2828 | 3263 to 3357 | 355 to 568 | 2196 to 2203 |
+| jump threads | 2 to 2 | 60 to 53 | 62 to 60 | 49 to 48 | 64 to 55 | 11 to 8 | 354 to 321 |
+| thread changes | 2 to 2 | 8 to 7 | 12 to 11 | 8 to 8 | 11 to 11 | 2 to 3 | 8 to 8 |
+| thickest fills | 3.99 to 3.81 | 3.87 to 4.0 | 3.97 to 3.96 | 3.92 to 4.04 | 3.98 to 3.99 | 4.0 to 3.98 | 3.92 to 4.0 |
+| Area at 3 fills (mm²) | 10.5 to 9.0 | 54.2 to 74.5 | 63.8 to 80.5 | 53.5 to 70.5 | 94.0 to 114.2 | 32.8 to 21.8 | 31.8 to 101.2 |
+| bare % | 0.0 to 0.0 | 0.04 to 0.02 | 0.04 to 0.01 | 0.01 to 0.0 | 0.02 to 0.01 | 1.06 to 0.29 | 1.23 to 1.96 |
+| astray | 0 to 0 | 4 to 5 | 3 to 3 | 1 to 3 | 4 to 2 | 13 to 21 | 90 to 118 |
+| detail lost % | 0.0 to 0.0 | 14.4 to 13.9 | 17.1 to 16.1 | 10.2 to 10.8 | 7.9 to 8.0 | 25.0 to 6.2 | 16.3 to 16.3 |
+| Parts sewn | 9 to 10 | 156 to 148 | 174 to 177 | 149 to 138 | 191 to 178 | 22 to 22 | 428 to 472 |
+| Time to plan (s) | 0.5 to 0.5 | 4.2 to 2.6 | 5.7 to 4.7 | 5.4 to 4.2 | 6.0 to 6.5 | 0.3 to 0.3 | 14.0 to 11.7 |
+| shapes whose rule changes | 0 of 5 | 40 of 78 | 50 of 90 | 29 of 69 | 35 of 92 | 5 of 9 | 69 of 550 |
+
+- **Better.** The anchors fall by 28 to 57 %, the jags by 48 to 77 % and the teeth by 16 to 87 %. The dogs
+  sew 1.5 % fewer stitches and leave 8 % fewer jump threads, and the colour error and the detail lost
+  stay within 1 of what they were. Every picture traces into the same shapes, so no shape is lost. The
+  badge's ring keeps more of its likeness, since it is traced as a ring of even width.
+- **Worse.** The dogs have 28 % more area at 3 fills, 340 mm² where they had 266, and one of them reaches
+  4.04 fills at its thickest spot, past the 4 fills where the warning starts. The lettered patch has 3
+  times the area at 3 fills, and 118 stitches astray where it had 90. The badge, flat art traced without
+  the `logo` style, sews 18 % more stitches and 60 % more short ones.
+- **Rules.** 29 to 50 of each dog's 69 to 92 shapes sew by another rule, as the shapes' outlines change.
+  The pear's shapes sew as they did.
+
+The committed traces of the pear and the dogs are not traced again: they are the inputs of their own
+cases, and this step changes only what `stitch plan` asks the tracer.
+
+### Smoothing in StitchCraft
+
+The tracer's options reach only pictures `stitch plan` traces itself. A document traced in VectorCraft by
+hand, or by another tracer, reaches StitchCraft as it is. The pass below smooths an automatic area's
+outline at a tolerance, before anything is digitized. M13.52 builds it. The numbers below are a prototype's,
+measured in M13.51 on traces made with the tracer's defaults.
+
+**The rule.** The setting `auto_smooth_mm` is how far a point of an outline may move. 0 turns the pass off.
+
+1. **Edges.** The outlines of the automatic areas whose setting is on are cut into edges at their
+   junctions: a point where 3 or more edges meet. A segment is the same in 2 outlines when its ends and
+   control points are, either way round, so an edge 2 areas share is one edge. An edge shared with an
+   area whose setting is 0, or with a shape with settings, stays as drawn. An edge 2 areas share is
+   smoothed at the smaller of their settings.
+2. **Corners.** Its corners cut an edge again. A corner is a point where the outline's direction
+   over 4 times the tolerance before it and after it differs by 60° or more, the sharpest point of each
+   run of such points. Junctions and corners stay where they are. A staircase of pixels smaller than the
+   tolerance turns both ways within that span, and so has no corner.
+3. **Smoothing.** Each piece between fixed points is resampled every fifth of the tolerance and smoothed
+   by a Gaussian whose deviation is the tolerance, measured along the piece. The piece is reflected through
+   each fixed end, so that the ends stay. The smoothed piece may lie no farther than the tolerance from the
+   piece as drawn, nor the piece as drawn from it (their Hausdorff distance). Where it would, or where a
+   ring would gain or lose more than 10 % of its area, the deviation shrinks by 0.7, up to 8 times, and
+   then the piece stays as drawn.
+4. **Crossings.** An edge whose smoothed line would cross another line is smoothed again with half the
+   deviation. That repeats until the line crosses none, and at last the edge stays as drawn.
+5. **Fewer points.** The smoothed edge is drawn with the fewest of its points that stay within 0.02 mm
+   of it, and every area along it takes that line.
+
+Every area that shares an edge has the same line along it, so no gap or overlap opens between them. The
+pass charges the element's budget for each point it resamples and each pair of segments it tests for a
+crossing. An area whose pass needs more keeps its outline, and `SC-I0921` names it.
+
+**The literature.** Douglas and Peucker keep the points that lie farthest from a chord, so they keep the
+tips of jags, and cut points without smoothing. Visvalingam and Whyatt
+([1993](https://eprints.lancs.ac.uk/id/eprint/135032)) remove the point whose triangle with its
+neighbours has the least area, one point after another, and leave outlines less jagged. Saalfeld
+([1999](https://www.bohrium.com/paper-details/topologically-consistent-line-simplification-with-the-douglas-peucker-algorithm/811959494144688129-144))
+showed that removing points can make a line cross another, and gave tests that keep it from doing so.
+PostGIS's [ST_CoverageSimplify](https://postgis.net/docs/ST_CoverageSimplify.html) simplifies the edges a
+set of polygons shares, each once, with a variant of Visvalingam and Whyatt, so that the polygons still
+cover their area without gaps: the shared edges of the rule are the same idea. A Gaussian along a curve
+is the smoothing of curvature scale space
+([Mokhtarian and Mackworth, 1992](https://www.cs.ubc.ca/~mack/Publications/b2hd-IEEE-PAMI92.html)). It
+pulls a convex curve inward by about the deviation squared over twice its radius, under 0.01 mm for a
+radius of 2 mm at 0.2 mm. The rule uses the Gaussian because it averages a jag away, where a method that
+keeps points keeps its tip.
+
+**VectorCraft's Simplify.** `object.path.simplify` refits each path, or each run of selected segments
+between anchors that stay
+([its MCP guide](https://github.com/storytold/vectorcraft/blob/main/docs/mcp.md#simplify)). It refits a
+path on its own, and its guide doesn't say that a run refits the same way in both directions, so the 2
+shapes of a shared edge can take 2 different lines. `stitch plan doc.vectorcraft` also runs without
+VectorCraft. The pass is StitchCraft's. A Simplify that refits the edges a selection's shapes share once
+is a candidate for the plug-in features RFC.
+
+### The prototype's numbers
+
+The prototype is a script of the step's notes, written from the rule above without the 10 % area bound.
+It smoothed each picture at 4 tolerances, and `main` at `00b45915` planned the results. Points are those
+needed within 0.02 mm, each shared edge counted once. Short stitches and stitches are the change from the
+pictures as traced. Recoloured is the share of the picture's area whose colour the smoothing changed,
+drawn at 10 pixels per mm.
+
+| Tolerance | Points, 4 dogs | Points, 4 photos | Jags, dogs | Jags, photos | Teeth, dogs | Short stitches, dogs | Stitches, dogs | Short stitches, pear | Short stitches, patch | Recoloured, dogs | Recoloured, photos | Dogs' shapes whose area moved over 10 % | Photos' shapes lost |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 0.1 mm | 11,481 to 11,647 | 224,528 to 177,423 | 0.58 to 0.71 | 12.7 to 8.0 | 1.62 to 1.70 | -1 % | -0.3 % | +3 % | -13 % | 1.5 to 1.8 % | 2.8 to 6.0 % | 0 | 0 |
+| 0.2 mm | 11,481 to 11,727 | 224,528 to 144,448 | 0.58 to 0.58 | 12.7 to 4.1 | 1.62 to 1.37 | -3 % | -1.7 % | -6 % | -12 % | 1.8 to 2.2 % | 4.0 to 8.7 % | 0 | 0 |
+| 0.4 mm | 11,481 to 10,659 | 224,528 to 113,794 | 0.58 to 0.23 | 12.7 to 1.8 | 1.62 to 0.69 | -6 % | -2.9 % | -15 % | -13 % | 3.0 to 3.9 % | 5.9 to 12.7 % | 14 | 41 |
+| 0.8 mm | 11,481 to 8,838 | 224,528 to 85,922 | 0.58 to 0.06 | 12.7 to 1.0 | 1.62 to 0.24 | -16 % | -8.7 % | -21 % | -15 % | 6.1 to 7.6 % | 8.3 to 17.8 % | 136 | 1287 |
+
+- **At 0.1 and 0.2 mm** nothing moves farther than half a thread. The photos, traced at 3 to 4 anchors per
+  mm, need 21 % fewer points at 0.1 mm and 36 % fewer at 0.2 mm, and at 0.2 mm their jags fall from 12.7 to 4.1 in every 10 mm.
+  Planned at 0.2 mm, the 4 photos sew 7 % fewer stitches and 18 to 24 % fewer stitches under 0.5 mm, with as many jumps, and plan in 18 to 59 % less time. Their fabric measures, stitches astray and likeness, were not run: each takes hours on the shared machine. The dogs and the pear, already fitted as curves at under 1 anchor per mm, need as many
+  points as before, and sew 3 and 6 % fewer short stitches at 0.2 mm. The traced lettered patch sews 12 % fewer and 4
+  more of its parts as satin columns.
+- **At 0.4 mm** the jags and teeth of the dogs halve, and the outlines move as far as a thread is wide.
+- **At 0.8 mm** the pear's teeth are gone in the step's pictures, but 7 % of the dogs' area
+  changes colour and 136 of their shapes grow or shrink by more than 10 %. The photos lose 1,287 small
+  shapes, which the area bound keeps.
+- **Rules.** The dogs sew 17 to 29 of their shapes by another rule at 0.1 and 0.2 mm, about as many as the
+  same outlines flattened, with more columns (48 to 59 at 0.2 mm) and as many refused. The shift test
+  doesn't change a rule at 0.2 mm either. At 0.4 mm 104 parts are refused where 85 are today. Not every changed rule is better: on the flower photo at 0.2 mm, a petal's part that was filled sews
+  as a column whose stitches fan along an edge still ragged at a thread's scale.
+- **Points on the dogs.** The tracer has already fitted their outlines as curves. The pass draws a smoothed
+  curve with straight lines within 0.02 mm, which takes as many points. The tracer's Paths 0 and Corners 0
+  are what cuts their points.
+
+### The setting and the notice
+
+- **`auto_smooth_mm`**, a length from 0 to 1 mm in the Auto effect's main section, labelled "Smooth
+  outlines". 0 is off and the default, for a document and for a picture `stitch plan` traces alike. A
+  person sets it with `--set auto_smooth_mm=0.2`. 0.2 mm is half a thread: on every picture of the set it
+  cut short stitches, with nothing moved that thread shows.
+- **`SC-I0921`**, info, once for the design: "The outlines of 107 automatic areas were smoothed within
+  0.2 mm: they are drawn with 3,126 points, where 3,067 drew them within 0.02 mm." It names the areas
+  whose pass needed more than the budget, which keep their outlines.
+- **Shapes a person drew.** VectorCraft's Expand leaves plain paths, so a document doesn't say which of
+  its shapes were traced. StitchCraft never smooths a document's shapes unless the setting asks, and never a shape with
+  settings. An edge such a shape shares stays as drawn on both sides.
+
 ### The owner's decisions
 
 On 2026-11-20 the owner decided:

@@ -27,7 +27,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode, Output};
 
 use serde_json::{Value, json};
-use stitchcraft_cli::trace::{COLOURS, steps};
+use stitchcraft_cli::trace::{COLOURS, Fitting, steps};
 use stitchcraft_core::Mm;
 use stitchcraft_plan::profiles::{BROTHER_PE800_4X4, REFERENCE};
 use stitchcraft_testkit::temp::TempDir;
@@ -54,6 +54,10 @@ const TESTS: &[(&str, fn())] = &[
     (
         "req_cli_012_the_picture_is_traced_for_the_machine_at_the_size_and_in_the_colours_asked",
         req_cli_012_the_picture_is_traced_for_the_machine_at_the_size_and_in_the_colours_asked,
+    ),
+    (
+        "req_cli_024_a_picture_planned_in_the_logo_style_is_traced_with_image_trace_s_own_fitting",
+        req_cli_024_a_picture_planned_in_the_logo_style_is_traced_with_image_trace_s_own_fitting,
     ),
     (
         "diag_sc_e0816_what_vectorcraft_s_command_line_said_when_it_failed_ends_the_message",
@@ -208,7 +212,7 @@ fn req_cli_012_stitch_plan_traces_a_picture_with_vectorcraft_s_command_line_and_
     // VectorCraft runs the steps from standard input, without the user's preferences, and saves the document
     // into a folder of the command's own beside the machine file, which is gone.
     let kept = kept.unwrap();
-    assert_eq!(kept["steps"], steps("badge.png", PICTURE, REFERENCE, None, COLOURS).to_string());
+    assert_eq!(kept["steps"], steps("badge.png", PICTURE, REFERENCE, None, COLOURS, Fitting::Fewest).to_string());
     assert_eq!(kept["no_prefs"], "1");
     let given: Vec<&str> = kept["args"].as_array().unwrap().iter().map(|arg| arg.as_str().unwrap()).collect();
     assert_eq!(given[..4], ["run", "--commands", "-", "--export"]);
@@ -278,8 +282,16 @@ fn req_cli_012_the_picture_is_traced_for_the_machine_at_the_size_and_in_the_colo
     let args = ["plan", "photo.JPG", "-o", "photo.pes", "--profile", BROTHER_PE800_4X4.id, "--size", "80", "--colours", "4"];
     let (out, kept) = stitch(dir.path(), &args, None);
     assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
-    assert_eq!(kept.unwrap()["steps"], steps("photo.JPG", PICTURE, &BROTHER_PE800_4X4, Some(Mm::new(80.0).unwrap()), 4).to_string());
+    assert_eq!(kept.unwrap()["steps"], steps("photo.JPG", PICTURE, &BROTHER_PE800_4X4, Some(Mm::new(80.0).unwrap()), 4, Fitting::Fewest).to_string());
     assert!(text(&out.stdout).contains(&format!("  profile   {} (", BROTHER_PE800_4X4.id)), "{}", text(&out.stdout));
+}
+
+fn req_cli_024_a_picture_planned_in_the_logo_style_is_traced_with_image_trace_s_own_fitting() {
+    // The other cases plan with no style, and the steps fit the outlines with the fewest points.
+    let dir = folder("logo", "badge.png");
+    let (out, kept) = stitch(dir.path(), &["plan", "badge.png", "-o", "badge.pes", "--style", "logo"], None);
+    assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
+    assert_eq!(kept.unwrap()["steps"], steps("badge.png", PICTURE, REFERENCE, None, COLOURS, Fitting::Defaults).to_string());
 }
 
 fn diag_sc_e0816_what_vectorcraft_s_command_line_said_when_it_failed_ends_the_message() {

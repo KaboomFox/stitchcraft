@@ -347,11 +347,16 @@ test diag_sc_e0701_too_wide ... ignored
         let (failures, skipped) = judged(Some(&[Verdict::Ignored("too slow")]));
         assert_eq!(
             failures,
-            ["it is ignored (\"too slow\"): a case may be ignored only as \"models only: …\" or \"planned: …\", or in the debug build as \"release only: …\""]
+            [
+                "it is ignored (\"too slow\"): a case may be ignored only as \"models only: …\" or \"planned: …\", or in the debug build as \"release only: …\""
+            ]
         );
         assert_eq!(skipped, None);
         let (failures, _) = judged(Some(&[models, Verdict::Ignored("")]));
-        assert_eq!(failures, ["it is ignored: a case may be ignored only as \"models only: …\" or \"planned: …\", or in the debug build as \"release only: …\""]);
+        assert_eq!(
+            failures,
+            ["it is ignored: a case may be ignored only as \"models only: …\" or \"planned: …\", or in the debug build as \"release only: …\""]
+        );
     }
 
     #[test]
@@ -366,11 +371,16 @@ test diag_sc_e0701_too_wide ... ignored
         let (failures, skipped) = judged(Some(&[Verdict::Ignored("too slow")]));
         assert_eq!(
             failures,
-            ["it is ignored (\"too slow\"): a case may be ignored only as \"models only: …\" or \"planned: …\", or in the debug build as \"release only: …\""]
+            [
+                "it is ignored (\"too slow\"): a case may be ignored only as \"models only: …\" or \"planned: …\", or in the debug build as \"release only: …\""
+            ]
         );
         assert_eq!(skipped, None);
         let (failures, _) = judged(Some(&[release, Verdict::Ignored("")]));
-        assert_eq!(failures, ["it is ignored: a case may be ignored only as \"models only: …\" or \"planned: …\", or in the debug build as \"release only: …\""]);
+        assert_eq!(
+            failures,
+            ["it is ignored: a case may be ignored only as \"models only: …\" or \"planned: …\", or in the debug build as \"release only: …\""]
+        );
         assert_eq!(judged(None).0, ["did not run (is it a #[test]? does it compile?)"]);
     }
 
