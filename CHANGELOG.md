@@ -2634,6 +2634,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- Automatic digitizing: a satin column along a hole kept open sews past a shape beside it. Such a column has a
+  pull compensation for each rail, none on the hole's side (`REQ-AUTO-084`). Where its other rail runs along a
+  shape sewn after it, digitizing wrote the overlap in front of both values, as in "1 0.4 0", and planning
+  refused the design with `SC-E0101` (`REQ-AUTO-029`). The rail along the shape now takes the overlap and
+  the other keeps the length it had. Seen on traced pictures planned in the `logo` style, which sews more of
+  their parts as columns. Designs that planned before sew as they did.
 - M13.23: pictures that planned nothing. `stitch plan` of 2 photos in 6 colours at 100 mm stopped with
   `SC-E0004`, and of a third with `SC-E0009`. It didn't write a file for any of them.
   - The work budget ran out on each photo's background, one area of some 7,000 anchors. Automatic

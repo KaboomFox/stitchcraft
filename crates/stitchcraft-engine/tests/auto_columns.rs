@@ -408,7 +408,8 @@ fn req_auto_029_a_column_along_a_hole_kept_open_sews_under_a_shape_beside_it_and
     let band = automatic(shape("band", &rectangle((0.0, 5.0), (40.0, 10.0))));
     let design = Design::new(vec![frame.clone(), band.clone()], DesignSettings::default()).unwrap();
     let (made, _) = digitized(&design, &Budget::DEFAULT);
-    let pulls: Vec<&str> = made.iter().filter(|element| element.id.as_str().starts_with("frame")).filter_map(|column| setting(column, PULL_COMPENSATION)).collect();
+    let pulls: Vec<&str> =
+        made.iter().filter(|element| element.id.as_str().starts_with("frame")).filter_map(|column| setting(column, PULL_COMPENSATION)).collect();
     let overlap = rules().auto_overlap_mm.get();
     let (along_hole, under_band) = (format!("{reach} 0"), format!("{overlap} 0"));
     assert_eq!(pulls.len(), 4, "{pulls:?}");
