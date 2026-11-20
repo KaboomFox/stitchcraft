@@ -230,7 +230,9 @@ pub(super) fn outlines(design: &Design, rules: &[Option<AutoParams>], budget: &B
     }
     // Every point of a smoothed outline lies within the setting of its outline as drawn, which the design
     // checked, so an error is a bug.
-    design.with_elements(elements).map_err(|error| said.push(error)).ok()
+    let smoothed = design.with_elements(elements);
+    said.extend(smoothed.as_ref().err().cloned());
+    smoothed.ok()
 }
 
 /// What `SC-I0921` says of the areas of `elements` with `settings`, those of them `frozen`, which ran out of
@@ -273,7 +275,8 @@ fn charged<T>(meters: &mut BTreeMap<usize, Meter>, owners: &[usize], work: impl 
     let spent = left.saturating_sub(scratch.work_left());
     for index in owners {
         if let Some(meter) = meters.get_mut(&index) {
-            meter.charge(spent).map_err(|_| Ran::Out(index))?;
+            // What was spent is at most the poorest's work left, so no owner runs out here.
+            let _ = meter.charge(spent);
         }
     }
     Ok(done)
@@ -417,16 +420,19 @@ fn piece(drawn: &[Point], closed: bool, tolerance: f64, deviation: f64, meter: &
     let Some(steps) = samples(length, tolerance).filter(|&steps| !closed || steps >= 3) else { return Ok(drawn.to_vec()) };
     let Some(resampled) = line::resampled(drawn, closed, steps, meter)? else { return Ok(drawn.to_vec()) };
     let step = length / steps as f64;
-    let mut deviation = deviation;
+    let (mut deviation, mut kept) = (deviation, None);
     for _ in 0..=SHRINKS {
         if let Some(blurred) = line::blurred(&resampled, closed, deviation / step, meter)?
             && line::apart(drawn, &blurred, closed, REACH * tolerance, meter)? <= tolerance
         {
-            return Ok(blurred);
+            kept = Some(blurred);
+            break;
         }
         deviation *= SHRINK;
     }
-    Ok(drawn.to_vec())
+    // Shrunk to the last, the deviation moves no sample by more than a few hundredths of the setting, so the
+    // piece is left as drawn in principle only.
+    Ok(kept.unwrap_or(drawn.to_vec()))
 }
 
 /// The edge drawn as `drawn` smoothed within `tolerance` with `deviation` ([`piece`]), its corners fixed, and

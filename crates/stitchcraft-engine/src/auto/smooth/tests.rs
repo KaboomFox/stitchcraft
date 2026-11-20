@@ -274,3 +274,137 @@ fn the_lines_that_cross() {
     assert!((line::area(&[p(0.0, 0.0), p(2.0, 0.0), p(2.0, 3.0)]) - 3.0).abs() < 1e-12);
     assert!((line::area(&[p(0.0, 0.0), p(2.0, 3.0), p(2.0, 0.0)]) + 3.0).abs() < 1e-12);
 }
+
+/// A fill named `id` through each of `rings`, automatic, with `params`.
+fn areas(id: &str, rings: &[Vec<(f64, f64)>], params: &[(&str, &str)]) -> Element {
+    let mut element = area(id, &rings[0], true, params);
+    let Shape::Fill { path, .. } = &mut element.shape else { panic!("a fill") };
+    for ring in &rings[1..] {
+        let (start, segments) = (p(ring[0].0, ring[0].1), ring.iter().skip(1).map(|&(x, y)| Segment::Line(p(x, y))).collect());
+        path.subpaths.push(Subpath { start, segments, closed: true });
+    }
+    element
+}
+
+/// A ring of `n` points round a circle of `radius` about `(x, y)`.
+fn circle(x: f64, y: f64, radius: f64, n: usize) -> Vec<(f64, f64)> {
+    (0..n)
+        .map(|i| {
+            let (sin, cos) = stitchcraft_core::math::sin_cos(std::f64::consts::TAU * i as f64 / n as f64);
+            (x + radius * cos, y + radius * sin)
+        })
+        .collect()
+}
+
+/// The points of every subpath of the element `index` of `design`, the start first.
+fn outline(design: &Design, index: usize) -> Vec<Vec<Point>> {
+    let Shape::Fill { path, .. } = &design.elements()[index].shape else { panic!("a fill") };
+    path.subpaths.iter().map(|subpath| once(subpath.start).chain(subpath.segments.iter().map(|s| s.end())).collect()).collect()
+}
+
+#[test]
+fn req_auto_131_a_ring_without_corners_is_smoothed_round() {
+    // A circle 5 mm round drawn with 72 points has no corner: it is smoothed as one ring, every point within
+    // 0.2 mm of the circle, and drawn with fewer points.
+    let (design, said) = smoothed(vec![area("a", &circle(10.0, 10.0, 5.0, 72), true, &[("auto_smooth_mm", "0.2")])], &Budget::DEFAULT);
+    let ring = &outline(design.as_ref().unwrap(), 0)[0];
+    assert!(ring.len() < 72, "{}", ring.len());
+    for q in ring {
+        let off = (q.distance(p(10.0, 10.0)) - 5.0).abs();
+        assert!(off <= 0.2, "{q:?} {off}");
+    }
+    assert_eq!(said.len(), 1);
+    // The least work that smooths it, found by halving.
+    let at = |work: u64| {
+        smoothed(vec![area("a", &circle(10.0, 10.0, 5.0, 72), true, &[("auto_smooth_mm", "0.2")])], &Budget { max_work: work, ..Budget::DEFAULT })
+    };
+    let (mut short, mut enough) = (0, 1_000_000);
+    while enough - short > 1 {
+        let middle = u64::midpoint(short, enough);
+        if at(middle).0.is_some() { enough = middle } else { short = middle }
+    }
+    assert_eq!(at(enough).0, design);
+    // With any less, the ring keeps its outline and the notice names it: the last 2,000 amounts run out in
+    // each of the pass's last stages.
+    for work in enough - 2_000..enough {
+        let (smoothed, said) = at(work);
+        assert_eq!(smoothed, None, "{work}");
+        assert!(said[0].message.contains("needed more work"), "{work}: {}", said[0].message);
+    }
+}
+
+#[test]
+fn req_auto_134_a_ring_whose_area_any_smoothing_changes_stays_as_drawn() {
+    // A dot 0.1 mm across, smoothed within 0.3 mm, loses more than a tenth of its area at every deviation the
+    // pass tries: it stays as drawn, and the notice still counts it.
+    let (design, said) = smoothed(vec![area("a", &circle(1.0, 1.0, 0.05, 16), true, &[("auto_smooth_mm", "0.3")])], &Budget::DEFAULT);
+    assert_eq!(design, None);
+    assert_eq!(
+        said[0].message,
+        "The outline of 1 automatic area was smoothed within 0.3 mm: it is drawn with 4 points, where 4 drew it within 0.02 mm."
+    );
+}
+
+#[test]
+fn req_auto_134_a_smoothed_edge_that_would_cross_a_hole_is_smoothed_less() {
+    // An area 9.6 by 10 mm whose top waves 0.15 mm up and down every 1.6 mm, with a hole just under a crest.
+    let wave: Vec<(f64, f64)> = (0..=192)
+        .map(|i| {
+            let x = 0.05 * f64::from(i);
+            (x, 10.0 + 0.15 * stitchcraft_core::math::sin_cos(std::f64::consts::TAU * x / 1.6).0)
+        })
+        .collect();
+    let mut outer = vec![(0.0, 0.0), (9.6, 0.0)];
+    outer.extend(wave.iter().rev());
+    let hole = vec![(0.35, 10.0), (0.35, 10.12), (0.45, 10.12), (0.45, 10.0)];
+    let crest = |design: &Design| -> f64 {
+        let near = outline(design, 0)[0].iter().filter(|q| (0.35..=0.45).contains(&q.x()) && q.y() > 9.0).map(|q| q.y()).collect::<Vec<_>>();
+        near.into_iter().fold(f64::INFINITY, f64::min)
+    };
+    let smooth = [("auto_smooth_mm", "0.4")];
+    // Without the hole, the crest comes down through where the hole would be.
+    let (alone, _) = smoothed(vec![areas("a", &[outer.clone()], &smooth)], &Budget::DEFAULT);
+    assert!(crest(alone.as_ref().unwrap()) < 10.1, "{}", crest(alone.as_ref().unwrap()));
+    // With it, the wave is smoothed less, and the crest stays above the hole.
+    let (holed, _) = smoothed(vec![areas("a", &[outer, hole.clone()], &smooth)], &Budget::DEFAULT);
+    let holed = holed.unwrap();
+    assert!(crest(&holed) > 10.12, "{}", crest(&holed));
+    assert_eq!(outline(&holed, 0)[1], hole.iter().map(|&(x, y)| p(x, y)).collect::<Vec<_>>());
+}
+
+#[test]
+fn a_piece_that_moves_too_far_is_smoothed_less() {
+    // Teeth 1 mm tall every 0.5 mm blur farther than 0.1 mm at a deviation of 1 mm: the deviation shrinks
+    // until the piece lies within 0.1 mm of the teeth.
+    let teeth: Vec<Point> = (0..=8).map(|i| p(0.25 * f64::from(i), if i % 2 == 1 { 1.0 } else { 0.0 })).collect();
+    let meter = &mut Budget::DEFAULT.meter();
+    let steps = samples(line::length(&teeth, false), 0.1).unwrap();
+    let resampled = line::resampled(&teeth, false, steps, meter).unwrap().unwrap();
+    let step = line::length(&teeth, false) / steps as f64;
+    let first = line::blurred(&resampled, false, 1.0 / step, meter).unwrap().unwrap();
+    assert!(line::apart(&teeth, &first, false, 0.4, meter).unwrap() > 0.1);
+    let kept = piece(&teeth, false, 0.1, 1.0, meter).unwrap();
+    assert_ne!(kept, teeth);
+    assert!(line::apart(&teeth, &kept, false, 0.4, meter).unwrap() <= 0.1);
+}
+
+#[test]
+fn the_sharpest_of_a_run_of_turning_points_is_the_corner() {
+    // Points every 0.1 mm along an L: 3 of them turn by 60° or more over 0.4 mm, and the sharpest, the bend
+    // itself at (5, 0), is the corner.
+    let mut l: Vec<Point> = (0..=50).map(|i| p(0.1 * f64::from(i), 0.0)).collect();
+    l.extend((1..=50).map(|i| p(5.0, 0.1 * f64::from(i))));
+    assert_eq!(line::corners(&l, false, 0.4, &mut Budget::DEFAULT.meter()).unwrap(), vec![50]);
+}
+
+#[test]
+fn how_far_apart_round_a_closed_line_with_a_window_past_its_end_or_round_it() {
+    let meter = &mut Budget::DEFAULT.meter();
+    let ring: Vec<Point> = circle(0.0, 0.0, 1.0, 60).into_iter().map(|(x, y)| p(x, y)).collect();
+    let shrunk: Vec<Point> = circle(0.0, 0.0, 0.9, 60).into_iter().map(|(x, y)| p(x, y)).collect();
+    // A window past the line's end wraps to its start; one longer than the line takes all of it.
+    for window in [0.5, 10.0] {
+        let apart = line::apart(&ring, &shrunk, true, window, meter).unwrap();
+        assert!((apart - 0.1).abs() < 0.01, "{window}: {apart}");
+    }
+}
