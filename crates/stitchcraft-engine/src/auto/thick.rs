@@ -79,12 +79,8 @@ pub(crate) fn finished(
                 plan.elements.iter().enumerate().filter(|(_, id)| of(id)).filter_map(|(at, _)| ElementRef::from_index(at)).collect()
             };
             let (base, made, columns) = (refs(&|id| base.contains(id)), refs(&|id| made.contains(id)), refs(&|id| columns.contains(id)));
-            let lettering: BTreeMap<ElementRef, Pull> = plan
-                .elements
-                .iter()
-                .enumerate()
-                .filter_map(|(at, id)| Some((ElementRef::from_index(at)?, *lettering.get(id)?)))
-                .collect();
+            let lettering: BTreeMap<ElementRef, Pull> =
+                plan.elements.iter().enumerate().filter_map(|(at, id)| Some((ElementRef::from_index(at)?, *lettering.get(id)?))).collect();
             let rules = thin::Rules {
                 cap: held.cap,
                 limit: held.limits.warn_fills,
@@ -309,7 +305,13 @@ mod tests {
         // and `SC-I1119` what is left above the cap.
         let mut sewn = plan(4, 1);
         let held = Held { limits: Limits::DEFAULT, overlap: 1.0, cap: 3.0 };
-        let said = finished(&mut sewn, &held, (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new()), stitchcraft_plan::profiles::REFERENCE, &Budget::DEFAULT);
+        let said = finished(
+            &mut sewn,
+            &held,
+            (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new()),
+            stitchcraft_plan::profiles::REFERENCE,
+            &Budget::DEFAULT,
+        );
         let codes: Vec<Code> = said.iter().map(|said| said.code).collect();
         assert_eq!(codes, [Code::AutoThinned, Code::AutoThick]);
         assert!(said[0].message.contains("Left: ") && said[0].message.contains(" at 3 fills or more"), "{}", said[0].message);
@@ -355,7 +357,16 @@ mod tests {
         let measure = used(&|meter| Thickness::of(&sewn, meter).is_ok());
         let thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
         let base = BTreeSet::new();
-        let rules = thin::Rules { cap: 4.0, limit: 4.0, base: &base, columns: &base, lettering: &BTreeMap::new(), overlap: 1.0, shortest: 0.3, longest: 12.1 };
+        let rules = thin::Rules {
+            cap: 4.0,
+            limit: 4.0,
+            base: &base,
+            columns: &base,
+            lettering: &BTreeMap::new(),
+            overlap: 1.0,
+            shortest: 0.3,
+            longest: 12.1,
+        };
         let pass = used(&|meter| thin::thinned(&mut sewn.clone(), &mut thickness.clone(), &rules, meter).is_ok());
         assert!(pass > measure, "{pass} {measure}");
         let budget = Budget { max_work: measure, ..Budget::DEFAULT };

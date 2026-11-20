@@ -1997,7 +1997,7 @@ settings does. The cap leaves it as it is, and `SC-W0913` tells of a spot above 
 (`REQ-AUTO-124`). Planning knows the lettering it may change by a mark the lettering passes give the elements
 they place, `Element::lettered`: `Lettered::Digitized` from the passes of marked text and text objects, and
 `Lettered::Set` where a person sets text in a font. The elements' ids aren't that mark, since a person may
-name a shape so, and no file carries it. A design with lettering of either kind and no automatic shape is
+name a shape so, and no file holds it. A design with lettering of either kind and no automatic shape is
 measured by the rules' default limits. With nothing in the cap's reach, its plan is only measured.
 
 **Underlay tagged.** A lettering column sewn whole tags the needle points before its top stitches' first as

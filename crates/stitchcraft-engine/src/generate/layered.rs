@@ -221,7 +221,15 @@ impl<'a> Layered<'a> {
 
     /// The element's `layer`, of the stitch groups `runs` in their `colours`.
     fn generated(&self, runs: Vec<Vec<stitchcraft_core::Point>>, colours: Vec<crate::generators::Colour>, layer: Layer) -> Generated {
-        Generated { common: self.common.clone(), stitch_type: self.stitch_type, groups: runs, colours, min_stitch: self.min_stitch, layer, underlay_points: 0 }
+        Generated {
+            common: self.common.clone(),
+            stitch_type: self.stitch_type,
+            groups: runs,
+            colours,
+            min_stitch: self.min_stitch,
+            layer,
+            underlay_points: 0,
+        }
     }
 }
 

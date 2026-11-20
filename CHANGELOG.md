@@ -7,7 +7,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ### Added
 - M13.50: the thickness cap covers lettering (`REQ-AUTO-119` to `REQ-AUTO-124`, `SC-W0913`).
   - Lettering that automatic digitizing places, marked text and text objects, is in the reach of the last
-    pass and the cap. Its columns stay whole: the cap takes a column's underlay only where another column
+    pass and the cap. No column's top stitch moves: the cap takes a column's underlay only where another column
     covers it too, and the running stitches under a column, judging the column's cover by its own pull
     compensation. The last resort takes no lettering column's top, and the last pass moves no end of its
     stitches. CHANGELOG_NUMBERS

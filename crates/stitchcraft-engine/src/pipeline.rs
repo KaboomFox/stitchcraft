@@ -30,10 +30,10 @@ use crate::assemble::{Assembled, assemble_routed};
 use crate::auto::cap::Pull;
 use crate::auto::{Sewing, sewing, thick};
 use crate::design::{Design, Element, Lettered};
-use crate::generators::pull::PullParams;
 use crate::finalize::{Finalized, finalize};
 use crate::generate::layered::{Layered, underlay};
 use crate::generate::{Generated, Generation, approach, generate_with};
+use crate::generators::pull::PullParams;
 use crate::generators::{Layer, Neighbours};
 use crate::moves::Routing;
 use crate::underlays_first::{Candidate, alone, steps};
@@ -103,8 +103,11 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
     // The lettering that digitizing placed is in the cap's reach, as the elements it made are (`REQ-AUTO-119`).
     // A design with lettering is measured, by the rules' default limits when no automatic shape sets them,
     // and one with nothing in the cap's reach only measured (`REQ-AUTO-124`).
-    let reach: BTreeSet<ElementId> =
-        made.iter().cloned().chain(elements.iter().filter(|element| element.lettered == Some(Lettered::Digitized)).map(|element| element.id.clone())).collect();
+    let reach: BTreeSet<ElementId> = made
+        .iter()
+        .cloned()
+        .chain(elements.iter().filter(|element| element.lettered == Some(Lettered::Digitized)).map(|element| element.id.clone()))
+        .collect();
     let limits = limits.or_else(|| if elements.iter().any(|element| element.lettered.is_some()) { thick::by_default() } else { None });
     // The satin columns in the cap's reach: it leaves their top stitches as they are (`REQ-AUTO-112`). Those of
     // the lettering are pulled in by their own pull compensation (`REQ-AUTO-121`).
