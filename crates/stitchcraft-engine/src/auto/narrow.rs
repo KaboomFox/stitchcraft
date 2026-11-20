@@ -1119,4 +1119,31 @@ mod tests {
         let edges = Edges::of(&part, 1.0, &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!(edges.nearest(Point::ORIGIN, &mut Budget::DEFAULT.meter()), Ok(f64::INFINITY));
     }
+
+    #[test]
+    fn req_auto_152_a_whole_broad_part_is_sorted_as_a_wide_column_or_refused_with_its_reason() {
+        let rules = AutoParams::from_set(&[("auto_max_split_satin_width_mm", "10")].into_iter().collect()).unwrap().params;
+        let bounds = Bounds::of(&rules, Mm::new(1.0).unwrap());
+        let area = ElementId::new("area").unwrap();
+        // A bar 8.5 mm wide is one wide column.
+        let bar = outline(&[(0.0, 0.0), (40.0, 0.0), (40.0, 8.5), (0.0, 8.5)]);
+        let wide = sorted(&area, vec![bar.clone()], &bounds, by(&rules), &mut Budget::DEFAULT.meter()).unwrap();
+        let [Along::Columns(columns)] = wide.along.as_slice() else { panic!("{:?}", wide.along) };
+        assert!(columns.wide && columns.part == bar && columns.sewn.len() == 1 && wide.filled.is_empty() && wide.said.is_empty());
+        assert_eq!(wide.fired.iter().map(|fired| fired.rule).collect::<Vec<_>>(), [RuleId::Wide]);
+        // A band 8.5 mm wide bent tightly round a point 3 mm inside it crowds its inner rail: it is an area, and
+        // says why.
+        let turn = 1.5 * std::f64::consts::PI;
+        let arc = |r: f64, from: f64, by: f64| -> Vec<(f64, f64)> {
+            (0..=48).map(|i| sin_cos(from + by * f64::from(i) / 48.0)).map(|(sin, cos)| (r * cos, r * sin)).collect()
+        };
+        let mut bent = arc(11.5, 0.0, turn);
+        bent.extend(arc(3.0, turn, -turn));
+        let bend = outline(&bent);
+        let refused = sorted(&area, vec![bend], &bounds, by(&rules), &mut Budget::DEFAULT.meter()).unwrap();
+        assert!(refused.along.is_empty() && !refused.filled.is_empty(), "{:?}", refused.along);
+        assert_eq!(refused.fired.first().map(|fired| fired.rule), Some(RuleId::Area));
+        let [said] = refused.said.as_slice() else { panic!("{:?}", refused.said) };
+        assert!(said.code == Code::AutoSatinFilled && said.message.contains("of one edge to 1 mm of the other"), "{said}");
+    }
 }
