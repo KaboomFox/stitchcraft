@@ -130,6 +130,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0920`](#sc-w0920) | Warning | Own Auto settings replace the group's |
 | [`SC-I0921`](#sc-i0921) | Info | Outlines smoothed |
 | [`SC-W0922`](#sc-w0922) | Warning | What Expand couldn't keep |
+| [`SC-I0923`](#sc-i0923) | Info | Style that changes how a design sews |
 | [`SC-E1001`](#sc-e1001) | Error | Nothing to route |
 | [`SC-I1002`](#sc-i1002) | Info | Element left out of the route |
 | [`SC-W1003`](#sc-w1003) | Warning | Piece of a routed satin column may sew otherwise |
@@ -1812,6 +1813,24 @@ the budget allows sews nothing, in the automatic design and in the expanded one.
 
 The message names each such shape, as the notices name it. To change a text, edit it in the
 automatic design, which stays hidden under the expanded parts, and expand it again.
+
+## SC-I0923
+
+**Info** — Style that changes how a design sews
+
+The other style of digitizing would sew this design otherwise. `stitch plan --style logo` keeps
+ragged thin lines as lines and an uneven part of several strokes as satin columns, and the photo
+style, the defaults, merges such lines into their neighbours and fills such parts. Planning counts
+what the rules did to this design that the other style would do otherwise, and names that style.
+The style is the person's choice, because no measure of a picture tells reliably which it needs:
+flat art and lettering lose detail in the photo style, and a traced photo sews thick in the logo
+style. The notice says what was counted, never which style is right, and it changes nothing that
+sews. A design that both styles sew alike gets none.
+
+The message gives the counts: thin lines merged, or sewn as lines, and parts filled by a rule, or
+sewn as satin columns. The hint names the settings that the other style sets. To see the design in
+the other style, plan it with that `--style`, or set those settings in the dialog of StitchCraft's
+Auto effect, and compare the previews.
 
 ## SC-E1001
 
