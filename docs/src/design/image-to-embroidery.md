@@ -4085,10 +4085,10 @@ background and the layers. Its cases are in `crates/stitchcraft-engine/tests/aut
 module's own tests. 2 things differ from the rule above:
 
 - **Corners next to each other.** The 4 corners of a rectangle are 4 points next to each other in its outline.
-  A run of turning points goes on only while they lie no farther apart along the line than 4 times the
-  setting, so a thin strip's 2 ends each count as one turn, and a rectangle keeps its 4 corners.
-- **An edge that keeps its line.** An edge whose smoothed line has the same points as drawn, such as a
-  straight side, keeps its segments, curves and all.
+  A run of turning points goes on only while its points lie within 4 times the setting of each other along
+  the line: then a rectangle keeps its 4 corners, and a thin strip's end is one turn.
+- **An edge that keeps its line.** An edge whose smoothed line has the same points as drawn, a straight side
+  for one, keeps the segments it was drawn with.
 
 ## Subject cut-out
 
