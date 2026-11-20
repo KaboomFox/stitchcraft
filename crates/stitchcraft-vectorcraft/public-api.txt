@@ -96,7 +96,7 @@ pub fn stitchcraft_vectorcraft::lettering::shown(&str, core::option::Option<&str
 pub mod stitchcraft_vectorcraft::settings
 pub const stitchcraft_vectorcraft::settings::PROFILE: &str
 pub const stitchcraft_vectorcraft::settings::SETTINGS_FILTER: &str
-pub fn stitchcraft_vectorcraft::settings::kept_cap(&serde_json::value::Value) -> core::option::Option<stitchcraft_engine::auto::Held>
+pub fn stitchcraft_vectorcraft::settings::kept_cap(&serde_json::value::Value) -> core::option::Option<stitchcraft_engine::auto::thick::Held>
 pub fn stitchcraft_vectorcraft::settings::kept_data(&stitchcraft_engine::design::DesignSettings, &stitchcraft_plan::profile::MachineProfile) -> serde_json::value::Value
 pub enum stitchcraft_vectorcraft::RouteMarker
 pub stitchcraft_vectorcraft::RouteMarker::End
