@@ -262,7 +262,8 @@ choice matters for this design and which way the other style goes. The other sty
 sets them. The notice counts 2 things:
 
 - **Thin lines.** In the photo style, the lines that merged into their neighbours. In the logo style, the
-  ragged thin lines that merging would take, found as merging finds them, which stay as they are.
+  ragged thin lines that merging would take, found as merging finds them, which stay as they are. A merge
+  keeps some of them for the picture's likeness, so the notice says that they may merge.
 - **Parts.** Each part is decided again from the measures that decided it, under the other style's
   bounds. A part filled here that the other style sews as satin columns counts with its rule, and a part
   sewn as columns that the other style fills counts as such.
@@ -272,9 +273,30 @@ right, and nothing of what the picture shows. A design whose counts are all 0 ge
 stitch. The count of the parts plans nothing again, so it leaves out how a fill splits off its narrow
 pieces, which `auto_prefer` leans too, and the lines that a merge keeps for the picture's likeness.
 
-**What it costs.** COST
+**What it costs.** The photo style adds a unit of work for each part and no geometry. The logo style
+measures the thin parts of each area once more, as merging would. On the 28 pictures, each planned 3
+times in each style before and after the notice, the fastest plans took 3.5 % longer in all in the logo
+style and 1.6 % less in the photo style. The time goes to the 4 large traced photos, which took 1 to 8 %
+longer in the logo style, where the runs' noise is about 7 %. Every machine file was the same byte for
+byte. A label on fur and a building's photo planned with `SC-E0101` in the logo style, before the notice
+too.
 
-**What it says on the set.** SURVEY
+**What it says on the set.** The notice is silent on 6 pictures: the even badge, house and shield, the sky
+of flat bands, the badge with a soft gradient and the traced badge, which sew alike in both styles. On the
+other 22 it speaks in both styles, and its direction is right. Flat art planned as a photo hears that 1 to 5
+of its parts, filled by the rule uneven or compact, would keep their columns, and a traced dog planned as a
+logo hears that 39 to 52 of its parts would be filled and 14 to 30 of its lines may merge. Its counts
+mislead:
+
+- **A count is no weight.** The lettered disc hears of 1 part in each style, though that part, its ring,
+  was 572 mm² at 3 fills in `logo` and 87 in `photo`. The lettered patch hears of 5 parts, and the
+  lettered sign of 2, where under 2 % of their area sews by another rule.
+- **Lines that may merge outnumber those that merge.** The soft fruit in `logo` hears of 14 lines, and 6
+  merge in `photo`. The furry picture hears of 234, and 108 merge.
+
+So the notice says that the choice matters and which way the other style goes, not how much it costs.
+The previews and `SC-W0913` tell that.
+
 
 ### The grounds of the bounds
 
