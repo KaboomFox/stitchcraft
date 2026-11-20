@@ -13,6 +13,7 @@ Usage: stitch <COMMAND>
 
 Commands:
   plan        Plan a design, an SVG file or a VectorCraft document, for a machine and write the machine file, with a picture and a report if asked. A picture, a PNG or JPEG file, is traced with VectorCraft's command line first [alias: export]
+  expand      Expand an automatic design: write it as the ordinary shapes automatic digitizing makes of it, each with its own StitchCraft effect, to edit one by one. A VectorCraft document keeps its traced shapes, hidden and locked, under a new group of the parts. An SVG file has the parts alone. The expanded design sews as the automatic one did, and no longer changes with the picture or the Auto effect
   lettering   Set a text in an embroidery font, a folder in Ink/Stitch's font format, plan it for a machine and write the machine file, with a picture if asked
   testsheet   Write a machine-checkpoint test sheet (docs/src/plan/machine-testing.md)
   inspect     Read a machine file (PES, PEC or DST) and describe it: size, stitches, threads, stitch lengths
@@ -121,6 +122,64 @@ Options:
 
   -h, --help
           Print help (see a summary with '-h')
+```
+
+## stitch expand
+
+```text
+Expand an automatic design: write it as the ordinary shapes automatic digitizing makes of it, each with its own StitchCraft effect, to edit one by one. A VectorCraft document keeps its traced shapes, hidden and locked, under a new group of the parts. An SVG file has the parts alone. The expanded design sews as the automatic one did, and no longer changes with the picture or the Auto effect
+
+Usage: stitch expand [OPTIONS] --output <OUTPUT> <DESIGN>
+
+Arguments:
+  <DESIGN>
+          The design: a VectorCraft document (.vectorcraft), an SVG file, or a picture (.png, .jpg or .jpeg), which VectorCraft's command line traces first, as `stitch plan` traces it. Every shape without settings is digitized automatically, as `stitch plan --auto` digitizes it
+
+Options:
+  -o, --output <OUTPUT>
+          The expanded design to write: a VectorCraft document (.vectorcraft), from a VectorCraft document or a picture, or an SVG file with Ink/Stitch's attributes (.svg)
+
+  -p, --profile <PROFILE>
+          The machine profile whose threads name the parts (see `stitch profiles`); by default the one a VectorCraft document keeps, or else the reference machine. The document written keeps it
+
+      --auto
+          Digitize automatically the shapes that have no settings: StitchCraft chooses the stitches of each by its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them
+
+      --sort-colours
+          Sew the shapes with settings in the order StitchCraft chooses too, as --auto sews the shapes it digitizes: shapes that overlap keep their paint order, and each thread then sews as long as it can, the nearest shape next (docs/src/design/image-to-embroidery.md)
+
+      --style <STYLE>
+          The style of automatic digitizing: a named set of its rules' settings, set on every shape digitized automatically that doesn't set them itself. `logo` suits flat art drawn in strokes, and `photo` a traced photo (docs/src/user/reference/auto-rules.md)
+
+      --set <KEY=VALUE>
+          Set a setting of automatic digitizing's rules, as KEY=VALUE, on every shape digitized automatically that doesn't set it itself, such as auto_min_slenderness=4. A setting given here goes before the style's (docs/src/user/reference/params/auto.md)
+
+      --text <AREA:TEXT>
+          Sew the traced letters inside an area as lettering in an embroidery font, as tall as they are: the area's LEFT,TOP,WIDTH,HEIGHT in percent of the box round the design's shapes, which is a traced picture's own box, then a colon and the text, such as 10,40,80,20:MATCH. A font is named after the text in double quotes, as "MATCH" font=NAME, and is found in the folder STITCHCRAFT_FONTS names (docs/src/user/how-to/letter-a-picture.md). May be given several times
+
+      --keep <AREA>
+          Keep the parts of the design inside an area from merging into their neighbours: each part of a shape digitized automatically that lies wholly inside it sews by its width, where it would merge as a speck or a thin line. The area is LEFT,TOP,WIDTH,HEIGHT in percent of the box round the design's shapes, such as 62,18,6,5 round an eye (docs/src/user/how-to/keep-small-parts.md). May be given several times
+
+      --guide <POINTS>
+          Draw a guide over the design: each filled part of a shape digitized automatically that it crosses sews as a guided fill whose rows follow it. The guide is 2 points or more, X,Y,X,Y… in percent of the box round the design's shapes, joined by straight lines, such as 20,80,45,50,60,20 along a leaf (docs/src/user/how-to/guide-the-rows.md). May be given several times
+
+      --vectorcraft-cli <PROGRAM>
+          VectorCraft's command line, which traces a picture; by default `vectorcraft-cli` on the PATH
+
+      --size <MM>
+          How large a picture is sewn: its longer side, in millimetres, its background included; by default as large as the machine's hoop holds
+
+      --colours <N>
+          How many colours a picture has, its background included: Image Trace traces it in at most that many of the machine's threads, 2 to 256; by default 6
+
+      --fewer-points
+          Trace a picture with fewer points: Image Trace's Paths and Corners at their lowest, which draw its outlines with about a third fewer anchors and fewer jags. Off by default, since it changes how many shapes of a traced picture sew
+
+      --traced <FILE>
+          Also write the document VectorCraft traced a picture into (.vectorcraft), to correct the trace in VectorCraft
+
+  -h, --help
+          Print help
 ```
 
 ## stitch lettering

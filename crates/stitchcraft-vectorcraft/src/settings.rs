@@ -9,11 +9,15 @@
 //!
 //! **What they are.** The filter's data is an object: Ink/Stitch's design settings by their names, each a
 //! length in millimetres ([`SETTINGS`]) but `rotate_on_export`, the turn on export in degrees ([`Turn`]),
-//! and `profile`, the machine's id ([`kept_data`]):
+//! `profile`, the machine's id ([`kept_data`]), and, for a document `stitch expand` wrote, what the cap
+//! at the end of planning holds its parts to, by the names of the Auto effect's settings ([`Held::KEYS`]),
+//! each its value as text (`REQ-AUTO-143`):
 //!
 //! ```json
 //! {"profile": "brother-pe800-5x7", "collapse_len_mm": 3, "min_stitch_len_mm": 0, "min_satin_stroke_width_mm": 1, "rotate_on_export": 90}
 //! ```
+//!
+//! The Design Settings filter keeps the cap's values a document has when it runs again ([`kept_cap`]).
 //!
 //! **How they read.** A length is a number of 0 or more, and a turn any number, as the SVG adapter reads
 //! Ink/Stitch's, and a machine is one of the built-in profiles. What doesn't read keeps its default, and so does a setting
@@ -23,7 +27,9 @@
 
 use serde_json::{Map, Value, json};
 use stitchcraft_core::{Code, Diagnostic, Fix, Mm};
+use stitchcraft_engine::auto::Held;
 use stitchcraft_engine::design::{DesignSettings, SETTINGS, Setting, Turn};
+use stitchcraft_params::ParamSet;
 use stitchcraft_plan::MachineProfile;
 use stitchcraft_plan::profiles::{self, REFERENCE};
 
@@ -50,6 +56,9 @@ pub fn kept_data(settings: &DesignSettings, machine: &MachineProfile) -> Value {
         data.insert(setting.name.to_string(), json!(setting.get(settings).get()));
     }
     data.insert(Turn::NAME.to_string(), json!(settings.rotate_on_export.degrees()));
+    for (key, value) in settings.cap.iter().flat_map(Held::values) {
+        data.insert(key.to_string(), json!(value));
+    }
     Value::Object(data)
 }
 
@@ -63,6 +72,8 @@ pub(crate) fn kept(plugin_data: Option<&Value>, warnings: &mut Vec<Diagnostic>) 
         warnings.push(ignored(&format!("The design settings kept with the document, {}, are not a list of settings", quoted(data))));
         return kept;
     };
+    // The cap's values read so far: each one read again with those before it.
+    let mut cap = ParamSet::new();
     for (name, value) in entries {
         if name == PROFILE {
             kept.machine = value.as_str().and_then(profiles::find);
@@ -82,6 +93,21 @@ pub(crate) fn kept(plugin_data: Option<&Value>, warnings: &mut Vec<Diagnostic>) 
                     quoted(value)
                 ))),
             }
+        } else if Held::KEYS.contains(&name.as_str()) {
+            let read = crate::values::text(value).and_then(|text| {
+                cap.set(name.as_str(), text);
+                Held::of(&cap).ok()
+            });
+            match read {
+                Some(held) => kept.settings.cap = Some(held),
+                None => {
+                    cap.remove(name);
+                    warnings.push(ignored(&format!(
+                        "The design setting `{name}` kept with the document, {}, is not a value it takes, so it keeps the Auto effect's default",
+                        quoted(value)
+                    )));
+                }
+            }
         } else if name == Turn::NAME {
             match value.as_f64().and_then(Turn::new) {
                 Some(turn) => kept.settings.rotate_on_export = turn,
@@ -95,6 +121,21 @@ pub(crate) fn kept(plugin_data: Option<&Value>, warnings: &mut Vec<Diagnostic>) 
         }
     }
     kept
+}
+
+/// What the cap holds the parts of a document to, by the data the Design Settings filter keeps with it,
+/// `data`, as the reader reads it: `None` when it keeps none of its values, or one that doesn't read.
+pub fn kept_cap(data: &Value) -> Option<Held> {
+    let entries = data.as_object()?;
+    let cap: ParamSet = entries
+        .iter()
+        .filter(|(name, _)| Held::KEYS.contains(&name.as_str()))
+        .map(|(name, value)| Some((name.as_str(), crate::values::text(value)?)))
+        .collect::<Option<Vec<_>>>()?
+        .into_iter()
+        .collect();
+    cap.iter().next()?;
+    Held::of(&cap).ok()
 }
 
 /// `SC-W0812` saying `what`, with how to keep the settings anew.
@@ -150,6 +191,18 @@ mod tests {
             })
         );
         assert_eq!(read(&data), (Kept { settings, machine: Some(&BROTHER_PE800_SMALL) }, Vec::new()));
+        // A document `stitch expand` wrote keeps what the cap holds its parts to, each value as text, and the
+        // filter keeps it when it runs again (`REQ-AUTO-143`).
+        let held = Held { cap: 3.5, overlap: 0.75, ..Held::of(&ParamSet::new()).unwrap() };
+        let capped = DesignSettings { cap: Some(held), ..settings };
+        let data = kept_data(&capped, &BROTHER_PE800_SMALL);
+        assert_eq!((data.get("auto_thick_cap_fills"), data.get("auto_overlap_mm")), (Some(&json!("3.5")), Some(&json!("0.75"))));
+        assert_eq!(read(&data), (Kept { settings: capped, machine: Some(&BROTHER_PE800_SMALL) }, Vec::new()));
+        assert_eq!(kept_cap(&data), Some(held));
+        assert_eq!(kept_cap(&kept_data(&settings, &BROTHER_PE800_SMALL)), None);
+        assert_eq!(kept_cap(&json!({"auto_thick_cap_fills": [[1]]})), None);
+        assert_eq!(kept_cap(&json!({"auto_thick_cap_fills": "lots"})), None);
+        assert_eq!(kept_cap(&json!(5)), None);
         // A document the filter never ran on has the defaults and no machine of its own.
         assert_eq!(kept(None, &mut Vec::new()), Kept::default());
         assert_eq!(read(&json!({})), (Kept::default(), Vec::new()));
@@ -177,6 +230,15 @@ mod tests {
                     "warning SC-W0812: The design setting `rotate_on_export` kept with the document, \"90\", is not a number of degrees, so the design isn't turned. {hint}"
                 ),
             ]
+        );
+        // A value of the cap that doesn't read keeps the Auto effect's default, and those that read are kept.
+        let (kept, said) = read(&json!({"auto_thick_cap_fills": "lots", "auto_overlap_mm": 0.5}));
+        assert_eq!(kept.settings.cap.map(|held| (held.cap, held.overlap)), Some((3.25, 0.5)));
+        assert_eq!(
+            said,
+            [format!(
+                "warning SC-W0812: The design setting `auto_thick_cap_fills` kept with the document, \"lots\", is not a value it takes, so it keeps the Auto effect's default. {hint}"
+            )]
         );
         let (kept, said) = read(&json!(["a", "list"]));
         assert_eq!(kept, Kept::default());

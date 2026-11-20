@@ -153,8 +153,11 @@ The other texts, seeds, and settings left empty to take another's value keep the
 today they are the custom locks' steps, `random_seed`, a fill underlay's angles, and a satin's zigzag underlay
 insets and its shortest random split. A choice leaves out the options that a text spells out, which are the
 custom locks, and `fill_method` leaves out Ink/Stitch's legacy fill, which StitchCraft sews as a tatami fill
-(`REQ-FILL-005`). `satin_column` belongs to the effect, which sets it from its family. `turn_stitches`, the switch that
-automatic digitizing sets on its own fills, is left out of the fill's dialog. The Auto effect's dialog
+(`REQ-FILL-005`). `satin_column` belongs to the effect, which sets it from its family. From M13.26 the fill's dialog
+has `turn_stitches`, the switch that automatic digitizing sets on its own fills, and every stitch effect's
+dialog `digitized_as`, last of the settings every element shares: VectorCraft admits an effect record only
+with the parameters its manifest takes, and an expanded part sets both (`REQ-VC-035`,
+[Expand](image-to-embroidery.md#expand)). The Auto effect's dialog
 leaves out the settings of the registry's Advanced group, which are
 the bounds of the rules and the 2 limits of the cover's measure (M13.21), the base layer's offset, and
 the 4 limits of how thick a design sews (M13.29), and how far outlines are smoothed (M13.52), which is off

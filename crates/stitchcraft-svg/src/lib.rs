@@ -42,6 +42,7 @@ mod style;
 mod text;
 mod transform;
 pub mod version;
+pub mod written;
 
 pub use document::{Svg, read, read_with};
 pub use text::MAX_BYTES;

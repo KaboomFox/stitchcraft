@@ -5,6 +5,15 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.26: `stitch expand DESIGN -o OUT.vectorcraft` or `.svg` writes an automatic design as the ordinary
+  shapes digitizing makes of it, each with its own StitchCraft effect, to edit one by one
+  (`REQ-AUTO-142` to `REQ-AUTO-144`, `REQ-CLI-025`). A VectorCraft document keeps its traced shapes hidden
+  and locked under the new group. A new setting of every stitch effect, `digitized_as` (`no`, `part`, `base`
+  or `lettering`), and the cap's limits kept as design settings make the expanded design sew as the
+  automatic one did: bit for bit on the 13 designs of the set at the engine and through an SVG file.
+  `SC-W0922` names what Expand couldn't keep. The fill effect's dialog shows `turn_stitches`, and every
+  effect's `digitized_as` (`REQ-VC-035`). `stitch expand` writes an SVG file with the writer of the Ink/Stitch
+  differential, moved from the test kit to `stitchcraft_svg::written`. Every design sews as before.
 - M13.52: smoothed outlines, a setting off by default (`REQ-AUTO-131` to `REQ-AUTO-134`, `SC-I0921`).
   - `auto_smooth_mm`, an advanced setting from 0 to 1 mm, smooths each automatic area's outline before it
     is digitized. Each point stays within the setting of where it was drawn, and corners stay. An edge 2

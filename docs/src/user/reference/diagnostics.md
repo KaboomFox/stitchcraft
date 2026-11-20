@@ -129,6 +129,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0919`](#sc-w0919) | Warning | Guide not used |
 | [`SC-W0920`](#sc-w0920) | Warning | Own Auto settings replace the group's |
 | [`SC-I0921`](#sc-i0921) | Info | Outlines smoothed |
+| [`SC-W0922`](#sc-w0922) | Warning | What Expand couldn't keep |
 | [`SC-E1001`](#sc-e1001) | Error | Nothing to route |
 | [`SC-I1002`](#sc-i1002) | Info | Element left out of the route |
 | [`SC-W1003`](#sc-w1003) | Warning | Piece of a routed satin column may sew otherwise |
@@ -1798,6 +1799,19 @@ The message gives how many areas were smoothed, within which setting, and how ma
 outlines need within 0.02 mm as drawn and as smoothed, and names any area whose smoothing needed
 more work than the budget allows, which keeps its outline. To sew the outlines as drawn, set
 `auto_smooth_mm` to 0.
+
+## SC-W0922
+
+**Warning** — What Expand couldn't keep
+
+Expand made an automatic design the ordinary elements digitizing makes of it, and some of it
+couldn't stay as it was. The lettering of a text, placed for a marker or set in a font, became the
+columns it sews: they sew as before, but the text can't be edited as text, and lettering set in a
+font no longer marks its underlay as lettering does. A shape whose digitizing needed more work than
+the budget allows sews nothing, in the automatic design and in the expanded one.
+
+The message names each such shape, as the notices name it. To change a text, edit it in the
+automatic design, which stays hidden under the expanded parts, and expand it again.
 
 ## SC-E1001
 

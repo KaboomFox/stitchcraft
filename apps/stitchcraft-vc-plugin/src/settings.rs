@@ -9,7 +9,8 @@
 //! them.
 //!
 //! VectorCraft opens a filter's dialog at its defaults, not at what the filter last kept, so the filter
-//! keeps all of its settings each time it runs. A VectorCraft before 0.16 runs a filter too, and drops
+//! keeps all of its settings each time it runs. What the cap holds an expanded design to, which `stitch
+//! expand` keeps there and the dialog doesn't show, stays as it was kept. A VectorCraft before 0.16 runs a filter too, and drops
 //! the `documentData` it returns, so there the filter declines with `SC-E0813` rather than seem to keep
 //! them.
 
@@ -20,7 +21,7 @@ use stitchcraft_engine::design::{DesignSettings, SETTINGS, Turn};
 use stitchcraft_params::{Empty, Kind};
 use stitchcraft_plan::profiles::{self, BUILTIN, REFERENCE};
 use stitchcraft_vectorcraft::effect_error;
-use stitchcraft_vectorcraft::settings::{PROFILE, kept_data};
+use stitchcraft_vectorcraft::settings::{PROFILE, kept_cap, kept_data};
 
 use crate::dialog::{self, own};
 use crate::effect::{RunError, too_old};
@@ -80,9 +81,9 @@ pub fn run(input: &[u8], params: &[u8]) -> Result<Vec<u8>, RunError> {
     let turn = params.get(Turn::NAME).and_then(Value::as_str).and_then(|id| Turn::CHOICES.iter().find(|(choice, _)| *choice == id));
     settings.rotate_on_export = turn.map(|(_, turn)| *turn).ok_or(RunError::BadInput)?;
     let machine = params.get(PROFILE).and_then(Value::as_str).and_then(profiles::find).ok_or(RunError::BadInput)?;
-    if params.pointer("/_context/documentData").is_none() {
-        return Ok(effect_error(&cannot_keep()));
-    }
+    let Some(kept) = params.pointer("/_context/documentData") else { return Ok(effect_error(&cannot_keep())) };
+    // What the cap holds an expanded design's parts to stays as `stitch expand` kept it (`REQ-AUTO-143`).
+    settings.cap = kept_cap(kept);
     let objects: Vec<Value> = input.objects.iter().map(|object| json!({"id": object.id})).collect();
     serde_json::to_vec(&json!({"objects": objects, "documentData": kept_data(&settings, machine)})).map_err(|_| RunError::Encode)
 }
@@ -125,6 +126,16 @@ mod tests {
             ran(&json!({"objects": []}), &json!({})),
             json!({"objects": [], "documentData": kept_data(&DesignSettings::default(), REFERENCE)})
         );
+    }
+
+    #[test]
+    fn req_auto_143_the_filter_keeps_what_the_cap_holds_an_expanded_design_to() {
+        let held = stitchcraft_engine::auto::Held { cap: 3.5, ..stitchcraft_engine::auto::Held::of(&Default::default()).unwrap() };
+        let expanded = DesignSettings { cap: Some(held), ..DesignSettings::default() };
+        let mut given: Value = serde_json::from_slice(&params(&json!({}))).unwrap();
+        given["_context"]["documentData"] = kept_data(&expanded, REFERENCE);
+        let out: Value = serde_json::from_slice(&run(br#"{"objects": []}"#, &serde_json::to_vec(&given).unwrap()).unwrap()).unwrap();
+        assert_eq!(out["documentData"], kept_data(&expanded, REFERENCE));
     }
 
     #[test]

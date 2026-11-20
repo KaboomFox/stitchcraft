@@ -33,6 +33,7 @@ Checked against VectorCraft's `docs/plugins.md` and its history, in the 0.18.0 r
 | [P8](#p8-effects-and-stroke-style-in-filter-objects), effects and stroke style in filters | Adopted | 0.15.0 | [#3174](https://github.com/storytold/vectorcraft/pull/3174) |
 | [P9](#p9-type-as-glyph-outlines), type as glyph outlines | Proposed by StitchCraft, not yet raised upstream | | |
 | [P10](#p10-an-export-budget-that-fits-a-traced-photo), an export budget that fits a traced photo | Proposed by StitchCraft, not yet raised upstream | | |
+| [P11](#p11-the-effects-of-a-paths-groups-in-a-filter), the effects of a path's groups in a filter | Proposed by StitchCraft, not yet raised upstream | | |
 
 The plug-in classes this RFC was for, and what VectorCraft serves of them now:
 
@@ -172,6 +173,17 @@ to 4 seconds. The proposal has 4 parts:
 A browser host could go further and run an exporter's module with the browser's own compiler in a
 worker, since an exporter has no imports and changes nothing in the document. The time limit alone would
 then bound it. StitchCraft's browser demo does this beside the editor for its own exporters.
+
+### P11: The effects of a path's groups in a filter
+
+Proposed by StitchCraft for Expand (M13.26), and not yet raised upstream. Each object a filter is given
+also lists `groupEffects`: the effect records of the groups and layers it lies in, the outermost first,
+each as `effects` lists a record, read only. A filter that replaces an object then knows the settings the
+object took from its groups, as an exporter reads them in the whole document. StitchCraft's Auto effect is
+usually on the traced group, and today a filter can't read its settings. Expand also digitizes the whole
+design, which takes an export's work, so it needs P10's budget for a heavy filter too
+([Expand](image-to-embroidery.md#expand)). Until both are in VectorCraft, a person expands a design with
+`stitch expand` and opens the document it writes.
 
 ## Security and determinism
 

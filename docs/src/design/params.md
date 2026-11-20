@@ -187,6 +187,10 @@ Ink/Stitch passes it over ([SVG input](svg-input.md#settings-of-a-shape)). Shoul
 declare a setting of that name, the contract's check below fails, and a migration renames StitchCraft's
 ([versioning](#versioning-and-migration)).
 
+From M13.26 `digitized_as` is another, in its own group, `no` by default: an element set to `part`, `base` or
+`lettering` sews as automatic digitizing made it, which Expand sets on each part
+([Expand](image-to-embroidery.md#expand)).
+
 ### Completeness (REQ-PRM-001)
 
 A declaration that compiles can still be wrong: an empty range, a default outside it, a repeated option,

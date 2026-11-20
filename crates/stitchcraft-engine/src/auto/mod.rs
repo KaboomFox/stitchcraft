@@ -77,6 +77,7 @@ mod area;
 pub(crate) mod cap;
 mod clips;
 mod columns;
+mod expand;
 mod guides;
 mod marks;
 mod narrow;
@@ -88,6 +89,7 @@ mod split;
 pub(crate) mod thick;
 mod thin;
 
+pub use expand::expand;
 use guides::Guides;
 use marks::Marks;
 #[cfg(test)]
@@ -99,7 +101,7 @@ pub use params::{
     MAX_UNEVENNESS, MIN_AREA, MIN_FILL_WIDTH, MIN_LIKENESS, MIN_LINE_UNEVENNESS, MIN_SLENDERNESS, MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, STITCH,
 };
 use rules::{Asked, Bounds, Fired, Measures, RuleId};
-pub use thick::WARNING_CHARS;
+pub use thick::{Held, WARNING_CHARS};
 
 use std::borrow::Cow;
 use std::collections::BTreeSet;
@@ -444,7 +446,11 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     let automatic = design.elements().iter().any(|element| element.automatic);
     if !design.sort_colours && !automatic {
         let diagnostics = marks::unused_all(&design.marks, &design.guides);
-        return Sewing { elements: Cow::Borrowed(design.elements()), diagnostics, base: Vec::new(), made: BTreeSet::new(), limits: None };
+        let (mut base, mut made) = (Vec::new(), BTreeSet::new());
+        // The elements set as digitizing's own sew as it made them (`REQ-AUTO-143`).
+        let elements = expand::marked(Cow::Borrowed(design.elements()), &mut base, &mut made);
+        let limits = expand::limits(None, &made, &design.settings);
+        return Sewing { elements, diagnostics, base, made, limits };
     }
     let mut diagnostics = Vec::new();
     // Each mark's area and each guide's line are read once, before the shapes are cut to their clips.
@@ -540,11 +546,15 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     diagnostics.splice(0..0, counts.said());
     let set: BTreeSet<&ElementId> = elements.iter().filter(|element| !element.automatic).map(|element| &element.id).collect();
     let mut elements = beside.elements;
-    let made: BTreeSet<ElementId> = elements.iter().filter(|element| !set.contains(&element.id)).map(|element| element.id.clone()).collect();
+    let mut made: BTreeSet<ElementId> = elements.iter().filter(|element| !set.contains(&element.id)).map(|element| element.id.clone()).collect();
     for element in elements.iter_mut().filter(|element| made.contains(&element.id)) {
         small_locks(&mut element.params);
     }
-    Sewing { elements: Cow::Owned(elements), diagnostics, base: beside.base, made, limits }
+    // The elements with settings that are set as digitizing's own sew as it made them too (`REQ-AUTO-143`).
+    let mut base = beside.base;
+    let elements = expand::marked(Cow::Owned(elements), &mut base, &mut made);
+    let limits = expand::limits(limits, &made, &design.settings);
+    Sewing { elements, diagnostics, base, made, limits }
 }
 
 /// `design` as automatic digitizing sews its colours: each thin line that merges into a neighbour

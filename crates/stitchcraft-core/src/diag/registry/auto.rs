@@ -281,6 +281,16 @@ macro_rules! auto_codes {
         /// more work than the budget allows, which keeps its outline. To sew the outlines as drawn, set
         /// `auto_smooth_mm` to 0.
         AutoSmoothed = "SC-I0921", Info, "Outlines smoothed";
+
+        /// Expand made an automatic design the ordinary elements digitizing makes of it, and some of it
+        /// couldn't stay as it was. The lettering of a text, placed for a marker or set in a font, became the
+        /// columns it sews: they sew as before, but the text can't be edited as text, and lettering set in a
+        /// font no longer marks its underlay as lettering does. A shape whose digitizing needed more work than
+        /// the budget allows sews nothing, in the automatic design and in the expanded one.
+        ///
+        /// The message names each such shape, as the notices name it. To change a text, edit it in the
+        /// automatic design, which stays hidden under the expanded parts, and expand it again.
+        AutoExpandLost = "SC-W0922", Warning, "What Expand couldn't keep";
         } }
     };
 }

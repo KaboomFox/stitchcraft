@@ -22,6 +22,8 @@ Each guide solves one problem:
 - [Make the rows of a fill follow a form](guide-the-rows.md), such as fur or a petal, with a line drawn
   over the picture
 - [Find a shape by its name](find-a-shape.md) in VectorCraft's Layers panel, the notices and the report
+- [Expand an automatic design](expand-an-automatic-design.md) into shapes you edit one by one
+  (`stitch expand`)
 - [Report a bug](report-a-bug.md) with a bundle that reproduces it (`stitch bug-report`)
 
 Planned, each with the milestone that brings its feature:
