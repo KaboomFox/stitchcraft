@@ -190,11 +190,7 @@ fn req_auto_126_names_an_older_version_gave_are_kept_and_skipped_as_any_other() 
     // A document planned by a version that put the thread first, then given a new red area.
     let red = thread_name(&Thread::new(RED), palette());
     let (old, taken) = (format!("{red} fill (1)"), format!("Fill 1, {red}"));
-    let design = design(vec![
-        fill("vc:1:fill", RED, true),
-        named(fill("vc:2:fill", RED, true), &old),
-        named(fill("vc:3:fill", RED, true), &taken),
-    ]);
+    let design = design(vec![fill("vc:1:fill", RED, true), named(fill("vc:2:fill", RED, true), &old), named(fill("vc:3:fill", RED, true), &taken)]);
     let sewn = design.elements().to_vec();
     let names = given(&design, &sewn, &[]);
     let listed: Vec<Option<&str>> = names.shapes.iter().map(|shape| shape.name.as_deref()).collect();
