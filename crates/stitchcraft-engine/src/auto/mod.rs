@@ -89,6 +89,7 @@ mod split;
 mod style;
 pub(crate) mod thick;
 mod thin;
+mod wide;
 
 pub use expand::expand;
 use guides::Guides;
@@ -99,8 +100,8 @@ use neighbours::{Background, Sewn, no_area, parts_of, speck};
 pub use neighbours::{TOUCHING, is_part};
 pub use params::{
     ADVANCED, AutoParams, COLUMN_OVERLAP, DETAILS_LAST, FILL_ANGLE, FILL_OUTLINE, FILL_UNEVEN, IGNORE_BACKGROUND, LONGEST_SATIN_STITCH, MAX_REACH,
-    MAX_SATIN_WIDTH, MAX_UNEVENNESS, MIN_AREA, MIN_FILL_WIDTH, MIN_LIKENESS, MIN_LINE_UNEVENNESS, MIN_SLENDERNESS, MIN_TRIPLE_RUN_WIDTH, OVERLAP,
-    PREFER, STITCH,
+    MAX_SATIN_WIDTH, MAX_SPLIT_SATIN_WIDTH, MAX_UNEVENNESS, MIN_AREA, MIN_FILL_WIDTH, MIN_LIKENESS, MIN_LINE_UNEVENNESS, MIN_SLENDERNESS,
+    MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, STITCH, WIDEST_SPLIT_SATIN,
 };
 use rules::{Asked, Bounds, Fired, Measures, RuleId};
 pub use thick::{Held, WARNING_CHARS};
@@ -219,7 +220,7 @@ fn of_stroke(width: Mm, bounds: &Bounds) -> (Fired, Stitches) {
     let rule = rules::choose(&measures, bounds);
     let stitches = match (rule, bounds.asked) {
         (RuleId::Line, _) | (RuleId::Asked, Asked::Run) => Stitches::Running,
-        (RuleId::Column, _) | (RuleId::Asked, Asked::Satin) => Stitches::Satin,
+        (RuleId::Column | RuleId::Wide, _) | (RuleId::Asked, Asked::Satin) => Stitches::Satin,
         _ => Stitches::FilledStroke,
     };
     (Fired { rule, measures: Some(measures) }, stitches)
@@ -711,7 +712,8 @@ fn made_by(
     let (mut made, fired) = match &element.shape {
         Shape::Stroke { path, width, join, cap } => {
             let (fired, stitches) = of_stroke(*width, &bounds);
-            (stroke(element, path, Style { width: *width, join: *join, cap: *cap }, stitches, rules, meter)?, vec![fired])
+            let style = Style { width: *width, join: *join, cap: *cap, split: fired.rule == RuleId::Wide };
+            (stroke(element, path, style, stitches, rules, meter)?, vec![fired])
         }
         Shape::Fill { .. } => areas(element, &bounds, (narrow::By { rules, open, marks }, shown), meter)?,
     };
@@ -840,10 +842,14 @@ fn sewn(element: &Element, sorted: narrow::Parts, rules: &AutoParams, (guided, g
                 (vec![running(&rest, path, narrow.width, rules)], narrow.part)
             }
             narrow::Along::Columns(found) => {
+                let split = found.wide;
                 let pieces = found.sewn.into_iter().map(|sewn| match sewn {
                     columns::Sewn::Satin { path, width, push, even, holes } => {
                         satin = true;
                         let mut params = satin_params(&rest, width, rules);
+                        if split {
+                            wide::split(&mut params);
+                        }
                         edges(&mut params, &rest, width, rules, even, holes);
                         if push != [0.0, 0.0] {
                             params.set(PUSH_COMPENSATION, format!("{} {}", push[0], push[1]).as_str());
@@ -910,6 +916,8 @@ struct Style {
     width: Mm,
     join: Join,
     cap: Cap,
+    /// Whether a satin column's stitches are split: a wide line's (`REQ-AUTO-156`).
+    split: bool,
 }
 
 /// The satin columns of `element`, a stroke along `path` drawn with `style`, by `rules`: one for each
@@ -919,7 +927,10 @@ struct Style {
 /// left out, with `SC-W0401`.
 fn columns(element: &Element, path: &Path, style: Style, rules: &AutoParams, meter: &mut Meter) -> Result<Digitized, Exhausted> {
     let (rest, after) = split_after(&element.params);
-    let column = satin_params(&rest, style.width, rules);
+    let mut column = satin_params(&rest, style.width, rules);
+    if style.split {
+        wide::split(&mut column);
+    }
     let mut made = Digitized::default();
     let (mut satin, mut fill) = (false, false);
     for (n, subpath) in path.subpaths.iter().enumerate() {

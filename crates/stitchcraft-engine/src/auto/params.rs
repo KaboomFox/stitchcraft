@@ -36,6 +36,8 @@ pub const DETAILS_LAST: &str = "auto_details_last";
 pub const FILL_ANGLE: &str = "auto_fill_angle";
 /// The key of the widest satin column.
 pub const MAX_SATIN_WIDTH: &str = "auto_max_satin_width_mm";
+/// The key of the widest split satin column.
+pub const MAX_SPLIT_SATIN_WIDTH: &str = "auto_max_split_satin_width_mm";
 /// The key of the narrowest triple run.
 pub const MIN_TRIPLE_RUN_WIDTH: &str = "auto_min_triple_run_width_mm";
 /// The key of the least slenderness of a column.
@@ -67,6 +69,11 @@ pub const ADVANCED: &str = "Advanced";
 /// ask for: longer satin stitches lie loose and snag. It is the machine's limit, the same for every machine
 /// profile so far, so a design may set its widest satin column lower and never higher. MC-8 confirms it.
 pub const LONGEST_SATIN_STITCH: f64 = 7.0;
+
+/// The widest a person may set a split satin column, in millimetres (`auto_max_split_satin_width_mm`). The
+/// trade sews satin up to about 10 mm wide with split stitches, and the reference profile's longest stitch is
+/// 12 mm: a column any wider is a fill.
+pub const WIDEST_SPLIT_SATIN: f64 = 12.0;
 
 params! {
     /// Automatic digitizing: the settings of the rules that choose the stitches of a shape without settings
@@ -169,6 +176,18 @@ params! {
         /// longest satin stitch, so a shape may set it lower and never higher.
         auto_max_satin_width_mm: Length = "7", label "Widest satin column",
             range (DesignSettings::MIN_SATIN_STROKE_WIDTH.get(), LONGEST_SATIN_STITCH),
+            origin Origin::StitchCraft, stability Stability::Experimental;
+
+        /// The widest a part of an area, or a line, sews as one satin column whose stitches are split, when it
+        /// is wider than the widest satin column. Such a part has one centre line, and its width varies by no
+        /// more than `auto_max_unevenness`: a border, a ring or a bar. Its stitches split into pieces no
+        /// longer than the widest satin column, at random places, so that their needle holes don't line up.
+        /// At its default, the widest satin column, no part is split, and every part that wide is filled.
+        /// The trade sews satin up to about 10 mm wide so. A split column keeps satin's sheen where a fill
+        /// reads flat, but it sews thicker than a fill and with about half as much thread again. Off by
+        /// default until a sew-out confirms it.
+        auto_max_split_satin_width_mm: Length = "7", label "Widest split satin column",
+            range (LONGEST_SATIN_STITCH, WIDEST_SPLIT_SATIN),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
         /// The narrowest running stitch sewn as a triple run, each stitch sewn 3 times (bean stitch 1). A
@@ -351,6 +370,7 @@ mod tests {
         let base = ["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_keep_holes"];
         let bounds = [
             MAX_SATIN_WIDTH,
+            MAX_SPLIT_SATIN_WIDTH,
             MIN_TRIPLE_RUN_WIDTH,
             MIN_SLENDERNESS,
             MAX_UNEVENNESS,

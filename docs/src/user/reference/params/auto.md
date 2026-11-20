@@ -163,6 +163,22 @@ longest satin stitch, so a shape may set it lower and never higher.
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 
+### `auto_max_split_satin_width_mm`
+
+**Widest split satin column.** The widest a part of an area, or a line, sews as one satin column whose stitches are split, when it
+is wider than the widest satin column. Such a part has one centre line, and its width varies by no
+more than `auto_max_unevenness`: a border, a ring or a bar. Its stitches split into pieces no
+longer than the widest satin column, at random places, so that their needle holes don't line up.
+At its default, the widest satin column, no part is split, and every part that wide is filled.
+The trade sews satin up to about 10 mm wide so. A split column keeps satin's sheen where a fill
+reads flat, but it sews thicker than a fill and with about half as much thread again. Off by
+default until a sew-out confirms it.
+
+- **Accepts:** a length from 7 to 12 mm
+- **Default:** `7`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
 ### `auto_min_triple_run_width_mm`
 
 **Narrowest triple run.** The narrowest running stitch sewn as a triple run, each stitch sewn 3 times (bean stitch 1). A

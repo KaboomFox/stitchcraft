@@ -19,6 +19,7 @@ pub stitchcraft_engine::auto::rules::RuleId::Line
 pub stitchcraft_engine::auto::rules::RuleId::Refused
 pub stitchcraft_engine::auto::rules::RuleId::Speck
 pub stitchcraft_engine::auto::rules::RuleId::Uneven
+pub stitchcraft_engine::auto::rules::RuleId::Wide
 impl stitchcraft_engine::auto::rules::RuleId
 pub const fn stitchcraft_engine::auto::rules::RuleId::key(self) -> &'static str
 pub struct stitchcraft_engine::auto::rules::Preset
@@ -34,7 +35,8 @@ pub stitchcraft_engine::auto::rules::Rule::sewn: &'static str
 pub const stitchcraft_engine::auto::rules::LEAN: f64
 pub const stitchcraft_engine::auto::rules::MOST_CROWDING: f64
 pub const stitchcraft_engine::auto::rules::PRESETS: [stitchcraft_engine::auto::rules::Preset; 2]
-pub const stitchcraft_engine::auto::rules::RULES: [stitchcraft_engine::auto::rules::Rule; 9]
+pub const stitchcraft_engine::auto::rules::RULES: [stitchcraft_engine::auto::rules::Rule; 10]
+pub const stitchcraft_engine::auto::rules::WIDE_TOLERANCE: f64
 pub fn stitchcraft_engine::auto::rules::filled(&str) -> alloc::string::String
 pub enum stitchcraft_engine::auto::Stitches
 pub stitchcraft_engine::auto::Stitches::Fill
@@ -60,6 +62,7 @@ pub stitchcraft_engine::auto::AutoParams::auto_fill_uneven: <stitchcraft_params:
 pub stitchcraft_engine::auto::AutoParams::auto_ignore_background: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_max_reach: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_max_satin_width_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_max_split_satin_width_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_max_unevenness: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_min_area_mm2: <stitchcraft_params::kinds::Area as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_min_fill_width_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
@@ -109,6 +112,7 @@ pub const stitchcraft_engine::auto::IGNORE_BACKGROUND: &str
 pub const stitchcraft_engine::auto::LONGEST_SATIN_STITCH: f64
 pub const stitchcraft_engine::auto::MAX_REACH: &str
 pub const stitchcraft_engine::auto::MAX_SATIN_WIDTH: &str
+pub const stitchcraft_engine::auto::MAX_SPLIT_SATIN_WIDTH: &str
 pub const stitchcraft_engine::auto::MAX_UNEVENNESS: &str
 pub const stitchcraft_engine::auto::MIN_AREA: &str
 pub const stitchcraft_engine::auto::MIN_FILL_WIDTH: &str
@@ -124,6 +128,7 @@ pub const stitchcraft_engine::auto::PREFER: &str
 pub const stitchcraft_engine::auto::STITCH: &str
 pub const stitchcraft_engine::auto::TOUCHING: f64
 pub const stitchcraft_engine::auto::WARNING_CHARS: usize
+pub const stitchcraft_engine::auto::WIDEST_SPLIT_SATIN: f64
 pub const stitchcraft_engine::auto::ZIGZAG_ABOVE: stitchcraft_core::units::Mm
 pub fn stitchcraft_engine::auto::as_merged(&stitchcraft_engine::design::Design, &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_engine::design::Design, stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_engine::auto::digitize(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::auto::Digitized, stitchcraft_core::budget::Exhausted>
@@ -770,10 +775,13 @@ pub const stitchcraft_engine::generators::satin::CENTER_WALK_UNDERLAY_REPEATS: &
 pub const stitchcraft_engine::generators::satin::CONTOUR_UNDERLAY: &str
 pub const stitchcraft_engine::generators::satin::END_AT_NEAREST_POINT: &str
 pub const stitchcraft_engine::generators::satin::PUSH_COMPENSATION: &str
+pub const stitchcraft_engine::generators::satin::RANDOM_SPLIT_JITTER_PERCENT: &str
+pub const stitchcraft_engine::generators::satin::RANDOM_SPLIT_PHASE: &str
 pub const stitchcraft_engine::generators::satin::SATIN_COLUMN: &str
 pub const stitchcraft_engine::generators::satin::SATIN_METHODS: &[stitchcraft_params::spec::ChoiceOption]
 pub const stitchcraft_engine::generators::satin::SHORT_STITCH_DISTANCE: &str
 pub const stitchcraft_engine::generators::satin::SHORT_STITCH_INSET: &str
+pub const stitchcraft_engine::generators::satin::SPLIT_METHOD: &str
 pub const stitchcraft_engine::generators::satin::START_AT_NEAREST_POINT: &str
 pub const stitchcraft_engine::generators::satin::ZIGZAG_UNDERLAY: &str
 pub fn stitchcraft_engine::generators::satin::rails(&stitchcraft_engine::design::Path, stitchcraft_core::units::Mm, stitchcraft_engine::design::Join, &mut alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::option::Option<stitchcraft_engine::normalize::satin::Satin>, stitchcraft_core::budget::Exhausted>

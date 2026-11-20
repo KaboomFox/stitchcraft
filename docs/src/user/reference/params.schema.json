@@ -232,6 +232,21 @@
         "unit": "mm"
       }
     },
+    "auto_max_split_satin_width_mm": {
+      "default": 7.0,
+      "description": "The widest a part of an area, or a line, sews as one satin column whose stitches are split, when it is wider than the widest satin column. Such a part has one centre line, and its width varies by no more than `auto_max_unevenness`: a border, a ring or a bar. Its stitches split into pieces no longer than the widest satin column, at random places, so that their needle holes don't line up. At its default, the widest satin column, no part is split, and every part that wide is filled. The trade sews satin up to about 10 mm wide so. A split column keeps satin's sheen where a fill reads flat, but it sews thicker than a fill and with about half as much thread again. Off by default until a sew-out confirms it.",
+      "maximum": 12.0,
+      "minimum": 7.0,
+      "title": "Widest split satin column",
+      "type": "number",
+      "x-stitchcraft": {
+        "automatic": true,
+        "group": "Advanced",
+        "origin": "stitchcraft",
+        "stability": "experimental",
+        "unit": "mm"
+      }
+    },
     "auto_max_unevenness": {
       "default": 0.3,
       "description": "How much the width of a part of several centre lines varies along them, at the most, for it to sew as satin columns: the standard deviation of its width divided by its width. A part more uneven is filled, unless `auto_fill_uneven` is off. A part of one centre line isn't held to it: a leaf and a tapering stroke sew well as one column.",
@@ -3489,6 +3504,7 @@
           "auto_base_stitch_length_mm",
           "auto_base_keep_holes",
           "auto_max_satin_width_mm",
+          "auto_max_split_satin_width_mm",
           "auto_min_triple_run_width_mm",
           "auto_min_slenderness",
           "auto_max_unevenness",

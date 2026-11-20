@@ -602,7 +602,7 @@ fn paints(element: &Element, stitch_type: StitchType, rails: &mut Option<Option<
             Ok(Some((Kind::Column, joined(between(&rails, meter)).map_err(unfound)?)))
         }
         (Shape::Stroke { path, width, join, cap }, _) => {
-            let style = Style { width: *width, join: *join, cap: *cap };
+            let style = Style { width: *width, join: *join, cap: *cap, split: false };
             stroked(path, style, meter).map_err(|failed| said(failed, Code::AutoOrder, "what this line covers", KEPT))
         }
     }

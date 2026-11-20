@@ -87,6 +87,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`auto_ignore_background`](params/auto.md#auto_ignore_background) | Leave out the background | Auto parameters |
 | [`auto_max_reach`](params/auto.md#auto_max_reach) | Farthest a column reaches from its line | Auto parameters |
 | [`auto_max_satin_width_mm`](params/auto.md#auto_max_satin_width_mm) | Widest satin column | Auto parameters |
+| [`auto_max_split_satin_width_mm`](params/auto.md#auto_max_split_satin_width_mm) | Widest split satin column | Auto parameters |
 | [`auto_max_unevenness`](params/auto.md#auto_max_unevenness) | Most a column's width varies | Auto parameters |
 | [`auto_min_area_mm2`](params/auto.md#auto_min_area_mm2) | Smallest area | Auto parameters |
 | [`auto_min_fill_width_mm`](params/auto.md#auto_min_fill_width_mm) | Narrowest piece of a fill | Auto parameters |
