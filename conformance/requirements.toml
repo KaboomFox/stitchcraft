@@ -3390,6 +3390,24 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-AUTO-150"
+area = "auto"
+level = "L2"
+statement = "The style a design is digitized in is the person's choice, never guessed from the design. `stitch plan --style` takes `logo` or `photo` and refuses any other name, `auto` among them, before anything is read, with the list of styles. Without the option every automatic shape has the rules' defaults, which are the photo style's, whatever the picture or design measures."
+rationale = "M13.42 looked for a rule that chooses the style from a picture's own measures, on 25 pictures of known style and 3 that a person couldn't place (docs/src/design/image-to-embroidery.md, Choosing a style). No measure of the picture or of its trace separated the 2 groups: the best, the share of a picture's pixels in flat colour, styled a photographed badge and lettered sign as photos and a photo on a white ground as flat art, and a measure of the subject alone fell from 0.43 to 0.10 on a hand drawing when it had half the pixels. Some pictures need both styles, such as a label on a photo. A wrong guess costs a traced photo 2 to 11 times the area at 3 fills, and flat art up to 20 % of its detail, so the owner's standing order holds: where no rule is reliable, the person chooses."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-151"
+area = "auto"
+level = "L2"
+statement = "When the style changes how a design sews, `stitch plan` says so in one info notice, and the notice never changes what sews. Digitized with `auto_fill_uneven` on, as in the photo style, a design whose thin lines merged (REQ-AUTO-090) or whose parts were filled by the rule uneven (REQ-AUTO-032) gets a notice that counts both and names the logo style, which keeps them as lines and columns. Digitized with it off, as in the logo style, a design with ragged thin lines that would merge, or with parts that the rule uneven would fill, gets a notice that counts both and names the photo style, which merges and fills them. The counts are those of the design as digitized, and a design that the other style would sew alike gets no notice. The notice gives no opinion of what the picture shows."
+rationale = "A wrong style is said today, but spread out: each merged line has its own SC-I0915, and a photo in the logo style shows as a thick spot of SC-W0913. One notice tells the person that the choice matters for this design and which way the other style goes, without a guess that M13.42 found unreliable. It goes by counts the rules already make, so it holds for any picture."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-AUTO-031"
 area = "auto"
 level = "L2"

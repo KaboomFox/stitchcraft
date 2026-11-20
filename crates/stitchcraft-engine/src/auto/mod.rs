@@ -86,6 +86,7 @@ mod params;
 pub mod rules;
 mod smooth;
 mod split;
+mod style;
 pub(crate) mod thick;
 mod thin;
 mod wide;
@@ -469,6 +470,8 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     let smoothed = smooth::outlines(design, &rules, budget, &mut diagnostics);
     let design = smoothed.as_ref().unwrap_or(design);
     let elements = design.elements();
+    // Each automatic element's settings in the other style, for the notice that the style matters (`REQ-AUTO-151`).
+    let others = style::others(elements, &rules);
     // The ids given out: the design's, then each part's that a stroke of several subpaths adds. A design's
     // ids are unique (`Design::new`), so each is taken as it is, which costs no work and cannot fail.
     let mut taken = Labels::default();
@@ -480,7 +483,9 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     let background = neighbours::background(design, rules.first().and_then(Option::as_ref), budget);
     let layers = neighbours::flattened(design, &rules, matches!(background, Some(Background::Found)), budget);
     // Thin lines, such as the strands of fur a photo traces into, merge into the areas beside them.
-    let (layers, _) = neighbours::lines_merged(layers, &rules, design.settings.min_satin_stroke_width, &marks, budget);
+    let (layers, merges, would) = neighbours::lines_merged(layers, (&rules, &others), design.settings.min_satin_stroke_width, &marks, budget);
+    let mut tally = style::Tally::default();
+    tally.lines(merges.len(), would);
     // How each shape digitized sews, by its place in the design.
     let mut digitized = Vec::new();
     let mut sewn = Vec::with_capacity(layers.elements.len());
@@ -498,9 +503,15 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
         // A guide steers an area digitized whole under its details only where it shows (`REQ-AUTO-109`).
         let shown = layers.shown.get(&index).map(Vec::as_slice);
         let made = match made_by(&element, &design.settings, rules, (&open, &marks, shown), &mut meter)
-            .and_then(|made| named(made, &element, &mut taken, &mut meter))
+            .and_then(|(made, fired)| Ok((named(made, &element, &mut taken, &mut meter)?, fired)))
         {
-            Ok(made) => made,
+            Ok((made, fired)) => {
+                if let Some(other) = others.get(index).and_then(Option::as_ref) {
+                    let narrowest = design.settings.min_satin_stroke_width;
+                    tally.parts(&element.id, &fired, (&Bounds::of(rules, narrowest), &Bounds::of(other, narrowest)), budget);
+                }
+                made
+            }
             Err(exhausted) => {
                 diagnostics.push(exhausted.diagnostic(budget, Some(element.id.clone())));
                 continue;
@@ -546,6 +557,7 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
         counts.add(stitches);
     }
     diagnostics.splice(0..0, counts.said());
+    diagnostics.extend(tally.said());
     let set: BTreeSet<&ElementId> = elements.iter().filter(|element| !element.automatic).map(|element| &element.id).collect();
     let mut elements = beside.elements;
     let mut made: BTreeSet<ElementId> = elements.iter().filter(|element| !set.contains(&element.id)).map(|element| element.id.clone()).collect();
@@ -579,7 +591,7 @@ pub fn as_merged(design: &Design, budget: &Budget) -> Result<Design, Diagnostic>
     let background = neighbours::background(cut, rules.first().and_then(Option::as_ref), budget);
     let layers = neighbours::flattened(cut, &rules, matches!(background, Some(Background::Found)), budget);
     let marks = Marks::of(&design.marks, budget);
-    let (_, merges) = neighbours::lines_merged(layers, &rules, cut.settings.min_satin_stroke_width, &marks, budget);
+    let (_, merges, _) = neighbours::lines_merged(layers, (&rules, &[]), cut.settings.min_satin_stroke_width, &marks, budget);
     let mut drawn = design.elements().to_vec();
     let mut taken = Labels::default();
     for element in &drawn {
@@ -678,7 +690,7 @@ pub fn digitize(element: &Element, settings: &DesignSettings, meter: &mut Meter)
     let Some(rules) = read(element, &mut said) else { return Ok(Digitized { diagnostics: said, ..Digitized::default() }) };
     // Alone, an element has no shape drawn after it, each of its holes wide enough to read is open, and no
     // mark keeps its specks.
-    let mut made = made_by(element, settings, &rules, (&|_, _| Ok(true), &Marks::default(), None), meter)?;
+    let (mut made, _) = made_by(element, settings, &rules, (&|_, _| Ok(true), &Marks::default(), None), meter)?;
     made.diagnostics.splice(0..0, said);
     Ok(made)
 }
@@ -687,14 +699,15 @@ pub fn digitize(element: &Element, settings: &DesignSettings, meter: &mut Meter)
 /// settings of the rules, a hole of it kept open as `open` says, its specks inside `marks` measured
 /// (`REQ-AUTO-104`) and its filled parts steered by the guides read with them where `shown`, what shows of
 /// it when it is digitized whole under its details, shows (`REQ-AUTO-109`), as [`digitize`] makes them: each fill at the angle the rules give the design's
-/// fills, and `SC-I0912` last, naming the rule each part of it sewed by, when it sews by the rules.
+/// fills, and `SC-I0912` last, naming the rule each part of it sewed by, when it sews by the rules; and the
+/// rule each part sewed by.
 fn made_by(
     element: &Element,
     settings: &DesignSettings,
     rules: &AutoParams,
     (open, marks, shown): (&Open<'_>, &Marks, Option<&[Polygon]>),
     meter: &mut Meter,
-) -> Result<Digitized, Exhausted> {
+) -> Result<(Digitized, Vec<Fired>), Exhausted> {
     let bounds = Bounds::of(rules, settings.min_satin_stroke_width);
     let (mut made, fired) = match &element.shape {
         Shape::Stroke { path, width, join, cap } => {
@@ -713,7 +726,7 @@ fn made_by(
             fill.params.set(ANGLE, rules.auto_fill_angle.to_string().as_str());
         }
     }
-    Ok(made)
+    Ok((made, fired))
 }
 
 /// The ordinary elements that sew `element`, an automatic stroke along `path` drawn with `style`, as
