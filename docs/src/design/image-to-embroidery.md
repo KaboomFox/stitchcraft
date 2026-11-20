@@ -449,16 +449,86 @@ comes with every column the redrawn outline adds, poor or not: a well-formed nar
 within 3 and a body swing within 0.55 on the same kinds of letters, so the columns that look poor fan
 where the rules place their rungs.
 
+#### Rungs placed and less overlap
+
+A third prototype kept the outline drawn again, with its even spacing, and changed 2 things in place of a
+test. It was measured on the same set as the first 2.
+
+**Rungs placed from the rails.** The rungs come from the 2 rails alone, not from the triangulation. Both
+rails are sampled at even steps of at most 0.1 mm. The rungs follow the pairing of the rails that runs
+forward on both and makes the stitches shortest: the sum of each rung's length times how far the centre
+moves on. Every such pairing moves the centre the same distance in all. The shortest one lies square
+across a straight column and turns about the inside of a bend. Its rungs run forward on both rails, which keeps
+them from crossing there.
+Taken as it is, it piles a bend's stitches on the inner corner: one column of the running dog fanned 20
+to 1. So the pairing is eased. How far one rail runs ahead of the other is averaged over the column's
+median width on each side, which keeps both rails running forward and spreads a bend's turn over 2 widths.
+A rung is kept every millimetre of the centre line.
+
+On the columns that the outline drawn again makes, the eased rungs lower the body fan's 90th percentile
+from 3.6 to 1.9 on the pictures and from 4.5 to 2.4 on the letters. The share of columns within the
+hand-digitized bounds rises from 0.74 to 0.81 on the pictures and to 0.87 on the letters. The stitches lean
+more: the body lean's 90th percentile rises from 19° to 26° on the pictures and from 15° to 26° on the
+letters, and 5 picture columns and 2 letter columns
+cross where 2 and none did. Easing over 2 or 3 widths leans and crosses more. Placed rungs also crowd
+less, so fewer parts are refused: judged on them, the pictures make 154 columns where they made 120, and
+the running dog's area at 3 fills rises from 94 to 130 mm². So the prototype chooses each part's rule on
+the rungs as found and sews its columns on the placed rungs.
+
+**Less overlap under a part's column.** An area sewn before a part's satin column reaches its whole overlap
+of 1 mm under it, and is cut away under it only 1 mm inside the column's edge. A column narrower than
+2 mm then lies whole on the area, and with its own underlay and top stitches the spot sews 3 fills. A
+column's stitches reach its pull compensation of 0.4 mm past both rails because the thread pulls it in
+that far, and an area's rows pull in as far across them. So an area under the column has to lie only its pull
+compensation inside the column's edge, and the prototype keeps 0.4 mm of it there. On
+main this alone lowers every traced picture's area at 3 fills, the patch's from 420 to 278.5 mm². The
+fabric measure doesn't find a gap with 0.4 mm kept, or with none kept, because it doesn't pull stitches in:
+a sew-out has to show how much a column needs. Keeping 0.2 mm would hold the dogs' area within the noise
+of main's, but no measure gives 0.2 mm, so it would be tuned to them.
+
+| Picture | Area at 3 fills, mm²: main, third prototype | Thickest spot, fills | Stitches astray | Jump threads |
+|---|---|---|---|---|
+| Dog on turf, 6 threads | 54.3, 64.3 | 3.87, 3.94 | 4, 5 | 60, 57 |
+| Dog on turf, 9 threads | 63.8, 59.5 | 3.97, 3.85 | 3, 2 | 62, 64 |
+| Running dog, 6 threads | 53.5, 61.8 | 3.92, 4.05 | 1, 1 | 49, 54 |
+| Running dog, 9 threads | 94.0, 112.0 | 3.98, 4.00 | 4, 7 | 64, 57 |
+| Traced pear | 10.5, 3.0 | 3.99, 3.74 | 0, 0 | 2, 2 |
+| Traced lettered patch | 420.0, 400.5 | 4.25, 4.28 | 0, 1 | 42, 50 |
+| Traced magnolia, photo | 217.5, 226.3 | 4.22, 3.97 | 2,880, 2,901 | |
+| Traced coleus, photo | 306.3, 338.0 | 4.16, 5.31 | 82, 94 | |
+| Greylag goose, photo | 156.8, 207.3 | 4.37, 3.80 | 2,373, 2,381 | |
+| Mespelbrunn castle, photo | 91.8, 96.3 | 3.82, 4.53 | 1,939, 1,931 | |
+
+The badge sews as on main, and planning takes 5 % longer. The third prototype misses the bar in each of
+its parts. The running dog's area at 3 fills rises 18 mm² and the other dog's 10 mm², where the noise is
+8.5 mm², and 2 photos rise 32 and 50 mm². The coleus's thickest spot rises 1.15 fills and the castle's
+0.71, as with the outline drawn again alone. The running dog gains 3 stitches astray and the patch 1,
+which the even spacing brings. Under the 6 drawings 101 of the pictures' shapes and 54 letters change
+rule. The outline drawn again alone gives 102 and 55, and the bar is fewer than 100 and 38. The letters as drawn and as traced sew by other
+rules 22 times, against 32 on main. By M13.47's measures of the joins, the share of joins more than 1.5
+times as thick as their stroke rises at apexes from 0.62 to 0.70 and at crossings from 0.68 to 0.71, and
+falls a little at most other kinds. By eye, a placed column lies straighter than main's (the black column
+on the dog on turf), but the patch's A and M of the upper word and its T and LEM of the lower word sew as
+rougher satin where main fills them cleanly. Serif letters sewn as satin lose their serifs.
+
+So placing rungs well helps the columns it is given, and keeping less overlap under a part's column takes
+thread away on main as much as with the outline drawn again. The same measures fail as before. The area at 3
+fills comes with the columns that the outline drawn again adds, wide ones too, and with the fills it
+reshapes. The 2 photos' thickest spots and the stitches astray come with the outline drawn again and its
+even spacing, not with any column.
+
 #### Decisions for the owner
 
 - **The tolerance,** how far the outline drawn again may lie from the drawing: 0.05 mm is recommended,
   a quarter of a running stitch's own tolerance of 0.2 mm, and 2.5 times the jitter measured.
-- **What lands with it.** Recommended: the outline drawn again lands with 2 changes. Rungs are placed so
-  that the columns it adds keep a fan of 3 and a body lean of 35°. A narrow column lies on less of its
-  neighbours' overlap, so that the area at 3 fills doesn't rise. Both are measured in a
-  further evidence phase before the build. A refusing test with fixed bounds steadies the pictures' area,
-  but it adds knife edges of its own and fills 391 letters, so it isn't recommended. The outline drawn
-  again alone raises the area at 3 fills by up to 29 % and sews the patch's letters with fanned columns.
+- **What lands with it.** No prototype measured meets the step's bar. The outline drawn again alone raises
+  the area at 3 fills by up to 29 % and sews the patch's letters with fanned columns. A refusing test
+  with fixed bounds adds knife edges of its own and fills 391 letters. Rungs placed from the rails, with
+  less overlap under a part's column, still raise the dogs' and 2 photos' area and the stitches astray.
+  Recommended: the step stops here and main's rule stays. 2 findings may become steps of their own. Less
+  overlap under a part's column lowers main's own area at 3 fills, and needs a sew-out to show how much
+  overlap a column needs. Rungs placed from the rails could sew the columns main already makes, which
+  were not measured alone.
 - **A column that reads back otherwise.** Recommended: found and fixed where the column is built, as part
   of this step. Leaving out the rung that doesn't read back passes the hand-made cases but hides the cause,
   and the cause decides most of the photos' changes.
@@ -469,8 +539,8 @@ where the rules place their rungs.
 
 Nothing: `REQ-AUTO-135` to `REQ-AUTO-139` are planned, and their cases are marked planned. The cases of
 `REQ-AUTO-135` to `REQ-AUTO-138` fail on main. The case of `REQ-AUTO-139` passes on main: it measures each
-column's stitches in the plan, against the bounds that the build must keep. The prototype's code and the
-measures are kept with the step's notes, not in the repository.
+column's stitches in the plan, against the bounds that the build must keep. The 3 prototypes' code and
+the measures are kept with the step's notes, not in the repository.
 
 ## Stitch types by width
 
