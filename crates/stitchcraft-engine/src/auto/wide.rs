@@ -41,7 +41,9 @@ pub const SPLIT_JITTER_PERCENT: f64 = 10.0;
 pub(super) fn split(params: &mut ParamSet) {
     let jitter = SPLIT_JITTER_PERCENT.to_string();
     let longest = LONGEST_SATIN_STITCH.to_string();
-    for (key, value) in [(MAX_STITCH_LENGTH, longest.as_str()), (SPLIT_METHOD, "default"), (RANDOM_SPLIT_PHASE, "true"), (RANDOM_SPLIT_JITTER_PERCENT, &jitter)] {
+    for (key, value) in
+        [(MAX_STITCH_LENGTH, longest.as_str()), (SPLIT_METHOD, "default"), (RANDOM_SPLIT_PHASE, "true"), (RANDOM_SPLIT_JITTER_PERCENT, &jitter)]
+    {
         if params.get(key).is_none() {
             params.set(key, value);
         }
@@ -80,8 +82,7 @@ pub(super) fn tried(id: &ElementId, part: &Polygon, bounds: &Bounds, by: By<'_>,
     }
     Ok(match columns::columns(part, &wide, by.rules, &[], by.open, meter)? {
         Made::Columns { sewn, rule: RuleId::Column | RuleId::Asked, measures }
-            if bounds.one_even_line(measures.lines, measures.unevenness)
-                && sewn.iter().all(|sewn| matches!(sewn, Sewn::Satin { .. })) =>
+            if bounds.one_even_line(measures.lines, measures.unevenness) && sewn.iter().all(|sewn| matches!(sewn, Sewn::Satin { .. })) =>
         {
             Tried::Wide(Wide { sewn, measures })
         }
@@ -99,9 +100,9 @@ fn unmade(id: &ElementId, split: f64) -> Diagnostic {
          edges, so it is filled.",
         mm(split)
     );
-    Diagnostic::new(Code::AutoSatinFilled, message)
-        .with_element(id.clone())
-        .with_fix(Fix::Hint("To sew it as a satin column, draw it with smoother edges, or draw the column with 2 rails and give it settings.".to_string()))
+    Diagnostic::new(Code::AutoSatinFilled, message).with_element(id.clone()).with_fix(Fix::Hint(
+        "To sew it as a satin column, draw it with smoother edges, or draw the column with 2 rails and give it settings.".to_string(),
+    ))
 }
 
 #[cfg(test)]

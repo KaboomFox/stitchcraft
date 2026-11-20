@@ -305,8 +305,7 @@ impl Bounds {
         Bounds {
             narrowest,
             max_satin: rules.auto_max_satin_width_mm,
-            max_split: Some(rules.auto_max_split_satin_width_mm)
-                .filter(|split| micrometres(split.get()) > micrometres(LONGEST_SATIN_STITCH)),
+            max_split: Some(rules.auto_max_split_satin_width_mm).filter(|split| micrometres(split.get()) > micrometres(LONGEST_SATIN_STITCH)),
             splits: false,
             min_fill: (rules.auto_min_fill_width_mm.get() * uneven).min(rules.auto_max_satin_width_mm.get()),
             min_slenderness: rules.auto_min_slenderness * slender,
