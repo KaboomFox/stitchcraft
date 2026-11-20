@@ -136,6 +136,75 @@ fn the_window_s_job_names_the_dialog_s_row_and_its_parameters_from_the_manifest(
 }
 
 #[test]
+fn a_panel_shot_traces_a_picture_and_presses_the_panel_s_row_of_the_window_menu() {
+    let traced = "stitch = [\"plan\", \"docs/fixtures/dog-on-turf-cutout.png\", \"-o\", \"a.pes\", \"--traced\", \"a.vectorcraft\"]";
+    let layers = format!("{traced}\ncommands = [{{ cmd = \"ui.layersExpand\" }}]\nmenu = [\"Window\", \"Layers\"]\npanel = \"Layers\"");
+    assert_eq!(problems(&shot(UI, &layers)), Vec::<String>::new());
+    assert_eq!(problems(&shot(RENDER, traced)), Vec::<String>::new(), "a render shot can draw a traced picture too");
+    assert_eq!(
+        problems(&shot(RENDER, "panel = \"Layers\"\ncommands = [{ cmd = \"ui.layersExpand\" }]")),
+        ["`menu`, `dialog`, `panel` and `commands` are a vectorcraft-ui shot's"]
+    );
+    assert_eq!(
+        problems(&shot(UI, "menu = [\"Window\", \"Layers\"]\npanel = \"Layers\"\ndialog = \"fill\"\nplugins = [\"fill\"]")),
+        ["a shot shows a `dialog` or a `panel`, not both"]
+    );
+    assert_eq!(
+        problems(&shot(UI, "menu = [\"Window\", \"Swatches\"]\npanel = \"Swatches\"")),
+        ["`panel = \"Swatches\"` is none of the panels it can show: [\"Layers\"]"]
+    );
+    for menu in ["[\"Window\", \"Swatches\"]", "[\"Object\", \"Layers\"]"] {
+        assert_eq!(
+            problems(&shot(UI, &format!("menu = {menu}\npanel = \"Layers\""))),
+            ["its menu presses Window and then the row `Layers`, which shows the panel"],
+            "{menu}"
+        );
+    }
+    assert_eq!(
+        problems(&shot(UI, "menu = [\"Window\", \"Layers\"]\ncommands = [{ export = \"a.png\" }, { apply = \"fill\" }]")),
+        ["a step VectorCraft's window runs is a command, `cmd`", "a step VectorCraft's window runs is a command, `cmd`"]
+    );
+    // What it traces: a picture of the repository, into a `.vectorcraft` file of the shot's folder, with the
+    // pinned command line.
+    let tracing = |args: &str| problems(&shot(RENDER, &format!("stitch = [\"plan\", {args}]")));
+    assert_eq!(tracing("\"docs/no-such.png\", \"-o\", \"a.pes\", \"--traced\", \"a.vectorcraft\""), [
+        "it traces `docs/no-such.png`, which is no file of the repository"
+    ]);
+    assert_eq!(tracing("\"docs/fixtures/dog-on-turf-cutout.png\", \"-o\", \"a.pes\""), [
+        "`stitch plan` writes the traced document it opens: give it `--traced FILE`"
+    ]);
+    for traced in ["d/a.vectorcraft", "a.svg"] {
+        let args = format!("\"docs/fixtures/dog-on-turf-cutout.png\", \"-o\", \"a.pes\", \"--traced\", \"{traced}\"");
+        assert_eq!(tracing(&args), [format!("`--traced {traced}` is not the name of a `.vectorcraft` file")]);
+    }
+    let named = "\"docs/fixtures/dog-on-turf-cutout.png\", \"-o\", \"a.pes\", \"--traced\", \"a.vectorcraft\", \"--vectorcraft-cli\", \"v\"";
+    assert_eq!(tracing(named), ["`stitch` traces with the pinned `vectorcraft-cli`, and names none"]);
+    assert_eq!(tracing("\"--no-such-option\"").len(), 1);
+}
+
+#[test]
+fn a_panel_shot_s_job_gives_the_names_of_the_document_s_shapes_and_the_window_s_commands() {
+    // The traced pear, with the names `stitch plan --traced` writes: the engine names them as it plans.
+    let pear = util::root().join("docs/fixtures/traced-pear.vectorcraft");
+    let ui = shot(UI, "commands = [{ cmd = \"ui.layersExpand\", params = { open = true } }]\nmenu = [\"Window\", \"Layers\"]\npanel = \"Layers\"");
+    let entry = job(&ui, &pear, Path::new("/m"), Path::new("/p"), None).unwrap();
+    assert_eq!(entry["commands"], json!([{ "command": "ui.layersExpand", "params": { "open": true } }]));
+    assert_eq!(entry["panel"]["name"], "Layers");
+    let rows: Vec<&str> = entry["panel"]["rows"].as_array().unwrap().iter().map(|row| row.as_str().unwrap()).collect();
+    let bytes = std::fs::read(&pear).unwrap();
+    let sewn = sew(Source::VectorCraft, &bytes, (Reading { auto: true, ..Reading::default() }, &[]), REFERENCE, FormatId::PesV1, "pear");
+    let named: Vec<String> = sewn.names.sewing_order().into_iter().filter_map(|shape| shape.name.clone()).collect();
+    assert_eq!(rows, named);
+    assert!(rows.len() >= 4 && rows.iter().any(|row| row.ends_with(" fill (1)")), "{rows:?}");
+    println!("the pear's names: {rows:?}");
+    // A shot without a panel names no rows, and one whose document doesn't read says why.
+    let menu = shot(UI, "menu = [\"Effect\", \"Plug-ins\"]");
+    let entry = job(&menu, Path::new("/d"), Path::new("/m"), Path::new("/p"), None).unwrap();
+    assert_eq!((&entry["panel"], &entry["commands"]), (&Value::Null, &json!([])));
+    assert!(job(&ui, Path::new("/no/such.vectorcraft"), Path::new("/m"), Path::new("/p"), None).is_err());
+}
+
+#[test]
 fn the_window_starts_with_a_profile_that_holds_a_shot_s_heavy_module() {
     // The app of VectorCraft 0.23 refuses Stroke to Satin, which asks for a heavy budget, from a request,
     // with `allowHeavy` too, and the window took no picture of its menu. The module is in the profile the

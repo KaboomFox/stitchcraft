@@ -23,6 +23,12 @@ when the design sews in another order.
 it in VectorCraft, and the Layers panel shows each shape by its name. To find one, type its name into the
 panel's search box. The number in brackets keeps `fill (1)` from finding `fill (12)`.
 
+Open the group's row with its triangle to see the shapes' rows. Here is the traced pear in the panel, as
+VectorCraft shows it at the panel's default width:
+
+<!-- shot: vectorcraft-layers-names -->
+<!-- /shot -->
+
 The names are written once, when the picture is traced, and are then the shapes' own names, as a name
 you give a shape is. StitchCraft never renames a shape that has a name. Rename any you like. A shape you
 draw later has no name, and the notices name it for that plan only, with the next free number.
