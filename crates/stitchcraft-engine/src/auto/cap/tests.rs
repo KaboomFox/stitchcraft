@@ -244,6 +244,38 @@ fn req_auto_101_the_cap_stops_when_the_work_runs_out() {
     assert!((0..enough).all(|work| !run(work)), "{enough}");
 }
 
+/// `copies` columns, each sewing a zigzag 4 mm wide 5 times over itself, 5 fills, 20 mm apart along x: the
+/// plan, and the columns.
+fn columns_apart(copies: usize) -> (StitchPlan, BTreeSet<ElementRef>) {
+    let ids: Vec<String> = (0..copies).map(|copy| format!("column-{copy}")).collect();
+    let parts: Vec<Part> = ids
+        .iter()
+        .enumerate()
+        .map(|(copy, id)| {
+            let points = (0..5).flat_map(|_| zigzag(4.0, 0.25)).map(|(x, y)| (x + 20.0 * copy as f64, y)).collect();
+            (id.as_str(), Role::Top, points)
+        })
+        .collect();
+    (plan(&parts), (0..copies).filter_map(ElementRef::from_index).collect())
+}
+
+#[test]
+fn req_auto_101_the_cap_s_work_grows_as_the_design_does() {
+    // Columns far apart above the warning's limit: 4 of them take 4 times the thread of one, for about 4
+    // times the work, not 16, since a point is judged only for a spot its stitches lay thread at.
+    let work = |copies: usize| {
+        let (mut sewn, columns) = columns_apart(copies);
+        let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        let rules = Rules { cap: 3.0, limit: 4.0, columns: &columns, ..rules() };
+        let mut meter = Budget::DEFAULT.meter();
+        let capped = capped(&mut sewn, &mut thickness, &rules, &columns, &mut meter).unwrap().unwrap();
+        (capped.times[3], Budget::DEFAULT.max_work - meter.work_left())
+    };
+    let ((one, alone), (four, together)) = (work(1), work(4));
+    assert!(one > 0 && four == 4 * one, "{one} and {four}");
+    assert!(together <= 5 * alone, "{alone} and {together}");
+}
+
 /// What `finished` says of `sewn` with `budget`, and the plan it leaves.
 fn said(sewn: &StitchPlan, budget: &Budget) -> (Vec<Diagnostic>, StitchPlan) {
     let held = Held { limits: Limits::DEFAULT, overlap: 0.0, cap: 4.0 };
