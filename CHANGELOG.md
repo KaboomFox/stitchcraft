@@ -11,8 +11,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     satin column when it has one centre line, an even width and stitches that don't crowd. A line that wide
     sews so too. Its stitches split at 7 mm at a random phase with 10 % jitter, so that their needle holes
     don't line up, and the rule `wide` (`SC-I0912`) names it. A refused wide part says why (`SC-I0902`).
-  - 7 mm, the default, leaves no part wide, and no style sets it: every design sews as before and no
-    golden file changes. Raised to 10 mm, no part of the 13 designs or the 4 local photos sews differently.
+  - At 7 mm, the default, the rule is off, and no style sets it. Every design sews as before, and every
+    golden file stays. Raised to 10 mm, the 13 designs and the 4 local photos sew the same stitches.
     On a drawn bar, ring, arch and stroked circle 8.5 mm wide the columns sew 23.2 m of thread where the
     fills sew 15.2 m, 3.73 fills at the thickest spot against 2.63, and 146 stitches under 0.5 mm against 902.
 - M13.26: `stitch expand DESIGN -o OUT.vectorcraft` or `.svg` writes an automatic design as the ordinary

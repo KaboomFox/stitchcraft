@@ -629,9 +629,9 @@ compensation, that point lies 1.3 mm from the far rail, where the count, which t
 neighbours more than 2 mm across from it, leaves it out. The build's satin generator splits all 251.
 
 **Which parts of the set change: none.** The build confirmed it with the setting at 10 mm: every design
-and photo sews the same stitches, thread, jumps and thickness, and plans in the same time. Two say one
-note more, `SC-I0902` for a part refused as a wide column: a traced dog's patch that crowds 6.2 to 1, and
-Alpine Night's far ridge, whose column can't be drawn. On the 13 repository designs (the 4 traced dogs, the pear, the 2
+and photo sews the same stitches, thread, jumps and thickness, and plans in the same time. A traced dog's
+patch that crowds 6.2 to 1 and Alpine Night's far ridge, whose column can't be drawn, each add an
+`SC-I0902` for a part refused as a wide column. On the 13 repository designs (the 4 traced dogs, the pear, the 2
 traced badges, the lettered patch, the round patch, the patch, the badge, the emblem and Alpine Night) and
 the 4 local photos, 13 parts are wider than 7 mm and no wider than 10 mm.
 
@@ -660,15 +660,15 @@ circle, with the setting at 7 mm, as on `main`, and at 10 mm:
 | Stitches astray | 0, 0 | 1, 0 | 1, 0 |
 | Next split point within 0.2 mm, on the bar | | 7.8 % | 5.8 % |
 
-At 7.5 mm, 8.4 % of the bar's split points line up with the next. Planning took as long either way, 0.03 to
+At 7.5 mm, 8.4 % of the bar's split points lie within 0.2 mm of the next. Planning took as long either way, 0.03 to
 0.04 s for the sheet. At 10 mm the ring is wide now that its long stitch no longer refuses it, and the
 arch is refused for crowding its inner rail 2.1 to 1 and filled, with `SC-I0902`.
 
 What gets worse is thickness and thread: the columns sew about 50 % more thread than the fills. The thick
-spots have 2 causes. At 7.5 and 8.5 mm they lie where a ring or a stroked circle closes, its underlay and
-its last stitches over its first, as a 6 mm column's do (3.35 fills over 3.75 mm²). At 10 mm the ring also
+spots have 2 causes. At 7.5 and 8.5 mm they lie where a ring or a stroked circle closes. There its last
+stitches lie over its underlay and its first, as on a 6 mm column (3.35 fills over 3.75 mm²). At 10 mm the ring also
 passes 3 fills along the inner third of its band all round: its inner rail is 15 mm from the centre against
-25 mm for the outer, so its stitches lie 1.67 times as close there, over the zigzag underlay. The bare
+25 mm for the outer. Its stitches lie 1.67 times as close there, over the zigzag underlay. The bare
 fabric lies in a thin band along the inner edge of the curved columns, the arch and the stroked circle,
 where the crowded needle points move in along their stitches (`REQ-AUTO-071`). It is a satin column's own,
 5.92 mm² on the sheet 6 mm wide. The bars and the rings leave none. The short stitches and the jumps of a
@@ -682,7 +682,7 @@ fill's row ends mostly go.
 2. **The upper bound is the person's**, up to 12 mm (`WIDEST_SPLIT_SATIN`). The docs give 10 mm as the
    trade's usual widest, and what a wider column costs.
 3. **The split, at a random phase with 10 % jitter.** It is the only method of the 4 whose split points don't
-   fall in lines. Random means the design's seeded generator, so the same design sews the same stitches
+   fall in lines. Random means the design's seeded generator: the same design sews the same stitches
    every time.
 4. **7 mm stays one value for every profile**, as above.
 5. **The bound holds within a tolerance**, as above.
