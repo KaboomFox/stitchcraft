@@ -6,12 +6,12 @@ report and VectorCraft's Layers panel all use it.
 
 ## The parts of a name
 
-A name gives the shape's thread, how it sews, and its number among the shapes of that thread that sew
-the same way:
+A name gives how the shape sews, its number among the shapes of its thread that sew the same way, and
+last its thread:
 
-- `Red fill (3)` is the third red area that sews as a fill.
-- `Deep Gold column (1)` sews as satin columns, and `Black line (12)` as running stitches.
-- `White left out (1)` sews nothing. It is the picture's background, or merged into the shapes beside it.
+- `Fill 3, Red` is the third red area that sews as a fill.
+- `Column 1, Deep Gold` sews as satin columns, and `Line 12, Black` as running stitches.
+- `Left out 1, White` sews nothing. It is the picture's background, or merged into the shapes beside it.
 
 The thread is named as your machine names it. A colour that none of its threads has is named by its hex
 code, such as `#7d6f00`. The number counts down the Layers panel from its top row, so it doesn't change
@@ -21,29 +21,35 @@ when the design sews in another order.
 
 `stitch plan picture.png --traced picture.vectorcraft` writes the names into the traced document. Open
 it in VectorCraft, and the Layers panel shows each shape by its name. To find one, type its name into the
-panel's search box. The number in brackets keeps `fill (1)` from finding `fill (12)`.
+panel's search box. Type the comma after the number: `fill 1,` finds `Fill 1, Red` and not
+`Fill 12, Red`.
 
 Open the group's row with its triangle to see the shapes' rows. Here is the traced pear in the panel, as
 VectorCraft shows it at the panel's default width:
 
 <!-- shot: vectorcraft-layers-names -->
-![VectorCraft's Layers panel at its default width with the traced pear. It shows Layer 1, its group, open, and a row for each of the 6 shapes. Dark Olive fill (1), Russet Brown fill (1), Mint Green fill (1) and White left out (1) show whole. Dark Olive column (1) loses its closing bracket at the row's end, and Russet Brown column (1) shows only its first 18 characters, without its number and with no ellipsis.](../../images/generated/vectorcraft-layers-names.png)
+![VectorCraft's Layers panel at its default width with the traced pear. It shows Layer 1, its group, open, and a row for each of the 6 shapes, each name starting with how the shape sews and its number. Fill 1, Dark Olive, Column 1, Dark Olive, Fill 1, Russet Brown, Fill 1, Mint Green and Left out 1, White show whole. Column 1, Russet Brown shows its first 20 characters, Column 1, Russet Bro, with no ellipsis: its kind and number show, and the end of its thread's name is cut.](../../images/generated/vectorcraft-layers-names.png)
 <!-- /shot -->
 
-At the panel's default width a row shows about 20 characters. Longer names lose their end, and with it
-the number. Here `Russet Brown column (1)` shows only its first 18 characters. Widen the panel to read it whole.
+At the panel's default width a row shows about 20 characters. Longer names lose the end of the thread's
+name, and keep how the shape sews and its number. Here `Column 1, Russet Brown` shows as `Column 1, Russet
+Bro`. Widen the panel to read it whole.
 Search All still finds it by its whole name.
 
 The names are written once, when the picture is traced, and are then the shapes' own names, as a name
 you give a shape is. StitchCraft never renames a shape that has a name. Rename any you like. A shape you
 draw later has no name, and the notices name it for that plan only, with the next free number.
 
+A document traced by an older StitchCraft has names with the thread first, such as `Red fill (3)`. They
+are its shapes' own names, so they stay as they are. A shape you draw later gets a name in the new order,
+with the first number that no other shape's name has.
+
 ## In the notices
 
 A notice about a shape names it before its id:
 
 ```text
-info SC-I0912 ("Red fill (3)", vc:63:fill): This shape sews by the rule area.
+info SC-I0912 ("Fill 3, Red", vc:63:fill): This shape sews by the rule area.
 ```
 
 The id, `vc:63:fill`, is what a bug report needs. The name is what you look for in the Layers panel.
@@ -56,8 +62,8 @@ under `shapes` in the order they sew. Each has its `name`, `element`, `thread`, 
 
 ```json
 "shapes": [
-  { "name": "Red fill (1)", "element": "vc:6", "thread": "#ed171f", "kind": "fill", "place": 1 },
-  { "name": "White left out (1)", "element": "vc:3", "thread": "#f0f0f0", "kind": "left out", "place": null }
+  { "name": "Fill 1, Red", "element": "vc:6", "thread": "#ed171f", "kind": "fill", "place": 1 },
+  { "name": "Left out 1, White", "element": "vc:3", "thread": "#f0f0f0", "kind": "left out", "place": null }
 ]
 ```
 

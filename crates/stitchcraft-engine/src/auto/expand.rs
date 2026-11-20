@@ -30,7 +30,7 @@ use super::thick::{self, Held};
 use super::{AutoParams, Sewing, sewing};
 use crate::common::{BASE, DIGITIZED_AS, LETTERING, PART};
 use crate::design::{Design, DesignSettings, Element, Lettered};
-use crate::names::{Names, thread_name};
+use crate::names::{Names, base_name, thread_name};
 
 /// How many shapes the warning names of each kind at the most, the rest counted.
 const NAMED: usize = 5;
@@ -100,7 +100,7 @@ pub(super) fn limits(rules: Option<Held>, made: &BTreeSet<ElementId>, settings: 
 /// `design` expanded (`REQ-AUTO-142`): the elements automatic digitizing makes of it, in the order they sew,
 /// none of them automatic, without the Auto effect's settings, and each set as digitizing made it
 /// ([`DIGITIZED_AS`]). A part without a name of its own takes its shape's, as the notices name it, with the
-/// thread names of `profile`'s palette, and a piece of the base layer its thread's, `Red base layer (1)`. The design keeps what the cap held the automatic design to
+/// thread names of `profile`'s palette, and a piece of the base layer its thread's, `Base layer 1, Red`. The design keeps what the cap held the automatic design to
 /// ([`DesignSettings::cap`]), and none of its marks or guides, which steer automatic shapes only. What was
 /// said of digitizing comes back with it, and one warning names what Expand couldn't keep (`SC-W0922`).
 /// Digitizing has `budget`'s work, as planning gives it, and so does naming, which names nothing when it
@@ -143,7 +143,7 @@ pub fn expand(design: &Design, profile: &MachineProfile, budget: &Budget) -> Res
             let thread = thread_name(&element.thread, profile.palette.palette());
             let number = pieces.entry(thread.clone()).or_insert(0);
             *number += 1;
-            format!("{thread} base layer ({number})")
+            base_name(&thread, *number)
         };
         let own = element.name.clone().or_else(|| names.name_of(element.id.as_str()).map(str::to_string));
         let name = own.or_else(|| base.contains(&element.id).then(piece));

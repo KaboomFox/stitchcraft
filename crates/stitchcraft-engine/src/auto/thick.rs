@@ -349,7 +349,7 @@ mod tests {
         let line = Diagnostic { message: long.clone(), ..warned.clone() }.one_line();
         assert!(line.ends_with(HINT) && line.chars().count() <= WARNING_CHARS, "{}: {line}", line.chars().count());
         // With names, as many shapes are named as fit, and 1 when even 2 don't.
-        let named = |n: u8| format!("(\"Wisteria Violet column (12)\", vc:1234:fill#2~{n})");
+        let named = |n: u8| format!("(\"Column 12, Wisteria Violet\", vc:1234:fill#2~{n})");
         let make = |shown: usize| {
             let shapes: Vec<String> = (2..2 + shown).map(|n| named(u8::try_from(n).unwrap())).collect();
             let more = 14 - shown;
