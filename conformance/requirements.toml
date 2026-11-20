@@ -598,7 +598,7 @@ level = "L2"
 statement = "Lettering's setting widen_percent, StitchCraft's own, from 0 to 50 and 0 by default, widens every satin column of the text by that percent of its width on each side: lettering sets the glyph's pull_compensation_percent plus widen_percent on each satin column it places. Running stitches and fills are not changed. A value outside 0 to 50 is set at the nearest, with a warning that names widen_percent and the range. Lettering::take reads it by that name, so stitch lettering and the Lettering effect's record take it."
 rationale = "Small Font's columns, widened, sew bold letters at heights where no bold font sews (M14.9): a fifth of the width on each side keeps every counter that Small Font keeps today from 8 mm up, on its 62 letters and digits. Pull compensation is how Ink/Stitch's fonts already widen a column as it sews, so the glyphs stay as their authors drew them."
 milestone = "M14"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-SVG-009"

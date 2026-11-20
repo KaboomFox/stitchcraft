@@ -249,7 +249,7 @@ fn req_font_011_lines_align_by_the_width_of_their_glyphs_boxes() {
     );
     assert_eq!(Align::default(), Align::Left);
     let settings: Vec<(&str, &str, &str)> = SETTINGS.iter().map(|setting| (setting.name, setting.takes, setting.default)).collect();
-    assert_eq!(settings.len(), 10);
+    assert_eq!(settings.len(), 11);
     assert_eq!(
         [settings[0], settings[3], settings[4], settings[5], settings[6]],
         [
@@ -270,6 +270,7 @@ fn req_font_011_lines_align_by_the_width_of_their_glyphs_boxes() {
         back_and_forth: true,
         trim: Trim::Off,
         color_sort: ColourSort::Off,
+        widen_percent: 0.0,
     };
     assert_eq!(Lettering::default(), plain);
 }
@@ -516,6 +517,7 @@ fn req_vc_026_a_setting_is_taken_by_its_name_from_its_value_as_text() {
         back_and_forth: false,
         trim: Trim::Word,
         color_sort: ColourSort::Line,
+        widen_percent: 0.0,
     };
     assert_eq!(how, taken);
     // A value that doesn't read, a setting of a text along a path and a name that is none change nothing.
