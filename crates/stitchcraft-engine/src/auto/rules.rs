@@ -144,10 +144,10 @@ pub const RULES: [Rule; 10] = [
     Rule {
         id: RuleId::Wide,
         label: "Wide",
-        is: "wider than {auto_max_satin_width_mm} somewhere and no wider than {auto_max_split_satin_width_mm} anywhere, with one centre line \
-             along which its width varies by no more than {auto_max_unevenness} of itself, and a column by the rules below",
-        sewn: "one satin column whose stitches split into pieces no longer than {longest}, at random places. At the setting's default no part \
-               is wide",
+        is: "wider than {auto_max_satin_width_mm} somewhere and no wider than the widest split satin column anywhere, once a person raises \
+             it from its default, {auto_max_split_satin_width_mm}, at which no part is wide. It has one centre line along which its width \
+             varies by no more than {auto_max_unevenness} of itself, and is a column by the rules below",
+        sewn: "one satin column whose stitches split into pieces no longer than {longest}, at random places",
         bounds: &[MAX_SPLIT_SATIN_WIDTH, MAX_UNEVENNESS],
     },
     Rule {

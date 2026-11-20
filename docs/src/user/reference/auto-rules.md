@@ -9,12 +9,13 @@ Automatic digitizing chooses the stitches of each part of a shape by the first o
 | Asked (`asked`) | of a shape whose `auto_stitch` names a stitch, and can sew so | that stitch: a running stitch along its centre lines, satin columns along them, or a tatami fill of the whole shape | [`auto_stitch`](params/auto.md#auto_stitch) |
 | Speck (`speck`) | smaller than 1 mm² | merged into the neighbour it shares the longest edge with, or left out when it shares none | [`auto_min_area_mm2`](params/auto.md#auto_min_area_mm2) |
 | Line (`line`) | nowhere wider than the design's narrowest satin stroke, 1 mm | a running stitch along its centre lines, a triple run from 0.5 mm wide | [`auto_min_triple_run_width_mm`](params/auto.md#auto_min_triple_run_width_mm) |
+| Wide (`wide`) | wider than 7 mm somewhere and no wider than 7 mm anywhere, with one centre line along which its width varies by no more than 0.3 of itself, and a column by the rules below | one satin column whose stitches split into pieces no longer than 7 mm, at random places. At the setting's default no part is wide | [`auto_max_split_satin_width_mm`](params/auto.md#auto_max_split_satin_width_mm), [`auto_max_unevenness`](params/auto.md#auto_max_unevenness) |
 | Area (`area`) | wider than 7 mm somewhere | a tatami fill. A piece of it narrower than 4 mm leaves the fill when the rules below make it a line or a column | [`auto_max_satin_width_mm`](params/auto.md#auto_max_satin_width_mm), [`auto_min_fill_width_mm`](params/auto.md#auto_min_fill_width_mm) |
 | Compact (`compact`) | smaller in area than 3 times its width squared | a tatami fill | [`auto_min_slenderness`](params/auto.md#auto_min_slenderness), [`auto_prefer`](params/auto.md#auto_prefer) |
 | Uneven (`uneven`) | of several centre lines, with a width that varies along them by more than 0.3 of itself | a tatami fill. A piece of it narrower than the narrowest satin stroke leaves the fill as a line | [`auto_max_unevenness`](params/auto.md#auto_max_unevenness), [`auto_fill_uneven`](params/auto.md#auto_fill_uneven), [`auto_prefer`](params/auto.md#auto_prefer) |
 | Arms (`arms`) | reaching from one of its centre lines, on both sides of it, more than 1.4 times as far as the widest circle that fits inside it on its lines | a tatami fill | [`auto_max_reach`](params/auto.md#auto_max_reach) |
 | Column (`column`) | anything else | satin columns along its centre lines |  |
-| Refused (`refused`) | a column that can't be drawn, that would sew a stitch longer than 7 mm between its rails, or that would sew more than 2 mm of one rail to 1 mm of the other | a tatami fill | [`auto_max_satin_width_mm`](params/auto.md#auto_max_satin_width_mm) |
+| Refused (`refused`) | a column that can't be drawn, that would sew a stitch longer than 7 mm between its rails and isn't wide, or that would sew more than 2 mm of one rail to 1 mm of the other | a tatami fill | [`auto_max_satin_width_mm`](params/auto.md#auto_max_satin_width_mm) |
 
 `SC-I0912` names the rule each part of a shape sewed by, with the word in brackets above.
 
@@ -45,6 +46,7 @@ A shape's settings are those of VectorCraft's Auto effect on it, or on the group
 | [`auto_base_stitch_length_mm`](params/auto.md#auto_base_stitch_length_mm) | 3 mm | yes |
 | [`auto_base_keep_holes`](params/auto.md#auto_base_keep_holes) | true | yes |
 | [`auto_max_satin_width_mm`](params/auto.md#auto_max_satin_width_mm) | 7 mm | no: advanced |
+| [`auto_max_split_satin_width_mm`](params/auto.md#auto_max_split_satin_width_mm) | 7 mm | no: advanced |
 | [`auto_min_triple_run_width_mm`](params/auto.md#auto_min_triple_run_width_mm) | 0.5 mm | no: advanced |
 | [`auto_min_slenderness`](params/auto.md#auto_min_slenderness) | 3 | no: advanced |
 | [`auto_max_unevenness`](params/auto.md#auto_max_unevenness) | 0.3 | no: advanced |
