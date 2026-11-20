@@ -510,6 +510,18 @@ A style is a named set of these settings. `stitch plan --style logo` suits flat 
 prefers satin columns, and fills no uneven part and merges no thin line. `--style photo` is the defaults. The
 [rules' reference](../reference/auto-rules.md) lists what each style sets, and every setting with its tier.
 
+Which style a design needs is your choice: StitchCraft doesn't guess it. Flat art, lettering and ink
+drawings keep their lines and columns in the `logo` style, and lose detail in the `photo` style. A traced
+photo sews thin in the `photo` style, and thick in the `logo` style, where its ragged patches keep their
+columns. A picture of both kinds, such as a label on a photo, wants each style in a part of it. Give that
+part its own settings in VectorCraft, or hold its lines with a mark (`--keep`).
+
+When the other style would sew the design otherwise, planning says so once
+([`SC-I0923`](../reference/diagnostics.md#sc-i0923)). It counts the thin lines merged or kept and the
+parts filled or sewn as satin columns that the other style would sew another way, and names that style.
+The notice changes nothing, and it doesn't say which style is right: plan the design in the other style
+and compare the previews. A design that both styles sew alike gets no notice.
+
 ### Settings
 
 Each rule goes by the settings of the shape it digitizes, and a shape that sets none takes the defaults,

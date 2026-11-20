@@ -3365,7 +3365,7 @@ level = "L2"
 statement = "When the style changes how a design sews, `stitch plan` says so in one info notice, and the notice never changes what sews. Digitized with `auto_fill_uneven` on, as in the photo style, a design whose thin lines merged (REQ-AUTO-090) or whose parts were filled by the rule uneven (REQ-AUTO-032) gets a notice that counts both and names the logo style, which keeps them as lines and columns. Digitized with it off, as in the logo style, a design with ragged thin lines that would merge, or with parts that the rule uneven would fill, gets a notice that counts both and names the photo style, which merges and fills them. The counts are those of the design as digitized, and a design that the other style would sew alike gets no notice. The notice gives no opinion of what the picture shows."
 rationale = "A wrong style is said today, but spread out: each merged line has its own SC-I0915, and a photo in the logo style shows as a thick spot of SC-W0913. One notice tells the person that the choice matters for this design and which way the other style goes, without a guess that M13.42 found unreliable. It goes by counts the rules already make, so it holds for any picture."
 milestone = "M13"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-AUTO-031"

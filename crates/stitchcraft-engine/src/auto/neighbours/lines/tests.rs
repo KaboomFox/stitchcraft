@@ -50,7 +50,7 @@ fn run(elements: Vec<Element>, budget: &Budget) -> (Vec<String>, Vec<String>) {
 /// The ids of what `merged` gives, its lines kept by `marks`, and what it says.
 fn marked(elements: Vec<Element>, marks: &Marks, budget: &Budget) -> (Vec<String>, Vec<String>) {
     let (flattened, rules) = flattened(elements);
-    let (out, _) = merged(flattened, &rules, NARROWEST, marks, budget);
+    let (out, ..) = merged(flattened, (&rules, &[]), NARROWEST, marks, budget);
     (out.elements.iter().map(|(_, element)| element.id.to_string()).collect(), out.said.iter().map(ToString::to_string).collect())
 }
 
@@ -99,7 +99,7 @@ fn a_line_whose_area_merges_whole_sews_nothing_and_its_trim_has_no_place() {
 fn a_line_a_hair_from_the_rest_of_its_own_area_rejoins_it_across_the_gap() {
     // 0.02 mm apart, nearer than twice the shapes' tolerance.
     let (flattened, rules) = flattened(vec![auto("a", &[square((0.0, 0.0), (10.0, 10.0)), strand(10.02)], &[])]);
-    let (out, merges) = merged(flattened, &rules, NARROWEST, &Marks::default(), &Budget::DEFAULT);
+    let (out, merges, _) = merged(flattened, (&rules, &[]), NARROWEST, &Marks::default(), &Budget::DEFAULT);
     let said: Vec<String> = out.said.iter().map(ToString::to_string).collect();
     assert_eq!(
         said,
@@ -262,7 +262,7 @@ fn a_line_merges_into_no_area_whose_box_only_is_near_it() {
 fn a_line_beside_no_area_stays_in_its_area_when_another_line_of_it_merges() {
     let elements = vec![auto("left", &[square((0.0, 0.0), (10.0, 10.0))], &[]), auto("lines", &[strand(10.0), strand(40.0)], &[])];
     let (flattened, rules) = flattened(elements);
-    let (out, merges) = merged(flattened, &rules, NARROWEST, &Marks::default(), &Budget::DEFAULT);
+    let (out, merges, _) = merged(flattened, (&rules, &[]), NARROWEST, &Marks::default(), &Budget::DEFAULT);
     assert_eq!(merges.len(), 1);
     // `lines` keeps its far line, and sews it.
     let Some((_, element)) = out.elements.get(1) else { panic!("{} elements", out.elements.len()) };
@@ -270,4 +270,34 @@ fn a_line_beside_no_area_stays_in_its_area_when_another_line_of_it_merges() {
     let parts = parts_of(path, *rule, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
     assert_eq!((element.id.as_str(), parts.len()), ("lines", 1));
     assert!((ops::area_of(&parts) - 5.5).abs() < 1e-6, "{}", ops::area_of(&parts));
+}
+
+#[test]
+fn req_auto_151_an_area_that_keeps_its_lines_counts_those_that_the_other_style_merges() {
+    let off = [(crate::auto::FILL_UNEVEN, "false")];
+    let elements = || vec![auto("left", &[square((0.0, 0.0), (10.0, 10.0))], &off), auto("line", &[strand(10.0)], &off)];
+    let count = |budget: &Budget, other: bool| {
+        let elements = elements();
+        let (flattened, rules) = flattened(elements.clone());
+        let others = if other { crate::auto::style::others(&elements, &rules) } else { Vec::new() };
+        let (out, merges, would) = merged(flattened, (&rules, &others), NARROWEST, &Marks::default(), budget);
+        let ids: Vec<String> = out.elements.iter().map(|(_, element)| element.id.to_string()).collect();
+        (ids, merges.len(), would, out.said.iter().map(ToString::to_string).collect::<Vec<_>>())
+    };
+    // The line stays, and is counted once: the photo style would merge it.
+    let full = count(&Budget::DEFAULT, true);
+    assert_eq!(full, (vec!["left".to_string(), "line".to_string()], 0, 1, Vec::new()));
+    assert_eq!(count(&Budget::DEFAULT, false).2, 0);
+    // With too little work, the count says so, and the line stays all the same.
+    let (mut seen, mut work) = (BTreeSet::new(), 0);
+    loop {
+        let (ids, merges, would, said) = count(&Budget { max_work: work, ..Budget::DEFAULT }, true);
+        if (ids.clone(), merges, would, said.clone()) == full {
+            break;
+        }
+        assert_eq!((ids, merges), (vec!["left".to_string(), "line".to_string()], 0), "{work}");
+        seen.extend(said.iter().filter_map(|said| said.split(" needed more").next().map(str::to_string)));
+        work += 1;
+    }
+    assert!(seen.contains("info SC-I0923: Finding the thin lines that the other style would merge"), "{seen:?}");
 }

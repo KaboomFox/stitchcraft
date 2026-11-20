@@ -194,22 +194,21 @@ fn req_auto_150_the_style_is_the_persons_choice_and_none_is_guessed() {
 const PLAIN: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" width="30mm" height="30mm" viewBox="0 0 30 30"><rect id="r" x="5" y="5" width="20" height="10" fill="red"/></svg>"#;
 
 #[test]
-#[ignore = "planned: M13.42 builds the notice that the style changes how a design sews"]
 fn req_auto_151_stitch_plan_says_when_the_other_style_would_sew_a_design_otherwise() {
     let dir = TempDir::new("plan-style-notice");
     let notice = |design: &str, options: &[&str]| {
         let out = run(&plan_t(&dir, design, options).unwrap());
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
-        out.stderr.lines().filter(|line| line.contains("`--style logo`") || line.contains("`--style photo`")).map(str::to_string).collect::<Vec<_>>()
+        out.stderr.lines().filter(|line| line.starts_with("info SC-I0923")).map(str::to_string).collect::<Vec<_>>()
     };
     // In the photo style, the defaults, the uneven T is filled: one notice counts it and names the logo style.
     let photo = notice(THICK_AND_THIN, &[]);
     assert_eq!(photo.len(), 1, "{photo:?}");
-    assert!(photo[0].starts_with("info SC-I") && photo[0].contains("1 part filled as uneven") && photo[0].contains("`--style logo`"), "{photo:?}");
+    assert!(photo[0].contains("1 part filled by the rule uneven") && photo[0].contains("`--style logo`"), "{photo:?}");
     // In the logo style it keeps its columns: the notice names the photo style, which would fill it.
     let logo = notice(THICK_AND_THIN, &["--style", "logo"]);
     assert_eq!(logo.len(), 1, "{logo:?}");
-    assert!(logo[0].contains("1 part that the photo style fills") && logo[0].contains("`--style photo`"), "{logo:?}");
+    assert!(logo[0].contains("1 part sewn as satin columns would be filled") && logo[0].contains("`--style photo`"), "{logo:?}");
     // A rectangle sews alike in both styles, and nothing is said.
     assert!(notice(PLAIN, &[]).is_empty() && notice(PLAIN, &["--style", "logo"]).is_empty());
 }
