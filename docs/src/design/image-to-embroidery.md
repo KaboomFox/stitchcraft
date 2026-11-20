@@ -497,7 +497,7 @@ of main's, but no measure gives 0.2 mm, so it would be tuned to them.
 | Traced magnolia, photo | 217.5, 226.3 | 4.22, 3.97 | 2,880, 2,901 | |
 | Traced coleus, photo | 306.3, 338.0 | 4.16, 5.31 | 82, 94 | |
 | Greylag goose, photo | 156.8, 207.3 | 4.37, 3.80 | 2,373, 2,381 | |
-| Mespelbrunn castle, photo | 91.8, 96.3 | 3.82, 4.53 | 1,939, 1,931 | |
+| Traced castle, photo | 91.8, 96.3 | 3.82, 4.53 | 1,939, 1,931 | |
 
 The badge sews as on main, and planning takes 5 % longer. The third prototype misses the bar in each of
 its parts. The running dog's area at 3 fills rises 18 mm² and the other dog's 10 mm², where the noise is
@@ -517,30 +517,36 @@ fills comes with the columns that the outline drawn again adds, wide ones too, a
 reshapes. The 2 photos' thickest spots and the stitches astray come with the outline drawn again and its
 even spacing, not with any column.
 
-#### Decisions for the owner
+#### What the step decided
 
-- **The tolerance,** how far the outline drawn again may lie from the drawing: 0.05 mm is recommended,
-  a quarter of a running stitch's own tolerance of 0.2 mm, and 2.5 times the jitter measured.
-- **What lands with it.** No prototype measured meets the step's bar. The outline drawn again alone raises
-  the area at 3 fills by up to 29 % and sews the patch's letters with fanned columns. A refusing test
-  with fixed bounds adds knife edges of its own and fills 391 letters. Rungs placed from the rails, with
-  less overlap under a part's column, still raise the dogs' and 2 photos' area and the stitches astray.
-  Recommended: the step stops here and main's rule stays. 2 findings may become steps of their own. Less
-  overlap under a part's column lowers main's own area at 3 fills, and needs a sew-out to show how much
-  overlap a column needs. Rungs placed from the rails could sew the columns main already makes, which
-  were not measured alone.
-- **A column that reads back otherwise.** Recommended: found and fixed where the column is built, as part
-  of this step. Leaving out the rung that doesn't read back passes the hand-made cases but hides the cause,
-  and the cause decides most of the photos' changes.
-- **Always on.** Recommended: every automatic part is measured on its outline drawn again. A setting to
-  turn it off would give back rules that depend on the drawing, which helps no picture.
+The owner chose on 2026-11-20 to stop the step after these 3 rounds, and main's rule stays. No prototype
+meets the step's bar. Measured against main on each round's base, the outline drawn again alone raises the
+area at 3 fills by up to 29 % and sews the patch's letters with fanned columns. A refusing test with fixed
+bounds adds knife edges of its own and fills 391 letters. Rungs placed from the rails, with less overlap
+under a part's column, still raise the dogs' and 2 photos' area and the stitches astray.
+
+2 findings may become steps of their own:
+
+- **Less overlap under a part's satin column.** Keeping only the pull compensation, 0.4 mm, lowers main's
+  own area at 3 fills: the patch's falls from 420 to 278.5 mm² on base `efb23abe`. A sew-out has to show
+  how much overlap a column needs before a profile may change.
+- **Rungs placed from the rails on the columns main already makes.** Placed rungs fan less (the 90th
+  percentile of the fan falls from 3.62 to 1.87 on the pictures) but lean more and cross more. They were
+  measured only with the outline drawn again, never alone.
+
+The step opens again only with a rule that keeps the drawing out of the choice and doesn't raise the area
+at 3 fills, measured on the whole set. The prototype's choices would then stand as they were measured: a
+tolerance of 0.05 mm, a quarter of a running stitch's own tolerance of 0.2 mm and 2.5 times the jitter
+measured; a column that reads back otherwise fixed where it is built, since leaving out its rung hides the
+cause of most of the photos' changes; and every automatic part measured on its outline drawn again, with
+no setting to turn it off.
 
 #### What isn't built
 
 Nothing: `REQ-AUTO-135` to `REQ-AUTO-139` are planned, and their cases are marked planned. The cases of
-`REQ-AUTO-135` to `REQ-AUTO-138` fail on main. The case of `REQ-AUTO-139` passes on main: it measures each
-column's stitches in the plan, against the bounds that the build must keep. The 3 prototypes' code and
-the measures are kept with the step's notes, not in the repository.
+`REQ-AUTO-135` to `REQ-AUTO-138` fail on main. The case of `REQ-AUTO-139` passes on main: it measures
+each column's stitches in the plan against the bounds that a rule which reopens the step must keep. The 3 prototypes' code and the
+measures are kept with the step's notes, not in the repository.
 
 ## Stitch types by width
 
