@@ -403,3 +403,18 @@ which parts sew as satin columns, and not always for the better.
 - **Default:** `0`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_column_overlap_mm`
+
+**Overlap under a column.** How far an area stays under a satin column that digitizing makes of a part of another shape and
+sews after it: the area is cut away that far inside the column's edge, and reaches that far under
+it where they meet. Left empty, the default, it is the overlap, as everywhere else. A column's
+thread pulls its stitches in by about its pull compensation, 0.4 mm, so less than that may show
+fabric between the fill and the column. Less overlap sews thinner where a column edges a fill, but
+only a sew-out shows how little is enough. A value above the overlap reads as the overlap. Under
+an area, a running line or a satin column drawn as a stroke, lettering's too, the overlap stays.
+
+- **Accepts:** a length from 0 to 2 mm, or empty
+- **Default:** empty
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
