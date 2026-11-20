@@ -43,7 +43,7 @@ pub enum Command {
     Plan(PlanArgs),
     /// Expand an automatic design: write it as the ordinary shapes automatic digitizing makes of it, each
     /// with its own StitchCraft effect, to edit one by one. A VectorCraft document keeps its traced shapes,
-    /// hidden and locked, under a new group of the parts; an SVG file has the parts alone. The expanded
+    /// hidden and locked, under a new group of the parts. An SVG file has the parts alone. The expanded
     /// design sews as the automatic one did, and no longer changes with the picture or the Auto effect.
     Expand(ExpandArgs),
     /// Set a text in an embroidery font, a folder in Ink/Stitch's font format, plan it for a machine and

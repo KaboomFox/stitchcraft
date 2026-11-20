@@ -1,6 +1,6 @@
 # Image to embroidery
 
-<!-- implements: crates/stitchcraft-engine/src/auto/**, crates/stitchcraft-engine/src/moves.rs, crates/stitchcraft-engine/src/moves/**, crates/stitchcraft-plan/src/thickness/**, apps/stitchcraft-cli/src/commands/palette.rs, apps/stitchcraft-cli/src/trace.rs, apps/stitchcraft-cutout/src/**, apps/stitchcraft-cli/src/subject.rs, apps/stitchcraft-cli/src/subject/**, apps/stitchcraft-cli/src/commands/cutout.rs, crates/stitchcraft-svg/src/lettering/pictures.rs, crates/stitchcraft-svg/src/lettering/pictures/**, apps/stitchcraft-cli/src/text.rs, apps/stitchcraft-cli/src/keep.rs, crates/stitchcraft-engine/src/design/mark.rs, crates/stitchcraft-engine/src/design/mark/**, crates/stitchcraft-engine/src/names.rs, crates/stitchcraft-engine/src/names/** -->
+<!-- implements: crates/stitchcraft-engine/src/auto/**, crates/stitchcraft-engine/src/moves.rs, crates/stitchcraft-engine/src/moves/**, crates/stitchcraft-plan/src/thickness/**, apps/stitchcraft-cli/src/commands/palette.rs, apps/stitchcraft-cli/src/trace.rs, apps/stitchcraft-cutout/src/**, apps/stitchcraft-cli/src/subject.rs, apps/stitchcraft-cli/src/subject/**, apps/stitchcraft-cli/src/commands/cutout.rs, apps/stitchcraft-cli/src/commands/expand.rs, crates/stitchcraft-svg/src/lettering/pictures.rs, crates/stitchcraft-svg/src/lettering/pictures/**, apps/stitchcraft-cli/src/text.rs, apps/stitchcraft-cli/src/keep.rs, crates/stitchcraft-engine/src/design/mark.rs, crates/stitchcraft-engine/src/design/mark/**, crates/stitchcraft-engine/src/names.rs, crates/stitchcraft-engine/src/names/** -->
 
 Automatic digitizing makes a design that sews well from a picture of flat colours, such as a logo, clip
 art or a drawing, once it is traced into shapes. Settings on the shapes are optional. StitchCraft chooses
@@ -3170,15 +3170,50 @@ Each has a recommendation, which the step took.
 - **A text object's bold `font-weight` doesn't choose the bold font.** Recommended, and taken: the effect
   sews in the font it names or in the default, so documents sew as they did.
 
+### The build's measure
+
+**Measured** on 2026-11-20, the branch built at opt-level 2 (`crates/stitchcraft-testkit/examples/expand.rs`
+on the branch, not merged). Each design is planned automatic, expanded, and planned again with the same
+origin: at the engine, read back from the SVG file `stitch expand` writes, and, for the 5 designs traced
+into a VectorCraft document, read back from the document it writes.
+
+| Design | Parts | Engine | SVG file | `.vectorcraft` document |
+|---|---:|---|---|---|
+| Dog on turf, 6 threads | 157 | bit for bit | bit for bit | 4 needle points fewer of 9,599 |
+| Dog on turf, 9 threads | 175 | bit for bit | bit for bit | 2 needle points more of 10,175 |
+| Dog running, 6 threads | 150 | bit for bit | bit for bit | within 1.4e-13 mm |
+| Dog running, 9 threads | 192 | bit for bit | bit for bit | within 1.5e-13 mm |
+| Pear | 10 | bit for bit | bit for bit | within 5.7e-14 mm |
+| Lettered patch | 16 | bit for bit | bit for bit | |
+| Badges | 16 | bit for bit | bit for bit | |
+| Emblem | 10 | bit for bit | bit for bit | |
+| TS-13A to TS-13D, digitized halves | 22 to 78 | bit for bit | bit for bit | |
+| TS-13E, digitized half | 34 | bit for bit | within 6.4e-14 mm | |
+
+A VectorCraft document keeps points in points, so a part's millimetres read back to within a unit in their
+last place. Most products of a float and a point's size can't be written to read back exactly. The 2 dogs
+on turf sew the same few needle points otherwise at the engine when every point of their expanded design
+moves by a unit in its last place, so a fill's row there lies on a rounding's edge. Every other plan is the
+automatic one to 1e-13 mm. The traced badge of the command line's case writes the same PES bytes through both files.
+
+**Editing a part.** The largest fill of each expanded design was turned 45°, sewn as a contour fill, or
+deleted, and the other parts whose stitches changed were counted. On the badges, the emblem and TS-13A none
+to 3 change: the outline that sews with the fill and the part sewn next, which starts nearest where it ends.
+On the traced dogs 13 to 97 of 150 to 192 parts change. The cap at the end of planning accounts for most of
+them: it thins the plan where it sews thick, and an edited part changes where that is. With the cap out of
+reach, the turn changes no other part on the 9-thread dog on turf, and 18 on the 9-thread running dog, the
+parts the thread runs under and the next ones. A person who wants a part left alone by the cap sets its
+`digitized_as` to `no`.
+
+Stitched previews of the running dog, the lettered patch and TS-13C, automatic beside expanded beside
+expanded with its largest fill turned, show the first 2 alike. No golden file changes: what sews by default
+is the same.
+
 ### What isn't built
 
-- The Auto effect's preview in VectorCraft still draws the traced letters. A live effect is given one
-  object and no name ([RFC](rfc-vectorcraft-abi-v2.md), P6). The exported file and its preview picture
-  have the lettering.
-- A marker has one line of text. 2 lines take 2 markers.
-- A font is matched to the letters' weight, among 2 fonts. The letters' style, such as italic or script, doesn't choose a font yet.
-- The emblem's numbers are from a document traced earlier, kept outside the repository. A case in the
-  repository waits for a traced picture with lettered arcs among the fixtures.
+The Expand Embroidery filter in VectorCraft waits for the RFC's P11 and P10. Until then the person runs
+`stitch expand` and opens the document. The manifests declare `digitized_as` and `turn_stitches`
+already (`REQ-VC-035`).
 
 ## Marks that keep parts
 
@@ -3768,7 +3803,8 @@ it stays automatic. When no control gives what a person wants, Expand makes the 
 with ordinary effects, which the person edits one by one, as the automatic digitizing of other embroidery
 software leaves a design. The expanded design sews as the automatic one sewed, and it no longer changes
 when the picture, its marks or the Auto effect's settings change. Phase 1 recorded this decision on
-2026-11-20, with a prototype measured on 13 designs of the set of pictures. The build is a later phase.
+2026-11-20, with a prototype measured on 13 designs of the set of pictures, and the owner took each of its
+recommendations. The build followed the same day: `stitch expand` and `auto::expand`.
 
 ### The decision
 
@@ -3785,8 +3821,9 @@ planning thins the elements digitizing made and the lettering it placed, with th
 automatic shape (`REQ-AUTO-074`).
 
 Expand keeps them with one new setting common to every stitch effect, `digitized_as`: `no`, the default,
-for a shape set by hand, `part` for an element that sews as digitizing made it, and `base` for a piece of
-the base layer. Planning reads it from any element, so a person can also set it by hand, or turn it off
+for a shape set by hand, `part` for an element that sews as digitizing made it, `base` for a piece of
+the base layer, and `lettering` for lettering that digitizing placed, which keeps its underlay and its
+pull in the cap's reach (`REQ-AUTO-120`, `REQ-AUTO-121`). Planning reads it from any element, so a person can also set it by hand, or turn it off
 on a part. The cap's limits become design settings, kept with the document as its machine is
 ([design settings](vectorcraft-integration.md#design-settings-and-machine-kept-with-the-document)). With
 them the expanded design plans to the automatic plan exactly (`REQ-AUTO-142`, `REQ-AUTO-143`).
@@ -3805,6 +3842,7 @@ interoperability contract.
 | A guided fill (`REQ-AUTO-109`) | the fill, and its guide line grouped with it | the fill effect, guided |
 | Lettering it placed | the letters' columns and lines, as they sew | as a satin column and a line |
 | A part left out, the background or a speck | nothing | none |
+| Lettering it placed for a marker | its columns | `digitized_as` = `lettering` |
 | A piece of the base layer | a fill under the details | the fill effect, with `digitized_as` = `base` |
 | The run from one part to the next | nothing: planning finds it | `digitized_as` = `part` on both |
 | The cap's thinning | nothing: planning thins the plan | `digitized_as` = `part`, and the design's limits |
@@ -3820,21 +3858,27 @@ the row. 2 elements also carried `auto_fill_outline`, a setting of the Auto effe
 Each part takes its shape's name ([names of shapes](#names-of-shapes)), numbered as the notices number
 the parts. What Expand can't keep is said by a coded warning, and nothing is dropped silently:
 
-- The lettering it placed becomes columns, and its text can't be edited as text.
+- Lettering becomes columns, and its text can't be edited as text. Lettering set in a font no longer
+  marks its underlay as lettering does (`SC-W0922`).
+- A shape that needs more work than the budget allows is left out, as planning leaves it out
+  (`SC-E0004`), and `SC-W0922` names it.
+- A part cut to a clip is written whole into a VectorCraft document, which `SC-W0922` names. No part of
+  the set has one: digitizing cuts its shapes to their clips first.
 - An SVG file sewn by Ink/Stitch loses `digitized_as` and the design's limits, so Ink/Stitch sews it with
   jumps and without the cap.
-- A guided fill's guide is left out where the writer can't group it with its fill.
-- A shape that needs more work than the budget allows is left out, as planning leaves it out
-  (`SC-E0004`).
+
+A guided fill is written with its guide, in a group with it, as are a part's start, end and target markers.
 
 ### Expand on the command line and in VectorCraft
 
 **The command line.** `stitch expand picture.vectorcraft -o expanded.vectorcraft` writes the documented
-`.vectorcraft` format, and `-o expanded.svg` an SVG file with Ink/Stitch's attributes. The traced group
-stays in the document, hidden and locked, below a new group of the expanded parts, as Image Trace keeps
-the source image beside its paths. The document stays the one VectorCraft saved but for these 2 groups, as
-`--traced` keeps it but for the names ([names](#names-of-shapes)). A picture given to `stitch expand` is
-traced first, as `stitch plan` traces it.
+`.vectorcraft` format, and `-o expanded.svg` an SVG file with Ink/Stitch's attributes
+(`stitchcraft_svg::written`). It reads the design as `stitch plan --auto` does. Each object of a layer that
+holds an automatic shape stays in the document, hidden and locked, below a new group of the expanded
+parts, "Expanded embroidery", as Image Trace keeps the source image beside its paths
+(`stitchcraft_vectorcraft::expanded`). The document stays the one VectorCraft saved but for those objects'
+`visible` and `locked`, the new group, the document's `next_id` and the Design Settings filter's data, which
+keeps the cap's limits. A picture given to `stitch expand` is traced first, as `stitch plan` traces it.
 
 **VectorCraft, today.** In one undo step, a filter may replace the selected paths with new objects that
 have StitchCraft's effect records, as Stroke to Satin does

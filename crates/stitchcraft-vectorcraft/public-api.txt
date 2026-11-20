@@ -1,6 +1,12 @@
 # The public API of stitchcraft-vectorcraft, as `cargo xtask api` lists it (cargo-public-api 0.52.0, -sss).
 # Generated: do not edit. A change here is a change other code can see; say why in the pull request.
 pub mod stitchcraft_vectorcraft
+pub mod stitchcraft_vectorcraft::expanded
+pub struct stitchcraft_vectorcraft::expanded::Written
+pub stitchcraft_vectorcraft::expanded::Written::document: alloc::vec::Vec<u8>
+pub stitchcraft_vectorcraft::expanded::Written::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub const stitchcraft_vectorcraft::expanded::GROUP: &str
+pub fn stitchcraft_vectorcraft::expanded::written(&[u8], &stitchcraft_engine::design::Design, &stitchcraft_engine::design::Design, &stitchcraft_plan::profile::MachineProfile, &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_vectorcraft::expanded::Written, stitchcraft_core::diag::Diagnostic>
 pub mod stitchcraft_vectorcraft::filter
 pub struct stitchcraft_vectorcraft::filter::Given
 pub stitchcraft_vectorcraft::filter::Given::artboard_centre: core::option::Option<stitchcraft_core::units::Point>
@@ -90,6 +96,7 @@ pub fn stitchcraft_vectorcraft::lettering::shown(&str, core::option::Option<&str
 pub mod stitchcraft_vectorcraft::settings
 pub const stitchcraft_vectorcraft::settings::PROFILE: &str
 pub const stitchcraft_vectorcraft::settings::SETTINGS_FILTER: &str
+pub fn stitchcraft_vectorcraft::settings::kept_cap(&serde_json::value::Value) -> core::option::Option<stitchcraft_engine::auto::Held>
 pub fn stitchcraft_vectorcraft::settings::kept_data(&stitchcraft_engine::design::DesignSettings, &stitchcraft_plan::profile::MachineProfile) -> serde_json::value::Value
 pub enum stitchcraft_vectorcraft::RouteMarker
 pub stitchcraft_vectorcraft::RouteMarker::End

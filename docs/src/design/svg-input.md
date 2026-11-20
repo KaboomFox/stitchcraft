@@ -371,9 +371,10 @@ names, with the label and help a dialog shows, are listed once in `stitchcraft_e
 which a VectorCraft document's settings are read with too
 ([integration](vectorcraft-integration.md#design-settings-and-machine-kept-with-the-document)).
 
-The test kit writes such files too, so that Ink/Stitch can sew the differential's test sheets. It writes a
-design's elements with their parameters, and the settings that aren't StitchCraft's defaults
-(`stitchcraft_testkit::inkstitch`). It names Ink/Stitch's namespace by the reader's own constant,
+StitchCraft writes such files too (`stitchcraft_svg::written`): `stitch expand` an expanded design, and the
+test kit the differential's test sheets, so that Ink/Stitch can sew them (`stitchcraft_testkit::inkstitch`).
+It writes a design's elements with their parameters and names, and the settings that aren't StitchCraft's
+defaults. It names Ink/Stitch's namespace by the reader's own constant,
 `stitchcraft_svg::inkstitch::INKSTITCH_NS`.
 
 The fourth, `rotate_on_export`, turns the design about the hoop's centre as it is written into a machine
@@ -384,6 +385,10 @@ Ink/Stitch's preferences offer 90 either way, and its writer turns by any number
 no turn, and doesn't write a file for JSON that isn't a number. Ink/Stitch also keeps `thread-palette`
 there, which names the threads in its own lists and print-outs and doesn't change what the adapter sews,
 and the file's version (below). `SC-W0802` names any other element of Ink/Stitch's there.
+
+A file `stitch expand` writes also keeps what the cap holds its parts to, by the names of the Auto effect's
+settings, such as `auto_thick_cap_fills` (M13.26). They are StitchCraft's own, which Ink/Stitch passes over,
+and `SC-W0802` names a value that doesn't read ([Expand](image-to-embroidery.md#expand)).
 
 ## Files of older Ink/Stitch versions
 
