@@ -293,7 +293,7 @@ fn the_scan_finds_the_layers_objects_their_ids_and_the_document_s_keys() {
     // A string or a number in a layer's list is in it, and a document of a token alone reads.
     let listed = |inside: &str| scan(format!(r#"{{"layers": [{{"kind": {{"children": [{inside}]}}}}]}}"#).as_bytes(), "f").unwrap().layers[0].empty;
     assert_eq!((listed(r#""a""#), listed("1"), listed("")), (false, false, true));
-    assert!(scan(b"5", "f").is_some());
+    assert!(scan(b"5", "f").is_some() && scan(b" 5", "f").is_some());
     // Brackets that don't match aren't JSON.
     for broken in [&b"{]"[..], b"[}", b"{\"a\": [}", b"[1"] {
         assert!(scan(broken, "f").is_none(), "{}", String::from_utf8_lossy(broken));
