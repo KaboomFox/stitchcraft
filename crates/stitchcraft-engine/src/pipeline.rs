@@ -20,9 +20,10 @@
 //! the ones before it left (`REQ-GEN-004`), and one that needs more ends planning there: the design needs
 //! more stitches than it may have, so no plan could come of it, and making the rest would only fill memory.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
-use stitchcraft_core::{Budget, Code, Diagnostic};
+use stitchcraft_core::{Budget, Code, Diagnostic, ElementId};
+use stitchcraft_params::Family;
 use stitchcraft_plan::{MachineProfile, StitchPlan};
 
 use crate::assemble::{Assembled, assemble_routed};
@@ -97,6 +98,13 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
         let layer = |sewn: Generated| if base.contains(&element.id) { Generated { layer: Layer::Base, ..sewn } } else { sewn };
         generated.extend(sewn.map(|sewn| (element, layer(sewn))));
     }
+    // The satin columns that digitizing made: the cap at the end of planning leaves their top stitches as they
+    // are (`REQ-AUTO-112`).
+    let columns: BTreeSet<ElementId> = generated
+        .iter()
+        .filter(|(element, sewn)| sewn.stitch_type.family() == Family::Satin && made.contains(&element.id))
+        .map(|(element, _)| element.id.clone())
+        .collect();
     let mut meter = budget.meter();
     // Where shapes sewn later cover the way between 2 elements that digitizing made, the needle runs under
     // them and leaves no jump thread (`REQ-AUTO-053`).
@@ -115,7 +123,7 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
             // A design digitized automatically is thinned where a spot sews above the cap (`REQ-AUTO-074`),
             // told where it sews thick (`SC-W0913`), and is written.
             if let (Some(held), Some(plan)) = (limits, plan.as_mut()) {
-                diagnostics.extend(thick::finished(plan, &held, (&base, &made), profile, budget));
+                diagnostics.extend(thick::finished(plan, &held, (&base, &made, &columns), profile, budget));
             }
             plan
         }

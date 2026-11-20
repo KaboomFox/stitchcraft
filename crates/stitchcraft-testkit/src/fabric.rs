@@ -41,10 +41,14 @@
 //! pixels. The cases and the before and after sheet read it here, beside the bare fabric, so that thread
 //! taken away is weighed against fabric shown.
 
+use std::collections::BTreeSet;
+
 use stitchcraft_core::{Budget, Code, Point, Rect};
 use stitchcraft_engine::auto;
 use stitchcraft_engine::design::{Cap, Clip, Design, Element, Join, Shape};
+use stitchcraft_engine::generate::stitch_type_of;
 use stitchcraft_engine::normalize::{region, stroke};
+use stitchcraft_params::Family;
 use stitchcraft_plan::{Rgb, Role, SewnStitch, StitchKind, StitchPlan};
 
 use crate::metrics::{Grid, band, crossing, disc, index, spans};
@@ -58,6 +62,28 @@ pub use cover::{BARE, Cover, FAR, GAP, cover, painted};
 pub use likeness::{Likeness, likeness};
 pub use shown::{NOTCH, Shown, shown};
 pub use stitchcraft_plan::thickness::{Limits, Measure, Report, Thickness};
+
+/// The ids of the satin columns that automatic digitizing makes of `design`: the cap at the end of planning
+/// leaves their top stitches as digitizing laid them (`REQ-AUTO-112`).
+pub fn columns(design: &Design) -> BTreeSet<String> {
+    let (elements, _) = auto::digitized(design, &Budget::DEFAULT);
+    let satin = |element: &&Element| stitch_type_of(element, &design.settings).is_some_and(|stitch_type| stitch_type.family() == Family::Satin);
+    elements.iter().filter(satin).map(|element| element.id.to_string()).collect()
+}
+
+/// The fills of thread at the thickest spot of `plan`, and of them the fills that the top stitches of
+/// `columns` lay there (`REQ-AUTO-073`).
+///
+/// # Panics
+///
+/// When the plan sews no stitch, or is too large to measure.
+pub fn thickest(plan: &StitchPlan, columns: &BTreeSet<String>) -> (f64, f64) {
+    let report = thickness(plan, &Limits::DEFAULT);
+    let column = |layer: &&stitchcraft_plan::thickness::Layer| {
+        layer.element.and_then(|element| plan.elements.get(element.index())).is_some_and(|id| columns.contains(id.as_str()))
+    };
+    (report.fills.value, report.stack.iter().filter(column).map(|layer| layer.top).sum())
+}
 
 /// How thick `plan` sews against `limits`, with the default budget's work.
 ///
