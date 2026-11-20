@@ -1566,7 +1566,8 @@ shapes sewn after it, and a satin column sewed 0.4 mm past both rails, whatever 
    `pull_compensation_mm` takes one value for each rail, and Ink/Stitch can sew such a column.
 3. **Pull compensation is a setting of its own,** `auto_pull_compensation_mm`, 0.4 mm. A rail with no shape
    sewn after it beside it gets that. A column then doesn't grow wider over a colour sewn before it or over
-   fabric.
+   fabric. A rail along a hole kept open has none (`REQ-AUTO-084`), and keeps none when the other rail sews
+   past a shape: each rail keeps the length it had, one value for each.
 
 An area is cut away under a shape sewn after it that covers part of it, the overlap inside that shape's
 edge. A shape narrower than twice the overlap then lies on the area whole.
