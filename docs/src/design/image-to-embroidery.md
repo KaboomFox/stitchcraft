@@ -3637,8 +3637,8 @@ It gives it 4 steps on standard input, where a picture of any size fits. They ar
 2. `file.place` places the picture's bytes, fitted inside a square `--size` millimetres across, or else
    inside the machine's hoop 0.5 mm in from each side, its aspect kept.
 3. `imageTrace.make` traces it in colour with the library's colours as they are, at most `--colours` of
-   them, by the Abutting method, so that the shapes share their edges. It fits their outlines with Paths 0
-   and Corners 0, unless `--style logo` is given ([the tracer's options](#the-tracers-options)).
+   them, by the Abutting method, so that the shapes share their edges. With `--fewer-points` it fits their
+   outlines with fewer points ([the tracer's options](#the-tracers-options)).
 4. `imageTrace.expand` keeps the paths, without the picture.
 
 VectorCraft saves the document into a folder of the command's own beside the machine file, named as
@@ -3674,8 +3674,8 @@ sew it unlike the tutorial's flow.
 
 ## Outlines thread can't show
 
-Roadmap step M13.51 measured the outlines of traced pictures and gives Image Trace fitting options of its
-own for the pictures `stitch plan` traces (`REQ-CLI-024`). Step M13.52 builds the smoothing pass that this
+Roadmap step M13.51 measured the outlines of traced pictures and gives `stitch plan` an option,
+`--fewer-points`, off by default, that asks Image Trace for fitting options of its own (`REQ-CLI-024`). Step M13.52 builds the smoothing pass that this
 section describes, as a setting off by default (`REQ-AUTO-131` to `REQ-AUTO-134`, planned), and adds the
 notice `SC-I0921`.
 
@@ -3773,10 +3773,10 @@ doesn't lose detail by that measure, and its colour error shows the loss.
   shapes and 32 stitches astray.
 - **Snap Curves To Lines** moves each measure by less than 2 neighbouring values of Paths or Corners do.
 
-**Built (M13.51).** Paths 0 and Corners 0 for every picture `stitch plan` traces, but those with the `logo`
-style, which keeps the tracer's defaults. Corners 0 would round each turn of a drawn logo under 90°, such as
-an octagon's. No traced logo with its source was measured, so the `logo` style keeps the
-defaults until one is. Noise stays 25.
+**Built (M13.51).** `stitch plan --fewer-points` sends Paths 0 and Corners 0 for a picture it traces, in
+every style. Noise stays 25. Without the option, the default, `stitch plan` sends no fitting option, as
+before M13.51. Corners 0 rounds each turn under 90° of a drawn logo, such as an octagon's, so a person
+leaves the option out for a logo.
 
 Each picture was traced from its source by VectorCraft 0.24.1's command line with the defaults and with
 the 2 options, and planned by this step's code. The pictures are the pear, the 4 dogs, the badge of the
@@ -3814,6 +3814,14 @@ fills of thread or more:
   the `logo` style, sews 18 % more stitches and 60 % more short ones.
 - **Rules.** 29 to 50 of each dog's 69 to 92 shapes sew by another rule, as the shapes' outlines change.
   The pear's shapes sew as they did.
+
+**Why the option is off by default.** The fewer points don't make a design better to the eye: the
+previews of the dogs with and without the options look alike, with other jumps. And they change how a
+traced picture sews far more than its outlines change. A shape's stitch rule reacts to how its outline
+is drawn, so a third to a half of each dog's shapes sew by another rule, more of the design sews thick,
+and one dog passes the warning's limit. Until that rule is steady against how an outline is drawn, which
+step M13.53 takes up, the fewer points aren't a gain a person gets for free. They wait for M13.53 to be
+measured again, and turned on by default if they then show a clear gain.
 
 The committed traces of the pear and the dogs are not traced again: they are the inputs of their own
 cases, and this step changes only what `stitch plan` asks the tracer.
@@ -3923,8 +3931,8 @@ drawn at 10 pixels per mm.
 
 On 2026-11-20 the owner decided:
 
-1. **The tracer's options.** Paths 0 and Corners 0 for pictures `stitch plan` traces, the `logo` style
-   keeping the defaults. M13.51 built them.
+1. **The tracer's options.** Paths 0 and Corners 0 as an option of `stitch plan`, off by default, as for
+   the smoothing pass. M13.51 built it.
 2. **The smoothing pass.** Off by default everywhere, pictures `stitch plan` traces included, and built all
    the same as a setting (M13.52).
 3. **The pear's teeth.** Thread shows them, so no default removes them. A person who wants a clean edge

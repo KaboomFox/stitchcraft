@@ -282,7 +282,10 @@ fn req_cli_012_the_picture_is_traced_for_the_machine_at_the_size_and_in_the_colo
     let args = ["plan", "photo.JPG", "-o", "photo.pes", "--profile", BROTHER_PE800_4X4.id, "--size", "80", "--colours", "4"];
     let (out, kept) = stitch(dir.path(), &args, None);
     assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
-    assert_eq!(kept.unwrap()["steps"], steps("photo.JPG", PICTURE, &BROTHER_PE800_4X4, Some(Mm::new(80.0).unwrap()), 4, Fitting::Defaults).to_string());
+    assert_eq!(
+        kept.unwrap()["steps"],
+        steps("photo.JPG", PICTURE, &BROTHER_PE800_4X4, Some(Mm::new(80.0).unwrap()), 4, Fitting::Defaults).to_string()
+    );
     assert!(text(&out.stdout).contains(&format!("  profile   {} (", BROTHER_PE800_4X4.id)), "{}", text(&out.stdout));
 }
 
