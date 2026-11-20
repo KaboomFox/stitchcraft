@@ -512,3 +512,29 @@ fn req_auto_157_an_area_that_needs_more_work_under_a_parts_column_keeps_its_regi
         assert_eq!(elements[0].shape, drawn, "{work}");
     }
 }
+
+#[test]
+fn req_auto_158_with_the_setting_at_the_overlap_an_area_takes_the_steps_it_took_before() {
+    // A square covered by a part's column on its right and meeting another below it. Empty or at the
+    // overlap, the setting leaves the area to the steps it took before it existed, so the area needs exactly
+    // the work it needed then. A hair under the overlap, the columns are set apart and it needs more.
+    let work = |kept: &'static str| {
+        let sewn = || {
+            let params: Vec<(&str, &str)> = if kept.is_empty() { Vec::new() } else { vec![("auto_column_overlap_mm", kept)] };
+            vec![
+                area_with("first", (0.0, 0.0), (10.0, 10.0), &params),
+                part_column(1, (6.0, 0.0), (12.0, 10.0)),
+                part_column(2, (0.0, 10.0), (6.0, 12.0)),
+            ]
+        };
+        least_work(|budget| reached(sewn(), budget).1)
+    };
+    let before = work("");
+    assert_eq!(before, BEFORE_WORK);
+    assert_eq!(work("1"), before);
+    assert!(work("0.999") > before, "{}", work("0.999"));
+}
+
+/// The work the square of the case above needs on the steps an area took before the setting, counted when
+/// the case was written: those steps charge as they did, and setting the columns apart charges more.
+const BEFORE_WORK: u64 = 24_477;
