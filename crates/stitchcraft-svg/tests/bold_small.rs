@@ -5,7 +5,7 @@
 //! the machine checkpoint, and its cases with it.
 
 // Test code may unwrap, panic and index (clippy.toml allows it in tests, but not in their helpers).
-#![allow(clippy::unwrap_used, clippy::panic)]
+#![allow(clippy::unwrap_used, clippy::panic, clippy::cast_possible_truncation)]
 
 use std::rc::Rc;
 
