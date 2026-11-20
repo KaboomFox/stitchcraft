@@ -158,12 +158,12 @@ and in Barstitch Bold. `stitch lettering "MATCH" --font FOLDER --height 15` sets
 - Do Barstitch Bold's wide columns pull the fabric in, or sew too thick where 2 strokes meet?
 - At 10 mm, where only Small Font sews, is the word too light beside the traced one?
 
-M14.9 plans bold lettering under the heights Barstitch Bold sews
-([design](../design/image-to-embroidery.md#bold-letters-under-the-bold-fonts-heights)). At MC-8, sew the
-made-up word Hexmira at 8 and at 10 mm, each alone and on a cream field 3 mm round it, in 4 ways side by
-side. The 4 are Small Font as today, Small Font with `--widen-percent 20` once built (the step's probe
-writes it until then), Barstitch Bold set at that height and, last, Barstitch Bold with its pull
-compensation scaled to the height.
+M14.9 built `--widen-percent`, off by default, and plans its choice for bold lettering under the heights
+Barstitch Bold sews ([design](../design/image-to-embroidery.md#bold-letters-under-the-bold-fonts-heights)).
+At MC-8, sew the made-up word Hexmira at 8 and at 10 mm, each alone and on a cream field 3 mm round it,
+side by side: Small Font with `--widen-percent` 0, 10 and 20, made by the setting itself for the 4 × 4 in
+hoop, then Barstitch Bold set at that height and Barstitch Bold with its pull compensation scaled to the
+height. The automatic choice's limits, 20 % and from 8 mm, wait for this sew-out.
 
 - Which reads as bold as the traced block letters of the lettered patch?
 - Are the counters of the a, the e and the R open, or filled with thread?

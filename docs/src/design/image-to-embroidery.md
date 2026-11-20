@@ -3101,14 +3101,16 @@ size, such as 6 mm for a serif text font, is given with the font
 ([Hatch](https://blog.hatchembroidery.com/choosing-the-right-size-embroidery-lettering-for-your-project/)).
 No source gives a least size for counters. The 1 mm used here is the narrowest column's.
 
-**The design** (`REQ-FONT-024`, `REQ-AUTO-140`, `REQ-AUTO-141`), planned, for the owner's sew-out to
-confirm:
+**The design** (`REQ-FONT-024`, `REQ-AUTO-140`, `REQ-AUTO-141`). The setting is built, and off by default.
+The 2 automatic choices wait for the owner's sew-out to confirm their limits:
 
 - **`widen_percent`**, a lettering setting of StitchCraft's own beside Ink/Stitch's, from 0 to 50 and 0 by
   default. With 20, a satin column 1 mm wide sews 0.2 mm wider on each side: lettering adds the value
   to the `pull_compensation_percent` of every satin column it places. Running stitches and fills don't
-  change, and a value outside 0 to 50 is set at the nearest with a warning. `stitch lettering --widen-percent` and the
-  Lettering effect's record take it by that name.
+  change, and a value outside 0 to 50 is set at the nearest with `SC-W0102`, as the parameters' registry
+  holds a value in its range. A glyph's own value that doesn't read stays, for the planner to refuse. At 0
+  a text sews as it did before. `stitch lettering --widen-percent`, the Lettering effect's dialog and its
+  record take it by that name.
 - **A marker** with letters bolder than their font and too small for a bolder one has its text widened.
   The percent is 50 × (the letters' weight over the font's, less 1), rounded and at most 20. A widening under 5 % is left out. Letters under 8 mm are set as today,
   since a widened Small Font closes its counters there. `SC-I1118` gives the percent, or says why
@@ -3118,6 +3120,24 @@ confirm:
 
 B2 opens as many counters as today's Small Font from 8 mm up, measured on all 62 letters and digits, and
 that sets the 2 limits, 20 % and 8 mm. A sew-out confirms them or moves them, as it does a profile's values.
+
+**The build's numbers.** Measured on 2026-11-20 with the setting itself, on Small Font's 62 letters and
+digits. Each cell gives the stroke in heights, the narrowest column in mm, counters open to read of 22, the
+thickest spot alone and on a field in fills, and the area at 4 fills or more on a field in mm²:
+
+| widen_percent | 8 mm | 10 mm | 12 mm |
+|---|---|---|---|
+| 0, today | 0.17, 1.15, 16, 3.72 and 5.16, 4 | 0.16, 1.33, 21, 3.93 and 5.22, 7 | 0.15, 1.52, 22, 4.35 and 4.99, 14 |
+| 10 | 0.20, 1.30, 16, 4.04 and 5.14, 10 | 0.19, 1.52, 19, 4.50 and 5.24, 19 | 0.18, 1.74, 21, 4.25 and 5.34, 27 |
+| 20 | 0.22, 1.45, 16, 4.25 and 5.24, 22 | 0.21, 1.71, 19, 4.13 and 5.27, 39 | 0.20, 1.97, 21, 4.31 and 5.30, 48 |
+
+They match prototype B2, since Small Font's glyphs set no pull compensation in percent, so adding to it and
+setting it sew alike. No counter closes, and the ones under 1 mm are those of the A, the B, the a, the e
+and the 4, with the R's at 8 mm and 20 %. No letter of the 64 touches the next, and the narrowest gap
+between 2 letters falls from 1.5 to 1.0 mm at 8 mm. No stitch is shorter than 0.3 mm.
+
+**A finding for the sew-out.** Barstitch Bold's letters touch at its least heights today, as measured
+above. Nothing here changes its spacing: MC-8 shows whether the touching shows in thread.
 
 ### Decisions for the owner
 

@@ -1227,7 +1227,7 @@ With the effect the text is still a text object. Retyping it changes what sews, 
 and opens its dialog, and the exporter finds the record on the object it belongs to.
 
 **The dialog** is generated from lettering's own settings (`stitchcraft_svg::lettering::SETTINGS`), each
-with its default and help, by Ink/Stitch's names. It has 9 rows, which fit VectorCraft's dialog without
+with its default and help, by Ink/Stitch's names. It has 10 rows, which fit VectorCraft's dialog without
 sections:
 
 | Row | Setting | Default |
@@ -1239,6 +1239,7 @@ sections:
 | Sew lines back and forth | `back_and_forth` | on |
 | Sort colours | `color_sort` | `off` |
 | Trim | `trim` | `off`, for a machine that cuts no thread |
+| Widen columns | `widen_percent`, StitchCraft's own, in percent from 0 to 50 | 0 |
 
 The 2 settings that place a text along a path are left out, since a text object sews at its own place.
 

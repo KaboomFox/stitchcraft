@@ -323,7 +323,7 @@ The text becomes a design, which every host plans as it plans any other. Its ele
 
 **The settings** are named as Ink/Stitch names them. Its batch lettering has `scale`, `color_sort`, `trim`,
 `text_align`, `letter_spacing`, `word_spacing`, `line_height`, `text_position` and `vertical_text_position`,
-and its lettering window has `back_and_forth`. `lettering::SETTINGS` declares each once with its help, and
+and its lettering window has `back_and_forth`. `widen_percent` is StitchCraft's own (M14.9). `lettering::SETTINGS` declares each once with its help, and
 the options of `stitch lettering` take their help from it ([command line](../user/reference/cli.md)).
 
 ### Along a path

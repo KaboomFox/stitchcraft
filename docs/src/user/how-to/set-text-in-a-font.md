@@ -39,6 +39,21 @@ Barstitch Bold, whose strokes are half again as wide, from 11.5 to 29.9 mm. A
 size outside a font's range is set at the nearest size inside it, and `SC-W1106` names the range. For
 smaller or larger letters, choose a font drawn for them.
 
+## Make the letters bolder
+
+`--widen-percent` sews every satin column of the text wider, by that percent of its width on each side.
+It takes 0 to 50 and is 0 unless you set it. In the Lettering effect's dialog it is **Widen columns**. Use
+it where you want bold letters smaller than a bold font sews, such as Barstitch Bold under 12.5 mm:
+
+```sh
+stitch lettering "Hexmira" --font fonts/small_font --height 10 --widen-percent 20 -o hexmira.pes
+```
+
+At 20, Small Font's strokes sew about a fifth of the letters' height wide, as heavy as a bold font's. Running
+stitches and fills sew as they are. The small counters close first: under 8 mm the holes of the A and the 4
+fill with thread, so keep to 8 mm or taller, or widen less. Look at the preview before you
+sew. A value outside 0 to 50 is set at the nearest, with `SC-W0102`.
+
 ## Space and align the text
 
 `--letter-spacing`, `--word-spacing` and `--line-height` add millimetres between letters, words and lines,
