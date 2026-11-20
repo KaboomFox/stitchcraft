@@ -276,12 +276,11 @@ fn the_scan_finds_the_layers_objects_their_ids_and_the_document_s_keys() {
     ]}}, {"id": 2, "kind": {"children": []}}], "title": "a \"b\" \\"}}"#;
     let scanned = scan(text.as_bytes(), "f").unwrap();
     // The layers' 2 objects, each with the ids inside it, and the 2 layers' lists: no nested list is a layer's.
-    let tops: Vec<(Vec<u64>, Option<(usize, usize)>, Option<(usize, usize)>)> =
-        scanned.tops.iter().map(|top| (top.ids.clone(), top.visible, top.locked)).collect();
     let at = |what: &str| text.find(what).unwrap();
-    assert_eq!(tops[0], (vec![3, 4, 5], None, None));
+    let top = |k: usize| (scanned.tops[k].ids.clone(), scanned.tops[k].visible, scanned.tops[k].locked);
+    assert_eq!(top(0), (vec![3, 4, 5], None, None));
+    assert_eq!(top(1), (vec![6], Some((at(r#"true, "a""#), 4)), Some((at("false"), 5))));
     assert_eq!(scanned.tops[0].names, ["five"]);
-    assert_eq!(tops[1], (vec![6], Some((at(r#"true, "a""#), 4)), Some((at("false"), 5))));
     assert_eq!((scanned.tops[0].open, scanned.tops[1].open), (at(r#"{"id": 3"#), at(r#"{"locked""#)));
     let layers: Vec<(usize, bool)> = scanned.layers.iter().map(|layer| (layer.close, layer.empty)).collect();
     assert_eq!(layers, [(at("]}}, {\"id\": 2"), false), (at("]}}], \"title\""), true)]);
