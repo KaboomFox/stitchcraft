@@ -3172,8 +3172,8 @@ Each has a recommendation, which the step took.
 
 ### The build's measure
 
-**Measured** on 2026-11-20, the branch built at opt-level 2 (`crates/stitchcraft-testkit/examples/expand.rs`
-on the branch, not merged). Each design is planned automatic, expanded, and planned again with the same
+**Measured** on 2026-11-20, the branch built at opt-level 2, with a measuring program kept out of the
+repository. Each design is planned automatic, expanded, and planned again with the same
 origin: at the engine, read back from the SVG file `stitch expand` writes, and, for the 5 designs traced
 into a VectorCraft document, read back from the document it writes.
 
