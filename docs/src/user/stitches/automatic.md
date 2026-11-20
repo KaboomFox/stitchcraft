@@ -466,6 +466,30 @@ larger text sews at the nearest of those heights, and `SC-W1106` says so. A line
 at 3.6 mm sews at 3.6 mm, and `SC-W1117` says by how much it is longer than the text's place. Text on a path, vertical text and
 VectorCraft's area type are left out with a warning.
 
+### Smoothed outlines
+
+A traced outline wobbles by less than a thread is wide. The wobble can't show in thread, but it sews short
+stitches along the edge, and a ragged edge where 2 colours meet. **Smooth outlines** (`auto_smooth_mm`)
+smooths each automatic area's outline before anything is digitized, with no point moved farther than the
+setting:
+
+```sh
+stitch plan photo.jpg -o photo.pes --set auto_smooth_mm=0.2
+```
+
+Corners stay where they are. An edge 2 areas share is smoothed once, so no gap opens between them, and an
+outline whose area would change by more than a tenth is left as drawn. A shape with settings is never
+smoothed. The report says how many outlines were smoothed (`SC-I0921`).
+
+It is off by default, for traced pictures and documents alike, and no dialog shows it. Smoothing changes
+which parts of a shape sew as satin columns, and not every change is better: the traced dogs sew a quarter
+of their shapes by another rule at 0.2 mm, with a few more stitches astray and more area at 3 fills. Try
+it on a traced photo, whose outlines wobble most. At 0.2 mm, half a thread, the test photos sewed a fifth
+fewer stitches under 0.5 mm and planned in about half the time. On flat art or a traced drawing it changes
+little. On a picture with many thin traced lines it can merge some of them into their neighbours.
+[Image to embroidery](../../design/image-to-embroidery.md#the-builds-numbers) gives the numbers for each
+test picture.
+
 ### Changing the choice
 
 Each shape says which rule chose its stitches, with the numbers that decided it (`SC-I0912`, in the report

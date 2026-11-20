@@ -4059,7 +4059,7 @@ drawn at 10 pixels per mm.
   person sets it with `--set auto_smooth_mm=0.2`. 0.2 mm is half a thread: on every picture of the set it
   cut short stitches, with nothing moved that thread shows.
 - **`SC-I0921`**, info, once for the design: "The outlines of 107 automatic areas were smoothed within
-  0.2 mm: they are drawn with 3,126 points, where 3,067 drew them within 0.02 mm." It names the areas
+  0.2 mm: they are drawn with 3126 points, where 3067 drew them within 0.02 mm." It names the areas
   whose pass needed more than the budget, which keep their outlines.
 - **Shapes a person drew.** VectorCraft's Expand leaves plain paths, so a document doesn't say which of
   its shapes were traced. StitchCraft never smooths a document's shapes unless the setting asks, and never a shape with
@@ -4089,6 +4089,45 @@ module's own tests. 2 things differ from the rule above:
   the line: then a rectangle keeps its 4 corners, and a thin strip's end is one turn.
 - **An edge that keeps its line.** An edge whose smoothed line has the same points as drawn, a straight side
   for one, keeps the segments it was drawn with.
+
+### The build's numbers
+
+The step's probe planned every picture of the set off, at 0.2 mm and at 0.4 mm, with the branch at
+`076162e9` built at opt-level 2. The fabric measures of the 4 local photos were not run, since each takes
+hours. Points are those of `SC-I0921`, which counts an edge 2 areas share once for each area. The other
+columns are the change from the setting off.
+
+| Pictures | Points at 0.2 mm | Short stitches at 0.2 mm | Short stitches at 0.4 mm | Stitches at 0.2 mm | Planning time at 0.2 mm | Rules changed at 0.2 mm |
+|---|---|---|---|---|---|---|
+| 4 traced dogs | 19047 to 18271 | -3.0 % (-0.2 to -6.8 %) | -4.7 % | -0.9 % | -9 % | 21 to 27 of 69 to 92 shapes |
+| The pear | 1295 to 1408 | -5.9 % | -12.8 % | -0.7 % | as before | none |
+| The lettered patch | 17972 to 19959 | -12.8 % | -10.8 % | -3.3 % | -32 % | 156 of 550 |
+| The flat badge | 1503 to 1426 | -15.2 % | -12.7 % | -8.1 % | -50 % | none |
+| 4 traced photos | 387799 to 244567 | -21.3 % (-19.2 to -22.9 %) | -25.7 % | -7.1 % | -45 % | 72 to 277 shapes each |
+
+What gets worse at 0.2 mm:
+
+- **Stitches astray** rise on every dog: 4 to 9, 3 to 4, 1 to 6 and 4 to 6. At 0.4 mm they reach 10 to
+  25. A shape whose part changes rule sews its stitches a little off the drawn outline.
+- **The area at 3 fills or more** grows on 3 of the 4 dogs, by 6 to 33 %, and the thickest spot by up to
+  0.15 fills, still under the cap's warning.
+- **The lettered patch** loses 129 of its thin traced lines. Each was a sliver just over 1 mm², and smoothed
+  within a tenth of its area it falls under the speck bound and merges into its neighbour. So the patch
+  sews 260 shapes where it sewed 389, with 73 fewer jump threads, but its bare fabric grows from 1.2 to
+  1.9 % and its stitches astray from 90 to 128.
+- **More columns on the photos.** The flower photo sews 27 parts as satin columns where it sewed 13, and
+  their stitches fan along edges that are still ragged at a thread's scale.
+
+The likeness of the dogs moves by less than 0.01 either way, and the pear and the badge sew as before but
+for shorter stitches. No ring is lost, since the area bound keeps each within a tenth of its area. The
+probe's pictures, off, at 0.2 mm and at 0.4 mm, are in the step's notes.
+
+Against the prototype, the build cuts short stitches as much: 3 % on the dogs, 6 % on the pear, 13 % on the
+patch and 19 to 23 % on the photos, where the prototype measured 3, 6, 12 and 18 to 24 %. Its points
+differ for 2 reasons. The notice counts a shared edge for each of its areas, where the prototype counted
+it once. A straight side keeps its own segments, where the prototype drew every edge anew. So the dogs need
+4 % fewer points at 0.2 mm, where the prototype's needed 2 % more. The pear and the patch need 9 and 11 %
+more, since a smoothed curve takes more points within 0.02 mm than the curves the tracer fitted.
 
 ## Subject cut-out
 
