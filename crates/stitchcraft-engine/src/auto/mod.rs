@@ -84,6 +84,7 @@ mod narrow;
 mod neighbours;
 mod params;
 pub mod rules;
+mod smooth;
 mod split;
 pub(crate) mod thick;
 mod thin;
@@ -462,6 +463,10 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     // setting that doesn't read, which sews nothing.
     let rules: Vec<Option<AutoParams>> =
         elements.iter().map(|element| if element.automatic { read(element, &mut diagnostics) } else { None }).collect();
+    // The outlines of the areas that ask for it are smoothed before anything is measured (`REQ-AUTO-131`).
+    let smoothed = smooth::outlines(design, &rules, budget, &mut diagnostics);
+    let design = smoothed.as_ref().unwrap_or(design);
+    let elements = design.elements();
     // The ids given out: the design's, then each part's that a stroke of several subpaths adds. A design's
     // ids are unique (`Design::new`), so each is taken as it is, which costs no work and cannot fail.
     let mut taken = Labels::default();
@@ -566,6 +571,9 @@ pub fn as_merged(design: &Design, budget: &Budget) -> Result<Design, Diagnostic>
     let elements = cut.elements();
     let rules: Vec<Option<AutoParams>> =
         elements.iter().map(|element| if element.automatic { read(element, &mut diagnostics) } else { None }).collect();
+    let smoothed = smooth::outlines(cut, &rules, budget, &mut diagnostics);
+    let cut = smoothed.as_ref().unwrap_or(cut);
+    let elements = cut.elements();
     let background = neighbours::background(cut, rules.first().and_then(Option::as_ref), budget);
     let layers = neighbours::flattened(cut, &rules, matches!(background, Some(Background::Found)), budget);
     let marks = Marks::of(&design.marks, budget);

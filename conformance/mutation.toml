@@ -403,6 +403,174 @@ line = "(length > 0.0).then(|| Point::new(at.x() + dx / length * by, at.y() + dy
 why = "a direction of no length, let through, divides 0 by 0, which is not a number, and Point::new refuses a coordinate that is not a number, so there is no point either way"
 
 [[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth.rs"
+mutant = "replace < with <= in Step::key"
+line = "if backward < forward { (backward, false) } else { (forward, true) }"
+why = "a segment's points read the same both ways round only if it goes nowhere, and such a step is left out of its ring"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth.rs"
+mutant = "replace < with > in Step::key"
+line = "if backward < forward { (backward, false) } else { (forward, true) }"
+why = "every ring keys a segment the other way round alike, so the same rings share the same edges, and an edge is resampled and blurred alike from either end"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth.rs"
+mutant = "replace match guard !frozen.contains(&index) with true in outlines"
+line = "Err(Ran::Out(index)) if !frozen.contains(&index) => {"
+why = "a frozen area has no meter in the next attempt, so the work that runs out is never a frozen area's"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth.rs"
+mutant = "replace < with <= in canonical"
+line = "if backward < forward {"
+why = "an edge reads the same both ways round only if it doubles back on itself point for point, and then either way gives the same line"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth.rs"
+mutant = "replace < with > in canonical"
+line = "if backward < forward {"
+why = "a whole ring taken the other way round goes through the same samples, which the Gaussian weighs alike either way"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth.rs"
+mutant = "replace > with >= in flattened"
+line = "if closed && points.len() > 1 && points.first() == points.last() {"
+why = "a closed edge goes round at least 2 distinct points, so it never has 1 point"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth.rs"
+mutant = "replace && with || in flattened"
+line = "if closed && points.len() > 1 && points.first() == points.last() {"
+why = "a closed edge's points end where they start, so `points.len() > 1 || points.first() == points.last()` holds for it as the conjunction does"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth.rs"
+mutant = "replace * with + in piece"
+line = "&& line::apart(drawn, &blurred, closed, REACH * tolerance, meter)? <= tolerance"
+why = "the window only has to hold the segments within the setting of a sample, and for settings up to 1 mm 4 + the setting is wider than 4 times it, which finds the same nearest segment"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth.rs"
+mutant = "replace * with / in piece"
+line = "&& line::apart(drawn, &blurred, closed, REACH * tolerance, meter)? <= tolerance"
+why = "for settings up to 1 mm 4 / the setting is at least 4 times it, a wider window that finds the same nearest segment"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth.rs"
+mutant = "replace > with < in Pass::ring"
+line = "if points.len() > 1 && points.first() == points.last() {"
+why = "a ring that keeps its repeated last point has the same area, crosses nothing more, and needs the same points within 0.02 mm, since the repeat lies on the line"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth.rs"
+mutant = "replace > with == in Pass::ring"
+line = "if points.len() > 1 && points.first() == points.last() {"
+why = "a ring that keeps its repeated last point has the same area, crosses nothing more, and needs the same points within 0.02 mm, since the repeat lies on the line"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth.rs"
+mutant = "replace > with >= in Pass::ring"
+line = "if points.len() > 1 && points.first() == points.last() {"
+why = "a ring is made of edges of at least 2 points, so it never has 1 point"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth.rs"
+mutant = "replace > with >= in Pass::settle"
+line = "if (now - drawn).abs() > AREA * drawn.abs() {"
+why = "a ring's area changes by exactly a tenth only by a coincidence of rounding"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth/line.rs"
+mutant = "replace > with >= in at"
+line = "let along = if closed && total > 0.0 { along.rem_euclid(total) } else { along.clamp(0.0, total) };"
+why = "a closed line of no length has all its points in one place, which is the point taken round it or held to its ends"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth/line.rs"
+mutant = "replace > with >= in at"
+line = "let t = if end > start { (along - start) / (end - start) } else { 0.0 };"
+why = "over a segment of no length the share is 0 / 0, which `Point::lerp` takes as 0, the start, as the else branch does"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth/line.rs"
+mutant = "replace > with >= in corners"
+line = "(lengths > 0.0 && cos <= CORNER_COS).then_some(cos)"
+why = "with a length of 0 the cosine is 0 / 0, not a number, which is no turn either way"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth/line.rs"
+mutant = "replace < with <= in corners"
+line = "if cos < *least {"
+why = "2 points of one run turn by exactly the same cosine only by a coincidence of rounding, and either is the corner within the reach"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth/line.rs"
+mutant = "replace < with <= in corners"
+line = "&& last_least < first.2"
+why = "2 points of one run turn by exactly the same cosine only by a coincidence of rounding, and either is the corner within the reach"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth/line.rs"
+mutant = "replace < with <= in sample"
+line = "let through = if index < 0 { first } else { last };"
+why = "inside the loop the index lies before the first sample or past the last, never at 0"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth/line.rs"
+mutant = "replace < with <= in sample"
+line = "index = if index < 0 { -index } else { 2 * end - index };"
+why = "inside the loop the index lies before the first sample or past the last, never at 0"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth/line.rs"
+mutant = "replace + with - in blurred"
+line = "let Some((sx, sy)) = sample(samples, closed, index + k) else { return Ok(None) };"
+why = "the weights are the same on either side, so the neighbours count alike taken forward or back"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth/line.rs"
+mutant = "replace > with >= in from_segment"
+line = "let t = if squared > 0.0 { (((p.x() - a.x()) * dx + (p.y() - a.y()) * dy) / squared).clamp(0.0, 1.0) } else { 0.0 };"
+why = "the segments measured join distinct points, since flattening and the fewest points keep no point twice in a row"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth/line.rs"
+mutant = "replace + with * in fewest"
+line = "let farthest = (from + 1..to)"
+why = "the chord's own start lies 0 from it, so it is never the point farther than `within` that is kept"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth/line.rs"
+mutant = "replace > with < in fewest_round"
+line = "let far = points.iter().enumerate().fold((0, 0.0), |best, (i, &p)| if between(first, p) > best.1 { (i, between(first, p)) } else { best }).0;"
+why = "split at the first point instead, the open line's first pick is the point farthest from the first, the same split and the same points"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth/line.rs"
+mutant = "replace > with == in fewest_round"
+line = "let far = points.iter().enumerate().fold((0, 0.0), |best, (i, &p)| if between(first, p) > best.1 { (i, between(first, p)) } else { best }).0;"
+why = "split at the first point instead, the open line's first pick is the point farthest from the first, the same split and the same points"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth/line.rs"
+mutant = "replace > with >= in fewest_round"
+line = "let far = points.iter().enumerate().fold((0, 0.0), |best, (i, &p)| if between(first, p) > best.1 { (i, between(first, p)) } else { best }).0;"
+why = "2 points lie exactly as far from the first only by a coincidence of rounding"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth/line.rs"
+mutant = "replace / with * in cell"
+line = "(whole((x / CELL).floor()), whole((y / CELL).floor()))"
+why = "the grid's cell is 1 mm, so dividing by it and multiplying by it are the same"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/smooth/line.rs"
+mutant = "replace + with * in crossing"
+line = "for &other in members.iter().skip(i + 1) {"
+why = "skipping one segment fewer tests a segment against itself, which never crosses"
+
+[[equivalent]]
 file = "crates/stitchcraft-engine/src/auto/cap.rs"
 mutant = "replace Cap<'_, '_>::above -> Result<bool, Exhausted> with Ok(true)"
 line = "let (columns, rows) = self.pass.thickness.size();"

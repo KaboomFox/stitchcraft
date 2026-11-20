@@ -204,3 +204,27 @@ fn req_auto_144_the_shapes_digitizing_has_no_work_for_are_named_once_each() {
     let warning = said.iter().find(|said| said.code == Code::AutoExpandLost).unwrap();
     assert!(warning.message.contains("`patch-border`, `patch-field`, `m`, `a`, `t` and 2 more needed more work"), "{}", warning.message);
 }
+
+#[test]
+fn req_auto_142_a_design_with_smoothed_outlines_expands_to_its_own_plan() {
+    // Smoothing changes the parts digitizing makes (`REQ-AUTO-131`): Expand writes the parts of the design
+    // as it is set, smoothed or not, and drops the setting with the Auto effect's others.
+    let pear = pictures::pear();
+    for smooth in ["0", "0.2"] {
+        let elements: Vec<Element> = pear
+            .elements()
+            .iter()
+            .cloned()
+            .map(|mut element| {
+                element.params.set("auto_smooth_mm", smooth);
+                element
+            })
+            .collect();
+        let design = Design::new(elements, pear.settings).unwrap();
+        let bounds = design.bounds().unwrap();
+        let middle = Point::new((bounds.min().x() + bounds.max().x()) / 2.0, (bounds.min().y() + bounds.max().y()) / 2.0).unwrap();
+        let (expanded, _) = expanded(&design);
+        assert!(expanded.elements().iter().all(|element| element.params.iter().all(|(key, _)| !key.starts_with("auto_"))), "{smooth}");
+        assert_eq!(stitches(&placed(&expanded, middle)), stitches(&placed(&design, middle)), "{smooth}");
+    }
+}
