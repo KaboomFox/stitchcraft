@@ -2212,8 +2212,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   planned). On main the same outline drawn 2 ways within 0.02 mm sews 163 of the repository's 392 traced
   picture shapes and 324 of 1,116 letters by another rule. 3 prototypes, measured against main, each
   raised the area at 3 fills, and the owner chose on 2026-11-20 to stop the step and keep main's rule. The
-  design page records the causes, the measures and 2 possible steps of their own. Nothing sews differently
-  and no golden file changes.
+  design page records the causes, the measures and 2 possible steps of their own. Every design sews as
+  before, and the golden files stay.
 - M13.51: fewer points from the tracer, an option off by default (`REQ-CLI-024`).
   - `stitch plan picture.png --fewer-points` asks Image Trace for Paths 0 and Corners 0, which draw the
     outlines of the pear and the 4 traced dogs with 35 to 42 % fewer anchors and half the jags, for the same

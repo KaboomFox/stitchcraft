@@ -517,7 +517,7 @@ fills comes with the columns that the outline drawn again adds, wide ones too, a
 reshapes. The 2 photos' thickest spots and the stitches astray come with the outline drawn again and its
 even spacing, not with any column.
 
-#### What the step decided
+#### The step stopped
 
 The owner chose on 2026-11-20 to stop the step after these 3 rounds, and main's rule stays. No prototype
 meets the step's bar. Measured against main on each round's base, the outline drawn again alone raises the
@@ -535,7 +535,7 @@ under a part's column, still raise the dogs' and 2 photos' area and the stitches
   measured only with the outline drawn again, never alone.
 
 The step opens again only with a rule that keeps the drawing out of the choice and doesn't raise the area
-at 3 fills, measured on the whole set. The prototype's choices would then stand as they were measured: a
+at 3 fills, measured on every picture and letter of the set. The prototype's choices would then stand as they were measured: a
 tolerance of 0.05 mm, a quarter of a running stitch's own tolerance of 0.2 mm and 2.5 times the jitter
 measured; a column that reads back otherwise fixed where it is built, since leaving out its rung hides the
 cause of most of the photos' changes; and every automatic part measured on its outline drawn again, with
