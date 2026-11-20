@@ -9,10 +9,12 @@
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
-use stitchcraft_core::{Budget, Diagnostic, ElementId, Severity};
+use stitchcraft_core::{Budget, Diagnostic, ElementId, Point, Severity};
 use stitchcraft_engine::auto::digitized;
 use stitchcraft_engine::design::mark::Mark;
 use stitchcraft_engine::design::{Design, DesignSettings, Element};
+use stitchcraft_engine::plan;
+use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{Role, StitchPlan};
 use stitchcraft_testkit::designs::{BLUE, RED, fill, in_place};
 use stitchcraft_testkit::pictures::{self, Trace};
@@ -37,6 +39,19 @@ fn designs() -> Vec<(&'static str, Design)> {
     ]
 }
 
+/// The plan of `design` with its origin at `middle` and its stitches where it draws its shapes, as `in_place`
+/// plans a design round the middle of its own bounds.
+fn placed(design: &Design, middle: Point) -> StitchPlan {
+    let mut centred = Design::new(design.elements().to_vec(), DesignSettings { origin: Some(middle), ..design.settings }).unwrap();
+    centred.marks.clone_from(&design.marks);
+    centred.guides.clone_from(&design.guides);
+    let mut plan = plan(&centred, REFERENCE, &Budget::DEFAULT).plan.unwrap();
+    for stitch in plan.blocks.iter_mut().flat_map(|block| &mut block.stitches) {
+        stitch.at = Point::new(stitch.at.x() + middle.x(), stitch.at.y() + middle.y()).unwrap();
+    }
+    plan
+}
+
 /// Each stitch of `plan`: its thread's block, where it is, what kind and which part of its element's
 /// stitching.
 fn stitches(plan: &StitchPlan) -> Vec<(usize, f64, f64, String, Role)> {
@@ -53,9 +68,13 @@ fn stitches(plan: &StitchPlan) -> Vec<(usize, f64, f64, String, Role)> {
 #[ignore = "planned: M13.26 builds Expand"]
 fn req_auto_142_an_expanded_design_plans_to_the_automatic_plan() {
     for (name, design) in designs() {
-        let automatic = in_place(&design).plan.unwrap();
-        let (design, _) = expanded(&design);
-        let plan = in_place(&design).plan.unwrap();
+        // Both are planned round the middle of the drawing. The expanded design's own bounds differ, as its
+        // areas reach under their neighbours, and an origin of their own would move the fills' rows.
+        let bounds = design.bounds().unwrap();
+        let middle = Point::new((bounds.min().x() + bounds.max().x()) / 2.0, (bounds.min().y() + bounds.max().y()) / 2.0).unwrap();
+        let automatic = placed(&design, middle);
+        let (expanded, _) = expanded(&design);
+        let plan = placed(&expanded, middle);
         let threads = |plan: &StitchPlan| plan.blocks.iter().map(|block| block.thread.clone()).collect::<Vec<_>>();
         assert_eq!(threads(&plan), threads(&automatic), "{name}: threads");
         // Every stitch at the same point, of the same kind and part, in the same order: the machine file is
