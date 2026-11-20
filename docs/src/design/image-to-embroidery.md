@@ -3955,9 +3955,9 @@ person can read the names at the panel's smallest row size.
 ### The parts of a name
 
 A name tells a person how the shape sews, which one of them it is and its thread, in that order: `Fill 3,
-Red`, `Column 1, Deep Gold`, `Line 12, Black`. The Layers panel cuts off a long name's end, so the parts
-that tell 2 shapes of one thread apart come first. The thread comes last: the row's picture shows its
-colour, so it is the part a person can lose.
+Red`, `Column 1, Deep Gold`, `Line 12, Black`. The Layers panel cuts off a long name's end. The parts
+that tell 2 shapes of one thread apart come first, in the 20 characters a row shows. The row's picture shows the
+thread's colour, and the thread's name is the part a person can lose.
 
 - **The thread** is the thread's name. A traced shape's colour is one of the machine's threads exactly,
   since the trace uses the library's colours as they are, so its name is the palette's name of that colour.
