@@ -288,6 +288,12 @@ fn req_auto_151_an_area_that_keeps_its_lines_counts_those_that_the_other_style_m
     let full = count(&Budget::DEFAULT, true);
     assert_eq!(full, (vec!["left".to_string(), "line".to_string()], 0, 1, Vec::new()));
     assert_eq!(count(&Budget::DEFAULT, false).2, 0);
+    // A line of an area that names its stitch sews so in both styles, and isn't counted.
+    let named = [(crate::auto::FILL_UNEVEN, "false"), (crate::auto::STITCH, "fill")];
+    let elements = vec![auto("left", &[square((0.0, 0.0), (10.0, 10.0))], &named), auto("line", &[strand(10.0)], &named)];
+    let (flattened, rules) = flattened(elements.clone());
+    let others = crate::auto::style::others(&elements, &rules);
+    assert_eq!(merged(flattened, (&rules, &others), NARROWEST, &Marks::default(), &Budget::DEFAULT).2, 0);
     // With too little work, the count says so, and the line stays all the same.
     let (mut seen, mut work) = (BTreeSet::new(), 0);
     loop {

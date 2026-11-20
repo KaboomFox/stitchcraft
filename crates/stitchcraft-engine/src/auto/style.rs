@@ -83,10 +83,10 @@ impl Tally {
     /// Counts `merged` thin lines merged by areas with `auto_fill_uneven` on, and `kept` lines that areas with
     /// it off sew as lines and the other style merges.
     pub(super) fn lines(&mut self, merged: usize, kept: usize) {
-        if let Some(preset) = other(true).filter(|_| merged > 0) {
+        if let Some(preset) = other(true) {
             self.counts.entry(preset.name).or_default().merged += merged;
         }
-        if let Some(preset) = other(false).filter(|_| kept > 0) {
+        if let Some(preset) = other(false) {
             self.counts.entry(preset.name).or_default().kept += kept;
         }
     }
@@ -178,7 +178,7 @@ fn notice(preset: &Preset, count: &Count) -> Diagnostic {
     }
     if count.kept > 0 {
         changes.push(format!(
-            "{} would merge into {}",
+            "{} may merge into {}",
             counted(count.kept, "thin line sewn as a line", "thin lines sewn as lines"),
             if count.kept == 1 { "its neighbour" } else { "their neighbours" }
         ));

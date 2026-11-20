@@ -256,9 +256,25 @@ bound moves with the picture's pixels and size. Which style sews a picture bette
 both kinds, such as a label on a photo, wants `logo` on the label and `photo` on the rest, which one style
 can't give. Shape settings, marks (`--keep`) and Expand serve such a picture.
 
-**What is said instead.** One notice (`REQ-AUTO-151`, planned) counts the lines merged and the parts
-filled as uneven, or in `logo` those that `photo` would merge and fill, and names the other style. It goes
-by counts the rules already make and changes nothing that sews. A design both styles sew alike gets none.
+**What is said instead.** One notice, `SC-I0923` (`REQ-AUTO-151`, `auto::style`), tells the person that the
+choice matters for this design and which way the other style goes. The other style is the preset whose
+`auto_fill_uneven` differs from the shape's, with its values set over the shape's settings as `--style`
+sets them. The notice counts 2 things:
+
+- **Thin lines.** In the photo style, the lines that merged into their neighbours. In the logo style, the
+  ragged thin lines that merging would take, found as merging finds them, which stay as they are.
+- **Parts.** Each part is decided again from the measures that decided it, under the other style's
+  bounds. A part filled here that the other style sews as satin columns counts with its rule, and a part
+  sewn as columns that the other style fills counts as such.
+
+The notice names the other style and its settings, and says nothing else: no opinion of which style is
+right, and nothing of what the picture shows. A design whose counts are all 0 gets none. It changes no
+stitch. The count of the parts plans nothing again, so it leaves out how a fill splits off its narrow
+pieces, which `auto_prefer` leans too, and the lines that a merge keeps for the picture's likeness.
+
+**What it costs.** COST
+
+**What it says on the set.** SURVEY
 
 ### The grounds of the bounds
 

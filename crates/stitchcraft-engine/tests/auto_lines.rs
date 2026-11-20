@@ -88,7 +88,10 @@ fn diag_sc_i0915_a_ragged_thin_line_merges_into_the_area_it_shares_the_longest_e
 #[test]
 fn diag_sc_i0923_the_other_style_would_sew_the_ragged_line_otherwise() {
     // The line of the case above merges in the photo style, the defaults, and the logo style keeps it.
-    let (_, merged) = sewn(vec![rect("left", (0.0, 0.0), (10.0, 10.0), &RED), merging("line"), rect("right", (10.7, 0.0), (20.0, 10.0), &BLUE)]);
+    let design = || vec![rect("left", (0.0, 0.0), (10.0, 10.0), &RED), merging("line"), rect("right", (10.7, 0.0), (20.0, 10.0), &BLUE)];
+    let (_, merged) = sewn(design());
+    // Planned again, it says the same.
+    assert_eq!(sewn(design()).1, merged);
     assert_eq!(
         said(&merged, Code::AutoStyle),
         ["info SC-I0923: The logo style (`--style logo`) would sew this design otherwise: 1 thin line merged into its neighbour would \
@@ -102,7 +105,7 @@ fn diag_sc_i0923_the_other_style_would_sew_the_ragged_line_otherwise() {
     let notice = kept.iter().find(|said| said.code == Code::AutoStyle).unwrap();
     assert_eq!(
         notice.to_string(),
-        "info SC-I0923: The photo style (`--style photo`) would sew this design otherwise: 1 thin line sewn as a line would merge into its \
+        "info SC-I0923: The photo style (`--style photo`) would sew this design otherwise: 1 thin line sewn as a line may merge into its \
          neighbour."
     );
     assert_eq!(

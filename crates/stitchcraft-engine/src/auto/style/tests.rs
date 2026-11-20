@@ -112,7 +112,7 @@ fn req_auto_151_the_notice_counts_by_the_other_style_and_says_nothing_when_nothi
     tally.parts(&id, &[part(RuleId::Column, (40.0, 2.0), 0.4, 2)], (&logo, &photo), &Budget::DEFAULT);
     assert_eq!(
         tally.said().iter().map(ToString::to_string).collect::<Vec<_>>(),
-        ["info SC-I0923: The photo style (`--style photo`) would sew this design otherwise: 1 thin line sewn as a line would merge into its \
+        ["info SC-I0923: The photo style (`--style photo`) would sew this design otherwise: 1 thin line sewn as a line may merge into its \
          neighbour and 1 part sewn as satin columns would be filled."]
     );
     let mut tally = Tally::default();
@@ -124,7 +124,7 @@ fn req_auto_151_the_notice_counts_by_the_other_style_and_says_nothing_when_nothi
         [
             "info SC-I0923: The logo style (`--style logo`) would sew this design otherwise: 1 thin line merged into its neighbour would sew \
          as a line and 1 part filled by the rule uneven would sew as satin columns.",
-            "info SC-I0923: The photo style (`--style photo`) would sew this design otherwise: 3 thin lines sewn as lines would merge into \
+            "info SC-I0923: The photo style (`--style photo`) would sew this design otherwise: 3 thin lines sewn as lines may merge into \
          their neighbours and 2 parts sewn as satin columns would be filled."
         ]
     );
