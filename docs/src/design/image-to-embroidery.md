@@ -189,8 +189,8 @@ column no wider than that on average still sews one where its rails part, at a c
 column's longest stitch lies between the 2 points as far along its rails, as shares of their lengths from
 one rung to the next, at a corner of either rail. A part with a column that would sew a longer one is
 filled, and `SC-I0902` gives the stitch's length. The widest satin column is the longest satin stitch a
-machine sews well, so a shape may set it lower and never higher. It is the same for every machine profile
-so far, and becomes a value of the profile with the step that splits the stitches of a wider column.
+machine sews well, so a shape may set it lower and never higher. It is the same for every machine profile,
+for the reason [wide columns](#wide-columns) gives.
 
 ### Seeing and changing the choice
 
@@ -252,6 +252,123 @@ changes stay as they were:
 | Running dog, 9 threads | 2 | 13108 to 13115 | 108 to 106 |
 | Lettered patch | 2 | 25333 to 25340 | 37 |
 | Alpine Night, the demo's badge | 2 | 5419 to 5443 | 9 |
+
+### Wide columns
+
+A part between 7 and 10 mm wide that is otherwise a good column, a border or a bar, sews as one satin
+column whose stitches split at 7 mm (M13.54, `REQ-AUTO-152` to `REQ-AUTO-156`, planned). The owner chose
+this in the stitch-rules work, so that a wide border keeps satin's sheen where a fill reads flat. This
+section is the spec. The build adds the rule.
+
+**What the trade does.** Digitizing software splits a satin stitch longer than about 7 mm, which would lie
+loose and snag, into shorter ones. Wilcom's Auto Split is "used primarily to prevent long stitches
+in wide columns", with the tip "Use a length of 7.00 mm to preserve the satin effect"
+([split satin stitches](https://docs.wilcom.com/embroiderystudio/28/en/OnlineHelp/Quality/quality/quality-17.htm)).
+It "distributes needle penetrations in a random pattern so that they do not form a line down the middle of
+the shape" ([long satin stitches](https://docs.wilcom.com/embroiderystudio/28/en/OnlineHelp/Quality/quality/quality-16.htm)).
+BERNINA's Satin Special spreads its splits at random for the same reason
+([split long stitches](https://softwarehelp.bernina.com/en/MainHelp/PART_Digitizing/stitches/stitches-14.htm)).
+Wilcom's blog puts the widest such column at "around 10 mm", and allows 12 mm "in some situations"
+([stitch techniques](https://wilcom.com/resources/blog/embroidery-stitch-techniques)). mySewnet keeps
+patterned satin for columns "wider than about 8-10 mm", and asks for zigzag and edge-walk underlay
+together under very wide satin
+([satin column](https://softwarehelp.mysewnet.com/MSW/140/Embroidery/Topics/Satin_Column.htm)). Wilcom
+supports wide columns with zigzag and double zigzag underlay
+([zigzag underlay](https://docs.wilcom.com/embroiderystudio/27/en/OnlineHelp/Quality/stabilizing/stabilizing-12.htm)).
+Ink/Stitch's satin column splits a stitch longer than `max_stitch_length_mm` by its `split_method`. Its
+documentation names the default, simple and staggered methods, `random_split_jitter_percent`,
+`random_split_phase`, `min_random_split_length_mm` and `split_staggers`
+([satin column](https://inkstitch.org/docs/stitches/satin-column/)). StitchCraft's satin generator has them
+since M4.5 (`REQ-SAT-003`, [top stitches](algorithms/satin.md#top-stitches-method-satin_column)).
+
+**The machine's longest stitch is another limit.** The reference profile's longest stitch is 12 mm, a common
+value for Brother home machines that MC-1 and MC-2 confirm. Wilcom's machine formats give 12.1 mm for
+ternary coding and 12.7 mm for binary
+([stitch and jump length](https://docs.wilcom.com/embroiderystudio/28/en/OnlineHelp/Setup/machines/machines-3.htm)).
+The widest satin column, 7 mm, is how long a satin stitch lies well, which the thread and the fabric decide,
+not the machine. So it stays one value for every profile, and a wide column's stitches split at it.
+
+**The rule.** A row of the table, tried just before the area rule. Its parts are wider than
+`auto_max_satin_width_mm` somewhere and no wider than `auto_max_split_satin_width_mm` anywhere, to the
+micrometre. Such a part is `wide` when the other rules would make it a column and it has one centre line
+whose width varies by at most `auto_max_unevenness` of itself. It sews as a satin column whose stitches split at 7
+mm. Any other such part is an area, as before. A stroke as wide sews as a wide column along its centre line
+(`REQ-AUTO-156`). Only a whole part is wide. A piece cut from a broader part keeps today's rules.
+
+- **One line and even** (`REQ-AUTO-153`). Where 2 wide columns meet, each fans its split stitches into the
+  other. A column whose width swells has stitches of unlike lengths, whose splits fall unevenly.
+- **Refused** (`REQ-AUTO-154`). A wide part's columns are refused when they can't be drawn or crowd their
+  stitches on one rail, as a satin column's are. A stitch longer than 7 mm between the rails is no reason,
+  since it is split. A ring drawn 10 mm wide measures its longest stitch at 10.003 mm between its points, and
+  held to the bound as `REQ-AUTO-035` holds a column it was refused at the width it was drawn to.
+- **The split** (`REQ-AUTO-155`). `max_stitch_length_mm` 7, the default method, `random_split_phase` on
+  and `random_split_jitter_percent` 10. The underlay is a contour and a zigzag, as for a column wider than 4
+  mm.
+
+**What the split looks like.** Measured with a prototype on bars, rings, arches and stroked circles drawn in
+code at 7.5, 8.5 and 10 mm, with each split method. A split point is a needle point inside the column
+between 2 points far across from it. The table gives the bar 8.5 mm wide.
+
+| Split | Rows of split points, 0.25 mm apart | Next split point within 0.2 mm | Stitches | Under 0.5 mm | Thickest |
+|---|---:|---:|---:|---:|---:|
+| Default, equal parts | 6, 252 of 257 in one | 98 % | 5105 | 31 | 3.96 fills |
+| Simple | 7, 251 of 257 in one | 98 % | 4932 | 31 | 3.84 fills |
+| Staggered, 4 | 9, 3 rows of 62 or 63 | 0.5 % | 5321 | 31 | 3.90 fills |
+| Random phase, 10 % jitter | 21, none over 15 | 8 % | 5384 | 146 | 3.73 fills |
+
+The stitches and the thickest spot are the whole drawn sheet's. Equal parts and simple splits put nearly every split point on
+one line along the column, the line the trade avoids. Staggered splits never meet their neighbour's but repeat
+every 4 stitches, a ladder of short diagonals. Random phase scatters them, and only 6 to 9 % meet the next
+at any width. Simple split at 7.5 mm left all but 6 stitches whole, which the build looks into.
+
+**Which parts of the set change: none.** On the 13 repository designs (the 4 traced dogs, the pear, the 2
+traced badges, the lettered patch, the round patch, the patch, the badge, the emblem and Alpine Night) and
+the 4 local photos, 13 parts are wider than 7 mm and no wider than 10 mm.
+
+| Parts 7 to 10 mm wide | Why none is a wide column |
+|---|---|
+| 7 of the traced dogs, 7.4 to 9.8 mm | 6 have 2 centre lines or more and vary by more than 0.3, and one crowds its stitches 6.2 to 1 |
+| The traced badge's gold disc and Alpine Night's moon | compact |
+| Alpine Night's far ridge and 3 parts of the photos | their columns can't be drawn |
+
+No part of the set lies within 10 % of the bound, 9 to 11 mm wide, and would flip there. The lettered patch's
+border, the badges' rings and the emblem's frame are 7 mm wide or less, or wider than 11 mm. The rule is
+for drawn artwork, and its cases are drawn in code.
+
+**What it costs.** The drawn sheet 8.5 mm wide, filled on `main` and split at a random phase:
+
+| Measure | Filled | Wide columns |
+|---|---:|---:|
+| Thickest spot | 2.63 fills | 3.73 fills |
+| Area at 3 fills or more | 0 mm² | 10.5 mm² |
+| Thread | 15.2 m | 23.2 m |
+| Stitches | 5892 | 5384 |
+| Stitches under 0.5 mm | 902 | 146 |
+| Jumps, jump threads | 10, 6 | 4, 0 |
+| Bare fabric | 0.02 mm² | 5.83 mm² |
+| Stitches astray, detail lost | 1, 0 % | 0, 0 % |
+
+What gets worse is thickness and thread. The columns sew 50 % more thread than the fills. Their thick spots
+lie where a ring or a stroked circle closes, its underlay and its last stitches over its first, as a 6 mm
+column's do (3.35 fills over 3.75 mm²). The bare fabric is a satin column's own by this measure, 5.92 mm² on
+the sheet 6 mm wide. The plan takes as long. The short stitches and the jumps of a fill's row ends
+mostly go. At 10 mm the ring is refused for its 10.003 mm stitch and the arch crowds its inner
+rail, so only the bar and the stroked circle are wide there, which `REQ-AUTO-154` changes for the ring.
+
+**Decisions for the owner**, each recommended:
+
+1. **Off by default, on in the `logo` style.** `auto_max_split_satin_width_mm` is 7 mm by default, at which
+   no part is wide, and the `logo` style sets 10 mm. No picture of the set changes either way. Thickness is
+   the first concern, and a wide column sews 50 % more thread and 1.1 fills more at its closing spot than a
+   fill. MC-8's sew-out shows whether it reads better.
+2. **The upper bound, 10 mm**, from 7 to 12 mm. Wilcom's one source says about 10 mm. Ties fall on the
+   narrower side, so a column drawn 10 mm wide is wide.
+3. **The split, at a random phase with 10 % jitter.** It is the only method of the 4 whose split points don't
+   fall in lines, for 115 more stitches under 0.5 mm on the sheet.
+4. **7 mm stays one value for every profile**, as above.
+
+**What isn't built.** A wide piece of a broader part, a wide column of several lines, and patterned satin
+(mySewnet's patterns, Wilcom's program splits) are left out.
 
 ## Stitch types by width
 
