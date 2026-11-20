@@ -208,9 +208,9 @@ pub(super) fn outlines(design: &Design, rules: &[Option<AutoParams>], budget: &B
     // An area whose work runs out is left as drawn, and the others are smoothed again without it. Each attempt
     // freezes one more area, or all of them, so this ends.
     let mut frozen = BTreeSet::new();
-    let paths = loop {
+    let Smoothed { paths, points } = loop {
         match attempt(design, &settings, &frozen, budget) {
-            Ok(paths) => break paths,
+            Ok(smoothed) => break smoothed,
             Err(Ran::Out(index)) if !frozen.contains(&index) => {
                 frozen.insert(index);
             }
@@ -218,14 +218,7 @@ pub(super) fn outlines(design: &Design, rules: &[Option<AutoParams>], budget: &B
         }
     };
     let elements = design.elements();
-    let count = |path: &Path| path.subpaths.iter().map(|subpath| subpath.segments.len() + 1).sum::<usize>();
-    let (mut before, mut after) = (0, 0);
-    for index in settings.keys().filter(|index| !frozen.contains(index)) {
-        let Some(Shape::Fill { path, .. }) = elements.get(*index).map(|element| &element.shape) else { continue };
-        before += count(path);
-        after += paths.get(index).map_or_else(|| count(path), count);
-    }
-    said.push(notice(&settings, &frozen, (before, after), elements));
+    said.push(notice(&settings, &frozen, points, elements));
     if paths.is_empty() {
         return None;
     }
@@ -241,16 +234,16 @@ pub(super) fn outlines(design: &Design, rules: &[Option<AutoParams>], budget: &B
 }
 
 /// What `SC-I0921` says of the areas of `elements` with `settings`, those of them `frozen`, which ran out of
-/// work, and the outline points the others had and have.
+/// work, and the points the others' outlines need within [`KEPT`] as drawn and as smoothed.
 fn notice(settings: &BTreeMap<usize, f64>, frozen: &BTreeSet<usize>, (before, after): (usize, usize), elements: &[Element]) -> Diagnostic {
     let smoothed: Vec<f64> = settings.iter().filter(|(index, _)| !frozen.contains(index)).map(|(_, &setting)| setting).collect();
     let (least, most) = smoothed.iter().fold((f64::INFINITY, 0.0_f64), |(least, most), &s| (least.min(s), most.max(s)));
     let within = if least < most { format!("{least} to {most}") } else { format!("{most}") };
     let mut message = match smoothed.len() {
         0 => String::new(),
-        1 => format!("The outline of 1 automatic area was smoothed within {within} mm: it is drawn with {after} points, where it had {before}."),
+        1 => format!("The outline of 1 automatic area was smoothed within {within} mm: it is drawn with {after} points, where {before} drew it within {KEPT} mm."),
         n => format!(
-            "The outlines of {n} automatic areas were smoothed within {within} mm: they are drawn with {after} points, where they had {before}."
+            "The outlines of {n} automatic areas were smoothed within {within} mm: they are drawn with {after} points, where {before} drew them within {KEPT} mm."
         ),
     };
     let names: Vec<String> = frozen.iter().filter_map(|index| elements.get(*index)).map(|element| format!("`{}`", element.id)).collect();
@@ -466,10 +459,10 @@ fn smoothed(drawn: &[Point], closed: bool, tolerance: f64, deviation: f64, meter
 
 /// One attempt at smoothing the areas with `settings`, but those `frozen`: each area's smoothed path, for
 /// those whose outline changed, or why the work ran out.
-fn attempt(design: &Design, settings: &BTreeMap<usize, f64>, frozen: &BTreeSet<usize>, budget: &Budget) -> Result<BTreeMap<usize, Path>, Ran> {
+fn attempt(design: &Design, settings: &BTreeMap<usize, f64>, frozen: &BTreeSet<usize>, budget: &Budget) -> Result<Smoothed, Ran> {
     let active: BTreeMap<usize, f64> = settings.iter().filter(|(index, _)| !frozen.contains(index)).map(|(&i, &s)| (i, s)).collect();
     if active.is_empty() {
-        return Ok(BTreeMap::new());
+        return Ok(Smoothed::default());
     }
     let mut meters: BTreeMap<usize, Meter> = active.keys().map(|&index| (index, budget.meter())).collect();
     let mut rest = budget.meter();
@@ -508,7 +501,18 @@ fn attempt(design: &Design, settings: &BTreeMap<usize, f64>, frozen: &BTreeSet<u
     let all: BTreeSet<usize> = (0..pass.edges.len()).collect();
     pass.smooth(&all)?;
     pass.settle(&rings)?;
-    Ok(pass.paths(design, &rings))
+    let points = pass.points(&rings)?;
+    Ok(Smoothed { paths: pass.paths(design, &rings), points })
+}
+
+/// What an attempt made: each smoothed area's path, for those whose outline changed, and how many points the
+/// areas' outlines need within [`KEPT`], as drawn and as smoothed.
+#[derive(Default)]
+struct Smoothed {
+    /// The paths, by the areas' indices in the design.
+    paths: BTreeMap<usize, Path>,
+    /// The points, as drawn and as smoothed.
+    points: (usize, usize),
 }
 
 /// The edges of one attempt, the rings' runs along them, and the areas' meters.
@@ -590,6 +594,21 @@ impl Pass {
             }
             self.smooth(&dirty)?;
         }
+    }
+
+    /// How many points the smoothed areas' rings need within [`KEPT`], as drawn and now: a curve as drawn
+    /// counts as the points that draw it within that, so the 2 counts compare.
+    fn points(&mut self, rings: &[Ring]) -> Result<(usize, usize), Ran> {
+        let (mut before, mut after) = (0, 0);
+        for (&index, runs) in &self.runs {
+            let Some(ring) = rings.get(index) else { continue };
+            let (drawn, now) = (self.ring(runs, true), self.ring(runs, false));
+            let Some(meter) = self.meters.get_mut(&ring.element) else { continue };
+            let ran = |_| Ran::Out(ring.element);
+            before += line::fewest_round(&drawn, KEPT, meter).map_err(ran)?.len();
+            after += line::fewest_round(&now, KEPT, meter).map_err(ran)?.len();
+        }
+        Ok((before, after))
     }
 
     /// The smoothed edges that cross a line of an area along them, or themselves.

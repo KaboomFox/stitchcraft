@@ -212,12 +212,12 @@ fn diag_sc_i0921_says_the_outline_points_before_and_after() {
     let (_, said) = sewn(vec![lower, upper]);
     let notices: Vec<&str> = said.iter().filter(|d| d.code.to_string() == "SC-I0921").map(|d| d.message.as_str()).collect();
     assert_eq!(notices.len(), 1, "{said:?}");
-    // The 2 areas' outlines are drawn with 205 points, the shared edge counted once for each area.
+    // The 2 areas' outlines need 205 points as drawn, the shared edge counted once for each area.
     assert!(notices[0].contains("205"), "{}", notices[0]);
     let notice = said.iter().find(|d| d.code.to_string() == "SC-I0921").unwrap();
     assert_eq!(
         notice.to_string(),
-        "info SC-I0921: The outlines of 2 automatic areas were smoothed within 0.2 mm: they are drawn with 19 points, where they had 205."
+        "info SC-I0921: The outlines of 2 automatic areas were smoothed within 0.2 mm: they are drawn with 17 points, where 205 drew them within 0.02 mm."
     );
     assert_eq!(
         notice.fix,

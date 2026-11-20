@@ -350,11 +350,11 @@ mod tests {
         ];
         let cover = ["auto_base_offset_mm", "auto_base_rows", "auto_base_sliver_mm2", "auto_base_bare_percent"];
         let thick = ["auto_thick_warn_fills", "auto_thick_fail_fills", "auto_thick_warn_points", "auto_thick_fail_points", "auto_thick_cap_fills"];
-        assert_eq!(keys, [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..], &thick[..], &[DETAILS_LAST]].concat());
-        // The bounds, the base layer's offset and rows, the 2 limits of the cover's check, the 4 limits of the thickness and its cap, and the switch of the details
+        assert_eq!(keys, [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..], &thick[..], &[DETAILS_LAST, "auto_smooth_mm"]].concat());
+        // The bounds, the base layer's offset and rows, the 2 limits of the cover's check, the 4 limits of the thickness and its cap, the switch of the details and the smoothing
         // are the advanced settings, which no dialog shows.
         let advanced: Vec<&str> = AutoParams::SPECS.iter().filter(|spec| spec.group == ADVANCED).map(|spec| spec.key).collect();
-        assert_eq!(advanced, [&bounds[..], &cover[..], &thick[..], &[DETAILS_LAST]].concat());
+        assert_eq!(advanced, [&bounds[..], &cover[..], &thick[..], &[DETAILS_LAST, "auto_smooth_mm"]].concat());
     }
 
     #[test]
