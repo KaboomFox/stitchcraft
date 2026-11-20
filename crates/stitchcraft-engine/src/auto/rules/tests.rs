@@ -25,11 +25,21 @@ fn reaching(reach: f64) -> Measures {
 #[test]
 fn req_auto_030_the_rules_are_tried_in_the_tables_order_and_each_has_a_word_of_its_own() {
     let ids: Vec<RuleId> = RULES.iter().map(|rule| rule.id).collect();
-    let order =
-        [RuleId::Asked, RuleId::Speck, RuleId::Line, RuleId::Area, RuleId::Compact, RuleId::Uneven, RuleId::Arms, RuleId::Column, RuleId::Refused];
+    let order = [
+        RuleId::Asked,
+        RuleId::Speck,
+        RuleId::Line,
+        RuleId::Wide,
+        RuleId::Area,
+        RuleId::Compact,
+        RuleId::Uneven,
+        RuleId::Arms,
+        RuleId::Column,
+        RuleId::Refused,
+    ];
     assert_eq!(ids, order);
     let keys: Vec<&str> = RULES.iter().map(|rule| rule.id.key()).collect();
-    assert_eq!(keys, ["asked", "speck", "line", "area", "compact", "uneven", "arms", "column", "refused"]);
+    assert_eq!(keys, ["asked", "speck", "line", "wide", "area", "compact", "uneven", "arms", "column", "refused"]);
     // Every setting a rule names is a setting of the rules, and its texts leave no placeholder unfilled.
     for rule in RULES {
         assert!(rule.bounds.iter().all(|key| AutoParams::SPECS.iter().any(|spec| spec.key == *key)), "{:?}", rule.id);
@@ -46,6 +56,7 @@ fn req_auto_030_a_rules_text_gives_each_bound_s_default_with_its_unit() {
     assert_eq!(filled("{auto_min_slenderness} times, {auto_max_unevenness} of itself"), "3 times, 0.3 of itself");
     assert_eq!(filled("stroke, {narrowest}"), "stroke, 1 mm");
     assert_eq!(filled(RULES[2].sewn), "a running stitch along its centre lines, a triple run from 0.5 mm wide");
+    assert_eq!(filled("no longer than {longest}"), "no longer than 7 mm");
 }
 
 #[test]
@@ -99,7 +110,7 @@ fn req_auto_050_a_part_that_reaches_far_from_its_line_on_both_sides_has_arms() {
     let said = Fired { rule: RuleId::Arms, measures: Some(Measures { reach: 2.604, ..part(7.1, 0.97, 0.4, 1) }) }.text();
     assert_eq!(said, "arms (0.97 mm wide, reaching 2.60 times as far as its widest circle)");
     assert_eq!(
-        filled(RULES[6].is),
+        filled(RULES[7].is),
         "reaching from one of its centre lines, on both sides of it, more than 1.4 times as far as the widest circle that fits inside it on its lines"
     );
 }
@@ -182,7 +193,7 @@ fn req_auto_036_a_shape_that_names_its_stitch_sews_so_where_it_can() {
     assert_eq!(choose(&Measures::of_breadth(0.5, Breadth::Narrow), &asked("fill")), RuleId::Speck);
     // What is filled: an area, a compact part, an uneven one, and any part of a shape that asks to be.
     let filled: Vec<bool> = RULES.iter().map(|rule| fills(rule.id, &asked("auto"))).collect();
-    assert_eq!(filled, [false, false, false, true, true, true, true, false, false]);
+    assert_eq!(filled, [false, false, false, false, true, true, true, true, false, false]);
     assert_eq!(
         [fills(RuleId::Asked, &asked("fill")), fills(RuleId::Asked, &asked("satin")), fills(RuleId::Asked, &asked("run"))],
         [true, false, false]
@@ -253,4 +264,48 @@ fn diag_sc_i0912_names_each_part_s_rule_and_the_measures_that_decided_it() {
     most.extend(RULES.iter().flat_map(|rule| [fired(rule.id, None); 99]));
     let longest = said(&ElementId::new("a-layer-of-a-long-name:1234:fill").unwrap(), &most).unwrap().one_line();
     assert!(longest.ends_with(", 99 arms, 99 column, 99 refused.") && longest.chars().count() <= 500, "{}: {longest}", longest.chars().count());
+}
+
+#[test]
+fn req_auto_152_no_part_is_wide_at_the_default_and_a_raised_bound_is_held_to_its_tolerance() {
+    // At its default, the longest satin stitch, no part is wide: the bound is off.
+    let defaults = bounds(&[]);
+    assert_eq!((defaults.max_split, defaults.splits, defaults.wide()), (None, false, None));
+    assert_eq!(bounds(&[(MAX_SPLIT_SATIN_WIDTH, "7.0004")]).max_split, None);
+    assert_eq!(bounds(&[(MAX_SPLIT_SATIN_WIDTH, "7.001")]).max_split, Some(Mm::new(7.001).unwrap()));
+    // Raised, it holds a wide part's columns to the bound and its tolerance, and their stitches split.
+    let raised = bounds(&[(MAX_SPLIT_SATIN_WIDTH, "10")]);
+    let wide = raised.wide().unwrap();
+    assert_eq!((wide.max_satin.get(), wide.max_split, wide.splits), (10.0 + WIDE_TOLERANCE, None, true));
+    assert_eq!(Bounds { max_satin: raised.max_satin, ..wide }, Bounds { max_split: None, splits: true, ..raised });
+    assert!(raised.too_long(7.001) && !raised.too_long(7.0) && !wide.too_long(30.0));
+}
+
+#[test]
+fn req_auto_156_a_stroke_wider_than_a_satin_column_is_wide_up_to_the_bound_and_its_tolerance() {
+    let raised = bounds(&[(MAX_SPLIT_SATIN_WIDTH, "10")]);
+    let rule = |width: f64, bounds: &Bounds| choose(&Measures::of_stroke(width, bounds), bounds);
+    assert_eq!([rule(7.0, &raised), rule(7.001, &raised), rule(10.0 + WIDE_TOLERANCE, &raised)], [RuleId::Column, RuleId::Wide, RuleId::Wide]);
+    assert_eq!(rule(10.001 + WIDE_TOLERANCE, &raised), RuleId::Area);
+    // Off, a stroke as wide is filled.
+    assert_eq!(rule(8.5, &bounds(&[])), RuleId::Area);
+    // A wide line is never filled, and says its width.
+    assert!(!fills(RuleId::Wide, &raised));
+    let said = Fired { rule: RuleId::Wide, measures: Some(Measures::of_stroke(8.5, &raised)) }.text();
+    assert_eq!(said, "wide (8.5 mm wide)");
+}
+
+#[test]
+fn req_auto_153_a_wide_part_has_one_centre_line_and_an_even_width() {
+    let raised = bounds(&[(MAX_SPLIT_SATIN_WIDTH, "10")]);
+    // The most a width varies, 0.3, to its third decimal, also for a part of one line.
+    assert!(raised.is_wide(8.5, 1, 0.3004) && !raised.is_wide(8.5, 1, 0.3006));
+    assert!(!raised.is_wide(8.5, 2, 0.0) && !raised.is_wide(8.5, 0, 0.0));
+    assert!(raised.one_even_line(1, 0.0) && !raised.one_even_line(2, 0.0) && !raised.one_even_line(1, 0.31));
+    // A part as wide as a satin column is no wide part, nor any part with the bound off.
+    assert!(!raised.is_wide(7.0, 1, 0.0) && raised.is_wide(7.001, 1, 0.0) && !bounds(&[]).is_wide(8.5, 1, 0.0));
+    // A broad part whose lines weren't looked for is an area.
+    assert_eq!(choose(&Measures::of_breadth(80.0, Breadth::Broad), &raised), RuleId::Area);
+    // Leaning towards satin loosens the evenness, as for a part of several lines.
+    assert!(bounds(&[(MAX_SPLIT_SATIN_WIDTH, "10"), (PREFER, "satin")]).is_wide(8.5, 1, 0.4));
 }

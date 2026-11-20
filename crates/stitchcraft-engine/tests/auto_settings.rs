@@ -81,6 +81,8 @@ fn req_auto_020_the_rules_settings_are_stitchcraft_s_own_and_no_stitch_type_read
     // The advanced settings: the rules' bounds, then the base layer's offset and the 2 limits of the cover's check.
     let bounds = [
         (MAX_SATIN_WIDTH, "7"),
+        // The widest split satin column, at the widest satin column: no part is wide (`REQ-AUTO-152`, M13.54).
+        ("auto_max_split_satin_width_mm", "7"),
         (MIN_TRIPLE_RUN_WIDTH, "0.5"),
         (MIN_SLENDERNESS, "3"),
         (MAX_UNEVENNESS, "0.3"),
