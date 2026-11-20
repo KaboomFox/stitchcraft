@@ -1256,7 +1256,7 @@ stitch = ["plan", "docs/src/images/generated/auto-pear-photo.png", "-o", "pear.p
 commands = [{ cmd = "ui.layersExpand" }]
 menu = ["Window", "Layers"]
 panel = "Layers"
-alt = "VectorCraft's Layers panel at its default width with the traced pear. It shows Layer 1, its group, open, and a row for each of the 6 shapes. Dark Olive fill (1), Russet Brown fill (1), Mint Green fill (1) and White left out (1) show whole. Dark Olive column (1) loses its closing bracket at the row's end, and Russet Brown column (1) shows only its first 18 characters, without its number and with no ellipsis."
+alt = "VectorCraft's Layers panel at its default width with the traced pear. It shows Layer 1, its group, open, and a row for each of the 6 shapes, each name starting with how the shape sews and its number. Fill 1, Dark Olive, Column 1, Dark Olive, Fill 1, Russet Brown, Fill 1, Mint Green and Left out 1, White show whole. Column 1, Russet Brown shows its first 20 characters, Column 1, Russet Bro, with no ellipsis: its kind and number show, and the end of its thread's name is cut."
 
 [[shot]]
 id = "vectorcraft-fill-dialog"

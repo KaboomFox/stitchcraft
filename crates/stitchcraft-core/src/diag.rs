@@ -204,7 +204,7 @@ impl Diagnostic {
 }
 
 /// The words that name a shape in a message: its `name` in quotes, as a Rust string literal writes it so
-/// that no character of it breaks the line, then the id of its `element`, `"Red fill (3)", vc:63:fill`; or
+/// that no character of it breaks the line, then the id of its `element`, `"Fill 3, Red", vc:63:fill`; or
 /// the id alone when the shape has no name. Every message that names a shape names it so
 /// (`docs/src/design/image-to-embroidery.md` › Names of shapes).
 pub fn called(name: Option<&str>, element: &ElementId) -> String {
