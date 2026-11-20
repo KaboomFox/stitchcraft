@@ -5,6 +5,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.50: the thickness cap covers lettering (`REQ-AUTO-119` to `REQ-AUTO-124`, `SC-W0913`).
+  - Lettering that automatic digitizing places, marked text and text objects, is in the reach of the last
+    pass and the cap. Its columns stay whole: the cap takes a column's underlay only where another column
+    covers it too, and the running stitches under a column, judging the column's cover by its own pull
+    compensation. The last resort takes no lettering column's top, and the last pass moves no end of its
+    stitches. CHANGELOG_NUMBERS
+  - A lettering column sewn whole tags its underlay underlay in the plan.
+  - A design of a person's own lettering is measured by the default limits and warned of, and nothing is
+    taken from it.
+  - The mark planning reads is `Element::lettered` (`Lettered::Set` or `Lettered::Digitized`).
+  - The before and after sheet measures its row of the area at 3 fills or more at 3 fills again
+    (`fabric::THICK_FILLS`). Measured at the warning's limit, which M13.46 raised to 4, it read 0 on every
+    picture.
 - M13.46: the cap leaves satin columns whole, and is lower (`REQ-AUTO-112` to `REQ-AUTO-114`, `SC-I1119`,
   `SC-W0913`).
   - Below the warning's limit, 4 fills, the cap at the end of planning takes no needle point of a satin

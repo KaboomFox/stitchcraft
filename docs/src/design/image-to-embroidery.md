@@ -1994,11 +1994,26 @@ a picture (M14.5) and a text object that automatic digitizing letters (M14.7). I
 (`REQ-AUTO-119`), its columns are columns (`REQ-AUTO-112`), and a design of lettering alone is measured with
 the default limits. A lettering object a person places sews by its own settings, as every element with
 settings does. The cap leaves it as it is, and `SC-W0913` tells of a spot above the warning's limit
-(`REQ-AUTO-124`). Planning knows the lettering it may change by a mark the lettering pass gives the elements
-it places. The elements' ids aren't that mark, since a person may name a shape so.
+(`REQ-AUTO-124`). Planning knows the lettering it may change by a mark the lettering passes give the elements
+they place, `Element::lettered`: `Lettered::Digitized` from the passes of marked text and text objects, and
+`Lettered::Set` where a person sets text in a font. The elements' ids aren't that mark, since a person may
+name a shape so, and no file carries it. A design with lettering of either kind and no automatic shape is
+measured by the rules' default limits. With nothing in the cap's reach, its plan is only measured.
+
+**Underlay tagged.** A lettering column sewn whole tags the needle points before its top stitches' first as
+underlay (`REQ-AUTO-120`): its underlays, its start and the needle's way between them, as the satin
+generator joins them. Other columns sewn whole keep every stitch tagged top. Tagged on every column, the
+underlay changed TS-13D by 9 stitches, since the cap's rules for digitized columns were measured with their
+underlay tagged top. That is a step of its own.
+
+**The pull.** A lettering column's stitch covers a place only as its own pull compensation pulls it in, at
+each end where the thread turns: `pull_compensation_mm` and `pull_compensation_percent` of the stitch's length,
+the larger of the 2 sides' each, and 0.2 mm at the least (`REQ-AUTO-121`). It covers so even where the cap
+judges other columns' cover as drawn, above the warning's limit.
 
 **The last resort and lettering.** Above the warning's limit, M13.46's cap takes a satin column's top
-stitch as a last resort. On lettering it does not (`REQ-AUTO-123`). Measured on the 744 letters and the
+stitch as a last resort. On lettering it does not, and the last pass moves no end of a lettering column's
+stitches back along it (`REQ-AUTO-123`): where 3 columns cross at 7.8 fills, it narrowed a column by 2 stitches. Measured on the 744 letters and the
 words with the rules above and with the last resort, against the rules alone:
 
 | | Rules above | With the last resort |
@@ -2052,7 +2067,7 @@ fills, where 2 columns meet over the field between the M and the A.
   and sewed thicker.
 - Small Font on a field stays at 4.9 to 5.4 fills at its thickest joins, and the marked patch at 4.53. What
   MC-8 shows decides whether a word on a patch needs more. A lighter field under the letters would be a
-  setting of the field's.
+  setting of the field's, in a step of its own: M13.50 adds no setting.
 
 ## Likeness
 

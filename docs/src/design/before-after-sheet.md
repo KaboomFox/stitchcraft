@@ -38,7 +38,7 @@ The example computes no number of its own. Each comes from the function a confor
 | Jump threads left to cut, on a machine with one needle that cuts none | `stitchcraft_testkit::fabric::astray` |
 | Stitches astray | `stitchcraft_testkit::fabric::astray` |
 | Slivers, and the share of the design left bare | `stitchcraft_testkit::fabric::cover` |
-| The thickest spot in fills, the area at 3 fills or more, and the most needle points per mm² | `stitchcraft_testkit::fabric::thickness` |
+| The thickest spot in fills, the area at 3 fills or more, and the most needle points per mm² | `stitchcraft_testkit::fabric::thickness`, and `fabric::thick_area` for the area, at `fabric::THICK_FILLS` whatever the warning's limit |
 | Detail lost: the share of each colour's parts that the stitches lose, the mean over the colours | `stitchcraft_testkit::fabric::likeness` |
 
 [Image to embroidery](image-to-embroidery.md#covering-the-fabric) defines each one, and
