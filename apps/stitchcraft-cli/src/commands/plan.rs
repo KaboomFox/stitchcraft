@@ -32,6 +32,7 @@
 //! whether the panic came while planning or while drawing the picture, which a replay then draws too.
 
 use std::cell::Cell;
+use std::collections::BTreeMap;
 use std::fmt::Write as _;
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::Path;
@@ -40,6 +41,7 @@ use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use stitchcraft_core::{Budget, Code, Diagnostic, Severity};
 use stitchcraft_engine::design::{Design, Reading};
+use stitchcraft_engine::names::Names;
 use stitchcraft_formats::{Encoded, read_back};
 use stitchcraft_plan::profiles;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, TrimSupport};
@@ -126,6 +128,8 @@ pub struct Sewn {
     pub file: Option<Vec<u8>>,
     /// The machine file read back, with the plan's threads ([`read_back`]): what it sews.
     pub back: Option<StitchPlan>,
+    /// The design's shapes, named and placed in the sewing order as the engine planned them.
+    pub names: Names,
 }
 
 impl Sewn {
@@ -164,7 +168,7 @@ pub fn sew(
     });
     let (design, warnings) = match read {
         Ok(read) => read,
-        Err(unreadable) => return Sewn { diagnostics: vec![unreadable], plan: None, file: None, back: None },
+        Err(unreadable) => return Sewn { diagnostics: vec![unreadable], plan: None, file: None, back: None, names: Names::default() },
     };
     sew_design(&design, warnings, profile, format, name)
 }
@@ -175,18 +179,21 @@ pub fn sew(
 pub fn sew_design(design: &Design, warnings: Vec<Diagnostic>, profile: &MachineProfile, format: FormatId, name: &str) -> Sewn {
     // Planned for the format it is written in, whose limits the file then keeps.
     let outcome = stitchcraft_engine::plan(design, &profile.writing(format), &Budget::DEFAULT);
+    let names = outcome.names;
+    // The reader's warnings name the shapes they are about too (`REQ-AUTO-127`).
     let mut diagnostics = warnings;
+    names.tell(&mut diagnostics);
     diagnostics.extend(outcome.diagnostics);
-    let Some(plan) = outcome.plan else { return Sewn { diagnostics, plan: None, file: None, back: None } };
+    let Some(plan) = outcome.plan else { return Sewn { diagnostics, plan: None, file: None, back: None, names } };
     match stitchcraft_formats::encode(&plan, format, name) {
         Ok(Encoded { bytes, notes }) => {
             diagnostics.extend(notes);
             let back = read_back(&bytes, &plan).map_err(|bug| diagnostics.push(bug)).ok();
-            Sewn { diagnostics, plan: Some(plan), file: Some(bytes), back }
+            Sewn { diagnostics, plan: Some(plan), file: Some(bytes), back, names }
         }
         Err(e) => {
             diagnostics.push(e.diagnostic());
-            Sewn { diagnostics, plan: Some(plan), file: None, back: None }
+            Sewn { diagnostics, plan: Some(plan), file: None, back: None, names }
         }
     }
 }
@@ -265,7 +272,7 @@ pub fn run_with(args: &PlanArgs, models: &Provider) -> Outcome {
         match subject::cut(&bytes, &args.subject.marks.marks(), models) {
             Ok(cut) => Some(cut),
             Err(Stopped::Usage(why)) => return Outcome::usage(why),
-            Err(Stopped::Said(said)) => return refuse(args, tracing_for, None, &[said]),
+            Err(Stopped::Said(said)) => return refuse(args, tracing_for, None, (&[said], None)),
         }
     } else {
         None
@@ -316,18 +323,36 @@ fn traced(args: &PlanArgs, profile: &MachineProfile, bytes: &[u8], cut: Option<&
     let steps = trace::steps(&name, bytes, profile, tracing.size, tracing.colours.unwrap_or(trace::COLOURS));
     let scratch = Scratch::beside(&args.output)
         .map_err(|error| Outcome::unwritten("", &Unwritten { path: args.output.clone(), error, written: Vec::new() }))?;
-    trace::traced(tracing.vectorcraft_cli.as_deref(), &name, &steps, &scratch).map_err(|untraced| refuse(args, profile, cut, &[untraced]))
+    trace::traced(tracing.vectorcraft_cli.as_deref(), &name, &steps, &scratch).map_err(|untraced| refuse(args, profile, cut, (&[untraced], None)))
 }
 
 /// `stitch plan` once the design is read: planned and, unless StitchCraft found a bug in itself, written.
 /// `phase` follows where it is, for a bundle, and `cut` is the subject a picture was cut out to.
+/// A picture's traced document is written, and bundled, with the names its shapes were planned with
+/// (`REQ-VC-033`): planned again, it gives them the same names and sews the same stitches.
 fn planned(args: &PlanArgs, run: &Run, phase: &Cell<Phase>, cut: Option<&Subject>) -> Outcome {
-    let sewn = sew(run.source, run.design, (run.reading, run.rules), run.profile, run.format, run.name);
+    let mut sewn = sew(run.source, run.design, (run.reading, run.rules), run.profile, run.format, run.name);
+    let named = match trace::is_picture(&args.design).then(|| stitchcraft_vectorcraft::named(run.design, &nodes(&sewn.names), &Budget::DEFAULT)) {
+        Some(Ok(named)) => Some(named),
+        Some(Err(said)) => {
+            sewn.diagnostics.push(said);
+            None
+        }
+        None => None,
+    };
+    let run = &Run { design: named.as_deref().unwrap_or(run.design), says: run.says.clone(), ..*run };
     if sewn.found_a_bug() {
-        let refused = refuse(args, run.profile, cut, &sewn.diagnostics);
+        let refused = refuse(args, run.profile, cut, (&sewn.diagnostics, Some(&sewn.names)));
         return bug_report::beside(&args.output, run, Ok(&sewn), refused);
     }
     written(args, run, sewn, phase, cut)
+}
+
+/// The name of each shape of a VectorCraft document that `names` names, by its object's id: the shapes
+/// whose ids are `vc:` and a number.
+fn nodes(names: &Names) -> BTreeMap<u64, String> {
+    let node = |element: &str| element.strip_prefix("vc:").and_then(|id| id.parse().ok());
+    names.sewing_order().into_iter().filter_map(|shape| Some((node(&shape.element)?, shape.name.clone()?))).collect()
 }
 
 /// What `stitch plan` writes for the design `sewn`, of `run`: the machine file, and the picture, the report,
@@ -335,8 +360,8 @@ fn planned(args: &PlanArgs, run: &Run, phase: &Cell<Phase>, cut: Option<&Subject
 /// printed, before any is written. When anything said is an error, only the report (`REQ-CLI-003`).
 fn written(args: &PlanArgs, run: &Run, sewn: Sewn, phase: &Cell<Phase>, cut: Option<&Subject>) -> Outcome {
     let (profile, format) = (run.profile, run.format);
-    let Sewn { mut diagnostics, plan: Some(plan), file: Some(machine_file), back: Some(back) } = sewn else {
-        return refuse(args, profile, cut, &sewn.diagnostics);
+    let Sewn { mut diagnostics, plan: Some(plan), file: Some(machine_file), back: Some(back), names } = sewn else {
+        return refuse(args, profile, cut, (&sewn.diagnostics, Some(&sewn.names)));
     };
     // The picture is drawn before anything is written, so that one that cannot be drawn stops the rest too.
     phase.set(Phase::Picture);
@@ -353,11 +378,11 @@ fn written(args: &PlanArgs, run: &Run, sewn: Sewn, phase: &Cell<Phase>, cut: Opt
     // file without it is not the design: Ink/Stitch writes no file when an element fails, and neither does
     // this command.
     if diagnostics.iter().any(|d| d.severity() == Severity::Error) {
-        return refuse(args, profile, cut, &diagnostics);
+        return refuse(args, profile, cut, (&diagnostics, Some(&names)));
     }
     // What the cut-out kept is said first, as it came first.
     let diagnostics: Vec<Diagnostic> = cut.iter().map(|cut| cut.said.clone()).chain(diagnostics).collect();
-    let made = Made { file: Some((format, &machine_file)), planned: Some((&plan, &back)), subject: run.subject };
+    let made = Made { file: Some((format, &machine_file)), planned: Some((&plan, &back)), subject: run.subject, names: Some(&names) };
     let report = args.report.as_ref().map(|path| (path, report(args, profile, &made, &diagnostics)));
     let mut stdout = summary(args, profile, format, (&plan, &back), &machine_file);
     if let Some((path, image)) = &image {
@@ -389,10 +414,10 @@ fn written(args: &PlanArgs, run: &Run, sewn: Sewn, phase: &Cell<Phase>, cut: Opt
 }
 
 /// Nothing is written but the report, which says why: what the cut-out `cut` kept, if a picture was cut out,
-/// and `diagnostics`.
-fn refuse(args: &PlanArgs, profile: &MachineProfile, cut: Option<&Subject>, diagnostics: &[Diagnostic]) -> Outcome {
+/// and `diagnostics`, with the design's shapes, `names`, when it was planned.
+fn refuse(args: &PlanArgs, profile: &MachineProfile, cut: Option<&Subject>, (diagnostics, names): (&[Diagnostic], Option<&Names>)) -> Outcome {
     let diagnostics: Vec<Diagnostic> = cut.iter().map(|cut| cut.said.clone()).chain(diagnostics.iter().cloned()).collect();
-    let made = Made { file: None, planned: None, subject: cut.map(|cut| &cut.record) };
+    let made = Made { file: None, planned: None, subject: cut.map(|cut| &cut.record), names };
     if let Some(path) = &args.report
         && let Err(unwritten) = write_files(&[(path, report(args, profile, &made, &diagnostics).as_bytes())], &render_diagnostics(&diagnostics))
     {
@@ -402,12 +427,13 @@ fn refuse(args: &PlanArgs, profile: &MachineProfile, cut: Option<&Subject>, diag
 }
 
 /// What a report describes besides what was said: the machine file written, the plan and the file read back,
-/// and the record of a picture's cut-out.
+/// the record of a picture's cut-out, and the design's shapes when it was planned.
 #[derive(Clone, Copy)]
 struct Made<'a> {
     file: Option<(FormatId, &'a [u8])>,
     planned: Option<(&'a StitchPlan, &'a StitchPlan)>,
     subject: Option<&'a subject::Record>,
+    names: Option<&'a Names>,
 }
 
 /// What is written and what the machine will ask for: the file's size and counts, read `back`, and the
@@ -423,19 +449,31 @@ fn summary(args: &PlanArgs, profile: &MachineProfile, format: FormatId, (plan, b
 }
 
 /// The report: the design, the machine file if one was written, its counts and size, read back, the plan's
-/// threads, the record of a picture's cut-out, and every diagnostic with its element.
+/// threads, the record of a picture's cut-out, every diagnostic with its element and its shape's name, and
+/// the shapes in their sewing order (`REQ-CLI-023`).
 fn report(args: &PlanArgs, profile: &MachineProfile, made: &Made, diagnostics: &[Diagnostic]) -> String {
-    let Made { file, planned, subject } = *made;
-    let mut report = json!({
-        "design": path(&args.design),
-        "profile": profile.id,
-        "diagnostics": diagnostics.iter().map(|d| json!({
+    let Made { file, planned, subject, names } = *made;
+    let said = |d: &Diagnostic| {
+        let mut said = json!({
             "code": d.code.to_string(),
             "severity": d.severity().label(),
             "element": d.element.as_ref().map(ToString::to_string),
             "message": d.message,
-        })).collect::<Vec<Value>>(),
+        });
+        if let Some(name) = &d.name {
+            said["name"] = json!(name);
+        }
+        said
+    };
+    let mut report = json!({
+        "design": path(&args.design),
+        "profile": profile.id,
+        "diagnostics": diagnostics.iter().map(said).collect::<Vec<Value>>(),
     });
+    if let Some(names) = names {
+        let shape = |shape: &&stitchcraft_engine::names::Shape| json!({ "name": shape.name, "element": shape.element, "thread": shape.thread.to_string(), "kind": shape.kind.label(), "place": shape.place });
+        report["shapes"] = names.sewing_order().iter().map(shape).collect();
+    }
     if let Some((format, bytes)) = file {
         report["file"] = json!({ "path": path(&args.output), "format": format.name(), "bytes": bytes.len(), "sha256": hex(&Sha256::digest(bytes)) });
     }

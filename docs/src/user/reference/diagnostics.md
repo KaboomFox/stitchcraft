@@ -127,6 +127,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0917`](#sc-w0917) | Warning | Mark not used |
 | [`SC-I0918`](#sc-i0918) | Info | Parts that follow a guide |
 | [`SC-W0919`](#sc-w0919) | Warning | Guide not used |
+| [`SC-W0920`](#sc-w0920) | Warning | Own Auto settings replace the group's |
 | [`SC-E1001`](#sc-e1001) | Error | Nothing to route |
 | [`SC-I1002`](#sc-i1002) | Info | Element left out of the route |
 | [`SC-W1003`](#sc-w1003) | Warning | Piece of a routed satin column may sew otherwise |
@@ -1768,6 +1769,20 @@ A guide steers nothing, and the design sews as it would without it. It crosses n
 an automatic area, or its line has no length, or the design has no automatic shape, and the
 message says which of these it is. Draw the guide as a line across the filled shapes whose rows
 should follow it, or remove it.
+
+## SC-W0920
+
+**Warning** — Own Auto settings replace the group's
+
+A path or a compound path has StitchCraft's Auto effect of its own, inside a group or a layer
+whose Auto effect makes everything in it automatic. The nearest effects say how a path sews, so it
+sews by its own effect's settings alone, and none of the group's reach it. VectorCraft stores an
+effect with every setting, its defaults too, so the path's own effect can't leave a setting to
+the group.
+
+The message names the path, as the Layers panel shows it, and each setting the group changes from
+its default that the path's own effect sets otherwise, with both values. To sew the path by the
+group's settings, remove its own Auto effect. To keep it, set those settings on it too.
 
 ## SC-E1001
 

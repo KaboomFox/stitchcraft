@@ -5,6 +5,18 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.25: names of shapes (`REQ-AUTO-125` to `REQ-AUTO-127`, `REQ-VC-033`, `REQ-VC-034`, `REQ-CLI-023`,
+  `SC-W0920`).
+  - Each automatic shape without a name is named by its thread, how it sews and its number among the shapes
+    of both from the Layers panel's top row: `Red fill (3)`. A shape keeps a name it has, and no shape gets a
+    name another shape has.
+  - `stitch plan picture.png --traced` writes the names into the traced document, so VectorCraft's Layers
+    panel shows them and its search finds them. A picture's bug-report bundle keeps them.
+  - A notice about a shape names it before its id, `info SC-I0912 ("Red fill (3)", vc:63:fill): …`, and so
+    do the shapes of `SC-W0913`. The report gives each such notice a `name`, and lists the shapes under
+    `shapes` in their sewing order, each with its place.
+  - `SC-W0920` names a path whose own Auto effect inside an automatic group replaces the group's settings,
+    with each setting it doesn't take, in place of `SC-W0807`.
 - M13.46: the cap leaves satin columns whole, and is lower (`REQ-AUTO-112` to `REQ-AUTO-114`, `SC-I1119`,
   `SC-W0913`).
   - Below the warning's limit, 4 fills, the cap at the end of planning takes no needle point of a satin

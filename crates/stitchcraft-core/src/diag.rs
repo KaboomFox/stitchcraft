@@ -140,6 +140,11 @@ pub struct Diagnostic {
     pub message: String,
     /// The element it concerns, when it concerns one.
     pub element: Option<ElementId>,
+    /// The name of the shape its element is part of, when that shape has one: the name the person finds it
+    /// by in VectorCraft's Layers panel, which planning gives each shape digitized automatically
+    /// (`REQ-AUTO-127`). A host shows it before the element's id ([`called`]). Boxed, so that a `Result`
+    /// whose error is a diagnostic stays small.
+    pub name: Option<Box<str>>,
     /// Where on the canvas, in millimetres, when it has a place.
     pub at: Option<Point>,
     /// A hint, or a change the host can apply.
@@ -149,7 +154,7 @@ pub struct Diagnostic {
 impl Diagnostic {
     /// A diagnostic with `code` and `message`, not tied to an element or a place.
     pub fn new(code: Code, message: impl Into<String>) -> Self {
-        Diagnostic { code, message: message.into(), element: None, at: None, fix: None }
+        Diagnostic { code, message: message.into(), element: None, name: None, at: None, fix: None }
     }
 
     /// This diagnostic, concerning `element`.
@@ -178,11 +183,12 @@ impl Diagnostic {
         self.code.severity()
     }
 
-    /// The first line people read of it, naming its element when it has one:
-    /// `warning SC-W0307 (svg:patch:fill): …`. The command line prints its fix on the next line.
+    /// The first line people read of it, naming its element when it has one, after the name of its shape
+    /// when that has one ([`called`]): `warning SC-W0307 (svg:patch:fill): …`, `info SC-I0912 ("Red fill
+    /// (3)", vc:63:fill): …`. The command line prints its fix on the next line.
     pub fn headline(&self) -> String {
         match &self.element {
-            Some(element) => format!("{} {} ({element}): {}", self.severity().label(), self.code, self.message),
+            Some(element) => format!("{} {} ({}): {}", self.severity().label(), self.code, called(self.name.as_deref(), element), self.message),
             None => self.to_string(),
         }
     }
@@ -194,6 +200,17 @@ impl Diagnostic {
             Some(fix) => format!("{} {}", self.headline(), fix.describe()),
             None => self.headline(),
         }
+    }
+}
+
+/// The words that name a shape in a message: its `name` in quotes, as a Rust string literal writes it so
+/// that no character of it breaks the line, then the id of its `element`, `"Red fill (3)", vc:63:fill`; or
+/// the id alone when the shape has no name. Every message that names a shape names it so
+/// (`docs/src/design/image-to-embroidery.md` › Names of shapes).
+pub fn called(name: Option<&str>, element: &ElementId) -> String {
+    match name {
+        Some(name) => format!("{name:?}, {element}"),
+        None => element.to_string(),
     }
 }
 
@@ -222,6 +239,16 @@ mod tests {
             let digits: String = chars.collect();
             assert!(digits.len() == 4 && digits.chars().all(|c| c.is_ascii_digit()), "{id}: expected four digits");
         }
+    }
+
+    #[test]
+    fn req_auto_127_a_headline_names_the_shape_before_its_element() {
+        let element = ElementId::new("vc:63:fill").unwrap();
+        let said = Diagnostic::new(Code::AutoRule, "This shape sews by the rule area.").with_element(element.clone());
+        assert_eq!(said.headline(), "info SC-I0912 (vc:63:fill): This shape sews by the rule area.");
+        let named = Diagnostic { name: Some("Red \"fill\" (3)\n".into()), ..said };
+        assert_eq!(named.headline(), r#"info SC-I0912 ("Red \"fill\" (3)\n", vc:63:fill): This shape sews by the rule area."#);
+        assert_eq!(called(None, &element), "vc:63:fill");
     }
 
     #[test]

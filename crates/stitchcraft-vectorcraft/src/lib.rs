@@ -41,6 +41,7 @@ pub mod filter;
 mod geometry;
 mod gradient;
 pub mod lettering;
+mod named;
 pub mod settings;
 mod values;
 mod wire;
@@ -53,6 +54,7 @@ pub use effect::{
     AutoEffect, Effect, LINE_SIDES, RIBBON_MM, SIDES_PER_UNIT, effect_drawn, effect_error, effect_lines, effect_output, effect_ribbons, effect_solid,
     read_auto_effect, read_effect,
 };
+pub use named::named;
 pub use values::text as param_text;
 
 /// The namespace of StitchCraft's VectorCraft plug-ins. A live effect's id is `plugin.`, this, a dot and

@@ -483,7 +483,7 @@ same ([how thick a design sews](image-to-embroidery.md#how-thick-a-design-sews))
 |---|---|
 | Machine file | `stitchcraft-formats` writer chosen by the profile or the output extension |
 | Preview PNG | `stitchcraft-render`, from the *quantized* plan (`REQ-RND-001`), cut where the profile's machine cuts the thread ([rendering](rendering.md)) |
-| Report JSON | The CLI's, with the counts and size of the machine file read back as a machine reads it, its SHA-256, the threads and the diagnostics |
-| Traced document | Of a picture, the document VectorCraft's command line traced it into, which `stitch plan --traced` writes ([image to embroidery](image-to-embroidery.md#pictures-from-the-command-line)) |
+| Report JSON | The CLI's, with the counts and size of the machine file read back as a machine reads it, its SHA-256, the threads, the diagnostics with their shapes' names, and the shapes in their sewing order ([names of shapes](image-to-embroidery.md#names-of-shapes)) |
+| Traced document | Of a picture, the document VectorCraft's command line traced it into, with the names of its shapes, which `stitch plan --traced` writes ([image to embroidery](image-to-embroidery.md#pictures-from-the-command-line)) |
 | Cut-out | Of a picture planned with `--subject`, the picture cropped to its subject on a transparent ground, which `stitch plan --cutout` writes ([image to embroidery](image-to-embroidery.md#subject-cut-out)) |
 | Plug-in preview geometry | `stitchcraft-vc-plugin`, from one element's groups whatever their threads, its top rows or its path, by the preview's level ([integration](vectorcraft-integration.md#live-effect-previews-within-v1-budgets)) |

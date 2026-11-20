@@ -110,6 +110,7 @@ use stitchcraft_svg::lettering::pictures;
 use crate::container::{self, BYTES_PER_UNIT, MAX_BYTES, unreadable};
 
 mod clip;
+mod replaced;
 mod text;
 
 /// The bytes the elements' copies of their objects' paths may take, in all, for each byte of JSON read
@@ -940,7 +941,12 @@ impl Reader<'_> {
         }
         let gives = !own.is_empty() || own_auto.is_some();
         let levels = around.levels.saturating_add(u32::from(gives));
-        if levels > 1 {
+        // Its own Auto effect inside an automatic group is said with the settings it loses (`REQ-VC-034`).
+        let replaced = own_auto.filter(|_| own.is_empty()).zip(around.auto.filter(|_| around.effects.is_empty()));
+        if let Some((own, group)) = replaced {
+            self.warn(Code::AutoOwnReplaces, Some(label), replaced::message(&who, own, group), Some(replaced::HINT));
+        }
+        if levels > 1 + u32::from(replaced.is_some()) {
             let message = format!(
                 "{} gets StitchCraft effects from more than one level, its own or those of the groups and layers around it, and \
                  VectorCraft runs each on the stitches of the one before: it is sewn as the nearest say.",

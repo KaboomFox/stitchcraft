@@ -259,6 +259,17 @@ macro_rules! auto_codes {
         /// message says which of these it is. Draw the guide as a line across the filled shapes whose rows
         /// should follow it, or remove it.
         AutoGuideUnused = "SC-W0919", Warning, "Guide not used";
+
+        /// A path or a compound path has StitchCraft's Auto effect of its own, inside a group or a layer
+        /// whose Auto effect makes everything in it automatic. The nearest effects say how a path sews, so it
+        /// sews by its own effect's settings alone, and none of the group's reach it. VectorCraft stores an
+        /// effect with every setting, its defaults too, so the path's own effect can't leave a setting to
+        /// the group.
+        ///
+        /// The message names the path, as the Layers panel shows it, and each setting the group changes from
+        /// its default that the path's own effect sets otherwise, with both values. To sew the path by the
+        /// group's settings, remove its own Auto effect. To keep it, set those settings on it too.
+        AutoOwnReplaces = "SC-W0920", Warning, "Own Auto settings replace the group's";
         } }
     };
 }

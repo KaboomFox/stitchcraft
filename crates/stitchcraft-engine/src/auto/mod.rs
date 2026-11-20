@@ -98,6 +98,7 @@ pub use params::{
     MAX_UNEVENNESS, MIN_AREA, MIN_FILL_WIDTH, MIN_LIKENESS, MIN_LINE_UNEVENNESS, MIN_SLENDERNESS, MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, STITCH,
 };
 use rules::{Asked, Bounds, Fired, Measures, RuleId};
+pub use thick::WARNING_CHARS;
 
 use std::borrow::Cow;
 use std::collections::BTreeSet;

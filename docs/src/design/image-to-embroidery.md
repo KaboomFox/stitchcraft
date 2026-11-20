@@ -1,6 +1,6 @@
 # Image to embroidery
 
-<!-- implements: crates/stitchcraft-engine/src/auto/**, crates/stitchcraft-engine/src/moves.rs, crates/stitchcraft-engine/src/moves/**, crates/stitchcraft-plan/src/thickness/**, apps/stitchcraft-cli/src/commands/palette.rs, apps/stitchcraft-cli/src/trace.rs, apps/stitchcraft-cutout/src/**, apps/stitchcraft-cli/src/subject.rs, apps/stitchcraft-cli/src/subject/**, apps/stitchcraft-cli/src/commands/cutout.rs, crates/stitchcraft-svg/src/lettering/pictures.rs, crates/stitchcraft-svg/src/lettering/pictures/**, apps/stitchcraft-cli/src/text.rs, apps/stitchcraft-cli/src/keep.rs, crates/stitchcraft-engine/src/design/mark.rs, crates/stitchcraft-engine/src/design/mark/** -->
+<!-- implements: crates/stitchcraft-engine/src/auto/**, crates/stitchcraft-engine/src/moves.rs, crates/stitchcraft-engine/src/moves/**, crates/stitchcraft-plan/src/thickness/**, apps/stitchcraft-cli/src/commands/palette.rs, apps/stitchcraft-cli/src/trace.rs, apps/stitchcraft-cutout/src/**, apps/stitchcraft-cli/src/subject.rs, apps/stitchcraft-cli/src/subject/**, apps/stitchcraft-cli/src/commands/cutout.rs, crates/stitchcraft-svg/src/lettering/pictures.rs, crates/stitchcraft-svg/src/lettering/pictures/**, apps/stitchcraft-cli/src/text.rs, apps/stitchcraft-cli/src/keep.rs, crates/stitchcraft-engine/src/design/mark.rs, crates/stitchcraft-engine/src/design/mark/**, crates/stitchcraft-engine/src/names.rs, crates/stitchcraft-engine/src/names/** -->
 
 Automatic digitizing makes a design that sews well from a picture of flat colours, such as a logo, clip
 art or a drawing, once it is traced into shapes. Settings on the shapes are optional. StitchCraft chooses
@@ -3315,6 +3315,178 @@ says the area is grouped with the guide.
 - A guide with an area, which would steer only the parts inside it, or a guide's stroke read as a band.
   The prototype's guides did their work without them.
 - Turning the base layer to follow a guided fill.
+
+## Names of shapes
+
+A traced photo has hundreds of shapes, and every manual control starts with the same question: which shape
+is this? A mark ([marks that keep parts](#marks-that-keep-parts)), a guide (M13.24) and a shape's own
+effect all need the person to find the shape in VectorCraft. Today a notice names a shape by its element
+id, `vc:63:fill`, which is the number VectorCraft keeps in the file. The Layers panel never shows that
+number. Roadmap step M13.25 gives each shape of a traced design a name that the Layers panel, the notices
+and the report all show (`REQ-AUTO-125` to `REQ-AUTO-127`, `REQ-VC-033`, `REQ-CLI-023`), and says when a
+path's own Auto effect replaces its group's (`REQ-VC-034`, `SC-W0920`). The engine's `names` module
+builds the names.
+
+### What VectorCraft shows
+
+Read in VectorCraft's source at `3f8d7a0`, its `.vectorcraft` format and the Layers panel's code. The app's
+window wasn't run: VectorCraft isn't built here.
+
+- **A row shows the object's name.** A node of a `.vectorcraft` document has an optional `name`. The Layers
+  panel shows `Node::display_name()` (`crates/doc`): the name when there is one, else the kind in angle
+  brackets, `<Compound Path>`, `<Path>` or `<Group>`. In a traced document no node has a name. It is a
+  layer with one group in it, and in the group a compound path or a path for each shape. So a traced photo shows hundreds of rows
+  that read `<Compound Path>`.
+- **Search All finds by name.** The panel's search keeps the rows whose shown name, in lower case, contains
+  what the person typed (`list_rows` in `crates/ui-egui/src/panels/layers.rs`). A name written into the file
+  is what a person can search for. A query matches inside longer names, so `red fill 1` also finds
+  `red fill 12`.
+- **A long name is cut at the row's end.** The panel paints the name clipped to the row, which loses its
+  right end on a narrow panel. VectorCraft keeps at most 255 characters of a name.
+- **A name stays a name.** StitchCraft's reader gives an element its node's name already (`Element::name`),
+  and a name that begins with `stitch:` is a marker. A name StitchCraft writes must never begin with it.
+
+Not checked without the app's window: how many characters fit a row at the panel's default width, and
+whether a person can read the names at the panel's smallest row size.
+
+### The parts of a name
+
+A name tells a person the thread, how the shape sews and which one of them it is: `Red fill (3)`, `Deep Gold
+column (1)`, `Black line (12)`.
+
+- **The thread** is the thread's name. A traced shape's colour is one of the machine's threads exactly,
+  since the trace uses the library's colours as they are, so its name is the palette's name of that colour.
+  A colour that no thread of the palette has is written as its hex code, `#7d6f00`.
+- **How it sews** is the way the shape's main part sews: the part that keeps the id of its lowest element,
+  which is an area's fill, or its first narrow part when nothing of it is filled, or a stroke's first
+  column. A shape none of whose parts keeps that id goes by its first part in the sewing order. A fill of
+  any method is `fill`, a satin column is `column`, and a running stitch or another stroke is `line`. A
+  shape that sews nothing is `left out`, as the background the design leaves out is (`SC-W0906`), and so
+  is one merged whole into its neighbours.
+- **The number** counts the shapes of that thread and that way of sewing in the Layers panel's order, from
+  its top row, 1 first. The top row is the object drawn last. The number is written in brackets, so that a
+  search for `fill (1)` doesn't also find `fill (12)`.
+- **A shape** is what the elements of one object make. Their ids differ only in their last part
+  (`vc:6:fill` and `vc:6:stroke` are of `vc:6`), and the parts digitizing makes of them add `#` or `~`
+  and more to an element's id (`vc:6:fill#2`). A part has its shape's name.
+
+The longest name on the pictures measured was 18 characters with a hex code in place of the thread's name,
+and the longest thread name of the machine's palette has 15 (`Wisteria Violet`). A name then fits in 27.
+
+**Where it sews.** A name doesn't say where the shape is in the sewing order. The order is chosen again at
+every plan, and one small edit moves many shapes in it, as the measures below show. So the report lists
+the shapes in their sewing order at each plan, each with its place, which the name doesn't give.
+
+### How stable names are
+
+Measured on 2026-11-19 with a probe test (not committed), on the repository's traced badge, pear and 2
+dogs and on 2 of the 4 local photos, a magnolia and a coleus. Each design was read with
+`--auto`, digitized, and for the first 4 also planned on the reference machine. Then each of 9 shapes,
+spread through it, was deleted, or painted in another of the design's colours, and the names were made again.
+A count is of the other shapes whose names changed.
+
+Planned twice unchanged, every design gave the same names: digitizing is deterministic.
+
+| Number counted | Badge (3) | Pear (5) | Dog on turf (78) | Dog running (92) |
+| --- | --- | --- | --- | --- |
+| In the whole sewing order | 0 to 2 | 0 to 3 | 30 to 60 | 18 to 70 |
+| By thread in the sewing order | 0 to 2 | 0 to 2 | 7 to 54 | 1 to 32 |
+| By thread and kind in the sewing order | 0 | 0 | 3 to 25 | 1 to 29 |
+| By thread and kind in the Layers panel's order | 0 | 0 | 5 on average | 4 on average |
+
+The first 3 rows are for the deletion of 4 shapes. Deleting one shape reorders the sewing of shapes far from
+it, and a name with its place in the sewing order changes for up to 3 in 4 of the others. A number in the
+Layers panel's order changes only for the shapes of the same thread and kind below the one deleted.
+
+On the local photos, numbered by thread and kind in the Layers panel's order, a deletion renamed 23 of the
+magnolia's 424 other shapes on average. With the number counted by thread alone, without the kind, it renamed
+45. The magnolia and the coleus, of 704 shapes, gave the same names when digitized twice.
+
+The names as built were measured on 2026-11-19 with a probe test (not committed) that planned each design
+on the reference machine, at opt-level 2, and then planned it again with each of 4 shapes deleted, spread
+through it. Here every shape counts, those merged whole into their neighbours too, which are `left out`.
+
+| Design | Shapes | Longest name | Others renamed by a deletion | Plan |
+| --- | --- | --- | --- | --- |
+| Badge | 4 | 18 | 0 | under 0.1 s |
+| Pear | 6 | 23 | 0 | 0.2 s |
+| Dog on turf, 6 threads | 97 | 22 | 0 to 10 | 2 s |
+| Dog running, 9 threads | 107 | 22 | 0 to 2 | 2 to 3 s |
+| Magnolia | 2,014 | 26 | 84 to 430 | 43 to 69 s |
+| Coleus | 3,985 | 25 | 176 to 631 | 84 to 104 s |
+| Goose | 1,813 | 27 | 23 to 362 | 104 to 136 s |
+| Building | 1,444 | 26 | 10 to 289 | 100 to 111 s |
+
+Every design gave the same names when planned twice, and no thread was named by its hex code: the traced
+colours are the machine's threads. On a photo a deletion renames up to a fifth of the other shapes. A
+deleted shape changes which specks and thin lines merge into their neighbours, so shapes move between `fill`
+and `left out`, and the numbers of their thread below them move with them. Naming is one pass over the
+elements and the steps, and isn't timed apart from planning. The trace's own time wasn't measured, since
+VectorCraft isn't built here.
+
+So the names are written once, when the picture is traced, and are then the shapes' own names, as a name a
+person gives one is. StitchCraft never renames a shape that has a name. A shape the person draws later has
+none, and it is named, for that plan only, by the same rule with the next free number.
+
+### Places that show the names
+
+One function of the engine makes a name (`names::name`), and one of `stitchcraft-core` gives the words that
+name a shape in any message (`diag::called`): its name in quotes, then its element id for a bug report,
+`"Red fill (3)", vc:63:fill`. Planning gives each diagnostic about a shape with a name that name
+(`Diagnostic::name`), and its headline shows it. Every place below uses them.
+
+- **The traced document.** `stitch plan picture.png --traced FILE` writes each shape's name into its node,
+  and changes nothing else in the document (`REQ-VC-033`). The design that is planned is that document, with its names,
+  so planning `FILE` again sews the same stitches and says the same notices.
+- **The notices.** A notice about a shape names it, and so does a warning of the reader. A line of `stitch
+  plan` has the name before the id, `info SC-I0912 ("Red fill (3)", vc:63:fill): …` (`REQ-AUTO-127`). The
+  shapes at `SC-W0913`'s thickest spot are named the same way, each in brackets: `("Red fill (3)",
+  vc:63:fill) #ed171f 2.1`. `SC-I0916` and `SC-I0918` are about a mark and a guide, which they name by
+  its id as before, and they count the parts they keep or steer.
+- **The report.** Each diagnostic with an element has its `name` too, and a list `shapes` gives each shape's
+  name, id, thread, kind and place in the sewing order (`REQ-CLI-023`).
+- **The bug-report bundle** of a picture keeps the traced document with its names. A replay then names the
+  shapes as the run did.
+
+### A path's own Auto effect inside an automatic group
+
+A group's Auto effect makes everything inside it automatic with its settings. A path inside with an Auto
+effect of its own sews by its own settings alone (`REQ-VC-016`), since the nearest effects say how a path
+sews. VectorCraft writes an effect with every parameter, its defaults included (`merged_params` in its
+`crates/effects`, read at `3f8d7a0`), so the path's own effect stores every setting, and the reader can't
+tell a setting the person chose from one left at its default. The group's settings can't be merged under
+the path's.
+
+The roadmap row said this happens without a word. A case showed that `SC-W0807` said it, in the
+words for StitchCraft effects that reach a path from 2 levels: "it is sewn as the nearest say". A person
+learns from them neither which of the group's settings the path loses nor which path it is, since an unnamed
+path is only "the object" with its id. The warning `SC-W0920` is said in place of `SC-W0807` where an
+Auto effect lies inside an automatic group, with the path's name and both values of every group setting
+that the path's own effect sets otherwise, leaving out those the group keeps at their defaults
+(`REQ-VC-034`). The stitches stay as they are today.
+
+### Decisions taken
+
+The owner took the 6 recommendations of phase 1 on 2026-11-19:
+
+- Names are written once, at the trace, and kept as the shapes' own names. Names made again at every plan
+  would follow the sewing order and change for many shapes after each edit.
+- The number counts in the Layers panel's order, and the report gives the place in the sewing order beside
+  the name.
+- The number stands in brackets, so that a search finds one shape.
+- The shapes left out are named too, as `left out`, since notices name the background.
+- The layers keep their order. Automatic digitizing cuts an area away under the areas over it in the
+  layers, and the layers' order is part of the design.
+- A new code, `SC-W0920`, says that an Auto effect inside an automatic group replaces the group's settings,
+  so that `stitch explain` can say what to do.
+
+### What isn't built
+
+- `SC-I0916` and `SC-I0918` don't name the shapes whose parts a mark keeps or a guide steers. The marks
+  and the guides count the parts in digitizing, before the shapes have names.
+- The VectorCraft plug-in's previews don't show names. A document opened in VectorCraft has the names
+  `--traced` wrote, and a path the person draws later has a name for each plan only.
+- VectorCraft's own Layers panel isn't changed.
 
 ## Pictures from the command line
 
