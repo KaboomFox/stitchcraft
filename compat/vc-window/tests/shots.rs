@@ -1,6 +1,7 @@
-//! The docs' `vectorcraft-ui` pictures (roadmap step M6.7): VectorCraft's menus and dialogs with
-//! StitchCraft's plug-ins in them, reached through the accessibility tree as a person reaches them, and
-//! cropped. A plug-in's dialog is checked against its module's manifest on the way.
+//! The docs' `vectorcraft-ui` pictures (roadmap step M6.7): VectorCraft's menus, dialogs and panels with
+//! StitchCraft's plug-ins and names in them, reached through the accessibility tree as a person reaches
+//! them, and cropped. A plug-in's dialog is checked against its module's manifest on the way, and the
+//! Layers panel's rows against the names of the document's shapes.
 //!
 //! `cargo xtask shots --vectorcraft` writes the job, a JSON file that [`SHOTS`] names, and runs this test in
 //! the window probe's private desktop (`xtask/src/window.rs`). Without the variable the test does nothing,
@@ -12,16 +13,24 @@
 //!    names: from 0.23 VectorCraft's app installs one from a request only once a person has approved it. For
 //!    a dialog it makes the window the size the job gives: a plug-in's dialog doesn't scroll, and fill's
 //!    and satin's are taller than the window at the size it opens.
+//!    Then it runs the job's `commands`, for what a person does with clicks the tree doesn't reach, such as
+//!    opening the Layers panel's rows with their triangles (`ui.layersExpand`).
 //! 2. xa11y presses the menu bar's title and each row of the shot's menu path, as AT-SPI's press does for a
 //!    screen reader, then with a dialog the row of the family's effect, which the module's name begins.
 //! 3. The screenshot is cropped to the title and the rows that opened, with room for the menus' frames, or
-//!    to the dialog's window, which must fit in it, and written where the job says.
+//!    to the dialog's window, which must fit in it, or for a panel to the dock column right of the canvas,
+//!    where the Window menu shows it at its default width, and written where the job says.
 //! 4. A dialog must show a row for each parameter of the module's manifest that shows at the defaults: its
 //!    label with a colon after it, and then the control the job names for the parameter's type. From 0.14
 //!    VectorCraft scrolls the rows of a dialog taller than its window, and then the picture would show only
 //!    some: a dialog with a scroll bar is an error, the window too short for it. The job
 //!    gives the label the manifest does (`REQ-VC-012`); a VectorCraft before 0.14 writes one from the key
 //!    instead, first letter capital (its `form::humanize`).
+//!
+//! 5. A panel's rows must carry, in the tree, the names the job gives, which the engine gives the
+//!    document's shapes: each whole, none cut short. VectorCraft's Layers panel paints a row's name without a
+//!    node of its own, as read in its source at `3f8d7a0`, so the tree may give no text for the rows. Then
+//!    the record says so, and the picture is kept: it is what shows whether the names fit.
 //!
 //! Each shot records what it found, a dialog's tree among it, or why it failed ([`record`]).
 // The harness's own exemption (`src/lib.rs`): it waits on the app and reads and writes files.
@@ -45,6 +54,13 @@ const POLL: Duration = Duration::from_millis(100);
 const FRAME: i64 = 10;
 /// How deep a dialog's tree is walked and kept.
 const DEPTH: usize = 12;
+/// How deep the app's tree is walked for the nodes in a panel's dock column: egui nests its widgets deeper
+/// in the dock than in a dialog.
+const PANEL_DEPTH: usize = 40;
+/// The fewest characters of a text in the dock column that count as a name cut short.
+const CUT: usize = 8;
+/// How many of a dock column's named nodes a shot's record lists.
+const SHOWN: usize = 120;
 
 #[test]
 fn vectorcraft_ui_shots() {
@@ -83,6 +99,10 @@ fn take(shot: &Value) -> Result<(), String> {
         window.call("engine.execute", json!({"command": "plugin.install", "params": install}))?;
     }
     window.call("engine.execute", json!({"command": "select.all", "params": {}}))?;
+    // What a person does with a click the tree doesn't reach, such as opening the Layers panel's rows.
+    for command in shot.get("commands").and_then(Value::as_array).into_iter().flatten() {
+        window.call("engine.execute", command.clone())?;
+    }
     let opened_at = size(&window.inspect()?)?;
     let at = match shot.get("window").filter(|wanted| !wanted.is_null()) {
         None => opened_at,
@@ -106,9 +126,14 @@ fn take(shot: &Value) -> Result<(), String> {
         row.press().map_err(|e| format!("pressing {:?}: {e}", row.name))?;
     }
     let dialog = shot.get("dialog").filter(|dialog| !dialog.is_null());
-    let (crop, mut found) = match dialog {
-        Some(dialog) => opened(&app, dialog)?,
-        None => menus(&app, &title, &before)?,
+    let panel = shot.get("panel").filter(|panel| !panel.is_null());
+    let (crop, mut found) = match (dialog, panel) {
+        (Some(dialog), _) => opened(&app, dialog)?,
+        (None, Some(panel)) => {
+            let picture = window.screenshot_still(id)?;
+            docked(&app, &window.inspect()?, picture.width, panel)?
+        }
+        (None, None) => menus(&app, &title, &before)?,
     };
     let picture = window.screenshot_still(id)?;
     let pixels = (i64::from(picture.width), i64::from(picture.height));
@@ -249,6 +274,59 @@ fn opened(app: &App, dialog: &Value) -> Result<(Crop, String), String> {
     Ok((crop, found))
 }
 
+/// The dock column's rectangle in the screenshot's pixels, `width` wide, where the Window menu showed the
+/// panel `panel` names, and what its rows say: right of the canvas, from its top to its bottom, as
+/// `inspect`, `ui.inspect`'s answer, gives them in points. The panel paints no frame of its own that the tree
+/// gives. Each row must carry, in the tree, the whole name of its shape that the job lists, or the tree gives
+/// no text for the rows, which is said and keeps the picture ([`rows_said`]).
+fn docked(app: &App, inspect: &Value, width: u32, panel: &Value) -> Result<(Crop, String), String> {
+    let name = panel.get("name").and_then(Value::as_str).ok_or("the shot's panel has no name")?;
+    let number = |at: &str| inspect.pointer(at).and_then(Value::as_f64).ok_or(format!("ui.inspect shows no {at}: {inspect}"));
+    let scale = f64::from(width) / number("/window/0")?;
+    let (left, top) = (number("/canvasRect/0")? + number("/canvasRect/2")?, number("/canvasRect/1")?);
+    let (right, bottom) = (number("/window/0")?, top + number("/canvasRect/3")?);
+    let px = |points: f64| (points * scale).round() as i64;
+    let crop = (px(left), px(top), px(right) - px(left), px(bottom) - px(top));
+    if crop.2 <= 0 || crop.3 <= 0 {
+        return Err(format!("no dock column right of the canvas for the {name} panel: {inspect}"));
+    }
+    let inside = |b: Crop| b.0 >= crop.0 && b.1 >= crop.1 && b.0 < crop.0 + crop.2 && b.1 < crop.1 + crop.3;
+    let nodes: Vec<(&'static str, String, Crop)> = in_order(&app.as_element(), PANEL_DEPTH)?
+        .iter()
+        .filter_map(|node| Some((node.role.to_snake_case(), node.name.clone()?, bounds(node).ok()?)))
+        .filter(|(_, name, at)| !name.trim().is_empty() && inside(*at))
+        .collect();
+    let rows: Vec<&str> = panel.get("rows").and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_str).collect();
+    let texts: Vec<&str> = nodes.iter().map(|(_, text, _)| text.trim()).collect();
+    let said = rows_said(&rows, &texts).map_err(|wrong| format!("the {name} panel's rows: {wrong}"))?;
+    let shown: Vec<String> = nodes.iter().take(SHOWN).map(|(role, text, at)| format!("{role} {text:?} at {at:?}")).collect();
+    Ok((crop, format!("; the {name} panel: {said}. The {} named nodes in the dock column, the first {SHOWN}: {shown:?}", nodes.len())))
+}
+
+/// What the tree's `texts`, in the dock column, say of the Layers panel's `rows`, the names of the
+/// document's shapes: each row carries its whole name; or the tree gives no text for them, when no text is
+/// a name or the start of one, [`CUT`] characters at least. A name cut short, its end clipped or replaced
+/// by `…`, or one missing while others show, is wrong.
+fn rows_said(rows: &[&str], texts: &[&str]) -> Result<String, String> {
+    let whole: Vec<&str> = rows.iter().copied().filter(|row| texts.contains(row)).collect();
+    let cut: Vec<String> = texts
+        .iter()
+        .filter_map(|text| {
+            let start = text.trim_end_matches(['…', '.']).trim_end();
+            // A text shorter than a thread's name and a word, such as a button's, cuts no name.
+            let of = rows.iter().find(|row| start.chars().count() >= CUT && **row != *text && row.starts_with(start))?;
+            Some(format!("{text:?} for {of:?}"))
+        })
+        .collect();
+    let missing: Vec<&str> = rows.iter().copied().filter(|row| !whole.contains(row)).collect();
+    match (whole.is_empty() && cut.is_empty(), missing.is_empty() && cut.is_empty()) {
+        (true, _) if !rows.is_empty() => Ok(format!("the tree gives no text for its rows: none of the {} names of the shapes is in it", rows.len())),
+        (_, true) => Ok(format!("each of the {} rows carries its shape's whole name in the tree: {whole:?}", rows.len())),
+        // Each of `cut` already quotes its texts: joined, not debug-printed, so that its quotes stay unescaped.
+        _ => Err(format!("names cut short [{}], and names missing {missing:?}, of {rows:?}", cut.join(", "))),
+    }
+}
+
 /// `element` and those under it, `depth` levels down, in the tree's order: each before its children.
 fn in_order(element: &Element, depth: usize) -> Result<Vec<Element>, String> {
     let mut found = vec![element.clone()];
@@ -274,4 +352,20 @@ fn row(app: &App, label: &str) -> Result<Element, String> {
         }
         std::thread::sleep(POLL);
     }
+}
+
+#[test]
+fn a_panel_s_rows_carry_their_whole_names_or_the_tree_gives_no_text_for_them() {
+    let rows = ["Fern Green fill (1)", "Light Grey left out (1)"];
+    let said = rows_said(&rows, &["Layers", "Light Grey left out (1)", "Fern Green fill (1)"]).unwrap();
+    assert!(said.starts_with("each of the 2 rows carries its shape's whole name"), "{said}");
+    let said = rows_said(&rows, &["Layers", "Search All"]).unwrap();
+    assert!(said.starts_with("the tree gives no text for its rows: none of the 2"), "{said}");
+    for cut in ["Fern Green fi", "Fern Green fill…", "Fern Green..."] {
+        let wrong = rows_said(&rows, &[cut, "Light Grey left out (1)"]).unwrap_err();
+        assert!(wrong.contains(&format!("{cut:?} for \"Fern Green fill (1)\"")), "{wrong}");
+    }
+    let wrong = rows_said(&rows, &["Light Grey left out (1)"]).unwrap_err();
+    assert!(wrong.contains("names missing [\"Fern Green fill (1)\"]"), "{wrong}");
+    assert!(rows_said(&[], &["Layers"]).is_ok(), "a document without names checks nothing");
 }

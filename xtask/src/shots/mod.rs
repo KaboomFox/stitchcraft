@@ -124,6 +124,21 @@ pub struct Shot {
     /// dialog, whose labels are checked against the module's parameters.
     #[serde(default)]
     pub dialog: Option<String>,
+    /// `vectorcraft-ui` shots: the panel whose row of the Window menu `menu` presses. The picture shows the
+    /// panel at its default width, and the window probe checks that its rows carry the names of the
+    /// document's shapes.
+    #[serde(default)]
+    pub panel: Option<String>,
+    /// `vectorcraft-ui` shots: commands VectorCraft's window runs over its control channel before `menu`,
+    /// for what a person does with a click the accessibility tree doesn't reach, such as the Layers panel's
+    /// triangles (`ui.layersExpand`).
+    #[serde(default)]
+    pub commands: Vec<Step>,
+    /// VectorCraft shots: `stitch plan`'s arguments, which trace a picture of the repository with the pinned
+    /// `vectorcraft-cli` and name its shapes, as a person traces one (`--traced FILE`). The shot's document
+    /// is then the traced one, opened, with `steps` after it.
+    #[serde(default)]
+    pub stitch: Vec<String>,
     /// `vectorcraft-render` shots: a file of the repository the document is kept as, for pages that sew
     /// it. `cargo xtask shots --vectorcraft` writes it while it sews otherwise than the document drawn.
     #[serde(default)]
@@ -432,6 +447,9 @@ mod tests {
             steps: Vec::new(),
             menu: Vec::new(),
             dialog: None,
+            panel: None,
+            commands: Vec::new(),
+            stitch: Vec::new(),
             document: None,
         }
     }

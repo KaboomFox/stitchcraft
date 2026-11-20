@@ -50,7 +50,7 @@ docs check, whatever its file name.
 | `stitch` | `stitchcraft-render` ([rendering](rendering.md)) from a test sheet, or from a design the engine plans, an SVG file or a VectorCraft document | **exact bytes** (rendering is deterministic) | Stitch-type illustrations, parameter comparisons, diagnostics examples. `fabric = "#000000"` draws one on fabric of that colour instead of the style's own (`REQ-RND-003`) |
 | `picture` | xtask (`xtask/src/shots/picture.rs`) fills a design's areas flat in their colours. It draws a PNG file on white too, and the pear's photo in code | **exact bytes** | The pictures [automatic digitizing](../user/stitches/automatic.md) starts from |
 | `vectorcraft-render` | `vectorcraft-cli` of the pinned stable release, with the plug-in's modules installed: the canvas after the shot's `steps`, exported as PNG at `scale` pixels per point | perceptual tolerance (≤ 0.2 % of pixels differing by more than 8/255 in a channel, and ≤ 8 of them in any square of 16 pixels a side) | How the previews look in VectorCraft's canvas, without its window |
-| `vectorcraft-ui` | VectorCraft's window, of the same release, with the document `vectorcraft-cli` drew. The shot's menu path and the family's row are pressed through the accessibility tree, and the screenshot is cropped to the menus or the dialog | the same tolerance | Menus and dialogs, in a desktop without a screen ([VectorCraft's window in CI](#vectorcrafts-window-in-ci)) |
+| `vectorcraft-ui` | VectorCraft's window, of the same release, with the document `vectorcraft-cli` drew. The shot's menu path and the family's row are pressed through the accessibility tree, and the screenshot is cropped to the menus, the dialog or the panel | the same tolerance | Menus and dialogs, in a desktop without a screen ([VectorCraft's window in CI](#vectorcrafts-window-in-ci)) |
 | `photo` | a person, of a real sew-out | presence + metadata record (machine, fabric, commit, checkpoint) | Never regenerated; listed with their sew-out report |
 
 A shot declaration:
@@ -118,6 +118,20 @@ with one fails. VectorCraft keeps a module's last error only until its next succ
 stitch family once at most, and one that applies a family twice is an error. A render shot's picture is
 that drawing. A UI shot opens the document in VectorCraft's window and needs a `menu`, and with a
 `dialog` the picture shows the dialog of that family's effect.
+
+A UI shot can show a panel instead, `panel = "Layers"`, which its menu path Window, Layers shows. The
+picture is the dock column right of the canvas, at its default width, which is what a person gets.
+`commands` run in the window first, over its control channel, for what a person does with a click that the
+accessibility tree doesn't reach: `ui.layersExpand` opens the rows inside the layers, as their triangles
+do. The probe then checks what the panel says, beside its pixels. In the tree, each row's text is its
+shape's whole name as the engine's `names` gives it. A name cut short fails the shot. VectorCraft paints a row's
+name without a node of its own in the tree, as read in its source at `3f8d7a0`. When the tree doesn't
+hold the rows' text, the record says so and the picture is kept.
+
+A shot's document can be a traced picture. `stitch` holds `stitch plan`'s arguments, with a picture of the
+repository and `--traced FILE`. The pinned command line traces the picture as a person's would, and the
+shot's run opens the traced document with its shapes' names, and then draws its `steps` on it. The
+`vectorcraft-layers-names` shot traces the pear photo so, and shows its names in the Layers panel.
 
 A render shot can keep its document as a file of the repository, `document`, for the pages that sew it:
 the tutorial's patch is sewn from `docs/fixtures/round-patch.vectorcraft`, which VectorCraft draws from
