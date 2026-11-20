@@ -5,6 +5,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.55: less overlap under a part's satin column, a setting off by default (`REQ-AUTO-157`,
+  `REQ-AUTO-158`). `auto_column_overlap_mm`, an advanced setting from 0 to 2 mm, says how far an automatic
+  area stays under a satin column that digitizing makes of a part of a shape and sews after it: cut away
+  that far inside the column's edge, and reaching that far under it. Empty by default, it is the overlap,
+  and every design sews as before: no golden file changes. At 0.4 mm the traced patch sews 278.5 mm² at 3
+  fills where it sewed 420. Under an area, a running line or a satin column drawn as a stroke the overlap
+  stays. The key is `stitchcraft_engine::auto::COLUMN_OVERLAP`.
 - M13.42: the style of digitizing stays the person's choice (`REQ-AUTO-150`). Measured on 28 pictures, no
   measure of a picture or of its trace chose between `logo` and `photo` without misstyling 4 or more, so
   there is no `auto` style. A notice, `SC-I0923` (`REQ-AUTO-151`), says when the other style would sew the

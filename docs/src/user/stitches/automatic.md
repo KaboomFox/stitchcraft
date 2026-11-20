@@ -490,6 +490,28 @@ little. On a picture with many thin traced lines it can merge some of them into 
 [Image to embroidery](../../design/image-to-embroidery.md#the-builds-numbers) gives the numbers for each
 test picture.
 
+### Less overlap under a column
+
+Where a narrow part of a shape sews as a satin column over the edge of a fill, the fill lies 1 mm under the
+column, its whole overlap. A narrow column then lies wholly on the fill, and the spot sews thick.
+**Overlap under a column** (`auto_column_overlap_mm`) keeps less of the fill there:
+
+```sh
+stitch plan photo.jpg -o photo.pes --set auto_column_overlap_mm=0.4
+```
+
+It changes only the fills under such columns. A fill under another fill, under a running line, or under a
+satin column you drew as a stroke or as lettering keeps its overlap. Left empty, the setting is the overlap,
+and nothing sews differently.
+
+It is empty by default until a sew-out shows how little is enough, and no dialog shows it. A column's thread
+pulls in by about 0.4 mm, its pull compensation, so with less than that fabric may show between the fill and
+the column. At 0.4 mm the test pictures sewed less area at 3 fills of thread or more, most of all a traced
+patch whose letters are columns on a field. Sew a small piece first, and look along each column's inner edge
+for fabric showing between it and the fill, and for a ridge where the two lie on each other.
+[Image to embroidery](../../design/image-to-embroidery.md#less-overlap-under-a-parts-column) gives the
+numbers.
+
 ### Changing the choice
 
 Each shape says which rule chose its stitches, with the numbers that decided it (`SC-I0912`, in the report
