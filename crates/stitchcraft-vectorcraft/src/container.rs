@@ -64,6 +64,39 @@ pub fn read_part(bytes: &[u8]) -> &[u8] {
     end_of_json(bytes).ok().and_then(|end| bytes.get(..end)).unwrap_or(bytes)
 }
 
+/// The most a compressed file is unpacked to when it is written again: its JSON and the data after it.
+const MAX_WHOLE: usize = 4 * MAX_BYTES;
+
+/// The `.vectorcraft` file `bytes` and its own form: unpacked whole, its data after the JSON too, and
+/// `true`, when it is compressed, or else as it is and `false`. Charged to `meter`: `SC-E0806` when it is
+/// larger than [`MAX_WHOLE`] unpacked or its stream is damaged.
+pub(crate) fn whole<'a>(bytes: &'a [u8], meter: &mut Meter) -> Result<(Cow<'a, [u8]>, bool), Diagnostic> {
+    whole_within(bytes, MAX_WHOLE, meter)
+}
+
+/// [`whole`], unpacked to `most` bytes at the most.
+fn whole_within<'a>(bytes: &'a [u8], most: usize, meter: &mut Meter) -> Result<(Cow<'a, [u8]>, bool), Diagnostic> {
+    if !bytes.starts_with(&GZIP) {
+        return Ok((Cow::Borrowed(bytes), false));
+    }
+    let mut unpacked = Vec::new();
+    let limit = u64::try_from(most).unwrap_or(u64::MAX).saturating_add(1);
+    GzDecoder::new(bytes).take(limit).read_to_end(&mut unpacked).map_err(|e| unreadable(&format!("Its compressed data does not unpack: {e}.")))?;
+    if unpacked.len() > most {
+        return Err(unreadable(&format!("It unpacks to more than the {} MiB StitchCraft writes again.", most >> 20)));
+    }
+    charge(meter, unpacked.len())?;
+    Ok((Cow::Owned(unpacked), true))
+}
+
+/// `bytes` compressed as VectorCraft compresses a file.
+pub(crate) fn packed(bytes: &[u8]) -> Vec<u8> {
+    let mut encoder = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+    // Writing into memory doesn't fail.
+    let _ = std::io::Write::write_all(&mut encoder, bytes);
+    encoder.finish().unwrap_or_default()
+}
+
 /// Unpacks the gzip stream `bytes` up to the end of the marker, whichever piece it ends in, and a little
 /// past the limit at most.
 fn unpack(bytes: &[u8], meter: &mut Meter) -> Result<Vec<u8>, Diagnostic> {
@@ -175,6 +208,19 @@ mod tests {
                 assert!(refusal.message.contains("NUL byte"), "{refusal}");
             }
         }
+    }
+
+    #[test]
+    fn a_compressed_file_is_unpacked_whole_up_to_its_limit() {
+        let file = b"{}\n\0VCBLOBS\0abcd";
+        let packed = gzip(file);
+        let unpacked =
+            |most: usize| whole_within(&packed, most, &mut Budget::DEFAULT.meter()).map(|(bytes, compressed)| (bytes.into_owned(), compressed));
+        assert_eq!(unpacked(file.len()).unwrap(), (file.to_vec(), true));
+        assert_eq!(unpacked(file.len() - 1).map_err(|e| e.code), Err(Code::VcUnreadable));
+        assert_eq!(whole(file, &mut Budget::DEFAULT.meter()).unwrap(), (Cow::Borrowed(&file[..]), false));
+        // 4 times the JSON read, for the data a file keeps after it.
+        assert_eq!(MAX_WHOLE >> 20, 256);
     }
 
     #[test]

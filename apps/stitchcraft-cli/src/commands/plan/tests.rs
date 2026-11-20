@@ -43,7 +43,7 @@ fn req_thread_003_the_report_lists_each_thread_of_an_element_sewn_in_3() {
     let file = stitchcraft_formats::encode(&plan, FormatId::PesV1, "gradient").unwrap().bytes;
     let back = read_back(&file, &plan).unwrap();
     let args = args(PathBuf::from("gradient.svg"), PathBuf::from("gradient.pes"));
-    let made = Made { file: Some((FormatId::PesV1, &file)), planned: Some((&plan, &back)), subject: None };
+    let made = Made { file: Some((FormatId::PesV1, &file)), planned: Some((&plan, &back)), subject: None, names: None };
     let report: Value = serde_json::from_str(&report(&args, REFERENCE, &made, &[])).unwrap();
     let colours: Vec<&str> = report["threads"].as_array().unwrap().iter().map(|thread| thread["color"].as_str().unwrap()).collect();
     assert_eq!(colours, ["#c80000", "#00a000", "#0000c8"]);
@@ -95,7 +95,8 @@ fn req_auto_001_stitch_plan_auto_digitizes_the_shapes_without_settings() {
     let (auto, plain) = (dir.join("auto.pes"), dir.join("plain.pes"));
     let out = run(&PlanArgs { reading: ReadingArgs { auto: true, ..ReadingArgs::default() }, ..args(design.clone(), auto.clone()) });
     assert_eq!(out.status, Status::Done, "{}", out.stderr);
-    let rule = "info SC-I0912 (svg:line:stroke): This shape sews by the rule column (3 mm wide).\n";
+    // The shape is named by its colour, which none of the machine's threads has (`REQ-AUTO-125`).
+    let rule = "info SC-I0912 (\"#ff0000 column (1)\", svg:line:stroke): This shape sews by the rule column (3 mm wide).\n";
     assert_eq!(out.stderr, format!("info SC-I0901: 1 shape is digitized automatically: it sews as a satin column.\n{rule}"));
     // Without the switch, the line runs, as it did before.
     let out = run(&args(design, plain.clone()));
@@ -128,7 +129,7 @@ fn req_auto_030_stitch_plan_sets_the_rules_settings_and_a_style_on_every_automat
     };
     // By default the T is uneven, and filled. The logo style keeps its 2 columns, and so does the switch
     // alone. The photo style is the defaults.
-    assert!(said(&[]).starts_with("info SC-I0912 (svg:t:fill): This shape sews by the rule uneven ("), "{}", said(&[]));
+    assert!(said(&[]).starts_with("info SC-I0912 (\"#ff0000 fill (1)\", svg:t:fill): This shape sews by the rule uneven ("), "{}", said(&[]));
     assert!(said(&["--style", "logo"]).contains("the rule column ("));
     assert!(said(&["--set", "auto_fill_uneven=false"]).contains("the rule column ("));
     assert!(said(&["--style", "photo"]).contains("the rule uneven ("));

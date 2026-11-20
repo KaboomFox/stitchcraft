@@ -15,6 +15,7 @@ use stitchcraft_engine::design::{Cap, Clip, Design, DesignSettings, Element, Fil
 use stitchcraft_engine::finalize::{Finalized, finalize};
 use stitchcraft_engine::generate::{approach, generate};
 use stitchcraft_engine::generators::{Colour, Neighbours};
+use stitchcraft_engine::names::Names;
 use stitchcraft_engine::{PlanOutcome, plan};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::profiles::REFERENCE;
@@ -269,12 +270,12 @@ pub fn threaded(elements: &[(Element, Vec<Colour>)], settings: DesignSettings) -
     }
     let mut meter = budget.meter();
     let Some(Assembled { plan, warnings, shortest }) = assemble(&generated, &settings, &mut meter).unwrap() else {
-        return PlanOutcome { plan: None, diagnostics };
+        return PlanOutcome { plan: None, diagnostics, names: Names::default() };
     };
     diagnostics.extend(warnings);
     let Finalized { plan, diagnostics: finalized } = finalize(plan, REFERENCE, &settings, &shortest, &mut meter).unwrap();
     diagnostics.extend(finalized);
-    PlanOutcome { plan, diagnostics }
+    PlanOutcome { plan, diagnostics, names: Names::default() }
 }
 
 /// The plan of one element sewn in 3 threads, red, green and blue, as a linear gradient fill of 3 stops is
