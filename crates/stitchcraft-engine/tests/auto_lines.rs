@@ -6,7 +6,7 @@
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
-use stitchcraft_core::{Budget, Code, Diagnostic};
+use stitchcraft_core::{Budget, Code, Diagnostic, Fix};
 use stitchcraft_engine::auto::{MIN_LIKENESS, as_merged, digitized};
 use stitchcraft_engine::design::{Design, DesignSettings, Element, Shape};
 use stitchcraft_engine::normalize::region;
@@ -82,6 +82,39 @@ fn diag_sc_i0915_a_ragged_thin_line_merges_into_the_area_it_shares_the_longest_e
         said(&diagnostics, Code::AutoLineMerged),
         ["info SC-I0915: A line of this area, of 5.5 mm², is narrower than the narrowest satin stroke, so it is merged into `left`, which \
           it shares the longest edge with."]
+    );
+}
+
+#[test]
+fn diag_sc_i0923_the_other_style_would_sew_the_ragged_line_otherwise() {
+    // The line of the case above merges in the photo style, the defaults, and the logo style keeps it.
+    let design = || vec![rect("left", (0.0, 0.0), (10.0, 10.0), &RED), merging("line"), rect("right", (10.7, 0.0), (20.0, 10.0), &BLUE)];
+    let (_, merged) = sewn(design());
+    // Planned again, it says the same.
+    assert_eq!(sewn(design()).1, merged);
+    assert_eq!(
+        said(&merged, Code::AutoStyle),
+        ["info SC-I0923: The logo style (`--style logo`) would sew this design otherwise: 1 thin line merged into its neighbour would \
+          sew as a line."]
+    );
+    let logo = [("auto_prefer", "satin"), ("auto_fill_uneven", "false"), (MIN_LIKENESS, "0")];
+    let area =
+        |id: &str, (x0, x1): (f64, f64), thread: &Thread| automatic(fill(id, &[&[(x0, 0.0), (x1, 0.0), (x1, 10.0), (x0, 10.0)]], thread, &logo));
+    let (out, kept) = sewn(vec![area("left", (0.0, 10.0), &RED), ragged("line", &logo), area("right", (10.7, 20.0), &BLUE)]);
+    assert!(kinds(&out).contains(&("line", false)), "{:?}", kinds(&out));
+    let notice = kept.iter().find(|said| said.code == Code::AutoStyle).unwrap();
+    assert_eq!(
+        notice.to_string(),
+        "info SC-I0923: The photo style (`--style photo`) would sew this design otherwise: 1 thin line sewn as a line may merge into its \
+         neighbour."
+    );
+    assert_eq!(
+        notice.fix,
+        Some(Fix::Hint(
+            "`--style photo` sets `auto_prefer` to `balanced` and `auto_fill_uneven` to `true` on every automatic shape. In VectorCraft, set \
+             them in the dialog of StitchCraft's Auto effect."
+                .to_string()
+        ))
     );
 }
 

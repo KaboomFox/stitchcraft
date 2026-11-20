@@ -75,20 +75,22 @@ struct Line {
 /// that one of `marks` holds wholly sews as a line, and every part of an automatic area that a mark holds is
 /// counted for it (`REQ-AUTO-105`). Each area has `budget`'s work to itself to test its parts against the
 /// marks and find its lines, and each line to find where it goes. Each line merged is given back too, with
-/// where it went.
+/// where it went. An area that keeps its lines, whose other style's settings in `others` merge them
+/// (`auto::style`), counts the lines they would merge with the same work, and the count is given back last.
 pub(in crate::auto) fn merged<'d>(
     flattened: Flattened<'d>,
-    rules: &[Option<AutoParams>],
+    (rules, others): (&[Option<AutoParams>], &[Option<AutoParams>]),
     narrowest: Mm,
     marks: &Marks,
     budget: &Budget,
-) -> (Flattened<'d>, Vec<Merge>) {
+) -> (Flattened<'d>, Vec<Merge>, usize) {
     let Flattened { elements, kept, mut said, shown } = flattened;
     let mut areas: Vec<Option<Area>> =
         elements.iter().map(|(index, element)| area(element, rules.get(*index).and_then(Option::as_ref), budget)).collect();
     // Every area gives up its lines first, so that a line goes into what its neighbours keep.
     let mut lines = Vec::new();
     let mut done = Vec::new();
+    let mut would = 0;
     for (from, (index, element)) in elements.iter().enumerate() {
         let Some(rules) = rules.get(*index).and_then(Option::as_ref) else { continue };
         let Some(area) = areas.get_mut(from).and_then(Option::as_mut) else { continue };
@@ -103,6 +105,15 @@ pub(in crate::auto) fn merged<'d>(
             }
         };
         if !merges(rules) {
+            // The lines that the other style would merge are counted, and stay (`REQ-AUTO-151`).
+            let Some(other) = others.get(*index).and_then(Option::as_ref).filter(|other| merges(other)) else { continue };
+            match thin(&area.parts, &held, (narrowest, other, marks), &mut meter) {
+                Ok(thin) => would += thin.iter().filter(|thin| **thin).count(),
+                Err(failed) => {
+                    let finding = "the thin lines that the other style would merge";
+                    said.push(failed.said(Code::AutoStyle, finding, "they aren't counted", budget.max_work, element.id.clone()));
+                }
+            }
             continue;
         }
         match thin(&area.parts, &held, (narrowest, rules, marks), &mut meter) {
@@ -195,7 +206,7 @@ pub(in crate::auto) fn merged<'d>(
             }
         }
     }
-    (Flattened { elements: sewing, kept, said, shown }, done)
+    (Flattened { elements: sewing, kept, said, shown }, done, would)
 }
 
 /// Whether an area with `rules` merges its thin lines: unless it turns that off, or names its stitch.
