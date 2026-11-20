@@ -99,6 +99,25 @@ The letters of an embroidery font are not as wide as a picture's. The gaps betwe
 narrowed so that the text is as wide as the traced text, by up to half the letters' height wider and a
 tenth narrower. Beyond that the text is centred, and `SC-W1115` gives the 2 widths.
 
+## How thick the letters sew
+
+A font overlaps its columns where they join, so that the fabric doesn't show between them once the thread
+pulls them in. Where 2 columns meet, their stitches lie on each other, with their underlay and the running
+stitches between them. The cap on thread ([automatic digitizing](../stitches/automatic.md#how-thick-it-sews))
+takes from marked text what other stitches cover: a column's underlay where another column covers it, and
+the running stitches under a column. It never moves a column's stitches, so the letters look as the font
+draws them, and it leaves a column's underlay where no other column lies over it.
+
+Letters on a field, such as a patch's word, sew thicker than letters on bare fabric: the field and its base
+layer lie under every join. LETTER_NUMBERS `SC-W0913` then names the join and the threads stacked there.
+It means the spot is thicker than the limit of 4 fills, not that the design is wrong. Sew a test piece of
+the word first, slowly. To compare, sew the patch both ways once: with the word marked and with the
+letters left traced. A lighter field under marked text may come as a setting, once a sew-out shows it is
+needed.
+
+Lettering you set yourself in a font is never changed. A design of your own lettering alone is measured,
+and `SC-W0913` warns of a spot above the limit all the same.
+
 ## Which font the text is set in
 
 A marker with `font=NAME` is set in that font. Without it, StitchCraft measures the traced letters: how

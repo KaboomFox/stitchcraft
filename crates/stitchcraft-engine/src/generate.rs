@@ -153,8 +153,8 @@ pub struct Generated {
     /// the element's trim and stop after its top stitches.
     pub layer: Layer,
     /// How many of its first group's first needle points are underlay, sewn in one step with its top
-    /// stitches: a satin column's underlays sewn whole, which assembly tags underlay as it tags an underlay's
-    /// layer (`REQ-AUTO-120`). 0 for every other element.
+    /// stitches: a satin column's underlays sewn whole, which assembly tags underlay for lettering as it tags
+    /// an underlay's layer (`REQ-AUTO-120`). 0 for every other element.
     pub underlay_points: usize,
 }
 
