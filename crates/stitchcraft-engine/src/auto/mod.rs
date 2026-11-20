@@ -1236,9 +1236,9 @@ mod tests {
         assert_eq!(path.subpaths[0].start, p(30.0, -0.1));
         let gone = ElementId::new("gone").unwrap();
         assert_eq!(outline_after(&mut elements, &gone, vec![side.clone()], &mut taken, &design, &budget), None);
-        // The last element's outline ends where its lines do, and needs no work. It keeps the tolerance its
-        // fill sets.
-        assert_eq!(outline_after(&mut elements, &b, vec![side], &mut taken, &design, &Budget { max_work: 0, ..Budget::DEFAULT }), None);
+        // The last element's outline ends where its lines do, and needs no work to find that: a unit moves its
+        // one side in. It keeps the tolerance its fill sets.
+        assert_eq!(outline_after(&mut elements, &b, vec![side], &mut taken, &design, &Budget { max_work: 1, ..Budget::DEFAULT }), None);
         assert_eq!(elements.iter().map(|element| element.id.as_str()).collect::<Vec<_>>(), ["a", "a#2~2", "a#2", "b", "b#2"]);
         assert_eq!(elements[4].params.get(TOLERANCE), Some("0.3"));
     }
@@ -1257,8 +1257,8 @@ mod tests {
             hints: Hints::default(),
             clips: Vec::new(),
         };
-        // The square's ring before another fill: moving it 0.1 mm in costs 67,252 units, the work of cutting
-        // the ring of curves round it where it crosses itself, far more than finding where it ends.
+        // The square's ring before another fill: moving it 0.1 mm in costs 9 units, a unit for each of the 5
+        // sides of the ring opened at the middle of a side and for each of the 4 corners.
         let ring = Line { points: vec![p(0.0, 0.0), p(0.0, 10.0), p(10.0, 10.0), p(10.0, 0.0)], closed: true };
         let after = |work: u64| {
             let mut elements = vec![fill("a"), fill("b")];
@@ -1266,13 +1266,12 @@ mod tests {
             let budget = Budget { max_work: work, ..Budget::DEFAULT };
             (outline_after(&mut elements, &id, vec![ring.clone()], &mut Labels::default(), &DesignSettings::default(), &budget), elements.len())
         };
-        assert_eq!(after(67_252), (None, 3));
-        let (said, sewn) = after(67_251);
+        assert_eq!(after(9), (None, 3));
+        let (said, sewn) = after(8);
         assert_eq!(sewn, 2);
         let said = said.unwrap();
         assert_eq!((said.code, said.element.as_ref().map(|id| id.as_str())), (Code::AutoUnder, Some("a")));
-        let message =
-            "Finding where this area's outline runs inside its edge needed more than the work budget of 67251 units, so it sews no outline.";
+        let message = "Finding where this area's outline runs inside its edge needed more than the work budget of 8 units, so it sews no outline.";
         assert_eq!(said.message, message);
     }
 
