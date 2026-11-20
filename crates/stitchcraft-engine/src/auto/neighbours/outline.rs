@@ -734,6 +734,8 @@ mod tests {
         // narrower than twice the distance, moved, pass each other.
         assert_eq!(moved_in(vec![open(&[(0.0, 0.0), (0.0, 5.0), (0.05, 5.0)])]), [(vec![(0.1, 0.0), (0.1, 4.9), (0.05, 5.0)], false)]);
         assert_eq!(moved_in(vec![open(&[(0.0, 0.0), (5.0, 0.0), (5.0, -0.05)])]), [(vec![(0.0, -0.1), (4.9, -0.1), (5.0, -0.05)], false)]);
+        // One whose moved line ends just where it starts keeps that end.
+        assert_eq!(moved_in(vec![open(&[(0.0, 0.0), (5.0, 0.0), (5.0, -0.1)])]), [(vec![(0.0, -0.1), (4.9, -0.1), (4.9, -0.1)], false)]);
         let first = vec![(0.0, -0.1), (0.05, -0.1), (-0.05, 0.0), (-0.05, -5.0)];
         assert_eq!(moved_in(vec![open(&[(0.0, 0.0), (0.05, 0.0), (0.05, -5.0)])]), [(first, false)]);
         let arced = moved_in(vec![open(&[(0.0, 0.0), (0.0, 5.0), (-0.05, 5.0), (-0.05, 10.0)])]);
