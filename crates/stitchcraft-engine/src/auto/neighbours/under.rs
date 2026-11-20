@@ -476,9 +476,9 @@ fn beside(shapes: &mut Shapes, index: usize, reach: Reach, split: &mut [Option<S
             wide.extend(parts.wide);
             narrow.extend(parts.narrow);
             if column {
-                columns.extend(parts.open)
+                columns.extend(parts.open);
             } else {
-                open.extend(parts.open)
+                open.extend(parts.open);
             }
             lines.extend(parts.lines);
         }

@@ -1767,14 +1767,14 @@ not measured again.
 
 #### Less overlap under a part's column
 
-An area keeps its whole overlap, 1 mm, under a satin column that digitizing makes of a part of another shape
+An area reaches its whole overlap, 1 mm, under a satin column that digitizing makes of a part of another shape
 and sews after it. A column narrower than 2 mm then lies whole on the area, and with its own underlay and
 top stitches the spot sews 3 fills ([rungs placed and less overlap](#rungs-placed-and-less-overlap)).
 `auto_column_overlap_mm` (M13.55, `REQ-AUTO-157`, `REQ-AUTO-158`) sets how much the area keeps there
 instead, from 0 to 2 mm (`auto::neighbours::under`):
 
 - Where such a column covers the area, the area is cut away up to the setting inside the edge of what covers
-  it. Where an area sewn after it meets the column, that edge is the area's, and the area keeps its whole
+  it. Where an area sewn after it meets the column, that edge is the area's, and the area is cut away its whole
   overlap inside it.
 - Where the area meets such a column, of its own shape or of another, it reaches the setting under it,
   whichever way its rows run.
@@ -1783,7 +1783,7 @@ instead, from 0 to 2 mm (`auto::neighbours::under`):
 - Empty, the default, the setting is the area's overlap, and a value above the overlap reads as the
   overlap. The area is then taken as before the setting, step for step, and every design sews as it did.
 
-Nothing else changes. Under an area, under a part's running line, and under a satin column drawn as a
+The setting leaves every other overlap as it was. Under an area, under a part's running line, and under a satin column drawn as a
 stroke, a person's own or lettering's, the area reaches as far as before. The base layer, the cap, and a
 column's reach past its rails stay as they were. A part's column that sews before an area beside it reaches
 past its rail under the area instead, and the setting doesn't apply there. The sewing order chooses that
@@ -1796,7 +1796,7 @@ rails. So an area that lies less than that under the column may show fabric besi
 is the least that the pull argues for. The setting goes down to 0 so that a sew-out can show the edge. An
 expanded design (`REQ-AUTO-142`) keeps its areas as the setting cut them and drops the setting.
 
-Measured on the whole set at the default and at 0.6, 0.4 and 0.2 mm, in that order in each cell. The area
+Measured on every picture of the set at the default and at 0.6, 0.4 and 0.2 mm, in that order in each cell. The area
 at 3 fills or more and the thickest spot are as `fabric::thickness` measures them. The bare fabric is
 `fabric::cover`'s, with no stitch pulled in:
 
@@ -1817,7 +1817,8 @@ The badge, the round patch and the marked patch sew alike at every value, since 
 their areas. The likeness doesn't change on any picture, the stitches change by less than 1 %, and the jump
 threads by one at the most. The default's numbers are those M13.53 measured on main.
 
-What the numbers can say:
+The numbers show 4 things.
+
 
 - **Less thread where columns edge fills.** At 0.4 mm the area at 3 fills falls on 9 of the 10 traced
   pictures, most on the patch, whose letters are columns over a field, and rises 0.5 mm² on the coleus. On
@@ -1827,7 +1828,7 @@ What the numbers can say:
 - **The thickest spot** falls 0.25 fills on the patch and 0.1 to 0.2 on the pear. It rises 0.06 to 0.12 on
   the dog on turf in 6 threads, under the cap's limit at every value.
 - **The bare fabric can't say how little is enough.** The measure lays every stitch where the plan puts
-  it, and no thread pulls in. It finds no gap at any value, as it found none with no overlap at all in
+  it, and no thread pulls in. It doesn't find a gap at any value, as it found none with no overlap at all in
   M13.53. Its small rises, up to 0.18 mm² on the running dog in 9 threads, are slivers between an area and
   a column as planned, which the pull can only widen. A sew-out has to show where fabric opens.
 - **The cost to plan** is one more pass of geometry for each area beside a part's column. The dogs took 6

@@ -464,7 +464,7 @@ running dog in 6 threads from `main` after M13.48:
 
 M13.55 adds `auto_column_overlap_mm`, how far an area stays under a satin column that digitizing makes of a
 part of another shape ([less overlap under a part's column](../design/image-to-embroidery.md#less-overlap-under-a-parts-column)).
-It is empty by default, which keeps the whole overlap of 1 mm, until this sew-out says how little is
+It is empty by default, which is the whole overlap of 1 mm, until this sew-out says how little is
 enough. At MC-8, in the 4 × 4 in hoop (`-p brother-pe800-4x4`), sew a test piece drawn in code at the
 default and at 0.6, 0.4 and 0.2 mm. It has 12 tiles 20 mm wide, navy and orange fills, each edged along its
 top by a black satin column 2, 4 or 6 mm wide, straight in one column of tiles and curved in the next. Also
