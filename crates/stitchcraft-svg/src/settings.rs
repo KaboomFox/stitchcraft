@@ -18,6 +18,10 @@
 //!   degrees, right for a positive one. Ink/Stitch's preferences offer 90° either way, and its writer turns
 //!   by any number. Text that is not a number turns nothing and is named (`SC-W0802`): Ink/Stitch takes text
 //!   that isn't JSON as no turn, and fails to write a file for JSON that isn't a number.
+//! - **What the cap holds a design's parts to**, which `stitch expand` writes (`REQ-AUTO-143`): StitchCraft's
+//!   own, by the names of the Auto effect's settings ([`Held::KEYS`]), such as
+//!   `<inkstitch:auto_thick_cap_fills>3.25</inkstitch:auto_thick_cap_fills>`, read as that effect reads them.
+//!   A value that doesn't read is ignored and named (`SC-W0802`). Ink/Stitch passes them over.
 //! - **`thread-palette`** names the threads in Ink/Stitch's own thread lists and print-outs, which
 //!   StitchCraft does not write; it changes nothing StitchCraft sews or writes, and is passed over.
 //! - **`inkstitch_svg_version`** is the file's version, which [`crate::version`] reads with the file.
@@ -28,7 +32,9 @@ use std::collections::BTreeSet;
 
 use roxmltree::{Node, NodeId};
 use stitchcraft_core::Mm;
+use stitchcraft_engine::auto::Held;
 use stitchcraft_engine::design::{DesignSettings, Setting, Turn};
+use stitchcraft_params::ParamSet;
 
 use crate::inkstitch::INKSTITCH_NS;
 use crate::version;
@@ -45,6 +51,8 @@ pub(crate) struct Found {
     read: BTreeSet<String>,
     /// The settings so far.
     pub(crate) settings: DesignSettings,
+    /// The cap's values read so far, each one read again with those before it.
+    cap: ParamSet,
 }
 
 impl Found {
@@ -70,6 +78,20 @@ impl Found {
                 "Ink/Stitch's design setting `{name}`, \"{text}\", is not a number of 0 or more; it is ignored, and the design keeps its default."
             );
             return (!apply(setting, &mut self.settings, text)).then_some((message, None));
+        }
+        if Held::KEYS.contains(&name) {
+            self.cap.set(name, text);
+            match Held::of(&self.cap) {
+                Ok(held) => self.settings.cap = Some(held),
+                Err(_) => {
+                    self.cap.remove(name);
+                    return Some((
+                        format!("StitchCraft's design setting `{name}`, \"{text}\", is not a value it takes; it is ignored, and the Auto effect's default is used."),
+                        None,
+                    ));
+                }
+            }
+            return None;
         }
         match name {
             Turn::NAME => match text.parse::<f64>().ok().and_then(Turn::new) {

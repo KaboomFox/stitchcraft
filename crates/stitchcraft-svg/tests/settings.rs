@@ -118,3 +118,19 @@ fn req_svg_005_ink_stitch_s_other_metadata_is_named_unless_it_changes_nothing_se
         ["warning SC-W0802: The file's metadata has Ink/Stitch's `sparkle`, which is not a design setting StitchCraft knows; it is ignored."]
     );
 }
+
+#[test]
+fn req_auto_143_what_the_cap_holds_an_expanded_design_to_is_a_design_setting() {
+    use stitchcraft_engine::auto::Held;
+    // `stitch expand` writes the cap's values by the Auto effect's names, and they read as it reads them.
+    let (settings, warned) = read(&format!("<metadata>{}{}</metadata>", setting("auto_thick_cap_fills", "3.5"), setting("auto_overlap_mm", "0.75")));
+    let held = settings.cap.unwrap();
+    assert_eq!((held.cap, held.overlap, held.limits.warn_fills, warned), (3.5, 0.75, 4.0, vec![]));
+    // A value that doesn't read is named, and leaves the Auto effect's default.
+    let (settings, warned) = read(&format!("<metadata>{}{}</metadata>", setting("auto_thick_cap_fills", "lots"), setting("auto_overlap_mm", "0.75")));
+    assert_eq!(settings.cap.map(|held: Held| (held.cap, held.overlap)), Some((3.25, 0.75)));
+    let message = "warning SC-W0802: StitchCraft's design setting `auto_thick_cap_fills`, \"lots\", is not a value it takes; it is ignored, and \
+                   the Auto effect's default is used.";
+    assert_eq!(warned, [message]);
+    assert_eq!(read("<metadata/>").0.cap, None);
+}
