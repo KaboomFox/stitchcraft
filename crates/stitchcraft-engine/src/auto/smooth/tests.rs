@@ -370,6 +370,7 @@ fn req_auto_134_a_smoothed_edge_that_would_cross_a_hole_is_smoothed_less() {
     let holed = holed.unwrap();
     assert!(crest(&holed) > 10.12, "{}", crest(&holed));
     assert_eq!(outline(&holed, 0)[1], hole.iter().map(|&(x, y)| p(x, y)).collect::<Vec<_>>());
+    assert_eq!(fingerprint(Some(&holed)), "41 191.626350735 380.053194341 | 4 1.600000000 40.240000000");
 }
 
 #[test]
@@ -407,4 +408,171 @@ fn how_far_apart_round_a_closed_line_with_a_window_past_its_end_or_round_it() {
         let apart = line::apart(&ring, &shrunk, true, window, meter).unwrap();
         assert!((apart - 0.1).abs() < 0.01, "{window}: {apart}");
     }
+}
+
+/// Each subpath of each fill of `design` as its point count and the sums of its points' coordinates, to 9
+/// places: exact enough to tell any change in the pass's arithmetic.
+fn fingerprint(design: Option<&Design>) -> String {
+    let Some(design) = design else { return "as drawn".to_string() };
+    let mut out = Vec::new();
+    for index in 0..design.elements().len() {
+        for ring in outline(design, index) {
+            let (x, y) = ring.iter().fold((0.0, 0.0), |(x, y), q| (x + q.x(), y + q.y()));
+            out.push(format!("{} {x:.9} {y:.9}", ring.len()));
+        }
+    }
+    out.join(" | ")
+}
+
+/// The least work with which `elements` come out smoothed (the pass's result is `Some`), found by halving.
+fn least_work(elements: &[Element]) -> u64 {
+    let (mut short, mut enough) = (0, 4_000_000);
+    while enough - short > 1 {
+        let middle = u64::midpoint(short, enough);
+        let budget = Budget { max_work: middle, ..Budget::DEFAULT };
+        if smoothed(elements.to_vec(), &budget).0.is_some() { enough = middle } else { short = middle }
+    }
+    enough
+}
+
+/// The work `run` charges a meter.
+fn charged(run: impl FnOnce(&mut Meter)) -> u64 {
+    let mut meter = Budget { max_work: 1_000_000_000, ..Budget::DEFAULT }.meter();
+    run(&mut meter);
+    1_000_000_000 - meter.work_left()
+}
+
+#[test]
+fn the_pass_does_exactly_its_sums_and_its_work() {
+    let smooth = [("auto_smooth_mm", "0.2")];
+    let round = vec![area("a", &circle(10.0, 10.0, 5.0, 72), true, &smooth)];
+    let (design, said) = smoothed(round.clone(), &Budget::DEFAULT);
+    assert_eq!(fingerprint(design.as_ref()), "65 645.007068377 650.000000000");
+    assert_eq!(
+        said[0].message,
+        "The outline of 1 automatic area was smoothed within 0.2 mm: it is drawn with 64 points, where 40 drew it within 0.02 mm."
+    );
+    assert_eq!(least_work(&round), 40436);
+    let both = pair(&[("auto_smooth_mm", "0.4")], &[("auto_smooth_mm", "0.4")], true);
+    assert_eq!(fingerprint(smoothed(both.clone(), &Budget::DEFAULT).0.as_ref()), "6 13.461538462 8.029848824 | 6 9.461538462 16.029848824");
+    assert_eq!(least_work(&both), 6977);
+    // A ring 0.6 mm across, smoothed within 0.3 mm, keeps its area within a tenth only once its deviation
+    // has shrunk.
+    let small = vec![area("a", &circle(1.0, 1.0, 0.3, 24), true, &[("auto_smooth_mm", "0.3")])];
+    assert_eq!(fingerprint(smoothed(small, &Budget::DEFAULT).0.as_ref()), "15 15.225364249 15.000000000");
+    // 2 rings that touch at one point are each cut there, and smoothed with that point held.
+    let left = circle(0.0, 0.0, 2.0, 72);
+    let right: Vec<(f64, f64)> = left.iter().map(|&(x, y)| (4.0 - x, y)).collect();
+    let touching = vec![area("a", &left, true, &smooth), area("b", &right, true, &smooth)];
+    assert_eq!(fingerprint(smoothed(touching, &Budget::DEFAULT).0.as_ref()), "33 1.800900313 0.058719751 | 33 130.199099687 -0.058719751");
+}
+
+#[test]
+fn a_repeated_point_changes_nothing() {
+    let smooth = [("auto_smooth_mm", "0.2")];
+    let ring = circle(10.0, 10.0, 5.0, 72);
+    let mut repeated = ring.clone();
+    repeated.insert(10, ring[10]);
+    let (once, _) = smoothed(vec![area("a", &ring, true, &smooth)], &Budget::DEFAULT);
+    let (twice, _) = smoothed(vec![area("a", &repeated, true, &smooth)], &Budget::DEFAULT);
+    assert_eq!(fingerprint(twice.as_ref()), fingerprint(once.as_ref()));
+}
+
+#[test]
+fn req_auto_131_an_area_that_runs_out_leaves_the_others_smoothed() {
+    // A small ring and a large one, apart: with the least work that smooths the small one, the large one runs
+    // out, keeps its outline and is named.
+    let smooth = [("auto_smooth_mm", "0.2")];
+    let rings = vec![area("a", &circle(2.0, 2.0, 1.0, 24), true, &smooth), area("b", &circle(20.0, 20.0, 8.0, 96), true, &smooth)];
+    let work = least_work(&rings);
+    let (design, said) = smoothed(rings.clone(), &Budget { max_work: work, ..Budget::DEFAULT });
+    assert_eq!(outline(design.as_ref().unwrap(), 1), outline(&Design::new(rings, DesignSettings::default()).unwrap(), 1));
+    assert_ne!(outline(design.as_ref().unwrap(), 0)[0].len(), 24);
+    assert!(
+        said[0].message.ends_with("The area `b` needed more work to smooth than the budget allows, and keeps its outline."),
+        "{}",
+        said[0].message
+    );
+}
+
+#[test]
+fn a_piece_too_short_to_sample_stays_and_an_open_one_is_smoothed() {
+    let meter = &mut Budget::DEFAULT.meter();
+    // 2 steps of a closed piece are too few to go round: it stays as drawn.
+    let tiny = [p(0.0, 0.0), p(0.01, 0.0), p(0.0, 0.01)];
+    assert_eq!(piece(&tiny, true, 0.1, 0.1, meter).unwrap(), tiny.to_vec());
+    // An open piece of 2 steps is smoothed.
+    let bent = [p(0.0, 0.0), p(0.01, 0.005), p(0.02, 0.0)];
+    assert_ne!(piece(&bent, false, 0.1, 0.1, meter).unwrap(), bent.to_vec());
+}
+
+#[test]
+fn the_segments_near_a_stretch_of_a_line() {
+    let arcs = [0.0, 1.0, 2.0, 3.0, 4.0];
+    for (closed, from, to, near) in [
+        (true, -0.5, 0.5, vec![0, 3]),
+        (true, 3.5, 4.5, vec![3, 0]),
+        (true, 1.0, 5.5, vec![0, 1, 2, 3]),
+        (true, 1.5, 2.5, vec![1, 2]),
+        (true, 0.5, 2.5, vec![0, 1, 2]),
+        (true, 0.0, 0.5, vec![0]),
+        (true, 3.5, 4.0, vec![3]),
+        (false, 2.5, 7.0, vec![2, 3]),
+        (false, 1.0, 1.5, vec![0, 1]),
+        (false, -0.5, 0.5, vec![0]),
+        (false, 3.5, 4.5, vec![3]),
+    ] {
+        assert_eq!(line::near(&arcs, closed, from, to), near, "{closed} {from} {to}");
+    }
+}
+
+#[test]
+fn segments_cross_only_through_each_other() {
+    let s = |a: (f64, f64), b: (f64, f64)| (p(a.0, a.1), p(b.0, b.1));
+    // An end on the other segment is no crossing, whichever segment it ends.
+    assert!(!line::cross(s((0.0, 0.0), (2.0, 0.0)), s((1.0, -1.0), (1.0, 0.0))));
+    assert!(!line::cross(s((1.0, -1.0), (1.0, 0.0)), s((0.0, 0.0), (2.0, 0.0))));
+    assert!(line::cross(s((10.0, 10.0), (12.0, 10.0)), s((11.0, 9.0), (11.0, 11.0))));
+    // 2 short segments that cross inside one cell of the grid.
+    let small = vec![(vec![s((0.1, 0.1), (0.3, 0.3))], true), (vec![s((0.1, 0.3), (0.3, 0.1))], true)];
+    assert_eq!(line::crossing(&small, &mut Budget::DEFAULT.meter()).unwrap(), BTreeSet::from([0, 1]));
+    let lines = vec![
+        (vec![s((0.0, 0.0), (3.0, 3.0))], true),
+        (vec![s((0.0, 3.0), (3.0, 0.0))], false),
+        (vec![s((5.0, 0.0), (5.0, 2.0)), s((5.0, 2.0), (6.0, 2.0))], false),
+        (vec![s((4.5, 1.0), (5.5, 1.0))], false),
+    ];
+    assert_eq!(charged(|meter| assert!(line::crossing(&lines, meter).is_ok())), 75);
+}
+
+#[test]
+fn the_line_helpers_at_their_bounds() {
+    let meter = &mut Budget::DEFAULT.meter();
+    // A closed line of 2 points has no segment back: it is as long as its one segment.
+    assert_eq!(line::length(&[p(0.0, 0.0), p(3.0, 4.0)], true), 5.0);
+    // A last segment of no length resamples to its end.
+    assert_eq!(
+        line::resampled(&[p(0.0, 0.0), p(2.0, 0.0), p(2.0, 0.0)], false, 2, meter).unwrap().unwrap(),
+        vec![p(0.0, 0.0), p(1.0, 0.0), p(2.0, 0.0)]
+    );
+    // A closed triangle smaller than the reach turns as one run: one corner.
+    assert_eq!(line::corners(&[p(0.0, 0.0), p(0.2, 0.0), p(0.0, 0.1)], true, 0.8, meter).unwrap().len(), 1);
+    // A deviation of exactly a quarter sample blurs.
+    let curved: Vec<Point> = (0..=10).map(|i| p(f64::from(i), f64::from(i * i) / 10.0)).collect();
+    assert_ne!(line::blurred(&curved, false, 0.25, meter).unwrap().unwrap(), curved);
+    // 3 deviations reach 9 samples each side, and 3 samples blurred over 10 reach 13.
+    assert_eq!(fingerprint_points(&line::blurred(&curved, false, 3.0, meter).unwrap().unwrap()), "11 55.000000000 44.510002027");
+    assert_eq!(fingerprint_points(&line::blurred(&curved[..3], false, 10.0, meter).unwrap().unwrap()), "3 3.000000000 0.597925545");
+    assert_eq!(charged(|meter| assert!(line::blurred(&curved, false, 3.0, meter).is_ok())), 11 * 19);
+    // 3 points along a line thin to its ends, and so does a ring of 4 with one along a side.
+    assert_eq!(line::fewest(&[p(0.0, 0.0), p(1.0, 0.0), p(2.0, 0.0)], 0.02, meter).unwrap(), vec![p(0.0, 0.0), p(2.0, 0.0)]);
+    let ring = [p(0.0, 0.0), p(1.0, 0.0), p(2.0, 0.0), p(1.0, 1.0)];
+    assert_eq!(line::fewest_round(&ring, 0.02, meter).unwrap(), vec![p(0.0, 0.0), p(2.0, 0.0), p(1.0, 1.0)]);
+    assert_eq!(charged(|meter| assert!(line::fewest(&curved, 0.02, meter).is_ok())), 44);
+}
+
+/// The point count and coordinate sums of `points`, to 9 places.
+fn fingerprint_points(points: &[Point]) -> String {
+    let (x, y) = points.iter().fold((0.0, 0.0), |(x, y), q| (x + q.x(), y + q.y()));
+    format!("{} {x:.9} {y:.9}", points.len())
 }

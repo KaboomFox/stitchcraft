@@ -186,7 +186,7 @@ fn from_segment(p: Point, (a, b): (Point, Point)) -> f64 {
 
 /// The indices of the segments of a line `segments` long whose stretch along it, from `arcs[i]` to
 /// `arcs[i + 1]`, meets `from..=to`: round a closed line the stretch is taken round it.
-fn near(arcs: &[f64], closed: bool, from: f64, to: f64) -> Vec<usize> {
+pub(super) fn near(arcs: &[f64], closed: bool, from: f64, to: f64) -> Vec<usize> {
     let total = arcs.last().copied().unwrap_or(0.0);
     let count = arcs.len().saturating_sub(1);
     if closed && to - from >= total {
@@ -290,7 +290,7 @@ pub(super) fn area(points: &[Point]) -> f64 {
 
 /// Whether the segments `a` to `b` and `c` to `d` cross, other than at an end: an end that touches the other
 /// segment, or segments along one line, don't cross.
-fn cross((a, b): (Point, Point), (c, d): (Point, Point)) -> bool {
+pub(super) fn cross((a, b): (Point, Point), (c, d): (Point, Point)) -> bool {
     let side = |p: Point, q: Point, r: Point| (q.x() - p.x()) * (r.y() - p.y()) - (q.y() - p.y()) * (r.x() - p.x());
     side(a, b, c) * side(a, b, d) < 0.0 && side(c, d, a) * side(c, d, b) < 0.0
 }
