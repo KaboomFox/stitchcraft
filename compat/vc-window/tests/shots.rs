@@ -313,7 +313,7 @@ fn rows_said(rows: &[&str], texts: &[&str]) -> Result<String, String> {
         .iter()
         .filter_map(|text| {
             let start = text.trim_end_matches(['…', '.']).trim_end();
-            // A text shorter than a thread's name and a word, such as a button's, cuts no name.
+            // A text shorter than a kind, a number and its comma, such as a button's, cuts no name.
             let of = rows.iter().find(|row| start.chars().count() >= CUT && **row != *text && row.starts_with(start))?;
             Some(format!("{text:?} for {of:?}"))
         })
@@ -361,7 +361,7 @@ fn a_panel_s_rows_carry_their_whole_names_or_the_tree_gives_no_text_for_them() {
     assert!(said.starts_with("each of the 2 rows carries its shape's whole name"), "{said}");
     let said = rows_said(&rows, &["Layers", "Search All"]).unwrap();
     assert!(said.starts_with("the tree gives no text for its rows: none of the 2"), "{said}");
-    for cut in ["Fern Green fi", "Fern Green fill…", "Fern Green..."] {
+    for cut in ["Fill 1, Fe", "Fill 1, Fern…", "Fill 1, Fern..."] {
         let wrong = rows_said(&rows, &[cut, "Left out 1, Light Grey"]).unwrap_err();
         assert!(wrong.contains(&format!("{cut:?} for \"Fill 1, Fern Green\"")), "{wrong}");
     }

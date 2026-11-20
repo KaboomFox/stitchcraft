@@ -2208,6 +2208,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.25: a shape's name starts with how it sews and its number, and ends with its thread: `Column 1, Russet
+  Brown`, `Left out 1, White`, and Expand's `Base layer 1, Red` (`REQ-AUTO-125`). VectorCraft's Layers panel
+  shows about 20 characters of a row, and the kind and the number now always fit in them. A comma ends the
+  number, so a search for `fill 1,` doesn't find `Fill 12, Red`. A document traced before keeps its names,
+  and a shape added to it later is named in the new order. No golden file changes.
 - M13.53: the stitch rule and how an outline is drawn, findings only (`REQ-AUTO-135` to `REQ-AUTO-139`,
   planned). On main the same outline drawn 2 ways within 0.02 mm sews 163 of the repository's 392 traced
   picture shapes and 324 of 1,116 letters by another rule. 3 prototypes, measured against main, each

@@ -6,8 +6,8 @@ report and VectorCraft's Layers panel all use it.
 
 ## The parts of a name
 
-A name gives the shape's thread, how it sews, and its number among the shapes of that thread that sew
-the same way:
+A name gives how the shape sews, its number among the shapes of its thread that sew the same way, and
+last its thread:
 
 - `Fill 3, Red` is the third red area that sews as a fill.
 - `Column 1, Deep Gold` sews as satin columns, and `Line 12, Black` as running stitches.
@@ -21,7 +21,8 @@ when the design sews in another order.
 
 `stitch plan picture.png --traced picture.vectorcraft` writes the names into the traced document. Open
 it in VectorCraft, and the Layers panel shows each shape by its name. To find one, type its name into the
-panel's search box. The number in brackets keeps `fill (1)` from finding `fill (12)`.
+panel's search box. Type the comma after the number: `fill 1,` finds `Fill 1, Red` and not
+`Fill 12, Red`.
 
 Open the group's row with its triangle to see the shapes' rows. Here is the traced pear in the panel, as
 VectorCraft shows it at the panel's default width:
@@ -37,6 +38,10 @@ Search All still finds it by its whole name.
 The names are written once, when the picture is traced, and are then the shapes' own names, as a name
 you give a shape is. StitchCraft never renames a shape that has a name. Rename any you like. A shape you
 draw later has no name, and the notices name it for that plan only, with the next free number.
+
+A document traced by an older StitchCraft has names with the thread first, such as `Red fill (3)`. They
+are its shapes' own names, so they stay as they are. A shape you draw later gets a name in the new order,
+with the first number that no other shape's name has.
 
 ## In the notices
 

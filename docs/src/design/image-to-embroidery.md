@@ -3937,8 +3937,8 @@ window wasn't run: VectorCraft isn't built here.
   that read `<Compound Path>`.
 - **Search All finds by name.** The panel's search keeps the rows whose shown name, in lower case, contains
   what the person typed (`list_rows` in `crates/ui-egui/src/panels/layers.rs`). A name written into the file
-  is what a person can search for. A query matches inside longer names, so `red fill 1` also finds
-  `red fill 12`.
+  is what a person can search for. A query matches inside longer names, so `fill 1` also finds
+  `Fill 12, Red`.
 - **A long name is cut at the row's end.** The panel paints the name clipped to the row, which loses its
   right end on a narrow panel. VectorCraft keeps at most 255 characters of a name.
 - **A name stays a name.** StitchCraft's reader gives an element its node's name already (`Element::name`),
@@ -3946,16 +3946,18 @@ window wasn't run: VectorCraft isn't built here.
 
 Seen on 2026-11-20 in VectorCraft's own window, by the pinned release on CI (the shot
 `vectorcraft-layers-names`): at the panel's default width, a row of a shape in the traced group shows about
-20 characters. `Column 1, Dark Olive`, of 21, loses its closing bracket, and `Column 1, Russet Brown`, of
-23, shows only its first 18, with no `…`. The accessibility tree doesn't give the rows' text. The probe says so
-and keeps the picture. The longest names on the repository's traced documents, the pear and the 4
-dogs, have 23 characters (`Column 1, Russet Brown`, `Left out 1, Dark Brown`). Not checked: whether a
+20 characters, and cuts the rest with no `…`. With the thread first, `Dark Olive column (1)`, of 21, lost
+its closing bracket, and `Russet Brown column (1)`, of 23, showed only its first 18, without its number.
+So the kind and the number come first ([the parts of a name](#the-parts-of-a-name)). SHOT_NOTE The
+accessibility tree doesn't give the rows' text. The probe says so and keeps the picture. Not checked: whether a
 person can read the names at the panel's smallest row size.
 
 ### The parts of a name
 
-A name tells a person the thread, how the shape sews and which one of them it is: `Fill 3, Red`, `Deep Gold
-column (1)`, `Line 12, Black`.
+A name tells a person how the shape sews, which one of them it is and its thread, in that order: `Fill 3,
+Red`, `Column 1, Deep Gold`, `Line 12, Black`. The Layers panel cuts off a long name's end, so the parts
+that tell 2 shapes of one thread apart come first. The thread comes last: the row's picture shows its
+colour, so it is the part a person can lose.
 
 - **The thread** is the thread's name. A traced shape's colour is one of the machine's threads exactly,
   since the trace uses the library's colours as they are, so its name is the palette's name of that colour.
@@ -3963,18 +3965,23 @@ column (1)`, `Line 12, Black`.
 - **How it sews** is the way the shape's main part sews: the part that keeps the id of its lowest element,
   which is an area's fill, or its first narrow part when nothing of it is filled, or a stroke's first
   column. A shape none of whose parts keeps that id goes by its first part in the sewing order. A fill of
-  any method is `fill`, a satin column is `column`, and a running stitch or another stroke is `line`. A
-  shape that sews nothing is `left out`, as the background the design leaves out is (`SC-W0906`), and so
+  any method is `Fill`, a satin column is `Column`, and a running stitch or another stroke is `Line`. A
+  shape that sews nothing is `Left out`, as the background the design leaves out is (`SC-W0906`), and so
   is one merged whole into its neighbours.
 - **The number** counts the shapes of that thread and that way of sewing in the Layers panel's order, from
-  its top row, 1 first. The top row is the object drawn last. The number is written in brackets, so that a
-  search for `fill (1)` doesn't also find `fill (12)`.
+  its top row, 1 first. The top row is the object drawn last. A comma follows the number, so that a
+  search for `fill 1,` doesn't also find `Fill 12, Red`.
 - **A shape** is what the elements of one object make. Their ids differ only in their last part
   (`vc:6:fill` and `vc:6:stroke` are of `vc:6`), and the parts digitizing makes of them add `#` or `~`
   and more to an element's id (`vc:6:fill#2`). A part has its shape's name.
 
-The longest name on the pictures measured was 18 characters with a hex code in place of the thread's name,
-and the longest thread name of the machine's palette has 15 (`Wisteria Violet`). A name then fits in 27.
+Measured on 2026-11-20 by `stitch plan --auto --report` on the repository's 6 traced documents, the badge,
+the pear and the 4 dogs: the longest name has 22 characters (`Column 1, Russet Brown`, `Left out 1, Dark
+Brown`), and the kind, the number and the comma take at most 12 (`Left out 10,`). By the rule, the longest
+kind is `Left out`, of 8, and Expand's `Base layer`, of 10. The longest name of a thread a trace can match
+has 15 (`Wisteria Violet`), and an applique entry of the Brother palette, which a trace never matches, 17
+(`Applique Position`). The longest name is then `Base layer 1, Applique Position`, of 31. The kind, the
+number and the comma fit in the panel's 20 characters for any number of up to 8 digits.
 
 **Where it sews.** A name doesn't say where the shape is in the sewing order. The order is chosen again at
 every plan, and one small edit moves many shapes in it, as the measures below show. So the report lists
@@ -4008,6 +4015,8 @@ magnolia's 424 other shapes on average. With the number counted by thread alone,
 The names as built were measured on 2026-11-19 with a probe test (not committed) that planned each design
 on the reference machine, at opt-level 2, and then planned it again with each of 4 shapes deleted, spread
 through it. Here every shape counts, those merged whole into their neighbours too, which are `left out`.
+The longest names were measured with the thread first, `Russet Brown column (1)`. Every name in the
+order of 2026-11-20 is one character shorter, a comma and a space in place of a space and 2 brackets.
 
 | Design | Shapes | Longest name | Others renamed by a deletion | Plan |
 | --- | --- | --- | --- | --- |
