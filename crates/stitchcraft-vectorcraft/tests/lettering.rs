@@ -146,7 +146,7 @@ fn req_vc_026_a_text_with_the_lettering_effect_sews_as_lettering_sets_it() {
     }
     // The settings every lettering has are the effect's: read by name, each one.
     let params = json!({"font": "test", "scale": 100, "letter_spacing": 2, "word_spacing": 3, "line_height": 4, "text_align": "left",
-        "back_and_forth": false, "trim": "word", "color_sort": "off", "_context": {"mode": "effect"}, "preview_level": 1});
+        "back_and_forth": false, "trim": "word", "color_sort": "off", "widen_percent": 20, "_context": {"mode": "effect"}, "preview_level": 1});
     let spaced = self::read(&document(json!([text(7, "ab a\nb", 0.0, 0.0, json!({}), params)])));
     assert_eq!(said(&spaced.warnings), Vec::<String>::new());
     let how = Lettering {
@@ -155,6 +155,7 @@ fn req_vc_026_a_text_with_the_lettering_effect_sews_as_lettering_sets_it() {
         line_height: 4.0,
         back_and_forth: false,
         trim: lettering::Trim::Word,
+        widen_percent: 20.0,
         ..Lettering::default()
     };
     let set = lettering::set(&font, "ab a\nb", &how, &Budget::DEFAULT).unwrap();
