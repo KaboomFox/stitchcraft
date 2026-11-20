@@ -73,7 +73,7 @@ fn all(plan: &StitchPlan) -> BTreeSet<ElementRef> {
 /// `plan` capped with `rules`, its measure kept up to date, and the measure of what the cap left.
 fn cap(plan: &mut StitchPlan, rules: &Rules) -> (Option<Capped>, Thickness, Thickness) {
     let mut thickness = Thickness::of(plan, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
-    let capped = capped(plan, &mut thickness, rules, &all(plan), &mut Budget::DEFAULT.meter()).unwrap();
+    let capped = capped(plan, &mut thickness, rules, &all(plan), &Budget::DEFAULT).unwrap();
     let again = Thickness::of(plan, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
     (capped, thickness, again)
 }
@@ -137,7 +137,7 @@ fn req_auto_100_only_the_elements_digitizing_made_lose_needle_points() {
     let was = sewn.clone();
     let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
     let made: BTreeSet<ElementRef> = ElementRef::from_index(1).into_iter().collect();
-    let capped = capped(&mut sewn, &mut thickness, &rules(), &made, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let capped = capped(&mut sewn, &mut thickness, &rules(), &made, &Budget::DEFAULT).unwrap().unwrap();
     assert!(!capped.took(), "{capped:?}");
     assert_eq!(sewn, was);
 }
@@ -177,7 +177,7 @@ fn req_auto_100_a_shape_s_own_top_where_it_is_doubled_goes_last() {
 fn req_auto_100_every_kind_is_said_in_order() {
     let thickest =
         Thickness::of(&plan(&[("one", Role::Top, zigzag(4.0, 0.25))]), &mut Budget::DEFAULT.meter()).unwrap().unwrap().most(Measure::Fills);
-    let capped = Capped { taken: [1.0, 2.0, 3.04, 0.0], times: [1, 2, 3, 0], left: Over::default(), thickest };
+    let capped = Capped { taken: [1.0, 2.0, 3.04, 0.0], times: [1, 2, 3, 0], left: Over::default(), thickest, ran_out: false };
     assert_eq!(
         kinds(&capped),
         "1.0 mm of underlay and travel in 1 place, 2.0 mm of top stitches under later shapes in 2 places, 3.0 mm of a shape's own doubled top stitches in 3 places"
@@ -232,16 +232,45 @@ fn req_auto_100_a_point_on_a_straight_run_takes_no_thread_and_stays() {
     assert_eq!(inner(&kept), inner(&all));
 }
 
+/// The least work of a budget with which `sewn`, measured as `thickness`, is capped with `rules` without
+/// running out, of every element's points.
+fn least(sewn: &StitchPlan, thickness: &Thickness, rules: &Rules) -> u64 {
+    let whole = |max_work: u64| {
+        let budget = Budget { max_work, ..Budget::DEFAULT };
+        capped(&mut sewn.clone(), &mut thickness.clone(), rules, &all(sewn), &budget).is_ok_and(|capped| capped.is_some_and(|capped| !capped.ran_out))
+    };
+    let (mut short, mut enough) = (0, Budget::DEFAULT.max_work);
+    while enough - short > 1 {
+        let middle = short + (enough - short) / 2;
+        if whole(middle) { enough = middle } else { short = middle }
+    }
+    enough
+}
+
 #[test]
-fn req_auto_101_the_cap_stops_when_the_work_runs_out() {
+fn req_auto_101_a_cap_out_of_work_keeps_the_points_it_took_measured_again() {
     let sewn =
         plan(&[("under", Role::Top, zigzag(1.5, 0.25)), ("over", Role::Top, zigzag(1.5, 0.0625)), ("over", Role::Underlay, zigzag(1.5, 0.25))]);
     let thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
-    let run = |max_work: u64| {
-        capped(&mut sewn.clone(), &mut thickness.clone(), &rules(), &all(&sewn), &mut Budget { max_work, ..Budget::DEFAULT }.meter()).is_ok()
-    };
-    let enough = (0..10_000_000u64).find(|work| run(*work)).unwrap();
-    assert!((0..enough).all(|work| !run(work)), "{enough}");
+    let enough = least(&sewn, &thickness, &rules());
+    let (mut whole, mut full) = (sewn.clone(), thickness.clone());
+    let all_of = capped(&mut whole, &mut full, &rules(), &all(&sewn), &Budget::DEFAULT).unwrap().unwrap();
+    assert!(!all_of.ran_out && all_of.took(), "{all_of:?}");
+    // With less work at all, the cap runs out: before it takes a point it says nothing of the plan, and
+    // after, it keeps the points it took, no more than with the work it needs, and the plan they leave
+    // measured again.
+    let mut kept = 0;
+    for max_work in 0..enough {
+        let (mut plan, mut measure) = (sewn.clone(), thickness.clone());
+        let Ok(Some(capped)) = capped(&mut plan, &mut measure, &rules(), &all(&sewn), &Budget { max_work, ..Budget::DEFAULT }) else { continue };
+        assert!(capped.ran_out, "{max_work}: {capped:?}");
+        let measured = Thickness::of(&plan, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        assert!(measures_as(&measure, &measured), "{max_work}");
+        assert_eq!(capped.thickest, measured.most(Measure::Fills), "{max_work}");
+        assert!(capped.times.iter().sum::<usize>() <= all_of.times.iter().sum::<usize>(), "{max_work}: {capped:?}");
+        kept += usize::from(capped.took());
+    }
+    assert!(kept > 0, "{enough}");
 }
 
 /// `copies` columns, each sewing a zigzag 4 mm wide 5 times over itself, 5 fills, 20 mm apart along x: the
@@ -267,9 +296,9 @@ fn req_auto_101_the_cap_s_work_grows_as_the_design_does() {
         let (mut sewn, columns) = columns_apart(copies);
         let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
         let rules = Rules { cap: 3.0, limit: 4.0, columns: &columns, ..rules() };
-        let mut meter = Budget::DEFAULT.meter();
-        let capped = capped(&mut sewn, &mut thickness, &rules, &columns, &mut meter).unwrap().unwrap();
-        (capped.times[3], Budget::DEFAULT.max_work - meter.work_left())
+        let enough = least(&sewn, &thickness, &rules);
+        let capped = capped(&mut sewn, &mut thickness, &rules, &columns, &Budget::DEFAULT).unwrap().unwrap();
+        (capped.times[3], enough)
     };
     let ((one, alone), (four, together)) = (work(1), work(4));
     assert!(one > 0 && four == 4 * one, "{one} and {four}");
@@ -329,6 +358,24 @@ fn diag_sc_i1119_says_when_the_cap_ran_out_of_work_and_keeps_what_the_pass_left(
         note.message
     );
     assert_eq!(kept, sewn);
+}
+
+#[test]
+fn diag_sc_i1119_says_what_the_cap_took_before_it_ran_out_of_work_and_keeps_it() {
+    let sewn = plan(&[("base", Role::Underlay, zigzag(4.0, 0.25)), ("top", Role::Top, zigzag(4.0, 0.0625))]);
+    let thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    // The pass takes nothing here, so the cap works on the plan as it is: with one unit less than it needs, it
+    // runs out after it took points, and keeps them.
+    let pass = used(&|meter| super::super::thin::thinned(&mut sewn.clone(), &mut thickness.clone(), &rules(), meter).is_ok());
+    let short = least(&sewn, &thickness, &rules()) - 1;
+    assert!(short >= pass, "{short} and {pass}");
+    let (said, kept) = said(&sewn, &Budget { max_work: short, ..Budget::DEFAULT });
+    let note = said.iter().find(|said| said.code == Code::AutoThinned).unwrap();
+    assert!(note.message.contains("The last pass took nothing there, and the cap took "), "{}", note.message);
+    assert!(note.message.contains(" before it ran out of work. Left: "), "{}", note.message);
+    assert!(count(&kept, Role::Underlay) < count(&sewn, Role::Underlay));
+    let measured = Thickness::of(&kept, &mut Budget::DEFAULT.meter()).unwrap().unwrap().most(Measure::Fills).value;
+    assert!(note.message.contains(&format!("the thickest spot, {measured:.1} fills at ")), "{}", note.message);
 }
 
 #[test]
@@ -578,12 +625,12 @@ fn req_auto_112_the_last_resort_takes_no_point_of_a_column_that_digitizing_did_n
     let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
     let columns: BTreeSet<ElementRef> = ElementRef::from_index(0).into_iter().collect();
     let rules = Rules { columns: &columns, ..rules() };
-    assert!(capped(&mut sewn, &mut thickness, &rules, &BTreeSet::new(), &mut Budget::DEFAULT.meter()).unwrap().is_none());
+    assert!(capped(&mut sewn, &mut thickness, &rules, &BTreeSet::new(), &Budget::DEFAULT).unwrap().is_none());
     assert_eq!(sewn, was);
     // Made by digitizing, it loses points down to the limit.
     let made = columns.clone();
     let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
-    let capped = capped(&mut sewn, &mut thickness, &rules, &made, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let capped = capped(&mut sewn, &mut thickness, &rules, &made, &Budget::DEFAULT).unwrap().unwrap();
     assert!(capped.times[3] > 0, "{capped:?}");
 }
 

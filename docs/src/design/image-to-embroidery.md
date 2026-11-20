@@ -2198,8 +2198,23 @@ within 1 mm of a spot above the cap, and judges cover by the top stitches within
 found once. Places farther off count as not covered, and that keeps the points of a long stitch. Each kind goes
 through the plan up to 4 times, and stops once a time takes nothing or no spot is above the cap. It keeps
 the last pass's measure up to date with the pass's own helpers, so the design is still measured once. It
-works on copies. When it runs out of work, the plan stays as the last pass left it, and `SC-I1119` says
-so.
+works on copies.
+
+**Its work** (`REQ-AUTO-101`). The cap has the work budget once. A needle point goes only once it has been
+judged whole, so a cap that runs out of work keeps the points it took until then. The plan they leave is
+measured again, with the budget's work once more, and `SC-I1119` says what the cap took before it ran out.
+A cap that runs out before it takes a point leaves the plan as the last pass left it, and says so.
+
+Until this fix the last resort judged every column point near a spot above the warning's limit, in full,
+for each point it took: its cover and the measure with the joined stitch. Its work grew with the number of
+those points times the number it took, so it grew with the square of the design. Only a point whose 2
+stitches pass within 1 mm of the thickest spot lays thread there and can lower it, and only those are now
+judged, so each point taken costs the work of the points round its spot. The traced dog in 9 colours,
+planned in the `logo` style, needed 598 million units against the budget of 500 million, 587 million of
+them in the last resort. The cap ran out and took nothing, and the dog sewed 7.1 fills thick where the
+`photo` style sews 4.0. It now takes 22.5 million units, 12 million of them in the last resort, and sews
+4.6 fills thick, the plan the old cap made with no limit on its work. 4 columns far apart take 4 times the work of
+one, where they took 15 times. SURVEY
 
 Until M13.46 the cap took a satin column's top stitches too. Where a column's points crowded in a bend,
 the third kind could take one. The stitch left then crossed part of the column only. On TS-13C's face
