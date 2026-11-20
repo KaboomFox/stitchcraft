@@ -36,6 +36,7 @@ use crate::generate::{Generated, Generation, approach, generate_with};
 use crate::generators::pull::PullParams;
 use crate::generators::{Layer, Neighbours};
 use crate::moves::Routing;
+use crate::names::Names;
 use crate::underlays_first::{Candidate, alone, steps};
 
 /// What planning a design gives.
@@ -45,8 +46,11 @@ pub struct PlanOutcome {
     /// say.
     pub plan: Option<StitchPlan>,
     /// What was changed, left out or wrong, element by element, each naming its element when it has
-    /// one.
+    /// one, and its shape's name when that has one.
     pub diagnostics: Vec<Diagnostic>,
+    /// The design's shapes, each automatic one without a name named, and each placed in the plan's sewing
+    /// order (`REQ-AUTO-125`, [`crate::names`]); none when planning ran out of work before they were.
+    pub names: Names,
 }
 
 /// The stitch plan for `design`, sewn on the machine `profile` describes. Each element has `budget`'s
@@ -82,7 +86,8 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
             Ok(generation) => generation,
             Err(said) => {
                 diagnostics.extend(said);
-                return PlanOutcome { plan: None, diagnostics };
+                let names = named(design, (&elements, &base, &generated), profile, budget, &mut diagnostics);
+                return PlanOutcome { plan: None, diagnostics, names };
             }
         };
         // A top whose work ran out skips its element: its underlay is left out too, and its stitches come back.
@@ -117,6 +122,7 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
         .filter(|(element, _)| element.lettered == Some(Lettered::Digitized))
         .filter_map(|(element, _)| Some((element.id.clone(), Pull::of(&PullParams::from_set(&element.params).ok()?.params))))
         .collect();
+    let names = named(design, (&elements, &base, &generated), profile, budget, &mut diagnostics);
     let mut meter = budget.meter();
     // Where shapes sewn later cover the way between 2 elements that digitizing made, the needle runs under
     // them and leaves no jump thread (`REQ-AUTO-053`).
@@ -135,8 +141,10 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
             // A design digitized automatically is thinned where a spot sews above the cap (`REQ-AUTO-074`),
             // told where it sews thick (`SC-W0913`), and is written.
             match (limits, plan.as_mut()) {
-                (Some(held), Some(plan)) if reach.is_empty() => diagnostics.extend(thick::measured(plan, &held, budget)),
-                (Some(held), Some(plan)) => diagnostics.extend(thick::finished(plan, &held, (&base, &reach, &columns, &lettering), profile, budget)),
+                (Some(held), Some(plan)) if reach.is_empty() => diagnostics.extend(thick::measured(plan, &held, &names, budget)),
+                (Some(held), Some(plan)) => {
+                    diagnostics.extend(thick::finished(plan, &held, (&base, &reach, &columns, &lettering), profile, &names, budget));
+                }
                 _ => {}
             }
             plan
@@ -151,5 +159,24 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
             None
         }
     };
-    PlanOutcome { plan, diagnostics }
+    names.tell(&mut diagnostics);
+    PlanOutcome { plan, diagnostics, names }
+}
+
+/// The shapes of `design` named (`REQ-AUTO-125`) by how `elements`, the elements as they are generated, sew
+/// them, but for the base layer's pieces, `base`; their threads named by `profile`'s palette, and each
+/// placed by the first of the `generated` steps that sews it. Naming has `budget`'s work, and one that needs
+/// more names nothing: `diagnostics` then says so.
+fn named(
+    design: &Design,
+    (elements, base, generated): (&[Element], &[ElementId], &[(&Element, Generated)]),
+    profile: &MachineProfile,
+    budget: &Budget,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> Names {
+    let order: Vec<&ElementId> = generated.iter().map(|(element, _)| &element.id).collect();
+    Names::given(design, (elements, base, &order), profile.palette.palette(), &mut budget.meter()).unwrap_or_else(|exhausted| {
+        diagnostics.push(exhausted.diagnostic(budget, None));
+        Names::default()
+    })
 }

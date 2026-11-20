@@ -2633,6 +2633,24 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-VC-033"
+area = "vectorcraft"
+level = "L2"
+statement = "The document `stitch plan picture.png --traced FILE` writes gives each shape's node the name it was planned with (REQ-AUTO-125), and is otherwise the document VectorCraft saved. Planned again with `--auto`, it sews the same stitches and says the same notices. A bug-report bundle keeps the named document."
+rationale = "VectorCraft's Layers panel shows a node's name, and a traced document has none, so every row reads `<Compound Path>`. Read in VectorCraft at 3f8d7a0 (`Node::display_name`, the Layers panel's `list_rows`)."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-VC-034"
+area = "vectorcraft"
+level = "L2"
+statement = "A path or a compound path with StitchCraft's Auto effect of its own inside a group or a layer with one sews by its own effect's settings alone, as today, and SC-W0920 says so in place of SC-W0807: it names the object, and lists each of the group's settings that is not at its default and that the object's own effect sets otherwise, with the object's value."
+rationale = "VectorCraft stores an effect with every parameter (`merged_params` in its crates/effects, read at 3f8d7a0), so the object's own effect holds every setting and the group's can't be merged under it. SC-W0807's words for effects from 2 levels don't say which of the group's settings are lost."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-VC-019"
 area = "vectorcraft"
 level = "L2"
@@ -2856,6 +2874,15 @@ area = "cli"
 level = "L2"
 statement = "`--guide X,Y,X,Y…`, which stitch plan, stitch export and stitch bug-report take any number of times, draws a guide (REQ-AUTO-109) through 2 points or more, each in percent of the box round the design's shapes as --keep reads its numbers (REQ-CLI-021), joined by straight lines. A guide of fewer than 2 points, an odd count of numbers or a number that doesn't read is refused as a usage error before anything is read. The guides are used after the design's own, named guide-1, guide-2 and so on in the order given. A bug-report bundle records them with the settings of automatic digitizing's rules, and its replay uses them."
 rationale = "A picture traced by the command line never opens in an editor where a guide could be drawn. A few points in percent of the picture's box can be read off the picture whatever size it sews at, and a guided fill smooths its rows, so straight lines between them serve."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-CLI-023"
+area = "cli"
+level = "L2"
+statement = "The report of `stitch plan` gives each diagnostic about a shape its shape's `name`, and lists the shapes under `shapes` in their sewing order, each with its `name`, `element`, `thread`, `kind` and `place`, from 1; a shape left out comes last, with no place."
+rationale = "A name is stored once and the sewing order is chosen again at every plan, so the report says where each shape sews now."
 milestone = "M13"
 status = "active"
 
@@ -3721,5 +3748,32 @@ area = "auto"
 level = "L2"
 statement = "A detail moves to sew after a larger area it meets (REQ-AUTO-096) only together with what sews on top of it: the wishes of a nest go together or not at all. When the search for the fewest thread changes grants the wish that a detail sews after an area, it grants in the same step every wish that something sews after that detail, a detail of it or a satin column that borders it, and theirs in turn. When the row of threads can't grant them all, it grants none of them. So a detail's move never puts it after a detail or a column of its own that would sew after it."
 rationale = "Measured on 2026-11-19 with both settings on: on a traced dog a grey area that the darker fur closes in on moved to sew after the fur, and the tan patch inside it, which would cost a thread change to move, stayed where it was and lay under the grey's outline and rows. In the stitched preview the patch showed 6.0 mm² of tan where it showed 10.3 mm². Any picture with a detail inside a detail, a pupil in an eye or a window in a door, can do the same. Moving a nest whole, or not at all, needs no second plan and no measure of what shows. Making every smaller area that a moving detail meets a follower too was measured and not taken: with more inner pairs competing in the choice of the row, the traced dog's tan patch lay under the grey's edge again."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-125"
+area = "auto"
+level = "L2"
+statement = "Each automatic shape without a name is named, when it is planned, by its thread, how it sews and its number: the thread's name, or the name of the machine palette's thread of its colour exactly, or else its hex code; `fill`, `column` or `line` by the way its main part sews, the part that keeps its lowest element's id or else its first part in the sewing order, or `left out` for a shape that sews nothing; and, in brackets, its number among the automatic shapes of that thread and that way of sewing in the order of the Layers panel's rows, from the top, 1 first (`Red fill (3)`). All its parts take its name. A design planned twice gives the same names."
+rationale = "Measured on 2026-11-19 (docs/src/design/image-to-embroidery.md › Names of shapes): deleting one shape of a traced dog renamed up to 70 of its 91 other shapes when the number counted the sewing order, and 4 on average when it counted the Layers panel's order by thread and way of sewing. The brackets keep a search of the Layers panel for one number from finding longer ones."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-126"
+area = "auto"
+level = "L2"
+statement = "A shape with a name keeps it, whoever gave it, and no shape is given a name another shape of the design has: the number goes on to the next one free."
+rationale = "Names written into a traced document become the shapes' own names (REQ-VC-033), so an edit renames nothing, and a person may rename any shape."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-127"
+area = "auto"
+level = "L2"
+statement = "A notice about a shape names it by its name, from one function of the engine: `stitch plan` shows it in quotes before the element id (`info SC-I0912 (\"Red fill (3)\", vc:63:fill): …`), and a message that names shapes in its words, as SC-W0913's thickest spot does, names each so."
+rationale = "The Layers panel shows names, never element ids, and its Search All finds a name, so a person goes from a notice to the shape."
 milestone = "M13"
 status = "active"
