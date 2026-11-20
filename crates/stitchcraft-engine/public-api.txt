@@ -32,6 +32,7 @@ pub stitchcraft_engine::auto::rules::Rule::is: &'static str
 pub stitchcraft_engine::auto::rules::Rule::label: &'static str
 pub stitchcraft_engine::auto::rules::Rule::sewn: &'static str
 pub const stitchcraft_engine::auto::rules::LEAN: f64
+pub const stitchcraft_engine::auto::rules::LOGO: &str
 pub const stitchcraft_engine::auto::rules::MOST_CROWDING: f64
 pub const stitchcraft_engine::auto::rules::PRESETS: [stitchcraft_engine::auto::rules::Preset; 2]
 pub const stitchcraft_engine::auto::rules::RULES: [stitchcraft_engine::auto::rules::Rule; 9]

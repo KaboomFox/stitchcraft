@@ -1,12 +1,13 @@
-//! Outlines smoothed where thread can't show their wobble (roadmap step M13.51, `REQ-AUTO-131` to
+//! Outlines smoothed where thread can't show their wobble (roadmap step M13.52, `REQ-AUTO-131` to
 //! `REQ-AUTO-134`). A traced picture's outlines carry many points and wobble by less than a thread is
 //! wide. With `auto_smooth_mm` set, an automatic area's outline is smoothed within that distance, its corners
 //! kept, an edge 2 areas share smoothed once, and no outline made to cross itself or another. The designs
 //! are drawn here in code with a known wobble: a saw-tooth 0.06 mm high, a tooth every 0.5 mm.
 //!
-//! These cases are the spec phase's: they fail until the build phase adds the setting and the pass
-//! (`docs/src/design/image-to-embroidery.md` › Outlines thread can't show). The build phase also adds
-//! `SC-I0921` to the diagnostics registry, and renames the case of its message `diag_sc_i0921_…`.
+//! The requirements are planned, and the cases that need the pass are ignored as planned until M13.52
+//! builds it (`docs/src/design/image-to-embroidery.md` › Smoothing in StitchCraft). M13.52 removes their
+//! `#[ignore]`, adds `SC-I0921` to the diagnostics registry, and renames the case of its message
+//! `diag_sc_i0921_…`. The case of an area with no setting passes today, and guards the outline as drawn.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
@@ -114,6 +115,7 @@ fn cross(a: (f64, f64), b: (f64, f64), c: (f64, f64), d: (f64, f64)) -> bool {
 }
 
 #[test]
+#[ignore = "planned: M13.52 builds the smoothing pass"]
 fn req_auto_131_an_outline_is_smoothed_within_the_setting_and_keeps_its_corners() {
     let drawn = bottom("a", &[(SMOOTH, "0.2")], false);
     let (elements, _) = sewn(vec![drawn.clone()]);
@@ -132,6 +134,7 @@ fn req_auto_131_an_outline_is_smoothed_within_the_setting_and_keeps_its_corners(
 }
 
 #[test]
+#[ignore = "planned: M13.52 builds the smoothing pass"]
 fn req_auto_132_an_edge_2_areas_share_is_smoothed_once_and_they_still_meet() {
     let params = [(SMOOTH, "0.2")];
     let (elements, _) = sewn(vec![bottom("a", &params, false), top("b", &params)]);
@@ -149,6 +152,7 @@ fn req_auto_132_an_edge_2_areas_share_is_smoothed_once_and_they_still_meet() {
 }
 
 #[test]
+#[ignore = "planned: M13.52 builds the smoothing pass"]
 fn req_auto_133_an_edge_shared_with_an_area_set_off_stays_as_drawn() {
     let (lower, upper) = (bottom("a", &[(SMOOTH, "0.2")], true), top("b", &[(SMOOTH, "0")]));
     let drawn = on_the_edge(&outline(std::slice::from_ref(&lower), "a"));
@@ -171,6 +175,7 @@ fn req_auto_133_an_area_with_no_setting_sews_its_outline_as_drawn() {
 }
 
 #[test]
+#[ignore = "planned: M13.52 builds the smoothing pass"]
 fn req_auto_134_a_smoothed_outline_never_crosses_itself() {
     // A strip 0.6 mm tall whose top is the saw-tooth, filled whole and smoothed at 0.4 mm: more than half the
     // strip's height, so that its 2 long sides could meet.
@@ -190,6 +195,7 @@ fn req_auto_134_a_smoothed_outline_never_crosses_itself() {
 }
 
 #[test]
+#[ignore = "planned: M13.52 builds the smoothing pass"]
 fn req_auto_133_sc_i0921_says_the_outline_points_before_and_after() {
     let params = [(SMOOTH, "0.2")];
     let (lower, upper) = (bottom("a", &params, true), top("b", &params));

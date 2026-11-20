@@ -8,13 +8,23 @@
 //! line is the `stitch` app's.
 //!
 //! **The steps** ([`steps`]) are the compatibility gate's `trace` case's, which the user takes by hand in
-//! the tutorial: the machine's threads, as `stitch palette` writes them, loaded as a swatch library; the
+//! the tutorial, but for the fitting below: the machine's threads, as `stitch palette` writes them, loaded as a swatch library; the
 //! picture placed from its bytes; Image Trace in colour with that library's colours as they are, by the
 //! Abutting method, so that the shapes share their edges; and Expand, which keeps the paths. The picture is
 //! fitted, its aspect kept, inside a square `--size` millimetres across, or else inside the machine's hoop
 //! [`HOOP_MARGIN`] in from each side, so that any picture sews without a size given. Image Trace keeps at
 //! most `--colours` of the library's colours, [`COLOURS`] unless it says otherwise: Image Trace's own
 //! default.
+//!
+//! **The fitting** ([`Fitting`]). Image Trace's fitting options, left at their defaults, draw a traced
+//! outline with more points than thread can show: a staircase of pixels keeps its steps as corners, and
+//! each curve follows the pixels closely. Measured on the repository's traced pictures, Paths [`PATHS`] and
+//! Corners [`CORNERS`] draw them with about a third fewer anchors and fewer jags, for the same colour error
+//! against the picture and the same likeness, and the tracer still fits each edge once for both shapes
+//! that share it (`REQ-CLI-024`; `docs/src/design/image-to-embroidery.md` › Outlines thread can't show).
+//! Noise and Snap Curves To Lines stay at Image Trace's defaults. The `logo` style keeps every fitting
+//! option at its default: a logo's corners are drawn, Corners 0 would round each turn under 90°, and no
+//! traced logo was measured. Every VectorCraft release the compatibility gate supports reads both options.
 //!
 //! **Why the margin.** A picture's shapes reach its edge, and digitized automatically, a satin column along
 //! the edge sews past it: its stitches reach past its rails by their pull compensation
@@ -41,10 +51,35 @@ use std::process::{Command, Stdio};
 
 use serde_json::{Value, json};
 use stitchcraft_core::{Code, Diagnostic, Fix, Mm};
+use stitchcraft_engine::auto::rules::{LOGO, Preset};
 use stitchcraft_plan::MachineProfile;
 
 use crate::commands::{palette, printable};
 use crate::files::{self, Scratch};
+
+/// Image Trace's Paths for a picture traced with the fewest points ([`Fitting::Fewest`]): its curves follow
+/// the pixels least closely, within about 0.8 pixels.
+pub const PATHS: u32 = 0;
+/// Image Trace's Corners for a picture traced with the fewest points ([`Fitting::Fewest`]): a turn of 90° or
+/// more makes a corner, so a staircase of pixels is fitted as a line.
+pub const CORNERS: u32 = 0;
+
+/// How Image Trace fits the outlines of a picture `stitch plan` traces ([the module](self)).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Fitting {
+    /// With the fewest points that keep the picture: Paths [`PATHS`] and Corners [`CORNERS`].
+    Fewest,
+    /// With Image Trace's defaults, which keep a drawn corner: for the `logo` style.
+    Defaults,
+}
+
+impl Fitting {
+    /// The fitting for a picture digitized in the style `style`: [`Fitting::Defaults`] for the `logo` style,
+    /// and [`Fitting::Fewest`] for any other or none.
+    pub fn for_style(style: Option<&Preset>) -> Self {
+        if style.is_some_and(|preset| preset.name == LOGO) { Self::Defaults } else { Self::Fewest }
+    }
+}
 
 /// The extensions of the pictures `stitch plan` traces, in any case.
 pub const EXTENSIONS: &[&str] = &["png", "jpg", "jpeg"];
@@ -73,9 +108,9 @@ pub fn is_picture(path: &Path) -> bool {
 
 /// The steps VectorCraft's command line runs to trace the picture `bytes`, named `name`, in the threads of
 /// `profile`: fitted inside a square `size` across, or else inside the machine's hoop [`HOOP_MARGIN`] in from
-/// each side, and traced in at most `colours` of them ([the module](self)). `file.place` fits the picture
-/// inside its `rect`, `[x, y, width, height]` in points.
-pub fn steps(name: &str, bytes: &[u8], profile: &MachineProfile, size: Option<Mm>, colours: u32) -> Value {
+/// each side, and traced in at most `colours` of them with the `fitting` ([the module](self)). `file.place`
+/// fits the picture inside its `rect`, `[x, y, width, height]` in points.
+pub fn steps(name: &str, bytes: &[u8], profile: &MachineProfile, size: Option<Mm>, colours: u32, fitting: Fitting) -> Value {
     let rect = match size {
         Some(size) => [0.0, 0.0, size.to_points(), size.to_points()],
         None => {
@@ -83,16 +118,21 @@ pub fn steps(name: &str, bytes: &[u8], profile: &MachineProfile, size: Option<Mm
             [margin, margin, hoop.width.to_points() - 2.0 * margin, hoop.height.to_points() - 2.0 * margin]
         }
     };
+    let mut trace = json!({
+        "mode": "color",
+        "palette": "documentLibrary",
+        "library": format!("loaded/{LIBRARY}"),
+        "colors": colours,
+        "method": "abutting",
+    });
+    if let (Fitting::Fewest, Some(options)) = (fitting, trace.as_object_mut()) {
+        options.insert("paths".to_string(), json!(PATHS));
+        options.insert("corners".to_string(), json!(CORNERS));
+    }
     json!([
         {"command": "swatch.library.load", "params": {"name": LIBRARY, "data": palette::gpl(profile)}},
         {"command": "file.place", "params": {"name": name, "dataBase64": stitchcraft_vectorcraft::base64(bytes), "rect": rect}},
-        {"command": "imageTrace.make", "params": {"params": {
-            "mode": "color",
-            "palette": "documentLibrary",
-            "library": format!("loaded/{LIBRARY}"),
-            "colors": colours,
-            "method": "abutting",
-        }}},
+        {"command": "imageTrace.make", "params": {"params": trace}},
         {"command": "imageTrace.expand"},
     ])
 }
@@ -162,6 +202,7 @@ fn said(stderr: &[u8]) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
+    use stitchcraft_engine::auto::rules::PRESETS;
     use stitchcraft_plan::profiles::{BROTHER_PE800_4X4, REFERENCE};
     use stitchcraft_testkit::temp::TempDir;
 
@@ -180,7 +221,7 @@ mod tests {
     #[test]
     fn req_cli_012_the_steps_load_the_threads_place_the_picture_fitted_and_trace_it_in_them() {
         let picture = b"\x89PNG\r\n\x1a\n and the rest";
-        let given = steps("badge.png", picture, REFERENCE, None, COLOURS);
+        let given = steps("badge.png", picture, REFERENCE, None, COLOURS, Fitting::Defaults);
         let rect = &given[1]["params"]["rect"];
         let expected = json!([
             {"command": "swatch.library.load", "params": {"name": "threads.gpl", "data": palette::gpl(REFERENCE)}},
@@ -194,7 +235,7 @@ mod tests {
         let mm: Vec<f64> = rect.as_array().unwrap().iter().map(|points| Mm::from_points(points.as_f64().unwrap()).unwrap().get()).collect();
         assert!(mm.iter().zip([0.5, 0.5, 129.0, 179.0]).all(|(got, want)| (got - want).abs() < 1e-9), "{mm:?}");
         // A size fits it inside a square that size across, and another machine traces in its own threads.
-        let sized = steps("photo.jpg", picture, &BROTHER_PE800_4X4, Some(Mm::new(80.0).unwrap()), 4);
+        let sized = steps("photo.jpg", picture, &BROTHER_PE800_4X4, Some(Mm::new(80.0).unwrap()), 4, Fitting::Defaults);
         let points = Mm::new(80.0).unwrap().to_points();
         assert_eq!(sized[1]["params"]["rect"], json!([0.0, 0.0, points, points]));
         assert_eq!((&sized[0]["params"]["data"], &sized[2]["params"]["params"]["colors"]), (&json!(palette::gpl(&BROTHER_PE800_4X4)), &json!(4)));
@@ -203,13 +244,22 @@ mod tests {
 
     #[test]
     fn req_cli_024_the_trace_fits_its_outlines_with_the_fewest_points_that_keep_the_picture() {
-        // M13.51 (`docs/src/design/image-to-embroidery.md` › Outlines thread can't show): Paths 0 and Corners 0,
-        // and Noise and Snap Curves To Lines left at Image Trace's defaults. The build phase adds the `logo`
-        // style's steps, which keep every fitting option at its default.
-        let given = steps("photo.jpg", b"\xff\xd8\xff and the rest", REFERENCE, None, COLOURS);
-        let trace = &given[2]["params"]["params"];
-        assert_eq!((&trace["paths"], &trace["corners"]), (&json!(0), &json!(0)), "{trace}");
-        assert!(trace.get("noise").is_none() && trace.get("snapCurvesToLines").is_none(), "{trace}");
+        // Paths 0 and Corners 0, and Noise and Snap Curves To Lines left at Image Trace's defaults.
+        let picture = b"\xff\xd8\xff and the rest";
+        let fewest = steps("photo.jpg", picture, REFERENCE, None, COLOURS, Fitting::Fewest);
+        let trace = &fewest[2]["params"]["params"];
+        let expected = json!({"mode": "color", "palette": "documentLibrary", "library": "loaded/threads.gpl", "colors": 6, "method": "abutting", "paths": 0, "corners": 0});
+        assert_eq!(trace, &expected);
+        // Only the trace's options differ from the steps with the defaults.
+        let mut defaults = steps("photo.jpg", picture, REFERENCE, None, COLOURS, Fitting::Defaults);
+        assert_eq!(defaults[2]["params"]["params"].as_object_mut().unwrap().len(), 5);
+        defaults[2]["params"]["params"] = expected;
+        assert_eq!(defaults, fewest);
+        // The `logo` style keeps every fitting option at its default, and any other style, or none, fits
+        // with the fewest points.
+        let style = |name: &str| PRESETS.iter().find(|preset| preset.name == name);
+        assert_eq!(Fitting::for_style(style("logo")), Fitting::Defaults);
+        assert_eq!([Fitting::for_style(style("photo")), Fitting::for_style(None)], [Fitting::Fewest; 2]);
     }
 
     #[test]

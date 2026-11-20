@@ -115,6 +115,7 @@ pub fn run(check_only: bool, filter: Option<&str>, bless: Option<&str>, differen
     check_differential(&root, &data, &mut findings)?;
     check_models_only(&root, &rust, &mut findings)?;
     check_release_only(&root, &rust, &mut findings)?;
+    check_planned(&requirements, &rust, &mut findings);
     for fixture in unindexed(&root)? {
         findings.error(format!("{FIXTURES}/{fixture} has no row in {FIXTURES}/README.md, which gives each fixture's origin and licence"));
     }
@@ -187,7 +188,7 @@ pub fn run(check_only: bool, filter: Option<&str>, bless: Option<&str>, differen
     // A models-only case runs in the models' job and a release-only case in a step of CI, which `--check`
     // finds for each, and only the report lists them here.
     for o in &outcomes {
-        let elsewhere = |why: &&str| why.starts_with(cases::MODELS_ONLY) || why.starts_with(cases::RELEASE_ONLY);
+        let elsewhere = |why: &&str| [cases::MODELS_ONLY, cases::RELEASE_ONLY, cases::PLANNED].iter().any(|start| why.starts_with(start));
         let Some(why) = o.skipped.as_deref().filter(|why| !elsewhere(why)) else { continue };
         let message = format!("{} did not run: {why}", o.case);
         if util::in_ci() { findings.error(format!("required in CI: {message}")) } else { findings.warn(message) }
@@ -234,6 +235,18 @@ fn check_models_only(root: &Path, rust: &[cases::RustCase], findings: &mut Findi
         }
     }
     Ok(())
+}
+
+/// Checks that each case ignored as planned (`cases::PLANNED`) covers a requirement that is `planned`, so that
+/// the step that builds it, which makes the requirement `active`, runs its cases.
+fn check_planned(requirements: &[cases::Requirement], rust: &[cases::RustCase], findings: &mut Findings) {
+    let planned: BTreeSet<&str> = requirements.iter().filter(|r| r.status == "planned").map(|r| r.id.as_str()).collect();
+    for case in rust.iter().filter(|case| case.planned.is_some() && !planned.contains(case.covers.as_str())) {
+        findings.error(format!(
+            "{}: `{}` is ignored as planned, but {} is not a planned requirement: remove its #[ignore]",
+            case.file, case.name, case.covers
+        ));
+    }
 }
 
 /// CI's workflow, a step of which runs each test file that holds release-only cases.
@@ -492,6 +505,7 @@ mod tests {
             file: file.into(),
             models_only: Some(format!("{}the models job runs it", cases::MODELS_ONLY)),
             release_only: None,
+            planned: None,
         };
         check_models_only(&root, &[case("apps/stitchcraft-cutout/src/run.rs"), case("apps/stitchcraft-cutout/tests/nowhere.rs")], &mut findings)
             .unwrap();
@@ -535,6 +549,7 @@ mod tests {
             file: file.into(),
             models_only: None,
             release_only: Some(format!("{}CI's perf job runs it", cases::RELEASE_ONLY)),
+            planned: None,
         };
         check_release_only(
             &root,
@@ -545,5 +560,42 @@ mod tests {
         assert_eq!(findings.errors.len(), 2, "{:?}", findings.errors);
         assert!(findings.errors[0].contains("belong in a test file of their own"), "{}", findings.errors[0]);
         assert!(findings.errors[1].contains("--test nowhere"), "{}", findings.errors[1]);
+    }
+
+    #[test]
+    fn a_case_ignored_as_planned_covers_a_planned_requirement() {
+        let (root, mut findings) = (util::root(), Findings::default());
+        let requirements = cases::load_requirements(&root).unwrap();
+        check_planned(&requirements, &cases::discover_rust_cases(&root, &mut findings), &mut findings);
+        assert!(findings.errors.is_empty(), "{:?}", findings.errors);
+        let requirement = |id: &str, status: &str| cases::Requirement {
+            id: id.into(),
+            area: "auto".into(),
+            level: "L2".into(),
+            statement: String::new(),
+            milestone: "M13".into(),
+            status: status.into(),
+            rationale: None,
+        };
+        let case = |covers: &str, planned: bool| cases::RustCase {
+            name: format!("req_{}_x", covers.to_ascii_lowercase().replace("req-", "").replace('-', "_")),
+            covers: covers.into(),
+            file: "crates/stitchcraft-engine/tests/auto_smooth.rs".into(),
+            models_only: None,
+            release_only: None,
+            planned: planned.then(|| format!("{}M13.52 builds it", cases::PLANNED)),
+        };
+        let requirements = [requirement("REQ-AUTO-131", "planned"), requirement("REQ-AUTO-025", "active")];
+        let rust = [case("REQ-AUTO-131", true), case("REQ-AUTO-025", false), case("REQ-AUTO-025", true), case("SC-I0921", true)];
+        check_planned(&requirements, &rust, &mut findings);
+        assert_eq!(
+            findings.errors,
+            [
+                "crates/stitchcraft-engine/tests/auto_smooth.rs: `req_auto_025_x` is ignored as planned, but REQ-AUTO-025 is not a planned \
+                 requirement: remove its #[ignore]",
+                "crates/stitchcraft-engine/tests/auto_smooth.rs: `req_sc_i0921_x` is ignored as planned, but SC-I0921 is not a planned \
+                 requirement: remove its #[ignore]",
+            ]
+        );
     }
 }

@@ -303,7 +303,7 @@ fn req_cli_012_shapes_along_the_sides_of_a_picture_fitted_to_the_hoop_sew_in_it(
     assert!(out.stderr.contains("\nerror SC-E0701: The design is 130.8 × 180.0 mm, "), "{}", out.stderr);
     // Where VectorCraft places a picture given no size, `file.place`'s `[x, y, width, height]`, they sew in
     // the hoop.
-    let steps = trace::steps("sides.png", b"", REFERENCE, None, trace::COLOURS);
+    let steps = trace::steps("sides.png", b"", REFERENCE, None, trace::COLOURS, trace::Fitting::Fewest);
     let placed: [f64; 4] = serde_json::from_value(steps[1]["params"]["rect"].clone()).unwrap();
     let (out, size) = planned(placed.map(|points| Mm::from_points(points).unwrap().get()));
     assert_eq!(out.status, Status::Done, "{}", out.stderr);
