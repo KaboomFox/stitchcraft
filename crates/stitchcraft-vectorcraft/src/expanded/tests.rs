@@ -48,7 +48,7 @@ fn near(a: &Path, b: &Path) -> bool {
 
 #[test]
 fn req_cli_025_the_parts_go_in_a_group_over_the_traced_shapes_hidden_and_locked() {
-    let text = traced(r#""next_id": 12, "#);
+    let text = traced(r#""title": "a \"quoted\" \\ title", "next_id": 12, "#);
     let (expanded, back, written) = round_trip(&text);
     // The group holding the automatic shapes is hidden and locked; the object apart keeps its bytes.
     assert!(written.contains(r#"{"visible": false, "locked": true, "id": 3, "kind": {"type": "group""#), "{written}");

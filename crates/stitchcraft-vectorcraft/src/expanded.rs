@@ -399,13 +399,13 @@ fn scan(json: &[u8], filter: &str) -> Option<Scanned> {
                 let token = text.get(i..i + len)?;
                 found.spans.extend(kept(&path).map(|at| (at, (i, i + len))));
                 match stack.last_mut() {
-                    Some(Frame::Object { key: Some(key), depth, top, is_top, .. }) => {
+                    Some(Frame::Object { key: Some(key), top, is_top, .. }) => {
                         let place = top.and_then(|top| found.tops.get_mut(top));
                         match key.as_str() {
                             "id" => {
                                 let id = token.parse::<u64>().ok();
                                 found.largest = found.largest.max(id.unwrap_or(0));
-                                if let (Some(id), Some(place)) = (id, place.filter(|_| *depth > 0)) {
+                                if let (Some(id), Some(place)) = (id, place) {
                                     place.ids.push(id);
                                 }
                             }

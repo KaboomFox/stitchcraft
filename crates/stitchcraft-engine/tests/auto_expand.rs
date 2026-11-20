@@ -178,3 +178,29 @@ fn req_auto_144_an_expanded_design_no_longer_follows_its_marks_and_names_what_it
     let edited = Design::new(edited, expanded.settings).unwrap();
     assert_ne!(in_place(&edited).plan.unwrap(), before);
 }
+
+#[test]
+fn req_auto_144_named_lettering_and_a_shape_set_by_hand_keep_their_names_and_settings() {
+    // The lettering's columns named as a text object names them, and a square set by hand beside the patch.
+    let design = lettering_placed();
+    let mut elements: Vec<Element> = design.elements().to_vec();
+    for element in elements.iter_mut().filter(|element| element.lettered.is_some()) {
+        element.name = Some("Camp Elk".to_string());
+    }
+    elements.push(fill("by-hand", &[&[(-40.0, 0.0), (-30.0, 0.0), (-30.0, 10.0), (-40.0, 10.0)]], &BLUE, &[("angle", "30")]));
+    let design = Design::new(elements, design.settings).unwrap();
+    let (expanded, said) = expanded(&design);
+    let by_hand = expanded.elements().iter().find(|element| element.id.as_str() == "by-hand").unwrap();
+    assert_eq!((by_hand.params.get(DIGITIZED_AS), by_hand.params.get("angle")), (None, Some("30")));
+    let warning = said.iter().find(|said| said.code == Code::AutoExpandLost).unwrap();
+    assert!(warning.message.contains("The lettering of \"Camp Elk\" became the columns it sews"), "{}", warning.message);
+}
+
+#[test]
+fn req_auto_144_the_shapes_digitizing_has_no_work_for_are_named_once_each() {
+    let design = pictures::lettered_patch();
+    let (expanded, said) = expand(&design, REFERENCE, &Budget { max_work: 1, ..Budget::DEFAULT }).unwrap();
+    assert!(expanded.elements().is_empty());
+    let warning = said.iter().find(|said| said.code == Code::AutoExpandLost).unwrap();
+    assert!(warning.message.contains("`patch-border`, `patch-field`, `m`, `a`, `t` and 2 more needed more work"), "{}", warning.message);
+}
