@@ -322,7 +322,8 @@ fn rows_said(rows: &[&str], texts: &[&str]) -> Result<String, String> {
     match (whole.is_empty() && cut.is_empty(), missing.is_empty() && cut.is_empty()) {
         (true, _) if !rows.is_empty() => Ok(format!("the tree gives no text for its rows: none of the {} names of the shapes is in it", rows.len())),
         (_, true) => Ok(format!("each of the {} rows carries its shape's whole name in the tree: {whole:?}", rows.len())),
-        _ => Err(format!("names cut short {cut:?}, and names missing {missing:?}, of {rows:?}")),
+        // Each of `cut` already quotes its texts: joined, not debug-printed, so that its quotes stay unescaped.
+        _ => Err(format!("names cut short [{}], and names missing {missing:?}, of {rows:?}", cut.join(", "))),
     }
 }
 
