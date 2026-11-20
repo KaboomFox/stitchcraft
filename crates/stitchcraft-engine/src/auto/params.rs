@@ -52,6 +52,8 @@ pub const MAX_REACH: &str = "auto_max_reach";
 pub const MIN_FILL_WIDTH: &str = "auto_min_fill_width_mm";
 /// The key of the overlap.
 pub const OVERLAP: &str = "auto_overlap_mm";
+/// The key of the overlap under a part's satin column.
+pub const COLUMN_OVERLAP: &str = "auto_column_overlap_mm";
 /// The key of the smallest area.
 pub const MIN_AREA: &str = "auto_min_area_mm2";
 /// The key of the switch that leaves the background out.
@@ -316,6 +318,16 @@ params! {
         /// which parts sew as satin columns, and not always for the better.
         auto_smooth_mm: Length = "0", label "Smooth outlines", range (0.0, 1.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
+
+        /// How far an area stays under a satin column that digitizing makes of a part of another shape and
+        /// sews after it: the area is cut away that far inside the column's edge, and reaches that far under
+        /// it where they meet. Left empty, the default, it is the overlap, as everywhere else. A column's
+        /// thread pulls its stitches in by about its pull compensation, 0.4 mm, so less than that may show
+        /// fabric between the fill and the column. Less overlap sews thinner where a column edges a fill, but
+        /// only a sew-out shows how little is enough. A value above the overlap reads as the overlap. Under
+        /// an area, a running line or a satin column drawn as a stroke, lettering's too, the overlap stays.
+        auto_column_overlap_mm: OptionalLengthWithZero = "", label "Overlap under a column", range (0.0, 2.0),
+            origin Origin::StitchCraft, stability Stability::Experimental;
     }
 }
 
@@ -350,11 +362,14 @@ mod tests {
         ];
         let cover = ["auto_base_offset_mm", "auto_base_rows", "auto_base_sliver_mm2", "auto_base_bare_percent"];
         let thick = ["auto_thick_warn_fills", "auto_thick_fail_fills", "auto_thick_warn_points", "auto_thick_fail_points", "auto_thick_cap_fills"];
-        assert_eq!(keys, [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..], &thick[..], &[DETAILS_LAST, "auto_smooth_mm"]].concat());
-        // The bounds, the base layer's offset and rows, the 2 limits of the cover's check, the 4 limits of the thickness and its cap, the switch of the details and the smoothing
+        assert_eq!(
+            keys,
+            [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..], &thick[..], &[DETAILS_LAST, "auto_smooth_mm", COLUMN_OVERLAP]].concat()
+        );
+        // The bounds, the base layer's offset and rows, the 2 limits of the cover's check, the 4 limits of the thickness and its cap, the switch of the details and the smoothing and the overlap under a column
         // are the advanced settings, which no dialog shows.
         let advanced: Vec<&str> = AutoParams::SPECS.iter().filter(|spec| spec.group == ADVANCED).map(|spec| spec.key).collect();
-        assert_eq!(advanced, [&bounds[..], &cover[..], &thick[..], &[DETAILS_LAST, "auto_smooth_mm"]].concat());
+        assert_eq!(advanced, [&bounds[..], &cover[..], &thick[..], &[DETAILS_LAST, "auto_smooth_mm", COLUMN_OVERLAP]].concat());
     }
 
     #[test]
