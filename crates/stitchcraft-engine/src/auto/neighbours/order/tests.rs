@@ -37,6 +37,7 @@ fn element(id: &str, shape: Shape, thread: &Thread) -> Element {
         thread: thread.clone(),
         params: ParamSet::default(),
         automatic: false,
+        lettered: None,
         hints: Default::default(),
         clips: Vec::new(),
     }

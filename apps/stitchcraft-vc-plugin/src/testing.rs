@@ -155,6 +155,7 @@ pub(crate) fn three_threads() -> (stitchcraft_engine::design::Element, stitchcra
         thread: red.clone(),
         params: [("trim_after", "true")].into_iter().collect(),
         automatic: false,
+        lettered: None,
         hints: Default::default(),
         clips: Vec::new(),
     };

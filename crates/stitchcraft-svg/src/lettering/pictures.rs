@@ -42,7 +42,7 @@ use stitchcraft_core::units::Point;
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Meter, Severity};
 use stitchcraft_engine::design::mark::frame::{self, At};
 use stitchcraft_engine::design::mark::{Area, bounds, flat};
-use stitchcraft_engine::design::{Design, Element, Path, Segment, Shape, Subpath};
+use stitchcraft_engine::design::{Design, Element, Lettered, Path, Segment, Shape, Subpath};
 use stitchcraft_plan::Thread;
 
 use super::{Along, Lettering, Set, TextPosition, VerticalPosition, exhausted, scaled, set, set_along};
@@ -393,7 +393,8 @@ impl Work<'_> {
             let id = ElementId::new(format!("{}:{}", marker.label, element.id))
                 .map_err(|_| Stop::Unused("its name is too long to number its letters by.".to_string()))?;
             let thread = thread.clone().filter(|_| one_thread).unwrap_or_else(|| element.thread.clone());
-            letters.push(Element { id, name: None, thread, ..element.clone() });
+            // Digitizing placed it, so the cap may take its thread (`REQ-AUTO-119`).
+            letters.push(Element { id, name: None, thread, lettered: Some(Lettered::Digitized), ..element.clone() });
         }
         // Everything is set: now the shapes go, and the lettering comes after the last element that lost
         // one.

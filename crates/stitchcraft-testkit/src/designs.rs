@@ -55,6 +55,7 @@ pub fn along(id: &str, path: Path, thread: &Thread, params: &[(&str, &str)]) -> 
         thread: thread.clone(),
         params: params.iter().copied().collect::<ParamSet>(),
         automatic: false,
+        lettered: None,
         hints: Hints::default(),
         clips: Vec::new(),
     }
@@ -205,6 +206,7 @@ pub fn fill(id: &str, parts: &[&[(f64, f64)]], thread: &Thread, params: &[(&str,
         thread: thread.clone(),
         params: params.iter().copied().collect::<ParamSet>(),
         automatic: false,
+        lettered: None,
         hints: Hints::default(),
         clips: Vec::new(),
     }

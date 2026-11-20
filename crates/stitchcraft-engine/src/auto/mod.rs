@@ -74,7 +74,7 @@
 //! neighbours, and the areas sewn before it reach under it.
 
 mod area;
-mod cap;
+pub(crate) mod cap;
 mod clips;
 mod columns;
 mod guides;
@@ -398,8 +398,14 @@ pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>
 /// what fills alone lay there (`REQ-AUTO-073`).
 pub fn shown(design: &Design, budget: &Budget) -> BTreeSet<ElementId> {
     let Sewing { elements, made, outlines, .. } = sewing(design, budget);
-    let satin = |element: &Element| crate::generate::stitch_type_of(element, &design.settings).is_some_and(|stitch_type| stitch_type.family() == Family::Satin);
-    elements.iter().filter(|element| made.contains(&element.id) && (satin(element) || outlines.contains_key(&element.id))).map(|element| element.id.clone()).collect()
+    let satin = |element: &Element| {
+        crate::generate::stitch_type_of(element, &design.settings).is_some_and(|stitch_type| stitch_type.family() == Family::Satin)
+    };
+    elements
+        .iter()
+        .filter(|element| made.contains(&element.id) && (satin(element) || outlines.contains_key(&element.id)))
+        .map(|element| element.id.clone())
+        .collect()
 }
 
 /// What [`sewing`] makes of a design.
@@ -618,7 +624,8 @@ fn outline_after(
 ) -> Option<Diagnostic> {
     let at = elements.iter().position(|element| element.id == *id)?;
     // The outline runs its tolerance inside the edge, so that its stitches keep to the area (REQ-AUTO-130).
-    let edge: Vec<Vec<Point>> = lines.iter().map(|line| line.points.iter().chain(line.closed.then(|| line.points.first()).flatten()).copied().collect()).collect();
+    let edge: Vec<Vec<Point>> =
+        lines.iter().map(|line| line.points.iter().chain(line.closed.then(|| line.points.first()).flatten()).copied().collect()).collect();
     let set = elements.get(at).and_then(|fill| fill.params.get(TOLERANCE)).and_then(|by| by.parse::<f64>().ok());
     let target = elements.get(at + 1).and_then(|next| approach(next, settings, budget));
     let ended = neighbours::inset(lines, set.unwrap_or(OUTLINE_TOLERANCE.get()), budget, id).and_then(|lines| match &target {
@@ -1053,7 +1060,17 @@ fn ring_subpath(ring: &[Point]) -> Option<Subpath> {
 /// It is cut to the element's clips, as the element would be (`REQ-GEN-005`).
 fn part(element: &Element, id: ElementId, shape: Shape, params: ParamSet) -> Element {
     let clips = element.clips.clone();
-    Element { id, name: element.name.clone(), shape, thread: element.thread.clone(), params, automatic: false, hints: Hints::default(), clips }
+    Element {
+        id,
+        name: element.name.clone(),
+        shape,
+        thread: element.thread.clone(),
+        params,
+        automatic: false,
+        lettered: None,
+        hints: Hints::default(),
+        clips,
+    }
 }
 
 /// `params` without the settings that act after an element, and those settings.
@@ -1184,6 +1201,7 @@ mod tests {
             thread: stitchcraft_plan::Thread::new(stitchcraft_plan::Rgb::new(0, 0, 0)),
             params: ParamSet::default(),
             automatic: false,
+            lettered: None,
             hints: Hints::default(),
             clips: Vec::new(),
         };
@@ -1232,6 +1250,7 @@ mod tests {
             thread: stitchcraft_plan::Thread::new(stitchcraft_plan::Rgb::new(200, 30, 30)),
             params: settings.iter().copied().collect(),
             automatic: false,
+            lettered: None,
             hints: Hints::default(),
             clips: Vec::new(),
         };
@@ -1267,7 +1286,10 @@ mod tests {
         assert_eq!(outline_after(&mut elements, &gone, vec![side.clone()], (&mut taken, &mut Edges::new()), &design, &budget), None);
         // The last element's outline ends where its lines do, and needs no work to find that: a unit moves its
         // one side in. It keeps the tolerance its fill sets.
-        assert_eq!(outline_after(&mut elements, &b, vec![side], (&mut taken, &mut Edges::new()), &design, &Budget { max_work: 1, ..Budget::DEFAULT }), None);
+        assert_eq!(
+            outline_after(&mut elements, &b, vec![side], (&mut taken, &mut Edges::new()), &design, &Budget { max_work: 1, ..Budget::DEFAULT }),
+            None
+        );
         assert_eq!(elements.iter().map(|element| element.id.as_str()).collect::<Vec<_>>(), ["a", "a#2~2", "a#2", "b", "b#2"]);
         assert_eq!(elements[4].params.get(TOLERANCE), Some("0.3"));
     }
@@ -1283,6 +1305,7 @@ mod tests {
             thread: stitchcraft_plan::Thread::new(stitchcraft_plan::Rgb::new(200, 30, 30)),
             params: ParamSet::new(),
             automatic: false,
+            lettered: None,
             hints: Hints::default(),
             clips: Vec::new(),
         };
@@ -1293,7 +1316,17 @@ mod tests {
             let mut elements = vec![fill("a"), fill("b")];
             let id = elements[0].id.clone();
             let budget = Budget { max_work: work, ..Budget::DEFAULT };
-            (outline_after(&mut elements, &id, vec![ring.clone()], (&mut Labels::default(), &mut Edges::new()), &DesignSettings::default(), &budget), elements.len())
+            (
+                outline_after(
+                    &mut elements,
+                    &id,
+                    vec![ring.clone()],
+                    (&mut Labels::default(), &mut Edges::new()),
+                    &DesignSettings::default(),
+                    &budget,
+                ),
+                elements.len(),
+            )
         };
         assert_eq!(after(9), (None, 3));
         let (said, sewn) = after(8);
@@ -1339,6 +1372,7 @@ mod tests {
             thread,
             params: ParamSet::default(),
             automatic: true,
+            lettered: None,
             hints: Default::default(),
             clips: Vec::new(),
         };

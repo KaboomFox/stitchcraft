@@ -855,6 +855,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 thread: Thread::new(colour),
                 params: params.clone(),
                 automatic,
+                lettered: None,
                 hints: if part == "fill" { Hints { guide: fill_guide.clone(), ..hints.clone() } } else { hints.clone() },
                 clips: clips.clone(),
             });

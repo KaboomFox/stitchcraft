@@ -24,6 +24,12 @@
 //! 3 kinds go first, judging a column's stitches as drawn, and what is still above it after the cap loses
 //! columns' top points, one at a time, those that change their column least.
 //!
+//! **Lettering** (`REQ-AUTO-119` to `REQ-AUTO-123`). The lettering that digitizing placed is in the cap's
+//! reach, and its columns are columns. A font's columns overlap where they join by their own pull
+//! compensation, so a lettering column's stitch covers a place only as that pull moves it in, as drawn or not.
+//! A lettering column's underlay goes only where another of the lettering's columns covers it too, since it
+//! holds up its own column's top elsewhere, and the last resort takes none of a lettering column's points.
+//!
 //! **One measure.** The cap takes the last pass's measure and keeps it up to date stitch by stitch, as the
 //! pass does, with the pass's own helpers. Only the stitches near a spot above the cap are looked at, found
 //! once: taking thread only lowers spots.
@@ -66,6 +72,35 @@ const ROUNDS: usize = 4;
 
 /// The side of a cell of the cover's index of top stitches, in millimetres.
 const CELL: f64 = 1.0;
+
+/// The least a lettering column's stitch is pulled in at a turn, in millimetres: a font's least pull
+/// compensation, for stable fabric (`docs/src/design/image-to-embroidery.md` › The cap and lettering).
+pub const LEAST_PULL: f64 = 0.2;
+
+/// How far a lettering column's own pull compensation says the fabric pulls each end of its stitches in
+/// (`REQ-AUTO-121`): `pull_compensation_mm`, and `pull_compensation_percent` of the stitch's length, the
+/// larger of the 2 sides' each.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) struct Pull {
+    /// The length, in millimetres.
+    pub(crate) mm: f64,
+    /// The share of the stitch's length.
+    pub(crate) share: f64,
+}
+
+impl Pull {
+    /// The pull of a column whose settings of pull compensation are `params`.
+    pub(crate) fn of(params: &crate::generators::pull::PullParams) -> Pull {
+        let [a, b] = params.pull_compensation_mm.map(|mm| mm.get());
+        let [c, d] = params.pull_compensation_percent;
+        Pull { mm: a.max(b), share: c.max(d) / 100.0 }
+    }
+
+    /// How far a stitch `length` long is pulled in at an end where it turns: never less than [`LEAST_PULL`].
+    fn at(self, length: f64) -> f64 {
+        (self.mm + self.share * length).max(LEAST_PULL)
+    }
+}
 
 /// The kinds of needle point the cap takes, in the order it takes them.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -149,7 +184,7 @@ pub(crate) fn capped(
     if thickness.most(Measure::Fills).value <= rules.cap {
         return Ok(None);
     }
-    let (columns, outlines) = (rules.columns, rules.outlines);
+    let (columns, outlines, lettering) = (rules.columns, rules.outlines, rules.lettering);
     let shown = |element: &ElementRef| columns.contains(element) || outlines.contains_key(element);
     let sewn = thickness.sewn();
     meter.charge(units(sewn.len()))?;
@@ -161,8 +196,12 @@ pub(crate) fn capped(
     let takes =
         |stitch: &SewnStitch| element(stitch).is_some_and(|element| made.contains(&element) && !(stitch.role == Role::Top && shown(&element)));
     let points = candidates(sewn, &near, takes);
-    // Where a spot still sews above the warning's limit, the shown top points near it are the last resort.
-    let column = |stitch: &SewnStitch| element(stitch).is_some_and(|element| made.contains(&element) && stitch.role == Role::Top && shown(&element));
+    // Where a spot still sews above the warning's limit, the shown top points near it are the last resort:
+    // not a lettering column's, whose look is the font's (`REQ-AUTO-123`).
+    let column = |stitch: &SewnStitch| {
+        element(stitch)
+            .is_some_and(|element| made.contains(&element) && stitch.role == Role::Top && shown(&element) && !lettering.contains_key(&element))
+    };
     let (last, hottest) = if thickness.most(Measure::Fills).value > rules.limit {
         let near = thickness.near(rules.limit, NEAR, meter)?;
         (candidates(sewn, &near, column), candidates(sewn, &near, takes))
@@ -182,12 +221,16 @@ pub(crate) fn capped(
         let most: &mut f64 = longest.entry((element, stitch.role == Role::Top)).or_default();
         *most = most.max(stitch.length());
         if stitch.role == Role::Top && reach.touches(stitch) {
-            // A column's stitch, pulled in by the overlap at each end where the thread turns.
+            // A column's stitch, pulled in by the overlap at each end where the thread turns, and a lettering
+            // column's by its own pull, as drawn or not (`REQ-AUTO-121`).
             let before = at.checked_sub(1).and_then(|before| sewn.get(before)).is_some_and(|before| straight_on(before, stitch));
             let after = sewn.get(at.saturating_add(1)).is_some_and(|after| straight_on(stitch, after));
             let column = element.is_some_and(|element| columns.contains(&element));
-            let cut = |straight: bool| if straight || !column { 0.0 } else { rules.overlap };
-            ribbons.add(Ribbon::of((stitch.from, stitch.to), (cut(before), cut(after)), (stitch.block, stitch.index), element), meter)?;
+            let pull = element.and_then(|element| lettering.get(&element));
+            let by = pull.map_or(rules.overlap, |pull| pull.at(stitch.length()));
+            let cut = |straight: bool| if straight || !column { 0.0 } else { by };
+            let ribbon = Ribbon::of((stitch.from, stitch.to), (cut(before), cut(after)), (stitch.block, stitch.index), element);
+            ribbons.add(ribbon.firm(pull.is_some()), meter)?;
         }
     }
     let mut cap = Cap { pass: Pass::new(plan, thickness, rules), ribbons, longest, taken: [0.0; 4], times: [0; 4] };
@@ -321,7 +364,15 @@ impl Cap<'_, '_> {
         let whole = hot;
         let after = (block, to);
         let covered = match kind {
-            Kind::Hidden => self.ribbons.covers(&joined, |ribbon| ribbon.at > after, false, meter)?,
+            Kind::Hidden => {
+                // A lettering column's underlay holds its top up, and goes only where another of the
+                // lettering's columns covers it too (`REQ-AUTO-122`).
+                let lettering = pass.rules.lettering;
+                let other = |ribbon: &Ribbon| ribbon.element != element && ribbon.element.is_some_and(|other| lettering.contains_key(&other));
+                let held = element.is_some_and(|element| lettering.contains_key(&element));
+                self.ribbons.covers(&joined, |ribbon| ribbon.at > after, false, meter)?
+                    && (!held || self.ribbons.covers(&joined, other, false, meter)?)
+            }
             Kind::Under => {
                 let counts = |ribbon: &Ribbon| ribbon.at > after && ribbon.element != element;
                 self.ribbons.covers(&into, counts, false, meter)? && self.ribbons.covers(&out, counts, false, meter)?
@@ -409,7 +460,7 @@ impl Cap<'_, '_> {
         for (side, start) in [(before, false), (next, true)] {
             let Some(was) = side.and_then(|side| self.ribbons.kill((side.block, side.index))) else { continue };
             let cut = if start { (overlap, was.cut.1) } else { (was.cut.0, overlap) };
-            self.ribbons.add(Ribbon::of(was.whole, cut, was.at, was.element), meter)?;
+            self.ribbons.add(Ribbon::of(was.whole, cut, was.at, was.element).firm(was.firm), meter)?;
         }
         if let (Some(taken), Some(times)) = (self.taken.get_mut(kind.at()), self.times.get_mut(kind.at())) {
             *taken += was - length;
@@ -477,13 +528,21 @@ struct Ribbon {
     element: Option<ElementRef>,
     /// Whether it is still sewn: a needle point taken out ends the 2 stitches beside it.
     alive: bool,
+    /// Whether it covers only as pulled in, even where the cover is judged as sewn: a lettering column's.
+    firm: bool,
 }
 
 impl Ribbon {
     /// The stitch from `from` to `to` that ends at entry `at`, of `element`, pulled in by `cut` at its start and
     /// its end.
     fn of((from, to): (Point, Point), cut: (f64, f64), at: Entry, element: Option<ElementRef>) -> Ribbon {
-        Ribbon { pulled: pulled(from, to, cut.0, cut.1), whole: (from, to), cut, at, element, alive: true }
+        Ribbon { pulled: pulled(from, to, cut.0, cut.1), whole: (from, to), cut, at, element, alive: true, firm: false }
+    }
+
+    /// The ribbon, covering only as pulled in when `firm`: a lettering column's, and a stitch beside a joined
+    /// one that was a lettering column's.
+    fn firm(self, firm: bool) -> Ribbon {
+        Ribbon { firm, ..self }
     }
 }
 
@@ -529,7 +588,7 @@ impl Ribbons {
             let place = stitch.from.lerp(stitch.to, step as f64 / steps as f64);
             let near = self.cells.get(&(cell(place.x()), cell(place.y()))).map_or(&[][..], Vec::as_slice);
             meter.charge(units(near.len()).saturating_add(1))?;
-            let lies = |ribbon: &Ribbon| if as_sewn { Some(ribbon.whole) } else { ribbon.pulled };
+            let lies = |ribbon: &Ribbon| if as_sewn && !ribbon.firm { Some(ribbon.whole) } else { ribbon.pulled };
             let under =
                 |ribbon: &&Ribbon| ribbon.alive && counts(ribbon) && lies(ribbon).is_some_and(|(from, to)| to_side(place, from, to) <= RIBBON);
             if !near.iter().filter_map(|index| self.ribbons.get(*index)).any(|ribbon| under(&ribbon)) {

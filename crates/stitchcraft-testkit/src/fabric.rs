@@ -47,7 +47,6 @@ use stitchcraft_core::{Budget, Code, Point, Rect};
 use stitchcraft_engine::auto;
 use stitchcraft_engine::design::{Cap, Clip, Design, Element, Join, Shape};
 use stitchcraft_engine::normalize::{region, stroke};
-use stitchcraft_params::Family;
 use stitchcraft_plan::{Rgb, Role, SewnStitch, StitchKind, StitchPlan};
 
 use crate::metrics::{Grid, band, crossing, disc, index, spans};
@@ -82,6 +81,21 @@ pub fn thickest(plan: &StitchPlan, shown: &BTreeSet<String>) -> (f64, f64) {
         layer.element.and_then(|element| plan.elements.get(element.index())).is_some_and(|id| shown.contains(id.as_str()))
     };
     (report.fills.value, report.stack.iter().filter(on_top).map(|layer| layer.top).sum())
+}
+
+/// The fills of thread from which the before and after sheet counts a spot thick
+/// (`docs/src/design/before-after-sheet.md`). One layer of satin over a fill sews 2 to 3 fills, so the area at
+/// 3 or more is what a cap lowers. It is fixed, not the warning's limit, which M13.46 raised to 4: at 4 the
+/// row read 0 on every picture and could show no change.
+pub const THICK_FILLS: f64 = 3.0;
+
+/// The area of `plan` that sews [`THICK_FILLS`] or more, in square millimetres.
+///
+/// # Panics
+///
+/// When the plan sews no stitch, or is too large to measure.
+pub fn thick_area(plan: &StitchPlan) -> f64 {
+    thickness(plan, &Limits { warn_fills: THICK_FILLS, ..Limits::DEFAULT }).thick.area
 }
 
 /// How thick `plan` sews against `limits`, with the default budget's work.

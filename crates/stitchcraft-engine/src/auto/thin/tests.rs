@@ -66,8 +66,11 @@ fn columns(from: f64, width: f64) -> Vec<(f64, f64)> {
 const NONE: &BTreeSet<ElementRef> = &BTreeSet::new();
 const NO_EDGES: &BTreeMap<ElementRef, Vec<Vec<Point>>> = &BTreeMap::new();
 
+/// No lettering's columns.
+const NO_PULL: &BTreeMap<ElementRef, crate::auto::cap::Pull> = &BTreeMap::new();
+
 fn rules(base: &BTreeSet<ElementRef>) -> Rules<'_> {
-    Rules { cap: 4.0, limit: 4.0, base, columns: NONE, outlines: NO_EDGES, overlap: 1.0, shortest: 0.3, longest: 12.1 }
+    Rules { cap: 4.0, limit: 4.0, base, columns: NONE, outlines: NO_EDGES, lettering: NO_PULL, overlap: 1.0, shortest: 0.3, longest: 12.1 }
 }
 
 /// `plan` thinned with `rules`, its measure kept up to date, and the measure of what the pass left.

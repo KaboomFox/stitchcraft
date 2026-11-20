@@ -162,6 +162,7 @@ fn selected(objects: &[Object], meter: &mut Meter) -> Result<Selection, Diagnost
             thread,
             params,
             automatic: false,
+            lettered: None,
             hints: Hints::default(),
             clips: Vec::new(),
         });

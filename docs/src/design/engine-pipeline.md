@@ -187,7 +187,10 @@ Rules every generator follows:
   stitches of a run's underlays are tagged underlay ([underlays first](#underlays-first)). Every stitch
   of a design's base layer is tagged underlay too, its top rows among them
   ([covering the fabric](image-to-embroidery.md#one-underlay-under-the-whole-design)). Planning names what
-  a base layer's piece generated `Layer::Base`. Assembly tags that layer underlay.
+  a base layer's piece generated `Layer::Base`. Assembly tags that layer underlay. From M13.50 a satin
+  column sewn whole says how many of its first needle points come before its top stitches
+  (`Generated::underlay_points`), and assembly tags those underlay for lettering
+  ([the cap and lettering](image-to-embroidery.md#the-cap-and-lettering)).
 
 Generators are listed in [algorithms](algorithms/).
 

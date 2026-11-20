@@ -39,7 +39,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use stitchcraft_core::units::{Mm, Point};
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Meter, Severity};
-use stitchcraft_engine::design::{Clip, ClipShape, Design, DesignSettings, Element, Shape};
+use stitchcraft_engine::design::{Clip, ClipShape, Design, DesignSettings, Element, Lettered, Shape};
 use stitchcraft_engine::route::{Options, Route, Tool, route};
 
 use crate::font::{Direction, Font, Glyph};
@@ -514,7 +514,9 @@ fn placed(
     if let Shape::Stroke { width, .. } = &mut placed.shape {
         *width = Mm::new(width.get() * factor).map_err(|_| far())?;
     }
-    Ok(Element { id, ..placed })
+    // Lettering set in a font is a person's (`REQ-AUTO-124`): the passes of automatic digitizing that place it
+    // mark it theirs.
+    Ok(Element { id, lettered: Some(Lettered::Set), ..placed })
 }
 
 /// `element` with each of its points where `point` puts it: those of its path, of a fill's gradient, of its

@@ -100,7 +100,10 @@ pub(crate) fn assemble_routed(
         };
         let role = if matches!(generated.layer, Layer::Underlay | Layer::Base) { Role::Underlay } else { Role::Top };
         for (index, group) in groups.iter().enumerate() {
-            assembly.join(Group { element, generated, stitches: group.stitches, thread: group.thread, reference, role }, meter)?;
+            // A lettering column sewn whole sews its underlays first, in its first group, and they are tagged
+            // so (`REQ-AUTO-120`). Other columns keep every stitch top, as the cap's rules were measured with.
+            let underlay = if index == 0 && element.lettered.is_some() { generated.underlay_points } else { 0 };
+            assembly.join(Group { element, generated, stitches: group.stitches, thread: group.thread, reference, role, underlay }, meter)?;
             // The trim after the element's last group is `after`'s, with its stop.
             if group.ends_block && generated.common.trim_after && index + 1 < groups.len() {
                 assembly.trim(reference, meter)?;
@@ -148,6 +151,8 @@ struct Group<'a> {
     thread: &'a Thread,
     reference: ElementRef,
     role: Role,
+    /// How many of its first stitches are underlay, whatever its role.
+    underlay: usize,
 }
 
 impl Group<'_> {
@@ -224,7 +229,9 @@ impl<'a> Assembly<'a, '_, '_> {
             self.builder.jump(landing, Provenance::new(group.reference, Role::Travel));
         }
         self.stitch(&tie_in, Provenance::new(group.reference, Role::Lock), meter)?;
-        self.stitch(group.stitches, Provenance::new(group.reference, group.role), meter)?;
+        let (underlay, rest) = group.stitches.split_at(group.underlay.min(group.stitches.len()));
+        self.stitch(underlay, Provenance::new(group.reference, Role::Underlay), meter)?;
+        self.stitch(rest, Provenance::new(group.reference, group.role), meter)?;
         self.open = Some(group);
         Ok(())
     }
