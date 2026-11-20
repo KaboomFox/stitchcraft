@@ -3617,7 +3617,7 @@ window wasn't run: VectorCraft isn't built here.
 Seen on 2026-11-20 in VectorCraft's own window, by the pinned release on CI (the shot
 `vectorcraft-layers-names`): at the panel's default width, a row of a shape in the traced group shows about
 20 characters. `Dark Olive column (1)`, of 21, loses its closing bracket, and `Russet Brown column (1)`, of
-23, is cut after `colum`, with no `…`. The accessibility tree doesn't give the rows' text. The probe says so
+23, shows only its first 18, with no `…`. The accessibility tree doesn't give the rows' text. The probe says so
 and keeps the picture. The longest names on the repository's traced documents, the pear and the 4
 dogs, have 23 characters (`Russet Brown column (1)`, `Dark Brown left out (1)`). Not checked: whether a
 person can read the names at the panel's smallest row size.
