@@ -11,7 +11,9 @@ use std::rc::Rc;
 
 use stitchcraft_core::units::{MM_PER_SVG_PX, Point};
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix};
-use stitchcraft_engine::design::{Clip, ClipShape, Design, DesignSettings, Element, FillRule, Hints, Path, Reading, Segment, Shape, Subpath};
+use stitchcraft_engine::design::{
+    Clip, ClipShape, Design, DesignSettings, Element, FillRule, Hints, Lettered, Path, Reading, Segment, Shape, Subpath,
+};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::{Rgb, Thread};
 use stitchcraft_svg::font::{self, Font};
@@ -169,6 +171,8 @@ fn req_auto_069_a_line_sews_on_its_baseline_from_its_anchor_at_0_7_of_its_font_s
     // A font of one thread sews in the line's thread, and the elements have the object's name. They keep
     // the settings the font's author gave them, and are not automatic.
     assert!(elements.iter().all(|element| element.thread == Thread::new(RED) && element.name.as_deref() == Some("Title") && !element.automatic));
+    // Digitizing placed them, so they are in the cap's reach (`REQ-AUTO-119`).
+    assert!(elements.iter().all(|element| element.lettered == Some(Lettered::Digitized)));
     assert_eq!(
         said,
         ["info SC-I1116: The text `svg:t` is sewn in the embroidery font `test`, 14.0 mm tall: 0.7 of its font size, which is about how tall a \

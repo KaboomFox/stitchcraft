@@ -132,8 +132,8 @@ pub(crate) fn joined(pieces: Vec<Piece>, travel: f64, min_stitch: f64, meter: &m
             run.extend(evenly(needle, first, travel, meter)?);
         }
         // The top stitches' first point: the needle where it moved there.
-        if top && under.is_none() {
-            under = Some(if moved { run.len().saturating_sub(1) } else { run.len() });
+        if top {
+            under.get_or_insert(if moved { run.len().saturating_sub(1) } else { run.len() });
         }
         run.extend(points.into_iter().skip(skip));
         if way {

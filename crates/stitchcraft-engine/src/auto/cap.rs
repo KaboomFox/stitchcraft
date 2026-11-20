@@ -230,7 +230,7 @@ pub(crate) fn capped(
             let by = pull.map_or(rules.overlap, |pull| pull.at(stitch.length()));
             let cut = |straight: bool| if straight || !column { 0.0 } else { by };
             let ribbon = Ribbon::of((stitch.from, stitch.to), (cut(before), cut(after)), (stitch.block, stitch.index), element);
-            ribbons.add(Ribbon { firm: pull.is_some(), ..ribbon }, meter)?;
+            ribbons.add(ribbon.firm(pull.is_some()), meter)?;
         }
     }
     let mut cap = Cap { pass: Pass::new(plan, thickness, rules), ribbons, longest, taken: [0.0; 4], times: [0; 4] };
@@ -452,7 +452,7 @@ impl Cap<'_, '_> {
         for (side, start) in [(before, false), (next, true)] {
             let Some(was) = side.and_then(|side| self.ribbons.kill((side.block, side.index))) else { continue };
             let cut = if start { (overlap, was.cut.1) } else { (was.cut.0, overlap) };
-            self.ribbons.add(Ribbon { firm: was.firm, ..Ribbon::of(was.whole, cut, was.at, was.element) }, meter)?;
+            self.ribbons.add(Ribbon::of(was.whole, cut, was.at, was.element).firm(was.firm), meter)?;
         }
         if let (Some(taken), Some(times)) = (self.taken.get_mut(kind.at()), self.times.get_mut(kind.at())) {
             *taken += was - length;
@@ -529,6 +529,12 @@ impl Ribbon {
     /// its end.
     fn of((from, to): (Point, Point), cut: (f64, f64), at: Entry, element: Option<ElementRef>) -> Ribbon {
         Ribbon { pulled: pulled(from, to, cut.0, cut.1), whole: (from, to), cut, at, element, alive: true, firm: false }
+    }
+
+    /// The ribbon, covering only as pulled in when `firm`: a lettering column's, and a stitch beside a joined
+    /// one that was a lettering column's.
+    fn firm(self, firm: bool) -> Ribbon {
+        Ribbon { firm, ..self }
     }
 }
 
