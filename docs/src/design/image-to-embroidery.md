@@ -253,6 +253,301 @@ changes stay as they were:
 | Lettered patch | 2 | 25333 to 25340 | 37 |
 | Alpine Night, the demo's badge | 2 | 5419 to 5443 | 9 |
 
+### Outlines drawn 2 ways
+
+The rules measure a part's geometry. Until M13.53 the result also depended on the outline's drawing: how
+many points it has, where they fall and where a ring starts. The same outline drawn 2 ways that sew alike
+within a thread's width could sew by 2 rules. Every step that touches outlines then reshuffled which
+shapes were columns, and its own effect couldn't be seen through that noise. Measured on main `6f5703b7`
+(2026-11-20).
+
+#### Causes in the code
+
+Each finding below has its smallest pair of outlines drawn by hand, at most 0.02 mm apart, which sew by
+2 rules today. They are the cases of `REQ-AUTO-135` to `REQ-AUTO-138` (`tests/auto_drawing.rs`).
+
+- **A cap or a tip.** An end of a centre line is a cap when its corner lies inside the circle on its chord,
+  edge included ([centre lines](algorithms/centre-lines.md#strips-junctions-and-ends)). A square corner lies
+  exactly on that circle. A bar 2 mm wide and 12 mm long whose corner moves 0.02 mm towards its middle
+  leaves the 2 corners beside it at 89.6°, outside the circle. That end becomes a tip, the line runs on into
+  a corner, and the end's other corner lies 1.40 times as far from the line as the bar's widest circle
+  reaches. The bar sews by the rule arms, as a fill, where drawn square it sews as a column.
+- **Every point goes into the triangulation.** The triangulation cuts long edges but keeps every point
+  of the outline. Points added along an edge change its junctions and where the rungs fall, and rungs that
+  cross are held in place into a fan, which the crowding test sees. A bar whose end leans 0.02 mm sews as a
+  column drawn with 4 corners and is refused for crowding drawn with a point every 0.1 mm, 2.98 mm of one
+  edge to 1 mm of the other. A wedge does the same at 3.4 mm, and a quarter ring at 2.66 mm.
+- **A column read back.** A part's columns are drawn with rails and rungs and read back as any satin column
+  is read, to within a millionth of a millimetre (`generators::satin::drawn`). When one rung reads back
+  otherwise the whole part is refused and filled (`SC-I0902`). An L or a T with one end corner moved
+  0.02 mm is refused so. A T whose stem joins its bar 0.02 mm off square is refused when its ring starts at
+  another corner.
+- **Direction and place.** A ring drawn the other way round doesn't change a rule on any picture, and a
+  whole picture moved 0.05 mm changed 2 shapes of more than 10,000.
+
+#### The measure of stability
+
+The probe draws every automatic shape of a picture again in 6 ways, within 0.02 mm of the drawing. A curve split
+in 2 at its middle is the same curve with twice the points. A dense drawing has a straight piece every 0.1 mm.
+A jittered one has every point moved 0.02 mm in a direction its position chooses, so that a point that 2 shapes
+share moves alike in both. The others start each ring halfway round, draw it the other way, or move the
+picture 0.05 mm. A shape changes when the rules of its parts change, specks aside. The set is the
+repository's traced pictures, the traced lettered patch and the hand-made pairs, 392 shapes, and 558 letters
+of 3 fonts at 3 heights, as drawn and as traced from pictures of them. A local set of 4 traced photos,
+8,833 shapes, is never committed.
+
+| Set | Shapes | Split | Dense | Jittered | Started elsewhere | Reversed | Moved | Any |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Pictures | 392 | 37 | 108 | 64 | 17 | 0 | 0 | 163 |
+| Letters | 1,116 | 91 | 174 | 180 | 5 | 0 | 1 | 324 |
+| Photos | 8,833 | 165 | 242 | 313 | 32 | 0 | 1 | 489 |
+
+Each of the 4 traced dogs has 27 to 38 of its 69 to 92 shapes change. A shape whose measure lies within
+10 % of a bound of the rules may fall either way however the outline is drawn, and no rule can keep it
+steady: 70 of the pictures' 163 and 126 of the letters' 324 are so. In 346 of the photos' 489 a column
+can't be drawn under one of the drawings.
+
+#### A fix, prototyped
+
+The prototype measures and draws each part on its outline drawn again in one standard way:
+
+- **Thinned.** A point goes when the ring without it stays within 0.05 mm of every point it had between its
+  neighbours. The point whose leaving moves the ring least goes first, a tie going to the lower point.
+  A point whose triangle with its neighbours holds another point of the part stays, so that no ring comes
+  to cross another. The result doesn't depend on where a ring starts or which way it runs.
+- **Evenly spaced.** Between its corners, where it turns by more than 30°, each ring is cut again into
+  even pieces no longer than its area over its perimeter, from its lowest point when it has no corner.
+  A run between 2 corners is cut into twice as many even pieces until it lies within 0.05 mm of the
+  thinned ring. Without that, a large part's pieces cut across its curves, and its fill laid 9 stitches
+  over its neighbour on a dog of 6 threads.
+- **A cap within 0.05 mm.** An end is a cap when its corners lie within 0.05 mm outside the circle on its
+  chord.
+- **A rung left out.** A column that reads back otherwise is drawn again without the first rung whose
+  leaving makes it read back, and refused only when none does.
+
+With all 4, the shapes that change fall from 163 to 98 on the pictures and
+from 324 to 38 on the letters. Drawing more points changes 6 letters where it changed 174. Of the 98 left,
+39 have a measure within 10 % of a bound and 21 a column that can't be drawn. On the photos the count
+falls only from 489 to 389, and 203 of those have a column that can't be drawn under one of the drawings. The letters as drawn and as
+traced sew by other rules 20 times, against 32 today. Without the even spacing the counts are 114 and 109, and without the rung left out a few more.
+
+#### The fix on today's outlines
+
+The fix alone, on the outlines as drawn today, moves 66 of the pictures' 374 shapes from one kind of stitch
+to another, 47 without the even spacing, most of them from a fill to satin columns. It moves 81 of the 1,116
+letters, 61 of them so.
+The column the knife edge refused today is now drawn, and it costs thread:
+
+| Picture | Area at 3 fills, mm² | Thickest spot, fills | Jump threads | Stitches astray |
+|---|---|---|---|---|
+| Dog on turf, 6 threads | 54.3 to 64.8 | 3.87 to 3.99 | 60 to 54 | 4 to 7 |
+| Dog on turf, 9 threads | 63.8 to 66.8 | 3.97 to 3.83 | 62 to 66 | 3 to 1 |
+| Running dog, 6 threads | 53.5 to 79.0 | 3.92 to 3.99 | 49 to 45 | 1 to 20 |
+| Running dog, 9 threads | 94.0 to 133.5 | 3.98 to 4.11 | 64 to 63 | 4 to 7 |
+| Traced pear | 10.5 to 8.8 | 3.99 to 3.87 | 2 to 3 | 0 to 4 |
+| Traced lettered patch | 420.0 to 498.5 | 4.25 to 4.56 | 42 to 49 | 0 |
+
+On the photos the fix alone changes the kind of stitch of 212 of 8,833 shapes, adds 1.5 to 3 % to the
+stitches and 2 to 9 % to the jumps. The badge sews as it did. Stitches change by up to 4 %, and planning takes as long. Without the even spacing
+the area at 3 fills of the dogs and the patch rises by 9 to 36 % too, and planning takes 40 % longer. On the traced patch the A
+and the M of its upper word, filled today, sew as satin columns that fan and cross, which looks worse, and the
+likeness falls by 2.2 %. Many of the knife edges refused poor columns today, and a stable rule keeps
+those columns unless the column test also changes.
+
+#### A column judged as it sews
+
+The knife edges above refused many poor columns by accident. A test in their place has to judge the
+column on the stitches it will sew, so that the outline's drawing can't change the verdict. The
+prototype samples each column's stitches as the rules pair its rails, one every 0.4 mm, and measures them:
+
+| Measure | What a sewer sees |
+|---|---|
+| Crossing | A stitch crosses one of the next 5 away from their ends |
+| Lean | The angle between a stitch and square to the way the column runs |
+| Fan | The most of one rail paired with 1 mm of the other |
+| Swing | How much the stitches' lengths spread: 90th percentile less 10th, over the median |
+| Slope | The most a stitch's length changes per millimetre the column runs |
+| Aspect | How many times as long as wide the column is |
+| Outside | The share of the stitches' length more than 0.1 mm outside the part |
+| Bare | The share of the part's inside, 0.15 mm in from its edge, that no stitch covers |
+
+Lean, fan, swing and slope are also taken on the column's body, a median width or more from each end,
+because a column's ends fan by design where they run under another column.
+
+The trade sets satin's width and leaves its shape to the digitizer's eye. Wilcom gives about 10 mm as the
+widest satin and 12 mm at most, and uses fill for large areas
+([stitch techniques](https://wilcom.com/resources/blog/embroidery-stitch-techniques)). Another guide gives
+0.8 to 8.9 mm, satin for most lettering and fill from about 2.5 mm
+([stitch types](https://forum.embroideres.com/blogs/entry/180-machine-embroidery-stitch-types-and-limitations)).
+Wilcom's turning satin turns its stitches evenly along the shape, tighter at pointed ends
+([turning stitches](https://docs.wilcom.com/embroiderystudio/e4/en/MainHelp/Digitizing/input/Digitize_columns_of_turning_stitches.htm)).
+Ink/Stitch, read at `d59c9ab`, checks a satin column's rails and rungs as drawn and warns about a column
+narrower than 0.3 mm. It doesn't judge how the stitches lie, because a person draws each column.
+
+The measures were taken on 4 groups. The columns that main makes and the redrawn outline keeps were
+taken as mostly good, and the columns that only the redrawn outline makes as often poor. The 832 columns
+of the 2 built-in fonts are digitized by hand. Letters as drawn and as traced are twins. The groups
+overlap on every measure:
+
+| Group | Columns | Body fan, 90th / most | Body swing, 90th / most | Body lean, 90th / most, ° |
+|---|---:|---|---|---|
+| Kept, pictures | 40 | 4.6 / 5.5 | 0.74 / 1.35 | 19 / 21 |
+| Kept, letters | 748 | 5.8 / 20 | 0.57 / 0.79 | 22 / 53 |
+| Added, pictures | 31 | 3.1 / 10 | 1.04 / 1.34 | 23 / 36 |
+| Added, letters | 64 | 12 / 20 | 0.62 / 0.78 | 33 / 50 |
+| Built-in fonts, by hand | 832 | 1.9 / 3.3 | 0.21 / 1.68 | 34 / 70 |
+
+No stitch crosses in any kept column, and 1 added picture column and 1 photo column cross. The
+columns that main makes fan more than those digitized by hand: the 90th percentile of the kept letters'
+body fan is 5.8, and the hand-digitized fonts' 99th percentile is 3. A shape measured within 10 % of a
+bound may fall either way however it is drawn. With the bounds below, 133 of 965 judged parts lie within
+10 % of the fan bound, 68 of the body swing bound and 53 of the body slope bound.
+
+The hand-digitized bounds, taken from the built-in fonts' 99th percentile, let no stitch cross another
+and bound the body's lean, fan, swing and slope at 35°, 3, 0.55 and 0.9, with swing within 1.2,
+outside within 1 % and bare within 10 %. The letter-keeping bounds keep the columns of the letters that main keeps: body lean 45°, fan 12, body
+swing 0.8, body slope 1.8, outside 2 % and bare 20 %. The shift test, the whole picture moved 0.05 mm,
+gives the noise: up to 8.5 mm² of area at 3 fills and 0.37 fills at the thickest spot.
+
+| Picture | Area at 3 fills, mm²: main, redrawn, redrawn and judged | Thickest spot, fills | Stitches astray | Jump threads |
+|---|---|---|---|---|
+| Dog on turf, 6 threads | 54.3, 69.0, 42.5 | 3.87, 3.99, 3.85 | 4, 4, 3 | 60, 59, 55 |
+| Dog on turf, 9 threads | 63.8, 64.3, 41.8 | 3.97, 3.83, 3.69 | 3, 1, 3 | 62, 64, 59 |
+| Running dog, 6 threads | 53.5, 68.3, 59.3 | 3.92, 4.00, 3.94 | 1, 2, 1 | 49, 54, 53 |
+| Running dog, 9 threads | 94.0, 121.3, 65.0 | 3.98, 3.99, 3.99 | 4, 6, 4 | 64, 57, 55 |
+| Traced pear | 10.5, 4.0, 4.0 | 3.99, 3.40, 3.40 | 0, 0, 0 | 2, 2, 2 |
+| Traced lettered patch | 420.0, 500.8, 431.8 | 4.25, 4.56, 4.56 | 0, 0, 1 | 42, 50, 39 |
+
+The badge sews as on main. Judged by the hand-digitized bounds, the pictures' area at 3 fills falls
+below main's on 4 of the 6 and rises 5.8 mm² on the running dog, within the noise. The patch rises
+11.8 mm², and its thickest spot 0.31 fills. The patch also gains 1 stitch astray, and loses 2.2 % of its
+likeness with the even spacing. The same 38 shapes of the patch are sewn. On the patch the lower word sews
+cleaner than on main while the C and the H of the upper word sew rougher. Of the 1,116 letters,
+391 move from satin columns to a fill, and their joins pile less thread: by M13.47's measures the share
+of joins more than 1.5 times as thick as their stroke falls in every kind of join, from 0.29 to 0.68 on
+main to 0.14 to 0.51. Other measures of the joins get worse. The area sewn twice, over the stroke's width
+squared, rises at corners from 0.21 to 0.38 and on curves from 0.23 to 0.30. Stitches shorter than 0.5 mm
+rise from 0.62 to 1.63 a join on curves and from 0.78 to 1.38 at corners. Filled at 12 mm the letters look
+clean, but the trade sews most lettering in satin for its sheen.
+
+The bounds are knife edges too. Under the 6 drawings, 165 of the pictures' 392 shapes and 324 of the
+1,116 letters change rule on main, and 100 and 38 with the first prototype. The redrawn outline whose runs
+lie within 0.05 mm of the thinned ring leaves 102 and 55. Judged by the hand-digitized bounds, 99 and 173
+change: jittering alone moves 133 letters, most between a column and a fill. Judged by the
+letter-keeping bounds, 99 and 95 change. The letters as drawn and as traced sew by other rules 68 times
+with the hand-digitized bounds, against 32 on main and 22 with the redrawn outline alone. The
+letter-keeping bounds change only 53 letters to a fill, and leave the patch's area at 500.8 mm², as
+without a test.
+
+On the 4 traced photos the hand-digitized bounds lower the magnolia's area at 3 fills from 217.5 to
+198.8 mm². They raise the coleus's from 306.3 to 336.0 mm², the goose's from 156.8 to 179.3 mm² and the
+coleus's thickest spot from 4.16 to 5.31 fills, as the redrawn outline alone does.
+
+So no set of bounds meets the step's bar on the pictures and the letters together. The area at 3 fills
+comes with every column the redrawn outline adds, poor or not: a well-formed narrow column adds 2.8 to
+11 mm², because it lies on its neighbours' 1 mm overlaps. The hand-digitized fonts' columns keep a body fan
+within 3 and a body swing within 0.55 on the same kinds of letters, so the columns that look poor fan
+where the rules place their rungs.
+
+#### Rungs placed and less overlap
+
+A third prototype kept the outline drawn again, with its even spacing, and changed 2 things in place of a
+test. It was measured on the same set as the first 2.
+
+**Rungs placed from the rails.** The rungs come from the 2 rails alone, not from the triangulation. Both
+rails are sampled at even steps of at most 0.1 mm. The rungs follow the pairing of the rails that runs
+forward on both and makes the stitches shortest: the sum of each rung's length times how far the centre
+moves on. Every such pairing moves the centre the same distance in all. The shortest one lies square
+across a straight column and turns about the inside of a bend. Its rungs run forward on both rails, which keeps
+them from crossing there.
+Taken as it is, it piles a bend's stitches on the inner corner: one column of the running dog fanned 20
+to 1. So the pairing is eased. How far one rail runs ahead of the other is averaged over the column's
+median width on each side, which keeps both rails running forward and spreads a bend's turn over 2 widths.
+A rung is kept every millimetre of the centre line.
+
+On the columns that the outline drawn again makes, the eased rungs lower the body fan's 90th percentile
+from 3.6 to 1.9 on the pictures and from 4.5 to 2.4 on the letters. The share of columns within the
+hand-digitized bounds rises from 0.74 to 0.81 on the pictures and to 0.87 on the letters. The stitches lean
+more: the body lean's 90th percentile rises from 19° to 26° on the pictures and from 15° to 26° on the
+letters, and 5 picture columns and 2 letter columns
+cross where 2 and none did. Easing over 2 or 3 widths leans and crosses more. Placed rungs also crowd
+less, so fewer parts are refused: judged on them, the pictures make 154 columns where they made 120, and
+the running dog's area at 3 fills rises from 94 to 130 mm². So the prototype chooses each part's rule on
+the rungs as found and sews its columns on the placed rungs.
+
+**Less overlap under a part's column.** An area sewn before a part's satin column reaches its whole overlap
+of 1 mm under it, and is cut away under it only 1 mm inside the column's edge. A column narrower than
+2 mm then lies whole on the area, and with its own underlay and top stitches the spot sews 3 fills. A
+column's stitches reach its pull compensation of 0.4 mm past both rails because the thread pulls it in
+that far, and an area's rows pull in as far across them. So an area under the column has to lie only its pull
+compensation inside the column's edge, and the prototype keeps 0.4 mm of it there. On
+main this alone lowers every traced picture's area at 3 fills, the patch's from 420 to 278.5 mm². The
+fabric measure doesn't find a gap with 0.4 mm kept, or with none kept, because it doesn't pull stitches in:
+a sew-out has to show how much a column needs. Keeping 0.2 mm would hold the dogs' area within the noise
+of main's, but no measure gives 0.2 mm, so it would be tuned to them.
+
+| Picture | Area at 3 fills, mm²: main, third prototype | Thickest spot, fills | Stitches astray | Jump threads |
+|---|---|---|---|---|
+| Dog on turf, 6 threads | 54.3, 64.3 | 3.87, 3.94 | 4, 5 | 60, 57 |
+| Dog on turf, 9 threads | 63.8, 59.5 | 3.97, 3.85 | 3, 2 | 62, 64 |
+| Running dog, 6 threads | 53.5, 61.8 | 3.92, 4.05 | 1, 1 | 49, 54 |
+| Running dog, 9 threads | 94.0, 112.0 | 3.98, 4.00 | 4, 7 | 64, 57 |
+| Traced pear | 10.5, 3.0 | 3.99, 3.74 | 0, 0 | 2, 2 |
+| Traced lettered patch | 420.0, 400.5 | 4.25, 4.28 | 0, 1 | 42, 50 |
+| Traced magnolia, photo | 217.5, 226.3 | 4.22, 3.97 | 2,880, 2,901 | |
+| Traced coleus, photo | 306.3, 338.0 | 4.16, 5.31 | 82, 94 | |
+| Greylag goose, photo | 156.8, 207.3 | 4.37, 3.80 | 2,373, 2,381 | |
+| Traced castle, photo | 91.8, 96.3 | 3.82, 4.53 | 1,939, 1,931 | |
+
+The badge sews as on main, and planning takes 5 % longer. The third prototype misses the bar in each of
+its parts. The running dog's area at 3 fills rises 18 mm² and the other dog's 10 mm², where the noise is
+8.5 mm², and 2 photos rise 32 and 50 mm². The coleus's thickest spot rises 1.15 fills and the castle's
+0.71, as with the outline drawn again alone. The running dog gains 3 stitches astray and the patch 1,
+which the even spacing brings. Under the 6 drawings 101 of the pictures' shapes and 54 letters change
+rule. The outline drawn again alone gives 102 and 55, and the bar is fewer than 100 and 38. The letters as drawn and as traced sew by other
+rules 22 times, against 32 on main. By M13.47's measures of the joins, the share of joins more than 1.5
+times as thick as their stroke rises at apexes from 0.62 to 0.70 and at crossings from 0.68 to 0.71, and
+falls a little at most other kinds. By eye, a placed column lies straighter than main's (the black column
+on the dog on turf), but the patch's A and M of the upper word and its T and LEM of the lower word sew as
+rougher satin where main fills them cleanly. Serif letters sewn as satin lose their serifs.
+
+So placing rungs well helps the columns it is given, and keeping less overlap under a part's column takes
+thread away on main as much as with the outline drawn again. The same measures fail as before. The area at 3
+fills comes with the columns that the outline drawn again adds, wide ones too, and with the fills it
+reshapes. The 2 photos' thickest spots and the stitches astray come with the outline drawn again and its
+even spacing, not with any column.
+
+#### The step stopped
+
+The owner chose on 2026-11-20 to stop the step after these 3 rounds, and main's rule stays. No prototype
+meets the step's bar. Measured against main on each round's base, the outline drawn again alone raises the
+area at 3 fills by up to 29 % and sews the patch's letters with fanned columns. A refusing test with fixed
+bounds adds knife edges of its own and fills 391 letters. Rungs placed from the rails, with less overlap
+under a part's column, still raise the dogs' and 2 photos' area and the stitches astray.
+
+2 findings may become steps of their own:
+
+- **Less overlap under a part's satin column.** Keeping only the pull compensation, 0.4 mm, lowers main's
+  own area at 3 fills: the patch's falls from 420 to 278.5 mm² on base `efb23abe`. A sew-out has to show
+  how much overlap a column needs before a profile may change.
+- **Rungs placed from the rails on the columns main already makes.** Placed rungs fan less (the 90th
+  percentile of the fan falls from 3.62 to 1.87 on the pictures) but lean more and cross more. They were
+  measured only with the outline drawn again, never alone.
+
+The step opens again only with a rule that keeps the drawing out of the choice and doesn't raise the area
+at 3 fills, measured on every picture and letter of the set. The prototype's choices would then stand as they were measured: a
+tolerance of 0.05 mm, a quarter of a running stitch's own tolerance of 0.2 mm and 2.5 times the jitter
+measured; a column that reads back otherwise fixed where it is built, since leaving out its rung hides the
+cause of most of the photos' changes; and every automatic part measured on its outline drawn again, with
+no setting to turn it off.
+
+#### What isn't built
+
+Nothing: `REQ-AUTO-135` to `REQ-AUTO-139` are planned, and their cases are marked planned. The cases of
+`REQ-AUTO-135` to `REQ-AUTO-138` fail on main. The case of `REQ-AUTO-139` passes on main: it measures
+each column's stitches in the plan against the bounds that a rule which reopens the step must keep. The 3 prototypes' code and the
+measures are kept with the step's notes, not in the repository.
+
 ### Wide columns
 
 A part between 7 and 10 mm wide that is otherwise a good column, a border or a bar, sews as one satin
@@ -268,8 +563,8 @@ It "distributes needle penetrations in a random pattern so that they do not form
 the shape" ([long satin stitches](https://docs.wilcom.com/embroiderystudio/28/en/OnlineHelp/Quality/quality/quality-16.htm)).
 BERNINA's Satin Special spreads its splits at random for the same reason
 ([split long stitches](https://softwarehelp.bernina.com/en/MainHelp/PART_Digitizing/stitches/stitches-14.htm)).
-Wilcom's blog puts the widest such column at "around 10 mm", and allows 12 mm "in some situations"
-([stitch techniques](https://wilcom.com/resources/blog/embroidery-stitch-techniques)). mySewnet keeps
+Wilcom's blog puts the widest satin at about 10 mm
+([a column judged as it sews](#a-column-judged-as-it-sews)). mySewnet keeps
 patterned satin for columns "wider than about 8-10 mm", and asks for zigzag and edge-walk underlay
 together under very wide satin
 ([satin column](https://softwarehelp.mysewnet.com/MSW/140/Embroidery/Topics/Satin_Column.htm)). Wilcom
@@ -301,6 +596,11 @@ mm. Any other such part is an area, as before. A stroke as wide sews as a wide c
   stitches on one rail, as a satin column's are. A stitch longer than 7 mm between the rails is no reason,
   since it is split. A ring drawn 10 mm wide measures its longest stitch at 10.003 mm between its points, and
   held to the bound as `REQ-AUTO-035` holds a column it was refused at the width it was drawn to.
+- **How it is drawn.** M13.53 found that the rules react to how an outline is drawn
+  ([outlines drawn 2 ways](#outlines-drawn-2-ways)). The bound is a new edge of that kind. No part of the set
+  lies between 9 and 11 mm wide and would sew a wide column, and a ring drawn exactly 10 mm wide is wide
+  only because its long stitch no longer refuses it. If M13.53's judge of a column as it sews is built
+  (`REQ-AUTO-139`), a wide column meets it too.
 - **The split** (`REQ-AUTO-155`). `max_stitch_length_mm` 7, the default method, `random_split_phase` on
   and `random_split_jitter_percent` 10. The underlay is a contour and a zigzag, as for a column wider than 4
   mm.
