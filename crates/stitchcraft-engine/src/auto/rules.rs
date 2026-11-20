@@ -26,7 +26,8 @@ use stitchcraft_core::{Code, Diagnostic, ElementId, Exhausted, Meter, Mm};
 
 use super::neighbours::speck;
 use super::params::{
-    FILL_UNEVEN, MAX_REACH, MAX_SATIN_WIDTH, MAX_UNEVENNESS, MIN_AREA, MIN_FILL_WIDTH, MIN_SLENDERNESS, MIN_TRIPLE_RUN_WIDTH, PREFER, STITCH,
+    FILL_UNEVEN, LONGEST_SATIN_STITCH, MAX_REACH, MAX_SATIN_WIDTH, MAX_SPLIT_SATIN_WIDTH, MAX_UNEVENNESS, MIN_AREA, MIN_FILL_WIDTH, MIN_SLENDERNESS,
+    MIN_TRIPLE_RUN_WIDTH, PREFER, STITCH,
 };
 use super::{AutoParams, micrometres, narrow};
 use crate::design::DesignSettings;
@@ -40,6 +41,13 @@ use crate::normalize::region::Polygon;
 /// stitches met at one end of a fan (`docs/src/design/image-to-embroidery.md` › Less thread where a design
 /// sews thick).
 pub const MOST_CROWDING: f64 = 2.0;
+
+/// How much wider than the widest split satin column (`auto_max_split_satin_width_mm`) a part or a line may
+/// be and still sew as one, in millimetres: 50 micrometres, an eighth of the thread's width, which no stitch
+/// can show. A part drawn as wide as the bound measures a few micrometres over it where the points of its
+/// outline fall: a ring drawn 10 mm wide with 180 points a side sews a stitch 10.003 mm long between its
+/// rails. Without it, a person who sets the bound to the width they drew would see the part filled.
+pub const WIDE_TOLERANCE: f64 = 0.05;
 
 /// Whether a satin column that sews `most` millimetres of one rail to a millimetre of the other crowds its
 /// stitches, so that the column is refused: more than [`MOST_CROWDING`], to the micrometre.
@@ -56,6 +64,10 @@ pub enum RuleId {
     Speck,
     /// The part is nowhere wider than the narrowest satin stroke.
     Line,
+    /// The part is wider than the widest satin column somewhere, no wider than the widest split satin column
+    /// anywhere, and a column of one centre line and even width: it sews as one satin column whose stitches
+    /// are split.
+    Wide,
     /// The part is wider than the widest satin column somewhere.
     Area,
     /// The part is short for its width: a blob.
@@ -66,7 +78,8 @@ pub enum RuleId {
     Arms,
     /// Any other part: it sews as satin columns.
     Column,
-    /// A column that can't be drawn, or that would sew a stitch longer than the widest satin column.
+    /// A column that can't be drawn, or that would sew a stitch longer than the widest satin column unless its
+    /// stitches are split.
     Refused,
 }
 
@@ -77,6 +90,7 @@ impl RuleId {
             RuleId::Asked => "asked",
             RuleId::Speck => "speck",
             RuleId::Line => "line",
+            RuleId::Wide => "wide",
             RuleId::Area => "area",
             RuleId::Compact => "compact",
             RuleId::Uneven => "uneven",
@@ -88,8 +102,8 @@ impl RuleId {
 }
 
 /// A row of the table: what a part is, and what it sews as. A `{key}` in a text stands for the default of
-/// the setting with that key, with its unit, and `{narrowest}` for the design's narrowest satin stroke
-/// ([`filled`]).
+/// the setting with that key, with its unit, `{narrowest}` for the design's narrowest satin stroke and
+/// `{longest}` for the longest satin stitch ([`filled`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Rule {
     /// Which rule.
@@ -105,7 +119,7 @@ pub struct Rule {
 }
 
 /// The rules, in the order they are tried: the first that a part matches decides.
-pub const RULES: [Rule; 9] = [
+pub const RULES: [Rule; 10] = [
     Rule {
         id: RuleId::Asked,
         label: "Asked",
@@ -126,6 +140,15 @@ pub const RULES: [Rule; 9] = [
         is: "nowhere wider than the design's narrowest satin stroke, {narrowest}",
         sewn: "a running stitch along its centre lines, a triple run from {auto_min_triple_run_width_mm} wide",
         bounds: &[MIN_TRIPLE_RUN_WIDTH],
+    },
+    Rule {
+        id: RuleId::Wide,
+        label: "Wide",
+        is: "wider than {auto_max_satin_width_mm} somewhere and no wider than {auto_max_split_satin_width_mm} anywhere, with one centre line \
+             along which its width varies by no more than {auto_max_unevenness} of itself, and a column by the rules below",
+        sewn: "one satin column whose stitches split into pieces no longer than {longest}, at random places. At the setting's default no part \
+               is wide",
+        bounds: &[MAX_SPLIT_SATIN_WIDTH, MAX_UNEVENNESS],
     },
     Rule {
         id: RuleId::Area,
@@ -160,17 +183,20 @@ pub const RULES: [Rule; 9] = [
     Rule {
         id: RuleId::Refused,
         label: "Refused",
-        is: "a column that can't be drawn, that would sew a stitch longer than {auto_max_satin_width_mm} between its rails, or that would sew \
-             more than 2 mm of one rail to 1 mm of the other",
+        is: "a column that can't be drawn, that would sew a stitch longer than {auto_max_satin_width_mm} between its rails and isn't wide, \
+             or that would sew more than 2 mm of one rail to 1 mm of the other",
         sewn: "a tatami fill",
         bounds: &[MAX_SATIN_WIDTH],
     },
 ];
 
-/// `text`, a rule's, with each `{key}` replaced by the default of the setting with that key and its unit, and
-/// `{narrowest}` by the default of the design's narrowest satin stroke.
+/// `text`, a rule's, with each `{key}` replaced by the default of the setting with that key and its unit,
+/// `{narrowest}` by the default of the design's narrowest satin stroke and `{longest}` by the longest satin
+/// stitch.
 pub fn filled(text: &str) -> String {
-    let mut filled = text.replace("{narrowest}", &format!("{} mm", mm(DesignSettings::MIN_SATIN_STROKE_WIDTH.get())));
+    let mut filled = text
+        .replace("{narrowest}", &format!("{} mm", mm(DesignSettings::MIN_SATIN_STROKE_WIDTH.get())))
+        .replace("{longest}", &format!("{} mm", mm(LONGEST_SATIN_STITCH)));
     for spec in AutoParams::SPECS {
         let value = format!("{} {}", spec.default, spec.kind.unit());
         filled = filled.replace(&format!("{{{}}}", spec.key), value.trim_end());
@@ -241,8 +267,14 @@ impl Asked {
 pub(crate) struct Bounds {
     /// The design's narrowest satin stroke: a part nowhere wider is a line.
     pub(crate) narrowest: Mm,
-    /// The widest satin column, and the longest stitch one sews between its rails.
+    /// The widest satin column, and the longest stitch one sews between its rails unless they are split.
     pub(crate) max_satin: Mm,
+    /// The widest split satin column, when it is wider than the longest satin stitch: `None` when no part is
+    /// wide, as by default.
+    pub(crate) max_split: Option<Mm>,
+    /// Whether the columns' stitches are split, so that no stitch between their rails is too long: a wide
+    /// part's columns ([`Bounds::wide`]).
+    pub(crate) splits: bool,
     /// The narrowest piece that stays in a fill, in millimetres: no wider than the widest satin column.
     pub(crate) min_fill: f64,
     /// The least slenderness of a part sewn as columns.
@@ -273,6 +305,9 @@ impl Bounds {
         Bounds {
             narrowest,
             max_satin: rules.auto_max_satin_width_mm,
+            max_split: Some(rules.auto_max_split_satin_width_mm)
+                .filter(|split| micrometres(split.get()) > micrometres(LONGEST_SATIN_STITCH)),
+            splits: false,
             min_fill: (rules.auto_min_fill_width_mm.get() * uneven).min(rules.auto_max_satin_width_mm.get()),
             min_slenderness: rules.auto_min_slenderness * slender,
             max_unevenness: rules.auto_max_unevenness * uneven,
@@ -281,6 +316,33 @@ impl Bounds {
             min_area: rules.auto_min_area_mm2,
             asked: Asked::named(rules.auto_stitch),
         }
+    }
+
+    /// The bounds a part's columns are held to when it is tried as a wide part: these, with the widest satin
+    /// column the widest split satin column and its tolerance ([`WIDE_TOLERANCE`]), and stitches that split.
+    /// `None` when no part is wide.
+    pub(crate) fn wide(&self) -> Option<Bounds> {
+        let max_split = self.max_split?;
+        let max_satin = Mm::new(max_split.get() + WIDE_TOLERANCE).ok()?;
+        Some(Bounds { max_satin, max_split: None, splits: true, ..*self })
+    }
+
+    /// Whether a line, or a part, `width` millimetres wide with `lines` centre lines along which its width
+    /// varies by `unevenness` of itself is a wide column: wider than the widest satin column, no wider than
+    /// the widest split satin column and its tolerance, each to the micrometre, of one line, and as even as a
+    /// column of several lines is held to.
+    pub(crate) fn is_wide(&self, width: f64, lines: usize, unevenness: f64) -> bool {
+        self.max_split.is_some_and(|split| {
+            micrometres(width) > micrometres(self.max_satin.get())
+                && micrometres(width) <= micrometres(split.get() + WIDE_TOLERANCE)
+                && self.one_even_line(lines, unevenness)
+        })
+    }
+
+    /// Whether a part of `lines` centre lines along which its width varies by `unevenness` of itself has one
+    /// line and is as even as a column of several lines is held to, as a wide part is (`REQ-AUTO-153`).
+    pub(crate) fn one_even_line(&self, lines: usize, unevenness: f64) -> bool {
+        lines == 1 && thousandths(unevenness) <= thousandths(self.max_unevenness)
     }
 
     /// How broad a stroke `width` millimetres wide is, or a part that is that wide at its widest.
@@ -307,9 +369,9 @@ impl Bounds {
     }
 
     /// Whether a satin stitch `length` millimetres long between a column's rails is longer than the widest
-    /// satin column, so that the column is refused.
+    /// satin column, so that the column is refused: never when its stitches are split.
     pub(crate) fn too_long(&self, length: f64) -> bool {
-        micrometres(length) > micrometres(self.max_satin.get())
+        !self.splits && micrometres(length) > micrometres(self.max_satin.get())
     }
 }
 
@@ -370,7 +432,8 @@ fn thousandths(ratio: f64) -> f64 {
 }
 
 /// The rule that a part, or a stroke, with `measures` sews by under `bounds`: the first of the table that it
-/// matches. [`RuleId::Refused`] is found later, once its columns are drawn.
+/// matches. [`RuleId::Refused`] is found later, once its columns are drawn, and so is [`RuleId::Wide`] for a
+/// part of an area: only a stroke's measures are known before ([`Measures::of_stroke`]).
 pub(crate) fn choose(measures: &Measures, bounds: &Bounds) -> RuleId {
     if speck(measures.area, bounds.min_area) {
         return RuleId::Speck;
@@ -381,6 +444,7 @@ pub(crate) fn choose(measures: &Measures, bounds: &Bounds) -> RuleId {
     }
     match measures.breadth {
         Breadth::Narrow => RuleId::Line,
+        Breadth::Broad if bounds.is_wide(measures.width, measures.lines, measures.unevenness) => RuleId::Wide,
         Breadth::Broad => RuleId::Area,
         Breadth::Medium if thousandths(measures.slenderness()) < thousandths(bounds.min_slenderness) => RuleId::Compact,
         Breadth::Medium if bounds.fill_uneven && measures.lines > 1 && thousandths(measures.unevenness) > thousandths(bounds.max_unevenness) => {
@@ -397,7 +461,7 @@ pub(crate) fn fills(rule: RuleId, bounds: &Bounds) -> bool {
     match rule {
         RuleId::Area | RuleId::Compact | RuleId::Uneven | RuleId::Arms => true,
         RuleId::Asked => bounds.asked == Asked::Fill,
-        RuleId::Speck | RuleId::Line | RuleId::Column | RuleId::Refused => false,
+        RuleId::Speck | RuleId::Line | RuleId::Wide | RuleId::Column | RuleId::Refused => false,
     }
 }
 

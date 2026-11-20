@@ -71,7 +71,6 @@ fn rule(said: &[Diagnostic], id: &str) -> String {
 }
 
 #[test]
-#[ignore = "planned: M13.54's build adds the wide-column rule"]
 fn req_auto_152_a_bar_8_5_mm_wide_sews_as_one_split_satin_column() {
     let (out, said) = sewn(vec![bar(8.5, &[(WIDEST_SPLIT, "10")])]);
     assert_eq!(out.len(), 1, "{out:?}");
@@ -80,7 +79,6 @@ fn req_auto_152_a_bar_8_5_mm_wide_sews_as_one_split_satin_column() {
 }
 
 #[test]
-#[ignore = "planned: M13.54's build adds the wide-column rule"]
 fn req_auto_152_a_ring_as_wide_as_the_bound_sews_as_a_split_satin_column() {
     // A ring drawn 10 mm wide measures its longest stitch a few micrometres over 10 mm between its points:
     // its stitches are split, so the length isn't a reason to refuse it (REQ-AUTO-154).
@@ -108,7 +106,6 @@ fn req_auto_153_a_wide_part_of_2_centre_lines_is_filled() {
 }
 
 #[test]
-#[ignore = "planned: M13.54's build adds the wide-column rule"]
 fn req_auto_155_the_needle_points_of_neighbouring_split_stitches_do_not_line_up() {
     use stitchcraft_testkit::designs::planned;
     let outcome = planned(vec![bar(8.5, &[(WIDEST_SPLIT, "10")])]);
@@ -127,7 +124,6 @@ fn req_auto_155_the_needle_points_of_neighbouring_split_stitches_do_not_line_up(
 }
 
 #[test]
-#[ignore = "planned: M13.54's build adds the wide-column rule"]
 fn req_auto_156_a_stroke_8_5_mm_wide_sews_as_a_split_satin_column() {
     let stroke = automatic(line("border", (0.0, 0.0), 50.0, &RED, &[(WIDEST_SPLIT, "10")]));
     let (out, said) = sewn(vec![stitchcraft_testkit::designs::widened(stroke, 8.5)]);

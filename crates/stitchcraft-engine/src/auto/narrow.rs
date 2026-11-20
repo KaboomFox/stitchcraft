@@ -41,6 +41,7 @@ use super::columns::{self, Columns, Made};
 use super::marks::Marks;
 use super::rules::{Asked, Bounds, Breadth, Fired, Measures, RuleId, choose};
 use super::split;
+use super::wide::{self, Tried};
 use super::{AutoParams, Open, no_area};
 use crate::normalize::region::Polygon;
 use crate::normalize::region::ops::{self, area_of};
@@ -167,7 +168,7 @@ fn sort(
         Found::Columns => match columns::columns(&part, bounds, by.rules, sorting.cuts(), by.open, meter)? {
             Made::Columns { sewn, rule, measures } => {
                 sorted.fired.push(fired(rule, Some(measures)));
-                sorted.along.push(Along::Columns(Columns { part, sewn }));
+                sorted.along.push(Along::Columns(Columns { part, sewn, wide: false }));
             }
             Made::Filled(RuleId::Uneven, measures) if !matches!(sorting, Sorting::Tail(_)) => {
                 sorted.fired.push(fired(RuleId::Uneven, measures));
@@ -197,6 +198,15 @@ fn sort(
             Made::Broken => kept(sorted, part, broken(id, LOST_COLUMNS)),
         },
         Found::Broad(measures) if matches!(sorting, Sorting::Part) => {
+            match wide::tried(id, &part, bounds, by, meter)? {
+                Tried::Wide(wide) => {
+                    sorted.fired.push(fired(RuleId::Wide, Some(wide.measures)));
+                    sorted.along.push(Along::Columns(Columns { part, sewn: wide.sewn, wide: true }));
+                    return Ok(());
+                }
+                Tried::Refused(said) => sorted.said.push(said),
+                Tried::Not => {}
+            }
             sorted.fired.push(fired(RuleId::Area, Some(measures)));
             let (broad, keep) = (bounds.max_satin.get(), bounds.min_fill);
             let Some(split) = split::split(&part, broad, keep, bounds.min_area, meter)? else { return unsplit(sorted, part, id) };
