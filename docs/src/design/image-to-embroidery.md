@@ -324,7 +324,8 @@ The prototype measures and draws each part on its outline drawn again in one sta
 
 With all 4, the shapes that change fall from 163 to 98 on the pictures and
 from 324 to 38 on the letters. Drawing more points changes 6 letters where it changed 174. Of the 98 left,
-39 have a measure within 10 % of a bound and 21 a column that can't be drawn. The letters as drawn and as
+39 have a measure within 10 % of a bound and 21 a column that can't be drawn. On the photos the count
+falls only from 489 to 389, and 203 of those have a column that can't be drawn under one of the drawings. The letters as drawn and as
 traced sew by other rules 20 times, against 32 today. Without the even spacing the counts are 114 and 109, and without the rung left out a few more.
 
 #### The fix on today's outlines
@@ -343,7 +344,8 @@ The column the knife edge refused today is now drawn, and it costs thread:
 | Traced pear | 10.5 to 8.8 | 3.99 to 3.87 | 2 to 3 | 0 to 4 |
 | Traced lettered patch | 420.0 to 498.5 | 4.25 to 4.56 | 42 to 49 | 0 |
 
-The badge sews as it did. Stitches change by up to 4 %, and planning takes as long. Without the even spacing
+On the photos the fix alone changes the kind of stitch of 212 of 8,833 shapes, adds 1.5 to 3 % to the
+stitches and 2 to 9 % to the jumps. The badge sews as it did. Stitches change by up to 4 %, and planning takes as long. Without the even spacing
 the area at 3 fills of the dogs and the patch rises by 9 to 36 % too, and planning takes 40 % longer. On the traced patch the A
 and the M of its upper word, filled today, sew as satin columns that fan and cross, which looks worse, and the
 likeness falls by 2.2 %. Many of the knife edges refused poor columns today, and a stable rule keeps
