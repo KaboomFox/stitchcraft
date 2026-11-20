@@ -100,7 +100,8 @@ fn req_auto_020_the_rules_settings_are_stitchcraft_s_own_and_no_stitch_type_read
         ("auto_thick_cap_fills", "3.25"),
     ];
     // And the switch that sews the details last, off since it costs jump threads (`REQ-AUTO-098`, M13.48).
-    let details = [("auto_details_last", "false")];
+    // And how far an outline is smoothed, off by default (`REQ-AUTO-133`, M13.52).
+    let details = [("auto_details_last", "false"), ("auto_smooth_mm", "0")];
     assert_eq!(defaults, [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..], &thick[..], &details[..]].concat());
     let advanced: Vec<&str> = AutoParams::SPECS.iter().filter(|spec| spec.group == ADVANCED).map(|spec| spec.key).collect();
     assert_eq!(advanced, bounds.iter().chain(&cover).chain(&thick).chain(&details).map(|(key, _)| *key).collect::<Vec<_>>());

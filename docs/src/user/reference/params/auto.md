@@ -389,3 +389,17 @@ mark must keep its edge clear. The design goes by the setting of its lowest auto
 - **Default:** `false`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_smooth_mm`
+
+**Smooth outlines.** How far a point of an area's outline may move when the outline is smoothed, before anything is
+digitized. A traced outline wobbles by less than a thread is wide, and the wobble sews short
+stitches and ragged edges. Corners stay, an edge 2 areas share is smoothed once so that no gap
+opens, and a ring's area changes by a tenth at most. 0, the default, sews every outline as drawn.
+0.2 mm, half a thread, cut short stitches on every traced picture measured, but it also changes
+which parts sew as satin columns, and not always for the better.
+
+- **Accepts:** a length from 0 to 1 mm
+- **Default:** `0`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version

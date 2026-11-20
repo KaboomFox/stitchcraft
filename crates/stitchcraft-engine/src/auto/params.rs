@@ -111,15 +111,6 @@ params! {
         /// its lowest automatic shape.
         auto_fill_outline: Toggle = "true", label "Outline round fills",
             origin Origin::StitchCraft, stability Stability::Experimental;
-
-        /// How far a point of an area's outline may move when the outline is smoothed, before anything is
-        /// digitized. A traced outline wobbles by less than a thread is wide, and the wobble sews short
-        /// stitches and ragged edges. Corners stay, an edge 2 areas share is smoothed once so that no gap
-        /// opens, and a ring's area changes by a tenth at most. 0 sews every outline as drawn, and is the
-        /// default. 0.2 mm, half a thread, cut short stitches on every traced picture measured, but it also
-        /// changes which parts sew as satin columns, and not always for the better.
-        auto_smooth_mm: Length = "0", label "Smooth outlines", range (0.0, 1.0),
-            origin Origin::StitchCraft, stability Stability::Experimental;
     }
 
     "Neighbours" {
@@ -315,6 +306,15 @@ params! {
         /// to cut by hand, and on traced photos it shows no more of the picture. Turn it on where an eye or a
         /// mark must keep its edge clear. The design goes by the setting of its lowest automatic shape.
         auto_details_last: Toggle = "false", label "Details sew last",
+            origin Origin::StitchCraft, stability Stability::Experimental;
+
+        /// How far a point of an area's outline may move when the outline is smoothed, before anything is
+        /// digitized. A traced outline wobbles by less than a thread is wide, and the wobble sews short
+        /// stitches and ragged edges. Corners stay, an edge 2 areas share is smoothed once so that no gap
+        /// opens, and a ring's area changes by a tenth at most. 0, the default, sews every outline as drawn.
+        /// 0.2 mm, half a thread, cut short stitches on every traced picture measured, but it also changes
+        /// which parts sew as satin columns, and not always for the better.
+        auto_smooth_mm: Length = "0", label "Smooth outlines", range (0.0, 1.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
     }
 }

@@ -65,7 +65,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Guided parameters](params/guided.md) | 3 | Guided fill |
 | [Tartan parameters](params/tartan.md) | 5 | Tartan fill |
 | [Path fill parameters](params/path-fill.md) | 3 | Contour fill, Meander fill, Circular fill |
-| [Auto parameters](params/auto.md) | 30 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
+| [Auto parameters](params/auto.md) | 31 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
 
 ## Every parameter
 
@@ -96,6 +96,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`auto_overlap_mm`](params/auto.md#auto_overlap_mm) | Overlap | Auto parameters |
 | [`auto_prefer`](params/auto.md#auto_prefer) | Satin or fill | Auto parameters |
 | [`auto_pull_compensation_mm`](params/auto.md#auto_pull_compensation_mm) | Pull compensation | Auto parameters |
+| [`auto_smooth_mm`](params/auto.md#auto_smooth_mm) | Smooth outlines | Auto parameters |
 | [`auto_stitch`](params/auto.md#auto_stitch) | Stitch | Auto parameters |
 | [`auto_thick_cap_fills`](params/auto.md#auto_thick_cap_fills) | Most thread on a spot, in fills | Auto parameters |
 | [`auto_thick_fail_fills`](params/auto.md#auto_thick_fail_fills) | Thread that fails, in fills | Auto parameters |

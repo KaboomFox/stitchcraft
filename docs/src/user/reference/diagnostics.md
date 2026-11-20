@@ -128,6 +128,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-I0918`](#sc-i0918) | Info | Parts that follow a guide |
 | [`SC-W0919`](#sc-w0919) | Warning | Guide not used |
 | [`SC-W0920`](#sc-w0920) | Warning | Own Auto settings replace the group's |
+| [`SC-I0921`](#sc-i0921) | Info | Outlines smoothed |
 | [`SC-E1001`](#sc-e1001) | Error | Nothing to route |
 | [`SC-I1002`](#sc-i1002) | Info | Element left out of the route |
 | [`SC-W1003`](#sc-w1003) | Warning | Piece of a routed satin column may sew otherwise |
@@ -1783,6 +1784,19 @@ the group.
 The message names the path, as the Layers panel shows it, and each setting the group changes from
 its default that the path's own effect sets otherwise, with both values. To sew the path by the
 group's settings, remove its own Auto effect. To keep it, set those settings on it too.
+
+## SC-I0921
+
+**Info** — Outlines smoothed
+
+The outlines of automatic areas were smoothed before they were digitized, as their setting
+`auto_smooth_mm` asks. Each point moved no farther than the setting, the corners stayed, an edge 2
+areas share was smoothed once, and no ring's area changed by more than a tenth. Smoothing cuts short
+stitches at ragged edges, but it also changes which parts sew as satin columns.
+
+The message gives how many areas were smoothed, within which setting, and how many outline points
+they had and have, and names any area whose smoothing needed more work than the budget allows,
+which keeps its outline. To sew the outlines as drawn, set `auto_smooth_mm` to 0.
 
 ## SC-E1001
 

@@ -42,6 +42,7 @@ pub stitchcraft_core::diag::Code::AutoOwnReplaces
 pub stitchcraft_core::diag::Code::AutoRule
 pub stitchcraft_core::diag::Code::AutoRunsLeft
 pub stitchcraft_core::diag::Code::AutoSatinFilled
+pub stitchcraft_core::diag::Code::AutoSmoothed
 pub stitchcraft_core::diag::Code::AutoSpeck
 pub stitchcraft_core::diag::Code::AutoThick
 pub stitchcraft_core::diag::Code::AutoThinned
@@ -337,6 +338,7 @@ pub stitchcraft_core::Code::AutoOwnReplaces
 pub stitchcraft_core::Code::AutoRule
 pub stitchcraft_core::Code::AutoRunsLeft
 pub stitchcraft_core::Code::AutoSatinFilled
+pub stitchcraft_core::Code::AutoSmoothed
 pub stitchcraft_core::Code::AutoSpeck
 pub stitchcraft_core::Code::AutoThick
 pub stitchcraft_core::Code::AutoThinned

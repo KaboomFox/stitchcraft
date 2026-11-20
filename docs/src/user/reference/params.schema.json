@@ -362,6 +362,21 @@
         "unit": "mm"
       }
     },
+    "auto_smooth_mm": {
+      "default": 0.0,
+      "description": "How far a point of an area's outline may move when the outline is smoothed, before anything is digitized. A traced outline wobbles by less than a thread is wide, and the wobble sews short stitches and ragged edges. Corners stay, an edge 2 areas share is smoothed once so that no gap opens, and a ring's area changes by a tenth at most. 0, the default, sews every outline as drawn. 0.2 mm, half a thread, cut short stitches on every traced picture measured, but it also changes which parts sew as satin columns, and not always for the better.",
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Smooth outlines",
+      "type": "number",
+      "x-stitchcraft": {
+        "automatic": true,
+        "group": "Advanced",
+        "origin": "stitchcraft",
+        "stability": "experimental",
+        "unit": "mm"
+      }
+    },
     "auto_stitch": {
       "default": "auto",
       "description": "The stitch the shape sews as. Left at `auto`, each part of it sews by the first rule that it matches, from its geometry. `run` sews every part as a running stitch along its centre lines, `satin` sews each part no wider than the widest satin column as satin columns along them, and `fill` fills the shape whole. A part that can't sew as asked goes by the rules: a speck, a part without a centre line, and for `satin` a part too narrow or too wide for a column.",
@@ -3455,7 +3470,8 @@
           "auto_thick_warn_points",
           "auto_thick_fail_points",
           "auto_thick_cap_fills",
-          "auto_details_last"
+          "auto_details_last",
+          "auto_smooth_mm"
         ],
         "name": "AutoParams",
         "title": "Auto parameters"

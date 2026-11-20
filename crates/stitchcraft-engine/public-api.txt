@@ -69,6 +69,7 @@ pub stitchcraft_engine::auto::AutoParams::auto_min_triple_run_width_mm: <stitchc
 pub stitchcraft_engine::auto::AutoParams::auto_overlap_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_prefer: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_pull_compensation_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_smooth_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_stitch: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_thick_cap_fills: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_thick_fail_fills: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
