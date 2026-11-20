@@ -1794,9 +1794,10 @@ The outlines of automatic areas were smoothed before they were digitized, as the
 areas share was smoothed once, and no ring's area changed by more than a tenth. Smoothing cuts short
 stitches at ragged edges, but it also changes which parts sew as satin columns.
 
-The message gives how many areas were smoothed, within which setting, and how many outline points
-they had and have, and names any area whose smoothing needed more work than the budget allows,
-which keeps its outline. To sew the outlines as drawn, set `auto_smooth_mm` to 0.
+The message gives how many areas were smoothed, within which setting, and how many points their
+outlines need within 0.02 mm as drawn and as smoothed, and names any area whose smoothing needed
+more work than the budget allows, which keeps its outline. To sew the outlines as drawn, set
+`auto_smooth_mm` to 0.
 
 ## SC-E1001
 
