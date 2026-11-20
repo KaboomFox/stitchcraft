@@ -577,9 +577,8 @@ impl Pass {
             for (&index, runs) in &self.runs {
                 let Some(ring) = rings.get(index) else { continue };
                 let (now, drawn) = (self.ring(runs, false), self.ring(runs, true));
-                if let Some(meter) = self.meters.get_mut(&ring.element) {
-                    meter.charge(units(now.len() + drawn.len())).map_err(|_| Ran::Out(ring.element))?;
-                }
+                let Some(meter) = self.meters.get_mut(&ring.element) else { continue };
+                meter.charge(units(now.len() + drawn.len())).map_err(|_| Ran::Out(ring.element))?;
                 let (now, drawn) = (line::area(&now), line::area(&drawn));
                 if (now - drawn).abs() > AREA * drawn.abs() {
                     dirty.extend(runs.iter().map(|run| run.edge).filter(|&edge| self.edges.get(edge).is_some_and(|edge| edge.line.is_some())));
