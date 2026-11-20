@@ -241,7 +241,9 @@ fn notice(settings: &BTreeMap<usize, f64>, frozen: &BTreeSet<usize>, (before, af
     let within = if least < most { format!("{least} to {most}") } else { format!("{most}") };
     let mut message = match smoothed.len() {
         0 => String::new(),
-        1 => format!("The outline of 1 automatic area was smoothed within {within} mm: it is drawn with {after} points, where {before} drew it within {KEPT} mm."),
+        1 => format!(
+            "The outline of 1 automatic area was smoothed within {within} mm: it is drawn with {after} points, where {before} drew it within {KEPT} mm."
+        ),
         n => format!(
             "The outlines of {n} automatic areas were smoothed within {within} mm: they are drawn with {after} points, where {before} drew them within {KEPT} mm."
         ),

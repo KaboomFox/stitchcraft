@@ -7,13 +7,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ### Added
 - M13.52: smoothed outlines, a setting off by default (`REQ-AUTO-131` to `REQ-AUTO-134`, `SC-I0921`).
   - `auto_smooth_mm`, an advanced setting from 0 to 1 mm, smooths each automatic area's outline before it
-    is digitized. No point moves farther than the setting, corners stay, an edge 2 areas share is smoothed
-    once, and an outline whose area would change by more than a tenth stays as drawn. 0, the default, sews
+    is digitized. Each point stays within the setting of where it was drawn, and corners stay. An edge 2
+    areas share is smoothed once, and an outline whose area would change by more than a tenth stays as drawn. 0, the default, sews
     every outline as drawn, so no design sews differently and no golden file changes.
   - At 0.2 mm the 4 traced photos sew 19 to 23 % fewer stitches under 0.5 mm and plan in 45 % less time,
     the lettered patch 13 % fewer, the pear 6 % and the traced dogs 3 %. The dogs sew 21 to 27 of their
-    shapes by another rule, with more stitches astray, and the lettered patch merges 129 thin lines into
-    their neighbours and leaves more fabric bare. The owner chose on 2026-11-20 to leave it off until the
+    shapes by another rule, with more stitches astray. The lettered patch merges 133 thin lines into their
+    neighbours, which leaves more fabric bare. The owner chose on 2026-11-20 to leave it off until the
     stitch rule is stable against how an outline is drawn (M13.53).
 - M14.9: `widen_percent`, a lettering setting that widens every satin column of a text by a percent of its
   width on each side, 0 to 50 and 0 by default (`REQ-FONT-024`). `stitch lettering --widen-percent`, the

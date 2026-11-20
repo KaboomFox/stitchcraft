@@ -477,8 +477,8 @@ setting:
 stitch plan photo.jpg -o photo.pes --set auto_smooth_mm=0.2
 ```
 
-Corners stay where they are. An edge 2 areas share is smoothed once, so no gap opens between them, and an
-outline whose area would change by more than a tenth is left as drawn. A shape with settings is never
+Corners stay where they are. Where 2 areas meet, their shared edge is smoothed once, so no gap opens
+between them. StitchCraft leaves an outline as drawn when its area would change by more than a tenth. A shape with settings is never
 smoothed. The report says how many outlines were smoothed (`SC-I0921`).
 
 It is off by default, for traced pictures and documents alike, and no dialog shows it. Smoothing changes

@@ -99,7 +99,10 @@ fn req_auto_133_an_edge_shared_with_a_shape_with_settings_stays_as_drawn() {
     // the lower area is smoothed, which the notice counts.
     let (design, said) = smoothed(pair(&[("auto_smooth_mm", "0.4")], &[], false), &Budget::DEFAULT);
     assert!(design.is_none(), "{design:?}");
-    assert_eq!(said[0].message, "The outline of 1 automatic area was smoothed within 0.4 mm: it is drawn with 19 points, where 19 drew it within 0.02 mm.");
+    assert_eq!(
+        said[0].message,
+        "The outline of 1 automatic area was smoothed within 0.4 mm: it is drawn with 19 points, where 19 drew it within 0.02 mm."
+    );
     // Set off on the upper area, it is the same.
     let (design, _) = smoothed(pair(&[("auto_smooth_mm", "0.4")], &[("auto_smooth_mm", "0")], true), &Budget::DEFAULT);
     assert!(design.is_none(), "{design:?}");

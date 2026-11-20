@@ -4107,25 +4107,25 @@ columns are the change from the setting off.
 
 What gets worse at 0.2 mm:
 
-- **Stitches astray** rise on every dog: 4 to 9, 3 to 4, 1 to 6 and 4 to 6. At 0.4 mm they reach 10 to
+- **Stitches astray** rise on every dog, from 1 to 4 to between 4 and 9. At 0.4 mm they reach 10 to
   25. A shape whose part changes rule sews its stitches a little off the drawn outline.
 - **The area at 3 fills or more** grows on 3 of the 4 dogs, by 6 to 33 %, and the thickest spot by up to
   0.15 fills, still under the cap's warning.
-- **The lettered patch** loses 129 of its thin traced lines. Each was a sliver just over 1 mm², and smoothed
-  within a tenth of its area it falls under the speck bound and merges into its neighbour. So the patch
+- **The lettered patch** loses 133 of its thin traced lines. Each was a sliver just over 1 mm², and smoothed
+  within a tenth of its area it falls under the speck bound, 0.96 to 1.0 mm², and merges into its neighbour. So the patch
   sews 260 shapes where it sewed 389, with 73 fewer jump threads, but its bare fabric grows from 1.2 to
   1.9 % and its stitches astray from 90 to 128.
 - **More columns on the photos.** The flower photo sews 27 parts as satin columns where it sewed 13, and
   their stitches fan along edges that are still ragged at a thread's scale.
 
 The likeness of the dogs moves by less than 0.01 either way, and the pear and the badge sew as before but
-for shorter stitches. No ring is lost, since the area bound keeps each within a tenth of its area. The
+for shorter stitches. The area bound keeps every ring within a tenth of its area, and every ring stays. The
 probe's pictures, off, at 0.2 mm and at 0.4 mm, are in the step's notes.
 
-Against the prototype, the build cuts short stitches as much: 3 % on the dogs, 6 % on the pear, 13 % on the
-patch and 19 to 23 % on the photos, where the prototype measured 3, 6, 12 and 18 to 24 %. Its points
+Against the prototype, the build cuts short stitches as much. The dogs sew 3 % fewer and the pear 6 %, as
+the prototype's did, the patch 13 % where it cut 12 %, and the photos 19 to 23 % where it cut 18 to 24 %. Its points
 differ for 2 reasons. The notice counts a shared edge for each of its areas, where the prototype counted
-it once. A straight side keeps its own segments, where the prototype drew every edge anew. So the dogs need
+it once. A straight side is drawn with the segments it had, where the prototype drew every edge anew. So the dogs need
 4 % fewer points at 0.2 mm, where the prototype's needed 2 % more. The pear and the patch need 9 and 11 %
 more, since a smoothed curve takes more points within 0.02 mm than the curves the tracer fitted.
 
