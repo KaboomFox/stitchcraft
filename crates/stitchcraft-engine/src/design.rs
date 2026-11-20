@@ -17,6 +17,8 @@ use stitchcraft_core::{Code, Diagnostic, ElementId, Mm, Point, Rect};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::{Rgb, Thread};
 
+use crate::auto::Held;
+
 pub mod mark;
 mod turn;
 
@@ -423,6 +425,11 @@ pub struct DesignSettings {
     /// How far the plan turns about the hoop's centre as it is written, once its origin is there
     /// (Ink/Stitch's `rotate_on_export`); none unless the design says.
     pub rotate_on_export: Turn,
+    /// What the cap at the end of planning holds the elements set as digitizing's own to (`REQ-AUTO-143`):
+    /// the limits of the design's thickness and the overlap of its areas, which Expand keeps from the
+    /// automatic design's lowest automatic shape. `None` leaves them to that shape, or else to the Auto
+    /// effect's defaults.
+    pub cap: Option<Held>,
 }
 
 impl DesignSettings {
@@ -442,6 +449,7 @@ impl Default for DesignSettings {
             stop_position: None,
             min_satin_stroke_width: DesignSettings::MIN_SATIN_STROKE_WIDTH,
             rotate_on_export: Turn::NONE,
+            cap: None,
         }
     }
 }
@@ -898,6 +906,7 @@ mod tests {
             min_stitch_len: Some(Mm::ZERO),
             min_satin_stroke_width: Mm::ZERO,
             rotate_on_export: Turn::LEFT,
+            cap: None,
         };
         assert!(Design::new(one(), edge).is_ok());
     }

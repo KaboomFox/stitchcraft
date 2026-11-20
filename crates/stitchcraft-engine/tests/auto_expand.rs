@@ -1,32 +1,48 @@
 //! Expand (roadmap step M13.26, `REQ-AUTO-142` to `REQ-AUTO-144`; `docs/src/design/image-to-embroidery.md`
 //! › Expand): an automatic design becomes the ordinary elements digitizing makes of it, which a person edits
-//! freely, and it sews as it did. The cases are planned: phase 1 recorded the decision, and the build phase
-//! writes `auto::expand` and the setting `digitized_as`.
-//!
-//! [`expanded`] stands in for `auto::expand` until then. It is what phase 1's prototype measured: the elements
-//! [`digitized`] gives, with nothing to say what ordinary settings can't, and no warning.
+//! freely, and it sews as it did. `apps/stitchcraft-cli/tests/expand.rs` holds the cases of the documents
+//! `stitch expand` writes, and the build's measure of the whole set is in the design page.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
-use stitchcraft_core::{Budget, Diagnostic, ElementId, Point, Severity};
-use stitchcraft_engine::auto::digitized;
+use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Point, Severity, math};
+use stitchcraft_engine::auto::expand;
+use stitchcraft_engine::common::DIGITIZED_AS;
 use stitchcraft_engine::design::mark::Mark;
-use stitchcraft_engine::design::{Design, DesignSettings, Element};
+use stitchcraft_engine::design::{Design, DesignSettings, Element, Lettered};
 use stitchcraft_engine::plan;
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{Role, StitchPlan};
-use stitchcraft_testkit::designs::{BLUE, RED, fill, in_place};
+use stitchcraft_testkit::designs::{BLUE, RED, along, fill, in_place, polylines};
 use stitchcraft_testkit::pictures::{self, Trace};
 
-/// The setting that says an element sews as digitizing made it (`REQ-AUTO-143`).
-const DIGITIZED_AS: &str = "digitized_as";
-
-/// `design` expanded, and what was said of it. Stands in for `auto::expand` (see the module's docs).
+/// `design` expanded, and what was said of it.
 fn expanded(design: &Design) -> (Design, Vec<Diagnostic>) {
-    let (elements, _) = digitized(design, &Budget::DEFAULT);
-    let elements: Vec<Element> = elements.into_owned().into_iter().map(|element| Element { automatic: false, lettered: None, ..element }).collect();
-    (Design::new(elements, design.settings).unwrap(), Vec::new())
+    expand(design, REFERENCE, &Budget::DEFAULT).unwrap()
+}
+
+/// A satin column of a font from `a` to `b`, 1.6 mm wide, with a contour underlay and 0.2 mm of pull
+/// compensation, marked as lettering digitizing placed (`tests/auto_lettering.rs` draws them so).
+fn letter(id: &str, (ax, ay): (f64, f64), (bx, by): (f64, f64)) -> Element {
+    let length = math::hypot(bx - ax, by - ay);
+    let (nx, ny) = (-(by - ay) / length * 0.8, (bx - ax) / length * 0.8);
+    let rails = polylines(&[&[(ax + nx, ay + ny), (bx + nx, by + ny)], &[(ax - nx, ay - ny), (bx - nx, by - ny)]]);
+    let params = [("satin_column", "true"), ("contour_underlay", "true"), ("pull_compensation_mm", "0.2")];
+    Element { lettered: Some(Lettered::Digitized), ..along(id, rails, &BLUE, &params) }
+}
+
+/// The lettered patch with an x of 3 lettering columns that digitizing placed on its field, where they cross.
+fn lettering_placed() -> Design {
+    let patch = pictures::lettered_patch();
+    let bounds = patch.bounds().unwrap();
+    let (cx, cy) = (bounds.min().x() + 8.0, bounds.max().y() - 5.0);
+    let ray = |k: usize| {
+        let (s, c) = math::sin_cos((60.0 * k as f64).to_radians());
+        letter(&format!("x{k}"), (cx - 3.0 * c, cy - 3.0 * s), (cx + 3.0 * c, cy + 3.0 * s))
+    };
+    let elements: Vec<Element> = patch.elements().iter().cloned().chain((0..3).map(ray)).collect();
+    Design::new(elements, patch.settings).unwrap()
 }
 
 /// The designs the plan is compared on: one of each kind of the set, small enough for a case.
@@ -36,6 +52,7 @@ fn designs() -> Vec<(&'static str, Design)> {
         ("badges", Design::new(badges.elements, DesignSettings::default()).unwrap()),
         ("pear", pictures::pear()),
         ("lettered patch", pictures::lettered_patch()),
+        ("lettering placed", lettering_placed()),
     ]
 }
 
@@ -65,7 +82,6 @@ fn stitches(plan: &StitchPlan) -> Vec<(usize, f64, f64, String, Role)> {
 }
 
 #[test]
-#[ignore = "planned: M13.26 builds Expand"]
 fn req_auto_142_an_expanded_design_plans_to_the_automatic_plan() {
     for (name, design) in designs() {
         // Both are planned round the middle of the drawing. The expanded design's own bounds differ, as its
@@ -86,7 +102,6 @@ fn req_auto_142_an_expanded_design_plans_to_the_automatic_plan() {
 }
 
 #[test]
-#[ignore = "planned: M13.26 builds Expand"]
 fn req_auto_142_an_expanded_design_has_ordinary_elements_named_after_their_shapes() {
     for (name, design) in designs() {
         let (expanded, _) = expanded(&design);
@@ -94,14 +109,14 @@ fn req_auto_142_an_expanded_design_has_ordinary_elements_named_after_their_shape
             assert!(!element.automatic, "{name}: {} is automatic", element.id);
             assert!(element.params.iter().all(|(key, _)| !key.starts_with("auto_")), "{name}: {} keeps a setting of the Auto effect", element.id);
             // Each part is named after its shape, as the notices name it, so the person finds it in the Layers
-            // panel.
-            assert!(element.name.as_deref().is_some_and(|named| !named.is_empty()), "{name}: {} has no name", element.id);
+            // panel. The lettering keeps the name it had, none here.
+            let part = matches!(element.params.get(DIGITIZED_AS), Some("part" | "base"));
+            assert!(!part || element.name.as_deref().is_some_and(|named| !named.is_empty()), "{name}: {} has no name", element.id);
         }
     }
 }
 
 #[test]
-#[ignore = "planned: M13.26 builds the setting digitized_as"]
 fn req_auto_143_a_fill_set_as_base_sews_only_underlay() {
     let base = fill("base", &[&[(0.0, 0.0), (20.0, 0.0), (20.0, 20.0), (0.0, 20.0)]], &RED, &[(DIGITIZED_AS, "base")]);
     let design = Design::new(vec![base], DesignSettings::default()).unwrap();
@@ -113,13 +128,13 @@ fn req_auto_143_a_fill_set_as_base_sews_only_underlay() {
 }
 
 #[test]
-#[ignore = "planned: M13.26 builds the setting digitized_as"]
 fn req_auto_143_the_needle_runs_under_a_later_shape_between_2_parts_set_by_hand() {
-    // 2 red squares 10 mm wide and 20 mm apart and a blue bar over them, as `tests/auto_runs.rs` draws them,
-    // here set by hand as parts digitizing made: the red thread runs under the bar from one to the other.
+    // 2 red squares 10 mm wide and 20 mm apart and a blue bar over both, set by hand as parts digitizing
+    // made: the red thread runs under the bar from one to the other, wherever the first ends and the second
+    // starts.
     let square =
         |id: &str, left: f64| fill(id, &[&[(left, 0.0), (left + 10.0, 0.0), (left + 10.0, 10.0), (left, 10.0)]], &RED, &[(DIGITIZED_AS, "part")]);
-    let bar = fill("bar", &[&[(8.0, 2.0), (32.0, 2.0), (32.0, 8.0), (8.0, 8.0)]], &BLUE, &[(DIGITIZED_AS, "part")]);
+    let bar = fill("bar", &[&[(-1.0, -1.0), (41.0, -1.0), (41.0, 11.0), (-1.0, 11.0)]], &BLUE, &[(DIGITIZED_AS, "part")]);
     let design = Design::new(vec![square("left", 0.0), square("right", 30.0), bar], DesignSettings::default()).unwrap();
     let plan = in_place(&design).plan.unwrap();
     let runs = plan.sewn_stitches().into_iter().filter(|stitch| stitch.role == Role::Travel).count();
@@ -140,9 +155,8 @@ fn req_auto_143_the_needle_runs_under_a_later_shape_between_2_parts_set_by_hand(
 }
 
 #[test]
-#[ignore = "planned: M13.26 builds Expand"]
 fn req_auto_144_an_expanded_design_no_longer_follows_its_marks_and_names_what_it_lost() {
-    let design = pictures::lettered_patch();
+    let design = lettering_placed();
     let (expanded, said) = expanded(&design);
     let before = in_place(&expanded).plan.unwrap();
     // A mark drawn over the expanded design changes nothing: it has no automatic shape left to digitize.
@@ -155,5 +169,12 @@ fn req_auto_144_an_expanded_design_no_longer_follows_its_marks_and_names_what_it
     // The lettering placed for the patch's marker became its columns, and one warning names it.
     let warnings: Vec<&Diagnostic> = said.iter().filter(|said| said.severity() == Severity::Warning).collect();
     assert_eq!(warnings.len(), 1, "{said:?}");
-    assert!(warnings[0].message.contains("lettering"), "{}", warnings[0].message);
+    assert_eq!(warnings[0].code, Code::AutoExpandLost);
+    assert!(warnings[0].message.contains("The lettering of `x0`, `x1` and `x2` became the columns it sews"), "{}", warnings[0].message);
+    // A part a person edits sews as its own settings say: a fill turned to another angle sews other rows.
+    let mut edited = expanded.elements().to_vec();
+    let at = edited.iter().position(|element| element.params.get("angle").is_some()).unwrap();
+    edited[at].params.set("angle", "17");
+    let edited = Design::new(edited, expanded.settings).unwrap();
+    assert_ne!(in_place(&edited).plan.unwrap(), before);
 }
