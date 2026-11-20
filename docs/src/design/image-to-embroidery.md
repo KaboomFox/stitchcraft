@@ -253,6 +253,121 @@ changes stay as they were:
 | Lettered patch | 2 | 25333 to 25340 | 37 |
 | Alpine Night, the demo's badge | 2 | 5419 to 5443 | 9 |
 
+### Outlines drawn 2 ways
+
+The rules measure a part's geometry. Until M13.53 the result also depended on the outline's drawing: how
+many points it has, where they fall and where a ring starts. The same outline drawn 2 ways that sew alike
+within a thread's width could sew by 2 rules. Every step that touches outlines then reshuffled which
+shapes were columns, and its own effect couldn't be seen through that noise. Measured on main `6f5703b7`
+(2026-11-20).
+
+#### Causes in the code
+
+Each finding below has its smallest pair of outlines drawn by hand, at most 0.02 mm apart, which sew by
+2 rules today. They are the cases of `REQ-AUTO-135` to `REQ-AUTO-138` (`tests/auto_drawing.rs`).
+
+- **A cap or a tip.** An end of a centre line is a cap when its corner lies inside the circle on its chord,
+  edge included ([centre lines](algorithms/centre-lines.md#strips-junctions-and-ends)). A square corner lies
+  exactly on that circle. A bar 2 mm wide and 12 mm long whose corner moves 0.02 mm towards its middle
+  leaves the 2 corners beside it at 89.6°, outside the circle. That end becomes a tip, the line runs on into
+  a corner, and the end's other corner lies 1.40 times as far from the line as the bar's widest circle
+  reaches. The bar sews by the rule arms, as a fill, where drawn square it sews as a column.
+- **Every point goes into the triangulation.** The triangulation cuts long edges but keeps every point
+  of the outline. Points added along an edge change its junctions and where the rungs fall, and rungs that
+  cross are held in place into a fan, which the crowding test sees. A bar whose end leans 0.02 mm sews as a
+  column drawn with 4 corners and is refused for crowding drawn with a point every 0.1 mm, 2.98 mm of one
+  edge to 1 mm of the other. A wedge does the same at 3.4 mm, and a quarter ring at 2.66 mm.
+- **A column read back.** A part's columns are drawn with rails and rungs and read back as any satin column
+  is read, to within a millionth of a millimetre (`generators::satin::drawn`). When one rung reads back
+  otherwise the whole part is refused and filled (`SC-I0902`). An L or a T with one end corner moved
+  0.02 mm is refused so. A T whose stem joins its bar 0.02 mm off square is refused when its ring starts at
+  another corner.
+- **Direction and place.** A ring drawn the other way round doesn't change a rule on any picture, and a
+  whole picture moved 0.05 mm changed 2 shapes of more than 10,000.
+
+#### The measure of stability
+
+The probe draws every automatic shape of a picture again in 6 ways, within 0.02 mm of the drawing. A curve split
+in 2 at its middle is the same curve with twice the points. A dense drawing has a straight piece every 0.1 mm.
+A jittered one has every point moved 0.02 mm in a direction its position chooses, so that a point that 2 shapes
+share moves alike in both. The others start each ring halfway round, draw it the other way, or move the
+picture 0.05 mm. A shape changes when the rules of its parts change, specks aside. The set is the
+repository's traced pictures, the traced lettered patch and the hand-made pairs, 392 shapes, and 558 letters
+of 3 fonts at 3 heights, as drawn and as traced from pictures of them. A local set of 4 traced photos,
+8,833 shapes, is never committed.
+
+| Set | Shapes | Split | Dense | Jittered | Started elsewhere | Reversed | Moved | Any |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Pictures | 392 | 37 | 108 | 64 | 17 | 0 | 0 | 163 |
+| Letters | 1,116 | 91 | 174 | 180 | 5 | 0 | 1 | 324 |
+| Photos | 8,833 | 165 | 242 | 313 | 32 | 0 | 1 | 489 |
+
+Each of the 4 traced dogs has 27 to 38 of its 69 to 92 shapes change. A shape whose measure lies within
+10 % of a bound of the rules may fall either way however the outline is drawn, and no rule can keep it
+steady: 70 of the pictures' 163 and 126 of the letters' 324 are so. In 346 of the photos' 489 a column
+can't be drawn under one of the drawings.
+
+#### A fix, prototyped
+
+The prototype measures and draws each part on its outline drawn again in one standard way:
+
+- **Thinned.** A point goes when the ring without it stays within 0.05 mm of every point it had between its
+  neighbours. The point whose leaving moves the ring least goes first, a tie going to the lower point.
+  A point whose triangle with its neighbours holds another point of the part stays, so that no ring comes
+  to cross another. The result doesn't depend on where a ring starts or which way it runs.
+- **Evenly spaced.** Between its corners, where it turns by more than 30°, each ring is cut again into
+  even pieces no longer than its area over its perimeter, from its lowest point when it has no corner.
+- **A cap within 0.05 mm.** An end is a cap when its corners lie within 0.05 mm outside the circle on its
+  chord.
+- **A rung left out.** A column that reads back otherwise is drawn again without the first rung whose
+  leaving makes it read back, and refused only when none does.
+
+With all 4, the shapes that change fall from 163 to 98 on the pictures and
+from 324 to 38 on the letters. Drawing more points changes 6 letters where it changed 174. Of the 98 left,
+39 have a measure within 10 % of a bound and 21 a column that can't be drawn. The letters as drawn and as
+traced sew by other rules 20 times, against 32 today. Without the even spacing the counts are 114 and 109, and without the rung left out a few more.
+
+#### The fix on today's outlines
+
+The fix alone, on the outlines as drawn today, moves 66 of the pictures' 374 shapes from one kind of stitch
+to another, 47 without the even spacing, most of them from a fill to satin columns. It moves 81 of the 1,116
+letters, 61 of them so.
+The column the knife edge refused today is now drawn, and it costs thread:
+
+| Picture | Area at 3 fills, mm² | Thickest spot, fills | Jump threads | Stitches astray |
+|---|---|---|---|---|
+| Dog on turf, 6 threads | 54.3 to 64.8 | 3.87 to 3.99 | 60 to 54 | 4 to 7 |
+| Dog on turf, 9 threads | 63.8 to 66.8 | 3.97 to 3.83 | 62 to 66 | 3 to 1 |
+| Running dog, 6 threads | 53.5 to 79.0 | 3.92 to 3.99 | 49 to 45 | 1 to 20 |
+| Running dog, 9 threads | 94.0 to 133.5 | 3.98 to 4.11 | 64 to 63 | 4 to 7 |
+| Traced pear | 10.5 to 8.8 | 3.99 to 3.87 | 2 to 3 | 0 to 4 |
+| Traced lettered patch | 420.0 to 498.5 | 4.25 to 4.56 | 42 to 49 | 0 |
+
+The badge sews as it did. Stitches change by up to 4 %, and planning takes as long. Without the even spacing
+the area at 3 fills of the dogs and the patch rises by 9 to 36 % too, and planning takes 40 % longer. On the traced patch the A
+and the M of its upper word, filled today, sew as satin columns that fan and cross, which looks worse, and the
+likeness falls by 2.2 %. Many of the knife edges refused poor columns today, and a stable rule keeps
+those columns unless the column test also changes.
+
+#### Decisions for the owner
+
+- **The tolerance,** how far the outline drawn again may lie from the drawing: 0.05 mm is recommended,
+  a quarter of a running stitch's own tolerance of 0.2 mm, and 2.5 times the jitter measured.
+- **What lands with it.** Recommended: the outline thinned and evenly spaced, with the cap test, built
+  together with a column judged as it will sew, so that the parts the fix moves to satin columns are those
+  whose columns sew well. The step is accepted only when the traced patch's letters sew no worse and no
+  dog's area at 3 fills rises. The other way, the fix alone, steadies the rule at the cost measured above.
+- **A column that reads back otherwise.** Recommended: found and fixed where the column is built, as part
+  of this step. Leaving out the rung that doesn't read back passes the hand-made cases but hides the cause,
+  and the cause decides most of the photos' changes.
+- **Always on.** Recommended: every automatic part is measured on its outline drawn again. A setting to
+  turn it off would give back rules that depend on the drawing, which helps no picture.
+
+#### What isn't built
+
+Nothing: `REQ-AUTO-135` to `REQ-AUTO-138` are planned, and their cases fail on main. The prototype's code
+and the measures are kept with the step's notes, not in the repository.
+
 ## Stitch types by width
 
 An automatic element is measured at the size it sews, in millimetres (`REQ-AUTO-002`). Its width at a place

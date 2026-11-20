@@ -3777,3 +3777,39 @@ statement = "A notice about a shape names it by its name, from one function of t
 rationale = "The Layers panel shows names, never element ids, and its Search All finds a name, so a person goes from a notice to the shape."
 milestone = "M13"
 status = "active"
+
+[[req]]
+id = "REQ-AUTO-135"
+area = "auto"
+level = "L2"
+statement = "Automatic digitizing measures each part of an automatic area, and draws its satin columns, on the part's outline drawn again in one standard way, whatever point each ring starts at and whichever way it runs: a point leaves a ring when the ring without it stays within 0.05 mm of every point it had between its neighbours, the point whose leaving moves the ring least first, and no point leaves whose triangle with its neighbours holds another point of the part. Between its corners, where it turns by more than 30°, each ring is then cut into even pieces no longer than the part's area over its perimeter. A part that stays in the fill is filled as drawn. A bar whose end leans 0.02 mm, a wedge and a quarter ring sew by the same rule drawn with their corners only and with a point every 0.1 mm."
+rationale = "Until M13.53 every point of an outline went into the part's triangulation, so points added along an edge moved its rungs and junctions. On main 6f5703b7 (2026-11-20), drawing each curve with twice the points, the same curves, changed the rule of 37 of the 392 shapes of the repository's traced pictures, and a point every 0.1 mm changed 108, and 174 of 1,116 letters. A bar whose end leans 0.02 mm was refused for crowding drawn with a point every 0.1 mm, 2.98 mm of one edge to 1 mm of the other. Prototyped, drawing more points changed 6 letters and drawing each curve split none."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-136"
+area = "auto"
+level = "L2"
+statement = "An end of a part's centre line is a cap when every corner of it lies within 0.05 mm outside the circle on its chord, and a cap grows across a chord while every corner of the cap lies so: a bar 2 mm wide and 12 mm long with any one corner moved 0.02 mm in any direction sews as a satin column, as drawn square."
+rationale = "A square corner lies exactly on the circle on its chord, and the test held it with no tolerance. On main 6f5703b7 a bar's corner moved 0.02 mm towards its middle left the 2 corners beside it at 89.6°: that end became a tip, the line ran into a corner, the bar reached 1.40 times as far as its widest circle, and it was filled by the rule arms. Jittering every point of the repository's traced pictures by 0.02 mm changed the rule of 64 of 392 shapes."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-137"
+area = "auto"
+level = "L2"
+statement = "A part isn't refused because its satin columns, drawn with rails and rungs and read back, would differ by less than 0.05 mm from what was drawn: an L or a T with one corner moved 0.02 mm, and a T whose stem joins its bar 0.02 mm off square started at any of its corners, sew as satin columns, as drawn square."
+rationale = "A column drawn with rails and rungs must read back to within a millionth of a millimetre, or the whole part is refused and filled (SC-I0902). On main 6f5703b7 a corner moved 0.02 mm refused an L and a T so, and in 346 of the 489 shapes of 4 traced photos whose rule changed under a drawing 0.02 mm away, a column couldn't be drawn under one of the drawings."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-138"
+area = "auto"
+level = "L2"
+statement = "Block letters, bars, an L, a T and a wedge, each drawn again with a point every 0.1 mm, with any one corner moved 0.02 mm in any of 8 directions, started at any corner or drawn the other way round, sew by the rules they sew by as drawn."
+rationale = "A rule that depends on how an outline is drawn reshuffles which shapes are columns at every step that touches outlines, so that no step's own effect can be seen. On main 6f5703b7 the rule of 163 of the repository's 392 traced picture shapes, 27 to 38 of each traced dog's 69 to 92, and of 324 of 1,116 letters changed under one of 6 drawings within 0.02 mm. A shape with a measure within 10 % of a bound may still fall either way: 70 of the 163 and 126 of the 324 were so."
+milestone = "M13"
+status = "planned"
