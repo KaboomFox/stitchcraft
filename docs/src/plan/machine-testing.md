@@ -462,6 +462,24 @@ running dog in 6 threads from `main` after M13.48:
 - They leave 4 and 7 jump threads fewer than with M13.45. Count the cuts by hand on each.
 - Do the eyes, the nose and the tan chest patch keep their edges with the fur sewn after them?
 
+M13.55 adds `auto_column_overlap_mm`, how far an area stays under a satin column that digitizing makes of a
+part of another shape ([less overlap under a part's column](../design/image-to-embroidery.md#less-overlap-under-a-parts-column)).
+It is empty by default, which is the whole overlap of 1 mm, until this sew-out says how little is
+enough. At MC-8, in the 4 × 4 in hoop (`-p brother-pe800-4x4`), sew a test piece drawn in code at the
+default and at 0.6, 0.4 and 0.2 mm. It has 12 tiles 20 mm wide, navy and orange fills, each edged along its
+top by a black satin column 2, 4 or 6 mm wide, straight in one column of tiles and curved in the next. Also
+sew the running dog in 9 threads at the default and at 0.4 mm, and with `auto_smooth_mm` at 0.2 mm for
+M13.52's setting:
+
+- Along each column's lower edge, does fabric show between the column and the fill? Look closely on the
+  curved tiles, where the thread pulls the column's stitches inward round the bend.
+- Where the column lies on the fill, is there a ridge you can feel? Is it lower at 0.4 than at the default?
+- Report the smallest value at which no fabric shows on any tile, and whether 2 mm columns need more than
+  6 mm ones.
+- On the dog at 0.4 mm, look for fabric beside its satin columns, and feel for the thick spots against
+  the default.
+- On the dog smoothed at 0.2 mm, do the outlines look cleaner than the default, and do its edges still meet?
+
 ## Report template
 
 The GitHub issue form *Sew-out report* asks for these fields; this is the same template for notes kept
