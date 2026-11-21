@@ -2651,6 +2651,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- Automatic digitizing: the cap at the end of planning no longer runs out of work on a large design, and
+  keeps what it took when it does (`REQ-AUTO-101`). Its last resort judged every column point near a spot
+  above the warning's limit for each point it took, a work that grew with the square of the design. The
+  traced dog in 9 colours in the `logo` style needed 598 million units against the budget of 500 million, and
+  the cap took nothing: `SC-I1119` said so, and `SC-W0913` warned of 7.1 fills. Only the points whose
+  stitches lay thread at the thickest spot can lower it, and only those are judged now: the dog takes 22.5
+  million units and sews 4.6 fills thick. A cap that still runs out of work keeps the points it took, and
+  `SC-I1119` says it took them before it ran out.
 - Automatic digitizing: a satin column along a hole kept open sews past a shape beside it. Such a column has a
   pull compensation for each rail, none on the hole's side (`REQ-AUTO-084`). Where its other rail runs along a
   shape sewn after it, digitizing wrote the overlap in front of both values, as in "1 0.4 0", and planning

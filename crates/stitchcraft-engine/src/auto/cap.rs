@@ -38,7 +38,7 @@ use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
 use stitchcraft_core::units::at_least;
-use stitchcraft_core::{Exhausted, Meter, Point, math};
+use stitchcraft_core::{Budget, Exhausted, Meter, Point, math};
 use stitchcraft_plan::thickness::{Measure, Over, PIXEL, STRAIGHT_ON, Spot, THREAD, Thickness, Zone};
 use stitchcraft_plan::{ElementRef, Role, SewnStitch, StitchPlan};
 
@@ -155,6 +155,8 @@ pub(crate) struct Capped {
     pub(crate) left: Over,
     /// The thickest spot after.
     pub(crate) thickest: Spot,
+    /// Whether it ran out of work, and kept the points it had taken until then.
+    pub(crate) ran_out: bool,
 }
 
 impl Capped {
@@ -171,15 +173,20 @@ impl Capped {
 /// all the same. So do the top stitches of the satin columns of `rules` (`REQ-AUTO-112`): their underlay is
 /// the cap's to take. A unit of work for each stitch
 /// and needle point looked at, each step along a stitch measured, and each top stitch looked at for a
-/// place's cover. A cap out of work may leave the plan and the measure part changed, so its caller works on
-/// copies and keeps what the last pass left.
+/// place's cover, out of `budget`'s work (`REQ-AUTO-101`). A needle point goes only once it is judged whole,
+/// so a cap that runs out of work while it takes points keeps those it took, and the plan they leave is
+/// measured again with the budget's work once more ([`Capped::ran_out`]). A cap out of work before it
+/// takes any, or that can't measure the plan again, may leave the plan and the measure part changed, so its
+/// caller works on copies and keeps what the last pass left.
 pub(crate) fn capped(
     plan: &mut StitchPlan,
     thickness: &mut Thickness,
     rules: &Rules,
     made: &BTreeSet<ElementRef>,
-    meter: &mut Meter,
+    budget: &Budget,
 ) -> Result<Option<Capped>, Exhausted> {
+    let mut work = budget.meter();
+    let meter = &mut work;
     if thickness.most(Measure::Fills).value <= rules.cap {
         return Ok(None);
     }
@@ -234,24 +241,20 @@ pub(crate) fn capped(
         }
     }
     let mut cap = Cap { pass: Pass::new(plan, thickness, rules), ribbons, longest, taken: [0.0; 4], times: [0; 4] };
-    // Above the warning's limit the 3 kinds go first, judging a column's cover as drawn; then below it, down to
-    // the cap, keeping the thread under a column's edge.
-    for (points, hot, limit) in [(&hottest, true, rules.limit), (&points, false, rules.cap)] {
-        for kind in [Kind::Hidden, Kind::Under, Kind::Doubled] {
-            for _ in 0..ROUNDS {
-                if !cap.above(limit, meter)? || cap.round(kind, points, hot, meter)? == 0 {
-                    break;
-                }
-            }
-        }
-    }
-    cap.last_resort(last, meter)?;
+    let ran_out = cap.taking([&hottest, &points], last, meter).is_err();
     let Cap { pass, taken, times, .. } = cap;
     let (plan, thickness, gone) = pass.ended();
     taken_out(plan, &gone);
-    thickness.resewn(plan, meter)?;
-    let left = thickness.over(Measure::Fills, rules.cap, meter)?;
-    Ok(Some(Capped { taken, times, left, thickest: thickness.most(Measure::Fills) }))
+    // What is left is measured with the budget's work once more. A cap out of work may have stopped part way
+    // through a point's change of the measure: the plan is measured again.
+    let mut again = budget.meter();
+    if ran_out {
+        *thickness = Thickness::of(plan, &mut again)?.ok_or(Exhausted::Work)?;
+    } else {
+        thickness.resewn(plan, &mut again)?;
+    }
+    let left = thickness.over(Measure::Fills, rules.cap, &mut again)?;
+    Ok(Some(Capped { taken, times, left, thickest: thickness.most(Measure::Fills), ran_out }))
 }
 
 /// The needle points of `sewn`, the plan's stitches, that the cap looks at: those of the elements `made`
@@ -283,6 +286,23 @@ struct Cap<'p, 'r> {
 }
 
 impl Cap<'_, '_> {
+    /// Takes the points the cap may take, with `meter`'s work: above the warning's limit the 3 kinds go
+    /// first, of `hottest`, judging a column's cover as drawn; then below it, of `points`, down to the cap,
+    /// keeping the thread under a column's edge; and last the columns' top points `last`, above the limit.
+    fn taking(&mut self, [hottest, points]: [&[Entry]; 2], last: Vec<Entry>, meter: &mut Meter) -> Result<(), Exhausted> {
+        let rules = self.pass.rules;
+        for (points, hot, limit) in [(hottest, true, rules.limit), (points, false, rules.cap)] {
+            for kind in [Kind::Hidden, Kind::Under, Kind::Doubled] {
+                for _ in 0..ROUNDS {
+                    if !self.above(limit, meter)? || self.round(kind, points, hot, meter)? == 0 {
+                        break;
+                    }
+                }
+            }
+        }
+        self.last_resort(last, meter)
+    }
+
     /// Whether a spot is still above `limit`, in fills. A unit of work for each spot.
     fn above(&self, limit: f64, meter: &mut Meter) -> Result<bool, Exhausted> {
         let (columns, rows) = self.pass.thickness.size();
@@ -293,19 +313,23 @@ impl Cap<'_, '_> {
     /// Takes satin columns' top points out of `points` while a spot sews above the warning's limit, one at a
     /// time: of those that may go and lower the thickest spot by half as much as the one that lowers it most,
     /// or more, the one whose joined stitch runs across the column, not along an edge, and turns least from the
-    /// stitch into it. A unit of work for each point looked at each time.
+    /// stitch into it. A unit of work for each point looked at each time. Only a point whose stitches lay
+    /// thread at the thickest spot can lower it, and only such a point is judged further, so that each point
+    /// taken costs the work of the points round its spot, not of every point near a spot above the limit
+    /// (`REQ-AUTO-101`).
     fn last_resort(&mut self, mut points: Vec<Entry>, meter: &mut Meter) -> Result<(), Exhausted> {
         while self.above(self.pass.rules.limit, meter)? {
+            let spot = self.pass.thickness.most(Measure::Fills).at;
             let mut may = Vec::new();
             for &point in &points {
                 meter.charge(1)?;
-                if let Some(change) = self.taken_out(point, Kind::Column, true, true, meter)? {
+                if let Some(change) = self.taken_out(point, Kind::Column, true, Some(spot), meter)? {
                     may.push((change, point));
                 }
             }
             let Some(point) = chosen(&may) else { break };
             points.retain(|other| *other != point);
-            self.taken_out(point, Kind::Column, true, false, meter)?;
+            self.taken_out(point, Kind::Column, true, None, meter)?;
         }
         Ok(())
     }
@@ -315,7 +339,7 @@ impl Cap<'_, '_> {
         let mut count = 0;
         for &point in points.iter().rev() {
             meter.charge(1)?;
-            if !self.pass.gone.contains(&point) && self.taken_out(point, kind, last, false, meter)?.is_some() {
+            if !self.pass.gone.contains(&point) && self.taken_out(point, kind, last, None, meter)?.is_some() {
                 count += 1;
             }
         }
@@ -323,8 +347,10 @@ impl Cap<'_, '_> {
     }
 
     /// Takes the needle point at entry `(block, at)` out of its run when it is of `kind` and may go, its 2
-    /// stitches become one, and says how that changes the stitch into it; only says so when `asked`.
-    fn taken_out(&mut self, (block, at): Entry, kind: Kind, hot: bool, asked: bool, meter: &mut Meter) -> Result<Option<Change>, Exhausted> {
+    /// stitches become one, and says how that changes the stitch into it; only says so when `asked`, with
+    /// how much it lowers that spot, the thickest. A point whose 2 stitches pass farther than [`NEAR`] from
+    /// the spot asked of lays no thread there, and lowers it by nothing: it isn't judged.
+    fn taken_out(&mut self, (block, at): Entry, kind: Kind, hot: bool, asked: Option<Point>, meter: &mut Meter) -> Result<Option<Change>, Exhausted> {
         let pass = &self.pass;
         let Some((_, role, element)) = pass.stitch((block, at)) else { return Ok(None) };
         // A point taken out is no stitch any more (`Pass::stitch`).
@@ -336,6 +362,12 @@ impl Cap<'_, '_> {
         // An underlay or travel point goes between 2 stitches of either, a top point between 2 of its shape.
         let fits = if kind == Kind::Hidden { kind.takes(next) } else { next == Role::Top && next_element == element };
         let (Some(into), Some(out)) = (pass.sewn(block, from, at), pass.sewn(block, at, to)) else { return Ok(None) };
+        if let Some(spot) = asked {
+            let place = pass.thickness.placed(spot);
+            if [&into, &out].iter().all(|stitch| to_side(place, stitch.from, stitch.to) > NEAR) {
+                return Ok(None);
+            }
+        }
         if !fits || into.from_role == Role::Lock {
             return Ok(None);
         }
@@ -421,9 +453,8 @@ impl Cap<'_, '_> {
         if !covered {
             return Ok(None);
         }
-        if asked {
+        if let Some(spot) = asked {
             // How much it lowers the thickest spot: the measure with the joined stitch, and back.
-            let spot = self.pass.thickness.most(Measure::Fills).at;
             let was = self.pass.thickness.at(Measure::Fills, spot);
             let thickness = &mut *self.pass.thickness;
             for stitch in [into, out] {
