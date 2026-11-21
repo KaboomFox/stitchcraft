@@ -296,6 +296,21 @@ mod tests {
 
     use super::*;
 
+    #[test]
+    fn diag_sc_i1119_says_what_the_cap_took_before_it_ran_out_and_that_it_took_nothing_when_it_ran_out_first() {
+        let spot = Spot { value: 5.0, at: Point::ORIGIN };
+        let thinned = Thinned { taken: [0.0; 4], times: [0; 4], above: Over::default(), left: Over::default(), thickest: spot };
+        let said = |times: usize, ran_out: bool| {
+            let capped = Capped { taken: [0.5, 0.0, 0.0, 0.0], times: [times, 0, 0, 0], left: Over::default(), thickest: spot, ran_out };
+            note(&thinned, &Ok(Some(capped)), 4.0).message
+        };
+        let (out, whole, nothing, none) = (said(1, true), said(1, false), said(0, true), said(0, false));
+        assert!(out.contains(", and the cap took 0.5 mm of underlay and travel in 1 place before it ran out of work."), "{out}");
+        assert!(whole.contains(", and the cap took 0.5 mm of underlay and travel in 1 place.") && !whole.contains("ran out"), "{whole}");
+        assert!(nothing.contains("The cap needs more work than the budget allows, and took nothing.") && !nothing.contains("cap took"), "{nothing}");
+        assert!(!none.contains("cap") && !none.contains("ran out"), "{none}");
+    }
+
     /// A plan of the square from (0, 0) to (10, 10) sewn `layers` times in a fill's rows, 0.25 mm apart, each
     /// time by an element of its own in a block of its own, after `under` such layers of no element.
     fn plan(layers: u8, under: u8) -> StitchPlan {
