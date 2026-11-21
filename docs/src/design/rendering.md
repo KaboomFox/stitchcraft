@@ -74,9 +74,9 @@ the other 2 at the same scale.
 
 With a key (`Settings::keyed`, `REQ-RND-006`), the thickness picture gets a strip 9 mm high under it: a
 bar from margin to margin of 4 boxes in the steps' colours, and under each border between 2 boxes the
-number of fills where the next step starts. The colours are the ones the style fills with and the numbers
-come from the limits it measures against (`stitchcraft_plan::thickness`), so the key can't disagree with
-the picture. The repository doesn't keep a font, so the figures are drawn as up to 7 straight bars each, as a
+number of fills where the next step starts. The key takes its colours from the style's own fills, and its
+numbers from the limits the style measures against (`stitchcraft_plan::thickness`). It can't disagree
+with the picture. The repository doesn't keep a font, so the figures are drawn as up to 7 straight bars each, as a
 calculator shows them (`key.rs`). Only the thickness style has a key: the other styles have no steps.
 
 A scene can also carry guides (`Scene::guides`, `REQ-RND-005`), lines of the design that aren't sewn,
