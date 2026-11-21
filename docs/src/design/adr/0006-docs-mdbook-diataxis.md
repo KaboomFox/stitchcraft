@@ -27,3 +27,9 @@ Details: [docs pipeline](../docs-pipeline.md).
 
 - **Jekyll on GitHub Pages:** no checks, Ruby toolchain. Rejected.
 - **Docusaurus / MkDocs:** capable, but bring Node or Python into a Rust-only repository.
+
+## Note, 2026-11-21
+
+Declared images have a fifth kind, `picture`, for the pictures automatic digitizing starts from
+([images](../docs-pipeline.md#images-five-kinds-each-reproducible)). Spike M0.8 met the UI screenshots'
+need, and M6.7 built their generator.

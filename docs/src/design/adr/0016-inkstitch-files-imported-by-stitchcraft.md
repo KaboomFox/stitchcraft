@@ -122,3 +122,9 @@ What was checked, on 2026-11-02, in VectorCraft's source at `v0.17.0`, `v0.18.0`
 - [RFC P7](../rfc-vectorcraft-abi-v2.md#p7-preserve-foreign-svg-attributes),
   [VectorCraft integration](../vectorcraft-integration.md#importing-inkstitch-svgs-into-vectorcraft)
   and [SVG input](../svg-input.md#inkstitch-objects).
+
+## Note, 2026-11-21
+
+Every stitch type of M10 is built and its settings declared, so the example of an undeclared setting no
+longer applies. A setting the registry still doesn't declare, such as a misspelt key, is named with
+`SC-W0105` and not written.

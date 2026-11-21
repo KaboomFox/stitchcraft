@@ -168,3 +168,9 @@ checks it against the standard.
 - **Each glyph file read once into one design**, its elements sorted by glyph. Rejected: the SVG reader
   would have to keep each element's glyph, and the glyph differential cuts each glyph out anyway. Cutting
   gives each glyph the design the differential sews in both programs.
+
+## Note, 2026-11-21
+
+M14.2 to M14.9 are done, and the repository doesn't exist yet: there is no `fonts.toml` and no xtask
+command that fetches it. They wait for the owner to create the repository, and no roadmap step names
+them. Until then the cases of a real font, and the fonts built into the exporters, come from the corpus.

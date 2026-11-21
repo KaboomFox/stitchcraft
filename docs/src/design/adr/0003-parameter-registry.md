@@ -27,3 +27,9 @@ and defaults equal Ink/Stitch's. Details: [parameter registry](../params.md).
 - **Serde structs + hand-written docs:** the drift we are trying to avoid.
 - **External schema file (YAML) generating Rust:** another language and a build step; doc comments
   next to code are where contributors look.
+
+## Note, 2026-11-21
+
+Of the outputs the decision names, the typed structs, validation, manifests, the SVG mapping, the docs pages and
+the JSON Schema are generated from the registry. CLI help and `proptest` strategies are not: the
+[parameter registry's outputs](../params.md#generated-outputs) list them as planned, in no step yet.
