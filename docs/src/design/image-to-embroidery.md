@@ -131,11 +131,11 @@ isn't said when `--auto` is given, or when no shape is digitized by default. The
 the elements that are automatic only because the reading asked (`VectorCraft::by_default`): an element an
 Auto effect reaches is automatic by the effect, and isn't counted. `stitch plan` says the notice first. A
 picture, a bug-report bundle and the exporters don't say it: a picture is always digitized automatically,
-and the exporters' option is on in their dialog, where the person sees it. Of the reader fixture
-`effects`, 2 of its 9 shapes have no effect, and `stitch plan` says:
+and the exporters' option is on in their dialog, where the person sees it. Of the traced badge
+with a Fill effect on one of its 4 shapes, the case of `REQ-AUTO-165`, `stitch plan` says:
 
 ```text
-info SC-I0924: 2 shapes without StitchCraft effects are digitized automatically, as a VectorCraft document is by default, and 7 shapes sew as their effects say: plan it with --no-auto to sew them as drawn.
+info SC-I0924: 3 shapes without StitchCraft effects are digitized automatically, as a VectorCraft document is by default, and 1 shape sews as its effects say: plan it with --no-auto to sew them as drawn.
 ```
 
 **Markers.** A `stitch:start` or `stitch:end` marker grouped with a shape the default digitizes is unused
@@ -151,8 +151,8 @@ its run digitized automatically, so a bundle from before the default, which has 
 (`REQ-CLI-027`). A document has no setting of its own for it: a shape a person wants sewn as drawn takes
 a StitchCraft Fill or Stroke effect.
 
-**What changes, measured** on `main` at `ae75d386`, and the same on `211b2784`, with the reference machine, plain
-against the default. The reader fixtures, larger than any hoop, were measured on a hoop of 1 m.
+**What changes, measured** on `main` at `ae75d386`, and the same on `211b2784` and on M13.8's own code, with
+the reference machine, `--no-auto` against the default. The reader fixtures, larger than any hoop, were measured on a hoop of 1 m.
 
 | Document | Shapes, automatic | Stitches | Thread changes | Jumps | Thickest, fills | At 3 fills, mm² | Above the cap, mm² |
 |---|---|---|---|---|---|---|---|
@@ -174,7 +174,8 @@ out (`SC-W0906`) where the plain reading fills it. The dogs sew a few hundred fe
 more thread changes, and the running dog in 9 threads has more area at 3 fills, 94 mm² against 79, as the
 pear has, 10.5 against 4.8. On the drawn shapes of `drawing-format1` the default sews thicker. A stroke
 round a fill becomes a satin column on the fill's edge, and the cap thins no column's top stitches
-(`REQ-AUTO-112`), so 10 mm² stay above the cap and under the warning. Planning takes about 10 times as
+(`REQ-AUTO-112`), so 10 mm² stay above the cap and under the warning. M13.8 changes no rule for it: it is a known cost of the
+default, measured on the whole set, which MC-8's sew-out weighs ([machine testing](../plan/machine-testing.md)). Planning takes about 10 times as
 long, 2.3 s against 0.2 s for the dogs in a debug build at optimization level 1. `ribbons` sews too
 many stitches for a PES file either way (`SC-E0602`), as a reader fixture may.
 
