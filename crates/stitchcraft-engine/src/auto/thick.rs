@@ -341,6 +341,37 @@ mod tests {
         assert_eq!(limits(&rules), Limits { warn_fills: 2.5, fail_fills: 4.0, warn_points: 7.0, fail_points: 9.0 });
     }
 
+    /// The default of the automatic setting `key`, as the settings' reference states it.
+    fn default_of(key: &str) -> &'static str {
+        AutoParams::SPECS.iter().find(|spec| spec.key == key).unwrap().default
+    }
+
+    #[test]
+    fn req_auto_062_the_warnings_setting_states_the_rows_of_a_fill_that_the_measure_counts_in() {
+        let spec = AutoParams::SPECS.iter().find(|spec| spec.key == "auto_thick_warn_fills").unwrap();
+        let help = spec.help().replace('\n', " ");
+        let rows = format!("A fill is what rows {} mm apart lay", stitchcraft_plan::thickness::ROWS);
+        assert!(help.contains(&rows), "{rows:?} is not in {help:?}");
+    }
+
+    #[test]
+    fn diag_sc_w0913_states_the_unit_and_the_limits_that_planning_measures_with() {
+        // The limits the explanation names are the settings' defaults, which are the measure's own
+        // (`req_auto_062_the_limits_are_the_settings_of_the_lowest_automatic_shape`).
+        let text = Code::AutoThick.explanation().replace('\n', " ");
+        let stated = [
+            format!("a fill with rows {} mm apart", stitchcraft_plan::thickness::ROWS),
+            format!("{} fills or more (`auto_thick_warn_fills`)", default_of("auto_thick_warn_fills")),
+            format!("{} needle points or more", default_of("auto_thick_warn_points")),
+            format!("{} fills (`auto_thick_fail_fills`)", default_of("auto_thick_fail_fills")),
+            format!("{} needle points (`auto_thick_fail_points`)", default_of("auto_thick_fail_points")),
+            format!("the cap, {} fills (`auto_thick_cap_fills`)", default_of("auto_thick_cap_fills")),
+        ];
+        for stated in stated {
+            assert!(text.contains(&stated), "{stated:?} is not in {text:?}");
+        }
+    }
+
     #[test]
     fn req_auto_062_3_fills_never_warn_and_4_do() {
         // The rows' ends of these squares lie 2 to a row along 2 sides, which no fill sews: the cases of
