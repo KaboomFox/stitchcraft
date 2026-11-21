@@ -69,7 +69,6 @@ use std::process::{Command, Stdio};
 
 use serde_json::{Value, json};
 use stitchcraft_core::{Budget, Code, Diagnostic, Fix, Mm};
-use stitchcraft_engine::design::Reading;
 use stitchcraft_plan::MachineProfile;
 use stitchcraft_plan::palette::PaletteEntry;
 
@@ -279,7 +278,8 @@ fn held(entries: &[&PaletteEntry], entry: &PaletteEntry) -> bool {
 
 /// The threads of `library` that the traced `document`'s shapes are filled in, in the library's order.
 fn used(document: &[u8], library: &[&'static PaletteEntry]) -> Result<Vec<&'static PaletteEntry>, Diagnostic> {
-    let read = stitchcraft_vectorcraft::read_with(document, &Budget::DEFAULT, Reading { auto: true, ..Reading::default() })?;
+    // Every filled shape is read with its thread, whether it has settings or not.
+    let read = stitchcraft_vectorcraft::read(document, &Budget::DEFAULT)?;
     let elements = read.design.elements();
     Ok(library.iter().copied().filter(|entry| elements.iter().any(|element| element.thread.color == entry.color)).collect())
 }

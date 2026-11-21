@@ -172,7 +172,8 @@ pub fn pixels<'a>(bytes: &'a [u8], option: &'a str) -> impl FnMut(u32, u32) -> R
             ),
         };
         let (width, height) = (picture.width(), picture.height());
-        let at = (x < width && y < height).then(|| (u64::from(y) * u64::from(width) + u64::from(x)) * 4);
+        // A row past the last is past the pixels' end, which `get` finds.
+        let at = (x < width).then(|| u64::from(y).checked_mul(u64::from(width))?.checked_add(u64::from(x))?.checked_mul(4)).flatten();
         let pixel = at.and_then(|at| usize::try_from(at).ok()).and_then(|at| picture.rgba().get(at..at + 3));
         match pixel {
             Some(&[r, g, b]) => Ok(Rgb::new(r, g, b)),
@@ -264,7 +265,7 @@ mod tests {
         assert_eq!(distance("kitten", "sitting"), 3);
         assert_eq!(distance("fucshia", "fuchsia"), 2);
         assert_eq!(distance("ab", "ba"), 2);
-        assert_eq!(distance("abc", "abd"), 1);
+        assert_eq!(distance("abc", "abx"), 1);
         assert_eq!(distance("abc", "abcd"), 1);
     }
 
@@ -277,7 +278,7 @@ mod tests {
         let mut pixel = pixels(&png, "--keep-colour");
         assert_eq!(pixel(0, 0).unwrap(), Rgb::new(0, 0, 7));
         assert_eq!(pixel(2, 1).unwrap(), Rgb::new(200, 200, 7));
-        for (x, y) in [(3, 0), (0, 2)] {
+        for (x, y) in [(3, 0), (0, 2), (2, u32::MAX)] {
             match pixel(x, y) {
                 Err(Unchosen::Usage(why)) => assert_eq!(why, format!("--keep-colour {x},{y} is outside the picture, which is 3 × 2 pixels")),
                 other => panic!("{other:?}"),
@@ -290,7 +291,7 @@ mod tests {
 
     #[cfg(not(feature = "cutout"))]
     #[test]
-    fn req_auto_160_a_build_without_the_cut_out_reads_no_pixel() {
+    fn a_build_without_the_cut_out_reads_no_pixel() {
         let mut pixel = pixels(b"", "--keep-colour");
         match pixel(3, 4) {
             Err(Unchosen::Usage(why)) => assert!(why.starts_with("--keep-colour 3,4: this stitch was built without its `cutout` feature"), "{why}"),
