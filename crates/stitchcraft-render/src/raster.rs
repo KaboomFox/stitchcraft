@@ -285,11 +285,9 @@ impl Canvas<'_> {
         let size = 2.5 * mm;
         let pen = Pen { color: INK, width: (0.12 * size).max(1.0), dash: None };
         for (n, text) in key_labels().iter().enumerate() {
-            let glyphs = key::glyphs(text).ok_or_else(|| RenderError::Internal(format!("the key has no figures for {text}")))?;
-            let advance = |glyph: &Glyph| if *glyph == Glyph::Point { 0.3 } else { 0.8 };
-            let across: f32 = glyphs.iter().map(advance).sum::<f32>() - 0.25;
-            let mut x = left + each * (n + 1) as f32 - across * size / 2.0;
-            for glyph in &glyphs {
+            let border = left + each * (n + 1) as f32;
+            let figures = placed(text, border, size).ok_or_else(|| RenderError::Internal(format!("the key has no figures for {text}")))?;
+            for (glyph, x) in figures {
                 let mut path = PathBuilder::new();
                 for ((x0, y0), (x1, y1)) in glyph.strokes() {
                     path.move_to(x + x0 * size, top + 5.0 * mm + y0 * size);
@@ -297,7 +295,6 @@ impl Canvas<'_> {
                 }
                 let path = path.finish().ok_or_else(|| internal("a figure of the key"))?;
                 self.stroke(&path, pen, 4.0 * size)?;
-                x += advance(glyph) * size;
             }
         }
         Ok(())
@@ -493,6 +490,22 @@ fn key_labels() -> [String; 3] {
     [label(thickness::ORDINARY), label(limits.warn_fills), label(limits.fail_fills.max(limits.warn_fills))]
 }
 
+/// The figures of `text`, each with the pixel its left edge stands at, for figures `size` pixels high centred
+/// on the pixel `centre`: a digit takes 0.55 of its height and a point none, with 0.25 between 2 figures.
+/// `None` when `text` has a character the key has no figure for.
+fn placed(text: &str, centre: f32, size: f32) -> Option<Vec<(Glyph, f32)>> {
+    let glyphs = key::glyphs(text)?;
+    let advance = |glyph: &Glyph| if *glyph == Glyph::Point { 0.3 } else { 0.8 };
+    let across: f32 = glyphs.iter().map(advance).sum::<f32>() - 0.25;
+    let mut x = centre - across * size / 2.0;
+    let mut placed = Vec::with_capacity(glyphs.len());
+    for glyph in glyphs {
+        placed.push((glyph, x));
+        x += advance(&glyph) * size;
+    }
+    Some(placed)
+}
+
 /// `fills` written as the key writes it: without a fraction when it is whole.
 fn label(fills: f64) -> String {
     format!("{fills}")
@@ -662,6 +675,12 @@ mod tests {
         // The numbers under the borders are where the steps start, by the limits the style draws with.
         assert_eq!(key_labels(), ["2", "4", "6"]);
         assert_eq!(label(2.5), "2.5");
+        // A number of several figures is centred as a whole: at 10 pixels high, 2.5 takes 16.5 pixels from
+        // the first figure's left edge to the last one's, 12 takes 13.5.
+        let at = |text: &str| placed(text, 100.0, 10.0).unwrap();
+        assert_eq!(at("2.5"), [(Glyph::Digit(2), 91.75), (Glyph::Point, 99.75), (Glyph::Digit(5), 102.75)]);
+        assert_eq!(at("12"), [(Glyph::Digit(1), 93.25), (Glyph::Digit(2), 101.25)]);
+        assert_eq!(placed("2e", 100.0, 10.0), None);
         let points: Vec<(i32, i32)> = (0..=25).flat_map(|row| [(0, row * 2), (400, row * 2)]).collect();
         let settings = Settings::new(Style::Thickness, 10.0).unwrap();
         let plain = scene(&points).render(settings, &mut Budget::DEFAULT.meter()).unwrap();
@@ -699,6 +718,15 @@ mod tests {
         // are fabric.
         let image = guided.render(Settings::new(Style::Simple, 10.0).unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!((pixel(&image, 50, 68), pixel(&image, 50, 71)), (white, white));
+        // A guide is work by its length, across and down: 10 mm over and 5 mm up, then 10 mm back, at 10
+        // pixels per millimetre, is 250 units and one for the line.
+        let work = |guides: Vec<Vec<GridPoint>>| {
+            let mut meter = Budget::DEFAULT.meter();
+            Scene { guides, ..scene(&[(0, 0), (100, 0)]) }.render(Settings::new(Style::Realistic, 10.0).unwrap(), &mut meter).unwrap();
+            meter.work_left()
+        };
+        let none = work(vec![vec![g(0, 50)]]);
+        assert_eq!(none - work(vec![vec![g(0, 50), g(100, 0), g(0, 0)]]), 251);
     }
 
     #[test]
