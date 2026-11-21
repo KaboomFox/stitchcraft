@@ -53,6 +53,6 @@ Every StitchCraft library: `stitchcraft-core`, `stitchcraft-params`, `stitchcraf
 `stitchcraft-engine`, `stitchcraft-formats`, `stitchcraft-render`, `stitchcraft-svg` and
 `stitchcraft-vectorcraft`, which its cases plan, write, draw and read. `proptest` for the strategies, and
 `flate2` for the compressed documents the fuzz bodies write (`cargo xtask layers` keeps `flate2` here and in
-the VectorCraft adapter). It is a dev-dependency only, so the libraries it uses can use it in their tests.
+the VectorCraft adapter). It is only ever a dev-dependency, and the libraries it depends on use it in their tests.
 
 Tests may unwrap and panic; this crate opts out of the no-panic lints at its root.

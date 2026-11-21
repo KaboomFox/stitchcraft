@@ -38,7 +38,7 @@ VectorCraft 0.14 (`src/tartan.rs`, `REQ-VC-021`). From M6.16 a fill's preview is
 each row, which VectorCraft paints solid, and the cases measure how much of the shape it covers
 (`src/preview/coverage.rs`, `REQ-VC-024`). From M14.4 *StitchCraft Lettering*, a live effect for text
 objects, keeps the embroidery font a text sews in and lettering's settings, which the exporters read with
-the document (`src/lettering.rs`, `REQ-VC-027`). The exporters hold the fonts they sew texts in
+the document (`src/lettering.rs`, `REQ-VC-027`). The exporters are built with the fonts they sew texts in
 (`src/fonts.rs`, `REQ-FONT-021`, and [Fonts](#fonts) below).
 Without a feature the module is M0.6's *hello* effect, which returns the object's geometry unchanged. The
 contract tests measure the host's costs with it (`docs/src/design/vectorcraft-integration.md`).

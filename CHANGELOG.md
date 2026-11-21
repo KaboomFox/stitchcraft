@@ -6,7 +6,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 
 ### In short
 
-What a user can do with this version, before its first release; the entries below give every step.
+What a user can do with this version, before its first release. The entries below give every step.
 
 - `stitch plan` writes PES and DST files from SVG files, Ink/Stitch's files and VectorCraft documents, in
   the stitch types of Ink/Stitch, with their lock stitches.

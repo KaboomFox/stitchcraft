@@ -112,13 +112,13 @@ jumps and colour changes, which the rethreads and the cuts at the machine are co
 | A drawn badge with a word typed on it | M14.7 | Made by hand: no file of the repository holds text. Plan it with `--auto` |
 | The demo's badge, with and without outlines | M13.27, M13.28, M13.17 | `stitch plan web/templates/alpine-night.svg --auto -o badge.pes`, and again with `--set auto_fill_outline=false` |
 | The traced pear, as planned and with a lattice base layer | M13.30, M13.35 | `stitch plan docs/fixtures/traced-pear.vectorcraft --auto -o pear.pes`, and again with `--set auto_base_rows=lattice` |
-| The traced dogs | M13.16 to M13.55 | `stitch plan docs/fixtures/traced-dog-running-9.vectorcraft --auto -o dog.pes`, and the other 3 documents `traced-dog-*.vectorcraft` in `docs/fixtures/` the same way. A step that asks for a setting adds its `--set`, such as `--set auto_fill_uneven=false` |
+| The traced dogs | M13.16 to M13.55 | `stitch plan docs/fixtures/traced-dog-running-9.vectorcraft --auto -o dog.pes`, and the other 3 documents `traced-dog-*.vectorcraft` in `docs/fixtures/` the same way. For a step's setting, add its `--set`, such as `--set auto_fill_uneven=false` |
 | The running dog traced from its photo, with and without `--fewer-points` | M13.51 | `stitch plan docs/fixtures/dog-running-cutout.png --auto --size 100 --colours 9 -o dog-traced.pes`, and again with `--fewer-points`. Both trace with VectorCraft's command line |
 | A traced dog with `stitch:keep` marks, one with a `stitch:guide` line, and a leaf with a guide | M13.39, M13.24 | Made by hand in VectorCraft: no file of the repository has a mark or a guide |
 | Hexmira in Small Font at 8 and 10 mm, made bolder | M14.9 | `stitch lettering "Hexmira" --font FOLDER --height 8 --widen-percent 10 -p brother-pe800-4x4 -o hexmira.pes`, at each height and at 0, 10 and 20 %. Barstitch Bold with its pull compensation scaled to the height is made by hand |
-| Words on a cream field: Hexmira at 8 and 10 mm, Hexmira 7.6 mm tall and VOLKAR in Barstitch Bold 12.5 mm tall | M14.9, M13.50 | Made by hand: a cream field drawn 3 mm round the word, with the word set on it as text |
+| Words on a cream field (Hexmira at 8 and 10 mm, Hexmira 7.6 mm tall, and VOLKAR in Barstitch Bold 12.5 mm tall) | M14.9, M13.50 | Made by hand: a cream field drawn 3 mm round the word, with the word set on it as text |
 | Bars and rings 6, 8 and 10 mm wide | M13.54 | `bar-8mm.svg` and its relatives from the commands after this table |
-| The test piece of 12 tiles under satin columns | M13.55 | Made by hand: navy and orange fills 20 mm wide, each edged along its top by a black satin column 2, 4 or 6 mm wide, straight in one column of tiles and curved in the next. No file of the repository draws it |
+| The test piece of 12 tiles under satin columns | M13.55 | Made by hand. Its tiles are fills 20 mm wide in navy and in orange, with a black satin column along each tile's top, straight on some tiles and curved on the others, in widths from 2 to 6 mm. No file of the repository draws it |
 
 The arc, and the bars and the rings of M13.54, each written by one command from nothing but the command
 itself:
@@ -131,7 +131,7 @@ for w in 6 8 10; do
 done
 ```
 
-## MC-8: what each step changed
+## MC-8: the steps and their checks
 
 Before MC-8, cases answer the TS-13 checks that its stitches can, and count the jump threads that later
 stitches sew down ([image to embroidery › Testing](../design/image-to-embroidery.md#testing)). The sew-out
@@ -422,8 +422,8 @@ M13.54 builds wide columns: a bar or a ring between 7 and 10 mm wide, sewn as on
 stitches split at 7 mm ([wide columns](../design/image-to-embroidery.md#wide-columns)). It is off by default,
 and doesn't change any picture of the set. At MC-8, sew a bar 50 mm long and a ring 40 mm across its middle, each
 at 6, 8 and 10 mm wide, once with `auto_max_split_satin_width_mm` at 10 mm and once without it, side by
-side, in the 4 × 4 in hoop (`brother-pe800-4x4`): 12 files, each made from the kit's bars and rings
-with `stitch plan bar-8mm.svg --auto -p brother-pe800-4x4`, and so for each, and again with
+side, in the 4 × 4 in hoop (`brother-pe800-4x4`): 12 files. Plan each of the kit's bars and rings
+with `stitch plan bar-8mm.svg --auto -p brother-pe800-4x4`, once as it is and once with
 `--set auto_max_split_satin_width_mm=10`. At 6 mm both are satin columns, so that row shows the column the wider ones are measured against.
 Without the setting the 8 and 10 mm ones are filled.
 

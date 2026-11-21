@@ -82,9 +82,9 @@ lettering is set.
 at its anchor. With `auto`, the reader gives a file's `<text>` elements as text objects for a host with
 fonts to set (`src/document/typed.rs`, `REQ-SVG-017`). A text object sews every line or none.
 
-From M14.3 lettering follows a path: `src/lettering/along.rs` seats each glyph on the path's first subpath
+From M14.3 lettering follows a path: `src/lettering/along.rs` places each glyph on the path's first subpath
 and turns it the way the path runs (`REQ-FONT-015`, `REQ-FONT-016`). `src/lettering/order.rs` adds the
-trims after letters, words or lines, and sorts a multicolour font's colours (`REQ-FONT-018`,
+trims that lettering's `trim` setting puts after glyphs. It sorts a multicolour font's colours too (`REQ-FONT-018`,
 `REQ-FONT-019`). From M14.8 `src/lettering/pictures/weight.rs` measures how bold letters are, the width of
 their strokes over their height, the same way on traced outlines and on a font's satin columns, and the
 font that takes the place of traced letters is chosen by it (`REQ-AUTO-080`). From M14.9 the setting
