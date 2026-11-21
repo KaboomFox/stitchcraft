@@ -687,6 +687,62 @@ mod tests {
     }
 
     #[test]
+    fn req_rnd_005_a_guide_is_a_tenth_of_a_millimetre_wide_at_any_scale() {
+        // A guide across a stitch 10 mm long, 5 mm below it, at 40 pixels per millimetre: 4 pixels wide, on
+        // the rows 278 to 281 (the margin of 2 mm and 5 mm down).
+        let guided = Scene { guides: vec![vec![g(0, 50), g(100, 50)]], ..scene(&[(0, 0), (100, 0)]) };
+        let image = guided.render(Settings::new(Style::Simple, 40.0).unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
+        let (white, column) = (Rgb::new(255, 255, 255), 200);
+        assert_eq!([278, 279, 280, 281].map(|y| pixel(&image, column, y)), [GUIDE; 4]);
+        assert_eq!((pixel(&image, column, 276), pixel(&image, column, 283)), (white, white));
+        // At 10 pixels per millimetre it is 1 pixel wide, between the rows 69 and 70: the rows beside them
+        // are fabric.
+        let image = guided.render(Settings::new(Style::Simple, 10.0).unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!((pixel(&image, 50, 68), pixel(&image, 50, 71)), (white, white));
+    }
+
+    #[test]
+    fn req_rnd_006_the_key_s_boxes_and_numbers_stand_where_a_reader_looks() {
+        // 40 × 5 mm of rows at 10 pixels per millimetre: the design's picture is 440 × 90 pixels and the key's
+        // strip, 9 mm, is the 90 rows under it.
+        let points: Vec<(i32, i32)> = (0..=25).flat_map(|row| [(0, row * 2), (400, row * 2)]).collect();
+        let settings = Settings::new(Style::Thickness, 10.0).unwrap();
+        let mut meter = Budget::DEFAULT.meter();
+        let keyed = scene(&points).render(settings.keyed().unwrap(), &mut meter).unwrap();
+        let mut plain_meter = Budget::DEFAULT.meter();
+        scene(&points).render(settings, &mut plain_meter).unwrap();
+        let (white, top) = (Rgb::new(255, 255, 255), 90);
+        assert_eq!((keyed.width, keyed.height), (440, 180));
+        // Each box is 100 pixels wide from the margin's 20, and 30 high from 10 rows under the strip's top.
+        for (n, colour) in STEPS.iter().enumerate() {
+            let (from, to) = (20 + 100 * n as u32, 119 + 100 * n as u32);
+            assert_eq!([pixel(&keyed, from, top + 10), pixel(&keyed, to, top + 39)], [*colour; 2], "{n}");
+            assert_eq!([pixel(&keyed, from + 50, top + 9), pixel(&keyed, from + 50, top + 40)], [white; 2], "{n}");
+        }
+        assert_eq!((pixel(&keyed, 19, top + 20), pixel(&keyed, 420, top + 20)), (white, white));
+        // Each number is a figure 25 pixels high from 50 rows under the strip's top, centred under its border
+        // at 120, 220 and 320: its middle bar, 3 pixels thick on the rows 61 to 63 and 13.75 wide, reaches
+        // 7 pixels to each side and stops short of 10.
+        let dark = |x: u32, y: u32| pixel(&keyed, x, top + y).r < 128;
+        for border in [120, 220, 320] {
+            assert!([61, 62, 63].iter().all(|y| dark(border, *y)), "{border}");
+            assert!(!dark(border, 59) && !dark(border, 65), "{border}");
+            assert!(dark(border - 6, 62) && dark(border + 6, 62), "{border}");
+            assert!(!dark(border - 10, 62) && !dark(border + 10, 62), "{border}");
+        }
+        // The 2 and the 6 have a top bar and a bottom one, the 4 neither.
+        assert!(dark(120, 50) && dark(120, 74) && dark(320, 50) && dark(320, 74));
+        assert!(!dark(220, 50) && !dark(220, 74));
+        // The 4's upright bars stand at its edges, 6.875 pixels each side of its border, from top to bottom
+        // on the right and in the upper half on the left.
+        assert!(dark(226, 55) && dark(226, 69) && dark(213, 55) && !dark(213, 69));
+        // The key's work: the strip's pixels twice (filled, and measured by the thickness style), each box's
+        // pixels and each figure's strokes, a unit more for each of the 8 things drawn.
+        let strip = 440 * 90;
+        assert_eq!(plain_meter.work_left() - meter.work_left(), (1 + strip) + strip + 4 * (1 + 100 * 30) + 3 * (1 + 100));
+    }
+
+    #[test]
     fn shades_and_tints_stay_in_range() {
         assert_eq!(shade(Rgb::new(255, 100, 0), 60), Rgb::new(153, 60, 0));
         assert_eq!(tint(Rgb::new(255, 100, 0), 50), Rgb::new(255, 177, 127));
