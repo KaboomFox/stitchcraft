@@ -6,7 +6,8 @@
 //!
 //! The setting is off by default, so the cases that need the rule raise it to 10 mm, and the cases without it
 //! guard that every design sews as before (`docs/src/design/image-to-embroidery.md` › Wide columns). The
-//! bound is compared within its tolerance, `WIDE_TOLERANCE`, which every case at the bound uses.
+//! bound is compared within its tolerance, `WIDE_TOLERANCE`, which every case at the bound uses. A wide
+//! column is a part's satin column, so the area under it keeps `auto_column_overlap_mm` there (`REQ-AUTO-157`).
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
@@ -14,7 +15,7 @@
 use stitchcraft_core::{Budget, Code, Diagnostic};
 use stitchcraft_engine::auto::digitized;
 use stitchcraft_engine::auto::rules::WIDE_TOLERANCE;
-use stitchcraft_engine::design::{Design, DesignSettings, Element, Shape};
+use stitchcraft_engine::design::{Design, DesignSettings, Element, Segment, Shape};
 use stitchcraft_testkit::designs::{BLUE, RED, automatic, fill, line, unbased};
 
 /// The setting of the step: the widest part that sews as a satin column with split stitches, in millimetres.
@@ -152,4 +153,29 @@ fn req_auto_156_without_the_setting_a_stroke_8_5_mm_wide_fills_what_it_paints() 
     let stroke = automatic(line("border", (0.0, 0.0), 50.0, &RED, &[]));
     let (out, _) = sewn(vec![stitchcraft_testkit::designs::widened(stroke, 8.5)]);
     assert!(out.iter().all(|e| matches!(e.shape, Shape::Fill { .. })), "{out:?}");
+}
+
+#[test]
+fn req_auto_157_an_area_keeps_its_column_overlap_under_a_wide_column() {
+    // A square 30 mm wide, and over its right edge a bar 8.5 mm wide and 50 mm long drawn after it, which
+    // sews as a split satin column: the square is cut away 1 mm inside the bar's edge by default, and 0.4 mm
+    // with the setting.
+    let right = |kept: &[(&str, &str)]| {
+        let mut params = vec![(WIDEST_SPLIT, "10")];
+        params.extend_from_slice(kept);
+        let square = automatic(fill("square", &[&[(0.0, 0.0), (30.0, 0.0), (30.0, 30.0), (0.0, 30.0)]], &RED, &params));
+        let over = automatic(fill("over", &[&[(25.0, -10.0), (33.5, -10.0), (33.5, 40.0), (25.0, 40.0)]], &BLUE, &[(WIDEST_SPLIT, "10")]));
+        let (out, _) = sewn(vec![square, over]);
+        assert!(out.iter().any(|element| element.id.as_str().contains("over") && split(element)), "{out:?}");
+        let square = out.iter().find(|element| element.id.as_str().contains("square")).unwrap();
+        let Shape::Fill { path, .. } = &square.shape else { panic!("{:?}", square.shape) };
+        let ends = path.subpaths.iter().flat_map(|sub| {
+            std::iter::once(sub.start).chain(sub.segments.iter().map(|segment| match segment {
+                Segment::Line(to) | Segment::Quad(_, to) | Segment::Cubic(_, _, to) => *to,
+            }))
+        });
+        (ends.map(|point| point.x()).fold(f64::NEG_INFINITY, f64::max) * 1000.0).round() / 1000.0
+    };
+    assert_eq!(right(&[]), 26.0);
+    assert_eq!(right(&[("auto_column_overlap_mm", "0.4")]), 25.4);
 }

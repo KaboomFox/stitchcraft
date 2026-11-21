@@ -1766,6 +1766,79 @@ upper fill 1.0, the ends of its rows 0.25, the overlap 1.0, the ends of its rows
 and the outline 0.25. The 178 to 280 mm² that the dogs keep at 3 fills or more are such edges with a column or a third shape beside them. 2 parts could still go. One is the outline along an edge between 2 areas, which the owner chose. The other is the overlap itself, which costs cover. The demo's badge was
 not measured again.
 
+#### Less overlap under a part's column
+
+An area reaches its whole overlap, 1 mm, under a satin column that digitizing makes of a part of another shape
+and sews after it. A column narrower than 2 mm then lies whole on the area, and with its own underlay and
+top stitches the spot sews 3 fills ([rungs placed and less overlap](#rungs-placed-and-less-overlap)).
+`auto_column_overlap_mm` (M13.55, `REQ-AUTO-157`, `REQ-AUTO-158`) sets how much the area keeps there
+instead, from 0 to 2 mm (`auto::neighbours::under`):
+
+- Where such a column covers the area, the area is cut away up to the setting inside the edge of what covers
+  it. Where an area sewn after it meets the column, that edge is the area's, and the area is cut away its whole
+  overlap inside it.
+- Where the area meets such a column, of its own shape or of another, it reaches the setting under it,
+  whichever way its rows run.
+- A wide column whose stitches split ([wide columns](#wide-columns)) is such a column too, and the area
+  under it keeps the setting there as well.
+- Empty, the default, the setting is the area's overlap, and a value above the overlap reads as the
+  overlap. The area is then taken as before the setting, step for step, and every design sews as it did.
+
+The setting leaves every other overlap as it was. Under an area, under a part's running line, and under a satin column drawn as a
+stroke, a person's own or lettering's, the area reaches as far as before. The base layer, the cap, and a
+column's reach past its rails stay as they were. A part's column that sews before an area beside it reaches
+past its rail under the area instead, and the setting doesn't apply there. The sewing order chooses that
+freely where the 2 don't overlap once the layers are flattened. On a test piece of navy and orange fills
+edged by columns of the other colour, it sewed half the columns before their fills, for one thread change
+fewer.
+
+The thread pulls a column's stitches in by its pull compensation, 0.4 mm by default, which they sew past both
+rails. So an area that lies less than that under the column may show fabric beside it once sewn, and 0.4 mm
+is the least that the pull argues for. The setting goes down to 0 so that a sew-out can show the edge. An
+expanded design (`REQ-AUTO-142`) keeps its areas as the setting cut them and drops the setting.
+
+Measured on every picture of the set at the default and at 0.6, 0.4 and 0.2 mm, in that order in each cell. The area
+at 3 fills or more and the thickest spot are as `fabric::thickness` measures them. The bare fabric is
+`fabric::cover`'s, with no stitch pulled in:
+
+| Picture | Area at 3 fills, mm² | Thickest spot, fills | Bare fabric, mm² | Stitches astray |
+|---|---|---|---|---|
+| Dog on turf, 6 threads | 54.3, 49.5, 50.5, 41.8 | 3.87, 3.99, 3.93, 3.95 | 0.67, 0.61, 0.61, 0.54 | 4 at each |
+| Dog on turf, 9 threads | 63.8, 64.3, 60.8, 50.5 | 3.97 at each | 0.64, 0.66, 0.81, 0.72 | 3 at each |
+| Running dog, 6 threads | 53.5, 52.8, 53.0, 56.3 | 3.92, 3.94, 3.96, 3.95 | 0.22, 0.22, 0.21, 0.26 | 1, 1, 1, 2 |
+| Running dog, 9 threads | 94.0, 91.0, 90.8, 85.3 | 3.98, 3.98, 3.99, 3.98 | 0.38, 0.43, 0.54, 0.56 | 4, 3, 3, 3 |
+| Traced pear | 10.5, 7.5, 5.5, 4.8 | 3.99, 3.78, 3.87, 3.85 | 0.01, 0.06, 0.08, 0.08 | 0 at each |
+| Traced lettered patch | 420.0, 349.5, 278.5, 176.8 | 4.25, 4.00, 4.00, 3.99 | 0.09, 0.24, 0.04, 0.06 | 0 at each |
+| Traced magnolia, photo | 217.5, 216.5, 210.5, 189.3 | 4.22 at each | 0.68, 0.86, 0.91, 0.94 | 2,880 at each |
+| Traced coleus, photo | 306.3, 306.8, 306.8, 303.8 | 4.16 at each | 3.94, 3.93, 3.94, 3.98 | 82 at each |
+| Greylag goose, photo | 156.8, 158.0, 155.5, 154.5 | 4.37 at each | 1.03, 1.09, 1.11, 1.07 | 2,373, 2,374, 2,374, 2,374 |
+| Traced castle, photo | 91.8, 91.8, 90.8, 90.8 | 3.82 at each | 0.82 at each | 1,939 at each |
+
+The badge, the round patch and the marked patch sew alike at every value, since no part's column edges
+their areas. The likeness doesn't change on any picture, the stitches change by less than 1 %, and the jump
+threads by one at the most. The default's numbers are those M13.53 measured on main.
+
+The numbers show 4 things.
+
+
+- **Less thread where columns edge fills.** At 0.4 mm the area at 3 fills falls on 9 of the 10 traced
+  pictures, most on the patch, whose letters are columns over a field, and rises 0.5 mm² on the coleus. On
+  the running dog in 6 threads, the goose and the castle it changes by 1.3 mm² or less, within this
+  measure's noise, which M13.53 put at 8.5 mm². At 0.2 mm it falls further on all but the running dog in 6
+  threads, which rises 2.8 mm² and gains a stitch astray.
+- **The thickest spot** falls 0.25 fills on the patch and 0.1 to 0.2 on the pear. It rises 0.06 to 0.12 on
+  the dog on turf in 6 threads, under the cap's limit at every value.
+- **The bare fabric can't say how little is enough.** The measure lays every stitch where the plan puts
+  it, and no thread pulls in. It doesn't find a gap at any value, as it found none with no overlap at all in
+  M13.53. Its small rises, up to 0.18 mm² on the running dog in 9 threads, are slivers between an area and
+  a column as planned, which the pull can only widen. A sew-out has to show where fabric opens.
+- **The cost to plan** is one more pass of geometry for each area beside a part's column. The dogs took 6
+  to 23 % longer. The photos' times varied by up to half between runs in no order, which is the noise of
+  a machine shared with other builds.
+
+The sew-out ([machine testing](../plan/machine-testing.md)) sews a test piece of fills edged by columns
+2, 4 and 6 mm wide at each value, and the running dog in 9 threads at the default and at 0.4 mm.
+
 ### On black fabric
 
 A preview is drawn on unbleached cotton or on white. `Settings::on` of the renderer names another fabric

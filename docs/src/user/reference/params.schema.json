@@ -124,6 +124,24 @@
         "unit": "mm"
       }
     },
+    "auto_column_overlap_mm": {
+      "default": null,
+      "description": "How far an area stays under a satin column that digitizing makes of a part of another shape and sews after it: the area is cut away that far inside the column's edge, and reaches that far under it where they meet. Left empty, the default, it is the overlap, as everywhere else. A column's thread pulls its stitches in by about its pull compensation, 0.4 mm, so less than that may show fabric between the fill and the column. Less overlap sews thinner where a column edges a fill, but only a sew-out shows how little is enough. A value above the overlap reads as the overlap. Under an area, a running line or a satin column drawn as a stroke, lettering's too, the overlap stays.",
+      "maximum": 2.0,
+      "minimum": 0.0,
+      "title": "Overlap under a column",
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-stitchcraft": {
+        "automatic": true,
+        "group": "Advanced",
+        "origin": "stitchcraft",
+        "stability": "experimental",
+        "unit": "mm"
+      }
+    },
     "auto_details_last": {
       "default": false,
       "description": "Whether a detail sews after the larger areas round it, where that costs no thread change: an automatic area that the shapes round it close in on, smaller than an area it meets, as an eye is in the fur round it. Sewn last, the detail keeps the later fills' rows off its edge. Off by default: a fill that moves for a detail can wait for a later batch of its thread, which adds jump threads to cut by hand, and on traced photos it shows no more of the picture. Turn it on where an eye or a mark must keep its edge clear. The design goes by the setting of its lowest automatic shape.",
@@ -3505,7 +3523,8 @@
           "auto_thick_fail_points",
           "auto_thick_cap_fills",
           "auto_details_last",
-          "auto_smooth_mm"
+          "auto_smooth_mm",
+          "auto_column_overlap_mm"
         ],
         "name": "AutoParams",
         "title": "Auto parameters"
