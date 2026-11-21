@@ -55,6 +55,13 @@ sews along the shape's middle. The example plans
 `traced-badge.svg`, a badge drawn as Image Trace traces one, and a document that VectorCraft saved plans the
 same way.
 
+`shares` lists each thread once, in the order the machine is first threaded with it: the stitches it sews,
+underlay included, their share of the design's stitches and how many times you thread it. A machine with
+one needle is rethreaded by hand for each thread, so look here for a thread that sews little before you
+sew. The badge's gold disc sews 184 stitches, 5.4 % of it. What to do about such a thread is yours to
+decide: StitchCraft lists the shares and chooses nothing. A report (`--report`) has the same list under
+`shares`.
+
 <!-- shot: traced-badge -->
 ![The traced badge digitized automatically. A red disc with a blue square on it and a gold disc in the middle sew as tatami fills, with no white round them.](../../images/generated/traced-badge.png)
 <!-- /shot -->
@@ -95,7 +102,15 @@ length of its longer side in millimetres, background included. Image Trace keeps
 6 unless you say otherwise. Count the background's colour too: the badge has 3 colours on white, so 4 keeps
 any colour between them out. `--fewer-points` sets Image Trace's Paths and Corners to 0, which draw the
 shapes with about a third fewer points and fewer jags thread can't show. It is off by default, since it
-also changes how many shapes sew, and it rounds the corners of a logo. To trace by hand as `stitch` does
+also changes how many shapes sew, and it rounds the corners of a logo. Image Trace gives a small bright
+colour its thread last, so a picture in 6 threads may lose the red of a small flower or the white of a
+sunlit wall. `--keep-colour` gives a colour a thread at any `--colours`. Name the thread as `stitch palette`
+and the share list name it, in any case (`--keep-colour "dark fuchsia"`). A colour as `#c70156`, or a
+pixel of the picture as `X,Y`, counted from its left and top edges, keeps the thread nearest it. Give it once for each colour you keep. `--drop-colour`, read the same way, leaves a
+thread out, one you don't have or don't want to rethread for, and its colours take the nearest of the
+others. `stitch` then traces the picture twice, so it takes
+twice as long, and says so with `SC-W0822` when no part of the picture is nearer a kept thread than the
+other threads. To trace by hand as `stitch` does
 with it, set both to 0 under **Advanced** in step 3. `--traced` keeps the document VectorCraft traced, which you can open in
 VectorCraft to correct the trace and then digitize as above. Each of its shapes has the name the notices
 give it ([find a shape by its name](../how-to/find-a-shape.md)). When `stitch` can't start VectorCraft's command

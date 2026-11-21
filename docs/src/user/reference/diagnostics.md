@@ -107,6 +107,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0814`](#sc-e0814) | Error | VectorCraft line not made into a satin column |
 | [`SC-E0815`](#sc-e0815) | Error | VectorCraft's command line could not be started |
 | [`SC-E0816`](#sc-e0816) | Error | VectorCraft could not trace the picture |
+| [`SC-W0822`](#sc-w0822) | Warning | Kept thread left out of the picture's trace |
 | [`SC-E0817`](#sc-e0817) | Error | VectorCraft test sheet not drawn |
 | [`SC-I0901`](#sc-i0901) | Info | Shapes digitized automatically |
 | [`SC-I0902`](#sc-i0902) | Info | Satin column can't be made; filled |
@@ -1452,6 +1453,19 @@ file named `.png` that holds something else. It fails too when it is a version w
 StitchCraft traces with: the user guide lists the versions the compatibility gate passed. Check that
 VectorCraft places the picture, or trace it with Image Trace in VectorCraft and plan the document you
 save.
+
+## SC-W0822
+
+**Warning** — Kept thread left out of the picture's trace
+
+`stitch plan --keep-colour` gave a colour of a picture a thread, and VectorCraft traced the picture
+again in the threads its first trace chose and the kept ones. The trace left the kept thread out,
+since no part of the picture is nearer its colour than the other threads'. The design sews without
+it.
+
+The message names the thread. A colour named as a thread or as `#rrggbb` may be one the picture
+hasn't: keep the colour of one of its pixels instead, as `X,Y`, or trace the picture in more
+`--colours`, so that the threads near the kept one take less of the picture.
 
 ## SC-E0817
 

@@ -168,6 +168,7 @@ pub stitchcraft_core::diag::Code::VcCliNotStarted
 pub stitchcraft_core::diag::Code::VcEffectUnchanged
 pub stitchcraft_core::diag::Code::VcFeatureIgnored
 pub stitchcraft_core::diag::Code::VcGeometryUnusable
+pub stitchcraft_core::diag::Code::VcKeptThreadUntraced
 pub stitchcraft_core::diag::Code::VcNewerFormat
 pub stitchcraft_core::diag::Code::VcNotConverted
 pub stitchcraft_core::diag::Code::VcNotPrinted
@@ -466,6 +467,7 @@ pub stitchcraft_core::Code::VcCliNotStarted
 pub stitchcraft_core::Code::VcEffectUnchanged
 pub stitchcraft_core::Code::VcFeatureIgnored
 pub stitchcraft_core::Code::VcGeometryUnusable
+pub stitchcraft_core::Code::VcKeptThreadUntraced
 pub stitchcraft_core::Code::VcNewerFormat
 pub stitchcraft_core::Code::VcNotConverted
 pub stitchcraft_core::Code::VcNotPrinted

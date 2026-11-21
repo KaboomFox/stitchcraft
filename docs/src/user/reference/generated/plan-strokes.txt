@@ -10,6 +10,9 @@ strokes.svg
             2. unnamed (#0040c0), shown as Brother PEC 21 "Ultramarine"
             3. unnamed (#c00000), shown as Brother PEC 5 "Red"
             4. unnamed (#00a000), shown as Brother PEC 37 "Leaf Green"
+  shares    1. unnamed (#c00000): 83 stitches, 14.9 %, threaded 2 times
+            2. unnamed (#0040c0): 35 stitches, 6.3 %, threaded once
+            3. unnamed (#00a000): 438 stitches, 78.8 %, threaded once
   preview   strokes.png (512 × 392 pixels)
   report    strokes.json
 warning SC-W0307 (svg:patch:fill): This fill's area falls into 2 parts, sewn one after another, each on its own.

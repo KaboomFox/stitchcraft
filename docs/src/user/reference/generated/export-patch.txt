@@ -10,6 +10,10 @@ patch.vectorcraft
             2. unnamed (#0033b3), shown as Brother PEC 21 "Ultramarine"
             3. unnamed (#008033), shown as Brother PEC 56 "Moss Green"
             4. unnamed (#e6b31a), shown as Brother PEC 11 "Deep Gold"
+  shares    1. unnamed (#bf0000): 1720 stitches, 69.3 %, threaded once
+            2. unnamed (#0033b3): 285 stitches, 11.5 %, threaded once
+            3. unnamed (#008033): 27 stitches, 1.1 %, threaded once
+            4. unnamed (#e6b31a): 451 stitches, 18.1 %, threaded once
   preview   patch.png (432 × 464 pixels)
 info SC-I0811 (vc:10): The object "stitch:ignore placement line" is named stitch:ignore, and is left out with everything in it.
   hint: Rename it to stitch it.

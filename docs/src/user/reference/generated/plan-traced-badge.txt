@@ -9,6 +9,9 @@ traced-badge.svg
   threads   1. unnamed (#ed171f), shown as Brother PEC 5 "Red"
             2. unnamed (#0a55a3), shown as Brother PEC 2 "Blue"
             3. unnamed (#e8a900), shown as Brother PEC 11 "Deep Gold"
+  shares    1. unnamed (#ed171f): 2592 stitches, 75.5 %, threaded once
+            2. unnamed (#0a55a3): 655 stitches, 19.1 %, threaded once
+            3. unnamed (#e8a900): 184 stitches, 5.4 %, threaded once
   preview   traced-badge.png (432 × 432 pixels)
 info SC-I0901: 3 shapes are digitized automatically: all sew as tatami fills.
 info SC-I0912 ("Fill 1, Red", svg:red:fill): This shape sews by the rule area.
