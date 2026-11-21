@@ -412,7 +412,9 @@ mod tests {
     #[test]
     fn requirement_ids_exist_in_the_requirements_file() {
         let text = include_str!("../../../conformance/requirements.toml");
-        for id in [req::INSIDE_HOOP, req::STITCH_LENGTH, req::STRUCTURE, req::NO_STITCH_IN_PLACE, req::COLOR_CHANGES, req::NAMED, req::TRIM_AFTER_SEWING] {
+        for id in
+            [req::INSIDE_HOOP, req::STITCH_LENGTH, req::STRUCTURE, req::NO_STITCH_IN_PLACE, req::COLOR_CHANGES, req::NAMED, req::TRIM_AFTER_SEWING]
+        {
             assert!(text.contains(&format!("id = \"{id}\"")), "{id} is not in conformance/requirements.toml");
         }
     }

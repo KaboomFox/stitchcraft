@@ -2281,8 +2281,8 @@ What a user can do with this version, before its first release. The entries belo
   check, and the plan went out unchecked. Now the invariants run on the plan that is returned, with 2 new
   rules: each run starts and ends with the locks its element's `ties` asks for, and each trim follows a
   stitch sewn since the thread was last cut. A plan that breaks one is reported as a bug, `SC-E0009`,
-  instead of returned. From M13.56 a stop ends a run of stitches, as the machine cuts there: the length rules and the
-  thickness measure no longer count a stitch across it. One model of the needle and the thread,
+  instead of returned. From M13.56 a stop ends a run of stitches, as the machine cuts there: the length
+  rules and the thickness measure no longer count a stitch across it. One model of the needle and the thread,
   `stitchcraft_plan::ThreadState`, serves every check. Nothing that sews changes, and no golden file does.
 - M13.25: a shape's name starts with how it sews and its number, and ends with its thread: `Column 1, Russet
   Brown`, `Left out 1, White`, and Expand's `Base layer 1, Red` (`REQ-AUTO-125`). VectorCraft's Layers panel

@@ -129,7 +129,10 @@ fn req_fin_003_the_plan_is_checked_after_the_cap() {
     // A cap that leaves a 0.1 mm stitch, shorter than the machine's shortest.
     let (short, said) = checked(&|plan| plan.blocks[0].stitches[3].at = p(1.1));
     assert_eq!(short, None);
-    let refused = (Code::InternalCheckFailed, "The stitch plan breaks REQ-PLAN-002 at block 0, entry 3: the stitch is 0.100 mm, shorter than 0.3 mm".to_string());
+    let refused = (
+        Code::InternalCheckFailed,
+        "The stitch plan breaks REQ-PLAN-002 at block 0, entry 3: the stitch is 0.100 mm, shorter than 0.3 mm".to_string(),
+    );
     assert_eq!(said, [thinned.clone(), refused]);
     // A cap that takes a tie-in's lock point out, where the element asks for a tie-in.
     let mut said = Vec::new();
