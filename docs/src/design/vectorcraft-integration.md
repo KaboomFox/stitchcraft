@@ -898,7 +898,7 @@ rows lie 0.25 mm, or 25 pixels, apart. At 100 % it lightens a pixel by less than
 changes: the exporters write what they wrote.
 
 **A large fill's rows in the editor wait for VectorCraft** (M6.19). With the hatch gone, a fill too large
-for its rows shows no direction at all. What a person wants there is the fill's real rows, and those need
+for its rows doesn't show their direction at all. A person wants the fill's real rows there, and those need
 one of 2 things from VectorCraft. One is a heavy budget for live effects, the open part of the RFC's
 [P4](rfc-vectorcraft-abi-v2.md#p4-budget-classes-for-live-effects). VectorCraft's change of 2026-11-18
 ([#8101](https://github.com/storytold/vectorcraft/pull/8101)) raised only object filters' runs, by a preference, and its `docs/plugins.md` says live

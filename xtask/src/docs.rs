@@ -542,8 +542,10 @@ mod tests {
     #[test]
     fn the_milestones_done_are_the_roadmap_s() {
         let done = done_milestones(&util::read(&util::root().join(ROADMAP)).unwrap());
-        // M6's and M7's steps are done, their machine checkpoints to sew, and M0 has steps open.
-        assert!(["M1", "M2", "M3", "M4", "M5", "M6", "M7"].iter().all(|m| done.contains(*m)) && !done.contains("M0"), "{done:?}");
+        // M7's steps are done, its machine checkpoint to sew, and M0 has steps open. So has M6: M6.19 waits for
+        // VectorCraft to give a live effect more than a light budget.
+        assert!(["M1", "M2", "M3", "M4", "M5", "M7"].iter().all(|m| done.contains(*m)), "{done:?}");
+        assert!(!done.contains("M0") && !done.contains("M6"), "{done:?}");
     }
 
     #[test]
