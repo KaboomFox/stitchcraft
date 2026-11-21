@@ -92,6 +92,20 @@ picture. An area wider than a satin column somewhere is digitized whole under th
 before them and is cut away under them. TS-13D and TS-13E sew such pictures traced both ways. A part no wider than a
 satin column whose centre lines are each shorter than half its width, a disc or a square, is a dot, which
 stays in the fill (`auto::columns::DOT`).
+The later steps of automatic digitizing each have a module, described in
+`docs/src/design/image-to-embroidery.md`. Since M13.16 a base layer sews first under the whole design
+(`auto::neighbours::base`). Since M13.18 thin lines merge into the patches beside them, and since M13.44
+a line stays where merging it would take the picture under its likeness (`auto::neighbours::lines`). Since
+M13.21 one table of rules chooses a part's stitches from its geometry (`auto::rules`). Since M13.24 a guide
+turns the rows of the filled parts it crosses (`auto::guides`), and since M13.39 a mark keeps the parts it
+encloses (`auto::marks`, `design::mark`). Since M13.25 every shape has a name the notices give
+(`names`). Since M13.26 an automatic design is expanded into the ordinary elements it sews as
+(`auto::expand`). Since M13.28 each fill sews an outline where its edge shows (`auto::neighbours::outline`).
+Since M13.29 planning warns of a design that sews thick (`auto::thick`). Since M13.35 a last pass takes
+thread where a spot sews above the cap (`auto::thin`), and the cap then takes needle points (`auto::cap`).
+Since M13.42 a notice says how the style changes the design (`auto::style`). Since M13.52 an area's
+outline can be smoothed (`auto::smooth`), and since M13.54 a part up to `auto_max_split_satin_width_mm`
+wide can sew as a split satin column (`auto::wide`).
 Since M6.12 a column drawn as one path can be drawn with its rails and rungs instead, for a host's Stroke
 to Satin tool (`generators::satin::drawn`). They sew as the column does. A design can be moved
 (`Design::moved`), as a host draws a test sheet (`testsheets`, `TestSheet::design`). Since M10.4 satin
@@ -116,7 +130,8 @@ Design:
 
 ## Dependencies
 
-`stitchcraft-core`, `stitchcraft-params`, `stitchcraft-plan`; `thiserror`; `svgtypes`, whose path-data
+`stitchcraft-core`, `stitchcraft-params`, `stitchcraft-plan`; `thiserror`; `serde_json`, which writes a
+tartan's sett as the editor's JSON (`generators::tartan::editor`); `svgtypes`, whose path-data
 parser alone reads a custom lock's path, from the setting's text (`locks::path`). Tests also use `proptest` and
 `stitchcraft-testkit`. Curves are flattened here, not with `kurbo`, so every platform gets the same
 points (`docs/src/design/engine-pipeline.md` › Normalize), and a fill's region is built here, not with
