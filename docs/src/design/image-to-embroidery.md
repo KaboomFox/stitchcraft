@@ -140,10 +140,10 @@ info SC-I0924: 3 shapes without StitchCraft effects are digitized automatically,
 
 **Markers** (`REQ-AUTO-166`). Under the default, a `stitch:start` or `stitch:end` marker grouped with a
 shape without StitchCraft effects sets that shape by hand, as the owner chose on 2026-11-21. The shape isn't
-digitized automatically. It sews as drawn from where its markers say, as with `--no-auto`, and its markers
-are used, so no `SC-W0807` is said of them. With `--auto` the person asks for automatic digitizing of every
-shape without settings: the shape is automatic, and the marker unused (`SC-W0807`), as before. The Auto
-effect makes it automatic too. `Reading::marked_as_drawn` carries the rule. The command line sets it with
+digitized automatically. It sews as drawn from where its markers say, as with `--no-auto`. No `SC-W0807`
+is said of its markers. With `--auto` the person asks for automatic digitizing of every shape without
+settings. Then the shape is automatic and its marker is unused (`SC-W0807`). The Auto effect makes it
+automatic too. The field `Reading::marked_as_drawn` holds the rule. The command line sets it with
 the default, the exporters with their option on, and a bug-report bundle records it. One function decides
 it, `by_paints` in `stitchcraft_vectorcraft::document`.
 

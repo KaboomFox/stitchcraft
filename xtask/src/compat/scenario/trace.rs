@@ -178,12 +178,28 @@ mod tests {
         assert!(said.contains("and these are not automatic: ["), "{said}");
         let mut bare: Value = serde_json::from_slice(&patch).unwrap();
         strip(&mut bare);
+        // Its Background's start marker sets it by hand under the default (`REQ-AUTO-166`).
+        let said = traced(&serde_json::to_vec(&bare).unwrap(), &threads, false).unwrap_err();
+        assert!(said.contains("and these are not automatic: [\"vc:2:fill\"]"), "{said}");
+        unmark(&mut bare);
         let said = traced(&serde_json::to_vec(&bare).unwrap(), &threads, false).unwrap_err();
         assert_eq!(said, "its background isn't left out (SC-W0906)");
         // Without `--auto`, its shapes are automatic only with the Auto effect, here on its layer.
         assert!(traced(&serde_json::to_vec(&bare).unwrap(), &threads, true).unwrap_err().contains("and these are not automatic: ["));
         bare["document"]["layers"][0]["appearance"]["effects"] = serde_json::json!([{"id": "plugin.dev.stitchcraft.auto", "params": {}}]);
         assert_eq!(traced(&serde_json::to_vec(&bare).unwrap(), &threads, true).unwrap_err(), "its background isn't left out (SC-W0906)");
+    }
+
+    /// `value` without its objects named `stitch:start`.
+    fn unmark(value: &mut Value) {
+        match value {
+            Value::Object(object) => object.values_mut().for_each(unmark),
+            Value::Array(items) => {
+                items.retain(|item| item.get("name") != Some(&serde_json::json!("stitch:start")));
+                items.iter_mut().for_each(unmark);
+            }
+            _ => {}
+        }
     }
 
     /// `value` without the effects of any object in it.
