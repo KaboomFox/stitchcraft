@@ -6,6 +6,7 @@
 //! output unless `-o` names a file.
 
 use stitchcraft_plan::MachineProfile;
+use stitchcraft_plan::palette::PaletteEntry;
 use stitchcraft_plan::profiles::REFERENCE;
 
 use super::{Outcome, asked_profile, write_files};
@@ -32,6 +33,25 @@ pub fn gpl(profile: &MachineProfile) -> String {
     profile.palette.palette().gpl(&format!("The threads of the {}, profile {}, from StitchCraft's stitch palette.", profile.name, profile.id))
 }
 
+/// [`gpl`] with only the threads `kept` (`REQ-AUTO-160`): the swatch library a picture is traced in when a
+/// person keeps a colour. Each line of a thread is the palette's own, as [`gpl`] writes it, and the threads
+/// keep the palette's order.
+pub fn gpl_of(profile: &MachineProfile, kept: &[&PaletteEntry]) -> String {
+    let text = gpl(profile);
+    let mut lines = text.lines();
+    let mut out: String = lines.by_ref().take(GPL_HEADER).flat_map(|line| [line, "\n"]).collect();
+    for (line, entry) in lines.zip(crate::colours::threads(profile.palette.palette())) {
+        if kept.iter().any(|kept| kept.index == entry.index) {
+            out.push_str(line);
+            out.push('\n');
+        }
+    }
+    out
+}
+
+/// The lines a GIMP palette starts with, before its colours: its header, name, columns and the comment.
+const GPL_HEADER: usize = 4;
+
 #[cfg(test)]
 mod tests {
     use stitchcraft_plan::profiles::BROTHER_PE800_4X4;
@@ -39,6 +59,19 @@ mod tests {
 
     use super::*;
     use crate::commands::Status;
+
+    #[test]
+    fn req_auto_160_a_library_of_the_threads_kept_is_the_palette_s_own_lines_in_its_order() {
+        let palette = REFERENCE.palette.palette();
+        let named = |name: &str| palette.entries.iter().find(|entry| entry.name == name).unwrap();
+        let text = gpl_of(REFERENCE, &[named("White"), named("Prussian Blue")]);
+        let all = gpl(REFERENCE);
+        let header: Vec<&str> = all.lines().take(GPL_HEADER).collect();
+        assert_eq!(text.lines().take(GPL_HEADER).collect::<Vec<_>>(), header);
+        assert_eq!(text.lines().skip(GPL_HEADER).collect::<Vec<_>>(), [" 14  31 124\tPrussian Blue", "240 240 240\tWhite"]);
+        assert!(text.ends_with("White\n"));
+        assert_eq!(gpl_of(REFERENCE, &[]).lines().count(), GPL_HEADER);
+    }
 
     fn args(profile: Option<&str>, output: Option<std::path::PathBuf>) -> PaletteArgs {
         PaletteArgs { profile: profile.map(str::to_string), output }
