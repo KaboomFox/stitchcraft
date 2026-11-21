@@ -14,7 +14,7 @@ Design ──▶ 0 auto ──▶ 1 normalize ──▶ 2 validate ──▶ 3 g
 ## 0. Automatic digitizing
 
 Since M13.1, before anything else, each element the host marked automatic, a shape without settings read
-with `--auto`, becomes the ordinary elements its geometry calls for, with the settings that say so
+with `--auto` or, from M13.8, a VectorCraft document's shape read without `--no-auto`, becomes the ordinary elements its geometry calls for, with the settings that say so
 (`stitchcraft_engine::auto::digitized`, [image to embroidery](image-to-embroidery.md#which-stitch-a-shape-gets)).
 
 - An area is sewn as it is, apart from its narrow parts: each becomes a running stitch along its centre

@@ -33,8 +33,8 @@ In VectorCraft:
 5. Save the document, here as `traced-badge.vectorcraft`.
 
 Each traced shape is filled in one of your threads. Leave the shapes without StitchCraft's Fill, Stroke and
-Satin effects: StitchCraft chooses the stitches of a shape without one, with `--auto` or with StitchCraft's
-Auto effect ([below](#in-vectorcraft-the-auto-effect)).
+Satin effects: StitchCraft chooses the stitches of a shape without one, in a VectorCraft document and in
+an SVG file planned with `--auto` ([below](#in-vectorcraft-the-auto-effect)).
 
 ## 3. Digitize it
 
@@ -73,7 +73,8 @@ decide: StitchCraft lists the shares and chooses nothing. A report (`--report`) 
 
 ### In VectorCraft, the Auto effect
 
-With the traced group selected, choose **Effect › Plug-ins › StitchCraft Auto**. Its dialog has the
+VectorCraft's exporters digitize the traced shapes automatically, with the rules' defaults. To change their
+settings, select the traced group and choose **Effect › Plug-ins › StitchCraft Auto**. Its dialog has the
 settings of the rules in sections named **Stitches by shape**, **Neighbours**, where **Overlap** is how far a
 shape is cut away under the next, and **Base layer**. Each starts at its default, and the button beside
 it opens its help ([reference](../reference/params/auto.md)). The rules' bounds, such as the widest satin
@@ -89,8 +90,8 @@ Each traced shape then shows the stitches StitchCraft chooses for it, as far as 
 effect work them out: a fill's top rows, and a column's or a line's stitches. A shape that needs more,
 such as a letter or a ring, shows its outline instead, and the machine file has every stitch whichever
 shows. A filled shape is drawn solid in its own colour either way, as thread will cover it. Zoom in to see
-the hairline gaps that mark its rows or stitches. The document now says it is digitized automatically, so **File › Export › Export As** writes the
-machine file without **Digitize automatically**, as does `stitch export` without `--auto`
+the hairline gaps that mark its rows or stitches. The effect keeps its settings with the document, which **File › Export › Export As** and `stitch export`
+sew by, with **Digitize automatically** on or off and with `--no-auto` too
 ([how](../how-to/embroider-a-vectorcraft-design.md)). VectorCraft stops the export of a large traced
 picture, a photo for one, and `stitch export` then writes it
 ([what to do](../how-to/embroider-a-vectorcraft-design.md#when-vectorcraft-stops-the-export)). Trace again and the group is new, without the

@@ -154,6 +154,10 @@ pub struct VectorCraft {
     pub machine: Option<&'static MachineProfile>,
     /// What was left out or simplified, in document order, and then what of the settings didn't read.
     pub warnings: Vec<Diagnostic>,
+    /// How many of the design's elements are automatic only because the reading's `auto` asked: those of
+    /// objects no StitchCraft effect reaches, the Auto effect included. A host that digitizes a document
+    /// automatically by default ([`crate::AUTO_BY_DEFAULT`]) says how many (`REQ-AUTO-165`).
+    pub by_default: usize,
 }
 
 /// The design in the `.vectorcraft` file `bytes`, read within `budget`. Fails with `SC-E0806` when the file
@@ -188,6 +192,7 @@ pub fn read_in(bytes: &[u8], budget: &Budget, reading: Reading, fonts: &mut dyn 
         elements: Vec::new(),
         warnings: Vec::new(),
         auto: reading.auto,
+        marked_as_drawn: reading.marked_as_drawn,
         settings,
         copied: 0,
         read,
@@ -196,6 +201,7 @@ pub fn read_in(bytes: &[u8], budget: &Budget, reading: Reading, fonts: &mut dyn 
         lettered: BTreeSet::new(),
         guides: Vec::new(),
         ungrouped: BTreeSet::new(),
+        by_default: BTreeSet::new(),
     };
     reader.header(file.format.as_deref(), file.version.as_ref())?;
     let document = file.document.ok_or_else(|| unreadable("It holds no document."))?;
@@ -206,7 +212,7 @@ pub fn read_in(bytes: &[u8], budget: &Budget, reading: Reading, fonts: &mut dyn 
         reader.node(layer, &Around::default())?;
     }
     reader.placed();
-    let (mut warnings, ungrouped) = (reader.warnings, reader.ungrouped);
+    let (mut warnings, ungrouped, by_default) = (reader.warnings, reader.ungrouped, reader.by_default);
     warnings.extend(unread);
     // The objects named stitch:keep are marks, never sewn (`REQ-VC-031`), and the paths named stitch:guide
     // are guides of the design (`REQ-VC-032`).
@@ -224,7 +230,8 @@ pub fn read_in(bytes: &[u8], budget: &Budget, reading: Reading, fonts: &mut dyn 
     let mut found = |name: &str, text: &str, budget: &Budget| crate::lettering::found_for(&mut *fonts, name, text, budget);
     let (design, said) = pictures::replace_among(design, &[], &mut found, &choices, &mut lettered, budget)?;
     warnings.extend(said);
-    Ok(VectorCraft { design, machine: kept.machine, warnings })
+    let by_default = design.elements().iter().filter(|element| element.automatic && by_default.contains(&element.id)).count();
+    Ok(VectorCraft { design, machine: kept.machine, warnings, by_default })
 }
 
 /// The machine the VectorCraft document `bytes` keeps, read within `budget` before the document itself, so
@@ -513,6 +520,8 @@ struct Reader<'f> {
     warnings: Vec<Diagnostic>,
     /// Whether an object without StitchCraft effects is an automatic element (`--auto`).
     auto: bool,
+    /// Whether such an object grouped with a start or an end marker sews as drawn all the same.
+    marked_as_drawn: bool,
     /// The design's settings, which the document keeps ([`settings`]): automatic digitizing chooses a
     /// stroke's stitches by them.
     settings: DesignSettings,
@@ -528,6 +537,8 @@ struct Reader<'f> {
     lettered: BTreeSet<String>,
     /// The paths named stitch:guide, the design's guides wherever they lie (`REQ-VC-032`).
     guides: Vec<Mark>,
+    /// The ids of the elements that are automatic only because `auto` asked.
+    by_default: BTreeSet<ElementId>,
     /// Where among the warnings each guide its group doesn't use is said: said only when the design has no
     /// automatic shape.
     ungrouped: BTreeSet<usize>,
@@ -1003,11 +1014,17 @@ impl Reader<'_> {
     /// strokes. Each is automatic with `--auto`, and when an Auto effect reaches the object, its own or a
     /// group's, whose parameters `auto` are then its settings of the rules (`REQ-VC-016`).
     fn by_paints(&mut self, node: &Node, label: &str, path: &Path, rule: FillRule, auto: Option<&Value>, hints: Hints) -> Result<(), Diagnostic> {
-        let automatic = self.auto || auto.is_some();
+        // This is the one place that decides what becomes of the markers grouped with a shape without
+        // StitchCraft effects. Under a VectorCraft document's default a start or an end marker sets its shape
+        // by hand, which then sews as drawn from where the marker says (`REQ-AUTO-166`). With `--auto` or the
+        // Auto effect the shape is automatic all the same.
+        let marked = (Hints { guide: None, ..hints.clone() }) != Hints::default();
+        let automatic = auto.is_some() || (self.auto && !(self.marked_as_drawn && marked));
+        let made = self.elements.len();
         // Automatic digitizing places where an automatic shape's parts start and end. A guide grouped with it
         // is the design's guide, which steers the parts it crosses (`REQ-VC-032`), and needs no word.
         let hints = if automatic {
-            if (Hints { guide: None, ..hints }) != Hints::default() {
+            if marked {
                 let message = "It is digitized automatically, which places where its parts start and end: the markers grouped with it are not used.";
                 self.feature(label, message.to_string(), None);
             }
@@ -1059,6 +1076,10 @@ impl Reader<'_> {
             strokes += 1;
             let shape = Shape::Stroke { path: self.copy(path)?, width, join, cap };
             self.element(node, label, &rank("stroke", strokes), shape, thread, params.clone(), automatic, hints.clone())?;
+        }
+        // Each element made here was charged as it was made.
+        if automatic && auto.is_none() {
+            self.by_default.extend(self.elements.iter().skip(made).map(|element| element.id.clone()));
         }
         Ok(())
     }

@@ -71,12 +71,14 @@ its arithmetic is the plug-in's.
 ## Bug reports
 
 Because the same design, profile, format and version give the same plan everywhere, those four are all a
-bug report needs, with the switches the design was read with. `--auto` decides how its shapes without
+bug report needs, with the switches the design was read with. `--auto` and `--no-auto` decide how its shapes without
 settings sew, and `--sort-colours` whether its shapes with settings sew in the order StitchCraft chooses.
 Since M13.21 `--set` and `--style` give the shapes digitized automatically their rules' settings, and the
 file records each setting with its value.
 `stitch bug-report` writes them into one JSON file, with the design itself in place of a path to it, and
-each switch only when it was on. A bundle of a run without them is as it always was. The design is an SVG
+each switch only when it was on. `auto` is recorded when the run digitized automatically, by `--auto` or as a
+VectorCraft document is by default, so a bundle without it, from before M13.8 or of a run with `--no-auto`,
+replays plain. A bundle of a run without them is as it always was. The design is an SVG
 file whole, or the part of a VectorCraft document its reader reads, which
 reads as the whole document does. Of a picture, it is the document VectorCraft's command line traced, read
 with `--auto`: VectorCraft's trace is not StitchCraft's to replay, and the replay doesn't need VectorCraft. When

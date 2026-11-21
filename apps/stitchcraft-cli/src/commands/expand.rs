@@ -61,6 +61,9 @@ pub fn run(args: &ExpandArgs) -> Outcome {
         Ok(output) => output,
         Err(outcome) => return outcome,
     };
+    if args.reading.no_auto {
+        return Outcome::usage("--no-auto isn't for stitch expand, which expands what automatic digitizing makes of a design");
+    }
     let picture = trace::is_picture(&args.design);
     if !picture && args.tracing.given() {
         return Outcome::usage(
@@ -94,7 +97,7 @@ pub fn run(args: &ExpandArgs) -> Outcome {
         (Source::of(&args.design), bytes, Vec::new())
     };
     let profile = plan::machine_for(asked, source, &document);
-    let reading = Reading { auto: true, ..Reading::from(&args.reading) };
+    let reading = Reading { auto: true, ..args.reading.reading(source) };
     let (design, mut said) = match plan::read_design(source, &document, (reading, &args.reading.rules())) {
         Ok((design, said)) => (design, traced_said.into_iter().chain(said).collect::<Vec<_>>()),
         Err(unreadable) => return Outcome::refuse(String::new(), &[unreadable]),

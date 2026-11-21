@@ -119,6 +119,7 @@ jumps and colour changes, which the rethreads and the cuts at the machine are co
 | Words on a cream field (Hexmira at 8 and 10 mm, Hexmira 7.6 mm tall, and VOLKAR in Barstitch Bold 12.5 mm tall) | M14.9, M13.50 | Made by hand: a cream field drawn 3 mm round the word, with the word set on it as text |
 | Bars and rings 6, 8 and 10 mm wide | M13.54 | `bar-8mm.svg` and its relatives from the commands after this table |
 | The test piece of 12 tiles under satin columns | M13.55 | Made by hand. Its tiles are fills 20 mm wide in navy and in orange, with a black satin column along each tile's top, straight on some tiles and curved on the others, in widths from 2 to 6 mm. No file of the repository draws it |
+| A circle 40 mm across, its fill in one colour and a 2 mm stroke round it in another | M13.8 | Made by hand in VectorCraft, without StitchCraft effects. `stitch plan circle.vectorcraft -o circle.pes`, and again with `--no-auto` |
 
 The arc, and the bars and the rings of M13.54, each written by one command from nothing but the command
 itself:
@@ -221,6 +222,14 @@ star is ([which stitch a shape gets](../design/image-to-embroidery.md#which-stit
 - Do the 2 stars, 5.3 and 4 mm across, read as stars of 4 points when they are filled?
 - With the outline, are the stars' points sharper, and is the run round the moon and the mountains on the
   fill's edge or beside it?
+
+M13.8 changed what a VectorCraft document sews without a switch. It is digitized automatically, as `--auto`
+digitized it. `--no-auto` sews it as drawn
+([the default](../design/image-to-embroidery.md#automatic-digitizing-by-default)). A stroke round a fill
+sews thicker by default, as a satin column on the fill's edge: the drawn reader fixture went from 2.74 to
+3.85 fills. MC-8 sews the kit's drawn circle, once with
+`stitch plan` and once with `--no-auto`. Does the column on its edge sew stiff or pucker, and is the
+default the one to keep?
 
 M13.31 moved the 2 buttons of TS-13D to a sheet of their own, TS-13E, so that VectorCraft exports each
 sheet with room in its budget ([compatibility gate](../design/compatibility-gate.md#level-a--abi-contract-fast-minutes)).

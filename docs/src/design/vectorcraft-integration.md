@@ -342,8 +342,9 @@ writes of the document:
   it without `--profile` ([below](#design-settings-and-machine-kept-with-the-document)).
   Reading the file back, as `stitch export` does, stops it at a writer's bug (`SC-E0009`). The file has
   every thread of the plan, those of an element sewn in several among them (`REQ-THREAD-003`). The budget is
-  `stitch export`'s own too. Its `auto` option digitizes the objects without StitchCraft effects, as
-  `--auto` does, and sews them in the order StitchCraft chooses. The exporters have no switch like
+  `stitch export`'s own too. Its `auto` option, on by default since M13.8 (`stitchcraft_vectorcraft::AUTO_BY_DEFAULT`),
+  digitizes the objects without StitchCraft effects, as `stitch export` does without a switch, and sews
+  them in the order StitchCraft chooses. Off, it is `--no-auto`. The exporters have no switch like
   `--sort-colours`, and the objects with effects keep their order among themselves
   ([image to embroidery](image-to-embroidery.md#sewing-order)). Level B of the [compatibility gate](compatibility-gate.md) exports a document with
   VectorCraft's command line and checks that the files are `stitch export`'s, byte for byte.
@@ -1263,8 +1264,8 @@ under automatic digitizing in the cases a path is:
 - The text has the Auto effect.
 - The text has no StitchCraft effect of its own, and the nearest group or layer around it that has
   StitchCraft effects has the Auto effect and no stitch effect.
-- The document is read with `--auto`, and neither the text nor a group or a layer around it has a
-  StitchCraft effect.
+- The document is read with `--auto`, or without a switch, as a document is by default, and neither the
+  text nor a group or a layer around it has a StitchCraft effect.
 
 A stitch effect says how a path sews and means nothing for a text. A text with one, its own or a group's
 around it, is left out as before.

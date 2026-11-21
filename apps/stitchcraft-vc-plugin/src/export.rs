@@ -49,7 +49,7 @@ use stitchcraft_params::find;
 use stitchcraft_plan::profiles::{self, BUILTIN, REFERENCE};
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, TrimSupport};
 use stitchcraft_render::{Settings, Style};
-use stitchcraft_vectorcraft::base64;
+use stitchcraft_vectorcraft::{AUTO_BY_DEFAULT, base64};
 
 use crate::dialog::own;
 use crate::effect::RunError;
@@ -78,7 +78,7 @@ pub const MAX_WARNING_CHARS: usize = stitchcraft_engine::auto::WARNING_CHARS;
 pub(crate) fn options() -> Vec<(&'static str, Param)> {
     let machines = std::iter::once(DOCUMENT).chain(BUILTIN.iter().map(|profile| profile.id)).collect();
     vec![
-        (AUTO, own(Schema::Bool { default: false }, "Digitize automatically", &auto_help(), AUTO_PAGE)),
+        (AUTO, own(Schema::Bool { default: AUTO_BY_DEFAULT }, "Digitize automatically", &auto_help(), AUTO_PAGE)),
         (PROFILE, own(Schema::Choice { options: machines, default: DOCUMENT }, "Machine", &profile_help(), PROFILE_PAGE)),
     ]
 }
@@ -90,9 +90,15 @@ fn auto_help() -> String {
     format!(
         "Chooses the stitches of each object without a StitchCraft effect by its width, as `stitch export --auto` does: a line up \
          to {} mm wide runs, a line up to {widest} mm wide is a satin column as wide as it, and a wider line or an area is a \
-         tatami fill. Objects with a StitchCraft effect sew as their effects say.",
+         tatami fill. Objects with a StitchCraft effect sew as their effects say. Off, the objects without one sew as drawn, as \
+         `stitch export --no-auto` sews them.",
         DesignSettings::MIN_SATIN_STROKE_WIDTH.get(),
     )
+}
+
+/// Whether an exporter digitizes automatically when the host passes no [`AUTO`]: the default of every host.
+const fn auto_by_default() -> bool {
+    AUTO_BY_DEFAULT
 }
 
 /// The page that says how objects without a StitchCraft effect are digitized.
@@ -116,9 +122,10 @@ pub(crate) const PROFILE_PAGE: &str = "user/reference/profiles.html";
 
 /// The parameters VectorCraft passes an exporter: its dialog's, by the names of [`AUTO`] and [`PROFILE`],
 /// and the file's.
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Deserialize)]
 struct Params {
-    #[serde(default)]
+    /// On unless the host turns it off ([`AUTO_BY_DEFAULT`]).
+    #[serde(default = "auto_by_default")]
     auto: bool,
     #[serde(default)]
     profile: Option<String>,
@@ -162,7 +169,7 @@ pub fn export(format: FormatId, input: &[u8], params: &[u8]) -> Result<Vec<u8>, 
         Some(id) => Some(profiles::find(id).ok_or(RunError::BadInput)?),
     };
     let wanted = Wanted { name: &params.context.name, picture: params.context.mode == PICTURE };
-    let out = match sewn(format, input, Reading { auto: params.auto, ..Reading::default() }, asked, wanted) {
+    let out = match sewn(format, input, Reading { auto: params.auto, marked_as_drawn: params.auto, ..Reading::default() }, asked, wanted) {
         Ok((file, said)) => serde_json::to_vec(&Exported { data_base64: base64(&file), warnings: warnings(&said) }),
         Err(said) => serde_json::to_vec(&Declined { error: decline(&said) }),
     };
@@ -394,6 +401,40 @@ mod tests {
         let rule = "info SC-I0912 (\"Column 1, Black\", vc:2:stroke): This shape sews by the rule column (3 mm wide).";
         assert_eq!(file(&auto).1, ["info SC-I0901: 1 shape is digitized automatically: it sews as a satin column.", rule]);
         assert_ne!(file(&auto).0, file(&plain).0);
+    }
+
+    #[test]
+    fn req_vc_036_the_exporters_digitize_automatically_by_default() {
+        // The dialog's option is on, and a host that passes no `auto` gets it on too.
+        let (_, option) = options().into_iter().find(|(id, _)| *id == AUTO).unwrap();
+        assert_eq!(option.schema, Schema::Bool { default: true });
+        let input = document(&json!([line(2, 3.0, &json!([]))]));
+        let automatic = {
+            let (bytes, said) = stitch_export(&input, Reading { auto: true, ..Reading::default() }, REFERENCE, FormatId::PesV1, "line");
+            (base64(&bytes), said)
+        };
+        assert_eq!(file(&exported(FormatId::PesV1, &input, &params("line", &json!({})))), automatic);
+        // Off, it is what `stitch export --no-auto` writes: the shapes as drawn.
+        let plain = {
+            let (bytes, said) = stitch_export(&input, Reading::default(), REFERENCE, FormatId::PesV1, "line");
+            (base64(&bytes), said)
+        };
+        assert_eq!(file(&exported(FormatId::PesV1, &input, &params("line", &json!({ AUTO: false })))), plain);
+        // On, a shape grouped with a start marker is set by hand, as `stitch export` reads it by default
+        // (`REQ-AUTO-166`): the patch's Background, without its Fill effect.
+        let mut patch: Value = serde_json::from_slice(PATCH).unwrap();
+        let background = patch.pointer_mut("/document/layers/0/kind/children/1/kind/children/0").unwrap();
+        assert_eq!(background["name"], json!("Background"));
+        background["appearance"]["effects"] = json!([]);
+        let patch = serde_json::to_vec(&patch).unwrap();
+        let sewn = |marked_as_drawn| {
+            let (bytes, said) =
+                stitch_export(&patch, Reading { auto: true, marked_as_drawn, ..Reading::default() }, REFERENCE, FormatId::PesV1, "patch");
+            (base64(&bytes), said)
+        };
+        let exported = file(&exported(FormatId::PesV1, &patch, &params("patch", &json!({}))));
+        assert_eq!(exported, sewn(true));
+        assert_ne!(exported, sewn(false));
     }
 
     /// The parameters of a run that asks for the picture of the file named `name`, with `set`.

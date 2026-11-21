@@ -35,8 +35,9 @@ To digitize such art:
 
 - Art drawn in VectorCraft, or opened there from an SVG file, is made of shapes already. Select them,
   choose **Effect › Plug-ins › StitchCraft Auto**, and write the machine file
-  ([how](../how-to/embroider-a-vectorcraft-design.md#write-the-machine-file)). On the command line, add
-  `--auto` to [`stitch plan`](../reference/cli.md#stitch-plan) or `stitch export`, as in
+  ([how](../how-to/embroider-a-vectorcraft-design.md#write-the-machine-file)). On the command line,
+  [`stitch plan`](../reference/cli.md#stitch-plan) and `stitch export` digitize a VectorCraft document so
+  without a switch, and `--no-auto` sews its shapes as drawn. Add `--auto` for an SVG file, as in
   `stitch plan emblem.svg --auto -o emblem.pes`.
 - A picture of the art, a PNG or JPEG file, is traced into shapes first, in the machine's threads.
   `stitch plan emblem.png -o emblem.pes` traces it with VectorCraft's command line, then digitizes the shapes.
@@ -141,8 +142,9 @@ uneven parts** off it changes thread less often and jumps more often
 ## How it chooses the stitches
 
 Automatic digitizing chooses the stitches of each shape without settings. A shape with settings sews as they
-say. The pictures below show shapes as they are drawn, and then digitized automatically. Without `--auto`,
-each of those shapes sews as one [tatami fill](tatami-fill.md), whatever its width.
+say. The pictures below show shapes as they are drawn, and then digitized automatically. Sewn as drawn, an
+SVG file without `--auto` or a VectorCraft document with `--no-auto`, each of those shapes sews as one
+[tatami fill](tatami-fill.md), whatever its width.
 [Image to embroidery](../../design/image-to-embroidery.md) gives every rule in full.
 
 ### Stitches by shape

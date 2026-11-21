@@ -88,7 +88,7 @@ use std::time::Duration;
 
 use serde::Deserialize;
 use serde_json::{Value, json};
-use stitchcraft_cli::cli::{Cli, Command as Stitch, PlanArgs};
+use stitchcraft_cli::cli::{Cli, Command as Stitch, PlanArgs, ReadingArgs};
 use stitchcraft_cli::commands::Status;
 use stitchcraft_cli::commands::plan::{self, Source, machine_for, sew};
 use stitchcraft_cli::fonts::FolderFonts;
@@ -1054,11 +1054,12 @@ pub(crate) fn sewn(bytes: &[u8]) -> Result<Vec<u8>, String> {
 }
 
 /// The file of `format`, named `name`, that `stitch export` writes from the VectorCraft document `bytes`
-/// without `--profile`, for the machine it keeps or else the reference machine, and what it says; or the
-/// errors that stop it.
+/// without a switch, read as it reads a document by default and planned for the machine the document keeps
+/// or else the reference machine, and what it says; or the errors that stop it.
 fn stitch_export(bytes: &[u8], format: FormatId, name: &str) -> Result<(Vec<u8>, Vec<Diagnostic>), String> {
     let profile = machine_for(None, Source::VectorCraft, bytes);
-    let sewn = sew(Source::VectorCraft, bytes, (Reading::default(), &[]), profile, format, name);
+    let reading = ReadingArgs::default().reading(Source::VectorCraft);
+    let sewn = sew(Source::VectorCraft, bytes, (reading, &[]), profile, format, name);
     let errors: Vec<String> = sewn.diagnostics.iter().filter(|d| d.severity() == Severity::Error).map(ToString::to_string).collect();
     match sewn.file {
         Some(file) if errors.is_empty() => Ok((file, sewn.diagnostics)),
