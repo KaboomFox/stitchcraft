@@ -28,11 +28,12 @@ use std::path::Path;
 use serde::Deserialize;
 use stitchcraft_cli::commands::plan::Source;
 use stitchcraft_core::Budget;
-use stitchcraft_engine::design::{Design, Element};
+use stitchcraft_engine::design::{Design, Element, Path as Outline, Shape};
+use stitchcraft_engine::normalize::stroke;
 use stitchcraft_engine::testsheets;
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{Rgb, StitchPlan};
-use stitchcraft_render::{Settings, Style};
+use stitchcraft_render::{Arrival, GridPoint, Scene, Settings, Style};
 
 use crate::compat::scenario::Step;
 use crate::util::{self, Findings};
@@ -48,6 +49,11 @@ const PHOTOS: &str = "docs/src/images/photos";
 const PHOTO_EXTENSIONS: [&str; 3] = ["jpg", "jpeg", "png"];
 /// Where `--check` puts the new version of a stale image.
 const STALE: &str = "target/shots";
+/// The words the alt text of a shot with `cut_jumps` says, so that no picture lets a reader think the machine
+/// cuts its jump threads (`REQ-RND-007`). Read in any case.
+pub const CUT_WORDS: &str = "jump threads cut";
+/// How near a guide's drawn line keeps to its curves, in millimetres: under a pixel at the largest scale.
+const GUIDE_TOLERANCE_MM: f64 = 0.02;
 
 #[derive(Deserialize, Default)]
 struct ShotsFile {
@@ -92,9 +98,21 @@ pub struct Shot {
     /// design: the codes its reader may report.
     #[serde(default)]
     pub allow: Vec<String>,
-    /// `stitch` shots: `realistic` (the default) or `simple`.
+    /// `stitch` shots: `realistic` (the default), `simple` or `thickness`.
     #[serde(default)]
     pub style: Option<String>,
+    /// `stitch` shots of a design: whether the lines of the design that aren't sewn are drawn too, thin and
+    /// grey under the stitches: each element's outline, its guide line and its anchor line, and the design's
+    /// automatic guides (`REQ-RND-005`).
+    #[serde(default)]
+    pub guides: bool,
+    /// `stitch` shots: whether the design is drawn as it looks once the person has cut its jump threads,
+    /// which the reference machine doesn't cut. The alt text must say so (`REQ-RND-007`, [`CUT_WORDS`]).
+    #[serde(default)]
+    pub cut_jumps: bool,
+    /// `stitch` shots in the thickness style: whether a key is drawn under the picture (`REQ-RND-006`).
+    #[serde(default)]
+    pub key: bool,
     /// `stitch` shots: the colour of the fabric the design is drawn on, as `#rrggbb`: the style's own when
     /// absent, unbleached cotton or white (`REQ-RND-003`).
     #[serde(default)]
@@ -202,6 +220,9 @@ pub fn run(check_only: bool, vectorcraft: bool) -> Result<(), String> {
         if shot.alt.trim().is_empty() {
             findings.error(format!("{SHOTS}: shot `{}` needs alt text", shot.id));
         }
+        if let Some(problem) = unsaid(shot) {
+            findings.error(format!("{SHOTS}: shot `{}`: {problem}", shot.id));
+        }
         if vectorcraft {
             continue;
         }
@@ -269,7 +290,19 @@ fn foreign(shot: &Shot) -> Vec<String> {
     if shot.fabric.is_some() && shot.kind != "stitch" {
         found.push("`fabric` is a stitch shot's".to_string());
     }
+    if (shot.guides || shot.cut_jumps || shot.key) && shot.kind != "stitch" {
+        found.push("`guides`, `cut_jumps` and `key` are a stitch shot's".to_string());
+    }
     found
+}
+
+/// What the alt text of `shot` leaves unsaid that it must say: that its jump threads are cut by hand, when
+/// `cut_jumps` draws them so (`REQ-RND-007`). `cargo xtask shots` and `cargo xtask docs --check` both ask.
+pub fn unsaid(shot: &Shot) -> Option<String> {
+    let said = shot.alt.to_lowercase().contains(CUT_WORDS);
+    (shot.cut_jumps && !said).then(|| {
+        format!("`cut_jumps` draws the design with its jump threads cut by hand, which the machine doesn't do: the alt text must say so, with the words \"{CUT_WORDS}\"")
+    })
 }
 
 /// The fabric colour `colour` names, written `#rrggbb`.
@@ -290,6 +323,16 @@ pub fn stitch(root: &Path, shot: &Shot) -> Result<Vec<Vec<u8>>, String> {
         Some(colour) => settings.on(fabric(colour)?),
         None => settings,
     };
+    let settings = if shot.key { settings.keyed().ok_or("only a thickness picture has a key (`style = \"thickness\"`)")? } else { settings };
+    scenes(root, shot)?
+        .iter()
+        .map(|scene| scene.render(settings, &mut Budget::DEFAULT.meter()).map(|image| image.png).map_err(|e| e.to_string()))
+        .collect()
+}
+
+/// The scenes of a `stitch` shot, one per image it makes: its plans as the machine they are for sews them,
+/// with the jump threads cut by hand when it says `cut_jumps`, and its design's guides when it says `guides`.
+fn scenes(root: &Path, shot: &Shot) -> Result<Vec<Scene>, String> {
     // Each picture shows what the machine its plan is for sews: the sheet's hoop, or the reference machine.
     let (plans, machine) = match (shot.sheet.as_deref(), shot.fixture.as_deref()) {
         // A sheet is drawn as it is: panels would name images that are never drawn.
@@ -302,12 +345,58 @@ pub fn stitch(root: &Path, shot: &Shot) -> Result<Vec<Vec<u8>>, String> {
         (None, Some(fixture)) => (designs(root, fixture, shot)?, REFERENCE),
         _ => return Err("a stitch shot names a test sheet (`sheet = \"TS-01\"`) or a design (`fixture = \"…\"`)".to_string()),
     };
+    let guides = if shot.guides { guides(&drawn(root, shot)?)? } else { Vec::new() };
     plans
         .iter()
         .map(|plan| {
-            stitchcraft_render::preview(plan, machine.trims, settings, &mut Budget::DEFAULT.meter()).map(|image| image.png).map_err(|e| e.to_string())
+            let mut scene = Scene::of(plan, machine.trims, &mut Budget::DEFAULT.meter()).map_err(|e| e.to_string())?;
+            if shot.cut_jumps {
+                for hole in scene.holes.iter_mut().filter(|hole| hole.arrival == Arrival::Loose) {
+                    hole.arrival = Arrival::Cut;
+                }
+            }
+            scene.guides.clone_from(&guides);
+            Ok(scene)
         })
         .collect()
+}
+
+/// The design a `stitch` shot draws, as read, before planning: the test sheet's, or the part of it the shot
+/// picks, or the fixture's.
+fn drawn(root: &Path, shot: &Shot) -> Result<Design, String> {
+    match (shot.sheet.as_deref(), shot.fixture.as_deref()) {
+        (Some(id), _) => picked(testsheets::find(id).ok_or_else(|| format!("there is no test sheet `{id}`"))?, shot),
+        (None, Some(fixture)) => {
+            let bytes = util::read_bytes(&root.join(fixture))?;
+            let reading = stitchcraft_engine::design::Reading { auto: shot.auto, ..Default::default() };
+            Ok(Source::of(Path::new(fixture)).read(&bytes, reading).map_err(|d| format!("{fixture}: {d}"))?.0)
+        }
+        (None, None) => Err("a stitch shot names a test sheet (`sheet = \"TS-01\"`) or a design (`fixture = \"…\"`)".to_string()),
+    }
+}
+
+/// The lines of `design` that aren't sewn, on the machine's grid (`REQ-RND-005`): each element's outline,
+/// then its guide line and its anchor line, and after the elements the design's automatic guides.
+fn guides(design: &Design) -> Result<Vec<Vec<GridPoint>>, String> {
+    let outline = |shape: &Shape| match shape {
+        Shape::Stroke { path, .. } | Shape::Fill { path, .. } => path.clone(),
+    };
+    let mut paths: Vec<Outline> = Vec::new();
+    for element in design.elements() {
+        paths.push(outline(&element.shape));
+        paths.extend(element.hints.guide.iter().map(|guide| guide.path.clone()));
+        paths.extend(element.hints.anchor.iter().cloned());
+    }
+    paths.extend(design.guides.iter().map(|mark| outline(&mark.shape)));
+    let mut meter = Budget::DEFAULT.meter();
+    let mut lines = Vec::new();
+    for path in &paths {
+        for piece in stroke::flatten(path, GUIDE_TOLERANCE_MM, &mut meter).map_err(|e| e.to_string())?.pieces {
+            let line = piece.points.iter().map(|point| point.to_tenths().map(|(x, y)| GridPoint { x, y }));
+            lines.push(line.collect::<Option<Vec<_>>>().ok_or("a guide lies off the machine's grid")?);
+        }
+    }
+    Ok(lines)
 }
 
 /// The plan of `sheet`, or of the part of it the elements of `shot` pick, planned as the sheet is planned, and
@@ -317,8 +406,25 @@ fn part(sheet: &testsheets::TestSheet, shot: &Shot) -> Result<StitchPlan, String
     if shot.elements.is_empty() {
         return sheet.plan().map_err(|e| format!("{id} could not be drawn: {e}"));
     }
-    let design = sheet.design().ok_or_else(|| format!("{id} is drawn stitch by stitch, and has no elements to pick"))?;
+    let part = picked(sheet, shot)?;
+    let outcome = stitchcraft_engine::plan(&part, sheet.profile, &Budget::DEFAULT);
+    let said: Vec<String> =
+        outcome.diagnostics.iter().filter(|d| !shot.allow.iter().any(|code| code == d.code.id())).map(ToString::to_string).collect();
+    if !said.is_empty() {
+        return Err(format!("{id}: {}", said.join("; ")));
+    }
+    outcome.plan.ok_or_else(|| format!("{id}'s elements {} have no plan", shot.elements.join(", ")))
+}
+
+/// The design of `sheet`, or the part of it whose elements' ids start as one of `shot`'s `elements` say.
+fn picked(sheet: &testsheets::TestSheet, shot: &Shot) -> Result<Design, String> {
+    let id = sheet.id;
+    let what = if shot.elements.is_empty() { "no design to take guides from" } else { "no elements to pick" };
+    let design = sheet.design().ok_or_else(|| format!("{id} is drawn stitch by stitch, and has {what}"))?;
     let design = design.map_err(|e| format!("{id} could not be drawn: {e}"))?;
+    if shot.elements.is_empty() {
+        return Ok(design);
+    }
     let picked: Vec<Element> = design
         .elements()
         .iter()
@@ -328,14 +434,7 @@ fn part(sheet: &testsheets::TestSheet, shot: &Shot) -> Result<StitchPlan, String
     if picked.is_empty() {
         return Err(format!("{id} has no element whose id starts with {}", shot.elements.join(" or ")));
     }
-    let part = Design::new(picked, design.settings).map_err(|d| format!("{id}: {d}"))?;
-    let outcome = stitchcraft_engine::plan(&part, sheet.profile, &Budget::DEFAULT);
-    let said: Vec<String> =
-        outcome.diagnostics.iter().filter(|d| !shot.allow.iter().any(|code| code == d.code.id())).map(ToString::to_string).collect();
-    if !said.is_empty() {
-        return Err(format!("{id}: {}", said.join("; ")));
-    }
-    outcome.plan.ok_or_else(|| format!("{id}'s elements {} have no plan", shot.elements.join(", ")))
+    Design::new(picked, design.settings).map_err(|d| format!("{id}: {d}"))
 }
 
 /// The plans of the design in `fixture`, read as `stitch plan` reads it: one per panel of `shot`, each with
@@ -439,6 +538,9 @@ mod tests {
             auto: false,
             allow: Vec::new(),
             style: Some("simple".to_string()),
+            guides: false,
+            cut_jumps: false,
+            key: false,
             fabric: None,
             scale: Some(2.0),
             report: String::new(),
@@ -521,6 +623,82 @@ mod tests {
         }
         let fixture = Shot { elements: vec!["e".into()], ..probe(None, Some("docs/fixtures/wave.svg"), &[]) };
         assert!(stitch(&root, &fixture).is_err_and(|e| e.contains("`elements` picks a test sheet's elements")));
+    }
+
+    /// A probe of `fixture`, drawn as it is with the shot's options in `toml`.
+    fn option(fixture: &str, toml: &str) -> Shot {
+        let shot: Shot = toml::from_str(&format!("id = \"probe\"\nkind = \"stitch\"\nalt = \"A probe\"\n{toml}")).unwrap();
+        Shot { fixture: Some(fixture.to_string()), ..shot }
+    }
+
+    #[test]
+    fn req_rnd_005_a_shot_with_guides_draws_its_design_s_unsewn_lines() {
+        let root = util::root();
+        let ripple = "params = { stroke_method = \"ripple_stitch\", line_count = \"4\" }";
+        let panel = format!("panels = [{{ caption = \"Ripple\", {ripple} }}]");
+        let plain = scenes(&root, &option("docs/fixtures/ripple-guide.svg", &panel)).unwrap();
+        let guided = scenes(&root, &option("docs/fixtures/ripple-guide.svg", &format!("guides = true\n{panel}"))).unwrap();
+        // Off by default; on, the wave's own line and its guide line, which isn't sewn.
+        assert!(plain[0].guides.is_empty());
+        assert_eq!(guided[0].guides.len(), 2);
+        assert_eq!(guided[0].holes, plain[0].holes);
+        // The guide is the arch from (8, 29) to (40, 29) mm, whose top lies at 9.5 mm.
+        let arch = &guided[0].guides[1];
+        assert_eq!((arch.first(), arch.last()), (Some(&GridPoint { x: 80, y: 290 }), Some(&GridPoint { x: 400, y: 290 })));
+        let top = arch.iter().map(|p| p.y).min().unwrap();
+        assert!((94..=96).contains(&top), "{top}");
+        // A satin's rails and rungs, each a line of its own, and a fill's outline, closed.
+        let satin = scenes(&root, &option("docs/fixtures/ripple-satin-guide.svg", &format!("guides = true\n{panel}"))).unwrap();
+        assert!(satin[0].guides.len() >= 4, "{}", satin[0].guides.len());
+        let fill = scenes(&root, &option("docs/fixtures/fill.svg", "guides = true")).unwrap();
+        assert!(fill[0].guides.iter().all(|line| line.len() > 2 && line.first() == line.last()));
+        // A test sheet drawn stitch by stitch has no design to take guides from.
+        let sheet = Shot { guides: true, ..probe(Some("TS-01"), None, &[]) };
+        assert!(scenes(&root, &sheet).is_err_and(|e| e.contains("no design")));
+    }
+
+    #[test]
+    fn req_rnd_006_a_thickness_shot_can_have_a_key_and_no_other_can() {
+        let root = util::root();
+        let thickness = |key: &str| stitch(&root, &option("docs/fixtures/wave.svg", &format!("style = \"thickness\"\nscale = 4.0\n{key}")));
+        let size = |png: &[u8]| tiny_skia::Pixmap::decode_png(png).map(|p| (p.width(), p.height())).unwrap();
+        let (plain, keyed) = (thickness("").unwrap(), thickness("key = true").unwrap());
+        let ((w, h), (kw, kh)) = (size(&plain[0]), size(&keyed[0]));
+        assert!(w == kw && kh > h, "{w}×{h} and {kw}×{kh}");
+        for style in ["realistic", "simple"] {
+            let refused = stitch(&root, &option("docs/fixtures/wave.svg", &format!("style = \"{style}\"\nkey = true")));
+            assert!(refused.is_err_and(|e| e.contains("only a thickness picture has a key")), "{style}");
+        }
+    }
+
+    #[test]
+    fn req_rnd_007_a_shot_with_its_jump_threads_cut_says_so() {
+        let root = util::root();
+        let allow = "auto = true\nallow = [\"SC-I0901\", \"SC-I0912\", \"SC-I0923\", \"SC-I0907\", \"SC-I0904\", \"SC-I0908\", \"SC-I0909\", \"SC-I0504\", \"SC-W0913\", \"SC-I1119\"]";
+        let loose = |scene: &Scene| scene.holes.iter().filter(|hole| hole.arrival == Arrival::Loose).count();
+        let carried = scenes(&root, &option("docs/fixtures/rules.svg", allow)).unwrap();
+        let cut = scenes(&root, &option("docs/fixtures/rules.svg", &format!("cut_jumps = true\n{allow}"))).unwrap();
+        // The reference machine carries the thread loose between the shapes; cut by hand, none is.
+        assert!(loose(&carried[0]) > 0);
+        assert_eq!(loose(&cut[0]), 0);
+        let joined = |scene: &Scene| scene.holes.iter().map(|hole| (hole.at, hole.arrival == Arrival::Sewn)).collect::<Vec<_>>();
+        assert_eq!(joined(&carried[0]), joined(&cut[0]));
+        // Its alternative text must say so.
+        let quiet = Shot { cut_jumps: true, ..probe(None, Some("docs/fixtures/wave.svg"), &[]) };
+        assert!(unsaid(&quiet).is_some_and(|e| e.contains("\"jump threads cut\"")));
+        assert_eq!(unsaid(&Shot { alt: "A wave, its Jump threads cut by hand".to_string(), ..quiet.clone() }), None);
+        assert_eq!(unsaid(&Shot { cut_jumps: false, ..quiet }), None);
+    }
+
+    #[test]
+    fn the_drawing_options_are_a_stitch_shot_s() {
+        let shot = |toml: &str| -> Shot { toml::from_str(&format!("id = \"probe\"\nalt = \"A probe\"\n{toml}")).unwrap() };
+        let refused = "`guides`, `cut_jumps` and `key` are a stitch shot's";
+        for option in ["guides = true", "cut_jumps = true", "key = true"] {
+            assert_eq!(foreign(&shot(&format!("kind = \"picture\"\npicture = \"pear\"\n{option}"))), [refused], "{option}");
+            assert_eq!(foreign(&shot(&format!("kind = \"photo\"\n{option}"))), [refused], "{option}");
+            assert!(foreign(&shot(&format!("kind = \"stitch\"\n{option}"))).is_empty(), "{option}");
+        }
     }
 
     /// The plan [`part`] gives of the sheet `id` for `shot`.
