@@ -8,4 +8,6 @@ badge.svg
   trims     the machine makes none of them: cut the jump threads by hand
   threads   1. unnamed (#c8102e), shown as Brother PEC 5 "Red"
             2. unnamed (#1f4e9c), shown as Brother PEC 2 "Blue"
+  shares    1. unnamed (#c8102e): 59 stitches, 47.6 %, threaded once
+            2. unnamed (#1f4e9c): 65 stitches, 52.4 %, threaded once
   preview   badge.png (384 × 384 pixels)

@@ -42,6 +42,23 @@
 //! picture traces the same for everyone. Its standard input is written from a thread of its own while its
 //! standard error is read, so that neither waits on the other.
 //!
+//! **A kept colour** (`REQ-AUTO-160`). Image Trace chooses which of the library's colours a picture gets,
+//! and gives none a place among them: its `keepColors` traces only the listed colours and leaves the rest of
+//! the picture out. So a picture with kept threads ([`Tracing::kept`]) is traced twice ([`picture`]). First
+//! in at most `--colours` less the kept threads, 2 at the least, chosen from the machine's threads without
+//! the kept ones: the threads the tracer would give the rest of the picture. Then again in a library of
+//! exactly those threads and the kept ones, in at most `--colours` of them, and that trace is the design.
+//! With as many kept threads as `--colours`, the first trace is left out. A kept thread the second trace
+//! leaves out, since no pixel lies nearer it than the other threads, is said with `SC-W0822`. The threads
+//! the first trace used are its shapes' fills, read as `stitch plan` reads the document, in loops over what
+//! that reading's budget already bounded.
+//!
+//! **A dropped colour** (`REQ-AUTO-161`). `--drop-colour` leaves threads out of every trace's library
+//! ([`Tracing::dropped`]), so that their pixels take the nearest of the others. A picture with dropped
+//! threads and none kept is traced once, in the library without them. A merge of 2 traced colours into one
+//! thread is not built: measured, leaving out the nearer of the 2 nearest threads is the tracer's own trace
+//! in one colour fewer.
+//!
 //! **What fails.** A program that can't be started is `SC-E0815`, and one that fails or saves no document is
 //! `SC-E0816`, which ends with the end of what it said on standard error, each character a terminal would
 //! act on escaped ([`printable`]).
@@ -51,9 +68,12 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 use serde_json::{Value, json};
-use stitchcraft_core::{Code, Diagnostic, Fix, Mm};
+use stitchcraft_core::{Budget, Code, Diagnostic, Fix, Mm};
 use stitchcraft_plan::MachineProfile;
+use stitchcraft_plan::palette::PaletteEntry;
 
+use crate::cli::TracingArgs;
+use crate::colours::{self, Unchosen};
 use crate::commands::{palette, printable};
 use crate::files::{self, Scratch};
 
@@ -104,6 +124,13 @@ pub fn is_picture(path: &Path) -> bool {
 /// each side, and traced in at most `colours` of them with the `fitting` ([the module](self)). `file.place`
 /// fits the picture inside its `rect`, `[x, y, width, height]` in points.
 pub fn steps(name: &str, bytes: &[u8], profile: &MachineProfile, size: Option<Mm>, colours: u32, fitting: Fitting) -> Value {
+    steps_in(&palette::gpl(profile), name, bytes, profile, size, colours, fitting)
+}
+
+/// [`steps`], with the swatch library `library`, a GIMP palette of the machine's threads, in place of all
+/// of them.
+#[allow(clippy::too_many_arguments)]
+fn steps_in(library: &str, name: &str, bytes: &[u8], profile: &MachineProfile, size: Option<Mm>, colours: u32, fitting: Fitting) -> Value {
     let rect = match size {
         Some(size) => [0.0, 0.0, size.to_points(), size.to_points()],
         None => {
@@ -123,7 +150,7 @@ pub fn steps(name: &str, bytes: &[u8], profile: &MachineProfile, size: Option<Mm
         options.insert("corners".to_string(), json!(CORNERS));
     }
     json!([
-        {"command": "swatch.library.load", "params": {"name": LIBRARY, "data": palette::gpl(profile)}},
+        {"command": "swatch.library.load", "params": {"name": LIBRARY, "data": library}},
         {"command": "file.place", "params": {"name": name, "dataBase64": stitchcraft_vectorcraft::base64(bytes), "rect": rect}},
         {"command": "imageTrace.make", "params": {"params": trace}},
         {"command": "imageTrace.expand"},
@@ -164,6 +191,112 @@ pub fn traced(program: Option<&Path>, name: &str, steps: &Value, scratch: &Scrat
     files::read_capped(&saved).map_err(|e| failed(name, &format!("it saved no document ({e}).")))
 }
 
+/// How a picture is traced, as `--vectorcraft-cli`, `--size`, `--colours`, `--fewer-points` and
+/// `--keep-colour` ask ([the module](self)).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Tracing<'a> {
+    /// The program that traces, or else [`PROGRAM`] on the PATH.
+    pub program: Option<&'a Path>,
+    /// The picture's longer side, or else the hoop's.
+    pub size: Option<Mm>,
+    /// How many colours at the most.
+    pub colours: u32,
+    /// How its outlines are fitted.
+    pub fitting: Fitting,
+    /// The machine's threads the picture keeps, each once, in the order named.
+    pub kept: Vec<&'static PaletteEntry>,
+    /// The machine's threads the picture is traced without, each once, in the order named.
+    pub dropped: Vec<&'static PaletteEntry>,
+}
+
+impl<'a> Tracing<'a> {
+    /// The tracing `args` ask for the picture `bytes`, traced for `profile`; or the usage error that says
+    /// why it can't be, before VectorCraft runs: a kept colour that is no thread, or more kept threads than
+    /// colours.
+    pub fn asked(args: &'a TracingArgs, bytes: &[u8], profile: &MachineProfile) -> Result<Tracing<'a>, String> {
+        const KEEP: &str = "--keep-colour";
+        const DROP: &str = "--drop-colour";
+        let palette = profile.palette.palette();
+        let colours = args.colours.unwrap_or(COLOURS);
+        let read = |given: &[colours::Colour], option: &str| {
+            colours::chosen(given, option, palette, &mut colours::pixels(bytes, option)).map_err(|Unchosen::Usage(why)| why)
+        };
+        let kept = read(&args.keep_colour, KEEP)?;
+        let dropped = read(&args.drop_colour, DROP)?;
+        if let Some(both) = kept.iter().find(|entry| held(&dropped, entry)) {
+            return Err(format!("{KEEP} and {DROP} both name the thread {}: keep it or leave it out", both.name));
+        }
+        if u32::try_from(kept.len()).map_or(true, |count| count > colours) {
+            return Err(format!("{KEEP} keeps {} threads, more than the {colours} colours of --colours", kept.len()));
+        }
+        if colours::threads(palette).filter(|entry| !held(&dropped, entry)).nth(1).is_none() {
+            return Err(format!("{DROP} leaves {} with fewer than 2 threads to trace in", palette.name));
+        }
+        let fitting = if args.fewer_points { Fitting::Fewest } else { Fitting::Defaults };
+        Ok(Tracing { program: args.vectorcraft_cli.as_deref(), size: args.size, colours, fitting, kept, dropped })
+    }
+}
+
+/// The document VectorCraft's command line traces the picture `bytes`, named `name`, into for `profile`, as
+/// `tracing` asks, into the folder `scratch`, with what was said of the threads kept (`SC-W0822`); or why it
+/// wasn't traced, as [`traced`] says. With kept threads it is traced twice ([the module](self)).
+pub fn picture(
+    name: &str,
+    bytes: &[u8],
+    profile: &MachineProfile,
+    tracing: &Tracing<'_>,
+    scratch: &Scratch,
+) -> Result<(Vec<u8>, Vec<Diagnostic>), Diagnostic> {
+    let Tracing { program, size, colours, fitting, ref kept, ref dropped } = *tracing;
+    if kept.is_empty() && dropped.is_empty() {
+        return traced(program, name, &steps(name, bytes, profile, size, colours, fitting), scratch).map(|document| (document, Vec::new()));
+    }
+    let threads: Vec<&'static PaletteEntry> = colours::threads(profile.palette.palette()).filter(|entry| !held(dropped, entry)).collect();
+    if kept.is_empty() {
+        let once = steps_in(&palette::gpl_of(profile, &threads), name, bytes, profile, size, colours, fitting);
+        return traced(program, name, &once, scratch).map(|document| (document, Vec::new()));
+    }
+    let others: Vec<&'static PaletteEntry> = threads.iter().copied().filter(|entry| !held(kept, entry)).collect();
+    let rest = colours.saturating_sub(u32::try_from(kept.len()).unwrap_or(u32::MAX));
+    let mut library: Vec<&'static PaletteEntry> = kept.clone();
+    if rest > 0 {
+        let first = steps_in(&palette::gpl_of(profile, &others), name, bytes, profile, size, rest.max(2), fitting);
+        let document = traced(program, name, &first, scratch)?;
+        library.extend(used(&document, &others)?);
+    }
+    let second = steps_in(&palette::gpl_of(profile, &library), name, bytes, profile, size, colours, fitting);
+    let document = traced(program, name, &second, scratch)?;
+    let traced_in = used(&document, kept)?;
+    let said = kept.iter().filter(|entry| !held(&traced_in, entry)).map(|entry| untraced(entry)).collect();
+    Ok((document, said))
+}
+
+/// Whether `entry` is one of `entries`.
+fn held(entries: &[&PaletteEntry], entry: &PaletteEntry) -> bool {
+    entries.iter().any(|held| held.index == entry.index)
+}
+
+/// The threads of `library` that the traced `document`'s shapes are filled in, in the library's order.
+fn used(document: &[u8], library: &[&'static PaletteEntry]) -> Result<Vec<&'static PaletteEntry>, Diagnostic> {
+    // Every filled shape is read with its thread, whether it has settings or not.
+    let read = stitchcraft_vectorcraft::read(document, &Budget::DEFAULT)?;
+    let elements = read.design.elements();
+    Ok(library.iter().copied().filter(|entry| elements.iter().any(|element| element.thread.color == entry.color)).collect())
+}
+
+/// `SC-W0822`: the kept thread `entry` isn't in the picture's trace.
+fn untraced(entry: &PaletteEntry) -> Diagnostic {
+    Diagnostic::new(
+        Code::VcKeptThreadUntraced,
+        format!(
+            "The thread {} ({}), kept with --keep-colour, isn't in the picture's trace: no part of the picture is nearer its colour than \
+             the other threads'.",
+            entry.name, entry.color
+        ),
+    )
+    .with_fix(Fix::Hint("Keep a colour the picture has, such as one of its pixels as X,Y, or trace it in more --colours.".to_string()))
+}
+
 /// `SC-E0815`: the program `program` names, or [`PROGRAM`] on the PATH, didn't start, with `error`.
 fn not_started(program: Option<&Path>, error: &std::io::Error) -> Diagnostic {
     let which = program.map_or_else(|| format!("`{PROGRAM}` on the PATH"), |path| path.display().to_string());
@@ -199,6 +332,26 @@ mod tests {
     use stitchcraft_testkit::temp::TempDir;
 
     use super::*;
+
+    #[test]
+    fn req_auto_161_dropping_every_thread_but_one_or_keeping_a_dropped_one_is_a_usage_error() {
+        let thread = |name: &str| crate::colours::Colour::Thread(name.to_string());
+        // By colour: 2 threads are named Flesh Pink, and a name is the first of them.
+        let all: Vec<crate::colours::Colour> =
+            crate::colours::threads(REFERENCE.palette.palette()).map(|entry| crate::colours::Colour::Rgb(entry.color)).collect();
+        let (one, two) = (all.get(1..).unwrap().to_vec(), all.get(2..).unwrap().to_vec());
+        let args = TracingArgs { drop_colour: one, ..TracingArgs::default() };
+        assert_eq!(Tracing::asked(&args, b"", REFERENCE).unwrap_err(), "--drop-colour leaves Brother PEC with fewer than 2 threads to trace in");
+        let args = TracingArgs { drop_colour: two, ..TracingArgs::default() };
+        assert_eq!(Tracing::asked(&args, b"", REFERENCE).unwrap().dropped.len(), all.len() - 2);
+        let args = TracingArgs { keep_colour: vec![thread("white")], drop_colour: vec![thread("Red"), thread("White")], ..TracingArgs::default() };
+        assert_eq!(
+            Tracing::asked(&args, b"", REFERENCE).unwrap_err(),
+            "--keep-colour and --drop-colour both name the thread White: keep it or leave it out"
+        );
+        let args = TracingArgs { colours: Some(2), keep_colour: vec![thread("Red"), thread("Blue")], ..TracingArgs::default() };
+        assert_eq!(Tracing::asked(&args, b"", REFERENCE).unwrap().kept.len(), 2);
+    }
 
     #[test]
     fn req_cli_012_a_picture_is_told_by_its_extension() {

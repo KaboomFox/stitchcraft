@@ -3475,6 +3475,33 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-AUTO-160"
+area = "auto"
+level = "L2"
+statement = "`stitch plan --keep-colour COLOUR`, and `stitch expand` with it, gives a picture a thread at any `--colours`. COLOUR is a thread of the machine by its name, in any case, a colour as `#rrggbb`, which keeps the machine's thread nearest it, or a pixel of the picture as X,Y, from its left and top edges, which keeps the thread nearest that pixel's colour. It may be given several times, and the kept threads are counted once each. Without it the picture is traced once, as before. With it, VectorCraft traces twice. First it traces the picture in at most `--colours` less the kept threads, 2 at the least, chosen from the machine's threads without the kept ones. Then it traces the picture again in a swatch library of exactly the threads the first trace used and the kept threads, in at most `--colours` of them, and that trace is the design. With as many kept threads as `--colours`, the first trace is left out. A kept thread that trace leaves out, since no pixel lies nearer it than the other threads, is said with a warning that names it, `SC-W0822`. More kept threads than `--colours`, a name that is no thread of the machine, which the error answers with the 3 nearest names, and a pixel outside the picture are usage errors, before VectorCraft runs. A `stitch` built without its `cutout` feature decodes no picture, so a pixel is a usage error that says so."
+rationale = "Image Trace chooses the threads by how much of the picture each would cover, so a small bright colour loses its thread first: on the varied set, the coleus traced in 6 threads had no purple or magenta, and 2 of its 19 small bright details. VectorCraft's documented `keepColors` traces only the listed colours and leaves the rest of the picture out (the coleus kept 38 % of its area), so it can't keep a colour. A library of exactly the threads wanted is what VectorCraft's documented commands allow (`swatch.library.load`, `palette` `documentLibrary`). The other threads are the tracer's own choice, so no rule of StitchCraft's decides which colour goes: measured, dropping the smallest thread lost the patch's red stars, and dropping the nearest raised the colour error of 2 pictures of 5. Which colour matters is the person's to say, as for marks."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-161"
+area = "auto"
+level = "L2"
+statement = "`stitch plan --drop-colour COLOUR`, and `stitch expand` with it, leaves a thread out of a picture's trace: COLOUR is read as for `--keep-colour`, and VectorCraft traces in the machine's threads without it, each time it traces, so that its pixels take the nearest of the others. It may be given several times. A colour both kept and dropped, a name that is no thread of the machine, which the error answers with the nearest names, and a pixel outside the picture are usage errors, before VectorCraft runs. Dropping every thread but one is a usage error too."
+rationale = "A person who lacks a thread, or who wants one rethread less, says which goes. On the set, leaving out the nearer of the 2 nearest threads of a 9-thread trace gave the same colour error and details as the tracer's own 8 threads, on all 7 pictures that traced in 9. So a merge of 2 traced colours into one is no better than one colour fewer when the pair is the nearest, and when it isn't, the person names it. Recolouring the traced shapes after the trace gives a colour no pixel had, while a trace without the thread gives each pixel its nearest thread."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-162"
+area = "auto"
+level = "L2"
+statement = "`stitch plan` lists each thread of the plan once, under `shares`, with the stitches it sews, underlay and lock stitches included, their share of all of the plan's stitches in percent, to a tenth, and how many times it is threaded, in the order it is first threaded. A thread is its colour and its name: one threaded twice is one share, threaded 2 times, and a stop is no threading. The shares are rounded by largest remainder, so that as shown they add up to exactly 100.0: each is rounded down to a tenth, and the tenths left over go one each to the largest remainders, the thread threaded first among equal ones. A plan without stitches has a share of 0.0 for each of its threads. The report has the same list as `shares`, each with `color`, `name`, `stitches`, `percent` and `threaded`."
+rationale = "Before a person rethreads a one-needle machine 8 times, they can see which threads sew little: on the varied set, 6 of the 7 pictures that traced in 9 threads had one that sews under 3 % of the stitches, the goose a thread of 1.0 %. The list is counted from the plan, so it is the same for any picture, and it guesses nothing. It is the evidence a person needs for `--drop-colour` and `--colours`."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-AUTO-031"
 area = "auto"
 level = "L2"
