@@ -568,7 +568,6 @@ mod coverage;
 #[cfg(test)]
 mod tests {
     use serde_json::{Value, json};
-    use stitchcraft_engine::registry::PARAMETERS;
     use stitchcraft_vectorcraft::{read_auto_effect, read_effect};
 
     use super::*;

@@ -9,7 +9,9 @@ use vectorcraft_doc::{Appearance, Document, Effect, Node, NodeId};
 use vectorcraft_geom::{BezPath, FillRule, PathData, Point, Rect, shapes};
 use vectorcraft_plugins::effect::Paints;
 use vectorcraft_plugins::objects::{self, Output};
-use vectorcraft_plugins::{ABI_VERSION, Budget, Error, HEAVY_FUEL, HEAVY_WALL_TIME_MS, Kind, Limits, Manifest, ParamSpec, Plugin, effect, export, registry};
+use vectorcraft_plugins::{
+    ABI_VERSION, Budget, Error, HEAVY_FUEL, HEAVY_WALL_TIME_MS, Kind, Limits, Manifest, ParamSpec, Plugin, effect, export, registry,
+};
 
 /// The stitch families, each a module of its own whose live effect sews an object as the family.
 const FAMILIES: [&str; 3] = ["stroke", "satin", "fill"];
