@@ -221,7 +221,7 @@ mod tests {
     /// file and the name VectorCraft shows (a docs review found Lettering missing from both).
     #[test]
     fn the_install_page_builds_every_module() {
-        let page = std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/src/user/install.md")).unwrap();
+        let page = include_str!("../../../docs/src/user/install.md");
         let built: Vec<&str> = page.lines().find_map(|line| line.strip_prefix("for m in ")).unwrap().trim_end_matches("; do").split(' ').collect();
         let mut modules: Vec<&str> = Module::all().into_iter().filter(|module| *module != Module::Hello).map(Module::name).collect();
         let mut sorted = built.clone();

@@ -571,7 +571,7 @@ kind = "stitch"
 fixture = "docs/fixtures/s-stitch.svg"
 style = "realistic"
 scale = 12.0
-alt = "A curved band 6 mm wide sewn as a satin column: its stitches swing from one edge to the other and lie close, so the thread shines"
+alt = "A curved band 6 mm wide sewn as a satin column: its stitches swing from one edge to the other and lie close together"
 panels = [
   { caption = "Satin column", params = { satin_column = "true" } },
 ]
@@ -591,7 +591,7 @@ fixture = "docs/fixtures/s-stitch.svg"
 style = "simple"
 scale = 20.0
 layout = "rows"
-alt = "A curved satin band with its stitches 1 mm apart to show what lies under them: no underlay, and a zigzag underlay sewn first across the band"
+alt = "A curved satin band with its stitches 1 mm apart to show what lies under them. The second has a zigzag underlay sewn first across the band"
 panels = [
   { caption = "Without underlay", params = { satin_column = "true", zigzag_spacing_mm = "1" } },
   { caption = "With a zigzag underlay", params = { satin_column = "true", zigzag_spacing_mm = "1", zigzag_underlay = "true" } },
@@ -1277,7 +1277,7 @@ steps = [
   { cmd = "paint.setFill", params = { color = "#1f4e9c" } },
 ]
 menu = ["Effect", "Plug-ins"]
-alt = "VectorCraft's Effect menu, open at Plug-ins, which lists the 5 StitchCraft effects: Auto, Fill, Lettering, Satin and Stroke."
+alt = "VectorCraft's Effect menu, open at Plug-ins, which lists the 5 StitchCraft effects, Auto, Fill, Lettering, Satin and Stroke."
 
 [[shot]]
 id = "vectorcraft-layers-names"
@@ -1329,7 +1329,7 @@ steps = [
 ]
 menu = ["Effect", "Plug-ins"]
 dialog = "auto"
-alt = "The StitchCraft Auto dialog in VectorCraft. The settings of automatic digitizing's rules are in sections: Stitches by shape, from Stitch to Outline round fills, Neighbours, from Overlap to Leave out the background, and Base layer. A section Preview comes last, with its drop-down at auto. Each row has a label, a field with its unit, a drop-down or a checkbox, and a button that opens the setting's help page. Under them are VectorCraft's Preview checkbox, checked, and the Cancel and OK buttons."
+alt = "The StitchCraft Auto dialog in VectorCraft. The settings of automatic digitizing's rules are in sections named Stitches by shape, from Stitch to Outline round fills, Neighbours, from Overlap to Leave out the background, and Base layer. A section Preview comes last, with its drop-down at auto. Each row has a label, a field with its unit, a drop-down or a checkbox, and a button that opens the setting's help page. Under them are VectorCraft's Preview checkbox, checked, and the Cancel and OK buttons."
 
 [[shot]]
 id = "vectorcraft-stroke-dialog"

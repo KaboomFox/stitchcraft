@@ -74,7 +74,7 @@ decide: StitchCraft lists the shares and chooses nothing. A report (`--report`) 
 ### In VectorCraft, the Auto effect
 
 With the traced group selected, choose **Effect › Plug-ins › StitchCraft Auto**. Its dialog has the
-settings of the rules in sections: **Stitches by shape**, **Neighbours**, where **Overlap** is how far a
+settings of the rules in sections named **Stitches by shape**, **Neighbours**, where **Overlap** is how far a
 shape is cut away under the next, and **Base layer**. Each starts at its default, and the button beside
 it opens its help ([reference](../reference/params/auto.md)). The rules' bounds, such as the widest satin
 column and the smallest area sewn, aren't in the dialog: `stitch plan --set` sets them. **Preview**, in a
@@ -82,7 +82,7 @@ section of its own, chooses how much of the stitches the canvas shows: auto, exa
 **Preview** checkbox below it is VectorCraft's, and shows the effect on the canvas while the dialog is open.
 
 <!-- shot: vectorcraft-auto-dialog -->
-![The StitchCraft Auto dialog in VectorCraft. The settings of automatic digitizing's rules are in sections: Stitches by shape, from Stitch to Outline round fills, Neighbours, from Overlap to Leave out the background, and Base layer. A section Preview comes last, with its drop-down at auto. Each row has a label, a field with its unit, a drop-down or a checkbox, and a button that opens the setting's help page. Under them are VectorCraft's Preview checkbox, checked, and the Cancel and OK buttons.](../../images/generated/vectorcraft-auto-dialog.png)
+![The StitchCraft Auto dialog in VectorCraft. The settings of automatic digitizing's rules are in sections named Stitches by shape, from Stitch to Outline round fills, Neighbours, from Overlap to Leave out the background, and Base layer. A section Preview comes last, with its drop-down at auto. Each row has a label, a field with its unit, a drop-down or a checkbox, and a button that opens the setting's help page. Under them are VectorCraft's Preview checkbox, checked, and the Cancel and OK buttons.](../../images/generated/vectorcraft-auto-dialog.png)
 <!-- /shot -->
 
 Each traced shape then shows the stitches StitchCraft chooses for it, as far as VectorCraft lets a live

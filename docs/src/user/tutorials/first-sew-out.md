@@ -29,7 +29,7 @@ them too.
 {{#include ../reference/generated/preview-ts-01.txt}}
 ```
 
-![TS-01 as it will sew: a cross with ticks, an upright F at the top left and four corner squares, in black thread. Thin lines join the parts: the jump threads, which are cut by hand.](../../images/generated/testsheet-ts-01.png)
+![TS-01 as it will sew in black thread. An upright F stands at the top left of a cross with ticks, with a square in each corner. Thin lines join the parts: the jump threads, which are cut by hand.](../../images/generated/testsheet-ts-01.png)
 
 The picture is drawn from the file itself, at the exact positions the machine will use, so this is what
 you should see in the hoop. Add `--style simple` to see every stitch, needle hole, trim and jump instead:
@@ -44,8 +44,8 @@ stop here and report that: it is the most important thing this sheet tests.
 ## 4. Hoop and sew
 
 Hoop the fabric and stabilizer drum-tight, centre the design, attach the hoop, and sew. The machine sews
-the cross first, then the "F", then the four corner squares. The PE800 makes no trims, as `stitch testsheet`
-said: it carries the thread from part to part. Cut these jump threads, the thin lines in the picture above,
+the cross first, then the "F", then the four corner squares. The PE800 doesn't trim, as `stitch testsheet`
+said: the thread runs on from part to part. Cut these jump threads, the thin lines in the picture above,
 once it has sewn.
 
 ## 5. Check

@@ -29,8 +29,8 @@ To update StitchCraft, run `git pull` in the `stitchcraft` folder and the `cargo
 ## The VectorCraft plug-ins
 
 The plug-ins say how each object of a [VectorCraft](https://github.com/storytold/vectorcraft) drawing
-sews, and show its stitches. They are 13 modules, all built from the same source, one for each feature of
-the `stitchcraft-vc-plugin` package:
+sews, and show its stitches. There are 13 modules, each built from the `stitchcraft-vc-plugin` package
+with a feature of its own:
 
 | Module | VectorCraft shows it as | Where |
 |---|---|---|
@@ -74,7 +74,7 @@ too: VectorCraft stops the export of a design as large as a traced photo, and `s
 ([when VectorCraft stops the export](how-to/embroider-a-vectorcraft-design.md#when-vectorcraft-stops-the-export)).
 
 When VectorCraft asks about installing a filter "which asks for a heavy budget", choose **OK**. From
-VectorCraft 0.24.1 the **OK** button stays grey for half a second after the question appears, and a
+VectorCraft 0.24.1 the **OK** button is grey for half a second after the question appears, and a
 script that controls the app can't choose it for you. To install such a filter without the app, give
 VectorCraft's command line `--allow-plugin-grants`:
 
