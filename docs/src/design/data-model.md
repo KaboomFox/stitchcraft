@@ -302,6 +302,59 @@ another format than its own (`REQ-PLAN-006`).
 depends on the elements' lock settings, which a plan does not hold. Assembly's cases check it with the
 settings (`REQ-ASM-003`, `REQ-LCK-001`).
 
+### The thread's state
+
+The invariants follow the needle. A machine reading a plan is also in a state of thread, and that state
+decides where locks belong. M13.56 wrote it down, from the owner's question on 2026-11-21. Its rules,
+`REQ-PLAN-008` to `REQ-PLAN-010`, are planned.
+
+| Entry | Needle | Sewing | Thread, `Command` | Thread, `LongJumps(l)` | Thread, `None` (PE800) |
+|---|---|---|---|---|---|
+| The plan's start | at the origin, up | no | cut: a new end | cut | cut |
+| `Normal` | moves to `at`, down | yes, from the second in a row | attached | attached | attached |
+| `Jump` | moves to `at`, up | no | attached: a jump thread | cut when the next needle point is farther than `l` from the last | attached: a jump thread the operator snips |
+| `Trim` | stays | no | cut | attached (no trim command) | attached (MC-1: the PE800 cuts no jump, trim-flagged or not) |
+| `Stop` | stays | no | cut, the same thread again | cut | cut (MC-1) |
+| A thread change | stays | no | cut, a new thread | cut | cut |
+| The plan's end | stays | no | cut | cut | cut |
+
+The thread is either attached to the fabric or cut. Each time it is cut, or may be (an operator snips the
+jump threads the PE800 leaves, `plan/machine-testing.md`), the stitching before it needs a tie-off and the
+stitching after it a tie-in, where the elements' `ties` set them. That is why plan assembly ties off and in
+round every jump, whatever the machine: the locks hold where a machine or a person cuts.
+
+The model is in 4 places in the code. `invariants::check` tracks the needle. `StitchPlan::sewn_stitches` is
+the sewing state. The preview's scene (`stitchcraft-render`) is the thread state by `TrimSupport`, and
+draws each hole as reached by a stitch, by a jump thread or across a cut. Plan assembly decides where locks
+go (`REQ-LCK-001`). They disagree in 2 places:
+
+- **A stop.** `sewn_stitches` keeps a run going across a stop. The scene cuts there, as the PE800 does,
+  and encoders write a stop as a change to the same thread. Assembly always jumps after a stop, so only a
+  sheet drawn stitch by stitch shows it: TS-02 sews on after its stop. `REQ-PLAN-010` makes a stop end
+  the run, which changes what the length checks see, and nothing that sews.
+- **The cap.** Finalize checks the invariants (`REQ-FIN-003`). Then an automatic design is thinned and
+  capped ([how thick a design sews](image-to-embroidery.md#how-thick-a-design-sews)), and those passes take
+  needle points out, lock stitches among them, with no check after them. `REQ-PLAN-008`'s check runs
+  after the cap, and the invariants move there with it.
+
+**What M13.56 measured.** A walk of every finished plan with this model, the elements' lock settings
+read from the design: the 26 test sheets, every conformance fixture and repository document planned plain,
+automatic, and in the photo and logo styles (240 plans), and 18 local traced photos in the photo style,
+9 subjects at 6 and 12 threads. Of their 5,333 runs with settings, 0 lack a lock that their element's
+`ties` sets. Every trim follows a stitch sewn since the last cut, and every returned plan passes the
+invariants after the cap too. On automatic designs the thinning pass leaves a lock one back and forth
+(`REQ-AUTO-074`): 2 needle points where assembly sewed 4, at 2,230 of the 5,333 tie-ins. The only stops
+right after a trim are TS-11A's, an element trimmed and then stopped after, and both cut. The 5 sheets
+drawn stitch by stitch, TS-01, TS-02 and TS-10A to TS-10C, have no locks and no settings, so the check
+wants no lock of them.
+
+**The checks.** `REQ-PLAN-009` and `REQ-PLAN-010` are plan rules and join `invariants::check`.
+`REQ-PLAN-008` needs the lock settings, which a plan doesn't hold, so it is the engine's. It walks the plan
+the engine returns once the cap is done, with each element's lock settings from its generated parameters,
+and reports a missing lock as `SC-E0009`, as a broken invariant is. The walk is linear in the plan's
+length. On the largest plan measured (a traced photo of 58,402 entries) it takes 1.5 ms, where
+`invariants::check` takes 2.2 ms.
+
 ### How thick a plan sews
 
 `stitchcraft_plan::thickness` measures a plan's thread, in fills, and its needle points per mm² in the

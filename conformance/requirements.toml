@@ -66,6 +66,31 @@ statement = "Every Normal and Jump entry names the element it came from, one the
 milestone = "M3"
 status = "active"
 
+[[req]]
+id = "REQ-PLAN-008"
+area = "plan"
+level = "L2"
+statement = "In the plan the engine returns, after the cap, each run of stitches starts with a lock stitch where its first point's element asks for a tie-in, and ends with one where its last point's element asks for a tie-off. A run is the needle points sewn between 2 places where the thread may be cut: the plan's start, a thread change, a jump, a trim, a stop and the end. An element asks by `ties`, `force_lock_stitches` and its stitch type, as plan assembly reads them. A plan that breaks it is a StitchCraft bug, SC-E0009."
+rationale = "An end without a lock is thread pulling out of the fabric. REQ-PLAN-004 was retired because a plan doesn't carry lock settings, and stages after assembly take stitches out. M13.56 measured 0 missing locks on every plan there is, so the check guards what assembly makes."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-PLAN-009"
+area = "plan"
+level = "L0"
+statement = "Each trim follows a stitch sewn since the last place the thread was cut (the plan's start, a thread change, a trim or a stop): no trim is a block's first entry, and no 2 trims follow each other with nothing sewn between them."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-PLAN-010"
+area = "plan"
+level = "L0"
+statement = "A stop ends a run of stitches, as a jump and a trim do: the machine cuts the thread there, and PES and DST write the stop as a thread change, so the stitch after it lays no thread from the hole before it (`StitchPlan::sewn_stitches`)."
+milestone = "M13"
+status = "planned"
+
 # ── Machine profiles ───────────────────────────────────────────────────────────────────────────────
 
 [[req]]
