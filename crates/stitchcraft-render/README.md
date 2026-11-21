@@ -19,7 +19,7 @@ the documentation images and the conformance suite. Design: `docs/src/design/ren
 
 - `scene.rs` — the plan as the fabric will show it, in machine units: holes, how the thread arrived at
   each (sewn, loose, cut), trims and stops. Plain data, compared by tests.
-- `raster.rs` — the two styles, drawn with tiny-skia (no SIMD) and encoded as PNG.
+- `raster.rs` — the three styles, drawn with tiny-skia (no SIMD) and encoded as PNG.
 - `error.rs` — `RenderError` and its diagnostics.
 
 ## Dependencies

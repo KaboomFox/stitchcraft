@@ -1,8 +1,9 @@
 # stitchcraft-testkit
 
 Test support, used **only as a dev-dependency** (enforced by `cargo xtask layers`): the degenerate-shape
-corpus, `proptest` strategies generated from the parameter registry, the conformance metrics (coverage,
-containment, row spacing, furrows, topology) and invariant assertions.
+corpus, `proptest` strategies of random plans and paths, the conformance metrics (coverage, containment,
+row spacing, furrows, topology) and invariant assertions. Strategies made from the parameter registry are
+planned, in no step yet (`docs/src/design/params.md`).
 
 **Now:**
 
@@ -22,11 +23,15 @@ containment, row spacing, furrows, topology) and invariant assertions.
 coverage, the share of a fill's area that the thread of a plan's stitches covers, rasterized at 0.05 mm
 with a 0.4 mm thread. `designs` builds the small designs the engine's cases plan.
 
-**Since M13:** `pictures` places the TS-13 sheets' stitches where the sheets draw their shapes. `stitches`
-reads back each element's needle points, a satin column's rungs and the jump threads the PE800 leaves.
-`inkstitch` writes a design's elements as an SVG file Ink/Stitch reads, with their parameters, so the
-Ink/Stitch differential can sew a test sheet in both programs. Its tests read the file as XML, the one use of
-the dev-dependency `roxmltree`.
+**Since M13:** `pictures` places the test pictures of automatic digitizing, and the TS-13 sheets' stitches,
+where the cases measure them: the traced pear and dogs of `docs/fixtures/`, and a lettered patch drawn in
+code. `stitches` reads back each element's needle points, a satin column's rungs and the jump threads the
+PE800 leaves. `satins` sews straight satin columns for the engine's satin cases and reads their needle points
+back as pairs across them. `strokes` holds the strokes of the traced word's M and A, as a person draws them,
+for the cases of letters sewn as strokes (`REQ-AUTO-087`). `transformed` mirrors, turns and redraws a design,
+for the cases that its stitches change only by the same change. `inkstitch` gives the Ink/Stitch
+differential `stitch expand`'s SVG writer (`stitchcraft_svg::written`), with Ink/Stitch's settings alone, so
+that a test sheet sews in both programs from one file.
 
 **Since M7:** `degenerate` holds the degenerate corpus, which the engine's `tests/degenerate.rs` runs
 through every stitch type. Among its shapes are points and lines of no length, rings of no area, hair-thin
@@ -40,6 +45,14 @@ the `fabric` module. It draws each one too, for `web/sheet.py` (`docs/src/design
 (`stitchcraft_plan::thickness`), which gives the grid's pixel and the thread's width to `metrics` too. The
 example `sheet` writes the thickest spot, the area at 3 fills or more and the most needle points.
 
-**Status:** grows with the milestones M1 to M5, M7 and M13. Design: `docs/src/design/conformance.md`.
+**Status:** grows with every milestone. Design: `docs/src/design/conformance.md`.
+
+## Dependencies
+
+Every StitchCraft library: `stitchcraft-core`, `stitchcraft-params`, `stitchcraft-plan`,
+`stitchcraft-engine`, `stitchcraft-formats`, `stitchcraft-render`, `stitchcraft-svg` and
+`stitchcraft-vectorcraft`, which its cases plan, write, draw and read. `proptest` for the strategies, and
+`flate2` for the compressed documents the fuzz bodies write (`cargo xtask layers` keeps `flate2` here and in
+the VectorCraft adapter). It is a dev-dependency only, so the libraries it uses can use it in their tests.
 
 Tests may unwrap and panic; this crate opts out of the no-panic lints at its root.

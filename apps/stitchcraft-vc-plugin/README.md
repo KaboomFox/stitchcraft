@@ -34,7 +34,12 @@ Paths named `stitch:route-start` and `stitch:route-end` selected with them mark 
 stitches with one route as Ink/Stitch's tool of that name does, through the same run
 (`src/route_runs.rs`, `REQ-VC-020`). From M10.7 *StitchCraft Tartan*, a filter of VectorCraft 0.15, sets the
 selected paths' tartan fills' sett from a code of its stripes, which the fill dialog then shows as text from
-VectorCraft 0.14 (`src/tartan.rs`, `REQ-VC-021`).
+VectorCraft 0.14 (`src/tartan.rs`, `REQ-VC-021`). From M6.16 a fill's preview is its shape with a gap along
+each row, which VectorCraft paints solid, and the cases measure how much of the shape it covers
+(`src/preview/coverage.rs`, `REQ-VC-024`). From M14.4 *StitchCraft Lettering*, a live effect for text
+objects, keeps the embroidery font a text sews in and lettering's settings, which the exporters read with
+the document (`src/lettering.rs`, `REQ-VC-027`). The exporters hold the fonts they sew texts in
+(`src/fonts.rs`, `REQ-FONT-021`, and [Fonts](#fonts) below).
 Without a feature the module is M0.6's *hello* effect, which returns the object's geometry unchanged. The
 contract tests measure the host's costs with it (`docs/src/design/vectorcraft-integration.md`).
 
@@ -109,5 +114,6 @@ whoever publishes a module publishes each font's licence file beside it, as `web
 `serde` and `serde_json` (the ABI's JSON), `stitchcraft-params` and `stitchcraft-engine` (the registry, and
 the sewing), `stitchcraft-plan` (the machine profiles and formats), `stitchcraft-core` (diagnostics and the
 budget), `stitchcraft-formats` (the exporters' files) and `stitchcraft-vectorcraft` (`plugin_id`, what a
-live effect reads and writes, and the documents an exporter reads) and `stitchcraft-svg` (lettering's settings,
-for the Lettering effect's dialog, and the font reader, for the fonts built in).
+live effect reads and writes, and the documents an exporter reads), `stitchcraft-svg` (lettering's settings,
+for the Lettering effect's dialog, and the font reader, for the fonts built in) and `stitchcraft-render` (the
+picture of the file an exporter returns with it).
