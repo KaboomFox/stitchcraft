@@ -14,4 +14,5 @@ docs` rewrites them, and CI fails when one is stale.
 | [Glossary](glossary.md) | hand-written | available |
 | [VectorCraft compatibility](compatibility.md) | generated from the compatibility gate's record, `compat/supported.toml` | available |
 | [Parameters](params.md) (one page per stitch type) | generated from the parameter registry | available |
+| [Automatic digitizing's rules](auto-rules.md) | generated from the rules and styles in `stitchcraft-engine`'s `auto::rules` | available |
 | [Ink/Stitch compatibility contract](../../design/inkstitch-compat-contract.md) | generated from `conformance/inkstitch-params.toml` and the parameter registry | available |

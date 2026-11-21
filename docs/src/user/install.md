@@ -29,58 +29,63 @@ To update StitchCraft, run `git pull` in the `stitchcraft` folder and the `cargo
 ## The VectorCraft plug-ins
 
 The plug-ins say how each object of a [VectorCraft](https://github.com/storytold/vectorcraft) drawing
-sews, and show its stitches. There are 3, one for each kind of stitch, and 2 more that write PES and DST
-files from VectorCraft's File › Export, from VectorCraft 0.14. Filters change the drawing: one sets a
-tartan's sett, from VectorCraft 0.15, one keeps a design's settings and machine with the document and one
-draws a test sheet, from VectorCraft 0.16, and others make lines into satin columns and route stitches,
-from VectorCraft 0.17. All are built from the same source. In the
-`stitchcraft` folder:
+sews, and show its stitches. They are 13 modules, all built from the same source, one for each feature of
+the `stitchcraft-vc-plugin` package:
+
+| Module | VectorCraft shows it as | Where |
+|---|---|---|
+| `stitchcraft-fill.wasm`, `stitchcraft-stroke.wasm`, `stitchcraft-satin.wasm` | StitchCraft Fill, Stroke and Satin, one effect for each kind of stitch | Effect › Plug-ins |
+| `stitchcraft-auto.wasm` | StitchCraft Auto, which chooses each shape's stitches by its width | Effect › Plug-ins |
+| `stitchcraft-lettering.wasm` | StitchCraft Lettering, which sews a text in an embroidery font | Effect › Plug-ins |
+| `stitchcraft-pes.wasm`, `stitchcraft-dst.wasm` | PES embroidery and DST embroidery (StitchCraft) | File › Export › Export As |
+| `stitchcraft-settings.wasm` | StitchCraft Design Settings, which keeps a design's settings and machine with the document | Object › Plug-ins |
+| `stitchcraft-testsheet.wasm` | StitchCraft Test Sheet, which draws a test sheet | Object › Plug-ins |
+| `stitchcraft-tartan.wasm` | StitchCraft Tartan, which sets a tartan's sett | Object › Plug-ins |
+| `stitchcraft-stroke-to-satin.wasm` | StitchCraft Stroke to Satin, which makes lines into satin columns | Object › Plug-ins |
+| `stitchcraft-route-satins.wasm`, `stitchcraft-route-runs.wasm` | StitchCraft Auto-Route Satin Columns and Auto-Route Running Stitch | Object › Plug-ins |
+
+Build each one in the `stitchcraft` folder, and copy it into a folder for plug-ins, here `plugins`:
 
 ```sh
 rustup target add wasm32-unknown-unknown
-cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown --features fill
+mkdir -p plugins
+for m in fill stroke satin auto lettering pes dst settings testsheet tartan stroke-to-satin route-satins route-runs; do
+  cargo build --locked -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown --features "$m"
+  cp target/wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm "plugins/stitchcraft-$m.wasm"
+done
 ```
 
-The build writes `target/wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm`. Copy it into a
-folder for plug-ins as `stitchcraft-fill.wasm`. Build again with `--features stroke`, `--features satin`,
-`--features auto`, `--features pes`, `--features dst`, `--features settings`, `--features testsheet`,
-`--features stroke-to-satin`, `--features route-satins`, `--features route-runs` and `--features tartan`,
-and copy the file each time, as `stitchcraft-stroke.wasm`, `stitchcraft-satin.wasm`, `stitchcraft-auto.wasm`,
-`stitchcraft-pes.wasm`, `stitchcraft-dst.wasm`, `stitchcraft-settings.wasm`, `stitchcraft-testsheet.wasm`,
-`stitchcraft-stroke-to-satin.wasm`, `stitchcraft-route-satins.wasm`, `stitchcraft-route-runs.wasm` and
-`stitchcraft-tartan.wasm`. VectorCraft 0.13 and earlier refuse the exporters, and from StitchCraft's M10.7
-the fill effect too, whose dialog holds a tartan's sett as text.
+Each build writes the same file, `stitchcraft_vc_plugin.wasm`, so copy it before the next. The exporters
+and the Fill and Lettering effects need VectorCraft 0.14 or later, Tartan 0.15, Design Settings and Test
+Sheet 0.16, and Stroke to Satin and the 2 Auto-Route filters 0.17. [VectorCraft
+compatibility](reference/compatibility.md) lists the releases they are tested with.
 
-In VectorCraft's desktop app, choose that folder in **Edit › Preferences › Plug-ins & Scratch Disks ›
-Additional Plug-ins Folder**, which is under **Performance & Storage** up to VectorCraft 0.14. VectorCraft
-installs the plug-ins in it whenever it starts, all but Stroke to Satin and the 2 Auto-Route filters. They
-ask for more work than a filter usually may do, which VectorCraft lets you allow when you install each on
-its own. Choose **Object › Plug-ins › Install Plug-in…** and pick `stitchcraft-stroke-to-satin.wasm`, and
-install `stitchcraft-route-satins.wasm` and `stitchcraft-route-runs.wasm` the same way. VectorCraft asks you first, and once you allow one,
-keeps it and installs it again when it starts. The effects are under **Effect › Plug-ins**, the formats in **File ›
-Export › Export As**, and the filters under **Object › Plug-ins**. In VectorCraft on the web, open each
-file with **File › Open** instead, once each time VectorCraft is opened. [Embroider a VectorCraft
+In VectorCraft's desktop app, choose the `plugins` folder in **Edit › Preferences › Plug-ins & Scratch
+Disks › Additional Plug-ins Folder**, which is under **Performance & Storage** up to VectorCraft 0.14.
+VectorCraft installs the plug-ins in it whenever it starts, all but Stroke to Satin and the 2 Auto-Route
+filters. They ask for more work than a filter usually may do, which VectorCraft lets you allow when you
+install each on its own. Choose **Object › Plug-ins › Install Plug-in…** and pick
+`stitchcraft-stroke-to-satin.wasm`, and install `stitchcraft-route-satins.wasm` and
+`stitchcraft-route-runs.wasm` the same way. VectorCraft asks you first, and once you allow one, keeps it
+and installs it again when it starts. In VectorCraft on the web, open each file with **File › Open**
+instead, once each time VectorCraft is opened. [Embroider a VectorCraft
 design](how-to/embroider-a-vectorcraft-design.md) shows how to use them. Keep the `stitch` program at hand
 too: VectorCraft stops the export of a design as large as a traced photo, and `stitch export` writes it
 ([when VectorCraft stops the export](how-to/embroider-a-vectorcraft-design.md#when-vectorcraft-stops-the-export)).
 
-From VectorCraft 0.23, only a person allows those 3 filters. In the app nothing changes for you: VectorCraft
-shows a question about installing the filter, "which asks for a heavy budget", and you choose **OK**. From
-0.24.1 the **OK** button is grey for the first half second after the question appears, and a click then
-doesn't install the filter. A script that controls the app can't choose it for you. To install a filter without the app, start VectorCraft's command
-line with `--allow-plugin-grants`:
+When VectorCraft asks about installing a filter "which asks for a heavy budget", choose **OK**. From
+VectorCraft 0.24.1 the **OK** button stays grey for half a second after the question appears, and a
+script that controls the app can't choose it for you. To install such a filter without the app, give
+VectorCraft's command line `--allow-plugin-grants`:
 
 ```sh
 vectorcraft-cli run --allow-plugin-grants --cmd plugin.install \
-  --params '{"path": "/path/to/stitchcraft-stroke-to-satin.wasm", "allowHeavy": true}'
+  --params '{"path": "/path/to/plugins/stitchcraft-stroke-to-satin.wasm", "allowHeavy": true}'
 ```
 
-VectorCraft keeps the filter, and the app installs it again when it starts. The command line up to
-VectorCraft 0.22 has no such option, and installs the filter without it.
-
-When you build a filter again and install the new file, VectorCraft 0.23 asks before it takes the place of
-the one it has. From the command line, add `"replace": true` to the parameters. VectorCraft 0.23 still has a filter
-you allowed in an earlier release.
+VectorCraft keeps the filter, and the app installs it again when it starts. To install a filter you
+built again in place of the one VectorCraft has, add `"replace": true` to the parameters: the app asks
+first. [VectorCraft compatibility](reference/compatibility.md) says which releases ask.
 
 ## VectorCraft's command line
 
