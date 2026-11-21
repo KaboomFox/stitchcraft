@@ -329,6 +329,7 @@ pub fn stitchcraft_engine::design::Path::map<E>(&self, impl core::ops::function:
 pub fn stitchcraft_engine::design::Path::points(&self) -> impl core::iter::traits::iterator::Iterator<Item = stitchcraft_core::units::Point> + '_
 pub struct stitchcraft_engine::design::Reading
 pub stitchcraft_engine::design::Reading::auto: bool
+pub stitchcraft_engine::design::Reading::marked_as_drawn: bool
 pub stitchcraft_engine::design::Reading::sort_colours: bool
 pub struct stitchcraft_engine::design::Setting
 pub stitchcraft_engine::design::Setting::help: &'static str

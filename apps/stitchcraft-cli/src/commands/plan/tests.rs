@@ -624,3 +624,44 @@ fn req_cli_006_when_a_file_cannot_be_written_none_is_and_what_was_said_is_printe
         assert!(!output.exists(), "{}", unwritten.display());
     }
 }
+
+#[test]
+fn diag_sc_i0924_the_notice_counts_the_shapes_digitized_by_default_and_those_set_by_hand() {
+    // Nothing digitized by default: nothing to say, however many shapes are set by hand.
+    assert_eq!(Counted { by_default: 0, set: 3 }.notice(), None);
+    let message = |by_default, set| {
+        let notice = Counted { by_default, set }.notice().unwrap();
+        assert_eq!((notice.code, notice.severity()), (Code::AutoByDefault, Severity::Info));
+        notice.message
+    };
+    assert_eq!(
+        message(1, 0),
+        "1 shape without StitchCraft effects is digitized automatically, as a VectorCraft document is by default: plan it with --no-auto \
+         to sew it as drawn."
+    );
+    assert_eq!(
+        message(2, 1),
+        "2 shapes without StitchCraft effects are digitized automatically, as a VectorCraft document is by default, and 1 shape is set by \
+         hand: plan it with --no-auto to sew them as drawn."
+    );
+    assert_eq!(
+        message(3, 2),
+        "3 shapes without StitchCraft effects are digitized automatically, as a VectorCraft document is by default, and 2 shapes are set \
+         by hand: plan it with --no-auto to sew them as drawn."
+    );
+}
+
+#[test]
+fn req_auto_163_only_a_vectorcraft_document_without_a_switch_is_digitized_by_default() {
+    let switches = |auto, no_auto| ReadingArgs { auto, no_auto, sort_colours: true, ..ReadingArgs::default() };
+    for (args, source, by_default, auto) in [
+        (switches(false, false), Source::VectorCraft, true, true),
+        (switches(true, false), Source::VectorCraft, false, true),
+        (switches(false, true), Source::VectorCraft, false, false),
+        (switches(false, false), Source::Svg, false, false),
+        (switches(true, false), Source::Svg, false, true),
+    ] {
+        assert_eq!(args.by_default(source), by_default, "{args:?} {source:?}");
+        assert_eq!(args.reading(source), Reading { auto, marked_as_drawn: auto && !args.auto, sort_colours: true }, "{args:?} {source:?}");
+    }
+}

@@ -78,7 +78,7 @@ pub struct Guide {                   // since M10.11: Ink/Stitch's guide line, V
 }
 
 pub struct Reading {                 // since M13.1: what every host's reader is asked
-    pub auto: bool,                  // --auto
+    pub auto: bool,                  // --auto, or a VectorCraft document without --no-auto
     pub sort_colours: bool,          // since M13.3: --sort-colours, which the reader passes on (Design::read_as)
 }
 

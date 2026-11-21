@@ -20,10 +20,12 @@ button after the field for its page in the reference. A setting shows only when 
 staggers show for staggered splits. VectorCraft before 0.14 lists every setting, each under its Ink/Stitch
 name.
 
-An object without a StitchCraft effect sews as Ink/Stitch sews a shape of an SVG file. Its fills are
-filled, and its strokes are sewn as running stitch. To let StitchCraft choose its stitches by width
-instead, as for a picture traced into shapes, apply **Effect › Plug-ins › StitchCraft Auto** to it, or to
-the group or the layer it is in, or write the file with `stitch export --auto`.
+StitchCraft digitizes an object without a StitchCraft effect automatically: it chooses the object's
+stitches by width, as for a picture traced into shapes. To sew such an object as drawn instead, with its
+fills filled and its strokes sewn as running stitch, apply StitchCraft's Fill or Stroke effect to it. To
+sew every such object as drawn, turn **Digitize automatically** off as you export, or write the file with
+`stitch export --no-auto`. **Effect › Plug-ins › StitchCraft Auto** sets the rules' settings of an object,
+or of the group or the layer it is in.
 
 - A line up to 1 mm wide runs, or up to the narrowest satin stroke the document keeps
   ([below](#keep-the-designs-settings-and-machine-with-it)). From 0.5 mm wide it is a triple run, each
@@ -74,9 +76,10 @@ With the [exporters installed](../install.md#the-vectorcraft-plug-ins), choose *
 As**, and **PES embroidery (StitchCraft)** or **DST embroidery (StitchCraft)** as the format. Once the file
 is picked, a dialog shows 2 options:
 
-- **Digitize automatically**, which chooses the stitches of the objects without a StitchCraft effect by
-  their width, as `stitch export --auto` does. The objects the Auto effect reaches are digitized
-  automatically either way.
+- **Digitize automatically** chooses the stitches of the objects without a StitchCraft effect by their
+  width, as `stitch export` does. It is on by default. Off, those objects sew as drawn,
+  as with `stitch export --no-auto`. The objects the Auto effect reaches are digitized automatically
+  either way.
 - **Machine**, the machine and hoop the design is planned for: `document`, the one the document keeps
   ([below](#keep-the-designs-settings-and-machine-with-it)), or `brother-pe800-5x7` when it keeps none,
   unless another is chosen. `stitch profiles` lists them.
@@ -180,6 +183,11 @@ fill or the column starts or ends, as Ink/Stitch's start and end commands do. Th
 at its start marker. A marker is never sewn, and a group or a layer is never a marker. Put one of each in
 a group: StitchCraft names a second one, and uses the first. The middle of the marker counts, so draw it
 small, such as a dot or a short line, where the needle is to go in or come out.
+
+A marker grouped with a shape without a StitchCraft effect sets that shape by hand. StitchCraft doesn't
+digitize it automatically. It sews as drawn, a fill filled and a stroke run, from where the marker says.
+With `stitch export --auto`, or under the Auto effect, the shape is digitized automatically all the same,
+and the marker is unused (`SC-W0807`).
 
 A small path named `stitch:origin`, anywhere in the document, is the design's origin, which goes to the
 hoop's centre, as Ink/Stitch's origin command is. Without one, the middle of the design goes there. One named

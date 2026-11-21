@@ -11,6 +11,8 @@ use stitchcraft_plan::FormatId;
 use stitchcraft_render::{Settings, Style};
 use stitchcraft_svg::lettering::{self, Align, ColourSort, TextPosition, Trim, VerticalPosition};
 
+use crate::commands::plan::Source;
+
 /// stitch — StitchCraft machine embroidery.
 #[derive(Debug, Parser)]
 #[command(name = "stitch", version = VERSION, about, long_about = None, after_help = AFTER_HELP)]
@@ -357,10 +359,16 @@ fn positive_mm(text: &str) -> Result<Mm, String> {
 /// [`Reading`].
 #[derive(Debug, Default, Args)]
 pub struct ReadingArgs {
-    /// Digitize automatically the shapes that have no settings: StitchCraft chooses the stitches of each by
-    /// its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them.
+    /// Digitize automatically the shapes of an SVG file that have no settings: StitchCraft chooses the
+    /// stitches of each by its width (docs/src/design/image-to-embroidery.md). A shape with settings is left
+    /// to them. A VectorCraft document is digitized so without it.
     #[arg(long)]
     pub auto: bool,
+    /// Sew the shapes of a VectorCraft document that have no settings as drawn: every area a fill and every
+    /// line a running stitch, in paint order. Without it they are digitized automatically, as --auto
+    /// digitizes them. An SVG file sews so without a switch.
+    #[arg(long, conflicts_with = "auto")]
+    pub no_auto: bool,
     /// Sew the shapes with settings in the order StitchCraft chooses too, as --auto sews the shapes it
     /// digitizes: shapes that overlap keep their paint order, and each thread then sews as long as it can,
     /// the nearest shape next (docs/src/design/image-to-embroidery.md).
@@ -435,9 +443,17 @@ fn rule(text: &str) -> Result<(String, String), String> {
     Ok((key.to_string(), value.to_string()))
 }
 
-impl From<&ReadingArgs> for Reading {
-    fn from(args: &ReadingArgs) -> Reading {
-        Reading { auto: args.auto, sort_colours: args.sort_colours }
+impl ReadingArgs {
+    /// Whether a design of the kind `source` is digitized automatically because neither --auto nor
+    /// --no-auto is given: a VectorCraft document's default ([`stitchcraft_vectorcraft::AUTO_BY_DEFAULT`]).
+    pub fn by_default(&self, source: Source) -> bool {
+        stitchcraft_vectorcraft::AUTO_BY_DEFAULT && source == Source::VectorCraft && !self.auto && !self.no_auto
+    }
+
+    /// The reading the switches ask for of a design of the kind `source`.
+    pub fn reading(&self, source: Source) -> Reading {
+        let by_default = self.by_default(source);
+        Reading { auto: self.auto || by_default, marked_as_drawn: by_default, sort_colours: self.sort_colours }
     }
 }
 
@@ -449,7 +465,7 @@ pub struct BugReportArgs {
     pub design: Option<PathBuf>,
     /// Replay this bundle instead: plan its design again, with the profile and format it names, and say
     /// whether everything comes out the same.
-    #[arg(long, conflicts_with_all = ["design", "output", "profile", "format", "says", "auto", "sort_colours", "style", "set"])]
+    #[arg(long, conflicts_with_all = ["design", "output", "profile", "format", "says", "auto", "no_auto", "sort_colours", "style", "set"])]
     pub replay: Option<PathBuf>,
     /// The bundle to write; by default next to the design, as DESIGN.bug-report.json.
     #[arg(long, short)]

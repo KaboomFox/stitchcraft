@@ -217,6 +217,28 @@ mod tests {
         assert_eq!(MODULE, Module::Hello);
     }
 
+    /// The install page's build loop builds every module but *hello*, and its table names each module's
+    /// file and the name VectorCraft shows (a docs review found Lettering missing from both).
+    #[test]
+    fn the_install_page_builds_every_module() {
+        let page = include_str!("../../../docs/src/user/install.md");
+        let built: Vec<&str> = page.lines().find_map(|line| line.strip_prefix("for m in ")).unwrap().trim_end_matches("; do").split(' ').collect();
+        let mut modules: Vec<&str> = Module::all().into_iter().filter(|module| *module != Module::Hello).map(Module::name).collect();
+        let mut sorted = built.clone();
+        sorted.sort_unstable();
+        modules.sort_unstable();
+        assert_eq!(sorted, modules, "the loop builds {built:?}");
+        for module in Module::all().into_iter().filter(|module| *module != Module::Hello) {
+            let file = format!("`stitchcraft-{}.wasm`", module.name());
+            let row = page.lines().find(|line| line.starts_with('|') && line.contains(&file));
+            assert!(row.is_some(), "no table row names {file}");
+            let name = module.manifest().name;
+            let short = name.strip_prefix("StitchCraft ").unwrap_or(name);
+            let short = short.split(" (").next().unwrap_or(short);
+            assert!(row.is_some_and(|row| row.contains(short)), "the row of {file} doesn't name {name}");
+        }
+    }
+
     #[test]
     fn each_module_serves_its_manifest_and_its_effect() {
         assert_eq!(Module::Hello.manifest(), manifest::hello());

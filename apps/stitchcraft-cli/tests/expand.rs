@@ -15,6 +15,8 @@ use stitchcraft_testkit::temp::TempDir;
 
 /// The traced badge.
 const TRACED: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../conformance/fixtures/vectorcraft/traced-badge.vectorcraft");
+/// The badge as an SVG file.
+const SVG: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../docs/fixtures/traced-badge.svg");
 
 fn stitch(dir: &Path, args: &[&str]) -> Output {
     Command::new(env!("CARGO_BIN_EXE_stitch")).args(args).current_dir(dir).output().unwrap()
@@ -46,6 +48,18 @@ fn req_cli_025_an_expanded_document_sews_as_the_automatic_design() {
         assert_eq!(again.status.code(), Some(0), "{written}: {}", text(&again.stderr));
         assert!(std::fs::read(dir.join(&planned)).unwrap() == std::fs::read(dir.join("automatic.pes")).unwrap(), "{written} sews otherwise");
     }
+}
+
+#[test]
+fn req_cli_025_an_svg_file_is_expanded_as_automatic_digitizing_makes_it_without_auto() {
+    let dir = TempDir::new("expand-svg");
+    std::fs::copy(SVG, dir.join("badge.svg")).unwrap();
+    // An SVG file isn't digitized by default, but `stitch expand` digitizes it all the same.
+    for (args, written) in [(&[][..], "plain.svg"), (&["--auto"][..], "auto.svg")] {
+        let out = stitch(dir.path(), &[&["expand", "badge.svg", "-o", written][..], args].concat());
+        assert_eq!(out.status.code(), Some(0), "{args:?}: {}", text(&out.stderr));
+    }
+    assert_eq!(std::fs::read(dir.join("plain.svg")).unwrap(), std::fs::read(dir.join("auto.svg")).unwrap());
 }
 
 #[test]

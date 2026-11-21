@@ -396,6 +396,10 @@ pub struct Guide {
 pub struct Reading {
     /// Whether each shape without settings is an [automatic](Element::automatic) element (`--auto`).
     pub auto: bool,
+    /// Whether a shape without settings that a start or an end marker is grouped with sews as drawn, from
+    /// where its markers say, though `auto` is on: a VectorCraft document read by default, where such a
+    /// marker sets its shape by hand (`REQ-AUTO-166`). With `--auto` it is off, and the marker is unused.
+    pub marked_as_drawn: bool,
     /// Whether the design sews every element in the order automatic digitizing chooses
     /// ([`Design::sort_colours`], `--sort-colours`), which the reader passes on to it.
     pub sort_colours: bool,

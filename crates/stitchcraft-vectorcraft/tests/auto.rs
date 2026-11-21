@@ -71,6 +71,22 @@ fn req_auto_001_an_object_without_stitchcraft_effects_is_automatic() {
 }
 
 #[test]
+fn req_auto_165_only_the_shapes_the_reading_alone_makes_automatic_are_counted() {
+    // A plain square, one with the Auto effect and one with a Fill effect: only the first is automatic by
+    // the reading, the second by its effect, and the third isn't.
+    let objects = [
+        square(2, 0.0, 0.0, &appearance(&[red()], &[])),
+        square(3, 60.0, 0.0, &appearance(&[red()], &["auto"])),
+        square(4, 120.0, 0.0, &appearance(&[red()], &["fill"])),
+    ]
+    .join(",");
+    let with = read(&document(4, &objects), true);
+    let automatic: Vec<bool> = with.design.elements().iter().map(|e| e.automatic).collect();
+    assert_eq!((automatic, with.by_default), (vec![true, true, false], 1));
+    assert_eq!(read(&document(4, &objects), false).by_default, 0);
+}
+
+#[test]
 fn req_auto_003_a_stroke_s_cap_is_read() {
     let cap = |extra: &str| {
         let read = read(&document(4, &line(2, "", &appearance(&[stroke(3.0, extra)], &[]))), true);

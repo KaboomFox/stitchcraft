@@ -10,8 +10,8 @@ What a user can do with this version, before its first release. The entries belo
 
 - `stitch plan` writes PES and DST files from SVG files, Ink/Stitch's files and VectorCraft documents, in
   the stitch types of Ink/Stitch, with their lock stitches.
-- `stitch plan --auto` chooses the stitches of shapes without settings, such as a picture traced in
-  VectorCraft, and `stitch plan picture.png` traces the picture with VectorCraft's command line first.
+- `stitch plan` chooses the stitches of a VectorCraft document's shapes without settings, such as a
+  picture traced in VectorCraft, and `--auto` does so for an SVG file, and `stitch plan picture.png` traces the picture with VectorCraft's command line first.
   `stitch expand` makes such a design the ordinary shapes it sews as, to edit one by one.
 - `stitch lettering` sets text in Ink/Stitch's embroidery fonts.
 - `stitch inspect`, `stitch preview` and `stitch convert` read, draw and convert machine files, and
@@ -19,6 +19,18 @@ What a user can do with this version, before its first release. The entries belo
 - In VectorCraft, StitchCraft's live effects, filters and exporters sew a document as `stitch export` does.
 
 ### Added
+- M13.8: VectorCraft documents are digitized automatically by default (`REQ-AUTO-163` to `REQ-AUTO-166`,
+  `REQ-CLI-026`, `REQ-CLI-027`, `REQ-VC-036`). `stitch plan` and `stitch export` now read a `.vectorcraft`
+  file as `--auto` read it, and write the same machine file. A shape with a StitchCraft Fill, Satin or
+  Stroke effect still sews as its effect says, and an expanded design sews as it is. A shape grouped with
+  a `stitch:start` or `stitch:end` marker counts as set by hand and sews as drawn from the marker, unless
+  `--auto` is given. One new notice, `SC-I0924`, says how many shapes the default digitized and how many
+  are set by hand. To get
+  the old behaviour, plan with `--no-auto`, or turn **Digitize automatically** off in the PES and DST
+  exporters' dialog, whose option is now on by default. `--no-auto` is refused beside `--auto`, with a
+  picture and with `stitch expand`. SVG files sew as before, and `--auto` still asks for automatic
+  digitizing there. A bug-report bundle records `auto` when the run digitized automatically, so an old
+  bundle replays as it was recorded. The golden files stay as they were.
 - M13.20: a kept colour (`REQ-AUTO-160`). `stitch plan --keep-colour COLOUR`, and `stitch expand` with it,
   gives a colour of a picture a thread at any `--colours`: a thread by its name in any case, `#rrggbb` for
   the nearest thread, or a pixel `X,Y` of the picture for the thread nearest its colour. VectorCraft then

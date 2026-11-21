@@ -11,6 +11,7 @@ use std::path::Path;
 
 use clap::Parser;
 use stitchcraft_cli::cli::{Cli, Command};
+use stitchcraft_cli::commands::plan::Source;
 
 #[test]
 fn req_auto_083_each_picture_the_budget_counts_is_a_command_stitch_reads() {
@@ -24,9 +25,9 @@ fn req_auto_083_each_picture_the_budget_counts_is_a_command_stitch_reads() {
         let cli = Cli::try_parse_from(["stitch"].into_iter().chain(args.iter().copied()).chain(["-o", "out.pes"]))
             .unwrap_or_else(|e| panic!("{name}: {e}"));
         match (&cli.command, picture.get("golden").and_then(toml::Value::as_str)) {
-            // A traced picture is exported with the Auto effect, as VectorCraft's exporter has it.
+            // A traced picture is exported digitized automatically, as a VectorCraft document is by default.
             (Command::Plan(plan), None) => {
-                assert!(plan.reading.auto, "{name} is digitized automatically");
+                assert!(plan.reading.reading(Source::of(&plan.design)).auto, "{name} is digitized automatically");
                 assert!(root.join(&plan.design).is_file(), "{name}: {}", plan.design.display());
             }
             // A sheet is written by `stitch testsheet`, and is its golden file.

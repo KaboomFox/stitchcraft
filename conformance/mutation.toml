@@ -637,6 +637,12 @@ line = "dot > 0.0 && cross.abs() <= sine * lengths"
 why = "where the dot product is 0 the 2 directions are square to each other, so the cross product is as large as their lengths' product, which no sine below 1 allows, and every bound is below 1: stroke_area asks for one only on a line wider than twice the tolerance"
 
 [[equivalent]]
+file = "apps/stitchcraft-vc-plugin/src/export.rs"
+mutant = "replace auto_by_default -> bool with true"
+line = "AUTO_BY_DEFAULT"
+why = "the function returns the constant AUTO_BY_DEFAULT, which is true, so returning true changes nothing until the default does"
+
+[[equivalent]]
 file = "apps/stitchcraft-vc-plugin/src/stroke_to_satin.rs"
 mutant = "replace > with >= in columns"
 line = "if satin.is_some() && path.subpaths.len() > 1 && matches!(recognize(&path, meter).map_err(|_| exhausted())?.shape, Ok(Column::Rails(_))) {"

@@ -68,6 +68,13 @@ pub const PLUGIN_NAMESPACE: &str = "dev.stitchcraft";
 /// settings of the rules (`REQ-VC-016`).
 pub const AUTO: &str = "auto";
 
+/// Whether a host digitizes a VectorCraft document automatically when the person doesn't say: the shapes no
+/// StitchCraft effect reaches are then read as with `--auto` (`REQ-AUTO-163`). A document is drawn to be
+/// embroidered, so they are. `stitch plan --no-auto` and the exporters' Digitize automatically option, off,
+/// sew them as drawn. The command line, the exporters, the compatibility gate and the docs pictures read this
+/// constant, and `Reading::default()` stays plain.
+pub const AUTO_BY_DEFAULT: bool = true;
+
 /// What VectorCraft puts before an installed plug-in's id to name its live effect (`effect.list` in its
 /// engine's `cmd/effectcmd.rs`).
 const EFFECT: &str = "plugin.";
