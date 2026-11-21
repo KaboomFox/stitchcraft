@@ -1481,6 +1481,15 @@ status = "active"
 # ── Routing ────────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
+id = "REQ-SAT-030"
+area = "satin"
+level = "L2"
+statement = "A satin column's `bend_open_percent` (StitchCraft's, 0 by default, 0 to 100) says how much farther apart than the zigzag spacing its pairs may lie on the outside of a bend so that they lie the spacing apart on the inside: a pair is placed the spacing from the one before at the nearer rail, or at the farther rail at 1 plus that percentage of the spacing when that is farther. At 0 a column places its pairs as Ink/Stitch does, the spacing apart at the farther rail."
+rationale = "The spacing kept on the outside crowds the inside by the ratio of the 2 radii. Opening the outside by a quarter, to 0.5 mm, keeps a gentle bend's inside at the spacing. Measured on 2026-11-21: at 1.1 times 221 points still moved in on the test designs, at 1.25 times 155, at 1.5 times 99, while the rail gaps over 0.55 mm went from 134 to 433 and 1,194."
+milestone = "M13"
+status = "planned"
+
+[[req]]
 id = "REQ-ROUTE-001"
 area = "route"
 level = "L2"
@@ -3728,9 +3737,45 @@ id = "REQ-AUTO-071"
 area = "auto"
 level = "L2"
 statement = "An automatic satin column moves its crowded needle points in along their stitches: a point closer than 0.35 mm to the last one left in place on its rail moves in by 25 % of its stitch's width, the next such point by 50 %, and so on in turn (`short_stitch_distance_mm` 0.35 and `short_stitch_inset` 25 50). A shape that sets either keeps what it sets, and the other is Ink/Stitch's. A straight column's points lie 0.4 mm apart on each rail, so every one of its stitches spans it."
-rationale = "On the inside of a corner or a bend a column's stitches fan to a point, since their spacing is kept on the outside: TS-13A's blue strip sewed 25 stitches from 5 mm of one rail to 1 mm of the other, up to 4.6 fills by itself, and Ink/Stitch's 0.25 mm and 15 % moved few of them, by little. Digitizing programs shorten some of the stitches in a sharp turn, each by a percentage of its own (Wilcom EmbroideryStudio, Reducing stitch bunching). A distance above the 0.4 mm spacing would move every second point of a straight column too, and thin its edges. Measured with the locks of REQ-AUTO-072 on 2026-11-16, the thickest spot of TS-13A came from 5.56 to 4.29 fills and of TS-13D from 6.46 to 5.45."
+rationale = "Planned change (M13.58): this distance becomes the `crowded` value of `auto_short_stitches` (REQ-AUTO-173), and by default a column moves no point in as it is made (REQ-AUTO-170) and the cap pulls points in only above the warning's limit (REQ-AUTO-171). This requirement retires when they are built. On the inside of a corner or a bend a column's stitches fan to a point, since their spacing is kept on the outside: TS-13A's blue strip sewed 25 stitches from 5 mm of one rail to 1 mm of the other, up to 4.6 fills by itself, and Ink/Stitch's 0.25 mm and 15 % moved few of them, by little. Digitizing programs shorten some of the stitches in a sharp turn, each by a percentage of its own (Wilcom EmbroideryStudio, Reducing stitch bunching). A distance above the 0.4 mm spacing would move every second point of a straight column too, and thin its edges. Measured with the locks of REQ-AUTO-072 on 2026-11-16, the thickest spot of TS-13A came from 5.56 to 4.29 fills and of TS-13D from 6.46 to 5.45."
 milestone = "M13"
 status = "active"
+
+[[req]]
+id = "REQ-AUTO-170"
+area = "auto"
+level = "L2"
+statement = "With `auto_short_stitches` at its default, `above_limit`, an automatic satin column sews each top stitch from rail to rail as it is placed, and keeps the zigzag spacing on the inside of a bend: digitizing sets no `short_stitch_distance_mm` or `short_stitch_inset` on the column, and sets `bend_open_percent` 25 (REQ-SAT-030). A shape that sets any of the 3 keeps what it sets. A half ring 3 mm wide whose inside is 8 mm from its centre sews each top stitch away from its ends past both rails by its pull compensation, within 0.1 mm, its outside points no more than 0.5 mm apart and its inside points no closer than 0.5 mm times the ratio of its radii, 8 to 11."
+rationale = "The owner, on 2026-11-21, of 18 drawings sewn by automatic digitizing: on the inside of a curve every other stitch ended short and sewed a second row, and she wants one row. A straight column's points lie 0.4 mm apart, so the 0.35 mm of REQ-AUTO-071 moves in the points of almost every curve: 1,044 on the 18 drawings, 2,153 on them, the repository's SVG drawings, the traced dogs and 6 traced photos. With the spacing kept on the inside, a bend whose inside radius is 0.8 of its outside's or more doesn't crowd at all, and the outside's stitches lie at most 1.25 thread widths apart. Measured with a prototype on 2026-11-21: 36 points moved in on those 58 designs, 1.2 % fewer stitches on the drawings, and the same bare share on every design."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-171"
+area = "auto"
+level = "L2"
+statement = "Where a spot of a design digitized automatically still sews above the warning's limit once the cap's 3 kinds are done (REQ-AUTO-112), the cap pulls in crowded top points of the satin columns that digitizing made, before its last resort takes any point. A point is crowded when it lies closer than 0.35 mm to its rail's needle point before or after it in its run. A point moves along its 2 stitches towards the middle of their other ends, by a quarter of the way and later by half, one point at a time: of the points whose stitches pass within 1 mm of the thickest spot, the one that lowers it most. A point stays when both its neighbours on its rail have moved, when it is a lettering column's (REQ-AUTO-123), when a stitch would be shorter than the machine's shortest, and when the change would raise a spot as REQ-AUTO-100 forbids. A column that pairs evenly moves a point no farther past its edge than REQ-AUTO-085 holds it. The cap stops pulling in once no spot is above the limit or no point lowers the thickest. A moved point keeps its place in its run."
+rationale = "A column's crowding matters only where the layers under and over it reach the limit. TS-13C's digitized half sews 4.11 fills where its face's outline, curving gently with inside points 0.316 mm apart, lies under 2 hair lines and over the face's fill and the base layer, and TS-13A's blue strip fans 25 stitches into a corner, 4.32 fills by itself and 6.05 with the fills under it. The last resort can only join a point's 2 stitches into one along the far rail: no point passed its test of cover at TS-13C, and it took 575 mm of the strip's top stitches and left the corner at 6.05. Pulling crowded points in, as digitizing programs shorten stitches in a turn, brought every design of REQ-AUTO-073 to 4.00 or under in the prototype of 2026-11-21."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-172"
+area = "auto"
+level = "L2"
+statement = "SC-I1119 says how many top points of satin columns the cap pulled in, as `pulled in N points of satin columns in M places`, apart from those it took. With the default settings, each design of REQ-AUTO-073 sews no spot of a millimetre above 4 fills, and the cap pulls in fewer than 231 points on all of them together, a tenth of the 2,310 that the distance of 0.35 mm moves in."
+rationale = "No silent fallback: a person sees which ends moved and can set `auto_short_stitches` or a shape's own short-stitch settings. The prototype of 2026-11-21 pulled in 155 points on those designs."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-173"
+area = "auto"
+level = "L2"
+statement = "`auto_short_stitches` `crowded` sews automatic satin columns as REQ-AUTO-071 and REQ-AUTO-085 say: digitizing sets `short_stitch_distance_mm` 0.35 and `short_stitch_inset` 25 50, its first inset held as REQ-AUTO-085 holds it, and no `bend_open_percent`, and the cap pulls no point in. Each design of REQ-AUTO-073 then plans as it did on main `1952f48c`, with the same thickest spot."
+rationale = "The owner prefers a manual control to machinery that guesses. One setting gives a whole design today's look, and a shape's own settings give it to one shape."
+milestone = "M13"
+status = "planned"
 
 [[req]]
 id = "REQ-AUTO-072"
@@ -3917,7 +3962,7 @@ id = "REQ-AUTO-085"
 area = "auto"
 level = "L2"
 statement = "An automatic satin column whose stitches pair no more than 1.5 mm of one rail with a millimetre of the other, measured as REQ-AUTO-017 measures crowding, and one with a rail along a hole kept open (REQ-AUTO-084), moves its crowded needle points in (REQ-AUTO-071) by a first inset no farther than its pull compensation on that side and 0.1 mm, a quarter of a thread, past its edge as drawn: the percentage of its stitch's width that the compensation and 0.1 mm make, in tenths, when that is under 25. The later insets stay, and a shape that sets either setting keeps its own. No letter of the lettered patch and TS-13B's 15, 10 and 6 mm words sewn as columns leaves a strip of another colour a thread wide inside its outline, and those of the patch and of the 10 and 6 mm words leave no notch a disc 0.15 mm across fits in."
-rationale = "The owner, on 2026-11-17: the patch's letters have new gaps. They were notches. A straight stem's rail beside a junction pairs 0.3 mm with 0.4 mm of the other rail round the junction's corner, closer than the 0.35 mm of REQ-AUTO-071, so every other point of the stem's outer edge moved in by a quarter of the 1.8 mm column, 0.65 mm, 0.25 mm past the edge: the M's stems showed 6 notches of 0.02 to 0.06 mm² 0.65 mm apart, none on main at M13.30. Moved in by its compensation and 0.1 mm, a point's thread, half a thread wide on each side, still covers the edge. Where a column fans, at a bend or where it ends on the slant under another column, its points pile up: held there too, TS-13A rose from 4.28 to 4.57 fills and the badges from 4.40 to 4.58, so a column that pairs more than 1.5 mm keeps the quarter. On TS-13B's 15 mm word the M and the C keep notches they had on main, where their points fan."
+rationale = "Planned change (M13.58): the first inset is held as here wherever a column's point moves in, as the column is made (REQ-AUTO-173) or when the cap pulls it in (REQ-AUTO-171), and the letters' cases hold with both values of `auto_short_stitches`. The owner, on 2026-11-17: the patch's letters have new gaps. They were notches. A straight stem's rail beside a junction pairs 0.3 mm with 0.4 mm of the other rail round the junction's corner, closer than the 0.35 mm of REQ-AUTO-071, so every other point of the stem's outer edge moved in by a quarter of the 1.8 mm column, 0.65 mm, 0.25 mm past the edge: the M's stems showed 6 notches of 0.02 to 0.06 mm² 0.65 mm apart, none on main at M13.30. Moved in by its compensation and 0.1 mm, a point's thread, half a thread wide on each side, still covers the edge. Where a column fans, at a bend or where it ends on the slant under another column, its points pile up: held there too, TS-13A rose from 4.28 to 4.57 fills and the badges from 4.40 to 4.58, so a column that pairs more than 1.5 mm keeps the quarter. On TS-13B's 15 mm word the M and the C keep notches they had on main, where their points fan."
 milestone = "M13"
 status = "active"
 
