@@ -169,7 +169,7 @@ pub fn export(format: FormatId, input: &[u8], params: &[u8]) -> Result<Vec<u8>, 
         Some(id) => Some(profiles::find(id).ok_or(RunError::BadInput)?),
     };
     let wanted = Wanted { name: &params.context.name, picture: params.context.mode == PICTURE };
-    let out = match sewn(format, input, Reading { auto: params.auto, ..Reading::default() }, asked, wanted) {
+    let out = match sewn(format, input, Reading { auto: params.auto, marked_as_drawn: params.auto, ..Reading::default() }, asked, wanted) {
         Ok((file, said)) => serde_json::to_vec(&Exported { data_base64: base64(&file), warnings: warnings(&said) }),
         Err(said) => serde_json::to_vec(&Declined { error: decline(&said) }),
     };

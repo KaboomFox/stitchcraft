@@ -641,13 +641,13 @@ fn diag_sc_i0924_the_notice_counts_the_shapes_digitized_by_default_and_those_set
     );
     assert_eq!(
         message(2, 1),
-        "2 shapes without StitchCraft effects are digitized automatically, as a VectorCraft document is by default, and 1 shape sews as \
-         its effects say: plan it with --no-auto to sew them as drawn."
+        "2 shapes without StitchCraft effects are digitized automatically, as a VectorCraft document is by default, and 1 shape is set by \
+         hand: plan it with --no-auto to sew them as drawn."
     );
     assert_eq!(
         message(3, 2),
-        "3 shapes without StitchCraft effects are digitized automatically, as a VectorCraft document is by default, and 2 shapes sew as \
-         their effects say: plan it with --no-auto to sew them as drawn."
+        "3 shapes without StitchCraft effects are digitized automatically, as a VectorCraft document is by default, and 2 shapes are set \
+         by hand: plan it with --no-auto to sew them as drawn."
     );
 }
 
@@ -662,6 +662,6 @@ fn req_auto_163_only_a_vectorcraft_document_without_a_switch_is_digitized_by_def
         (switches(true, false), Source::Svg, false, true),
     ] {
         assert_eq!(args.by_default(source), by_default, "{args:?} {source:?}");
-        assert_eq!(args.reading(source), Reading { auto, sort_colours: true }, "{args:?} {source:?}");
+        assert_eq!(args.reading(source), Reading { auto, marked_as_drawn: auto && !args.auto, sort_colours: true }, "{args:?} {source:?}");
     }
 }

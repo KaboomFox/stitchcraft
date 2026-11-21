@@ -136,6 +136,11 @@ struct Bundle {
     /// without it, and those written before it was recorded, have none.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     auto: bool,
+    /// Whether the run sewed a shape without settings that a start or an end marker is grouped with as drawn,
+    /// as a VectorCraft document's default does (`REQ-AUTO-166`). Bundles of runs without it, and those
+    /// written before it was recorded, have none.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    marked_as_drawn: bool,
     /// Whether the run sewed the shapes with settings in the order StitchCraft chooses too
     /// (`--sort-colours`). Bundles of runs without it, and those written before it was recorded, have none.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -393,6 +398,7 @@ fn bundle(run: &Run, sewn: Result<&Sewn, (&str, Phase)>) -> Bundle {
         profile: run.profile.id.to_string(),
         format: run.format.extension().to_string(),
         auto: run.reading.auto,
+        marked_as_drawn: run.reading.marked_as_drawn,
         sort_colours: run.reading.sort_colours,
         rules: run.rules.to_vec(),
         subject: run.subject.cloned(),
@@ -470,7 +476,7 @@ fn replay(path: &Path) -> Outcome {
     let Replayable { bundle: then, source, design, profile, format } = then;
     let design_path = PathBuf::from(&then.design.file);
     let name = then.design.name.clone().unwrap_or_else(|| design_name(&design_path).to_string());
-    let reading = Reading { auto: then.auto, sort_colours: then.sort_colours };
+    let reading = Reading { auto: then.auto, marked_as_drawn: then.marked_as_drawn, sort_colours: then.sort_colours };
     let subject = then.subject.as_ref();
     let run = Run {
         design_path: &design_path,

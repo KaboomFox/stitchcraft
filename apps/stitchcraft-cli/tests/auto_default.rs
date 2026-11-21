@@ -1,5 +1,5 @@
 //! Automatic digitizing by default for VectorCraft documents (roadmap step M13.8, `REQ-AUTO-163` to
-//! `REQ-AUTO-165`, `REQ-CLI-026`, `REQ-CLI-027`; `docs/src/design/image-to-embroidery.md` › Automatic
+//! `REQ-AUTO-166`, `REQ-CLI-026`, `REQ-CLI-027`; `docs/src/design/image-to-embroidery.md` › Automatic
 //! digitizing by default).
 //!
 //! The designs are the badge VectorCraft 0.18.0 traced (`traced-badge.vectorcraft`), whose shapes have no
@@ -121,7 +121,7 @@ fn req_auto_165_one_notice_counts_the_shapes_digitized_by_default_and_those_set_
     let notice = &notices[0];
     assert!(notice.starts_with("info SC-I0924: "), "{notice}");
     assert!(notice.contains(&format!("{automatic} shapes without StitchCraft effects are digitized automatically")), "{notice}");
-    assert!(notice.contains("1 shape sews as its effects say"), "{notice}");
+    assert!(notice.contains("1 shape is set by hand"), "{notice}");
     assert!(notice.contains("--no-auto"), "{notice}");
     // The shape set by hand sews as its effect says: the file is the one `--auto` writes, where it is left
     // to its effect too.
@@ -168,6 +168,8 @@ fn req_cli_027_a_bundle_records_the_reading_the_run_used_and_an_old_bundle_repla
     assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
     let mut bundle: Value = serde_json::from_slice(&std::fs::read(dir.join("default.json")).unwrap()).unwrap();
     assert_eq!(bundle["auto"], Value::Bool(true));
+    // And that a marker sets its shape by hand, as the default reads it (`REQ-AUTO-166`).
+    assert_eq!(bundle["marked_as_drawn"], Value::Bool(true));
     let replay = stitch(dir.path(), &["bug-report", "--replay", "default.json"]);
     assert_eq!(replay.status.code(), Some(0), "{}", text(&replay.stdout));
     // A run with `--no-auto` records nothing, as a bundle from before the default does, and both replay
@@ -175,7 +177,11 @@ fn req_cli_027_a_bundle_records_the_reading_the_run_used_and_an_old_bundle_repla
     let out = stitch(dir.path(), &["bug-report", "badge.vectorcraft", "--no-auto", "-o", "plain.json"]);
     assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
     let plain: Value = serde_json::from_slice(&std::fs::read(dir.join("plain.json")).unwrap()).unwrap();
-    assert_eq!(plain.get("auto"), None);
+    assert_eq!((plain.get("auto"), plain.get("marked_as_drawn")), (None, None));
+    let out = stitch(dir.path(), &["bug-report", "badge.vectorcraft", "--auto", "-o", "asked.json"]);
+    assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
+    let asked: Value = serde_json::from_slice(&std::fs::read(dir.join("asked.json")).unwrap()).unwrap();
+    assert_eq!((&asked["auto"], asked.get("marked_as_drawn")), (&Value::Bool(true), None));
     let replay = stitch(dir.path(), &["bug-report", "--replay", "plain.json"]);
     assert_eq!(replay.status.code(), Some(0), "{}", text(&replay.stdout));
     // The default's bundle without its `auto` replays plain, as a bundle from before the default does,
@@ -184,4 +190,51 @@ fn req_cli_027_a_bundle_records_the_reading_the_run_used_and_an_old_bundle_repla
     std::fs::write(dir.join("stripped.json"), serde_json::to_vec(&bundle).unwrap()).unwrap();
     let replay = stitch(dir.path(), &["bug-report", "--replay", "stripped.json"]);
     assert_eq!(replay.status.code(), Some(1), "{}", text(&replay.stdout));
+}
+
+/// The patch with the StitchCraft effects taken off the objects named in `plain`: its Background is grouped
+/// with a `stitch:start` marker.
+fn patch_without_effects(plain: &[&str]) -> Vec<u8> {
+    fn strip(node: &mut Value, plain: &[&str]) {
+        if node["name"].as_str().is_some_and(|name| plain.contains(&name)) {
+            node["appearance"]["effects"] = json!([]);
+        }
+        if let Some(children) = node.pointer_mut("/kind/children").and_then(Value::as_array_mut) {
+            children.iter_mut().for_each(|child| strip(child, plain));
+        }
+    }
+    let mut document: Value = serde_json::from_slice(&std::fs::read(PATCH).unwrap()).unwrap();
+    document["document"]["layers"].as_array_mut().unwrap().iter_mut().for_each(|layer| strip(layer, plain));
+    serde_json::to_vec(&document).unwrap()
+}
+
+#[test]
+fn req_auto_166_a_shape_with_a_start_or_end_marker_counts_as_set_by_hand_under_the_default() {
+    let dir = TempDir::new("auto-default-marker");
+    // The Background without its Fill effect, its start marker beside it: by default it sews as drawn from the
+    // marker, as `--no-auto` sews it, and nothing is digitized by default, so nothing is said of it.
+    std::fs::write(dir.join("patch.vectorcraft"), patch_without_effects(&["Background"])).unwrap();
+    let run = |args: &[&str], output: &str| {
+        let out = stitch(dir.path(), &[&["plan", "patch.vectorcraft", "-o", output][..], args].concat());
+        assert_eq!(out.status.code(), Some(0), "{args:?}: {}", text(&out.stderr));
+        (std::fs::read(dir.join(output)).unwrap(), text(&out.stderr))
+    };
+    let (default, said) = run(&[], "default.pes");
+    let (plain, plain_said) = run(&["--no-auto"], "plain.pes");
+    let (asked, asked_said) = run(&["--auto"], "asked.pes");
+    assert_eq!(default, plain);
+    assert_eq!(said, plain_said);
+    assert!(!said.contains("SC-I0924") && !said.contains("SC-I0901"), "{said}");
+    // With `--auto` the person asked for automatic digitizing: the shape is digitized, and its marker unused.
+    assert_ne!(default, asked);
+    assert!(asked_said.contains("SC-I0901"), "{asked_said}");
+    let unused = |said: &str| said.lines().filter(|line| line.contains("SC-W0807") && line.contains("markers grouped with it are not used")).count();
+    assert_eq!((unused(&said), unused(&asked_said)), (0, 1), "{said}\n{asked_said}");
+    // The Stem without its effect too: the notice counts the Background among the shapes set by hand.
+    std::fs::write(dir.join("patch.vectorcraft"), patch_without_effects(&["Background", "Stem"])).unwrap();
+    let (_, said) = run(&[], "mixed.pes");
+    let notice: Vec<&str> = said.lines().filter(|line| line.contains("SC-I0924")).collect();
+    assert_eq!(notice.len(), 1, "{said}");
+    assert!(notice[0].contains("1 shape without StitchCraft effects is digitized automatically"), "{said}");
+    assert!(notice[0].contains("4 shapes are set by hand"), "{said}");
 }

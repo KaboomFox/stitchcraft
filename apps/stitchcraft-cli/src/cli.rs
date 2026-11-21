@@ -452,7 +452,8 @@ impl ReadingArgs {
 
     /// The reading the switches ask for of a design of the kind `source`.
     pub fn reading(&self, source: Source) -> Reading {
-        Reading { auto: self.auto || self.by_default(source), sort_colours: self.sort_colours }
+        let by_default = self.by_default(source);
+        Reading { auto: self.auto || by_default, marked_as_drawn: by_default, sort_colours: self.sort_colours }
     }
 }
 

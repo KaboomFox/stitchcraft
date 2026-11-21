@@ -138,8 +138,8 @@ pub struct Counted {
 }
 
 impl Counted {
-    /// `SC-I0924`, said when the default digitized a shape: how many it digitized, how many sew as their
-    /// effects say, and the switch that sews them as drawn.
+    /// `SC-I0924`, said when the default digitized a shape: how many it digitized, how many are set by hand,
+    /// with StitchCraft effects or with markers, and the switch that sews them as drawn.
     pub fn notice(self) -> Option<Diagnostic> {
         let Counted { by_default, set } = self;
         let digitized = match by_default {
@@ -149,8 +149,8 @@ impl Counted {
         };
         let kept = match set {
             0 => String::new(),
-            1 => ", and 1 shape sews as its effects say".to_string(),
-            many => format!(", and {many} shapes sew as their effects say"),
+            1 => ", and 1 shape is set by hand".to_string(),
+            many => format!(", and {many} shapes are set by hand"),
         };
         let them = if by_default == 1 { "it" } else { "them" };
         let message = format!(

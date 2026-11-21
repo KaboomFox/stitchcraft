@@ -269,7 +269,7 @@ fn shapes(root: &Path, subject: &Subject) -> Result<Shapes, String> {
         Subject::File(file) => {
             let path = root.join("conformance").join(file);
             let bytes = std::fs::read(&path).map_err(|e| format!("{file}: {e}"))?;
-            let reading = Reading { auto: true, sort_colours: false };
+            let reading = Reading { auto: true, ..Reading::default() };
             let (design, _) = Source::of(&path).read(&bytes, reading).map_err(|e| format!("{file}: {e}"))?;
             let name = path.file_stem().and_then(|stem| stem.to_str()).unwrap_or("design").to_string();
             Ok(Shapes { named: automatic_of(&design), settings: design.settings, name })
