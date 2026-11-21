@@ -9,7 +9,7 @@
 //!    thread got to each (sewn, carried loose, or cut), trims and stops — in machine units, on the machine
 //!    the picture is for, which decides what cuts the thread ([`scene`]). Tests compare scenes, which
 //!    says *what* differs, instead of pixels.
-//! 2. [`Scene::render`] draws a scene in one of two [`Style`]s and encodes it as PNG ([`raster`]),
+//! 2. [`Scene::render`] draws a scene in one of three [`Style`]s and encodes it as PNG ([`raster`]),
 //!    byte-identical on every platform (REQ-RND-002), so documentation images are compared byte for
 //!    byte (`cargo xtask shots --check`).
 //!
@@ -18,6 +18,7 @@
 #![forbid(unsafe_code)]
 
 pub mod error;
+mod key;
 pub mod raster;
 pub mod scene;
 
