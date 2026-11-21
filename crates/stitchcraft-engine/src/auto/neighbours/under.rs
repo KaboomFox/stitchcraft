@@ -475,11 +475,7 @@ fn beside(shapes: &mut Shapes, index: usize, reach: Reach, split: &mut [Option<S
         if let Some(parts) = split_of(shapes, later, WIDE * reach.along, split, meter)? {
             wide.extend(parts.wide);
             narrow.extend(parts.narrow);
-            if column {
-                columns.extend(parts.open);
-            } else {
-                open.extend(parts.open);
-            }
+            (if column { &mut columns } else { &mut open }).extend(parts.open);
             lines.extend(parts.lines);
         }
     }
