@@ -219,7 +219,7 @@ as a line where `photo` merges it into its neighbour. So the wrong style costs:
 
 | Picture | In its own style | In the other |
 |---|---|---|
-| A traced photo | its thin lines merge, and it sews thin | `logo`: 2 to 11 times the area at 3 fills, up to 7.1 fills, the cap out of budget (`SC-W0913`). With the cap's work fixed ([Its work](#its-work)), up to 5.5 fills |
+| A traced photo | its thin lines merge, and it sews thin | `logo`: 2 to 11 times the area at 3 fills, up to 7.1 fills, the cap out of budget (`SC-W0913`). With the cap's work fixed ([The cap at the end of planning](#the-cap-at-the-end-of-planning)), up to 5.5 fills |
 | Flat art, lettering or a drawing | its lines and columns sew as drawn | `photo`: up to 20 % of its detail lost, as lines merge into fills (`SC-I0915`) |
 
 Some designs sew alike in both: a badge of broad flat shapes, a drawing of even lines or a sky of flat
@@ -2208,9 +2208,9 @@ A cap that runs out before it takes a point leaves the plan as the last pass lef
 
 Until this fix the last resort judged every column point near a spot above the warning's limit, in full,
 for each point it took: its cover and the measure with the joined stitch. Its work grew with the number of
-those points times the number it took, so it grew with the square of the design. Only a point whose 2
-stitches pass within 1 mm of the thickest spot lays thread there and can lower it. Only those are now
-judged. Each point taken then costs the work of the points round its spot. The traced dog in 9 colours,
+those points times the number it took, so it grew with the square of the design. A point can lower the
+thickest spot only when its 2 stitches pass within 1 mm of it and lay thread there. The cap now judges
+those points alone. Each point taken then costs the work of the points round its spot. The traced dog in 9 colours,
 planned in the `logo` style, needed 598 million units against the budget of 500 million, 587 million of
 them in the last resort. The cap ran out and took nothing, and the dog sewed 7.1 fills thick where the
 `photo` style sews 4.0. It now takes 22.5 million units, 12 million of them in the last resort, and sews
