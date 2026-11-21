@@ -420,6 +420,21 @@ mod tests {
             (base64(&bytes), said)
         };
         assert_eq!(file(&exported(FormatId::PesV1, &input, &params("line", &json!({ AUTO: false })))), plain);
+        // On, a shape grouped with a start marker is set by hand, as `stitch export` reads it by default
+        // (`REQ-AUTO-166`): the patch's Background, without its Fill effect.
+        let mut patch: Value = serde_json::from_slice(PATCH).unwrap();
+        let background = patch.pointer_mut("/document/layers/0/kind/children/1/kind/children/0").unwrap();
+        assert_eq!(background["name"], json!("Background"));
+        background["appearance"]["effects"] = json!([]);
+        let patch = serde_json::to_vec(&patch).unwrap();
+        let sewn = |marked_as_drawn| {
+            let (bytes, said) =
+                stitch_export(&patch, Reading { auto: true, marked_as_drawn, ..Reading::default() }, REFERENCE, FormatId::PesV1, "patch");
+            (base64(&bytes), said)
+        };
+        let exported = file(&exported(FormatId::PesV1, &patch, &params("patch", &json!({}))));
+        assert_eq!(exported, sewn(true));
+        assert_ne!(exported, sewn(false));
     }
 
     /// The parameters of a run that asks for the picture of the file named `name`, with `set`.
