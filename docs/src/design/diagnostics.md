@@ -208,7 +208,7 @@ another.
 | `SC-W0910` | Warning | Base layer left out (its shape needs more work than the budget allows, and every fill sews the underlay of its settings) | M13 |
 | `SC-I0911` | Info | Base layer turned off (the design's lowest automatic shape turns `auto_base_layer` off, so nothing lies under a place the top thread leaves bare, and fabric may show there) | M13 |
 | `SC-I0912` | Info | Rule that chose a shape's stitches (for each part of an automatic shape, the rule of the table it sewed by and the measures that decided it) | M13 |
-| `SC-W0913` | Warning | Design sews thick (a design digitized automatically has 1 mm² or more with 3 fills of thread or more over it, or 15 needle points or more, and is written all the same) | M13 |
+| `SC-W0913` | Warning | Design sews thick (a design digitized automatically has 1 mm² or more at the warning's limits, by default 4 fills of thread or more over it or 15 needle points or more, and is written all the same) | M13 |
 | `SC-I0914` | Info | Jumps not looked at for a run under later shapes (finding the runs that take the place of jumps between automatic elements needed more work than the budget allows, and the moves from the element named on are as they were) | M13 |
 | `SC-I0915` | Info | Thin line merged into a neighbour (a ragged part of an automatic area narrower than the narrowest satin stroke merges into the automatic area it shares the longest edge with, or keeps its lines when finding them needs more work than the budget allows) | M13 |
 | `SC-I0916` | Info | Parts kept by a mark (each mark named `stitch:keep` or given by `--keep`, with the parts that lie wholly inside it and how many of them sew that would have merged as specks or thin lines) | M13 |
