@@ -55,6 +55,13 @@ sews along the shape's middle. The example plans
 `traced-badge.svg`, a badge drawn as Image Trace traces one, and a document that VectorCraft saved plans the
 same way.
 
+`shares` lists each thread once, in the order the machine is first threaded with it: the stitches it sews,
+underlay included, their share of the design's stitches and how many times you thread it. A machine with
+one needle is rethreaded by hand for each thread, so look here for a thread that sews little before you
+sew. The badge's gold disc sews 184 stitches, 5.4 % of it. What to do about such a thread is yours to
+decide: StitchCraft lists the shares and chooses nothing. A report (`--report`) has the same list under
+`shares`.
+
 <!-- shot: traced-badge -->
 ![The traced badge digitized automatically. A red disc with a blue square on it and a gold disc in the middle sew as tatami fills, with no white round them.](../../images/generated/traced-badge.png)
 <!-- /shot -->

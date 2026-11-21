@@ -9,4 +9,7 @@ round-patch.vectorcraft
   threads   1. unnamed (#1f4e9c), shown as Brother PEC 2 "Blue"
             2. unnamed (#ffffff), shown as Brother PEC 29 "White"
             3. unnamed (#d9a400), shown as Brother PEC 11 "Deep Gold"
+  shares    1. unnamed (#1f4e9c): 1108 stitches, 67.8 %, threaded once
+            2. unnamed (#ffffff): 39 stitches, 2.4 %, threaded once
+            3. unnamed (#d9a400): 486 stitches, 29.8 %, threaded once
   preview   round-patch.png (269 × 269 pixels)

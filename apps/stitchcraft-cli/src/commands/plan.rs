@@ -497,9 +497,7 @@ fn report(args: &PlanArgs, profile: &MachineProfile, made: &Made, diagnostics: &
         }
         report["threads"] =
             plan.color_entries().iter().map(|e| json!({ "color": e.thread.color.to_string(), "name": e.thread.name, "stop": e.stop })).collect();
-        let share = |share: &shares::Share<'_>| {
-            json!({ "color": share.thread.color.to_string(), "name": share.thread.name, "stitches": share.stitches, "percent": share.percent(), "threaded": share.threaded })
-        };
+        let share = |share: &shares::Share<'_>| json!({ "color": share.thread.color.to_string(), "name": share.thread.name, "stitches": share.stitches, "percent": share.percent(), "threaded": share.threaded });
         report["shares"] = shares::shares(plan).iter().map(share).collect();
     }
     if let Some(subject) = subject {
