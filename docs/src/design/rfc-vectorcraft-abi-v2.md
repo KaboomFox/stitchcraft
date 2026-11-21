@@ -128,7 +128,9 @@ A live effect declares `"budget": "heavy"`, allowed once at install as a heavy f
 instructions and time and runs off the UI thread, with the object drawn as it is until the result comes.
 Fuel for each byte read back, as well as for each byte given, would make the budget follow what a
 generator writes. An embroidery effect's exact preview of a fill 7 mm across takes 27 million
-instructions, and a larger fill's stops at the light budget's 50 million.
+instructions, and a larger fill's stops at the light budget's 50 million. StitchCraft's M6.19 waits for
+this or for P3: from M6.18 a fill too large for its rows shows its shape whole, without the hatch that
+a person read as thread, and the rows come back when a heavy live effect or an overlay can carry them.
 
 ### P6: The objects beside a live effect's object
 

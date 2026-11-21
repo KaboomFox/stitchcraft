@@ -848,7 +848,7 @@ share, instead of being stopped (`apps/stitchcraft-vc-plugin/src/preview.rs`):
 |---|---|---|
 | Exact | The stitch polyline (strokes, satins), or the fill's shape with a gap along each stitch (fills) | For a stroke or a satin column, within nine tenths of the budget |
 | Rows | The fill's shape with a gap along each row segment of its top rows, or along each side of a contour fill's path round its rings (from M7.7), a meander fill's path (from M7.8) or a circular fill's pieces of spiral (from M7.9): where its stitches lie and which way they run | For a fill, within eight tenths |
-| Outline | The object's path as lines for a stroke or a satin column, and a fill's shape with a gap along a hatch line every 3 mm in its direction | When the others cost too much |
+| Outline | The object's path as lines for a stroke or a satin column, and a fill's shape whole, with nothing drawn on it (from M6.18) | When the others cost too much |
 
 **A fill reads as solid** (M6.16, `REQ-VC-024`). VectorCraft paints what a live effect returns with the
 object's own fill, and thread covers a fill whole. Until M6.16 a fill came back as thin ribbons, one 0.2 mm
@@ -860,24 +860,54 @@ as its own shape, flattened, and each stitch, row or hatch line is a gap in it
 both fill rules leave it empty. The winding number of the shape at the middle of the line tells which way
 that is. It also tells whether the fill rule fills there. A line outside the shape is left without a gap,
 since the fill would paint a ribbon there. Telling tests every side of the outline for each line, and
-that work is charged to the budget, 64 sides to a unit. A gap along a stitch or a row is 0.01 mm wide,
-and one along a hatch line 0.1 mm, since hatch lines lie far apart. The plug-in's case
-`req_vc_024_a_fill_s_preview_covers_its_shape_at_every_level_auto_picks` measures the share of each
-shape's area that its preview covers, on the browser demo's badge and on squares from 3.5 mm to 903 mm:
+that work is charged to the budget, 64 sides to a unit. A gap along a stitch or a row is 0.01 mm wide.
+The plug-in's case `req_vc_024_a_fill_s_preview_covers_its_shape_at_every_level_auto_picks` measures the
+share of each shape's area that its preview covers, on the browser demo's badge and on squares from
+3.5 mm to 903 mm:
 
-| Preview | Covered before M6.16 | Covered from M6.16 |
-|---|---|---|
-| A fill's rows, on squares from 3.5 mm to 564 mm a side | 80 % | 96 % |
-| A fill's outline with its hatch | 6 to 16 % | 96 to 97 % |
-| A fill's outline without its hatch, as auto shows the largest | under 1 % | 100 % |
-| A small fill's every stitch | 80 % or less | 94 to 95 % |
-| The Auto effect on the badge's ridges, which shows their outlines | 10 % | 96 to 97 % |
-| The Auto effect on the badge's sky, border and moon, which shows their outlines without a hatch | 1 to 5 % | 100 % |
-| The Auto effect on the badge's lake, star and snowcap, which shows a satin column's stitches or a fill's rows | 79 to 88 % | 93 to 95 % |
+| Preview | Covered before M6.16 | Covered in M6.16 and M6.17 | Covered from M6.18 |
+|---|---|---|---|
+| A fill's rows, on squares from 3.5 mm to 564 mm a side | 80 % | 96 % | 96 % |
+| A fill's outline, which had a hatch until M6.18 | 6 to 16 % | 96 to 97 % | 100 % |
+| A fill's outline when the hatch cost too much, as auto showed the largest | under 1 % | 100 % | 100 % |
+| A small fill's every stitch | 80 % or less | 94 to 95 % | 94 to 95 % |
+| The Auto effect on the badge's ridges, which shows their outlines | 10 % | 96 to 97 % | 100 % |
+| The Auto effect on the badge's sky, border, moon and lake, which shows their outlines | 1 to 5 % | 100 % | 100 % |
+| The Auto effect on the badge's star and snowcap, which shows a satin column's stitches or a fill's rows | 79 to 88 % | 93 to 95 % | 95 to 96 % |
 
 A satin column's stitches end outside the edge of a small shape, as its thread does. Their gaps show there
 as hairlines of the fill, which add less than 3 % of the star's area. A stroke's and a satin column's own
 effects return lines, which the object's stroke draws, and they are unchanged.
+
+**No mark that isn't sewn** (M6.18, `REQ-VC-024`). At every level the preview shows only where thread
+lies. A level that can't afford the stitches or the rows shows the shape whole, with nothing drawn on it.
+Until M6.18 the outline cut a gap 0.1 mm wide along a hatch line every 3 mm in the rows' direction, laid
+as rows 3 mm apart. Those lines are in no machine file, and a person who turned the browser demo's badge
+into stitches read the dark lines across its broad shapes as jump threads. A mark that reads as thread,
+or as a gap that sews, and isn't sewn misleads. So the outline now returns a fill's flattened shape with
+no gap. It spends three tenths of its budget flattening the path and one writing it, and the six tenths
+that laid, wrote and cut the hatch are gone. A stroke's and a satin column's outline are unchanged. The
+case `req_vc_024_a_fill_s_outline_is_its_shape_whole_with_nothing_drawn_on_it` checks that the outline
+returns the shape's own rings and covers it whole, on the badge and on the squares.
+
+The other levels keep their gaps, since each lies where thread lies: along a stitch the needle sews, or
+along a top row's segment, which the rows sew. A gap is 0.01 mm, or 0.028 pt. VectorCraft's canvas draws a
+point as a logical pixel at 100 % and zooms to 64,000 % (its `crates/ui-egui/src/canvas.rs`, read at
+`3f8d7a0`), so a gap is a pixel wide from about 3,500 %, where the
+rows lie 0.25 mm, or 25 pixels, apart. At 100 % it lightens a pixel by less than 3 %. Nothing sewn
+changes: the exporters write what they wrote.
+
+**A large fill's rows in the editor wait for VectorCraft** (M6.19). With the hatch gone, a fill too large
+for its rows shows no direction at all. What a person wants there is the fill's real rows, and those need
+one of 2 things from VectorCraft. One is a heavy budget for live effects, the open part of the RFC's
+[P4](rfc-vectorcraft-abi-v2.md#p4-budget-classes-for-live-effects). VectorCraft's change of 2026-11-18
+([#8101](https://github.com/storytold/vectorcraft/pull/8101)) raised only object filters' runs, by a preference, and its `docs/plugins.md` says live
+effects keep their budget. The other is the display-only overlays of
+[P3](rfc-vectorcraft-abi-v2.md#p3-display-only-overlays-for-live-effects), in review as [#3807](https://github.com/storytold/vectorcraft/pull/3807), which could
+draw the rows without making them part of the art. The contract case
+`m6_19_waits_for_vectorcraft_to_give_a_live_effect_more_than_a_light_budget` fails on the VectorCraft that
+accepts a heavy live effect or gives a live effect more than 50 million instructions. Overlays have no
+check yet, since their call isn't in a release to test against.
 
 The shape costs about what the ribbons cost. Its outline takes one anchor a point where it took a ribbon
 a side, and telling which way the gaps are wound is little work beside laying the rows. Measured in

@@ -3444,7 +3444,7 @@ A square's takes 12,900 units, an L's 21,000 and a ring's 31,800. The auto level
 tenths of the budget, then shows each element made as auto shows its family's: a fill's top rows, and a
 satin column's and a running stitch's every stitch. When that costs too much it shows the outline, as a
 larger square, an L, a ring and most traced letters do. Exact shows every stitch, and outline the path,
-hatched across a fill. A preview that costs more than the level allows shows less, with `SC-I0810`, as the
+a fill's shape whole. A preview that costs more than the level allows shows less, with `SC-I0810`, as the
 other effects' previews do. The command line's preview always shows every stitch.
 
 Tracing again replaces the group with a new one, without the effect. Apply the effect after the last
