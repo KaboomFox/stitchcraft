@@ -148,7 +148,7 @@ fn req_fin_003_the_plan_is_checked_after_the_cap() {
         Code::InternalCheckFailed,
         "The stitch plan breaks REQ-PLAN-002 at block 0, entry 3: the stitch is 0.100 mm, shorter than 0.3 mm".to_string(),
     );
-    assert_eq!(said, [thinned.clone(), refused]);
+    assert_eq!(said, [thinned, refused]);
     // A cap that takes a tie-in's lock point out, where the element asks for a tie-in.
     let mut said = Vec::new();
     let strip = |plan: &mut StitchPlan| {

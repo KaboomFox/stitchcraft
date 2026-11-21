@@ -1,7 +1,7 @@
 //! The machine's state as it reads a plan, entry by entry: where the needle is, whether a run of stitches
 //! is open, and whether the thread has sewn since it was last cut.
 //!
-//! Several things read a plan as the machine does: the stitch-length rules ([`StitchPlan::sewn_stitches`]),
+//! Several things read a plan as the machine does: the stitch-length rules ([`crate::plan::StitchPlan::sewn_stitches`]),
 //! the plan invariants ([`crate::invariants`]), the engine's check of the locks and, through
 //! `sewn_stitches`, the preview's scene. Each once kept its own copy of this model, and the copies
 //! disagreed at a stop (M13.56). This type is the one copy, so they can't disagree again. Design:

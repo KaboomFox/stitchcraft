@@ -55,7 +55,7 @@ pub(crate) fn locks(plan: &StitchPlan, asked: &BTreeMap<ElementId, (bool, bool)>
     let mut state = ThreadState::default();
     let mut run: Option<Run> = None;
     for (b, block) in plan.blocks.iter().enumerate() {
-        walk.ended(run.take());
+        walk.ended(run.take().as_ref());
         state.change_thread();
         for (i, stitch) in block.stitches.iter().enumerate() {
             match state.enter(b, i, stitch) {
@@ -65,15 +65,16 @@ pub(crate) fn locks(plan: &StitchPlan, asked: &BTreeMap<ElementId, (bool, bool)>
                         run.last = (b, i, stitch);
                     }
                 }
-                Entered::Jumped | Entered::Trimmed { .. } | Entered::Stopped => walk.ended(run.take()),
+                Entered::Jumped | Entered::Trimmed { .. } | Entered::Stopped => walk.ended(run.take().as_ref()),
             }
         }
     }
-    walk.ended(run);
+    walk.ended(run.as_ref());
     walk.violations
 }
 
 /// A run's first and last needle points, each with its block and entry.
+#[derive(Clone, Copy)]
 struct Run<'p> {
     first: (usize, usize, &'p Stitch),
     last: (usize, usize, &'p Stitch),
@@ -95,8 +96,8 @@ impl Walk<'_> {
 
     /// A run ended, if one was open: its first point is a tie-in's and its last a tie-off's where their
     /// elements ask for them. A run of one needle point lays no thread, so it has nothing to lock.
-    fn ended(&mut self, run: Option<Run<'_>>) {
-        let Some(Run { first: (b, i, first), last: (lb, li, last) }) = run else { return };
+    fn ended(&mut self, run: Option<&Run<'_>>) {
+        let Some(&Run { first: (b, i, first), last: (lb, li, last) }) = run else { return };
         if (b, i) == (lb, li) {
             return;
         }

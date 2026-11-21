@@ -19,7 +19,7 @@
 //! then lays thread between two needle holes, and its length is what the machine and the fabric feel. The
 //! first stitch after a jump, a trim, a stop or a thread change starts a new run and has no such length
 //! (`REQ-PLAN-010`). The machine's state, needle and thread, is one model,
-//! [`ThreadState`](crate::thread_state::ThreadState), which
+//! [`ThreadState`], which
 //! [`StitchPlan::sewn_stitches`](crate::plan::StitchPlan::sewn_stitches) reads too.
 //!
 //! The checker is linear in the plan's length and allocates only its report. Plans are bounded by the
