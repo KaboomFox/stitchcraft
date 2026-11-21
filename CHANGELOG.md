@@ -5,6 +5,18 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.20: a kept colour (`REQ-AUTO-160`). `stitch plan --keep-colour COLOUR`, and `stitch expand` with it,
+  gives a colour of a picture a thread at any `--colours`: a thread by its name in any case, `#rrggbb` for
+  the nearest thread, or a pixel `X,Y` of the picture for the thread nearest its colour. VectorCraft then
+  traces the picture twice, first in the other threads at `--colours` less the kept ones, then in exactly
+  the threads that trace used and the kept ones. A kept thread that trace leaves out is `SC-W0822`, a new
+  warning. A name that is no thread, which is answered with the nearest names, a pixel outside the picture
+  and more kept threads than `--colours` are usage errors before VectorCraft runs. A `stitch` built without
+  its `cutout` feature doesn't read a pixel and says so. Without `--keep-colour` a picture traces as before.
+- M13.20: a dropped colour (`REQ-AUTO-161`). `--drop-colour COLOUR`, read as `--keep-colour` reads it,
+  leaves a thread out of a picture's trace, so that its pixels take the nearest of the others. A colour
+  both kept and dropped, and dropping every thread but one, are usage errors. A merge of 2 traced colours
+  into one thread, which the roadmap planned, is not built: measured, it is one thread fewer.
 - M13.20: each thread's share of a design (`REQ-AUTO-162`). `stitch plan` lists each thread once under
   `shares`, in the order it is first threaded, with the stitches it sews, their share in percent to a tenth
   and how many times it is threaded, so that a person sees a thread that sews little before rethreading for

@@ -4619,8 +4619,8 @@ sew it unlike the tutorial's flow.
 Roadmap step M13.20. The owner's machine has one needle, so each thread change is a rethread by hand, and a
 design in 6 threads is what she wants to sew. Phase 1 measured what the colour count costs on a varied set
 on 2026-11-20, on main `571d3928`. `stitch plan` lists each thread's share of the stitches
-(`REQ-AUTO-162`). Planned: a person keeps a colour of the picture or leaves one out (`REQ-AUTO-160` and
-`REQ-AUTO-161`).
+(`REQ-AUTO-162`). A person keeps a colour of the picture (`REQ-AUTO-160`) or leaves one out
+(`REQ-AUTO-161`). The owner chose each of them on 2026-11-21.
 
 ### The colour count today
 
@@ -4708,14 +4708,49 @@ blue in 6 threads, and gains White in 9.
 
 ### Keeping a colour
 
-`--keep-colour COLOUR` names a colour the trace must have. COLOUR is a thread of the machine by its name, a
-colour as `#rrggbb`, or a pixel of the picture as X,Y, from its left and top edges, which keeps the thread
-nearest that pixel's colour. VectorCraft then traces twice.
+`--keep-colour COLOUR` names a colour the trace must have, for `stitch plan` and `stitch expand`. COLOUR
+is a thread of the machine by its name, in any case, a colour as `#rrggbb`, which keeps the thread nearest
+it by the palette's own matching, or a pixel of the picture as X,Y, from its left and top edges, which
+keeps the thread nearest that pixel's colour, its alpha left aside. A name is the first thread of that
+name. Brother's palette has 2 named Flesh Pink, and the other is named by its colour. VectorCraft then
+traces twice.
 
 1. It traces the picture in at most `--colours` less the kept threads, chosen from the machine's threads
-   without the kept ones. These are the threads the tracer itself would choose for the rest.
-2. It traces the picture again in a swatch library of exactly those threads and the kept ones, and this
-   trace is the design.
+   without the kept ones. These are the threads the tracer itself would choose for the rest. Image Trace
+   takes 2 colours at the least, and the first trace is in 2 when fewer are left. With as many kept
+   threads as `--colours` there is no first trace.
+2. It traces the picture again in a swatch library of exactly the threads the first trace's shapes are
+   filled in and the kept ones, and this trace is the design.
+
+The colours are read before VectorCraft runs (`apps/stitchcraft-cli/src/colours.rs`). A mistake costs no
+trace. Each name that is no thread is answered with the 3 nearest names, by the count of letters to
+change. A pixel outside the picture, and more kept threads than `--colours`, are usage errors too. A pixel
+needs the picture decoded, which `stitch` does only with its `cutout` feature. A build without it, such as
+the WASI one that makes the golden files, refuses a pixel with a usage error that names the feature. A
+kept thread the second trace leaves out, since no part of the picture is nearer its colour than the other
+threads', is the warning `SC-W0822`.
+
+Measured with the build on 2026-11-21, at 6 colours and 100 mm, VectorCraft 0.24.1, by one rule for every
+picture in place of a person: keep the thread nearest the colour of the most visible small bright
+detail the 6-colour trace loses, the largest by area times contrast. The pear loses none.
+
+| Picture | Kept | Thread changes | Colour error | Small details kept | Bright ones kept |
+|---|---|---|---|---|---|
+| dog-turf | Gray, a thread it has | 8, as before | 6.85, as before | 13 of 20, as before | 7 of 10, as before |
+| dog-run | Silver, for a grey | 8 to 7 | 7.35 to 7.41 | 19 to 21 of 37 | 10 to 12 of 17 |
+| emblem | Prussian Blue, a thread it has | 4, as before | 0.32, as before | 20 of 23, as before | 20 of 21, as before |
+| patch | Warm Gray, `SC-W0822` | 4, as before | 6.16 to 6.14 | 18 of 22, as before | 17 of 21, as before |
+| magnolia | Amber Red, for a pink | 10 to 9 | 6.48 to 6.60 | 22 to 23 of 41 | 15 to 16 of 25 |
+| goose | Silver, for a gold-brown | 10 to 9 | 6.27 to 6.32 | 51 to 39 of 79 | 48 to 36 of 71 |
+| castle | Warm Gray, for an olive | 9 to 11 | 7.22 to 7.26 | 31 to 29 of 61 | 6 of 24, as before |
+| coleus | Amber Red, for a green | 13 to 12 | 10.38 to 10.60 | 4 to 16 of 24 | 2 to 14 of 19 |
+
+A kept colour takes the place of one of the tracer's threads, so the count of threads stays and the colour
+error moves by 0.25 at most. The coleus keeps 12 more of its small details, and the goose loses 12. A
+picture traced in a thread it already has sews as before. A trace takes 0.5 to 3.4 seconds on the set,
+and a kept colour traces twice.
+
+Before the build, phase 1 kept a colour by trace scripts of its own:
 
 The coleus in 6 threads, Dark Fuchsia kept from a vein: the first trace chose grey, green, pewter, brown
 and black. It keeps 17 of its 24 small details for 4, and 15 of its 19 bright ones, more than 12 threads
@@ -4723,7 +4758,7 @@ keep. Its colour error falls from 10.4 to 10.3, where 9 threads give 10.0, since
 share of the leaves. It sews 11 thread changes where 6 threads sew 13, and 9 threads 46. In 6 threads the
 castle's sunlit walls trace in the sky's light blue. With White kept they are white, 6.5 % of its area,
 and the yellow-green of its hill goes, for a colour error of 7.3 where it had 7.2 and 11 thread changes
-for 9. The second trace costs as much as the first, 0.5 to 3.4 seconds on the set.
+for 9.
 
 The other threads are the tracer's choice, and no rule of StitchCraft's drops one. Measured with a stand-in
 for a person, who keeps the colour of the most visible small bright detail the trace lost:
@@ -4740,8 +4775,11 @@ the person asked for it.
 
 ### Leaving a colour out
 
-`--drop-colour COLOUR` leaves a thread out of the library. COLOUR reads as for `--keep-colour`. The
-pixels of the thread left out take the nearest of the others. The roadmap's row planned a merge of 2 traced colours into one thread. On the 7
+`--drop-colour COLOUR` leaves a thread out of the library of every trace, for `stitch plan` and
+`stitch expand`. COLOUR reads as for `--keep-colour`. The pixels of the thread left out take the nearest of the
+others. Without a kept colour the picture is traced once. A colour both kept and dropped, and dropping
+every thread but one, are usage errors before VectorCraft runs. The roadmap's row planned a merge of 2
+traced colours into one thread, which is not built. On the 7
 pictures that traced in 9 threads, leaving out the nearer of the 2 nearest threads gave the colour error
 and the details of the tracer's own 8 threads, within 0.06 and 2 details. So a merge of the nearest pair is
 one colour fewer, which `--colours` gives. A person who lacks a thread, or wants a rethread less, names the
@@ -4805,6 +4843,8 @@ Each with the recommendation.
 - **The default count stays 6.** It is the default already. 4 threads raise every photo's colour error by
   0.3 to 2.5 and lose the goose's details. 9 threads cost 3 to 33 thread changes more on each traced photo
   for 0 to 0.9 of colour error. Recommended: 6.
+The owner answered on 2026-11-21: yes to each.
+
 - **A kept colour, named or clicked.** `--keep-colour` with a thread's name, a colour or a pixel.
   Recommended: each of them. A person sees a pixel, and the share list shows a name.
 - **The rest of the threads are the tracer's.** The other choices are a rule that drops the smallest or the
@@ -4819,6 +4859,8 @@ Each with the recommendation.
 
 ### What isn't built
 
+- A merge of 2 traced colours into one thread. Measured, a merge of the nearest pair is one thread fewer,
+  which `--colours` gives, and `--drop-colour` names any other.
 - A rule that keeps a colour without being asked. The stand-in's choice, the most visible small detail
   lost, helped 2 pictures of 5 and cost one of them details.
 - A kept colour drawn in VectorCraft as a mark is. A pixel of the picture says the same.
