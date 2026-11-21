@@ -1000,6 +1000,16 @@ macro_rules! codes {
         /// save.
         VcTraceFailed = "SC-E0816", Error, "VectorCraft could not trace the picture";
 
+        /// `stitch plan --keep-colour` gave a colour of a picture a thread, and VectorCraft traced the picture
+        /// again in the threads its first trace chose and the kept ones. The trace left the kept thread out,
+        /// since no part of the picture is nearer its colour than the other threads'. The design sews without
+        /// it.
+        ///
+        /// The message names the thread. A colour named as a thread or as `#rrggbb` may be one the picture
+        /// hasn't: keep the colour of one of its pixels instead, as `X,Y`, or trace the picture in more
+        /// `--colours`, so that the threads near the kept one take less of the picture.
+        VcKeptThreadUntraced = "SC-W0822", Warning, "Kept thread left out of the picture's trace";
+
         /// StitchCraft's Test Sheet filter draws a sheet in the middle of an artboard, the one under the
         /// selection or else the first. It drew nothing, because there parts of the sheet would lie more than
         /// 10 m from the document's origin, farther than StitchCraft stitches: a machine file can't record a

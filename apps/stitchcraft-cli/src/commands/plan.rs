@@ -252,7 +252,7 @@ pub fn run_with(args: &PlanArgs, models: &Provider) -> Outcome {
     };
     let picture = trace::is_picture(&args.design);
     if !picture && args.tracing.given() {
-        return Outcome::usage("--vectorcraft-cli, --size, --colours and --traced are for a picture, a PNG or JPEG file");
+        return Outcome::usage("--vectorcraft-cli, --size, --colours, --keep-colour and --traced are for a picture, a PNG or JPEG file");
     }
     if let Err(why) = subject_options(picture, &args.subject) {
         return Outcome::usage(why);
@@ -274,6 +274,11 @@ pub fn run_with(args: &PlanArgs, models: &Provider) -> Outcome {
     let reading = Reading::from(&args.reading);
     // With `--subject`, the picture's subject is cut out, and VectorCraft traces the cut-out.
     let tracing_for = asked.unwrap_or(profiles::REFERENCE);
+    // The colours a person keeps are read before anything runs: a mistake costs no cut-out and no trace.
+    let tracing = match picture.then(|| trace::Tracing::asked(&args.tracing, &bytes, tracing_for)).transpose() {
+        Ok(tracing) => tracing,
+        Err(why) => return Outcome::usage(why),
+    };
     let cut = if args.subject.subject {
         match subject::cut(&bytes, &args.subject.marks.marks(), models) {
             Ok(cut) => Some(cut),
@@ -284,14 +289,14 @@ pub fn run_with(args: &PlanArgs, models: &Provider) -> Outcome {
         None
     };
     // A picture is the document VectorCraft traces it into, every shape of it digitized automatically.
-    let (source, design, reading) = if picture {
+    let (source, design, reading, traced_said) = if let Some(tracing) = &tracing {
         let placed = cut.as_ref().map_or(bytes.as_slice(), |cut| cut.png.as_slice());
-        match traced(args, tracing_for, placed, cut.as_ref()) {
-            Ok(document) => (Source::VectorCraft, document, Reading { auto: true, ..reading }),
+        match traced(args, tracing_for, tracing, placed, cut.as_ref()) {
+            Ok((document, said)) => (Source::VectorCraft, document, Reading { auto: true, ..reading }, said),
             Err(outcome) => return outcome,
         }
     } else {
-        (Source::of(&args.design), bytes, reading)
+        (Source::of(&args.design), bytes, reading, Vec::new())
     };
     let profile = machine_for(asked, source, &design);
     let rules = args.reading.rules();
@@ -311,7 +316,7 @@ pub fn run_with(args: &PlanArgs, models: &Provider) -> Outcome {
     // A panic is a bug in StitchCraft: with the design's bytes in hand, and where it came, a bundle can
     // reproduce it (`REQ-CLI-002`).
     let phase = Cell::new(Phase::Plan);
-    catch_unwind(AssertUnwindSafe(|| planned(args, &run, &phase, cut.as_ref()))).unwrap_or_else(|payload| {
+    catch_unwind(AssertUnwindSafe(|| planned(args, &run, &phase, (cut.as_ref(), &traced_said)))).unwrap_or_else(|payload| {
         let message = bug_report::panic_message(payload.as_ref());
         let stopped =
             Outcome { stdout: String::new(), stderr: format!("stitch: StitchCraft stopped on a bug in itself: {message}\n"), status: Status::Bug };
@@ -319,26 +324,31 @@ pub fn run_with(args: &PlanArgs, models: &Provider) -> Outcome {
     })
 }
 
-/// The document VectorCraft's command line traces the picture `bytes` into, for `profile`, as `args` ask
-/// ([`trace`]); or what `stitch plan` ends with when it doesn't: `SC-E0815` or `SC-E0816` and the report,
-/// or the folder VectorCraft saves into that can't be made beside the machine file. `cut` is the subject the
-/// picture was cut out to, if it was.
-fn traced(args: &PlanArgs, profile: &MachineProfile, bytes: &[u8], cut: Option<&Subject>) -> Result<Vec<u8>, Outcome> {
-    let tracing = &args.tracing;
+/// The document VectorCraft's command line traces the picture `bytes` into, for `profile`, as `tracing`
+/// asks ([`trace::picture`]), with what was said of its kept threads; or what `stitch plan` ends with when
+/// it doesn't: `SC-E0815` or `SC-E0816` and the report, or the folder VectorCraft saves into that can't be
+/// made beside the machine file. `cut` is the subject the picture was cut out to, if it was.
+fn traced(
+    args: &PlanArgs,
+    profile: &MachineProfile,
+    tracing: &trace::Tracing<'_>,
+    bytes: &[u8],
+    cut: Option<&Subject>,
+) -> Result<(Vec<u8>, Vec<Diagnostic>), Outcome> {
     let name = args.design.file_name().map_or_else(String::new, |name| name.to_string_lossy().into_owned());
-    let fitting = if tracing.fewer_points { trace::Fitting::Fewest } else { trace::Fitting::Defaults };
-    let steps = trace::steps(&name, bytes, profile, tracing.size, tracing.colours.unwrap_or(trace::COLOURS), fitting);
     let scratch = Scratch::beside(&args.output)
         .map_err(|error| Outcome::unwritten("", &Unwritten { path: args.output.clone(), error, written: Vec::new() }))?;
-    trace::traced(tracing.vectorcraft_cli.as_deref(), &name, &steps, &scratch).map_err(|untraced| refuse(args, profile, cut, (&[untraced], None)))
+    trace::picture(&name, bytes, profile, tracing, &scratch).map_err(|untraced| refuse(args, profile, cut, (&[untraced], None)))
 }
 
 /// `stitch plan` once the design is read: planned and, unless StitchCraft found a bug in itself, written.
-/// `phase` follows where it is, for a bundle, and `cut` is the subject a picture was cut out to.
+/// `phase` follows where it is, for a bundle, `cut` is the subject a picture was cut out to, and `traced`
+/// what was said of the threads a picture keeps, which is said first.
 /// A picture's traced document is written, and bundled, with the names its shapes were planned with
 /// (`REQ-VC-033`): planned again, it gives them the same names and sews the same stitches.
-fn planned(args: &PlanArgs, run: &Run, phase: &Cell<Phase>, cut: Option<&Subject>) -> Outcome {
+fn planned(args: &PlanArgs, run: &Run, phase: &Cell<Phase>, (cut, traced): (Option<&Subject>, &[Diagnostic])) -> Outcome {
     let mut sewn = sew(run.source, run.design, (run.reading, run.rules), run.profile, run.format, run.name);
+    sewn.diagnostics.splice(0..0, traced.iter().cloned());
     let named = match trace::is_picture(&args.design).then(|| stitchcraft_vectorcraft::named(run.design, &nodes(&sewn.names), &Budget::DEFAULT)) {
         Some(Ok(named)) => Some(named),
         Some(Err(said)) => {

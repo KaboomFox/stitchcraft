@@ -1,11 +1,12 @@
 //! `stitch plan picture.png` end to end, with this test program standing in for VectorCraft's command line
-//! (`REQ-CLI-012`, `REQ-CLI-013`, `SC-E0816`), and with `--subject` (`REQ-CLI-014`, `REQ-CLI-016`).
+//! (`REQ-CLI-012`, `REQ-CLI-013`, `SC-E0816`), with `--subject` (`REQ-CLI-014`, `REQ-CLI-016`), and with kept colours (`REQ-AUTO-160`, `SC-W0822`).
 //!
 //! **Why a stand-in.** VectorCraft isn't installed where these tests run. The compatibility gate's `picture`
 //! case runs the real one on every track, and here `stitch` is given this program as `--vectorcraft-cli`.
 //! Run with [`STAND_IN`] in its environment, which `stitch` passes on, it does what `vectorcraft-cli run
 //! --commands - --export FILE` does as far as `stitch` can tell. It reads the steps on standard input, keeps
-//! the text it read with its arguments in the file the variable names, and saves to `FILE` a document
+//! the text it read with its arguments in the file the variable names, a line for each time it runs, since a
+//! picture with kept colours is traced twice (`REQ-AUTO-160`), and saves to `FILE` a document
 //! VectorCraft traced: the fixture `traced-badge.vectorcraft`, which VectorCraft 0.18.0 traced when the
 //! `picture` case ran. With [`FAILS`] it fails as VectorCraft does, saying why, and with [`SAVES_NOTHING`] it
 //! ends without saving.
@@ -69,6 +70,8 @@ const TESTS: &[(&str, fn())] = &[
         "req_vc_033_the_traced_document_names_each_shape_and_changes_nothing_else",
         req_vc_033_the_traced_document_names_each_shape_and_changes_nothing_else,
     ),
+    ("req_auto_160_a_kept_colour_traces_the_picture_twice", req_auto_160_a_kept_colour_traces_the_picture_twice),
+    ("diag_sc_w0822_a_kept_thread_the_trace_leaves_out_is_named", diag_sc_w0822_a_kept_thread_the_trace_leaves_out_is_named),
     (
         "req_cli_016_models_that_aren_t_ready_are_said_with_each_file_and_the_folder_and_only_the_report_is_written",
         req_cli_016_models_that_aren_t_ready_are_said_with_each_file_and_the_folder_and_only_the_report_is_written,
@@ -153,7 +156,8 @@ fn stand_in(keeps: &Path) -> ExitCode {
     let no_prefs = std::env::var("VECTORCRAFT_NO_PREFS").ok();
     // The text it read, as VectorCraft reads it: a number parsed and written again may differ in its last digit.
     let kept = json!({"args": args, "no_prefs": no_prefs, "steps": steps});
-    std::fs::write(keeps, kept.to_string()).unwrap();
+    let mut file = std::fs::OpenOptions::new().create(true).append(true).open(keeps).unwrap();
+    std::io::Write::write_all(&mut file, format!("{kept}\n").as_bytes()).unwrap();
     if std::env::var_os(FAILS).is_some() {
         eprintln!("{SAID}");
         return ExitCode::from(1);
@@ -173,6 +177,12 @@ fn stitch(dir: &Path, args: &[&str], behaviour: Option<&str>) -> (Output, Option
 
 /// [`stitch`], with the variables `vars` set as well.
 fn stitch_with(dir: &Path, args: &[&str], behaviour: Option<&str>, vars: &[(&str, &Path)]) -> (Output, Option<Value>) {
+    let (out, mut calls) = stitch_calls(dir, args, behaviour, vars);
+    (out, calls.pop())
+}
+
+/// [`stitch_with`], with what the stand-in was given each time it ran, in order.
+fn stitch_calls(dir: &Path, args: &[&str], behaviour: Option<&str>, vars: &[(&str, &Path)]) -> (Output, Vec<Value>) {
     let keeps = dir.join("kept.json");
     let _ = std::fs::remove_file(&keeps);
     let mut command = Command::new(env!("CARGO_BIN_EXE_stitch"));
@@ -182,8 +192,8 @@ fn stitch_with(dir: &Path, args: &[&str], behaviour: Option<&str>, vars: &[(&str
         command.env(behaviour, "1");
     }
     let out = command.output().unwrap();
-    let kept = std::fs::read(&keeps).ok().map(|bytes| serde_json::from_slice(&bytes).unwrap());
-    (out, kept)
+    let kept = std::fs::read_to_string(&keeps).unwrap_or_default();
+    (out, kept.lines().map(|line| serde_json::from_str(line).unwrap()).collect())
 }
 
 /// A new folder for one test, with [`PICTURE`] in it as `name`.
@@ -242,6 +252,62 @@ fn req_cli_012_stitch_plan_traces_a_picture_with_vectorcraft_s_command_line_and_
     assert!(stdout.starts_with("badge.png\n") && stdout.ends_with("  report    badge.json\n  traced    traced.vectorcraft\n"), "{stdout}");
     let report: Value = serde_json::from_slice(&std::fs::read(dir.join("badge.json")).unwrap()).unwrap();
     assert_eq!((&report["design"], &report["profile"]), (&json!("badge.png"), &json!(REFERENCE.id)));
+}
+
+/// What a run of the stand-in traced in: the names of the swatch library's threads, and Image Trace's
+/// colour count.
+fn traced_in(call: &Value) -> (Vec<String>, u64) {
+    let steps: Value = serde_json::from_str(call["steps"].as_str().unwrap()).unwrap();
+    let library = steps[0]["params"]["data"].as_str().unwrap();
+    let names = library.lines().skip(4).map(|line| line.split_once('\t').unwrap().1.to_string()).collect();
+    (names, steps[2]["params"]["params"]["colors"].as_u64().unwrap())
+}
+
+fn names(names: &[&str]) -> Vec<String> {
+    names.iter().map(|name| name.to_string()).collect()
+}
+
+fn req_auto_160_a_kept_colour_traces_the_picture_twice() {
+    let threads = stitchcraft_cli::colours::threads(REFERENCE.palette.palette()).count();
+    let dir = folder("keep", "badge.png");
+    // First in the threads but the kept one, in one colour fewer; then in the threads the badge was traced
+    // in, red, blue, gold and white, and the kept one, in the colours asked.
+    let (out, calls) = stitch_calls(dir.path(), &["plan", "badge.png", "-o", "badge.pes", "--keep-colour", "red"], None, &[]);
+    assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
+    assert_eq!(calls.len(), 2);
+    let (first, colours) = traced_in(&calls[0]);
+    assert_eq!((first.len(), colours), (threads - 1, u64::from(COLOURS) - 1));
+    assert!(!first.contains(&"Red".to_string()));
+    assert_eq!(traced_in(&calls[1]), (names(&["Blue", "Red", "Deep Gold", "White"]), u64::from(COLOURS)));
+    assert!(!text(&out.stderr).contains("SC-W0822"), "{}", text(&out.stderr));
+    // The first trace is in 2 colours at the least, and with as many kept threads as colours there is none.
+    let three = ["plan", "badge.png", "-o", "b.pes", "--colours", "3", "--keep-colour", "Red", "--keep-colour", "#0a55a3"];
+    let (_, calls) = stitch_calls(dir.path(), &three, None, &[]);
+    assert_eq!((traced_in(&calls[0]).1, traced_in(&calls[1]).1), (2, 3));
+    let two = ["plan", "badge.png", "-o", "c.pes", "--colours", "2", "--keep-colour", "Red", "--keep-colour", "Blue"];
+    let (out, calls) = stitch_calls(dir.path(), &two, None, &[]);
+    assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
+    assert_eq!(calls.iter().map(traced_in).collect::<Vec<_>>(), [(names(&["Blue", "Red"]), 2)]);
+    // A mistake is a usage error before VectorCraft runs: for `stitch expand` too.
+    let (out, calls) = stitch_calls(dir.path(), &["expand", "badge.png", "-o", "badge.svg", "--keep-colour", "Redd"], None, &[]);
+    assert_eq!(out.status.code(), Some(2), "{}", text(&out.stderr));
+    let said = text(&out.stderr);
+    assert!(said.starts_with("stitch: --keep-colour Redd: Brother PEC has no thread of that name. The nearest names are Red"), "{said}");
+    assert!(calls.is_empty());
+}
+
+fn diag_sc_w0822_a_kept_thread_the_trace_leaves_out_is_named() {
+    // The stand-in's badge has no fuchsia, as a picture without a pixel nearer it than the other threads.
+    let warning = "warning SC-W0822: The thread Dark Fuchsia (#c70156), kept with --keep-colour, isn't in the picture's trace: no part of the \
+                   picture is nearer its colour than the other threads'.\n  hint: Keep a colour the picture has, such as one of its pixels as \
+                   X,Y, or trace it in more --colours.\n";
+    let dir = folder("keep-untraced", "badge.png");
+    for (command, output) in [("plan", "badge.pes"), ("expand", "badge.svg")] {
+        let (out, calls) = stitch_calls(dir.path(), &[command, "badge.png", "-o", output, "--keep-colour", "Dark Fuchsia"], None, &[]);
+        assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
+        assert_eq!(calls.len(), 2);
+        assert!(text(&out.stderr).starts_with(warning), "{command}: {}", text(&out.stderr));
+    }
 }
 
 fn req_cli_025_stitch_expand_traces_a_picture_first() {

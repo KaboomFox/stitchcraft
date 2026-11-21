@@ -63,7 +63,7 @@ pub fn run(args: &ExpandArgs) -> Outcome {
     };
     let picture = trace::is_picture(&args.design);
     if !picture && args.tracing.given() {
-        return Outcome::usage("--vectorcraft-cli, --size, --colours and --traced are for a picture, a PNG or JPEG file");
+        return Outcome::usage("--vectorcraft-cli, --size, --colours, --keep-colour and --traced are for a picture, a PNG or JPEG file");
     }
     if output == Output::VectorCraft && !picture && Source::of(&args.design) == Source::Svg {
         return Outcome::usage("a VectorCraft document is written from a VectorCraft document or a picture: name the output .svg");
@@ -79,18 +79,22 @@ pub fn run(args: &ExpandArgs) -> Outcome {
         }
     };
     let tracing_for = asked.unwrap_or(stitchcraft_plan::profiles::REFERENCE);
-    let (source, document) = if picture {
-        match traced(args, tracing_for, &bytes) {
-            Ok(document) => (Source::VectorCraft, document),
+    let (source, document, traced_said) = if picture {
+        let tracing = match trace::Tracing::asked(&args.tracing, &bytes, tracing_for) {
+            Ok(tracing) => tracing,
+            Err(why) => return Outcome::usage(why),
+        };
+        match traced(args, tracing_for, &tracing, &bytes) {
+            Ok((document, said)) => (Source::VectorCraft, document, said),
             Err(outcome) => return outcome,
         }
     } else {
-        (Source::of(&args.design), bytes)
+        (Source::of(&args.design), bytes, Vec::new())
     };
     let profile = plan::machine_for(asked, source, &document);
     let reading = Reading { auto: true, ..Reading::from(&args.reading) };
     let (design, mut said) = match plan::read_design(source, &document, (reading, &args.reading.rules())) {
-        Ok(read) => read,
+        Ok((design, said)) => (design, traced_said.into_iter().chain(said).collect::<Vec<_>>()),
         Err(unreadable) => return Outcome::refuse(String::new(), &[unreadable]),
     };
     let budget = Budget::DEFAULT;
@@ -135,14 +139,16 @@ pub fn run(args: &ExpandArgs) -> Outcome {
     Outcome { stdout: out, stderr: rendered, status: Status::Done }
 }
 
-/// The document VectorCraft's command line traces the picture `bytes` into, for `profile`, as `args` ask
-/// ([`trace`]); or the outcome that says why it doesn't.
-fn traced(args: &ExpandArgs, profile: &stitchcraft_plan::MachineProfile, bytes: &[u8]) -> Result<Vec<u8>, Outcome> {
-    let tracing = &args.tracing;
+/// The document VectorCraft's command line traces the picture `bytes` into, for `profile`, as `tracing`
+/// asks ([`trace::picture`]), with what was said of its kept threads; or the outcome that says why it doesn't.
+fn traced(
+    args: &ExpandArgs,
+    profile: &stitchcraft_plan::MachineProfile,
+    tracing: &trace::Tracing<'_>,
+    bytes: &[u8],
+) -> Result<(Vec<u8>, Vec<Diagnostic>), Outcome> {
     let name = args.design.file_name().map_or_else(String::new, |name| name.to_string_lossy().into_owned());
-    let fitting = if tracing.fewer_points { trace::Fitting::Fewest } else { trace::Fitting::Defaults };
-    let steps = trace::steps(&name, bytes, profile, tracing.size, tracing.colours.unwrap_or(trace::COLOURS), fitting);
     let scratch = Scratch::beside(&args.output)
         .map_err(|error| Outcome::unwritten("", &Unwritten { path: args.output.clone(), error, written: Vec::new() }))?;
-    trace::traced(tracing.vectorcraft_cli.as_deref(), &name, &steps, &scratch).map_err(|untraced| Outcome::refuse(String::new(), &[untraced]))
+    trace::picture(&name, bytes, profile, tracing, &scratch).map_err(|untraced| Outcome::refuse(String::new(), &[untraced]))
 }

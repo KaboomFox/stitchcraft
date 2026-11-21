@@ -229,7 +229,6 @@ fn plan_picture(dir: &TempDir, options: &[&str]) -> Result<PlanArgs, clap::Error
 }
 
 #[test]
-#[ignore = "planned: M13.20 builds the kept and dropped colours"]
 fn req_auto_160_a_kept_colour_is_a_thread_a_colour_or_a_pixel_and_no_more_than_the_count() {
     let dir = TempDir::new("plan-keep-colour");
     // A thread's name in any case, a colour and a pixel of the picture, each as often as needed.
@@ -391,11 +390,12 @@ fn req_cli_013_the_tracing_options_are_for_a_picture_only() {
         TracingArgs { size: Some(Mm::new(80.0).unwrap()), ..TracingArgs::default() },
         TracingArgs { colours: Some(4), ..TracingArgs::default() },
         TracingArgs { fewer_points: true, ..TracingArgs::default() },
+        TracingArgs { keep_colour: vec![crate::colours::Colour::Thread("Red".to_string())], ..TracingArgs::default() },
         TracingArgs { traced: Some(dir.join("traced.vectorcraft")), ..TracingArgs::default() },
     ];
     for tracing in given {
         let out = run(&PlanArgs { tracing, ..args(fixture("strokes.svg"), dir.join("strokes.pes")) });
-        let usage = "stitch: --vectorcraft-cli, --size, --colours and --traced are for a picture, a PNG or JPEG file\n";
+        let usage = "stitch: --vectorcraft-cli, --size, --colours, --keep-colour and --traced are for a picture, a PNG or JPEG file\n";
         assert_eq!((out.status, out.stderr.as_str()), (Status::Usage, usage));
     }
     assert!(!dir.join("strokes.pes").exists() && !dir.join("traced.vectorcraft").exists());
