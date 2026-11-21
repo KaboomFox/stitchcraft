@@ -134,7 +134,7 @@ its run digitized automatically, so a bundle from before the default, which has 
 (`REQ-CLI-027`). A document has no setting of its own for it: a shape a person wants sewn as drawn takes
 a StitchCraft Fill or Stroke effect.
 
-**What changes, measured** on `main` at `ae75d386` with the reference machine, plain
+**What changes, measured** on `main` at `ae75d386`, and the same on `211b2784`, with the reference machine, plain
 against the default. The reader fixtures, larger than any hoop, were measured on a hoop of 1 m.
 
 | Document | Shapes, automatic | Stitches | Thread changes | Jumps | Thickest, fills | At 3 fills, mm² | Above the cap, mm² |
