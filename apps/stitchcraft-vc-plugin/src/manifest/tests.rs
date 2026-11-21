@@ -59,10 +59,11 @@ fn req_vc_011_each_exporter_s_manifest_is_one_vectorcraft_accepts() {
         assert_eq!(validate(&text(&manifest)), Ok(()), "{format:?}");
         assert_eq!(manifest.id, format!("dev.stitchcraft.{}", format.extension()));
         assert_eq!((manifest.kind, manifest.extensions.as_slice()), ("exporter", &[format.extension()][..]));
-        // `stitch export`'s options, as they are when it is not given them: no automatic digitizing, and the
-        // machine the document keeps, else the reference machine, listed first after it.
+        // `stitch export`'s options, as they are when it is not given them: automatic digitizing, as a
+        // document is digitized by default (`REQ-VC-036`), and the machine the document keeps, else the
+        // reference machine, listed first after it.
         let machines: Vec<&str> = std::iter::once(DOCUMENT).chain(profiles.iter().copied()).collect();
-        let options = vec![(AUTO, Schema::Bool { default: false }), (PROFILE, Schema::Choice { options: machines, default: DOCUMENT })];
+        let options = vec![(AUTO, Schema::Bool { default: true }), (PROFILE, Schema::Choice { options: machines, default: DOCUMENT })];
         assert_eq!(schemas(&manifest.params), options, "{format:?}");
         assert_eq!(profiles.first(), Some(&REFERENCE.id));
     }

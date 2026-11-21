@@ -20,10 +20,11 @@
 //!   effect on the traced group makes its shapes automatic (`REQ-VC-016`).
 
 use serde_json::Value;
+use stitchcraft_cli::cli::ReadingArgs;
 use stitchcraft_cli::commands::palette;
 use stitchcraft_cli::commands::plan::{Source, sew};
 use stitchcraft_core::{Code, Severity};
-use stitchcraft_engine::design::{FillRule, Reading, Segment, Shape};
+use stitchcraft_engine::design::{FillRule, Segment, Shape};
 use stitchcraft_engine::testsheets::pictures::{self, Picture, Trace};
 use stitchcraft_plan::FormatId;
 use stitchcraft_plan::profiles::REFERENCE;
@@ -115,10 +116,10 @@ fn drawn(picture: &Picture, across: f32) -> Result<Vec<u8>, String> {
 }
 
 /// Whether `bytes`, a VectorCraft document, sews digitized automatically as [the module](self) says, in the
-/// threads `threads` names (`#rrggbb`, in any order), with `--auto` or, when its Auto `effect` says so,
-/// without; or how it doesn't.
+/// threads `threads` names (`#rrggbb`, in any order), as `stitch plan` reads a document without a switch
+/// or, when its Auto `effect` says so, with `--no-auto`; or how it doesn't.
 pub(super) fn traced(bytes: &[u8], threads: &[String], effect: bool) -> Result<(), String> {
-    let reading = Reading { auto: !effect, ..Reading::default() };
+    let reading = ReadingArgs { no_auto: effect, ..ReadingArgs::default() }.reading(Source::VectorCraft);
     let (design, _) = Source::VectorCraft.read(bytes, reading).map_err(|unread| unread.to_string())?;
     let set: Vec<&str> = design.elements().iter().filter(|e| !e.automatic).map(|e| e.id.as_str()).collect();
     if !set.is_empty() || design.elements().is_empty() {
