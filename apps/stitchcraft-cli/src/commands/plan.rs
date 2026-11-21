@@ -452,6 +452,7 @@ fn summary(args: &PlanArgs, profile: &MachineProfile, format: FormatId, (plan, b
     let _ = writeln!(out, "  profile   {} ({})", profile.id, profile.name);
     describe_plan(&mut out, back, Some(profile));
     describe_threads(&mut out, plan, format.palette().map(|id| Entries::Written(id.palette())));
+    shares::describe(&mut out, &shares::shares(plan));
     out
 }
 
@@ -496,6 +497,10 @@ fn report(args: &PlanArgs, profile: &MachineProfile, made: &Made, diagnostics: &
         }
         report["threads"] =
             plan.color_entries().iter().map(|e| json!({ "color": e.thread.color.to_string(), "name": e.thread.name, "stop": e.stop })).collect();
+        let share = |share: &shares::Share<'_>| {
+            json!({ "color": share.thread.color.to_string(), "name": share.thread.name, "stitches": share.stitches, "percent": share.percent(), "threaded": share.threaded })
+        };
+        report["shares"] = shares::shares(plan).iter().map(share).collect();
     }
     if let Some(subject) = subject {
         report["subject"] = serde_json::to_value(subject).unwrap_or_default();
@@ -514,6 +519,8 @@ fn path(path: &Path) -> String {
 fn round(mm: f64) -> f64 {
     (mm * 10.0).round() / 10.0
 }
+
+mod shares;
 
 #[cfg(test)]
 mod tests;

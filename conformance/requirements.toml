@@ -3429,10 +3429,10 @@ status = "planned"
 id = "REQ-AUTO-162"
 area = "auto"
 level = "L2"
-statement = "`stitch plan` lists each thread of the plan once, under `shares`, with the top stitches it sews and their share of all of them in percent, to a tenth, and how many times it is threaded, in the order it is first threaded. The shares add up to 100 within a tenth for each thread. The report has the same list as `shares`, each with `color`, `name`, `stitches`, `percent` and `threaded`."
+statement = "`stitch plan` lists each thread of the plan once, under `shares`, with the stitches it sews, underlay and lock stitches included, their share of all of the plan's stitches in percent, to a tenth, and how many times it is threaded, in the order it is first threaded. A thread is its colour and its name: one threaded twice is one share, threaded 2 times, and a stop is no threading. The shares are rounded by largest remainder, so that as shown they add up to exactly 100.0: each is rounded down to a tenth, and the tenths left over go one each to the largest remainders, the thread threaded first among equal ones. A plan without stitches has a share of 0.0 for each of its threads. The report has the same list as `shares`, each with `color`, `name`, `stitches`, `percent` and `threaded`."
 rationale = "Before a person rethreads a one-needle machine 8 times, they can see which threads sew little: on the varied set, 6 of the 7 pictures that traced in 9 threads had one that sews under 3 % of the stitches, the goose a thread of 1.0 %. The list is counted from the plan, so it is the same for any picture, and it guesses nothing. It is the evidence a person needs for `--drop-colour` and `--colours`."
 milestone = "M13"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-AUTO-031"

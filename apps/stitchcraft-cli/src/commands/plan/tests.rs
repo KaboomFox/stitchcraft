@@ -268,7 +268,6 @@ fn req_auto_161_a_dropped_colour_is_read_as_a_kept_one_and_contradictions_are_us
 }
 
 #[test]
-#[ignore = "planned: M13.20 builds the list of shares"]
 fn req_auto_162_the_plan_lists_each_threads_share_of_the_stitches() {
     // The element in red, green and blue of REQ-THREAD-003's case: each thread once, in the order it is
     // first threaded, with its top stitches and their share.

@@ -4588,8 +4588,9 @@ sew it unlike the tutorial's flow.
 
 Roadmap step M13.20. The owner's machine has one needle, so each thread change is a rethread by hand, and a
 design in 6 threads is what she wants to sew. Phase 1 measured what the colour count costs on a varied set
-on 2026-11-20, on main `571d3928`. The planned requirements are `REQ-AUTO-160` to `REQ-AUTO-162`. A person
-keeps a colour of the picture or leaves one out. `stitch plan` lists each thread's share of the stitches.
+on 2026-11-20, on main `571d3928`. `stitch plan` lists each thread's share of the stitches
+(`REQ-AUTO-162`). Planned: a person keeps a colour of the picture or leaves one out (`REQ-AUTO-160` and
+`REQ-AUTO-161`).
 
 ### The colour count today
 
@@ -4601,8 +4602,8 @@ and thin lines into their neighbours, which may take a part's thread away ([like
 mark keeps a part from merging ([marks that keep parts](#marks-that-keep-parts)). A mark keeps a part's
 shape. It can't give the part a thread the trace didn't choose. The sewing order sews each thread as long
 as it can ([sewing order](#sewing-order)). `stitch plan` lists the threads in the order the machine sews them, one
-line each time a thread is threaded, and the report has the same list under `threads`. Neither says how much
-each thread sews.
+line each time a thread is threaded, and the report has the same list under `threads`. How much each
+thread sews is the [list of shares](#the-list-of-shares).
 
 ### What 6 threads costs
 
@@ -4719,9 +4720,25 @@ colour farther than their nearest thread. The trace leaves the thread out instea
 
 ### The list of shares
 
-`stitch plan` lists each thread once, with the top stitches it sews, their share of all of them and how
-many times it is threaded. The report has the same list under `shares`. In 9 threads 6 of the 7 pictures that trace in 9 have a thread that sews under 3 % of the stitches: the goose has one of 1.0 % and the pear one of 0.9 %. In 6 threads only the patch has one, its red stars at 1.9 %. A person sees
-which thread sews little before rethreading for it, and leaves it out or keeps it.
+`stitch plan` lists each thread once under `shares`, in the order it is first threaded: the stitches it
+sews, their share of the plan's stitches and how many times it is threaded. The report has the same list
+under `shares`. One count makes both (`commands/plan/shares.rs`), so they can't disagree. In 9 threads 6
+of the 7 pictures that trace in 9 have a thread that sews under 3 % of the stitches: the goose has one of
+1.0 % and the pear one of 0.9 %. In 6 threads only the patch has one, its red stars at 1.9 %. A person
+sees which thread sews little before rethreading for it, and decides. The list chooses nothing.
+
+A thread is its colour and its name, as the machine file names it. The sewing order can thread one twice,
+when a thread sews under another's shapes and again over them: it is one spool, so it is one share,
+threaded 2 times. The same colour by another name is another thread. A stop keeps the thread in the needle,
+so it is no threading. The stitches counted are all the plan's stitches in the thread, underlay and lock
+stitches among them, as the `stitches` line counts them: each uses the spool and the time.
+
+The shares are rounded to a tenth of a percent by largest remainder, so that the shares as shown add up
+to exactly 100.0. Each is rounded down to a tenth, and the tenths left over go one each to the shares
+with the largest remainders, the thread threaded first among equal ones. 3 threads of one stitch each
+show 33.4, 33.3 and 33.3. A thread too small to show a tenth shows 0.0 with its stitches counted. A
+plan without stitches shows 0.0 for each thread it threads. The count runs over the plan the engine made,
+which the work budget already bounds, as the plan's other counts do, so it charges no meter.
 
 ### What VectorCraft's command line allows
 

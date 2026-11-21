@@ -5,6 +5,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.20: each thread's share of a design (`REQ-AUTO-162`). `stitch plan` lists each thread once under
+  `shares`, in the order it is first threaded, with the stitches it sews, their share in percent to a tenth
+  and how many times it is threaded, so that a person sees a thread that sews little before rethreading for
+  it. The report has the same list under `shares`. A thread threaded twice is one share. The shares are
+  rounded by largest remainder and add up to exactly 100.0 as shown. Every machine file sews as before, and
+  no golden file changes.
 - M13.54: wide columns, a setting off by default (`REQ-AUTO-152` to `REQ-AUTO-156`).
   - `auto_max_split_satin_width_mm`, an advanced setting from 7 to 12 mm. Raised, a part of an automatic area
     wider than a satin column somewhere and no wider than the setting anywhere, within 0.05 mm, sews as one
