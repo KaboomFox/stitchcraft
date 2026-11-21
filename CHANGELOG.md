@@ -2284,6 +2284,11 @@ What a user can do with this version, before its first release. The entries belo
   instead of returned. From M13.56 a stop ends a run of stitches, as the machine cuts there: the length
   rules and the thickness measure no longer count a stitch across it. One model of the needle and the thread,
   `stitchcraft_plan::ThreadState`, serves every check. Nothing that sews changes, and no golden file does.
+- M6.18: the editor's preview of a fill shows only what sews (`REQ-VC-024`). At the outline level,
+  which VectorCraft shows for a fill too large for its rows, a fill was drawn with a line every 3 mm across
+  it, which read as jump threads. It is now drawn whole, and the editor doesn't draw lines across a large fill.
+  What sews is unchanged: the machine files and the golden files stay as they were. M6.19, a large fill's
+  real rows in the editor, waits for VectorCraft to give live effects a heavy budget or overlays.
 - M13.25: a shape's name starts with how it sews and its number, and ends with its thread: `Column 1, Russet
   Brown`, `Left out 1, White`, and Expand's `Base layer 1, Red` (`REQ-AUTO-125`). VectorCraft's Layers panel
   shows about 20 characters of a row, and the kind and the number now always fit in them. With the comma that

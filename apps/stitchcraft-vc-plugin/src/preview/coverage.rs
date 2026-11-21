@@ -158,6 +158,34 @@ fn req_vc_024_a_fill_s_preview_covers_its_shape_at_every_level_auto_picks() {
     assert!(low.is_empty(), "previews that cover less than 90 % of their shape, or spill over 3 % of it: {low:#?}");
 }
 
+#[test]
+fn req_vc_024_a_fill_s_outline_is_its_shape_whole_with_nothing_drawn_on_it() {
+    // The outline lays no stitch and no row, so nothing on it may read as thread or as a gap that sews: it
+    // returns the shape's own rings and covers all of it, on the badge and on squares far wider than a hoop.
+    let mut marked = Vec::new();
+    let mut note = |name: String, shape: &Value, preview: Vec<u8>| {
+        let (covered, spilt) = shares(shape, &preview);
+        println!("{name}: {} subpaths, covers {:.2} %, spills {:.2} %", subpaths(&preview), covered * 100.0, spilt * 100.0);
+        // The shape's own rings, and no ribbon. Its sides are the flattened path's, so the shares differ from
+        // whole by a few hundredths of a percent at a sharp corner, as the star's do.
+        if subpaths(&preview) != rings(shape).len() || covered < 0.999 || spilt > 0.001 {
+            marked.push(name);
+        }
+    };
+    for (name, shape) in badge() {
+        note(format!("Auto effect, the badge's {name}"), &shape, auto(&shape, "outline"));
+        note(format!("fill effect, the badge's {name}"), &shape, fill(&shape, "outline"));
+    }
+    for side in SIDES {
+        let shape = square(side);
+        note(format!("Auto effect, square {side} pt"), &shape, auto(&shape, "outline"));
+        note(format!("fill effect, square {side} pt"), &shape, fill(&shape, "outline"));
+    }
+    // Auto shows the largest square, whose rows cost too much, by the same outline.
+    note("Auto effect at auto, square 2560 pt".into(), &square(2560.0), auto(&square(2560.0), "auto"));
+    assert!(marked.is_empty(), "outlines with a mark on them, or that leave part of their shape uncovered: {marked:#?}");
+}
+
 /// The fill effect's element for `shape`, with its defaults.
 fn element(shape: &Value) -> Element {
     read_effect(Family::Fill, &input(shape), &params(Family::Fill, &[]), &Budget::DEFAULT).unwrap().element
@@ -201,7 +229,7 @@ fn req_vc_024_a_fill_s_shape_is_drawn_within_its_share_or_not_at_all() {
 }
 
 #[test]
-fn req_vc_024_a_gap_is_cut_by_the_fill_rule_and_the_hatch_left_out_when_it_costs_too_much() {
+fn req_vc_024_a_gap_is_cut_by_the_fill_rule_and_is_as_narrow_as_a_hair() {
     // 2 squares turning the same way, one inside the other: the nonzero rule fills the inner one, where a
     // gap shows, and the even-odd rule leaves it empty, where a ribbon would be painted.
     let mut nested = square(100.0);
@@ -215,13 +243,9 @@ fn req_vc_024_a_gap_is_cut_by_the_fill_rule_and_the_hatch_left_out_when_it_costs
     let middle = || lines(1, 17.0, 17.0);
     let cut = |element: &Element| cut(element, &flat, middle(), GAP_MM, &mut Budget::DEFAULT.meter()).unwrap().map(|drawn| subpaths(&drawn));
     assert_eq!((cut(&nonzero), cut(&evenodd)), (Some(3), Some(2)));
-    // 4 hatch lines test 10 points' sides each and 16 more: a unit of work, with which they are cut, and
-    // without which the shape is drawn without them.
-    let meter = |work: u64| Budget { max_work: work, max_stitches: 0 }.meter();
-    let hatch = |work: u64| hatched(&nonzero, &flat, lines(4, 1.0, 1.0), &mut meter(work)).unwrap();
-    assert_eq!((subpaths(&hatch(1)), subpaths(&hatch(0))), (2 + 4, 2));
-    assert!((gap(&hatch(1), 2) - HATCH_GAP_MM).abs() < 0.001, "{}", gap(&hatch(1), 2));
-    // A row's gap is narrower, and so is a stitch's.
+    // The outline's shape tests no side, so it costs no work, and has no gap: both rings only.
+    assert_eq!(subpaths(&whole(&nonzero, &flat).unwrap()), 2);
+    // A row's gap and a stitch's are a hundredth of a millimetre wide.
     let Shown::Drawn(Level::Rows, rows) = fill_rows(&element(&square(40.0)), Spend(FUEL_BASE)) else { panic!("no rows") };
     assert!((gap(&rows, 1) - GAP_MM).abs() < 0.001, "{}", gap(&rows, 1));
     let Shown::Drawn(Level::Exact, stitches) = exact(Family::Fill, &element(&square(40.0)), None) else { panic!("no stitches") };
