@@ -26,6 +26,7 @@ pub mod locks;
 mod moves;
 pub mod names;
 pub mod normalize;
+pub mod probe;
 mod pipeline;
 pub mod registry;
 pub mod route;

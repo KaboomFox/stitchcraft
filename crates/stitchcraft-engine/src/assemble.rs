@@ -103,6 +103,10 @@ pub(crate) fn assemble_routed(
             // A lettering column sewn whole sews its underlays first, in its first group, and they are tagged
             // so (`REQ-AUTO-120`). Other columns keep every stitch top, as the cap's rules were measured with.
             let underlay = if index == 0 && element.lettered.is_some() { generated.underlay_points } else { 0 };
+            // PROBE (M13.57): how many of the first group's points are underlay.
+            if index == 0 && role == Role::Top {
+                crate::probe::UNDERLAY.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(element.id.clone(), generated.underlay_points);
+            }
             assembly.join(Group { element, generated, stitches: group.stitches, thread: group.thread, reference, role, underlay }, meter)?;
             // The trim after the element's last group is `after`'s, with its stop.
             if group.ends_block && generated.common.trim_after && index + 1 < groups.len() {

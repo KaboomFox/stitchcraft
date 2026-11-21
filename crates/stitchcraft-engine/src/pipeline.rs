@@ -57,7 +57,18 @@ pub struct PlanOutcome {
 /// work to itself, and the stitches the elements before it left; assembling and finalizing have the work
 /// once more, and the design `budget`'s stitches.
 pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanOutcome {
-    let Sewing { elements, mut diagnostics, base, made, limits } = sewing(design, budget);
+    let Sewing { mut elements, mut diagnostics, base, made, limits } = sewing(design, budget);
+    // PROBE (M13.57): settings set on elements after digitizing.
+    {
+        let overrides = crate::probe::OVERRIDES.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if !overrides.is_empty() { for element in elements.to_mut().iter_mut() {
+            if let Some(set) = overrides.get(&element.id) {
+                for (key, value) in set {
+                    element.params.set(key, value);
+                }
+            }
+        } }
+    }
     let candidates: Vec<Candidate> = elements.iter().map(|element| Candidate::of(element, &design.settings)).collect();
     let (steps, lone) = steps(&candidates);
     diagnostics.extend(lone.into_iter().filter_map(|(k, why)| elements.get(k).map(|element| alone(element, why))));
@@ -122,6 +133,25 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
         .filter(|(element, _)| element.lettered == Some(Lettered::Digitized))
         .filter_map(|(element, _)| Some((element.id.clone(), Pull::of(&PullParams::from_set(&element.params).ok()?.params))))
         .collect();
+    // PROBE (M13.57): each element's kind.
+    {
+        let mut kinds = crate::probe::KINDS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        kinds.clear();
+        for (element, sewn) in &generated {
+            let kind = if base.contains(&element.id) {
+                "base"
+            } else if lettering.contains_key(&element.id) {
+                "letter"
+            } else if columns.contains(&element.id) {
+                "column"
+            } else if !reach.contains(&element.id) {
+                match sewn.stitch_type.family() { Family::Fill => "pfill", Family::Satin => "pcolumn", Family::Stroke => "prun" }
+            } else {
+                match sewn.stitch_type.family() { Family::Fill => "fill", Family::Satin => "column", Family::Stroke => "run" }
+            };
+            kinds.insert(element.id.clone(), (kind, crate::probe::key(element.shape.path().points())));
+        }
+    }
     let names = named(design, (&elements, &base, &generated), profile, budget, &mut diagnostics);
     let mut meter = budget.meter();
     // Where shapes sewn later cover the way between 2 elements that digitizing made, the needle runs under
@@ -143,6 +173,8 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
             match (limits, plan.as_mut()) {
                 (Some(held), Some(plan)) if reach.is_empty() => diagnostics.extend(thick::measured(plan, &held, &names, budget)),
                 (Some(held), Some(plan)) => {
+                    *crate::probe::PRE.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(plan.clone());
+                    if *crate::probe::NOCAP.lock().unwrap_or_else(std::sync::PoisonError::into_inner) { return PlanOutcome { plan: Some(plan.clone()), diagnostics, names }; }
                     diagnostics.extend(thick::finished(plan, &held, (&base, &reach, &columns, &lettering), profile, &names, budget));
                 }
                 _ => {}

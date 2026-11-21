@@ -264,7 +264,13 @@ pub(super) fn columns(
         let holes = [along(&column.rails[0], &kept, meter)?, along(&column.rails[1], &kept, meter)?];
         let even = crowding(&column.rails, &column.rungs, meter)? <= EVEN;
         let Ok(drawn) = drawn::from_rails(column.rails, column.rungs, push, meter)? else { return Ok(Made::Unmade) };
-        sewn.push(Sewn::Satin { path: drawn.path(), width, push, even, holes });
+        let path = drawn.path();
+        // PROBE (M13.57): a column the probe names sews as a running line along its line.
+        if crate::probe::LINES.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains(&crate::probe::key(path.points())) {
+            sewn.push(Sewn::Running { line: column.walked, width });
+            continue;
+        }
+        sewn.push(Sewn::Satin { path, width, push, even, holes });
     }
     Ok(Made::Columns { sewn, rule, measures })
 }

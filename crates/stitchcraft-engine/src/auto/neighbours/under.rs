@@ -386,16 +386,34 @@ fn widened(shapes: &mut Shapes, index: usize, overlap: f64, meter: &mut Meter) -
     let points: Vec<Point> = rails.iter().flatten().copied().collect();
     let bounds = Envelope::of(&points);
     let mut beside = Vec::new();
+    let mut satins = Vec::new();
     for later in index + 1..shapes.len() {
         meter.charge(1)?;
         let own = shapes.kind(later) == Some(Kind::Part) && shapes.of_shape.get(later) == shapes.of_shape.get(index);
         if own || shapes.kind(later) == Some(Kind::Line) || !shapes.bounds(later).is_some_and(|other| near(&bounds, TOUCHING, &other)) {
             continue;
         }
-        beside.extend(shapes.grown(later, meter)?.into_iter().flatten());
+        let grown: Vec<Polygon> = shapes.grown(later, meter)?.into_iter().flatten().collect();
+        if shapes.satin(later) {
+            satins.extend(grown.iter().cloned());
+        }
+        beside.extend(grown);
     }
     let [first, second] = &rails;
     let under = [runs_along(first, &beside, meter)?, runs_along(second, &beside, meter)?];
+    // PROBE (M13.57, candidate f): a rail along a later satin column reaches only F under it.
+    let f = *crate::probe::F.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if let Some(f) = f.filter(|_| under.contains(&true)) {
+        let cols = [runs_along(first, &satins, meter)?, runs_along(second, &satins, meter)?];
+        let other = [under[0] && !cols[0], under[1] && !cols[1]];
+        if other.contains(&true) {
+            shapes.reach_past(index, other, overlap);
+        }
+        if cols.contains(&true) {
+            shapes.reach_past(index, cols, f.min(overlap));
+        }
+        return Ok(true);
+    }
     if under.contains(&true) {
         shapes.reach_past(index, under, overlap);
     }

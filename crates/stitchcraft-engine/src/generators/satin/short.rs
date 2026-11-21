@@ -47,8 +47,10 @@ impl Rail {
         if self.next >= insets.len() {
             self.next = 0;
         }
+        crate::probe::RAIL_POINTS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         match self.last {
             Some(last) if point.distance(last) < distance => {
+                crate::probe::SHORTENED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                 let by = insets.get(self.next).copied().unwrap_or(0.0) * point.distance(other);
                 self.next += 1;
                 -limit.map_or(by, |limit| by.min(limit))
