@@ -2648,7 +2648,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   with. A fill is what rows 0.25 mm apart lay, not 0.4 mm (`auto_thick_warn_fills`, `SC-W0913`). `SC-W0913`
   warns from 4 fills, not 3, and names the cap as 3.25 fills, not 4. `stitch preview --style thickness`
   draws orange from 4 fills, not 3. Tests now hold these texts to the registries' defaults and to
-  `stitchcraft_plan::thickness`. Nothing sews differently, and no golden file changes.
+  `stitchcraft_plan::thickness`. Designs sew as before, and the golden files stay.
 - Automatic digitizing: the cap at the end of planning no longer runs out of work on a large design, and
   keeps what it took when it does (`REQ-AUTO-101`). Its last resort judged every column point near a spot
   above the warning's limit for each point it took, a work that grew with the square of the design. The
