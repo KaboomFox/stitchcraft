@@ -110,9 +110,12 @@ so it keeps its reading, and `--auto` asks for automatic digitizing there.
 **One reading.** Without a switch, `stitch plan` reads a document as `--auto` reads it, and writes the
 same machine file byte for byte, with the same diagnostics (`REQ-AUTO-163`). So the cap at the end of
 planning and the warning of how thick a design sews hold under the default as they do with `--auto`. One
-constant of the VectorCraft adapter is the default. The command line, the exporters, the compatibility
-gate and the docs pictures import it. `Reading::default()` stays plain, and each host passes the reading
-it wants.
+constant of the VectorCraft adapter, `stitchcraft_vectorcraft::AUTO_BY_DEFAULT`, is the default.
+`Reading::default()` stays plain, and each host passes the reading it wants. The command line resolves its
+switches in one place, `ReadingArgs::reading`, which `stitch plan`, `stitch bug-report` and `stitch expand`
+call with the kind of design. The exporters' option takes the constant as its default, in the manifest and
+for a host that passes no `auto`. Level B of the compatibility gate reads a document as `ReadingArgs`
+reads it without a switch, and the docs pictures keep the reading each shot names.
 
 **What doesn't change** (`REQ-AUTO-164`). The default digitizes the shapes `--auto` digitizes: an object with
 no StitchCraft effect of its own and none on a group or a layer around it. The reader already leaves an
@@ -124,7 +127,21 @@ the default. Markers grouped with a shape the default digitizes are said unused 
 
 **The notice** (`REQ-AUTO-165`). One line, `SC-I0924`, says how many shapes without StitchCraft effects
 the default digitized and how many sew as their effects say, and that `--no-auto` sews them as drawn. It
-isn't said when `--auto` is given, or when no shape is digitized by default.
+isn't said when `--auto` is given, or when no shape is digitized by default. The VectorCraft reader counts
+the elements that are automatic only because the reading asked (`VectorCraft::by_default`): an element an
+Auto effect reaches is automatic by the effect, and isn't counted. `stitch plan` says the notice first. A
+picture, a bug-report bundle and the exporters don't say it: a picture is always digitized automatically,
+and the exporters' option is on in their dialog, where the person sees it. Of the reader fixture
+`effects`, 2 of its 9 shapes have no effect, and `stitch plan` says:
+
+```text
+info SC-I0924: 2 shapes without StitchCraft effects are digitized automatically, as a VectorCraft document is by default, and 7 shapes sew as their effects say: plan it with --no-auto to sew them as drawn.
+```
+
+**Markers.** A `stitch:start` or `stitch:end` marker grouped with a shape the default digitizes is unused
+(`SC-W0807`), as with `--auto`. Whether such a shape should count as set by hand is the owner's open
+question, so the reader decides it in one place, `by_paints` in `stitchcraft_vectorcraft::document`, and no
+case pins it as a requirement.
 
 **The opt-out.** `--no-auto` sews the shapes without effects as drawn: every area a tatami fill and every
 line a running stitch, in paint order (`REQ-CLI-026`). It is refused beside `--auto`, with a picture, which

@@ -181,6 +181,14 @@ the dog again before sewing. MC-8 also sews the demo's badge, `web/templates/alp
 `stitch plan web/templates/alpine-night.svg --auto -o badge.pes`, and the same with
 `--set auto_fill_outline=false`.
 
+M13.8 changed what a VectorCraft document sews without a switch: it is digitized automatically, as `--auto`
+digitized it, and `--no-auto` sews it as drawn
+([the default](../design/image-to-embroidery.md#automatic-digitizing-by-default)). A stroke round a fill
+sews thicker by default, as a satin column on the fill's edge: the drawn reader fixture went from 2.74 to
+3.85 fills. MC-8 sews a 40 mm circle drawn in VectorCraft with a 2 mm stroke round its fill, once with
+`stitch plan` and once with `--no-auto`. Does the column on its edge sew stiff or pucker, and is the
+default the one to keep?
+
 - Do the 2 stars, 5.3 and 4 mm across, read as stars of 4 points when they are filled?
 - With the outline, are the stars' points sharper, and is the run round the moon and the mountains on the
   fill's edge or beside it?

@@ -20,10 +20,12 @@ button after the field for its page in the reference. A setting shows only when 
 staggers show for staggered splits. VectorCraft before 0.14 lists every setting, each under its Ink/Stitch
 name.
 
-An object without a StitchCraft effect sews as Ink/Stitch sews a shape of an SVG file. Its fills are
-filled, and its strokes are sewn as running stitch. To let StitchCraft choose its stitches by width
-instead, as for a picture traced into shapes, apply **Effect › Plug-ins › StitchCraft Auto** to it, or to
-the group or the layer it is in, or write the file with `stitch export --auto`.
+StitchCraft digitizes an object without a StitchCraft effect automatically: it chooses the object's
+stitches by width, as for a picture traced into shapes. To sew such an object as drawn instead, with its
+fills filled and its strokes sewn as running stitch, apply StitchCraft's Fill or Stroke effect to it. To
+sew every such object as drawn, turn **Digitize automatically** off as you export, or write the file with
+`stitch export --no-auto`. **Effect › Plug-ins › StitchCraft Auto** sets the rules' settings of an object,
+or of the group or the layer it is in.
 
 - A line up to 1 mm wide runs, or up to the narrowest satin stroke the document keeps
   ([below](#keep-the-designs-settings-and-machine-with-it)). From 0.5 mm wide it is a triple run, each
@@ -74,9 +76,10 @@ With the [exporters installed](../install.md#the-vectorcraft-plug-ins), choose *
 As**, and **PES embroidery (StitchCraft)** or **DST embroidery (StitchCraft)** as the format. Once the file
 is picked, a dialog shows 2 options:
 
-- **Digitize automatically**, which chooses the stitches of the objects without a StitchCraft effect by
-  their width, as `stitch export --auto` does. The objects the Auto effect reaches are digitized
-  automatically either way.
+- **Digitize automatically**, on unless you turn it off, which chooses the stitches of the objects
+  without a StitchCraft effect by their width, as `stitch export` does. Off, those objects sew as drawn,
+  as with `stitch export --no-auto`. The objects the Auto effect reaches are digitized automatically
+  either way.
 - **Machine**, the machine and hoop the design is planned for: `document`, the one the document keeps
   ([below](#keep-the-designs-settings-and-machine-with-it)), or `brother-pe800-5x7` when it keeps none,
   unless another is chosen. `stitch profiles` lists them.

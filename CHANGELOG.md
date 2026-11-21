@@ -5,6 +5,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.8: VectorCraft documents are digitized automatically by default (`REQ-AUTO-163` to `REQ-AUTO-165`,
+  `REQ-CLI-026`, `REQ-CLI-027`, `REQ-VC-036`). `stitch plan` and `stitch export` now read a `.vectorcraft`
+  file as `--auto` read it, and write the same machine file. A shape with a StitchCraft Fill, Satin or
+  Stroke effect still sews as its effect says, and an expanded design sews as it is. One new notice,
+  `SC-I0924`, says how many shapes the default digitized and how many sew as their effects say. To get
+  the old behaviour, plan with `--no-auto`, or turn **Digitize automatically** off in the PES and DST
+  exporters' dialog, whose option is now on by default. `--no-auto` is refused beside `--auto`, with a
+  picture and with `stitch expand`. SVG files sew as before, and `--auto` still asks for automatic
+  digitizing there. A bug-report bundle records `auto` when the run digitized automatically, so an old
+  bundle replays as it was recorded. No golden file changes.
 - M13.20: a kept colour (`REQ-AUTO-160`). `stitch plan --keep-colour COLOUR`, and `stitch expand` with it,
   gives a colour of a picture a thread at any `--colours`: a thread by its name in any case, `#rrggbb` for
   the nearest thread, or a pixel `X,Y` of the picture for the thread nearest its colour. VectorCraft then

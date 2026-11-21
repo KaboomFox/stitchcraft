@@ -132,6 +132,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-I0921`](#sc-i0921) | Info | Outlines smoothed |
 | [`SC-W0922`](#sc-w0922) | Warning | What Expand couldn't keep |
 | [`SC-I0923`](#sc-i0923) | Info | Style that changes how a design sews |
+| [`SC-I0924`](#sc-i0924) | Info | Shapes digitized by default |
 | [`SC-E1001`](#sc-e1001) | Error | Nothing to route |
 | [`SC-I1002`](#sc-i1002) | Info | Element left out of the route |
 | [`SC-W1003`](#sc-w1003) | Warning | Piece of a routed satin column may sew otherwise |
@@ -1848,6 +1849,21 @@ The message gives the counts: thin lines merged, or sewn as lines, and parts fil
 sewn as satin columns. The hint names the settings that the other style sets. To see the design in
 the other style, plan it with that `--style`, or set those settings in the dialog of StitchCraft's
 Auto effect, and compare the previews.
+
+## SC-I0924
+
+**Info** — Shapes digitized by default
+
+A VectorCraft document is digitized automatically by default: each shape that no StitchCraft
+effect reaches, its own or a group's or a layer's around it, is read as `--auto` reads it, and the
+shapes with Fill, Satin or Stroke effects sew as those effects say. A document is drawn to be
+embroidered, and automatic digitizing chooses each part's stitch by its width, where the plain
+reading fills every area and runs every line.
+
+The message gives both counts. To sew the shapes without effects as drawn, plan the document with
+`--no-auto`, or turn the exporter's Digitize automatically option off. To sew one shape as drawn,
+apply StitchCraft's Fill or Stroke effect to it. The notice isn't given with `--auto`, which asks
+for automatic digitizing, or when the default digitized no shape.
 
 ## SC-E1001
 

@@ -70,7 +70,10 @@ Options:
           Also write a report of the plan and what was said about it (JSON), even when nothing else is written
 
       --auto
-          Digitize automatically the shapes that have no settings: StitchCraft chooses the stitches of each by its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them
+          Digitize automatically the shapes of an SVG file that have no settings: StitchCraft chooses the stitches of each by its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them. A VectorCraft document is digitized so without it
+
+      --no-auto
+          Sew the shapes of a VectorCraft document that have no settings as drawn: every area a fill and every line a running stitch, in paint order. Without it they are digitized automatically, as --auto digitizes them. An SVG file sews so without a switch
 
       --sort-colours
           Sew the shapes with settings in the order StitchCraft chooses too, as --auto sews the shapes it digitizes: shapes that overlap keep their paint order, and each thread then sews as long as it can, the nearest shape next (docs/src/design/image-to-embroidery.md)
@@ -149,7 +152,10 @@ Options:
           The machine profile whose threads name the parts (see `stitch profiles`); by default the one a VectorCraft document keeps, or else the reference machine. The document written keeps it
 
       --auto
-          Digitize automatically the shapes that have no settings: StitchCraft chooses the stitches of each by its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them
+          Digitize automatically the shapes of an SVG file that have no settings: StitchCraft chooses the stitches of each by its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them. A VectorCraft document is digitized so without it
+
+      --no-auto
+          Sew the shapes of a VectorCraft document that have no settings as drawn: every area a fill and every line a running stitch, in paint order. Without it they are digitized automatically, as --auto digitizes them. An SVG file sews so without a switch
 
       --sort-colours
           Sew the shapes with settings in the order StitchCraft chooses too, as --auto sews the shapes it digitizes: shapes that overlap keep their paint order, and each thread then sews as long as it can, the nearest shape next (docs/src/design/image-to-embroidery.md)
@@ -511,7 +517,10 @@ Options:
           What goes wrong, in your words; it goes into the bundle
 
       --auto
-          Digitize automatically the shapes that have no settings: StitchCraft chooses the stitches of each by its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them
+          Digitize automatically the shapes of an SVG file that have no settings: StitchCraft chooses the stitches of each by its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them. A VectorCraft document is digitized so without it
+
+      --no-auto
+          Sew the shapes of a VectorCraft document that have no settings as drawn: every area a fill and every line a running stitch, in paint order. Without it they are digitized automatically, as --auto digitizes them. An SVG file sews so without a switch
 
       --sort-colours
           Sew the shapes with settings in the order StitchCraft chooses too, as --auto sews the shapes it digitizes: shapes that overlap keep their paint order, and each thread then sews as long as it can, the nearest shape next (docs/src/design/image-to-embroidery.md)
