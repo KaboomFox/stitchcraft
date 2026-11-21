@@ -74,12 +74,27 @@ fn req_plan_008_an_entry_that_names_no_element_asks_for_nothing() {
 }
 
 #[test]
+fn req_plan_008_a_run_of_one_needle_point_has_nothing_to_lock() {
+    // One point lays no thread (`REQ-ASM-007`'s block of one point): neither end is asked for.
+    let mut b = PlanBuilder::new(Thread::new(Rgb::new(0, 0, 0)));
+    let e = b.element(ElementId::new("e").unwrap()).unwrap();
+    b.jump(p(0.0), Provenance::new(e, Role::Travel));
+    b.stitch(p(0.0), Provenance::new(e, Role::Top));
+    b.trim(Some(e));
+    b.jump(p(5.0), Provenance::new(e, Role::Travel));
+    b.stitch(p(5.0), Provenance::new(e, Role::Top));
+    b.stitch(p(7.0), Provenance::new(e, Role::Top));
+    assert_eq!(missing(&b.finish(), &asking(true, true)), [(0, 4), (0, 5)], "the run of 2 points has 2 ends to lock");
+}
+
+#[test]
 fn req_plan_008_reports_are_capped() {
     let mut b = PlanBuilder::new(Thread::new(Rgb::new(0, 0, 0)));
     let e = b.element(ElementId::new("e").unwrap()).unwrap();
     for i in 0..60 {
-        b.jump(p(f64::from(i)), Provenance::new(e, Role::Travel));
-        b.stitch(p(f64::from(i)), Provenance::new(e, Role::Top));
+        b.jump(p(f64::from(2 * i)), Provenance::new(e, Role::Travel));
+        b.stitch(p(f64::from(2 * i)), Provenance::new(e, Role::Top));
+        b.stitch(p(f64::from(2 * i + 1)), Provenance::new(e, Role::Top));
     }
     assert_eq!(locks(&b.finish(), &asking(true, false)).len(), invariants::MAX_REPORTED);
 }

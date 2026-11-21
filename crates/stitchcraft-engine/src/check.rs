@@ -11,7 +11,8 @@
 //!   are the machine's thread state ([`ThreadState`]): the needle points sewn between the plan's start, a
 //!   thread change, a jump, a trim, a stop and the end. An element asks for locks as assembly reads its
 //!   settings ([`Generated::locks`]). A plan doesn't hold those settings, which is why this check is the
-//!   engine's and not an invariant.
+//!   engine's and not an invariant. A run of one needle point lays no thread, so it has nothing to lock, and
+//!   the check skips it, as assembly sews it (`REQ-ASM-007`).
 //!
 //! A plan that breaks either is a bug in StitchCraft, reported as `SC-E0009` instead of returned. Nothing
 //! is repaired. Both walks are linear in the plan's length, and the plan is bounded by the stitch budget
@@ -48,27 +49,34 @@ pub(crate) fn checked(plan: StitchPlan, profile: &MachineProfile, asked: &BTreeM
 }
 
 /// Where `plan` lacks a lock that `asked` sets (`REQ-PLAN-008`). An element `asked` doesn't list, or an
-/// entry that names none, asks for nothing.
+/// entry that names none, asks for nothing, and a run of one needle point has nothing to lock.
 pub(crate) fn locks(plan: &StitchPlan, asked: &BTreeMap<ElementId, (bool, bool)>) -> Vec<Violation> {
     let mut walk = Walk { plan, asked, violations: Vec::new() };
     let mut state = ThreadState::default();
-    let mut last: Option<(usize, usize, &Stitch)> = None;
+    let mut run: Option<Run> = None;
     for (b, block) in plan.blocks.iter().enumerate() {
-        walk.ended(last.take());
+        walk.ended(run.take());
         state.change_thread();
         for (i, stitch) in block.stitches.iter().enumerate() {
             match state.enter(b, i, stitch) {
-                Entered::Started => {
-                    walk.started(b, i, stitch);
-                    last = Some((b, i, stitch));
+                Entered::Started => run = Some(Run { first: (b, i, stitch), last: (b, i, stitch) }),
+                Entered::Sewn(_) => {
+                    if let Some(run) = run.as_mut() {
+                        run.last = (b, i, stitch);
+                    }
                 }
-                Entered::Sewn(_) => last = Some((b, i, stitch)),
-                Entered::Jumped | Entered::Trimmed { .. } | Entered::Stopped => walk.ended(last.take()),
+                Entered::Jumped | Entered::Trimmed { .. } | Entered::Stopped => walk.ended(run.take()),
             }
         }
     }
-    walk.ended(last);
+    walk.ended(run);
     walk.violations
+}
+
+/// A run's first and last needle points, each with its block and entry.
+struct Run<'p> {
+    first: (usize, usize, &'p Stitch),
+    last: (usize, usize, &'p Stitch),
 }
 
 /// The walk of [`locks`]: what it reads, and what it found.
@@ -85,24 +93,24 @@ impl Walk<'_> {
         Some((id, *self.asked.get(id)?))
     }
 
-    /// A run starts at `stitch`, entry `i` of block `b`.
-    fn started(&mut self, b: usize, i: usize, stitch: &Stitch) {
-        if let Some((id, (true, _))) = self.asks(stitch)
-            && stitch.origin.role != Role::Lock
+    /// A run ended, if one was open: its first point is a tie-in's and its last a tie-off's where their
+    /// elements ask for them. A run of one needle point lays no thread, so it has nothing to lock.
+    fn ended(&mut self, run: Option<Run<'_>>) {
+        let Some(Run { first: (b, i, first), last: (lb, li, last) }) = run else { return };
+        if (b, i) == (lb, li) {
+            return;
+        }
+        if let Some((id, (true, _))) = self.asks(first)
+            && first.origin.role != Role::Lock
         {
             let message = format!("the run starts without the tie-in that element `{}` asks for", id.as_str());
             self.add(b, i, message);
         }
-    }
-
-    /// A run ended at `last`, if one was open.
-    fn ended(&mut self, last: Option<(usize, usize, &Stitch)>) {
-        let Some((b, i, stitch)) = last else { return };
-        if let Some((id, (_, true))) = self.asks(stitch)
-            && stitch.origin.role != Role::Lock
+        if let Some((id, (_, true))) = self.asks(last)
+            && last.origin.role != Role::Lock
         {
             let message = format!("the run ends without the tie-off that element `{}` asks for", id.as_str());
-            self.add(b, i, message);
+            self.add(lb, li, message);
         }
     }
 

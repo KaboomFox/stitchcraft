@@ -76,6 +76,7 @@ pub(crate) fn assemble_routed(
         builder: PlanBuilder::new(first.thread.clone()),
         thread: first.thread.clone(),
         open: None,
+        run: Vec::new(),
         settings,
         warnings: Vec::new(),
         settings_said: BTreeSet::new(),
@@ -160,6 +161,11 @@ impl Generated {
     /// trim, stop, thread change or the end follows it. Manual stitch gets neither unless locks are forced.
     /// Assembly places the locks by it, and the check of the returned plan (`crate::check`, `REQ-PLAN-008`)
     /// asks for them by it.
+    ///
+    /// A lock belongs to the run, the needle points sewn on from one group to the next with no cut between
+    /// them. So a tie-off is made from the run's track, back from its last point, and a run that ends on a
+    /// group of one needle point still has its tie-off (`REQ-LCK-001`). A tie-in is made from its group's
+    /// track, the only one known where the needle lands.
     pub(crate) fn locks(&self) -> (bool, bool) {
         let common = &self.common;
         let by_hand = self.stitch_type == StitchType::ManualStitch && !common.force_lock_stitches;
@@ -191,6 +197,9 @@ struct Assembly<'a, 'r, 'm> {
     thread: Thread,
     /// The group the needle is still sewing from, until a tie-off ends it.
     open: Option<Group<'a>>,
+    /// The needle points of the run being sewn, from its tie-in or its first point: the track its tie-off
+    /// is made from ([`Generated::locks`]).
+    run: Vec<Point>,
     settings: &'a DesignSettings,
     warnings: Vec<Diagnostic>,
     /// The warnings about locks' settings kept so far, by element.
@@ -275,10 +284,12 @@ impl<'a> Assembly<'a, '_, '_> {
     /// Ends the open group, with its tie-off if it gets one.
     fn tie_off(&mut self, meter: &mut Meter) -> Result<(), Exhausted> {
         let Some(open) = self.open.take() else { return Ok(()) };
+        let run = core::mem::take(&mut self.run);
         if open.locks().1 {
-            let points = self.lock(tie_off(open.stitches, &open.generated.common, meter)?, open);
+            let points = self.lock(tie_off(&run, &open.generated.common, meter)?, open);
             self.stitch(&points, Provenance::new(open.reference, Role::Lock), meter)?;
         }
+        self.run.clear();
         Ok(())
     }
 
@@ -299,6 +310,7 @@ impl<'a> Assembly<'a, '_, '_> {
             meter.charge(1)?;
             meter.charge_stitches(1)?;
             self.builder.stitch(at, origin);
+            self.run.push(at);
         }
         Ok(())
     }
