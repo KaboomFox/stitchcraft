@@ -8,6 +8,7 @@
 //! - [`invariants`]: the L0 rules every plan must satisfy (`REQ-PLAN-…`).
 //! - [`profile`] and [`profiles`]: machine facts, and the built-in profiles.
 //! - [`palette`] and [`thread`]: thread colours and nearest-colour matching.
+//! - [`thread_state`]: the machine's state as it reads a plan, the one model the checks share.
 //!
 //! Design: `docs/src/design/data-model.md`.
 #![forbid(unsafe_code)]
@@ -20,9 +21,11 @@ pub mod profile;
 pub mod profiles;
 pub mod thickness;
 pub mod thread;
+pub mod thread_state;
 
 pub use builder::{PlanBuilder, PlanError};
 pub use invariants::Violation;
 pub use plan::{ColorBlock, ColorEntry, ElementRef, PlanStats, Provenance, Role, SewnStitch, Stitch, StitchKind, StitchPlan};
 pub use profile::{FormatId, MachineProfile, PaletteId, TrimSupport};
 pub use thread::{Rgb, Thread};
+pub use thread_state::{Entered, ThreadState};

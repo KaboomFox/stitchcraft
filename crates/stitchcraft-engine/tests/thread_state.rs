@@ -39,7 +39,6 @@ fn ends(plan: &StitchPlan, run: &[&stitchcraft_plan::Stitch]) -> Option<(String,
 }
 
 #[test]
-#[ignore = "planned: M13.56 builds the thread check"]
 fn req_plan_008_each_run_starts_and_ends_with_the_locks_its_element_asks_for() {
     // Each element alone, and after one in another thread, with a trim and with a stop: every place the
     // thread may be cut. The check builds this walk into the engine, after the cap, with each element's
@@ -93,7 +92,6 @@ fn sewn(entries: &str) -> StitchPlan {
 }
 
 #[test]
-#[ignore = "planned: M13.56 builds the thread check"]
 fn req_plan_009_a_trim_cuts_a_thread_that_has_sewn_since_the_last_cut() {
     let broken = |plan: &StitchPlan| check(plan, REFERENCE).iter().filter(|v| v.requirement == "REQ-PLAN-009").count();
     assert_eq!(broken(&sewn("SSST")), 0);
@@ -109,7 +107,6 @@ fn req_plan_009_a_trim_cuts_a_thread_that_has_sewn_since_the_last_cut() {
 }
 
 #[test]
-#[ignore = "planned: M13.56 builds the thread check"]
 fn req_plan_010_a_stop_ends_the_run_as_the_machine_cuts_there() {
     // The PE800 cuts the thread at a stop (MC-1), which PES and DST write as a thread change: the stitch
     // after it starts a new run and lays no thread from the hole before the stop.

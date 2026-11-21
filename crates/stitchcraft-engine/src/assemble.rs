@@ -155,15 +155,24 @@ struct Group<'a> {
     underlay: usize,
 }
 
-impl Group<'_> {
-    /// Whether the group gets a tie-in where the needle jumps to it, and a tie-off where a jump, trim,
-    /// stop, thread change or the end follows it. Manual stitch gets neither unless locks are forced.
-    fn locks(&self) -> (bool, bool) {
-        let common = &self.generated.common;
-        let by_hand = self.generated.stitch_type == StitchType::ManualStitch && !common.force_lock_stitches;
+impl Generated {
+    /// Whether the element's stitching gets a tie-in where the needle jumps to it, and a tie-off where a jump,
+    /// trim, stop, thread change or the end follows it. Manual stitch gets neither unless locks are forced.
+    /// Assembly places the locks by it, and the check of the returned plan (`crate::check`, `REQ-PLAN-008`)
+    /// asks for them by it.
+    pub(crate) fn locks(&self) -> (bool, bool) {
+        let common = &self.common;
+        let by_hand = self.stitch_type == StitchType::ManualStitch && !common.force_lock_stitches;
         let tie_in = matches!(common.ties, "0" | "1") && !by_hand;
         let tie_off = (matches!(common.ties, "0" | "2") || common.force_lock_stitches) && !by_hand;
         (tie_in, tie_off)
+    }
+}
+
+impl Group<'_> {
+    /// The locks the group's element asks for ([`Generated::locks`]).
+    fn locks(&self) -> (bool, bool) {
+        self.generated.locks()
     }
 
     /// Whether the needle may sew straight on from this group to a point `distance` away: no forced

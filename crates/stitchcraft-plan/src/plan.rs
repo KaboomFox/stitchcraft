@@ -24,6 +24,7 @@
 use stitchcraft_core::{ElementId, Point, Rect};
 
 use crate::thread::Thread;
+use crate::thread_state::{Entered, ThreadState};
 
 /// What the machine does at one entry of the plan.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -137,8 +138,8 @@ pub struct ColorEntry<'a> {
 }
 
 /// A stitch that lays thread between two needle holes: a `Normal` stitch whose previous movement was a
-/// `Normal` stitch in the same block, with no trim since (a stop keeps the run going; a jump, a trim or a
-/// thread change starts a new one). Its length is what the machine and the fabric feel, so stitch-length
+/// `Normal` stitch in the same block, with no jump, trim or stop since (`REQ-PLAN-010`: the machine cuts at a
+/// stop; [`ThreadState`] is the model). Its length is what the machine and the fabric feel, so stitch-length
 /// rules, statistics and previews all use this one definition.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SewnStitch {
@@ -223,24 +224,12 @@ impl StitchPlan {
     /// Every stitch that lays thread between two needle holes, in sewing order (see [`SewnStitch`]).
     pub fn sewn_stitches(&self) -> Vec<SewnStitch> {
         let mut sewn = Vec::new();
-        let (mut needle, mut needle_role) = (Point::ORIGIN, Role::Travel);
+        let mut state = ThreadState::default();
         for (block, b) in self.blocks.iter().enumerate() {
-            let mut sewing = false;
+            state.change_thread();
             for (index, stitch) in b.stitches.iter().enumerate() {
-                match stitch.kind {
-                    StitchKind::Normal => {
-                        if sewing {
-                            sewn.push(SewnStitch { block, index, from: needle, to: stitch.at, role: stitch.origin.role, from_role: needle_role });
-                        }
-                        sewing = true;
-                        (needle, needle_role) = (stitch.at, stitch.origin.role);
-                    }
-                    StitchKind::Jump => {
-                        sewing = false;
-                        needle = stitch.at;
-                    }
-                    StitchKind::Trim => sewing = false,
-                    StitchKind::Stop => {}
+                if let Entered::Sewn(stitch) = state.enter(block, index, stitch) {
+                    sewn.push(stitch);
                 }
             }
         }
