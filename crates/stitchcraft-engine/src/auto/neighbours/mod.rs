@@ -77,7 +77,7 @@ use super::marks::Marks;
 use super::{AutoParams, Style, outline, painted};
 use crate::design::{DesignSettings, Element, FillRule, Path, Shape};
 use crate::generate::{stitch_type_of, trim_or_stop_left_out};
-use crate::generators::pull::PULL_COMPENSATION;
+use crate::generators::pull::{PULL_COMPENSATION, PullParams};
 use crate::generators::satin::{self, SatinParams};
 use crate::normalize::region::geom::{self, Envelope};
 use crate::normalize::region::ops::{self, Parts};
@@ -420,12 +420,18 @@ impl Shapes {
     }
 
     /// Makes the satin column `index` sew `overlap` past each of its rails that `under` names, in the order
-    /// they are sewn, and its pull compensation past the other: Ink/Stitch's `pull_compensation_mm` takes a
-    /// length for each rail.
+    /// they are sewn, and past the other by that rail's own pull compensation: Ink/Stitch's
+    /// `pull_compensation_mm` takes one length for both rails or a length for each, and a column along a
+    /// hole kept open already has one for each (`REQ-AUTO-084`). A column whose pull compensation can't be
+    /// read, or is out of its range, keeps it as it is, and planning says so when it reads it.
     fn reach_past(&mut self, index: usize, under: [bool; 2], overlap: f64) {
         let Some(element) = self.elements.get_mut(index) else { return };
-        let pull = element.params.get(PULL_COMPENSATION).unwrap_or("0").to_string();
-        let past = under.map(|under| if under { overlap.to_string() } else { pull.clone() });
+        let Ok(Validated { params: pull, warnings }) = PullParams::from_set(&element.params) else { return };
+        if !warnings.is_empty() {
+            return;
+        }
+        let past: Vec<String> =
+            under.iter().zip(pull.pull_compensation_mm).map(|(&under, own)| if under { overlap } else { own.get() }.to_string()).collect();
         element.params.set(PULL_COMPENSATION, past.join(" ").as_str());
     }
 
