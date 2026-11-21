@@ -10,7 +10,7 @@ bundle**. Write one when:
 ## Write the bundle
 
 Run `stitch bug-report` with the design, an SVG file or a VectorCraft document, and the profile and
-format you sew with, and `--auto` if you planned it with `--auto`:
+format you sew with, and `--auto` or `--no-auto` if you planned it with that switch:
 
 ```sh
 stitch bug-report design.svg --profile brother-pe800-4x4 --says "the zigzag's corners are rounded"
@@ -22,7 +22,8 @@ names another file). The bundle holds:
 - your design file, whole, or a VectorCraft document's JSON without the pictures after it, and the
   design name the machine file's label holds;
 - the profile, the format (`--format pes|dst`, the profile's own by default) and the version of
-  StitchCraft, and whether the shapes without settings were digitized automatically (`--auto`);
+  StitchCraft, and whether the shapes without settings were digitized automatically, as a VectorCraft
+  document is unless `--no-auto` is given;
 - a digest of the plan's stitches, and the machine file's size and digest;
 - the messages, or the crash's message;
 - what you wrote with `--says`.

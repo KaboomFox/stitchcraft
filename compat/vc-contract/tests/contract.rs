@@ -496,10 +496,11 @@ fn each_exporter_installs_as_an_exporter_of_its_format() {
         let manifest = plugin.manifest();
         assert!(manifest.kind == Kind::Exporter, "{format} is an exporter");
         assert_eq!(manifest.extensions, [format]);
-        // `stitch export`'s options, as they are when it isn't given them: the machine is the one the
-        // document keeps, or else the reference machine (`REQ-VC-013`).
+        // `stitch export`'s options, as they are when it isn't given them: a document is digitized
+        // automatically (`REQ-VC-036`), and the machine is the one the document keeps, or else the
+        // reference machine (`REQ-VC-013`).
         let defaults = manifest.defaults();
-        assert_eq!((defaults.get("auto"), defaults.get("profile")), (Some(&json!(false)), Some(&json!("document"))), "{format}");
+        assert_eq!((defaults.get("auto"), defaults.get("profile")), (Some(&json!(true)), Some(&json!("document"))), "{format}");
     }
 }
 

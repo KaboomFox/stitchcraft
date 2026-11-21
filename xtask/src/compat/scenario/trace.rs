@@ -20,10 +20,11 @@
 //!   effect on the traced group makes its shapes automatic (`REQ-VC-016`).
 
 use serde_json::Value;
+use stitchcraft_cli::cli::ReadingArgs;
 use stitchcraft_cli::commands::palette;
 use stitchcraft_cli::commands::plan::{Source, sew};
 use stitchcraft_core::{Code, Severity};
-use stitchcraft_engine::design::{FillRule, Reading, Segment, Shape};
+use stitchcraft_engine::design::{FillRule, Segment, Shape};
 use stitchcraft_engine::testsheets::pictures::{self, Picture, Trace};
 use stitchcraft_plan::FormatId;
 use stitchcraft_plan::profiles::REFERENCE;
@@ -115,10 +116,10 @@ fn drawn(picture: &Picture, across: f32) -> Result<Vec<u8>, String> {
 }
 
 /// Whether `bytes`, a VectorCraft document, sews digitized automatically as [the module](self) says, in the
-/// threads `threads` names (`#rrggbb`, in any order), with `--auto` or, when its Auto `effect` says so,
-/// without; or how it doesn't.
+/// threads `threads` names (`#rrggbb`, in any order), as `stitch plan` reads a document without a switch
+/// or, when its Auto `effect` says so, with `--no-auto`; or how it doesn't.
 pub(super) fn traced(bytes: &[u8], threads: &[String], effect: bool) -> Result<(), String> {
-    let reading = Reading { auto: !effect, ..Reading::default() };
+    let reading = ReadingArgs { no_auto: effect, ..ReadingArgs::default() }.reading(Source::VectorCraft);
     let (design, _) = Source::VectorCraft.read(bytes, reading).map_err(|unread| unread.to_string())?;
     let set: Vec<&str> = design.elements().iter().filter(|e| !e.automatic).map(|e| e.id.as_str()).collect();
     if !set.is_empty() || design.elements().is_empty() {
@@ -177,12 +178,28 @@ mod tests {
         assert!(said.contains("and these are not automatic: ["), "{said}");
         let mut bare: Value = serde_json::from_slice(&patch).unwrap();
         strip(&mut bare);
+        // Its Background's start marker sets it by hand under the default (`REQ-AUTO-166`).
+        let said = traced(&serde_json::to_vec(&bare).unwrap(), &threads, false).unwrap_err();
+        assert!(said.contains("and these are not automatic: [\"vc:2:fill\"]"), "{said}");
+        unmark(&mut bare);
         let said = traced(&serde_json::to_vec(&bare).unwrap(), &threads, false).unwrap_err();
         assert_eq!(said, "its background isn't left out (SC-W0906)");
         // Without `--auto`, its shapes are automatic only with the Auto effect, here on its layer.
         assert!(traced(&serde_json::to_vec(&bare).unwrap(), &threads, true).unwrap_err().contains("and these are not automatic: ["));
         bare["document"]["layers"][0]["appearance"]["effects"] = serde_json::json!([{"id": "plugin.dev.stitchcraft.auto", "params": {}}]);
         assert_eq!(traced(&serde_json::to_vec(&bare).unwrap(), &threads, true).unwrap_err(), "its background isn't left out (SC-W0906)");
+    }
+
+    /// `value` without its objects named `stitch:start`.
+    fn unmark(value: &mut Value) {
+        match value {
+            Value::Object(object) => object.values_mut().for_each(unmark),
+            Value::Array(items) => {
+                items.retain(|item| item.get("name") != Some(&serde_json::json!("stitch:start")));
+                items.iter_mut().for_each(unmark);
+            }
+            _ => {}
+        }
     }
 
     /// `value` without the effects of any object in it.

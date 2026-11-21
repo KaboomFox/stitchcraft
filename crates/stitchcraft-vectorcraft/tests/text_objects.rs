@@ -81,7 +81,7 @@ fn fonts() -> BuiltIn {
     BuiltIn::new(kept(vec![Folder { name: "small_font", files: kept(files) }]))
 }
 
-const AUTO: Reading = Reading { auto: true, sort_colours: false };
+const AUTO: Reading = Reading { auto: true, marked_as_drawn: false, sort_colours: false };
 
 /// `bytes` read with [`fonts`], as `reading` asks.
 fn read(bytes: &[u8], reading: Reading) -> VectorCraft {
