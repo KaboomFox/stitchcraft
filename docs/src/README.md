@@ -26,8 +26,7 @@ How it is built:
 - **Building StitchCraft?** Read the [technical design](design/tdd.md), then the [roadmap](plan/roadmap.md).
 - **Contributing?** See [contributing](contributing/).
 
-> **Status:** StitchCraft sews the strokes of an SVG design and writes PES and DST files. A stroke is
-> sewn in running stitch or manual stitch, with bean stitch where it is set. Milestone M4 is under way:
-> the engine sews a satin column's underlays and top stitches, and `stitch plan` sews the satins of
-> an SVG from M8, when it reads Ink/Stitch's settings. Fills come in M5. The
-> [roadmap](plan/roadmap.md) has every step.
+> **Status:** before a first release. StitchCraft sews strokes, satin columns and fills from SVG files,
+> Ink/Stitch's files and VectorCraft documents, chooses the stitches of a picture traced in VectorCraft, sets
+> text in Ink/Stitch's embroidery fonts, and writes PES and DST files. The machine checkpoints that check
+> it on fabric are out for sewing. The [roadmap](plan/roadmap.md) has every step and where each stands.

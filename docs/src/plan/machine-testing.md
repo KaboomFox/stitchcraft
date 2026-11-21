@@ -96,14 +96,50 @@ middle of the artboard (`REQ-VC-015`). A checkpoint can so sew a sheet through V
 | MC-10 | M15 | TS-15 | Do fonts ported automatically sew as legibly as fonts digitized by hand, from the least height of their range? |
 | MC-7 | M12 | all | Release regression |
 
+## MC-8: the kit
+
+Write every file of the kit from the commit under test, and give that commit in each report. A step below
+that compares 2 versions names the earlier one: write that file from the commit before the step. A file
+written at another commit sews as that commit planned it. `stitch inspect FILE` gives each file's stitches,
+jumps and colour changes, which the rethreads and the cuts at the machine are counted against.
+
+| Kit item | Steps | How it is made |
+|---|---|---|
+| TS-13A to TS-13F | M13.2 to M13.46 | `stitch testsheet TS-13A -o TS-13A.pes`, and so for each sheet. The Test Sheet filter draws them too |
+| The word Stitch in Small Font at 3.6 and 15.2 mm, Hello World on 2 lines, and Hello on an arc | M14.2, M14.3 | The `stitch lettering` commands below, with a copy of Ink/Stitch's font folder, and `arc.svg` from the commands after this table |
+| MATCH 15 mm tall, traced, in Small Font and in Barstitch Bold | M14.8 | The traced word is TS-13B's word 15 mm tall. `stitch lettering "MATCH" --font FOLDER --height 15` sets it in each font |
+| The lettered patch, traced, and the same patch with its word as text | M13.36, M13.37, M13.50, M14.5 | Made by hand. The cases draw the patch in code (`lettered_patch` in `crates/stitchcraft-testkit/src/pictures.rs`), and no command writes it to a file. Draw it as an SVG file, plan it with `--auto`, and again with `--text` round the word |
+| A drawn badge with a word typed on it | M14.7 | Made by hand: no file of the repository holds text. Plan it with `--auto` |
+| The demo's badge, with and without outlines | M13.27, M13.28, M13.17 | `stitch plan web/templates/alpine-night.svg --auto -o badge.pes`, and again with `--set auto_fill_outline=false` |
+| The traced pear, as planned and with a lattice base layer | M13.30, M13.35 | `stitch plan docs/fixtures/traced-pear.vectorcraft --auto -o pear.pes`, and again with `--set auto_base_rows=lattice` |
+| The traced dogs | M13.16 to M13.55 | `stitch plan docs/fixtures/traced-dog-running-9.vectorcraft --auto -o dog.pes`, and the other 3 documents `traced-dog-*.vectorcraft` in `docs/fixtures/` the same way. For a step's setting, add its `--set`, such as `--set auto_fill_uneven=false` |
+| The running dog traced from its photo, with and without `--fewer-points` | M13.51 | `stitch plan docs/fixtures/dog-running-cutout.png --auto --size 100 --colours 9 -o dog-traced.pes`, and again with `--fewer-points`. Both trace with VectorCraft's command line |
+| A traced dog with `stitch:keep` marks, one with a `stitch:guide` line, and a leaf with a guide | M13.39, M13.24 | Made by hand in VectorCraft: no file of the repository has a mark or a guide |
+| Hexmira in Small Font at 8 and 10 mm, made bolder | M14.9 | `stitch lettering "Hexmira" --font FOLDER --height 8 --widen-percent 10 -p brother-pe800-4x4 -o hexmira.pes`, at each height and at 0, 10 and 20 %. Barstitch Bold with its pull compensation scaled to the height is made by hand |
+| Words on a cream field (Hexmira at 8 and 10 mm, Hexmira 7.6 mm tall, and VOLKAR in Barstitch Bold 12.5 mm tall) | M14.9, M13.50 | Made by hand: a cream field drawn 3 mm round the word, with the word set on it as text |
+| Bars and rings 6, 8 and 10 mm wide | M13.54 | `bar-8mm.svg` and its relatives from the commands after this table |
+| The test piece of 12 tiles under satin columns | M13.55 | Made by hand. Its tiles are fills 20 mm wide in navy and in orange, with a black satin column along each tile's top, straight on some tiles and curved on the others, in widths from 2 to 6 mm. No file of the repository draws it |
+
+The arc, and the bars and the rings of M13.54, each written by one command from nothing but the command
+itself:
+
+```sh
+printf '<svg xmlns="http://www.w3.org/2000/svg" width="110mm" height="60mm" viewBox="0 0 110 60"><path d="M 10 55 A 45 45 0 0 1 100 55" fill="none" stroke="#000"/></svg>\n' > arc.svg
+for w in 6 8 10; do
+  awk -v w=$w 'BEGIN { printf "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"60mm\" height=\"20mm\" viewBox=\"0 0 60 20\"><path fill=\"#0a55a3\" d=\"M5 %gH55V%gH5Z\"/></svg>\n", 10 - w / 2, 10 + w / 2 }' > bar-${w}mm.svg
+  awk -v w=$w 'BEGIN { R = 20 + w / 2; r = 20 - w / 2; printf "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"60mm\" height=\"60mm\" viewBox=\"0 0 60 60\"><path fill=\"#ed171f\" fill-rule=\"evenodd\" d=\"M%g 30A%g %g 0 1 0 %g 30A%g %g 0 1 0 %g 30Z M%g 30A%g %g 0 1 1 %g 30A%g %g 0 1 1 %g 30Z\"/></svg>\n", 30 + R, R, R, 30 - R, R, R, 30 + R, 30 + r, r, r, 30 - r, r, r, 30 + r }' > ring-${w}mm.svg
+done
+```
+
+## MC-8: the steps and their checks
+
 Before MC-8, cases answer the TS-13 checks that its stitches can, and count the jump threads that later
 stitches sew down ([image to embroidery › Testing](../design/image-to-embroidery.md#testing)). The sew-out
 answers the rest, and shows whether those threads show. On 2026-11-01 TS-13B's digitized T 4 mm tall
 gained the arm of its bar that it had lost, and the leg of its A 6 mm tall that sewed as a line became a
 column like the other. M13.12 then changed what the digitized halves of TS-13A and TS-13B sew, as the
-pictures' layers are flattened before they are digitized. It also added TS-13D. A TS-13 file written before
-then sews as it did: write the sheet again before sewing it, and check that its stitches number as the
-[test-sheet reference](../user/reference/test-sheets.md) says. On 2026-11-08 a narrow part's column
+pictures' layers are flattened before they are digitized. It also added TS-13D. Check that each sheet's
+stitches number as the [test-sheet reference](../user/reference/test-sheets.md) says. On 2026-11-08 a narrow part's column
 stopped running along its cut into one of the cut's corners, where it sewed a fan of stitches and left
 fabric bare beside it. The column now ends along the whole cut. TS-13C's digitized star then sews its
 right-hand point from its tip to its cut. At MC-8, look at each point's end along its cut for fabric
@@ -121,8 +157,8 @@ ends of its range on the PE800, from a copy of Ink/Stitch's font folder:
 - At 15.2 mm, do the satin columns cover, and how long do the jump threads between the letters take to cut?
 
 From M14.3, sew 2 more on the PE800. `stitch lettering "Hello\nWorld" --font small_font --scale 200 -o lines.pes`
-sews its second line back from where the first ended. With `--path arc.svg --scale 300`, `Hello` follows an
-arc drawn in an SVG file.
+sews its second line back from where the first ended. With `--path arc.svg --scale 300`, `Hello` follows the
+kit's arc.
 
 - Between the 2 lines, is the thread as short as the picture draws it, and does the second line, sewn from
   the right, look like the first?
@@ -168,16 +204,17 @@ height. The automatic choice's limits, 20 % and from 8 mm, wait for this sew-out
 - Which reads as bold as the traced block letters of the lettered patch?
 - Are the counters of the a, the e and the R open, or filled with thread?
 - Do Barstitch Bold's letters touch, and does a word in it still read?
+- At 8 mm and 20 %, the narrowest gap between 2 of Small Font's letters is 1.0 mm by M14.9's measure, where
+  it is 1.5 mm unwidened. Do the letters still stand apart in thread, or do they touch?
 - Is the widened Small Font stiff or thick where its strokes meet, against today's?
 
 MC-8 also sews one of the owner's traced dogs, `docs/fixtures/traced-dog-running-9.vectorcraft`, 100 mm
 tall: `stitch plan docs/fixtures/traced-dog-running-9.vectorcraft --auto -o dog.pes`. Does the fur read as
-fur, the face and the eyes as hers, and do its 83 jump threads, which the PE800 doesn't cut, take long to
+fur, the face and the eyes as hers, and do its jump threads, which the PE800 doesn't cut, take long to
 snip? 3 rows of its fills show beside thin lines of fur of another colour (M13.18): do they show?
 
 M13.27 changed what the dog sews: 2 blobs of its fur that sewed as satin columns are fills now, as a small
-star is ([which stitch a shape gets](../design/image-to-embroidery.md#which-stitch-a-shape-gets)). Write
-the dog again before sewing. MC-8 also sews the demo's badge, `web/templates/alpine-night.svg`, twice:
+star is ([which stitch a shape gets](../design/image-to-embroidery.md#which-stitch-a-shape-gets)). MC-8 also sews the demo's badge, `web/templates/alpine-night.svg`, twice:
 `stitch plan web/templates/alpine-night.svg --auto -o badge.pes`, and the same with
 `--set auto_fill_outline=false`.
 
@@ -187,28 +224,25 @@ the dog again before sewing. MC-8 also sews the demo's badge, `web/templates/alp
 
 M13.31 moved the 2 buttons of TS-13D to a sheet of their own, TS-13E, so that VectorCraft exports each
 sheet with room in its budget ([compatibility gate](../design/compatibility-gate.md#level-a--abi-contract-fast-minutes)).
-No rule changed. A TS-13D file written before then holds the buttons too: write TS-13D and TS-13E again
-before sewing.
+No rule changed.
 
 M13.28 changed what every automatic design sews: each fill sews an outline now
-([an outline round a fill](../design/image-to-embroidery.md#an-outline-round-a-fill)). Write the badge, the
-dog and TS-13A to TS-13D again before sewing.
+([an outline round a fill](../design/image-to-embroidery.md#an-outline-round-a-fill)).
 
 - Does the moon's outline, 18 stitches round a circle 9.6 mm across, read as round?
 - M13.17 runs the thread under shapes sewn later in place of 13 of the dog's jumps, and of one of the
-  badge's ([runs in place of jumps](../design/image-to-embroidery.md#runs-in-place-of-jumps)). Write the
-  dog, the badge and TS-13B again before sewing. Does a run show through the shape over it, as a ridge or
+  badge's ([runs in place of jumps](../design/image-to-embroidery.md#runs-in-place-of-jumps)). Does a run show through the shape over it, as a ridge or
   as a darker line under a light thread? Does one peek out at the edge of a fill?
 - On the dog, do the outlines sharpen the fur's edges or draw lines that the photo doesn't have?
 - An outline sews through a stretch of its edge under a later shape. Does that run show through the shape
   that covers it, or raise it?
 
-M13.22 changed the order that the digitized halves of TS-13A, TS-13C and TS-13D sew in, and the dog's:
-write them again before sewing. The elements now sew in the order that changes thread least
+M13.22 changed the order that the digitized halves of TS-13A, TS-13C and TS-13D sew in, and the dog's.
+The elements now sew in the order that changes thread least
 ([sewing order](../design/image-to-embroidery.md#sewing-order)), which MC-8 checks:
 
-- The dog changes thread 12 times, where it changed 28 times. Count the rethreads at the machine: do they
-  match, and is each thread's turn as long as the plan says?
+- Count the dog's rethreads at the machine. Do they match the colour changes that `stitch inspect dog.pes`
+  gives, and is each thread's turn as long as the plan says?
 - Some satin columns now sew before the fill beside them and reach 1 mm under it, where every column sewed
   after its fill. Along the dog's columns of fur, does the fill's edge show on the column, or fabric
   between them?
@@ -225,8 +259,8 @@ are StitchCraft's own values, which MC-8 confirms or changes:
 - On TS-13C, the fill of the star's middle goes on into each point as far as a disc 4 mm across fits. The
   tips sew as columns. Does a point read as well as it did as one column from its cut 6.6 mm wide?
 - Sew the dog twice, as planned and with **Fill uneven parts** off (`--set auto_fill_uneven=false`), which
-  sews its ragged patches as columns again. As planned it changes thread 12 times and jumps 108 times,
-  and with the switch off 10 and 132 times. Which reads better, and which takes longer at the machine?
+  sews its ragged patches as columns again. `stitch inspect` gives each file's thread changes and jumps.
+  Which reads better, and which takes longer at the machine?
 - A blob sews as a small fill, where a column bent into its corners. Compare the dog's nostrils and the
   buttons' dots of TS-13D with a satin dot drawn by hand. Does a fill 1 to 2 mm across sew cleanly without
   an underlay?
@@ -243,17 +277,17 @@ changes them:
 - Sew the dog on black fabric twice, as planned and with the base layer off. The Auto effect's dialog in
   VectorCraft turns it off (`auto_base_layer`), and each fill then sews its own underlay.
 - On black, does fabric show between patches, with the base layer and without it?
-- Since M13.21 the top thread of this dog has 0 slivers, and leaves less than 0.001 % of the design bare. The
+- At M13.21 the top thread of this dog had 0 slivers, and left less than 0.001 % of the design bare. The
   measure passes slivers up to 0.4 mm² over the base layer or within 0.4 mm of the design's outline, and 0.5 % bare
   in all (`auto_base_sliver_mm2`, `auto_base_bare_percent`). Both limits are StitchCraft's own, set from
   the 4 traced dogs. With the base layer on, can a sliver be found by eye, and does the base layer's
-  thread hide it? The running dog in 6 threads has the largest, one sliver of 0.26 mm²: sew it on black
+  thread hide it? The running dog in 6 threads had the largest, one sliver of 0.26 mm²: sew it on black
   too when the first dog leaves the question open.
 - Does the base layer's thread show beside a patch's edge, or through a lighter fill sewn over it? The
   base layer lies 0.4 mm inside the design's outline, a value of StitchCraft's own, and the measure doesn't
-  model how far real thread pulls an edge in. By the measure, 0.23 mm² of base thread lies uncovered
+  model how far real thread pulls an edge in. At M13.16, by the measure, 0.23 mm² of base thread lay uncovered
   within 0.4 mm of this dog's outline on another colour, the nearest 0.18 mm from it, against 0.02 mm²
-  with the base layer 0.6 mm inside. The dog on turf in 9 threads has the most, 0.70 mm² against 0.07 mm²
+  with the base layer 0.6 mm inside. The dog on turf in 9 threads had the most, 0.70 mm² against 0.07 mm²
   ([the numbers](../design/image-to-embroidery.md#settings-of-the-cover)). Look along the outline on
   black fabric. Where base thread shows there, sew again with `auto_base_offset_mm` at −0.6 mm.
 - Which dog lies flatter and softer, and which puckers less?
@@ -261,9 +295,10 @@ changes them:
 - Do the fills' edges sew cleanly where the rows turn, or does the thread pile up or break there?
 
 M13.29 measures how thick a design sews and changes nothing that sews
-([how thick a design sews](../design/image-to-embroidery.md#how-thick-a-design-sews)). Its limits, 3 and
-6 fills of thread over one spot and 15 and 30 needle points per mm², are starting values from public
-advice, which no sew-out has confirmed. MC-8 confirms them or changes them with a ladder of squares,
+([how thick a design sews](../design/image-to-embroidery.md#how-thick-a-design-sews)). Its limits, the
+fills of thread over one spot and the needle points per mm² that warn and that fail
+([`auto_thick_warn_fills` and the 3 settings after it](../user/reference/params/auto.md)), are starting
+values from public advice, which no sew-out has confirmed. MC-8 confirms them or changes them with a ladder of squares,
 test sheet TS-13F, which `stitch testsheet TS-13F` writes and the Test Sheet filter draws:
 
 - **Top row:** squares 15 mm a side of 1, 2, 3, 4, 5 and 6 fills on each other, each fill with the default
@@ -283,8 +318,10 @@ test sheet TS-13F, which `stitch testsheet TS-13F` writes and the Test Sheet fil
   needle. Look at the needle for a bend or a burr, and at the fabric round the square for puckers. Bend
   the square, and measure how thick it is with calipers.
 - The first square that breaks thread or thumps sets the failing limit, and the square before it, less
-  one, sets the warning. Then sew the running dog in 9 threads, whose thickest spot has 7.0 fills, and
-  compare where it gives trouble with its heat map (`stitch preview --style thickness`).
+  one, sets the warning. Then sew the running dog in 9 threads with the cap at its most,
+  `--set auto_thick_cap_fills=50`, which leaves its thread as the rules lay it. Compare where it gives
+  trouble with its heat map (`stitch preview --style thickness`) and with the thickest spot that `SC-W0913`
+  names.
 
 M13.30 changes what sews where areas overlap
 ([less thread where areas overlap](../design/image-to-embroidery.md#less-thread-where-areas-overlap)).
@@ -344,41 +381,41 @@ judging a spot. At MC-8, after the ladder:
 
 M13.36 keeps a traced letter's counters open and its edges whole
 ([holes and edges of columns](../design/image-to-embroidery.md#holes-and-edges-of-columns)). At MC-8, on
-the traced lettered patch (kit item 14) beside the patch with its word as text (item 15):
+the traced lettered patch beside the patch with its word as text:
 
 - The A's counter has no pull compensation along it. Does the cream field show through it as a
-  triangle, as on item 15? Measure it across at its base, and say whether the A reads as an A from a
+  triangle, as on the patch with its word as text? Measure it across at its base, and say whether the A reads as an A from a
   metre away.
 - A straight column moves a crowded point no farther than its edge and a quarter of a thread. Run a
   finger along the M's stems and the A's legs: are their edges smooth, without the notches of MC-8's
   first sew-out?
 - Where the A's legs meet its crossbar, and the M's stems meet its diagonals, does fabric or field show
   between the columns?
-- TS-13B's 6 mm word has 2 more jump threads. Cut them by hand. Does an end pull out?
+- M13.36 gave TS-13B's 6 mm word 2 more jump threads. Cut them by hand. Does an end pull out?
 
 M13.37 sews a traced letter's straight strokes each as a column of its own
 ([letters sewn as strokes](../design/image-to-embroidery.md#letters-sewn-as-strokes)). At MC-8, compare the
-traced lettered patch (kit item 14) with the patch with its word as text (item 15):
+traced lettered patch with the patch with its word as text:
 
 - Do the M's stems run top to bottom with level stitches, and its middle strokes stop against them, as on
-  item 15? Does the A's apex split upright, and does its crossbar stop against both legs?
+  the patch with its word as text? Does the A's apex split upright, and does its crossbar stop against both legs?
 - Where a stroke stops against another, as the T's stem under its bar, the H's crossbar against its stems
   and the M's middle strokes against its stems, does fabric show where they meet after sewing? The stroke
   that stops ends on the other's side, and the other's pull compensation is what reaches past that side. If
   fabric shows, the stopping stroke reaches 0.4 mm into the other again, in a step of its own.
 - TS-13D's emblems sew their white frames as columns along their sides, where they were filled. Do the
-  frames' corners sew cleanly, and is the stacked emblem's white ring, 4.23 fills at its thickest, stiff?
+  frames' corners sew cleanly, and is the stacked emblem's white ring stiff at its thickest?
 
 M13.50 brings lettering that automatic digitizing places into the cap's reach
 ([the cap and lettering](../design/image-to-embroidery.md#the-cap-and-lettering)). At MC-8, sew a made-up word
 in each built-in font on a field, VOLKAR in Barstitch Bold 12.5 mm tall and Hexmira in Small Font 7.6 mm
-tall, each marked on a cream field 3 mm round it, from `main` and from M13.50 side by side, and the marked
-lettered patch (kit item 15):
+tall, each marked on a cream field 3 mm round it, from the commit before M13.50 and from the commit under
+test side by side, and the lettered patch with its word as text:
 
-- Barstitch Bold's joins sew 0.5 to 1.0 fills less on M13.50, with the running stitches hidden under its
+- By M13.50's measure, Barstitch Bold's joins sew 0.5 to 1.0 fills less since M13.50, with the running stitches hidden under its
   columns taken. Does the needle thump less at the K's, the X's and the W's joins?
   Do the joins still look closed, with no fabric or field between the columns?
-- Small Font's joins and the patch's M sew as on `main`, 4.5 to 5.4 fills over the field. Does the
+- Small Font's joins and the patch's M sew as before M13.50, 4.5 to 5.4 fills over the field by its measure. Does the
   needle thump there, or the thread shred? If so, the field under the letters is what MC-8 changes, since no
   rule of the cap may take a column's top from lettering.
 - Press each word with a thumb. Is it stiffer where the columns meet than along a stroke?
@@ -387,14 +424,15 @@ M13.54 builds wide columns: a bar or a ring between 7 and 10 mm wide, sewn as on
 stitches split at 7 mm ([wide columns](../design/image-to-embroidery.md#wide-columns)). It is off by default,
 and doesn't change any picture of the set. At MC-8, sew a bar 50 mm long and a ring 40 mm across its middle, each
 at 6, 8 and 10 mm wide, once with `auto_max_split_satin_width_mm` at 10 mm and once without it, side by
-side, in the 4 × 4 in hoop (`brother-pe800-4x4`): 12 files, each made with
-`stitch plan SHAPE.svg --auto -p brother-pe800-4x4 [--set auto_max_split_satin_width_mm=10]`. At 6 mm both are satin columns, so that row shows the column the wider ones are measured against.
+side, in the 4 × 4 in hoop (`brother-pe800-4x4`): 12 files. Plan each of the kit's bars and rings
+with `stitch plan bar-8mm.svg --auto -p brother-pe800-4x4`, once as it is and once with
+`--set auto_max_split_satin_width_mm=10`. At 6 mm both are satin columns, so that row shows the column the wider ones are measured against.
 Without the setting the 8 and 10 mm ones are filled.
 
 - Does the split satin read as satin from a metre away, or as a fill? Does it read better than the fill
   beside it?
 - Look along each split column: do its needle points fall in a line, or in a ladder of short diagonals?
-- Press each shape with a thumb. The split rings sew 3.5 to 3.8 fills at their thickest, where a ring
+- Press each shape with a thumb. By M13.54's measure the split rings sew 3.5 to 3.8 fills at their thickest, where a ring
   closes, and the 10 mm ring along the inner third of its band, against 2.2 to 2.5 for the fills. Is that spot stiff, or does the needle thump there?
 - Do the ring's split stitches crowd on its inner edge, and does fabric show at the outer one?
 
@@ -406,9 +444,9 @@ side:
 - A ragged strand of fur narrower than 1 mm now sews as part of the patch beside it, in that patch's
   thread. Does the dog still read as the photo does, its eyes, nose and the white blaze on its face clear?
   Which version looks more like fur?
-- The dogs leave 15 to 32 % fewer jump threads. Count the ones you cut on each.
-- The dog on turf in 9 threads sews 0.31 fills more at its thickest spot, 4.8 fills, where a satin column or a fill lies
-  over 3 or 4 other fills. Does the needle thump there, or the thread fray?
+- M13.18 measured 15 to 32 % fewer jump threads on the dogs. Count the ones you cut on each.
+- M13.18 measured 0.31 fills more at the thickest spot of the dog on turf in 9 threads, where a satin column
+  or a fill lies over 3 or 4 other fills. Does the needle thump there, or the thread fray?
 
 M13.39 keeps the parts a person marks ([marks that keep parts](../design/image-to-embroidery.md#marks-that-keep-parts)).
 Without a mark nothing sews differently. At MC-8, sew a traced dog with a `stitch:keep` mark round each eye
@@ -450,16 +488,16 @@ M13.45 and from after it, side by side:
 
 - The lines it keeps sew as running stitches over the patches. Do they read as the strands of fur and the
   pale strip above the nose of the photo, or as stray thread?
-- It leaves 4 jump threads more. Cut them by hand, and say whether an end pulls out.
-- The cap limits every spot to 4 fills in both. Feel the areas at 3 fills or more: 137 mm² before and
-  126 mm² after. Is either stiffer?
+- M13.45 measured 4 jump threads more. Cut them by hand, and say whether an end pulls out.
+- Feel the areas at 3 fills or more, which M13.45 measured at 137 mm² before and 126 mm² after, with the
+  cap at 4 fills then. Is either stiffer?
 - On the running dog in 6 threads, the grey ring round the tan patch on its chest sews before the patch, so
   the tan lies on top. Is its edge whole, and does it read as tan from a metre away?
 
 M13.48 turns details last off by default again and keeps merging by likeness on. At MC-8, sew the dog on turf in 9 threads and the
-running dog in 6 threads from `main` after M13.48:
+running dog in 6 threads:
 
-- They leave 4 and 7 jump threads fewer than with M13.45. Count the cuts by hand on each.
+- M13.48 measured 4 and 7 jump threads fewer than with M13.45. Count the cuts by hand on each.
 - Do the eyes, the nose and the tan chest patch keep their edges with the fur sewn after them?
 
 M13.55 adds `auto_column_overlap_mm`, how far an area stays under a satin column that digitizing makes of a
@@ -468,8 +506,7 @@ It is empty by default, which is the whole overlap of 1 mm, until this sew-out s
 enough. At MC-8, in the 4 × 4 in hoop (`-p brother-pe800-4x4`), sew a test piece drawn in code at the
 default and at 0.6, 0.4 and 0.2 mm. It has 12 tiles 20 mm wide, navy and orange fills, each edged along its
 top by a black satin column 2, 4 or 6 mm wide, straight in one column of tiles and curved in the next. Also
-sew the running dog in 9 threads at the default and at 0.4 mm, and with `auto_smooth_mm` at 0.2 mm for
-M13.52's setting:
+sew the running dog in 9 threads at the default and at 0.4 mm:
 
 - Along each column's lower edge, does fabric show between the column and the fill? Look closely on the
   curved tiles, where the thread pulls the column's stitches inward round the bend.
@@ -478,7 +515,21 @@ M13.52's setting:
   6 mm ones.
 - On the dog at 0.4 mm, look for fabric beside its satin columns, and feel for the thick spots against
   the default.
-- On the dog smoothed at 0.2 mm, do the outlines look cleaner than the default, and do its edges still meet?
+
+M13.51 adds `stitch plan --fewer-points`, off by default, which traces a picture with fewer anchors and fewer
+jags ([outlines thread can't show](../design/image-to-embroidery.md#outlines-thread-cant-show)). It changes
+the rule of a third to a half of each dog's shapes. At MC-8, sew the running dog traced from its photo with
+and without the option, side by side:
+
+- Which reads more like the photo, and which has the cleaner edges?
+- Count the jump threads you cut on each, and feel for thick spots where a shape sews by another rule.
+
+M13.52 smooths each automatic area's outline within `auto_smooth_mm`, off by default
+([smoothing in StitchCraft](../design/image-to-embroidery.md#smoothing-in-stitchcraft)). At MC-8, sew the
+running dog in 9 threads with `--set auto_smooth_mm=0.2` beside the dog as planned:
+
+- Do the outlines look cleaner, and do the edges of 2 areas still meet?
+- The pass changes the rule of some of the dog's shapes. Does the dog still read as the photo does?
 
 ## Report template
 
