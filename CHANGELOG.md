@@ -10,8 +10,8 @@ What a user can do with this version, before its first release. The entries belo
 
 - `stitch plan` writes PES and DST files from SVG files, Ink/Stitch's files and VectorCraft documents, in
   the stitch types of Ink/Stitch, with their lock stitches.
-- `stitch plan --auto` chooses the stitches of shapes without settings, such as a picture traced in
-  VectorCraft, and `stitch plan picture.png` traces the picture with VectorCraft's command line first.
+- `stitch plan` chooses the stitches of a VectorCraft document's shapes without settings, such as a
+  picture traced in VectorCraft, and `--auto` does so for an SVG file, and `stitch plan picture.png` traces the picture with VectorCraft's command line first.
   `stitch expand` makes such a design the ordinary shapes it sews as, to edit one by one.
 - `stitch lettering` sets text in Ink/Stitch's embroidery fonts.
 - `stitch inspect`, `stitch preview` and `stitch convert` read, draw and convert machine files, and
