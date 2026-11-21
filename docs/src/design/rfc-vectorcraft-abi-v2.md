@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Audience** | ArtCraft / VectorCraft maintainers |
-| **Status** | Mostly adopted ([status](#status)): 7 proposals in VectorCraft 0.14.0 to 0.17.0. P3 is in review, and the rest of P4 and P6 is open. P9 is proposed here and not yet raised upstream |
+| **Status** | Mostly adopted ([status](#status)): 7 proposals in VectorCraft 0.14.0 to 0.17.0. P3 is in review, and the rest of P4 and P6 is open. P9 to P11 are proposed here and not yet raised upstream |
 | **Compatibility** | Additive. Every plug-in written for ABI v1 keeps working, and `vc_abi_version` still returns 1 |
 | **Author's interest** | StitchCraft (machine embroidery), but every proposal serves other plug-ins too |
 
@@ -19,7 +19,8 @@ owner's choice ([fonts](fonts.md#decisions-for-the-owner)).
 
 ## Status
 
-Checked against VectorCraft's `docs/plugins.md` and its history, in the 0.18.0 release (2026-10-28):
+Checked against VectorCraft's `docs/plugins.md` and its history, in the 0.18.0 release (2026-10-28). The
+gate pins 0.24.1 now, and the table isn't checked against it yet, P3's review among the rest:
 
 | Proposal | In VectorCraft | Since | Pull request |
 |---|---|---|---|
@@ -34,6 +35,7 @@ Checked against VectorCraft's `docs/plugins.md` and its history, in the 0.18.0 r
 | [P9](#p9-type-as-glyph-outlines), type as glyph outlines | Proposed by StitchCraft, not yet raised upstream | | |
 | [P10](#p10-an-export-budget-that-fits-a-traced-photo), an export budget that fits a traced photo | Proposed by StitchCraft, not yet raised upstream | | |
 | [P11](#p11-the-effects-of-a-paths-groups-in-a-filter), the effects of a path's groups in a filter | Proposed by StitchCraft, not yet raised upstream | | |
+| P12, placed images given to a filter ([ADR-0019](adr/0019-subject-cut-out-before-tracing.md)) | Not raised: a plug-in still couldn't run the cut-out's models | | |
 
 The plug-in classes this RFC was for, and what VectorCraft serves of them now:
 

@@ -231,7 +231,7 @@ rest. Each is a parameter of every element the shape makes, under its own name a
 (`REQ-SVG-009`). A shape with a fill and a stroke gives both elements the same parameters, as Ink/Stitch
 gives them to both of its own. The registry reads them as it reads a VectorCraft effect's (`REQ-PRM-002`).
 It strips the white space round a value and names a value it can't read. A setting it doesn't declare,
-such as one of a stitch type of M10, is kept, and `SC-W0105` names it.
+such as a misspelt key, is kept, and `SC-W0105` names it.
 
 The adapter applies 2 settings itself, and they are parameters of neither element. `ignore_object` leaves
 the shape out ([below](#inkstitch-objects)). `stroke_first`, when it says yes in one of Ink/Stitch's

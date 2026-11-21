@@ -379,7 +379,8 @@ at `d59c9ab`.
 An S-stitch sews one stitch across the column at each pair, every other one back the other way, and goes
 on from each to the next along a rail, so that the needle draws S's laid end to end. Split by a longest
 stitch, its stitches cover the column in rows that follow it, as a fill's rows do. StitchCraft sews it as
-Ink/Stitch sews its "S" stitch, read at `6555892`.
+Ink/Stitch sews its "S" stitch, read at `6555892`. That commit is outside the history of the pin `d59c9ab`, and
+`REQ-SAT-029`'s differential sews the S-stitch and the zigzag satin in the pinned Ink/Stitch.
 
 1. **Pairs.** The pairs are placed, compensated and inset as the top stitches' are (steps 1 to 3 of
    [Top stitches](#top-stitches-method-satin_column)), with their random variation drawn alike.
@@ -688,6 +689,8 @@ a stroke selected with it crosses its rails. No step plans such a tool in Stitch
 | `REQ-SAT-013` | Starting at its nearest point, a column begins on the line between its rails nearest the needle, or on its outline when only that is within the jump length, and follows the line to its first stitch |
 | `REQ-SAT-014` | Ending at its nearest point, a column ends on its outline nearest the next stitch. Every part is cut in 2 there, at its own needle point when one lies within the shortest stitch of the cut. The column sews the first halves, then the second halves from the line's end, and stitches the end last |
 | `REQ-SAT-015` | A column drawn as one subpath whose stroke is no wider than the design's narrowest satin stroke sews as a stroke would, with `SC-W0212`. It offers its first point, as a stroke does |
+| `REQ-SAT-016` | A column drawn as one subpath and wider than the design's narrowest satin stroke is sewn between 2 rails, its centre line offset by half the stroke's width to each side, with the stroke's join |
+| `REQ-SAT-017` | The rungs of a column made from its centre line are Ink/Stitch's: at the lows of the line's blurred corner scores and at its nodes, 1 mm apart or more, each kept only when it crosses each rail once |
 | `REQ-SAT-018` | A column whose needle points all lie within its shortest stitch of its first sews nothing, with `SC-W0215`, and the rest of the design is planned. A zigzag satin with no stitch across sews nothing either, not even its underlays |
 | `REQ-SAT-019` | Of 2 rings, the second starts at its node nearest the first's first node that no drawn rung lies before, its nodes too. The stitches go straight across whatever node each ring was drawn from and however it is closed, and rings drawn alike keep their starts (`DEV-SAT-009`) |
 | `REQ-SAT-020` | An E-stitch sews each of a satin column's pairs as a spike: from the first rail's inset point across to the second's and back through the same splits. The stitch across splits as a top stitch across does, by default into the fewest equal parts |
@@ -699,6 +702,7 @@ a stroke selected with it crosses its rails. No step plans such a tool in Stitch
 | `REQ-SAT-026` | A zigzag satin places a satin column's pairs at half the zigzag spacing and sews one point of each, the rails alternating from the first rail. Each 2 points in a row are a pair across, and a point left over is left out. The pairs are inset along their own stitches and sewn across and back as a satin column's. Its outline runs through pairs at the full spacing |
 | `REQ-SAT-027` | A zigzag satin's stitches split by the column's split method. The simple and staggered methods number the stitch back to pair i 2i and the stitch across it 2i + 1. By default each splits into its own fewest equal parts, the stitch back taking no count from the stitch across before it |
 | `REQ-SAT-028` | Under a zigzag satin, the contour's first side stops at the zigzag's last point on the first rail, and its second side at its first and last points on the second rail, before the insets. An odd centre walk moves none of these places |
+| `REQ-SAT-029` | The E-stitches, S-stitches and zigzag satins of TS-11A sew in the pinned Ink/Stitch as in StitchCraft, by the differential's measures |
 
 Machine checkpoint MC-3 sews a width ladder (1–10 mm) and an underlay comparison to tune defaults
 ([machine testing](../../plan/machine-testing.md)).
@@ -708,5 +712,6 @@ Machine checkpoint MC-3 sews a width ladder (1–10 mm) and an underlay comparis
 `SC-E0201`, `SC-W0202`, `SC-W0203`, `SC-W0205`, `SC-W0206` (a contour underlay too short for its insets
 keeps its length), `SC-W0207`, `SC-W0208` (stitches leaning more than 45° from square to the column),
 `SC-W0209` (a top stitch longer than 12 mm), `SC-W0210`, `SC-W0211`, `SC-W0212`, `SC-W0213`, `SC-E0214`,
-`SC-W0215` (a column too small to sew) and `SC-E0216` (a column without a section to sew). The running
+`SC-W0215` (a column too small to sew), `SC-E0216` (a column without a section to sew) and `SC-W0217` (a
+clipped column sewn whole). The running
 stitch's `SC-W0402` names a travel length raised to twice the shortest stitch.

@@ -177,7 +177,7 @@ as the first record, with a warning that Brother machines expect the field. File
 1.5.1 itself test both cases (`conformance/oracle/write_pes.py`).
 
 Every reader survives every truncation and single-byte change of the golden files (a deterministic test
-that runs on every PR), and an hour of coverage-guided fuzzing every night (`REQ-FMT-006`;
+that runs on every PR), and 20 minutes of coverage-guided fuzzing for each reader every night (`REQ-FMT-006`;
 [fuzzing](conformance.md#fuzzing)).
 
 **Round trips.** A file cannot say everything a plan says (a trim is a flag in PEC and three jumps in DST;
@@ -213,7 +213,6 @@ A PES file made from one names each by the Brother colour nearest black that is 
 | VP3 | Husqvarna Viking, Pfaff | M11 | Nested length-prefixed sections; thread descriptions as strings |
 | XXX | Singer | M11 | |
 | U01 | Barudan | M11 | |
-| CSV / JSON | Debugging and interchange | M2 | Human-readable plan dumps; the conformance suite's golden format for stitch lists |
 | HUS, VIP | Husqvarna (older) | — | Compressed; read-only candidates after 1.0 |
 
 ## Conformance
@@ -227,6 +226,8 @@ A PES file made from one names each by the Brother colour nearest black that is 
 | `REQ-FMT-005` | Independent oracle: pyembroidery reads our files to the same stitches (CI job with a pinned version) |
 | `REQ-FMT-006` | Fuzzed readers never panic, never allocate beyond caps, always terminate |
 | `REQ-FMT-007` | Long moves are split within the format's per-record limit |
+| `REQ-FMT-009` | The PEC reader reads stitch data with or without the 4-byte origin field |
+| `REQ-FMT-010` | PES files flag every jump after the stitch data's first record as a trim, as pystitch writes them |
 | `REQ-FMT-008` | DST is read as its machines sew it (three or more jumps in a row after sewing cut the thread), and writing DST reports where they will cut and the plan does not (`SC-I0605`) |
 | `REQ-FMT-011` | A PES design whose top-left corner lies more than 204.7 mm from the start is refused, not written with its origin field wrapped round |
 | `REQ-FMT-012` | PEC thumbnails draw stitches only inside their frames, so the stitch data's end mark is followed by `00` |

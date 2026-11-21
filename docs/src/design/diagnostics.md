@@ -84,9 +84,9 @@ warnings.
 undo (for example "rotate the design 90°" for `SC-W0702` when the rotated bounds fit, or "drop the
 dangling rung" for `SC-W0203`). Applied fixes go through the host's command system so they are undoable.
 
-## Initial codes
+## The codes
 
-Codes referenced by the design docs; each is registered in the milestone that implements it. A
+The codes the design docs name, each registered by the step that built it. A
 registered code must keep its row here, with the same severity and a title that starts with the
 registry's (`cargo xtask docs --check`), so a code allocated for one thing cannot be registered for
 another.
@@ -140,7 +140,7 @@ another.
 | `SC-W0320` | Warning | Cross stitch with an odd thread count; an even count sewn (1 sews 2, where Ink/Stitch sews no cross) | M10 |
 | `SC-W0321` | Warning | Cross stitch grid too fine for the shortest stitch; needle points left out | M10 |
 | `SC-W0322` | Warning | Half cross with an even thread count; the odd count above sewn (as Ink/Stitch sews it) | M10 |
-| `SC-E0323` | Error | Tartan fill's sett can't be read; skipped (not JSON, no palette, or a threadcount or colour letters before M10.7) | M10 |
+| `SC-E0323` | Error | Tartan fill's sett can't be read; skipped (not JSON, no palette, a number that isn't one, a stripe's width or count that isn't a number, or letters without a count) | M10 |
 | `SC-W0324` | Warning | Tartan's herringbone sewn as straight rows (retired): M10.7 sews herringbones | M10 |
 | `SC-W0325` | Warning | Tartan fill without a sett; Ink/Stitch's default sett sewn (as Ink/Stitch sews it) | M10 |
 | `SC-W0326` | Warning | Tartan sett with no stripe to sew; only the underlay sewn (as in Ink/Stitch) | M10 |

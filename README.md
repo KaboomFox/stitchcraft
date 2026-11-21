@@ -28,12 +28,14 @@ How it is built:
 
 ## Status
 
-StitchCraft sews the strokes of an SVG design in running stitch, bean stitch or manual stitch, with lock
-stitches, trims and stops, and writes PES and DST files. It reads, draws and converts PES, PEC and DST
-files from other software. The engine sews satin columns, their underlays first, then their top stitches
-with compensation, short stitches and split stitches. The rest of milestone M4 decides where a column
-starts and ends, and sews columns drawn as a centre line. An SVG's satin columns are sewn once `stitch
-plan` reads Ink/Stitch's settings, in M8. Fills come in M5.
+StitchCraft sews all 17 of Ink/Stitch's stitch types: running and manual stitches, zigzag strokes and
+ripples, satin columns with their E, S and zigzag forms, and tatami, legacy, contour, meander, circular,
+cross stitch, tartan, guided and linear gradient fills. It writes PES and DST files, with locks, trims and stops, and reads, draws
+and converts PES, PEC and DST files from other software. It sews SVG files with their Ink/Stitch settings,
+commands, clips and clones, and VectorCraft documents, whose plug-in previews and exports the stitches.
+Automatic digitizing of a design or a traced picture (M13) and lettering in embroidery fonts (M14) are
+under way. Each milestone closes when its machine checkpoint's sew-out report is in, and M2 is the one
+closed so far.
 [ROADMAP.md](ROADMAP.md) is the status board.
 
 ## Use it

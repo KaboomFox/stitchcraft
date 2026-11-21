@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Draft 0.1 — design approved for M0/M1, later sections refined as milestones land |
-| **Date** | 2026-10-08 |
+| **Status** | Approved for M0 and M1 on 2026-10-08, and kept up to date as the milestones land |
+| **Date** | 2026-11-21 |
 | **Scope** | A Rust machine-embroidery engine and its integration with VectorCraft |
 | **Reading time** | ~25 minutes; every section links to the detailed design it summarizes |
 
@@ -84,8 +84,10 @@ here (details and file references in [VectorCraft integration](vectorcraft-integ
   drawn). Parameters come from a manifest schema (number, int, bool, choice; at most 64).
 - **Live-effect parameters are stored per object** in the document as `{"id": "plugin.<id>",
   "params": {…}}` — so embroidery settings can live on the art today, with no VectorCraft change.
-- Limits that shape our design: 50 M instructions per call (+4,000 per input byte), 5 s per
-  live-effect run, input is geometry only (no paint), no file-format plug-ins, no panels.
+- Limits that shaped the first design, in ABI v1 before VectorCraft 0.14: 50 M instructions per call
+  (+4,000 per input byte), 5 s per live-effect run, input is geometry only (no paint), no file-format
+  plug-ins, no panels. Since 0.14 a live effect is given its object's paints, exporters exist and a
+  manifest takes 256 parameters ([RFC status](rfc-vectorcraft-abi-v2.md#status)).
 - Everything is a command, reachable from the UI, a JSON control channel, an MCP server and a
   headless CLI (`vectorcraft-cli run --in f --cmd … --export out.png`), which our tests and
   screenshot pipeline drive.
@@ -167,6 +169,7 @@ The workspace is split into layered crates; a crate may depend only on lower lay
 | L3 | `stitchcraft-vectorcraft` | `.vectorcraft` document adapter and effect-record mapping |
 | test | `stitchcraft-testkit` | Fixtures, property-test strategies, invariant checkers |
 | app | `stitchcraft-cli` (`stitch`) | Command-line tool |
+| app library | `stitchcraft-cutout` | The subject cut-out of a photo, run by `stitch` before tracing |
 | app | `stitchcraft-vc-plugin` | VectorCraft WebAssembly plug-ins |
 
 Details, dependency rules and the reasoning are in [architecture](architecture.md).
@@ -179,7 +182,7 @@ Details, dependency rules and the reasoning are in [architecture](architecture.m
 | [0002](adr/0002-host-agnostic-engine-plugin-first.md) | Host-agnostic engine; VectorCraft ABI v1 plug-in first, new plug-in features upstream, in-tree crate optional |
 | [0003](adr/0003-parameter-registry.md) | One parameter registry generates UI schemas, CLI, docs, SVG mapping and test strategies |
 | [0004](adr/0004-determinism.md) | Determinism by construction: ordered collections, `libm`, seeded RNG, absolute quantization |
-| [0005](adr/0005-geometry-stack.md) | `kurbo` for curves, `i_overlay` for polygon booleans/offsets, `petgraph` + own Eulerian walk, `rstar` |
+| [0005](adr/0005-geometry-stack.md) | The engine's own geometry on `f64`, with `libm` for transcendental functions, and no geometry crate |
 | [0006](adr/0006-docs-mdbook-diataxis.md) | mdBook, Diátaxis structure, generated reference, CI-regenerated images |
 | [0007](adr/0007-pes-first-brother-profile.md) | PES v1 first for the Brother machine; DST second |
 | [0008](adr/0008-conformance-first.md) | Conformance-first development: requirement IDs and cases before code |
@@ -189,6 +192,12 @@ Details, dependency rules and the reasoning are in [architecture](architecture.m
 | [0012](adr/0012-read-dont-copy.md) | Ink/Stitch's source may be read, never copied |
 | [0013](adr/0013-brother-pe800-reference-machine.md) | A Brother PE800 is the reference machine, with a profile for each of its 3 hoops |
 | [0014](adr/0014-generators-see-their-neighbours.md) | Elements are generated in order, each seeing the needle before it and the next element |
+| [0015](adr/0015-pictures-traced-by-vectorcraft.md) | Pictures are traced by VectorCraft's command line |
+| [0016](adr/0016-inkstitch-files-imported-by-stitchcraft.md) | Ink/Stitch files come into VectorCraft through `stitch import-inkstitch` |
+| [0017](adr/0017-routing-is-one-engine-function.md) | Routing is one engine function, which VectorCraft's filters and lettering call |
+| [0018](adr/0018-underlays-first-is-a-setting-of-each-element.md) | Underlays first is a setting of each element |
+| [0019](adr/0019-subject-cut-out-before-tracing.md) | A photo's subject is cut out by `stitch` before VectorCraft traces it |
+| [0020](adr/0020-fonts-from-a-repository-of-their-own.md) | Embroidery fonts come from a repository of their own |
 
 ## 7. Data model (summary)
 
@@ -197,11 +206,12 @@ Full types in [data model](data-model.md).
 - **Units**: millimetres as `f64`, y pointing down (same as SVG and VectorCraft). Adapters convert
   (`pt × 25.4/72`, SVG user units through the viewBox). Encoders quantize absolute positions to
   0.1 mm once, so long designs never drift.
-- **Design** (engine input): ordered `Element`s — `id` (stable host id), `shape` (`Region`, `Path` or
-  `Satin`), `thread`, `params` (`ParamSet`), `commands` (start/end points, trim, stop, ignore) — plus
-  design settings (collapse length, minimum stitch length, origin) and a machine profile.
+- **Design** (engine input): ordered `Element`s, each with an `id` (stable host id), a name, a `shape`
+  (`Stroke` or `Fill`), a `thread`, its `params` (`ParamSet`), whether it is automatic or lettered, its
+  hints (start and end points, trim, stop) and its clips. The design adds its settings (collapse length,
+  shortest stitch, origin), its marks and its guides. The machine profile is the second argument of `plan`.
 - **StitchPlan** (engine output): colour blocks of stitches; every stitch has a position, a kind
-  (`Normal`, `Jump`, `Trim`, `Stop`, `ColorChange`, `End`) and provenance (element id and role:
+  (`Normal`, `Jump`, `Trim` or `Stop`; the blocks carry the colour changes and the end) and provenance (element id and role:
   underlay, top, travel, lock) used by previews, reports and diagnostics.
 - **Diagnostics**: `SC-E…` errors and `SC-W…` warnings with element, location, message and a fix
   hint; each code has a generated explanation page ([diagnostics](diagnostics.md)).
@@ -270,10 +280,11 @@ Details: [determinism](determinism.md).
 
 Three phases (full design in [VectorCraft integration](vectorcraft-integration.md)):
 
-1. **ABI v1, no upstream change (M6).** Plug-ins `dev.stitchcraft.running`, `.satin` and `.fill` are
+1. **ABI v1, no upstream change (M6).** Plug-ins `dev.stitchcraft.stroke`, `.satin` and `.fill` are
    *live effects*: applying one stores the embroidery parameters on the object and draws a lightweight
    stitch preview. VectorCraft's own commands make satin columns of 2 paths, add rungs and bake previews,
-   and its Graphic Styles keep embroidery settings as presets.
+   and its Graphic Styles keep embroidery settings as presets. The Auto effect, lettering, the filters and
+   the exporters are modules of the same plug-in ([plug-ins](vectorcraft-integration.md#plug-ins)).
    Machine files come from `stitch export design.vectorcraft`. (The namespace is one constant, changed
    in one place once the project has a domain.)
 2. **Plug-in features, proposed upstream.** [An RFC](rfc-vectorcraft-abi-v2.md) for the ArtCraft team
@@ -298,8 +309,8 @@ the runner reports a requirement × case matrix.
 | L3 | Ink/Stitch differential metrics on a corpus (pinned Ink/Stitch as a black-box oracle) | nightly |
 | L4 | Physical sew-outs on the Brother machine, recorded through an issue form | milestone gates |
 
-Plus unit tests, property tests (`proptest`), snapshot tests (`insta`), CLI-in-docs tests
-(`trycmd`), mutation testing (`cargo-mutants`) and coverage ratchets.
+Plus unit tests, property tests (`proptest`), command-line examples declared in `docs/examples.toml`
+and run by `cargo xtask docs --check`, mutation testing (`cargo-mutants`) and coverage ratchets.
 
 ## 15. Documentation (summary)
 
@@ -318,7 +329,7 @@ least-privilege workflow tokens.
 ## 17. Release and versioning
 
 SemVer per crate; the plug-in's version and its VectorCraft ABI version are reported in its
-manifest. Changelogs from conventional commit scopes (`release-plz`, M12). Plug-in `.wasm` files and
+manifest. Each step adds its line to `CHANGELOG.md` by hand; M12 decides how releases make theirs. Plug-in `.wasm` files and
 CLI binaries are attached to GitHub Releases with checksums. A release requires: green gates,
 compatibility gate green for the current VectorCraft stable, and the machine checkpoint for that
 milestone signed off.
@@ -340,9 +351,11 @@ milestone signed off.
 
 ## 19. Open questions
 
-1. Exact Brother model (affects PES version and trim support) — answered at MC-1 at the latest.
+1. Exact Brother model (affects PES version and trim support). Answered: a Brother PE800, the reference
+   machine ([ADR-0013](adr/0013-brother-pe800-reference-machine.md)).
 2. Final project name and plug-in id namespace (working name StitchCraft; plug-in ids derive from one
    constant).
 3. ArtCraft's appetite for the RFC's open proposals and for embroidery in-tree. Ask on their Discord before
    M9. VectorCraft adopted the rest from 0.14.
-4. Where the repository lives on GitHub (needed for the docs site URL and badges).
+4. Where the repository lives on GitHub (needed for the docs site URL and badges). Answered: on GitHub,
+   with the docs site on its Pages ([publishing](docs-pipeline.md)).
