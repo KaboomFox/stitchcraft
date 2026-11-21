@@ -9,7 +9,9 @@ use vectorcraft_doc::{Appearance, Document, Effect, Node, NodeId};
 use vectorcraft_geom::{BezPath, FillRule, PathData, Point, Rect, shapes};
 use vectorcraft_plugins::effect::Paints;
 use vectorcraft_plugins::objects::{self, Output};
-use vectorcraft_plugins::{ABI_VERSION, Budget, Error, HEAVY_FUEL, HEAVY_WALL_TIME_MS, Kind, Limits, ParamSpec, Plugin, effect, export, registry};
+use vectorcraft_plugins::{
+    ABI_VERSION, Budget, Error, HEAVY_FUEL, HEAVY_WALL_TIME_MS, Kind, Limits, Manifest, ParamSpec, Plugin, effect, export, registry,
+};
 
 /// The stitch families, each a module of its own whose live effect sews an object as the family.
 const FAMILIES: [&str; 3] = ["stroke", "satin", "fill"];
@@ -745,6 +747,19 @@ fn satin_line(id: u32, path: &PathData) -> Value {
     let navy = json!({"type": "solid", "color": {"model": "rgb", "r": 0.0, "g": 0.2, "b": 0.6}});
     let stroke = json!({"kind": "stroke", "paint": navy, "width": pt(3.0)});
     json!({"id": id, "appearance": {"items": [stroke], "effects": [{"id": "plugin.dev.stitchcraft.satin", "params": {}}]}, "kind": {"type": "path", "path": path}})
+}
+
+/// M6.19, a large fill's real rows in the editor, waits for VectorCraft to give a live effect more than a light
+/// run's budget: a manifest that asks for a heavy live effect, the RFC's P4, or more instructions for every
+/// live effect. This fails on the VectorCraft that allows either, the day the step can start
+/// (`docs/src/design/vectorcraft-integration.md`, live-effect previews).
+#[test]
+fn m6_19_waits_for_vectorcraft_to_give_a_live_effect_more_than_a_light_budget() {
+    // The same manifest with a light budget is accepted, so the heavy one is refused for its budget alone.
+    let manifest = |budget: &str| format!(r#"{{"id":"dev.stitchcraft.waits","name":"Waits","kind":"effect","budget":"{budget}"}}"#);
+    Manifest::parse(manifest("light").as_bytes()).unwrap_or_else(|e| panic!("a light live effect's manifest: {e}"));
+    assert!(Manifest::parse(manifest("heavy").as_bytes()).is_err(), "VectorCraft accepts a heavy live effect: M6.19 can start");
+    assert_eq!(Limits::default().fuel_base, 50_000_000, "VectorCraft gives a live effect a new budget: review FUEL_BASE, and M6.19 may start");
 }
 
 /// StitchCraft Stroke to Satin, from VectorCraft 0.17, is a heavy filter, which VectorCraft's host gives
