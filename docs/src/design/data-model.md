@@ -360,7 +360,14 @@ wants no lock of them.
 `sewn_stitches`. `REQ-PLAN-008` needs the lock settings, which a plan doesn't hold, so it is the engine's
 (`stitchcraft-engine`'s `check` module). It walks the plan the engine returns once the cap is done, with
 each element's lock settings from its generated parameters, and reports a missing lock as `SC-E0009`, as a
-broken invariant is, and never repairs the plan. The walk is linear in the plan's length.
+broken invariant is, and never repairs the plan. A run of one needle point lays no thread, so the check
+skips it, as assembly sews it without locks (`REQ-ASM-007`). The walk is linear in the plan's length.
+
+The check found one real gap, in a random degenerate design of `degenerate.rs` and in none of the 284 plans
+of the set. A guided fill sewed its last group, of one needle point, straight on from the group before
+it. Its tie-off was made from that group alone, which has no stitch to lock, so the run ended with
+no tie-off. From M13.56 a tie-off is made from the run's own points
+([lock stitches](algorithms/locks.md#placement)).
 
 ### How thick a plan sews
 

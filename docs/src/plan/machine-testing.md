@@ -534,6 +534,12 @@ where assembly sewed 4, at 2,230 of the 5,333 tie-ins M13.56 counted. Whether a 
 - Where a shape starts after a jump thread you cut, pull its thread tail. Does the tie-in hold, or does
   the end pull out?
 
+M13.56 also makes a run's tie-off from the run's own needle points, so a run that ends on a group of one
+point, sewn straight on from the group before it, ends with its tie-off where it ended with none
+([placement](../design/algorithms/locks.md#placement)). The test sheets and the repository's designs
+sew no such run, so they sew at MC-8 as before. At MC-8, if a design ends a shape on a
+lone stitch, pull its thread tail and say whether the end holds.
+
 M13.51 adds `stitch plan --fewer-points`, off by default, which traces a picture with fewer anchors and fewer
 jags ([outlines thread can't show](../design/image-to-embroidery.md#outlines-thread-cant-show)). It changes
 the rule of a third to a half of each dog's shapes. At MC-8, sew the running dog traced from its photo with

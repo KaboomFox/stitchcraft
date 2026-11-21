@@ -1041,7 +1041,7 @@ status = "active"
 id = "REQ-LCK-001"
 area = "plan/locks"
 level = "L2"
-statement = "Lock stitches appear where `ties` says (both, before, after, neither) and only there: a tie-in where the needle jumps to a group, a tie-off where a jump, trim, stop, thread change or the end follows one, none between groups sewn on from one to the next. `force_lock_stitches` adds the tie-off; manual stitch has none unless forced."
+statement = "Lock stitches appear where `ties` says (both, before, after, neither) and only there: a tie-in where the needle jumps to a group, a tie-off where a jump, trim, stop, thread change or the end follows one, none between groups sewn on from one to the next. `force_lock_stitches` adds the tie-off; manual stitch has none unless forced. A tie-off is made from the run's own needle points, so a run that ends on a group of one point still has it."
 milestone = "M3"
 status = "active"
 

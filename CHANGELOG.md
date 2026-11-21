@@ -2703,6 +2703,9 @@ What a user can do with this version, before its first release. The entries belo
   scans every text file, documents included.
 
 ### Fixed
+- M13.56: a run of stitches that ended on one stitch, sewn straight on from the stitches before it,
+  could end without its tie-off. The tie-off is now made from the whole run's stitches. The new check of
+  the plan's locks found it in a random test design. None of the repository's designs sews such a run.
 - Docs review A: the help and the reference state the numbers that planning measures how thick a design sews
   with. A fill is what rows 0.25 mm apart lay, not 0.4 mm (`auto_thick_warn_fills`, `SC-W0913`). `SC-W0913`
   warns from 4 fills, not 3, and names the cap as 3.25 fills, not 4. `stitch preview --style thickness`
