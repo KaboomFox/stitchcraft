@@ -328,6 +328,10 @@ pub struct TracingArgs {
     /// traced twice, the second time in the threads the first chose and the kept ones.
     #[arg(long, value_name = "COLOUR", value_parser = crate::colours::colour)]
     pub keep_colour: Vec<crate::colours::Colour>,
+    /// Trace a picture without a thread of the machine, so that its colours take the nearest of the others:
+    /// a colour read as --keep-colour reads it. May be given several times.
+    #[arg(long, value_name = "COLOUR", value_parser = crate::colours::colour)]
+    pub drop_colour: Vec<crate::colours::Colour>,
     /// Also write the document VectorCraft traced a picture into (.vectorcraft), to correct the trace in
     /// VectorCraft.
     #[arg(long, value_name = "FILE")]
@@ -337,8 +341,9 @@ pub struct TracingArgs {
 impl TracingArgs {
     /// Whether any option is given, which only a picture takes.
     pub fn given(&self) -> bool {
-        let TracingArgs { vectorcraft_cli, size, colours, fewer_points, keep_colour, traced } = self;
-        vectorcraft_cli.is_some() || size.is_some() || colours.is_some() || *fewer_points || !keep_colour.is_empty() || traced.is_some()
+        let TracingArgs { vectorcraft_cli, size, colours, fewer_points, keep_colour, drop_colour, traced } = self;
+        let colours_named = !keep_colour.is_empty() || !drop_colour.is_empty();
+        vectorcraft_cli.is_some() || size.is_some() || colours.is_some() || *fewer_points || colours_named || traced.is_some()
     }
 }
 

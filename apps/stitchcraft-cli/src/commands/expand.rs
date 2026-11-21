@@ -63,7 +63,9 @@ pub fn run(args: &ExpandArgs) -> Outcome {
     };
     let picture = trace::is_picture(&args.design);
     if !picture && args.tracing.given() {
-        return Outcome::usage("--vectorcraft-cli, --size, --colours, --keep-colour and --traced are for a picture, a PNG or JPEG file");
+        return Outcome::usage(
+            "--vectorcraft-cli, --size, --colours, --keep-colour, --drop-colour and --traced are for a picture, a PNG or JPEG file",
+        );
     }
     if output == Output::VectorCraft && !picture && Source::of(&args.design) == Source::Svg {
         return Outcome::usage("a VectorCraft document is written from a VectorCraft document or a picture: name the output .svg");

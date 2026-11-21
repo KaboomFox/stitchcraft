@@ -53,6 +53,12 @@
 //! the first trace used are its shapes' fills, read as `stitch plan` reads the document, in loops over what
 //! that reading's budget already bounded.
 //!
+//! **A dropped colour** (`REQ-AUTO-161`). `--drop-colour` leaves threads out of every trace's library
+//! ([`Tracing::dropped`]), so that their pixels take the nearest of the others. A picture with dropped
+//! threads and none kept is traced once, in the library without them. A merge of 2 traced colours into one
+//! thread is not built: measured, leaving out the nearer of the 2 nearest threads is the tracer's own trace
+//! in one colour fewer.
+//!
 //! **What fails.** A program that can't be started is `SC-E0815`, and one that fails or saves no document is
 //! `SC-E0816`, which ends with the end of what it said on standard error, each character a terminal would
 //! act on escaped ([`printable`]).
@@ -200,6 +206,8 @@ pub struct Tracing<'a> {
     pub fitting: Fitting,
     /// The machine's threads the picture keeps, each once, in the order named.
     pub kept: Vec<&'static PaletteEntry>,
+    /// The machine's threads the picture is traced without, each once, in the order named.
+    pub dropped: Vec<&'static PaletteEntry>,
 }
 
 impl<'a> Tracing<'a> {
@@ -207,15 +215,26 @@ impl<'a> Tracing<'a> {
     /// why it can't be, before VectorCraft runs: a kept colour that is no thread, or more kept threads than
     /// colours.
     pub fn asked(args: &'a TracingArgs, bytes: &[u8], profile: &MachineProfile) -> Result<Tracing<'a>, String> {
-        const OPTION: &str = "--keep-colour";
+        const KEEP: &str = "--keep-colour";
+        const DROP: &str = "--drop-colour";
+        let palette = profile.palette.palette();
         let colours = args.colours.unwrap_or(COLOURS);
-        let kept = colours::chosen(&args.keep_colour, OPTION, profile.palette.palette(), &mut colours::pixels(bytes, OPTION))
-            .map_err(|Unchosen::Usage(why)| why)?;
+        let read = |given: &[colours::Colour], option: &str| {
+            colours::chosen(given, option, palette, &mut colours::pixels(bytes, option)).map_err(|Unchosen::Usage(why)| why)
+        };
+        let kept = read(&args.keep_colour, KEEP)?;
+        let dropped = read(&args.drop_colour, DROP)?;
+        if let Some(both) = kept.iter().find(|entry| held(&dropped, entry)) {
+            return Err(format!("{KEEP} and {DROP} both name the thread {}: keep it or leave it out", both.name));
+        }
         if u32::try_from(kept.len()).map_or(true, |count| count > colours) {
-            return Err(format!("{OPTION} keeps {} threads, more than the {colours} colours of --colours", kept.len()));
+            return Err(format!("{KEEP} keeps {} threads, more than the {colours} colours of --colours", kept.len()));
+        }
+        if colours::threads(palette).filter(|entry| !held(&dropped, entry)).nth(1).is_none() {
+            return Err(format!("{DROP} leaves {} with fewer than 2 threads to trace in", palette.name));
         }
         let fitting = if args.fewer_points { Fitting::Fewest } else { Fitting::Defaults };
-        Ok(Tracing { program: args.vectorcraft_cli.as_deref(), size: args.size, colours, fitting, kept })
+        Ok(Tracing { program: args.vectorcraft_cli.as_deref(), size: args.size, colours, fitting, kept, dropped })
     }
 }
 
@@ -229,11 +248,15 @@ pub fn picture(
     tracing: &Tracing<'_>,
     scratch: &Scratch,
 ) -> Result<(Vec<u8>, Vec<Diagnostic>), Diagnostic> {
-    let Tracing { program, size, colours, fitting, ref kept } = *tracing;
-    if kept.is_empty() {
+    let Tracing { program, size, colours, fitting, ref kept, ref dropped } = *tracing;
+    if kept.is_empty() && dropped.is_empty() {
         return traced(program, name, &steps(name, bytes, profile, size, colours, fitting), scratch).map(|document| (document, Vec::new()));
     }
-    let threads: Vec<&'static PaletteEntry> = colours::threads(profile.palette.palette()).collect();
+    let threads: Vec<&'static PaletteEntry> = colours::threads(profile.palette.palette()).filter(|entry| !held(dropped, entry)).collect();
+    if kept.is_empty() {
+        let once = steps_in(&palette::gpl_of(profile, &threads), name, bytes, profile, size, colours, fitting);
+        return traced(program, name, &once, scratch).map(|document| (document, Vec::new()));
+    }
     let others: Vec<&'static PaletteEntry> = threads.iter().copied().filter(|entry| !held(kept, entry)).collect();
     let rest = colours.saturating_sub(u32::try_from(kept.len()).unwrap_or(u32::MAX));
     let mut library: Vec<&'static PaletteEntry> = kept.clone();
@@ -309,6 +332,26 @@ mod tests {
     use stitchcraft_testkit::temp::TempDir;
 
     use super::*;
+
+    #[test]
+    fn req_auto_161_dropping_every_thread_but_one_or_keeping_a_dropped_one_is_a_usage_error() {
+        let thread = |name: &str| crate::colours::Colour::Thread(name.to_string());
+        // By colour: 2 threads are named Flesh Pink, and a name is the first of them.
+        let all: Vec<crate::colours::Colour> =
+            crate::colours::threads(REFERENCE.palette.palette()).map(|entry| crate::colours::Colour::Rgb(entry.color)).collect();
+        let (one, two) = (all.get(1..).unwrap().to_vec(), all.get(2..).unwrap().to_vec());
+        let args = TracingArgs { drop_colour: one, ..TracingArgs::default() };
+        assert_eq!(Tracing::asked(&args, b"", REFERENCE).unwrap_err(), "--drop-colour leaves Brother PEC with fewer than 2 threads to trace in");
+        let args = TracingArgs { drop_colour: two, ..TracingArgs::default() };
+        assert_eq!(Tracing::asked(&args, b"", REFERENCE).unwrap().dropped.len(), all.len() - 2);
+        let args = TracingArgs { keep_colour: vec![thread("white")], drop_colour: vec![thread("Red"), thread("White")], ..TracingArgs::default() };
+        assert_eq!(
+            Tracing::asked(&args, b"", REFERENCE).unwrap_err(),
+            "--keep-colour and --drop-colour both name the thread White: keep it or leave it out"
+        );
+        let args = TracingArgs { colours: Some(2), keep_colour: vec![thread("Red"), thread("Blue")], ..TracingArgs::default() };
+        assert_eq!(Tracing::asked(&args, b"", REFERENCE).unwrap().kept.len(), 2);
+    }
 
     #[test]
     fn req_cli_012_a_picture_is_told_by_its_extension() {

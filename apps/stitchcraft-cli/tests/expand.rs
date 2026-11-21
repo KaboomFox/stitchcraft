@@ -57,7 +57,7 @@ fn req_cli_025_what_stitch_expand_can_t_write_is_a_usage_error() {
         (&["expand", "badge.vectorcraft", "-o", "badge.pes"][..], "cannot tell what to write as `badge.pes`: name it .vectorcraft or .svg"),
         (
             &["expand", "badge.vectorcraft", "-o", "x.svg", "--size", "50"][..],
-            "--vectorcraft-cli, --size, --colours, --keep-colour and --traced are for a picture",
+            "--vectorcraft-cli, --size, --colours, --keep-colour, --drop-colour and --traced are for a picture",
         ),
         (&["expand", "badge.svg", "-o", "x.vectorcraft"][..], "a VectorCraft document is written from a VectorCraft document or a picture"),
     ] {

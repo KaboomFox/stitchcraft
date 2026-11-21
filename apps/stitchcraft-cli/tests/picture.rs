@@ -288,6 +288,17 @@ fn req_auto_160_a_kept_colour_traces_the_picture_twice() {
     let (out, calls) = stitch_calls(dir.path(), &two, None, &[]);
     assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
     assert_eq!(calls.iter().map(traced_in).collect::<Vec<_>>(), [(names(&["Blue", "Red"]), 2)]);
+    // A dropped thread is left out of every trace's library: traced once without a kept one.
+    let (out, calls) = stitch_calls(dir.path(), &["plan", "badge.png", "-o", "d.pes", "--drop-colour", "silver"], None, &[]);
+    assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
+    let [(library, colours)]: [(Vec<String>, u64); 1] = calls.iter().map(traced_in).collect::<Vec<_>>().try_into().unwrap();
+    assert_eq!((library.len(), colours, library.contains(&"Silver".to_string())), (threads - 1, u64::from(COLOURS), false));
+    let both = ["plan", "badge.png", "-o", "e.pes", "--keep-colour", "Red", "--drop-colour", "Blue"];
+    let (_, calls) = stitch_calls(dir.path(), &both, None, &[]);
+    let (first, second) = (traced_in(&calls[0]).0, traced_in(&calls[1]).0);
+    assert_eq!(first.len(), threads - 2);
+    assert!(!first.contains(&"Blue".to_string()) && !first.contains(&"Red".to_string()));
+    assert_eq!(second, names(&["Red", "Deep Gold", "White"]));
     // A mistake is a usage error before VectorCraft runs: for `stitch expand` too.
     let (out, calls) = stitch_calls(dir.path(), &["expand", "badge.png", "-o", "badge.svg", "--keep-colour", "Redd"], None, &[]);
     assert_eq!(out.status.code(), Some(2), "{}", text(&out.stderr));

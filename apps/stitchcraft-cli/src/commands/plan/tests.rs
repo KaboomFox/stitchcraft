@@ -248,7 +248,6 @@ fn req_auto_160_a_kept_colour_is_a_thread_a_colour_or_a_pixel_and_no_more_than_t
 }
 
 #[test]
-#[ignore = "planned: M13.20 builds the kept and dropped colours"]
 fn req_auto_161_a_dropped_colour_is_read_as_a_kept_one_and_contradictions_are_usage_errors() {
     let dir = TempDir::new("plan-drop-colour");
     assert!(plan_picture(&dir, &["--drop-colour", "Silver", "--drop-colour", "#a8a8a8"]).is_ok());
@@ -391,11 +390,12 @@ fn req_cli_013_the_tracing_options_are_for_a_picture_only() {
         TracingArgs { colours: Some(4), ..TracingArgs::default() },
         TracingArgs { fewer_points: true, ..TracingArgs::default() },
         TracingArgs { keep_colour: vec![crate::colours::Colour::Thread("Red".to_string())], ..TracingArgs::default() },
+        TracingArgs { drop_colour: vec![crate::colours::Colour::Thread("Red".to_string())], ..TracingArgs::default() },
         TracingArgs { traced: Some(dir.join("traced.vectorcraft")), ..TracingArgs::default() },
     ];
     for tracing in given {
         let out = run(&PlanArgs { tracing, ..args(fixture("strokes.svg"), dir.join("strokes.pes")) });
-        let usage = "stitch: --vectorcraft-cli, --size, --colours, --keep-colour and --traced are for a picture, a PNG or JPEG file\n";
+        let usage = "stitch: --vectorcraft-cli, --size, --colours, --keep-colour, --drop-colour and --traced are for a picture, a PNG or JPEG file\n";
         assert_eq!((out.status, out.stderr.as_str()), (Status::Usage, usage));
     }
     assert!(!dir.join("strokes.pes").exists() && !dir.join("traced.vectorcraft").exists());

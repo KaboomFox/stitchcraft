@@ -1,12 +1,13 @@
-//! The colours a person names for a picture's trace (`REQ-AUTO-160`): `--keep-colour`, which gives a
-//! colour a thread at any `--colours` (`docs/src/design/image-to-embroidery.md` › A picture in 6 threads).
+//! The colours a person names for a picture's trace: `--keep-colour`, which gives a colour a thread at any
+//! `--colours` (`REQ-AUTO-160`), and `--drop-colour`, which leaves a thread out (`REQ-AUTO-161`) (`docs/src/design/image-to-embroidery.md` › A picture in 6 threads).
 //!
 //! **Why a person names it.** Image Trace chooses a picture's threads by how much of it each would cover, so
 //! a small bright colour loses its thread first. Which small colour matters is the person's to say: no rule
 //! of the picture's measures chose it reliably on the varied set, as for marks.
 //!
 //! **A colour, 3 ways** ([`Colour`]). A thread of the machine by its name, in any case, as `stitch palette`
-//! and the share list name it; a colour as `#rrggbb`, which is the machine's thread nearest it by the
+//! and the share list name it, the first of the palette's threads of that name (Brother's has 2 named
+//! Flesh Pink, and the other is named by its colour); a colour as `#rrggbb`, which is the machine's thread nearest it by the
 //! palette's own matching ([`Palette::nearest`]); or a pixel of the picture as `X,Y`, from its left and top
 //! edges, which is the thread nearest that pixel's colour, its alpha left aside. Each is read to one entry of
 //! the machine's palette ([`chosen`]), before VectorCraft runs, so that a mistake is a usage error that
@@ -16,8 +17,8 @@
 //! brings in `image`. A build without it, such as the WASI one that makes the golden files, refuses a pixel
 //! with a usage error that names the feature and the other 2 ways, rather than guess its colour.
 //!
-//! The choices are read here and not in the trace, so that `--drop-colour` (`REQ-AUTO-161`, planned) reads
-//! its colours the same way.
+//! The choices are read here and not in the trace, so that `--drop-colour` (`REQ-AUTO-161`), which leaves a
+//! thread out, reads its colours the same way.
 
 use std::fmt;
 
