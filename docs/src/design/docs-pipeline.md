@@ -78,6 +78,20 @@ and so on. A test sheet is drawn as it is, so a shot of one has no panels. The p
 a picture never shows a design that the engine changed without the page saying so. The `alt` text is
 mandatory (accessibility), and the docs check fails on images without it.
 
+Three keys of a `stitch` shot draw what a picture of the sewn design alone can't show. Each is off unless
+the shot sets it:
+
+- `guides = true` draws the lines of the design that aren't sewn under the stitches, so a reader sees
+  what they follow: each element's outline, its guide line and anchor line, and the design's automatic
+  guides (`REQ-RND-005`). `ripple-guide-drawn` uses it.
+- `cut_jumps = true` draws the design as it looks once the person has cut its jump threads. The
+  reference machine cuts none, so a realistic picture shows every one, and on a small picture they hide
+  what the text is about. The shot's alt text must say "jump threads cut", and `cargo xtask shots` and
+  `cargo xtask docs --check` fail on one that doesn't, so no picture lets a reader think the machine cuts
+  them (`REQ-RND-007`). `auto-rules-cut` uses it.
+- `key = true` draws a key under a picture in the thickness style (`REQ-RND-006`). `auto-rules-thickness`
+  uses it.
+
 A picture shot shows a picture before it is digitized:
 
 ```toml

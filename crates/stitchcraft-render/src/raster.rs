@@ -641,7 +641,12 @@ mod tests {
             (bare.render(realistic, &mut Budget::DEFAULT.meter()).unwrap(), guided.render(realistic, &mut Budget::DEFAULT.meter()).unwrap());
         assert_eq!(pixel(&image, 70, 30), pixel(&plain, 70, 20));
         // A scene of a plan has none, and a scene of guides alone is still empty.
-        assert!(Scene::of(&stitchcraft_plan::StitchPlan::default(), stitchcraft_plan::TrimSupport::None, &mut Budget::DEFAULT.meter()).unwrap().guides.is_empty());
+        assert!(
+            Scene::of(&stitchcraft_plan::StitchPlan::default(), stitchcraft_plan::TrimSupport::None, &mut Budget::DEFAULT.meter())
+                .unwrap()
+                .guides
+                .is_empty()
+        );
         let only = Scene { guides: vec![vec![g(0, 0), g(10, 10)]], ..Scene::default() };
         let settings = Settings::new(Style::Simple, 8.0).unwrap();
         assert_eq!(only.render(settings, &mut Budget::DEFAULT.meter()), Err(RenderError::Empty));
