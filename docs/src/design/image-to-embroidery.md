@@ -7,7 +7,7 @@ art or a drawing, once it is traced into shapes. Settings on the shapes are opti
 the stitches of each shape by its width at the size it sews. A colour drawn under others sews what shows of
 it, and neighbouring shapes overlap where they meet. Specks and the background are left out, and the
 sewing is ordered for few colour changes and short jumps. Milestone M13 of the [roadmap](../plan/roadmap.md)
-builds it, after M7.5. Photographs sewn in blended colours need another technique, outside the roadmap.
+builds it, and its steps M13.8 and M13.20 are still to come. Photographs sewn in blended colours need another technique, outside the roadmap.
 
 ## The flow
 
@@ -214,7 +214,9 @@ The [rules' table](../user/reference/auto-rules.md) is generated from the code's
 (`stitchcraft_engine::auto::rules::RULES`), with each bound's default, so that the table, the notice a
 shape gives and the tests at each bound can't drift apart. The rules are tried in this order. First a shape whose
 setting names a stitch sews so. Then a speck merges into a neighbour and a line runs. A ragged thin line has
-merged into its neighbour before the rules are tried ([Neighbours](#neighbours)). Areas are filled next,
+merged into its neighbour before the rules are tried ([Neighbours](#neighbours)). A wide part sews as a
+split satin column once a person raises the widest split satin column ([Wide columns](#wide-columns)).
+Areas are filled next,
 with compact parts and uneven parts after them, and then a part with arms. Any other part sews as satin
 columns, unless its columns are refused.
 One function compares every bound (`auto::rules::choose`), a length to the micrometre and a ratio to its
@@ -267,7 +269,7 @@ leaves the balloon, and a wing 6 mm wide stays in the fill.
 column no wider than that on average still sews one where its rails part, at a corner or round a bend. A
 column's longest stitch lies between the 2 points as far along its rails, as shares of their lengths from
 one rung to the next, at a corner of either rail. A part with a column that would sew a longer one is
-filled, and `SC-I0902` gives the stitch's length. The widest satin column is the longest satin stitch a
+filled, unless it is wide ([Wide columns](#wide-columns)), and `SC-I0902` gives the stitch's length. The widest satin column is the longest satin stitch a
 machine sews well, so a shape may set it lower and never higher. It is the same for every machine profile,
 for the reason [wide columns](#wide-columns) gives.
 
@@ -406,9 +408,9 @@ The satin stitches that lean along their column (`SC-W0208`), which a fan sews, 
 4 to 8. The thread changes rose with M13.21, and each is a rethread by hand on a machine with one needle.
 A design of many small fills has many lines, each of which sews after the fills it borders. M13.22
 searches for the order that changes thread least, and the dogs changed thread 8, 12, 8 and 12 times
-([Sewing order](#sewing-order)). Since M13.30 the second changes thread 13 times. With `auto_fill_uneven` off they change thread 6, 9, 7 and 10 times and
-jump 113, 135, 105 and 132 times, where they jump 84, 91, 79 and 108 times as planned. The switch trades
-thread changes for jump threads.
+([Sewing order](#sewing-order)). Measured then, on 2026-11-14, with `auto_fill_uneven` off they changed thread 6, 9, 7 and 10 times and
+jumped 113, 135, 105 and 132 times, where they jumped 84, 91, 79 and 108 times as planned. The switch trades
+thread changes for jump threads. Each later step's thread changes are recorded in `tests/auto_photos.rs`.
 
 M13.27's rule for a part with arms fills 5 parts of the dogs that sewed as columns, blobs of fur 2 to 13 mm²
 large, and the 2 stars of the lettered patch. Measured on 2026-11-15 against the step before, the thread
@@ -882,7 +884,8 @@ A stroke is a line as wide as it is drawn (M13.1):
   themselves, or vanish. The rails the satin column would make tell whether it can follow a subpath. A
   subpath it cannot follow sews as the area it paints, filled as a wider line is (`SC-I0902`). So does a
   dot that a round or square cap draws. A dot with a butt cap draws nothing, and is left out (`SC-W0401`).
-- Wider than that, the area it paints is filled (`REQ-AUTO-004`). That area is each segment widened by
+- Wider than that, the area it paints is filled (`REQ-AUTO-004`), unless it is no wider than the widest split
+  satin column: then it sews as a [wide column](#wide-columns) along its path (`REQ-AUTO-156`). That area is each segment widened by
   half the stroke's width to each side, with its corners joined as the stroke's join joins them and its
   open ends capped with its cap. It is the stroke's area within the shapes' tolerance. A miter longer
   than its limit is cut square. Those pieces, joined into one area, are the fill's outline. A part of it smaller than 1 mm²
@@ -1302,8 +1305,8 @@ mends it in 5 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
    edge with an area merge the cheapest first, those of the colour with the most parts, and of 2 as cheap
    the smaller, while their cost stays within `auto_min_likeness` of the picture's likeness. The rest sew
    as lines, and `SC-I0915` says so. A part is defined once, by `auto::is_part`, and the measure imports it.
-   At 0, the default, nothing is measured and every line merges. The setting stays off until M13.35's cap
-   on thickness lands ([Merging by likeness](#merging-by-likeness)).
+   It is 0.85 by default since M13.45. At 0 nothing is measured and every line merges
+   ([Merging by likeness](#merging-by-likeness)).
 4. **Specks** (`REQ-AUTO-008`). An automatic area, or a part of one, smaller than 1 mm² is too small to sew:
    it would sew a knot. It is merged into the automatic area it shares the longest edge with, which may be
    its own. A speck that fills a hole goes into the area around it, and no hole shows where it was. One that
@@ -1432,8 +1435,8 @@ hidden stretch, whatever its length, brings 0 to 3, for 400 more stitches on eac
 stitches spent stop buying jumps. The jumps that are left come from a fill joined from 2 parts of one
 shape, whose 2 outlines each leave out the edge between the parts, from a ring and a line of one outline
 that lie far apart, and from hidden stretches longer than 25 mm. Each jump is a thread that a machine with
-one needle leaves to cut by hand, until M13.17 of the [roadmap](../plan/roadmap.md) sews those moves under
-the shapes that cover them.
+one needle leaves to cut by hand. Since M13.17 the needle runs under the shapes sewn later wherever a hidden
+way exists ([runs in place of jumps](#runs-in-place-of-jumps)).
 
 ## Covering the fabric
 
@@ -1594,7 +1597,7 @@ StitchCraft's base layer (`REQ-AUTO-028`) is that fill, made by automatic digiti
    before every automatic element, at the place of the first one, and the order of
    [Sewing order](#sewing-order) leaves it there.
 8. **The fills on it** sew no underlay of their own: digitizing turns their `fill_underlay` off. On the
-   running dog in 9 threads the fills' own underlays are 601 of today's 11,996 stitches.
+   running dog in 9 threads the fills' own underlays were 601 of its 11,996 stitches on 2026-11-10.
 9. **Said.** `SC-I0909` says the base layer's area, pieces and thread. A base layer whose shape needs more
    work than the budget allows is left out with `SC-W0910`, and every fill then keeps its underlay. A
    design that turns the base layer off is told that fabric may show (`SC-I0911`). That is information and
@@ -1703,7 +1706,7 @@ and 1 mm under the other, and the other gives the part up: their overlap is whol
 width.
 
 When parting an area's overlaps needs more work than the budget allows, the area sews its whole overlap,
-and `SC-I0904` says so. `SC-W0913` tells of a place that still has 3 fills of thread or more.
+and `SC-I0904` says so. `SC-W0913` tells of a place at the warning's limit of thread, 4 fills by default.
 
 **Where the thread lay.** Before the step, the running dog in 9 threads had 629 mm² at 3 fills or more.
 Each stitch of its plan was put to what it sews, and the thread summed over each window of 1 mm, as the
@@ -2048,7 +2051,7 @@ again. A limit above the largest value has nothing over it, and the spots are no
 Counted in processor instructions on the sheets TS-13A and TS-13B, the measure takes
 1.9 % of planning. Before these 3 savings it took 2.7 %.
 
-### What today's designs measure
+### What designs measured before M13.30
 
 Measured on 2026-11-16 as `--auto` sewed each picture before M13.30, with the base layer and the outline
 on. What M13.30 changed is measured in [Less thread where areas overlap](#less-thread-where-areas-overlap).
@@ -2104,11 +2107,11 @@ The [runs in place of jumps](#runs-in-place-of-jumps) lie under later fills and 
 
 This step measures and changes nothing that sews. Each row was measured on the running dog in 9 threads
 by changing one setting, and the bare share is what the top thread leaves of the design
-([covering the fabric](#covering-the-fabric)), 0.000 % today:
+([covering the fabric](#covering-the-fabric)), 0.000 % then, on 2026-11-16:
 
 | Change | At 3 fills or more, mm² | Bare, % of the design | Stitches |
 |---|---:|---:|---:|
-| As sewn today | 629 | 0.000 | 14,380 |
+| As sewn then | 629 | 0.000 | 14,380 |
 | No outline (`auto_fill_outline` off) | 516 | 0.000 | 13,076 |
 | No overlap (`auto_overlap_mm` 0) | 155 | 0.409 | 12,849 |
 | Overlap of 0.5 mm | 437 | 0.012 | 13,638 |
@@ -2182,7 +2185,7 @@ little. It isn't built.
 
 The rules of single shapes can't bring the dogs to the cap: 5 to 8 elements meet at their thickest spots,
 each with a little thread, and no rule of one shape knows the sum: the finished plan does. So a plan of a design digitized
-automatically is measured once, and where a spot sews above 4 fills a last pass takes thread
+automatically is measured once, and where a spot sews above the cap a last pass takes thread
 (`REQ-AUTO-074`, `auto/thin.rs`). Taking a needle point out of a run takes no thread away, since its 2
 stitches become one as long, and cutting a run leaves a jump thread. Thread leaves a spot only where the
 stitching doubles back on itself, or where the end of a row can move. The pass looks at the stitches
@@ -2297,7 +2300,9 @@ so a spot far from the change can pile up thread. No rule about a line or a deta
 step tried planning twice and keeping the thinner plan, which doubled a traced photo's export. The owner
 asked on 2026-11-18 for one general cap at the end of planning instead, which every design meets whatever
 its shapes and their order (`REQ-AUTO-099` to `REQ-AUTO-103`). Its value is the setting
-`auto_thick_cap_fills`, 4 fills by default, since MC-8's sew-out will set the real limits.
+`auto_thick_cap_fills`, since MC-8's sew-out will set the real limits. It was 4 fills when M13.35 built it,
+and is 3.25 by default since M13.46 ([the cap's default](#the-caps-default)). The numbers of this section
+are M13.35's, measured with the cap at 4.
 
 **Why the last pass stops.** The thread at every spot above 4 fills was split on 2026-11-18, in pieces of
 0.2 mm, by kind. A piece of top thread counts as hidden where the top stitches of the shapes sewn after it
@@ -2370,8 +2375,9 @@ them in the last resort. The cap ran out and took nothing, and the dog sewed 7.1
 one, where they took 15 times.
 
 Measured on 2026-11-20 on the set of [Choosing a style](#choosing-a-style), 28 pictures planned in both
-styles, against `main` at `a1887433`. 52 of the 56 plans sew byte for byte as before, and 2 plan in neither,
-refused by the bug of a column's pull compensation (`SC-E0101`). The 4 that change are those whose cap ran
+styles, against `main` at `a1887433`. 52 of the 56 plans sew byte for byte as before, and 2 planned in neither
+then, refused with `SC-E0101` by a bug since fixed: a column along a hole kept open read its 2 rails' pull
+compensations as one length. The 4 that change are those whose cap ran
 out of work, all in `logo`. The area is what is left at the cap, 3.25 fills or more:
 
 | Picture, `logo` | Thickest spot | Area at the cap | Stitches | Jumps | Time to plan |
@@ -2452,7 +2458,7 @@ details last, the dog on turf in 6 threads rose to 5.49 fills and the running do
 brought both to 4.00. The goose, the building and the coleus kept a spot at 4.01 to 4.12 fills in one order
 or the other.
 
-**Which cap every picture meets.** 4 fills, on every design of the repository in each of the 3 orders. Of the
+**Which cap every picture meets.** 4 fills when M13.35 measured, on every design of the repository in each of the 3 orders. Of the
 4 traced photos outside it, the magnolia meets it in each order and the others come within 0.22 fills.
 With the cap at 3.5 the badges, TS-13A and D and the pear come under it, but the lettered patch stays at 3.70,
 TS-13B at 3.74, TS-13C at 3.68 and the dogs at 3.61 to 3.98 (`sweep` of the prototype, thickest spots
@@ -2468,8 +2474,9 @@ round, took 11 % on TS-13A.
 
 **Decisions for the owner.**
 
-- The cap's value: 4 fills by default. Every test design and the traced dogs meet it, and nothing lower is
-  met by all of them. Recommended until MC-8 sews the ladder.
+- The cap's value: 4 fills by default. Every test design and the traced dogs met it, and nothing lower was
+  met by all of them. Recommended until MC-8 sews the ladder, and taken. M13.46 lowered it to 3.25
+  ([the cap's default](#the-caps-default)).
 - The third kind takes a shape's own top stitches, which show, where its other stitches cover the same
   places. Without it 3 designs stay above 4 fills. Recommended, since what shows doesn't change colour and
   the bare share moves by 0.001 % at most.
@@ -2622,6 +2629,10 @@ the step whose work its cause is. This step doesn't add a rule for them:
 | Traced running dog, 6 threads | 3.92 | 0 | 2.86 | 1.06 | 4 fills and the base layer, whose tops show | none yet: fills alone |
 | Traced running dog, 9 threads | 3.98 | 0 | 3.80 | 0.18 | 4 fills, whose tops show | none yet: fills alone |
 
+M13.47 and M13.49 are steps on the joins of traced letters that the owner parked on 2026-11-19, since words
+on a patch sew as marked text in a built-in font ([roadmap](../plan/roadmap.md)). Their measures of joins
+are used on this page.
+
 On the 2 running dogs the thickest spot is now one of fills alone, 3.92 and 3.98 fills, above the cap of
 3.25. The cap took what its rules let it there. Their top thread shows, and the cap takes a shape's own top
 only where it is doubled.
@@ -2638,7 +2649,8 @@ it started at 3 fills, which nearly every design has somewhere, so it was said o
   3. One layer of satin over a fill measures 2 to 3 fills and sews well, and 2 dense layers on a fill measure
   4 or more. The failing limit stays at 6.
 
-With the cap's last resort no digitized design of the repository and no dog sews above 4 fills. TS-13A, D and
+With the cap's last resort no digitized design of the repository and no dog sews above 4 fills, but the
+marked patch, whose lettering the cap covers since M13.50 ([the cap and lettering](#the-cap-and-lettering)). TS-13A, D and
 E still warn, at places of their halves as drawn, which the cap doesn't touch.
 
 #### The cap and lettering
@@ -2871,8 +2883,7 @@ it among photos, and the lettered patch and the test sheets' digitized halves am
 
 Before M13.44 the local flowers, bird and building kept 0.43 to 0.48, under the limit. Thin lines are half
 of their parts, and the rule of `REQ-AUTO-090` merged them all. With their thin lines sewn as lines they keep
-0.93 to 0.99. Merging now keeps the picture's likeness ([Merging by likeness](#merging-by-likeness)). A merge
-of thin pieces (M13.38) would take more of them, and waits for M13.44.
+0.93 to 0.99. Merging now keeps the picture's likeness ([Merging by likeness](#merging-by-likeness)).
 
 The before and after sheet shows the share of detail lost, 1 less the likeness, in percent, from the same
 function ([before and after sheet](before-after-sheet.md)).
@@ -3072,17 +3083,11 @@ A trace drawn colour by colour changes thread less in paint order than as sewn, 
 the dogs, because its lines then sew before the fills beside them.
 
 Fewer thread changes leave more jump threads. The machine cuts the thread at a change and not at a jump,
-so a thread that sews once jumps where it changed before. The dogs jump 84, 91, 79 and 108 times, where
-they jumped 82, 94, 81 and 112 times, and leave 77, 78, 70 and 95 jump threads to cut by hand, where they
-left 71, 73, 64 and 84. Since M13.27 filled 5 of their blobs they jump 79, 91, 79 and 106 times, and leave
-71, 78, 70 and 93 jump threads. With an outline after each fill (M13.28,
-[an outline round a fill](#an-outline-round-a-fill)) they jump 84, 97, 82 and 109 times, and leave 76, 84,
-73 and 96. With runs under the shapes sewn later (M13.17, [runs in place of jumps](#runs-in-place-of-jumps))
-they leave 69, 79, 60 and 83. Since M13.30
-([less thread where areas overlap](#less-thread-where-areas-overlap)) they leave 71, 80, 58 and 74, and
-since narrow columns walk once (M13.35, [a narrow column walks once](#a-narrow-column-walks-once)) 73,
-81, 58 and 72. Since an outline sews through no more than 12 mm under a later fill
-([the outline under a later fill](#the-outline-under-a-later-fill)) they leave 74, 84, 61 and 74. The traced pear and the test pictures change thread once for each thread after
+so a thread that sews once jumps where it changed before. With M13.22's order the dogs jumped 84, 91, 79 and
+108 times, where they jumped 82, 94, 81 and 112 times, and left 77, 78, 70 and 95 jump threads to cut by
+hand, where they left 71, 73, 64 and 84. Later steps moved these counts, and `tests/auto_photos.rs` records
+each step's: since M13.48 the dogs leave 60, 62, 49 and 64 jump threads, with the runs under the shapes sewn
+later (M13.17, [runs in place of jumps](#runs-in-place-of-jumps)). The traced pear and the test pictures change thread once for each thread after
 the first, as they did. The digitized halves of the TS-13 sheets change thread 2, 4, 4 and 6 times, where
 they changed 5, 4, 5 and 8 times. TS-13B's black sews twice: its base layer and letters first, and the
 lines of its windows after the fills they border. The search keeps 87 to 3,584 rows of batches on the
@@ -3109,40 +3114,26 @@ leaves are counted apart.
 | Emblem, abutting or stacked | 0 | 0.35 mm | 0 | 2 |
 | Button, abutting or stacked | 0 | 0.40 mm | 6 | 0 |
 | Traced pear | 0 | 0.44 mm | 0 | 2 |
-| Traced dog on turf, 6 threads | 0 | 1.33 mm | 5 | 69 |
-| Traced dog on turf, 9 threads | 0 | 3.00 mm | 9 | 79 |
-| Traced running dog, 6 threads | 0.18 mm² | 1.95 mm | 2 | 60 |
-| Traced running dog, 9 threads | 0 | 1.86 mm | 6 | 83 |
 
 The button's 7 dots sew on from one to the next, each move 2.7 mm long across its yellow. The pear leaves 2
 jump threads, where it left 4: the narrow ends of its olive and dark olive bands are uneven, and sew as
 fills with their bands (M13.21). `tests/auto_fabric.rs` keeps the moves and the jump threads as measured.
+The traced dogs don't leave a bare patch. They show 3, 5, 3 and 9 moves and leave 60, 62, 49 and 64 jump threads, as
+`tests/auto_photos.rs` records them since M13.48.
 
 The owner's dog, traced from her 2 photos in 6 and in 9 threads (M13.15, `docs/fixtures/README.md` › The
-traced dogs), lays 16 stitches astray: 5 and 8 on the dog on turf in 6 and in 9 threads, and 1 and 2 on the
-running dog (15 since M13.35's last pass moved a row of the dog on turf in 9 threads back under its
-neighbour). 2 are straight moves, 2.25 and 2.1 mm long, each between 2 lines of one narrow part, which is
-a stitch because it is shorter than the collapse length. 3 are stitches of outlines, 1.76 to 2.34 mm
-long, each along the edge of a thin, ragged fill. The other 11 are rows of fills, each up to 4 mm
-long, a fill's stitch. Before M13.30 the dogs laid 14, which the rest of this paragraph counts up to. M13.21, which fills where columns sewed, brought 20 of them. Of the 6 that were traced
-then, 5 lay along a line of fur of another colour that sews on the fill or that the fill reaches under.
-The line sews as wide as its thread, and the row shows beside it. The sixth lay under the edge of a column
-sewn after its fill. M13.22's order took 8 of the 20 away and brought 4 others, beside neighbours that
-now sew in another order. M13.27 fills 5 blobs of fur that sewed as columns
-([which stitch a shape gets](#which-stitch-a-shape-gets)). A row of the largest shows beside a line of fur
-in both running dogs, the second move crosses a blob that a column covered before, and one row of the
-running dog in 9 threads no longer shows: 19 stitches where there were 17. M13.28 sews an outline after
-each fill, and the fills end elsewhere. 8 of the rows no longer show and one other does, and the 2
-stitches of outlines came: 14 stitches. Which neighbour hid each of the 8 rows was not traced. M13.30
-left 11 rows where 10 lay, on other shapes, and a third stitch of an outline
-([less thread where areas overlap](#less-thread-where-areas-overlap)). Before
-M13.21 the dogs laid 7 stitches astray. 2 of them were satin stitches 7.89 and 4.72 mm long that fanned
-across a shape biting into their column, and M13.21 removed those. `tests/auto_photos.rs` lists each stitch,
+traced dogs), lays 12 stitches astray since M13.46. `tests/auto_photos.rs` lists each stitch (`ASTRAY`),
 with where it lies and why, and its case fails on any other stitch astray and on any listed one that no
-longer is. Of the [roadmap](../plan/roadmap.md)'s steps, M13.18 removes the rows, by merging the thin
-lines into their neighbours, and the 2 moves with them. M13.17 looked for a hidden way for each of the 2
-and didn't find one ([runs in place of jumps](#runs-in-place-of-jumps)). The dogs' moves astray are moves from one element to
-the next, as the button's are. Their jump threads, 60 to 83, are those that no later shape covers: each
+longer is. 3 are rows of fills beside a line of fur of another colour that sews on the fill or that the
+fill reaches under: the line sews as wide as its thread, and the row shows beside it. 4 are stitches of
+outlines, each along the edge of a thin, ragged fill. 3 are rows that moved when a neighbour's ragged
+thin lines merged (M13.18), and one a row moved when the blocks sew in another order. The last is a
+straight move between 2 lines of one narrow part, which is a stitch because it is shorter than the
+collapse length. M13.17 looked for a hidden way for it and didn't find one
+([runs in place of jumps](#runs-in-place-of-jumps)). Before M13.21 the dogs laid 7 stitches astray. 2 of
+them were satin stitches 7.89 and 4.72 mm long that fanned across a shape biting into their column, and
+M13.21, which fills where columns sewed, removed those. The dogs' moves astray are moves from one element to
+the next, as the button's are. Their jump threads, 49 to 64, are those that no later shape covers: each
 thread sews its shapes one after another, and the PE800 cuts no jump. Each dog takes
 too long to digitize and measure in the tests' debug build, so CI's `perf` job runs these cases in the
 release build ([conformance](conformance.md#cases-in-the-release-build)). The pieces of the dogs that
@@ -3179,7 +3170,7 @@ each shown on main before M13.37 by a case of `tests/auto_details.rs`:
    and their pull compensation reach over them.
 
 **Wishes to the search.** Each detail sews after the larger areas it meets where that costs no thread
-change, as a satin column does after its fill (rule 5 above). Of the rows of batches with the fewest
+change, as a satin column does after its fill (rule 4 above). Of the rows of batches with the fewest
 changes, the search takes the one that sews fewer details early. A detail then waits for a later batch of
 its thread. The owner's machine has one needle, and each thread change is a rethread by hand. As hard
 rules, details last took the traced photos in 6 threads from 8 thread changes to 13 and 14. In 9 threads
@@ -3394,7 +3385,9 @@ The rules' values are StitchCraft's own parameters, registered as any other
 The settings come in 3 tiers. The Auto effect's dialog shows the first 2, and the third is the rules' bounds,
 which `stitch plan --set KEY=VALUE` sets on every shape digitized automatically, as a document can on one.
 The [rules' reference](../user/reference/auto-rules.md) lists every setting with its default and its tier,
-generated from the registry.
+generated from the registry. The table below gives the dialog's settings and the rules each one changes.
+The advanced settings are the rules' bounds and the limits of the measures, and each is described with
+its rule on this page.
 
 | Tier | Setting | Key | Rules |
 |---|---|---|---|
@@ -3409,16 +3402,6 @@ generated from the registry.
 | A design | Base layer | `auto_base_layer` | whether the design sews one, read of the lowest shape whose settings read, as its other settings are |
 | A design | Base layer's stitch length | `auto_base_stitch_length_mm` | its rows' stitches and their spacing |
 | A design | Base layer keeps holes | `auto_base_keep_holes` | whether the outer shape keeps its holes |
-| Advanced | Widest satin column | `auto_max_satin_width_mm` | a line's stitches, a part's columns and their longest stitch, the split of a part into its fill and the pieces that leave it. A shape may set it lower, never higher |
-| Advanced | Narrowest triple run | `auto_min_triple_run_width_mm` | a running stitch tripled |
-| Advanced | Least slenderness of a column | `auto_min_slenderness` | a compact part |
-| Advanced | Most a column's width varies | `auto_max_unevenness` | an uneven part |
-| Advanced | Farthest a column reaches from its line | `auto_max_reach` | a part with arms |
-| Advanced | Narrowest piece of a fill | `auto_min_fill_width_mm` | what leaves the fill of an area |
-| Advanced | Smallest area | `auto_min_area_mm2` | specks, the narrow parts too small to cut from a broad part, and what details may leave of a hole they fill |
-| Advanced | Base layer's offset | `auto_base_offset_mm` | how far inside the design's outer shape it lies, and how wide the rim is |
-| Advanced | Largest sliver | `auto_base_sliver_mm2` | the largest gap in the top thread that is left to the base layer: a limit of the [measure](#the-stricter-measure), by which nothing sews differently |
-| Advanced | Most left to the base layer | `auto_base_bare_percent` | the most of the design that the top thread may leave bare over a base layer, the measure's other limit |
 
 A design's settings are a shape's too: VectorCraft's Auto effect on a group or a layer sets them on every
 path inside it. The Auto effect's dialog held 13 rows after M13.16 and was 903 px tall in a window of 900.
@@ -3541,8 +3524,9 @@ are not compared, since a traced edge has specks of other colours along it.
 
 A subpath that crosses the marker's edge stays as it was traced. When more than half of its points lie
 inside, it is probably a letter partly outside the marker, or a letter the tracing joined to something
-outside, and `SC-W1114` counts those. Points are those of the outline flattened within 0.05 mm, which is a
-tenth of the narrowest stroke an embroidery font sews.
+outside, and `SC-W1114` counts those. Points are those of the outline flattened within 0.05 mm
+(`stitchcraft_engine::design::mark::FLAT`): a piece a tenth as tall as the shortest letter an embroidery
+font sews still measures within 2 %.
 
 ### Size and place
 
@@ -3709,12 +3693,12 @@ from 10 to 12.5 mm the person can leave the text unmarked. Below 10 mm the lette
 reads, light as it is.
 
 **A text object** has no traced letters. Its Lettering effect sews in the font it names, or in the
-default font. A bold `font-weight` doesn't choose the bold font: type set at 12 points is 3 mm tall, far
-under what the bold font sews, and a document made before this step would sew otherwise than it did.
+default font. Since M14.8 a bold text object sews in the bold font where that font sews its height
+([text objects in automatic digitizing](fonts.md#text-objects-in-automatic-digitizing)).
 
-**Left for later.** Bold letters under 12.5 mm, which M14.9 measured and plans to widen
-([below](#bold-letters-under-the-bold-fonts-heights)). The effect's dialog has
-no list of fonts.
+**Left for later.** M14.9 built `widen_percent` for bold letters under 12.5 mm
+([below](#bold-letters-under-the-bold-fonts-heights)), and its automatic choice waits for the owner's
+sew-out. The effect's dialog has no list of fonts.
 
 ### Bold letters under the bold font's heights
 
@@ -3813,15 +3797,17 @@ size, such as 6 mm for a serif text font, is given with the font
 No source gives a least size for counters. The 1 mm used here is the narrowest column's.
 
 **The design** (`REQ-FONT-024`, `REQ-AUTO-140`, `REQ-AUTO-141`). The setting is built, and off by default.
-The 2 automatic choices wait for the owner's sew-out to confirm their limits:
+**`widen_percent`** is a lettering setting of StitchCraft's own beside Ink/Stitch's, from 0 to 50 and 0 by
+default. With 20, a satin column 1 mm wide sews 0.2 mm wider on each side: lettering adds the value
+to the `pull_compensation_percent` of every satin column it places. Running stitches and fills don't
+change, and a value outside 0 to 50 is set at the nearest with `SC-W0102`, as the parameters' registry
+holds a value in its range. A glyph's own value that doesn't read stays, for the planner to refuse. At 0
+a text sews as it did before. `stitch lettering --widen-percent`, the Lettering effect's dialog and its
+record take it by that name.
 
-- **`widen_percent`**, a lettering setting of StitchCraft's own beside Ink/Stitch's, from 0 to 50 and 0 by
-  default. With 20, a satin column 1 mm wide sews 0.2 mm wider on each side: lettering adds the value
-  to the `pull_compensation_percent` of every satin column it places. Running stitches and fills don't
-  change, and a value outside 0 to 50 is set at the nearest with `SC-W0102`, as the parameters' registry
-  holds a value in its range. A glyph's own value that doesn't read stays, for the planner to refuse. At 0
-  a text sews as it did before. `stitch lettering --widen-percent`, the Lettering effect's dialog and its
-  record take it by that name.
+The 2 automatic choices (`REQ-AUTO-140`, `REQ-AUTO-141`, planned) wait for the owner's sew-out to confirm
+their limits:
+
 - **A marker** with letters bolder than their font and too small for a bolder one has its text widened.
   The percent is 50 × (the letters' weight over the font's, less 1), rounded and at most 20. A widening under 5 % is left out. Letters under 8 mm are set as today,
   since a widened Small Font closes its counters there. `SC-I1118` gives the percent, or says why
@@ -3863,9 +3849,10 @@ Each has a recommendation, which the step took.
   choice leaves them traced. Recommended: lettering, since small traced letters are the ones that sew
   worst.
 - **The limits of the spacing**, half a height wider and a tenth narrower, are starting values that no
-  sew-out has confirmed. MC-10 sews a patch both ways.
+  sew-out has confirmed. The lettered patch that [machine testing](../plan/machine-testing.md) sews both
+  ways from M14.5 can show them.
 - **`--text` in percent of the design's box.** Pixels of the picture are the other choice, and need the
-  picture's size, which `stitch` doesn't read today. Recommended: percent.
+  picture's size, which `stitch` didn't read when this was decided. Recommended, and taken: percent.
 - **A bolder font built in.** Decided on 2026-11-16: the owner asked for one, and M14.8 built in
   Barstitch Bold.
 - **Bold letters from 6 to 12.5 mm**, which the bold font doesn't sew, are set in Small Font at their own
@@ -3878,53 +3865,9 @@ Each has a recommendation, which the step took.
   Bold set below its least height is bolder and runs its letters together. A third font from Ink/Stitch's
   library is the other choice, and none of them sews at 9 to 12 mm by its own range. MC-8 sews the
   candidates side by side.
-- **A text object's bold `font-weight` doesn't choose the bold font.** Recommended, and taken: the effect
-  sews in the font it names or in the default, so documents sew as they did.
-
-### The build's measure
-
-**Measured** on 2026-11-20, the branch built at opt-level 2, with a measuring program kept out of the
-repository. Each design is planned automatic, expanded, and planned again with the same
-origin: at the engine, read back from the SVG file `stitch expand` writes, and, for the 5 designs traced
-into a VectorCraft document, read back from the document it writes.
-
-| Design | Parts | Engine | SVG file | `.vectorcraft` document |
-|---|---:|---|---|---|
-| Dog on turf, 6 threads | 157 | bit for bit | bit for bit | 4 needle points fewer of 9,599 |
-| Dog on turf, 9 threads | 175 | bit for bit | bit for bit | 2 needle points more of 10,175 |
-| Dog running, 6 threads | 150 | bit for bit | bit for bit | within 1.4e-13 mm |
-| Dog running, 9 threads | 192 | bit for bit | bit for bit | within 1.5e-13 mm |
-| Pear | 10 | bit for bit | bit for bit | within 5.7e-14 mm |
-| Lettered patch | 16 | bit for bit | bit for bit | |
-| Badges | 16 | bit for bit | bit for bit | |
-| Emblem | 10 | bit for bit | bit for bit | |
-| TS-13A to TS-13D, digitized halves | 22 to 78 | bit for bit | bit for bit | |
-| TS-13E, digitized half | 34 | bit for bit | within 6.4e-14 mm | |
-
-A VectorCraft document keeps points in points. A part's millimetres read back to within a unit in their
-last place. Most products of a float and a point's size can't be written to read back exactly. The 2 dogs
-on turf sew the same few needle points otherwise at the engine when every point of their expanded design
-moves by a unit in its last place, so a fill's row there lies on a rounding's edge. Every other plan is the
-automatic one to 1e-13 mm. The traced badge of the command line's case writes the same PES bytes through both files.
-
-**Editing a part.** The largest fill of each expanded design was turned 45°, sewn as a contour fill, or
-deleted, and the other parts whose stitches changed were counted. On the badges, the emblem and TS-13A none
-to 3 change: the outline that sews with the fill and the part sewn next, which starts nearest where it ends.
-On the traced dogs 13 to 97 of 150 to 192 parts change. The cap at the end of planning accounts for most of
-them: it thins the plan where it sews thick, and an edited part changes where that is. With the cap out of
-reach, the turn doesn't change another part on the 9-thread dog on turf, and changes 18 on the 9-thread
-running dog: the parts the needle sews under between 2 parts, and the next ones. A person who wants a part left alone by the cap sets its
-`digitized_as` to `no`.
-
-Stitched previews of the running dog, the lettered patch and TS-13C, automatic beside expanded beside
-expanded with its largest fill turned, show the first 2 alike. The golden files stay as they were, since every
-design sews as before.
-
-### What isn't built
-
-The Expand Embroidery filter in VectorCraft waits for the RFC's P11 and P10. Until then the person runs
-`stitch expand` and opens the document. The manifests declare `digitized_as` and `turn_stitches`
-already (`REQ-VC-035`).
+- **A text object's bold weight.** Recommended in M14.5: it doesn't choose the bold font, so documents sew
+  as they did. M14.8 changed that, and a bold text object sews in the bold font where it can
+  ([text objects in automatic digitizing](fonts.md#text-objects-in-automatic-digitizing)).
 
 ## Marks that keep parts
 
@@ -3976,7 +3919,7 @@ fill or a stroke, since a reader is given only objects that paint, and a rectang
 stroke and no fill shows the picture under it. It is never sewn.
 
 - **In VectorCraft**, the person draws the mark with VectorCraft's own tools over the traced picture and names
-  it in the Layers panel. VectorCraft 0.23.0 gives a plug-in no canvas tool. A group or a layer so named is not
+  it in the Layers panel. VectorCraft's plug-in ABI v1 has no canvas tools. A group or a layer so named is not
   a mark, and `SC-W0807` says so (`REQ-VC-031`).
 - **In an SVG file**, the mark is an element whose `inkscape:label` is the name.
 - **From the command line**, `--keep LEFT,TOP,WIDTH,HEIGHT` marks a rectangle in percent of the box round the
@@ -4118,8 +4061,8 @@ specks too, on 2026-11-18.
   rest of the order fixed would need a second order for marked designs. Chosen: accept it, and let
   M13.35's cap bound the thickness, as for details last and likeness.
 - **Details last stays its own setting.** A mark could also sew its parts last. That moves fills, which can
-  thicken a spot elsewhere, as M13.40 measured. Chosen: leave the order alone until the cap is merged and
-  `auto_details_last` is turned on.
+  thicken a spot elsewhere, as M13.40 measured. Chosen: marks don't change the order. Details last is
+  its own setting, off by default since M13.48.
 
 ### What isn't built
 
@@ -4181,7 +4124,7 @@ A guide is a shape named `stitch:guide`, or `stitch:guide` and a note of the per
 readers take guides out of the elements beside the marks (`mark::taken_out`). It is never sewn.
 
 - **In VectorCraft**, the person draws the guide with the Pen or Pencil tool over the traced picture and
-  names it in the Layers panel. VectorCraft 0.23.0 gives a plug-in no canvas tool. `stitch:guide` is the
+  names it in the Layers panel. VectorCraft's plug-in ABI v1 has no canvas tools. `stitch:guide` is the
   name VectorCraft documents already give a guide grouped with the shapes it steers ([the markers
   table](vectorcraft-integration.md)). A path so named keeps that meaning for shapes with settings, and is
   also a guide of the design for every automatic area it crosses, wherever it lies in the layers. A traced
@@ -4210,7 +4153,7 @@ file and its preview picture follow the guide.
 ### Where it runs
 
 Planning reads each guide's line once, beside the marks (`auto::marks`). In the rules by width
-(`auto::sewn`), each filled part that is no speck is tested against the guides' lines, as a running
+(`auto::guides`), each filled part that is no speck is tested against the guides' lines, as a running
 stitch is cut to its clips (`normalize::region::cut::inside`). Each pair of a segment of a line and a side
 of the part costs a unit of work of the area's element. A design without guides tests
 nothing. The guided fill then sews as it does for a shape set by hand.
@@ -4334,10 +4277,10 @@ says the area is grouped with the guide.
 
 A traced photo has hundreds of shapes, and every manual control starts with the same question: which shape
 is this? A mark ([marks that keep parts](#marks-that-keep-parts)), a guide (M13.24) and a shape's own
-effect all need the person to find the shape in VectorCraft. Today a notice names a shape by its element
-id, `vc:63:fill`, which is the number VectorCraft keeps in the file. The Layers panel never shows that
-number. Roadmap step M13.25 gives each shape of a traced design a name that the Layers panel, the notices
-and the report all show (`REQ-AUTO-125` to `REQ-AUTO-127`, `REQ-VC-033`, `REQ-CLI-023`), and says when a
+effect all need the person to find the shape in VectorCraft. Before M13.25 a notice named a shape by its
+element id alone, `vc:63:fill`, which is the number VectorCraft keeps in the file. The Layers panel never
+shows that number. Roadmap step M13.25 gave each shape of a traced design a name that the Layers panel, the notices
+and the report all show (`REQ-AUTO-125` to `REQ-AUTO-127`, `REQ-VC-033`, `REQ-CLI-023`), and said when a
 path's own Auto effect replaces its group's (`REQ-VC-034`, `SC-W0920`). The engine's `names` module
 builds the names.
 
@@ -4432,7 +4375,7 @@ magnolia's 424 other shapes on average. With the number counted by thread alone,
 
 The names as built were measured on 2026-11-19 with a probe test (not committed) that planned each design
 on the reference machine, at opt-level 2, and then planned it again with each of 4 shapes deleted, spread
-through it. Here every shape counts, those merged whole into their neighbours too, which are `left out`.
+through it. Here every shape counts, those merged whole into their neighbours too, which are `Left out`.
 The longest names were measured with the thread first, `Russet Brown column (1)`. Every name in the
 order of 2026-11-20 is one character shorter, a comma and a space in place of a space and 2 brackets.
 
@@ -4449,8 +4392,8 @@ order of 2026-11-20 is one character shorter, a comma and a space in place of a 
 
 Every design gave the same names when planned twice, and no thread was named by its hex code: the traced
 colours are the machine's threads. On a photo a deletion renames up to a fifth of the other shapes. A
-deleted shape changes which specks and thin lines merge into their neighbours, so shapes move between `fill`
-and `left out`, and the numbers of their thread below them move with them. Naming is one pass over the
+deleted shape changes which specks and thin lines merge into their neighbours, so shapes move between `Fill`
+and `Left out`, and the numbers of their thread below them move with them. Naming is one pass over the
 elements and the steps, and isn't timed apart from planning. The trace's own time wasn't measured, since
 VectorCraft isn't built here.
 
@@ -4655,8 +4598,12 @@ plan. It has the same threads. Each stitch lies at the same point, with the same
 same order. So the machine file is the same byte for byte. The planning functions are deterministic and get the same
 elements and the same 3 sets. The requirement holds the 2 plans to the bit. A document written out reads its points
 back to within a unit in the last place of a point (`stitchcraft_vectorcraft::filter`). A fill's rows
-could then fall on the other side of a rounding. The case of a written document checks every
-needle point to within 0.001 mm, with the same count, kinds, threads and order. A person's edit breaks it.
+could then fall on the other side of a rounding. The case of a written document,
+`req_cli_025_an_expanded_document_sews_as_the_automatic_design`, plans the traced badge from the
+VectorCraft document and the SVG file `stitch expand` writes, and compares their PES bytes with the
+automatic design's. A PES file holds tenths of a millimetre, so stitches within 0.001 mm of each other
+write the same bytes unless one lies on a rounding's edge, and none of the badge's does. The 2 dogs on
+turf have such points ([the build's measure](#the-builds-measure)). A person's edit breaks it.
 So does a format that can't store a part's settings, and a guide that a filter can't group with its fill.
 
 Stitched previews of a traced dog, the lettered patch and TS-13C, automatic beside expanded with
@@ -4706,11 +4653,50 @@ Each with the recommendation of phase 1:
    Recommended: `stitch expand` on the command line, and Expand Embroidery in VectorCraft's menus, so
    that the 2 commands aren't mistaken for each other.
 
+### The build's measure
+
+**Measured** on 2026-11-20, the branch built at opt-level 2, with a measuring program kept out of the
+repository. Each design is planned automatic, expanded, and planned again with the same
+origin: at the engine, read back from the SVG file `stitch expand` writes, and, for the 5 designs traced
+into a VectorCraft document, read back from the document it writes.
+
+| Design | Parts | Engine | SVG file | `.vectorcraft` document |
+|---|---:|---|---|---|
+| Dog on turf, 6 threads | 157 | bit for bit | bit for bit | 4 needle points fewer of 9,599 |
+| Dog on turf, 9 threads | 175 | bit for bit | bit for bit | 2 needle points more of 10,175 |
+| Dog running, 6 threads | 150 | bit for bit | bit for bit | within 1.4e-13 mm |
+| Dog running, 9 threads | 192 | bit for bit | bit for bit | within 1.5e-13 mm |
+| Pear | 10 | bit for bit | bit for bit | within 5.7e-14 mm |
+| Lettered patch | 16 | bit for bit | bit for bit | |
+| Badges | 16 | bit for bit | bit for bit | |
+| Emblem | 10 | bit for bit | bit for bit | |
+| TS-13A to TS-13D, digitized halves | 22 to 78 | bit for bit | bit for bit | |
+| TS-13E, digitized half | 34 | bit for bit | within 6.4e-14 mm | |
+
+A VectorCraft document keeps points in points. A part's millimetres read back to within a unit in their
+last place. Most products of a float and a point's size can't be written to read back exactly. The 2 dogs
+on turf sew the same few needle points otherwise at the engine when every point of their expanded design
+moves by a unit in its last place, so a fill's row there lies on a rounding's edge. Every other plan is the
+automatic one to 1e-13 mm. The traced badge of the command line's case writes the same PES bytes through both files.
+
+**Editing a part.** The largest fill of each expanded design was turned 45°, sewn as a contour fill, or
+deleted, and the other parts whose stitches changed were counted. On the badges, the emblem and TS-13A none
+to 3 change: the outline that sews with the fill and the part sewn next, which starts nearest where it ends.
+On the traced dogs 13 to 97 of 150 to 192 parts change. The cap at the end of planning accounts for most of
+them: it thins the plan where it sews thick, and an edited part changes where that is. With the cap out of
+reach, the turn doesn't change another part on the 9-thread dog on turf, and changes 18 on the 9-thread
+running dog: the parts the needle sews under between 2 parts, and the next ones. A person who wants a part left alone by the cap sets its
+`digitized_as` to `no`.
+
+Stitched previews of the running dog, the lettered patch and TS-13C, automatic beside expanded beside
+expanded with its largest fill turned, show the first 2 alike. The golden files stay as they were, since every
+design sews as before.
+
 ### What isn't built
 
-Everything: `stitch expand`, `digitized_as`, the design settings of the cap, the writer of the expanded
-document and the SVG file, and the warning, whose number the build phase takes. Its requirements are
-`REQ-AUTO-142` to `REQ-AUTO-144`, `REQ-CLI-025` and `REQ-VC-035`, each with a case kept as planned.
+The Expand Embroidery filter in VectorCraft waits for the RFC's P11 and P10. Until then the person runs
+`stitch expand` and opens the document. The manifests declare `digitized_as` and `turn_stitches`
+already (`REQ-VC-035`).
 
 ## Pictures from the command line
 
@@ -5021,9 +5007,9 @@ The owner answered on 2026-11-21: yes to each.
 ## Outlines thread can't show
 
 Roadmap step M13.51 measured the outlines of traced pictures and gives `stitch plan` an option,
-`--fewer-points`, off by default, that asks Image Trace for fitting options of its own (`REQ-CLI-024`). Step M13.52 builds the smoothing pass that this
-section describes, as a setting off by default (`REQ-AUTO-131` to `REQ-AUTO-134`, planned), and adds the
-notice `SC-I0921`.
+`--fewer-points`, off by default, that asks Image Trace for fitting options of its own (`REQ-CLI-024`). Step M13.52 built the smoothing pass that this
+section describes, as a setting off by default (`REQ-AUTO-131` to `REQ-AUTO-134`), and the notice
+`SC-I0921`.
 
 The owner, on 2026-11-19: "often time there are too many points and you need to simplify the number of
 points in the shape". She simplifies traced shapes by hand in a drawing program before she sews them. The
@@ -5165,9 +5151,10 @@ fills of thread or more:
 other jumps, and the options change how a
 traced picture sews far more than its outlines change. A shape's stitch rule reacts to how its outline
 is drawn, so a third to a half of each dog's shapes sew by another rule, more of the design sews thick,
-and one dog passes the warning's limit. Until that rule is steady against how an outline is drawn, which
-step M13.53 takes up, the fewer points aren't a gain a person gets for free. They wait for M13.53 to be
-measured again, and turned on by default if they then show a clear gain.
+and one dog passes the warning's limit. That rule reacts to how an outline is drawn, and the fewer
+points change it. The option stays off. M13.53 looked for a rule that doesn't
+react, and the owner stopped it on 2026-11-20 with main's rule kept. A rule that keeps the drawing out of
+the choice without raising the area at 3 fills would open the question again.
 
 The committed traces of the pear and the dogs are not traced again: they are the inputs of their own
 cases, and this step changes only what `stitch plan` asks the tracer.
@@ -5176,7 +5163,7 @@ cases, and this step changes only what `stitch plan` asks the tracer.
 
 The tracer's options reach only pictures `stitch plan` traces itself. A document traced in VectorCraft by
 hand, or by another tracer, reaches StitchCraft as it is. The pass below smooths an automatic area's
-outline at a tolerance, before anything is digitized. M13.52 builds it. The numbers below are a prototype's,
+outline at a tolerance, before anything is digitized. M13.52 built it. The numbers below are a prototype's,
 measured in M13.51 on traces made with the tracer's defaults.
 
 **The rule.** The setting `auto_smooth_mm` is how far a point of an outline may move. 0 turns the pass off.
@@ -5282,7 +5269,7 @@ On 2026-11-20 the owner decided:
 2. **The smoothing pass.** Off by default everywhere, pictures `stitch plan` traces included, and built all
    the same as a setting (M13.52).
 3. **The pear's teeth.** Thread shows them, so no default removes them. A person who wants a clean edge
-   between 2 bands of colour sets `auto_smooth_mm` to 0.8 mm once M13.52 builds it.
+   between 2 bands of colour sets `auto_smooth_mm` to 0.8 mm.
 4. **Traced letters that flip.** Not these steps': a later step looks at the columns' rule for a stem that
    leans by a pixel.
 
@@ -5533,4 +5520,6 @@ area kept wrongly and 3 % lost.
   tall in lines from 0.3 to 0.9 mm wide. Each branch Ink/Stitch finds has one of StitchCraft's, and away
   from their ends the lines lie within 0.15 of a width of each other.
 
-Codes 0900 to 0999 are automatic digitizing's ([diagnostics](diagnostics.md)).
+Codes 0900 to 0999 are automatic digitizing's, and 1200 to 1299 the subject cut-out's
+([diagnostics](diagnostics.md)). Text in pictures uses lettering's codes, of 1100 to 1199, and the cap's
+`SC-I1119` is among them too.
