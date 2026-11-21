@@ -126,7 +126,7 @@ the default. Markers grouped with a shape the default digitizes are said unused 
 `--auto`. A text object without effects becomes lettering, as with `--auto`.
 
 **The notice** (`REQ-AUTO-165`). One line, `SC-I0924`, says how many shapes without StitchCraft effects
-the default digitized and how many sew as their effects say, and that `--no-auto` sews them as drawn. It
+the default digitized and how many are set by hand, with effects or with markers, and that `--no-auto` sews them as drawn. It
 isn't said when `--auto` is given, or when no shape is digitized by default. The VectorCraft reader counts
 the elements that are automatic only because the reading asked (`VectorCraft::by_default`): an element an
 Auto effect reaches is automatic by the effect, and isn't counted. `stitch plan` says the notice first. A
@@ -135,13 +135,17 @@ The exporters' option shows in their dialog, and the exporters don't repeat it. 
 with a Fill effect on one of its 4 shapes, the case of `REQ-AUTO-165`, `stitch plan` says:
 
 ```text
-info SC-I0924: 3 shapes without StitchCraft effects are digitized automatically, as a VectorCraft document is by default, and 1 shape sews as its effects say: plan it with --no-auto to sew them as drawn.
+info SC-I0924: 3 shapes without StitchCraft effects are digitized automatically, as a VectorCraft document is by default, and 1 shape is set by hand: plan it with --no-auto to sew them as drawn.
 ```
 
-**Markers.** A `stitch:start` or `stitch:end` marker grouped with a shape the default digitizes is unused
-(`SC-W0807`), as with `--auto`. Whether such a shape should count as set by hand is the owner's open
-question. The rule is written in one function, `by_paints` in `stitchcraft_vectorcraft::document`, and no case pins
-it as a requirement.
+**Markers** (`REQ-AUTO-166`). Under the default, a `stitch:start` or `stitch:end` marker grouped with a
+shape without StitchCraft effects sets that shape by hand, as the owner chose on 2026-11-21. The shape isn't
+digitized automatically. It sews as drawn from where its markers say, as with `--no-auto`, and its markers
+are used, so no `SC-W0807` is said of them. With `--auto` the person asks for automatic digitizing of every
+shape without settings: the shape is automatic, and the marker unused (`SC-W0807`), as before. The Auto
+effect makes it automatic too. `Reading::marked_as_drawn` carries the rule. The command line sets it with
+the default, the exporters with their option on, and a bug-report bundle records it. One function decides
+it, `by_paints` in `stitchcraft_vectorcraft::document`.
 
 **The opt-out.** `--no-auto` sews the shapes without effects as drawn: every area a tatami fill and every
 line a running stitch, in paint order (`REQ-CLI-026`). It is refused beside `--auto`, with a picture, which

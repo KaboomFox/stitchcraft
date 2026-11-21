@@ -5,11 +5,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
-- M13.8: VectorCraft documents are digitized automatically by default (`REQ-AUTO-163` to `REQ-AUTO-165`,
+- M13.8: VectorCraft documents are digitized automatically by default (`REQ-AUTO-163` to `REQ-AUTO-166`,
   `REQ-CLI-026`, `REQ-CLI-027`, `REQ-VC-036`). `stitch plan` and `stitch export` now read a `.vectorcraft`
   file as `--auto` read it, and write the same machine file. A shape with a StitchCraft Fill, Satin or
-  Stroke effect still sews as its effect says, and an expanded design sews as it is. One new notice,
-  `SC-I0924`, says how many shapes the default digitized and how many sew as their effects say. To get
+  Stroke effect still sews as its effect says, and an expanded design sews as it is. A shape grouped with
+  a `stitch:start` or `stitch:end` marker counts as set by hand and sews as drawn from the marker, unless
+  `--auto` is given. One new notice, `SC-I0924`, says how many shapes the default digitized and how many
+  are set by hand. To get
   the old behaviour, plan with `--no-auto`, or turn **Digitize automatically** off in the PES and DST
   exporters' dialog, whose option is now on by default. `--no-auto` is refused beside `--auto`, with a
   picture and with `stitch expand`. SVG files sew as before, and `--auto` still asks for automatic

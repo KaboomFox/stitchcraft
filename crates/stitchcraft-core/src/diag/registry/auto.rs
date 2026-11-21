@@ -316,6 +316,9 @@ macro_rules! auto_codes {
         /// embroidered, and automatic digitizing chooses each part's stitch by its width, where the plain
         /// reading fills every area and runs every line.
         ///
+        /// A shape without effects that a `stitch:start` or `stitch:end` marker is grouped with is set by
+        /// hand too, and sews as drawn from where the marker says.
+        ///
         /// The message gives both counts. To sew the shapes without effects as drawn, plan the document with
         /// `--no-auto`, or turn the exporter's Digitize automatically option off. To sew one shape as drawn,
         /// apply StitchCraft's Fill or Stroke effect to it. The notice isn't given with `--auto`, which asks

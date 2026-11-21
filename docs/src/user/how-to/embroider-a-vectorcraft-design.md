@@ -184,6 +184,11 @@ at its start marker. A marker is never sewn, and a group or a layer is never a m
 a group: StitchCraft names a second one, and uses the first. The middle of the marker counts, so draw it
 small, such as a dot or a short line, where the needle is to go in or come out.
 
+A marker grouped with a shape without a StitchCraft effect sets that shape by hand. StitchCraft doesn't
+digitize it automatically. It sews as drawn, a fill filled and a stroke run, from where the marker says.
+With `stitch export --auto`, or under the Auto effect, the shape is digitized automatically all the same,
+and the marker is unused (`SC-W0807`).
+
 A small path named `stitch:origin`, anywhere in the document, is the design's origin, which goes to the
 hoop's centre, as Ink/Stitch's origin command is. Without one, the middle of the design goes there. One named
 `stitch:stop-position` is where the frame moves before each stop, clear of the needle, so you can place an
