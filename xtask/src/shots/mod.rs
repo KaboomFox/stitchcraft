@@ -50,7 +50,7 @@ const PHOTO_EXTENSIONS: [&str; 3] = ["jpg", "jpeg", "png"];
 /// Where `--check` puts the new version of a stale image.
 const STALE: &str = "target/shots";
 /// The words the alt text of a shot with `cut_jumps` says, so that no picture lets a reader think the machine
-/// cuts its jump threads (`REQ-RND-007`). Read in any case.
+/// cuts its jump threads. Read in any case.
 pub const CUT_WORDS: &str = "jump threads cut";
 /// How near a guide's drawn line keeps to its curves, in millimetres: under a pixel at the largest scale.
 const GUIDE_TOLERANCE_MM: f64 = 0.02;
@@ -107,7 +107,7 @@ pub struct Shot {
     #[serde(default)]
     pub guides: bool,
     /// `stitch` shots: whether the design is drawn as it looks once the person has cut its jump threads,
-    /// which the reference machine doesn't cut. The alt text must say so (`REQ-RND-007`, [`CUT_WORDS`]).
+    /// which the reference machine doesn't cut. The alt text must say so ([`CUT_WORDS`]).
     #[serde(default)]
     pub cut_jumps: bool,
     /// `stitch` shots in the thickness style: whether a key is drawn under the picture (`REQ-RND-006`).
@@ -297,7 +297,7 @@ fn foreign(shot: &Shot) -> Vec<String> {
 }
 
 /// What the alt text of `shot` leaves unsaid that it must say: that its jump threads are cut by hand, when
-/// `cut_jumps` draws them so (`REQ-RND-007`). `cargo xtask shots` and `cargo xtask docs --check` both ask.
+/// `cut_jumps` draws them so. `cargo xtask shots` and `cargo xtask docs --check` both ask.
 pub fn unsaid(shot: &Shot) -> Option<String> {
     let said = shot.alt.to_lowercase().contains(CUT_WORDS);
     (shot.cut_jumps && !said).then(|| {
@@ -672,7 +672,7 @@ mod tests {
     }
 
     #[test]
-    fn req_rnd_007_a_shot_with_its_jump_threads_cut_says_so() {
+    fn a_shot_with_its_jump_threads_cut_says_so() {
         let root = util::root();
         let allow = "auto = true\nallow = [\"SC-I0901\", \"SC-I0912\", \"SC-I0923\", \"SC-I0907\", \"SC-I0904\", \"SC-I0908\", \"SC-I0909\", \"SC-I0504\", \"SC-W0913\", \"SC-I1119\"]";
         let loose = |scene: &Scene| scene.holes.iter().filter(|hole| hole.arrival == Arrival::Loose).count();

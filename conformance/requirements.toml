@@ -275,15 +275,6 @@ rationale = "A heat map without a key can't be read: the reader has to find in t
 milestone = "M13"
 status = "active"
 
-[[req]]
-id = "REQ-RND-007"
-area = "render"
-level = "L2"
-statement = "A docs shot with `cut_jumps = true` draws its design as it looks after the person has cut the jump threads: each thread the machine carries loose from one hole to the next is drawn as cut. Its alternative text says so with the words \"jump threads cut\", and `cargo xtask shots` and `cargo xtask docs --check` fail on a shot that doesn't."
-rationale = "The reference machine cuts no jump thread, so a realistic picture shows each one, and on a small picture they hide the stitches the text is about. A picture without them must not let a reader think the machine cuts them."
-milestone = "M13"
-status = "active"
-
 # ── Parameters ─────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]

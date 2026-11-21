@@ -76,12 +76,12 @@ With a key (`Settings::keyed`, `REQ-RND-006`), the thickness picture gets a stri
 bar from margin to margin of 4 boxes in the steps' colours, and under each border between 2 boxes the
 number of fills where the next step starts. The colours are the ones the style fills with and the numbers
 come from the limits it measures against (`stitchcraft_plan::thickness`), so the key can't disagree with
-the picture. The repository keeps no font, so the figures are drawn as up to 7 straight bars each, as a
+the picture. The repository doesn't keep a font, so the figures are drawn as up to 7 straight bars each, as a
 calculator shows them (`key.rs`). Only the thickness style has a key: the other styles have no steps.
 
 A scene can also carry guides (`Scene::guides`, `REQ-RND-005`), lines of the design that aren't sewn,
 such as a ripple stitch's guide line or a satin column's rails. They are drawn first, in every style, 0.1 mm
-wide (at least a pixel) in grey `#a6a6a6`, so the stitches lie on them, and the image grows to hold them. A
+wide (at least a pixel) in grey `#a6a6a6`. The stitches lie on them, and the image grows to hold them. A
 plan doesn't know its design's lines, so a scene of a plan has none: the docs shots add them
 ([docs pipeline](docs-pipeline.md#images-five-kinds-each-reproducible)).
 

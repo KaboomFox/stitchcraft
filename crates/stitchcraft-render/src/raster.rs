@@ -667,8 +667,8 @@ mod tests {
         let plain = scene(&points).render(settings, &mut Budget::DEFAULT.meter()).unwrap();
         let keyed = scene(&points).render(settings.keyed().unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
         // The key is a strip under the picture, as wide as it, and the picture above it doesn't change.
-        let strip = (KEY_MM * 10.0).ceil() as u32;
-        assert_eq!((keyed.width, keyed.height), (plain.width, plain.height + strip));
+        assert_eq!(keyed.width, plain.width);
+        assert_eq!(f64::from(keyed.height - plain.height), f64::from(KEY_MM * 10.0).ceil());
         for y in [0, 30, plain.height - 1] {
             assert_eq!(pixel(&keyed, 70, y), pixel(&plain, 70, y));
         }

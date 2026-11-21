@@ -413,7 +413,7 @@ fn adr_index(root: &Path, findings: &mut Findings) -> Result<(), String> {
 /// threads cut says so ([`shots::unsaid`]).
 fn images(root: &Path, pages: &[(PathBuf, String)], findings: &mut Findings) -> Result<(), String> {
     let shots = shots::load(root)?;
-    // A picture drawn with its jump threads cut says so wherever a page shows it (`REQ-RND-007`).
+    // A picture drawn with its jump threads cut says so wherever a page shows it.
     for problem in shots.iter().filter_map(|shot| shots::unsaid(shot).map(|problem| format!("docs/shots.toml: shot `{}`: {problem}", shot.id))) {
         findings.error(problem);
     }
