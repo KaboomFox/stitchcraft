@@ -1,6 +1,6 @@
 # Engine pipeline
 
-<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/generate/**, crates/stitchcraft-engine/src/generators/next.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, crates/stitchcraft-engine/src/underlays_first.rs, crates/stitchcraft-engine/src/underlays_first/**, apps/stitchcraft-cli/src/commands/plan.rs, apps/stitchcraft-cli/src/commands/plan/** -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/generate/**, crates/stitchcraft-engine/src/generators/next.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/check.rs, crates/stitchcraft-engine/src/check/**, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, crates/stitchcraft-engine/src/underlays_first.rs, crates/stitchcraft-engine/src/underlays_first/**, apps/stitchcraft-cli/src/commands/plan.rs, apps/stitchcraft-cli/src/commands/plan/** -->
 
 From a `Design` to a checked `StitchPlan`. Each stage is a module in `stitchcraft-engine` with its
 own tests; stages communicate only through the types in the [data model](data-model.md).
@@ -458,6 +458,15 @@ The plan invariant checker (`stitchcraft-plan::invariants`, the same code confor
 validates the result. A violation is a bug in StitchCraft: `plan` returns no plan and reports
 `SC-E0009 internal check failed` (`REQ-FIN-003`). The command line then does not write a machine file.
 It writes a bug-report bundle that reproduces the failure (`REQ-CLI-002`). The conformance suite has a case for every invariant.
+
+The thinning pass and the cap below take needle points out of a plan that passed. The check runs again on
+the plan `plan` returns, once they are done (the engine's `check` module). It checks the invariants once
+more, and each run's locks (`REQ-PLAN-008`, [the thread's state](data-model.md#the-threads-state)): a run
+whose element asks for a tie-in or a tie-off by its `ties` must start or end with a lock stitch. A
+violation is `SC-E0009`, and no plan is returned. Every plan the engine returns passes the check by
+construction. The check is linear in the plan, which the stitch budget bounds, so it has no meter of its
+own. On the largest plan M13.56 measured, a traced photo of 58,402 entries, the invariants took 2.6 ms
+and a walk of the locks 1.6 ms, at opt-level 1.
 
 A plan that passes, of a design with an automatic shape, is then measured for its thickness, with the
 budget's work once more. Where a spot sews above the cap (`auto_thick_cap_fills`), a last pass takes thread there that is hidden or

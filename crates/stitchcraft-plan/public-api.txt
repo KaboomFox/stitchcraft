@@ -23,6 +23,7 @@ pub const stitchcraft_plan::invariants::req::NAMED: &str
 pub const stitchcraft_plan::invariants::req::NO_STITCH_IN_PLACE: &str
 pub const stitchcraft_plan::invariants::req::STITCH_LENGTH: &str
 pub const stitchcraft_plan::invariants::req::STRUCTURE: &str
+pub const stitchcraft_plan::invariants::req::TRIM_AFTER_SEWING: &str
 pub struct stitchcraft_plan::invariants::Violation
 pub stitchcraft_plan::invariants::Violation::block: usize
 pub stitchcraft_plan::invariants::Violation::message: alloc::string::String
@@ -258,6 +259,28 @@ pub stitchcraft_plan::thread::Thread::name: core::option::Option<alloc::string::
 impl stitchcraft_plan::thread::Thread
 pub fn stitchcraft_plan::thread::Thread::named(stitchcraft_plan::thread::Rgb, impl core::convert::Into<alloc::string::String>) -> Self
 pub const fn stitchcraft_plan::thread::Thread::new(stitchcraft_plan::thread::Rgb) -> Self
+pub mod stitchcraft_plan::thread_state
+pub enum stitchcraft_plan::thread_state::Entered
+pub stitchcraft_plan::thread_state::Entered::Jumped
+pub stitchcraft_plan::thread_state::Entered::Sewn(stitchcraft_plan::plan::SewnStitch)
+pub stitchcraft_plan::thread_state::Entered::Started
+pub stitchcraft_plan::thread_state::Entered::Stopped
+pub stitchcraft_plan::thread_state::Entered::Trimmed
+pub stitchcraft_plan::thread_state::Entered::Trimmed::after_sewing: bool
+pub struct stitchcraft_plan::thread_state::ThreadState
+impl stitchcraft_plan::thread_state::ThreadState
+pub fn stitchcraft_plan::thread_state::ThreadState::change_thread(&mut self)
+pub fn stitchcraft_plan::thread_state::ThreadState::enter(&mut self, usize, usize, &stitchcraft_plan::plan::Stitch) -> stitchcraft_plan::thread_state::Entered
+pub fn stitchcraft_plan::thread_state::ThreadState::needle(&self) -> stitchcraft_core::units::Point
+impl core::default::Default for stitchcraft_plan::thread_state::ThreadState
+pub fn stitchcraft_plan::thread_state::ThreadState::default() -> Self
+pub enum stitchcraft_plan::Entered
+pub stitchcraft_plan::Entered::Jumped
+pub stitchcraft_plan::Entered::Sewn(stitchcraft_plan::plan::SewnStitch)
+pub stitchcraft_plan::Entered::Started
+pub stitchcraft_plan::Entered::Stopped
+pub stitchcraft_plan::Entered::Trimmed
+pub stitchcraft_plan::Entered::Trimmed::after_sewing: bool
 pub enum stitchcraft_plan::FormatId
 pub stitchcraft_plan::FormatId::Dst
 pub stitchcraft_plan::FormatId::PesV1
@@ -380,6 +403,13 @@ pub stitchcraft_plan::Thread::name: core::option::Option<alloc::string::String>
 impl stitchcraft_plan::thread::Thread
 pub fn stitchcraft_plan::thread::Thread::named(stitchcraft_plan::thread::Rgb, impl core::convert::Into<alloc::string::String>) -> Self
 pub const fn stitchcraft_plan::thread::Thread::new(stitchcraft_plan::thread::Rgb) -> Self
+pub struct stitchcraft_plan::ThreadState
+impl stitchcraft_plan::thread_state::ThreadState
+pub fn stitchcraft_plan::thread_state::ThreadState::change_thread(&mut self)
+pub fn stitchcraft_plan::thread_state::ThreadState::enter(&mut self, usize, usize, &stitchcraft_plan::plan::Stitch) -> stitchcraft_plan::thread_state::Entered
+pub fn stitchcraft_plan::thread_state::ThreadState::needle(&self) -> stitchcraft_core::units::Point
+impl core::default::Default for stitchcraft_plan::thread_state::ThreadState
+pub fn stitchcraft_plan::thread_state::ThreadState::default() -> Self
 pub struct stitchcraft_plan::Violation
 pub stitchcraft_plan::Violation::block: usize
 pub stitchcraft_plan::Violation::message: alloc::string::String

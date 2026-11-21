@@ -2276,6 +2276,14 @@ What a user can do with this version, before its first release. The entries belo
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.56: every plan the engine returns is checked after the cap, and the check knows the thread's state
+  (`REQ-PLAN-008` to `REQ-PLAN-010`). The thinning pass and the cap took needle points out after finalize's
+  check, and the plan went out unchecked. Now the invariants run on the plan that is returned, with 2 new
+  rules: each run starts and ends with the locks its element's `ties` asks for, and each trim follows a
+  stitch sewn since the thread was last cut. A plan that breaks one is reported as a bug, `SC-E0009`,
+  instead of returned. From M13.56 a stop ends a run of stitches, as the machine cuts there: the length
+  rules and the thickness measure no longer count a stitch across it. One model of the needle and the thread,
+  `stitchcraft_plan::ThreadState`, serves every check. Nothing that sews changes, and no golden file does.
 - M6.18: the editor's preview of a fill shows only what sews (`REQ-VC-024`). At the outline level,
   which VectorCraft shows for a fill too large for its rows, a fill was drawn with a line every 3 mm across
   it, which read as jump threads. It is now drawn whole, and the editor doesn't draw lines across a large fill.
@@ -2700,6 +2708,9 @@ What a user can do with this version, before its first release. The entries belo
   scans every text file, documents included.
 
 ### Fixed
+- M13.56: a run of stitches that ended on one stitch, sewn straight on from the stitches before it,
+  could end without its tie-off. The tie-off is now made from the whole run's stitches. The new check of
+  the plan's locks found it in a random test design. None of the repository's designs sews such a run.
 - Docs review A: the help and the reference state the numbers that planning measures how thick a design sews
   with. A fill is what rows 0.25 mm apart lay, not 0.4 mm (`auto_thick_warn_fills`, `SC-W0913`). `SC-W0913`
   warns from 4 fills, not 3, and names the cap as 3.25 fills, not 4. `stitch preview --style thickness`
