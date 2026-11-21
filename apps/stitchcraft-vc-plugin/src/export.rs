@@ -49,7 +49,7 @@ use stitchcraft_params::find;
 use stitchcraft_plan::profiles::{self, BUILTIN, REFERENCE};
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, TrimSupport};
 use stitchcraft_render::{Settings, Style};
-use stitchcraft_vectorcraft::base64;
+use stitchcraft_vectorcraft::{AUTO_BY_DEFAULT, base64};
 
 use crate::dialog::own;
 use crate::effect::RunError;
@@ -78,7 +78,7 @@ pub const MAX_WARNING_CHARS: usize = stitchcraft_engine::auto::WARNING_CHARS;
 pub(crate) fn options() -> Vec<(&'static str, Param)> {
     let machines = std::iter::once(DOCUMENT).chain(BUILTIN.iter().map(|profile| profile.id)).collect();
     vec![
-        (AUTO, own(Schema::Bool { default: false }, "Digitize automatically", &auto_help(), AUTO_PAGE)),
+        (AUTO, own(Schema::Bool { default: AUTO_BY_DEFAULT }, "Digitize automatically", &auto_help(), AUTO_PAGE)),
         (PROFILE, own(Schema::Choice { options: machines, default: DOCUMENT }, "Machine", &profile_help(), PROFILE_PAGE)),
     ]
 }
@@ -90,9 +90,15 @@ fn auto_help() -> String {
     format!(
         "Chooses the stitches of each object without a StitchCraft effect by its width, as `stitch export --auto` does: a line up \
          to {} mm wide runs, a line up to {widest} mm wide is a satin column as wide as it, and a wider line or an area is a \
-         tatami fill. Objects with a StitchCraft effect sew as their effects say.",
+         tatami fill. Objects with a StitchCraft effect sew as their effects say. Off, the objects without one sew as drawn, as \
+         `stitch export --no-auto` sews them.",
         DesignSettings::MIN_SATIN_STROKE_WIDTH.get(),
     )
+}
+
+/// Whether an exporter digitizes automatically when the host passes no [`AUTO`]: the default of every host.
+const fn auto_by_default() -> bool {
+    AUTO_BY_DEFAULT
 }
 
 /// The page that says how objects without a StitchCraft effect are digitized.
@@ -116,9 +122,10 @@ pub(crate) const PROFILE_PAGE: &str = "user/reference/profiles.html";
 
 /// The parameters VectorCraft passes an exporter: its dialog's, by the names of [`AUTO`] and [`PROFILE`],
 /// and the file's.
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Deserialize)]
 struct Params {
-    #[serde(default)]
+    /// On unless the host turns it off ([`AUTO_BY_DEFAULT`]).
+    #[serde(default = "auto_by_default")]
     auto: bool,
     #[serde(default)]
     profile: Option<String>,
@@ -397,7 +404,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "planned: M13.8 builds automatic digitizing by default"]
     fn req_vc_036_the_exporters_digitize_automatically_by_default() {
         // The dialog's option is on, and a host that passes no `auto` gets it on too.
         let (_, option) = options().into_iter().find(|(id, _)| *id == AUTO).unwrap();

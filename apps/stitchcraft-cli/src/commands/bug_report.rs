@@ -265,7 +265,7 @@ fn after_panic(command: &Command, message: &str) -> Outcome {
     {
         let source = Source::of(&args.design);
         let profile = machine_for(asked, source, &design);
-        let (reading, rules) = (Reading::from(&args.reading), args.reading.rules());
+        let (reading, rules) = (args.reading.reading(source), args.reading.rules());
         let run = Run {
             design_path: &args.design,
             source,
@@ -316,7 +316,7 @@ fn make(args: &BugReportArgs, design_path: &Path) -> Outcome {
         }
     };
     let source = Source::of(design_path);
-    let (reading, rules) = (Reading::from(&args.reading), args.reading.rules());
+    let (reading, rules) = (args.reading.reading(source), args.reading.rules());
     let profile = machine_for(asked, source, &design);
     let format = args.format.map_or(profile.format, FormatId::from);
     let run = Run {

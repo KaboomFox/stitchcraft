@@ -8,6 +8,7 @@ use stitchcraft_testkit::temp::TempDir;
 
 use super::*;
 use crate::cli::{Format, PlanArgs, ReadingArgs, TracingArgs};
+use crate::commands::plan::Counted;
 
 fn conformance(name: &str) -> PathBuf {
     PathBuf::from(format!("{}/../../conformance/{name}", env!("CARGO_MANIFEST_DIR")))
@@ -199,11 +200,18 @@ fn req_cli_002_a_bug_found_while_planning_writes_a_bundle() {
     let design = strokes();
     let run = pes(Path::new("strokes.svg"), "strokes", &design);
     let check = Diagnostic::new(Code::InternalCheckFailed, "A stitch of 0.1 mm.");
-    let sewn = Sewn { diagnostics: vec![check.clone()], plan: None, file: None, back: None, names: Names::default() };
+    let sewn = Sewn { diagnostics: vec![check.clone()], plan: None, file: None, back: None, names: Names::default(), counted: Counted::default() };
     assert!(sewn.found_a_bug());
     assert!(
-        !Sewn { diagnostics: vec![Diagnostic::new(Code::StitchesMerged, "Merged.")], plan: None, file: None, back: None, names: Names::default() }
-            .found_a_bug()
+        !Sewn {
+            diagnostics: vec![Diagnostic::new(Code::StitchesMerged, "Merged.")],
+            plan: None,
+            file: None,
+            back: None,
+            names: Names::default(),
+            counted: Counted::default()
+        }
+        .found_a_bug()
     );
     let out = beside(&dir.join("checked.pes"), &run, Ok(&sewn), Outcome::refuse(String::new(), &[check]));
     assert_eq!(out.status, Status::Bug);

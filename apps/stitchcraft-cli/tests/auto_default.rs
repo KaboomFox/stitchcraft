@@ -47,7 +47,6 @@ fn without_notice(stderr: &[u8]) -> String {
 }
 
 #[test]
-#[ignore = "planned: M13.8 builds automatic digitizing by default"]
 fn req_auto_163_a_vectorcraft_document_sews_as_with_auto_by_default_and_an_svg_file_does_not() {
     let dir = TempDir::new("auto-default-badge");
     std::fs::copy(TRACED, dir.join("badge.vectorcraft")).unwrap();
@@ -72,7 +71,6 @@ fn req_auto_163_a_vectorcraft_document_sews_as_with_auto_by_default_and_an_svg_f
 }
 
 #[test]
-#[ignore = "planned: M13.8 builds automatic digitizing by default"]
 fn req_auto_164_shapes_set_by_hand_and_expanded_designs_sew_as_they_are_set() {
     let dir = TempDir::new("auto-default-set");
     // Every shape of the patch has a StitchCraft effect: the default changes nothing, and says nothing.
@@ -106,7 +104,6 @@ fn one_set_by_hand() -> Vec<u8> {
 }
 
 #[test]
-#[ignore = "planned: M13.8 builds automatic digitizing by default"]
 fn req_auto_165_one_notice_counts_the_shapes_digitized_by_default_and_those_set_by_hand() {
     let document = one_set_by_hand();
     // The library says how many are automatic once the shape with the effect is left to it.
@@ -134,14 +131,13 @@ fn req_auto_165_one_notice_counts_the_shapes_digitized_by_default_and_those_set_
 }
 
 #[test]
-#[ignore = "planned: M13.8 builds automatic digitizing by default"]
 fn req_cli_026_no_auto_sews_a_vectorcraft_document_as_drawn_and_is_refused_where_it_means_nothing() {
     let dir = TempDir::new("auto-default-no-auto");
     std::fs::copy(TRACED, dir.join("badge.vectorcraft")).unwrap();
     std::fs::copy(SVG, dir.join("badge.svg")).unwrap();
     let plain = stitch(dir.path(), &["plan", "badge.vectorcraft", "--no-auto", "-o", "plain.pes"]);
     assert_eq!(plain.status.code(), Some(0), "{}", text(&plain.stderr));
-    assert_eq!(std::fs::read(dir.join("plain.pes")).unwrap(), sewn(&std::fs::read(TRACED).unwrap(), Reading::default(), "plain"));
+    assert_eq!(std::fs::read(dir.join("plain.pes")).unwrap(), sewn(&std::fs::read(TRACED).unwrap(), Reading::default(), "badge"));
     assert!(!text(&plain.stderr).contains("SC-I0924") && !text(&plain.stderr).contains("SC-I0901"), "{}", text(&plain.stderr));
     // Of an SVG file it is what the file sews without a switch.
     let svg = stitch(dir.path(), &["plan", "badge.svg", "--no-auto", "-o", "svg.pes"]);
@@ -164,7 +160,6 @@ fn req_cli_026_no_auto_sews_a_vectorcraft_document_as_drawn_and_is_refused_where
 }
 
 #[test]
-#[ignore = "planned: M13.8 builds automatic digitizing by default"]
 fn req_cli_027_a_bundle_records_the_reading_the_run_used_and_an_old_bundle_replays_as_it_was() {
     let dir = TempDir::new("auto-default-bundle");
     std::fs::copy(TRACED, dir.join("badge.vectorcraft")).unwrap();

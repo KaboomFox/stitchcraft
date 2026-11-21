@@ -110,9 +110,53 @@ impl Source {
                 let (design, said) = crate::text::replaced(design, &[], &mut fonts)?;
                 Ok((design, svg.warnings.into_iter().chain(lettered).chain(said).collect()))
             }
-            Source::VectorCraft => stitchcraft_vectorcraft::read_in(bytes, &Budget::DEFAULT, reading, &mut FolderFonts::from_env())
-                .map(|read| (read.design, read.warnings)),
+            Source::VectorCraft => self.read_counted(bytes, reading).map(|(design, warnings, _)| (design, warnings)),
         }
+    }
+
+    /// As [`Source::read`], with how many of the design's shapes the reading's `auto` alone digitized and how
+    /// many sew as their settings say: none and none of an SVG file, which is digitized by default nowhere.
+    pub fn read_counted(self, bytes: &[u8], reading: Reading) -> Result<(Design, Vec<Diagnostic>, Counted), Diagnostic> {
+        match self {
+            Source::Svg => self.read(bytes, reading).map(|(design, warnings)| (design, warnings, Counted::default())),
+            Source::VectorCraft => stitchcraft_vectorcraft::read_in(bytes, &Budget::DEFAULT, reading, &mut FolderFonts::from_env()).map(|read| {
+                let set = read.design.elements().iter().filter(|element| !element.automatic).count();
+                (read.design, read.warnings, Counted { by_default: read.by_default, set })
+            }),
+        }
+    }
+}
+
+/// How many shapes of a VectorCraft document the reading's `auto` alone digitized automatically, and how many
+/// sew as their settings say, which the notice of the default gives (`REQ-AUTO-165`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Counted {
+    /// The shapes automatic only because the reading asked.
+    pub by_default: usize,
+    /// The shapes that sew as their settings say.
+    pub set: usize,
+}
+
+impl Counted {
+    /// `SC-I0924`, said when the default digitized a shape: how many it digitized, how many sew as their
+    /// effects say, and the switch that sews them as drawn.
+    pub fn notice(self) -> Option<Diagnostic> {
+        let Counted { by_default, set } = self;
+        let digitized = match by_default {
+            0 => return None,
+            1 => "1 shape without StitchCraft effects is".to_string(),
+            many => format!("{many} shapes without StitchCraft effects are"),
+        };
+        let kept = match set {
+            0 => String::new(),
+            1 => ", and 1 shape sews as its effects say".to_string(),
+            many => format!(", and {many} shapes sew as their effects say"),
+        };
+        let them = if by_default == 1 { "it" } else { "them" };
+        let message = format!(
+            "{digitized} digitized automatically, as a VectorCraft document is by default{kept}: plan it with --no-auto to sew {them} as drawn."
+        );
+        Some(Diagnostic::new(Code::AutoByDefault, message))
     }
 }
 
@@ -130,6 +174,8 @@ pub struct Sewn {
     pub back: Option<StitchPlan>,
     /// The design's shapes, named and placed in the sewing order as the engine planned them.
     pub names: Names,
+    /// How many shapes the reading's `auto` alone digitized, and how many sew as their settings say.
+    pub counted: Counted,
 }
 
 impl Sewn {
@@ -149,17 +195,28 @@ pub fn sew(
     format: FormatId,
     name: &str,
 ) -> Sewn {
-    let (design, warnings) = match read_design(source, design, (reading, rules)) {
+    let (design, warnings, counted) = match read_counted(source, design, (reading, rules)) {
         Ok(read) => read,
-        Err(unreadable) => return Sewn { diagnostics: vec![unreadable], plan: None, file: None, back: None, names: Names::default() },
+        Err(unreadable) => {
+            return Sewn { diagnostics: vec![unreadable], plan: None, file: None, back: None, names: Names::default(), counted: Counted::default() };
+        }
     };
-    sew_design(&design, warnings, profile, format, name)
+    Sewn { counted, ..sew_design(&design, warnings, profile, format, name) }
 }
 
 /// The design file `design`, of the kind `source`, read as `reading` asks, with the marks, guides and texts
 /// `rules` gives and the rules' settings set on its automatic shapes, and what was said of it: what `stitch
 /// plan` sews, and `stitch expand` expands. The error is the reader's, a file that can't be read.
 pub fn read_design(source: Source, design: &[u8], (reading, rules): (Reading, &[(String, String)])) -> Result<(Design, Vec<Diagnostic>), Diagnostic> {
+    read_counted(source, design, (reading, rules)).map(|(design, warnings, _)| (design, warnings))
+}
+
+/// As [`read_design`], with the [`Counted`] shapes of the design as read.
+fn read_counted(
+    source: Source,
+    design: &[u8],
+    (reading, rules): (Reading, &[(String, String)]),
+) -> Result<(Design, Vec<Diagnostic>, Counted), Diagnostic> {
     // The marks of `--text` came with the rules (`REQ-CLI-020`): their letters are replaced before the
     // rules' settings are set on what is left.
     // So did the marks of `--keep` (`REQ-CLI-021`), given to the design as read, in percent of its box.
@@ -170,12 +227,12 @@ pub fn read_design(source: Source, design: &[u8], (reading, rules): (Reading, &[
     let marks: Vec<&str> = marks.iter().map(|(_, mark)| mark.as_str()).collect();
     let keeps: Vec<&str> = keeps.iter().map(|(_, mark)| mark.as_str()).collect();
     let guides: Vec<&str> = guides.iter().map(|(_, guide)| guide.as_str()).collect();
-    source.read(design, reading).and_then(|(design, mut warnings)| {
+    source.read_counted(design, reading).and_then(|(design, mut warnings, counted)| {
         let design = crate::guide::guided(crate::keep::kept(design, &keeps), &guides);
         let (design, said) =
             if marks.is_empty() { (design, Vec::new()) } else { crate::text::replaced(design, &marks, &mut FolderFonts::from_env())? };
         warnings.extend(said);
-        Ok((design.automatic_with(&rules), warnings))
+        Ok((design.automatic_with(&rules), warnings, counted))
     })
 }
 
@@ -190,16 +247,17 @@ pub fn sew_design(design: &Design, warnings: Vec<Diagnostic>, profile: &MachineP
     let mut diagnostics = warnings;
     names.tell(&mut diagnostics);
     diagnostics.extend(outcome.diagnostics);
-    let Some(plan) = outcome.plan else { return Sewn { diagnostics, plan: None, file: None, back: None, names } };
+    let counted = Counted::default();
+    let Some(plan) = outcome.plan else { return Sewn { diagnostics, plan: None, file: None, back: None, names, counted } };
     match stitchcraft_formats::encode(&plan, format, name) {
         Ok(Encoded { bytes, notes }) => {
             diagnostics.extend(notes);
             let back = read_back(&bytes, &plan).map_err(|bug| diagnostics.push(bug)).ok();
-            Sewn { diagnostics, plan: Some(plan), file: Some(bytes), back, names }
+            Sewn { diagnostics, plan: Some(plan), file: Some(bytes), back, names, counted }
         }
         Err(e) => {
             diagnostics.push(e.diagnostic());
-            Sewn { diagnostics, plan: Some(plan), file: None, back: None, names }
+            Sewn { diagnostics, plan: Some(plan), file: None, back: None, names, counted }
         }
     }
 }
@@ -251,6 +309,9 @@ pub fn run_with(args: &PlanArgs, models: &Provider) -> Outcome {
         Err(outcome) => return outcome,
     };
     let picture = trace::is_picture(&args.design);
+    if picture && args.reading.no_auto {
+        return Outcome::usage("--no-auto is for a VectorCraft document: a picture is traced to be digitized automatically");
+    }
     if !picture && args.tracing.given() {
         return Outcome::usage(
             "--vectorcraft-cli, --size, --colours, --keep-colour, --drop-colour and --traced are for a picture, a PNG or JPEG file",
@@ -273,7 +334,7 @@ pub fn run_with(args: &PlanArgs, models: &Provider) -> Outcome {
             return Outcome { stdout: String::new(), stderr: format!("stitch: cannot read {}: {e}\n", args.design.display()), status: Status::Io };
         }
     };
-    let reading = Reading::from(&args.reading);
+    let reading = args.reading.reading(Source::of(&args.design));
     // With `--subject`, the picture's subject is cut out, and VectorCraft traces the cut-out.
     let tracing_for = asked.unwrap_or(profiles::REFERENCE);
     // The colours a person keeps are read before anything runs: a mistake costs no cut-out and no trace.
@@ -351,6 +412,9 @@ fn traced(
 fn planned(args: &PlanArgs, run: &Run, phase: &Cell<Phase>, (cut, traced): (Option<&Subject>, &[Diagnostic])) -> Outcome {
     let mut sewn = sew(run.source, run.design, (run.reading, run.rules), run.profile, run.format, run.name);
     sewn.diagnostics.splice(0..0, traced.iter().cloned());
+    // A VectorCraft document digitized by default says so first, and how to sew it as drawn (`REQ-AUTO-165`).
+    let notice = (!trace::is_picture(&args.design) && args.reading.by_default(run.source)).then(|| sewn.counted.notice()).flatten();
+    sewn.diagnostics.splice(0..0, notice);
     let named = match trace::is_picture(&args.design).then(|| stitchcraft_vectorcraft::named(run.design, &nodes(&sewn.names), &Budget::DEFAULT)) {
         Some(Ok(named)) => Some(named),
         Some(Err(said)) => {
@@ -379,7 +443,7 @@ fn nodes(names: &Names) -> BTreeMap<u64, String> {
 /// printed, before any is written. When anything said is an error, only the report (`REQ-CLI-003`).
 fn written(args: &PlanArgs, run: &Run, sewn: Sewn, phase: &Cell<Phase>, cut: Option<&Subject>) -> Outcome {
     let (profile, format) = (run.profile, run.format);
-    let Sewn { mut diagnostics, plan: Some(plan), file: Some(machine_file), back: Some(back), names } = sewn else {
+    let Sewn { mut diagnostics, plan: Some(plan), file: Some(machine_file), back: Some(back), names, .. } = sewn else {
         return refuse(args, profile, cut, (&sewn.diagnostics, Some(&sewn.names)));
     };
     // The picture is drawn before anything is written, so that one that cannot be drawn stops the rest too.

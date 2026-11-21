@@ -309,6 +309,18 @@ macro_rules! auto_codes {
         /// the other style, plan it with that `--style`, or set those settings in the dialog of StitchCraft's
         /// Auto effect, and compare the previews.
         AutoStyle = "SC-I0923", Info, "Style that changes how a design sews";
+
+        /// A VectorCraft document is digitized automatically by default: each shape that no StitchCraft
+        /// effect reaches, its own or a group's or a layer's around it, is read as `--auto` reads it, and the
+        /// shapes with Fill, Satin or Stroke effects sew as those effects say. A document is drawn to be
+        /// embroidered, and automatic digitizing chooses each part's stitch by its width, where the plain
+        /// reading fills every area and runs every line.
+        ///
+        /// The message gives both counts. To sew the shapes without effects as drawn, plan the document with
+        /// `--no-auto`, or turn the exporter's Digitize automatically option off. To sew one shape as drawn,
+        /// apply StitchCraft's Fill or Stroke effect to it. The notice isn't given with `--auto`, which asks
+        /// for automatic digitizing, or when the default digitized no shape.
+        AutoByDefault = "SC-I0924", Info, "Shapes digitized by default";
         } }
     };
 }
