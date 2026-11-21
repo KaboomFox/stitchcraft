@@ -322,6 +322,16 @@ pub struct TracingArgs {
     /// shapes of a traced picture sew.
     #[arg(long)]
     pub fewer_points: bool,
+    /// Give a colour of a picture a thread at any --colours: a thread of the machine by its name, in any
+    /// case; a colour as #rrggbb, for the thread nearest it; or a pixel of the picture as X,Y, from its left
+    /// and top edges, for the thread nearest its colour. May be given several times. The picture is then
+    /// traced twice, the second time in the threads the first chose and the kept ones.
+    #[arg(long, value_name = "COLOUR", value_parser = crate::colours::colour)]
+    pub keep_colour: Vec<crate::colours::Colour>,
+    /// Trace a picture without a thread of the machine, so that its colours take the nearest of the others:
+    /// a colour read as --keep-colour reads it. May be given several times.
+    #[arg(long, value_name = "COLOUR", value_parser = crate::colours::colour)]
+    pub drop_colour: Vec<crate::colours::Colour>,
     /// Also write the document VectorCraft traced a picture into (.vectorcraft), to correct the trace in
     /// VectorCraft.
     #[arg(long, value_name = "FILE")]
@@ -331,8 +341,9 @@ pub struct TracingArgs {
 impl TracingArgs {
     /// Whether any option is given, which only a picture takes.
     pub fn given(&self) -> bool {
-        let TracingArgs { vectorcraft_cli, size, colours, fewer_points, traced } = self;
-        vectorcraft_cli.is_some() || size.is_some() || colours.is_some() || *fewer_points || traced.is_some()
+        let TracingArgs { vectorcraft_cli, size, colours, fewer_points, keep_colour, drop_colour, traced } = self;
+        let colours_named = !keep_colour.is_empty() || !drop_colour.is_empty();
+        vectorcraft_cli.is_some() || size.is_some() || colours.is_some() || *fewer_points || colours_named || traced.is_some()
     }
 }
 
@@ -529,7 +540,7 @@ pub enum PreviewStyle {
     Realistic,
     /// Every stitch, needle hole, move, trim and stop, for checking a design.
     Simple,
-    /// How thick the design sews: grey thread, yellow from 2 fills of it over one spot, orange from 3 and
+    /// How thick the design sews: grey thread, yellow from 2 fills of it over one spot, orange from 4 and
     /// red from 6.
     Thickness,
 }
@@ -572,5 +583,25 @@ impl From<Format> for FormatId {
             Format::Pes => FormatId::PesV1,
             Format::Dst => FormatId::Dst,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use clap::ValueEnum;
+    use stitchcraft_plan::thickness::{Limits, ORDINARY};
+
+    use super::PreviewStyle;
+
+    #[test]
+    fn req_rnd_004_the_thickness_styles_help_names_the_steps_the_renderer_draws() {
+        let value = PreviewStyle::Thickness.to_possible_value().unwrap();
+        let help = value.get_help().unwrap().to_string().replace('\n', " ");
+        let steps = format!(
+            "yellow from {ORDINARY} fills of it over one spot, orange from {} and red from {}",
+            Limits::DEFAULT.warn_fills,
+            Limits::DEFAULT.fail_fills
+        );
+        assert!(help.contains(&steps), "{steps:?} is not in {help:?}");
     }
 }

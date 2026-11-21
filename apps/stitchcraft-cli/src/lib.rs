@@ -11,6 +11,7 @@
 #![allow(clippy::disallowed_methods)]
 
 pub mod cli;
+pub mod colours;
 pub mod commands;
 pub mod files;
 pub mod fonts;

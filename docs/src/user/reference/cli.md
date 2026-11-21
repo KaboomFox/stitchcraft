@@ -102,6 +102,12 @@ Options:
       --fewer-points
           Trace a picture with fewer points: Image Trace's Paths and Corners at their lowest, which draw its outlines with about a third fewer anchors and fewer jags. Off by default, since it changes how many shapes of a traced picture sew
 
+      --keep-colour <COLOUR>
+          Give a colour of a picture a thread at any --colours: a thread of the machine by its name, in any case; a colour as #rrggbb, for the thread nearest it; or a pixel of the picture as X,Y, from its left and top edges, for the thread nearest its colour. May be given several times. The picture is then traced twice, the second time in the threads the first chose and the kept ones
+
+      --drop-colour <COLOUR>
+          Trace a picture without a thread of the machine, so that its colours take the nearest of the others: a colour read as --keep-colour reads it. May be given several times
+
       --traced <FILE>
           Also write the document VectorCraft traced a picture into (.vectorcraft), to correct the trace in VectorCraft
 
@@ -174,6 +180,12 @@ Options:
 
       --fewer-points
           Trace a picture with fewer points: Image Trace's Paths and Corners at their lowest, which draw its outlines with about a third fewer anchors and fewer jags. Off by default, since it changes how many shapes of a traced picture sew
+
+      --keep-colour <COLOUR>
+          Give a colour of a picture a thread at any --colours: a thread of the machine by its name, in any case; a colour as #rrggbb, for the thread nearest it; or a pixel of the picture as X,Y, from its left and top edges, for the thread nearest its colour. May be given several times. The picture is then traced twice, the second time in the threads the first chose and the kept ones
+
+      --drop-colour <COLOUR>
+          Trace a picture without a thread of the machine, so that its colours take the nearest of the others: a colour read as --keep-colour reads it. May be given several times
 
       --traced <FILE>
           Also write the document VectorCraft traced a picture into (.vectorcraft), to correct the trace in VectorCraft
@@ -349,7 +361,7 @@ Options:
           Possible values:
           - realistic: The finished embroidery on fabric, with the jump threads the machine leaves for you to cut
           - simple:    Every stitch, needle hole, move, trim and stop, for checking a design
-          - thickness: How thick the design sews: grey thread, yellow from 2 fills of it over one spot, orange from 3 and red from 6
+          - thickness: How thick the design sews: grey thread, yellow from 2 fills of it over one spot, orange from 4 and red from 6
           
           [default: realistic]
 

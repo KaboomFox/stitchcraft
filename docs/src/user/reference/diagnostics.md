@@ -107,6 +107,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0814`](#sc-e0814) | Error | VectorCraft line not made into a satin column |
 | [`SC-E0815`](#sc-e0815) | Error | VectorCraft's command line could not be started |
 | [`SC-E0816`](#sc-e0816) | Error | VectorCraft could not trace the picture |
+| [`SC-W0822`](#sc-w0822) | Warning | Kept thread left out of the picture's trace |
 | [`SC-E0817`](#sc-e0817) | Error | VectorCraft test sheet not drawn |
 | [`SC-I0901`](#sc-i0901) | Info | Shapes digitized automatically |
 | [`SC-I0902`](#sc-i0902) | Info | Satin column can't be made; filled |
@@ -1453,6 +1454,19 @@ StitchCraft traces with: the user guide lists the versions the compatibility gat
 VectorCraft places the picture, or trace it with Image Trace in VectorCraft and plan the document you
 save.
 
+## SC-W0822
+
+**Warning** — Kept thread left out of the picture's trace
+
+`stitch plan --keep-colour` gave a colour of a picture a thread, and VectorCraft traced the picture
+again in the threads its first trace chose and the kept ones. The trace left the kept thread out,
+since no part of the picture is nearer its colour than the other threads'. The design sews without
+it.
+
+The message names the thread. A colour named as a thread or as `#rrggbb` may be one the picture
+hasn't: keep the colour of one of its pixels instead, as `X,Y`, or trace the picture in more
+`--colours`, so that the threads near the kept one take less of the picture.
+
 ## SC-E0817
 
 **Error** — VectorCraft test sheet not drawn
@@ -1679,21 +1693,22 @@ A design digitized with `--auto` puts thread on thread. Each area reaches under 
 after it, and a base layer lies under all of them. An outline lies on a fill's edge. Where too much
 thread lies over one spot, a needle deflects and the thread shreds or breaks. Planning measures the
 design in 2 ways, in the window of 1 mm² round each spot. The first is the thread, in fills: the
-length of thread over the spot, as a share of what a fill with rows 0.4 mm apart lays. The second is
-the needle points in a square millimetre, the locks left out. The warning is given when a place of
-1 mm² or more has 3 fills or more (`auto_thick_warn_fills`), or 15 needle points or more to a
-square millimetre (`auto_thick_warn_points`). The message gives the most of each measure and where,
-from the design's centre, the shapes whose thread is stacked there, and the area at each limit
-and at the failing limits, 6 fills (`auto_thick_fail_fills`) and 30 needle points
+length of thread over the spot, as a share of what a fill with rows 0.25 mm apart lays, the default
+spacing of a fill's rows. The second is the needle points in a square millimetre, the locks left
+out. The warning is given when a place of 1 mm² or more has 4 fills or more
+(`auto_thick_warn_fills`), or 15 needle points or more to a square millimetre
+(`auto_thick_warn_points`). The message gives the most of each measure and where, from the design's
+centre, the shapes whose thread is stacked there, and the area at each limit and at the failing
+limits, 6 fills (`auto_thick_fail_fills`) and 30 needle points
 (`auto_thick_fail_points`).
 
 The design is written all the same. The limits are starting values for a 75/11 needle and
 40-weight polyester thread, from the public advice of machine and software makers, and no sew-out
 has confirmed them yet: sew a test piece of the thickest part before the whole design.
 `stitch preview --style thickness` draws where the thread is thick. Where the thickest spot is above
-the cap, 4 fills (`auto_thick_cap_fills`), the message says so: no more thread there may go. A design too large to measure,
-or one whose measuring needs more work than the budget allows, gets this warning too, and its
-message says that the design was not measured.
+the cap, 3.25 fills (`auto_thick_cap_fills`), the message says so: no more thread there may go. A
+design too large to measure, or one whose measuring needs more work than the budget allows, gets
+this warning too, and its message says that the design was not measured.
 
 ## SC-I0914
 

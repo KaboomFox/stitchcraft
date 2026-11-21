@@ -213,6 +213,79 @@ fn req_auto_151_stitch_plan_says_when_the_other_style_would_sew_a_design_otherwi
     assert!(notice(PLAIN, &[]).is_empty() && notice(PLAIN, &["--style", "logo"]).is_empty());
 }
 
+/// `stitch plan picture.png` with `options`, parsed, for the cases of the kept and dropped colours: the
+/// picture isn't traced, since no VectorCraft is named that runs.
+fn plan_picture(dir: &TempDir, options: &[&str]) -> Result<PlanArgs, clap::Error> {
+    use clap::Parser;
+
+    use crate::cli::{Cli, Command};
+
+    let (picture, output) = (dir.join("picture.png"), dir.join("picture.pes"));
+    std::fs::write(&picture, b"\x89PNG\r\n\x1a\n a picture").unwrap();
+    let (picture, output) = (picture.to_str().unwrap().to_string(), output.to_str().unwrap().to_string());
+    let cli = Cli::try_parse_from(["stitch", "plan", picture.as_str(), "-o", output.as_str()].into_iter().chain(options.iter().copied()))?;
+    let Command::Plan(args) = cli.command else { panic!("not a plan") };
+    Ok(args)
+}
+
+#[test]
+fn req_auto_160_a_kept_colour_is_a_thread_a_colour_or_a_pixel_and_no_more_than_the_count() {
+    let dir = TempDir::new("plan-keep-colour");
+    // A thread's name in any case, a colour and a pixel of the picture, each as often as needed.
+    for kept in
+        [&["--keep-colour", "Dark Fuchsia"][..], &["--keep-colour", "dark fuchsia"], &["--keep-colour", "#c70156"], &["--keep-colour", "12,40"]]
+    {
+        assert!(plan_picture(&dir, kept).is_ok(), "{kept:?}");
+    }
+    assert!(plan_picture(&dir, &["--keep-colour", "White", "--keep-colour", "Red"]).is_ok());
+    // More kept threads than the colour count is a usage error, before VectorCraft runs.
+    let missing = dir.join("no-such-vectorcraft-cli");
+    let missing = missing.to_str().unwrap();
+    let options = ["--colours", "2", "--keep-colour", "White", "--keep-colour", "Red", "--keep-colour", "Black", "--vectorcraft-cli", missing];
+    let out = run(&plan_picture(&dir, &options).unwrap());
+    assert_eq!(out.status, Status::Usage, "{}", out.stderr);
+    assert!(out.stderr.contains("--keep-colour") && !out.stderr.contains("SC-E0815"), "{}", out.stderr);
+}
+
+#[test]
+fn req_auto_161_a_dropped_colour_is_read_as_a_kept_one_and_contradictions_are_usage_errors() {
+    let dir = TempDir::new("plan-drop-colour");
+    assert!(plan_picture(&dir, &["--drop-colour", "Silver", "--drop-colour", "#a8a8a8"]).is_ok());
+    let missing = dir.join("no-such-vectorcraft-cli");
+    let missing = missing.to_str().unwrap();
+    let usage = |options: &[&str]| {
+        let out = run(&plan_picture(&dir, &[options, &["--vectorcraft-cli", missing]].concat()).unwrap());
+        assert_eq!(out.status, Status::Usage, "{options:?}: {}", out.stderr);
+        out.stderr
+    };
+    // Kept and dropped at once; a name that is no thread, answered with the nearest names; a pixel outside
+    // the picture, which the stand-in picture has none of.
+    assert!(usage(&["--keep-colour", "Red", "--drop-colour", "red"]).contains("--drop-colour"));
+    assert!(usage(&["--drop-colour", "Dark Fucshia"]).contains("Dark Fuchsia"));
+    assert!(usage(&["--drop-colour", "5000,5000"]).contains("5000,5000"));
+}
+
+#[test]
+fn req_auto_162_the_plan_lists_each_threads_share_of_the_stitches() {
+    // The element in red, green and blue of REQ-THREAD-003's case: each thread once, in the order it is
+    // first threaded, with its top stitches and their share.
+    let plan = stitchcraft_testkit::designs::three_threads();
+    let file = stitchcraft_formats::encode(&plan, FormatId::PesV1, "gradient").unwrap().bytes;
+    let back = read_back(&file, &plan).unwrap();
+    let args = args(PathBuf::from("gradient.svg"), PathBuf::from("gradient.pes"));
+    let made = Made { file: Some((FormatId::PesV1, &file)), planned: Some((&plan, &back)), subject: None, names: None };
+    let report: Value = serde_json::from_str(&report(&args, REFERENCE, &made, &[])).unwrap();
+    let shares = report["shares"].as_array().unwrap();
+    let colours: Vec<&str> = shares.iter().map(|share| share["color"].as_str().unwrap()).collect();
+    assert_eq!(colours, ["#c80000", "#00a000", "#0000c8"]);
+    let percent: f64 = shares.iter().map(|share| share["percent"].as_f64().unwrap()).sum();
+    assert!((percent - 100.0).abs() <= 0.1 * 3.0, "{percent}");
+    assert!(shares.iter().all(|share| share["threaded"].as_u64() == Some(1) && share["stitches"].as_u64().unwrap() > 0));
+    // What `stitch plan` prints lists them too.
+    let printed = summary(&args, REFERENCE, FormatId::PesV1, (&plan, &back), &file);
+    assert!(printed.lines().any(|line| line.trim_start().starts_with("shares")), "{printed}");
+}
+
 /// Red, blue and red squares 10 mm apart, without settings: tatami fills, as Ink/Stitch sews them.
 const SQUARES: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm" viewBox="0 0 100 100"><rect id="r1" x="0" y="0" width="10" height="10" fill="red"/><rect id="b" x="20" y="0" width="10" height="10" fill="blue"/><rect id="r2" x="40" y="0" width="10" height="10" fill="red"/></svg>"#;
 
@@ -316,11 +389,13 @@ fn req_cli_013_the_tracing_options_are_for_a_picture_only() {
         TracingArgs { size: Some(Mm::new(80.0).unwrap()), ..TracingArgs::default() },
         TracingArgs { colours: Some(4), ..TracingArgs::default() },
         TracingArgs { fewer_points: true, ..TracingArgs::default() },
+        TracingArgs { keep_colour: vec![crate::colours::Colour::Thread("Red".to_string())], ..TracingArgs::default() },
+        TracingArgs { drop_colour: vec![crate::colours::Colour::Thread("Red".to_string())], ..TracingArgs::default() },
         TracingArgs { traced: Some(dir.join("traced.vectorcraft")), ..TracingArgs::default() },
     ];
     for tracing in given {
         let out = run(&PlanArgs { tracing, ..args(fixture("strokes.svg"), dir.join("strokes.pes")) });
-        let usage = "stitch: --vectorcraft-cli, --size, --colours and --traced are for a picture, a PNG or JPEG file\n";
+        let usage = "stitch: --vectorcraft-cli, --size, --colours, --keep-colour, --drop-colour and --traced are for a picture, a PNG or JPEG file\n";
         assert_eq!((out.status, out.stderr.as_str()), (Status::Usage, usage));
     }
     assert!(!dir.join("strokes.pes").exists() && !dir.join("traced.vectorcraft").exists());
