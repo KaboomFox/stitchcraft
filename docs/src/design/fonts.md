@@ -48,7 +48,8 @@ lighter settings. Their satin spacing is 0.25 mm, without a zigzag underlay, and
 stitches. At their least heights, the median satin column of 4 small fonts is 0.47 to 0.61 mm wide, and a
 tenth of their columns are narrower than 0.3 to 0.5 mm. The 4 are Ink/Stitch Small Font, Glacial Tiny,
 Pacificlo tiny and Venezia small. Automatic digitizing sews a line narrower than 1 mm
-(`min_satin_stroke_width_mm`) as a run, and compensates every satin column by 0.4 mm.
+(`min_satin_stroke_width_mm`) as a run, and sews a satin column 0.4 mm past each rail that no later shape
+lies beside (`auto_pull_compensation_mm`).
 
 **Licences.** By their licence files, 102 fonts are under the OFL, 25 under CC BY-SA, 1 under CC BY, and 3
 in the public domain or under CC0. 8 are under CC BY-NC-SA, 1 under CC Attribution-NoDerivatives and 1 under
@@ -104,11 +105,11 @@ its debug level, and a glyph took it 10 seconds, against 1.6 with the log turned
 then takes 12 minutes, and a twentieth of every glyph 22.
 
 **What differs.** These counts are from runs on 3 November 2026, before M10.1 brought simple crosses. Of
-the sample's 524 glyphs, 357 agree by every measure. 98 are of stitch types StitchCraft doesn't sew yet,
-which the report lists, 66 of them in cross stitch and the rest in tartan fills, ripples and guided fills.
-They join the comparison with M10's steps, the simple crosses with M10.1 and Jersey 15's double crosses
+the sample's 524 glyphs, 357 agree by every measure. 98 were of stitch types StitchCraft didn't sew then,
+which the report listed, 66 of them in cross stitch and the rest in tartan fills, ripples and guided fills.
+They joined the comparison with M10's steps, the simple crosses with M10.1 and Jersey 15's double crosses
 with M10.2. Sewn alone with M10.2, every one of Jersey 15's 162 glyphs agrees, the 2 programs' threads
-overlapping by 1.000 in each. Ripples join with M10.8, and guided ripples with M10.11. Of the 324 glyphs of
+overlapping by 1.000 in each. Ripples joined with M10.8, and guided ripples with M10.11. Of the 324 glyphs of
 the 3 Ondulamarif fonts, sewn alone on 8 November 2026, 144 agree and 180 differ as the ledger explains,
 most of them by where each program's running stitch places the needle points of a ripple's lines. Medium
 has 57 that agree and 51 excused, S 46 and 62, and XL 41 and 67. The sample's other 69 differ as the
@@ -317,6 +318,9 @@ The text becomes a design, which every host plans as it plans any other. Its ele
   sews at the end of the glyph its element was in, after the glyph's fills, where Ink/Stitch puts it at the
   end of the group it was in. A text without a satin column sews as its glyphs draw it. The routing's
   warnings are passed on, and its notes aren't.
+- **Widened.** `widen_percent` widens every satin column of the text by that percent of its width on each
+  side, by adding to its pull compensation (`REQ-FONT-024`). It is 0 by default. Then a font sews as its
+  author digitized it ([bold letters under the bold font's heights](image-to-embroidery.md#bold-letters-under-the-bold-fonts-heights)).
 - **Bounded.** Any text, any path and any numbers give a design or `SC-E1108`, never a panic. The layout,
   the seats on a path, the placing, the trims and the sort charge one meter of the budget, and the routing
   has the budget again.
@@ -820,7 +824,7 @@ the fills of broad parts. The table lists what glyphs need beyond them, with the
 | Ends on the baseline, the x-height and the capitals' height | A column's end is flat when the edge lies within 20° of square to it, and pointed otherwise | M15.6 |
 | Serifs | A serif is an arm with a column of its own, or a bump | M15.6 |
 | Thin strokes | A part narrower than 1 mm runs along its centre line. Small fonts digitized by hand sew satin columns half as wide | M15.7 |
-| Counters and the settings of small letters | Columns are compensated by 0.4 mm at every height, and a counter that closes isn't named. Small fonts digitized by hand compensate by 0.05 to 0.1 mm | M15.7 |
+| Counters and the settings of small letters | Columns sew 0.4 mm past a rail with nothing sewn after them beside it, at every height, and a counter that closes isn't named. Small fonts digitized by hand compensate by 0.05 to 0.1 mm | M15.7 |
 | Jumps inside a glyph | Columns sew longest first, and a jump joins each 2. TS-13B's digitized letters leave 37 jump threads | M15.8 |
 | Joined letters and overlapping strokes | Contours are united before their centre lines are found | M15.9 |
 | Heights | A shape is digitized at the size it sews | M15.10 |
@@ -842,10 +846,10 @@ coverage and stitches. TS-15 sews 3 ported fonts beside the fonts digitized by h
 
 - **The font repository and its licences, and the reader** (M14.1): decided. The owner accepted
   [ADR-0020](adr/0020-fonts-from-a-repository-of-their-own.md) on 2026-11-08, as it was written. The owner creates
-  `KaboomFox/stitchcraft-fonts` before M14.2 pins it, and reads the licence files of the 10 fonts the ADR
+  `KaboomFox/stitchcraft-fonts` before a step pins it, and reads the licence files of the 10 fonts the ADR
   names before they join.
 - **Spacing in millimetres of the text or of the font** (M14.2). `--letter-spacing 1` at a scale of 50
-  percent adds 0.5 mm, as in Ink/Stitch, whose documents M14.4 will read. The recommendation, taken, is to
+  percent adds 0.5 mm, as in Ink/Stitch, whose documents M14.4 reads. The recommendation, taken, is to
   keep Ink/Stitch's meaning. Millimetres as sewn are the other choice.
 - **`--height`** (M14.2). `stitch lettering` takes the size as `--scale`, Ink/Stitch's setting, or as
   `--height` in millimetres over the font's `size`. The recommendation, taken, is to keep both.
@@ -867,12 +871,14 @@ coverage and stitches. TS-15 sews 3 ported fonts beside the fonts digitized by h
   Ink/Stitch's library and found none for 9 to 12 mm by its own range. The recommendation is Small Font
   widened ([bold letters under the bold font's heights](image-to-embroidery.md#bold-letters-under-the-bold-fonts-heights)).
 - **The font's name typed, or chosen from a list** (M14.4). The Lettering effect's dialog takes the font's
-  name as text. The recommendation, taken, is to keep the text field while one font is built in, since a
-  document then sews the same in every build and from `stitch`. A list is easier with many fonts, and
+  name as text. The recommendation, taken, was to keep the text field while one font was built in, since a
+  document then sews the same in every build and from `stitch`. With 2 fonts built in since M14.8 it is
+  still a text field. A list is easier with many fonts, and
   needs the same fonts in every build that opens the document.
 - **Pinning the font repository** (M14.4). CI builds Small Font in from the corpus of Ink/Stitch's fonts
-  until `fonts.toml` pins `KaboomFox/stitchcraft-fonts`. The recommendation is to pin it before a second
-  font is built in.
+  until `fonts.toml` pins `KaboomFox/stitchcraft-fonts`. The recommendation was to pin it before a second
+  font is built in. Barstitch Bold joined with M14.8 from the corpus, as the repository doesn't exist yet,
+  and the pin waits for the owner to create it.
 - **A bold text object sews in the bold font** (M14.8). A text object has no letters to measure. The
   decision taken is that its `font-weight`, or its VectorCraft style, chooses Barstitch Bold where it sews
   at the text's size, and that the typeface's name doesn't choose one. For a text with the Lettering effect,

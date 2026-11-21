@@ -73,8 +73,9 @@ browser shows. It runs the pull request's plug-ins in the editor built in the sa
 
 **The same files as the command line.** The editor opens a design, gives every shape the Auto effect and
 exports it to PES and to DST. It also saves the document, and `stitch plan` writes both files of the saved
-document, under the name the editor gave its exporter. The script does this for 2 designs, the demo's starter drawing and a traced dog, and each pair of files
-must be the same byte for byte. A pair that differs fails the run, which names the first byte
+document, under the name the editor gave its exporter. The script tries this for 2 designs, the demo's starter drawing and a traced dog, and each pair of files
+must be the same byte for byte. The dog's export is stopped, as [the time's limit](#the-times-limit) says, so
+its pair is reported as stopped. A pair that differs fails the run, which names the first byte
 that differs and what each program has there. The workflow keeps both programs' files as an artifact.
 VectorCraft stops an exporter that runs more instructions than it allows an export. The editor then
 doesn't write a file, and there is nothing to compare. The sheet and the comment say so, and the run goes on. Any
@@ -129,7 +130,7 @@ to build `stitch`, 2 minutes 50 seconds in the browser and 50 seconds to build t
 the 10 pictures. A minute of the browser's time was the dog's export stopped twice more, which the
 script no longer tries after the first run.
 
-## Not in this step
+## Not built
 
-Every effect exercised in the browser, and pictures of each effect's dialog on the current VectorCraft,
-are a later step ([roadmap](../plan/roadmap.md)).
+Every effect exercised in the browser, and pictures of each effect's dialog on the current VectorCraft.
+No step of the [roadmap](../plan/roadmap.md) names them yet.

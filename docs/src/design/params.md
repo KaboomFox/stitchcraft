@@ -9,10 +9,10 @@ Everything else that needs to know about parameters is generated from that decla
                         ┌──▶ typed params struct used by the generator
                         ├──▶ validation (types, ranges, applicability) with coded diagnostics
 params! { … }  ─────────┼──▶ VectorCraft plug-in manifests (schema per plug-in, ≤ 64 params)
-(in the generator)      ├──▶ CLI: `stitch params`, `--param key=value`
+(in the generator)      ├──▶ CLI help: `stitch params` (planned)
                         ├──▶ SVG mapping (`inkstitch:<key>` attributes, read and write)
                         ├──▶ reference docs pages + JSON Schema (generated, checked in CI)
-                        └──▶ proptest strategies for conformance and fuzzing
+                        └──▶ proptest strategies for conformance and fuzzing (planned)
 ```
 
 Nothing about a declaration is written twice, so its label, help, range and default cannot drift apart
@@ -276,8 +276,8 @@ its stitch types is planned, and the check leaves it out.
 | `docs/src/user/reference/params.schema.json`: the parameters as JSON values (numbers, booleans, strings, arrays, `null` for empty), for editors, presets and JSON hosts | `cargo xtask docs` | same | M3.1 |
 | The *StitchCraft* column of the [Ink/Stitch compatibility contract](inkstitch-compat-contract.md) | `cargo xtask docs` | same, plus the cross-checks above | M3.1 |
 | VectorCraft manifests, one for each stitch family's module, with each parameter's label, unit, section, help, help page and the values that show it | at runtime from the registry, when VectorCraft asks a module for its manifest (`stitchcraft-vc-plugin`'s `manifest` and `dialog`) | plug-in tests validate them against VectorCraft's manifest rules, `cargo xtask docs --check` finds each help page, the contract tests install them in VectorCraft's host, and the window probe checks the dialogs' rows | M6.2, and the dialogs M6.10 |
-| SVG attribute read/write | `stitchcraft-svg` iterates the registry | round-trip property test `REQ-PRM-003` | planned for M8 |
-| CLI parameter help (`stitch params`, `--param key=value`) | at runtime from the registry | `trycmd` examples | planned, in no step yet |
+| SVG attributes read, and written for the differential's files (`stitchcraft_svg::written`) | `stitchcraft-svg`, which the registry reads them for as it reads a VectorCraft effect's (`REQ-PRM-002`) | the reader's cases; the round-trip property test `REQ-PRM-003` is planned | read from M8.1 |
+| CLI parameter help (`stitch params`, `--param key=value`) | at runtime from the registry | examples in `docs/examples.toml` | planned, in no step yet |
 | `proptest` strategies | `stitchcraft-testkit` iterates the registry | used by every generator property test | planned, in no step yet |
 
 ## Splitting for VectorCraft ABI v1
@@ -301,7 +301,9 @@ Markdown.
 
 ## Presets
 
-A preset is a named partial `ParamSet` (`"denim"`, `"knit, light"`) stored as a TOML file in a
+Presets of a stitch type's parameters are not built, and no roadmap step plans them. The presets that
+exist are automatic digitizing's styles ([its rules and styles](../user/reference/auto-rules.md)). The plan:
+a preset is a named partial `ParamSet` (`"denim"`, `"knit, light"`) stored as a TOML file in a
 `presets` directory of the parameters crate. The same code as user input validates it, and a generated
 page documents it. In VectorCraft, users can also save appearance (including embroidery live effects) as
 Graphic Styles. Applying one copies its effect records into each object, and a design sews them
@@ -309,6 +311,7 @@ Graphic Styles. Applying one copies its effect records into each object, and a d
 
 ## Versioning and migration
 
-The registry has a schema version. A breaking change (renamed key, changed unit) ships a migration
-function `vN → vN+1` and a conformance case with an old-format input. Unknown keys from newer files are
+Planned, with the first release: the registry gets a schema version, and a breaking change (renamed key,
+changed unit) comes with a migration function `vN → vN+1` and a conformance case with an old-format input.
+Built now: unknown keys from newer files are
 preserved on round trips where the host allows it, and reported once as `SC-W0105`.

@@ -7,7 +7,7 @@ before VectorCraft ships it — and keep a public, generated table of which Vect
 
 | Track | What we test against | How it is discovered | When | Effect of a failure |
 |---|---|---|---|---|
-| `stable` | Latest published, non-pre-release VectorCraft release | SemVer tags from `git ls-remote` | Daily, and on every PR touching the plug-in, a library crate or the gate | **Blocks** our release; its issue is labelled `upstream-stable` |
+| `stable` | Latest published, non-pre-release VectorCraft release | SemVer tags from `git ls-remote` | Daily, and on every PR touching the paths `compat.yml` lists: the plug-in, `stitch`, the library crates, the gate, xtask and the manifests | **Blocks** our release; its issue is labelled `upstream-stable` |
 | `prerelease` | Latest published alpha/beta/RC (`-alpha`, `-beta`, `-rc` SemVer tags) | SemVer tags from `git ls-remote`, when newer than the latest release | Daily | Its issue is labelled `upstream-prerelease`; does not block |
 | `release-branch` | Head of VectorCraft's `release` branch, which their pipeline builds into the next (still private, draft) release | `git ls-remote … refs/heads/release` | Daily | Its issue is labelled `upstream-canary` |
 | `main` | Head of VectorCraft's `main` | `git ls-remote … refs/heads/main` | Daily | Its issue is labelled `upstream-canary` |
@@ -104,8 +104,8 @@ levels and writes the track's result for the report, and `cargo xtask compat e2e
 The scenarios are data files in `compat/scenarios/*.toml`, each one or more runs of `vectorcraft-cli`. A
 run starts from a new document, or from one an earlier run saved, and draws its shapes with VectorCraft's
 commands. So every file VectorCraft opens is one it wrote, and StitchCraft reads only what the version
-under test saved. Steps work on the selection, which drawing a shape sets: VectorCraft 0.7.0 can't give
-one command another's result. VectorCraft runs a live effect once for an object and its parameters, and
+under test saved. Steps work on the selection, which drawing a shape sets: VectorCraft's command line couldn't give
+one command another's result when this was checked, at 0.7.0, and the scenarios still work that way. VectorCraft runs a live effect once for an object and its parameters, and
 remembers only a module's last failure, which the next success clears. So each module a run installs is
 asked for its last error after every PNG export, which runs the live effects, and it must have none. A
 scenario draws each object it gives an effect before it gives another the same family's, and
@@ -140,6 +140,10 @@ version and what sews must not:
 | `stroke-to-satin` | an S curve, a V and a circle with strokes 3 mm wide and the satin effect, saved and drawn, then made into columns by Stroke to Satin, saved, drawn and exported to PES | the columns sew as the lines did, 3 satin columns in the strokes' colour, and the file is the one `stitch export` writes (`REQ-VC-014`) |
 | `testsheets` | each sheet drawn as a design, drawn by Test Sheet into a new document, then saved and exported to PES; the TS-13 sheets with StitchCraft Auto installed | each document sews as the sheet's design moved by whole millimetres to the middle of its artboard, and each file is the one `stitch export` writes. The Auto effect digitizes the TS-13 sheets' shapes automatically (`REQ-VC-015`, `REQ-VC-016`) |
 | `picture` | the badge drawn flat as a PNG, which `stitch plan badge.png --traced traced.vectorcraft` traces with VectorCraft's command line, its steps on standard input. With the reference machine's threads loaded as a swatch library, the picture is fitted into the hoop and traced in colour with the library's colours by the Abutting method, and its paths are kept and saved | `stitch` ends well, and the document it traced, read with `--auto`, sews the badge's 3 threads, each a thread of the palette, the white round the badge left out as the background (`REQ-CLI-012`, `REQ-AUTO-001`, `REQ-AUTO-009`) |
+| `route-runs` | 3 lines with the stroke effect, a rail, a post across it and a brace, routed by Auto-Route Running Stitch | the route gives 8 strokes, 5 on top and 3 runs under them, as the engine's tests route them (`REQ-VC-020`) |
+| `route-satins` | 2 lines with the satin effect, an upright and a bar, routed by Auto-Route Satin Columns | the route gives the upright's top, a run down its centre line, the upright back up over the run and the bar (`REQ-VC-018`) |
+| `tartan` | a square with the fill effect, its sett set by StitchCraft Tartan from a threadcount, exported to PES before and after | the effect's record keeps the tartan fill and the sett, and the file after the filter is the one `stitch export` writes and differs from the one before (`REQ-VC-021`) |
+| `traced-photo` | a photo's cut-out traced by `stitch plan` with the command line under test, given the Auto effect in VectorCraft and saved, then exported to PES | `stitch` ends well, and VectorCraft's own export is stopped for the instructions it needs. When a VectorCraft lets it finish, the scenario fails, so the pages that send a user to `stitch export` change (`REQ-VC-025`, `REQ-VC-016`) |
 | `trace` | the reference machine's threads, as `stitch palette` writes them, loaded as a swatch library, a badge drawn flat in 3 of them on white placed, traced in colour with the library's colours by the Abutting method, its paths kept, and saved; then StitchCraft's Auto effect applied to the traced group, saved, and drawn | read with `--auto`, every shape is automatic, the white round the badge is left out as the background, and the badge sews its 3 threads, each a thread of the palette; with the Auto effect, so without `--auto`, and drawing it doesn't leave a last error (`REQ-CLI-011`, `REQ-AUTO-001`, `REQ-AUTO-009`, `REQ-VC-016`) |
 
 *As sent*: the saved file sews as it does with the StitchCraft records of the objects the effects were
@@ -210,7 +214,7 @@ it in an issue of its own, labelled `upstream-canary`.
 
 The `window` job runs the app VectorCraft releases, from the Linux archive of the pinned stable release,
 in a desktop without a screen. `cargo xtask compat window` takes screenshots of the window and drives it
-through its accessibility tree with xa11y, as the docs' `vectorcraft-ui` pictures will be made
+through its accessibility tree with xa11y, as the docs' `vectorcraft-ui` pictures are made
 ([docs pipeline](docs-pipeline.md#vectorcrafts-window-in-ci)). The archive's SHA-256 is pinned beside the
 stable tag in `compat/vectorcraft.toml`, so the bot PR that moves the pin records the new archive's sum
 too, the one the release's `SHA256SUMS.txt` lists and the run checked. The same archive holds

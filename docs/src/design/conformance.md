@@ -11,7 +11,7 @@ as a **matrix** on every pull request. Code is written to make cases pass, not t
 
 | Term | Meaning |
 |---|---|
-| Requirement | A numbered, testable statement: `REQ-FILL-TAT-006: pull compensation preserves region topology` |
+| Requirement | A numbered, testable statement: `REQ-FILL-TAT-006`: a tatami fill's top rows are lengthened by pull compensation |
 | Case | Input + parameters + profile + expectations, as a data file, linked to ≥ 1 requirement |
 | Check | A reusable assertion (an invariant, a metric bound, a golden comparison, an expected diagnostic) |
 | Level | Where the case's truth comes from (L0 invariants … L4 a real machine) |
@@ -27,10 +27,10 @@ as a **matrix** on every pull request. Code is written to make cases pass, not t
 id = "REQ-FILL-TAT-006"
 area = "fill/tatami"
 level = "L2"
-statement = "Pull compensation preserves the number of holes and connected components of the region."
-rationale = "Compensating by growing the whole shape closes gaps the designer left on purpose."
+statement = "A tatami fill's top rows reach past each end of their segments by pull_compensation_mm plus pull_compensation_percent of the segment's length, …"
+rationale = "The thread pulls the fabric in along the rows, and lengthening them makes up for it. …"
 milestone = "M5"
-status = "planned"        # planned | active | retired
+status = "active"        # planned | active | retired
 ```
 
 Rules, enforced in CI:
@@ -48,8 +48,8 @@ Rules, enforced in CI:
 Cases come in two forms, and the report treats them alike.
 
 **Rust tests named after a requirement.** A test function named `req_<area>_<nnn>_<what>` is a case for
-`REQ-<AREA>-<NNN>`: `req_plan_002_stitch_lengths` proves `REQ-PLAN-002`, `req_fill_tat_006_gap_preserved`
-would prove `REQ-FILL-TAT-006`. The name is the link, so there is no list to keep in sync; `--check` finds
+`REQ-<AREA>-<NNN>`: `req_plan_002_stitch_lengths` proves `REQ-PLAN-002`, and
+`req_fill_tat_006_pull_compensation_keeps_every_piece_and_hole_of_the_part` is a case for `REQ-FILL-TAT-006`. The name is the link, so there is no list to keep in sync; `--check` finds
 them by scanning the source and rejects a name that points at no requirement. Use them for rules best
 shown with small hand-built inputs — an invariant's violating and passing examples, a palette's spot
 checks.
@@ -63,7 +63,7 @@ the codes in a table of their own. This is what keeps error paths alive
 ([diagnostics](diagnostics.md#the-registry)).
 
 **Data cases**, `conformance/cases/<area>/<name>.toml`: an input, a profile and expectations, run by the
-suite in-process. Unknown fields are errors, so a typo cannot silently switch a check off. M1 has the
+suite in-process. Unknown fields are errors, so a typo cannot silently switch a check off. The
 `testsheet` kind:
 
 ```toml
@@ -142,9 +142,8 @@ stitches. Its strokes are as wide as an SVG stroke whose style says nothing, and
 width, `capped` a cap, `clipped` one clip path more, and `automatic` makes any element one whose stitches
 StitchCraft chooses, by the settings of the rules that `rules` gives at their defaults. Its fills are
 closed rings filled by the nonzero rule (`fill`, through `rings`), so a hole is drawn the other way round
-from its outline. No stitch type gives its groups threads of their own before M10.6. Until then `threaded`
-puts the groups of each element in the threads a case gives them, `block` and `within`, and assembles and
-finalizes the elements as `plan` does. `three_threads` is one element sewn in red, green and blue, which the
+from its outline. `threaded` puts the groups of each element in the threads a case gives them, `block` and `within`, and assembles and
+finalizes the elements as `plan` does, so a case of several threads doesn't need a tartan or gradient fill to make them. `three_threads` is one element sewn in red, green and blue, which the
 cases of the writers, the previews and the report sew (`REQ-THREAD-003`). The plug-in has no dev-dependencies,
 and its own `testing` module makes the same element for the cases of its exporters and live effects. The satin cases sew their columns with `stitchcraft_testkit::satins`, as an element is
 sewn on the reference machine, with the stitch lengths the engine gives it there (`satin_lengths`), and
@@ -237,11 +236,11 @@ Metrics are defined once in `stitchcraft-testkit::metrics` so every case measure
 |---|---|
 | Coverage | Rasterize the region and the stitch lines (thread width 0.4 mm) at 0.05 mm; covered fraction of region pixels |
 | Edge coverage | Points every 0.05 mm along an edge where 2 shapes meet. The fraction within 0.2 mm of a top stitch, with each stitch pulled in where the thread turns |
-| Containment | Maximum distance of any stitch point outside the region (0 if inside) |
-| Row spacing | Median and spread of perpendicular distances between consecutive rows |
-| Stitch length | Min, max and distribution of `Normal` stitch lengths by role |
-| Furrows | Longest run of rows whose needle points align within 0.1 mm |
-| Topology | Holes and components of the region vs. of the stitched area |
+| Containment | Planned. Maximum distance of any stitch point outside the region (0 if inside) |
+| Row spacing | Planned. Median and spread of perpendicular distances between consecutive rows |
+| Stitch length | Planned. Min, max and distribution of `Normal` stitch lengths by role |
+| Furrows | Planned. Longest run of rows whose needle points align within 0.1 mm |
+| Topology | Planned. Holes and components of the region vs. of the stitched area |
 | Bare fabric | The design painted at 0.05 mm as a viewer paints it, its background left out: the largest patch the top stitches leave bare, once opened with a disc as wide as the thread (`stitchcraft_testkit::fabric`) |
 | Cover | The same painting, read more strictly: the gaps a thread wide that the top stitches leave inside the design, and the share of the design they leave bare (`stitchcraft_testkit::fabric::cover`, `REQ-AUTO-027`) |
 | Each shape's own | What of each area's shape shows its own thread: how much of each hole shows what lies under it, and the gaps a thread wide and the notches 0.15 mm wide where another colour shows inside its outline (`stitchcraft_testkit::fabric::shown`, `REQ-AUTO-084`, `REQ-AUTO-085`) |
@@ -249,8 +248,8 @@ Metrics are defined once in `stitchcraft-testkit::metrics` so every case measure
 | Likeness | What of each colour's parts of the trace the stitches keep, each part counted once whatever its size, and the mean over the colours (`stitchcraft_testkit::fabric::likeness`, `REQ-AUTO-093`). A part is what `stitchcraft_engine::auto::is_part` says, which line merging shares (`REQ-AUTO-095`) |
 | Thickness | The thread over each spot, in fills, and the needle points per mm², which the plan itself measures (`stitchcraft_plan::thickness`, `REQ-AUTO-060`) and `stitchcraft_testkit::fabric::thickness` reads for the cases and the before and after sheet. `fabric::thickest` splits the thickest spot's thread into what satin columns' top stitches lay there and the rest (`fabric::columns`, `REQ-AUTO-073`). The pixel and the thread's width of the metrics above are that measure's |
 
-Coverage is defined since M5.9 and edge coverage since M13.2, and the other metrics arrive with the cases that
-need them. `stitchcraft-testkit::stitches` reads back what a test sheet's stitches show against its
+Coverage is defined since M5.9 and edge coverage since M13.2. The metrics marked planned are not built: they come with
+the cases that need them, which no roadmap step names yet. `stitchcraft-testkit::stitches` reads back what a test sheet's stitches show against its
 drawing: where each element's needle goes in and where a satin column's rungs lie. It also finds the jump
 threads the PE800 leaves, as it cuts none, and the later stitches that sew them down. A pixel is the region's when its centre lies inside the region's rings, by the even-odd rule, and
 covered when its centre lies within 0.2 mm of a stitch the plan sews, whatever its role: the thread is the
@@ -318,7 +317,8 @@ where a path's move-to draws nothing after it, is left out with the jumps and th
 
 `REQ-SVG-008`, `REQ-AUTO-021`, `REQ-AUTO-022`, `REQ-RUN-013`, `REQ-SAT-029`, `REQ-FILL-CON-008`,
 `REQ-FILL-CIR-007`, `REQ-FILL-CRS-007`, `REQ-FILL-CRS-012`, `REQ-FONT-001`, `REQ-ROUTE-008`,
-`REQ-ROUTE-013`, `REQ-RIP-011` and `REQ-RIP-019` are the requirements of level L3. The other runs of the suite leave them and their cases to this one. The corpus is
+`REQ-ROUTE-013`, `REQ-RIP-011`, `REQ-RIP-019`, `REQ-FILL-TRT-011`, `REQ-FILL-GRD-009`, `REQ-FILL-GDD-008` and
+`REQ-FILL-GDD-013` are the requirements of level L3. The other runs of the suite leave them and their cases to this one. The corpus is
 designs the SVG reader sews in full, with their settings (`REQ-SVG-009`), trim and stop commands and the file
 version. A case may name a test sheet drawn as a design instead (`sheet`). With `elements`, the measures
 judge only the sheet's elements whose ids start with it. Both programs sew an SVG file
@@ -408,8 +408,7 @@ lines, and the E in 0.7 mm lines.
 glyphs left out, and both programs sew that file, compared by the measures above. StitchCraft plans it for
 the reference machine with a hoop 400 mm a side, as a glyph file is drawn at its font's height and a glyph
 may be wider than the reference hoop. Every night the case sews 4 glyphs of each font, and every Sunday all
-21,179, in 6 parts. A glyph whose stitch types StitchCraft doesn't sew yet is listed, and joins the
-comparison with M10's steps. An element whose setting StitchCraft can't read is left out with `SC-E0101`,
+21,179, in 6 parts. An element whose setting StitchCraft can't read is left out with `SC-E0101`,
 where Ink/Stitch sews the setting's default: its glyph is excused by `DEV-PRM-001` and not compared. A glyph
 neither program writes a file of agrees. Ink/Stitch writes none when it finds nothing to sew, an element it
 can't sew or elements that sew no stitch, as of a glyph of one empty path, and StitchCraft none when an
@@ -440,7 +439,8 @@ test`, then writes `target/conformance/`:
 
 - `report.md` — the requirement × case matrix, failures first, requirements nobody tests yet folded
   away; in GitHub Actions it is appended to the job summary, so every pull request shows it;
-- `report.json` — machine-readable results, for the docs (requirement pages will show their status);
+- `report.json`: machine-readable results, for tools that read them. No page shows a requirement's status from it, and
+  no roadmap step plans one;
 - `diffs/` — for a machine-file golden that differs, previews (simple style) of the golden file and of
   the new output, so a reviewer sees what sews differently; CI keeps them as a workflow artifact when a
   run fails.
@@ -519,8 +519,8 @@ case ignored as planned whose requirement is not `planned`. So the step that mak
 that changes files under `conformance/golden/` unless it carries the `golden-change` label and a line in
 `CHANGELOG.md`. For the canonical-plan goldens of the format tests, bless with
 `STITCHCRAFT_BLESS=1 cargo test -p stitchcraft-formats --test golden`; for the preview goldens
-(`REQ-RND-002`), with `STITCHCRAFT_BLESS=1 cargo test -p stitchcraft-render --test preview`. Later, `stitch conformance run`
-will let users validate a machine profile with the same cases.
+(`REQ-RND-002`), with `STITCHCRAFT_BLESS=1 cargo test -p stitchcraft-render --test preview`. A `stitch conformance run`, with which
+users would check a machine profile by the same cases, is in no roadmap step.
 
 ## Gates
 
@@ -535,9 +535,8 @@ will let users validate a machine profile with the same cases.
 
 ## Unit, snapshot and doc tests still exist
 
-Conformance cases describe behaviour users see. Unit tests (in modules), snapshot tests (`insta`, for
-intermediate structures such as cell decompositions) and CLI examples in the docs (`trycmd`) still cover
-internals and documentation; mutation testing (`cargo-mutants`) and a coverage ratchet (`cargo-llvm-cov`)
+Conformance cases describe behaviour users see. Unit tests (in modules) still cover internals, and the
+command-line examples declared in `docs/examples.toml`, which `cargo xtask docs --check` runs, cover the docs; mutation testing (`cargo-mutants`) and a coverage ratchet (`cargo-llvm-cov`)
 measure how well all of them together bite ([guardrails](guardrails.md)).
 
 Both are ratchets. `conformance/coverage.toml` holds a line-coverage floor per crate, which a pull

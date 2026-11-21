@@ -211,5 +211,6 @@ The conformance suite checks, through the engine's public API (`crates/stitchcra
    (`REQ-LCK-005`). A path that cannot be sewn as written says why, and any path sews no lock stitch shorter
    than 0.2 mm (`REQ-LCK-006`, property test).
 
-Plan assembly (M3.8) checks where locks go (`ties`, `REQ-LCK-001`). Machine checkpoint MC-2 checks with test
-sheet TS-04 whether the default locks hold when the tail is pulled (`REQ-LCK-003`).
+Plan assembly (M3.8) checks where locks go (`ties`, `REQ-LCK-001`). Machine checkpoint MC-2 will check with test
+sheet TS-04 whether the default locks hold when the tail is pulled (`REQ-LCK-003`, planned until its
+sew-out report).

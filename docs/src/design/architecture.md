@@ -49,7 +49,7 @@ tools: stitchcraft-xtask (`xtask/`, run as `cargo xtask`)
 | `stitchcraft-render` | L2 | CPU preview images of plans (thread look, simple look, overlays) | depend on engine |
 | `stitchcraft-svg` | L3 | SVG → `Design` (geometry, styles, `inkstitch:*` attributes, commands), plan → SVG, and embroidery fonts in Ink/Stitch's format (`font`, M14.1) | contain stitch logic |
 | `stitchcraft-vectorcraft` | L3 | `.vectorcraft` → `Design` (commands in names included), effect records ↔ `ParamSet`, plug-in JSON objects | contain stitch logic |
-| `stitchcraft-testkit` | test | fixtures, `proptest` strategies (from the registry), invariant assertions | be a normal dependency |
+| `stitchcraft-testkit` | test | fixtures, `proptest` strategies, invariant assertions | be a normal dependency |
 | `stitchcraft-cli` | app | the `stitch` command; all filesystem access, and the one program StitchCraft starts, VectorCraft's command line, which traces a picture ([ADR-0015](adr/0015-pictures-traced-by-vectorcraft.md)) | contain engine logic |
 | `stitchcraft-cutout` | app library | the subject cut-out that `stitch` runs before a photo is traced. It reads the photo and runs the pinned models with tract ([ADR-0019](adr/0019-subject-cut-out-before-tracing.md)). `image` and `tract-onnx` are allowed here alone | be a dependency of anything but `stitchcraft-cli`; run a model with a random operator |
 | `stitchcraft-vc-plugin` | app | VectorCraft ABI v1 shim + plug-in manifests | contain engine logic; `unsafe` outside `abi.rs` |
@@ -86,31 +86,30 @@ GPL/AGPL/LGPL.
 | XML / SVG syntax | `roxmltree`, `svgtypes` | MIT/Apache | svg, and engine for `svgtypes`' path-data parser alone, which reads a custom lock drawn as a path |
 | A font's `font.json`, and its glyph names in Unicode's NFC | `serde_json`, `unicode-normalization` 0.1 | MIT/Apache, and Unicode-3.0 for its tables | svg |
 | `.vectorcraft` documents: JSON, its coordinates read exactly, unpacked from gzip by a Rust backend | `serde`, `serde_json`, `flate2` 1 | MIT/Apache | vectorcraft |
-| Rasterizing previews, and reading VectorCraft's pictures to compare them | `tiny-skia` 0.11 | BSD-3-Clause | render, xtask |
+| Rasterizing previews, and reading VectorCraft's pictures to compare them | `tiny-skia` 0.12 | BSD-3-Clause | render, xtask |
 | JSON reports, and the plug-in's JSON | `serde_json` | MIT/Apache | cli, vc-plugin |
 | Content hashes of bug-report bundles, and of the cut-out's models against their pins | `sha2` 0.11 | MIT/Apache | cli, cutout |
 | A photo read for the subject cut-out and resized for its models, and the cut-out written | `image` 0.25 (jpeg, png) | MIT/Apache | cutout |
 | The cut-out's models run from their ONNX files | `tract-onnx` 0.23, without its default features | MIT/Apache | cutout |
 | CLI parsing | `clap` 4 | MIT/Apache | cli, xtask |
 | Tooling's TOML and JSON, and the pins of the cut-out's models | `toml`, `toml_edit`, `serde_json` | MIT/Apache | xtask, and cutout for `toml` alone |
-| Tests | `proptest`, `insta` | MIT/Apache, Apache | dev only |
+| Tests | `proptest` | MIT/Apache | dev only |
 
 The engine's geometry is its own, with no crate for curves, regions, offsets, nearest points or graphs:
 spike M0.7 accepted that ([ADR-0005](adr/0005-geometry-stack.md)). Versions above are those
-`Cargo.toml` asks for (2026-10-17), and `Cargo.lock` is the truth.
+`Cargo.toml` asks for (2026-11-21), and `Cargo.lock` is the truth.
 
 ## Hosts: ports and adapters
 
 The engine exposes one entry point and one input type:
 
 ```rust,ignore
-pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanOutcome;   // since M3.8
+pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanOutcome;
 
 pub struct PlanOutcome {
     pub plan: Option<StitchPlan>,   // None when nothing could be sewn
     pub diagnostics: Vec<Diagnostic>,
-    pub names: Names,               // the shapes' names and sewing places, since M13.25
-    // per-element groups, for previews and reports, arrive with the VectorCraft plug-in (M6)
+    pub names: Names,               // the shapes' names and sewing places
 }
 ```
 
@@ -121,17 +120,17 @@ and a per-element entry point, which `plan` calls for each element and live prev
 
 ```rust,ignore
 pub fn generate(element: &Element, settings: &DesignSettings, profile: &MachineProfile,
-                neighbours: &Neighbours, budget: &Budget) -> Generation;   // since M3.8
+                neighbours: &Neighbours, budget: &Budget) -> Generation;
 
 pub struct Generation {
-    pub generated: Option<Generated>,   // the element's stitch groups and their threads (M10.5); None when it is skipped
+    pub generated: Option<Generated>,   // the element's stitch groups and their threads; None when it is skipped
     pub diagnostics: Vec<Diagnostic>,
 }
 ```
 
 A live preview sees one object, so it has no neighbours, and it sews on the reference machine.
 
-From M10.4 a third entry point, `route`, gives elements back in a sewing order, with the satin columns cut
+A third entry point, `route`, gives elements back in a sewing order, with the satin columns cut
 and runs added under them, as Ink/Stitch's routing tools do. VectorCraft's routing filters and lettering
 call it ([routing tools](routing.md#the-function), [ADR-0017](adr/0017-routing-is-one-engine-function.md)).
 
@@ -194,14 +193,14 @@ VectorCraft reports the plug-in as failed.
 | A new stitch type | `crates/stitchcraft-engine/src/generators/<name>/` | registry params, diagnostics, conformance cases, docs page — see the [playbook](../contributing/playbook-new-stitch-type.md) |
 | A parameter | the generator's `params!` block | nothing else by hand: docs and schemas regenerate; a new `…Params` declaration also gets a line in `stitchcraft_engine::registry::PARAMETERS` — see the [playbook](../contributing/playbook-new-param.md) |
 | A machine format | `crates/stitchcraft-formats/src/<format>/` | [format playbook](../contributing/playbook-new-format.md) |
-| Routing, as Ink/Stitch's Auto-Route tools route | `stitchcraft_engine::route`, from M10.4 | the routing filters in `stitchcraft-vc-plugin`, and the [routing tools](routing.md) page |
+| Routing, as Ink/Stitch's Auto-Route tools route | `stitchcraft_engine::route` | the routing filters in `stitchcraft-vc-plugin`, and the [routing tools](routing.md) page |
 | A machine profile | `crates/stitchcraft-plan/src/profiles/` (data) | machine-testing record |
 | A diagnostic | the diagnostics registry in `stitchcraft-core` | explanation text + a case that triggers it |
 | SVG/Ink/Stitch parsing | `stitchcraft-svg` | compatibility contract row |
-| An embroidery font in Ink/Stitch's format, its settings and glyphs | `stitchcraft_svg::font`, from M14.1 | the [fonts](fonts.md#the-reader) page, and its key in the reader's table, which the font settings page is written from |
-| Setting text in a font: the layout, the scale and the route of its letters. From M14.3 also the path it follows and the order it sews in | `stitchcraft_svg::lettering`, from M14.2, and `stitch lettering` in `apps/stitchcraft-cli/src/commands/lettering.rs` | the [lettering](fonts.md#lettering) section, and a setting's entry in `lettering::SETTINGS`, which the command's help is written from |
-| Lettering of a text object under automatic digitizing | `stitchcraft_svg::lettering::objects`, from M14.7, called by the VectorCraft reader and by `apps/stitchcraft-cli/src/text.rs` for an SVG file's `<text>`, which `src/document/typed.rs` reads | the [text objects in automatic digitizing](fonts.md#text-objects-in-automatic-digitizing) section |
-| Lettering in the place of a picture's traced text | `stitchcraft_svg::lettering::pictures`, from M14.5, called by the VectorCraft reader and by `apps/stitchcraft-cli/src/text.rs` | the [text in pictures](image-to-embroidery.md#text-in-pictures) section |
+| An embroidery font in Ink/Stitch's format, its settings and glyphs | `stitchcraft_svg::font` | the [fonts](fonts.md#the-reader) page, and its key in the reader's table, which the font settings page is written from |
+| Setting text in a font, along a path or not, with the order and route its letters sew in | `stitchcraft_svg::lettering`, and `stitch lettering` in `apps/stitchcraft-cli/src/commands/lettering.rs` | the [lettering](fonts.md#lettering) section, and a setting's entry in `lettering::SETTINGS`, which the command's help is written from |
+| Lettering of a text object under automatic digitizing | `stitchcraft_svg::lettering::objects`, called by the VectorCraft reader and by `apps/stitchcraft-cli/src/text.rs` for an SVG file's `<text>`, which `src/document/typed.rs` reads | the [text objects in automatic digitizing](fonts.md#text-objects-in-automatic-digitizing) section |
+| Lettering in the place of a picture's traced text | `stitchcraft_svg::lettering::pictures`, called by the VectorCraft reader and by `apps/stitchcraft-cli/src/text.rs` | the [text in pictures](image-to-embroidery.md#text-in-pictures) section |
 | VectorCraft document reading | `stitchcraft-vectorcraft` | compatibility gate scenario |
-| A CLI subcommand | `apps/stitchcraft-cli/src/commands/` | `trycmd` example in the docs |
+| A CLI subcommand | `apps/stitchcraft-cli/src/commands/` | an example in `docs/examples.toml`, whose output `cargo xtask docs` writes |
 | A repo check | `xtask/src/` | `cargo xtask ci` step list and the [guardrails](guardrails.md) page |

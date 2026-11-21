@@ -146,8 +146,9 @@ as well as the code:
    selected paths and compound paths, and lists filters on images among what plug-ins don't do in ABI v1
    (`docs/plugins.md` at `3f8d7a0`). In VectorCraft's own flow the user makes the cut-out with
    `stitch cutout` and places it instead of the photo, then traces it with Image Trace. Under M9,
-   StitchCraft would propose P10, which would give a filter each selected placed image as PNG data and let
-   it return a new image for each. P10 isn't raised, as a plug-in still couldn't run the models. A module may be 32 MiB,
+   StitchCraft would propose P12 (numbered P10 here at first, a number the RFC gives its export budget).
+   With it a filter would get each selected placed image as PNG data, and could return a new image for each.
+   P12 isn't raised, as a plug-in still couldn't run the models. A module may be 32 MiB,
    and the models are 49.1 MB. A heavy filter gets 1 G instructions, and MobileSAM's encoder alone does
    38.8 G multiply-adds.
 3. **The models.** MobileSAM cuts the subject out of a box. Its encoder takes the photo once, at 1,024 px on

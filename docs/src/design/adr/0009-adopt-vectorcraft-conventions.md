@@ -46,3 +46,7 @@ VectorCraft changes a convention we follow, we re-evaluate here. When we improve
 - VectorCraft contributors recognize the shape of the code, the gate and the rules.
 - Upstreaming (RFC proposals, phase 3) meets their review standards from the start.
 - We take on a little more CI (GitHub Actions on every PR), which external contributions need.
+
+## Note, 2026-11-21
+
+Row 20's check of unused dependencies isn't built. No gate of xtask or CI looks for unused declarations.

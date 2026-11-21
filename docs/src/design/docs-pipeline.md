@@ -31,6 +31,10 @@ everything.
 | Format modules (limits, commands) | format reference | `cargo xtask docs` |
 | `conformance/inkstitch-params.toml` + registry | [compatibility contract](inkstitch-compat-contract.md) with status | `cargo xtask docs` |
 | Compatibility runs | supported VectorCraft versions | `cargo xtask compat report` (M6.6) |
+| Automatic digitizing's rules and styles (`auto::rules`' `RULES` and `PRESETS`) | [automatic digitizing's rules](../user/reference/auto-rules.md) | `cargo xtask docs` |
+| The font reader's keys (`stitchcraft_svg::font::KEYS`) | [font settings](../user/reference/font-settings.md) | `cargo xtask docs` |
+| The test sheets and their stitch shots | [test sheets](../user/reference/test-sheets.md) | `cargo xtask docs` |
+| `docs/examples.toml`, run with `stitch` | each example's output, `docs/src/user/reference/generated/<id>.txt` | `cargo xtask docs` |
 
 Generated pages are committed (reviewers see user-facing changes in the diff) and marked with a header
 comment; `cargo xtask docs --check` regenerates them in memory and fails if anything differs, or if a
@@ -262,8 +266,8 @@ written again. Pages show what the command prints today.
   that shows at least two pictures. The page claims its types by their Ink/Stitch ids, on a line of
   its own: `<!-- stitch-types: running_stitch, manual_stitch -->`. The check plans an element of each
   stitch type, and each type the engine sews needs its page, so a new stitch type brings one. `UNSHOWN`
-  in `xtask/src/stitch_pages.rs` lists the types sewn before the check, whose pages roadmap step M13.11
-  writes. Each is a warning until then, and an error once its page exists.
+  in `xtask/src/stitch_pages.rs` listed the types sewn before the check. It is empty since M13.11 wrote
+  their pages, so a sewn type without a page fails.
 - `cargo xtask conformance --check` fails when requirements and cases disagree, or a fixture has no row
   in the fixtures index.
 - `cargo xtask shots --check` fails for a declared image that is missing or has no alt text. It also
@@ -353,8 +357,8 @@ The workflow says where the preview is in one comment on the pull request, which
 removes the folder when the pull request closes.
 
 A preview is one folder, which the build job hands to the publisher whole, and the comment is made of
-sections (`.github/scripts/preview-comment.cjs`). A later step, which shows a pull request's pictures beside
-those of `main`, adds a folder to the preview and a section to the comment.
+sections (`.github/scripts/preview-comment.cjs`). The [before and after sheet](before-after-sheet.md), which shows a
+pull request's pictures beside those of `main`, is one more folder of the preview and a section of the comment.
 
 ## Writing rules
 
