@@ -31,7 +31,7 @@ use crate::auto::cap::Pull;
 use crate::auto::{Sewing, sewing, thick};
 use crate::check;
 use crate::design::{Design, Element, Lettered};
-use crate::finalize::{Finalized, finalize};
+use crate::finalize::{Finalized, fitted};
 use crate::generate::layered::{Layered, underlay};
 use crate::generate::{Generated, Generation, approach, generate_with};
 use crate::generators::pull::PullParams;
@@ -131,7 +131,7 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
     let finished = assemble_routed(&generated, &design.settings, routing.as_mut(), &mut meter).and_then(|assembled| match assembled {
         Some(Assembled { plan, warnings, shortest }) => {
             diagnostics.extend(warnings);
-            finalize(plan, profile, &design.settings, &shortest, &mut meter).map(Some)
+            fitted(plan, profile, &design.settings, &shortest, &mut meter).map(Some)
         }
         None => Ok(None),
     });
