@@ -3196,6 +3196,33 @@ rationale = "No measure gives the amount, and the owner's machine has to show it
 milestone = "M13"
 status = "active"
 [[req]]
+id = "REQ-AUTO-167"
+area = "auto"
+level = "L2"
+statement = "A satin column that digitizing makes of a line or of a part reaches past a rail along which a satin column sewn after it runs, for more than half the rail's length, by `auto_column_reach_mm` (REQ-AUTO-168), 0.4 mm by default, its pull compensation, and not by the overlap. Along any other shape sewn after it, it still reaches the overlap (REQ-AUTO-029). A rail along both reaches the smaller. SC-I0904 counts these columns with the others that sew past a rail, at what each reaches."
+rationale = "M13.57 measured, on 45 designs under the default and the logo style, that most of the area above the cap is 2 columns' tops lying on each other where the one sewn first reaches 1 mm under the next. The cap doesn't take a column's top points below the limit (REQ-AUTO-112), and its last resort, taking a point from one, leaves the other's thread there. The column on top covers that edge with its own pull compensation, so the one under it needs to reach no further. On the logo style it took the area at 4 fills or more from 594.8 to 183.8 mm² on 28 designs, and made no design thicker."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-168"
+area = "auto"
+level = "L2"
+statement = "`auto_column_reach_mm`, an advanced setting from 0 to 2 mm, 0.4 mm by default, sets how far an automatic satin column reaches past a rail under a satin column sewn after it (REQ-AUTO-167). A value above the overlap reads as the overlap, and 1 mm, the overlap's default, sews as before M13.57. A person sets it with `--set`, or as a shape's own setting in a document, and an expanded design (REQ-AUTO-142) keeps the columns as the setting made them."
+rationale = "The bare-fabric measure doesn't pull stitches in, so it can't tell how little reach is enough under a column on fabric: it rose by 0.2 to 1.8 mm² on 7 designs of 28. The owner prefers a control she can turn to guessing machinery. The default acts where the measure shows the thread she warns of, and the setting gives back the old reach if a sew-out shows fabric between 2 columns."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-169"
+area = "auto"
+level = "L2"
+statement = "When a design ends with a spot at the warning's limit or above it (SC-W0913) and an automatic shape that lays thread there has `auto_prefer` set to `satin`, as the logo style sets it, the warning's hint says that the logo style sews more of the design as satin columns, which lie on each other at the thick places, and that `--style photo` fills more of it and sews it thinner. A design without such a shape there keeps the hint as it is. Nothing that sews changes."
+rationale = "The owner asked for it as M13.57's first change. Measured on main at de4f7934, every design the logo style left above 4 fills sewed thinner under the photo style: the 4 traced dogs at 3.87 to 3.98 fills where the logo style sews 4.62 to 4.95, a lettered badge at 3.98 where it sews 5.64. No measure of a picture chooses the style reliably (REQ-AUTO-150), so the person chooses, and the warning names the other choice where it matters."
+milestone = "M13"
+status = "planned"
+
+[[req]]
 id = "REQ-AUTO-163"
 area = "auto"
 level = "L2"
