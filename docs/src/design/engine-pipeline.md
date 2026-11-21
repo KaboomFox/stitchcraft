@@ -460,9 +460,9 @@ validates the result. A violation is a bug in StitchCraft: `plan` returns no pla
 It writes a bug-report bundle that reproduces the failure (`REQ-CLI-002`). The conformance suite has a case for every invariant.
 
 The thinning pass and the cap below take needle points out of a plan after finalize. So `plan` checks
-the plan it returns once, when they are done (the engine's `check` module): the pipeline fits the plan to
-the machine without finalize's own check, which `finalize` keeps for those who call it alone, and no plan
-is walked twice for the same answer. The check covers the invariants and each run's locks (`REQ-PLAN-008`, [the thread's state](data-model.md#the-threads-state)): a run
+the plan it returns once, when they are done (the engine's `check` module). The pipeline fits the plan to
+the machine without finalize's own check, so no plan is walked twice for the same answer. `finalize` keeps
+that check for those who call it alone. The check covers the invariants and each run's locks (`REQ-PLAN-008`, [the thread's state](data-model.md#the-threads-state)): a run
 whose element asks for a tie-in or a tie-off by its `ties` must start or end with a lock stitch. A
 violation is `SC-E0009`, and no plan is returned. Every plan the engine returns passes the check by
 construction. The check is linear in the plan, which the stitch budget bounds, so it has no meter of its
