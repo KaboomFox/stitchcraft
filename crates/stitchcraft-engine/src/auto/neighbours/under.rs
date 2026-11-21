@@ -377,7 +377,7 @@ const RAIL_STEP: f64 = 0.5;
 
 /// Makes the automatic satin column `index` of `shapes` sew `overlap` past each rail that a shape sewn after
 /// it runs along for more than half the rail's length, with `meter`'s work, and says whether it has such a
-/// rail (`REQ-AUTO-029`). A rail with none keeps the column's pull compensation, so the column grows no
+/// rail (`REQ-AUTO-029`). A rail with none keeps its own pull compensation, so the column grows no
 /// wider over a shape sewn before it or over fabric. A line goes over the column, and a part's line or
 /// column of the column's own shape paints the part the column is in, so neither is a shape beside it.
 fn widened(shapes: &mut Shapes, index: usize, overlap: f64, meter: &mut Meter) -> Result<bool, Failed> {
