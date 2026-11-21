@@ -25,6 +25,12 @@ line = "let from_left = before.is_none_or(|before| before < place);"
 why = "each column is sewn once, so the place of the column before is never this column's place"
 
 [[equivalent]]
+file = "crates/stitchcraft-render/src/raster.rs"
+mutant = "replace * with + in image_size"
+line = "let millimetres = |lo: i32, hi: i32| (f64::from(hi) - f64::from(lo)) / 10.0 + 2.0 * f64::from(MARGIN_MM);"
+why = "MARGIN_MM is 2, and 2 × 2 is 2 + 2: both give a margin of 2 mm on each side"
+
+[[equivalent]]
 file = "crates/stitchcraft-svg/src/lettering/mod.rs"
 mutant = "replace > with >= in widening"
 line = "let held = if asked > WIDEST {"

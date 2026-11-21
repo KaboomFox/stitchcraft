@@ -11,6 +11,12 @@
 //! Every size is in millimetres times the scale, so a design looks the same at every scale, only
 //! sharper. A margin of [`MARGIN_MM`] keeps threads and marks at the edge inside the image.
 //!
+//! Two things that don't sew can be drawn too, so that a picture in the docs shows what the stitches
+//! follow and how to read it. A scene's guides, the design's lines that aren't sewn, are drawn first in
+//! every style, thin and grey, so the stitches lie on them (`REQ-RND-005`). A thickness picture can have a
+//! key under it, its steps' colours and the limits where each starts ([`Settings::keyed`], `REQ-RND-006`),
+//! taken from the constants the style draws with, so the key can't say other numbers than the picture uses.
+//!
 //! **Determinism.** tiny-skia is built without its SIMD feature, so its pipelines run the same scalar
 //! code on every CPU. Only straight lines and circles are drawn: circles and round caps are conics,
 //! which tiny-skia flattens with arithmetic and square roots (correctly rounded everywhere), so nothing
@@ -20,11 +26,12 @@
 //! PNG files check it on Linux, macOS and Windows (REQ-RND-002).
 
 use stitchcraft_core::{Meter, Point};
-use stitchcraft_plan::thickness::{Limits, Measure, Step, Thickness};
+use stitchcraft_plan::thickness::{self, Limits, Measure, Step, Thickness};
 use stitchcraft_plan::{Rgb, Role, SewnStitch};
 use tiny_skia::{Color, FillRule, LineCap, Paint, Path, PathBuilder, Pixmap, Rect, Stroke, StrokeDash, Transform};
 
 use crate::error::RenderError;
+use crate::key::{self, Glyph};
 use crate::scene::{Arrival, GridPoint, Hole, Mark, Scene};
 
 /// The largest preview, in pixels on a side (4096 × 4096 RGBA pixels take 64 MiB).
@@ -79,6 +86,7 @@ pub struct Settings {
     style: Style,
     scale: f32,
     fabric: Option<Rgb>,
+    key: bool,
 }
 
 impl Settings {
@@ -94,7 +102,7 @@ impl Settings {
     /// `style` at `scale` pixels per millimetre; `None` unless the scale is within
     /// [`MIN_SCALE`](Self::MIN_SCALE)..=[`MAX_SCALE`](Self::MAX_SCALE).
     pub fn new(style: Style, scale: f32) -> Option<Settings> {
-        (Self::MIN_SCALE..=Self::MAX_SCALE).contains(&scale).then_some(Settings { style, scale, fabric: None })
+        (Self::MIN_SCALE..=Self::MAX_SCALE).contains(&scale).then_some(Settings { style, scale, fabric: None, key: false })
     }
 
     /// The style.
@@ -114,6 +122,17 @@ impl Settings {
         Settings { fabric: Some(fabric), ..self }
     }
 
+    /// These settings with a key under the picture (`REQ-RND-006`): a box in each step's colour and, under
+    /// each border between 2 boxes, the number of fills where the next step starts. `None` unless the style
+    /// is [`Style::Thickness`], the only style with steps to explain.
+    #[must_use]
+    pub const fn keyed(self) -> Option<Settings> {
+        match self.style {
+            Style::Thickness => Some(Settings { key: true, ..self }),
+            Style::Realistic | Style::Simple => None,
+        }
+    }
+
     /// The colour of the fabric under the design: the one [`on`](Self::on) named, or else the style's own.
     pub const fn fabric(self) -> Rgb {
         match self.fabric {
@@ -129,6 +148,18 @@ const ORDINARY: Rgb = Rgb::from_hex(0xBDBDBD);
 const DOUBLED: Rgb = Rgb::from_hex(0xF2CF45);
 const THICK: Rgb = Rgb::from_hex(0xEE7F1E);
 const FAILING: Rgb = Rgb::from_hex(0xC8161D);
+/// The colours of the thickness style's steps, from the thinnest thread to the thickest, as its key shows them.
+const STEPS: [Rgb; 4] = [ORDINARY, DOUBLED, THICK, FAILING];
+
+/// The grey of the lines of a design that are not sewn (`REQ-RND-005`).
+const GUIDE: Rgb = Rgb::from_hex(0xA6A6A6);
+/// How wide those lines are, in millimetres: thinner than a simple picture's stitch.
+const GUIDE_MM: f32 = 0.1;
+/// The height of a thickness picture's key, in millimetres: 1 of room, 3 of boxes, 1 of room, 2.5 of numbers
+/// and 1.5 of room.
+const KEY_MM: f32 = 9.0;
+/// The dark grey of the key's numbers.
+const INK: Rgb = Rgb::from_hex(0x404040);
 
 /// A drawn preview.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -145,24 +176,32 @@ impl Scene {
     /// Draws the scene. One unit of work per element drawn, plus one per pixel of its length.
     pub fn render(&self, settings: Settings, meter: &mut Meter) -> Result<Image, RenderError> {
         let (min, max) = self.bounds().ok_or(RenderError::Empty)?;
-        let (width, height) = image_size(min, max, settings.scale)?;
+        let below = if settings.key { KEY_MM } else { 0.0 };
+        let (width, height) = image_size(min, max, settings.scale, below)?;
         let pixmap = Pixmap::new(width, height).ok_or_else(|| internal("no canvas of that size"))?;
         let mut canvas = Canvas { pixmap, min, mm: settings.scale, meter };
         canvas.pixmap.fill(color(settings.fabric()));
+        canvas.guides(&self.guides)?;
         match settings.style {
             Style::Realistic => canvas.realistic(self)?,
             Style::Simple => canvas.simple(self)?,
             Style::Thickness => canvas.thickness(self)?,
+        }
+        if settings.key {
+            // The design's picture keeps its size, the other styles' at this scale; the key is under it.
+            let (_, design) = image_size(min, max, settings.scale, 0.0)?;
+            canvas.key(design, settings.fabric())?;
         }
         let png = canvas.pixmap.encode_png().map_err(|e| internal(&format!("the PNG encoder failed: {e}")))?;
         Ok(Image { width, height, png })
     }
 }
 
-/// The image size for a design from `min` to `max` at `scale`, or why there is none.
-fn image_size(min: GridPoint, max: GridPoint, scale: f32) -> Result<(u32, u32), RenderError> {
+/// The image size for a design from `min` to `max` at `scale`, with `below` millimetres more under it, or why
+/// there is none.
+fn image_size(min: GridPoint, max: GridPoint, scale: f32, below: f32) -> Result<(u32, u32), RenderError> {
     let millimetres = |lo: i32, hi: i32| (f64::from(hi) - f64::from(lo)) / 10.0 + 2.0 * f64::from(MARGIN_MM);
-    let (across, down) = (millimetres(min.x, max.x), millimetres(min.y, max.y));
+    let (across, down) = (millimetres(min.x, max.x), millimetres(min.y, max.y) + f64::from(below));
     let pixels = |mm: f64| (mm * f64::from(scale)).ceil();
     let limit = f64::from(MAX_SIDE);
     let (width, height) = (pixels(across), pixels(down));
@@ -204,6 +243,61 @@ impl Canvas<'_> {
         let (dx, dy) = (p.x - self.min.x, p.y - self.min.y);
         let to_px = |units: i32| (MARGIN_MM + units as f32 / 10.0) * self.mm;
         (to_px(dx), to_px(dy))
+    }
+
+    /// The lines of the design that are not sewn, thin and grey, each as one polyline.
+    fn guides(&mut self, guides: &[Vec<GridPoint>]) -> Result<(), RenderError> {
+        let pen = Pen { color: GUIDE, width: (GUIDE_MM * self.mm).max(1.0), dash: None };
+        for guide in guides {
+            let mut points = guide.iter().map(|p| self.px(*p));
+            let Some((x, y)) = points.next() else { continue };
+            let (mut path, mut length, mut last) = (PathBuilder::new(), 0.0, (x, y));
+            path.move_to(x, y);
+            for (x, y) in points {
+                path.line_to(x, y);
+                length += (x - last.0).abs() + (y - last.1).abs();
+                last = (x, y);
+            }
+            // A guide of one point has no line to draw.
+            let Some(path) = path.finish() else { continue };
+            self.stroke(&path, pen, length)?;
+        }
+        Ok(())
+    }
+
+    /// The key of a thickness picture, in the strip under the design's `design` rows of pixels, on `fabric`:
+    /// a box in each step's colour between the margins, and the number of fills where each step after the
+    /// first starts under the border it starts at.
+    fn key(&mut self, design: u32, fabric: Rgb) -> Result<(), RenderError> {
+        let (width, height, mm) = (self.pixmap.width() as f32, self.pixmap.height() as f32, self.mm);
+        let top = design as f32;
+        let strip = Rect::from_ltrb(0.0, top, width, height).ok_or_else(|| internal("the key's strip"))?;
+        self.meter.charge(1 + work(width * (height - top)))?;
+        self.pixmap.fill_rect(strip, &paint(fabric), Transform::identity(), None);
+        let (left, right) = (MARGIN_MM * mm, width - MARGIN_MM * mm);
+        let each = (right - left) / STEPS.len() as f32;
+        for (n, colour) in STEPS.iter().enumerate() {
+            let x = left + each * n as f32;
+            let swatch = Rect::from_xywh(x, top + mm, each, 3.0 * mm).ok_or_else(|| internal("a box of the key"))?;
+            self.meter.charge(1 + work(each * 3.0 * mm))?;
+            self.pixmap.fill_rect(swatch, &paint(*colour), Transform::identity(), None);
+        }
+        let size = 2.5 * mm;
+        let pen = Pen { color: INK, width: (0.12 * size).max(1.0), dash: None };
+        for (n, text) in key_labels().iter().enumerate() {
+            let border = left + each * (n + 1) as f32;
+            let figures = placed(text, border, size).ok_or_else(|| RenderError::Internal(format!("the key has no figures for {text}")))?;
+            for (glyph, x) in figures {
+                let mut path = PathBuilder::new();
+                for ((x0, y0), (x1, y1)) in glyph.strokes() {
+                    path.move_to(x + x0 * size, top + 5.0 * mm + y0 * size);
+                    path.line_to(x + x1 * size, top + 5.0 * mm + y1 * size);
+                }
+                let path = path.finish().ok_or_else(|| internal("a figure of the key"))?;
+                self.stroke(&path, pen, 4.0 * size)?;
+            }
+        }
+        Ok(())
     }
 
     fn realistic(&mut self, scene: &Scene) -> Result<(), RenderError> {
@@ -389,6 +483,34 @@ fn paint(c: Rgb) -> Paint<'static> {
     paint
 }
 
+/// The numbers under the borders of a thickness picture's key: the fills where each step after the first
+/// starts, by the limits [`Canvas::thickness`] colours with.
+fn key_labels() -> [String; 3] {
+    let limits = Limits::DEFAULT;
+    [label(thickness::ORDINARY), label(limits.warn_fills), label(limits.fail_fills.max(limits.warn_fills))]
+}
+
+/// The figures of `text`, each with the pixel its left edge stands at, for figures `size` pixels high centred
+/// on the pixel `centre`: a digit takes 0.55 of its height and a point none, with 0.25 between 2 figures.
+/// `None` when `text` has a character the key has no figure for.
+fn placed(text: &str, centre: f32, size: f32) -> Option<Vec<(Glyph, f32)>> {
+    let glyphs = key::glyphs(text)?;
+    let advance = |glyph: &Glyph| if *glyph == Glyph::Point { 0.3 } else { 0.8 };
+    let across: f32 = glyphs.iter().map(advance).sum::<f32>() - 0.25;
+    let mut x = centre - across * size / 2.0;
+    let mut placed = Vec::with_capacity(glyphs.len());
+    for glyph in glyphs {
+        placed.push((glyph, x));
+        x += advance(&glyph) * size;
+    }
+    Some(placed)
+}
+
+/// `fills` written as the key writes it: without a fraction when it is whole.
+fn label(fills: f64) -> String {
+    format!("{fills}")
+}
+
 fn internal(what: &str) -> RenderError {
     RenderError::Internal(format!("tiny-skia refused {what}"))
 }
@@ -414,7 +536,7 @@ mod tests {
                 lock: false,
             })
             .collect();
-        Scene { holes, marks: Default::default() }
+        Scene { holes, ..Scene::default() }
     }
 
     #[test]
@@ -502,6 +624,150 @@ mod tests {
         assert_eq!((pixel(&image, 70, 45), image.width, image.height), (Rgb::new(255, 255, 255), 140, 90));
         let short = Budget { max_stitches: 10, max_work: 140 * 90 + 500 };
         assert!(matches!(scene(&[(0, 0), (100, 50)]).render(settings, &mut short.meter()), Err(RenderError::Budget(_))));
+    }
+
+    #[test]
+    fn req_rnd_005_guides_are_drawn_thin_and_grey_under_the_stitches() {
+        let bare = scene(&[(0, 0), (100, 0)]);
+        // A guide 5 mm below the stitch, and one across it.
+        let guided = Scene { guides: vec![vec![g(0, 50), g(100, 50)], vec![g(50, -10), g(50, 50)]], ..bare.clone() };
+        for style in Style::ALL {
+            let settings = Settings::new(*style, 10.0).unwrap();
+            let (plain, image) =
+                (bare.render(settings, &mut Budget::DEFAULT.meter()).unwrap(), guided.render(settings, &mut Budget::DEFAULT.meter()).unwrap());
+            // The picture grows to hold the guides: 10 × 6 mm plus the margins, from 1 mm above the stitch.
+            assert_eq!((plain.width, plain.height, image.width, image.height), (140, 40, 140, 100), "{style:?}");
+            // The guide, along the 2 rows or columns of pixels its middle lies between, is drawn; on white, in grey.
+            let fabric = pixel(&image, 30, 5);
+            assert_eq!(fabric, settings.fabric(), "{style:?}");
+            for (x, y) in [(30, 79), (30, 80), (69, 50), (70, 50)] {
+                let guide = pixel(&image, x, y);
+                assert_ne!(guide, fabric, "{style:?} {x},{y}");
+                if *style != Style::Realistic {
+                    assert!(guide.r == guide.g && guide.g == guide.b && guide.r >= GUIDE.r, "{style:?} {x},{y}: {guide:?}");
+                }
+            }
+        }
+        // Under the stitches: where the guide crosses the thread, the thread's own pixels show.
+        let realistic = Settings::new(Style::Realistic, 10.0).unwrap();
+        let (plain, image) =
+            (bare.render(realistic, &mut Budget::DEFAULT.meter()).unwrap(), guided.render(realistic, &mut Budget::DEFAULT.meter()).unwrap());
+        assert_eq!(pixel(&image, 70, 30), pixel(&plain, 70, 20));
+        // A scene of a plan has none, and a scene of guides alone is still empty.
+        assert!(
+            Scene::of(&stitchcraft_plan::StitchPlan::default(), stitchcraft_plan::TrimSupport::None, &mut Budget::DEFAULT.meter())
+                .unwrap()
+                .guides
+                .is_empty()
+        );
+        let only = Scene { guides: vec![vec![g(0, 0), g(10, 10)]], ..Scene::default() };
+        let settings = Settings::new(Style::Simple, 8.0).unwrap();
+        assert_eq!(only.render(settings, &mut Budget::DEFAULT.meter()), Err(RenderError::Empty));
+        // Each guide line is work.
+        let lines: Vec<Vec<GridPoint>> = (0..100).map(|_| vec![g(0, 0), g(100, 0)]).collect();
+        let small = Budget { max_stitches: 10, max_work: 3000 };
+        assert!(matches!(Scene { guides: lines, ..bare }.render(settings, &mut small.meter()), Err(RenderError::Budget(_))));
+    }
+
+    #[test]
+    fn req_rnd_006_a_thickness_picture_s_key_shows_its_steps_and_their_limits() {
+        assert!(Style::ALL.iter().all(|style| Settings::new(*style, 8.0).unwrap().keyed().is_some() == (*style == Style::Thickness)));
+        // The numbers under the borders are where the steps start, by the limits the style draws with.
+        assert_eq!(key_labels(), ["2", "4", "6"]);
+        assert_eq!(label(2.5), "2.5");
+        // A number of several figures is centred as a whole: at 10 pixels high, 2.5 takes 16.5 pixels from
+        // the first figure's left edge to the last one's, 12 takes 13.5.
+        let at = |text: &str| placed(text, 100.0, 10.0).unwrap();
+        assert_eq!(at("2.5"), [(Glyph::Digit(2), 91.75), (Glyph::Point, 99.75), (Glyph::Digit(5), 102.75)]);
+        assert_eq!(at("12"), [(Glyph::Digit(1), 93.25), (Glyph::Digit(2), 101.25)]);
+        assert_eq!(placed("2e", 100.0, 10.0), None);
+        let points: Vec<(i32, i32)> = (0..=25).flat_map(|row| [(0, row * 2), (400, row * 2)]).collect();
+        let settings = Settings::new(Style::Thickness, 10.0).unwrap();
+        let plain = scene(&points).render(settings, &mut Budget::DEFAULT.meter()).unwrap();
+        let keyed = scene(&points).render(settings.keyed().unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
+        // The key is a strip under the picture, as wide as it, and the picture above it doesn't change.
+        assert_eq!(keyed.width, plain.width);
+        assert_eq!(f64::from(keyed.height - plain.height), f64::from(KEY_MM * 10.0).ceil());
+        for y in [0, 30, plain.height - 1] {
+            assert_eq!(pixel(&keyed, 70, y), pixel(&plain, 70, y));
+        }
+        // 4 boxes from margin to margin, 100 pixels each, in the steps' colours.
+        let boxes = plain.height + 20;
+        assert_eq!([70, 170, 270, 370].map(|x| pixel(&keyed, x, boxes)), [ORDINARY, DOUBLED, THICK, FAILING]);
+        // A number under each border between 2 boxes: its digit's middle bar, drawn in ink, and fabric beside it.
+        let digits = plain.height + 62;
+        for border in [120, 220, 320] {
+            assert_eq!(pixel(&keyed, border, digits), INK, "{border}");
+            assert_eq!(pixel(&keyed, border + 20, digits), Rgb::new(255, 255, 255), "{border}");
+        }
+        // The key on black fabric is on black too.
+        let black = scene(&points).render(settings.keyed().unwrap().on(Rgb::new(0, 0, 0)), &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(pixel(&black, 145, plain.height + 2), Rgb::new(0, 0, 0));
+    }
+
+    #[test]
+    fn req_rnd_005_a_guide_is_a_tenth_of_a_millimetre_wide_at_any_scale() {
+        // A guide across a stitch 10 mm long, 5 mm below it, at 40 pixels per millimetre: 4 pixels wide, on
+        // the rows 278 to 281 (the margin of 2 mm and 5 mm down).
+        let guided = Scene { guides: vec![vec![g(0, 50), g(100, 50)]], ..scene(&[(0, 0), (100, 0)]) };
+        let image = guided.render(Settings::new(Style::Simple, 40.0).unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
+        let (white, column) = (Rgb::new(255, 255, 255), 200);
+        assert_eq!([278, 279, 280, 281].map(|y| pixel(&image, column, y)), [GUIDE; 4]);
+        assert_eq!((pixel(&image, column, 276), pixel(&image, column, 283)), (white, white));
+        // At 10 pixels per millimetre it is 1 pixel wide, between the rows 69 and 70: the rows beside them
+        // are fabric.
+        let image = guided.render(Settings::new(Style::Simple, 10.0).unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!((pixel(&image, 50, 68), pixel(&image, 50, 71)), (white, white));
+        // A guide is work by its length, across and down: 10 mm over and 5 mm up, then 10 mm back, at 10
+        // pixels per millimetre, is 250 units and one for the line.
+        let work = |guides: Vec<Vec<GridPoint>>| {
+            let mut meter = Budget::DEFAULT.meter();
+            Scene { guides, ..scene(&[(0, 0), (100, 0)]) }.render(Settings::new(Style::Realistic, 10.0).unwrap(), &mut meter).unwrap();
+            meter.work_left()
+        };
+        let none = work(vec![vec![g(0, 50)]]);
+        assert_eq!(none - work(vec![vec![g(0, 50), g(100, 0), g(0, 0)]]), 251);
+    }
+
+    #[test]
+    fn req_rnd_006_the_key_s_boxes_and_numbers_stand_where_a_reader_looks() {
+        // 40 × 5 mm of rows at 10 pixels per millimetre: the design's picture is 440 × 90 pixels and the key's
+        // strip, 9 mm, is the 90 rows under it.
+        let points: Vec<(i32, i32)> = (0..=25).flat_map(|row| [(0, row * 2), (400, row * 2)]).collect();
+        let settings = Settings::new(Style::Thickness, 10.0).unwrap();
+        let mut meter = Budget::DEFAULT.meter();
+        let keyed = scene(&points).render(settings.keyed().unwrap(), &mut meter).unwrap();
+        let mut plain_meter = Budget::DEFAULT.meter();
+        scene(&points).render(settings, &mut plain_meter).unwrap();
+        let (white, top) = (Rgb::new(255, 255, 255), 90);
+        assert_eq!((keyed.width, keyed.height), (440, 180));
+        // Each box is 100 pixels wide from the margin's 20, and 30 high from 10 rows under the strip's top.
+        for (n, colour) in (0u32..).zip(STEPS.iter()) {
+            let (from, to) = (20 + 100 * n, 119 + 100 * n);
+            assert_eq!([pixel(&keyed, from, top + 10), pixel(&keyed, to, top + 39)], [*colour; 2], "{n}");
+            assert_eq!([pixel(&keyed, from + 50, top + 9), pixel(&keyed, from + 50, top + 40)], [white; 2], "{n}");
+        }
+        assert_eq!((pixel(&keyed, 19, top + 20), pixel(&keyed, 420, top + 20)), (white, white));
+        // Each number is a figure 25 pixels high from 50 rows under the strip's top, centred under its border
+        // at 120, 220 and 320: its middle bar, 3 pixels thick on the rows 61 to 63 and 13.75 wide, reaches
+        // 7 pixels to each side and stops short of 10.
+        let dark = |x: u32, y: u32| pixel(&keyed, x, top + y).r < 128;
+        for border in [120, 220, 320] {
+            assert!([61, 62, 63].iter().all(|y| dark(border, *y)), "{border}");
+            assert!(!dark(border, 59) && !dark(border, 65), "{border}");
+            assert!(dark(border - 6, 62) && dark(border + 6, 62), "{border}");
+            assert!(!dark(border - 10, 62) && !dark(border + 10, 62), "{border}");
+        }
+        // The 2 and the 6 have a top bar and a bottom one, the 4 neither.
+        assert!(dark(120, 50) && dark(120, 74) && dark(320, 50) && dark(320, 74));
+        assert!(!dark(220, 50) && !dark(220, 74));
+        // The 4's upright bars stand at its edges, 6.875 pixels each side of its border, from top to bottom
+        // on the right and in the upper half on the left.
+        assert!(dark(226, 55) && dark(226, 69) && dark(213, 55) && !dark(213, 69));
+        // The key's work: the strip's pixels twice (filled, and measured by the thickness style), each box's
+        // pixels and each figure's strokes, a unit more for each of the 8 things drawn.
+        let strip = 440 * 90;
+        assert_eq!(plain_meter.work_left() - meter.work_left(), (1 + strip) + strip + 4 * (1 + 100 * 30) + 3 * (1 + 100));
     }
 
     #[test]
