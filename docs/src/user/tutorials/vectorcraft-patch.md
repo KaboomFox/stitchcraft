@@ -24,7 +24,7 @@ high. Give it a blue fill and no stroke. A fill sews in the colour of its object
 With the circle selected, choose **Effect › Plug-ins › StitchCraft Fill**:
 
 <!-- shot: vectorcraft-plugins-menu -->
-![VectorCraft's Effect menu, open at Plug-ins, which lists StitchCraft Fill, StitchCraft Satin and StitchCraft Stroke.](../../images/generated/vectorcraft-plugins-menu.png)
+![VectorCraft's Effect menu, open at Plug-ins, which lists the 5 StitchCraft effects, Auto, Fill, Lettering, Satin and Stroke.](../../images/generated/vectorcraft-plugins-menu.png)
 <!-- /shot -->
 
 The dialog holds Ink/Stitch's [settings for a fill](../reference/params/fill.md) in sections, each with
