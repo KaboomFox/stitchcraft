@@ -2,7 +2,7 @@
 
 <!-- The status line, a label and its value, which the ADR index is checked against. -->
 <!-- vale ai-tells.ColonUsage = NO -->
-**Status:** Accepted · 2026-10-31, after spike M13.9
+**Status:** Accepted · 2026-10-31, after spike M13.9 · consequence 1 amended by [ADR-0019](0019-subject-cut-out-before-tracing.md)
 <!-- vale ai-tells.ColonUsage = YES -->
 
 ## Context
@@ -52,7 +52,8 @@ What was checked, on 2026-10-31:
 ## Consequences
 
 - StitchCraft's crates don't read PNG or JPEG files, and don't trace. The WebAssembly build and the
-  layering stay as they are.
+  layering stay as they are. (Amended by ADR-0019 on 2026-11-08: `stitchcraft-cutout` reads them for the
+  subject cut-out. StitchCraft still doesn't trace.)
 - A picture given to `stitch` sews as the same picture traced in VectorCraft does, in the tutorial's flow.
   A fix to VectorCraft's tracer helps both, and the user can open the saved document in VectorCraft to
   correct the trace.

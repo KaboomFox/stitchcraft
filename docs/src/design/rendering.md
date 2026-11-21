@@ -101,6 +101,6 @@ test -p stitchcraft-render --test preview` in a pull request labelled `golden-ch
 ## Later
 
 - The hoop and the comfort zone drawn around the design, from a machine profile.
-- Thread direction and sheen for fills and satins, and a density map, once those stitch types exist (M3–M5).
+- Thread direction and sheen for fills and satins. The density map is drawn: it is the `thickness` style.
 - Inside VectorCraft the plug-in returns stitch geometry and VectorCraft draws it on its own canvas;
   this renderer is for files, the command line and the docs.

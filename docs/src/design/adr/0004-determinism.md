@@ -30,3 +30,9 @@ macOS and Windows. Enforced by clippy `disallowed-types`/`disallowed-methods`. D
 The decision first named a CI job that would compare output hashes across Linux, macOS, Windows and
 wasm. CI compares each operating system's outputs with the golden files instead, and builds the
 WebAssembly target without running it ([cross-platform check](../determinism.md#cross-platform-check)).
+
+## Note, 2026-11-21
+
+The `wasm-goldens` gate now runs `stitch`, built for WASI, under wasmtime on every conformance case that
+writes a machine file, and compares its bytes with the golden files. So the WebAssembly build is run and
+compared too, by the goldens ([cross-platform check](../determinism.md#cross-platform-check)).

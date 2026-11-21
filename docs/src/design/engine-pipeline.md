@@ -126,10 +126,9 @@ underlay, reading the running stitch's tolerance and random lengths for its path
 and sews one path through it after the same underlay ([fills](algorithms/fills.md#meander-fill)). A
 circular fill, sewn from M7.9, sews a spiral round the middle of each part after that underlay too, and
 routes the spiral's pieces as a tatami fill routes its rows ([fills](algorithms/fills.md#circular-fill)).
-A guided fill, sewn from M10.9, copies its guide line across each part after that underlay, and routes the
-lines its copies leave inside the part as the circular fill routes its pieces
-([guided fill](algorithms/guided.md)). Its strategy is read first: until M10.10 one that offsets the guide
-skips the element, and its other settings are not read. Without a guide it can use, it sews the tatami fill
+A guided fill follows its guide line across each part after that underlay, by its strategy: copies of
+the line, or the line offset in parallel or as a buffer. It routes the lines inside the part as the
+circular fill routes its pieces ([guided fill](algorithms/guided.md)). Every strategy sews. Without a guide it can use, it sews the tatami fill
 its settings make, which the generate step reads too, saying only what reading them as a guided fill's
 didn't. A guided fill offers the element before it its area, as a tatami fill does.
 A cross stitch fill, sewn from M10.1, sews a cross in each cell of a grid that each part covers enough of,
@@ -236,8 +235,7 @@ default, and StitchCraft's own. Ink/Stitch has no such order.
   before any element is generated. So are whether its settings read, by the registry's declarations of
   what its stitch type reads, and whether it has an underlay. A satin column has one with one of its 3
   underlays on. A tatami, contour, meander, circular, guided or tartan fill has one with `fill_underlay` on,
-  unless it is set to Ink/Stitch's legacy fill or not to be sewn, or a guided fill's strategy is not sewn
-  yet. A tartan with an underlay sews it in its own
+  unless it is set to Ink/Stitch's legacy fill or not to be sewn. A tartan with an underlay sews it in its own
   thread before its stripes' colours, and so joins no run unless its sett sews no stripe.
 - **2 passes.** A run sews the underlays of its elements that have one, in their order, then the top
   stitches of every element in the same order (`REQ-ASM-009`). An element without underlay, such as a
@@ -472,13 +470,16 @@ same ([how thick a design sews](image-to-embroidery.md#how-thick-a-design-sews))
 
 ## 7. Incremental and parallel planning
 
-- **Cache:** a group is keyed by (element shape hash, params hash, neighbours, seed, engine version). The
-  VectorCraft live effects already cache per object; the CLI and future panels reuse the same key.
+Neither is built, and no roadmap step plans them. The engine plans every element on every run: it keeps no
+cache, and `stitch` has no `parallel` feature. If they come, they keep to this:
+
+- **Cache:** a group's key would hold what makes its stitches: the element's shape and parameters, its
+  neighbours, the seed and the engine's version.
 - **Parallelism (native only):** elements are generated in sewing order, each seeing its neighbours
-  ([ADR 0014](adr/0014-generators-see-their-neighbours.md)). Reading parameters and recognizing shapes
-  depend on the element alone. That work may run in parallel with `rayon` behind the CLI's `parallel`
-  feature. Its results are joined in document order, and the output is then identical to a sequential run. The wasm
-  plug-in stays single-threaded.
+  ([ADR 0014](adr/0014-generators-see-their-neighbours.md)). Only reading parameters and recognizing
+  shapes depend on the element alone, so only that work could run in parallel. Its results would be
+  joined in document order, so that the output is the one a sequential run gives. The wasm plug-in stays
+  single-threaded.
 
 ## 8. Outputs
 

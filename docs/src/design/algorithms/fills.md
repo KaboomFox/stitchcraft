@@ -470,7 +470,8 @@ to tune pull compensation ([machine testing](../../plan/machine-testing.md)).
 ## Contour fill
 
 Rings that follow the region's outline inward, like growth rings (P2, M7.7), as Ink/Stitch sews its contour
-fill (read at `d59c9ab`, the commit the differential pins, and at `6555892`). Each part of the region is
+fill (read at `d59c9ab`, the commit the differential pins, and at `6555892`, a commit outside the pin's history,
+so `REQ-FILL-CON-008`'s differential checks the description against the pinned Ink/Stitch). Each part of the region is
 filled on its own, with `row_spacing_mm` between its rings, d below.
 
 ### Rings
@@ -814,8 +815,8 @@ The differential compares the sheet with Ink/Stitch's sewing of it (`REQ-FILL-CI
 
 Rows that follow a guide line drawn with the fill. From M10.9 the guide is copied across each part a row
 spacing at a time, its copies cut by the part, and the lines inside routed as a circular fill's pieces are,
-after the tatami fill's underlay ([guided fill](guided.md)). Ink/Stitch's
-parallel offset and buffer strategies, which offset the guide instead, come with M10.10.
+after the tatami fill's underlay ([guided fill](guided.md)). From M10.10 Ink/Stitch's
+parallel offset and buffer strategies, which offset the guide instead, are sewn too.
 
 ## Linear gradient fill (P3)
 
@@ -865,6 +866,3 @@ stitch reads a `reverse` of its own (M10.8). Ink/Stitch reads them for its legac
 of another method leaves `reverse` to the node's stroke without a word, as it leaves every stroke's
 setting. The VectorCraft plug-in's fill dialog does not offer the method.
 
-## References
-
-- D. Hilbert, "Über die stetige Abbildung einer Linie auf ein Flächenstück," *Mathematische Annalen* 38, 1891.

@@ -84,9 +84,9 @@ warnings.
 undo (for example "rotate the design 90°" for `SC-W0702` when the rotated bounds fit, or "drop the
 dangling rung" for `SC-W0203`). Applied fixes go through the host's command system so they are undoable.
 
-## Initial codes
+## The codes
 
-Codes referenced by the design docs; each is registered in the milestone that implements it. A
+The codes the design docs name, each registered by the step that built it. A
 registered code must keep its row here, with the same severity and a title that starts with the
 registry's (`cargo xtask docs --check`), so a code allocated for one thing cannot be registered for
 another.
@@ -140,7 +140,7 @@ another.
 | `SC-W0320` | Warning | Cross stitch with an odd thread count; an even count sewn (1 sews 2, where Ink/Stitch sews no cross) | M10 |
 | `SC-W0321` | Warning | Cross stitch grid too fine for the shortest stitch; needle points left out | M10 |
 | `SC-W0322` | Warning | Half cross with an even thread count; the odd count above sewn (as Ink/Stitch sews it) | M10 |
-| `SC-E0323` | Error | Tartan fill's sett can't be read; skipped (not JSON, no palette, or a threadcount or colour letters before M10.7) | M10 |
+| `SC-E0323` | Error | Tartan fill's sett can't be read; skipped (not JSON, no palette, a number that isn't one, a stripe's width or count that isn't a number, or letters without a count) | M10 |
 | `SC-W0324` | Warning | Tartan's herringbone sewn as straight rows (retired): M10.7 sews herringbones | M10 |
 | `SC-W0325` | Warning | Tartan fill without a sett; Ink/Stitch's default sett sewn (as Ink/Stitch sews it) | M10 |
 | `SC-W0326` | Warning | Tartan sett with no stripe to sew; only the underlay sewn (as in Ink/Stitch) | M10 |
@@ -208,7 +208,7 @@ another.
 | `SC-W0910` | Warning | Base layer left out (its shape needs more work than the budget allows, and every fill sews the underlay of its settings) | M13 |
 | `SC-I0911` | Info | Base layer turned off (the design's lowest automatic shape turns `auto_base_layer` off, so nothing lies under a place the top thread leaves bare, and fabric may show there) | M13 |
 | `SC-I0912` | Info | Rule that chose a shape's stitches (for each part of an automatic shape, the rule of the table it sewed by and the measures that decided it) | M13 |
-| `SC-W0913` | Warning | Design sews thick (a design digitized automatically has 1 mm² or more with 3 fills of thread or more over it, or 15 needle points or more, and is written all the same) | M13 |
+| `SC-W0913` | Warning | Design sews thick (a design digitized automatically has 1 mm² or more at the warning's limits, by default 4 fills of thread or more over it or 15 needle points or more, and is written all the same) | M13 |
 | `SC-I0914` | Info | Jumps not looked at for a run under later shapes (finding the runs that take the place of jumps between automatic elements needed more work than the budget allows, and the moves from the element named on are as they were) | M13 |
 | `SC-I0915` | Info | Thin line merged into a neighbour (a ragged part of an automatic area narrower than the narrowest satin stroke merges into the automatic area it shares the longest edge with, or keeps its lines when finding them needs more work than the budget allows) | M13 |
 | `SC-I0916` | Info | Parts kept by a mark (each mark named `stitch:keep` or given by `--keep`, with the parts that lie wholly inside it and how many of them sew that would have merged as specks or thin lines) | M13 |

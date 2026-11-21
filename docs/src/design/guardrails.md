@@ -32,10 +32,10 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 | API docs | Rustdoc builds without warnings: no broken, ambiguous or private intra-doc links | `cargo xtask ci` (`RUSTDOCFLAGS=-D warnings`) | `cargo xtask ci` · CI |
 | **Public API review** | Changes to a library crate's public API show in the PR diff, as a change to its `public-api.txt` | `xtask/src/api.rs` (cargo-public-api, pinned) | `cargo xtask api --check` · CI |
 | **Coverage ratchet** | No crate's line coverage drops below its floor, and floors only go up. A crate below its floor has its untested lines named on the pull request, those only another build of a function or a closure on the line runs included | `conformance/coverage.toml`, `xtask/src/coverage.rs` (cargo-llvm-cov) | `cargo xtask coverage` · CI job |
-| **Performance budget** | Planning the reference hoop's whole field (`REQ-FILL-TAT-009`) takes at most 2 % more instructions than recorded, and so does shrinking a region 150 mm across 300 times, as contour fill will. So does `stitch` writing each picture of automatic digitizing, the traced dogs, the pear and the TS-13 sheets, whose count the report splits into stages (`REQ-AUTO-083`). Records only go down. A count below half the record fails too: the counted function was lost. The times are reported against NFR-PERF-1's 50 ms and NFR-PERF-3's 200 ms, with a warning above them | `conformance/perf.toml`, `xtask/src/perf.rs` and `xtask/src/pictures.rs` (valgrind's callgrind), the engine's `field` and `insets` examples, the `profiling` profile | `cargo xtask perf` · CI job |
+| **Performance budget** | Planning the reference hoop's whole field (`REQ-FILL-TAT-009`) takes at most 2 % more instructions than recorded, and so does shrinking a region 150 mm across 300 times, as contour fill does. So does `stitch` writing each picture of automatic digitizing, the traced dogs, the pear and the TS-13 sheets, whose count the report splits into stages (`REQ-AUTO-083`). Records only go down. A count below half the record fails too: the counted function was lost. The times are reported against NFR-PERF-1's 50 ms and NFR-PERF-3's 200 ms, with a warning above them | `conformance/perf.toml`, `xtask/src/perf.rs` and `xtask/src/pictures.rs` (valgrind's callgrind), the engine's `field` and `insets` examples, the `profiling` profile | `cargo xtask perf` · CI job |
 | **Release build** | The build `stitch` and the plug-ins are published as plans as the tests' debug build does: the engine's release tests pass in it too. A release build is compiled more aggressively, and Rust 1.97.0 got one wrong there | `crates/stitchcraft-engine/tests/release.rs`, `rust-toolchain.toml` | `perf` CI job |
 | **Mutation testing** | Tests notice changed behaviour: every mutant in the lines a pull request changes is noticed or a listed equivalent; no crate gets more mutants no test notices than recorded, and records only go down. A weekly part whose unmutated tree failed its tests, or a recorded crate with no mutant tried, fails | `.cargo/mutants.toml`, `conformance/mutation.toml`, `xtask/src/mutants.rs` | `mutants.yml` · changed lines every PR, in 16 parts · everything weekly |
-| **Fuzzing** | Readers never panic, respect their caps and terminate; anything read round-trips and previews | `fuzz/`, `stitchcraft-testkit::fuzz` ([conformance](conformance.md#fuzzing)) | bodies every PR · an hour nightly |
+| **Fuzzing** | Readers never panic, respect their caps and always end. Anything read round-trips and previews | `fuzz/`, `stitchcraft-testkit::fuzz` ([conformance](conformance.md#fuzzing)) | bodies every PR · 20 minutes a target nightly |
 
 `cargo xtask ci` runs everything that does not need extra tools; tools that are not installed locally
 are reported as skipped, while CI installs them and treats them as required. `cargo xtask` refuses an
@@ -152,11 +152,13 @@ whose plan they check. It runs the cases too slow for the debug build there too,
 
 - **One roadmap step per PR**, titled with its id: `M3.4: running stitch even spacing`. Small PRs
   (target under ~400 lines of non-generated change) review faster and revert cleanly.
-- **Conventional commit scopes** (`feat(engine):`, `fix(formats):`, `docs:`) feed the changelog.
+- **Commit titles start with the step id** (`M3.4: …`), as `AGENTS.md` says. Each step adds its own line
+  to `CHANGELOG.md` by hand.
 - **The PR template** asks for: the step id, requirements touched, cases added, docs updated, golden
   changes justified, screenshots refreshed if UI changed, whether a sew-out is needed.
-- **Required checks** on `main` (branch protection): the `ci` and `docs` workflows. Merges are squash
-  merges; `main` is always releasable.
+- **Required checks** on `main`, set by a ruleset: `gates (cargo xtask ci)` and the other jobs it lists,
+  among them the tests on macOS and Windows, the docs check, coverage, perf and `shots-ui`. Pull requests
+  merge with a merge commit, which keeps each branch's commits, and `main` is always releasable.
 - **Playbooks** make common changes mechanical: [new stitch type](../contributing/playbook-new-stitch-type.md),
   [new parameter](../contributing/playbook-new-param.md), [new format](../contributing/playbook-new-format.md),
   [new diagnostic](../contributing/playbook-new-diagnostic.md), and the [review checklist](../contributing/review-checklist.md).

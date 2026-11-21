@@ -33,7 +33,8 @@ gates catch anything you miss.
    `cargo xtask shots`. The page claims the type under its title with `<!-- stitch-types: <id> -->`.
    Once the engine sews the type, `cargo xtask docs --check` fails until one page claims it and shows
    at least two pictures.
-8. **Gate.** `cargo xtask ci`, then open the PR with the roadmap step id. A test sheet drawn as a design is
+8. **Gate.** `cargo xtask prepush`, then open the PR with the roadmap step id. CI runs every gate
+   (`cargo xtask ci`) on it. A test sheet drawn as a design is
    checked mirrored, turned and drawn again too (`tests/transformed.rs`). The type's sheet must sew the same
    whichever way it is drawn.
 9. **Ink/Stitch's fonts.** The glyph differential lists the glyphs of a type StitchCraft doesn't sew yet. Once
