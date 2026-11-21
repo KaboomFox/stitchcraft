@@ -23,6 +23,12 @@
 //! from where it meets that shape there. The area beyond gives the line's part up to it, and their overlap
 //! is whole all the same.
 //!
+//! Under a part's satin column an area may keep less, `auto_column_overlap_mm` (`REQ-AUTO-157`): it is cut
+//! away that far inside the column's edge and reaches that far under it. The column's own stitches reach
+//! its pull compensation past its rails, so the area needs to lie only about that far under it, and with
+//! the whole overlap a narrow column lies whole on the area and sews thick. The setting is empty by
+//! default, which is the overlap, and the area is then taken as before, step for step (`REQ-AUTO-158`).
+//!
 //! The areas are taken from the last to the first, so that each one meets the shapes sewn after it as they
 //! are sewn, with their own overlaps. For the area `a`:
 //!
@@ -237,14 +243,15 @@ struct Split {
 }
 
 /// The shape `later` of `shapes` grown by [`TOUCHING`], split in its parts at least `width` wide and its
-/// narrower ones, as `found` has it or with `meter`'s work; `None` for a shape that paints nothing. A satin
-/// column and a part's line or column are open whole. Of an area, the wide parts are those a disc `width`
-/// across fits on: the area shrunk by half the width and grown again by as much.
-fn split_of(shapes: &mut Shapes, later: usize, width: f64, found: &mut [Option<Split>], meter: &mut Meter) -> Result<Option<Split>, Failed> {
+/// narrower ones, as `found` has it or with `meter`'s work. A satin column and a part's line or column are
+/// open whole. Of an area, the wide parts are those a disc `width` across fits on: the area shrunk by half
+/// the width and grown again by as much. A shape that paints nothing has no parts, though [`near_later`]
+/// finds none such: it goes by what a shape paints, which nothing changes while an area is taken.
+fn split_of(shapes: &mut Shapes, later: usize, width: f64, found: &mut [Option<Split>], meter: &mut Meter) -> Result<Split, Failed> {
     if let Some(Some(known)) = found.get(later).filter(|known| known.as_ref().is_some_and(|known| known.width == width)) {
-        return Ok(Some(known.clone()));
+        return Ok(known.clone());
     }
-    let Some(grown) = shapes.grown(later, meter)? else { return Ok(None) };
+    let grown = shapes.grown(later, meter)?.unwrap_or_default();
     // The width is what a split found once is found again by: without it the split is made again, the same.
     let mut split = Split { width, ..Split::default() };
     match shapes.kind(later) {
@@ -261,7 +268,7 @@ fn split_of(shapes: &mut Shapes, later: usize, width: f64, found: &mut [Option<S
     if let Some(slot) = found.get_mut(later) {
         *slot = Some(split.clone());
     }
-    Ok(Some(split))
+    Ok(split)
 }
 
 /// How many overlaps wide a part of an area is at the least for an area sewn before it to reach its whole
@@ -278,6 +285,9 @@ struct Reach {
     along: f64,
     /// Across its rows: its pull compensation, and no more than along them.
     across: f64,
+    /// Under a part's satin column, either way: `auto_column_overlap_mm`, its overlap when that is empty,
+    /// and no more than its overlap (`REQ-AUTO-157`).
+    column: f64,
     /// The angle of its rows, in degrees.
     angle: f64,
 }
@@ -286,13 +296,14 @@ impl Reach {
     /// The reach of an area with the settings `rules`.
     fn of(rules: &AutoParams) -> Reach {
         let along = rules.auto_overlap_mm.get();
-        Reach { along, across: rules.auto_pull_compensation_mm.get().min(along), angle: rules.auto_fill_angle }
+        let column = rules.auto_column_overlap_mm.map_or(along, |kept| kept.get().min(along));
+        Reach { along, across: rules.auto_pull_compensation_mm.get().min(along), column, angle: rules.auto_fill_angle }
     }
 
     /// The reach under a narrow shape: [`UNDER_NARROW`] of it along the rows, and no more across them.
     fn narrow(self) -> Reach {
         let along = self.along * UNDER_NARROW;
-        Reach { along, across: self.across.min(along), angle: self.angle }
+        Reach { along, across: self.across.min(along), ..self }
     }
 
     /// `parts` grown by the reach, with `meter`'s work: every point within the ellipse round a point of
@@ -451,17 +462,25 @@ fn beside(shapes: &mut Shapes, index: usize, reach: Reach, split: &mut [Option<S
     // The areas and the parts' lines and columns sewn after it that come near it, and every area, column and
     // part's line or column that does, grown to meet it, in its wide and its narrow parts.
     let (mut covering, mut wide, mut narrow, mut open, mut lines) = (Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new());
+    // With less overlap under a part's satin column than elsewhere (`REQ-AUTO-157`), those columns apart: what
+    // they paint of it, and each grown to meet it. With as much, none is set apart, and the area is taken as
+    // it was before the setting, step for step.
+    let less = reach.column < reach.along;
+    let (mut painted, mut columns) = (Vec::new(), Vec::new());
     for later in near_later(shapes, index, &bounds, meter)? {
         covering.extend_from_slice(covers(shapes, index, later));
-        if let Some(parts) = split_of(shapes, later, WIDE * reach.along, split, meter)? {
-            wide.extend(parts.wide);
-            narrow.extend(parts.narrow);
-            open.extend(parts.open);
-            lines.extend(parts.lines);
+        let column = less && shapes.kind(later) == Some(Kind::Part) && shapes.satin(later);
+        if column {
+            painted.extend_from_slice(covers(shapes, index, later));
         }
+        let parts = split_of(shapes, later, WIDE * reach.along, split, meter)?;
+        wide.extend(parts.wide);
+        narrow.extend(parts.narrow);
+        (if column { &mut columns } else { &mut open }).extend(parts.open);
+        lines.extend(parts.lines);
     }
-    // Every shape that comes near it is in one of the 4, and the areas and parts among them in `covering` too.
-    if wide.is_empty() && narrow.is_empty() && open.is_empty() && lines.is_empty() {
+    // Every shape that comes near it is in one of the 5, and the areas and parts among them in `covering` too.
+    if wide.is_empty() && narrow.is_empty() && open.is_empty() && lines.is_empty() && columns.is_empty() {
         return Ok(Some(Found::apart(area)));
     }
     // What the shapes sewn after it leave of it uncovered: none, and it sews nothing.
@@ -473,16 +492,26 @@ fn beside(shapes: &mut Shapes, index: usize, reach: Reach, split: &mut [Option<S
     let (wide, narrow, open) =
         (joined(union([wide.as_slice()], meter))?, joined(union([narrow.as_slice()], meter))?, joined(union([open.as_slice()], meter))?);
     let lines = joined(union([lines.as_slice()], meter))?;
+    let columns = if columns.is_empty() { columns } else { joined(union([columns.as_slice()], meter))? };
     // Cut away the overlap inside their edges, but for its parts they cover whole, which only they sew. What
     // is left holds what they leave uncovered. An area sewn after it may still hold a line's part, which it
     // gives up to this one ([`parted`]): its edge is taken where the line's part ends.
     let apart = if lines.is_empty() { covered } else { joined(difference(&covered, &lines, meter))? };
     let cut_zone = joined(buffered(&apart, -reach.along, meter))?;
+    // Under a part's satin column it is cut away deeper, up to its reach under the column inside the edge of
+    // what covers it: that edge, not the column's own, where an area sewn after it meets the column.
+    let cut_zone = if painted.is_empty() {
+        cut_zone
+    } else {
+        let painted = joined(union([painted.as_slice()], meter))?;
+        let deeper = joined(intersection(&joined(buffered(&apart, -reach.column, meter))?, &painted, meter))?;
+        joined(union([cut_zone.as_slice(), deeper.as_slice()], meter))?
+    };
     let left = attached(joined(difference(&area, &cut_zone, meter))?, &uncovered, meter)?;
     let cut = !no_area(area_of(&area) - area_of(&left));
     // Reaching under the shapes sewn after it from where it touches them, outside what was cut away: its
     // reach under their wide parts, and less under their narrow ones.
-    let covers = joined(union([wide.as_slice(), narrow.as_slice(), open.as_slice()], meter))?;
+    let covers = joined(union([wide.as_slice(), narrow.as_slice(), open.as_slice(), columns.as_slice()], meter))?;
     let contact = joined(intersection(&area, &joined(union([covers.as_slice(), lines.as_slice()], meter))?, meter))?;
     // Across a line's part, whose thread doesn't cover it, and on under the shapes beyond it from where it
     // meets them there: its overlap with them is then whole, whatever the line's width. A shape beyond the
@@ -506,7 +535,10 @@ fn beside(shapes: &mut Shapes, index: usize, reach: Reach, split: &mut [Option<S
     let under_wide = if wide.is_empty() { Vec::new() } else { joined(intersection(&reach.grown(&from, meter)?, &wide, meter))? };
     let under_narrow = if narrow.is_empty() { Vec::new() } else { joined(intersection(&reach.narrow().grown(&from, meter)?, &narrow, meter))? };
     let under_open = if open.is_empty() { Vec::new() } else { joined(intersection(&joined(buffered(&from, reach.along, meter))?, &open, meter))? };
-    let reached = joined(union([across.as_slice(), under_wide.as_slice(), under_narrow.as_slice(), under_open.as_slice()], meter))?;
+    let under_columns =
+        if columns.is_empty() { Vec::new() } else { joined(intersection(&joined(buffered(&from, reach.column, meter))?, &columns, meter))? };
+    let reached =
+        joined(union([across.as_slice(), under_wide.as_slice(), under_narrow.as_slice(), under_open.as_slice(), under_columns.as_slice()], meter))?;
     let under = joined(difference(&joined(difference(&reached, &area, meter))?, &cut_zone, meter))?;
     let parts =
         if no_area(area_of(&under)) { left.clone() } else { attached(joined(union([left.as_slice(), under.as_slice()], meter))?, &left, meter)? };

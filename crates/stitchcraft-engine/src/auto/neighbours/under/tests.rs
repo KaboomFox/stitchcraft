@@ -1,6 +1,7 @@
 //! Less thread where areas overlap (`REQ-AUTO-067`): how far an area reaches along its rows and across
 //! them, under wide and narrow shapes and under a running line's part, and which of 2 areas sews under a
-//! shape sewn after both. The cases of `tests/auto_thick.rs` measure what that takes off a design.
+//! shape sewn after both. The cases of `tests/auto_thick.rs` measure what that takes off a design. And how
+//! far an area stays under a part's satin column (`REQ-AUTO-157`, `REQ-AUTO-158`).
 
 use stitchcraft_core::{Budget, Code, ElementId, Mm};
 
@@ -73,7 +74,7 @@ fn req_auto_067_an_area_reaches_its_overlap_along_its_rows_and_its_pull_compensa
     assert_eq!(reaches(&[("auto_overlap_mm", "0.3"), ("auto_pull_compensation_mm", "2")]), (0.3, 0.3));
     // Without pull compensation it still reaches a hundredth of a millimetre across them.
     assert_eq!(reaches(&[("auto_pull_compensation_mm", "0")]), (1.0, 0.01));
-    assert_eq!((LEAST, Reach::of(&AutoParams::defaults())), (0.01, Reach { along: 1.0, across: 0.4, angle: 0.0 }));
+    assert_eq!((LEAST, Reach::of(&AutoParams::defaults())), (0.01, Reach { along: 1.0, across: 0.4, column: 1.0, angle: 0.0 }));
 }
 
 #[test]
@@ -86,7 +87,7 @@ fn req_auto_067_rows_at_any_angle_reach_as_far_along_them() {
     // A grown part keeps its holes and its winding: a ring 4 mm wide round a hole 2 mm wide grows on both
     // sides.
     let ring = Polygon { holes: vec![vec![p(4.0, 4.0), p(6.0, 4.0), p(6.0, 6.0), p(4.0, 6.0), p(4.0, 4.0)]], ..square((0.0, 0.0), (10.0, 10.0)) };
-    let reach = Reach { along: 0.5, across: 0.2, angle: 0.0 };
+    let reach = Reach { along: 0.5, across: 0.2, column: 0.5, angle: 0.0 };
     let grown = reach.grown(std::slice::from_ref(&ring), &mut Budget::DEFAULT.meter()).unwrap();
     let [grown] = grown.as_slice() else { panic!("{grown:?}") };
     assert_eq!(far(std::slice::from_ref(grown)), (10.5, 10.2));
@@ -106,9 +107,9 @@ fn under(second: Sewn) -> f64 {
 #[test]
 fn req_auto_067_an_area_reaches_half_as_far_under_a_narrow_shape() {
     assert_eq!((WIDE, UNDER_NARROW), (3.0, 0.5));
-    let narrow = Reach { along: 1.0, across: 0.4, angle: 30.0 }.narrow();
-    assert_eq!(narrow, Reach { along: 0.5, across: 0.4, angle: 30.0 });
-    assert_eq!(Reach { along: 0.6, across: 0.4, angle: 0.0 }.narrow().across, 0.3);
+    let narrow = Reach { along: 1.0, across: 0.4, column: 0.7, angle: 30.0 }.narrow();
+    assert_eq!(narrow, Reach { along: 0.5, across: 0.4, column: 0.7, angle: 30.0 });
+    assert_eq!(Reach { along: 0.6, across: 0.4, column: 0.6, angle: 0.0 }.narrow().across, 0.3);
     // An area wider than 3 overlaps is reached under by the whole overlap, and a narrower one by half.
     let strip = |wide: f64| area("second", (10.0, 0.0), (10.0 + wide, 10.0));
     assert_eq!([under(strip(3.1)), under(strip(2.9)), under(strip(1.0))], [11.0, 10.5, 10.5]);
@@ -372,3 +373,168 @@ fn req_auto_067_a_shape_is_split_once_for_the_areas_sewn_before_it_that_share_a_
     let other = work(pair(&[("auto_overlap_mm", "0.6")]), 0, &mut split);
     assert_eq!((other.1, split[2].as_ref().map(|split| split.width)), (10.6, Some(0.6 * WIDE)));
 }
+
+/// A part's satin column of the shape `shape`, its part the box from `from` to `to`, its rails along the
+/// box's sides from top to bottom.
+fn part_column(shape: usize, from: (f64, f64), to: (f64, f64)) -> Sewn {
+    let rail = |x: f64| Subpath { start: p(x, from.1), segments: vec![Segment::Line(p(x, to.1))], closed: false };
+    let rails = Shape::stroke(Path { subpaths: vec![rail(from.0), rail(to.0)] });
+    let satin = Element { shape: rails, params: [("satin_column", "true")].into_iter().collect(), ..filled("column", &[]) };
+    Sewn { element: satin, area: None, automatic: true, reach: None, shape, part: Some(square(from, to)) }
+}
+
+/// The region of the square from (0, 0) to (10, 10), with the settings `params`, beside `later`.
+fn first_beside(params: &[(&str, &str)], later: Vec<Sewn>) -> Vec<Polygon> {
+    let mut sewn = vec![area_with("first", (0.0, 0.0), (10.0, 10.0), params)];
+    sewn.extend(later);
+    region(&reached(sewn, &Budget::DEFAULT).0, "first")
+}
+
+/// Whether `parts` cover the point (`x`, `y`).
+fn covered_at(parts: &[Polygon], x: f64, y: f64) -> bool {
+    parts.iter().any(|part| part.covers(p(x, y)))
+}
+
+#[test]
+fn req_auto_157_an_area_reaches_its_column_overlap_under_a_parts_satin_column_it_meets() {
+    // A part's column 2 mm wide to the right of the square and one below it: the square's rows end at the
+    // first and run along the second, and it reaches as far under both.
+    let beside = |params: &[(&str, &str)]| far(&first_beside(params, vec![part_column(1, (10.0, 0.0), (12.0, 10.0))])).0;
+    let below = |params: &[(&str, &str)]| {
+        let rails = |y: f64| Subpath { start: p(0.0, y), segments: vec![Segment::Line(p(10.0, y))], closed: false };
+        let satin =
+            Element { shape: Shape::stroke(Path { subpaths: vec![rails(10.0), rails(12.0)] }), ..part_column(1, (0.0, 0.0), (1.0, 1.0)).element };
+        let column = Sewn { element: satin, part: Some(square((0.0, 10.0), (10.0, 12.0))), ..part_column(1, (0.0, 0.0), (1.0, 1.0)) };
+        far(&first_beside(params, vec![column])).1
+    };
+    let set = |kept: &'static str| vec![("auto_column_overlap_mm", kept)];
+    // Empty, the default, it is the overlap: 1 mm, or what the area sets.
+    assert_eq!([beside(&[]), below(&[])], [11.0, 11.0]);
+    assert_eq!(beside(&[("auto_overlap_mm", "0.5")]), 10.5);
+    // Set, it is the setting, either way the rows run.
+    for (kept, reach) in [("0.6", 10.6), ("0.4", 10.4), ("0.2", 10.2), ("0", 10.0)] {
+        assert_eq!([beside(&set(kept)), below(&set(kept))], [reach, reach], "{kept}");
+    }
+    // A value above the overlap reads as the overlap, and one equal to it is the overlap.
+    assert_eq!(
+        [beside(&set("1.5")), beside(&set("1")), beside(&[("auto_overlap_mm", "0.5"), ("auto_column_overlap_mm", "0.8")])],
+        [11.0, 11.0, 10.5]
+    );
+    let reach = |params: &[(&str, &str)]| Reach::of(&AutoParams::from_set(&params.iter().copied().collect()).unwrap().params);
+    assert_eq!(reach(&set("0.4")), Reach { along: 1.0, across: 0.4, column: 0.4, angle: 0.0 });
+    assert_eq!(reach(&[("auto_overlap_mm", "0.3"), ("auto_column_overlap_mm", "0.3")]).column, 0.3);
+    assert_eq!(reach(&[("auto_overlap_mm", "0.3"), ("auto_column_overlap_mm", "0.31")]).column, 0.3);
+    // Below 0 it reads as 0, which is warned of (`SC-W0102`).
+    let below_zero = AutoParams::from_set(&set("-0.1").into_iter().collect()).unwrap();
+    assert_eq!((below_zero.params.auto_column_overlap_mm.map(Mm::get), below_zero.warnings.len()), (Some(0.0), 1));
+}
+
+#[test]
+fn req_auto_157_an_area_is_cut_away_its_column_overlap_inside_a_parts_satin_column_that_covers_it() {
+    // A part's column 6 mm wide of a shape drawn after the square covers its right side from x = 6, the
+    // full height: by default the square is cut away 1 mm inside the column's edge, from x = 7.
+    let column = || vec![part_column(1, (6.0, 0.0), (12.0, 10.0))];
+    let cut_from = |params: &[(&str, &str)]| {
+        let first = first_beside(params, column());
+        // Halfway up, the square ends where it is cut away.
+        let ends = (0..300).map(|k| 5.005 + f64::from(k) * 0.01).find(|x| !covered_at(&first, *x, 5.0)).unwrap();
+        (ends * 10.0).round() / 10.0
+    };
+    assert_eq!(cut_from(&[]), 7.0);
+    for (kept, from) in [("0.6", 6.6), ("0.4", 6.4), ("0.2", 6.2), ("0", 6.0)] {
+        assert_eq!(cut_from(&[("auto_column_overlap_mm", kept)]), from, "{kept}");
+    }
+    // An area sewn after the square that meets the column is no edge of it: the cut is measured from the
+    // edge of what covers the square. With an area over the square's top 3 mm, beside the column, the
+    // square ends 0.4 mm inside the column's edge below that area, and 1 mm inside the area's edge.
+    let mut both = column();
+    both.push(area("over", (0.0, 7.0), (6.0, 10.0)));
+    let first = first_beside(&[("auto_column_overlap_mm", "0.4")], both);
+    assert!(covered_at(&first, 6.3, 5.0) && !covered_at(&first, 6.5, 5.0));
+    assert!(covered_at(&first, 3.0, 7.9) && !covered_at(&first, 3.0, 8.1));
+    assert!(!covered_at(&first, 6.3, 7.7), "under the area and the column");
+}
+
+#[test]
+fn req_auto_157_the_setting_changes_no_other_overlap() {
+    let kept = [("auto_column_overlap_mm", "0.4")];
+    // Under an area sewn after it, the square reaches its overlap.
+    assert_eq!(far(&first_beside(&kept, vec![area("second", (10.0, 0.0), (20.0, 10.0))])).0, 11.0);
+    // Under a satin column of a stroke, a person's own or lettering's, it reaches its whole overlap.
+    let rail = |x: f64| Subpath { start: p(x, 0.0), segments: vec![Segment::Line(p(x, 10.0))], closed: false };
+    let stroke = Element {
+        shape: Shape::stroke(Path { subpaths: vec![rail(10.0), rail(12.0)] }),
+        params: [("satin_column", "true")].into_iter().collect(),
+        ..filled("second", &[])
+    };
+    let column = Sewn { element: stroke, area: None, automatic: false, reach: None, shape: 1, part: None };
+    assert_eq!(far(&first_beside(&kept, vec![column])).0, 11.0);
+    // Under the part of a running line it reaches across the part, as without the setting.
+    let strip = square((10.0, 0.0), (10.8, 10.0));
+    let middle = Subpath { start: p(10.4, 0.4), segments: vec![Segment::Line(p(10.4, 9.6))], closed: false };
+    let shape = Shape::Stroke { path: Path { subpaths: vec![middle] }, width: Mm::new(0.8).unwrap(), join: Join::Round, cap: Cap::Round };
+    let line = || Sewn {
+        element: Element { shape: shape.clone(), ..filled("line", &[]) },
+        area: None,
+        automatic: true,
+        reach: None,
+        shape: 1,
+        part: Some(strip.clone()),
+    };
+    assert_eq!(first_beside(&kept, vec![line()]), first_beside(&[], vec![line()]));
+    // Inside an area sewn after it that covers it, it is cut away its overlap inside the edge.
+    let over = |params: &[(&str, &str)]| first_beside(params, vec![area("over", (6.0, 0.0), (12.0, 10.0))]);
+    assert_eq!(over(&kept), over(&[]));
+    // Empty or equal to the overlap, the setting leaves every region as it was.
+    let columns = || vec![part_column(1, (6.0, 0.0), (12.0, 10.0)), part_column(2, (0.0, -2.0), (10.0, 0.0))];
+    assert_eq!(first_beside(&[("auto_column_overlap_mm", "1")], columns()), first_beside(&[], columns()));
+}
+
+#[test]
+fn req_auto_157_an_area_that_needs_more_work_under_a_parts_column_keeps_its_region_at_every_step() {
+    // A square covered by a part's column on its right and meeting another below it, with less overlap
+    // under them: with any less work than it needs, the square is sewn as drawn, and that is said.
+    let sewn = || {
+        vec![
+            area_with("first", (0.0, 0.0), (10.0, 10.0), &[("auto_column_overlap_mm", "0.4")]),
+            part_column(1, (6.0, 0.0), (12.0, 10.0)),
+            part_column(2, (0.0, 10.0), (6.0, 12.0)),
+        ]
+    };
+    let least = least_work(|budget| reached(sewn(), budget).1);
+    let drawn = filled("first", &[square((0.0, 0.0), (10.0, 10.0))]).shape;
+    for work in sampled(least) {
+        let (elements, said) = reached(sewn(), &Budget { max_work: work, ..Budget::DEFAULT });
+        assert!(
+            said.iter().any(|said| said.code == Code::AutoUnder && said.element.as_ref().map(ElementId::as_str) == Some("first")),
+            "{work}: {said:?}"
+        );
+        assert_eq!(elements[0].shape, drawn, "{work}");
+    }
+}
+
+#[test]
+fn req_auto_158_with_the_setting_at_the_overlap_an_area_takes_the_steps_it_took_before() {
+    // A square covered by a part's column on its right and meeting another below it. Empty or at the
+    // overlap, the setting leaves the area to the steps it took before it existed, so the area needs exactly
+    // the work it needed then. A hair under the overlap, the columns are set apart and it needs more.
+    let work = |kept: &'static str| {
+        let sewn = || {
+            let params: Vec<(&str, &str)> = if kept.is_empty() { Vec::new() } else { vec![("auto_column_overlap_mm", kept)] };
+            vec![
+                area_with("first", (0.0, 0.0), (10.0, 10.0), &params),
+                part_column(1, (6.0, 0.0), (12.0, 10.0)),
+                part_column(2, (0.0, 10.0), (6.0, 12.0)),
+            ]
+        };
+        least_work(|budget| reached(sewn(), budget).1)
+    };
+    let before = work("");
+    assert_eq!(before, BEFORE_WORK);
+    assert_eq!(work("1"), before);
+    assert!(work("0.999") > before, "{}", work("0.999"));
+}
+
+/// The work the square of the case above needs on the steps an area took before the setting, counted when
+/// the case was written: those steps charge as they did, and setting the columns apart charges more.
+const BEFORE_WORK: u64 = 24_477;

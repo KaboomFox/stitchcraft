@@ -160,8 +160,8 @@ with the parameters its manifest takes, and an expanded part sets both (`REQ-VC-
 [Expand](image-to-embroidery.md#expand)). The Auto effect's dialog
 leaves out the settings of the registry's Advanced group, which are
 the bounds of the rules and the 2 limits of the cover's measure (M13.21), the base layer's offset, and
-the 4 limits of how thick a design sews (M13.29), and how far outlines are smoothed (M13.52), which is off
-unless `--set` asks for it.
+the 4 limits of how thick a design sews (M13.29), how far outlines are smoothed (M13.52), and how far an
+area lies under a part's satin column (M13.55). The last 2 are off unless `--set` asks for them.
 The switch that sews an outline round each fill has a row since M13.28, in the offset's place. The dialog
 opens with
 the group that declares the family's method. The groups only the family uses, for its default method, come

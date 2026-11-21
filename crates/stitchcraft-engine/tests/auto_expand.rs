@@ -228,3 +228,33 @@ fn req_auto_142_a_design_with_smoothed_outlines_expands_to_its_own_plan() {
         assert_eq!(stitches(&placed(&expanded, middle)), stitches(&placed(&design, middle)), "{smooth}");
     }
 }
+
+#[test]
+fn req_auto_158_a_design_with_less_overlap_under_its_columns_expands_to_its_own_plan() {
+    // The setting changes the areas digitizing makes (`REQ-AUTO-157`): Expand writes them as the setting cut
+    // them, and drops the setting with the Auto effect's others.
+    let pear = pictures::pear();
+    let mut sewn = Vec::new();
+    for kept in ["", "0.4"] {
+        let elements: Vec<Element> = pear
+            .elements()
+            .iter()
+            .cloned()
+            .map(|mut element| {
+                if !kept.is_empty() {
+                    element.params.set("auto_column_overlap_mm", kept);
+                }
+                element
+            })
+            .collect();
+        let design = Design::new(elements, pear.settings).unwrap();
+        let bounds = design.bounds().unwrap();
+        let middle = Point::new((bounds.min().x() + bounds.max().x()) / 2.0, (bounds.min().y() + bounds.max().y()) / 2.0).unwrap();
+        let (expanded, _) = expanded(&design);
+        assert!(expanded.elements().iter().all(|element| element.params.iter().all(|(key, _)| !key.starts_with("auto_"))), "{kept}");
+        let planned = stitches(&placed(&design, middle));
+        assert_eq!(stitches(&placed(&expanded, middle)), planned, "{kept}");
+        sewn.push(planned);
+    }
+    assert_ne!(sewn[0], sewn[1], "the setting changes what the pear sews");
+}

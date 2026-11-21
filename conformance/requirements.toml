@@ -3109,6 +3109,24 @@ statement = "A smoothed outline crosses neither itself nor another edge of its a
 rationale = "A narrow part, a tooth or a strip thinner than twice the setting can fold over when both its sides move by the setting. Removing points can make a line cross another (Saalfeld, 1999), and a fill can't sew a region that crosses itself."
 milestone = "M13"
 status = "active"
+
+[[req]]
+id = "REQ-AUTO-157"
+area = "auto"
+level = "L2"
+statement = "An automatic area keeps `auto_column_overlap_mm` of overlap under each satin column that automatic digitizing makes of a part of a shape and sews after it (a part's column), a wide column whose stitches split (REQ-AUTO-152) among them. Where such a column of another shape covers the area, the area is cut away up to that far inside the column's edge, and where the area meets one, it reaches that far under it. The setting is the area's own, in millimetres, from 0 to 2, and a value above the area's overlap, `auto_overlap_mm`, reads as the overlap. Nothing else changes: under an area, a part's running line, or a satin column of a stroke (a person's own or lettering's), the area keeps its reach of REQ-AUTO-067, and the base layer, a column's own reach past its rails and the cap sew as they did."
+rationale = "A part's column covers an area's edge, and with the whole overlap of 1 mm left under it a column narrower than 2 mm lies whole on the area and the spot sews 3 fills. A column's stitches reach its pull compensation past its rails because the thread pulls them in that far, so an area needs to lie only about that far inside the column's edge. M13.53 measured that 0.4 mm there lowers every traced picture's area at 3 fills. The fabric measure can't say how little is enough, since it doesn't pull stitches in: only a sew-out can."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-158"
+area = "auto"
+level = "L2"
+statement = "`auto_column_overlap_mm` is empty by default, for a document and for a picture `stitch plan` traces alike, and an empty setting is the area's overlap: every design then sews as it did before the setting. A person sets it with `--set`, or as a shape's own setting in a document. It is among the advanced settings, which the Auto effect's dialog doesn't show. An expanded design (REQ-AUTO-142) keeps the areas as the setting cut them and drops the setting with the Auto effect's others, so it plans to the automatic plan."
+rationale = "No measure gives the amount, and the owner's machine has to show it first: on 2026-11-20 she chose to build the setting off by default and sew it. Empty, it follows the overlap as main's areas do, so a design that sets its overlap keeps that overlap under columns too."
+milestone = "M13"
+status = "active"
 [[req]]
 id = "REQ-AUTO-142"
 area = "auto"
