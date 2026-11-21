@@ -319,7 +319,7 @@ The text becomes a design, which every host plans as it plans any other. Its ele
   end of the group it was in. A text without a satin column sews as its glyphs draw it. The routing's
   warnings are passed on, and its notes aren't.
 - **Widened.** `widen_percent` widens every satin column of the text by that percent of its width on each
-  side, by adding to its pull compensation (`REQ-FONT-024`). It is 0 by default, so a font sews as its
+  side, by adding to its pull compensation (`REQ-FONT-024`). It is 0 by default. Then a font sews as its
   author digitized it ([bold letters under the bold font's heights](image-to-embroidery.md#bold-letters-under-the-bold-fonts-heights)).
 - **Bounded.** Any text, any path and any numbers give a design or `SC-E1108`, never a panic. The layout,
   the seats on a path, the placing, the trims and the sort charge one meter of the budget, and the routing
@@ -824,7 +824,7 @@ the fills of broad parts. The table lists what glyphs need beyond them, with the
 | Ends on the baseline, the x-height and the capitals' height | A column's end is flat when the edge lies within 20° of square to it, and pointed otherwise | M15.6 |
 | Serifs | A serif is an arm with a column of its own, or a bump | M15.6 |
 | Thin strokes | A part narrower than 1 mm runs along its centre line. Small fonts digitized by hand sew satin columns half as wide | M15.7 |
-| Counters and the settings of small letters | Columns sew 0.4 mm past a rail that no later shape lies beside, at every height, and a counter that closes isn't named. Small fonts digitized by hand compensate by 0.05 to 0.1 mm | M15.7 |
+| Counters and the settings of small letters | Columns sew 0.4 mm past a rail with nothing sewn after them beside it, at every height, and a counter that closes isn't named. Small fonts digitized by hand compensate by 0.05 to 0.1 mm | M15.7 |
 | Jumps inside a glyph | Columns sew longest first, and a jump joins each 2. TS-13B's digitized letters leave 37 jump threads | M15.8 |
 | Joined letters and overlapping strokes | Contours are united before their centre lines are found | M15.9 |
 | Heights | A shape is digitized at the size it sews | M15.10 |

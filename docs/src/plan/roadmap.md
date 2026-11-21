@@ -42,7 +42,7 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | M1.5 ✅ | PES v1 writer: header, PEC header, palette indices, thumbnails | golden files (`REQ-FMT-001`) |
 | M1.6 ✅ | Brother PEC palette table + CIEDE2000 nearest colour | `REQ-THREAD-001` spot checks |
 | M1.7 ✅ | DST writer (header, ternary records, jump splitting, commands) | golden files; `REQ-FMT-007` |
-| M1.8 ✅ | `stitch testsheet <TS-xx> --profile … -o file` (and `--list`), `stitch profiles`, `stitch explain`; the CLI moves to `clap` (`stitch inspect` needs the readers: M2.1) | examples in the docs, declared in `docs/examples.toml` |
+| M1.8 ✅ | `stitch testsheet <TS-xx> --profile … -o file` (and `--list`), `stitch profiles`, `stitch explain`. The CLI moves to `clap` (`stitch inspect` needs the readers: M2.1) | examples in the docs, declared in `docs/examples.toml` |
 | M1.9 ✅ | Conformance runner v1: requirements × cases matrix, L0 + L1 goldens, job summary | report visible on PRs |
 | M1.10 ✅ | Docs: profile, format, test-sheet, diagnostics and command-line reference generated; tutorial "Your first sew-out" with real output | docs check green |
 | MC-1 🧵 | Sew **TS-01** (orientation, scale), **TS-02** (colour changes, stops, jumps with and without trims), **TS-10A/B/C** (a frame filling each of the PE800's 3 hoops) from PES v1; same TS-01 from DST if the machine reads DST | Sew-out report filed; profile values confirmed or changed; PES v6 decision made |

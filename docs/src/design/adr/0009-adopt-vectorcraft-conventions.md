@@ -49,4 +49,4 @@ VectorCraft changes a convention we follow, we re-evaluate here. When we improve
 
 ## Note, 2026-11-21
 
-Row 20's check of unused dependencies isn't built: neither xtask nor CI runs `cargo-machete` or a check like it.
+Row 20's check of unused dependencies isn't built. No gate of xtask or CI looks for unused declarations.

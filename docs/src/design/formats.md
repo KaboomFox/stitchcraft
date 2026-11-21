@@ -177,7 +177,7 @@ as the first record, with a warning that Brother machines expect the field. File
 1.5.1 itself test both cases (`conformance/oracle/write_pes.py`).
 
 Every reader survives every truncation and single-byte change of the golden files (a deterministic test
-that runs on every PR), and 20 minutes of coverage-guided fuzzing for each reader every night (`REQ-FMT-006`;
+that runs on every PR), and 20 minutes of coverage-guided fuzzing for each reader every night (`REQ-FMT-006`,
 [fuzzing](conformance.md#fuzzing)).
 
 **Round trips.** A file cannot say everything a plan says (a trim is a flag in PEC and three jumps in DST;

@@ -473,8 +473,8 @@ same ([how thick a design sews](image-to-embroidery.md#how-thick-a-design-sews))
 Neither is built, and no roadmap step plans them. The engine plans every element on every run: it keeps no
 cache, and `stitch` has no `parallel` feature. If they come, they keep to this:
 
-- **Cache:** a group would be keyed by the element's shape, its parameters, its neighbours, the seed and the
-  engine's version.
+- **Cache:** a group's key would hold what makes its stitches: the element's shape and parameters, its
+  neighbours, the seed and the engine's version.
 - **Parallelism (native only):** elements are generated in sewing order, each seeing its neighbours
   ([ADR 0014](adr/0014-generators-see-their-neighbours.md)). Only reading parameters and recognizing
   shapes depend on the element alone, so only that work could run in parallel. Its results would be

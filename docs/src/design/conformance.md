@@ -143,7 +143,7 @@ width, `capped` a cap, `clipped` one clip path more, and `automatic` makes any e
 StitchCraft chooses, by the settings of the rules that `rules` gives at their defaults. Its fills are
 closed rings filled by the nonzero rule (`fill`, through `rings`), so a hole is drawn the other way round
 from its outline. `threaded` puts the groups of each element in the threads a case gives them, `block` and `within`, and assembles and
-finalizes the elements as `plan` does, so a case of several threads needs no tartan or gradient fill to make them. `three_threads` is one element sewn in red, green and blue, which the
+finalizes the elements as `plan` does, so a case of several threads doesn't need a tartan or gradient fill to make them. `three_threads` is one element sewn in red, green and blue, which the
 cases of the writers, the previews and the report sew (`REQ-THREAD-003`). The plug-in has no dev-dependencies,
 and its own `testing` module makes the same element for the cases of its exporters and live effects. The satin cases sew their columns with `stitchcraft_testkit::satins`, as an element is
 sewn on the reference machine, with the stitch lengths the engine gives it there (`satin_lengths`), and
@@ -439,7 +439,7 @@ test`, then writes `target/conformance/`:
 
 - `report.md` — the requirement × case matrix, failures first, requirements nobody tests yet folded
   away; in GitHub Actions it is appended to the job summary, so every pull request shows it;
-- `report.json` — machine-readable results, for tools that read them. No page shows a requirement's status from it, and
+- `report.json`: machine-readable results, for tools that read them. No page shows a requirement's status from it, and
   no roadmap step plans one;
 - `diffs/` — for a machine-file golden that differs, previews (simple style) of the golden file and of
   the new output, so a reviewer sees what sews differently; CI keeps them as a workflow artifact when a

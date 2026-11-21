@@ -28,9 +28,9 @@ How it is built:
 
 ## Status
 
-StitchCraft sews all 17 of Ink/Stitch's stitch types: running and manual stitches, zigzag strokes and
-ripples, satin columns with their E, S and zigzag forms, and tatami, legacy, contour, meander, circular,
-cross stitch, tartan, guided and linear gradient fills. It writes PES and DST files, with locks, trims and stops, and reads, draws
+StitchCraft sews all 17 of Ink/Stitch's stitch types. Strokes sew as running, manual or zigzag stitches or
+ripples. Satin columns sew in their 4 methods. Fills sew as tatami, legacy, contour, meander, circular, cross
+stitch, tartan, guided and linear gradient fills. It writes PES and DST files, with locks, trims and stops, and reads, draws
 and converts PES, PEC and DST files from other software. It sews SVG files with their Ink/Stitch settings,
 commands, clips and clones, and VectorCraft documents, whose plug-in previews and exports the stitches.
 Automatic digitizing of a design or a traced picture (M13) and lettering in embroidery fonts (M14) are

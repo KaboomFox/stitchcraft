@@ -312,6 +312,6 @@ Graphic Styles. Applying one copies its effect records into each object, and a d
 ## Versioning and migration
 
 Planned, with the first release: the registry gets a schema version, and a breaking change (renamed key,
-changed unit) ships a migration function `vN → vN+1` and a conformance case with an old-format input.
+changed unit) comes with a migration function `vN → vN+1` and a conformance case with an old-format input.
 Built now: unknown keys from newer files are
 preserved on round trips where the host allows it, and reported once as `SC-W0105`.

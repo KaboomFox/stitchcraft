@@ -85,8 +85,8 @@ here (details and file references in [VectorCraft integration](vectorcraft-integ
 - **Live-effect parameters are stored per object** in the document as `{"id": "plugin.<id>",
   "params": {…}}` — so embroidery settings can live on the art today, with no VectorCraft change.
 - Limits that shaped the first design, in ABI v1 before VectorCraft 0.14: 50 M instructions per call
-  (+4,000 per input byte), 5 s per live-effect run, input is geometry only (no paint), no file-format
-  plug-ins, no panels. Since 0.14 a live effect is given its object's paints, exporters exist and a
+  (+4,000 per input byte), 5 s per live-effect run, and an input of geometry alone, without paint. A
+  plug-in couldn't write a file format or add a panel. Since 0.14 a live effect is given its object's paints, exporters exist and a
   manifest takes 256 parameters ([RFC status](rfc-vectorcraft-abi-v2.md#status)).
 - Everything is a command, reachable from the UI, a JSON control channel, an MCP server and a
   headless CLI (`vectorcraft-cli run --in f --cmd … --export out.png`), which our tests and
@@ -206,12 +206,12 @@ Full types in [data model](data-model.md).
 - **Units**: millimetres as `f64`, y pointing down (same as SVG and VectorCraft). Adapters convert
   (`pt × 25.4/72`, SVG user units through the viewBox). Encoders quantize absolute positions to
   0.1 mm once, so long designs never drift.
-- **Design** (engine input): ordered `Element`s, each with an `id` (stable host id), a name, a `shape`
-  (`Stroke` or `Fill`), a `thread`, its `params` (`ParamSet`), whether it is automatic or lettered, its
-  hints (start and end points, trim, stop) and its clips. The design adds its settings (collapse length,
+- **Design** (engine input): ordered `Element`s. An element has an `id` (stable host id) and a name. Its
+  `shape` is a `Stroke` or a `Fill`, sewn in its `thread` by its `params` (`ParamSet`). It may be automatic
+  or lettered, and has hints (start and end points, trim, stop) and clips. The design adds its settings (collapse length,
   shortest stitch, origin), its marks and its guides. The machine profile is the second argument of `plan`.
 - **StitchPlan** (engine output): colour blocks of stitches; every stitch has a position, a kind
-  (`Normal`, `Jump`, `Trim` or `Stop`; the blocks carry the colour changes and the end) and provenance (element id and role:
+  (`Normal`, `Jump`, `Trim` or `Stop`, as the colour changes and the end are the blocks' own) and provenance (element id and role:
   underlay, top, travel, lock) used by previews, reports and diagnostics.
 - **Diagnostics**: `SC-E…` errors and `SC-W…` warnings with element, location, message and a fix
   hint; each code has a generated explanation page ([diagnostics](diagnostics.md)).
@@ -280,7 +280,7 @@ Details: [determinism](determinism.md).
 
 Three phases (full design in [VectorCraft integration](vectorcraft-integration.md)):
 
-1. **ABI v1, no upstream change (M6).** Plug-ins `dev.stitchcraft.stroke`, `.satin` and `.fill` are
+1. **ABI v1 as VectorCraft releases it (M6).** Plug-ins `dev.stitchcraft.stroke`, `.satin` and `.fill` are
    *live effects*: applying one stores the embroidery parameters on the object and draws a lightweight
    stitch preview. VectorCraft's own commands make satin columns of 2 paths, add rungs and bake previews,
    and its Graphic Styles keep embroidery settings as presets. The Auto effect, lettering, the filters and
@@ -329,7 +329,7 @@ least-privilege workflow tokens.
 ## 17. Release and versioning
 
 SemVer per crate; the plug-in's version and its VectorCraft ABI version are reported in its
-manifest. Each step adds its line to `CHANGELOG.md` by hand; M12 decides how releases make theirs. Plug-in `.wasm` files and
+manifest. Each step adds its line to `CHANGELOG.md` by hand, and M12 decides how releases make theirs. Plug-in `.wasm` files and
 CLI binaries are attached to GitHub Releases with checksums. A release requires: green gates,
 compatibility gate green for the current VectorCraft stable, and the machine checkpoint for that
 milestone signed off.
@@ -357,5 +357,5 @@ milestone signed off.
    constant).
 3. ArtCraft's appetite for the RFC's open proposals and for embroidery in-tree. Ask on their Discord before
    M9. VectorCraft adopted the rest from 0.14.
-4. Where the repository lives on GitHub (needed for the docs site URL and badges). Answered: on GitHub,
+4. Where on GitHub the repository is kept (needed for the docs site URL and badges). Answered: on GitHub,
    with the docs site on its Pages ([publishing](docs-pipeline.md)).
