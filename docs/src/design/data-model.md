@@ -305,8 +305,8 @@ settings (`REQ-ASM-003`, `REQ-LCK-001`).
 ### The thread's state
 
 The invariants follow the needle. A machine reading a plan is also in a state of thread, and that state
-decides where locks belong. M13.56 wrote it down, from the owner's question on 2026-11-21. Its rules,
-`REQ-PLAN-008` to `REQ-PLAN-010`, are planned.
+decides where locks belong. M13.56 wrote it down, from the owner's question on 2026-11-21, and checks its
+rules, `REQ-PLAN-008` to `REQ-PLAN-010`, in every plan the engine returns.
 
 | Entry | Needle | Sewing | Thread, `Command` | Thread, `LongJumps(l)` | Thread, `None` (PE800) |
 |---|---|---|---|---|---|
@@ -323,19 +323,27 @@ jump threads the PE800 leaves, `plan/machine-testing.md`), the stitching before 
 stitching after it a tie-in, where the elements' `ties` set them. That is why plan assembly ties off and in
 round every jump, whatever the machine: the locks hold where a machine or a person cuts.
 
-The model is in 4 places in the code. `invariants::check` tracks the needle. `StitchPlan::sewn_stitches` is
-the sewing state. The preview's scene (`stitchcraft-render`) is the thread state by `TrimSupport`, and
-draws each hole as reached by a stitch, by a jump thread or across a cut. Plan assembly decides where locks
-go (`REQ-LCK-001`). They disagree in 2 places:
+The model is one type, `stitchcraft_plan::ThreadState`. It reads a plan entry by entry, keeps where the
+needle is, whether a run is open and whether the thread has sewn since it was last cut, and says what each
+entry did, from a stitch sewn from the hole before it to a stop. A thread change
+ends the run and cuts. `StitchPlan::sewn_stitches`, `invariants::check` and the engine's lock check read
+the plan through it, and the preview's scene (`stitchcraft-render`) reads `sewn_stitches`. The scene
+keeps the thread's state by `TrimSupport` on top, and draws each hole as reached by a stitch, by a jump
+thread or across a cut. The lock check reads an element's lock settings by the rule that plan assembly
+places locks by (`REQ-LCK-001`).
 
-- **A stop.** `sewn_stitches` keeps a run going across a stop. The scene cuts there, as the PE800 does,
+Before M13.56 the model was in 4 places, which disagreed in 2:
+
+- **A stop.** `sewn_stitches` kept a run going across a stop. The scene cut there, as the PE800 does,
   and encoders write a stop as a change to the same thread. Assembly always jumps after a stop, so only a
-  sheet drawn stitch by stitch shows it: TS-02 sews on after its stop. `REQ-PLAN-010` makes a stop end
-  the run, which changes what the length checks see, and nothing that sews.
+  sheet drawn stitch by stitch shows it: TS-02 sews on after its stop. A stop now ends the run
+  (`REQ-PLAN-010`). The stitch after TS-02's stop is no longer a sewn stitch for the length rules and the
+  thickness measure. Its machine files are byte for byte as before, and so is its preview, where the
+  scene already drew that hole as reached across a cut.
 - **The cap.** Finalize checks the invariants (`REQ-FIN-003`). Then an automatic design is thinned and
   capped ([how thick a design sews](image-to-embroidery.md#how-thick-a-design-sews)), and those passes take
-  needle points out, lock stitches among them, with no check after them. `REQ-PLAN-008`'s check runs
-  after the cap, and the invariants move there with it.
+  needle points out, lock stitches among them, and the plan went out unchecked after them. The
+  [check](engine-pipeline.md#6-check) now runs on the plan that is returned, after the cap.
 
 **What M13.56 measured.** A walk of every finished plan with this model, the elements' lock settings
 read from the design: the 26 test sheets, every conformance fixture and repository document planned plain,
@@ -348,12 +356,11 @@ right after a trim are TS-11A's, an element trimmed and then stopped after, and 
 drawn stitch by stitch, TS-01, TS-02 and TS-10A to TS-10C, have no locks and no settings, so the check
 wants no lock of them.
 
-**The checks.** `REQ-PLAN-009` and `REQ-PLAN-010` are plan rules and join `invariants::check`.
-`REQ-PLAN-008` needs the lock settings, which a plan doesn't hold, so it is the engine's. It walks the plan
-the engine returns once the cap is done, with each element's lock settings from its generated parameters,
-and reports a missing lock as `SC-E0009`, as a broken invariant is. The walk is linear in the plan's
-length. On the largest plan measured (a traced photo of 58,402 entries) it takes 1.5 ms, where
-`invariants::check` takes 2.2 ms.
+**The checks.** `REQ-PLAN-009` and `REQ-PLAN-010` are plan rules, in `invariants::check` and
+`sewn_stitches`. `REQ-PLAN-008` needs the lock settings, which a plan doesn't hold, so it is the engine's
+(`stitchcraft-engine`'s `check` module). It walks the plan the engine returns once the cap is done, with
+each element's lock settings from its generated parameters, and reports a missing lock as `SC-E0009`, as a
+broken invariant is, and never repairs the plan. The walk is linear in the plan's length.
 
 ### How thick a plan sews
 

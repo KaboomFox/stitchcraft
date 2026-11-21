@@ -15,8 +15,7 @@
 //!
 //! A plan that breaks either is a bug in StitchCraft, reported as `SC-E0009` instead of returned. Nothing
 //! is repaired. Both walks are linear in the plan's length, and the plan is bounded by the stitch budget
-//! that made it, so the check needs no meter of its own. On the largest plan measured, a traced photo of
-//! 58,402 entries, the walk of the locks took 1.5 ms and the invariants 2.2 ms (M13.56, opt-level 1).
+//! that made it, so the check needs no meter of its own. Its cost is in the design page's Check section.
 //! Design: `docs/src/design/data-model.md` › The thread's state.
 
 use std::collections::BTreeMap;

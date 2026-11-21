@@ -47,8 +47,8 @@ pub struct ThreadState {
 
 impl Default for ThreadState {
     /// The plan's start: the needle at the origin, up, and the thread cut.
-    fn default() -> ThreadState {
-        ThreadState { needle: Point::ORIGIN, needle_role: Role::Travel, in_run: false, sewn_since_cut: false }
+    fn default() -> Self {
+        Self { needle: Point::ORIGIN, needle_role: Role::Travel, in_run: false, sewn_since_cut: false }
     }
 }
 

@@ -459,6 +459,15 @@ validates the result. A violation is a bug in StitchCraft: `plan` returns no pla
 `SC-E0009 internal check failed` (`REQ-FIN-003`). The command line then does not write a machine file.
 It writes a bug-report bundle that reproduces the failure (`REQ-CLI-002`). The conformance suite has a case for every invariant.
 
+The thinning pass and the cap below take needle points out of a plan that passed. The check runs again on
+the plan `plan` returns, once they are done (the engine's `check` module). It checks the invariants once
+more, and each run's locks (`REQ-PLAN-008`, [the thread's state](data-model.md#the-threads-state)): a run
+whose element asks for a tie-in or a tie-off by its `ties` must start or end with a lock stitch. A
+violation is `SC-E0009`, and no plan is returned. Every plan the engine returns passes the check by
+construction. The check is linear in the plan, which the stitch budget bounds, so it has no meter of its
+own. On the largest plan M13.56 measured, a traced photo of 58,402 entries, the invariants took 2.6 ms
+and a walk of the locks 1.6 ms, at opt-level 1.
+
 A plan that passes, of a design with an automatic shape, is then measured for its thickness, with the
 budget's work once more. Where a spot sews above the cap (`auto_thick_cap_fills`), a last pass takes thread there that is hidden or
 that the design doesn't need, with the budget's work once more, keeping to the profile's shortest and longest

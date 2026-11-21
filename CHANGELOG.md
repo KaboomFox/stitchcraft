@@ -2264,6 +2264,14 @@ What a user can do with this version, before its first release. The entries belo
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.56: every plan the engine returns is checked after the cap, and the check knows the thread's state
+  (`REQ-PLAN-008` to `REQ-PLAN-010`). The thinning pass and the cap took needle points out after finalize's
+  check, and the plan went out unchecked. Now the invariants run on the plan that is returned, with 2 new
+  rules: each run starts and ends with the locks its element's `ties` asks for, and each trim follows a
+  stitch sewn since the thread was last cut. A plan that breaks one is reported as a bug, `SC-E0009`,
+  instead of returned. From M13.56 a stop ends a run of stitches, as the machine cuts there: the length rules and the
+  thickness measure no longer count a stitch across it. One model of the needle and the thread,
+  `stitchcraft_plan::ThreadState`, serves every check. Nothing that sews changes, and no golden file does.
 - M13.25: a shape's name starts with how it sews and its number, and ends with its thread: `Column 1, Russet
   Brown`, `Left out 1, White`, and Expand's `Base layer 1, Red` (`REQ-AUTO-125`). VectorCraft's Layers panel
   shows about 20 characters of a row, and the kind and the number now always fit in them. With the comma that
