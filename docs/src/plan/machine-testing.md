@@ -204,6 +204,8 @@ height. The automatic choice's limits, 20 % and from 8 mm, wait for this sew-out
 - Which reads as bold as the traced block letters of the lettered patch?
 - Are the counters of the a, the e and the R open, or filled with thread?
 - Do Barstitch Bold's letters touch, and does a word in it still read?
+- At 8 mm and 20 %, the narrowest gap between 2 of Small Font's letters is 1.0 mm by M14.9's measure, where
+  it is 1.5 mm unwidened. Do the letters still stand apart in thread, or do they touch?
 - Is the widened Small Font stiff or thick where its strokes meet, against today's?
 
 MC-8 also sews one of the owner's traced dogs, `docs/fixtures/traced-dog-running-9.vectorcraft`, 100 mm
