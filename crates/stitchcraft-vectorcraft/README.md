@@ -60,6 +60,18 @@ and `effect_name` are the plug-ins' ids and their live effects', one definition 
 reader and the compatibility gate. `param_text` writes a parameter's value as an element holds it, which
 the gate compares settings with. `base64` writes a file's bytes as VectorCraft takes them in JSON: an
 exporter's file, and the picture `stitch plan` gives VectorCraft's command line to trace (M13.10).
+From M13.24 and M13.39 the reader takes the paths named `stitch:guide` out of the design as its guides, which
+automatic areas follow (`REQ-VC-032`), and the objects named `stitch:keep` as marks of the parts to keep
+(`REQ-VC-031`), none of them sewn. From M13.25 `src/named.rs` writes each traced shape's name into the
+document VectorCraft traced, which `stitch plan picture.png --traced` writes (`REQ-VC-033`), and
+`src/document/replaced.rs` names a path whose own Auto effect inside an automatic group replaces the
+group's settings (`SC-W0920`, `REQ-VC-034`). From M13.26 `src/expanded.rs` writes an expanded design into
+the document it came from, its parts as paths with their effects and the automatic shapes hidden and
+locked, which `stitch expand picture.vectorcraft -o expanded.vectorcraft` writes (`REQ-CLI-025`).
+From M14.4 `src/document/text.rs` reads a text object with StitchCraft's Lettering effect as lettering in
+its embroidery font (`REQ-VC-026`), and from M14.7 one that automatic digitizing reaches without it, in the
+default font (`REQ-VC-029`). From M14.5 what lies inside an object named `stitch:text` is set as lettering
+(`REQ-VC-028`).
 Design: `docs/src/design/vectorcraft-integration.md#reading-vectorcraft-files-stitchcraft-vectorcraft`.
 The VectorCraft versions it reads are proven by `docs/src/design/compatibility-gate.md`.
 

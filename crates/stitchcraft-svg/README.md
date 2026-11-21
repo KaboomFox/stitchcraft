@@ -82,6 +82,23 @@ lettering is set.
 at its anchor. With `auto`, the reader gives a file's `<text>` elements as text objects for a host with
 fonts to set (`src/document/typed.rs`, `REQ-SVG-017`). A text object sews every line or none.
 
+From M14.3 lettering follows a path: `src/lettering/along.rs` seats each glyph on the path's first subpath
+and turns it the way the path runs (`REQ-FONT-015`, `REQ-FONT-016`). `src/lettering/order.rs` adds the
+trims after letters, words or lines, and sorts a multicolour font's colours (`REQ-FONT-018`,
+`REQ-FONT-019`). From M14.8 `src/lettering/pictures/weight.rs` measures how bold letters are, the width of
+their strokes over their height, the same way on traced outlines and on a font's satin columns, and the
+font that takes the place of traced letters is chosen by it (`REQ-AUTO-080`). From M14.9 the setting
+`widen_percent`, StitchCraft's own and 0 by default, widens each satin column of a text by adding to its
+pull compensation (`REQ-FONT-024`).
+
+From M13.26 `src/written.rs` writes a design's elements as an SVG file with Ink/Stitch's attributes: what
+`stitch expand -o design.svg` writes (`REQ-CLI-025`), and the files of the Ink/Stitch differential
+(`stitchcraft_testkit::inkstitch`). The reader reads each element's shape, colour and parameters back as
+they were written.
+
+From M13.39 and M13.24 the reader takes the elements named `stitch:keep` out of the design as marks, and
+those named `stitch:guide` as guides, never sewn (`src/document/mod.rs`, `REQ-AUTO-104`, `REQ-AUTO-111`).
+
 Style sheets set properties as in a viewer (`src/sheet.rs`, `REQ-SVG-006`). Their rules with element,
 class and id selectors, the ones Illustrator and CorelDRAW write, are read, in the order of CSS's cascade.
 One `SC-W0802` names the other selectors and the at-rules.
@@ -107,7 +124,8 @@ Design: `docs/src/design/data-model.md` (the `Design`), `docs/src/design/archite
   from an element of its name. Style sheets cost a unit per 8 bytes, and each element a unit per class,
   per rule tested against it and per declaration it takes. A clone costs what it shows each time it shows
   it, and a unit per node it looks at to find out whether it shows itself. Clones nest at most 16 deep.
-- Parameters will round-trip unchanged (`REQ-PRM-003`, M8).
+- Parameters round-tripping unchanged through any SVG file is planned (`REQ-PRM-003`, in no step yet). The
+  elements `src/written.rs` writes read back with their parameters.
 
 ## Dependencies
 
