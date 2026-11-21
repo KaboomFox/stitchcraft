@@ -396,6 +396,26 @@ mod tests {
         assert_ne!(file(&auto).0, file(&plain).0);
     }
 
+    #[test]
+    #[ignore = "planned: M13.8 builds automatic digitizing by default"]
+    fn req_vc_036_the_exporters_digitize_automatically_by_default() {
+        // The dialog's option is on, and a host that passes no `auto` gets it on too.
+        let (_, option) = options().into_iter().find(|(id, _)| *id == AUTO).unwrap();
+        assert_eq!(option.schema, Schema::Bool { default: true });
+        let input = document(&json!([line(2, 3.0, &json!([]))]));
+        let automatic = {
+            let (bytes, said) = stitch_export(&input, Reading { auto: true, ..Reading::default() }, REFERENCE, FormatId::PesV1, "line");
+            (base64(&bytes), said)
+        };
+        assert_eq!(file(&exported(FormatId::PesV1, &input, &params("line", &json!({})))), automatic);
+        // Off, it is what `stitch export --no-auto` writes: the shapes as drawn.
+        let plain = {
+            let (bytes, said) = stitch_export(&input, Reading::default(), REFERENCE, FormatId::PesV1, "line");
+            (base64(&bytes), said)
+        };
+        assert_eq!(file(&exported(FormatId::PesV1, &input, &params("line", &json!({ AUTO: false })))), plain);
+    }
+
     /// The parameters of a run that asks for the picture of the file named `name`, with `set`.
     fn picture_params(name: &str, set: &Value) -> Vec<u8> {
         let mut params = set.clone();

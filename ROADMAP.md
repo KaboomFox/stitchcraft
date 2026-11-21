@@ -64,8 +64,8 @@ and TS-11B samples it too (M7.9). An Ink/Stitch file sews with its settings, eac
 of a shape a parameter of its elements (M8.1), and an older file's settings as Ink/Stitch updates them
 (M8.3). Its fills and satin columns start and end at its start and end commands, a VectorCraft document's
 at its `stitch:start` and `stitch:end` markers, and its circular fills turn round its target point
-(M8.4). TS-11A samples the new strokes and satins, so MC-6's sheets are all drawn. Next is MC-8's sew-out,
-then M13.8, and MC-6, and M8 goes ahead meanwhile. M10 has begun with cross stitch, sewn with each of
+(M8.4). TS-11A samples the new strokes and satins, so MC-6's sheets are all drawn. Next are M13.8, which
+the owner took ahead of MC-8's sew-out on 2026-11-21, and MC-8, then MC-6, and M8 goes ahead meanwhile. M10 has begun with cross stitch, sewn with each of
 Ink/Stitch's crosses plain and flipped, on a grid that may turn, which TS-17A samples for MC-12 (M10.1,
 M10.2). Plan assembly sews the groups of one element in threads of their own (M10.5), and a tartan fill
 weaves a plaid of rows in the colours of its sett, each in its own thread, which TS-17B samples (M10.6).

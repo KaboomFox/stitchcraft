@@ -25,8 +25,8 @@ An Image Trace object is a group of the traced paths, with the source image hidd
 those paths, and Expand is optional. Without `--auto` it sews each of them as Ink/Stitch sews an SVG
 shape: every area as a tatami fill and every line as a running stitch, in paint order. In a test document
 of a traced square and a strip 2.1 mm wide beside it, both sewed as tatami fills. With `--auto`, each
-shape sews as this page describes. Once MC-8 confirms the rules on the machine, M13.8 makes automatic
-digitizing the default for VectorCraft documents, and `--auto` is then needed for SVG files only.
+shape sews as this page describes. M13.8 makes automatic digitizing the default for VectorCraft documents,
+and `--auto` is then needed for SVG files only ([below](#automatic-digitizing-by-default)).
 
 VectorCraft's exporter plug-ins ([P1](rfc-vectorcraft-abi-v2.md#p1-exporter-plug-ins), 0.14) move the second
 step into VectorCraft, as File › Export › Export As › PES, which StitchCraft's formats are exporters for since
@@ -99,6 +99,67 @@ is SVG's miter, limited by `stroke-miterlimit`, where Ink/Stitch reads a miter l
 Digitizing doesn't add an error of its own (`REQ-AUTO-006`). A part that its width's stitches cannot sew
 is sewn otherwise, or left out with a warning, and a shape that paints nothing sews as it would without
 the switch. One odd shape among hundreds never keeps a design from being written.
+
+### Automatic digitizing by default
+
+M13.8 makes a VectorCraft document digitized automatically without a switch. The step comes before
+MC-8's sew-out, as the owner chose on 2026-11-21, and the sew-out then confirms or corrects the default
+rather than waiting for it. A VectorCraft document is drawn to be embroidered. An SVG file may be one of Ink/Stitch's,
+so it keeps its reading, and `--auto` asks for automatic digitizing there.
+
+**One reading.** Without a switch, `stitch plan` reads a document as `--auto` reads it, and writes the
+same machine file byte for byte, with the same diagnostics (`REQ-AUTO-163`). So the cap at the end of
+planning and the warning of how thick a design sews hold under the default as they do with `--auto`. One
+constant of the VectorCraft adapter is the default. The command line, the exporters, the compatibility
+gate and the docs pictures import it. `Reading::default()` stays plain, and each host passes the reading
+it wants.
+
+**What doesn't change** (`REQ-AUTO-164`). The default digitizes the shapes `--auto` digitizes: an object with
+no StitchCraft effect of its own and none on a group or a layer around it. The reader already leaves an
+object a Fill, Satin or Stroke effect reaches to that effect (`stitchcraft_vectorcraft::document`), so a
+shape set by hand sews as it was set. Every part of an expanded design has its effect and `digitized_as`,
+so an expanded design is never digitized again. The Auto effect makes a shape automatic with or without
+the default. Markers grouped with a shape the default digitizes are said unused (`SC-W0807`), as with
+`--auto`. A text object without effects becomes lettering, as with `--auto`.
+
+**The notice** (`REQ-AUTO-165`). One line, `SC-I0924`, says how many shapes without StitchCraft effects
+the default digitized and how many sew as their effects say, and that `--no-auto` sews them as drawn. It
+isn't said when `--auto` is given, or when no shape is digitized by default.
+
+**The opt-out.** `--no-auto` sews the shapes without effects as drawn: every area a tatami fill and every
+line a running stitch, in paint order (`REQ-CLI-026`). It is refused beside `--auto`, with a picture, which
+is traced to be digitized automatically, and with `stitch expand`. The exporters' Digitize automatically
+option is on by default, and off it is `--no-auto` (`REQ-VC-036`). A bug-report bundle records `auto` when
+its run digitized automatically, so a bundle from before the default, which has no `auto`, replays plain
+(`REQ-CLI-027`). A document has no setting of its own for it: a shape a person wants sewn as drawn takes
+a StitchCraft Fill or Stroke effect.
+
+**What changes, measured** on `main` at `ae75d386` with the reference machine, plain
+against the default. The reader fixtures, larger than any hoop, were measured on a hoop of 1 m.
+
+| Document | Shapes, automatic | Stitches | Thread changes | Jumps | Thickest, fills | At 3 fills, mm² | Above the cap, mm² |
+|---|---|---|---|---|---|---|---|
+| `patch`, `round-patch` | 0 of 5, 0 of 3 | unchanged | unchanged | unchanged | unchanged | unchanged | unchanged |
+| `traced-badge` | 4 of 4 | 26,125 → 8,748 | 3 → 2 | 4 → 3 | 4.15 → 2.89 | 0 → 0 | 0 → 0 |
+| `traced-pear` | 6 of 6 | 14,059 → 4,628 | 3 → 2 | 6 → 5 | 5.17 → 3.99 | 4.8 → 10.5 | 2.2 → 4.5 |
+| `drawing-format1`, `drawing-format4` | 4 of 4 | 2,094 → 2,016 | 3 → 3 | 4 → 6 | 2.74 → 3.85 | 0 → 19.8 | 0 → 10.0 |
+| `effects` | 2 of 9 | 2,171 → 2,177 | 6 → 6 | 7 → 9 | 4.25 → 3.97 | 21.2 → 17.2 | 6.2 → 2.5 |
+| `features` | 12 of 12 | 3,423 → 3,696 | 8 → 3 | 12 → 22 | 3.78 → 2.91 | 0 → 0 | 0 → 0 |
+| `ribbons-format1`, `ribbons-format4` | 1 of 1 | 269,405 → 230,043 | 0 → 0 | 1 → 1 | 3.26 → 1.98 | 0 → 0 | 0 → 0 |
+| `traced-dog-on-turf-6` | 97 of 97 | 10,153 → 9,530 | 5 → 8 | 66 → 69 | 5.22 → 3.87 | 60.0 → 54.2 | 27.2 → 12.8 |
+| `traced-dog-on-turf-9` | 115 of 115 | 10,880 → 10,100 | 8 → 12 | 87 → 75 | 5.68 → 3.97 | 74.5 → 63.8 | 44.2 → 9.0 |
+| `traced-dog-running-6` | 83 of 83 | 10,885 → 10,630 | 5 → 8 | 59 → 58 | 5.26 → 3.92 | 59.5 → 53.5 | 28.8 → 11.8 |
+| `traced-dog-running-9` | 107 of 107 | 12,165 → 11,779 | 8 → 11 | 76 → 76 | 5.38 → 3.98 | 79.0 → 94.0 | 41.0 → 36.5 |
+
+Every traced document's thickest spot falls from over the warning's 4 fills, 4.15 to 5.68, to under it,
+2.89 to 3.98. The badge and the pear sew a third of the stitches, since the default leaves their background
+out (`SC-W0906`) where the plain reading fills it. The dogs sew a few hundred fewer stitches in 3 or 4
+more thread changes, and the running dog in 9 threads has more area at 3 fills, 94 mm² against 79, as the
+pear has, 10.5 against 4.8. On the drawn shapes of `drawing-format1` the default sews thicker. A stroke
+round a fill becomes a satin column on the fill's edge, and the cap thins no column's top stitches
+(`REQ-AUTO-112`), so 10 mm² stay above the cap and under the warning. Planning takes about 10 times as
+long, 2.3 s against 0.2 s for the dogs in a debug build at optimization level 1. `ribbons` sews too
+many stitches for a PES file either way (`SC-E0602`), as a reader fixture may.
 
 ## Which stitch a shape gets
 
