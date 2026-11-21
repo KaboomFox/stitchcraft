@@ -7,7 +7,8 @@
 //! pipeline stages: [`auto`], which chooses the stitches of the shapes without settings, [`normalize`],
 //! [`generate`], which sends each element to its generator in
 //! [`generators`], [`assemble`], with the [`locks`] it sews, and [`finalize`], which fits the plan to the
-//! machine and checks it; the machine-checkpoint [`testsheets`], drawn in code; and the parameter
+//! machine and checks it, and `check`, which checks the plan that is returned once nothing takes stitches out
+//! of it; the machine-checkpoint [`testsheets`], drawn in code; and the parameter
 //! [`registry`] with the settings every stitch type shares ([`common`]). [`route`] joins satin columns into one
 //! route, as a host's routing tools and lettering ask. `underlays_first` finds the runs of elements that sew
 //! their underlays before their top stitches, which `plan` sews as 2 layers each. Finalize and the generators that
@@ -17,6 +18,7 @@
 
 pub mod assemble;
 pub mod auto;
+mod check;
 pub mod common;
 pub mod design;
 pub mod finalize;

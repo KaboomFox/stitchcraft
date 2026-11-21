@@ -525,6 +525,21 @@ sew the running dog in 9 threads at the default and at 0.4 mm:
 - On the dog at 0.4 mm, look for fabric beside its satin columns, and feel for the thick spots against
   the default.
 
+M13.56 checks the locks of every plan the engine returns, after the cap
+([the thread's state](../design/data-model.md#the-threads-state)), and changes nothing that sews. On an
+automatic design the thinning pass leaves a tie-in one back and forth (`REQ-AUTO-074`): 2 needle points
+where assembly sewed 4, at 2,230 of the 5,333 tie-ins M13.56 counted. Whether a lock holds is
+`REQ-LCK-003`, still planned, which names TS-04. At MC-8, on any automatic design:
+
+- Where a shape starts after a jump thread you cut, pull its thread tail. Does the tie-in hold, or does
+  the end pull out?
+
+M13.56 also makes a run's tie-off from the run's own needle points, so a run that ends on a group of one
+point, sewn straight on from the group before it, ends with its tie-off where it ended with none
+([placement](../design/algorithms/locks.md#placement)). The test sheets and the repository's designs
+sew no such run, so they sew at MC-8 as before. At MC-8, if a design ends a shape on a
+lone stitch, pull its thread tail and say whether the end holds.
+
 M13.51 adds `stitch plan --fewer-points`, off by default, which traces a picture with fewer anchors and fewer
 jags ([outlines thread can't show](../design/image-to-embroidery.md#outlines-thread-cant-show)). It changes
 the rule of a third to a half of each dog's shapes. At MC-8, sew the running dog traced from its photo with

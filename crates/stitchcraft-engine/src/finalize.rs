@@ -30,7 +30,8 @@
 //!    stop position past the edge is `SC-E0701`, whatever else is true of it. Otherwise a design larger
 //!    than the comfort zone is `SC-W0702`.
 //! 5. **The check.** The plan invariants (`stitchcraft_plan::invariants`) must hold; a broken one is a bug
-//!    in StitchCraft (`SC-E0009`), and nothing is written.
+//!    in StitchCraft (`SC-E0009`), and nothing is written. [`finalize`] checks, for those who call it
+//!    alone; the pipeline fits the plan (`fitted`) and checks once, on the plan it returns (`check`).
 
 use stitchcraft_core::units::{at_least, up_to_tenth};
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Mm, Point, Rect};
@@ -56,6 +57,26 @@ pub struct Finalized {
 /// generator used it. Every entry costs a unit of work from `meter`, and every stitch added one of its
 /// stitches.
 pub fn finalize(
+    plan: StitchPlan,
+    profile: &MachineProfile,
+    settings: &DesignSettings,
+    shortest: &[Mm],
+    meter: &mut Meter,
+) -> Result<Finalized, Exhausted> {
+    let Finalized { plan, mut diagnostics } = fitted(plan, profile, settings, shortest, meter)?;
+    let Some(plan) = plan else { return Ok(Finalized { plan: None, diagnostics }) };
+    let violations = invariants::check(&plan, profile);
+    if violations.is_empty() {
+        return Ok(Finalized { plan: Some(plan), diagnostics });
+    }
+    diagnostics.extend(violations.iter().map(invariants::Violation::diagnostic));
+    Ok(Finalized { plan: None, diagnostics })
+}
+
+/// [`finalize`] without its check: `plan` fitted to the machine, for the pipeline, which checks the plan
+/// it returns once, after the stages that take stitches out of it (`REQ-FIN-003`, the `check` module).
+/// Checking here too would walk every plan twice for the same answer.
+pub(crate) fn fitted(
     mut plan: StitchPlan,
     profile: &MachineProfile,
     settings: &DesignSettings,
@@ -89,12 +110,7 @@ pub fn finalize(
         return Ok(Finalized { plan: None, diagnostics });
     }
     diagnostics.extend(size);
-    let violations = invariants::check(&plan, profile);
-    if violations.is_empty() {
-        return Ok(Finalized { plan: Some(plan), diagnostics });
-    }
-    diagnostics.extend(violations.iter().map(invariants::Violation::diagnostic));
-    Ok(Finalized { plan: None, diagnostics })
+    Ok(Finalized { plan: Some(plan), diagnostics })
 }
 
 /// `plan` moved so that `origin`, or else the centre of the box around its stitches, is at the hoop's

@@ -9,10 +9,11 @@ Design: `docs/src/design/data-model.md`.
 |---|---|
 | `plan` | `StitchPlan` (colour blocks of `Stitch` entries: `Normal`, `Jump`, `Trim`, `Stop`), `Provenance`, `PlanStats` |
 | `builder` | `PlanBuilder`: appends entries with the needle tracked, so commands always happen where the needle is |
-| `invariants` | `check(plan, profile)`: the L0 rules `REQ-PLAN-001/002/003/005/006/007`, each violation naming its requirement |
+| `invariants` | `check(plan, profile)`: the L0 rules `REQ-PLAN-001/002/003/005/006/007/009`, each violation naming its requirement |
 | `profile` | `MachineProfile`, `FormatId`, `TrimSupport`, `PaletteId`; profile validation and the hoop/comfort check (`SC-E0701`, `SC-W0702`) |
 | `profiles` | The built-in profiles as data: the reference Brother PE800 with each of its hoops (`brother-pe800-5x7`, `brother-pe800-4x4`, `brother-pe800-small`) |
 | `thickness` | How thick a plan sews, on cells of 0.5 mm. It measures the thread, in fills, and the needle points per mm² in the 1 mm² round each spot. It also gives the pieces over a limit and the shapes stacked at the thickest spot. Planning warns by it (`SC-W0913`) and the renderer draws it |
+| `thread_state` | `ThreadState`: the machine's needle and thread as it reads a plan, entry by entry. `sewn_stitches`, the invariants and the engine's lock check share it, so they can't disagree |
 | `thread`, `palette` | `Rgb`, `Thread`; the Brother PEC palette; CIEDE2000 nearest-colour matching |
 
 ## Invariants

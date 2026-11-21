@@ -14,8 +14,12 @@ tie-off). The lock stops the thread from pulling out when it is trimmed or the n
 
 ## Placement
 
-The anchor is the group's first needle point for a tie-in and its last for a tie-off. A group with no
-needle point other than the anchor has no stitch to lock, and assembly sews it without one.
+A lock belongs to the run, the needle points sewn on from one group to the next with no cut between
+them. The anchor is the run's first needle point for a tie-in and its last for a tie-off. A tie-off is made
+from the run's own points, back from its last one, so a run that ends on a group of one needle point,
+sewn straight on from the group before it, still has its tie-off (M13.56, `REQ-LCK-001`). A tie-in is made
+from its group's points, the only ones known when the needle jumps there. A run whose only needle point
+is the anchor lays no thread and has no stitch to lock, and assembly sews it without one.
 
 - **Steps** are distances along the stitching from the anchor, positive into it. A lock of steps follows
   the stitching round its corners. It lies on the stitches that come after it, and they cover it. A

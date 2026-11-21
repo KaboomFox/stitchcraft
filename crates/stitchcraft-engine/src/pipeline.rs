@@ -29,8 +29,9 @@ use stitchcraft_plan::{MachineProfile, StitchPlan};
 use crate::assemble::{Assembled, assemble_routed};
 use crate::auto::cap::Pull;
 use crate::auto::{Sewing, sewing, thick};
+use crate::check;
 use crate::design::{Design, Element, Lettered};
-use crate::finalize::{Finalized, finalize};
+use crate::finalize::{Finalized, fitted};
 use crate::generate::layered::{Layered, underlay};
 use crate::generate::{Generated, Generation, approach, generate_with};
 use crate::generators::pull::PullParams;
@@ -130,24 +131,23 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
     let finished = assemble_routed(&generated, &design.settings, routing.as_mut(), &mut meter).and_then(|assembled| match assembled {
         Some(Assembled { plan, warnings, shortest }) => {
             diagnostics.extend(warnings);
-            finalize(plan, profile, &design.settings, &shortest, &mut meter).map(Some)
+            fitted(plan, profile, &design.settings, &shortest, &mut meter).map(Some)
         }
         None => Ok(None),
     });
     diagnostics.extend(routing.and_then(|routing| routing.said(budget)));
     let plan = match finished {
-        Ok(Some(Finalized { mut plan, diagnostics: said })) => {
+        Ok(Some(Finalized { plan, diagnostics: said })) => {
             diagnostics.extend(said);
             // A design digitized automatically is thinned where a spot sews above the cap (`REQ-AUTO-074`),
             // told where it sews thick (`SC-W0913`), and is written.
-            match (limits, plan.as_mut()) {
-                (Some(held), Some(plan)) if reach.is_empty() => diagnostics.extend(thick::measured(plan, &held, &names, budget)),
-                (Some(held), Some(plan)) => {
-                    diagnostics.extend(thick::finished(plan, &held, (&base, &reach, &columns, &lettering), profile, &names, budget));
-                }
-                _ => {}
-            }
-            plan
+            let cap = |plan: &mut StitchPlan| match &limits {
+                Some(held) if reach.is_empty() => thick::measured(plan, held, &names, budget),
+                Some(held) => thick::finished(plan, held, (&base, &reach, &columns, &lettering), profile, &names, budget),
+                None => Vec::new(),
+            };
+            let asked = check::asked(generated.iter().map(|(element, sewn)| (&element.id, sewn)));
+            plan.and_then(|plan| after_finalize(plan, cap, profile, &asked, &mut diagnostics))
         }
         Ok(None) => {
             let message = "The design has nothing to stitch: it has no elements, or every one was skipped.";
@@ -161,6 +161,20 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
     };
     names.tell(&mut diagnostics);
     PlanOutcome { plan, diagnostics, names }
+}
+
+/// `plan`, finalized, through the stages that come after finalize, `cap` (on an automatic design the
+/// thinning pass and the cap, which take needle points out), and then the check of the plan that is
+/// returned ([`check`]): a plan that breaks it is not returned, and `diagnostics` gets its `SC-E0009`.
+pub(crate) fn after_finalize(
+    mut plan: StitchPlan,
+    cap: impl FnOnce(&mut StitchPlan) -> Vec<Diagnostic>,
+    profile: &MachineProfile,
+    asked: &BTreeMap<ElementId, (bool, bool)>,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> Option<StitchPlan> {
+    diagnostics.extend(cap(&mut plan));
+    check::checked(plan, profile, asked).map_err(|said| diagnostics.extend(said)).ok()
 }
 
 /// The shapes of `design` named (`REQ-AUTO-125`) by how `elements`, the elements as they are generated, sew

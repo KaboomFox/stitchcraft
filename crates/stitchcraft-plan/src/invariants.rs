@@ -13,11 +13,14 @@
 //! | REQ-PLAN-005 | While sewing, a stitch never lands where the needle already is. |
 //! | REQ-PLAN-006 | Colour changes plus stops fit the profile's format. |
 //! | REQ-PLAN-007 | Every stitch and jump names an element the plan lists; a trim or a stop may name none. |
+//! | REQ-PLAN-009 | Each trim follows a stitch sewn since the thread was last cut. |
 //!
-//! "While sewing" means the previous movement was a `Normal` stitch with no trim since: the stitch then
-//! lays thread between two needle holes, and its length is what the machine and the fabric feel. The first
-//! stitch after a jump, a trim or a thread change starts a new run and has no such length. The definition
-//! lives in one place, [`StitchPlan::sewn_stitches`](crate::plan::StitchPlan::sewn_stitches).
+//! "While sewing" means the previous movement was a `Normal` stitch with no trim or stop since: the stitch
+//! then lays thread between two needle holes, and its length is what the machine and the fabric feel. The
+//! first stitch after a jump, a trim, a stop or a thread change starts a new run and has no such length
+//! (`REQ-PLAN-010`). The machine's state, needle and thread, is one model,
+//! [`ThreadState`], which
+//! [`StitchPlan::sewn_stitches`](crate::plan::StitchPlan::sewn_stitches) reads too.
 //!
 //! The checker is linear in the plan's length and allocates only its report. Plans are bounded by the
 //! stitch budget that produced them (or a reader's cap), so it needs no meter of its own; it reports at
@@ -26,10 +29,11 @@
 use core::fmt;
 
 use stitchcraft_core::units::at_least;
-use stitchcraft_core::{Code, Diagnostic, Mm, Point};
+use stitchcraft_core::{Code, Diagnostic, Mm};
 
 use crate::plan::{StitchKind, StitchPlan};
 use crate::profile::MachineProfile;
+use crate::thread_state::{Entered, ThreadState};
 
 /// Requirement ids, as in `conformance/requirements.toml` (a test checks they exist there).
 pub mod req {
@@ -45,6 +49,8 @@ pub mod req {
     pub const COLOR_CHANGES: &str = "REQ-PLAN-006";
     /// Every stitch and jump names its element.
     pub const NAMED: &str = "REQ-PLAN-007";
+    /// A trim follows a stitch sewn since the last cut.
+    pub const TRIM_AFTER_SEWING: &str = "REQ-PLAN-009";
 }
 
 /// The shortest lock (tie-in, tie-off) stitch: locks are deliberately tiny back-and-forth stitches.
@@ -87,9 +93,10 @@ impl fmt::Display for Violation {
 pub fn check(plan: &StitchPlan, profile: &MachineProfile) -> Vec<Violation> {
     let mut report = Report::default();
     let (half_width, half_height) = (profile.hoop.width.get() / 2.0, profile.hoop.height.get() / 2.0);
-    let mut needle = Point::ORIGIN;
+    let mut state = ThreadState::default();
 
     for (b, block) in plan.blocks.iter().enumerate() {
+        state.change_thread();
         if !block.stitches.iter().any(|s| s.kind == StitchKind::Normal) {
             report.add(req::STRUCTURE, b, None, "the colour block sews no stitches".to_string());
         }
@@ -105,9 +112,12 @@ pub fn check(plan: &StitchPlan, profile: &MachineProfile) -> Vec<Violation> {
                 );
                 report.add(req::INSIDE_HOOP, b, Some(i), message);
             }
+            let needle = state.needle();
+            if state.enter(b, i, stitch) == (Entered::Trimmed { after_sewing: false }) {
+                report.add(req::TRIM_AFTER_SEWING, b, Some(i), "the trim cuts a thread that has sewn nothing since it was last cut".to_string());
+            }
             match stitch.kind {
                 StitchKind::Normal | StitchKind::Jump => {
-                    needle = at;
                     let what = if stitch.kind == StitchKind::Jump { "jump" } else { "stitch" };
                     match stitch.origin.element {
                         None => report.add(req::NAMED, b, Some(i), format!("the {what} names no element")),
@@ -171,7 +181,7 @@ impl Report {
 
 #[cfg(test)]
 mod tests {
-    use stitchcraft_core::ElementId;
+    use stitchcraft_core::{ElementId, Point};
 
     use super::*;
     use crate::builder::PlanBuilder;
@@ -278,7 +288,7 @@ mod tests {
     }
 
     #[test]
-    fn runs_restart_after_jumps_trims_and_thread_changes_but_not_stops() {
+    fn runs_restart_after_jumps_trims_stops_and_thread_changes() {
         let mut b = valid();
         b.jump(p(20.0, 10.0), top());
         b.stitch(p(35.0, 10.0), top()); // first stitch after a jump: no length rule
@@ -288,7 +298,8 @@ mod tests {
 
         let mut stop = valid();
         stop.stop(None);
-        stop.stitch(p(40.0, 10.0), top()); // a stop does not cut the thread: 26 mm stitch
+        stop.stitch(p(40.0, 10.0), top()); // first stitch after a stop: the machine cut there (REQ-PLAN-010)
+        stop.stitch(p(40.2, 10.0), top()); // and the run goes on from it
         assert_eq!(requirements(&stop.finish()), vec![req::STITCH_LENGTH]);
     }
 
@@ -302,7 +313,8 @@ mod tests {
         assert_eq!(report[0].to_string(), "REQ-PLAN-003 at block 2: the colour block sews no stitches");
 
         let mut plan = valid().finish();
-        plan.blocks[0].stitches.push(Stitch { at: p(5.0, 5.0), kind: StitchKind::Trim, origin: Provenance::plan(Role::Command) });
+        // A stop away from the needle (block 0 ends with a trim, so a second trim would break REQ-PLAN-009 too).
+        plan.blocks[0].stitches.push(Stitch { at: p(5.0, 5.0), kind: StitchKind::Stop, origin: Provenance::plan(Role::Command) });
         assert_eq!(requirements(&plan), vec![req::STRUCTURE]);
     }
 
@@ -335,6 +347,28 @@ mod tests {
         );
         // A trim or a stop may name none: `valid` has one of each.
         assert_eq!(requirements(&valid().finish()), Vec::<&str>::new());
+    }
+
+    #[test]
+    fn req_plan_009_a_trim_follows_a_stitch_sewn_since_the_last_cut() {
+        let mut twice = valid();
+        twice.trim(None);
+        twice.trim(None);
+        let report: Vec<String> = check(&twice.finish(), &PROFILE).iter().map(ToString::to_string).collect();
+        assert_eq!(report, ["REQ-PLAN-009 at block 1, entry 6: the trim cuts a thread that has sewn nothing since it was last cut"]);
+        let mut after_stop = valid();
+        after_stop.stop(None);
+        after_stop.trim(None);
+        assert_eq!(requirements(&after_stop.finish()), vec![req::TRIM_AFTER_SEWING], "a stop cuts too");
+        let mut after_change = valid();
+        after_change.change_thread(Thread::new(Rgb::new(0, 0, 255)));
+        after_change.trim(None);
+        after_change.stitch(p(14.0, 10.0), top());
+        assert_eq!(requirements(&after_change.finish()), vec![req::TRIM_AFTER_SEWING], "so does a thread change");
+        let mut after_jump = valid();
+        after_jump.jump(p(20.0, 10.0), top());
+        after_jump.trim(None);
+        assert_eq!(requirements(&after_jump.finish()), Vec::<&str>::new(), "a jump cuts nothing");
     }
 
     #[test]
@@ -378,7 +412,9 @@ mod tests {
     #[test]
     fn requirement_ids_exist_in_the_requirements_file() {
         let text = include_str!("../../../conformance/requirements.toml");
-        for id in [req::INSIDE_HOOP, req::STITCH_LENGTH, req::STRUCTURE, req::NO_STITCH_IN_PLACE, req::COLOR_CHANGES, req::NAMED] {
+        for id in
+            [req::INSIDE_HOOP, req::STITCH_LENGTH, req::STRUCTURE, req::NO_STITCH_IN_PLACE, req::COLOR_CHANGES, req::NAMED, req::TRIM_AFTER_SEWING]
+        {
             assert!(text.contains(&format!("id = \"{id}\"")), "{id} is not in conformance/requirements.toml");
         }
     }

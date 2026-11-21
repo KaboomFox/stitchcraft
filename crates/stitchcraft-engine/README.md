@@ -10,7 +10,7 @@ repeats, bean stitch (`generators::passes`) and random length since M3.5; manual
 (`generators::manual`) since M3.6. Lock stitches (`locks`) of each shape, at either end of a group, are
 here since M3.7. Since M3.8 the entry point, `plan`, sends each element to its generator (`generate`) and
 joins the groups into one plan (`assemble`). Since M3.9 it fits the plan to the machine and checks it
-(`finalize`), and a plan that `plan` returns can be written as it is. Since M4.1 a satin column's path
+(`finalize`), and a plan that `plan` returns can be written as it is. Since M13.56 the check runs again on the plan `plan` returns, after the cap, with each run's locks (`check`). Since M4.1 a satin column's path
 is read as its rails and rungs (`normalize::satin`), as Ink/Stitch reads it. Since M4.2 its top stitches
 are placed as Ink/Stitch places them (`generators::satin`), since M4.3 compensated and varied at random
 as Ink/Stitch does, since M4.4 inset where they crowd on curves, and since M4.5 split where they are

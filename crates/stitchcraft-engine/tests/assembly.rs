@@ -167,6 +167,29 @@ fn req_lck_001_locks_go_where_ties_says_and_only_there() {
 }
 
 #[test]
+fn req_lck_001_a_run_that_ends_on_a_group_of_one_needle_point_has_its_tie_off() {
+    // A lock belongs to the run: its tie-off is made from the run's own points, so a last group too short to
+    // carry one, sewn straight on from the group before it, still ends with it. Found by the random paths of
+    // `degenerate.rs`, whose guided fill ended on such a group with no tie-off.
+    use stitchcraft_engine::assemble::assemble;
+    use stitchcraft_engine::finalize::finalize;
+    use stitchcraft_engine::generate::generate;
+    use stitchcraft_engine::generators::Neighbours;
+    let element = line("e", (0.0, 0.0), 10.0, &RED, &[]);
+    let settings = DesignSettings { origin: Some(p(0.0, 0.0)), ..DesignSettings::default() };
+    let mut generated = generate(&element, &settings, REFERENCE, &Neighbours::default(), &Budget::DEFAULT).generated.unwrap();
+    generated.groups.push(vec![p(11.0, 0.0)]);
+    let mut meter = Budget::DEFAULT.meter();
+    let assembled = assemble(&[(&element, generated)], &settings, &mut meter).unwrap().unwrap();
+    assert_eq!(shape(&assembled.plan), "J L4 S6 L4", "sewn on 1 mm to the last group, then tied off");
+    let stitches = &assembled.plan.blocks[0].stitches;
+    let off: Vec<_> = stitches[stitches.len() - 4..].iter().map(|stitch| stitch.at).collect();
+    assert_eq!(off, [p(10.5, 0.0), p(11.0, 0.0), p(10.5, 0.0), p(11.0, 0.0)], "a half stitch back along the run's last stitch");
+    let finalized = finalize(assembled.plan, REFERENCE, &settings, &assembled.shortest, &mut meter).unwrap();
+    assert!(finalized.plan.is_some(), "{:?}", finalized.diagnostics);
+}
+
+#[test]
 fn req_gen_002_an_element_that_cannot_be_sewn_is_skipped_and_the_rest_still_plans() {
     let square =
         Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0)), Segment::Line(p(5.0, 5.0))], closed: true }] };
