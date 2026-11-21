@@ -1,0 +1,488 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Diagnostics - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-b37cbce2.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-95df4fb0.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/design/diagnostics.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="diagnostics"><a class="header" href="#diagnostics">Diagnostics</a></h1>
+<!-- implements: crates/stitchcraft-core/src/diag.rs, crates/stitchcraft-core/src/diag/registry.rs, crates/stitchcraft-core/src/diag/registry/auto.rs, crates/stitchcraft-core/src/text.rs, apps/stitchcraft-cli/src/commands/explain.rs -->
+<p>A diagnostic is a problem with the user’s design or input, explained in the user’s terms, with a
+stable code. Diagnostics are values: the engine collects them and keeps planning whatever it can.
+Errors in the Rust sense (<code>Result</code>) are reserved for failures to do the work at all
+(<a href="architecture.html#errors-and-diagnostics">architecture</a>).</p>
+<pre><code class="language-rust ignore">pub struct Diagnostic {
+    pub code: Code,                  // SC-W0702
+    pub severity: Severity,          // Error | Warning | Info
+    pub element: Option&lt;ElementId&gt;,  // which object
+    pub at: Option&lt;Point&gt;,           // where on the canvas (mm)
+    pub message: String,             // one sentence, specific: "Design is 162 × 148 mm; …"
+    pub fix: Option&lt;Fix&gt;,            // a hint, or a machine-applicable fix
+}</code></pre>
+<h2 id="codes"><a class="header" href="#codes">Codes</a></h2>
+<p><code>SC-</code> + <code>E</code> (error: this element, or the design, cannot be stitched), <code>W</code> (warning: stitched, but
+probably not what you want) or <code>I</code> (info) + four digits grouped by area:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Range</th><th>Area</th></tr>
+</thead>
+<tbody>
+<tr><td>0000–0099</td><td>Input and budgets</td></tr>
+<tr><td>0100–0199</td><td>Parameters</td></tr>
+<tr><td>0200–0299</td><td>Satin</td></tr>
+<tr><td>0300–0399</td><td>Fills</td></tr>
+<tr><td>0400–0499</td><td>Strokes (running, bean, manual, zigzag, ripple)</td></tr>
+<tr><td>0500–0599</td><td>Plan assembly (ties, travel, trims, colours)</td></tr>
+<tr><td>0600–0699</td><td>Formats and threads</td></tr>
+<tr><td>0700–0799</td><td>Machine profile (hoop, limits)</td></tr>
+<tr><td>0800–0899</td><td>Hosts (SVG, VectorCraft)</td></tr>
+<tr><td>0900 to 0999</td><td>Automatic digitizing (<a href="image-to-embroidery.html">image to embroidery</a>)</td></tr>
+<tr><td>1000 to 1099</td><td>Routing (<a href="routing.html">routing tools</a>)</td></tr>
+<tr><td>1100 to 1199</td><td>Fonts and lettering (<a href="fonts.html#the-reader">fonts</a>)</td></tr>
+<tr><td>1200 to 1299</td><td>Subject cut-out (<a href="image-to-embroidery.html#subject-cut-out">image to embroidery</a>)</td></tr>
+</tbody>
+</table>
+</div>
+<p>Codes are never reused. A retired code keeps its page with “retired in vX”.</p>
+<h2 id="the-registry"><a class="header" href="#the-registry">The registry</a></h2>
+<p>The codes are one table in <code>stitchcraft-core</code>, the <code>registry!</code> block in <code>src/diag/registry.rs</code>, which
+defines the <code>Code</code> enum. Automatic digitizing’s codes, <code>SC-x09xx</code>, are written in <code>src/diag/registry/auto.rs</code>,
+which keeps the table’s file under the size limit. <code>Code</code> lists them in the order of their codes.
+Each entry is one line (variant, id, severity, title), and its doc comment is
+the long explanation (Markdown: what it means, why it matters for the sew-out, how to fix it), so the
+text users read is also the code’s rustdoc. Tests reject an entry whose id is malformed or duplicated,
+whose letter disagrees with its severity, or whose explanation is missing. From that table:</p>
+<ul>
+<li><code>cargo xtask docs</code> generates the <strong>diagnostics index</strong> (one page per code, like <code>rustc</code>’s error index);</li>
+<li><code>stitch explain SC-W0702</code> prints the explanation in the terminal;</li>
+<li>in VectorCraft, the plug-in shows each message after its code, for the user to look up in the index or
+with <code>stitch explain</code>;</li>
+<li><code>cargo xtask conformance</code> fails when a code has no <code>diag_sc_&lt;code&gt;_&lt;what&gt;</code> test that produces it from
+real input and checks the text a user reads, or when such a test names a code that is not registered
+(<a href="conformance.html#cases">conformance</a>); the registry’s own tests fail when a code has no explanation.</li>
+</ul>
+<p>That last rule is what keeps error paths alive: a message that no test ever renders can ship with a
+typo in its formatting and nobody sees it until a user does.</p>
+<h2 id="writing-good-messages"><a class="header" href="#writing-good-messages">Writing good messages</a></h2>
+<ul>
+<li>Say what is wrong <em>and</em> by how much: “Rows are 0.25 mm apart but the region is only 0.18 mm tall.”</li>
+<li>Name the object and point at the place.</li>
+<li>Offer the fix in embroidery terms: “Use a running stitch for parts this thin, or widen the shape.”</li>
+<li>No blame, no internal names (<code>LineString</code>, <code>GEOS</code>), no stack traces.</li>
+</ul>
+<h2 id="as-text"><a class="header" href="#as-text">As text</a></h2>
+<p>A diagnostic reads the same wherever StitchCraft prints it. Its <code>Display</code> is the severity, the code and
+the message: <code>warning SC-W0702: Design is 190.0 × 150.0 mm; …</code>. <code>Diagnostic::headline</code> adds the object
+it is about, as in <code>warning SC-W0307 (svg:patch:fill): The area falls into 2 parts.</code>, and the command
+line prints that, with the fix on the line below. <code>Diagnostic::one_line</code> puts the fix after the
+headline, for a host that shows each diagnostic as one line of text, as VectorCraft shows an export’s
+warnings.</p>
+<h2 id="fixes"><a class="header" href="#fixes">Fixes</a></h2>
+<p><code>Fix::Hint(String)</code> is advice. <code>Fix::Apply(Edit)</code> is a change the host can apply with one click and
+undo (for example “rotate the design 90°” for <code>SC-W0702</code> when the rotated bounds fit, or “drop the
+dangling rung” for <code>SC-W0203</code>). Applied fixes go through the host’s command system so they are undoable.</p>
+<h2 id="the-codes"><a class="header" href="#the-codes">The codes</a></h2>
+<p>The codes the design docs name, each registered by the step that built it. A
+registered code must keep its row here, with the same severity and a title that starts with the
+registry’s (<code>cargo xtask docs --check</code>), so a code allocated for one thing cannot be registered for
+another.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Code</th><th>Severity</th><th>Title</th><th>Milestone</th></tr>
+</thead>
+<tbody>
+<tr><td><code>SC-E0004</code></td><td>Error</td><td>Budget exhausted (work for one element, work joining the elements, or stitches for the design)</td><td>M1</td></tr>
+<tr><td><code>SC-E0005</code></td><td>Error</td><td>Preview too large (over 4,096 pixels on a side at the requested scale)</td><td>M2</td></tr>
+<tr><td><code>SC-E0009</code></td><td>Error</td><td>Internal check failed (a StitchCraft bug; a bug-report bundle is written)</td><td>M1</td></tr>
+<tr><td><code>SC-E0010</code></td><td>Error</td><td>Nothing to stitch (no embroiderable elements)</td><td>M1</td></tr>
+<tr><td><code>SC-W0011</code></td><td>Warning</td><td>Stitch type not sewn yet, element skipped (retired): M10.10 sews the last of them</td><td>M3</td></tr>
+<tr><td><code>SC-E0012</code></td><td>Error</td><td>Bug-report bundle could not be replayed</td><td>M3</td></tr>
+<tr><td><code>SC-W0013</code></td><td>Warning</td><td>Element outside its clip paths; left out (wholly outside them or a VectorCraft clipping object, or under clips that don’t meet or have no area; Ink/Stitch sews one whose clip path is empty whole)</td><td>M8</td></tr>
+<tr><td><code>SC-E0101</code></td><td>Error</td><td>Parameter has the wrong type or an unknown choice</td><td>M3</td></tr>
+<tr><td><code>SC-W0102</code></td><td>Warning</td><td>Parameter clamped to its allowed range</td><td>M3</td></tr>
+<tr><td><code>SC-W0105</code></td><td>Warning</td><td>Unknown parameter preserved but ignored</td><td>M3</td></tr>
+<tr><td><code>SC-I0106</code></td><td>Info</td><td>Value only the node’s other stitch type reads; default used here (as in Ink/Stitch)</td><td>M7</td></tr>
+<tr><td><code>SC-E0201</code></td><td>Error</td><td>Satin column has no rails (no subpath longer than a point)</td><td>M4</td></tr>
+<tr><td><code>SC-W0202</code></td><td>Warning</td><td>Satin rails taken as the two longest subpaths (where the subpaths meet does not say)</td><td>M4</td></tr>
+<tr><td><code>SC-W0203</code></td><td>Warning</td><td>Satin rung does not cross both rails (dangling rung); the rail’s nearest point is used</td><td>M4</td></tr>
+<tr><td><code>SC-W0205</code></td><td>Warning</td><td>Satin subpath is one point; left out</td><td>M4</td></tr>
+<tr><td><code>SC-W0206</code></td><td>Warning</td><td>Satin contour underlay too short for its insets; it keeps its length</td><td>M4</td></tr>
+<tr><td><code>SC-W0207</code></td><td>Warning</td><td>Satin rung crosses a rail more than once; left out</td><td>M4</td></tr>
+<tr><td><code>SC-W0208</code></td><td>Warning</td><td>Satin stitches lean more than 45° from square to the column; add a rung here</td><td>M7</td></tr>
+<tr><td><code>SC-W0209</code></td><td>Warning</td><td>Satin stitch longer than 12 mm; it may snag</td><td>M7</td></tr>
+<tr><td><code>SC-W0210</code></td><td>Warning</td><td>Satin rails without rungs have different numbers of nodes (some pair with none)</td><td>M4</td></tr>
+<tr><td><code>SC-W0211</code></td><td>Warning</td><td>Satin push compensation too long for a rail; that rail keeps its length</td><td>M4</td></tr>
+<tr><td><code>SC-W0212</code></td><td>Warning</td><td>Satin column drawn as one path too narrow; sewn as a stroke</td><td>M4</td></tr>
+<tr><td><code>SC-W0213</code></td><td>Warning</td><td>Parts of a satin column drawn as one path left out (still crossing after 20 cuts in half, or turning too tightly for its width)</td><td>M4</td></tr>
+<tr><td><code>SC-E0214</code></td><td>Error</td><td>Satin column drawn as one path could not be made into rails (too short, or too tight for its width)</td><td>M4</td></tr>
+<tr><td><code>SC-W0215</code></td><td>Warning</td><td>Satin column too small for the shortest stitch; left out (all within it of its first needle point, or a zigzag satin with no stitch across, underlays and all; Ink/Stitch sews a speck)</td><td>M4</td></tr>
+<tr><td><code>SC-E0216</code></td><td>Error</td><td>Satin column has no section to sew (its rungs or push compensation take each section’s length off a rail)</td><td>M4</td></tr>
+<tr><td><code>SC-W0217</code></td><td>Warning</td><td>Satin column is clipped; sewn whole (as in Ink/Stitch)</td><td>M8</td></tr>
+<tr><td><code>SC-W0303</code></td><td>Warning</td><td>Parts of a fill too small to sew left out (3 square CSS pixels or less, as in Ink/Stitch); a fill of no area sews nothing</td><td>M5</td></tr>
+<tr><td><code>SC-W0304</code></td><td>Warning</td><td>Fill smaller than 1.4 mm² (20 square CSS pixels); a running stitch or a satin column may sew it better</td><td>M5</td></tr>
+<tr><td><code>SC-W0305</code></td><td>Warning</td><td>Fill part too thin for rows; sewn round its outline (as in Ink/Stitch)</td><td>M5</td></tr>
+<tr><td><code>SC-I0306</code></td><td>Info</td><td>Nonzero fill rule fills a part inside that the even-odd rule leaves empty (Ink/Stitch leaves it empty)</td><td>M5</td></tr>
+<tr><td><code>SC-W0307</code></td><td>Warning</td><td>Fill in parts that are apart; each sewn on its own, joined by jumps</td><td>M5</td></tr>
+<tr><td><code>SC-I0308</code></td><td>Info</td><td>Fill underlay too thin for rows; sewn round the outline (as in Ink/Stitch)</td><td>M5</td></tr>
+<tr><td><code>SC-W0309</code></td><td>Warning</td><td>Fill’s expand shrinks a part away; sewn at its own size (as in Ink/Stitch)</td><td>M5</td></tr>
+<tr><td><code>SC-W0310</code></td><td>Warning</td><td>Fill’s underlay inset shrinks a part away; underlay over all of it (as in Ink/Stitch)</td><td>M5</td></tr>
+<tr><td><code>SC-W0311</code></td><td>Warning</td><td>Contour fill leaves out rings it does not reach, where its rings part or lie too far apart (as in Ink/Stitch, which says nothing)</td><td>M7</td></tr>
+<tr><td><code>SC-W0312</code></td><td>Warning</td><td>Fill’s pull compensation below 0; read as 0 (as in Ink/Stitch)</td><td>M5</td></tr>
+<tr><td><code>SC-I0313</code></td><td>Info</td><td>Fill drawn twice along its edge; Ink/Stitch fills the part left empty (its repair merges the stretch)</td><td>M5</td></tr>
+<tr><td><code>SC-W0314</code></td><td>Warning</td><td>Legacy fill sewn as a tatami fill without underlay (Ink/Stitch’s legacy fill is not built)</td><td>M7</td></tr>
+<tr><td><code>SC-I0315</code></td><td>Info</td><td>Contour fill’s part too narrow for its spiral; sewn inner to outer (Ink/Stitch fails or sews nothing)</td><td>M7</td></tr>
+<tr><td><code>SC-W0316</code></td><td>Warning</td><td>Meander pattern is one of Ink/Stitch’s tiles; sewn with StitchCraft’s default tile</td><td>M7</td></tr>
+<tr><td><code>SC-W0317</code></td><td>Warning</td><td>Meander fill part too small for its tile; sewn round its outline (Ink/Stitch stops with an error)</td><td>M7</td></tr>
+<tr><td><code>SC-W0318</code></td><td>Warning</td><td>Circular fill part within its row spacing of its middle; sewn as one circle (as Ink/Stitch sews it)</td><td>M7</td></tr>
+<tr><td><code>SC-W0319</code></td><td>Warning</td><td>Cross stitch part covers no cell of its grid enough; sews nothing (Ink/Stitch warns too)</td><td>M10</td></tr>
+<tr><td><code>SC-W0320</code></td><td>Warning</td><td>Cross stitch with an odd thread count; an even count sewn (1 sews 2, where Ink/Stitch sews no cross)</td><td>M10</td></tr>
+<tr><td><code>SC-W0321</code></td><td>Warning</td><td>Cross stitch grid too fine for the shortest stitch; needle points left out</td><td>M10</td></tr>
+<tr><td><code>SC-W0322</code></td><td>Warning</td><td>Half cross with an even thread count; the odd count above sewn (as Ink/Stitch sews it)</td><td>M10</td></tr>
+<tr><td><code>SC-E0323</code></td><td>Error</td><td>Tartan fill’s sett can’t be read; skipped (not JSON, no palette, a number that isn’t one, a stripe’s width or count that isn’t a number, or letters without a count)</td><td>M10</td></tr>
+<tr><td><code>SC-W0324</code></td><td>Warning</td><td>Tartan’s herringbone sewn as straight rows (retired): M10.7 sews herringbones</td><td>M10</td></tr>
+<tr><td><code>SC-W0325</code></td><td>Warning</td><td>Tartan fill without a sett; Ink/Stitch’s default sett sewn (as Ink/Stitch sews it)</td><td>M10</td></tr>
+<tr><td><code>SC-W0326</code></td><td>Warning</td><td>Tartan sett with no stripe to sew; only the underlay sewn (as in Ink/Stitch)</td><td>M10</td></tr>
+<tr><td><code>SC-W0327</code></td><td>Warning</td><td>Tartan sett too fine for the shortest stitch; needle points left out</td><td>M10</td></tr>
+<tr><td><code>SC-W0328</code></td><td>Warning</td><td>Tartan stripe’s colour can’t be read; left out (as Ink/Stitch leaves it)</td><td>M10</td></tr>
+<tr><td><code>SC-W0329</code></td><td>Warning</td><td>Linear gradient fill without a linear gradient; its colour fades out</td><td>M10</td></tr>
+<tr><td><code>SC-W0330</code></td><td>Warning</td><td>Gradient stop within 2 rows of the blend before; passed over</td><td>M10</td></tr>
+<tr><td><code>SC-W0331</code></td><td>Warning</td><td>Guided fill without a guide line; sewn as a tatami fill (also for a guide of no length, or a copied one that starts and ends at one point, with the fill’s own settings, as Ink/Stitch sews one without a guide)</td><td>M10</td></tr>
+<tr><td><code>SC-W0332</code></td><td>Warning</td><td>Guided fill’s rows along its guide meet no part; sewn as a tatami fill (that part, at the angle of the guide’s ends, the fallback Ink/Stitch has for a part its rows meet and the cut leaves empty, while it stops with an error where copies or offset curves miss the part, <code>DEV-FILL-034</code>)</td><td>M10</td></tr>
+<tr><td><code>SC-W0333</code></td><td>Warning</td><td>Guided fill’s rows apart, the needle jumps between them (rows that only meet a hole’s edge, with no row from that hole to the outline, as Ink/Stitch sews the rows it can’t join on their own)</td><td>M10</td></tr>
+<tr><td><code>SC-W0401</code></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td><td>M3</td></tr>
+<tr><td><code>SC-W0402</code></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest</td><td>M3</td></tr>
+<tr><td><code>SC-W0403</code></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td><td>M3</td></tr>
+<tr><td><code>SC-W0404</code></td><td>Warning</td><td>Hand-placed stitch longer than max_stitch_length_mm; kept for the shortest stitch</td><td>M3</td></tr>
+<tr><td><code>SC-W0405</code></td><td>Warning</td><td>Zigzag stitch shorter than the shortest stitch; the zigzag sews narrower</td><td>M7</td></tr>
+<tr><td><code>SC-W0406</code></td><td>Warning</td><td>Ripple stitch setting not applied; sewn without it (the satin column’s <code>push_compensation_mm</code> along a column)</td><td>M10</td></tr>
+<tr><td><code>SC-W0407</code></td><td>Warning</td><td>Ripple stitch of more than 1,000 lines; cut to 1,000, or 999 to keep the parity of <code>line_count</code></td><td>M10</td></tr>
+<tr><td><code>SC-W0408</code></td><td>Warning</td><td>Ripple stitch’s skips would leave out every line; every line sewn</td><td>M10</td></tr>
+<tr><td><code>SC-W0409</code></td><td>Warning</td><td>Ripple stitch’s guide can’t place its copies; sewn without it</td><td>M10</td></tr>
+<tr><td><code>SC-W0502</code></td><td>Warning</td><td>Lock stitch shorter than 0.2 mm; lengthened</td><td>M3</td></tr>
+<tr><td><code>SC-W0503</code></td><td>Warning</td><td>Custom lock cannot be sewn as written</td><td>M3</td></tr>
+<tr><td><code>SC-I0504</code></td><td>Info</td><td>Stitches shorter than the shortest stitch merged</td><td>M3</td></tr>
+<tr><td><code>SC-W0505</code></td><td>Warning</td><td>Trim or stop after an element that sews nothing; left out</td><td>M3</td></tr>
+<tr><td><code>SC-I0506</code></td><td>Info</td><td>Underlays first joins no run; the element sews as without it (it would make a run of one, or it is sewn in several threads)</td><td>M10</td></tr>
+<tr><td><code>SC-E0601</code></td><td>Error</td><td>Too many colour changes for the file format</td><td>M1</td></tr>
+<tr><td><code>SC-E0602</code></td><td>Error</td><td>Design too large for the file format (coordinates or data exceed its fields)</td><td>M1</td></tr>
+<tr><td><code>SC-E0603</code></td><td>Error</td><td>Machine file could not be read (wrong format, truncated, or a record that makes no sense)</td><td>M2</td></tr>
+<tr><td><code>SC-W0604</code></td><td>Warning</td><td>Thread colours unknown (the file stores none, as DST never does; threads are placeholders)</td><td>M2</td></tr>
+<tr><td><code>SC-I0605</code></td><td>Info</td><td>Long jumps cut in DST (machines cut the thread before three or more jump records in a row)</td><td>M3</td></tr>
+<tr><td><code>SC-W0606</code></td><td>Warning</td><td>Threads share a Brother colour (more different threads than a PES file’s 61 thread colours)</td><td>M3</td></tr>
+<tr><td><code>SC-E0701</code></td><td>Error</td><td>Design does not fit the hoop</td><td>M1</td></tr>
+<tr><td><code>SC-W0702</code></td><td>Warning</td><td>Design is larger than the comfort zone (the profile’s most accurate area)</td><td>M1</td></tr>
+<tr><td><code>SC-I0703</code></td><td>Info</td><td>Stitches longer than the machine’s longest stitch; split</td><td>M3</td></tr>
+<tr><td><code>SC-E0801</code></td><td>Error</td><td>SVG could not be read (with the parser’s position)</td><td>M3</td></tr>
+<tr><td><code>SC-W0802</code></td><td>Warning</td><td>SVG feature ignored (e.g. raster image, text not converted to paths, an Ink/Stitch file Ink/Stitch would update or warn about, read as it is)</td><td>M3</td></tr>
+<tr><td><code>SC-W0803</code></td><td>Warning</td><td>VectorCraft file from a newer format version; read best-effort (a version newer than the newest the adapter reads)</td><td>M6</td></tr>
+<tr><td><code>SC-W0804</code></td><td>Warning</td><td>Element geometry invalid or out of range (path data error, invalid transform, draws nothing, beyond 10 m, a stroke’s width, join or miter limit that does not read, a clone that shows itself); the usable part is stitched</td><td>M3</td></tr>
+<tr><td><code>SC-I0805</code></td><td>Info</td><td>Object left out, as the file asks (Ink/Stitch’s ignore commands and <code>ignore_object</code> setting, or a clone whose <code>clone</code> setting is off)</td><td>M3</td></tr>
+<tr><td><code>SC-E0806</code></td><td>Error</td><td>VectorCraft file could not be read (not a VectorCraft document, or larger than the adapter reads). Its JSON counts, and so do the copies of names, settings and paths its elements would hold</td><td>M6</td></tr>
+<tr><td><code>SC-W0807</code></td><td>Warning</td><td>VectorCraft object or feature not stitched (text, images, symbols, live objects, opacity masks, VectorCraft’s own effects, brushes, gradients, patterns, a group’s own paints), what adds nothing to a clip, StitchCraft effects from more than one level or on a clipping object, a start or end marker, or a <code>stitch:</code> name StitchCraft doesn’t read</td><td>M6</td></tr>
+<tr><td><code>SC-W0808</code></td><td>Warning</td><td>VectorCraft geometry unusable (a number that does not read or a point beyond 10 m; a shape that draws nothing; a clipping path, which adds nothing to its clip)</td><td>M6</td></tr>
+<tr><td><code>SC-I0809</code></td><td>Info</td><td>VectorCraft layer or guide left out, as it does not print (template layers, layers whose printing is off, guides)</td><td>M6</td></tr>
+<tr><td><code>SC-I0810</code></td><td>Info</td><td>VectorCraft live effect leaves the object as it is (it sews no stitch, its preview level needs more work than VectorCraft lets a live effect do, it is a satin column drawn as one path or a zigzag stroke and VectorCraft gives the effect no stroke, or the effect is on one of the object’s fills or strokes)</td><td>M6</td></tr>
+<tr><td><code>SC-I0811</code></td><td>Info</td><td>VectorCraft object left out, as its name asks (an object or a layer named <code>stitch:ignore</code>)</td><td>M6</td></tr>
+<tr><td><code>SC-W0812</code></td><td>Warning</td><td>VectorCraft design setting ignored (a length that isn’t a number of 0 or more, or a machine StitchCraft doesn’t have, which the Design Settings filter keeps with the document)</td><td>M6</td></tr>
+<tr><td><code>SC-E0813</code></td><td>Error</td><td>VectorCraft too old for the filter (the Design Settings filter run by a VectorCraft before 0.16, which doesn’t keep a filter’s data, Stroke to Satin by one before 0.15, which doesn’t keep a filter’s effect records, and Test Sheet by one before 0.16, which doesn’t say it keeps them)</td><td>M6</td></tr>
+<tr><td><code>SC-E0814</code></td><td>Error</td><td>VectorCraft line not made into a satin column (Stroke to Satin refused a selection because it is empty or a path has no stroke, or because a line drawn with its rails and rungs would sew otherwise)</td><td>M6</td></tr>
+<tr><td><code>SC-E0815</code></td><td>Error</td><td>VectorCraft’s command line could not be started (<code>stitch plan</code> traces a picture with it: neither on the PATH nor where <code>--vectorcraft-cli</code> says)</td><td>M13</td></tr>
+<tr><td><code>SC-E0816</code></td><td>Error</td><td>VectorCraft could not trace the picture (its command line failed or didn’t save the document)</td><td>M13</td></tr>
+<tr><td><code>SC-E0817</code></td><td>Error</td><td>VectorCraft test sheet not drawn (in the middle of the artboard, parts of the sheet would lie more than 10 m from the document’s origin)</td><td>M6</td></tr>
+<tr><td><code>SC-I0818</code></td><td>Info</td><td>Ink/Stitch file from an older version, read as Ink/Stitch updates it (the shapes given a default or a setting whose meaning has changed since, such as a fill’s 3 mm stitches before its file version 4, counted for each change)</td><td>M3</td></tr>
+<tr><td><code>SC-E0819</code></td><td>Error</td><td>More than one origin or stop position (Ink/Stitch’s <code>origin</code> command, or more than one object named <code>stitch:origin</code>, 2 or more times, or its <code>stop_position</code> command or <code>stitch:stop-position</code> in a design that stops: no machine file is written, as Ink/Stitch writes none)</td><td>M8</td></tr>
+<tr><td><code>SC-E0820</code></td><td>Error</td><td>VectorCraft selection not routed (no selected path has an effect of its own that the filter routes, satin for Auto-Route Satin Columns and stroke for Auto-Route Running Stitch, or 2 objects selected mark the route’s start, or 2 its end: nothing changes)</td><td>M10</td></tr>
+<tr><td><code>SC-E0821</code></td><td>Error</td><td>VectorCraft tartan’s sett not set (StitchCraft Tartan’s code can’t be read, names letters the register uses for no colour, lacks a stripe or makes a setting longer than the fill’s Sett holds, or no selected path takes a sett: nothing changes)</td><td>M10</td></tr>
+<tr><td><code>SC-W0822</code></td><td>Warning</td><td>Kept thread left out of the picture’s trace (no part of the picture is nearer the colour <code>--keep-colour</code> kept than the other threads’)</td><td>M13</td></tr>
+<tr><td><code>SC-I0901</code></td><td>Info</td><td>Shapes digitized automatically (<code>--auto</code>, a VectorCraft document by default, or VectorCraft’s Auto effect), counted by their stitches (running stitches, satin columns or tatami fills)</td><td>M13</td></tr>
+<tr><td><code>SC-I0902</code></td><td>Info</td><td>Satin column can’t be made; filled (a part of an automatic line that turns more tightly than it is wide, is shorter than a CSS pixel or is a dot its cap draws, or a part of an automatic area whose triangles don’t make a column round one of its lines or whose column would be read back otherwise)</td><td>M13</td></tr>
+<tr><td><code>SC-W0903</code></td><td>Warning</td><td>Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin)</td><td>M13</td></tr>
+<tr><td><code>SC-I0904</code></td><td>Info</td><td>Areas reach under the shapes sewn after them (automatic areas grown under the shapes sewn after them that they touch, or cut away under the areas and parts’ lines and columns sewn after them that cover them, by an overlap of 0.4 mm unless an area sets another)</td><td>M13</td></tr>
+<tr><td><code>SC-I0905</code></td><td>Info</td><td>Speck merged into a neighbour (an automatic area or a part of one smaller than its smallest area, 1 mm² unless it sets another, merged into the area it shares the longest edge with, or left out)</td><td>M13</td></tr>
+<tr><td><code>SC-W0906</code></td><td>Warning</td><td>Background left out (the lowest shape, an automatic area that covers the whole design under the other shapes, unless it switches <code>auto_ignore_background</code> off; what shows of it inside the picture is sewn)</td><td>M13</td></tr>
+<tr><td><code>SC-I0907</code></td><td>Info</td><td>Elements sewn in an order of their own (automatic elements, and with <code>--sort-colours</code> every element, sewn in the order StitchCraft chooses, with the thread changes of each order; an element or an order that needs more work than the budget allows keeps paint order)</td><td>M13</td></tr>
+<tr><td><code>SC-I0908</code></td><td>Info</td><td>Layers flattened (each automatic area sews what shows of it under the automatic areas drawn over it, and an area wider than a satin column somewhere is digitized whole under the areas that fill its holes, which sew after it)</td><td>M13</td></tr>
+<tr><td><code>SC-I0909</code></td><td>Info</td><td>Base layer sewn under the design (one underlay under the outer shape of the automatic shapes, with its area, pieces and thread)</td><td>M13</td></tr>
+<tr><td><code>SC-W0910</code></td><td>Warning</td><td>Base layer left out (its shape needs more work than the budget allows, and every fill sews the underlay of its settings)</td><td>M13</td></tr>
+<tr><td><code>SC-I0911</code></td><td>Info</td><td>Base layer turned off (the design’s lowest automatic shape turns <code>auto_base_layer</code> off, so nothing lies under a place the top thread leaves bare, and fabric may show there)</td><td>M13</td></tr>
+<tr><td><code>SC-I0912</code></td><td>Info</td><td>Rule that chose a shape’s stitches (for each part of an automatic shape, the rule of the table it sewed by and the measures that decided it)</td><td>M13</td></tr>
+<tr><td><code>SC-W0913</code></td><td>Warning</td><td>Design sews thick (a design digitized automatically has 1 mm² or more at the warning’s limits, by default 4 fills of thread or more over it or 15 needle points or more, and is written all the same)</td><td>M13</td></tr>
+<tr><td><code>SC-I0914</code></td><td>Info</td><td>Jumps not looked at for a run under later shapes (finding the runs that take the place of jumps between automatic elements needed more work than the budget allows, and the moves from the element named on are as they were)</td><td>M13</td></tr>
+<tr><td><code>SC-I0915</code></td><td>Info</td><td>Thin line merged into a neighbour (a ragged part of an automatic area narrower than the narrowest satin stroke merges into the automatic area it shares the longest edge with, or keeps its lines when finding them needs more work than the budget allows)</td><td>M13</td></tr>
+<tr><td><code>SC-I0916</code></td><td>Info</td><td>Parts kept by a mark (each mark named <code>stitch:keep</code> or given by <code>--keep</code>, with the parts that lie wholly inside it and how many of them sew that would have merged as specks or thin lines)</td><td>M13</td></tr>
+<tr><td><code>SC-W0917</code></td><td>Warning</td><td>Mark not used (a mark that has no part of an automatic shape wholly inside it, as a mark without an area has none, and the design then sews as without it)</td><td>M13</td></tr>
+<tr><td><code>SC-I0918</code></td><td>Info</td><td>Parts that follow a guide (each guide named <code>stitch:guide</code> or given by <code>--guide</code>, with the areas and the filled parts that sew a guided fill along it, and the parts it crosses that keep their stitches)</td><td>M13</td></tr>
+<tr><td><code>SC-W0919</code></td><td>Warning</td><td>Guide not used (a guide that crosses no filled part of an automatic shape, whose line has no length, or in a design with no automatic shape, and the design then sews as without it)</td><td>M13</td></tr>
+<tr><td><code>SC-W0920</code></td><td>Warning</td><td>Own Auto settings replace the group’s (a path or a compound path with StitchCraft’s Auto effect inside a group or a layer with one sews by its own settings alone: the message names it and the group’s settings it doesn’t take)</td><td>M13</td></tr>
+<tr><td><code>SC-I0921</code></td><td>Info</td><td>Outlines smoothed (how many points the smoothed automatic areas had and have, and the areas whose smoothing needed more than the work budget, which keep their outlines)</td><td>M13</td></tr>
+<tr><td><code>SC-W0922</code></td><td>Warning</td><td>What Expand couldn’t keep (lettering that became its columns, a shape left out for its budget, and a part a VectorCraft document has without its clips, each named)</td><td>M13</td></tr>
+<tr><td><code>SC-I0923</code></td><td>Info</td><td>Style that changes how a design sews (the thin lines merged or kept and the parts filled or sewn as satin columns that the other style would sew another way, with that style’s name)</td><td>M13</td></tr>
+<tr><td><code>SC-I0924</code></td><td>Info</td><td>Shapes digitized by default (a VectorCraft document planned without <code>--auto</code> or <code>--no-auto</code>, said once: the count of shapes digitized by default, and the count of those set by hand)</td><td>M13</td></tr>
+<tr><td><code>SC-E1001</code></td><td>Error</td><td>Nothing to route (no element the tool can take among those given, a satin column for Auto-Route Satin Columns or a stroke for Auto-Route Running Stitch: they stay as they were)</td><td>M10</td></tr>
+<tr><td><code>SC-I1002</code></td><td>Info</td><td>Element left out of the route (a fill, a shape digitized automatically, settings that don’t read, rails that can’t be made, no length, a stroke whose first subpath ends where it starts, or a satin column among running stitches: kept as it is)</td><td>M10</td></tr>
+<tr><td><code>SC-W1003</code></td><td>Warning</td><td>Piece of a routed satin column may sew otherwise (read back, it has other rails or pairs other points: it is kept)</td><td>M10</td></tr>
+<tr><td><code>SC-W1004</code></td><td>Warning</td><td>Too many lines to cut where they cross (more than 1,000 lines routed as running stitches: none is cut by another, as with Add nodes at intersections off)</td><td>M10</td></tr>
+<tr><td><code>SC-E1101</code></td><td>Error</td><td>Font could not be read (a <code>font.json</code> that is missing or isn’t an object of settings, or glyph files that are missing or aren’t SVG StitchCraft reads: nothing of the font is sewn)</td><td>M14</td></tr>
+<tr><td><code>SC-W1102</code></td><td>Warning</td><td>Font setting not read, its default kept (a value in <code>font.json</code> of another type than its key takes, which keeps Ink/Stitch’s default, or an entry of a list or a table of another type, which is left out)</td><td>M14</td></tr>
+<tr><td><code>SC-W1103</code></td><td>Warning</td><td>Font file not read (a glyph file compressed with xz, as in Ink/Stitch’s packages: its glyphs are left out)</td><td>M14</td></tr>
+<tr><td><code>SC-W1104</code></td><td>Warning</td><td>Glyph left out (a glyph whose paths give it no box, or every glyph of a file whose baseline guide doesn’t give a place, as Ink/Stitch’s lettering leaves them out)</td><td>M14</td></tr>
+<tr><td><code>SC-I1105</code></td><td>Info</td><td>Font read as Ink/Stitch reads it (a key the format doesn’t have, a glyph drawn twice in a direction, of which the later counts, a file without a baseline guide, or a font without glyphs for its <code>default_variant</code>, which sews its first direction)</td><td>M14</td></tr>
+<tr><td><code>SC-W1106</code></td><td>Warning</td><td>Scale outside the font’s range (lettering sets the text at the nearest scale between the font’s <code>min_scale</code> and <code>max_scale</code>, and names the range in percent and in millimetres)</td><td>M14</td></tr>
+<tr><td><code>SC-W1107</code></td><td>Warning</td><td>Character not in the font (it sews as the font’s default glyph, or is left as a space in a font without that glyph)</td><td>M14</td></tr>
+<tr><td><code>SC-E1108</code></td><td>Error</td><td>Text could not be set (a text none of whose characters sews, or one with a glyph that can’t be placed. Along a path, also a path without length)</td><td>M14</td></tr>
+<tr><td><code>SC-W1109</code></td><td>Warning</td><td>Text longer than its path (the line goes on straight past an open path’s end, round a closed path again, or is pushed together when stretched)</td><td>M14</td></tr>
+<tr><td><code>SC-W1110</code></td><td>Warning</td><td>Lettering setting not applied (lines asked to sew back and forth in a font drawn for one direction, or colours asked to be sorted in a font that doesn’t sort)</td><td>M14</td></tr>
+<tr><td><code>SC-W1111</code></td><td>Warning</td><td>Text not sewn in its embroidery font (a VectorCraft text object with the Lettering effect whose font isn’t found or doesn’t read, or that is area type, type on a path or vertical type, and a text object under automatic digitizing without a font or with a line that can’t be set)</td><td>M14</td></tr>
+<tr><td><code>SC-I1112</code></td><td>Info</td><td>Traced letters replaced by lettering (what lay inside a text marker of a picture, with both heights, the text and the font)</td><td>M14</td></tr>
+<tr><td><code>SC-W1113</code></td><td>Warning</td><td>Text marker not used (without text, without an area, with every shape partly outside it, or with a font that is missing or unreadable), or one of its settings left unread</td><td>M14</td></tr>
+<tr><td><code>SC-W1114</code></td><td>Warning</td><td>Shape crosses a text marker’s edge (more than half inside it, and sewn as traced beside the lettering)</td><td>M14</td></tr>
+<tr><td><code>SC-W1115</code></td><td>Warning</td><td>Lettering not the traced letters’ size (set at the nearest height the font sews, or over a tenth of their height from their width)</td><td>M14</td></tr>
+<tr><td><code>SC-I1116</code></td><td>Info</td><td>Text sewn in an embroidery font (a text object under automatic digitizing, whose own typeface can’t be read. The message has the font used, the height with its reason, and the longest line’s length)</td><td>M14</td></tr>
+<tr><td><code>SC-W1117</code></td><td>Warning</td><td>Lettering longer than its text’s place (a line of a text object under automatic digitizing that is longer than the length its text most likely had, at the smallest height the font sews at)</td><td>M14</td></tr>
+<tr><td><code>SC-I1118</code></td><td>Info</td><td>Font chosen by the letters’ weight (a text marker without a font, set in the font nearest in weight to its traced letters among those that sew at their height, or a bold text object sewn in the bold font where it can. The message names the font and says why)</td><td>M14</td></tr>
+<tr><td><code>SC-I1119</code></td><td>Info</td><td>Thread taken from thick spots (by the last pass over a design digitized automatically and the cap after it, where a spot still sewed above the cap: how much of each kind, and what is left)</td><td>M13</td></tr>
+<tr><td><code>SC-E1201</code></td><td>Error</td><td>Subject cut-out’s models not ready (a model that couldn’t be fetched, or isn’t the file pinned: the message names every file and the folder they belong in)</td><td>M13</td></tr>
+<tr><td><code>SC-E1202</code></td><td>Error</td><td>No subject found to cut out (no part of U²-Net-p’s map reaches a half and no box is given, or MobileSAM didn’t keep a pixel)</td><td>M13</td></tr>
+<tr><td><code>SC-E1203</code></td><td>Error</td><td>Picture could not be read for the cut-out (not a PNG or JPEG file it reads, or larger than its limits)</td><td>M13</td></tr>
+<tr><td><code>SC-E1204</code></td><td>Error</td><td>Cut-out model could not be run (tract refused a model that matches its pin)</td><td>M13</td></tr>
+<tr><td><code>SC-E1205</code></td><td>Error</td><td>Cut-out model has a random operator (refused before it runs, as tract would seed it from the computer)</td><td>M13</td></tr>
+<tr><td><code>SC-I1206</code></td><td>Info</td><td>Subject cut out (the box it came from, the share of the picture kept and the cut-out’s size)</td><td>M13</td></tr>
+<tr><td><code>SC-E1207</code></td><td>Error</td><td>Subject cut-out left out of this build (a <code>stitch</code> built without its <code>cutout</code> feature)</td><td>M13</td></tr>
+</tbody>
+</table>
+</div>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../design/params.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../design/svg-input.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../design/params.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../design/svg-input.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

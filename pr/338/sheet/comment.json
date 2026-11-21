@@ -1,0 +1,10 @@
+[
+ "**Before and after:** {sheet}",
+ "",
+ "11 pictures as this pull request sews them, against main at 3ce5969: 0 numbers got worse, 0 got better, 0 changed otherwise.",
+ "",
+ "The editor in Chromium and `stitch` wrote the same PES and DST files, byte for byte, of alpine-night.",
+ "The editor did not export dog-on-turf-6, so nothing was compared: plug-in exceeded its instruction budget.",
+ "The panel's exports, StitchCraft's engine in the page, wrote the PES and DST files and drew the picture `stitch` makes, byte for byte, of alpine-night, dog-on-turf-6, dog-on-turf-9, dog-running-6, dog-running-9: PES 0.3 s to 2.7 s, DST 0.3 s to 2.8 s, the picture 0.9 s to 3.0 s.",
+ "Giving dog-on-turf-6 the Auto effect took 2.7 s (limit 30.0 s) until the editor had drawn them, and its PES export was refused: the middle of 3 runs in Chromium drawing in software."
+]

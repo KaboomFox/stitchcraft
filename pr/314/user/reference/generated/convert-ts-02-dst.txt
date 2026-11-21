@@ -1,0 +1,22 @@
+$ stitch convert TS-02.pes -o TS-02.dst
+TS-02.pes · PES (#PES0001) → DST
+  file      TS-02.dst (DST, 1085 bytes)
+  sha256    88d453b2512bb535f9dd2205cbb0be753a5eb9b1700ae9abf2e88062fabff927
+  size      120.0 × 70.0 mm
+  stitches  93 stitches, 46 jumps, 14 trims, 3 colour changes, 0 stops
+  threads   1. Red (#ed171f)
+            2. Blue (#0a55a3)
+            3. Emerald Green (#00673e)
+            4. Emerald Green (#00673e) — a stop: keep the same thread
+$ stitch inspect TS-02.dst
+TS-02.dst · DST · "TS-02"
+  sha256    88d453b2512bb535f9dd2205cbb0be753a5eb9b1700ae9abf2e88062fabff927
+  size      120.0 × 70.0 mm
+  stitches  93 stitches, 46 jumps, 14 trims, 3 colour changes, 0 stops
+  extent    x -60.0 to 60.0 mm, y -35.0 to 35.0 mm from where the machine starts
+  lengths   stitches from 2.50 to 2.50 mm
+  threads   1. thread 1 (#000000)
+            2. thread 2 (#000000)
+            3. thread 3 (#000000)
+            4. thread 4 (#000000)
+            (DST stores no colours: each block is a pause for the next thread)

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StitchCraft, before and after</title>
+<style>
+:root { color-scheme: light dark; --line: #8886; --worse: #c62828; --better: #2e7d32; }
+body { font: 15px/1.5 system-ui, sans-serif; margin: 0 auto; max-width: 1200px; padding: 16px; }
+table { border-collapse: collapse; margin: 12px 0; }
+th, td { border: 1px solid var(--line); padding: 4px 8px; text-align: right; }
+th:first-child, td:first-child { text-align: left; }
+.worse { color: var(--worse); font-weight: 600; }
+.better { color: var(--better); }
+.was { opacity: .65; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 8px 0 28px; }
+.pair.one { grid-template-columns: 1fr; }
+figure { margin: 0; }
+figure img { max-width: 100%; height: auto; border: 1px solid var(--line); background: #f4efe6; }
+.scroll { overflow-x: auto; }
+</style>
+<h1>Before and after</h1>
+<p>The standard pictures as this pull request sews them, at <code>5dce787de3</code>, beside main at <code>6f5703b758</code>. Every number is measured by the functions the conformance cases use.</p>
+<h2>Numbers</h2>
+<div class="scroll"><table>
+<tr><th>Picture</th><th>Stitches</th><th>Thread changes</th><th>Jumps</th><th>Jump threads left to cut</th><th>Stitches astray</th><th>Slivers</th><th>Bare, % of the design</th><th>Thickest spot, fills</th><th>At 3 fills or more, mm²</th><th>Most needle points per mm²</th><th>Detail lost, % of each colour&#x27;s parts</th></tr>
+<tr><td><a href="#dog-on-turf-6">dog-on-turf-6</a></td><td class="changed"><span class="was">9,530 →</span> 9,482</td><td>8</td><td>69</td><td>60</td><td class="better"><span class="was">4 →</span> 2 ▼ better</td><td>0</td><td class="better"><span class="was">0.041 →</span> 0.024 ▼ better</td><td class="better"><span class="was">3.870 →</span> 3.842 ▼ better</td><td>0</td><td class="better"><span class="was">25 →</span> 23 ▼ better</td><td>14.394</td></tr>
+<tr><td><a href="#dog-on-turf-9">dog-on-turf-9</a></td><td class="changed"><span class="was">10,100 →</span> 10,069</td><td>12</td><td>75</td><td>62</td><td>3</td><td>0</td><td class="better"><span class="was">0.039 →</span> 0.026 ▼ better</td><td class="better"><span class="was">3.974 →</span> 3.894 ▼ better</td><td>0</td><td class="better"><span class="was">28 →</span> 27 ▼ better</td><td>17.137</td></tr>
+<tr><td><a href="#dog-running-6">dog-running-6</a></td><td class="changed"><span class="was">10,630 →</span> 10,596</td><td>8</td><td class="better"><span class="was">58 →</span> 57 ▼ better</td><td class="better"><span class="was">49 →</span> 48 ▼ better</td><td>1</td><td>0</td><td class="worse"><span class="was">0.011 →</span> 0.016 ▲ worse</td><td class="worse"><span class="was">3.919 →</span> 4.073 ▲ worse</td><td>0</td><td class="better"><span class="was">26 →</span> 25 ▼ better</td><td>10.185</td></tr>
+<tr><td><a href="#dog-running-9">dog-running-9</a></td><td class="changed"><span class="was">11,779 →</span> 11,794</td><td>11</td><td class="better"><span class="was">76 →</span> 75 ▼ better</td><td class="better"><span class="was">64 →</span> 63 ▼ better</td><td class="better"><span class="was">4 →</span> 2 ▼ better</td><td>0</td><td class="better"><span class="was">0.019 →</span> 0.010 ▼ better</td><td class="worse"><span class="was">3.984 →</span> 4.052 ▲ worse</td><td>0</td><td class="better"><span class="was">24 →</span> 23 ▼ better</td><td>7.895</td></tr>
+<tr><td><a href="#pear">pear</a></td><td class="changed"><span class="was">4,628 →</span> 4,634</td><td>2</td><td>5</td><td>2</td><td>0</td><td>0</td><td class="worse"><span class="was">0 →</span> 0.001 ▲ worse</td><td class="better"><span class="was">3.992 →</span> 3.929 ▼ better</td><td>0</td><td class="better"><span class="was">18 →</span> 17 ▼ better</td><td>0</td></tr>
+<tr><td><a href="#lettered-patch">lettered-patch</a></td><td>4,000</td><td>2</td><td>11</td><td>8</td><td>0</td><td>0</td><td>0.003</td><td>3.978</td><td>0</td><td>14</td><td>0</td></tr>
+<tr><td><a href="#ts-13a-digitized">ts-13a-digitized</a></td><td class="changed"><span class="was">11,484 →</span> 11,471</td><td>2</td><td>21</td><td>18</td><td>0</td><td>1</td><td>0.012</td><td class="worse"><span class="was">3.986 →</span> 3.991 ▲ worse</td><td>0</td><td>14</td><td>0</td></tr>
+<tr><td><a href="#ts-13b-digitized">ts-13b-digitized</a></td><td class="changed"><span class="was">6,868 →</span> 6,813</td><td>4</td><td>51</td><td>46</td><td class="worse"><span class="was">17 →</span> 18 ▲ worse</td><td>0</td><td class="better"><span class="was">0.066 →</span> 0.063 ▼ better</td><td>3.845</td><td>0</td><td>13</td><td>0</td></tr>
+<tr><td><a href="#ts-13c-digitized">ts-13c-digitized</a></td><td class="changed"><span class="was">5,949 →</span> 5,954</td><td>4</td><td>18</td><td>13</td><td>3</td><td>0</td><td class="worse"><span class="was">0.001 →</span> 0.006 ▲ worse</td><td class="worse"><span class="was">3.924 →</span> 3.967 ▲ worse</td><td>0</td><td class="worse"><span class="was">14 →</span> 16 ▲ worse</td><td>0</td></tr>
+<tr><td><a href="#ts-13d-digitized">ts-13d-digitized</a></td><td>7,928</td><td>3</td><td>16</td><td>12</td><td>0</td><td>0</td><td>0.001</td><td>3.972</td><td>0</td><td>15</td><td>0</td></tr>
+<tr><td><a href="#ts-13e-digitized">ts-13e-digitized</a></td><td class="changed"><span class="was">2,712 →</span> 2,713</td><td>2</td><td>8</td><td>5</td><td>0</td><td>0</td><td>0</td><td>3.241</td><td>0</td><td>10</td><td>0</td></tr>
+</table></div>
+<p>A number in red got worse and one in green got better. More stitches are neither.</p>
+<h2>In the browser</h2>
+<p>The editor in Chromium and <code>stitch</code> wrote the same PES and DST files, byte for byte, of alpine-night.</p>
+<p>The editor did not export dog-on-turf-6, so nothing was compared: plug-in exceeded its instruction budget.</p>
+<p>The panel&#x27;s exports, StitchCraft&#x27;s engine in the page, wrote the PES and DST files and drew the picture <code>stitch</code> makes, byte for byte, of alpine-night, dog-on-turf-6, dog-on-turf-9, dog-running-6, dog-running-9: PES 0.4 s to 3.7 s, DST 0.4 s to 3.7 s, the picture 0.6 s to 4.1 s.</p>
+<p>Giving dog-on-turf-6 the Auto effect took 3.8 s (limit 30.0 s) until the editor had drawn them, and its PES export was refused: the middle of 3 runs in Chromium drawing in software.</p>
+<p>On main: Giving dog-on-turf-6 the Auto effect took 4.1 s (limit 30.0 s) until the editor had drawn them, and its PES export was refused: the middle of 3 runs in Chromium drawing in software.</p>
+<div class="pair"><figure><img src="before/editor.png" alt="The editor with main&#x27;s plug-ins" loading="lazy"><figcaption>The editor with main&#x27;s plug-ins</figcaption></figure><figure><img src="after/editor.png" alt="The editor with the plug-ins of this pull request" loading="lazy"><figcaption>The editor with the plug-ins of this pull request</figcaption></figure></div>
+<h2>Pictures</h2>
+<h3 id="dog-on-turf-6">dog-on-turf-6</h3>
+<div class="pair"><figure><img src="before/dog-on-turf-6.png" alt="dog-on-turf-6 on main" loading="lazy"><figcaption>dog-on-turf-6 on main</figcaption></figure><figure><img src="after/dog-on-turf-6.png" alt="dog-on-turf-6 in this pull request" loading="lazy"><figcaption>dog-on-turf-6 in this pull request</figcaption></figure></div>
+<h3 id="dog-on-turf-9">dog-on-turf-9</h3>
+<div class="pair"><figure><img src="before/dog-on-turf-9.png" alt="dog-on-turf-9 on main" loading="lazy"><figcaption>dog-on-turf-9 on main</figcaption></figure><figure><img src="after/dog-on-turf-9.png" alt="dog-on-turf-9 in this pull request" loading="lazy"><figcaption>dog-on-turf-9 in this pull request</figcaption></figure></div>
+<h3 id="dog-running-6">dog-running-6</h3>
+<div class="pair"><figure><img src="before/dog-running-6.png" alt="dog-running-6 on main" loading="lazy"><figcaption>dog-running-6 on main</figcaption></figure><figure><img src="after/dog-running-6.png" alt="dog-running-6 in this pull request" loading="lazy"><figcaption>dog-running-6 in this pull request</figcaption></figure></div>
+<h3 id="dog-running-9">dog-running-9</h3>
+<div class="pair"><figure><img src="before/dog-running-9.png" alt="dog-running-9 on main" loading="lazy"><figcaption>dog-running-9 on main</figcaption></figure><figure><img src="after/dog-running-9.png" alt="dog-running-9 in this pull request" loading="lazy"><figcaption>dog-running-9 in this pull request</figcaption></figure></div>
+<h3 id="pear">pear</h3>
+<div class="pair"><figure><img src="before/pear.png" alt="pear on main" loading="lazy"><figcaption>pear on main</figcaption></figure><figure><img src="after/pear.png" alt="pear in this pull request" loading="lazy"><figcaption>pear in this pull request</figcaption></figure></div>
+<h3 id="lettered-patch">lettered-patch</h3>
+<div class="pair"><figure><img src="before/lettered-patch.png" alt="lettered-patch on main" loading="lazy"><figcaption>lettered-patch on main</figcaption></figure><figure><img src="after/lettered-patch.png" alt="lettered-patch in this pull request" loading="lazy"><figcaption>lettered-patch in this pull request</figcaption></figure></div>
+<h3 id="ts-13a-digitized">ts-13a-digitized</h3>
+<div class="pair"><figure><img src="before/ts-13a-digitized.png" alt="ts-13a-digitized on main" loading="lazy"><figcaption>ts-13a-digitized on main</figcaption></figure><figure><img src="after/ts-13a-digitized.png" alt="ts-13a-digitized in this pull request" loading="lazy"><figcaption>ts-13a-digitized in this pull request</figcaption></figure></div>
+<h3 id="ts-13b-digitized">ts-13b-digitized</h3>
+<div class="pair"><figure><img src="before/ts-13b-digitized.png" alt="ts-13b-digitized on main" loading="lazy"><figcaption>ts-13b-digitized on main</figcaption></figure><figure><img src="after/ts-13b-digitized.png" alt="ts-13b-digitized in this pull request" loading="lazy"><figcaption>ts-13b-digitized in this pull request</figcaption></figure></div>
+<h3 id="ts-13c-digitized">ts-13c-digitized</h3>
+<div class="pair"><figure><img src="before/ts-13c-digitized.png" alt="ts-13c-digitized on main" loading="lazy"><figcaption>ts-13c-digitized on main</figcaption></figure><figure><img src="after/ts-13c-digitized.png" alt="ts-13c-digitized in this pull request" loading="lazy"><figcaption>ts-13c-digitized in this pull request</figcaption></figure></div>
+<h3 id="ts-13d-digitized">ts-13d-digitized</h3>
+<div class="pair"><figure><img src="before/ts-13d-digitized.png" alt="ts-13d-digitized on main" loading="lazy"><figcaption>ts-13d-digitized on main</figcaption></figure><figure><img src="after/ts-13d-digitized.png" alt="ts-13d-digitized in this pull request" loading="lazy"><figcaption>ts-13d-digitized in this pull request</figcaption></figure></div>
+<h3 id="ts-13e-digitized">ts-13e-digitized</h3>
+<div class="pair"><figure><img src="before/ts-13e-digitized.png" alt="ts-13e-digitized on main" loading="lazy"><figcaption>ts-13e-digitized on main</figcaption></figure><figure><img src="after/ts-13e-digitized.png" alt="ts-13e-digitized in this pull request" loading="lazy"><figcaption>ts-13e-digitized in this pull request</figcaption></figure></div>
+<p>This run built the tools in 234 s and planned and measured the pictures in 65 s.</p>
+</html>

@@ -1,0 +1,436 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>RFC: VectorCraft plug-in features - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-9aa5b005.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-95df4fb0.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/design/rfc-vectorcraft-abi-v2.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="rfc-vectorcraft-plug-in-features"><a class="header" href="#rfc-vectorcraft-plug-in-features">RFC: VectorCraft plug-in features</a></h1>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th></th><th></th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Audience</strong></td><td>ArtCraft / VectorCraft maintainers</td></tr>
+<tr><td><strong>Status</strong></td><td>Mostly adopted (<a href="#status">status</a>): 7 proposals in VectorCraft 0.14.0 to 0.17.0. P3 is in review, and the rest of P4 and P6 is open. P9 to P11 are proposed here and not yet raised upstream</td></tr>
+<tr><td><strong>Compatibility</strong></td><td>Additive. Every plug-in written for ABI v1 keeps working, and <code>vc_abi_version</code> still returns 1</td></tr>
+<tr><td><strong>Author’s interest</strong></td><td>StitchCraft (machine embroidery), but every proposal serves other plug-ins too</td></tr>
+</tbody>
+</table>
+</div>
+<p>This page began as the RFC for a plug-in ABI v2. VectorCraft took most of its proposals into ABI v1 instead,
+from pull requests by StitchCraft’s author.
+Each came as keys that hosts from before it ignore, or as a kind of plug-in that they refuse to install, and a
+plug-in that uses none of them installs anywhere. VectorCraft’s
+<a href="https://github.com/storytold/vectorcraft/blob/main/docs/plugins.md">plug-in documentation</a> is the contract.
+This page records what was adopted and when, and what StitchCraft still proposes. Its path keeps the old
+name, which links point at. The <a href="../plan/roadmap.html">roadmap</a> plans StitchCraft’s use of the adopted
+features in M6.8 to M6.12, and proposes the open parts of P4 and P6 in M9. Raising P9 upstream is the
+owner’s choice (<a href="fonts.html#decisions-for-the-owner">fonts</a>).</p>
+<h2 id="status"><a class="header" href="#status">Status</a></h2>
+<p>Checked against VectorCraft’s <code>docs/plugins.md</code> and its history, in the 0.18.0 release (2026-10-28). The
+gate pins 0.24.1 now, and the table isn’t checked against it yet, P3’s review among the rest:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Proposal</th><th>In VectorCraft</th><th>Since</th><th>Pull request</th></tr>
+</thead>
+<tbody>
+<tr><td><a href="#p1-exporter-plug-ins">P1</a>, exporter plug-ins</td><td>Adopted</td><td>0.14.0</td><td><a href="https://github.com/storytold/vectorcraft/pull/3171">#3171</a></td></tr>
+<tr><td><a href="#p2-rich-parameter-schemas">P2</a>, rich parameter schemas</td><td>Adopted</td><td>0.14.0</td><td><a href="https://github.com/storytold/vectorcraft/pull/3172">#3172</a></td></tr>
+<tr><td><a href="#p3-display-only-overlays-for-live-effects">P3</a>, overlays for live effects</td><td>In review</td><td></td><td><a href="https://github.com/storytold/vectorcraft/pull/3807">#3807</a></td></tr>
+<tr><td><a href="#p4-budget-classes-for-filters">P4</a>, budget classes</td><td>Heavy filters adopted, heavy live effects open</td><td>0.17.0</td><td><a href="https://github.com/storytold/vectorcraft/pull/3721">#3721</a></td></tr>
+<tr><td><a href="#p5-document-level-plug-in-data">P5</a>, document-level plug-in data</td><td>Adopted for filters and exporters</td><td>0.16.0</td><td><a href="https://github.com/storytold/vectorcraft/pull/3720">#3720</a></td></tr>
+<tr><td><a href="#p6-the-paints-of-a-live-effects-object">P6</a>, context for live effects</td><td>Fills and strokes adopted, neighbours open</td><td>0.14.0, a stroke’s style 0.15.0</td><td><a href="https://github.com/storytold/vectorcraft/pull/3173">#3173</a></td></tr>
+<tr><td><a href="#p7-preserve-foreign-svg-attributes">P7</a>, foreign SVG attributes</td><td>Adopted</td><td>0.17.0</td><td><a href="https://github.com/storytold/vectorcraft/pull/3758">#3758</a></td></tr>
+<tr><td><a href="#p8-effects-and-stroke-style-in-filter-objects">P8</a>, effects and stroke style in filters</td><td>Adopted</td><td>0.15.0</td><td><a href="https://github.com/storytold/vectorcraft/pull/3174">#3174</a></td></tr>
+<tr><td><a href="#p9-type-as-glyph-outlines">P9</a>, type as glyph outlines</td><td>Proposed by StitchCraft, not yet raised upstream</td><td></td><td></td></tr>
+<tr><td><a href="#p10-an-export-budget-that-fits-a-traced-photo">P10</a>, an export budget that fits a traced photo</td><td>Proposed by StitchCraft, not yet raised upstream</td><td></td><td></td></tr>
+<tr><td><a href="#p11-the-effects-of-a-paths-groups-in-a-filter">P11</a>, the effects of a path’s groups in a filter</td><td>Proposed by StitchCraft, not yet raised upstream</td><td></td><td></td></tr>
+<tr><td>P12, placed images given to a filter (<a href="adr/0019-subject-cut-out-before-tracing.html">ADR-0019</a>)</td><td>Not raised: a plug-in still couldn’t run the cut-out’s models</td><td></td><td></td></tr>
+</tbody>
+</table>
+</div>
+<p>The plug-in classes this RFC was for, and what VectorCraft serves of them now:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Plug-in class</th><th>Now</th></tr>
+</thead>
+<tbody>
+<tr><td>Output generators for embroidery (PES/DST), plotters (HPGL), laser cutters (G-code) and cutting machines</td><td>Exporters write their own formats (P1)</td></tr>
+<tr><td>Generators with many settings (halftones, hatching, embroidery, pattern fills)</td><td>Up to 256 parameters, labelled, in groups, with help and conditions (P2)</td></tr>
+<tr><td>Previews of things that are not the object’s geometry (stitches, toolpaths, cut order)</td><td>Still only by replacing geometry, at JSON’s cost for every point (P3, in review)</td></tr>
+<tr><td>Heavy but legitimate computation (routing, packing, simulation)</td><td>Heavy filters (P4), and an export’s own budget, which a traced photo needs 5 to 6 times over (P10). A live effect still has a light run’s budget</td></tr>
+<tr><td>Plug-ins with document-wide settings (machine profile, plotter pens)</td><td>Data kept with the document (P5)</td></tr>
+<tr><td>Tools that set up objects for a live effect (a satin column from a line, a test sheet)</td><td>Filters read and return effect records and a stroke’s style (P8)</td></tr>
+<tr><td>Plug-ins that work on text (lettering, engraving, cutting type)</td><td>Filters and live effects receive paths alone, and an exporter only a type object’s text and its font’s name (P9)</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="adopted"><a class="header" href="#adopted">Adopted</a></h2>
+<p>How VectorCraft adopted each proposal, where it differs from what was proposed.</p>
+<h3 id="p1-exporter-plug-ins"><a class="header" href="#p1-exporter-plug-ins">P1: Exporter plug-ins</a></h3>
+<p>A plug-in of <code>"kind": "exporter"</code> lists 1 to 8 <code>extensions</code>. File › Export › Export As lists it after the
+built-in formats as <code>plugin.&lt;id&gt;</code>, which <code>document.export</code> writes too. It is given the whole document as a
+native <code>.vectorcraft</code> file’s JSON, where the RFC proposed the filters’ object JSON. The JSON lists every
+layer, object, appearance and effect record, with the data plug-ins keep with the document. It returns
+<code>{"dataBase64": …, "warnings": […]}</code>, and the host writes the file. An export gets 10 G instructions, plus
+4,000 for each input byte, and 300 s, and runs on the export’s worker with Background Export on. Its
+<code>_context</code> names the file’s extension and name, and a plug-in with parameters asks for them once the file
+is picked.</p>
+<h3 id="p2-rich-parameter-schemas"><a class="header" href="#p2-rich-parameter-schemas">P2: Rich parameter schemas</a></h3>
+<p>As proposed: <code>label</code>, <code>unit</code>, <code>group</code>, <code>help</code>, <code>helpUrl</code> (an <code>https://</code> page) and <code>visibleWhen</code>, the types
+<code>string</code> (with <code>maxLength</code>, at most 4,096) and <code>numberList</code> (with <code>minItems</code> and <code>maxItems</code>, at most 256).
+A plug-in declares up to 256 parameters, at most 64 of them outside groups, where the RFC proposed a
+manifest key to ask for more. <code>visibleWhen</code> names checkboxes and choices declared before the parameter. A
+hidden parameter still goes to the plug-in. A plug-in’s parameters scroll in its dialog when they don’t fit
+the window.</p>
+<h3 id="p4-budget-classes-for-filters"><a class="header" href="#p4-budget-classes-for-filters">P4: Budget classes for filters</a></h3>
+<p>A filter that declares <code>"budget": "heavy"</code> gets 1 G instructions, plus 4,000 for each input byte, and 300 s
+(<code>HEAVY_FUEL</code>, <code>HEAVY_WALL_TIME_MS</code>). It installs once the user allows it, and runs in the background with
+progress and Cancel. A host from before heavy filters ignores the key, and the filter gets a light run’s
+budget there. Only a filter may be heavy, as a live effect runs whenever the document is drawn. A heavy
+filter’s budget grows with its input alone: the host learns how much output there is only once the run has
+ended.</p>
+<h3 id="p5-document-level-plug-in-data"><a class="header" href="#p5-document-level-plug-in-data">P5: Document-level plug-in data</a></h3>
+<p>A filter is given what it last kept with the document as <code>_context.documentData</code>, and keeps new data by
+returning <code>documentData</code>, at most 1 MiB of JSON, in the same undo step as its objects. The native file
+keeps it in <code>document.unknown.pluginData</code> under the plug-in’s id. An exporter reads every plug-in’s, in the
+document it is given. A live effect isn’t given it: its geometry depends on its object alone.</p>
+<h3 id="p6-the-paints-of-a-live-effects-object"><a class="header" href="#p6-the-paints-of-a-live-effects-object">P6: The paints of a live effect’s object</a></h3>
+<p>A live effect is given its object’s <code>fills</code> and <code>strokes</code>. Each stroke comes with its <code>width</code>, and from
+0.15.0 with its <code>join</code>, <code>cap</code> and <code>miterLimit</code>, as a filter’s does (P8). <code>_context.item</code> says where the
+effect is: on the object, or in the own effects of one of its fills or strokes. The paints are read only,
+and the effect still changes only the geometry. The objects beside it are not given
+(<a href="#p6-the-objects-beside-a-live-effects-object">below</a>).</p>
+<h3 id="p7-preserve-foreign-svg-attributes"><a class="header" href="#p7-preserve-foreign-svg-attributes">P7: Preserve foreign SVG attributes</a></h3>
+<p>As proposed: attributes in other applications’ XML namespaces stay on their objects from SVG import to SVG
+export, and copies keep them. Nothing in VectorCraft reads them. An Ink/Stitch SVG opened in VectorCraft
+keeps its <code>inkstitch:*</code> parameters when it is saved as SVG again.</p>
+<h3 id="p8-effects-and-stroke-style-in-filter-objects"><a class="header" href="#p8-effects-and-stroke-style-in-filter-objects">P8: Effects and stroke style in filter objects</a></h3>
+<p>As proposed: a filter is given each stroke’s <code>join</code>, <code>cap</code> and <code>miterLimit</code>, as a live effect is, and each
+object’s own effect records. It may return <code>effects</code>, which replace the object’s own. Each is admitted as
+<code>effect.apply</code> admits it: a known effect, or an installed live-effect plug-in with parameters its manifest
+takes. A tool can make a line into a satin column with its effect, or draw a test sheet whose objects sew.</p>
+<h2 id="open"><a class="header" href="#open">Open</a></h2>
+<h3 id="p3-display-only-overlays-for-live-effects"><a class="header" href="#p3-display-only-overlays-for-live-effects">P3: Display-only overlays for live effects</a></h3>
+<p>A live effect may return <code>"overlay": {"format": "f32-polylines", "data": base64}</code>, with its geometry or
+instead of it. The overlay is a compact binary list of polylines, each with an RGBA colour and a width in
+points. The host draws overlays on the canvas above the object, never exports or hit-tests them, and caches
+them with the effect result. This makes previews cheap, 8 bytes for each point instead of the 40 or so JSON
+takes, and keeps the object’s real geometry untouched. An embroidery preview could then show every stitch
+of a large fill, where it shows a fill’s rows or its outline today. <a href="https://github.com/storytold/vectorcraft/pull/3807">#3807</a> adds overlays, and is in
+review.</p>
+<h3 id="p4-budget-classes-for-live-effects"><a class="header" href="#p4-budget-classes-for-live-effects">P4: Budget classes for live effects</a></h3>
+<p>A live effect declares <code>"budget": "heavy"</code>, allowed once at install as a heavy filter is. It gets more
+instructions and time and runs off the UI thread, with the object drawn as it is until the result comes.
+Fuel for each byte read back, as well as for each byte given, would make the budget follow what a
+generator writes. An embroidery effect’s exact preview of a fill 7 mm across takes 27 million
+instructions, and a larger fill’s stops at the light budget’s 50 million. StitchCraft’s M6.19 waits for
+this or for P3: from M6.18 a fill too large for its rows shows its shape whole, without the hatch that
+a person read as thread, and the rows come back when a heavy live effect or an overlay can afford them.</p>
+<h3 id="p6-the-objects-beside-a-live-effects-object"><a class="header" href="#p6-the-objects-beside-a-live-effects-object">P6: The objects beside a live effect’s object</a></h3>
+<p>The live-effect input holds, optionally, the objects in the same group whose names start with a prefix the
+manifest declares (<code>"contextPrefixes": ["stitch:"]</code>). Embroidery reads start and end markers from it, so a
+preview starts and ends where <code>stitch export</code> does. Other plug-ins use the context for guides and anchors.</p>
+<h3 id="p9-type-as-glyph-outlines"><a class="header" href="#p9-type-as-glyph-outlines">P9: Type as glyph outlines</a></h3>
+<p>Proposed by StitchCraft, and not yet raised upstream. A filter is also given each selected type object, and a
+live effect the type object it is applied to, read only. Each comes as its glyph outlines in the path form, subpaths of
+anchors, with its text, its font and its fills and strokes. The outlines are the ones VectorCraft shows on the
+canvas and makes with Type › Create Outlines. An exporter’s document has each type object’s outlines beside its
+text record. A plug-in’s sandbox can’t read font files, and a plug-in can’t shape or outline type itself.
+Today a user runs Create Outlines first, and the text is then no longer editable. StitchCraft would sew
+lettering typed in VectorCraft from the outlines, in M14 and M15 (<a href="fonts.html">fonts</a>).</p>
+<p>Nothing in VectorCraft’s plans covers it, at <code>3f8d7a0</code> (2026-10-25). Its <code>docs/plugins.md</code> gives a filter
+the selected paths and compound paths alone, and a live effect one object’s geometry. An exporter is given the
+document’s JSON, where a type object is its text and a font’s name. The plug-ins still missing in G17 of its
+<code>docs/gaps.md</code> are tool and panel plug-ins, importers and a plug-in directory. Its roadmaps leave type out.</p>
+<h3 id="p10-an-export-budget-that-fits-a-traced-photo"><a class="header" href="#p10-an-export-budget-that-fits-a-traced-photo">P10: An export budget that fits a traced photo</a></h3>
+<p>An export may run 10 billion instructions and 4,000 more for each byte of the document. A photo traced
+into 6 or 9 colours 100 mm tall, each shape digitized by width, needs 51 to 69 billion in an embroidery
+exporter, for documents of 236 to 265 KB that are allowed 11 billion
+(<a href="vectorcraft-integration.html#an-export-that-finishes">the measurements</a>). VectorCraft stops the export
+after 6 seconds on the desktop and after 27 in the browser, and the user reads <code>plug-in exceeded its instruction budget</code> with no file. The same module, run by a browser without a count, writes the file in 2
+to 4 seconds. The proposal has 4 parts:</p>
+<ul>
+<li>An exporter declares <code>"budget": "heavy"</code>, allowed once at install as a heavy filter is. A heavy export
+may run 100 billion instructions and the same amount for each byte, which is 1.5 times the largest
+design measured. The 300 seconds stay as they are and bound the time.</li>
+<li>A heavy export runs off the UI thread, with its progress shown and a way to cancel it. VectorCraft’s
+interpreter ran 51 billion instructions in 20 seconds natively. In the browser, where the interpreter
+is itself WebAssembly, it ran 11 billion in 27 seconds, so 51 billion would take about 2 minutes there.</li>
+<li>An export’s <code>_context</code> names the instructions it may run, as <code>fuel</code>. A plug-in that knows its own cost
+can then decline with a message of its own before the work, where it is stopped part way today.</li>
+<li>The error for a stopped export says which limit stopped it and names the plug-in, so that the plug-in’s
+documentation can say what to do next.</li>
+</ul>
+<p>A browser host could go further and run an exporter’s module with the browser’s own compiler in a
+worker, since an exporter has no imports and changes nothing in the document. The time limit alone would
+then bound it. StitchCraft’s browser demo does this beside the editor for its own exporters.</p>
+<h3 id="p11-the-effects-of-a-paths-groups-in-a-filter"><a class="header" href="#p11-the-effects-of-a-paths-groups-in-a-filter">P11: The effects of a path’s groups in a filter</a></h3>
+<p>Proposed by StitchCraft for Expand (M13.26), and not yet raised upstream. Each object a filter is given
+also lists <code>groupEffects</code>: the effect records of the groups and layers it lies in, the outermost first,
+each as <code>effects</code> lists a record, read only. A filter that replaces an object then knows the settings the
+object took from its groups, as an exporter reads them in the whole document. StitchCraft’s Auto effect is
+usually on the traced group, and today a filter can’t read its settings. Expand also digitizes the whole
+design, which takes an export’s work, so it needs P10’s budget for a heavy filter too
+(<a href="image-to-embroidery.html#expand">Expand</a>). Until both are in VectorCraft, a person expands a design with
+<code>stitch expand</code> and opens the document it writes.</p>
+<h2 id="security-and-determinism"><a class="header" href="#security-and-determinism">Security and determinism</a></h2>
+<p>The proposals leave the sandbox as it is: plug-ins still cannot touch files, the network, clocks or
+randomness. Exporters return bytes, which the host writes. Overlays are plain data, and heavy budgets are
+opt-in and still bounded. The outlines of type (P9) are data the host gives, and the budget charges for
+their points as for any input. Results are still deterministic functions of their inputs, which a host may
+cache.</p>
+<h2 id="implementation-sketch-and-tests"><a class="header" href="#implementation-sketch-and-tests">Implementation sketch and tests</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Proposal</th><th>Main files</th><th>Tests</th></tr>
+</thead>
+<tbody>
+<tr><td>P3</td><td><code>crates/plugins/src/effect.rs</code>, canvas drawing in <code>crates/ui-egui/src/canvas.rs</code></td><td>a fuzz test of overlay decoding, a cache key test</td></tr>
+<tr><td>P4, live effects</td><td><code>crates/plugins/src/{effect,runtime}.rs</code>, the install flow</td><td>fuel accounting tests, a drawing that waits for a heavy result</td></tr>
+<tr><td>P6, objects beside</td><td><code>crates/plugins/src/objects.rs</code></td><td>ABI tests</td></tr>
+<tr><td>P9</td><td><code>crates/plugins/src/objects.rs</code>, with the text outliner of <code>crates/effects/src/live.rs</code></td><td>ABI tests of type sent to filters, live effects and exporters</td></tr>
+</tbody>
+</table>
+</div>
+<p>We would contribute implementations and tests following VectorCraft’s <code>AGENTS.md</code>, one proposal per PR.
+StitchCraft’s compatibility gate already runs a third-party contract test against every VectorCraft
+release, release branch and <code>main</code> (<a href="compatibility-gate.html">compatibility gate</a>).</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../design/vectorcraft-integration.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../design/compatibility-gate.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../design/vectorcraft-integration.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../design/compatibility-gate.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

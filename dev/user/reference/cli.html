@@ -1,0 +1,753 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Command line - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../searchindex-9aa5b005.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../toc-95df4fb0.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/user/reference/cli.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <!-- Generated by `cargo xtask docs` from the `clap` definition in `apps/stitchcraft-cli/src/cli.rs`. Edit the source, not this page. -->
+<h1 id="command-line"><a class="header" href="#command-line">Command line</a></h1>
+<p><code>stitch</code> is StitchCraft’s command-line tool. Each section shows the command’s own <code>--help</code>.</p>
+<h2 id="stitch"><a class="header" href="#stitch">stitch</a></h2>
+<pre><code class="language-text">stitch: the StitchCraft command-line tool
+
+Usage: stitch &lt;COMMAND&gt;
+
+Commands:
+  plan        Plan a design, an SVG file or a VectorCraft document, for a machine and write the machine file, with a picture and a report if asked. A picture, a PNG or JPEG file, is traced with VectorCraft's command line first [alias: export]
+  expand      Expand an automatic design: write it as the ordinary shapes automatic digitizing makes of it, each with its own StitchCraft effect, to edit one by one. A VectorCraft document keeps its traced shapes, hidden and locked, under a new group of the parts. An SVG file has the parts alone. The expanded design sews as the automatic one did, and no longer changes with the picture or the Auto effect
+  lettering   Set a text in an embroidery font, a folder in Ink/Stitch's font format, plan it for a machine and write the machine file, with a picture if asked
+  testsheet   Write a machine-checkpoint test sheet (docs/src/plan/machine-testing.md)
+  inspect     Read a machine file (PES, PEC or DST) and describe it: size, stitches, threads, stitch lengths
+  preview     Draw a machine file (PES, PEC or DST) as a picture of what it will sew (PNG)
+  convert     Write a machine file (PES, PEC or DST) in another format
+  profiles    List the built-in machine profiles
+  palette     Write a machine's threads as a GIMP palette (.gpl), which VectorCraft loads as a swatch library, so that Image Trace traces a picture in them
+  cutout      Cut a picture's subject out, a PNG or JPEG file, as `stitch plan --subject` does before VectorCraft traces it, and write the cut-out alone (PNG): to place in VectorCraft instead of the picture
+  explain     Explain a diagnostic code, such as SC-W0702
+  bug-report  Write a bug-report bundle that reproduces what StitchCraft does with a design, or replay one
+  help        Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help
+          Print help
+
+  -V, --version
+          Print version
+
+Exit status: 0 done (warnings allowed) · 1 the design or file has errors (nothing written) · 2 usage
+error · 3 a file could not be read or written · 4 a bug in StitchCraft (a bug-report bundle is written
+where it can be: see `stitch bug-report`).
+</code></pre>
+<h2 id="stitch-plan"><a class="header" href="#stitch-plan">stitch plan</a></h2>
+<pre><code class="language-text">Plan a design, an SVG file or a VectorCraft document, for a machine and write the machine file, with a picture and a report if asked. A picture, a PNG or JPEG file, is traced with VectorCraft's command line first
+
+Usage: stitch plan [OPTIONS] --output &lt;OUTPUT&gt; &lt;DESIGN&gt;
+
+Arguments:
+  &lt;DESIGN&gt;
+          The design: an SVG file, a VectorCraft document (.vectorcraft), or a picture (.png, .jpg or .jpeg), which VectorCraft's command line traces in the machine's threads and StitchCraft digitizes automatically
+
+Options:
+  -o, --output &lt;OUTPUT&gt;
+          The machine file to write
+
+  -p, --profile &lt;PROFILE&gt;
+          The machine profile (see `stitch profiles`); by default the one a VectorCraft document keeps, which StitchCraft's Design Settings filter sets, or else the reference machine, which `stitch profiles` lists first
+
+      --format &lt;FORMAT&gt;
+          The file format; by default the output file's extension decides
+
+          Possible values:
+          - pes: Brother PES, version 1
+          - dst: Tajima DST
+
+      --preview &lt;PREVIEW&gt;
+          Also draw a picture of what the file will sew (PNG)
+
+      --report &lt;REPORT&gt;
+          Also write a report of the plan and what was said about it (JSON), even when nothing else is written
+
+      --auto
+          Digitize automatically the shapes of an SVG file that have no settings: StitchCraft chooses the stitches of each by its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them. A VectorCraft document is digitized so without it
+
+      --no-auto
+          Sew the shapes of a VectorCraft document that have no settings as drawn: every area a fill and every line a running stitch, in paint order. Without it they are digitized automatically, as --auto digitizes them. An SVG file sews so without a switch
+
+      --sort-colours
+          Sew the shapes with settings in the order StitchCraft chooses too, as --auto sews the shapes it digitizes: shapes that overlap keep their paint order, and each thread then sews as long as it can, the nearest shape next (docs/src/design/image-to-embroidery.md)
+
+      --style &lt;STYLE&gt;
+          The style of automatic digitizing: a named set of its rules' settings, set on every shape digitized automatically that doesn't set them itself. `logo` suits flat art drawn in strokes, and `photo` a traced photo (docs/src/user/reference/auto-rules.md)
+
+      --set &lt;KEY=VALUE&gt;
+          Set a setting of automatic digitizing's rules, as KEY=VALUE, on every shape digitized automatically that doesn't set it itself, such as auto_min_slenderness=4. A setting given here goes before the style's (docs/src/user/reference/params/auto.md)
+
+      --text &lt;AREA:TEXT&gt;
+          Sew the traced letters inside an area as lettering in an embroidery font, as tall as they are: the area's LEFT,TOP,WIDTH,HEIGHT in percent of the box round the design's shapes, which is a traced picture's own box, then a colon and the text, such as 10,40,80,20:MATCH. A font is named after the text in double quotes, as "MATCH" font=NAME, and is found in the folder STITCHCRAFT_FONTS names (docs/src/user/how-to/letter-a-picture.md). May be given several times
+
+      --keep &lt;AREA&gt;
+          Keep the parts of the design inside an area from merging into their neighbours: each part of a shape digitized automatically that lies wholly inside it sews by its width, where it would merge as a speck or a thin line. The area is LEFT,TOP,WIDTH,HEIGHT in percent of the box round the design's shapes, such as 62,18,6,5 round an eye (docs/src/user/how-to/keep-small-parts.md). May be given several times
+
+      --guide &lt;POINTS&gt;
+          Draw a guide over the design: each filled part of a shape digitized automatically that it crosses sews as a guided fill whose rows follow it. The guide is 2 points or more, X,Y,X,Y… in percent of the box round the design's shapes, joined by straight lines, such as 20,80,45,50,60,20 along a leaf (docs/src/user/how-to/guide-the-rows.md). May be given several times
+
+      --vectorcraft-cli &lt;PROGRAM&gt;
+          VectorCraft's command line, which traces a picture; by default `vectorcraft-cli` on the PATH
+
+      --size &lt;MM&gt;
+          How large a picture is sewn: its longer side, in millimetres, its background included; by default as large as the machine's hoop holds
+
+      --colours &lt;N&gt;
+          How many colours a picture has, its background included: Image Trace traces it in at most that many of the machine's threads, 2 to 256; by default 6
+
+      --fewer-points
+          Trace a picture with fewer points: Image Trace's Paths and Corners at their lowest, which draw its outlines with about a third fewer anchors and fewer jags. Off by default, since it changes how many shapes of a traced picture sew
+
+      --keep-colour &lt;COLOUR&gt;
+          Give a colour of a picture a thread at any --colours: a thread of the machine by its name, in any case; a colour as #rrggbb, for the thread nearest it; or a pixel of the picture as X,Y, from its left and top edges, for the thread nearest its colour. May be given several times. The picture is then traced twice, the second time in the threads the first chose and the kept ones
+
+      --drop-colour &lt;COLOUR&gt;
+          Trace a picture without a thread of the machine, so that its colours take the nearest of the others: a colour read as --keep-colour reads it. May be given several times
+
+      --traced &lt;FILE&gt;
+          Also write the document VectorCraft traced a picture into (.vectorcraft), to correct the trace in VectorCraft
+
+      --subject
+          Cut the picture's subject out before VectorCraft traces it, so that its background isn't sewn: the rest is made transparent, and the picture cropped to what is kept
+
+      --subject-box &lt;X0,Y0,X1,Y1&gt;
+          The subject's box, from its left and top edges to its right and bottom ones; by default the box round the main subject that U²-Net-p finds
+
+      --subject-point &lt;X,Y&gt;
+          A point of the subject, as often as needed
+
+      --not-subject &lt;X,Y&gt;
+          A point of what isn't the subject, as often as needed
+
+      --cutout &lt;FILE&gt;
+          Also write the cut-out (PNG), with the other files, to see what was kept
+
+  -h, --help
+          Print help (see a summary with '-h')
+</code></pre>
+<h2 id="stitch-expand"><a class="header" href="#stitch-expand">stitch expand</a></h2>
+<pre><code class="language-text">Expand an automatic design: write it as the ordinary shapes automatic digitizing makes of it, each with its own StitchCraft effect, to edit one by one. A VectorCraft document keeps its traced shapes, hidden and locked, under a new group of the parts. An SVG file has the parts alone. The expanded design sews as the automatic one did, and no longer changes with the picture or the Auto effect
+
+Usage: stitch expand [OPTIONS] --output &lt;OUTPUT&gt; &lt;DESIGN&gt;
+
+Arguments:
+  &lt;DESIGN&gt;
+          The design: a VectorCraft document (.vectorcraft), an SVG file, or a picture (.png, .jpg or .jpeg), which VectorCraft's command line traces first, as `stitch plan` traces it. Every shape without settings is digitized automatically, as `stitch plan --auto` digitizes it
+
+Options:
+  -o, --output &lt;OUTPUT&gt;
+          The expanded design to write: a VectorCraft document (.vectorcraft), from a VectorCraft document or a picture, or an SVG file with Ink/Stitch's attributes (.svg)
+
+  -p, --profile &lt;PROFILE&gt;
+          The machine profile whose threads name the parts (see `stitch profiles`); by default the one a VectorCraft document keeps, or else the reference machine. The document written keeps it
+
+      --auto
+          Digitize automatically the shapes of an SVG file that have no settings: StitchCraft chooses the stitches of each by its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them. A VectorCraft document is digitized so without it
+
+      --no-auto
+          Sew the shapes of a VectorCraft document that have no settings as drawn: every area a fill and every line a running stitch, in paint order. Without it they are digitized automatically, as --auto digitizes them. An SVG file sews so without a switch
+
+      --sort-colours
+          Sew the shapes with settings in the order StitchCraft chooses too, as --auto sews the shapes it digitizes: shapes that overlap keep their paint order, and each thread then sews as long as it can, the nearest shape next (docs/src/design/image-to-embroidery.md)
+
+      --style &lt;STYLE&gt;
+          The style of automatic digitizing: a named set of its rules' settings, set on every shape digitized automatically that doesn't set them itself. `logo` suits flat art drawn in strokes, and `photo` a traced photo (docs/src/user/reference/auto-rules.md)
+
+      --set &lt;KEY=VALUE&gt;
+          Set a setting of automatic digitizing's rules, as KEY=VALUE, on every shape digitized automatically that doesn't set it itself, such as auto_min_slenderness=4. A setting given here goes before the style's (docs/src/user/reference/params/auto.md)
+
+      --text &lt;AREA:TEXT&gt;
+          Sew the traced letters inside an area as lettering in an embroidery font, as tall as they are: the area's LEFT,TOP,WIDTH,HEIGHT in percent of the box round the design's shapes, which is a traced picture's own box, then a colon and the text, such as 10,40,80,20:MATCH. A font is named after the text in double quotes, as "MATCH" font=NAME, and is found in the folder STITCHCRAFT_FONTS names (docs/src/user/how-to/letter-a-picture.md). May be given several times
+
+      --keep &lt;AREA&gt;
+          Keep the parts of the design inside an area from merging into their neighbours: each part of a shape digitized automatically that lies wholly inside it sews by its width, where it would merge as a speck or a thin line. The area is LEFT,TOP,WIDTH,HEIGHT in percent of the box round the design's shapes, such as 62,18,6,5 round an eye (docs/src/user/how-to/keep-small-parts.md). May be given several times
+
+      --guide &lt;POINTS&gt;
+          Draw a guide over the design: each filled part of a shape digitized automatically that it crosses sews as a guided fill whose rows follow it. The guide is 2 points or more, X,Y,X,Y… in percent of the box round the design's shapes, joined by straight lines, such as 20,80,45,50,60,20 along a leaf (docs/src/user/how-to/guide-the-rows.md). May be given several times
+
+      --vectorcraft-cli &lt;PROGRAM&gt;
+          VectorCraft's command line, which traces a picture; by default `vectorcraft-cli` on the PATH
+
+      --size &lt;MM&gt;
+          How large a picture is sewn: its longer side, in millimetres, its background included; by default as large as the machine's hoop holds
+
+      --colours &lt;N&gt;
+          How many colours a picture has, its background included: Image Trace traces it in at most that many of the machine's threads, 2 to 256; by default 6
+
+      --fewer-points
+          Trace a picture with fewer points: Image Trace's Paths and Corners at their lowest, which draw its outlines with about a third fewer anchors and fewer jags. Off by default, since it changes how many shapes of a traced picture sew
+
+      --keep-colour &lt;COLOUR&gt;
+          Give a colour of a picture a thread at any --colours: a thread of the machine by its name, in any case; a colour as #rrggbb, for the thread nearest it; or a pixel of the picture as X,Y, from its left and top edges, for the thread nearest its colour. May be given several times. The picture is then traced twice, the second time in the threads the first chose and the kept ones
+
+      --drop-colour &lt;COLOUR&gt;
+          Trace a picture without a thread of the machine, so that its colours take the nearest of the others: a colour read as --keep-colour reads it. May be given several times
+
+      --traced &lt;FILE&gt;
+          Also write the document VectorCraft traced a picture into (.vectorcraft), to correct the trace in VectorCraft
+
+  -h, --help
+          Print help
+</code></pre>
+<h2 id="stitch-lettering"><a class="header" href="#stitch-lettering">stitch lettering</a></h2>
+<pre><code class="language-text">Set a text in an embroidery font, a folder in Ink/Stitch's font format, plan it for a machine and write the machine file, with a picture if asked
+
+Usage: stitch lettering [OPTIONS] --font &lt;FOLDER&gt; --output &lt;OUTPUT&gt; &lt;TEXT&gt;
+
+Arguments:
+  &lt;TEXT&gt;
+          The text. A backslash and n (`\n`) ends a line
+
+Options:
+      --font &lt;FOLDER&gt;
+          The font: a folder in Ink/Stitch's font format, with its font.json and its glyph files
+
+  -o, --output &lt;OUTPUT&gt;
+          The machine file to write
+
+  -p, --profile &lt;PROFILE&gt;
+          The machine profile (see `stitch profiles`); by default the reference machine, which `stitch profiles` lists first
+
+      --format &lt;FORMAT&gt;
+          The file format; by default the output file's extension decides
+
+          Possible values:
+          - pes: Brother PES, version 1
+          - dst: Tajima DST
+
+      --preview &lt;PREVIEW&gt;
+          Also draw a picture of what the file will sew (PNG)
+
+      --scale &lt;PERCENT&gt;
+          The size of the text, in percent of the font's own size. A scale outside the font's `min_scale` to `max_scale` is set at the nearest the font sews at, with a warning
+
+      --height &lt;MM&gt;
+          The height of the text in millimetres, in place of --scale: the scale is the height over the font's size, the height of its reference capital
+
+      --align &lt;left|center|right|block|letterspacing&gt;
+          How the lines are aligned: from the left, centred, to the right, their words spread as wide as the widest line (block), or that with the letters of a one-word line spread too (letterspacing)
+          
+          [default: left]
+
+      --letter-spacing &lt;MM&gt;
+          Millimetres added between the letters of a word, or taken away when negative, at a scale of 100 percent
+          
+          [default: 0]
+
+      --word-spacing &lt;MM&gt;
+          Millimetres added between words, or taken away when negative, at a scale of 100 percent
+          
+          [default: 0]
+
+      --line-height &lt;MM&gt;
+          Millimetres added between lines, or taken away when negative, at a scale of 100 percent
+          
+          [default: 0]
+
+      --trim &lt;off|line|word|glyph&gt;
+          Where the thread is trimmed: nowhere but where the font's glyphs trim it (off), after each line, after each word, or after            each letter (glyph)
+          
+          [default: off]
+
+      --color-sort &lt;off|all|line|word&gt;
+          Which letters of a multicolour font sew one colour after another, in the order the font's author numbered its colours:            none (off), the whole text's, each line's or each word's. A font that doesn't sort its colours sews as it is, with a warning
+          
+          [default: off]
+
+      --back-and-forth &lt;true|false&gt;
+          Whether every other line sews in the direction back, so that a line starts where the line before it ended. It needs a font            that draws its glyphs for both directions, and a text in another font sews every line the same way, with a warning
+          
+          [default: true]
+          [possible values: true, false]
+
+      --widen-percent &lt;PERCENT&gt;
+          How much wider each satin column of the text sews, in percent of its width on each side, from 0 to 50: bolder letters from a font of light strokes. Running stitches and fills stay as they are. A value outside 0 to 50 is set at the nearest, with a warning
+          
+          [default: 0]
+
+      --path &lt;FILE&gt;
+          Set the text along a path of this SVG file, in the file's place on its page: the path labelled `batch lettering`, as Ink/Stitch's batch lettering takes it, or else the file's first path that paints. The text follows the path's first subpath
+
+      --text-position &lt;left|center|right|stretch&gt;
+          Where the text lies along its path: from the path's start (left), centred on it, up to its end (right), or spread from its            start to its end (stretch)
+          
+          [default: left]
+
+      --vertical-text-position &lt;top|baseline|bottom&gt;
+          Which part of the text lies on its path: its lowest point, so that it stands on the path (top), its first line's baseline,            or its highest point, so that it hangs from the path (bottom)
+          
+          [default: top]
+
+  -h, --help
+          Print help (see a summary with '-h')
+</code></pre>
+<h2 id="stitch-testsheet"><a class="header" href="#stitch-testsheet">stitch testsheet</a></h2>
+<pre><code class="language-text">Write a machine-checkpoint test sheet (docs/src/plan/machine-testing.md)
+
+Usage: stitch testsheet [OPTIONS] [SHEET]
+
+Arguments:
+  [SHEET]
+          The sheet, such as TS-01 (see --list)
+
+Options:
+      --list
+          List the test sheets and exit
+
+  -p, --profile &lt;PROFILE&gt;
+          The machine profile to check the sheet against (see `stitch profiles`); by default the one for the hoop the sheet is sewn in
+
+  -o, --output &lt;OUTPUT&gt;
+          The file to write
+
+      --format &lt;FORMAT&gt;
+          The file format; by default the output file's extension decides
+
+          Possible values:
+          - pes: Brother PES, version 1
+          - dst: Tajima DST
+
+  -h, --help
+          Print help (see a summary with '-h')
+</code></pre>
+<h2 id="stitch-inspect"><a class="header" href="#stitch-inspect">stitch inspect</a></h2>
+<pre><code class="language-text">Read a machine file (PES, PEC or DST) and describe it: size, stitches, threads, stitch lengths
+
+Usage: stitch inspect [OPTIONS] &lt;FILE&gt;
+
+Arguments:
+  &lt;FILE&gt;
+          The machine file
+
+Options:
+  -p, --profile &lt;PROFILE&gt;
+          Also check the design against a machine profile (see `stitch profiles`)
+
+  -h, --help
+          Print help
+</code></pre>
+<h2 id="stitch-preview"><a class="header" href="#stitch-preview">stitch preview</a></h2>
+<pre><code class="language-text">Draw a machine file (PES, PEC or DST) as a picture of what it will sew (PNG)
+
+Usage: stitch preview [OPTIONS] --output &lt;OUTPUT&gt; &lt;FILE&gt;
+
+Arguments:
+  &lt;FILE&gt;
+          The machine file
+
+Options:
+  -o, --output &lt;OUTPUT&gt;
+          The picture to write (PNG)
+
+      --style &lt;STYLE&gt;
+          How the picture looks
+
+          Possible values:
+          - realistic: The finished embroidery on fabric, with the jump threads the machine leaves for you to cut
+          - simple:    Every stitch, needle hole, move, trim and stop, for checking a design
+          - thickness: How thick the design sews: grey thread, yellow from 2 fills of it over one spot, orange from 4 and red from 6
+          
+          [default: realistic]
+
+      --scale &lt;SCALE&gt;
+          Pixels per millimetre
+          
+          [default: 8]
+
+  -p, --profile &lt;PROFILE&gt;
+          The machine the picture is for, which decides where the thread is cut (see `stitch profiles`); by default the reference machine
+
+  -h, --help
+          Print help (see a summary with '-h')
+</code></pre>
+<h2 id="stitch-convert"><a class="header" href="#stitch-convert">stitch convert</a></h2>
+<pre><code class="language-text">Write a machine file (PES, PEC or DST) in another format
+
+Usage: stitch convert [OPTIONS] --output &lt;OUTPUT&gt; &lt;FILE&gt;
+
+Arguments:
+  &lt;FILE&gt;
+          The machine file to read
+
+Options:
+  -o, --output &lt;OUTPUT&gt;
+          The file to write
+
+      --format &lt;FORMAT&gt;
+          The file format; by default the output file's extension decides
+
+          Possible values:
+          - pes: Brother PES, version 1
+          - dst: Tajima DST
+
+  -h, --help
+          Print help (see a summary with '-h')
+</code></pre>
+<h2 id="stitch-profiles"><a class="header" href="#stitch-profiles">stitch profiles</a></h2>
+<pre><code class="language-text">List the built-in machine profiles
+
+Usage: stitch profiles
+
+Options:
+  -h, --help
+          Print help
+</code></pre>
+<h2 id="stitch-palette"><a class="header" href="#stitch-palette">stitch palette</a></h2>
+<pre><code class="language-text">Write a machine's threads as a GIMP palette (.gpl), which VectorCraft loads as a swatch library, so that Image Trace traces a picture in them
+
+Usage: stitch palette [OPTIONS]
+
+Options:
+  -p, --profile &lt;PROFILE&gt;
+          The machine profile whose threads to write (see `stitch profiles`); by default the reference machine's
+
+  -o, --output &lt;OUTPUT&gt;
+          The file to write; by default the palette goes to standard output
+
+  -h, --help
+          Print help
+</code></pre>
+<h2 id="stitch-cutout"><a class="header" href="#stitch-cutout">stitch cutout</a></h2>
+<pre><code class="language-text">Cut a picture's subject out, a PNG or JPEG file, as `stitch plan --subject` does before VectorCraft traces it, and write the cut-out alone (PNG): to place in VectorCraft instead of the picture
+
+Usage: stitch cutout [OPTIONS] --output &lt;OUTPUT&gt; &lt;PICTURE&gt;
+
+Arguments:
+  &lt;PICTURE&gt;
+          The picture: a PNG or JPEG file
+
+Options:
+  -o, --output &lt;OUTPUT&gt;
+          The cut-out to write (PNG)
+
+      --subject-box &lt;X0,Y0,X1,Y1&gt;
+          The subject's box, from its left and top edges to its right and bottom ones; by default the box round the main subject that U²-Net-p finds
+
+      --subject-point &lt;X,Y&gt;
+          A point of the subject, as often as needed
+
+      --not-subject &lt;X,Y&gt;
+          A point of what isn't the subject, as often as needed
+
+  -h, --help
+          Print help
+</code></pre>
+<h2 id="stitch-explain"><a class="header" href="#stitch-explain">stitch explain</a></h2>
+<pre><code class="language-text">Explain a diagnostic code, such as SC-W0702
+
+Usage: stitch explain &lt;CODE&gt;
+
+Arguments:
+  &lt;CODE&gt;
+          The code
+
+Options:
+  -h, --help
+          Print help
+</code></pre>
+<h2 id="stitch-bug-report"><a class="header" href="#stitch-bug-report">stitch bug-report</a></h2>
+<pre><code class="language-text">Write a bug-report bundle that reproduces what StitchCraft does with a design, or replay one.
+
+The bundle is one file to attach to an issue, and it holds the design. With --replay, plan a bundle's design again and compare; the exit status is 1 when it does not reproduce.
+
+Usage: stitch bug-report [OPTIONS] [DESIGN]
+
+Arguments:
+  [DESIGN]
+          The design StitchCraft gets wrong: an SVG file, or a VectorCraft document (.vectorcraft)
+
+Options:
+      --replay &lt;REPLAY&gt;
+          Replay this bundle instead: plan its design again, with the profile and format it names, and say whether everything comes out the same
+
+  -o, --output &lt;OUTPUT&gt;
+          The bundle to write; by default next to the design, as DESIGN.bug-report.json
+
+  -p, --profile &lt;PROFILE&gt;
+          The machine profile (see `stitch profiles`); by default the one a VectorCraft document keeps, which StitchCraft's Design Settings filter sets, or else the reference machine, which `stitch profiles` lists first
+
+      --format &lt;FORMAT&gt;
+          The file format; by default the profile's
+
+          Possible values:
+          - pes: Brother PES, version 1
+          - dst: Tajima DST
+
+      --says &lt;SAYS&gt;
+          What goes wrong, in your words; it goes into the bundle
+
+      --auto
+          Digitize automatically the shapes of an SVG file that have no settings: StitchCraft chooses the stitches of each by its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them. A VectorCraft document is digitized so without it
+
+      --no-auto
+          Sew the shapes of a VectorCraft document that have no settings as drawn: every area a fill and every line a running stitch, in paint order. Without it they are digitized automatically, as --auto digitizes them. An SVG file sews so without a switch
+
+      --sort-colours
+          Sew the shapes with settings in the order StitchCraft chooses too, as --auto sews the shapes it digitizes: shapes that overlap keep their paint order, and each thread then sews as long as it can, the nearest shape next (docs/src/design/image-to-embroidery.md)
+
+      --style &lt;STYLE&gt;
+          The style of automatic digitizing: a named set of its rules' settings, set on every shape digitized automatically that doesn't set them itself. `logo` suits flat art drawn in strokes, and `photo` a traced photo (docs/src/user/reference/auto-rules.md)
+
+      --set &lt;KEY=VALUE&gt;
+          Set a setting of automatic digitizing's rules, as KEY=VALUE, on every shape digitized automatically that doesn't set it itself, such as auto_min_slenderness=4. A setting given here goes before the style's (docs/src/user/reference/params/auto.md)
+
+      --text &lt;AREA:TEXT&gt;
+          Sew the traced letters inside an area as lettering in an embroidery font, as tall as they are: the area's LEFT,TOP,WIDTH,HEIGHT in percent of the box round the design's shapes, which is a traced picture's own box, then a colon and the text, such as 10,40,80,20:MATCH. A font is named after the text in double quotes, as "MATCH" font=NAME, and is found in the folder STITCHCRAFT_FONTS names (docs/src/user/how-to/letter-a-picture.md). May be given several times
+
+      --keep &lt;AREA&gt;
+          Keep the parts of the design inside an area from merging into their neighbours: each part of a shape digitized automatically that lies wholly inside it sews by its width, where it would merge as a speck or a thin line. The area is LEFT,TOP,WIDTH,HEIGHT in percent of the box round the design's shapes, such as 62,18,6,5 round an eye (docs/src/user/how-to/keep-small-parts.md). May be given several times
+
+      --guide &lt;POINTS&gt;
+          Draw a guide over the design: each filled part of a shape digitized automatically that it crosses sews as a guided fill whose rows follow it. The guide is 2 points or more, X,Y,X,Y… in percent of the box round the design's shapes, joined by straight lines, such as 20,80,45,50,60,20 along a leaf (docs/src/user/how-to/guide-the-rows.md). May be given several times
+
+  -h, --help
+          Print help (see a summary with '-h')
+</code></pre>
+<h2 id="stitch-help"><a class="header" href="#stitch-help">stitch help</a></h2>
+<pre><code class="language-text">Print this message or the help of the given subcommand(s)
+
+Usage: stitch help [COMMAND]...
+
+Arguments:
+  [COMMAND]...
+          Print help for the subcommand(s)
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../user/reference/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../user/reference/profiles.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../user/reference/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../user/reference/profiles.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../mark-09e88c2c.min.js"></script>
+        <script src="../../searcher-09f2665d.js"></script>
+
+        <script src="../../clipboard-1626706a.min.js"></script>
+        <script src="../../highlight-abc7f01d.js"></script>
+        <script src="../../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

@@ -1,0 +1,9 @@
+$ stitch explain SC-W0702
+SC-W0702: Design is larger than the comfort zone
+
+The design fits the hoop but is larger than the profile's comfort zone: the area where this
+machine and hoop sew most accurately. Near the hoop's edge fabric is held less firmly, so large
+designs pucker and shift more.
+
+The file was written. Rotate the design if the message says that brings it inside the comfort
+zone, use a firmer stabilizer, or scale the design down.

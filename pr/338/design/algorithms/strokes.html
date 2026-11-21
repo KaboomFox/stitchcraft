@@ -1,0 +1,778 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Strokes - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../searchindex-b37cbce2.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../toc-95df4fb0.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/design/algorithms/strokes.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="stroke-generators"><a class="header" href="#stroke-generators">Stroke generators</a></h1>
+<!-- implements: crates/stitchcraft-engine/src/generators/mod.rs, crates/stitchcraft-engine/src/generators/running/**, crates/stitchcraft-engine/src/generators/manual.rs, crates/stitchcraft-engine/src/generators/zigzag/**, crates/stitchcraft-engine/src/generators/ripple/**, crates/stitchcraft-engine/src/generators/passes.rs, crates/stitchcraft-engine/src/normalize/stroke.rs, crates/stitchcraft-engine/src/normalize/along.rs -->
+<p>Strokes follow a path. Shape: <code>StrokePath</code> (an ordered list of polylines, corners marked, from the
+normalizer). Phase P1 (M3) unless noted.</p>
+<p>A stroke starts where it is drawn and ends where it is drawn, as in Ink/Stitch. Its generator is given its
+neighbours, as every generator is (<a href="../adr/0014-generators-see-their-neighbours.html">ADR 0014</a>), and a
+stroke sews the same whatever they are, and whatever start and end positions its design gives it
+(<code>REQ-GEN-001</code>). A satin column or a tatami fill before a stroke ends near the
+stroke’s first point.</p>
+<p>A stroke cut to clips, its SVG clip paths or VectorCraft clipping objects, sews the pieces of its lines
+inside every one (<code>REQ-GEN-005</code>). Its subpaths are cut where they cross a clip’s outline, as Ink/Stitch
+cuts them. A running stitch’s or a zigzag
+stroke’s is flattened first as a shape’s outline is, and a manual stitch’s runs from node to node, with a
+needle point at each cut. Each piece sews on its own, in order along its subpath, and a closed subpath that is cut
+is cut where it starts too. Left whole, a subpath keeps its curves and sews as drawn. The clips leave the
+width alone, so a zigzag stroke’s zigzag ends square at a cut, half its width either side of the line.
+Ink/Stitch closes each piece of a cut closed zigzag stroke, which StitchCraft sews open (<code>DEV-RUN-009</code>), and
+sews a line that also touches its clip at a point whole, which StitchCraft cuts as any other
+(<code>DEV-RUN-010</code>). Wholly outside its clips, a stroke isn’t sewn (<code>SC-W0013</code>), and the element before it ends
+nearest the first piece they leave. A ripple stitch cuts its needle points instead, and routes the pieces
+(<a href="#clips">clips</a>).</p>
+<h2 id="running-stitch"><a class="header" href="#running-stitch">Running stitch</a></h2>
+<p>The workhorse: outlines, details, travel, underlay.</p>
+<p><strong>Parameters:</strong> <code>running_stitch_length_mm</code> (one length or a repeating pattern of lengths, <code>LengthList</code>),
+<code>running_stitch_tolerance_mm</code>, <code>repeats</code>, <code>bean_stitch_repeats</code>, <code>enable_random_stitch_length</code>,
+<code>random_stitch_length_jitter_percent</code>, <code>random_seed</code>.</p>
+<h3 id="placement"><a class="header" href="#placement">Placement</a></h3>
+<p>A stitch is the straight line between two needle points, so placement measures along the path but
+checks straight. “The shortest stitch” is the one <a href="../engine-pipeline.html#5-finalize">Finalize</a> enforces
+(settings or profile, whichever is larger).</p>
+<ol>
+<li><strong>Flatten.</strong> The normalizer turns the path into polylines within a tenth of the tolerance (the other
+nine tenths are left for the stitches) and marks its corners: joins between segments where the path
+turns by more than 30°. A curve’s own bend is never a corner, however tight.</li>
+<li><strong>Split at corners.</strong> Every corner gets a needle penetration, so sharp shapes stay sharp, unless it is
+closer than the shortest stitch, along the path, to the previous penetration or to the end: then the
+spans on either side of it are joined.</li>
+<li><strong>Even spacing per span.</strong> For a span of length <code>L</code> between corners and target length <code>s</code>, place
+<code>n = ceil(L / s − ε)</code> stitches spaced <code>L / n</code> apart along the path. Every stitch is at most <code>s</code> and the
+last one is never a short leftover — the classic even-division rule digitizers use. With several
+lengths (<code>"2.5 1.0"</code>) the lengths repeat along the path, carrying on from span to span; each span takes
+as many as it needs and scales them by one factor to end exactly on its corner. Lengths below twice
+the shortest stitch are raised to it (<code>SC-W0402</code>), so a span longer than the longest length scales its
+stitches by more than a half and keeps each at or above the shortest stitch; in a shorter span, a
+stitch scaled below it joins its shorter neighbour. Where those stitches stray from the path by more
+than the tolerance left after flattening, as on a curve too tight for them, the span is spread again
+in one stitch more, then one more, as long as that takes no more stitches than step 5 would make of
+it, until they keep to it. A small circle is so sewn in even stitches as long as the tolerance left after
+flattening allows, where splitting the stray ones would halve them. With random length, each try draws its lengths again
+from where the span’s draws began.</li>
+<li><strong>Measure straight.</strong> Where the path bends back on itself within less than the shortest stitch (a
+cusp, a tight loop, a curl at an end), two points far apart along it can be close in a straight line.
+Going along the needle points: one closer than the shortest stitch to the last one kept is dropped; a
+corner drops the points kept since the previous corner instead, and is dropped itself if that is not
+enough; the end drops whatever it takes, corners too. A drop lengthens the stitch over it, and one
+longer than the longest length is split where the path is half its length from its start (at most
+the longest length), as often as needed. When only the start is left and the end is too close to it
+(a small closed loop), the stitch goes by way of the point of the path farthest from both ends; if
+even that is closer than the shortest stitch, the part is not stitched (<code>SC-W0401</code>).</li>
+<li><strong>Respect the curve.</strong> If the chord between two consecutive needle points strays from the path by
+more than the tolerance left after flattening, split that stitch at the path’s point of greatest
+deviation, among those at least the shortest stitch from both its ends, and repeat. A part longer than
+the longest length is split along the path as in step 4. So the stitches stray from the path by at
+most <code>running_stitch_tolerance_mm</code>, except where the path’s details are smaller than the shortest
+stitch. There a point of the flattened path that is passed over lies nearer than the shortest stitch
+to a needle of its stitch, and the path strays by less than the shortest stitch plus a tenth of the
+tolerance.</li>
+<li><strong>Random length.</strong> With <code>enable_random_stitch_length</code>, each stitch length is drawn uniformly from
+<code>s × (1 ± jitter)</code>, the first of each span a random fraction of that (a random phase, below), then the
+span is rescaled to end on its corner. Each span draws from its own stream of the element’s generator,
+keyed by its subpath’s place in the path and its own place in the subpath, so a change to one span
+leaves the lengths of the others as they were. The generator is seeded with the element’s
+<code>random_seed</code> (a setting every stitch type that varies at random shares), or with its id when that is
+empty. A seed replaces the id, as in Ink/Stitch, so elements alike given one seed sew alike, and the
+same element and seed always give the same stitches.</li>
+</ol>
+<p><strong>When the rules disagree,</strong> the shortest stitch wins (a shorter stitch hammers one spot and can break the
+thread), then corners, then the tolerance. A part of the path that is a single point, shorter than the
+shortest stitch, or lying all within it of its ends, is not stitched (<code>SC-W0401</code>). Only arithmetic and square roots are used, so
+every platform places the same stitches.</p>
+<p><strong>Compared with Ink/Stitch:</strong> the same parameters, meanings and defaults; the placement differs in four
+documented ways, <code>DEV-RUN-001</code> to <code>DEV-RUN-004</code> in the deviations ledger (<code>conformance/deviations.toml</code>),
+and random length draws and places its lengths in other ways (<code>DEV-RUN-005</code>).</p>
+<p><strong>A guided fill’s rows</strong> are stitched as these steps stitch a span, but with Ink/Stitch’s own corners
+(<code>along_row</code>, <a href="guided.html#the-stitches">guided fill</a>). There a join that turns by 45° or more is a corner,
+unless it lies within twice the tolerance along the row of the turn before it. A row’s stagger runs on through the gentler joins
+where a copy of its guide meets its lengthened ends, which this page’s 30° rule would make corners. With
+<code>flexible_stagger</code> its needle points lie whole stitches apart from its start, round its corners, and its
+last stitch is what is left. The fill’s settings, its bean stitch among them, reach the registry’s groups
+of the running stitch and of the path fills too.</p>
+<p><strong>Satin underlays</strong> walk lines made point by point by the satin generator
+(<a href="satin.html#underlays">satin</a>), and steps 2 to 5 place their stitches, with each walk’s own length and
+tolerance. Such a line is a polyline already, and each join that turns by more than 30° is a corner. A
+line too small for a stitch of the shortest length is sewn as its 2 ends, as Ink/Stitch sews it, and
+finalizing merges what is too short.</p>
+<p><strong>A wide stroke’s area</strong>, which automatic digitizing fills (<a href="../image-to-embroidery.html#stitch-types-by-width">image to
+embroidery</a>), is made from the path segment by segment,
+flattened within the shapes’ tolerance: its joins go where 2 segments meet, and it bends smoothly inside
+a curve. Its ends and corners are square to the chords there, and half the stroke’s width turns the angle
+such a chord makes with its curve into a shift of the corner. So a curve that ends the subpath, or meets
+the next segment at a corner, is halved further at that end until the shift is within the tolerance too.
+Where 2 segments meet smoothly nothing more is needed.</p>
+<h3 id="repeats-and-bean-stitch"><a class="header" href="#repeats-and-bean-stitch">Repeats and bean stitch</a></h3>
+<ul>
+<li><code>repeats = k</code> sews the path k times, alternating direction; odd k ends at the far end, even k returns
+to the start (useful for travel that must come back). Each pass starts where the last one ended, so a
+turnaround is not a stitch in place.</li>
+<li><code>bean_stitch_repeats = b</code> replaces every stitch A→B with A→B→A→B… (2b+1 passes), producing the thick
+“triple stitch” line at b = 1. A list (<code>"1 0"</code>) alternates bean and plain stitches.</li>
+<li><strong>Order, as in Ink/Stitch</strong> (read at <code>d59c9ab</code>): bean stitch applies after repeats, to every stitch of
+every pass, with the list running on from pass to pass. Ink/Stitch repeats the turnaround point, so
+the turnaround takes one step of the list; StitchCraft counts that step too, without sewing it, so a
+file sews the same in both. With a two-value list, each stretch of the path then gets the same
+treatment on every pass.</li>
+<li>A zigzag’s turnaround takes no step of the list, as in Ink/Stitch (<a href="#zigzag-stroke-p2-m7">zigzag stroke</a>).</li>
+<li>Repeats apply to running, ripple and zigzag strokes; bean stitch to those and to manual stitch (the
+<a href="../inkstitch-compat-contract.html">compatibility contract</a> lists each parameter’s stitch types).</li>
+<li>The fills sewn as one path have repeats and bean stitch of their own, which Ink/Stitch declares for
+its fills apart from a stroke’s. Bean stitch comes first, and each repeat then sews everything sewn so
+far again, the other way round, so <code>k</code> repeats sew 2^(k−1) passes (<a href="fills.html#stitches">fills</a>).</li>
+<li>A circular fill’s bean stitch leaves out the stitches that run between the pieces of its spiral, but
+each of those stitches takes a step of the list, as in Ink/Stitch
+(<a href="fills.html#circular-fill">circular fill</a>). A tartan fill takes the fills’ bean stitch for its runs
+alone, the needle’s travel between them left out the same way, and its rows and its needle’s travel
+take the running stitch’s length, as a tatami fill’s travel does (<a href="tartan.html#a-colours-lines">tartan fill</a>).</li>
+</ul>
+<h3 id="random-length"><a class="header" href="#random-length">Random length</a></h3>
+<p>Ink/Stitch draws each stitch from <code>s × (1 ± jitter)</code> and starts each stretch between corners at a random
+phase, so rows sewn side by side with the same settings do not line their holes up. One random number
+gives a stitch both its length and its phase: the first stitch of a stretch is its drawn length times
+that number. After a stitch that the tolerance made shorter, the next starts a new phase too. Ink/Stitch
+does not rescale, so the last stitch before a corner is whatever is left. Each stretch draws from a
+stream keyed by the seed and the stretch’s place in its subpath, and the places start again in each
+subpath, so subpaths drawn alike sew alike.</p>
+<p>StitchCraft draws a stitch’s length and its span’s phase from 2 numbers. A phase starts only where a span
+starts, and each span is rescaled to end on its corner (placement, step 6: no short leftover). Its streams
+are keyed by the subpath’s place as well, so subpaths drawn alike, such as lines side by side, start at
+different phases, which is what the random phase is for (<code>DEV-RUN-005</code>).</p>
+<p>A contour fill sews its path stretch by stretch, a ring or a turn of a spiral at a time, each a span of
+its own, and keys each span’s streams by its number in the fill (<a href="fills.html#stitches">fills</a>).</p>
+<h3 id="properties-conformance"><a class="header" href="#properties-conformance">Properties (conformance)</a></h3>
+<ul>
+<li>Stitches are spread evenly between corners, in more of them where they stray from the points of the
+flattened path by more than the tolerance left after flattening, as long as that takes no more than
+splitting. Measured straight, every stitch is at most
+<code>s × (1 + jitter)</code> + 1 µm for the longest length <code>s</code> and at least the shortest stitch, and a part too
+small for that is reported (<code>REQ-RUN-001</code>).</li>
+<li>Deviation from the source path ≤ tolerance, both ways, measured densely (<code>REQ-RUN-002</code>).</li>
+<li>Corners are penetration points unless that would make a stitch too short (<code>REQ-RUN-003</code>).</li>
+<li>Bean stitch sews each stitch <code>2b + 1</code> times, so a run of n stitches with b throughout has exactly
+<code>n × (2b + 1)</code>; the list runs on across repeats, each turnaround taking a step (<code>REQ-RUN-004</code>).</li>
+<li>Repeats alternate direction with no stitch in place; their parity decides the exit point
+(<code>REQ-RUN-005</code>).</li>
+<li>With random length the lengths vary. The same element and seed give the same stitches, and another
+seed gives others. A seed replaces the element’s id, and elements given one seed draw the same lengths.
+Each span draws from its own stream, so a change to one span leaves the others’ lengths as they were
+(<code>REQ-RUN-007</code>).</li>
+</ul>
+<h3 id="diagnostics"><a class="header" href="#diagnostics">Diagnostics</a></h3>
+<p><code>SC-W0401</code> part of the path too small for the shortest stitch (skipped); <code>SC-W0402</code> stitch length below
+twice the shortest stitch (raised), a stroke’s or a satin underlay’s, which the message names.</p>
+<h2 id="manual-stitch"><a class="header" href="#manual-stitch">Manual stitch</a></h2>
+<p>Every node of the path is a needle penetration, in order — for hand-placed stitches and imported stitch
+files. A curve gives only its end node: its control points are not stitched and it is not flattened. When
+the path is closed it comes back to its start, and a node where the needle already is sews no stitch.
+Segments longer than <code>max_stitch_length_mm</code> (if set, a setting manual stitch shares with satin columns)
+are split into the fewest equal parts no longer than it, but never into parts shorter than the shortest
+stitch, and <code>SC-W0404</code> says how many stitches stay longer for that. Ink/Stitch splits a segment into the
+fewest equal parts no longer than the setting, however short they are (<code>DEV-RUN-006</code>). A value of 0 means
+“not set”, as in Ink/Stitch, and so does one below 0, so every stitch is then sewn as drawn. Bean stitch
+applies, and repeats do not. Lock stitches are added only when <code>force_lock_stitches</code> is set, as in
+Ink/Stitch (read at <code>d59c9ab</code>).</p>
+<p>Ink/Stitch’s bean stitch takes a step of its list for every point it lists, and it lists some where the
+needle already is. A node drawn twice is listed twice, and so is the end of each stitch Ink/Stitch
+splits. Where a closed path came back to its start already, the start is listed once more. Its stitch
+plan leaves out stitches shorter than its shortest stitch only after the bean stitch, and a node left out
+for that keeps its step. StitchCraft gives each of these its step, sewing nothing, and a bean list then
+falls on the same stitches in both tools.</p>
+<p>The shortest stitch holds here too: a node closer than it to the needle point before it is left out, so
+the stitch before runs on to the next node, and <code>SC-W0403</code> says how many. A part’s last node is always
+kept, leaving out the one before it instead. Ink/Stitch drops such points later, over the whole plan,
+without a word, and only those 0.1 mm or less from the point before at its default (<code>DEV-RUN-006</code>). A part
+that is one point, or too small for one stitch, is not stitched (<code>SC-W0401</code>).</p>
+<p>Properties: needle points are the nodes in order plus only the documented splits, and <code>SC-W0404</code> names
+a stitch kept longer than <code>max_stitch_length_mm</code> (<code>REQ-RUN-006</code>). Every stitch is at least as long as the
+shortest stitch (<code>REQ-RUN-008</code>).</p>
+<h2 id="zigzag-stroke-p2-m7"><a class="header" href="#zigzag-stroke-p2-m7">Zigzag stroke (P2, M7)</a></h2>
+<p>A zigzag along the path, as wide as its stroke. The needle crosses the path from side to side, as
+Ink/Stitch sews its zig-zag stitch (<code>stroke_method</code> <code>zigzag_stitch</code>, read at <code>d59c9ab</code>). It suits a light
+border, a couched look or a stem too thin for a satin column.</p>
+<p><strong>Parameters:</strong> <code>zigzag_spacing_mm</code>, the distance along the path from one stitch to the next that crosses
+the same way, a zig and a zag together, 0.4 mm by default; <code>stroke_pull_compensation_mm</code>, how much further
+out than half the stroke’s width each side’s needle points go, one value for both sides or 2; and
+<code>zigzag_angle</code>, which turns every stitch away from square to the path, from −89° to 89°. <code>repeats</code> and
+<code>bean_stitch_repeats</code> apply. The width is the stroke’s, read as a satin column drawn as one path reads it.
+Before Ink/Stitch’s file version 3 a zigzag stroke read <code>pull_compensation_mm</code>, shared by its 2 sides, and
+in a file of version 1 or 2 the SVG reader halves it into <code>stroke_pull_compensation_mm</code>, as Ink/Stitch’s
+update does (<code>REQ-SVG-007</code>).</p>
+<p>Strokes, satin columns and fills each read <code>zigzag_spacing_mm</code> their own way
+(<a href="../params.html#naming-rules">parameter registry</a>, rule 7). A stroke reads a list, as Ink/Stitch does.
+Only its first value counts.</p>
+<h3 id="placement-1"><a class="header" href="#placement-1">Placement</a></h3>
+<p>Each part of the path, one per subpath, is sewn on its own, as a running stitch is.</p>
+<ol>
+<li><strong>Spread.</strong> The part is flattened within a tenth of a CSS pixel, as a satin column’s or a fill’s
+subpaths are, and <code>n + 1</code> points are spread along it at equal distances, its ends included. <code>n</code> is its
+length divided by half the spacing, rounded half to even, at least 2, and one more if that is odd. So
+the zigzag has a whole number of zigs and zags, and it starts and ends on the same side.</li>
+<li><strong>Directions.</strong> Point 0’s direction is the line to point 1, and the last point’s the line from the one
+before it. Every other point’s direction is halfway between the line from the point before it and the
+line to the point after it, each taken with length 1, so a point at a corner leans evenly into both of
+its sides. The lines are those between the spread points, not the path’s own.</li>
+<li><strong>Across.</strong> Each point moves square to its direction, turned by <code>zigzag_angle</code> (positive turns
+clockwise as the drawing shows it). The points numbered 0, 2, 4 and on move to the right of the way
+the path goes, by half the width plus the second pull compensation. Points 1, 3, 5 and on move to the
+left, by half the width plus the first. A pull compensation below minus half the width moves its
+points over to the other side. Each point whose direction has no length stays where it is, as on a
+turn straight back.</li>
+<li><strong>Closed paths.</strong> A stroke closes when one of its subpaths moves and the others, if any, draw nothing:
+single points, or segments of no length. That subpath’s ends must lie nearer each other than 0.05 CSS
+pixels. Its last needle point then moves onto its first, and the zigzag ends where it started.
+Ink/Stitch counts a subpath of no length as a second line, and keeps such a zigzag open
+(<code>DEV-RUN-008</code>).</li>
+<li><strong>Repeats and bean stitch.</strong> Repeats sew the zigzag again, every other pass backwards, and each pass
+after the first starts with the needle point after the one the last pass ended at. Bean stitch then
+sews each stitch <code>2b + 1</code> times, with its list taken one after another along the stitches of all the
+passes, as for a running stitch (<a href="#repeats-and-bean-stitch">repeats and bean stitch</a>). Ink/Stitch does
+not list the point a pass turns at twice in a zigzag, as it does in a running stitch, so that point
+takes no step of the bean list here.</li>
+</ol>
+<p>The needle points come from arithmetic, square roots and the cosine and sine of the angle
+(<code>stitchcraft_core::math</code>) alone, and every platform places them alike.</p>
+<p><strong>Compared with Ink/Stitch.</strong> Ink/Stitch spreads the points along a running stitch it sews first, at half
+each spacing and within <code>running_stitch_tolerance_mm</code> of the path. StitchCraft spreads them along the
+path, flattened as Ink/Stitch flattens it for that running stitch (<code>DEV-RUN-007</code>). At the default spacing
+those running stitches are 0.2 mm long, chords of the path’s curves, so the two lines and the points
+spread along them differ by hundredths of a millimetre. A part whose length lies close to a rounding
+boundary of its count of zigs and zags may have one zig and zag more or fewer. With several spacings,
+Ink/Stitch’s zigzag takes the first, and its running stitch takes half of each, one after another. A long
+one cuts across a curve by up to <code>running_stitch_tolerance_mm</code>, and the zigzag follows it there, inside
+the path. StitchCraft sews the first spacing along the path. A part of the path that is one point is not
+stitched (<code>SC-W0401</code>), as for a running stitch (<code>DEV-RUN-004</code>).</p>
+<h3 id="properties-conformance-1"><a class="header" href="#properties-conformance-1">Properties (conformance)</a></h3>
+<ul>
+<li>The needle points of each part, before repeats, are <code>n + 1</code> with <code>n</code> even, as step 1 counts them, and
+their places along the flattened path are <code>L / n</code> apart (<code>REQ-RUN-009</code>).</li>
+<li>Each needle point lies across its direction from its place on the path, turned by <code>zigzag_angle</code>:
+even points at half the width plus the second pull compensation to the right, odd points at half the
+width plus the first to the left (<code>REQ-RUN-010</code>).</li>
+<li>A closed stroke ends on its first needle point (<code>REQ-RUN-011</code>).</li>
+<li>Repeats and bean stitch sew the zigzag as step 5 says, with no step of the bean list for a turn
+(<code>REQ-RUN-012</code>).</li>
+</ul>
+<h3 id="diagnostics-1"><a class="header" href="#diagnostics-1">Diagnostics</a></h3>
+<p><code>SC-W0401</code> for a part of the path that is one point. Finishing leaves out a needle point of each stitch
+shorter than the shortest stitch (<code>SC-I0504</code>). At the default spacing, 0.4 mm, and a shortest stitch of
+0.3 mm, that is every stitch of a straight zigzag narrower than 0.224 mm, and the zigzag sews as a line.
+<code>SC-W0405</code> names a zigzag with stitches that short, and the width it needs. It counts the stitches that
+are sewn. A closed zigzag’s last needle point moves onto its first before they are counted. That stitch
+can be the only short one, as at a teardrop’s tip. Ink/Stitch’s shortest stitch is 0.1 mm by default, and
+it sews such a zigzag as it is.</p>
+<h2 id="ripple-stitch-m108-m1011"><a class="header" href="#ripple-stitch-m108-m1011">Ripple stitch (M10.8, M10.11)</a></h2>
+<p>A ripple stitch sews lines that spread out from the stroke: copies of its line that shrink towards a
+point or follow a guide, or lines along a satin column from one of its rails to the other. They are sewn
+as one running stitch, and a grid’s lines and a clip’s parts as runs of their own. It suits light textures
+that fade to a point, such as a shell. Its lines may cross. StitchCraft sews it as Ink/Stitch sews its
+ripple stitch (<code>stroke_method</code> <code>ripple_stitch</code>), read at <code>d59c9ab</code> (<code>lib/stitches/ripple_stitch.py</code>, the
+ripple settings in <code>lib/elements/stroke.py</code>, and how it finds its helpers in <code>lib/marker.py</code>).</p>
+<p><strong>Parameters:</strong> <code>line_count</code>, <code>min_line_dist_mm</code>, <code>exponent</code>, <code>flip_exponent</code>, <code>skip_start</code>,
+<code>skip_end</code>, <code>flip_copies</code>, <code>join_style</code>, <code>staggers</code>, <code>reverse</code> and <code>manual_pattern_placement</code>, the rails’
+<code>reverse_rails</code> and <code>swap_satin_rails</code>, a guide’s <code>satin_guide_pattern_position</code>, <code>scale_axis</code>,
+<code>scale_start</code>, <code>scale_end</code> and <code>rotate_ripples</code>, and the grid’s <code>grid_size_mm</code> and <code>grid_first</code>
+(<code>RippleParams</code>). Each line is sewn with the running stitch’s settings, its length and tolerance, random
+length and <code>random_seed</code>, and the whole ripple with <code>repeats</code> and <code>bean_stitch_repeats</code>.</p>
+<h3 id="the-strokes-lines"><a class="header" href="#the-strokes-lines">The stroke’s lines</a></h3>
+<p>The stroke’s subpaths are flattened as a shape’s outline is, within a tenth of a CSS pixel, and each one
+that moves is a line. A subpath that is one point is not stitched (<code>SC-W0401</code>). Lines shorter together
+than the shortest stitch sew nothing, and <code>SC-W0401</code> gives their length. The lines say which ripple the
+stroke sews:</p>
+<ul>
+<li><strong>2 lines or more</strong> are a satin column’s rails and rungs, read by the satin column’s own code
+(<a href="satin.html#recognizing-rails-and-rungs">satin</a>), and the ripple runs along the column, its lines between
+the rails.</li>
+<li><strong>1 open line</strong> ripples towards a target point, or along its guide (<a href="#guided-ripples">guided ripples</a>).</li>
+<li><strong>1 closed line</strong>, whose ends lie within 0.05 CSS pixels of each other, spirals in to the target point,
+or along its guide.</li>
+</ul>
+<h3 id="the-target-point"><a class="header" href="#the-target-point">The target point</a></h3>
+<p>Ink/Stitch’s <code>target_point</code> command tied to the stroke gives the target point, read as the start and end
+commands are read (<a href="../svg-input.html#inkstitch-objects">SVG input</a>). In a VectorCraft document a path named
+<code>stitch:target</code> grouped with the stroke gives it, at the middle of the box round its anchors
+(<a href="../vectorcraft-integration.html#commands-in-v1">VectorCraft integration</a>). Without either, the target
+point is the centroid of the convex hull of the stroke’s lines, as GEOS finds a polygon’s centroid. Where
+the lines’ points all lie in a line, the hull is the segment between the 2 farthest apart, and the target
+point its middle. One point is its own hull.</p>
+<h3 id="places"><a class="header" href="#places">Places</a></h3>
+<p>Each line has a place <code>t</code>, from 0 to 1. Of <code>n</code> lines, line <code>k</code> is at <code>(k / (n − 1))</code> raised to the power
+<code>exponent</code>, which is at least 0.1. With <code>flip_exponent</code>, line <code>k</code> is at 1 less the place of line
+<code>n − 1 − k</code>. Above 1, the exponent packs the lines together towards the first line, and below 1 towards
+the last. With 1 line, its place is 0, or 1 with <code>flip_exponent</code>.</p>
+<ul>
+<li><strong>Along a column.</strong> Pairs of points are placed across the column every <code>running_stitch_tolerance_mm</code>,
+as a satin column places its pairs (<a href="satin.html#top-stitches-method-satin_column">satin</a>), with no
+compensation and nothing at random. The rails are read as a satin column reads its own, with the
+ripple’s <code>reverse_rails</code> and <code>swap_satin_rails</code> and the satin column’s defaults for its other settings,
+and cut into sections at their rungs (<code>REQ-RIP-018</code>). With <code>reverse_rails</code> automatic, the second rail is
+turned where it runs against the first. Line <code>k</code> goes through the point <code>t</code> of the way from each pair’s
+point on the first rail to its point on the second. The first line lies along the first rail and the
+last along the second.</li>
+<li><strong>Towards a target point.</strong> The line is first sewn as a running stitch with the stroke’s stitch lengths
+and tolerance, without random length (<a href="#placement">placement</a>). Its needle points are the outline, a
+grid size apart with <code>grid_size_mm</code> (<a href="#the-grid">the grid</a>). With <code>manual_pattern_placement</code> the outline
+is the first subpath’s nodes instead, and its curves’ control points are left out. Line
+<code>k</code> goes through the point <code>t</code> of the way from each point of the outline to the target point: the
+outline shrunk towards the target point by <code>1 − t</code>. The first line is the outline itself, and a line at
+<code>t</code> 1 is the target point alone. Another line reaches the target point only where the outline does.</li>
+</ul>
+<h3 id="how-many-lines"><a class="header" href="#how-many-lines">How many lines</a></h3>
+<ol>
+<li><code>line_count</code> gives the count. With <code>min_line_dist_mm</code>, the count is the shortest length among the
+column’s pairs, or among the lines from the outline’s points to the target point, divided by
+<code>min_line_dist_mm</code> and rounded up. The count then keeps the parity of <code>line_count</code>, odd or even, by
+being 1 less where it differs, so that the ripple ends on the same side however large the stroke is
+drawn. It is at least 1, and at most 1,000, or 999 where 1,000 would change its parity. <code>SC-W0407</code>
+says when it is cut, where Ink/Stitch sews every line (<code>DEV-RIP-002</code>). <code>line_count</code> itself stops at
+1,000. A pair or a line of length 0 counts as Ink/Stitch counts it: the shortest is taken from those
+after it, and is 0 when it is the last. So a column whose rails meet at its end takes the least count,
+whatever <code>min_line_dist_mm</code> says.</li>
+<li>A closed line and the point join (<code>join_style</code> 1) add 1 line, since bending makes one line of 2.</li>
+<li>A ripple along a column has at least 2 lines.</li>
+</ol>
+<h3 id="guided-ripples"><a class="header" href="#guided-ripples">Guided ripples</a></h3>
+<p>A ripple of 1 line can follow a guide instead of shrinking towards its target point (<code>REQ-RIP-012</code> to
+<code>REQ-RIP-014</code>). In an SVG file, a path in the stroke’s group with Ink/Stitch’s guide-line or anchor-line
+start marker is a helper (<a href="../svg-input.html#inkstitch-objects">SVG input</a>). In a VectorCraft document, a
+path in the stroke’s group named <code>stitch:guide</code> or <code>stitch:anchor</code> is one
+(<a href="../vectorcraft-integration.html#commands-in-v1">VectorCraft integration</a>). Each copy is the outline moved,
+then turned about a point and scaled about it along x and y, in that order. A copy’s points keep the
+outline’s order, so point <code>j</code> of every copy lies on one line across the ripple, the line a grid sews.
+Copies are counted as lines are (<a href="#how-many-lines">how many lines</a>), and bend and are sewn as lines are.</p>
+<h4 id="along-a-guide-line"><a class="header" href="#along-a-guide-line">Along a guide line</a></h4>
+<p>A guide of 1 subpath is a guide line, flattened as a shape’s outline is, or taken through its nodes where
+it is a manual stitch. Unless <code>manual_pattern_placement</code> is on, the outline is placed again along itself
+at the same stitch lengths, as Ink/Stitch places it.</p>
+<ul>
+<li><strong>Count and places.</strong> The copies are counted along the guide’s length, and lie at the places
+<code>exponent</code> and <code>flip_exponent</code> give along it. With <code>satin_guide_pattern_position</code> <code>render_at_rungs</code>, a
+copy lies at each point of the guide instead. A guide of more than 1,000 points sews 1,000 copies, and
+<code>SC-W0407</code> says so (<code>DEV-RIP-002</code>).</li>
+<li><strong>Moving.</strong> Each copy moves by the way from the guide’s start to its place.</li>
+<li><strong>Turning.</strong> With <code>rotate_ripples</code>, the default, each copy after the first turns about its place by the
+angle from the guide’s direction at its start to the direction from the copy before’s place. The
+start’s direction is taken over the guide’s first 0.1 CSS pixels.</li>
+<li><strong>Scaling.</strong> Copy <code>i</code> of <code>n</code> is scaled about its place by an even step from <code>scale_start</code> to <code>scale_end</code>
+percent. <code>scale_axis</code> 1 scales along x alone and 2 along y alone. 3 scales nothing, and 0, the default,
+scales along both axes. A file without <code>scale_end</code> sets 0, and the copies shrink to the guide’s end.</li>
+</ul>
+<h4 id="between-a-satin-guides-rails"><a class="header" href="#between-a-satin-guides-rails">Between a satin guide’s rails</a></h4>
+<p>A guide that is a satin column, its <code>satin_column</code> on, or that has several subpaths, is a satin guide. Its
+rails are read with its own settings, but the ripple’s <code>reverse_rails</code> and <code>swap_satin_rails</code>, and cut at
+its rungs. Each copy lies on a pair of points across the guide, from its first rail to its second. It
+moves to the pair’s first point, and turns and scales about it so that the outline’s ends lie on the
+pair’s points.</p>
+<ul>
+<li><strong>Line count</strong>, <code>satin_guide_pattern_position</code>’s default. The pairs lie at an even spacing, as a satin
+column places its pairs. Their count comes from the length of the guide’s middle, as it comes from a
+guide line’s length. The middle is the line through the middles of the guide’s pairs at its own zigzag
+spacing.</li>
+<li><strong>At the rungs</strong> (<code>render_at_rungs</code>). A pair lies at the end of each section.</li>
+<li><strong>Adaptive.</strong> Pairs are tried every 0.1 CSS pixels. The outline, turned so that the line between its
+ends runs along x, has a box round it. A copy is kept on a pair where its box clears the last kept
+copy’s box moved across the guide by <code>min_line_dist_mm</code>, or by 0.1 CSS pixels without it. Past 1,000
+such places, the copies are 1,000 (<code>SC-W0407</code>). As in Ink/Stitch, the box moves to the left of the line
+from the pair’s first point to its second, in the drawing’s own coordinates, whichever way the guide
+runs. Where it runs with its first rail on the left, each copy clears the last by <code>min_line_dist_mm</code>.
+The other way, their boxes overlap by as much.</li>
+</ul>
+<p>A guide whose rails close places its first pair again at its end, and that copy is left out, as is the
+only pair of a guide too short for 2. Between a satin guide’s rails, <code>exponent</code>, <code>flip_exponent</code>,
+<code>scale_start</code> and <code>scale_end</code> place nothing.</p>
+<p>A closed line with no anchor line, its ends within 0.05 CSS pixels, is placed otherwise (<code>DEV-RIP-005</code>).
+Each copy is centred on its pair’s middle by the outline’s centroid, as GEOS finds a line’s. It is scaled by
+its pair’s width over the first pair’s, on <code>scale_axis</code>, and with <code>rotate_ripples</code> it turns as its pair
+turns from the first. At the rungs, the copies lie at every section’s end but the guide’s own end.</p>
+<h4 id="the-anchor-line"><a class="header" href="#the-anchor-line">The anchor line</a></h4>
+<p>An anchor line says which points of the outline lie on a satin guide’s pairs: the start and the end of
+its first subpath, in place of the outline’s ends. A closed line with an anchor line is placed so, and not
+centred. The copies along a guide line don’t use it. One whose ends are one point is left out with
+<code>SC-W0409</code>.</p>
+<h4 id="a-guide-that-cant-place-copies"><a class="header" href="#a-guide-that-cant-place-copies">A guide that can’t place copies</a></h4>
+<p>A guide line of no length can’t place copies. A satin guide can’t place them when its rails don’t make a
+section, and it can’t when its middle has no length or its first pair has no width. <code>SC-W0409</code> says why,
+and the ripple sews as it would without the guide (<code>DEV-RIP-004</code>). A satin guide whose own settings don’t
+read is left out so too. What reading a satin guide warns of is said, but not its errors, which would refuse
+the ripple: <code>SC-W0409</code> says why the guide is left out instead.</p>
+<h3 id="bent-lines"><a class="header" href="#bent-lines">Bent lines</a></h3>
+<p>A closed line’s lines and the point join’s bend into the next line. So do the lines along a column without
+<code>flip_copies</code>. At the outline’s point or the column’s pair <code>i</code> of <code>m</code>, line <code>k</code> lies <code>i / (m − 1)</code> of the
+way from its own point to line <code>k + 1</code>’s. It starts on its own start and ends on the next line’s end. The
+point join flips every other line, counted from the first of the count, towards a target point always
+and along a column with <code>flip_copies</code> on. Such a line lies <code>1 − i / (m − 1)</code> of the way, so it starts on
+the next line’s start and ends on its own end. The last line bends into none and is left out, and the
+bent lines are 1 fewer than the count. A closed line’s lines, bent, run on from one to the next in a
+spiral that ends at the target point.</p>
+<h3 id="skipping-lines"><a class="header" href="#skipping-lines">Skipping lines</a></h3>
+<p><code>skip_start</code> leaves out the first lines and <code>skip_end</code> the last. Ink/Stitch leaves out none where they
+add up to the number of lines or more, and so does StitchCraft. <code>SC-W0408</code> says so.</p>
+<h3 id="sewing-the-lines"><a class="header" href="#sewing-the-lines">Sewing the lines</a></h3>
+<h4 id="one-line-at-a-time"><a class="header" href="#one-line-at-a-time">One line at a time</a></h4>
+<p>Lines along a column or towards a target point with <code>flip_copies</code> on, the default, are sewn one at a time,
+each as a running stitch of its own with the stroke’s stitch lengths and tolerance. A line of 1 point,
+from a column of 1 pair, is left out.</p>
+<ul>
+<li><strong>Flat join</strong> (<code>join_style</code> 0, the default). Every other line, counted from the first sewn, is sewn
+from its end. The ripple goes back and forth. A straight running stitch joins each line’s last
+needle point to the next line’s first.</li>
+<li><strong>Point join</strong> (<code>join_style</code> 1). The lines are bent, and every other line, counted from the first of
+the count, is sewn from its end. Each line then starts where the one before ended, and nothing joins
+them.</li>
+<li><strong>Staggers.</strong> With <code>staggers</code> 0, a line is placed from the end it is sewn from, and a line of no length
+sews its one point. With any other value, line <code>i</code>, counted from the first sewn, is placed from its
+start, <code>((i / staggers) mod 1)</code> of the sum of the stitch lengths before it, so that the needle points of
+lines side by side don’t line up. The line is lengthened back along its first segment by that much, or
+in proportion less where the segment is shorter than 0.1 CSS pixels, and sewn as a running stitch. The
+needle points before the line’s start are left out, and the start is the first needle point. A needle
+point nearer the start than the shortest stitch is left out too. The line is then sewn from its end
+where it turns back. A line of no length sews its one point, but nothing at a phase of 0, as Ink/Stitch
+at <code>d59c9ab</code> sews it when run as a black box. <code>staggers</code> is 1 when a file sets none. Each line is then
+placed from its start. Ink/Stitch’s settings window shows 0.</li>
+<li>With random length, each line draws from its own stream of the element’s generator, keyed by its place
+among the lines sewn.</li>
+</ul>
+<h4 id="one-run"><a class="header" href="#one-run">One run</a></h4>
+<p>A closed line’s lines, and the others with <code>flip_copies</code> off, are sewn as one running stitch through all
+their points in order. Each line is sewn from its start, and the needle goes straight from one line’s end
+to the next one’s start.</p>
+<h4 id="through-their-own-points"><a class="header" href="#through-their-own-points">Through their own points</a></h4>
+<p>With <code>manual_pattern_placement</code>, each line’s points are its needle points (<code>REQ-RIP-016</code>). With
+<code>flip_copies</code>, every other line is sewn from its end, the first among them. A straight run joins each line
+to the next, cut into the fewest even stitches no longer than the first stitch length.</p>
+<h4 id="the-whole-ripple"><a class="header" href="#the-whole-ripple">The whole ripple</a></h4>
+<p><code>reverse</code> sews the whole ripple backwards, from its last needle point. <code>repeats</code> sews each of its runs
+there and back, and <code>bean_stitch_repeats</code> then sews each run as a running stitch’s
+(<a href="#repeats-and-bean-stitch">repeats and bean stitch</a>). A line sewn one at a time that starts where the one
+before ended lists that needle point again, as Ink/Stitch lists it, and it takes a step of the bean list
+each time. So does a run’s turn, where a pass after the first starts. A ripple starts and ends where its
+stitches do, whatever its neighbours. It offers the element before it its first subpath’s start, as every
+stroke does. Lines near the target point can be shorter than the shortest stitch. Finalize then leaves out
+their needle points that lie too near the one before (<a href="../engine-pipeline.html#5-finalize">finalize</a>).</p>
+<p>The lines’ points come from arithmetic, square roots and powers (<code>stitchcraft_core::math</code>) alone, and
+every platform places them alike. Each point of each line costs a unit of work, and the points must fit
+in the stitches the budget has left before they are made.</p>
+<h3 id="the-grid"><a class="header" href="#the-grid">The grid</a></h3>
+<p>With <code>grid_size_mm</code>, the ripple sews a grid too (<code>REQ-RIP-015</code>). Grid line <code>j</code> runs across the ripple’s own
+lines, through point <code>j</code> of every line left after the skips. The outline’s needle points, or a
+column’s pairs, lie a grid size apart, raised to twice the shortest stitch as a stitch length is
+(<code>SC-W0402</code>, <code>DEV-RUN-003</code>). Without <code>flip_copies</code>, where the lines run one way and join flat, every other
+grid line runs the other way. The grid then starts at its corner nearest the ripple’s last needle point,
+the first of them when several are as near: its first or its last line, from its start or its end. It is
+sewn as the lines are sewn one at a time, every other one from its end only with <code>flip_copies</code>, as a run
+of its own after the ripple’s. Its run is not repeated. <code>grid_first</code> sews every run backwards and in the
+other order, so that the grid comes first.</p>
+<h3 id="clips"><a class="header" href="#clips">Clips</a></h3>
+<p>A ripple cut to clips sews the pieces of its needle points that lie inside them (<code>REQ-RIP-017</code>), cut where
+they cross the edges of the clips’ area as a stroke’s line is cut. Its lines cross those edges again and
+again, so the pieces are many and short. A part of the area routes its pieces as a tatami fill routes its
+rows (<a href="fills.html#3-routing-every-segment-once">routing</a>), sewing each piece once as it lies. Between pieces
+the needle goes along the part’s outline, never under them, from the outline’s point nearest the first
+piece’s start to its point nearest the last piece’s end. Every part is a run of its own. The parts come in
+the order of their first pieces along the ripple, and the part of the last piece comes last. The travel
+before a part’s first piece and after its last is left out. With a grid, the ripple’s runs keep the travel
+after their last piece, and the grid’s runs the travel before their first. The needle then goes along the
+outline from the ripple’s end to the grid. Runs are repeated after that. A ripple wholly outside its clips
+isn’t sewn (<code>SC-W0013</code>, <code>DEV-RIP-003</code>).</p>
+<h3 id="not-applied"><a class="header" href="#not-applied">Not applied</a></h3>
+<p>Ink/Stitch reads a column’s rails with the element’s <code>push_compensation_mm</code>, which StitchCraft leaves at 0.
+<code>SC-W0406</code> names it when it is set to anything else.</p>
+<h3 id="compared-with-inkstitch"><a class="header" href="#compared-with-inkstitch">Compared with Ink/Stitch</a></h3>
+<p>The lines, their places and their count are Ink/Stitch’s. The running stitches along each line, along the
+joins and along the outline that a ripple towards a target point is made from place their needle points
+as StitchCraft’s running stitch does (<code>DEV-RUN-001</code> to <code>DEV-RUN-005</code>). So the outline’s points differ a
+little, and the copies made from them. With <code>min_line_dist_mm</code>, the count towards a target point is
+measured from those points, and can differ by 2 where the shortest length falls near a whole number of
+<code>min_line_dist_mm</code>. Ink/Stitch sews nothing of lines shorter together than 0.1 CSS pixels, and StitchCraft
+nothing of lines shorter together than the shortest stitch (<code>DEV-RUN-004</code>).</p>
+<p>A guided ripple’s copies are made of the outline’s running stitch too, and differ as it does. Drawn with
+straight sides, TS-17C’s guided wave and circle sew the same needle points in both programs, their locks
+aside. StitchCraft sews otherwise on purpose where a guide can’t place copies, where a ripple lies wholly
+outside its clips, and where a closed line’s ends almost meet (<code>DEV-RIP-003</code> to <code>DEV-RIP-005</code>).</p>
+<p>Ink/Stitch starts a staggered line where its stitches have run the phase from the stretch’s start,
+measured along them. Where the stretch is the whole phase, that is the line’s start, or near it where the
+stitches cut a bend. Where the first segment is shorter than 0.1 CSS pixels, the stretch is shorter than
+the phase, and Ink/Stitch leaves the rest of the phase of the line unsewn. StitchCraft starts every line at
+its start (<code>DEV-RIP-001</code>).</p>
+<h3 id="properties-conformance-2"><a class="header" href="#properties-conformance-2">Properties (conformance)</a></h3>
+<ul>
+<li>A stroke of 2 lines or more ripples along the column its rails and rungs make, a stroke of 1 open line
+towards its target point, and a stroke of 1 closed line in a spiral to it (<code>REQ-RIP-001</code>).</li>
+<li>The target point is the stroke’s <code>target_point</code> command or <code>stitch:target</code> marker, or else the centroid
+of the convex hull of its lines (<code>REQ-RIP-002</code>).</li>
+<li>The count is <code>line_count</code>, or what <code>min_line_dist_mm</code> gives with the parity of <code>line_count</code> kept, 1 more
+for a closed line or the point join, at least 2 along a column and at most 1,000 (<code>REQ-RIP-003</code>).</li>
+<li>Line <code>k</code> lies at its place, <code>(k / (n − 1))^exponent</code>, or flipped, between the rails or towards the
+target point. A copy of the outline reaches the target point only at place 1, or where the outline does
+(<code>REQ-RIP-004</code>).</li>
+<li><code>skip_start</code> and <code>skip_end</code> leave out lines at each end, and the ripple keeps every line when together
+they would leave out all of them (<code>REQ-RIP-005</code>).</li>
+<li>With <code>flip_copies</code>, the lines are sewn back and forth, joined flat by straight running stitches or at a
+point. Without it, and for a closed line, they are sewn as one running stitch (<code>REQ-RIP-006</code>).</li>
+<li>Each line’s stitches keep within the running stitch’s tolerance of the line through its points
+(<code>REQ-RIP-007</code>).</li>
+<li>Staggered lines start their needle points <code>((i / staggers) mod 1)</code> of the stitch lengths’ sum before
+their start. A line of no length sews its one point, but nothing when staggered at a phase of 0
+(<code>REQ-RIP-008</code>).</li>
+<li><code>reverse</code> sews the ripple backwards, then <code>repeats</code> and <code>bean_stitch_repeats</code> sew it as a running
+stitch’s (<code>REQ-RIP-009</code>).</li>
+<li><code>push_compensation_mm</code> along a column is named and not applied (<code>REQ-RIP-010</code>).</li>
+<li>TS-17C’s ripples sew in Ink/Stitch as in StitchCraft (<code>REQ-RIP-011</code>).</li>
+<li>Copies follow a guide line, moved, turned with it and scaled from <code>scale_start</code> to <code>scale_end</code>
+(<code>REQ-RIP-012</code>).</li>
+<li>A satin guide places each copy’s ends on a pair across it, or centres a closed line on each pair
+(<code>REQ-RIP-013</code>), and an anchor line’s ends take the place of the outline’s (<code>REQ-RIP-014</code>).</li>
+<li>A grid’s lines join the same point of every line, start nearest the ripple’s end and sew as a run of
+their own, first with <code>grid_first</code> (<code>REQ-RIP-015</code>).</li>
+<li>With <code>manual_pattern_placement</code>, the lines are sewn through their own points (<code>REQ-RIP-016</code>).</li>
+<li>Clips cut the ripple’s needle points, and each part of their area routes its pieces (<code>REQ-RIP-017</code>).</li>
+<li>A column and a satin guide read their rails with the ripple’s <code>reverse_rails</code> and <code>swap_satin_rails</code>
+(<code>REQ-RIP-018</code>).</li>
+<li>TS-17C’s guided ripples sew in Ink/Stitch as in StitchCraft (<code>REQ-RIP-019</code>).</li>
+</ul>
+<h3 id="diagnostics-2"><a class="header" href="#diagnostics-2">Diagnostics</a></h3>
+<p><code>SC-W0401</code> for a subpath that is one point and for lines too short for the shortest stitch, <code>SC-W0406</code> for
+<code>push_compensation_mm</code> along a column, <code>SC-W0407</code> for a count or a guide’s places cut to 1,000, <code>SC-W0408</code>
+for skips that would leave out every line, and <code>SC-W0409</code> for a guide or an anchor line that can’t place
+copies. <code>SC-W0013</code> says when the ripple lies wholly outside its clips, and <code>SC-W0402</code> when the grid size is
+raised. A ripple along a column says what the satin column’s reading of its rails and rungs
+says (<code>SC-W0202</code>, <code>SC-W0203</code>, <code>SC-W0205</code>, <code>SC-W0207</code>, <code>SC-W0210</code>), and <code>SC-E0216</code> when no section of the
+column has length.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../design/algorithms/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../design/algorithms/satin.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../design/algorithms/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../design/algorithms/satin.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../mark-09e88c2c.min.js"></script>
+        <script src="../../searcher-09f2665d.js"></script>
+
+        <script src="../../clipboard-1626706a.min.js"></script>
+        <script src="../../highlight-abc7f01d.js"></script>
+        <script src="../../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

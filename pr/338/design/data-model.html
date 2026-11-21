@@ -1,0 +1,657 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Data model - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-b37cbce2.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-95df4fb0.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/design/data-model.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="data-model"><a class="header" href="#data-model">Data model</a></h1>
+<!-- implements: crates/stitchcraft-core/src/lib.rs, crates/stitchcraft-core/src/units.rs, crates/stitchcraft-core/src/element.rs, crates/stitchcraft-core/src/rect.rs, crates/stitchcraft-core/src/budget.rs, crates/stitchcraft-plan/src/*.rs, crates/stitchcraft-plan/src/palette/**, crates/stitchcraft-plan/src/profiles/**, crates/stitchcraft-engine/src/design.rs, crates/stitchcraft-engine/src/design/turn.rs -->
+<p>The types every crate shares. Code sketches are illustrative (<code>ignore</code>); the crates’ rustdoc is the
+API reference once the types exist. Invariants listed here are checked in code (constructors return
+<code>Result</code>) and by conformance level L0.</p>
+<h2 id="units-and-coordinates-stitchcraft-core"><a class="header" href="#units-and-coordinates-stitchcraft-core">Units and coordinates (<code>stitchcraft-core</code>)</a></h2>
+<pre><code class="language-rust ignore">/// A length in millimetres. Always finite; construction from untrusted input is checked.
+pub struct Mm(f64);
+
+/// A point in millimetres, y pointing down (SVG and VectorCraft convention).
+pub struct Point { pub x: f64, pub y: f64 }</code></pre>
+<ul>
+<li><strong>Internal unit: millimetres.</strong> Embroidery parameters are specified in mm and machine files use
+0.1 mm, so mm keeps the numbers people read and the numbers we compute the same.</li>
+<li><strong>Host units are converted at the adapter:</strong> VectorCraft points ×25.4/72; SVG user units through
+the root <code>viewBox</code>/<code>width</code>/<code>height</code>, with CSS pixels at 96 per inch.</li>
+<li><strong>Quantization happens once, in the encoder</strong>, on absolute positions: <code>round_half_even(x * 10)</code>.
+Deltas are differences of quantized absolutes, so rounding never accumulates.</li>
+<li><strong>Axis conventions per format</strong> are the encoder’s job (DST is y-up). Test sheet TS-01 (an
+asymmetric “F” with a ruler) proves orientation and scale on the machine.</li>
+</ul>
+<h2 id="engine-input-design-stitchcraft-engine"><a class="header" href="#engine-input-design-stitchcraft-engine">Engine input: <code>Design</code> (<code>stitchcraft-engine</code>)</a></h2>
+<p>Hosts translate their documents into a <code>Design</code> (<code>stitchcraft_engine::design</code>), so the engine never sees a
+host document and every host gets the same stitches for the same design. Since M3.3:</p>
+<pre><code class="language-rust ignore">pub struct Design {                  // checked by Design::new
+    elements: Vec&lt;Element&gt;,
+    pub settings: DesignSettings,
+    pub sort_colours: bool,          // since M13.3: the elements with settings sew in the order StitchCraft chooses too
+    pub marks: Vec&lt;Mark&gt;,            // since M13.39: areas whose parts automatic digitizing keeps, never sewn
+    pub guides: Vec&lt;Mark&gt;,           // since M13.24: lines whose rows the filled parts they cross follow, never sewn
+}
+
+pub struct Element {
+    pub id: ElementId,               // stable host id: "svg:path123:fill", "vc:42:fill"
+    pub name: Option&lt;String&gt;,        // the name the user gave it (Inkscape's label)
+    pub shape: Shape,
+    pub thread: Thread,
+    pub params: ParamSet,            // as the host stores them; validated against the registry when planned
+    pub automatic: bool,             // since M13.1: a shape without settings, read with --auto, whose stitches StitchCraft chooses
+    pub lettered: Option&lt;Lettered&gt;,  // since M13.50: lettering set in a font (Set) or placed by digitizing (Digitized); no file holds it
+    pub hints: Hints,                // since M8.4: where its design says it starts and ends, the point it aims at, its guide
+    pub clips: Vec&lt;Clip&gt;,            // since M8.5: it sews only what lies inside every one (REQ-GEN-005)
+}
+
+pub struct Clip {                    // since M8.5: an SVG clip path, and from M8.7 a VectorCraft clipping object
+    pub shapes: Arc&lt;[ClipShape]&gt;,    // their areas together, shared by the elements it cuts; none leaves nothing
+}
+
+pub struct ClipShape {
+    pub path: Path,                  // in the design's millimetres
+    pub rule: FillRule,              // which parts of it are inside, as a fill's
+}
+
+pub struct Hints {                   // since M8.4: Ink/Stitch's start, end and target commands, VectorCraft's markers
+    pub start: Option&lt;Point&gt;,        // its start position, in place of the needle before it (REQ-GEN-001)
+    pub end: Option&lt;Point&gt;,          // its end position, in place of the next element's offer
+    pub target: Option&lt;Point&gt;,       // what a circular fill turns round and a ripple aims at (REQ-FILL-CIR-008, REQ-RIP-002)
+    pub guide: Option&lt;Guide&gt;,        // since M10.11: the line a ripple's copies follow (REQ-RIP-012, REQ-RIP-013)
+    pub anchor: Option&lt;Path&gt;,        // since M10.11: the anchor line. Its first subpath's ends are where a satin
+                                     // guide's copies land (REQ-RIP-014), and from M10.10 a guided fill's
+                                     // closed rows start where any of it crosses them (REQ-FILL-GDD-012)
+}
+
+pub struct Guide {                   // since M10.11: Ink/Stitch's guide line, VectorCraft's stitch:guide marker
+    pub path: Path,                  // in the design's millimetres: a line, or a satin guide's rails and rungs
+    pub width: Mm,                   // its stroke's width, for a satin guide drawn as one path
+    pub join: Join,                  // how its stroke turns its corners
+    pub params: ParamSet,            // its own settings, which say whether it is a satin column and how to read it
+}
+
+pub struct Reading {                 // since M13.1: what every host's reader is asked
+    pub auto: bool,                  // --auto, or a VectorCraft document without --no-auto
+    pub sort_colours: bool,          // since M13.3: --sort-colours, which the reader passes on (Design::read_as)
+}
+
+pub struct DesignSettings {          // since M3.8; read from an Ink/Stitch file since M4.8, its commands from M8,
+                                     // and from a VectorCraft document since M6.11
+    pub collapse_len: Mm,            // 3 mm: same-thread moves no longer than this are sewn on, not jumped
+    pub min_stitch_len: Option&lt;Mm&gt;,  // the design's shortest stitch, for elements that set none
+    pub origin: Option&lt;Point&gt;,       // where the hoop's centre goes; None: the centre of the stitches
+    pub stop_position: Option&lt;Point&gt;,// where the frame moves before each stop; None: it stays
+    pub min_satin_stroke_width: Mm,  // 1 mm: a satin column drawn as one path no wider is sewn as a stroke (M4.8)
+    pub rotate_on_export: Turn,      // the plan turned about the hoop's centre as it is written (M8.9); none by default
+    pub cap: Option&lt;auto::Held&gt;,     // what the cap holds the parts digitizing made to, which Expand keeps (M13.26)
+}
+
+pub enum Shape {
+    Stroke { path: Path, width: Mm, join: Join, cap: Cap },  // an outline: running stitch and the other stroke methods
+    Fill { path: Path, rule: FillRule, gradient: Option&lt;Gradient&gt; },  // an area: its boundary, which parts are inside,
+                                                                      // and since M10.12 its linear gradient
+}
+
+pub struct Gradient {                // since M10.12: a fill's linear gradient, placed by its host
+    pub start: Point,                // where offset 0 lies, in the design's millimetres, every transform applied
+    pub end: Point,                  // where offset 1 lies
+    pub stops: Vec&lt;GradientStop&gt;,    // 2 or more, in order
+}
+
+pub struct GradientStop {
+    pub offset: f64,                 // from 0 to 1, never before the stop before
+    pub colour: Rgb,
+    pub opacity: f64,                // from 0 to 1; 0 is transparent
+}
+
+pub enum Join { Miter { limit: f64 }, Round, Bevel }   // a stroke's corners; Join::UNSET is a miter limited at 5
+pub enum Cap { Butt, Round, Square }                  // since M13.1: how a stroke ends where an open subpath ends
+
+pub struct Path { pub subpaths: Vec&lt;Subpath&gt; }   // in millimetres, y down
+pub struct Subpath { pub start: Point, pub segments: Vec&lt;Segment&gt;, pub closed: bool }
+pub enum Segment { Line(Point), Quad(Point, Point), Cubic(Point, Point, Point) }</code></pre>
+<p>Elements are in the host’s paint order, bottom first. They sew in that order unless the design has
+automatic elements or <code>sort_colours</code> is set: since M13.3 automatic digitizing then chooses the order
+(<a href="image-to-embroidery.html#sewing-order">image to embroidery</a>). From M10.15 a run of elements that set
+<code>underlays_first</code> sews in that order twice, its underlays first and its top stitches after
+(<a href="engine-pipeline.html#underlays-first">engine pipeline</a>). Curves keep their control points, and the
+generators flatten them with the tolerance their parameters give.</p>
+<p>A design’s marks (<code>design::mark::Mark</code>, an id and a shape) are no elements: a reader takes the shapes named
+<code>stitch:keep</code> out of its elements and gives them to the design, and automatic digitizing keeps the parts
+wholly inside them (<a href="image-to-embroidery.html#marks-that-keep-parts">marks that keep parts</a>).
+Its guides are no elements either: the shapes named <code>stitch:guide</code>, taken out beside the marks, whose
+lines the filled parts of automatic areas they cross follow (<a href="image-to-embroidery.html#a-guide-on-one-shape">a guide on one shape</a>).
+<code>Design::with_elements</code> gives a design other elements and keeps its settings, its marks and its guides.</p>
+<p>A host reads 3 of the settings by Ink/Stitch’s names, <code>collapse_len_mm</code>, <code>min_stitch_len_mm</code> and
+<code>min_satin_stroke_width_mm</code>: an SVG file’s metadata, and since M6.11 the data a VectorCraft document keeps
+for StitchCraft’s Design Settings filter. <code>SETTINGS</code> lists them with the label and help that filter’s
+dialog shows, and <code>Setting::get</code> and <code>Setting::set</code> read and write each in millimetres. A shortest stitch
+of 0 is <code>None</code>, which leaves it to the machine.</p>
+<p>From M13.26 a design also keeps what the cap at the end of planning holds the elements digitizing made to:
+the limits of its thickness and the overlap of its areas, by the names of the Auto effect’s settings
+(<code>auto::Held::KEYS</code>). Expand writes them from the lowest automatic shape, and both hosts read them where
+they read the other settings (<a href="image-to-embroidery.html#expand">Expand</a>). <code>None</code> leaves them to the lowest
+automatic shape, or to the Auto effect’s defaults.</p>
+<p>A stroke’s width and join, since M4.8, are as the host draws them: in SVG, <code>stroke-width</code> scaled by the
+transforms, and <code>stroke-linejoin</code> with <code>stroke-miterlimit</code> (<a href="svg-input.html#stroke-width-and-join">SVG input</a>).
+Only a satin column drawn as one path uses them, as its width and its corners. <code>Shape::stroke(path)</code>
+makes a stroke that says nothing of either: 1 CSS pixel wide, with <code>Join::UNSET</code>. Its cap, since M13.1, is
+SVG’s <code>stroke-linecap</code> or VectorCraft’s cap, <code>Butt</code> when nothing sets it. Ink/Stitch sews no cap, and
+neither does an element with settings. An automatic element’s stitches follow it
+(<a href="image-to-embroidery.html#stitch-types-by-width">image to embroidery</a>).</p>
+<p>An automatic element is a shape without settings that the user asked StitchCraft to digitize: the readers
+mark it when <code>Reading::auto</code> is set, and the engine turns it into ordinary elements with the settings its
+width calls for before anything is generated (<code>stitchcraft_engine::auto</code>).</p>
+<p>Documents repeat ids, so adapters make theirs unique with <code>stitchcraft_core::Labels</code>, which gives a
+label repeated in a document <code>~2</code>, <code>~3</code> and so on, in every adapter alike.</p>
+<p>Invariants, checked by <code>Design::new</code>: element ids are unique, and every point is finite and within
+±10,000 mm, as far as machine-file coordinates go, a gradient’s start and end among them. No stroke is
+narrower than 0, a miter limit is a finite number of at least 1, and the settings’ lengths are not negative.
+A gradient has 2 stops or more, its offsets and opacities from 0 to 1, each offset at or after the one before. Adapters drop what they cannot
+represent with a diagnostic of their own, so a failed check is a bug in the adapter (<code>SC-E0009</code>).
+<code>Design::moved</code> gives the design moved by an offset, every point of its elements, their gradients’ among
+them, and its origin and stop position, checked the same way. VectorCraft’s Test Sheet filter draws a test sheet in the middle of the
+artboard with it (<code>REQ-VC-015</code>).</p>
+<p><strong>Gradients.</strong> A fill painted with a linear gradient keeps it in its shape (M10.12), as the gradient’s
+start and end with its stops, each an offset, a colour and an opacity. A linear gradient fill sews its colours
+(<a href="algorithms/gradient.html">gradient fill</a>), and every other method sews the element’s thread, which the host
+reads as the first colour a viewer shows of it. Before it gives the 2 points in the design’s millimetres, as it
+gives the path, the host applies the gradient’s own units and transforms and the shape’s. A host’s paint
+rules stay in its adapter, and the points move with the path. Whatever builds a fill anew from another, a design
+moved or a sheet’s clone of a fill, must say what becomes of its gradient, and the type makes it say so.
+These other places were weighed and left:</p>
+<ul>
+<li>A field of the element beside its thread. A stroke has no use for it, and code that copies an element
+with <code>..element.clone()</code> and moves its path would keep its gradient where it was, without a word.</li>
+<li>A kind of shape of its own beside <code>Fill</code>. Every reader of a fill’s area would then have 2 kinds to read.</li>
+<li>A setting among the element’s parameters. The registry, the dialogs and the files’ settings would hold a
+paint, and no host keeps one there.</li>
+<li>The gradient as its host writes it, with its units and its transforms, placed by the engine. Each host
+has rules of its own for that, as SVG’s bounding box units and VectorCraft’s placement fitted to a box,
+and the adapters already apply them to paths.</li>
+</ul>
+<p><strong>Commands.</strong> Ink/Stitch’s start, end and target commands, and VectorCraft’s start, end and target markers,
+are an element’s hints (M8.4, the target marker M10.8), its points checked and moved with the rest. So are
+Ink/Stitch’s guide lines and anchor lines, and VectorCraft’s <code>stitch:guide</code> and <code>stitch:anchor</code> markers
+(M10.11), a guide’s and an anchor’s every point included. Clip
+paths are an element’s clips (M8.5), and so are VectorCraft’s clipping objects (M8.7), checked and moved
+with it too, which the engine cuts it to (<a href="engine-pipeline.html">engine pipeline</a>). A clip’s shapes are shared by the elements it cuts, so
+that a clip group of many objects holds its clipping object once. Trims and stops are the element
+parameters <code>trim_after</code> and <code>stop_after</code>, and the origin and stop position are design settings (M3.8), which
+Ink/Stitch’s <code>origin</code> and <code>stop_position</code> commands and VectorCraft’s <code>stitch:origin</code> and <code>stitch:stop-position</code>
+markers give (M8.8).</p>
+<h3 id="region"><a class="header" href="#region">Region</a></h3>
+<p>A fill’s region is not part of the design: the normalizer builds it from the fill’s path and fill rule,
+since M5.1 (<code>stitchcraft_engine::normalize::region</code>):</p>
+<pre><code class="language-rust ignore">pub struct Region { pub parts: Vec&lt;Polygon&gt; }   // in the order the drawing reaches them
+pub struct Polygon { pub outline: Vec&lt;Point&gt;, pub holes: Vec&lt;Vec&lt;Point&gt;&gt; }   // closed rings, in millimetres</code></pre>
+<p>Each ring starts at its point that comes first in the drawing, and repeats it at its end. Outlines turn
+clockwise and holes counter-clockwise in y-up axes, and in those axes the region lies on the right of
+every ring. Parts of 3 square CSS pixels (0.21 mm²) or less are left out, with <code>SC-W0303</code>. The
+<a href="algorithms/fills.html#region">fills design</a> builds the region step by step.</p>
+<h3 id="satinshape"><a class="header" href="#satinshape">SatinShape</a></h3>
+<p>A satin column’s path is recognized, since M4.1, as one of 2 shapes (<code>stitchcraft_engine::normalize::satin</code>):</p>
+<pre><code class="language-rust ignore">pub enum Shape {
+    Rails(Satin),   // 2 rails as polylines, and what pairs their points: rungs, or the rails' nodes
+    CentreLine { line: Vec&lt;Point&gt;, closed: bool },  // one subpath, flattened; closed when the path ends with Z
+}</code></pre>
+<p>A centre line is made into a <code>Satin</code> of its own, its rails offset from the line by the stroke’s width and
+join (<code>stitchcraft_engine::normalize::centre_line</code>, since M4.9). How rails and rungs are recognised from
+a host path, and made from a centre line, is part of the <a href="algorithms/satin.html">satin design</a>.</p>
+<h2 id="parameters"><a class="header" href="#parameters">Parameters</a></h2>
+<p><code>ParamSet</code> maps registry keys to typed values; generators receive <em>typed views</em>
+(<code>TatamiParams { row_spacing: Mm, angle: Deg, … }</code>) produced by the registry. See
+<a href="params.html">parameter registry</a>.</p>
+<h2 id="engine-output-stitchplan-stitchcraft-plan"><a class="header" href="#engine-output-stitchplan-stitchcraft-plan">Engine output: <code>StitchPlan</code> (<code>stitchcraft-plan</code>)</a></h2>
+<pre><code class="language-rust ignore">pub struct StitchPlan {
+    pub blocks: Vec&lt;ColorBlock&gt;,       // sewing order; a thread change between blocks, the end after the last
+    pub elements: Vec&lt;ElementId&gt;,      // what `ElementRef`s point at
+}
+
+pub struct ColorBlock {
+    pub thread: Thread,
+    pub stitches: Vec&lt;Stitch&gt;,
+}
+
+pub struct Stitch {
+    pub at: Point,                     // where the needle is after this entry (mm, y down, hoop centre = 0,0)
+    pub kind: StitchKind,
+    pub origin: Provenance,
+}
+
+pub enum StitchKind { Normal, Jump, Trim, Stop }
+
+pub struct Provenance {
+    pub element: Option&lt;ElementRef&gt;,   // index into `elements`; None for plan-level entries
+    pub role: Role,                    // Top, Underlay, Travel, Lock, Command
+}</code></pre>
+<ul>
+<li><strong>Colour changes and the end are structure, not entries.</strong> The machine changes thread between two
+blocks and ends after the last one, so a plan cannot misplace either; encoders write exactly one
+colour change between blocks and one end.</li>
+<li><strong><code>Trim</code> and <code>Stop</code> happen where the needle is;</strong> their <code>at</code> repeats the needle position so every entry
+has one (bounds, previews and reports never special-case commands), and the invariant checker verifies
+it. Encoders decide how a format expresses them. PEC puts a trim flag on every jump after the first
+move, and records a stop as a change to the same thread. DST spells a trim as a run of jumps. See
+<a href="formats.html">formats</a>.</li>
+<li><strong>The origin is the centre of the hoop</strong>, where the needle starts, above the fabric. The first
+<code>Normal</code> stitch is the first time it goes down.</li>
+<li><code>PlanBuilder</code> appends entries with the needle tracked; <code>PlanStats</code> counts stitches, jumps, trims, stops
+and thread changes for reports.</li>
+<li>A plan does not name a profile: it is checked against one, <code>invariants::check(&amp;plan, &amp;profile)</code>.</li>
+</ul>
+<h3 id="plan-invariants"><a class="header" href="#plan-invariants">Plan invariants</a></h3>
+<p>Conformance level L0 checks these on every plan the suite produces. A violation is a bug in whatever
+built the plan: the command line reports it as <code>SC-E0009</code> and writes nothing. “While sewing” means the
+previous movement was a <code>Normal</code> stitch with no trim since — the stitch lays thread between two holes,
+and its length is what the machine and fabric feel; the first stitch after a jump, a trim or a thread
+change starts a new run. A length or a position within <code>LENGTH_SLACK</code> (10⁻⁹ mm) of a limit counts as at
+it, at the hoop’s edge as for a stitch’s length, so floating-point rounding cannot push a stitch placed
+exactly at a limit past it. Generators place stitches by the same test, and so does the check that a design
+fits the hoop. The rules hold for the plan. A machine file rounds its positions to 0.1 mm, and its
+stitches are within 0.14 mm of the plan’s (<a href="formats.html">formats</a>, <code>REQ-FMT-002</code>). The colour changes a plan may
+have are those of the format it is written in: <code>MachineProfile::writing</code> gives the machine’s profile for
+another format than its own (<code>REQ-PLAN-006</code>).</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Requirement</th><th>Rule</th><th>Since</th></tr>
+</thead>
+<tbody>
+<tr><td><code>REQ-PLAN-001</code></td><td>Every position is finite and inside the profile’s hoop, centred on the origin.</td><td>M1</td></tr>
+<tr><td><code>REQ-PLAN-002</code></td><td>While sewing, every stitch is between the profile’s <code>min_stitch</code> (lock stitches, into or out of a lock point: 0.2 mm) and <code>max_stitch</code>.</td><td>M1</td></tr>
+<tr><td><code>REQ-PLAN-003</code></td><td>Every block sews at least one stitch; trims and stops happen where the needle is.</td><td>M1</td></tr>
+<tr><td><code>REQ-PLAN-005</code></td><td>While sewing, no stitch lands where the needle already is.</td><td>M1</td></tr>
+<tr><td><code>REQ-PLAN-006</code></td><td>Thread changes plus stops fit the format (PES: 255; DST: 999).</td><td>M1</td></tr>
+<tr><td><code>REQ-PLAN-007</code></td><td>Every <code>Normal</code> and <code>Jump</code> entry names an element the plan lists. A trim or a stop need not name one.</td><td>M3</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>REQ-PLAN-004</code>, a tie-off before a trim and a tie-in after it, is retired. Whether they belong there
+depends on the elements’ lock settings, which a plan does not hold. Assembly’s cases check it with the
+settings (<code>REQ-ASM-003</code>, <code>REQ-LCK-001</code>).</p>
+<h3 id="the-threads-state"><a class="header" href="#the-threads-state">The thread’s state</a></h3>
+<p>The invariants follow the needle. A machine reading a plan is also in a state of thread, and that state
+decides where locks belong. M13.56 wrote it down, from the owner’s question on 2026-11-21, and checks its
+rules, <code>REQ-PLAN-008</code> to <code>REQ-PLAN-010</code>, in every plan the engine returns.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Entry</th><th>Needle</th><th>Sewing</th><th>Thread, <code>Command</code></th><th>Thread, <code>LongJumps(l)</code></th><th>Thread, <code>None</code> (PE800)</th></tr>
+</thead>
+<tbody>
+<tr><td>The plan’s start</td><td>at the origin, up</td><td>no</td><td>cut: a new end</td><td>cut</td><td>cut</td></tr>
+<tr><td><code>Normal</code></td><td>moves to <code>at</code>, down</td><td>yes, from the second in a row</td><td>attached</td><td>attached</td><td>attached</td></tr>
+<tr><td><code>Jump</code></td><td>moves to <code>at</code>, up</td><td>no</td><td>attached: a jump thread</td><td>cut when the next needle point is farther than <code>l</code> from the last</td><td>attached: a jump thread the operator snips</td></tr>
+<tr><td><code>Trim</code></td><td>stays</td><td>no</td><td>cut</td><td>attached (no trim command)</td><td>attached (MC-1: the PE800 cuts no jump, trim-flagged or not)</td></tr>
+<tr><td><code>Stop</code></td><td>stays</td><td>no</td><td>cut, the same thread again</td><td>cut</td><td>cut (MC-1)</td></tr>
+<tr><td>A thread change</td><td>stays</td><td>no</td><td>cut, a new thread</td><td>cut</td><td>cut</td></tr>
+<tr><td>The plan’s end</td><td>stays</td><td>no</td><td>cut</td><td>cut</td><td>cut</td></tr>
+</tbody>
+</table>
+</div>
+<p>The thread is either attached to the fabric or cut. Each time it is cut, or may be (an operator snips the
+jump threads the PE800 leaves, <code>plan/machine-testing.md</code>), the stitching before it needs a tie-off and the
+stitching after it a tie-in, where the elements’ <code>ties</code> set them. That is why plan assembly ties off and in
+round every jump, whatever the machine: the locks hold where a machine or a person cuts.</p>
+<p>The model is one type, <code>stitchcraft_plan::ThreadState</code>. It reads a plan entry by entry, keeps where the
+needle is, whether a run is open and whether the thread has sewn since it was last cut, and says what each
+entry did, from a stitch sewn from the hole before it to a stop. A thread change
+ends the run and cuts. <code>StitchPlan::sewn_stitches</code>, <code>invariants::check</code> and the engine’s lock check read
+the plan through it, and the preview’s scene (<code>stitchcraft-render</code>) reads <code>sewn_stitches</code>. The scene
+keeps the thread’s state by <code>TrimSupport</code> on top, and draws each hole as reached by a stitch, by a jump
+thread or across a cut. The lock check reads an element’s lock settings by the rule that plan assembly
+places locks by (<code>REQ-LCK-001</code>).</p>
+<p>Before M13.56 the model was in 4 places, which disagreed in 2:</p>
+<ul>
+<li><strong>A stop.</strong> <code>sewn_stitches</code> kept a run going across a stop. The scene cut there, as the PE800 does,
+and encoders write a stop as a change to the same thread. Assembly always jumps after a stop, so only a
+sheet drawn stitch by stitch shows it: TS-02 sews on after its stop. A stop now ends the run
+(<code>REQ-PLAN-010</code>). The stitch after TS-02’s stop is no longer a sewn stitch for the length rules and the
+thickness measure. Its machine files are byte for byte as before, and so is its preview, where the
+scene already drew that hole as reached across a cut.</li>
+<li><strong>The cap.</strong> Finalize checks the invariants (<code>REQ-FIN-003</code>). Then an automatic design is thinned and
+capped (<a href="image-to-embroidery.html#how-thick-a-design-sews">how thick a design sews</a>), and those passes take
+needle points out, lock stitches among them, and the plan went out unchecked after them. The
+<a href="engine-pipeline.html#6-check">check</a> now runs on the plan that is returned, after the cap.</li>
+</ul>
+<p><strong>What M13.56 measured.</strong> A walk of every finished plan with this model, the elements’ lock settings
+read from the design: the 26 test sheets, every conformance fixture and repository document planned plain,
+automatic, and in the photo and logo styles (240 plans), and 18 local traced photos in the photo style,
+9 subjects at 6 and 12 threads. Of their 5,333 runs with settings, 0 lack a lock that their element’s
+<code>ties</code> sets. Every trim follows a stitch sewn since the last cut, and every returned plan passes the
+invariants after the cap too. On automatic designs the thinning pass leaves a lock one back and forth
+(<code>REQ-AUTO-074</code>): 2 needle points where assembly sewed 4, at 2,230 of the 5,333 tie-ins. The only stops
+right after a trim are TS-11A’s, an element trimmed and then stopped after, and both cut. The 5 sheets
+drawn stitch by stitch, TS-01, TS-02 and TS-10A to TS-10C, have no locks and no settings, so the check
+wants no lock of them.</p>
+<p><strong>The checks.</strong> <code>REQ-PLAN-009</code> and <code>REQ-PLAN-010</code> are plan rules, in <code>invariants::check</code> and
+<code>sewn_stitches</code>. <code>REQ-PLAN-008</code> needs the lock settings, which a plan doesn’t hold, so it is the engine’s
+(<code>stitchcraft-engine</code>’s <code>check</code> module). It walks the plan the engine returns once the cap is done, with
+each element’s lock settings from its generated parameters, and reports a missing lock as <code>SC-E0009</code>, as a
+broken invariant is, and never repairs the plan. A run of one needle point lays no thread, so the check
+skips it, as assembly sews it without locks (<code>REQ-ASM-007</code>). The walk is linear in the plan’s length.</p>
+<p>The check found one real gap, in a random degenerate design of <code>degenerate.rs</code> and in none of the 284 plans
+of the set. A guided fill sewed its last group, of one needle point, straight on from the group before
+it. Its tie-off was made from that group alone, which has no stitch to lock, so the run ended with
+no tie-off. From M13.56 a tie-off is made from the run’s own points
+(<a href="algorithms/locks.html#placement">lock stitches</a>).</p>
+<h3 id="how-thick-a-plan-sews"><a class="header" href="#how-thick-a-plan-sews">How thick a plan sews</a></h3>
+<p><code>stitchcraft_plan::thickness</code> measures a plan’s thread, in fills, and its needle points per mm² in the
+square millimetre round each spot. It lives beside the plan, so that the engine’s warning and the
+renderer’s heat map are one measure, which the test kit reads too. <a href="image-to-embroidery.html#how-thick-a-design-sews">Image to embroidery</a>
+defines the 2 measures and their limits.</p>
+<h2 id="threads-and-palettes"><a class="header" href="#threads-and-palettes">Threads and palettes</a></h2>
+<pre><code class="language-rust ignore">pub struct Thread {
+    pub color: Rgb,                  // what the user chose
+    pub name: Option&lt;String&gt;,        // shown to the operator
+}</code></pre>
+<p>An element has one thread of its own, <code>Element::thread</code>, which its host reads from its paint. From M10.5 its
+generator may sew some of its groups in threads of their own, as tartan and linear gradient fills do. The
+element’s stitches then lie in several colour blocks of the plan, each block in one thread, and each stitch
+still names its element (<a href="engine-pipeline.html#several-threads-in-one-element">engine pipeline</a>).</p>
+<p>Palettes are static tables (the Brother PEC palette first) of <code>PaletteEntry { index, name, color, matchable }</code>. Nearest-colour matching uses CIEDE2000 in CIELAB (D65), through <code>stitchcraft_core::math</code>
+so it is deterministic, with ties going to the lower index; it is tested against the 34 reference pairs
+of Sharma, Wu &amp; Dalal (2005). Entries that are not threads — Brother’s applique steps 62–64 — are never
+matched. A format that names threads by entries gives a design’s threads theirs together
+(<code>Palette::assign</code>, REQ-THREAD-002). Different threads get different entries while they last, the nearest
+pairs first, and a thread read from such a file gets its own (<a href="formats.html">formats</a>, PES). Each table names
+its source in its module docs and in a row of <code>NOTICE</code>. The PEC palette is the one
+MIT-licensed pyembroidery publishes, with entries 62 and 63 from its fork pystitch. A palette’s threads,
+the entries matching may choose, are also written as a GIMP palette (<code>Palette::gpl</code>, <code>stitch palette</code>,
+REQ-CLI-011), which VectorCraft loads as a swatch library for Image Trace to trace a picture in
+(<a href="image-to-embroidery.html">image to embroidery</a>). Thread catalogues (brand and number) arrive with M11.</p>
+<h2 id="machine-profiles"><a class="header" href="#machine-profiles">Machine profiles</a></h2>
+<pre><code class="language-rust ignore">pub struct MachineProfile {
+    pub id: &amp;'static str,            // "brother-pe800-5x7"
+    pub name: &amp;'static str,          // "Brother PE800 with its 5 × 7 in hoop"
+    pub hoop: Size,                  // 130 × 180 mm
+    pub comfort: Option&lt;Size&gt;,       // None — a warning beyond it, not an error
+    pub format: FormatId,            // PesV1 | Dst
+    pub max_stitch: Mm,              // 12.0
+    pub min_stitch: Mm,              // 0.3
+    pub trims: TrimSupport,          // Command | LongJumps(Mm) | None
+    pub palette: PaletteId,          // BrotherPec
+    pub evidence: &amp;'static str,      // where the values come from
+}</code></pre>
+<p>Profiles are data in <code>stitchcraft-plan/src/profiles/</code>, listed by <code>stitch profiles</code> and documented by
+generated reference pages. A profile’s values are <em>machine facts</em>: changing one requires a
+machine-testing record that justifies it (<a href="../plan/machine-testing.html">machine testing</a>), and <code>evidence</code>
+says where each value comes from. Format limits that are not machine facts (the most colour changes a
+format records) live on <code>FormatId</code>, so the invariant checker and the encoders read the same number.
+<code>trims</code> decides where a preview cuts the thread and when a report says the machine makes none of a file’s
+trims (<a href="rendering.html">rendering</a>). The PE800’s is <code>None</code>, from machine checkpoint MC-1.</p>
+<p>A profile is a machine with one hoop, so a machine with 3 hoops has 3 profiles. <code>profiles::REFERENCE</code> is
+the reference machine’s, the Brother PE800 with its 5 × 7 in hoop
+(<a href="adr/0013-brother-pe800-reference-machine.html">ADR 0013</a>). Code that means the machine the checkpoints
+run on imports it rather than naming a hoop: the command line plans for it unless <code>--profile</code> names
+another or a VectorCraft document keeps one
+(<a href="vectorcraft-integration.html#design-settings-and-machine-kept-with-the-document">integration</a>). Each
+test sheet names the profile of the hoop it is sewn in.</p>
+<p><code>check_fit(bounds)</code> turns the design’s size into <code>SC-E0701</code> (larger than the hoop) or <code>SC-W0702</code> (larger
+than the comfort zone), with “rotate 90°” as a one-click fix when turning the design would fit
+(<code>REQ-PRF-002</code>).</p>
+<h2 id="budgets"><a class="header" href="#budgets">Budgets</a></h2>
+<pre><code class="language-rust ignore">pub struct Budget {
+    pub max_stitches: u32,           // per design, default 2,000,000
+    pub max_work: u64,               // abstract work units per element, and once more for assembly
+}</code></pre>
+<p>Work units are counted per inner loop iteration (scanline crossings, graph edge visits, offset
+steps) so a budget behaves identically on every machine. Each element has the work budget to itself,
+and so does working out what it offers the element before it to end near. Exhaustion there yields
+<code>SC-E0004</code> for the element, and other elements still plan. Assembly and finalize share the budget once
+more, and running out there plans nothing. <code>SC-E0004</code> then says so for the whole design.</p>
+<p>Work bounds time, not memory: a unit can make a point, and 500 million points are gigabytes. A few
+settings multiply an element’s needle points. 10 mm of zigzag at the smallest spacing, sewn 100 times
+with bean stitch 10, is 4.2 million. So the stitch limit bounds what generators hold as well
+(<code>REQ-GEN-004</code>):</p>
+<ul>
+<li>A generator spends a stitch for each needle point as it makes it, and for each one a pass after the
+first or bean stitch sews again.</li>
+<li>What it lays out before sewing it must fit in the stitches left, though it spends none on it: a
+satin column’s pairs, say, or a fill’s row segments.</li>
+<li>Once done, it settles at the needle points it gives. Some it made were dropped on the way, such as
+points too close together, and some were copied, such as an E-stitch’s way back down its spike.</li>
+</ul>
+<p>So a generator never holds much more than the stitches left, and it may stop a little short of the limit
+where it made many more points than it keeps. Each element is given the stitches the elements before it
+left. The first that needs more ends planning there, with <code>SC-E0004</code> naming it: the design cannot be sewn
+within its limit, and making the rest would only fill memory.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../design/architecture.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../design/params.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../design/architecture.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../design/params.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

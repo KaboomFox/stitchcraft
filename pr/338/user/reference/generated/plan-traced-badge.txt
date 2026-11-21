@@ -1,0 +1,26 @@
+$ stitch plan traced-badge.svg --auto -o traced-badge.pes --preview traced-badge.png
+traced-badge.svg
+  file      traced-badge.pes (PES v1, 8347 bytes)
+  sha256    ab10564f3719e441a57550adbc5f89e1e23ef7e4403dd2c94904f7e077415114
+  profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
+  size      50.0 × 50.0 mm
+  stitches  3431 stitches, 3 jumps, 2 trims, 2 colour changes, 0 stops
+  trims     the machine makes none of them: cut the jump threads by hand
+  threads   1. unnamed (#ed171f), shown as Brother PEC 5 "Red"
+            2. unnamed (#0a55a3), shown as Brother PEC 2 "Blue"
+            3. unnamed (#e8a900), shown as Brother PEC 11 "Deep Gold"
+  shares    1. unnamed (#ed171f): 2592 stitches, 75.5 %, threaded once
+            2. unnamed (#0a55a3): 655 stitches, 19.1 %, threaded once
+            3. unnamed (#e8a900): 184 stitches, 5.4 %, threaded once
+  preview   traced-badge.png (432 × 432 pixels)
+info SC-I0901: 3 shapes are digitized automatically: all sew as tatami fills.
+info SC-I0912 ("Fill 1, Red", svg:red:fill): This shape sews by the rule area.
+info SC-I0912 ("Fill 1, Blue", svg:blue:fill): This shape sews by the rule area.
+info SC-I0912 ("Fill 1, Deep Gold", svg:gold:fill): This shape sews by the rule area.
+warning SC-W0906 ("Left out 1, White", svg:white:fill): This area covers the whole design under the other shapes, so it is left out as the picture's background.
+  hint: To sew it, give it settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it.
+info SC-I0908: 2 areas are digitized whole under the areas that fill their holes, which sew after them.
+info SC-I0904: 2 areas are cut away under the areas sewn after them, 1 mm inside their edges.
+info SC-I0909: A base layer of 1899.82 mm² in 1 piece sews first under the design, in the thread #ed171f.
+  hint: To sew the design without a base layer, turn `auto_base_layer` off.
+info SC-I0504: 3 needle points less than the shortest stitch (0.3 mm) from a needle point next to them were left out.

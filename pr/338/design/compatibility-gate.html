@@ -1,0 +1,476 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>VectorCraft compatibility gate - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-b37cbce2.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-95df4fb0.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/design/compatibility-gate.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="vectorcraft-compatibility-gate"><a class="header" href="#vectorcraft-compatibility-gate">VectorCraft compatibility gate</a></h1>
+<p><strong>Goal:</strong> know within a day when a VectorCraft change would break the StitchCraft plug-in — ideally
+before VectorCraft ships it — and keep a public, generated table of which VectorCraft versions work.</p>
+<h2 id="tracks"><a class="header" href="#tracks">Tracks</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Track</th><th>What we test against</th><th>How it is discovered</th><th>When</th><th>Effect of a failure</th></tr>
+</thead>
+<tbody>
+<tr><td><code>stable</code></td><td>Latest published, non-pre-release VectorCraft release</td><td>SemVer tags from <code>git ls-remote</code></td><td>Daily, and on every PR touching the paths <code>compat.yml</code> lists: the plug-in, <code>stitch</code>, the library crates, the gate, xtask and the manifests</td><td><strong>Blocks</strong> our release; its issue is labelled <code>upstream-stable</code></td></tr>
+<tr><td><code>prerelease</code></td><td>Latest published alpha/beta/RC (<code>-alpha</code>, <code>-beta</code>, <code>-rc</code> SemVer tags)</td><td>SemVer tags from <code>git ls-remote</code>, when newer than the latest release</td><td>Daily</td><td>Its issue is labelled <code>upstream-prerelease</code>; does not block</td></tr>
+<tr><td><code>release-branch</code></td><td>Head of VectorCraft’s <code>release</code> branch, which their pipeline builds into the next (still private, draft) release</td><td><code>git ls-remote … refs/heads/release</code></td><td>Daily</td><td>Its issue is labelled <code>upstream-canary</code></td></tr>
+<tr><td><code>main</code></td><td>Head of VectorCraft’s <code>main</code></td><td><code>git ls-remote … refs/heads/main</code></td><td>Daily</td><td>Its issue is labelled <code>upstream-canary</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Each track has one issue at a time, commented on while the track fails and closed when it passes again.</p>
+<p>Draft releases are not visible to the public API, so the <code>release</code> branch is the earliest public signal
+of an upcoming release (VectorCraft’s release workflow runs on pushes to <code>release</code>,
+<code>.github/workflows/release.yml</code>); pre-release tags catch alphas, betas and release candidates as soon as
+they are published.</p>
+<p><code>compat/vectorcraft.toml</code> records the versions currently pinned per track (the branch for branch tracks,
+and the SHA-256 of the stable release’s Linux archive), so that pull requests are checked against a fixed
+release and every change of pin is a reviewable PR. The file also records the release the browser demo’s
+editor is built from (<a href="vectorcraft-integration.html#browser-distribution">browser distribution</a>).</p>
+<h2 id="two-levels-of-test"><a class="header" href="#two-levels-of-test">Two levels of test</a></h2>
+<h3 id="level-a--abi-contract-fast-minutes"><a class="header" href="#level-a--abi-contract-fast-minutes">Level A — ABI contract (fast, minutes)</a></h3>
+<p><code>compat/vc-contract</code> is a small crate <strong>outside the workspace</strong> that depends on VectorCraft’s
+<code>vectorcraft-plugins</code> crate at the track’s ref (a git dependency rewritten per track by
+<code>cargo xtask compat</code>). It loads our freshly built <code>.wasm</code> files into VectorCraft’s real host code and
+checks:</p>
+<ol>
+<li>Each module installs (<code>vectorcraft_plugins::registry::install_bytes</code>), and its manifest is accepted
+(id, kind, parameter count and types).</li>
+<li><code>vc_abi_version</code> is a version the host supports.</li>
+<li>Live effects run through <code>vectorcraft_plugins::effect::apply</code> on fixture geometry, finish within the
+host’s limits, and return the expected preview geometry: paths of stitches for strokes and satin
+columns and closed paths for fills. When an effect can’t show stitches, its last error says why.
+Which level a shape shows, and the geometry of each, the plug-in’s native tests check. From VectorCraft
+0.23 <code>apply</code> also takes the document, where the host looks up the swatches a painted preview names.
+StitchCraft’s previews are paths alone, and the tests give it none. From 0.24 the paints it is given can
+name the object and the effect’s place in its list, by which VectorCraft lists a stage it deferred while
+a document opened. The tests leave that at its default, which builds against 0.23 too.</li>
+<li>Filters run and return valid objects. Exporters run through <code>vectorcraft_plugins::export::run</code> on
+documents written for the test, return a file of their format, with the export’s warnings, plan for
+the machine their dialog names, and decline with the first error when there is one (<code>REQ-VC-011</code>).
+The Design Settings filter, run as <code>plugin.run</code> runs a filter, keeps its dialog’s values with the
+document and returns its objects as they were. The exporters plan that document for the machine it
+keeps, unless their dialog names another (<code>REQ-VC-013</code>). Stroke to Satin installs as a heavy filter,
+and makes each of M6.4’s lines into a column that the PES exporter writes as it wrote the line
+(<code>REQ-VC-014</code>). Test Sheet draws each sheet into a new document, which the PES exporter writes within
+an export’s budget (<code>REQ-VC-015</code>). StitchCraft Tartan sets a square’s sett, which the PES exporter writes
+as it writes a square whose sett was set by hand (<code>REQ-VC-021</code>). The effect records they give are
+admitted as <code>plugin.run</code> admits
+them, by the manifests of the installed live effects.</li>
+<li>Error paths: invalid parameters are rejected by the host with the expected message.</li>
+<li>Budget: the <em>hello</em> plug-in’s cost for each byte of JSON it reads and writes stays within a quarter
+above the costs <a href="vectorcraft-integration.html#live-effect-previews-within-v1-budgets">recorded for previews</a>.
+Every preview level finishes on shapes of growing size, within VectorCraft’s limits (<code>REQ-VC-003</code>), and
+an export of a fill of the reference hoop’s whole field finishes within an export’s (<code>REQ-VC-011</code>).
+Stroke to Satin finishes within a heavy filter’s, and Test Sheet within a light one’s. Each run prints
+the costs.</li>
+<li>Room: a test sheet’s export that takes more than 85 % of an export’s budget fails. The message names
+the sheet and gives its count beside the limit (<code>EXPORT_SHARE</code> in
+<code>compat/vc-contract/tests/contract.rs</code>). The limit is
+VectorCraft’s own, which the test reads from its host: <code>export::FUEL</code> and the host’s allowance for each
+byte of the document. The count is the least budget the export finishes within, found by halving to
+within 1 %. Level B can’t make this check, since <code>vectorcraft-cli</code> says only that an export ran out.
+The Test Sheet filter’s drawing of a sheet fails in the same way when it passes 90 % of a light
+filter’s budget (<code>DRAW_SHARE</code>).</li>
+</ol>
+<p><strong>Why 85 %, and why on every library crate.</strong> M13.17 changed the engine, and with it what an export
+costs. Its pull request never ran the gate, because the workflow’s paths named the plug-in and not the
+crates it is built from. TS-13D’s export went from 10.536 to 10.872 billion instructions of the 10.905
+billion VectorCraft allowed it, and nothing said so. The next step that changed what sews then failed
+with <code>plug-in exceeded its instruction budget</code>, for a cost that wasn’t its own. M13.31 split the sheet
+in 2, TS-13D and TS-13E, and closed both holes. Pull requests that change anything under <code>crates/</code> run
+the gate now, and a sheet past 85 % fails in the pull request that takes it there, with 15 % left to
+act in. On <code>main</code> before the split, TS-13A, TS-13B and TS-13C took 75, 74 and 78 %.</p>
+<p><strong>Why 90 % for a drawing.</strong> The filter draws a sheet’s objects and digitizes none of them, so a change to
+what sews leaves its count as it is. A change to a sheet’s shapes moves it. TS-13F’s drawing took
+43.3 million of the 50.1 million instructions, 86 %, when M13.32 added the check. The others took 15 to
+55 %.</p>
+<p><code>vectorcraft-plugins</code> depends only on <code>geom</code>, <code>color</code>, <code>doc</code> and <code>wasmi</code>, so this builds quickly.</p>
+<h3 id="level-b--end-to-end-slower-tens-of-minutes"><a class="header" href="#level-b--end-to-end-slower-tens-of-minutes">Level B — end to end (slower, tens of minutes)</a></h3>
+<p>Uses VectorCraft’s own command line, <code>vectorcraft-cli run</code>. For <code>stable</code> and <code>prerelease</code> it is the
+binary in the release’s Linux archive (VectorCraft’s <code>packaging/linux/package.sh</code> puts it there). The
+archive is checked against the SHA-256 the pins file records for the pinned release, or against the one
+the release’s <code>SHA256SUMS.txt</code> lists for a newer release. curl tries a download again after any error,
+every 10 seconds for a minute, so a short outage of GitHub’s downloads passes. For a longer one, as on
+8 November 2026, the jobs that run the pinned release keep its archive in the Actions cache under its
+version and SHA-256 (<code>.github/actions/vectorcraft-archive</code>), and a pull request uses the copy a run on
+<code>main</code> kept, checked like a download. For the branch tracks it is built from the
+branch, with a cached target directory. <code>cargo xtask compat track &lt;track&gt; --ref &lt;tag|sha&gt;</code> runs both
+levels and writes the track’s result for the report, and <code>cargo xtask compat e2e</code> runs Level B alone.</p>
+<p>The scenarios are data files in <code>compat/scenarios/*.toml</code>, each one or more runs of <code>vectorcraft-cli</code>. A
+run starts from a new document, or from one an earlier run saved, and draws its shapes with VectorCraft’s
+commands. So every file VectorCraft opens is one it wrote, and StitchCraft reads only what the version
+under test saved. Steps work on the selection, which drawing a shape sets: VectorCraft’s command line couldn’t give
+one command another’s result when this was checked, at 0.7.0, and the scenarios still work that way. VectorCraft runs a live effect once for an object and its parameters, and
+remembers only a module’s last failure, which the next success clears. So each module a run installs is
+asked for its last error after every PNG export, which runs the live effects, and it must have none. A
+scenario draws each object it gives an effect before it gives another the same family’s, and
+<code>cargo xtask compat</code> refuses an <code>apply</code> step no drawing shows. Exporting a PES or a DST file draws
+nothing: an exporter is given the document’s JSON. An export that must fail names the code of the error it
+says, with <code>fails</code>. VectorCraft stops a run at a step that fails, so that export ends its run, and no check
+names its file. A run installs a module whose manifest sets a heavy budget, Stroke to Satin’s, with
+<code>allowHeavy</code>, as the user allows it. From VectorCraft 0.23 a request’s <code>allowHeavy</code> counts only in a session
+that its command line was started in with <code>--allow-plugin-grants</code>, so such a run starts with that option
+when the command line’s help names it. Every run has <code>VECTORCRAFT_NO_PREFS</code> set, which leaves VectorCraft
+without preferences and without the folder it keeps installed plug-ins in. So a run starts with the modules
+it installs alone, and leaves none in the VectorCraft of whoever runs the gate. A step’s parameter written <code>{ stitchcraft = "…" }</code> is replaced by what
+StitchCraft makes of the name, the threads <code>stitch palette</code> writes or a test picture drawn flat as a PNG, so
+that what VectorCraft traces is StitchCraft’s own. A run can be <code>stitch plan</code> with its arguments instead,
+which traces a picture with the <code>vectorcraft-cli</code> under test. It runs in the gate’s own process, its files in
+the scenario’s folder, and must end well. A run’s <code>files</code> are written there first, made by StitchCraft from
+their names, and the files <code>stitch</code> writes count as exported. The checks are StitchCraft’s, since VectorCraft’s pictures change from version to
+version and what sews must not:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Scenario</th><th>Steps</th><th>Checks</th></tr>
+</thead>
+<tbody>
+<tr><td><code>install-and-list</code></td><td>install the modules, then <code>plugin.list</code></td><td>each family’s live effect, the Auto effect, each format’s exporter and each filter is listed (<code>REQ-VC-002</code>, <code>REQ-VC-011</code>, <code>REQ-VC-013</code>, <code>REQ-VC-014</code>, <code>REQ-VC-015</code>, <code>REQ-VC-016</code>)</td></tr>
+<tr><td><code>apply</code></td><td>a square filled red and a line, given the fill and stroke effects with parameters, then saved</td><td>as sent, with a fill in red and a stroke (<code>REQ-VC-004</code>, <code>REQ-PRM-003</code>)</td></tr>
+<tr><td><code>clipping-mask</code></td><td>a red square 1 in a side with the fill effect and a blue line across it with the stroke effect, drawn and exported to PES, then a square half the size drawn in their middle and Make Clipping Mask made of all 3, saved, drawn and exported to PES and DST</td><td>as sent, with a fill in red and a stroke in blue, each sewing, and every needle point within the clipping object. Each file is the one <code>stitch export</code> writes, and the PES file differs from the one before the mask (<code>REQ-VC-017</code>, <code>REQ-GEN-005</code>, <code>REQ-VC-011</code>)</td></tr>
+<tr><td><code>compound-satin</code></td><td>2 rails and a rung, Make Compound Path, then the satin effect</td><td>as sent, and one satin column (<code>REQ-VC-007</code>)</td></tr>
+<tr><td><code>graphic-style</code></td><td>a group of 2 squares, and a gold square with a fill effect, drawn, whose new graphic style is then applied to the group</td><td>as sent, and 3 fills in gold at the effect’s 90° (<code>REQ-VC-006</code>)</td></tr>
+<tr><td><code>lettering</code></td><td>a text created with <code>text.create</code>, given the Lettering effect with Ink/Stitch Small Font at 150 percent, saved, drawn, and exported to PES and DST</td><td>the saved document sews as lettering sets the same text at the text’s place, and each file is the one <code>stitch export</code> writes of it. Drawing the text doesn’t leave an error. The font is built into the exporters, and <code>stitch</code> finds it in its folder of fonts, both from the pinned corpus (<code>REQ-VC-026</code>, <code>REQ-VC-027</code>, <code>REQ-FONT-021</code>)</td></tr>
+<tr><td><code>text-in-auto</code></td><td>a square and a text created with <code>text.create</code>, each given the Auto effect, saved, drawn, and exported to PES and DST</td><td>each file is the one <code>stitch export</code> writes of its document, and the file with the text differs from the square’s, so the text sewed: as lettering in the font built into the exporters. Drawing the text, which runs the Auto effect on its outlines, doesn’t leave an error (<code>REQ-VC-029</code>, <code>REQ-AUTO-069</code>)</td></tr>
+<tr><td><code>missing-plugin</code></td><td>a fill saved and drawn, then opened and saved again without the plug-ins</td><td>both sew alike, as sent: the records are kept (<code>REQ-PRM-003</code>)</td></tr>
+<tr><td><code>export</code></td><td>a square filled red and a line far below it, given the fill and stroke effects, saved, then exported to PES and DST by StitchCraft’s exporters</td><td>each file is the one <code>stitch export</code> writes of the saved document, and the export’s warnings are what it says, the DST’s cut on the long jump among them (<code>REQ-VC-011</code>)</td></tr>
+<tr><td><code>settings</code></td><td>a 1 in square given the fill effect and exported to PES, then the Design Settings filter run with the 4 × 4 in hoop, a shortest stitch of 1.5 mm and a quarter turn right on export, and the square saved and exported to PES and DST; then the filter run with the small hoop, and the square saved and exported to PES</td><td>each document keeps what the filter was run with, each file is the one <code>stitch export</code> writes, the PES file differs from the one before the filter, and the small hoop’s export fails with <code>SC-E0701</code> (<code>REQ-VC-013</code>)</td></tr>
+<tr><td><code>stroke-to-satin</code></td><td>an S curve, a V and a circle with strokes 3 mm wide and the satin effect, saved and drawn, then made into columns by Stroke to Satin, saved, drawn and exported to PES</td><td>the columns sew as the lines did, 3 satin columns in the strokes’ colour, and the file is the one <code>stitch export</code> writes (<code>REQ-VC-014</code>)</td></tr>
+<tr><td><code>testsheets</code></td><td>each sheet drawn as a design, drawn by Test Sheet into a new document, then saved and exported to PES; the TS-13 sheets with StitchCraft Auto installed</td><td>each document sews as the sheet’s design moved by whole millimetres to the middle of its artboard, and each file is the one <code>stitch export</code> writes. The Auto effect digitizes the TS-13 sheets’ shapes automatically (<code>REQ-VC-015</code>, <code>REQ-VC-016</code>)</td></tr>
+<tr><td><code>picture</code></td><td>the badge drawn flat as a PNG, which <code>stitch plan badge.png --traced traced.vectorcraft</code> traces with VectorCraft’s command line, its steps on standard input. With the reference machine’s threads loaded as a swatch library, the picture is fitted into the hoop and traced in colour with the library’s colours by the Abutting method, and its paths are kept and saved</td><td><code>stitch</code> ends well, and the document it traced, read with <code>--auto</code>, sews the badge’s 3 threads, each a thread of the palette, the white round the badge left out as the background (<code>REQ-CLI-012</code>, <code>REQ-AUTO-001</code>, <code>REQ-AUTO-009</code>)</td></tr>
+<tr><td><code>route-runs</code></td><td>3 lines with the stroke effect, a rail, a post across it and a brace, routed by Auto-Route Running Stitch</td><td>the route gives 8 strokes, 5 on top and 3 runs under them, as the engine’s tests route them (<code>REQ-VC-020</code>)</td></tr>
+<tr><td><code>route-satins</code></td><td>2 lines with the satin effect, an upright and a bar, routed by Auto-Route Satin Columns</td><td>the route gives the upright’s top, a run down its centre line, the upright back up over the run and the bar (<code>REQ-VC-018</code>)</td></tr>
+<tr><td><code>tartan</code></td><td>a square with the fill effect, its sett set by StitchCraft Tartan from a threadcount, exported to PES before and after</td><td>the effect’s record keeps the tartan fill and the sett, and the file after the filter is the one <code>stitch export</code> writes and differs from the one before (<code>REQ-VC-021</code>)</td></tr>
+<tr><td><code>traced-photo</code></td><td>a photo’s cut-out traced by <code>stitch plan</code> with the command line under test, given the Auto effect in VectorCraft and saved, then exported to PES</td><td><code>stitch</code> ends well, and VectorCraft’s own export is stopped for the instructions it needs. When a VectorCraft lets it finish, the scenario fails, so the pages that send a user to <code>stitch export</code> change (<code>REQ-VC-025</code>, <code>REQ-VC-016</code>)</td></tr>
+<tr><td><code>trace</code></td><td>the reference machine’s threads, as <code>stitch palette</code> writes them, loaded as a swatch library, a badge drawn flat in 3 of them on white placed, traced in colour with the library’s colours by the Abutting method, its paths kept, and saved; then StitchCraft’s Auto effect applied to the traced group, saved, and drawn</td><td>read with <code>--auto</code>, every shape is automatic, the white round the badge is left out as the background, and the badge sews its 3 threads, each a thread of the palette; with the Auto effect, so without <code>--auto</code>, and drawing it doesn’t leave a last error (<code>REQ-CLI-011</code>, <code>REQ-AUTO-001</code>, <code>REQ-AUTO-009</code>, <code>REQ-VC-016</code>)</td></tr>
+</tbody>
+</table>
+</div>
+<p><em>As sent</em>: the saved file sews as it does with the StitchCraft records of the objects the effects were
+applied to put back as the steps sent them. So VectorCraft stored what the dialog set, on the objects it
+was applied to, in a form StitchCraft reads. An object <code>effect.apply</code> named that the file doesn’t hold
+fails the check. A file is sewn as <code>stitch plan</code> sews it, for the machine it keeps or else the reference
+machine, and 2 are compared
+byte for byte, as is a machine file exported with the one <code>stitch export</code> writes of its document, by the
+format and the name of the file. Elements are counted by kind, thread and settings. A paint’s fill is a fill too, and has no
+settings. A box a document sews within is in its points, the design planned with its origin at the
+document’s and no turn on export, so that each needle point lies where the document draws it. The live-effect budget of each preview level is Level A’s (<code>REQ-VC-003</code>).</p>
+<h2 id="automation"><a class="header" href="#automation">Automation</a></h2>
+<pre><code class="language-text">schedule (daily) ──▶ discover tracks ──▶ for each track: build plug-ins ─▶ Level A ─▶ Level B ─▶ its result
+                                                                                                  │
+              ┌───────────────────────────────────────────────────────────────────────────────────┘
+              ▼
+   results ──▶ `cargo xtask compat report` ──▶ an issue per track: opened, commented on, or closed
+              │
+              └─ a new stable or pre-release passes ─▶ bot PR "compat: VectorCraft vX.Y.Z":
+                                                       pins, compat/supported.toml and the generated page
+</code></pre>
+<ul>
+<li><code>cargo xtask compat report</code> decides, and the workflow acts on what it prints. The rules are Rust with
+tests. Filing an issue is too (<code>cargo xtask compat issue</code>), which comments on an open issue with the
+same title rather than open another.</li>
+<li>Each track’s issue is titled “VectorCraft compatibility: <track> fails”. It lists what failed at each
+level, with links to the run and to VectorCraft’s changes since the last release that passed. The issue
+is closed when the track passes again. A track fails when its job ends without writing a result.
+VectorCraft always has a release and a <code>main</code> branch, so a run that discovers no version of either
+counts that track as failing. When discovery fails, the other tracks’ issues are left as they are. The
+move rehearsal has an issue of its own, which a run without the rehearsal leaves alone.</li>
+<li>A new stable release or pre-release that passes both levels is adopted. The report writes its pins (for
+a stable release, the archive’s SHA-256 the run checked, and the contract crate’s tag) and its row in
+<code>compat/supported.toml</code>, and <code>cargo xtask docs</code> regenerates the page. The bot pushes the branch
+<code>compat/vectorcraft-&lt;tag&gt;</code> and opens the pull request. It then dispatches ci, docs, goldens and compat
+on the branch itself, because GitHub runs workflows for a push made with the workflow’s own token only
+when they are dispatched. A new VectorCraft version is adopted only through a reviewed pull request
+with the full CI green.</li>
+<li>GitHub Actions can open a pull request only if the repository’s settings allow it (Settings › Actions ›
+General › Workflow permissions). Otherwise the run opens an issue, or comments on it, titled
+<code>VectorCraft compatibility: a new release waits for its pull request</code>, which names the branch. The first
+run with nothing to adopt closes it.</li>
+<li>The report job alone writes: <code>contents</code>, <code>pull-requests</code>, <code>issues</code> and <code>actions</code> with the default
+<code>GITHUB_TOKEN</code>. It runs on schedule, or when the workflow is started by hand on <code>main</code>, and never for a
+cancelled run, whose tracks may have stopped before writing their results.</li>
+</ul>
+<h2 id="moving-into-vectorcraft"><a class="header" href="#moving-into-vectorcraft">Moving into VectorCraft</a></h2>
+<p>StitchCraft must stay movable into VectorCraft’s own repository (<a href="adr/0011-movable-into-vectorcraft.html">ADR-0011</a>).
+The <code>move</code> job rehearses it against the latest stable release and <code>main</code> (pull requests that touch
+manifests or tooling: the pinned stable release):</p>
+<ol>
+<li>Check out VectorCraft and put this repository into it as the folder <code>stitchcraft/</code>, and check that
+VectorCraft’s git would keep every file of ours: its <code>.gitignore</code> leaves out every folder named <code>plan</code>,
+and ours keeps <code>docs/src/plan/</code> in.</li>
+<li><strong>Nested:</strong> <code>cargo xtask compat join --nested ..</code>, then build a throwaway VectorCraft crate that depends
+on <code>stitchcraft-engine</code> by path.</li>
+<li><strong>Joined:</strong> <code>cargo xtask compat join ..</code>, then run <code>cargo xtask ci</code> from the folder: StitchCraft’s
+gates, inside VectorCraft’s workspace, with its lockfile and lints.</li>
+</ol>
+<p>A failure means a change here, or one in VectorCraft, has made the move harder. The scheduled run reports
+it in an issue of its own, labelled <code>upstream-canary</code>.</p>
+<h2 id="vectorcrafts-window"><a class="header" href="#vectorcrafts-window">VectorCraft’s window</a></h2>
+<p>The <code>window</code> job runs the app VectorCraft releases, from the Linux archive of the pinned stable release,
+in a desktop without a screen. <code>cargo xtask compat window</code> takes screenshots of the window and drives it
+through its accessibility tree with xa11y, as the docs’ <code>vectorcraft-ui</code> pictures are made
+(<a href="docs-pipeline.html#vectorcrafts-window-in-ci">docs pipeline</a>). The archive’s SHA-256 is pinned beside the
+stable tag in <code>compat/vectorcraft.toml</code>, so the bot PR that moves the pin records the new archive’s sum
+too, the one the release’s <code>SHA256SUMS.txt</code> lists and the run checked. The same archive holds
+<code>vectorcraft-cli</code>, for Level B.</p>
+<h2 id="the-supported-versions-table"><a class="header" href="#the-supported-versions-table">The supported-versions table</a></h2>
+<p>The user guide’s <a href="../user/reference/compatibility.html">VectorCraft compatibility</a> page is generated by
+<code>cargo xtask docs</code> from <code>compat/supported.toml</code>, never hand-edited. The record lists the releases that
+passed both levels, with the day each passed. Only the pull request that adopts a release writes to it. A
+branch’s result changes daily and is reported in its issue, never in the record. A row of the page looks
+like this:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>VectorCraft</th><th>Track</th><th>Passed the gate</th></tr>
+</thead>
+<tbody>
+<tr><td>0.12.0</td><td>stable</td><td>2026-10-18</td></tr>
+</tbody>
+</table>
+</div>
+<p>It also names the release the gate pins, which pull requests are checked against.</p>
+<h2 id="going-upstream"><a class="header" href="#going-upstream">Going upstream</a></h2>
+<p>The strongest gate is in VectorCraft itself: we will offer VectorCraft a tiny third-party contract test
+(our minimal plug-in built as a fixture, like their <code>desaturate.wasm</code>) so <code>cargo xtask ci</code> catches ABI
+changes before release. VectorCraft runs its gates locally rather than on every PR in GitHub Actions
+(observed in <code>.github/workflows/</code> at <code>89ea46c</code>), so a test in their suite is worth more than a test in
+ours.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../design/rfc-vectorcraft-abi-v2.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../design/conformance.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../design/rfc-vectorcraft-abi-v2.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../design/conformance.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

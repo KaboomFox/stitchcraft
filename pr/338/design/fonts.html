@@ -1,0 +1,1198 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Fonts - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-b37cbce2.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-95df4fb0.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/design/fonts.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="fonts"><a class="header" href="#fonts">Fonts</a></h1>
+<!-- implements: crates/stitchcraft-svg/src/font/**, crates/stitchcraft-svg/src/lettering/**, apps/stitchcraft-cli/src/commands/lettering.rs, apps/stitchcraft-cli/src/commands/lettering/** -->
+<p>Lettering sews text in a font. M14 sets text in embroidery fonts, digitized glyph by glyph in Ink/Stitch’s
+font format. M15 ports an ordinary TrueType or OpenType font automatically. It reads each glyph’s outline at
+the height the text is set and works out how the glyph sews (<a href="../plan/roadmap.html">roadmap</a>). This page
+records the research both milestones rest on, counted and read on 2026-11-02. The sources are listed at the
+end. Since M8.6, Ink/Stitch’s fonts are a corpus of the differential, each glyph sewn in both programs
+(<a href="#the-corpus">the corpus</a>).</p>
+<h2 id="inkstitchs-fonts"><a class="header" href="#inkstitchs-fonts">Ink/Stitch’s fonts</a></h2>
+<p>Ink/Stitch’s fonts are a repository of their own,
+<a href="https://github.com/inkstitch/embroidery-fonts">inkstitch/embroidery-fonts</a>, which Ink/Stitch includes as its
+<code>fonts</code> folder. At commit <code>c7e3a05</code> it has 142 fonts. Ink/Stitch’s tutorial on making a font and its page on
+the font tools document the format. The numbers below were counted from the font files.</p>
+<ul>
+<li><strong>A font is a folder.</strong> <code>font.json</code> gives the font’s settings, and a glyph file gives its glyphs for each
+direction it sews in. 137 fonts sew left to right (<code>ltr.svg</code>) and 17 right to left (<code>rtl.svg</code>), 12 of
+them both ways. One font also sews top to bottom and bottom to top. 5 large fonts split a direction into
+several files, in a folder of that name. The folder also has a licence file and a preview picture.</li>
+<li><strong>A glyph file</strong> has a layer for each glyph, labelled <code>GlyphLayer-</code> followed by the character, and a guide
+named <code>baseline</code>. A layer can be named for several characters, as for a ligature. An Arabic letter has a
+layer for each of its forms.</li>
+<li><strong>The settings</strong> name the font, its licence and the font it was made from, with that font’s address.
+<code>size</code> is the height of a reference capital in millimetres, and <code>min_scale</code> and <code>max_scale</code> bound the
+heights the font sews at. <code>horiz_adv_x</code> gives each glyph’s advance, with a default and the space’s.
+<code>kerning_pairs</code> gives each pair’s adjustment, which is subtracted from the advance. Further keys force
+upper or lower case, name the glyph sewn for a missing one, and say whether the font sews lines back and
+forth, sorts its colours or is routed by auto-satin.</li>
+<li><strong>Heights.</strong> A font sews from <code>size</code> × <code>min_scale</code> to <code>size</code> × <code>max_scale</code>. The least heights range from
+2.8 mm (Glacial Tiny) to 144 mm and the greatest from 6.9 to 468 mm. Their medians are 20 and 45 mm. 21
+fonts are tagged <code>tiny</code>.</li>
+<li><strong>Stitch types.</strong> 94 fonts sew satin columns, 73,422 of them. 119 fonts sew running stitches, 67 tatami
+fills and 25 cross stitch.</li>
+</ul>
+<p><strong>How they are made.</strong> 134 of the fonts name the font they were made from, 36 of them from Google Fonts. The
+tutorial starts from a TrueType or OpenType file. FontForge writes it as an SVG font, and an Ink/Stitch tool
+splits that into glyph layers at a chosen height. Each glyph is then digitized by hand, with its satin
+columns and rungs, where it starts and ends, its trims and its settings. The tutorial calls each letter “a
+small embroidery in itself” and ends with “real stitchouts are the ultimate test”.</p>
+<p><strong>Small sizes</strong> are separate fonts. Pacificlo tiny sews Pacifico from 4.2 to 9.4 mm, and Pacificlo from 13.6
+to 23.8 mm. Pacificlo tiny, Amitaclo small and Chicken Little KOR Small keep their larger fonts’ columns with
+lighter settings. Their satin spacing is 0.25 mm, without a zigzag underlay, and their pull compensation is
+0.05 to 0.1 mm in place of 0.2 to 0.3 mm. Venezia small also sews satin columns where Venezia sews running
+stitches. At their least heights, the median satin column of 4 small fonts is 0.47 to 0.61 mm wide, and a
+tenth of their columns are narrower than 0.3 to 0.5 mm. The 4 are Ink/Stitch Small Font, Glacial Tiny,
+Pacificlo tiny and Venezia small. Automatic digitizing sews a line narrower than 1 mm
+(<code>min_satin_stroke_width_mm</code>) as a run, and sews a satin column 0.4 mm past each rail that no later shape
+lies beside (<code>auto_pull_compensation_mm</code>).</p>
+<p><strong>Licences.</strong> By their licence files, 102 fonts are under the OFL, 25 under CC BY-SA, 1 under CC BY, and 3
+in the public domain or under CC0. 8 are under CC BY-NC-SA, 1 under CC Attribution-NoDerivatives and 1 under
+the GPL-3.0. NickAinley, the 142nd, is under a free font’s licence, with its authors’ permission for
+Ink/Stitch. The licence field of <code>font.json</code> disagrees with the licence file for 3 fonts. It names the OFL
+for <code>precious</code>, whose licence file is the GPL-3.0 with a ban on selling the font. It names CC BY-SA for
+<code>cogs_KOR</code>, under CC BY, and for <code>nick_ainley</code>. Ink/Stitch 3.3.0 renamed 14 fonts to respect the OFL’s
+Reserved Font Names.</p>
+<p><strong>Lettering.</strong> Ink/Stitch’s lettering (<code>lib/lettering</code> at <code>d59c9ab</code>) advances each glyph by its own advance,
+less the kerning of its pair, and each word by the space’s advance. The user can widen the spacing of
+letters, of words and of lines by a number of millimetres. Lines align left, centre or right, or are
+justified as a block. A trim
+can follow each letter, word or line. Lines sew back and forth in a font with a variant for the other
+direction, and a sortable font’s colours sew in order. Batch lettering clamps the scale to the font’s range.
+In a font whose <code>auto_satin</code> is on, Auto-Route Satin Columns routes the satin columns and strokes of the
+whole text, their order kept and without trims, before the trims are added and the colours sorted. Each
+piece goes to the end of the group its element was in. The key is on when <code>font.json</code> leaves it out, and
+at <code>c7e3a05</code> every font sets it, Ink/Stitch Small Font and Medium Font on and the other 140 off.
+StitchCraft’s lettering routes such a font’s text with M10.4’s function (<a href="routing.html">routing tools</a>).</p>
+<h2 id="the-corpus"><a class="header" href="#the-corpus">The corpus</a></h2>
+<p>M8.6 makes Ink/Stitch’s fonts a corpus of the <a href="conformance.html#l3--inkstitch-differential-nightly">differential</a>.
+<code>cargo xtask corpus</code> fetches the archive GitHub makes of <code>c7e3a05</code>, the commit
+<code>conformance/inkstitch/fonts.toml</code> pins, and checks its SHA-256 before it unpacks it. The fonts stay in a
+cache outside the repository: the folder <code>STITCHCRAFT_CORPUS</code> names, or <code>stitchcraft/corpus</code> in the user’s
+cache folder. No font file is committed. Outside the repository the gates leave them alone, where the
+clean-room check would find the GPL in one font’s licence. <code>cargo clean</code> keeps them, and every worktree
+shares them.</p>
+<p><strong>The fonts it takes.</strong> A licence file names the font’s own licence first, in a sentence such as “This font
+has been adapted for Ink/Stitch and is licensed under the SIL Open Font License”. It often names the licence
+of the font it was made from after it, or quotes it. So of the licences a file names, the first is the
+font’s. The corpus takes the fonts under the OFL, CC0 or the public domain, CC BY and CC BY-SA, whose
+adaptations may be shared for any use: 131 fonts, with 167 glyph files and 21,179 glyphs. The report names the
+other 11, which are never sewn.</p>
+<p><strong>A glyph as a design.</strong> Ink/Stitch’s lettering takes every group labelled <code>GlyphLayer-</code>, wherever it lies in
+the file, and so does the differential: of the 21,616 glyphs of the 142 fonts, 3,030 lie inside other groups.
+Each glyph is cut out of its glyph file as a design of its own. Its group is shown, as lettering shows it, and
+every other drawn element is left out, in the groups round it too. The rest of the file stays as it was
+written, its version and definitions with the symbols of Ink/Stitch’s commands among them, and so do the
+transforms and styles of the groups round the glyph. Both programs sew that file. StitchCraft plans it for the reference machine with a
+hoop 400 mm a side, since a glyph file is drawn at its font’s height and a glyph can be wider than the
+reference hoop.</p>
+<p><strong>The sample.</strong> Every night the differential sews 4 glyphs of each font, 524 in all, and every Sunday all
+21,179, in 6 parts. A font’s glyphs are taken in the order of its files, sorted by path, and in each file in
+its order. The sample takes the glyphs at the places 0, n/4, n/2 and 3n/4 of n, rounded down. It spreads over
+each font, from its first glyph, and moves only when the pin does. Run from its checkout, Ink/Stitch logs at
+its debug level, and a glyph took it 10 seconds, against 1.6 with the log turned off. On 2 cores the sample
+then takes 12 minutes, and a twentieth of every glyph 22.</p>
+<p><strong>What differs.</strong> These counts are from runs on 3 November 2026, before M10.1 brought simple crosses. Of
+the sample’s 524 glyphs, 357 agree by every measure. 98 were of stitch types StitchCraft didn’t sew then,
+which the report listed, 66 of them in cross stitch and the rest in tartan fills, ripples and guided fills.
+They joined the comparison with M10’s steps, the simple crosses with M10.1 and Jersey 15’s double crosses
+with M10.2. Sewn alone with M10.2, every one of Jersey 15’s 162 glyphs agrees, the 2 programs’ threads
+overlapping by 1.000 in each. Ripples joined with M10.8, and guided ripples with M10.11. Of the 324 glyphs of
+the 3 Ondulamarif fonts, sewn alone on 8 November 2026, 144 agree and 180 differ as the ledger explains,
+most of them by where each program’s running stitch places the needle points of a ripple’s lines. Medium
+has 57 that agree and 51 excused, S 46 and 62, and XL 41 and 67. The sample’s other 69 differ as the
+ledger explains,
+<code>conformance/inkstitch/glyphs.toml</code> naming the glyphs each excuse is for. A glyph may differ in more than
+one way. A twentieth of every glyph, the seventh of 20 parts, holds 1,059 glyphs. Of them 699 agree, 238
+are listed and 122 differ as the ledger explains. It found the last 3 rows of the table, which the sample
+has none of, and a glyph neither program wrote a file of, which agreed: the U of Apex simple small, whose
+satin column neither could sew then.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Difference</th><th>Sample</th><th>Twentieth</th><th>Explained by</th></tr>
+</thead>
+<tbody>
+<tr><td>The threads named by other entries of Brother’s palette, both files changing thread at the same blocks</td><td>34</td><td>29</td><td><code>DEV-THREAD-001</code>, checked</td></tr>
+<tr><td>Running stitches placed otherwise, more of them on tight curves, within 0.3 mm of each other</td><td>14</td><td>28</td><td><code>DEV-RUN-002</code>, checked</td></tr>
+<tr><td>Elements whose settings StitchCraft can’t read, left out, such as a <code>repeats</code> of <code>0 2</code> in Neon blinking</td><td>6</td><td>38</td><td><code>DEV-PRM-001</code></td></tr>
+<tr><td>Stitch patterns, which StitchCraft doesn’t apply, in Initials XL and Mai en fleur</td><td>5</td><td>6</td><td><code>DEV-SVG-026</code></td></tr>
+<tr><td>Random satin widths, and a negative width decrease raised to 0, in Magnolia bicolor and Cats</td><td>4</td><td>7</td><td><code>DEV-SAT-002</code>, <code>DEV-PRM-002</code></td></tr>
+<tr><td>Meander tiles of StitchCraft’s own, in Barstitch textured</td><td>4</td><td>8</td><td><code>DEV-FILL-018</code></td></tr>
+<tr><td>Cooper Marif’s fills in a viewBox of another shape than its page, which StitchCraft centres and Ink/Stitch doesn’t</td><td>4</td><td>6</td><td><code>DEV-SVG-025</code></td></tr>
+<tr><td>Satin stitches longer than the machine’s 12 mm, split, in Hebrew simple rounded small, whose pull compensation is 10 mm</td><td>2</td><td>1</td><td><code>DEV-FIN-001</code>, checked</td></tr>
+<tr><td>Needle points nearer the one before than the machine’s shortest stitch, 0.3 mm, left out, in Honoka’s underlays of 0.2 mm stitches and DejaVu’s full stop</td><td>0</td><td>3</td><td><code>DEV-FIN-001</code>, checked</td></tr>
+<tr><td>A needle point Ink/Stitch sews where a path ends with a move-to that draws nothing, 24 mm above Kum Tsoan relief’s V</td><td>0</td><td>1</td><td><code>DEV-SVG-011</code>, checked</td></tr>
+<tr><td>A jump that goes nowhere in Ink/Stitch’s file, which pystitch writes</td><td>0</td><td>1</td><td><code>DEV-FMT-001</code>, checked</td></tr>
+</tbody>
+</table>
+</div>
+<p>A checked excuse counts only where the differential undoes the deviation in Ink/Stitch’s file and the measure
+then agrees, or where each program’s thread lies within 0.3 mm of the other’s. Without its 6 stitch patterns,
+Ink/Stitch sews Initials XL’s B in 9,804 stitches, against StitchCraft’s 9,805 and its own 12,158. In a page
+of its viewBox’s shape, Cooper Marif’s 7 overlaps by 0.999, against 0.573. Without its needle points nearer
+the one before than 0.3 mm, Ink/Stitch sews Honoka’s 服 in 1,889 stitches, against StitchCraft’s 1,935 and its
+own 3,101.</p>
+<p><strong>Every glyph.</strong> The first run of every glyph, on 3 November 2026 at <code>c31df0d4</code>, found 56 glyphs that differ
+by more than the ledger explained and 11 that didn’t sew, in 20 fonts. The 11 are glyphs of one empty path,
+such as Egyptian’s spaces and Noble’s tilde. Ink/Stitch doesn’t write a file of them and says it didn’t
+find an element to sew, and StitchCraft writes none with <code>SC-E0010</code>, so they agree now. <code>--font</code> sews the 20
+fonts’ 4,961 glyphs alone, and M8.6 sorted the 56 by their causes:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Cause</th><th>Glyphs</th><th>What M8.6 did</th></tr>
+</thead>
+<tbody>
+<tr><td>Running stitch outlines whose needle points set the bounds the files are aligned by, round the fills of 22 of Western Light’s glyphs and beside satin columns in 3 glyphs of other fonts</td><td>25</td><td>Excused by <code>DEV-RUN-002</code>, checked within 0.3 mm</td></tr>
+<tr><td>Corners of 2 subpaths that meet but for rounding, 2e-15 to 7e-15 CSS pixels apart, so shapely repairs the shape, in 14 cross stitch glyphs of Egyptian’s 2 sizes and in Jaquarda Bastarda 9’s ®</td><td>15</td><td>Excused by <code>DEV-FILL-001</code>, for the glyphs named</td></tr>
+<tr><td>A rung that rounding leaves a hair short of a rail, which Ink/Stitch takes for a rail, in 3 glyphs of AGS Garamond and in Apex simple’s q in both its sizes</td><td>5</td><td>The V, which StitchCraft didn’t sew, is fixed and agrees now. <code>DEV-SAT-013</code> excuses the other 4</td></tr>
+<tr><td>Fills that run along their own edges (<code>SC-I0313</code>), in Califragilistic</td><td>3</td><td>Excused by <code>DEV-FILL-001</code></td></tr>
+<tr><td>Cross stitch parts that reach equally far left after the repair, in Egyptian small’s ǘ and ӳ</td><td>2</td><td>Excused by <code>DEV-FILL-029</code></td></tr>
+<tr><td>Satin rings that start apart, in Initials XL’s comma and Alchemy’s 🜂</td><td>2</td><td>Excused by <code>DEV-SAT-009</code></td></tr>
+<tr><td>The second of 2 satin rings started past a rung, its stitches leaning up to 89°, in Emilio 20 tricolore’s E</td><td>1</td><td>Fixed: it starts at its nearest node that no rung lies before</td></tr>
+<tr><td>Travel under a tatami fill’s rows, in Alchemy’s ¯</td><td>1</td><td>Excused by <code>DEV-FILL-007</code></td></tr>
+<tr><td>Jumps that go nowhere after lock stitches 2 satin columns force, in DejaVu’s Ä</td><td>1</td><td><code>DEV-FMT-001</code>, now undone within colour blocks too</td></tr>
+<tr><td>Top stitches that Ink/Stitch’s plan drops beside the underlay’s last point, 0.4 mm off each tip of Manga Impact’s &amp;</td><td>1</td><td>Excused by <code>DEV-RUN-003</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Run again on 8 November 2026 with these changes, the 20 fonts’ glyphs give 4,644 that agree and 317 that
+differ as the ledger explains. None differ otherwise or are known follow-up work, and every one sews.
+The rung fix also lets StitchCraft sew the x and the U of Apex simple, in both its sizes, which neither
+program sewed before. Ink/Stitch still calls their columns not stitchable, and <code>DEV-SAT-013</code> excuses them.
+A scan of every glyph file’s satin columns found 5 more fonts with columns the 2 fixes could change. Run
+again too, their 562 glyphs agree, but for 2 that excuses made before M8.6 explain.</p>
+<h2 id="licences-in-the-font-repository"><a class="header" href="#licences-in-the-font-repository">Licences in the font repository</a></h2>
+<p><a href="adr/0020-fonts-from-a-repository-of-their-own.html">ADR-0020</a> sets which licences StitchCraft’s
+font repository takes and how a font’s licence is checked when it joins. Read on 8 November 2026, each of
+the 131 licence files the corpus takes at <code>c7e3a05</code> names an allowed licence first. 32 of them also point
+at the terms of the font each was made from, or at a permission its author gave:</p>
+<ul>
+<li>15 point at an original under the OFL or in the public domain, such as Magnolia Script, Linux Libertine
+and Apex Lake, or under DejaVu’s licence.</li>
+<li>7 point at an original that its author’s own terms let anyone use, without a word on shared
+adaptations, and at its author’s leave to use it for Ink/Stitch. Aventurina, Bluenesia Satin, Cherry for
+inkstitch, Cherry for Kaalleen, DinoMouse72, Learning curve and Monicha are these 7.</li>
+<li>7 are the Emilio 20 fonts, whose original the files name as under CC BY-SA and “used and distributed with
+permission from the author”.</li>
+<li>3 draw animals of the Emoji Embroidery Project, whose author allowed their use in fonts for Ink/Stitch.
+The 3 are Animals Alphabet, Alphabet des animaux and Tieralphabet.</li>
+</ul>
+<p>The ADR keeps the 7 of the second kind out until their authors allow sharing beyond Ink/Stitch, and a person
+reads the 10 of the last 2 kinds before they join.</p>
+<h2 id="the-reader"><a class="header" href="#the-reader">The reader</a></h2>
+<p><code>stitchcraft_svg::font::read</code> reads a font in Ink/Stitch’s format from the files of its folder, as
+Ink/Stitch’s lettering reads it at <code>d59c9ab</code> (<code>lib/lettering/font.py</code>, <code>font_variant.py</code> and <code>glyph.py</code>),
+run as a black box on fonts drawn for it (<a href="adr/0020-fonts-from-a-repository-of-their-own.html">ADR-0020</a>). M14.2’s lettering sets text with what it reads, as <code>REQ-FONT-002</code> to <code>REQ-FONT-008</code> say.</p>
+<ul>
+<li><strong>Settings.</strong> <code>font.json</code> is UTF-8 text, with or without a byte order mark, and holds an object of
+settings. Each key that Ink/Stitch reads is read at Ink/Stitch’s default where the file lacks it, as the
+<a href="../user/reference/font-settings.html">font settings</a> page gives them. A value of another type keeps the
+default (<code>SC-W1102</code>), and a key Ink/Stitch doesn’t read is ignored (<code>SC-I1105</code>). A font without a
+<code>font.json</code> that holds an object isn’t read (<code>SC-E1101</code>). Ink/Stitch loads such a font with every setting
+at its default and leaves it out of its list of fonts, as it has no name.</li>
+<li><strong>Directions.</strong> A direction’s glyph files are <code>ltr.svg</code>, then the SVG files directly in a folder <code>ltr</code>
+by their names, and the same for <code>rtl</code>, <code>ttb</code> and <code>btt</code>. An older font names its files <code>→.svg</code>, <code>←.svg</code>,
+<code>↓.svg</code> and <code>↑.svg</code>, as Ink/Stitch Small Font’s README describes them. Ink/Stitch takes a folder’s files
+in the order the system lists them in, which differs from system to system. 2 fonts at <code>c7e3a05</code> draw a
+glyph in 2 files of a direction. Roman bicolor AGS draws 66 glyphs in its <code>mono.svg</code> and again in its
+<code>zbi.svg</code>, whose name sorts after it, and AGS Garamond’s full stop is in both its files. A file
+compressed with xz isn’t read (<code>SC-W1103</code>).</li>
+<li><strong>Glyphs.</strong> Each group labelled <code>GlyphLayer-</code> and a name is a glyph, wherever it lies. Its name is its
+label in Unicode’s NFC, so the ohm sign is the Greek omega, and of 2 glyphs of one name in a direction the
+later counts (<code>SC-I1105</code>). Its design is the one the glyph differential cuts and sews
+(<a href="#the-corpus">the corpus</a>), read by the SVG reader with what the reader says of it.</li>
+<li><strong>The box.</strong> A glyph’s box spans the x of the points that its <code>&lt;path&gt;</code> elements reach, connectors’
+aside. A subpath reaches its ends and its curves’ turning points, and a move-to that draws nothing
+reaches its place. Hidden paths count,
+and so does a glyph inside the glyph. Ink/Stitch’s lettering places each glyph by its box’s left edge,
+and advances a glyph without an advance of its own to its right edge. A path whose transform doesn’t
+read counts where it lies without it, where the SVG reader leaves it out of the design (<code>SC-W0804</code>).
+Ink/Stitch leaves a glyph out when its group has no path, or when a path in it draws nothing, such as one
+of empty path data. StitchCraft leaves it out too (<code>SC-W1104</code>). 12 glyphs at <code>c7e3a05</code> are left out so,
+11 of them of one empty path.</li>
+<li><strong>The baseline.</strong> A glyph file’s baseline is its first guide labelled <code>baseline</code>. Inkscape writes the
+guide’s y up from the page’s bottom, and the baseline lies the page’s height in user units less that y
+below the top. The page’s height is the viewBox’s, or else the root’s height in pixels, and 0 when the
+root has no height in a unit, as 2 of Ink/Stitch’s glyph files have none. Without the guide the
+baseline is the page’s top (<code>SC-I1105</code>).</li>
+<li><strong>Lengths.</strong> The reader gives every length in millimetres. The box and the baseline lie on the glyph
+file’s page, as the glyph’s design does, and the advances, the kerning, the space and the leading are
+converted from <code>font.json</code>’s CSS pixels. A pair’s kerning is the value for its 2 labels with a space
+between them, or else joined, as older fonts write 195,269 of the 1,816,358 pairs at <code>c7e3a05</code>. A
+glyph’s advance is its own, or else <code>horiz_adv_x_default</code>, or else its box’s right edge.</li>
+<li><strong>The licence.</strong> The licence file, and the licence it names first, as the corpus reads it.</li>
+</ul>
+<p><strong>Measured against Ink/Stitch.</strong> On 8 November 2026 both programs read the 142 fonts of <code>c7e3a05</code>. They
+found the same 21,502 glyphs in the same directions, and the same default direction for each font. 21,132
+glyphs have the same left edge, width and baseline within a micrometre. The numbers from Ink/Stitch have
+6 digits, such as 11.3386 for StitchCraft’s 11.338584. The other 370 differ for 2 causes:</p>
+<ul>
+<li>303 are the glyphs of the 3 fonts whose glyph files draw a viewBox of another shape than the page, which
+StitchCraft centres and Ink/Stitch doesn’t (<code>DEV-SVG-025</code>). Their boxes lie right of Ink/Stitch’s, as their
+designs do: 30.0 mm in Califragilistic, 16.5 mm in Cooper Marif and 24.8 mm in InfiniPicto.</li>
+<li>67 are the glyphs drawn in 2 files of a direction, which Ink/Stitch took in the system’s order.</li>
+</ul>
+<p>Ink/Stitch Small Font, under the OFL, is the corpus’s case of a real font (<code>REQ-FONT-008</code>). Its 98
+left-to-right and 89 right-to-left glyphs read with nothing said, and plan in 17,890 stitches for the
+reference machine with a hoop 400 mm a side.</p>
+<h2 id="lettering"><a class="header" href="#lettering">Lettering</a></h2>
+<p><code>stitchcraft_svg::lettering::set</code> sets a text in a font the reader read, and <code>stitch lettering</code> is its first
+host (M14.2, <code>REQ-FONT-009</code> to <code>REQ-FONT-014</code>). <code>set_along</code> sets it along a path (M14.3, <code>REQ-FONT-015</code> to
+<code>REQ-FONT-020</code>). Both follow Ink/Stitch’s lettering, read at <code>d59c9ab</code> (<code>lib/lettering/font.py</code>,
+<code>font_variant.py</code>, <code>lib/extensions/batch_lettering.py</code> and <code>lettering_along_path.py</code>) and run as a black box.
+The text becomes a design, which every host plans as it plans any other. Its elements are marked
+<code>Lettered::Set</code>, and the passes of automatic digitizing that place lettering mark theirs
+<code>Lettered::Digitized</code> (<a href="image-to-embroidery.html#the-cap-and-lettering">the cap and lettering</a>).</p>
+<ul>
+<li><strong>Lines and words.</strong> The text is read in Unicode’s NFC, as glyphs are named. A line ends at a line feed
+and loses the spaces at its ends. Its words lie between its spaces, and between 2 spaces in a row lies an
+empty word. A word is set in the case <code>letter_case</code> forces.</li>
+<li><strong>Glyphs.</strong> At each character of a word, the glyph with the longest name that the rest of the word starts
+with sews, and the text goes on after that name. A ligature’s glyph, named by its letters, sews for them.</li>
+<li><strong>A missing character</strong> sews as the glyph <code>default_glyph</code> names, and <code>SC-W1107</code> names the character. In a
+font without that glyph the pen moves on by a space, and the warning says that instead.</li>
+<li><strong>Places.</strong> A word’s first glyph has its box’s left edge at the pen, which starts each line at 0. Each
+later glyph’s origin lies its predecessor’s advance after that glyph’s origin. The pair’s kerning is
+taken from that distance and the letter spacing added to it. Its box lies its own left edge after its origin. After a word the pen lies the
+last glyph’s advance after its origin, plus a space’s advance and the word spacing. Ink/Stitch adds a
+glyph’s left edge to its place for every glyph but a word’s first, which is the same rule told from the
+pen.</li>
+<li><strong>Lines.</strong> Each line’s baseline lies <code>leading</code> plus the line height below the line before. An empty line
+takes its height too.</li>
+<li><strong>Alignment.</strong> A line’s width spans its glyphs’ boxes. Left-aligned lines stay. Centred, a line moves left by
+half its width, and right-aligned by all of it. The first line’s start is then the text’s centre or its
+right edge. A block moves each word of a line right by its place in the line times an equal share of
+what the line lacks to the widest line. Ink/Stitch’s <code>letterspacing</code> does the same to the glyphs of a line
+of one word.</li>
+<li><strong>The scale.</strong> The text is set at <code>scale</code> percent of the font’s size, kept within <code>min_scale</code> and
+<code>max_scale</code>, as Ink/Stitch’s batch lettering keeps it. Outside them the text is set at the nearer end, and
+<code>SC-W1106</code> names the range in percent and in millimetres of height. The elements are scaled about the first
+line’s start on its baseline, each with its stroke’s width. The spacings are scaled with the text, as
+Ink/Stitch scales the group it sets the text in: 1 mm of letter spacing at 50 percent is 0.5 mm. An
+element’s stitch settings aren’t scaled, in either program.</li>
+<li><strong>Right to left.</strong> In a font whose <code>text_direction</code> is <code>rtl</code>, a line’s words and each word’s glyphs are
+laid in the reverse of their order in the text, and a pair’s kerning is looked up with the glyph that
+comes first in the text first. The glyphs of an <code>rtl</code> direction are drawn to sew from the right, and a
+line in them sews from its last glyph to its first.</li>
+<li><strong>Back and forth.</strong> A font’s author can digitize each glyph twice, to sew from the left and from the
+right. With <code>back_and_forth</code> on, which is the default as in Ink/Stitch, the lines of a text in such a font
+take their glyphs from the font’s default direction and from its reverse, one line from each. The lines are counted
+from 0, the empty ones too. A line then starts where the line before it ended, and the thread between
+them is short. The glyphs lie where they lie one way, within the difference between a glyph’s 2 drawings.
+A font needs glyph files for both directions, and its <code>reversible</code> must not be off: 12 of the 142 fonts at
+<code>c7e3a05</code> have both. In another font every line sews the default way. Ink/Stitch does that in silence.
+StitchCraft says it with <code>SC-W1110</code> when the text has a line to sew back, since the thread then crosses the
+text from each line’s end to the next line’s start. A character that the reverse direction lacks sews
+as the default glyph, as any missing character does.</li>
+<li><strong>Trims.</strong> <code>trim</code> chooses where lettering adds a trim, and <code>off</code> is the default, as in Ink/Stitch. With
+<code>glyph</code> a trim follows each glyph. With <code>word</code> it follows the last glyph sewn of each word, and with <code>line</code>
+of each line, but never the text’s last glyph. A trim is the setting <code>trim_after</code> on the last element the
+glyph sews, which the planner reads as it reads any element’s. A glyph’s own trims stay with every choice.
+The planner joins or jumps between 2 letters without a trim as it does between any 2 elements, for the
+machine’s profile.</li>
+<li><strong>Sorted colours.</strong> A multicolour font sews each letter in several threads, and its author numbers each
+element’s colour with <code>color_sort_index</code>. In a font whose <code>sortable</code> is on, <code>color_sort</code> sews the elements
+in the order of those numbers, and those of one number in the order they sewed in. <code>all</code> sorts the whole
+text’s elements, and <code>line</code> and <code>word</code> sort each line’s or each word’s. An element without a number sorts as number 404,
+after the others, as in Ink/Stitch. The elements of a number that <code>combine_at_sort_indices</code> lists become
+one element, the first, with the subpaths of the others. A tartan or a linear gradient fill made so gets
+<code>stop_at_ending_point</code>, as Ink/Stitch sets it. Sorting moves no glyph. A glyph’s colours no longer sew
+together once sorted, and a trim then follows the last element of each of them. In a font
+that doesn’t sort, the text sews as it is drawn and <code>SC-W1110</code> says so. The numbers are lettering’s to
+read, and it takes them off the design’s elements, sorted or not: the planner has no setting of that name
+and would warn of it on every element.</li>
+<li><strong>Auto-satin.</strong> In a font whose <code>auto_satin</code> is on, when the text has a satin column, the text’s satin
+columns and strokes are routed before the trims are added and the colours sorted. They are routed by <code>stitchcraft_engine::route</code> as Auto-Route Satin Columns routes them with
+Preserve order on and trims off (<a href="routing.html">routing tools</a>). The route’s elements replace them. Each
+sews at the end of the glyph its element was in, after the glyph’s fills, where Ink/Stitch puts it at the
+end of the group it was in. A text without a satin column sews as its glyphs draw it. The routing’s
+warnings are passed on, and its notes aren’t.</li>
+<li><strong>Widened.</strong> <code>widen_percent</code> widens every satin column of the text by that percent of its width on each
+side, by adding to its pull compensation (<code>REQ-FONT-024</code>). It is 0 by default. Then a font sews as its
+author digitized it (<a href="image-to-embroidery.html#bold-letters-under-the-bold-fonts-heights">bold letters under the bold font’s heights</a>).</li>
+<li><strong>Bounded.</strong> Any text, any path and any numbers give a design or <code>SC-E1108</code>, never a panic. The layout,
+the seats on a path, the placing, the trims and the sort charge one meter of the budget, and the routing
+has the budget again.</li>
+</ul>
+<p><strong>The settings</strong> are named as Ink/Stitch names them. Its batch lettering has <code>scale</code>, <code>color_sort</code>, <code>trim</code>,
+<code>text_align</code>, <code>letter_spacing</code>, <code>word_spacing</code>, <code>line_height</code>, <code>text_position</code> and <code>vertical_text_position</code>,
+and its lettering window has <code>back_and_forth</code>. <code>widen_percent</code> is StitchCraft’s own (M14.9). <code>lettering::SETTINGS</code> declares each once with its help, and
+the options of <code>stitch lettering</code> take their help from it (<a href="../user/reference/cli.html">command line</a>).</p>
+<h3 id="along-a-path"><a class="header" href="#along-a-path">Along a path</a></h3>
+<p><code>lettering::set_along</code> sets a text along a path. Each glyph is moved to a seat on the path and turned, and
+the text lies in the path’s millimetres.</p>
+<ul>
+<li><strong>The path</strong> is the first subpath of the path given, followed within 0.01 mm. Ink/Stitch takes the first
+subpath too. A closed path is followed from its start, round to its start again.</li>
+<li><strong>A glyph is never bent.</strong> It is a small embroidery, with satin columns whose stitches were set
+square to them, and it is moved and turned as a whole. The point where its box’s left edge meets its
+baseline lies on the path. The glyph is turned about that point, the way the path runs from there to the
+point its box’s width further along. Its baseline is then the chord of the path under it. On a straight
+stretch the glyph stands on the path. On a bend its ends touch the path, and across a sharp corner it
+bridges the corner. The glyphs before and after a sharp corner can overlap on the corner’s inner side.
+Both programs leave them so: round the corner, or space the letters.</li>
+<li><strong>Along the path</strong> the glyphs of a line keep the distances the layout gives them, measured from the
+line’s leftmost box. <code>text_position</code> says where the line starts. With <code>left</code> it starts at the path’s
+start. With <code>center</code> it is centred on the path’s length, and with <code>right</code> it ends at the path’s end.</li>
+<li><strong>Stretched.</strong> With <code>stretch</code> the line starts at the path’s start, and what the path is longer than the
+line is shared out equally: one share between 2 glyphs of a word, and 2 between 2 words.</li>
+<li><strong>Across the path.</strong> <code>vertical_text_position</code> says which part of the text lies on the path. With <code>top</code>,
+the default, the text stands on the path by its lowest point, a descender’s end if it has one. With
+<code>baseline</code> the first line’s baseline lies on the path. With <code>bottom</code> the text hangs from the path by its
+highest point. The text’s lowest and highest points are measured on the points of its glyphs’ paths.</li>
+<li><strong>Lines.</strong> Each later line lies <code>leading</code> plus <code>line_height</code> further across the path, at the places along
+the path it would have as the first line. On a straight path that is a parallel line. On a bend, the
+letters of a line on the bend’s inner side lie closer together and can touch, and those on its outer side
+lie further apart. Lines sew back and forth along a path as they do off it.</li>
+<li><strong>A line longer than its path</strong> is set whole. On an open path it goes on straight past the end, the way
+the path ends, and before the start when the line is centred or ends at the path’s end. On a closed path
+it goes round again, over its own start. A stretched line has its letters pushed together to fit. Each
+time <code>SC-W1109</code> gives the line’s length and the path’s.</li>
+<li><strong>A path without length</strong> has nothing to follow, and the text is refused with <code>SC-E1108</code>.</li>
+<li><strong>From the command line</strong> <code>--path FILE</code> names an SVG file. The path is the one labelled <code>batch lettering</code>,
+the label Ink/Stitch’s batch lettering looks for. In a file without that label it is the first path that
+paints, and the summary names the path taken. The text lies where the path lies on the file’s page.</li>
+</ul>
+<p><strong>How Ink/Stitch does each</strong>, from running its batch lettering at <code>d59c9ab</code> on paths drawn for it:</p>
+<ul>
+<li>It seats and turns a glyph the same way, by the chord under its box. A word on an arc, on a line and
+across a right angle has the same size in both programs to 0.1 mm, in each position
+(<a href="#measured-against-inkstitchs-lettering-along-a-path">measured</a>).</li>
+<li>A line longer than its path has every glyph past the end at the path’s end, unturned, one over the other.
+A centred line that would start before the path’s start is counted from the path’s end. StitchCraft sets
+the line on and warns (<code>DEV-FONT-004</code>).</li>
+<li>A text of 2 lines comes out with its first line only. The code moves each later line onto a curve parallel
+to the path, which no file it wrote showed. Along a path Ink/Stitch sorts no colours (<code>DEV-FONT-005</code>).</li>
+<li>A closed path is followed from its start, as an open one.</li>
+</ul>
+<p><strong>What M14.2 chose.</strong></p>
+<ul>
+<li><em>Advances and kerning by the whole label.</em> Ink/Stitch’s lettering looks a glyph’s advance and kerning up
+by its label, and takes a label longer than 11 characters from its 12th character on. It looks the advance
+of Allegria 55’s glyph <code>Inkscape_logo</code> up as <code>go</code>. StitchCraft looks it up by the whole label
+(<code>DEV-FONT-001</code>).</li>
+<li><em>The 3 fonts whose glyph files are centred.</em> The reader’s boxes of Califragilistic, Cooper Marif and
+InfiniPicto lie right of Ink/Stitch’s (<code>DEV-SVG-025</code>), and the layout adds a glyph’s left edge for every
+glyph but a word’s first. Their words are set wider than in Ink/Stitch by that offset between the first
+2 letters of each word. No lettering case covers them, and the step leaves them so.</li>
+<li><em>Arabic forms wait.</em> A glyph named with <code>.isol</code>, <code>.init</code>, <code>.medi</code> or <code>.fina</code> is a form of an Arabic
+letter, which Ink/Stitch chooses by the letter’s neighbours. StitchCraft chooses none yet. The letter
+is then a missing character and is named so, which keeps the gap loud.</li>
+<li><em>Where the code lies.</em> The layout is in <code>stitchcraft-svg</code> beside the reader, since it needs the reader’s
+fonts and the engine’s routing and nothing else. <code>Path::map</code> of the engine became public for it.</li>
+<li><em>Design settings.</em> The text’s design has the default design settings, as Ink/Stitch’s batch lettering
+sets a text in an empty document. A glyph file’s own settings aren’t the text’s.</li>
+</ul>
+<p><strong>Measured against Ink/Stitch’s lettering.</strong> On 16 November 2026 both programs set words in Ink/Stitch
+Small Font and Medium Font. Ink/Stitch at <code>d59c9ab</code> ran as a black box. Its batch lettering runs without
+a window and wrote each text as an SVG file and as a PES file. StitchCraft wrote its PES file with <code>stitch lettering</code>
+for the Brother PE800.</p>
+<ul>
+<li><em>Places.</em> The 11 glyphs of <code>Stitch Craft</code> lie at the same places in both fonts within 0.0001 mm, the last
+digit Ink/Stitch writes. Ink/Stitch’s places are the translations of its glyph groups. A tolerance of
+0.001 mm is a hundredth of a machine file’s unit.</li>
+<li><em>Stitches.</em> The table gives each file’s size, stitches, jumps and trims, read back from the PES file.
+The sizes agree to the file’s 0.1 mm, and the jumps and trims are the same. The stitch counts differ by
+1.5 percent at most. Each program leaves out needle points closer than the shortest stitch in its own
+way, which the glyph differential records for single glyphs.</li>
+</ul>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Font</th><th>Scale</th><th>Text</th><th>StitchCraft</th><th>Ink/Stitch</th></tr>
+</thead>
+<tbody>
+<tr><td>Small Font</td><td>70 %</td><td><code>Hello</code></td><td>14.2 × 3.8 mm, 297 stitches, 1 jump, 0 trims</td><td>14.2 × 3.8 mm, 293, 1, 0</td></tr>
+<tr><td>Small Font</td><td>100 %</td><td><code>Hello</code></td><td>20.2 × 5.4 mm, 401, 1, 0</td><td>20.2 × 5.4 mm, 407, 1, 0</td></tr>
+<tr><td>Small Font</td><td>300 %</td><td><code>Hello</code></td><td>59.8 × 15.6 mm, 1,113, 5, 4</td><td>59.8 × 15.6 mm, 1,116, 5, 4</td></tr>
+<tr><td>Small Font</td><td>100 %</td><td><code>Stitch Craft</code></td><td>51.4 × 6.2 mm, 875, 4, 3</td><td>51.4 × 6.2 mm, 874, 4, 3</td></tr>
+<tr><td>Medium Font</td><td>75 %</td><td><code>Hello</code></td><td>44.0 × 11.8 mm, 792, 5, 4</td><td>44.0 × 11.8 mm, 800, 5, 4</td></tr>
+<tr><td>Medium Font</td><td>150 %</td><td><code>Hello</code></td><td>87.6 × 23.4 mm, 1,473, 5, 4</td><td>87.6 × 23.4 mm, 1,459, 5, 4</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>Stitch Craft</code> in Small Font at 300 percent is 153.6 mm wide in both programs, wider than the PE800’s hoop,
+and <code>stitch lettering</code> refuses it with <code>SC-E0701</code>. The comparison was run by hand, and the 3 differences
+the step leaves are in the ledger (<code>DEV-FONT-001</code> to <code>DEV-FONT-003</code>).</p>
+<p><strong>What M14.3 chose.</strong></p>
+<ul>
+<li><em>Trims by the glyphs’ words.</em> Ink/Stitch finds a word’s end by counting the glyphs against the text’s
+characters, and a ligature, one glyph for 2 characters, shifts its trims. StitchCraft goes by the words the
+layout laid (<code>DEV-FONT-006</code>).</li>
+<li><em>Lines across the path.</em> A later line is pushed across the path glyph by glyph, where Ink/Stitch’s code
+means to follow a parallel curve. The parallel of a path with corners needs its joins and its loops cut,
+and Ink/Stitch’s own batch lettering never showed a second line to compare with.</li>
+<li><em>The warning for one direction.</em> <code>back_and_forth</code> is on by default, as in Ink/Stitch, and most fonts sew
+one way. A text of several lines in such a font is warned of each time. The thread across the text is
+what the owner of a machine without a cutter has to cut, and the warning is where she learns of it.</li>
+<li><em>A fill’s angle isn’t turned.</em> A glyph’s elements keep their settings on a path, as they do when scaled.
+A fill’s <code>angle</code> is among them, and its rows keep their direction on the fabric while the glyph turns.
+Ink/Stitch Small Font and Medium Font have no fills. A font with fills along a bend waits for a later step.</li>
+<li><em>No case in the nightly differential.</em> The differential runs one Ink/Stitch extension, the one that
+writes a stitch plan from a design, on files in the repository. Lettering needs another extension and a
+font, and fonts aren’t in this repository (ADR-0020). A case would need the font corpus fetched in that
+job and a second runner. The comparison stays by hand, with the commands in the hand-off notes.</li>
+</ul>
+<h4 id="measured-against-inkstitchs-lettering-along-a-path"><a class="header" href="#measured-against-inkstitchs-lettering-along-a-path">Measured against Ink/Stitch’s lettering along a path</a></h4>
+<p>On 16 November 2026 both programs set texts in Ink/Stitch Small Font at 300 percent along paths, as in the
+measurement above. The arc is half a circle of radius 50 mm, from its left end over the top. The line is
+100 mm long, and the corner is 30 mm across and then 40 mm down. Each cell gives the file’s size, stitches,
+jumps and trims.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Path</th><th>Text</th><th>Position</th><th>StitchCraft</th><th>Ink/Stitch</th></tr>
+</thead>
+<tbody>
+<tr><td>arc</td><td><code>Hello</code></td><td>left, top</td><td>46.4 × 56.2 mm, 1,121, 5, 4</td><td>46.4 × 56.2 mm, 1,114, 5, 4</td></tr>
+<tr><td>arc</td><td><code>Hello</code></td><td>centre, baseline</td><td>66.8 × 23.4 mm, 1,119, 5, 4</td><td>66.8 × 23.4 mm, 1,117, 5, 4</td></tr>
+<tr><td>arc</td><td><code>Hello</code></td><td>right, bottom</td><td>36.2 × 47.8 mm, 1,122, 5, 4</td><td>36.2 × 47.8 mm, 1,121, 5, 4</td></tr>
+<tr><td>arc</td><td><code>He llo</code></td><td>stretch, top</td><td>129.2 × 62.0 mm, 1,114, 5, 4</td><td>129.2 × 62.0 mm, 1,119, 5, 4</td></tr>
+<tr><td>line</td><td><code>Help</code></td><td>left, top</td><td>51.6 × 19.4 mm, 1,037, 4, 3</td><td>51.6 × 19.4 mm, 1,041, 4, 3</td></tr>
+<tr><td>line</td><td><code>Help</code></td><td>left, bottom</td><td>51.6 × 19.4 mm, 1,037, 4, 3</td><td>51.6 × 19.4 mm, 1,042, 4, 3</td></tr>
+<tr><td>corner</td><td><code>Hello</code></td><td>left, top</td><td>46.0 × 47.0 mm, 1,134, 5, 4</td><td>46.0 × 47.0 mm, 1,115, 5, 4</td></tr>
+</tbody>
+</table>
+</div>
+<p>The other settings were measured off a path. Magnolia bicolor is a font of 2 colours that sorts.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Font</th><th>Scale</th><th>Text</th><th>Setting</th><th>StitchCraft</th><th>Ink/Stitch</th></tr>
+</thead>
+<tbody>
+<tr><td>Small Font</td><td>300 %</td><td><code>Hello</code>, <code>World</code></td><td>back and forth</td><td>70.4 × 39.4 mm, 2,415, 10, 9</td><td>70.4 × 39.4 mm, 2,426, 10, 9</td></tr>
+<tr><td>Small Font</td><td>100 %</td><td><code>Hi yo</code>, <code>We</code></td><td>no trim</td><td>21.4 × 14.0 mm, 625, 4, 3</td><td>21.4 × 14.0 mm, 628, 4, 3</td></tr>
+<tr><td>Small Font</td><td>100 %</td><td><code>Hi yo</code>, <code>We</code></td><td>trim after lines</td><td>625, 4, 3</td><td>628, 4, 3</td></tr>
+<tr><td>Small Font</td><td>100 %</td><td><code>Hi yo</code>, <code>We</code></td><td>trim after words</td><td>625, 4, 3</td><td>628, 4, 3</td></tr>
+<tr><td>Small Font</td><td>100 %</td><td><code>Hi yo</code>, <code>We</code></td><td>trim after letters</td><td>641, 6, 5</td><td>643, 6, 5</td></tr>
+<tr><td>Magnolia bicolor</td><td>100 %</td><td><code>Ab cd</code></td><td>unsorted</td><td>7 colour changes</td><td>7</td></tr>
+<tr><td>Magnolia bicolor</td><td>100 %</td><td><code>Ab cd</code></td><td>sorted, all</td><td>1 colour change</td><td>1</td></tr>
+<tr><td>Magnolia bicolor</td><td>100 %</td><td><code>Ab cd</code></td><td>sorted by word</td><td>3 colour changes</td><td>3</td></tr>
+</tbody>
+</table>
+</div>
+<p>A trim after each line or word changes nothing in that text: its words and lines lie more than 3 mm apart,
+and the planner jumps between them with or without a trim. A trim after each letter cuts the 2 joins
+that auto-satin made inside <code>Hi</code> and <code>yo</code>. Magnolia bicolor’s text is 106.8 × 33.6 mm here and
+107.0 × 34.2 mm in Ink/Stitch, with one jump fewer, sorted or not. The glyphs differ so before any sort,
+as the glyph differential records, and the sort doesn’t change it.</p>
+<p><strong>Jumps between letters.</strong> With auto-satin, the letters of a word are joined by the shortest way from one
+to the next. As in Ink/Stitch, a way shorter than the design’s <code>collapse_len</code>, 3 mm, sews as a stitch on
+the fabric between the letters. Small Font is drawn for that, and at its small sizes a word
+sews without a jump. At large sizes the gaps grow past 3 mm and become jumps, whose threads the PE800
+leaves to cut by hand.</p>
+<h2 id="lettering-in-the-place-of-a-pictures-text"><a class="header" href="#lettering-in-the-place-of-a-pictures-text">Lettering in the place of a picture’s text</a></h2>
+<p>From M14.5, <code>stitchcraft_svg::lettering::pictures</code> sets a text where a picture’s traced letters were, at
+their height and along their line, with <a href="#lettering"><code>set</code></a> and <a href="#along-a-path"><code>set_along</code></a> as they are.
+<a href="image-to-embroidery.html#text-in-pictures">Text in pictures</a> describes it. It asks a host for a font by
+name, as a text object does, and the empty name is the default font.</p>
+<h2 id="text-objects-in-automatic-digitizing"><a class="header" href="#text-objects-in-automatic-digitizing">Text objects in automatic digitizing</a></h2>
+<p>M14.7 sews a text object that automatic digitizing meets (<code>REQ-AUTO-069</code>, <code>REQ-AUTO-070</code>). A text object
+is what a drawing keeps of a text someone typed. It has the text’s characters and the name of its
+typeface, with its size and its place. An SVG file’s <code>&lt;text&gt;</code> element is one, and so is a VectorCraft document’s point type. Until
+M14.7 automatic digitizing left both out with a warning. Text that was made into paths before it reached
+StitchCraft is shapes, and <a href="image-to-embroidery.html#text-in-pictures">text in pictures</a> handles those.</p>
+<p><strong>An embroidery font is used in the typeface’s place.</strong> The outlines of a text object’s letters aren’t in
+the drawing. They are in the typeface’s font file, and StitchCraft doesn’t read font files before
+<a href="../plan/roadmap.html#m15--fonts-ported-automatically">M15.2</a>, nor does VectorCraft give
+a plug-in a text’s glyphs. So the text is set by <a href="#lettering">lettering</a>, in the host’s default embroidery
+font, which is Ink/Stitch Small Font where the fonts are Ink/Stitch’s. The word sews cleanly, where the
+drawing has it and about as tall. Its letters have the embroidery font’s shapes and widths, not the
+typeface’s: a display face and a script both come out as Small Font’s light upright letters. A note
+says so for each text object (<code>SC-I1116</code>). Roadmap step M15.13 sews a text in its own typeface.</p>
+<p><strong>A bold text sews in the bold font</strong> (M14.8, <code>REQ-AUTO-082</code>). A text object has no traced letters to
+measure. Its weight comes from what the drawing says of it. It is bold when its first line that shows
+has an SVG <code>font-weight</code> of <code>bold</code>, <code>bolder</code> or 700 and above. In a VectorCraft document it is bold when the
+run’s style name says Bold, Black or Heavy, and not Semi Bold or Demi Bold, or when a variable typeface’s
+<code>wght</code> axis is 700 or more. A bold text sews in the boldest font the host offers, Barstitch Bold, when that
+font sews every line’s capitals at 0.7 of its font size: from 17.9 to 46.5 mm of font size, 51 to 131
+points. <code>SC-I1118</code> says so. A bold text smaller or larger sews in Small Font, and <code>SC-I1118</code> gives the font
+size from which Barstitch Bold sews. A text that isn’t bold sews in Small Font, as before. The typeface’s
+name doesn’t choose one. Arial or Georgia isn’t the name of an embroidery font, and matching names would choose by accident.
+<code>objects::font_of</code> is the one place a text object’s font is chosen, and <code>letter_among</code> asks the host for it
+with the text’s characters, so that only their glyphs are read.</p>
+<p><code>stitchcraft_svg::lettering::objects</code> does it. Each reader gives what it read as a <code>TextObject</code>, which is
+lines, and <code>letter</code> sets each line with <a href="#lettering"><code>set</code></a>. There is no second layout.</p>
+<p><strong>How tall.</strong> A font size is the height of the box a typeface is drawn in, and no letter is that tall. An
+embroidery font’s <code>size</code> is the height of its letters. How tall a typeface draws its capitals is written
+in its font file, which isn’t read. In the 7 fonts measured below it is between 0.64 and 0.73 of the font size. So a line is set so
+that the embroidery font’s letters are 0.7 of its font size tall (<code>objects::CAPITALS</code>), to a tenth of a
+percent. For those fonts the lettering is within 0.06 of the font size of the capitals it replaces,
+which is 1.2 mm for a text 20 mm in size, unless its line is fitted to a shorter place. The scale stays within the heights the font sews at, and
+outside them <code>SC-W1106</code> gives the height the text is set at. Small Font sews from 3.6 to 15.2 mm, so text
+from 5.1 to 21.7 mm in font size, 14.6 to 61.5 points, sews at its height.</p>
+<p><strong>Where.</strong> These hold exactly:</p>
+<ul>
+<li>A line’s baseline is the text’s, and the lines are turned as the text’s baseline is.</li>
+<li>A line starts, is centred or ends at its anchor, as the drawing aligns it.</li>
+<li>Each line of a text of several lines is placed on its own, where the drawing has it.</li>
+</ul>
+<p>The note gives the height each text sewed at and why: 0.7 of its font size, or made smaller to fit a
+length, which it names as stated or estimated. It also gives the longest line’s length as sewn.</p>
+<p><strong>How long.</strong> The embroidery font’s letters are as wide as it draws them, and Small Font is a wide font.
+On a badge drawn for the step, a title of 8 characters at a font size of 18 mm was 98.7 mm long
+at 12.6 mm tall, which is 0.69 of the font size for each character. The badge left the line 73 mm, and
+the lettering ran over the badge’s border. A design sewn so is wrong, and worse than one without its text.
+So a line is fitted to the length its text most likely had in the drawing (<code>objects::fit</code>):</p>
+<ol>
+<li><strong>That length</strong> is the one the drawing states, where it states one, as an SVG file’s <code>textLength</code>
+does. A VectorCraft document states none. VectorCraft measures a text object’s box and doesn’t save it:
+<code>cached_bounds</code> is marked <code>#[serde(skip)]</code> in <code>crates/doc/src/text.rs</code>, read at v0.24.1. Without
+a stated length it is estimated at half the font size for each character of the line, spaces included
+(<code>objects::WIDTH</code>).</li>
+<li><strong>A line that is no longer than that</strong> is left as it is. It isn’t stretched.</li>
+<li><strong>A longer line has its gaps narrowed first,</strong> each by up to a tenth of the letters’ height, the limit
+by which <a href="image-to-embroidery.html#text-in-pictures">lettering closes up to traced letters</a>.</li>
+<li><strong>Then it is set smaller,</strong> with its gaps as narrow for its height, at the scale that makes it as long
+as its place, cut to a tenth of a percent.</li>
+<li><strong>It is never set smaller than the font sews.</strong> A line that is still longer at the font’s smallest
+height is set at that height, and <code>SC-W1117</code> gives its length and its place’s.</li>
+</ol>
+<p>The anchor and the baseline are the same through all of it, and a centred line is centred on its anchor
+still. On the badge, the title now sews 10.0 mm tall and 72.0 mm long, inside the badge.</p>
+<p>The estimate is for the proportional typefaces text is commonly set in. It was measured on 7 fonts
+installed on the build machine, with their own advances and kerning, as a line’s length over its font size
+and its count of characters. None of the fonts is in the repository.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Font</th><th>Capitals’ height</th><th>4 lines of small letters</th><th>A line of capitals</th></tr>
+</thead>
+<tbody>
+<tr><td>FreeSans, with Helvetica’s widths</td><td>0.73</td><td>0.44 to 0.56</td><td>0.61</td></tr>
+<tr><td>FreeSerif, with Times’s widths</td><td>0.66</td><td>0.41 to 0.52</td><td>0.61</td></tr>
+<tr><td>Carlito, with Calibri’s widths</td><td>0.64</td><td>0.42 to 0.49</td><td>0.50</td></tr>
+<tr><td>Caladea, with Cambria’s widths</td><td>0.67</td><td>0.42 to 0.50</td><td>0.54</td></tr>
+<tr><td>DejaVu Sans</td><td>0.73</td><td>0.52 to 0.62</td><td>0.61</td></tr>
+<tr><td>DejaVu Serif</td><td>0.73</td><td>0.53 to 0.63</td><td>0.68</td></tr>
+<tr><td>Inter</td><td>0.73</td><td>0.49 to 0.59</td><td>0.62</td></tr>
+</tbody>
+</table>
+</div>
+<p>The lines were 4 short lines of 2 or 3 words and a pangram, and
+the capitals “HAPPY BIRTHDAY”. Half the font size lies in the middle of the small letters’ range. It is
+short for capitals and for wide faces, where a line comes out up to a quarter shorter than it was drawn,
+and smaller with it. A line too short is inside its place, and a line too long is over its neighbours, so
+the estimate errs short. The same fonts’ capitals are 0.64 to 0.73 of the font size tall.</p>
+<p><strong>The thread</strong> is the text’s fill colour when the font sews in one thread, as it is for a text with the
+Lettering effect. A font of several threads keeps its own.</p>
+<p><strong>What sews.</strong> The letters keep the settings the font’s author gave them. They aren’t automatic elements,
+so the rules for shapes don’t touch them, and they sew at the text’s place in the stitching order, cut to
+the clips around it.</p>
+<p><strong>What each reader reads.</strong> <a href="svg-input.html#text-objects">The SVG adapter</a> reads a <code>&lt;text&gt;</code> element, and
+<a href="vectorcraft-integration.html#text-without-the-lettering-effect">the VectorCraft adapter</a> reads point type.
+Each page says what its reader leaves out.</p>
+<p><strong>All or nothing.</strong> A text object sews every line or none. It sews nothing when the host has no default
+font, when the font doesn’t read, when a line can’t be set, or when its letters would lie beyond the
+design’s reach. <code>SC-W1111</code> then says why, and names the fonts the host has. A text object without a
+visible character sews nothing and nothing is said, since a viewer doesn’t show it either.</p>
+<p><strong>No setting turns it off.</strong> A design sews without its text when the text is hidden or deleted in the
+drawing, as any shape is left out. A setting would be one more row in the Auto effect’s dialog for
+something the drawing already says.</p>
+<p><strong>A text with the Lettering effect</strong> (M14.4) keeps the font and the settings a person chose for it.
+Automatic digitizing doesn’t set it again, and <code>SC-I1116</code> isn’t said of it.</p>
+<h2 id="fonts-built-into-the-plug-ins"><a class="header" href="#fonts-built-into-the-plug-ins">Fonts built into the plug-ins</a></h2>
+<p>A plug-in can’t read files. The fonts that a VectorCraft document’s texts sew in are built into the
+exporters (M14.4, <code>REQ-FONT-021</code>, <a href="vectorcraft-integration.html#lettering">lettering in VectorCraft</a>).</p>
+<ul>
+<li><strong>The build option.</strong> The plug-in’s build script reads <code>STITCHCRAFT_FONTS_DIR</code>, which names a folder
+of fonts: a checkout of the font repository’s <code>fonts</code> folder, or the corpus’s <code>src</code>. For each font that
+<code>apps/stitchcraft-vc-plugin/built-in-fonts.txt</code> lists, it includes the font’s <code>font.json</code>, its glyph
+files and its licence file from where they lie. A preview picture and a README are left out. Without the option no
+font is built in, and everything builds, tests and runs. A case that needs a font built in says it is
+skipped. A font that the list names and the folder lacks stops the build, since a plug-in that silently
+lacked it would leave texts out.</li>
+<li><strong>Only the exporters contain them.</strong> The modules are built from the same code, and the linker leaves out
+of each what its run doesn’t use. Only an exporter’s run uses the fonts.</li>
+<li><strong>Where <code>stitch</code> finds them.</strong> In the folder <code>STITCHCRAFT_FONTS</code> names, where each folder that has a
+<code>font.json</code> is a font. A font is found by the same names there, so <code>stitch export</code> writes the file the
+exporter writes. The option <code>--fonts</code> and the user’s data folder, which
+<a href="adr/0020-fonts-from-a-repository-of-their-own.html">ADR-0020</a> plans, aren’t built yet.</li>
+<li><strong>Where CI finds them.</strong> <code>fonts.toml</code> doesn’t pin the font repository yet. Until it does, the jobs that
+build the modules for the compatibility gate and for the browser demo take the fonts from the pinned
+corpus of Ink/Stitch’s fonts, whose files the font repository copies whole (<code>.github/actions/fonts</code>, <code>build-in</code>).</li>
+</ul>
+<p><strong>Which fonts.</strong> The browser demo publishes the modules, and a published exporter shares the fonts in it.
+So a font is listed only when its licence lets a copy be shared with the licence’s text beside it and
+asks for nothing more: the SIL Open Font License, and CC0 or the public domain. 2 fonts are listed
+(<code>REQ-FONT-022</code>):</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Font</th><th>Folder</th><th>Licence</th><th>Its files</th><th>What it adds to each exporter, as stored</th><th>Compressed with gzip</th></tr>
+</thead>
+<tbody>
+<tr><td>Ink/Stitch Small Font, copyright 2017 Lex Neva</td><td><code>small_font</code></td><td>SIL Open Font License 1.1</td><td><code>font.json</code>, <code>ltr.svg</code>, <code>rtl.svg</code>, <code>LICENSE</code></td><td>829,061 bytes</td><td>78,486 bytes</td></tr>
+<tr><td>Barstitch Bold, copyright 2017 The Barlow Project Authors</td><td><code>barstitch_bold</code></td><td>SIL Open Font License 1.1</td><td><code>font.json</code>, <code>ltr.svg</code>, <code>LICENSE</code></td><td>1,432,433 bytes</td><td>175,882 bytes</td></tr>
+</tbody>
+</table>
+</div>
+<p>Small Font is the default font: 5.08 mm tall at 100 percent, sewn from 70 to 300 percent, with glyphs for both
+directions. Its lines sew back and forth. Barstitch Bold is the bold font (M14.8): block letters with
+strokes half again as wide for their height, 23 mm at 100 percent and sewn from 50 to 130 percent, with
+157 glyphs for one direction. A third of its bytes are the kerning pairs of its <code>font.json</code>. A text
+marker without a font name is set in the one of the 2 that is nearest in weight to the letters it replaces
+(<a href="image-to-embroidery.html#the-font-chosen-by-the-letters-weight">the font chosen by the letters’ weight</a>).
+The glyph files are text, which a web server sends
+compressed. With the font, and with the SVG reader and lettering that read it, the demo’s PES exporter
+grew from 3.5 to 5.4 MB as stored, and from 1.2 to 1.7 MB as sent. Barstitch Bold made it 7,027,008 bytes
+as stored, from 5,581,963, and 1,901,059 bytes as sent, from 1,713,566 (CI’s web build of 2026-11-16).</p>
+<p><strong>What was checked,</strong> on 16 November 2026, for Small Font at <code>c7e3a05</code>:</p>
+<ul>
+<li>Its <code>LICENSE</code> names the SIL Open Font License 1.1 first, with Lex Neva’s copyright, and has the
+licence’s whole text. It doesn’t name a Reserved Font Name.</li>
+<li>The files are built in as they are, so the copy isn’t a modified version.</li>
+<li>The OFL lets the font be bundled and redistributed with any software, when each copy has the copyright
+notice and the licence. The licence file is built into the module beside the glyph files. The demo’s
+build also copies it to <code>fonts/small_font/LICENSE</code> on the site and lists it in <code>plugins.json</code>, and it
+fails for a font without a licence file.</li>
+<li>The test <code>req_font_021_…</code> reads every font built in, and fails for one whose licence file names
+another licence first.</li>
+</ul>
+<p>The same was checked for Barstitch Bold at <code>c7e3a05</code>, on the same day:</p>
+<ul>
+<li>Its <code>LICENSE</code> says the font was adapted for Ink/Stitch from Barlow and is under the SIL Open Font
+License 1.1. It has Barlow’s copyright line, “Copyright 2017 The Barlow Project Authors
+(https://github.com/jpt/barlow)”, and the licence’s whole text. It doesn’t declare a Reserved Font Name. The
+words stand only in the licence’s own text.</li>
+<li>Its 3 files are built in as the corpus has them, so the copy isn’t a modified version.</li>
+</ul>
+<p><strong>Only what a text needs is read</strong> (M14.8, <code>REQ-FONT-023</code>). An exporter reads its fonts on every run,
+within the instructions VectorCraft allows an export. Before this step, a font was read only when a text named it.
+Reading it cut every glyph out of its glyph file and read each as a design, which was most of the cost,
+and a text uses a few glyphs of a hundred or more. So:</p>
+<ul>
+<li><code>font::read_for</code> reads a font for a text. It keeps the glyphs whose names are made of the text’s
+characters, as written and in Unicode’s NFC, in upper and in lower case, since a font’s <code>letter_case</code> may
+turn them. It keeps the font’s <code>default_glyph</code> too. A ligature is kept when the text has all its
+characters. A glyph named with a form after a dot goes by what stands before the dot. Every other glyph
+is passed over before it is measured, cut out or read, and nothing is said of it.</li>
+<li>A host keeps each font as far as the texts so far need it (<code>lettering::Kept</code>). A text whose characters
+the kept font was read for is served by it. Another has the font read again for the characters of both.
+<code>Fonts::font_for</code> asks so, and a text object’s effect and a text marker both ask with their text.</li>
+<li>A font built in is found by its folder’s name without any <code>font.json</code> being read. The <code>name</code> in a
+<code>font.json</code> is looked for only when no folder is so named. Barstitch Bold’s <code>font.json</code> is 517 KB.</li>
+<li><code>stitch</code> reads its fonts the same way, so it says of a document what an exporter says.</li>
+</ul>
+<p>The glyph file itself is still read whole as XML, once for each direction, to find the glyphs in it. A
+font that no text names isn’t read at all. <a href="#what-reading-a-font-costs">The counts</a> are below.</p>
+<p><strong>CC BY and CC BY-SA fonts</strong> are left to the owner. Either licence requires a credit where a person who
+gets the module can see it. The credit names the author and the licence, with the licence’s address, and
+says what was changed. The site would publish it beside the licence file. An export would have to say it
+too, as <code>stitch lettering</code> is to print it (ADR-0020). CC BY-SA also requires that an adaptation be shared
+under the same licence. A module with the font’s files unchanged in it is a collection by the licence’s own
+terms, and a collection is no adaptation, and whether a sewn design is one is for the owner to decide before such a font
+joins. Geneva Rounded, for one, is under CC BY-SA 2.5 and would add 716 KB.</p>
+<h3 id="what-reading-a-font-costs"><a class="header" href="#what-reading-a-font-costs">What reading a font costs</a></h3>
+<p>Measured on 2026-11-16 with callgrind, on the native debug build of <code>stitch</code>, in instructions:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>What is read</th><th>Small Font</th><th>Barstitch Bold</th></tr>
+</thead>
+<tbody>
+<tr><td>The whole font, by <code>stitch lettering MATCH</code></td><td>345 M</td><td>1,468 M</td></tr>
+<tr><td>The font for the text MATCH, by <code>stitch plan</code> of a marked patch</td><td>not measured</td><td>263 M</td></tr>
+</tbody>
+</table>
+</div>
+<p>So reading Barstitch Bold for one word costs 18 percent of reading it whole. Of the whole read, 64 M is
+its <code>font.json</code>, whose kerning table is long: it is read once, when the font is. In the compatibility gate’s <code>lettering</code> scenario, with both fonts built
+in, an export of one word ran 2,013 M of the 10,002 M instructions VectorCraft allows, as it did with Small Font
+alone (2.01 G, M14.4), and one of 4 lines of 2 words ran 2,449 M. The second font costs an export nothing until a
+text is set in it.</p>
+<h2 id="fonts-ported-by-other-programs"><a class="header" href="#fonts-ported-by-other-programs">Fonts ported by other programs</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Program</th><th>With a TrueType or OpenType font</th><th>Reported results</th></tr>
+</thead>
+<tbody>
+<tr><td>Wilcom EmbroideryStudio</td><td>Converts an installed font as text is typed, or a whole font into an embroidery font. It cuts letters into column objects and sets their stitch angles. It finds where strokes overlap and the order they sew in. Turning strokes follow each stroke, and a complex fill sews at one angle. Options turn stitches parallel to slanted ends (K, X, Y), make serifs broader than 0.8 mm strokes of their own, cap sharp angles (A, V) and overlap strokes at T and O junctions. Converted letters can be edited and the font saved</td><td>Comparable to fonts digitized by hand, though “the quality may not be quite as good”. Narrower serif fonts convert better than blocked ones</td></tr>
+<tr><td>BERNINA Embroidery Software</td><td>Stitches text in the TrueType and OpenType fonts installed on the computer</td><td>“Not all TrueType fonts are suitable”</td></tr>
+<tr><td>Hatch Embroidery</td><td>Generates stitches from an installed font’s outlines</td><td>Test-stitch each, since not all suit embroidery. Its digitized fonts state ranges, such as 6 to 30 mm for a serif, 12 to 50 mm for a script and 4 to 6 mm for a block font in running stitch</td></tr>
+<tr><td>Embird Font Engine</td><td>Fills letters with satin columns (“auto column”) or fills, from about 5 mm to 30 cm tall. It replaces each satin stitch longer than 12 mm</td><td>Its maker claims lettering “almost as if it was digitized by a human digitizer”</td></tr>
+<tr><td>SewWhat-Pro, Stitch Era</td><td>Convert text in installed fonts</td><td>A reviewer found SewWhat-Pro’s results “abysmal”. A test of Stitch Era found its TrueType lettering best at 8 to 10 mm, and smaller letters poor</td></tr>
+<tr><td>Brother PE-Design 11, Embrilliance</td><td>Tools to digitize letters by hand. Embrilliance’s BX fonts are digitized letters</td><td>None</td></tr>
+</tbody>
+</table>
+</div>
+<p>Trade articles on small lettering ask for capitals at least 6.4 mm tall, mixed case at least 5 mm and all
+capitals at least 3.8 mm (<a href="https://www.piworld.com/embroidery-digitizing-tips-on-creating-designs-with-letters/all">PI World</a>).
+Its other minimums are 0.8 mm for a column’s width, 0.9 mm across a counter and 0.5 mm between letters.
+Another article puts small letters on a centre walk with pull compensation, and satin columns at least as
+wide as the needle. It advises against serifs and strokes of varying width under about half an inch
+(<a href="https://members.asicentral.com/news/how-to/may-2018/keep-your-small-letters-crisp/">ASI</a>).</p>
+<p><strong>Published methods.</strong> VSM’s patent US 6,934,599 (priority 2002, expired 2023) describes porting a font
+automatically. A glyph’s contours are grouped and cut at sharp corners and at nodes of a thinned skeleton
+until each part is simple. Each part sews as a straight or curved satin column or as a running stitch, its
+stitches square to the skeleton. The parts are ordered by how they connect. Neighbouring columns are merged,
+with jumps between the rest. M13’s <a href="algorithms/centre-lines.html">centre lines</a> and columns are a pipeline of
+that kind. Brother’s US 5,559,711 (expired 2014) chooses satin or another stitch by a region’s roundness, its
+area over its perimeter squared. StrokeStyles (Berio and others, 2022) splits glyphs of many scripts into
+overlapping strokes, from the medial axis, the outline’s convex and concave parts and 7 kinds of junction,
+without training data. Balashova and others (2019) fit a model of strokes to existing fonts. A thesis of 1998
+at National Taiwan Normal University digitized embroidery from medial axes, a neural network classifying the
+junctions.</p>
+<h2 id="font-files"><a class="header" href="#font-files">Font files</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Crate</th><th>Licence</th><th>What it gives</th></tr>
+</thead>
+<tbody>
+<tr><td>skrifa 0.49</td><td>MIT OR Apache-2.0</td><td>Glyph outlines of TrueType and CFF fonts, unhinted at any size or hinted, at any point of a variable font’s axes. VectorCraft’s text uses 0.47</td></tr>
+<tr><td>read-fonts 0.46</td><td>MIT OR Apache-2.0</td><td>The tables that skrifa and harfrust read</td></tr>
+<tr><td>harfrust 0.15</td><td>MIT</td><td>HarfBuzz’s shaping in Rust, with advances, kerning from <code>kern</code> and GPOS, ligatures, marks and Arabic forms. VectorCraft’s text uses 0.13</td></tr>
+<tr><td>write-fonts 0.55</td><td>MIT OR Apache-2.0</td><td>Fonts built in code for tests, as VectorCraft’s tests build theirs</td></tr>
+<tr><td>ttf-parser 0.25 and rustybuzz 0.20</td><td>MIT OR Apache-2.0, and MIT</td><td>The older pair, last released in November 2024</td></tr>
+<tr><td>fontdb 0.24 or fontique 0.12</td><td>MIT, and Apache-2.0 OR MIT</td><td>Installed fonts found by family name, for the command line</td></tr>
+</tbody>
+</table>
+</div>
+<p>Each licence is on the allow-list of <code>deny.toml</code>. At the versions VectorCraft uses, skrifa, read-fonts and
+harfrust forbid <code>unsafe</code> code and build without the standard library, and VectorCraft builds them for its
+web app. A font file is never committed to StitchCraft. Tests build their fonts in code with write-fonts and
+read a corpus downloaded at pinned commits.</p>
+<ul>
+<li><strong>Hinting</strong> moves an outline’s points onto a screen’s pixels at small sizes, which means nothing to a
+needle. A port reads outlines unhinted, in font units, and scales them with StitchCraft’s own arithmetic
+(<a href="determinism.html">determinism</a>).</li>
+<li><strong>Composite glyphs</strong>, such as most accented letters, are placed from their components. A port can
+digitize a base letter once for every glyph made from it.</li>
+<li><strong>Overlapping contours</strong> are common in composites and in variable fonts, where each stroke is often a
+contour of its own. A viewer fills a glyph by the nonzero rule, and so does the region code of M5.1. Text
+typed in an installed font fails in Ink/Stitch as a fill whose border crosses itself
+(<a href="../plan/inkstitch-usage.html">how people use Ink/Stitch</a>).</li>
+<li><strong>Variable fonts</strong> are set at a named instance or at axis values. A weight axis can thicken a font’s
+strokes at small heights, and an optical size axis gives the font’s design for small text.</li>
+</ul>
+<p><strong>Stroke widths.</strong> In Source Sans 3 Regular, a stem is 83 units at a cap height of 660 (12.6 %). At capitals
+8.0 mm tall its stems are 1 mm wide, the narrowest satin column of automatic digitizing. At 4.0 mm they are
+0.5 mm wide, where a run is tripled. Inter Regular’s stems are 1 mm wide at 7.8 mm, and Source Sans 3 Bold’s
+at 4.5 mm. Source Serif 4 Regular’s stems are 1 mm wide at 7.1 mm and its hairlines at 14.9 mm. Between
+those heights its letters mix satin columns and runs. A stem is 7 mm wide, where automatic digitizing fills,
+at capitals 56 mm tall in Source Sans 3 Regular and 31 mm tall in its Bold.</p>
+<p><strong>Dots.</strong> At capitals 6 mm tall, Source Sans 3 Regular’s i-dot covers 0.79 mm², its full stop 0.99 mm² and
+each dot of an ä 0.65 mm². Inter Regular’s i-dot covers 0.76 mm². M13 takes a part under 1 mm² for a speck,
+and merges it into a neighbour or leaves it out.</p>
+<h2 id="licences-of-ported-fonts"><a class="header" href="#licences-of-ported-fonts">Licences of ported fonts</a></h2>
+<p>A font ported into an embroidery font is a modified version of the font. A design sewn in it is a document
+made with the font.</p>
+<ul>
+<li><strong>OFL.</strong> A “Modified Version” includes one made “by changing formats or by porting the Font Software to a
+new environment”, and the licence’s site counts a conversion to SVG as one. It is distributed under the
+OFL only, never sold by itself, and named without the font’s Reserved Font Names. “The requirement for
+fonts to remain under this license does not apply to any document created using the Font Software.”</li>
+<li><strong>UFL 1.0</strong>, the Ubuntu font licence, counts a change of format as a modification too. A version changed
+substantially takes a new name, and another adds “derivative” to the name. The licence “does not affect
+any document created using the Font Software”.</li>
+<li><strong>Apache-2.0</strong> allows modified versions with the licence, its NOTICE file and a note of the changes.</li>
+<li><strong>Creative Commons.</strong> BY and BY-SA allow adaptations with credit, under the same licence for SA.
+NoDerivatives doesn’t allow sharing adaptations, and NonCommercial doesn’t allow commercial use.</li>
+<li><strong>Proprietary fonts</strong> follow their licences. Rare Bird’s desktop licence doesn’t allow derivative works,
+and requires a supplemental licence for “embroidering or sewing machines”. KG Fonts sells an embroidery
+licence for embroidery font files.</li>
+</ul>
+<p>A font’s name table gives its copyright notice, trademark, licence description and licence URL (name IDs 0,
+7, 13 and 14), which a port can read and report. Google Fonts’ fonts are under the OFL, the UFL or
+Apache-2.0, in a folder for each in its repository.</p>
+<p><strong>Where fonts live.</strong> VectorCraft’s shared fonts are in
+<a href="https://github.com/storytold/craft-fonts">storytold/craft-fonts</a>, an optional build input
+(<code>CRAFT_FONTS_DIR</code>), with each font’s licence text beside it (VectorCraft’s <code>docs/development.md</code> at
+<code>1505384</code>). Embroidery fonts in Ink/Stitch’s format come from a repository of their own,
+<code>KaboomFox/stitchcraft-fonts</code>, as <a href="adr/0020-fonts-from-a-repository-of-their-own.html">ADR-0020</a> decides. A
+ported font is made on the user’s computer from a font the user has.</p>
+<h2 id="glyph-rules"><a class="header" href="#glyph-rules">Glyph rules</a></h2>
+<p>M13 digitizes a traced shape by its width at the size it sews (<a href="image-to-embroidery.html">image to embroidery</a>).
+A glyph is such a shape, and M13’s rules do most of the work, from centre lines and junctions to rings and
+the fills of broad parts. The table lists what glyphs need beyond them, with the step of M15 that adds it.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Need</th><th>M13 today</th><th>Step</th></tr>
+</thead>
+<tbody>
+<tr><td>Every contour sews</td><td>A part under 1 mm² is a speck, and the lowest shape can be the background</td><td>M15.3</td></tr>
+<tr><td>Dots and marks</td><td>A dot’s centre line has no length, and the dot is filled, or merged as a speck</td><td>M15.5</td></tr>
+<tr><td>Ends on the baseline, the x-height and the capitals’ height</td><td>A column’s end is flat when the edge lies within 20° of square to it, and pointed otherwise</td><td>M15.6</td></tr>
+<tr><td>Serifs</td><td>A serif is an arm with a column of its own, or a bump</td><td>M15.6</td></tr>
+<tr><td>Thin strokes</td><td>A part narrower than 1 mm runs along its centre line. Small fonts digitized by hand sew satin columns half as wide</td><td>M15.7</td></tr>
+<tr><td>Counters and the settings of small letters</td><td>Columns sew 0.4 mm past a rail with nothing sewn after them beside it, at every height, and a counter that closes isn’t named. Small fonts digitized by hand compensate by 0.05 to 0.1 mm</td><td>M15.7</td></tr>
+<tr><td>Jumps inside a glyph</td><td>Columns sew longest first, and a jump joins each 2. TS-13B’s digitized letters leave 37 jump threads</td><td>M15.8</td></tr>
+<tr><td>Joined letters and overlapping strokes</td><td>Contours are united before their centre lines are found</td><td>M15.9</td></tr>
+<tr><td>Heights</td><td>A shape is digitized at the size it sews</td><td>M15.10</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Correcting a glyph.</strong> A ported font can be written in Ink/Stitch’s format (M15.11), with its satin columns
+drawn with their rails and rungs as Stroke to Satin draws them. A user then corrects a glyph in its layer, in
+VectorCraft or in Inkscape with Ink/Stitch, and M14’s lettering sews the corrected font. VectorCraft keeps
+<code>inkstitch:*</code> attributes from SVG import to SVG export (<a href="rfc-vectorcraft-abi-v2.html">RFC</a>, P7). The writer
+puts the baselines at 0, where a reader puts a baseline when the file lacks a <code>baseline</code> guide. Wilcom’s
+converted letters are corrected the same way, as letters of the saved font.</p>
+<p><strong>Testing.</strong> 36 of Ink/Stitch’s fonts were digitized by hand from fonts on Google Fonts, all 36 under the OFL.
+The corpus pairs each original with the Ink/Stitch font made from it. A port at that font’s heights is
+measured against it, by the share of each glyph’s area sewn as satin columns, fills and runs, and by jumps,
+coverage and stitches. TS-15 sews 3 ported fonts beside the fonts digitized by hand from them, at MC-10
+(<a href="../plan/machine-testing.html">machine testing</a>).</p>
+<h2 id="decisions-for-the-owner"><a class="header" href="#decisions-for-the-owner">Decisions for the owner</a></h2>
+<ul>
+<li><strong>The font repository and its licences, and the reader</strong> (M14.1): decided. The owner accepted
+<a href="adr/0020-fonts-from-a-repository-of-their-own.html">ADR-0020</a> on 2026-11-08, as it was written. The owner creates
+<code>KaboomFox/stitchcraft-fonts</code> before a step pins it, and reads the licence files of the 10 fonts the ADR
+names before they join.</li>
+<li><strong>Spacing in millimetres of the text or of the font</strong> (M14.2). <code>--letter-spacing 1</code> at a scale of 50
+percent adds 0.5 mm, as in Ink/Stitch, whose documents M14.4 reads. The recommendation, taken, is to
+keep Ink/Stitch’s meaning. Millimetres as sewn are the other choice.</li>
+<li><strong><code>--height</code></strong> (M14.2). <code>stitch lettering</code> takes the size as <code>--scale</code>, Ink/Stitch’s setting, or as
+<code>--height</code> in millimetres over the font’s <code>size</code>. The recommendation, taken, is to keep both.</li>
+<li><strong>Back and forth by default</strong> (M14.3). <code>back_and_forth</code> is on unless it is turned off, as in Ink/Stitch.
+A text of several lines in a font drawn for one direction then gets a warning each time. The
+recommendation, taken, is to keep Ink/Stitch’s default and the warning. Off by default is the other choice,
+with no warning and a long thread between the lines of every font.</li>
+<li><strong>A text longer than its path</strong> (M14.3) is sewn on past the path’s end, with a warning. The other choice
+is to refuse it, with no file written. The recommendation, taken, is to sew it: the picture shows by how much
+the text is too long.</li>
+<li><strong>Which fonts are built into the plug-ins</strong> (M14.4, M14.8). Ink/Stitch Small Font was the one font, under
+the OFL (<a href="#fonts-built-into-the-plug-ins">fonts built into the plug-ins</a>). The owner asked for a bolder
+one on 2026-11-16, and Barstitch Bold joined. Each further font adds its files to both exporters, and a
+line of <code>built-in-fonts.txt</code> and of <code>lettering::HELD</code> adds one. Fonts under CC BY or CC BY-SA wait for
+the owner’s word on their credit.</li>
+<li><strong>A third font, for bold letters under 12.5 mm</strong> (M14.8). Barstitch Bold sews capital letters from 12.5
+mm, and Small Font is the only font below that
+(<a href="image-to-embroidery.html#the-font-chosen-by-the-letters-weight">the gap</a>). M14.9 measured the fonts of
+Ink/Stitch’s library and found none for 9 to 12 mm by its own range. The recommendation is Small Font
+widened (<a href="image-to-embroidery.html#bold-letters-under-the-bold-fonts-heights">bold letters under the bold font’s heights</a>).</li>
+<li><strong>The font’s name typed, or chosen from a list</strong> (M14.4). The Lettering effect’s dialog takes the font’s
+name as text. The recommendation, taken, was to keep the text field while one font was built in, since a
+document then sews the same in every build and from <code>stitch</code>. With 2 fonts built in since M14.8 it is
+still a text field. A list is easier with many fonts, and
+needs the same fonts in every build that opens the document.</li>
+<li><strong>Pinning the font repository</strong> (M14.4). CI builds Small Font in from the corpus of Ink/Stitch’s fonts
+until <code>fonts.toml</code> pins <code>KaboomFox/stitchcraft-fonts</code>. The recommendation was to pin it before a second
+font is built in. Barstitch Bold joined with M14.8 from the corpus, as the repository doesn’t exist yet,
+and the pin waits for the owner to create it.</li>
+<li><strong>A bold text object sews in the bold font</strong> (M14.8). A text object has no letters to measure. The
+decision taken is that its <code>font-weight</code>, or its VectorCraft style, chooses Barstitch Bold where it sews
+at the text’s size, and that the typeface’s name doesn’t choose one. For a text with the Lettering effect,
+the effect’s font setting decides, empty for the default, whatever the text’s weight, so that documents
+keep sewing as they did.
+The other choice is to let the effect’s empty font follow the weight too.</li>
+<li><strong>Text objects sew in an embroidery font under automatic digitizing</strong> (M14.7), until a typeface’s
+outlines can be read (M15.13). The recommendation, taken, is to letter every text object automatic
+digitizing meets, with a note each time. The other choice leaves text out with a warning, as before, and
+a design then sews without its words.</li>
+<li><strong>How tall a text object’s lettering is</strong> (M14.7). The recommendation, taken, is 0.7 of the font size,
+about the capitals’ height in most typefaces
+(<a href="#text-objects-in-automatic-digitizing">text objects in automatic digitizing</a>). Small letters then come
+out a little taller than the drawing’s, since an embroidery font’s small letters are tall for its
+capitals. The other choice sets the whole font size as the letters’ height, which sews every text about
+4 tenths larger than it is drawn.</li>
+<li><strong>Lettering longer than the drawn line</strong> (M14.7): decided on 2026-11-16. A line is fitted to the length
+its text most likely had, a stated length or half the font size for each character
+(<a href="#text-objects-in-automatic-digitizing">text objects in automatic digitizing</a>). Sewing every line at
+its full height, with its length in the note, was the other choice, and it sewed the badge’s title over a
+badge’s border. The estimate sews some lines smaller than they need be. M15.13 reads the real widths.</li>
+<li><strong>No setting turns text off in automatic digitizing</strong> (M14.7). The recommendation, taken, is none: hiding
+the text in the drawing leaves it out. An <code>auto_text</code> setting is the other choice.</li>
+<li><strong>When M15 comes.</strong> The roadmap places it after M14 and before M11 and 1.0. M15.1 and M15.2 can go ahead
+beside M14. Moving M15 after 1.0 brings 1.0 sooner.</li>
+<li><strong>Which ported fonts are written.</strong> Text in any installed font can be sewn as a design, as Wilcom and Hatch
+sew it. The font’s licence is reported. Writing a ported font is making a modified version of the font.
+The plan writes one for a font under the OFL, the UFL, Apache-2.0, CC0, CC BY or CC BY-SA, and for another
+font only when the user says they hold a licence that allows it. The owner can make that stricter or
+looser.</li>
+<li><strong>Ported fonts in the font repository.</strong> Ports of OFL fonts, corrected by hand and sewn out, could join
+StitchCraft’s font repository under new names, as Ink/Stitch’s library grew from such fonts.</li>
+<li><strong>The narrowest satin column in lettering.</strong> Automatic digitizing runs a line narrower than 1 mm, and
+Ink/Stitch’s small fonts sew columns about 0.5 mm wide. TS-15 sews both, and MC-10 chooses.</li>
+<li><strong>Raising P9.</strong> The RFC’s <a href="rfc-vectorcraft-abi-v2.html#p9-type-as-glyph-outlines">P9</a> proposes that
+VectorCraft give plug-ins type as glyph outlines, which its plans don’t cover. Without it, the exporter
+plug-in can’t sew type in the type’s own font, since it can’t read font files. From M14.4 it sews type in
+an embroidery font built into it. Whether to raise P9 on VectorCraft’s own
+repository, and when, is the owner’s choice.</li>
+</ul>
+<h2 id="sources"><a class="header" href="#sources">Sources</a></h2>
+<ul>
+<li>Ink/Stitch’s tutorial <a href="https://inkstitch.org/tutorials/font-creation/">Fonts for Ink/Stitch</a></li>
+<li>Ink/Stitch’s <a href="https://inkstitch.org/docs/font-tools/">font tools</a></li>
+<li>Ink/Stitch’s <a href="https://inkstitch.org/docs/lettering/">lettering</a></li>
+<li>Ink/Stitch’s <a href="https://inkstitch.org/docs/satin-tools/">satin tools</a> and <a href="https://inkstitch.org/docs/stroke-tools/">stroke tools</a></li>
+<li>The page of Ink/Stitch’s <a href="https://inkstitch.org/fonts/ink_stitch">Small Font and Medium Font</a></li>
+<li>Ink/Stitch’s release notes for <a href="https://inkstitch.org/en/2026-07-31-v3.3.0">v3.3.0</a></li>
+<li>The font files of <a href="https://github.com/inkstitch/embroidery-fonts">inkstitch/embroidery-fonts</a> at <code>c7e3a05</code></li>
+<li>Wilcom’s <a href="https://docs.wilcom.com/embroiderystudio/28/en/OnlineHelp/Lettering/lettering_custom/lettering_custom-2.htm">Converting TrueType fonts to embroidery</a>
+and <a href="https://docs.wilcom.com/embroiderystudio/28/en/OnlineHelp/Lettering/lettering_custom/lettering_custom-4.htm">Convert TrueType fonts</a></li>
+<li>Wilcom’s <a href="https://docs.wilcom.com/embroiderystudio/27/en/OnlineHelp/Management/custom_fonts/custom_fonts-4.htm">Experiment with conversion settings</a>
+and <a href="https://docs.wilcom.com/embroiderystudio/28/en/OnlineHelp/Management/custom_fonts/custom_fonts-5.htm">Refine turning stroke options</a></li>
+<li>BERNINA’s <a href="https://softwarehelp.bernina.com/en/MainHelp/PART_Lettering/special_lettering/special_lettering-4.htm">Convert fonts to embroidery</a></li>
+<li>Hatch’s <a href="https://hatchembroidery.com/resources/blog/choosing-the-right-size-embroidery-lettering-for-your-project">lettering sizes</a>
+and its <a href="https://help.hatchembroidery.com/portal/en/kb/hatch/tech-talk/articles/what-should-i-know-about-hatch-fonts-truetype-fonts-and-third-party-fonts">note on TrueType fonts</a></li>
+<li>Embird’s <a href="https://embird.net/font-engine">Font Engine</a> and its <a href="https://www.embird.net/sw/embird/tutorial/feparam/feparam.htm">parameters</a></li>
+<li>Machine Embroidery Geek on <a href="https://www.machineembroiderygeek.com/?p=19511">converting TTF fonts</a> and on
+<a href="https://www.machineembroiderygeek.com/what-are-bx-fonts-for-machine-embroidery/">BX fonts</a></li>
+<li>A shop’s page on <a href="https://www.mulqueen.com/shop/Embroidery-Supplies/Software/Embrilliance-Software/p/Embrilliance-StitchArtist-Level-3.htm">Embrilliance StitchArtist Level 3</a></li>
+<li>EduTech Wiki on <a href="https://edutechwiki.unige.ch/en/Stitch_Era_-_lettering">Stitch Era’s lettering</a></li>
+<li>Impressions on <a href="https://impressionsmagazine.com/process-technique/understanding-alphabet-and-font-options/16203/">alphabet and font options</a></li>
+<li>The patents <a href="https://patents.google.com/patent/US6934599">US 6,934,599</a> and <a href="https://patents.google.com/patent/US5559711">US 5,559,711</a></li>
+<li>D. Berio and others, <a href="https://doc.gold.ac.uk/autograff/post/papers/strokestyles_2022/">StrokeStyles</a>, ACM
+Transactions on Graphics (2022)</li>
+<li>E. Balashova and others, <a href="https://cris.tau.ac.il/en/publications/learning-a-stroke-based-representation-for-fonts/">Learning a stroke-based representation for fonts</a>,
+Computer Graphics Forum 38 (2019)</li>
+<li>The thesis <a href="https://openaccess.library.uitm.edu.my/Record/ndltd-TW-087NTNU0395026">Automatic embroidery digitizing based on skeletonization and backpropagation neural network</a>,
+National Taiwan Normal University</li>
+<li>The crates’ pages on crates.io on 2026-11-02, and the source of skrifa 0.47, read-fonts 0.44 and harfrust 0.13</li>
+<li>The <a href="https://openfontlicense.org/open-font-license-official-text/">OFL</a>, its pages on
+<a href="https://openfontlicense.org/ofl-reserved-font-names/">Reserved Font Names</a> and on
+<a href="https://openfontlicense.org/webfonts-and-reserved-font-names/">webfonts</a>, and an
+<a href="https://ctan.math.washington.edu/tex-archive/fonts/cm-unicode/doc/OFL-FAQ.txt">OFL FAQ</a></li>
+<li>The <a href="https://spdx.org/licenses/Ubuntu-font-1.0.html">UFL 1.0</a></li>
+<li><a href="https://fontspring.com/lic/rare-bird-font-foundry/desktop">Rare Bird’s desktop licence</a> and
+<a href="https://kimberlygeswein.com//kg-font-licensing-information/">KG Fonts’ licences</a></li>
+<li>Google Fonts’ <a href="https://googlefonts.github.io/gf-guide/googlefonts.html">repository guide</a></li>
+<li>Stroke widths and dots measured with fontTools on the OFL fonts that VectorCraft bundles, and satin widths
+measured on Ink/Stitch’s font files</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../design/image-to-embroidery.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../design/formats.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../design/image-to-embroidery.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../design/formats.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

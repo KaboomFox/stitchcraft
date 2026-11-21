@@ -1,0 +1,742 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>SVG input - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-9aa5b005.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-95df4fb0.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/design/svg-input.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="svg-input"><a class="header" href="#svg-input">SVG input</a></h1>
+<!-- implements: crates/stitchcraft-svg/src/** -->
+<p>The SVG adapter, <code>stitchcraft-svg</code>, turns an SVG file into a <a href="data-model.html#engine-input-design-stitchcraft-engine"><code>Design</code></a>
+and a list of warnings. It reads what an SVG viewer draws, in millimetres, and reports what it leaves
+out. The engine never sees SVG (<a href="architecture.html#hosts-ports-and-adapters">architecture</a>).</p>
+<h2 id="what-becomes-an-element"><a class="header" href="#what-becomes-an-element">What becomes an element</a></h2>
+<ul>
+<li><strong>Shapes.</strong> Each <code>&lt;path&gt;</code>, <code>&lt;rect&gt;</code>, <code>&lt;circle&gt;</code>, <code>&lt;ellipse&gt;</code>, <code>&lt;line&gt;</code>, <code>&lt;polyline&gt;</code> and <code>&lt;polygon&gt;</code>
+that paints becomes one element per paint. A fill becomes an area and a stroke becomes an outline.
+A <code>&lt;line&gt;</code> has no fill.</li>
+<li><strong>Where a shape starts.</strong> A running stitch starts where its path starts and runs the way it runs, and
+each basic shape starts and runs as Ink/Stitch reads it. A circle or an ellipse starts at its top and
+turns left on screen. SVG 2 starts it at its right and turns the other way, which only dashes or
+markers would show.</li>
+<li><strong>Order.</strong> Elements follow document order, which is SVG’s paint order and the sewing order. A
+shape’s fill is sewn before its stroke, as Ink/Stitch sews them, and the outline covers the fill’s edge.
+When <code>paint-order</code> paints the stroke first, <code>SC-W0802</code> says the fill is sewn first.</li>
+<li><strong>Groups.</strong> <code>&lt;g&gt;</code>, <code>&lt;a&gt;</code> and <code>&lt;switch&gt;</code> pass their transform and style to their children. A
+<code>&lt;switch&gt;</code> draws only its first child whose conditions pass, as a viewer does. Ink/Stitch sews every
+child of a switch, and drops the transforms of the switch and of the elements above it
+(<code>DEV-SVG-004</code>).</li>
+<li><strong>Flattening transforms.</strong> A transform that flattens an element to a line or a point, such as
+<code>scale(0 1)</code> or <code>matrix(1 1 1 1 0 0)</code>, has no inverse, and a viewer doesn’t show the element or what is
+in it (CSS Transforms 1, transform function lists). They are left out with <code>SC-W0804</code>. Ink/Stitch
+sews them flattened: a stroke along the line it becomes (<code>DEV-SVG-012</code>).</li>
+<li><strong>Ids.</strong> An element’s id is <code>svg:&lt;label&gt;:fill</code> or <code>svg:&lt;label&gt;:stroke</code>. The label is the SVG
+element’s <code>id</code>, or <code>&lt;tag&gt;@&lt;n&gt;</code> for the n-th element of that kind. A repeated id gets <code>~2</code>, <code>~3</code> and
+so on (<code>stitchcraft_core::Labels</code>, as in the VectorCraft adapter). The adapter’s own diagnostics name
+the SVG element as <code>svg:&lt;label&gt;</code>.</li>
+<li><strong>Names.</strong> An <code>inkscape:label</code> becomes the element’s name.</li>
+<li><strong>Automatic elements.</strong> Read with <code>--auto</code> (<code>Reading::auto</code>), a shape with no attribute in Ink/Stitch’s
+namespace is an automatic element, whose stitches StitchCraft chooses by its width
+(<a href="image-to-embroidery.html#automatic-elements">image to embroidery</a>, <code>REQ-AUTO-001</code>). The trim and stop
+of Ink/Stitch’s commands attached to it still apply. A shape with any <code>inkstitch:</code> attribute, or an
+<code>embroider_</code> attribute as Ink/Stitch’s early versions wrote its settings, is not automatic: it sews as
+its settings say (<a href="#settings-of-a-shape">below</a>).
+Read with <code>--sort-colours</code> (<code>Reading::sort_colours</code>), the design’s shapes with settings sew in the order
+StitchCraft chooses too (<a href="image-to-embroidery.html#sewing-order">image to embroidery</a>, <code>REQ-AUTO-011</code>).</li>
+</ul>
+<h2 id="geometry-and-units"><a class="header" href="#geometry-and-units">Geometry and units</a></h2>
+<ul>
+<li>The root’s <code>width</code>, <code>height</code>, <code>viewBox</code> and <code>preserveAspectRatio</code> map user units to millimetres. A
+user unit is a CSS pixel, 1/96 inch, unless they say otherwise. A root with only a width or only a
+height takes the other from its viewBox’s shape, as SVG 2 sizes an image, and a percentage counts as
+missing. Ink/Stitch takes both sides from the viewBox, in pixels, when either is missing
+(<code>DEV-SVG-009</code>).</li>
+<li>The page’s top left corner is the design’s origin, which a tatami fill lays its rows from
+(<code>REQ-FILL-TAT-002</code>). Ink/Stitch maps a viewBox that does not start at 0 by scaling it first and then
+moving it by its start in pixels. Its rows and their needle points lie a fraction of a row spacing
+elsewhere then (<code>DEV-SVG-015</code>). Inkscape writes viewBoxes that start at 0, and with those they lie
+alike.</li>
+<li>A viewer ignores a root <code>width</code>, <code>height</code> or <code>viewBox</code> that is empty, and a <code>preserveAspectRatio</code> that
+does not read. The adapter ignores them too, and <code>SC-W0804</code> names each. A <code>width</code>, <code>height</code> or
+<code>viewBox</code> that does not read could put the design at any size, and the file is refused (<code>SC-E0801</code>).
+So is a size of 0 or less, and a viewBox with no area, in which a viewer draws nothing.</li>
+<li>Transforms compose through every ancestor. The matrices use <code>stitchcraft_core::math</code>, so the result
+is the same on every platform (<a href="determinism.html">determinism</a>).</li>
+<li>Path data is read as SVG viewers draw it, arcs included. An error in the data, or in the list of
+points of a <code>&lt;polyline&gt;</code> or <code>&lt;polygon&gt;</code>, ends the path at the error, and <code>SC-W0804</code> names it. inkex
+skips what is not a number in a list of points, and Ink/Stitch sews the rest (<code>DEV-SVG-010</code>).</li>
+<li>A path has the subpaths a viewer draws. A move-to with nothing drawn after it is no subpath, and a
+command that draws after a closepath starts a new subpath where the closed one started. inkex keeps
+such a move-to as a subpath of one point and runs the closed subpath on, so Ink/Stitch can count other
+subpaths, which tell a satin column’s rails from its rungs (<code>DEV-SVG-011</code>).</li>
+<li>An arc becomes cubic curves as inkex, which Ink/Stitch reads files with, cuts it: in equal pieces, one
+more than the whole quarter turns it makes. Manual stitch puts a needle point on each piece’s end, as
+Ink/Stitch’s does. inkex counts the quarter turns in floating point, and its rounding can cut an arc of
+a whole number of quarter turns into one piece fewer (<code>DEV-SVG-002</code>).</li>
+<li>A <code>&lt;circle&gt;</code> or an <code>&lt;ellipse&gt;</code> starts at its top and goes round anticlockwise on screen, as inkex
+draws it, so a stroke round it starts and runs as Ink/Stitch’s does.</li>
+<li>A <code>&lt;rect&gt;</code> with one radius rounds its corners with it, and one with a radius of 0 has square corners.
+An <code>&lt;ellipse&gt;</code> with one radius is a circle of that radius. That is how SVG 2 draws them. inkex rounds
+a rect whose <code>rx</code> or <code>ry</code> is 0 with the other, and takes an ellipse’s missing radius as 0
+(<code>DEV-SVG-006</code>).</li>
+<li>Positions are exact to within a micrometre (<code>REQ-SVG-001</code>). Any path data reads without failing the
+adapter, and fuzzing checks it (<code>REQ-SVG-002</code>).</li>
+<li>A length may have spaces around it. One that does not read is 0, as in a viewer, and <code>SC-W0804</code> names
+it. A percentage is of the viewport’s width, height or diagonal over √2, an <code>em</code> is 16 user units and
+an <code>ex</code> 8, as with a viewer’s default font. inkex reads them as 0 in a shape’s attributes
+(<code>DEV-SVG-005</code>).</li>
+</ul>
+<h2 id="colour-and-visibility"><a class="header" href="#colour-and-visibility">Colour and visibility</a></h2>
+<ul>
+<li><code>fill</code>, <code>stroke</code>, <code>color</code> and <code>currentColor</code> give the thread colour. A gradient gives its first colour
+and a pattern its fallback colour, each with a warning. A linear gradient fill’s linear gradient gives its
+first colour without one, and the fill sews the gradient (<a href="#gradients">below</a>). A gradient of one colour, such as an Inkscape
+swatch, gives that colour without one. Its first colour is that of its first stop a viewer shows, one
+not fully transparent and of a <code>stop-opacity</code> above 0. A gradient without stops paints nothing, as in a
+viewer. So do one whose stops a viewer doesn’t show and a reference to an element the file does not
+have, unless a colour is written after it. Ink/Stitch sews such a fill in black (<code>DEV-SVG-007</code>).</li>
+<li>Colours read as editors write them. Keywords such as <code>currentcolor</code> may be in any case. An ICC colour
+after the sRGB one, which Inkscape’s colour-managed picker writes, is left for the sRGB colour.</li>
+<li>Properties come from presentation attributes (<code>fill="red"</code>), the rules of style sheets and the <code>style</code>
+attribute, in the order of CSS’s cascade, as in a viewer (<code>REQ-SVG-006</code>). A rule overrides a
+presentation attribute, and the <code>style</code> attribute overrides a rule. Of 2 rules, the more specific one
+applies (more ids, then more classes, then an element name), and of 2 as specific, the later one. An
+<code>!important</code> declaration overrides all of these. A paint, colour, stroke width, join or miter limit
+that does not read gives way to the next declaration, as in CSS. When none of an element’s paints
+reads, the inherited paint stays, and <code>SC-W0802</code> names the value. inkex takes the declaration the
+cascade puts first whether it reads or not, and Ink/Stitch sews a fill whose colour does not read in
+black and leaves such a stroke out (<code>DEV-SVG-008</code>). <code>display</code>, <code>visibility</code>, <code>opacity</code>,
+<code>fill-opacity</code>, <code>stroke-opacity</code>, <code>fill-rule</code> and <code>paint-order</code> are read as inkex reads them, from
+the declaration the cascade puts first. A value there that does not read is ignored, and the
+declarations after it are not used, where a viewer would use the next one.</li>
+<li>Style sheets are the <code>&lt;style&gt;</code> elements of the file, wherever they are, whose type is CSS. Illustrator
+and CorelDRAW write a drawing’s colours as classes there. The adapter reads a rule whose selector is an
+element name or <code>*</code> followed by classes and ids, such as <code>rect</code>, <code>.cls-1</code>, <code>#logo</code> or <code>path.st0.st1</code>.
+It reads a list of such selectors, such as <code>.a, .b</code>, as well. One <code>SC-W0802</code> names the other selectors,
+such as <code>g &gt; rect</code> or <code>a:hover</code>, and the at-rules, such as <code>@media</code> and <code>@import</code>. What they set is not
+used. Ink/Stitch reads styles through inkex, which applies more kinds of selector.</li>
+<li><code>display: none</code> hides an element and everything in it. A hidden or fully transparent paint is left
+out, as a viewer leaves it out. <code>visibility</code> hides a paint, and so does an <code>opacity</code> of 0 on its
+element or above it. A <code>fill-opacity</code> or <code>stroke-opacity</code> of 0 makes its paint clear, as does a colour
+that is <code>transparent</code> or has an alpha of 0, <code>currentColor</code> where <code>color</code> is such a colour, and a
+gradient whose stops a viewer doesn’t show. Ink/Stitch leaves out only what <code>display</code> hides and a fill
+whose <code>fill-opacity</code> is written <code>0</code> (<code>DEV-SVG-003</code>). The insides of <code>&lt;defs&gt;</code> and <code>&lt;symbol&gt;</code> are drawn
+only where a clone shows them (<a href="#clones">below</a>), and those of <code>&lt;marker&gt;</code>, <code>&lt;pattern&gt;</code>, <code>&lt;clipPath&gt;</code> and
+<code>&lt;mask&gt;</code> never. <code>context-fill</code> and <code>context-stroke</code> paint only a marker’s or a clone’s content, and
+outside a clone they paint nothing. Ink/Stitch sews them black.</li>
+<li>Ink/Stitch sews a fill’s linear gradient in its first stop, and a swatch in its colour, like the
+adapter, but every other gradient and every pattern in black, whatever colour is written after it
+(<code>DEV-SVG-013</code>).</li>
+</ul>
+<h2 id="gradients"><a class="header" href="#gradients">Gradients</a></h2>
+<p>A shape whose <code>inkstitch:fill_method</code> is <code>linear_gradient_fill</code> sews the linear gradient its fill is
+painted with (<a href="algorithms/gradient.html">linear gradient fill</a>). The reader places it as a viewer does, in
+the design’s millimetres, once it has read the shape’s outline (<code>REQ-SVG-014</code>).</p>
+<p>A gradient takes what it doesn’t say from the gradient its <code>href</code> names, and that one from the next, each
+once and at most 16 deep. Inkscape keeps a gradient’s stops in one gradient and its vector in another that
+names it. The vector’s <code>x1</code>, <code>y1</code>, <code>x2</code> and <code>y2</code> come from the nearest linear gradient that gives each.
+<code>gradientUnits</code> and <code>gradientTransform</code> come from the nearest gradient that gives them, a radial one too.
+The stops come from the first gradient that has any.</p>
+<p>With <code>gradientUnits="userSpaceOnUse"</code>, as Inkscape writes it, the vector is in user units, and a percentage
+is a share of the viewport. Otherwise it is in shares of the box round the shape’s outline, curves and all,
+SVG’s default. A gradient without a vector then runs along the box’s top from its left side to its right.
+The <code>gradientTransform</code> applies before the box and the shape’s own transforms.</p>
+<p>A stop’s offset is a number or a percentage, kept from 0 to 1 and never before the stop before. A stop’s
+colour is its <code>stop-color</code>, the nearest <code>color</code> for <code>currentColor</code>, or black where the stop doesn’t give a
+usable one. Its opacity is its <code>stop-opacity</code> times its colour’s alpha.</p>
+<p>A gradient of fewer than 2 stops, or in a box whose width or height is 0, places none, and the fill sews
+its colour fading out (<code>SC-W0329</code>). A length or a transform that can’t be used is named with <code>SC-W0804</code>,
+and left as a viewer leaves it. A gradient more than 10 m from the origin is named and not sewn. A radial
+gradient is no linear gradient: its first colour is sewn, with the warning a gradient gives.</p>
+<p>Ink/Stitch reads the gradient’s own vector as user units, whatever its units, and none from the gradients
+it names. A gradient without a vector of its own sews in its last colour there (<code>DEV-SVG-027</code>).</p>
+<h2 id="clip-paths"><a class="header" href="#clip-paths">Clip paths</a></h2>
+<p>A shape that a <code>clip-path</code> cuts shows only inside it, and sews only what shows (<code>REQ-SVG-011</code>). The
+adapter reads each clip path into a clip of the shape’s elements, and the engine cuts them to it
+(<code>REQ-GEN-005</code>, <a href="engine-pipeline.html">engine pipeline</a>). The code is in <code>crates/stitchcraft-svg/src/document/clip.rs</code>.</p>
+<ul>
+<li><strong>Which clip paths.</strong> The <code>clip-path</code> property of the shape, and of each group, link (<code>&lt;a&gt;</code>) and
+<code>&lt;switch&gt;</code> round it, as an attribute, in a <code>style</code> or by a style sheet’s rule, names a <code>&lt;clipPath&gt;</code> by
+<code>url(#id)</code>. The shape must lie inside every one. A clip path’s own <code>clip-path</code> cuts it too, as
+another clip. Ink/Stitch reads only the shape’s and its groups’ (<code>DEV-SVG-018</code>), and no clip path’s own
+(<code>DEV-SVG-017</code>).</li>
+<li><strong>Its area.</strong> A clip path is its children’s areas together, each filled by its <code>clip-rule</code>, which they
+inherit from the clip path: a path or basic shape, or a <code>&lt;use&gt;</code> of one at the use’s <code>x</code> and <code>y</code>. A
+group’s children count, as Inkscape draws them, because Inkscape puts the group it clips with in the
+clip path as it is. SVG doesn’t allow a group there, and a browser leaves one out. Children that aren’t
+displayed (<code>display: none</code>, <code>visibility: hidden</code>) are left out, as are lines, which have no inside, and
+text, which the adapter doesn’t read. A child’s paint doesn’t matter. Ink/Stitch pools every
+child’s subpaths and takes the largest for the outline and the rest for holes, whatever their rules,
+so where 2 children overlap it leaves the overlap out (<code>DEV-SVG-016</code>).</li>
+<li><strong>Where it lies.</strong> In the user space of the element it clips, that element’s own transform included,
+after the clip path’s transform and each child’s. With <code>clipPathUnits="objectBoundingBox"</code>, its
+coordinates are shares of the box round the shape, curves bounded where they turn. The transforms of
+the elements the clip path itself lies in don’t move it. Ink/Stitch puts the clipped element’s
+transform in place of the clip path’s, reads <code>objectBoundingBox</code> as user space and applies the
+transforms round the clip path (<code>DEV-SVG-017</code>).</li>
+<li><strong>What it leaves.</strong> A fill’s area is cut before its underlay, <code>expand_mm</code> and its method see it, so
+<code>expand_mm</code> grows the cut area past the clip’s edge, as in Ink/Stitch. A stroke’s line is cut where it
+crosses the clip’s outline, and each piece sews on its own, in order along it. A satin column is sewn
+whole, as Ink/Stitch sews it (<code>SC-W0217</code>). A clip path with no area, empty or of lines or text alone,
+hides the whole shape in a viewer. The shape isn’t sewn then (<code>SC-W0013</code>). Ink/Stitch takes such
+a clip path for none and sews the shape whole (<code>DEV-SVG-019</code>).</li>
+<li><strong>Exceptions.</strong> A <code>clip-path</code> that names nothing, or an element that isn’t a clip path, clips nothing,
+as in a viewer. <code>SC-W0802</code> names the rest: a CSS shape such as <code>circle(50%)</code>, clip paths that name each
+other in a loop, <code>objectBoundingBox</code> on a group, whose box the adapter doesn’t measure, a <code>clip-path</code> on
+a clip path’s child, which neither program applies, what lies in more than 16 groups in a clip path,
+and the root’s. An Inkscape power clip is read from
+the clip path the file holds, as a viewer draws it, where Ink/Stitch reads the path effect’s settings
+(<code>DEV-SVG-020</code>). Masks are not applied, as in Ink/Stitch.</li>
+</ul>
+<h2 id="stroke-width-and-join"><a class="header" href="#stroke-width-and-join">Stroke width and join</a></h2>
+<p>A stroke’s width and join give a satin column drawn as one path its width and its corners
+(<a href="algorithms/satin.html#single-path-satin">single-path satin</a>). Other strokes are sewn along their paths,
+however wide they are drawn. Both are read as Ink/Stitch reads them (<code>REQ-SVG-004</code>), except an automatic
+element’s join, read as SVG draws it. Its cap matters only to an automatic element, whose stitches cover
+the line as it is drawn (<code>REQ-AUTO-003</code>).</p>
+<ul>
+<li><strong>Width.</strong> The width is <code>stroke-width</code>, inherited, 1 user unit when nothing sets it. It is a length in
+the shape’s own user units, as in a viewer, and a percentage is of the viewport’s diagonal over √2.
+The transforms down to the shape scale it by the average of how far they stretch the x and y axes.
+That is exact when they scale both axes alike. Under an uneven scale or a skew, a viewer draws the
+stroke wider one way than the other, and the average is the middle way. An automatic line sewn across
+its width is then as wide as that average all along. <code>SC-W0802</code> names such a line (<code>REQ-AUTO-005</code>).
+The transforms scale a stroke with <code>vector-effect: non-scaling-stroke</code> too, as
+Ink/Stitch scales it, though a viewer does not.</li>
+<li><strong>Join.</strong> <code>round</code> and <code>bevel</code> are read as they are named. A <code>miter</code> join is limited by
+<code>stroke-miterlimit</code>, 4 when nothing sets it, as SVG says. Any other join, or none, is a miter limited
+at 5, as in Ink/Stitch. SVG 2’s <code>miter-clip</code> and <code>arcs</code> count as other joins. An automatic element’s
+corners follow the drawing instead (<code>REQ-AUTO-004</code>). There, a join that is not set is SVG’s initial
+miter, limited by <code>stroke-miterlimit</code>, and so are <code>miter-clip</code> and <code>arcs</code>, which few viewers draw.</li>
+<li><strong>Cap.</strong> <code>stroke-linecap</code>, inherited, <code>butt</code> when nothing sets it: <code>butt</code>, <code>round</code> or <code>square</code>, in any
+case. Ink/Stitch sews no cap, and reads none.</li>
+<li><strong>Values that do not read.</strong> A width, join or limit that does not read is ignored, as a viewer
+ignores it, and <code>SC-W0804</code> names it. A cap that does not read is ignored too, without a word: it changes
+nothing for a shape with settings. A negative width and a limit below 1 do not read. A stroke too
+wide to measure, such as <code>1e308in</code>, is left out with <code>SC-W0804</code>. Its fill is still sewn.</li>
+</ul>
+<p>Ink/Stitch reads a width in <code>%</code>, <code>em</code> or <code>ex</code> as 0, and a join written in capitals as no join at all. The
+adapter reads them as a viewer draws them (<code>DEV-SVG-001</code>).</p>
+<h2 id="settings-of-a-shape"><a class="header" href="#settings-of-a-shape">Settings of a shape</a></h2>
+<p>Ink/Stitch keeps how each shape sews in attributes of its namespace on the shape’s own node, each named
+after its setting: <code>inkstitch:fill_method</code>, <code>inkstitch:row_spacing_mm</code>, <code>inkstitch:satin_column</code> and the
+rest. Each is a parameter of every element the shape makes, under its own name and with its own text
+(<code>REQ-SVG-009</code>). A shape with a fill and a stroke gives both elements the same parameters, as Ink/Stitch
+gives them to both of its own. The registry reads them as it reads a VectorCraft effect’s (<code>REQ-PRM-002</code>).
+It strips the white space round a value and names a value it can’t read. A setting it doesn’t declare,
+such as a misspelt key, is kept, and <code>SC-W0105</code> names it.</p>
+<p>The adapter applies 2 settings itself, and they are parameters of neither element. <code>ignore_object</code> leaves
+the shape out (<a href="#inkstitch-objects">below</a>). <code>stroke_first</code>, when it says yes in one of Ink/Stitch’s
+words, sews the stroke before the fill (<code>REQ-SVG-010</code>). Otherwise the fill sews first, whatever SVG’s
+<code>paint-order</code> says. Ink/Stitch’s trim and stop commands turn on <code>trim_after</code> and <code>stop_after</code> over the
+shape’s own settings, as Ink/Stitch adds them.</p>
+<p>Ink/Stitch doesn’t read a group’s settings, but for <code>ignore_object</code>. <code>SC-W0802</code> names the others a group
+has, which don’t change what sews. The <a href="inkstitch-compat-contract.html">compatibility contract</a> lists every setting, with
+the milestone in which StitchCraft reads it.</p>
+<p>A setting of StitchCraft’s own that a stitch type reads is an attribute of Ink/Stitch’s namespace as well,
+read as every other. From M10.15, <code>inkstitch:underlays_first</code> on a shape sews its elements’ underlays
+with those of the elements beside them that set it, before their top stitches
+(<a href="engine-pipeline.html#underlays-first">underlays first</a>,
+<a href="adr/0018-underlays-first-is-a-setting-of-each-element.html">ADR-0018</a>). Ink/Stitch (read at <code>d59c9ab</code>)
+reads only the settings on its own list of attributes, so it sews such a shape as one without the
+attribute. Its Params dialog leaves the attribute in place, Duplicate Params copies it to other shapes
+with the rest of the shape’s settings, and Remove Embroidery Settings deletes it with them.</p>
+<h2 id="inkstitch-objects"><a class="header" href="#inkstitch-objects">Ink/Stitch objects</a></h2>
+<p>An Ink/Stitch SVG has 3 kinds of object that Ink/Stitch reads and does not sew. The adapter sews none of
+them (<code>REQ-SVG-003</code>).</p>
+<ul>
+<li><strong>Commands.</strong> The <code>trim</code> and <code>stop</code> commands turn on the object’s <code>trim_after</code> and <code>stop_after</code>. The
+<code>ignore_object</code> and <code>ignore_layer</code> commands leave out an object or a layer, as the
+<code>inkstitch:ignore_object</code> setting does when it says yes in one of Ink/Stitch’s words, which a toggle
+reads too, and <code>SC-I0805</code> lists each object left out. The
+<code>starting_point</code> and <code>ending_point</code> commands give the start and end positions of every element of the
+shape they are tied to, which its fills and satin columns start and end at (<code>REQ-GEN-001</code>). The
+<code>target_point</code> command gives the point its circular fill turns round (<code>REQ-FILL-CIR-008</code>) and its
+ripple stitch aims at (<code>REQ-RIP-002</code>). Each is at its symbol’s place: the <code>&lt;use&gt;</code> element’s <code>x</code> and
+<code>y</code> under the transforms of the use and of the groups above it, as Ink/Stitch places it. Of 2 commands
+of a kind on a shape, the first connector in the file counts. A command whose place doesn’t read is
+named with <code>SC-W0802</code> and left out, and so are those of a shape digitized automatically, whose parts
+start and end where automatic digitizing places them. The <code>origin</code> and <code>stop_position</code> commands are
+tied to nothing, and count wherever they are, in <code>&lt;defs&gt;</code> and hidden layers too, as Ink/Stitch finds
+them. Each gives the design a setting at its symbol’s place (<code>REQ-ASM-005</code>). The origin goes to the
+hoop’s centre, and the frame moves to the stop position before each stop. Ink/Stitch refuses a file with
+2 origins, or 2 stop positions and a stop, and StitchCraft does too (<code>SC-E0819</code>,
+<a href="engine-pipeline.html#origin-stop-position-and-turn-on-export">why</a>). The
+<a href="inkstitch-compat-contract.html#commands">command table</a> gives what the adapter does with each of the 12
+commands. Before its file version 3, Ink/Stitch named 7 of them otherwise, such as
+<code>fill_start</code> for <code>starting_point</code>: the adapter reads those as the commands they became in any file,
+where Ink/Stitch renames them only in the files it updates and sews the old symbol elsewhere
+(<code>DEV-SVG-014</code>).</li>
+<li><strong>Connectors</strong> tie a command to its object.</li>
+<li><strong>Helper paths</strong> have one of Ink/Stitch’s start markers. They steer the stitches of other objects. From
+M10.11 the adapter reads guide lines and anchor lines, as Ink/Stitch at <code>d59c9ab</code> finds them
+(<code>REQ-RIP-012</code> to <code>REQ-RIP-014</code>). Ink/Stitch looks for a shape’s helpers among the other children of its
+group and nowhere else, so the adapter does too. A guide line or an anchor line is a shape with a stroke,
+hidden or not, whose <code>style</code> attribute starts it with Ink/Stitch’s marker. A stroke’s guide is the first
+satin column among the guide lines, its <code>satin_column</code> on, or else the first guide line. From M10.9 a
+fill’s guide is the first guide line that is no satin column, as Ink/Stitch’s fill looks past satin
+guides (<code>REQ-SVG-015</code>, <a href="algorithms/guided.html#the-guide-line">guided fill</a>). The anchor line is the first
+anchor line that isn’t a satin column. Each goes to the shape’s elements under the transforms above it.
+The guide keeps its stroke’s width and join and its settings, and the anchor line its whole path. A ripple
+stitch reads the start and the end of the anchor’s first subpath
+(<a href="algorithms/strokes.html#guided-ripples">ripple stitch</a>), and from M10.10 a guided fill starts its closed
+rows where any subpath of it crosses them
+(<a href="algorithms/guided.html#rows-that-close-and-the-anchor-line">guided fill</a>). A guide line or an
+anchor line in no group steers nothing. Ink/Stitch’s pattern helpers aren’t applied yet.</li>
+</ul>
+<p><code>SC-W0802</code> reports a connector that ties no command, a helper path that isn’t applied or steers nothing, an
+<code>ignore_layer</code> command in no layer, and a command on an object that is not stitched. The module docs of <code>crates/stitchcraft-svg/src/inkstitch.rs</code> describe how the adapter
+finds these objects, with the Ink/Stitch files they were read from.</p>
+<h2 id="clones"><a class="header" href="#clones">Clones</a></h2>
+<p>A clone is a <code>&lt;use&gt;</code> element that names another element, its source. Inkscape makes one with Edit › Clone ›
+Create Clone, and places each symbol with one. A clone sews what it shows, in its own place in the
+document’s order, as Ink/Stitch sews a clone (<code>REQ-SVG-012</code>). A <code>&lt;use&gt;</code> of one of Ink/Stitch’s command
+symbols is a command instead (<a href="#inkstitch-objects">above</a>). The code is in
+<code>crates/stitchcraft-svg/src/document/clone.rs</code>, whose module docs say what was read of Ink/Stitch and what
+was run.</p>
+<ul>
+<li><strong>What it shows.</strong> The source and everything in it, drawn as a viewer draws it. The source is drawn under
+its own transform, which the use’s <code>x</code> and <code>y</code> move and the use’s transform places. It inherits the use’s style, and the
+source’s own declarations win over it, the rules of a style sheet that select the source among them.
+There <code>context-fill</code> and <code>context-stroke</code> paint with the use’s fill and stroke, as Chrome and Firefox draw
+them. A clip path on the use cuts what it shows. A clone in the source is drawn the same way, inside the
+one that shows it. Ink/Stitch drops the use’s presentation attributes and the rules that select the
+source by its id, and sews context paints black (<code>DEV-SVG-021</code>).</li>
+<li><strong>Ids.</strong> The elements a clone sews are named after it: the fill of the shape <code>square</code> that the clone
+<code>clone1</code> shows is <code>svg:clone1/square:fill</code>. So 2 clones of one shape sew elements with ids of their own.</li>
+<li><strong>Symbols.</strong> A <code>&lt;symbol&gt;</code> is drawn in the viewport the clone gives it. Its <code>viewBox</code> fits the use’s
+<code>width</code> and <code>height</code>, as its <code>preserveAspectRatio</code> says, or the symbol’s own size when the use sets none,
+as SVG 2 has it, or else the page. What lies outside that viewport is sewn too, as Inkscape draws it,
+though a browser cuts it off. Ink/Stitch sews a symbol’s content in its own units at the use’s place, whatever
+its size (<code>DEV-SVG-022</code>).</li>
+<li><strong>Settings.</strong> A clone has 3 settings of its own, which the
+<a href="inkstitch-compat-contract.html#clones-use">compatibility contract</a> lists. When <code>clone</code> is off, the clone
+sews nothing, and <code>SC-I0805</code> lists it. <code>angle</code> and <code>flip_angle</code> set the angles of its fills (below). The
+clone’s <code>trim_after</code> and <code>stop_after</code>, and a trim or a stop command tied to it, trim or stop after the last
+element it sews. Its <code>min_stitch_length_mm</code> and <code>min_jump_stitch_length_mm</code> apply to every element it
+sews. Ink/Stitch reads none of a clone’s other settings, and <code>SC-W0802</code> names them.</li>
+<li><strong>Commands.</strong> The commands tied to the source apply to what the clone sews, at places that move with
+it, as Ink/Stitch copies them. So do the commands in the source whose connectors are in it too. A command
+tied to a shape in the source from outside it applies only where the source itself is drawn. Of the
+other commands tied to the clone, Ink/Stitch applies none, and <code>SC-W0802</code> names them.</li>
+<li><strong>Angles.</strong> A fill’s angle is fixed to the page in Ink/Stitch, not to the shape, so a clone that turns a
+fill turns its angle with it (<code>REQ-SVG-013</code>). The direction of the fill’s rows is taken through the map
+from where the source is drawn to where the clone draws it, and the angle is rounded to 6 decimal places,
+as Ink/Stitch writes it. A fill at 30° sews at -15° in a clone turned 45° right, and at 150° in one
+mirrored left to right. A symbol has no place of its own. Its fills turn with the clone’s transform
+alone, as Ink/Stitch turns them. A clone’s own <code>angle</code> gives all its fills that angle instead, and
+<code>flip_angle</code> reverses the angle they sew at. Clones inside clones turn it each in its own place, the
+innermost first. A shape digitized automatically keeps the angle digitizing chooses, and <code>SC-W0802</code> names
+a clone’s <code>angle</code> or <code>flip_angle</code> there.</li>
+<li><strong>What is left out.</strong> A use doesn’t draw anything when its link leads to no element, or to one that
+isn’t SVG’s, as in a viewer. When a clone shows itself, directly or through other clones, it is left out
+with <code>SC-W0804</code>, as a viewer leaves it out, and the rest of the file is sewn. So is a clone inside more
+than 16 others, with <code>SC-W0802</code>, which bounds how deep the reader goes. The reader charges the budget for
+what a clone shows each time it shows it. A small file of clones of clones that would draw a billion
+shapes runs out of it and is refused.</li>
+</ul>
+<p>Ink/Stitch fails on a clone that shows itself, and on a use whose <code>x</code> or <code>y</code> has a unit, such as <code>10mm</code>.
+It sews the drawing of a command’s symbol whose id ends in a copy’s <code>-2</code> as a clone, besides applying the
+command (<code>DEV-SVG-023</code>). It resolves the clones in a clone’s source first and applies only their angles
+there, so such a clone sews though its <code>clone</code> setting is off, without its trim, stop and shortest stitch
+and jump, and a command it copies stays where it moves it, wherever the clone round it draws the shape. It
+moves a command it copies only when the command’s connector is in a group, where Ink/Stitch’s Attach
+Commands puts it, and leaves one at the root where it was. And it gives everything a clone sews the clone’s
+shortest stitch and jump, the design’s when the clone sets none, where the adapter keeps the source’s
+(<code>DEV-SVG-024</code>).</p>
+<h2 id="design-settings"><a class="header" href="#design-settings">Design settings</a></h2>
+<p>Ink/Stitch keeps 4 settings for the whole design in the file’s first <code>&lt;metadata&gt;</code> element. Each is an
+element of Ink/Stitch’s namespace whose text is the value, and the first of each name counts. The lengths
+in millimetres, <code>collapse_len_mm</code>, <code>min_stitch_len_mm</code> and <code>min_satin_stroke_width_mm</code>, become the
+design’s collapse length, shortest stitch and narrowest satin stroke (<code>REQ-SVG-005</code>).
+<code>SC-W0802</code> names a value that is not a number of 0 or more, and the design keeps its default. The
+defaults are in the <a href="data-model.html#engine-input-design-stitchcraft-engine">data model</a>. The settings’
+names, with the label and help a dialog shows, are listed once in <code>stitchcraft_engine::design::SETTINGS</code>,
+which a VectorCraft document’s settings are read with too
+(<a href="vectorcraft-integration.html#design-settings-and-machine-kept-with-the-document">integration</a>).</p>
+<p>StitchCraft writes such files too (<code>stitchcraft_svg::written</code>): <code>stitch expand</code> an expanded design, and the
+test kit the differential’s test sheets, so that Ink/Stitch can sew them (<code>stitchcraft_testkit::inkstitch</code>).
+It writes a design’s elements with their parameters and names, and the settings that aren’t StitchCraft’s
+defaults. It names Ink/Stitch’s namespace by the reader’s own constant,
+<code>stitchcraft_svg::inkstitch::INKSTITCH_NS</code>.</p>
+<p>The fourth, <code>rotate_on_export</code>, turns the design about the hoop’s centre as it is written into a machine
+file, for machines that don’t turn a design to fit their hoop (M8.9). It is the design’s turn on export,
+a number of degrees, right for a positive one (<a href="engine-pipeline.html#origin-stop-position-and-turn-on-export">engine pipeline</a>).
+Ink/Stitch’s preferences offer 90 either way, and its writer turns by any number, as does StitchCraft.
+<code>SC-W0802</code> names text that is not a number, which turns nothing. Ink/Stitch takes text that isn’t JSON as
+no turn, and doesn’t write a file for JSON that isn’t a number. Ink/Stitch also keeps <code>thread-palette</code>
+there, which names the threads in its own lists and print-outs and doesn’t change what the adapter sews,
+and the file’s version (below). <code>SC-W0802</code> names any other element of Ink/Stitch’s there.</p>
+<p>A file <code>stitch expand</code> writes also keeps the cap’s limits for its parts, by the names of the Auto effect’s
+settings, such as <code>auto_thick_cap_fills</code> (M13.26). They are StitchCraft’s own, which Ink/Stitch passes over,
+and <code>SC-W0802</code> names a value that doesn’t read (<a href="image-to-embroidery.html#expand">Expand</a>).</p>
+<h2 id="files-of-older-inkstitch-versions"><a class="header" href="#files-of-older-inkstitch-versions">Files of older Ink/Stitch versions</a></h2>
+<p>Ink/Stitch numbers the files it works on, <code>inkstitch_svg_version</code> in the metadata, 4 at the commit the
+contract checks. When it opens a file of an older version that has content of its own, an element or an
+attribute in its namespace or an <code>embroider_</code> attribute, it updates the file so that it sews as it did:
+the defaults that have changed since are written into the shapes that relied on them
+(<code>crates/stitchcraft-svg/src/version.rs</code> says how it was found). The adapter reads such a file as
+Ink/Stitch updates it (<code>REQ-SVG-007</code>), with the changed defaults as parameters of the shapes, and
+<code>SC-I0818</code> says how many shapes changed:</p>
+<ul>
+<li>in a file of version 1, a polyline whose <code>style</code> attribute sets a stroke is a manual stitch;</li>
+<li>in a file of version 1 or 2, a zigzag stroke’s <code>pull_compensation_mm</code>, unless 0, is halved into
+<code>stroke_pull_compensation_mm</code>, which applies to each side from version 3 (M8.3);</li>
+<li>in a file of version 1 or 2, a satin column starts and ends where it is drawn, with
+<code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off (M8.3);</li>
+<li>in a file of version 1 or 2, a <code>starting_point</code> or <code>ending_point</code> command works at its connector’s end
+on its object, where it worked then, rather than at its symbol (M8.4);</li>
+<li>in a file of version 1 to 3, a shape whose fill is sewn, without a longest stitch of its own, sews
+3 mm stitches, the default before version 4, where today’s default is 4 mm;</li>
+<li>in a file of version 1 to 3, a fill with <code>auto_fill</code> off is a legacy fill, sewn as a tatami fill without
+underlay (<code>DEV-FILL-014</code>), and <code>fill_method</code> <code>auto_fill</code>, the tatami fill’s name before version 4, is a
+tatami fill (M8.3).</li>
+</ul>
+<p>Each shape gets the updates of each version after its file’s, in the order of the versions, over the
+settings it has, as Ink/Stitch updates it. One digitized automatically sews by the rules instead.
+Ink/Stitch asks its user whether a file with its content and no version is an old design, which it then
+updates, or objects pasted into a new file. The adapter can’t ask. It reads such a file as it is and says
+so with <code>SC-W0802</code>, as it says that a file of a version above 4 is read as version 4.</p>
+<p>The update’s other changes alter nothing the adapter sews. The
+<a href="inkstitch-compat-contract.html#file-versions">compatibility contract</a> lists them all, with the milestone
+that applies them.</p>
+<h2 id="reports"><a class="header" href="#reports">Reports</a></h2>
+<ul>
+<li><code>SC-W0802</code> reports a feature that is not stitched. Text read without <code>auto</code>, images, nested <code>&lt;svg&gt;</code> elements and the style
+sheet rules that are not read are such features. So are masks, filters and markers, a group’s
+Ink/Stitch settings, the settings of Ink/Stitch’s early versions (<code>embroider_</code> attributes), what is not
+applied of a clip path (<a href="#clip-paths">Clip paths</a>) and what is not applied of a clone
+(<a href="#clones">Clones</a>). It reports a file Ink/Stitch would update, or warn about, that is read as it is: one
+with Ink/Stitch’s content and no file version, or of a newer version.</li>
+<li><code>SC-I0818</code> says how many shapes of a file an older Ink/Stitch saved are read as its update changes
+them, for each change.</li>
+<li><code>SC-W0804</code> reports geometry that cannot be used:
+<ul>
+<li>path data or a list of points with an error, stitched up to the error</li>
+<li>a transform that does not parse, or that flattens what it draws, left out with its contents</li>
+<li>an element that draws nothing</li>
+<li>a point more than 10 m from the origin</li>
+<li>a stroke width, join or miter limit that does not read, and a stroke too wide to measure</li>
+<li>an empty root <code>width</code>, <code>height</code> or <code>viewBox</code>, and a root <code>preserveAspectRatio</code> that does not read</li>
+<li>a clone that shows itself, a symbol’s <code>viewBox</code>, <code>preserveAspectRatio</code> or size that does not read, a
+symbol’s viewport of no area, and a clone whose source’s place does not read</li>
+</ul>
+</li>
+<li><code>SC-E0801</code> refuses a file that is not SVG, or that is larger than the adapter reads. It refuses a file
+whose size cannot be used too: a root <code>width</code>, <code>height</code> or <code>viewBox</code> that does not read, a size of 0
+or less, a viewBox with no area, or a size so large that the viewBox scales to no number, however
+<code>preserveAspectRatio</code> fits it.</li>
+</ul>
+<h2 id="text-objects"><a class="header" href="#text-objects">Text objects</a></h2>
+<p>Without <code>auto</code> a <code>&lt;text&gt;</code> element is left out with <code>SC-W0802</code>. With <code>auto</code> it is read as a text object
+(M14.7, <code>REQ-SVG-017</code>), which sews as lettering in an embroidery font
+(<a href="fonts.html#text-objects-in-automatic-digitizing">text objects in automatic digitizing</a>). The reader has
+no fonts. It gives each text object with its place among the design’s elements (<code>Svg::texts</code>), and
+<code>stitch</code> sets them once the file is read, as it sets the text of a marker.</p>
+<p>A viewer lays a text’s characters out with the widths of its typeface, which the reader doesn’t have and
+the embroidery font doesn’t share. The reader takes what doesn’t depend on a width:</p>
+<ul>
+<li><strong>Lines.</strong> The <code>&lt;text&gt;</code> element starts a line at its <code>x</code> and <code>y</code>, or at the origin without them. A
+<code>&lt;tspan&gt;</code> with an <code>x</code> or a <code>y</code> starts a new line, as editors write the lines of a text. A <code>dx</code> or a <code>dy</code>
+written where a line starts moves its start. A <code>y</code> alone keeps the <code>x</code> of the line before, though a
+viewer goes on where that line’s last letter ended. A <code>&lt;tspan&gt;</code> or a link (<code>&lt;a&gt;</code>) without a place goes on in
+its line.</li>
+<li><strong>Characters.</strong> White space is collapsed and trimmed, unless <code>xml:space="preserve"</code> keeps it. Characters
+that a viewer doesn’t show are not read: those with <code>display: none</code>, with <code>visibility: hidden</code>, or
+with neither a fill nor a stroke.</li>
+<li><strong>Size, anchor, colour and typeface</strong> are those of the element a line’s first visible character is in.
+The size is the nearest <code>font-size</code> that is a length, times the shares nearer to the character: <code>em</code>,
+<code>ex</code> as half an <code>em</code>, and percent. Without one it is CSS’s 16 pixels. A size that is a word, such as
+<code>larger</code>, isn’t read. The anchor is <code>text-anchor</code>. The colour is the fill’s, or the stroke’s for a text
+without a fill. The typeface is <code>font-family</code>, which the note names.</li>
+<li><strong>Weight.</strong> The text is bold when the <code>font-weight</code> of its first line that shows is <code>bold</code>, <code>bolder</code> or
+700 and above (<code>REQ-AUTO-082</code>). A bold text can sew in the bold font
+(<a href="fonts.html#text-objects-in-automatic-digitizing">fonts</a>).</li>
+<li><strong>A stated length.</strong> The <code>textLength</code> of a <code>&lt;text&gt;</code> element of one line, or of a <code>&lt;tspan&gt;</code> that starts
+a line, is the length the line’s lettering is fitted to, scaled as the transforms scale along the
+baseline. Without one the length is estimated.</li>
+<li><strong>Transforms</strong> place each line’s anchor. They scale the font size as they scale across the baseline, and
+they turn the text as they turn the baseline.</li>
+<li><strong>Clips</strong> of the groups around the element cut the lettering.</li>
+</ul>
+<p><code>SC-W0802</code> says what isn’t followed, once for each element:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Left out</th><th>What sews</th></tr>
+</thead>
+<tbody>
+<tr><td>Text on a path (<code>&lt;textPath&gt;</code>)</td><td>The rest of the element. <code>stitch lettering --path</code> sets a text along a path</td></tr>
+<tr><td>A place for each letter: a list of numbers in <code>x</code>, <code>y</code>, <code>dx</code> or <code>dy</code>, a <code>dx</code> or <code>dy</code> inside a line, <code>rotate</code>, a <code>textLength</code> inside a line or of a text of several lines</td><td>The line, its letters spaced as the embroidery font spaces them, from the first place of a list</td></tr>
+<tr><td>A transform that stretches, mirrors or slants the text</td><td>The text upright, as tall as it is drawn, turned as its baseline is</td></tr>
+<tr><td>The element’s own <code>clip-path</code></td><td>The lettering uncut</td></tr>
+</tbody>
+</table>
+</div>
+<p>Vertical text (<code>writing-mode</code>) is not stitched, and <code>SC-W1111</code> says so: an embroidery font’s glyphs are
+drawn to sew along a line. Text that an editor flows into a shape (<code>&lt;flowRoot&gt;</code>) is left out with
+<code>SC-W0802</code> as before, and so is text inside a clip path. <code>direction</code> isn’t read: an embroidery font sets a
+right-to-left script in its own direction.</p>
+<h2 id="text-and-limits"><a class="header" href="#text-and-limits">Text and limits</a></h2>
+<p>A file is UTF-8 text, or ISO-8859-1 when its XML declaration says so, which the adapter turns into UTF-8.
+A file in any other encoding is refused when it has a byte outside ASCII.</p>
+<p>A file is at most 64 MiB with a million XML nodes, and its style sheets have at most a million selectors,
+declarations and at-rules. Illustrator declares its namespaces as XML entities, and an entity whose value
+is plain text is read. A file is refused when an entity’s value holds markup or other entities, or when
+its references would expand the file past 64 MiB. Without these rules a small file could need a large
+amount of memory. Only the document type declaration’s internal subset, <code>&lt;!DOCTYPE svg [ … ]&gt;</code>, declares
+entities: a declaration in a comment or in character data declares nothing. A name declared twice counts
+at its longer value. XML keeps the first declaration, and the limit must hold whichever the parser keeps.
+Reading charges the budget for each XML node, path segment and 8 bytes of a transform, point list or
+style sheet. Each element is charged for its classes, the style sheet rules tested against it and the
+declarations it takes, and for 8 bytes of its <code>style</code> attribute each time it is read: a gradient’s stops
+are read again for each shape the gradient paints (<a href="data-model.html#budgets">budgets</a>).</p>
+<h2 id="fonts"><a class="header" href="#fonts">Fonts</a></h2>
+<p>The adapter also reads embroidery fonts in Ink/Stitch’s format, folders of a <code>font.json</code> and glyph files,
+with <code>stitchcraft_svg::font</code> (<a href="fonts.html#the-reader">the reader</a>). Each glyph’s design is read as an SVG file
+is read, within the budget the whole font shares. A glyph’s box and its file’s baseline are measured on the
+page the root’s size and viewBox give, which the adapter maps the drawing with too. From M14.2,
+<code>stitchcraft_svg::lettering</code> sets a text in such a font, each glyph’s design placed and scaled into the
+text’s design (<a href="fonts.html#lettering">lettering</a>). Along a path, each glyph’s design is turned too
+(<a href="fonts.html#along-a-path">along a path</a>).</p>
+<p>A shape’s <code>inkscape:label</code> is its element’s name. From M14.5, a shape labelled <code>stitch:text</code> and a text
+marks text in a traced picture (<code>REQ-SVG-016</code>). The reader has no fonts, so it reads the shape as any
+other, and <code>stitch</code> sets the lettering once the file is read
+(<a href="image-to-embroidery.html#text-in-pictures">text in pictures</a>). From M13.39, the reader takes a shape labelled <code>stitch:keep</code>
+out of the elements and gives it to the design as a mark
+(<a href="image-to-embroidery.html#marks-that-keep-parts">marks that keep parts</a>), and from M13.24 a path labelled
+<code>stitch:guide</code> as a guide (<a href="image-to-embroidery.html#a-guide-on-one-shape">a guide on one shape</a>). Ink/Stitch’s
+guide line, a path with its marker, guides only the shape grouped with it.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../design/diagnostics.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../design/engine-pipeline.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../design/diagnostics.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../design/engine-pipeline.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

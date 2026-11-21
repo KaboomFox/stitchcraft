@@ -1,0 +1,829 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Machine testing - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-b37cbce2.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-95df4fb0.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/plan/machine-testing.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="machine-testing-protocol"><a class="header" href="#machine-testing-protocol">Machine testing protocol</a></h1>
+<!-- implements: crates/stitchcraft-engine/src/testsheets/**, apps/stitchcraft-cli/src/commands/testsheet.rs -->
+<p>Automated tests prove the files are what we intend. Only a machine proves they sew well. This page is
+the protocol for <strong>machine checkpoints</strong> (MC-1 … MC-12) on the reference machine: a Brother PE800, whose
+5 × 7 in hoop sews at most 130 × 180 mm. Its 4 × 4 in and small hoops have profiles too, and the TS-10
+sheets test them (<a href="../design/adr/0013-brother-pe800-reference-machine.html">ADR 0013</a>).</p>
+<h2 id="roles"><a class="header" href="#roles">Roles</a></h2>
+<ul>
+<li><strong>StitchCraft generates</strong> each test sheet deterministically: <code>stitch testsheet TS-xx -o TS-xx.pes</code>
+checks it against the profile of the hoop it is for. It prints that profile, the file’s SHA-256, its
+size and counts, the threads in the order they are sewn (with the Brother palette name the machine
+shows for each) and what to check after sewing. Its size and counts are the file’s, read back as the
+machine reads it. <code>stitch preview TS-xx.pes -o TS-xx.png</code> draws a picture of what the file sews on the
+reference machine, with the jump threads it leaves.
+<code>stitch testsheet --list</code> lists the sheets. The MC-1 sheets are drawn stitch by stitch, to test the
+machine and the file formats; from MC-2, sheets are drawn as designs and planned by the engine, so
+sewing them tests its stitches, locks and plan assembly too.</li>
+<li><strong>The tester sews</strong> it with the standard setup below, photographs it, measures it, and files a
+<strong>Sew-out report</strong> issue (the form asks for everything on this page).</li>
+<li><strong>A maintainer turns the report into changes</strong>: profile values, parameter defaults, new conformance
+cases, or bugs. Every profile change links its report.</li>
+</ul>
+<h2 id="standard-setup-keep-it-constant"><a class="header" href="#standard-setup-keep-it-constant">Standard setup (keep it constant)</a></h2>
+<p>Record anything that differs in the report.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Item</th><th>Standard</th></tr>
+</thead>
+<tbody>
+<tr><td>Fabric</td><td>Medium-weight woven cotton (quilting cotton or twill), pressed</td></tr>
+<tr><td>Stabilizer</td><td>One layer of medium tear-away; cut-away for knits (TS-09 only)</td></tr>
+<tr><td>Needle</td><td>75/11 embroidery needle, fresh at each checkpoint</td></tr>
+<tr><td>Top thread</td><td>40 wt polyester embroidery thread; colours as listed on the expected-result sheet (any brand)</td></tr>
+<tr><td>Bobbin</td><td>60 wt (90 wt) bobbin thread, white</td></tr>
+<tr><td>Hoop</td><td>The 5 × 7 in hoop, unless the sheet names another; fabric drum-tight, design centred</td></tr>
+<tr><td>Machine settings</td><td>Note the machine’s speed and its own trim/jump settings (some Brother models trim automatically on long jumps)</td></tr>
+<tr><td>Starting</td><td>Hold the thread’s tail for the first few stitches: at MC-1 a tail left loose pulled the first stitches out</td></tr>
+<tr><td>Jump threads</td><td>The PE800 cuts the thread at thread changes and stops, but at no jump (MC-1). At each thread change and stop, snip the jump threads sewn so far, and snip the rest before any pull test. The sheets never sew over a jump thread that is still there, but TS-13, which sews its pictures as any design: which jump threads they sew down is one of its checks</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="photographing-and-measuring"><a class="header" href="#photographing-and-measuring">Photographing and measuring</a></h2>
+<ul>
+<li><strong>Front and back</strong>, flat, in daylight or a daylight lamp, camera straight above.</li>
+<li><strong>A ruler in every photo</strong>, along the top and left edges, millimetre side visible.</li>
+<li><strong>Close-ups</strong> of anything odd (loops, gaps, puckers, bird’s nests), with the ruler.</li>
+<li>Measure with a steel ruler or calipers; report in mm with one decimal.</li>
+<li>Rate each item 1–5 (5 = indistinguishable from expected) and add a sentence.</li>
+</ul>
+<h2 id="test-sheets"><a class="header" href="#test-sheets">Test sheets</a></h2>
+<p><code>stitch testsheet</code> writes each sheet. From M6.12, VectorCraft’s Test Sheet filter draws the sheets drawn as
+designs, TS-02B to TS-09, into a document, where they sew as <code>stitch testsheet</code> writes them, moved to the
+middle of the artboard (<code>REQ-VC-015</code>). A checkpoint can so sew a sheet through VectorCraft’s workflow.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Sheet</th><th>What it checks</th><th>Measure / observe</th><th>First used</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>TS-01</strong> Orientation &amp; scale</td><td>An asymmetric “F”, a 100 mm cross with 10 mm ticks, 10 mm squares in the corners (120 × 120 mm)</td><td>F not mirrored or rotated; 100 mm line = 100.0 ± 0.5 mm in X and Y; squares square</td><td>MC-1</td></tr>
+<tr><td><strong>TS-02</strong> Commands</td><td>3 colour blocks, a stop, and rows of 2 dashes separated by jumps of 2, 5, 15 and 30 mm. The left half (red) has a trim before every jump, the right half (blue) none; PES flags every jump as a trim (REQ-FMT-010), so in a PES file the halves differ only in the plan (120 × 70 mm)</td><td>The machine stops for colours and the stop; every dash sews; which jumps were cut on each half; any loose loops</td><td>MC-1, MC-2</td></tr>
+<tr><td><strong>TS-02B</strong> Commands, from elements</td><td>TS-02 drawn as a design and planned by the engine. Each red dash but the last sets a trim after it (<code>trim_after</code>). The blue ones set none, and the 2 mm gap between them is sewn across, because it is within the 3 mm collapse length. The green line stops halfway (<code>stop_after</code>). The stitching has a lock wherever it starts or ends (120 × 70 mm)</td><td>The machine stops for colours and the stop; does any dash pull out while the machine goes on, uncut, to the next? Once the jump threads are snipped, does each dash hold?</td><td>MC-2</td></tr>
+<tr><td><strong>TS-03</strong> Running stitch</td><td>Lines at 1.5, 2.0, 2.5, 3.0 and 4.0 mm stitch length, bean 1× and 2×, circles at tolerances of 0.1, 0.2 and 0.5 mm, and 20 stitches placed by hand at 0.3, 0.4, 0.5, 0.7 and 1.0 mm (60 × 78 mm). The long lines alternate between left to right and right to left. The circles are sewn right to left, and each hand-placed line starts below where the last one ended</td><td>Even stitches, smooth curves, solid bean lines, and the shortest hand-placed stitch that sews cleanly: 0.3 mm or less if the 0.3 mm line is clean, since the sheet has no shorter line</td><td>MC-2</td></tr>
+<tr><td><strong>TS-04</strong> Lock stitches</td><td>Lines 30 mm long with every lock shape but custom at both ends, trimmed after: the half stitch on first stitches of 1, 1.5 and 2.5 mm, back-and-forth at 0.5, 0.7 and 1.0 mm, drawn shapes at 70, 100 and 150 % (110 × 65 mm). The rows alternate between left to right and right to left</td><td>Snip the jump threads first. Pull each tail gently: does the lock stay, or does the thread pull out? Is the lock visible from the front?</td><td>MC-2</td></tr>
+<tr><td><strong>TS-05</strong> Satin width ladder</td><td>3 rows at zigzag spacings of 0.3, 0.4 and 0.5 mm, each of 10 columns 20 mm tall and 1 to 10 mm wide, with no underlay (91 × 76 mm). Each column is sewn as drawn and trimmed after; the rows alternate between left to right and right to left, and the columns between down and up, each from its corner nearest the one before</td><td>Coverage, fabric showing between stitches, edges straight, long stitches loose, how much narrower than drawn</td><td>MC-3</td></tr>
+<tr><td><strong>TS-06</strong> Satin underlays</td><td>The same column, 6 mm wide and 30 mm tall, with no underlay, a centre walk, a contour, a zigzag, and a contour with a zigzag (62 × 30 mm). Each column is sewn as drawn and trimmed after, alternately down and up from its corner nearest the one before, the centre walk first</td><td>Edge sharpness, loft, puckering, underlay showing</td><td>MC-3</td></tr>
+<tr><td><strong>TS-07</strong> Registration</td><td>3 circles 60 mm across, filled in red with the default underlay at pull compensations of 0, 0.2 and 0.4 mm, then outlined in black with a running stitch along their edges (126.2 × 126 mm). Each fill and outline is trimmed after, and each outline starts where the jump to it arrives</td><td>Gap or overlap between fill and outline at 12 points around each circle, how much narrower than drawn each fill sews, puckering</td><td>MC-4</td></tr>
+<tr><td><strong>TS-08</strong> Fill density &amp; angle</td><td>15 squares 30 mm wide, with the default underlay: rows at spacings of 0.25, 0.3, 0.4, 0.5 and 0.6 mm, top to bottom, and columns at angles of 0°, 45° and 90° (100 × 170 mm). Each square is trimmed after</td><td>Coverage, stiffness, puckering, visible furrows. At 0.25 mm, below the Brother’s shortest stitch of 0.3 mm, a sliver at each row’s start in the 0° and 90° squares, where the rows meet the edges square on (<code>DEV-FIN-001</code>). The 45° square’s rows end 0.35 mm apart along its edges and keep their starts. If the machine sews 0.25 mm stitches cleanly, the report can lower the profile’s shortest stitch</td><td>MC-4</td></tr>
+<tr><td><strong>TS-09</strong> Fill underlay &amp; travel</td><td>A rectangle 50 × 30 mm with a square hole and a round hole, and a bar 6 mm to its right, all one fill, sewn 3 times (66 × 114 mm). The top copy has no underlay. The others have the default underlay, and the bottom one 2 gap-filling rows too. Each copy is trimmed after</td><td>Travel hidden? Does the fill hold at both ends of the jump to the bar? Holes clean? A gap where the rows round a hole meet?</td><td>MC-4</td></tr>
+<tr><td><strong>TS-10A/B/C</strong> Hoop size</td><td>Frames of 100 × 100 mm (A, the 4 × 4 in hoop), 130 × 180 mm (B, the 5 × 7 in) and 20 × 60 mm (C, the small hoop), each as large as its hoop’s field, with a centre cross and an “F” in the top-left corner</td><td>The machine takes each design in its hoop without asking for a larger one, and sews it to size. The small hoop’s field is the right way round</td><td>MC-1, MC-5</td></tr>
+<tr><td><strong>TS-11A</strong> New strokes and satins</td><td>M7’s new strokes and satins, a band to a thread, each sample trimmed after (127 × 144 mm). Most are hooks, straight and then turning a quarter circle, in rows that turn back on each other. Zigzag strokes (M7.2) at spacings of 0.4, 1 and 2 mm and widths of 1, 2 and 4 mm, and a line 4 mm wide whose stitches turn 45°. E-stitches (M7.3) 3 and 5 mm wide at spacings of 2 and 3 mm, along the sides of a square and round 4 circles, on appliqué fabric laid at one stop and trimmed at the next. S-stitches (M7.4) 6 and 10 mm wide at spacings of 0.4 and 0.6 mm, the 10 mm ones split at 3 mm by the default and the staggered methods. Zigzag satins (M7.5) 4 and 8 mm wide at spacings of 0.4 and 1 mm, each beside a satin column of the same width and spacing, and one 8 mm wide at 1 mm over a contour underlay</td><td>Per type, as listed on its expected-result sheet. A zigzag sews narrower than drawn, and the report says by how much, whether its sides are even round curves and which is the narrowest width that sews cleanly. The E-stitch’s spine should cover the appliqué’s raw edge, and its spikes hold it without puckering. The S-stitch should cover its band at 0.4 mm with its steps along the edges even, and the report says whether the default method’s splits leave a furrow along the band that the staggered ones do not. The zigzag satin should cover its band at 0.4 mm as its satin column does, and the report says whether it sews narrower than the satin column beside it. Its contour underlay should not show past the zigzag at either end</td><td>MC-6</td></tr>
+<tr><td><strong>TS-11B</strong> New fills</td><td>Contour fills (M7.7) and circular fills (M7.9), each over the default underlay and trimmed after, a row to a thread (125 × 166 mm). Top row: discs 36 mm across with rings 0.25 mm apart, sewn inner to outer round a hole 12 mm across set off its middle, as a spiral and as a double spiral. Middle row: stars 40 mm across with rings 0.4 mm apart and round, mitred and bevelled corners. Third row: 2 squares joined by a neck 3 mm wide, where the rings part. Beside them, a rectangle whose rings alternate their direction and a leaf smoothed by 0.5 mm. Bottom row, circular fills: the disc round its hole and the star again, and a rectangle whose circles fade from 0.25 mm apart at its middle to 1 mm at its corners</td><td>Fabric showing between the rings, puckering, and whether the discs sew 36 mm across. Whether inner to outer’s steps show as a line across the rings, and whether the alternating rectangle looks calmer. A knot or a bump where the spirals end. Whether the mitred star’s rings reach into its points where the round and bevelled ones leave a gap at each tip, and which looks best. The neck should fill, and the smoothed leaf’s line should run without kinks. Whether the circular fills’ rings look round and even, whether the travel between pieces of a spiral shows on the star’s points or round the hole, and whether the fading rectangle is denser at its middle. The time the sheet takes</td><td>MC-6</td></tr>
+<tr><td><strong>TS-11C</strong> Meander fills</td><td>Meander fills (M7.8), each over the default underlay and trimmed after, a row to a thread (123 × 120 mm). The top row’s discs, 36 mm across, are in hexagons, squares and triangles 2 mm a side. The middle row’s discs are in octagons and squares, in hexagons and triangles, and in hexagons with squares and triangles. In the bottom row a star 40 mm across is in squares and triangles. Beside it a rectangle in hexagons twice as large sews as a zigzag 2.5 mm wide kept inside it, and a leaf in hexagons half as large is turned by 30° and smoothed by 0.5 mm</td><td>Whether each tiling shows in the stitches and the line looks even, or bare patches show where it didn’t reach, and which tile looks best at which size. Does the underlay show between the line’s turns, or is the fill too light to hide the fabric? The zigzag should stay inside the rectangle and lie flat. On the smoothed leaf, a line without kinks and 1 mm sides sewn cleanly. Puckering where the line turns</td><td>MC-6</td></tr>
+<tr><td><strong>TS-12</strong> Real design</td><td>A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours, its PES file written by VectorCraft’s File › Export › Export As (M6.9)</td><td>Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean? A graphic style applied to a group: do the paths inside sew as VectorCraft shows them, with the style’s settings and colour? A satin border of 2 circles joined by Make Compound Path: do its stitches go straight across all the way round? A satin column that Stroke to Satin made of a line (M6.12): does it sew as the line did with the satin effect? A fill and a line cut by Make Clipping Mask (M8.7): do they sew only inside the clipping shape, cut where VectorCraft shows them cut?</td><td>MC-5, MC-7</td></tr>
+<tr><td><strong>TS-13</strong> Pictures digitized automatically (M13)</td><td>Test pictures drawn in code (<code>stitchcraft_engine::testsheets::pictures</code>), digitized automatically in the top half of each sheet and sewn as drawn, in paint order, in the bottom half, which sews first and stops. TS-13A has a badge traced abutting and one traced stacked, specks round a disc, a row of badges drawn badge by badge, and a bar that runs on beside a square without touching it (126 × 168 mm). TS-13B has the word MATCH in block letters 15, 10, 6 and 4 mm tall, and windows whose lines, traced as areas, are 0.3, 0.6 and 0.9 mm wide (110 × 148 mm). TS-13C has a cartoon face drawn with black lines 1, 2 and 4 mm wide, a star, and a balloon on its string (111 × 108 mm). TS-13D has an emblem 42 mm wide, a navy square with a white disc, a red star on the disc and 3 gold bars, traced abutting and traced stacked (89 × 100 mm). TS-13E has a button 23 mm across, a yellow disc with 7 orange dots in a black rim, traced abutting and traced stacked (24 × 108 mm)</td><td>Fabric showing between colours, on both halves, and on the digitized half whether each area’s 1 mm overlap under the next covers the gap or shows as a ridge (M13.2, M13.16), and whether the base layer under the digitized half shows beside a shape’s edge or through a fill (M13.16). Whether a stacked trace’s digitized half, its covered parts cut away, sews as flat as the abutting one, and what became of the specks round the disc (M13.2). Where a shape runs on beside an area without touching it, whether the fabric that shows there as drawn reads as a gap (M13.2). The smallest letters that read. Whether each outline’s columns cover the edges of the fills beside them, and whether the triple runs show as wide as their lines. A column’s square end past the end of a line with round caps (M13.1), and how far it shows past the round end. Small traced rings and hairpins, filled because no satin column can follow them (M13.1), and how solid they sew beside their columns’ neighbours. Colour changes, jumps, trims and time against the half in paint order, on a row of badges drawn badge by badge too, as Auto Grouping draws them (M13.3). Whether any shape covers one drawn over it, which the order must never let happen, and whether each line sewn after the fill it borders covers the fill’s edge (M13.3). Lines traced as areas, 0.3, 0.6 and 0.9 mm wide, sewn along their middles (M13.4): whether each reaches as far as the line drawn, whether the 0.6 and 0.9 mm lines’ triple runs show as wide as they are drawn and the 0.3 mm line’s single run doesn’t look thin, and whether the fills beside a line, reaching under it, leave fabric showing along it. Whether a junction’s third branch, which ends at the line it meets, leaves a gap or a knot there (M13.4). Letters and outlines as wide as a satin column, sewn as satin columns between their own edges (M13.5): whether each column’s stitches lie square to its stroke, round a ring and through a bend. Where a column ends under another, 0.4 mm longer, does fabric show, or a ridge? A slanted terminal should end flat along its edge as drawn, and a round one at its farthest point. Whether a crossbar sewn as a column of its own across a stem reads as one stroke. The underlays by width should hold the columns up, and 0.4 mm of pull compensation keep them as wide as drawn. The stitches that lean where strokes meet at sharp angles, as in an M or a W (<code>SC-W0208</code>), and the jumps between a letter’s columns. Shapes broad in places and narrow in others (M13.6). The star’s points and the balloon’s string sew as columns over the fill of the star’s middle and of the balloon. Do their flat ends cover the fill’s edge, or leave fabric or a ridge there? Do each point’s stitches lie square to it from its tip to its cut? Pictures traced in layers (M13.12). Whether the stacked emblem, its layers flattened, sews as the abutting one beside it, and how stiff it sews as drawn on the bottom half, each colour whole under the colours over it. Which sews better between the bars, the navy filled whole under the white disc and the bars or the navy sewn round them as drawn? Whether the gold bars keep their height, 2.1 mm as drawn, and their square ends. Which sews better between the dots, the button’s yellow filled whole under them or sewn round them as drawn, and does the rim’s column cover the yellow’s edge? Whether fabric or a ridge shows round the bars, the disc, the star and the dots. Small discs no wider than a satin column are dots, filled (M13.12), as the gold discs of the row of badges and the button’s dots are. Do they sew round, and does fabric show at their edges? Which jump threads a shape sews down, since the PE800 cuts none</td><td>MC-8</td></tr>
+<tr><td><strong>TS-13F</strong> How thick a design may sew (M13.30)</td><td>A ladder of squares 15 mm a side, drawn as plain fills and not digitized (112 × 57 mm with its outlines). Top row: 1, 2, 3, 4, 5 and 6 fills on each other, left to right, each fill with the default rows of 0.25 mm, its angle turned 30° from the one under it. Middle row: the same squares under black satin outlines 2 mm wide, which sew last. Bottom row: 3 blocks 12 mm a side, each one fill cut into patches 1.5, 2 and 3 mm across that reach 1 mm under the patch sewn after them in their row and the one below. Every square and block lies on one open layer of rows, as the base layer of a digitized design sews by default, and no fill has an underlay of its own</td><td>The first square that breaks or shreds thread, or where the needle thumps, bare and under the outline. Puckers round each square, how stiff each is, and its thickness by calipers. Which block of patches is the stiffest, and whether the base layer shows between patches</td><td>MC-8</td></tr>
+<tr><td><strong>TS-14</strong> Lettering (M14)</td><td>3 embroidery fonts, a block, a script and a small one, each at the least and the greatest heights it sews at, and a name along an arc</td><td>Whether every glyph reads at its least height, satin coverage at its greatest, and whether the locks of small glyphs hold after the trims</td><td>MC-9</td></tr>
+<tr><td><strong>TS-15</strong> Fonts ported automatically (M15)</td><td>3 fonts from Google Fonts, a sans, a serif and a script, each ported at 3 heights beside the font Ink/Stitch digitized by hand from it, at the same heights. A word in satin columns 0.4, 0.6, 0.8 and 1 mm wide beside the same word in triple runs. <code>stitch testsheet</code> draws it with the fonts of the corpus</td><td>Whether every ported glyph reads at the least height, with its dots, serifs and counters. The jump threads inside letters and between them. Whether the ported letters read as well as the letters digitized by hand beside them, and the narrowest satin column that sews a letter cleanly</td><td>MC-10</td></tr>
+<tr><td><strong>TS-16</strong> An Ink/Stitch file (M8)</td><td>A design written as Ink/Stitch writes a file, which <code>stitch plan</code> reads, each step of M8 drawing its part. Its fill and its satin column start and end at Ink/Stitch’s commands. From M8.4 a red fill 40 × 30 mm sews from its top-right corner to its bottom-left one, and a blue satin column 40 mm long starts in its middle and ends three quarters along. From M8.5 a green fill is cut by its clip path, a circle, to a quarter of a disc, and a black zigzag running stitch by a U-shaped one into 2 pieces. From M8.8 the origin lies off the design’s middle, on the blue column’s top edge 10 mm in from its left end, and a stop after the blue column sends the frame to a stop position 20 mm right of the fill and 10 mm above it. From M8.9 the file turns the design right on export, about its origin, so its first 4 parts sew 100 mm wide and 40 mm tall. From M8.10 a clone of the red fill, turned 45° right, sews after them, in red, below the fill once the design is turned: its rows turn with it, and it starts and ends at the corners turned from the fill’s. From M8.13 2 black lines 40 mm long sew last, above the rest once the design is turned, each locked at both ends with a custom lock drawn as a path and trimmed after: straight lines and a curve at 100 %, and lines and an arc at 150 %. It is sewn beside the PES file the differential’s Ink/Stitch writes of it</td><td>Where each element starts and ends, against its commands. Whether the clipped edges sew where the clip path cuts them, and the clone’s rows lie at its turned angle. Do the drawn locks hold when the tail is pulled? Whether the machine puts the origin or the design’s middle at the hoop’s centre, where the frame waits at the stop, and whether the design sews turned right about its origin. Every difference between the 2 sew-outs</td><td>MC-11</td></tr>
+<tr><td><strong>TS-17A</strong> Cross stitch (M10)</td><td>Cross stitch fills (M10.1, M10.2), drawn before MC-12, each trimmed after, a row to a thread, every sample but the turned square on the canvas’s grid. From M10.1, in red, squares 24 mm wide of simple crosses on grids of 2 and 3 mm, with 2 and 4 threads. Below them in blue, the 2 mm square with 2 threads and the 3 mm one with 4, flipped, and a K 24 mm tall drawn as Ink/Stitch’s cross-stitch fonts draw their letters, on a 2 mm grid with 2 threads, grown by 0.1 mm, its slanted edges cutting their cells in half. From M10.2, in green, squares of upright, dense upright, double and Smyrna crosses on the 3 mm grid, the double crosses with 2 threads as Jersey 15 sews them. Below them in black, squares of half crosses with 3 threads, plain and flipped, and a square 18 mm wide turned 30° with its grid, as lettering along a path turns a glyph’s (114 × 114 mm)</td><td>Whether every cross’s top diagonal lies the same way, and whether the stitches through the cells’ middles show. Fabric between the crosses at 2 and 4 threads, and the grid that reads best at the letter’s size. How the layers of the double and Smyrna crosses look, and whether the half crosses’ travel stitches show on their edges. Gaps between the dense upright crosses, and the turned square’s stepped edges. The time the sheet takes</td><td>MC-12</td></tr>
+<tr><td><strong>TS-17B</strong> New fills (M10)</td><td>Tartan, guided and linear gradient fills (M10.6, M10.7, M10.9, M10.10, M10.12), drawn before MC-12, each trimmed after. From M10.6, 5 tartans 40 mm square, 3 to a row, each underlay in a thread of its own. Their setts are mirrored at the ends or repeated, and one has a weft that differs from its warp. Another has stripes 0.5 and 0.8 mm wide sewn as runs, and one is turned 30° and scaled by 150 %. From M10.7, a herringbone 3 mm wide of blue, white, red and black ends the second row. From M10.12, 3 squares 40 mm a side in a third row, in linear gradients of 2 and 3 stops at slants of their own, the last one’s middle stop transparent, each underlay in its first colour. From M10.9, the fourth row starts with a leaf 48 mm from tip to tip, from the bottom left to the top right of a 40 mm square, in emerald green over its underlay. Its guided fill copies an S-shaped guide from tip to tip, 0.25 mm apart. From M10.10, beside it, a fan in yellow whose rows are the offset curves of an arc, and an egg in flesh pink whose rows are rings round a short line, started along an anchor line. From M10.9 only <code>stitch testsheet</code> draws the sheet: the leaf’s guide is a marker the Test Sheet filter would have to group with it (130 × 172 mm)</td><td>Whether a tartan’s warp and weft read as a weave and its runs lie flat on its fills, and how its herringbone turns. The spacing of the guided rows round the guide’s bends, and where the copied rows crowd. The spacing of the fan’s offset rows from its inner arc to its outer, and where the egg’s rings show their joins or their starts along the anchor line. Whether a gradient’s colours blend with no step between its sections, and whether the transparent stop leaves a clean gap. Colour changes, jumps and time</td><td>MC-12</td></tr>
+<tr><td><strong>TS-17C</strong> Ripples and routing (M10)</td><td>Ripple stitches (M10.8, M10.11), drawn before MC-12, along a column of rails and rungs, from an open line towards a target point and from a closed line spiralling in. Ripples along a guide line and closed lines on a satin guide, beside a ripple with a grid. The routing tools (M10.4, M10.13): satin letters as drawn beside the same letters after auto-satin routing, and a network of running stitches as drawn beside it after auto-run routing. Drawn from M10.4 with its part, the word ROUTE in satin letters 20 mm tall with a centre walk underlay, as drawn above and routed 30 mm below. From M10.13, below them in red, 6 bean-stitched running stitches that cross, branch and pass near each other, as drawn on the left and routed with trims on the right. From M10.15, below the network in red, a bar and a post that cross at their middles, satin columns 5 mm wide and 30 mm long with a contour and a zigzag underlay, as drawn on the left and with their underlays first on the right. From M10.8, in green below the crossing columns, a ripple of 7 lines sewn back and forth along a column between 2 arches, drawn with rails and a rung. Beside it, the 8 copies of a wave shrink to a target point 20 mm above it and meet at points. On the right, a circle spirals in to its middle. From M10.11, at the bottom in green, 5 guided ripples. 8 copies of a wave follow an arch, shrinking to 30 % as they turn with it. Copies of a circle 5 mm across follow 2 curved rails, centred between them. A column of 5 lines has a grid across it 3 mm apart, sewn first, and copies of a thin diamond stand across a ladder at its rungs, an anchor line across its middle. Last, 7 copies of a zigzag along a straight guide, sewn through their nodes, are cut to a circle. 2 satin columns of one thread that cross, as drawn beside the same 2 with their underlays first (M10.15)</td><td>Whether the ripples’ lines and the guided copies keep their spacing, how their joins look, and if the grid lies flat across its column with the clipped zigzag’s pieces joined by no visible thread. Jumps, trims and time on the routed halves against the halves as drawn, and whether the runs under the satins show, and under the bean stitches of the lines. Whether the crossing columns, their underlays sewn first, lie flatter than as drawn. The height of each crossing above the fabric, with calipers. Whether the bar’s satin bulges or its underlay shows where the post crosses it. How the needle goes back from the post’s underlay to the bar</td><td>MC-12</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="checkpoint-calendar"><a class="header" href="#checkpoint-calendar">Checkpoint calendar</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Checkpoint</th><th>After</th><th>Sheets</th><th>Questions it must answer</th></tr>
+</thead>
+<tbody>
+<tr><td>MC-1</td><td>M1</td><td>TS-01, TS-02, TS-10A/B/C</td><td>Does the machine read our PES? Right size and orientation? Which trim encoding works? Does each hoop take a design as large as its profile allows, from PES v1?</td></tr>
+<tr><td>MC-2</td><td>M3</td><td>TS-03, TS-04, TS-02B</td><td>Minimum stitch length and lock defaults? Do the locks hold where the machine cuts the thread, and where a jump thread is snipped?</td></tr>
+<tr><td>MC-3</td><td>M4</td><td>TS-05, TS-06</td><td>Satin spacing, width limits, underlay defaults, pull compensation</td></tr>
+<tr><td>MC-4</td><td>M5</td><td>TS-07, TS-08, TS-09</td><td>Fill spacing, pull compensation, gap-filling rows, underlay and travel defaults</td></tr>
+<tr><td>MC-5</td><td>M6</td><td>TS-12, TS-10</td><td>Is the VectorCraft workflow complete and correct? Does a test sheet drawn by the Test Sheet filter sew as <code>stitch testsheet</code> writes it?</td></tr>
+<tr><td>MC-8</td><td>M13.12</td><td>TS-13, from <code>stitch testsheet</code> or drawn in VectorCraft by the Test Sheet filter with the Auto effect</td><td>Do pictures digitized automatically sew better than the same shapes in paint order? Are the widest satin column, the narrowest triple run, the overlap, the base layer, the underlays by width and the columns’ pull compensation right?</td></tr>
+<tr><td>MC-6</td><td>M7</td><td>TS-11A and TS-11B, from <code>stitch testsheet</code> or drawn in VectorCraft by the Test Sheet filter, and TS-11C from <code>stitch testsheet</code></td><td>New stitch types acceptable? Are their defaults right?</td></tr>
+<tr><td>MC-11</td><td>M8</td><td>TS-16, from <code>stitch testsheet</code>, beside Ink/Stitch’s machine file of it, which the differential keeps (<code>target/conformance/differential/ts-16.inkstitch.pes</code>)</td><td>Does an Ink/Stitch file sew from StitchCraft’s machine file as it does from Ink/Stitch’s?</td></tr>
+<tr><td>MC-12</td><td>M10</td><td>TS-17A, TS-17B, TS-17C, from <code>stitch testsheet</code> or drawn in VectorCraft by the Test Sheet filter, but TS-17B and TS-17C only from <code>stitch testsheet</code>. TS-17B’s guided leaf, fan and egg follow guides that a filter can’t group with them (M10.9, M10.10). A document’s coordinates round the points where TS-17C’s routed letters are cut, and a piece of its T then sews its first stitch 0.05 mm off. In M10.12 the filter drew TS-17B’s linear gradients as gradient paints, which sew as the engine sews them</td><td>New stitch types acceptable, and their defaults right? Do ripple stitches keep their lines apart and their joins neat, and do guided copies follow their guides? Are there fewer jump threads on the routed designs than on the same elements as drawn? With their underlays first, do satin columns that cross lie flatter? Does each linear gradient blend its colours with no step between its stops? From M10.9, does a guided fill’s rows bend with its guide and keep their spacing round its bends? From M10.10, do offset rows keep their spacing where copies would crowd, and do a buffer’s rings hide their joins and their starts?</td></tr>
+<tr><td>MC-9</td><td>M14</td><td>TS-14</td><td>Do the fonts sew legibly across the heights they claim?</td></tr>
+<tr><td>MC-10</td><td>M15</td><td>TS-15</td><td>Do fonts ported automatically sew as legibly as fonts digitized by hand, from the least height of their range?</td></tr>
+<tr><td>MC-7</td><td>M12</td><td>all</td><td>Release regression</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="mc-8-the-kit"><a class="header" href="#mc-8-the-kit">MC-8: the kit</a></h2>
+<p>Write every file of the kit from the commit under test, and give that commit in each report. A step below
+that compares 2 versions names the earlier one: write that file from the commit before the step. A file
+written at another commit sews as that commit planned it. <code>stitch inspect FILE</code> gives each file’s stitches,
+jumps and colour changes, which the rethreads and the cuts at the machine are counted against.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Kit item</th><th>Steps</th><th>How it is made</th></tr>
+</thead>
+<tbody>
+<tr><td>TS-13A to TS-13F</td><td>M13.2 to M13.46</td><td><code>stitch testsheet TS-13A -o TS-13A.pes</code>, and so for each sheet. The Test Sheet filter draws them too</td></tr>
+<tr><td>The word Stitch in Small Font at 3.6 and 15.2 mm, Hello World on 2 lines, and Hello on an arc</td><td>M14.2, M14.3</td><td>The <code>stitch lettering</code> commands below, with a copy of Ink/Stitch’s font folder, and <code>arc.svg</code> from the commands after this table</td></tr>
+<tr><td>MATCH 15 mm tall, traced, in Small Font and in Barstitch Bold</td><td>M14.8</td><td>The traced word is TS-13B’s word 15 mm tall. <code>stitch lettering "MATCH" --font FOLDER --height 15</code> sets it in each font</td></tr>
+<tr><td>The lettered patch, traced, and the same patch with its word as text</td><td>M13.36, M13.37, M13.50, M14.5</td><td>Made by hand. The cases draw the patch in code (<code>lettered_patch</code> in <code>crates/stitchcraft-testkit/src/pictures.rs</code>), and no command writes it to a file. Draw it as an SVG file, plan it with <code>--auto</code>, and again with <code>--text</code> round the word</td></tr>
+<tr><td>A drawn badge with a word typed on it</td><td>M14.7</td><td>Made by hand: no file of the repository holds text. Plan it with <code>--auto</code></td></tr>
+<tr><td>The demo’s badge, with and without outlines</td><td>M13.27, M13.28, M13.17</td><td><code>stitch plan web/templates/alpine-night.svg --auto -o badge.pes</code>, and again with <code>--set auto_fill_outline=false</code></td></tr>
+<tr><td>The traced pear, as planned and with a lattice base layer</td><td>M13.30, M13.35</td><td><code>stitch plan docs/fixtures/traced-pear.vectorcraft --auto -o pear.pes</code>, and again with <code>--set auto_base_rows=lattice</code></td></tr>
+<tr><td>The traced dogs</td><td>M13.16 to M13.55</td><td><code>stitch plan docs/fixtures/traced-dog-running-9.vectorcraft --auto -o dog.pes</code>, and the other 3 documents <code>traced-dog-*.vectorcraft</code> in <code>docs/fixtures/</code> the same way. For a step’s setting, add its <code>--set</code>, such as <code>--set auto_fill_uneven=false</code></td></tr>
+<tr><td>The running dog traced from its photo, with and without <code>--fewer-points</code></td><td>M13.51</td><td><code>stitch plan docs/fixtures/dog-running-cutout.png --auto --size 100 --colours 9 -o dog-traced.pes</code>, and again with <code>--fewer-points</code>. Both trace with VectorCraft’s command line</td></tr>
+<tr><td>A traced dog with <code>stitch:keep</code> marks, one with a <code>stitch:guide</code> line, and a leaf with a guide</td><td>M13.39, M13.24</td><td>Made by hand in VectorCraft: no file of the repository has a mark or a guide</td></tr>
+<tr><td>Hexmira in Small Font at 8 and 10 mm, made bolder</td><td>M14.9</td><td><code>stitch lettering "Hexmira" --font FOLDER --height 8 --widen-percent 10 -p brother-pe800-4x4 -o hexmira.pes</code>, at each height and at 0, 10 and 20 %. Barstitch Bold with its pull compensation scaled to the height is made by hand</td></tr>
+<tr><td>Words on a cream field (Hexmira at 8 and 10 mm, Hexmira 7.6 mm tall, and VOLKAR in Barstitch Bold 12.5 mm tall)</td><td>M14.9, M13.50</td><td>Made by hand: a cream field drawn 3 mm round the word, with the word set on it as text</td></tr>
+<tr><td>Bars and rings 6, 8 and 10 mm wide</td><td>M13.54</td><td><code>bar-8mm.svg</code> and its relatives from the commands after this table</td></tr>
+<tr><td>The test piece of 12 tiles under satin columns</td><td>M13.55</td><td>Made by hand. Its tiles are fills 20 mm wide in navy and in orange, with a black satin column along each tile’s top, straight on some tiles and curved on the others, in widths from 2 to 6 mm. No file of the repository draws it</td></tr>
+<tr><td>A circle 40 mm across, its fill in one colour and a 2 mm stroke round it in another</td><td>M13.8</td><td>Made by hand in VectorCraft, without StitchCraft effects. <code>stitch plan circle.vectorcraft -o circle.pes</code>, and again with <code>--no-auto</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>The arc, and the bars and the rings of M13.54, each written by one command from nothing but the command
+itself:</p>
+<pre><code class="language-sh">printf '&lt;svg xmlns="http://www.w3.org/2000/svg" width="110mm" height="60mm" viewBox="0 0 110 60"&gt;&lt;path d="M 10 55 A 45 45 0 0 1 100 55" fill="none" stroke="#000"/&gt;&lt;/svg&gt;\n' &gt; arc.svg
+for w in 6 8 10; do
+  awk -v w=$w 'BEGIN { printf "&lt;svg xmlns=\"http://www.w3.org/2000/svg\" width=\"60mm\" height=\"20mm\" viewBox=\"0 0 60 20\"&gt;&lt;path fill=\"#0a55a3\" d=\"M5 %gH55V%gH5Z\"/&gt;&lt;/svg&gt;\n", 10 - w / 2, 10 + w / 2 }' &gt; bar-${w}mm.svg
+  awk -v w=$w 'BEGIN { R = 20 + w / 2; r = 20 - w / 2; printf "&lt;svg xmlns=\"http://www.w3.org/2000/svg\" width=\"60mm\" height=\"60mm\" viewBox=\"0 0 60 60\"&gt;&lt;path fill=\"#ed171f\" fill-rule=\"evenodd\" d=\"M%g 30A%g %g 0 1 0 %g 30A%g %g 0 1 0 %g 30Z M%g 30A%g %g 0 1 1 %g 30A%g %g 0 1 1 %g 30Z\"/&gt;&lt;/svg&gt;\n", 30 + R, R, R, 30 - R, R, R, 30 + R, 30 + r, r, r, 30 - r, r, r, 30 + r }' &gt; ring-${w}mm.svg
+done
+</code></pre>
+<h2 id="mc-8-the-steps-and-their-checks"><a class="header" href="#mc-8-the-steps-and-their-checks">MC-8: the steps and their checks</a></h2>
+<p>Before MC-8, cases answer the TS-13 checks that its stitches can, and count the jump threads that later
+stitches sew down (<a href="../design/image-to-embroidery.html#testing">image to embroidery › Testing</a>). The sew-out
+answers the rest, and shows whether those threads show. On 2026-11-01 TS-13B’s digitized T 4 mm tall
+gained the arm of its bar that it had lost, and the leg of its A 6 mm tall that sewed as a line became a
+column like the other. M13.12 then changed what the digitized halves of TS-13A and TS-13B sew, as the
+pictures’ layers are flattened before they are digitized. It also added TS-13D. Check that each sheet’s
+stitches number as the <a href="../user/reference/test-sheets.html">test-sheet reference</a> says. On 2026-11-08 a narrow part’s column
+stopped running along its cut into one of the cut’s corners, where it sewed a fan of stitches and left
+fabric bare beside it. The column now ends along the whole cut. TS-13C’s digitized star then sews its
+right-hand point from its tip to its cut. At MC-8, look at each point’s end along its cut for fabric
+showing at the cut’s corners. Later that day M13.15 measured the column’s width inside its own outline,
+and made an open column’s rail cut across the outline’s slivers narrower than a thread. TS-13B’s word
+4 mm tall then sews the outer legs of its M as satin columns, 1.05 mm wide where the M’s middle strokes meet
+them. Do they sew as cleanly as the triple runs beside them, and does the M keep its shape?</p>
+<p>Lettering sews from M14.2, before TS-14 is drawn. Until then, sew a word in Ink/Stitch Small Font at the
+ends of its range on the PE800, from a copy of Ink/Stitch’s font folder:
+<code>stitch lettering "Stitch" --font small_font --scale 70 -o small.pes</code> for its least height, 3.6 mm, and
+<code>--scale 300</code> for its greatest, 15.2 mm.</p>
+<ul>
+<li>At 3.6 mm, does every letter read, and do the stitches that join the letters on the fabric show?</li>
+<li>At 15.2 mm, do the satin columns cover, and how long do the jump threads between the letters take to cut?</li>
+</ul>
+<p>From M14.3, sew 2 more on the PE800. <code>stitch lettering "Hello\nWorld" --font small_font --scale 200 -o lines.pes</code>
+sews its second line back from where the first ended. With <code>--path arc.svg --scale 300</code>, <code>Hello</code> follows the
+kit’s arc.</p>
+<ul>
+<li>Between the 2 lines, is the thread as short as the picture draws it, and does the second line, sewn from
+the right, look like the first?</li>
+<li>On the arc, do the letters stand evenly, and do the columns of a turned letter cover as those of an
+upright one?</li>
+</ul>
+<p>From M14.4, sew a name typed in VectorCraft on the PE800. Type 2 lines as point type, apply
+<strong>Effect › Plug-ins › StitchCraft Lettering</strong> with Size 150, and export to PES.</p>
+<ul>
+<li>Does the text sew where it stands in the document, beside a shape drawn next to it?</li>
+<li>Is 7.6 mm the height you expected from the dialog, without a picture of the font on the canvas?</li>
+</ul>
+<p>From M14.5, sew a lettered patch twice on the PE800. The first has its word traced as shapes. The second
+is the same picture planned with <code>--text</code> round the word, in Ink/Stitch Small Font
+(<a href="../user/how-to/letter-a-picture.html">letter a picture</a>).</p>
+<ul>
+<li>Which word reads better at 10 mm, and which at 6 mm and below?</li>
+<li>Is the field whole under the lettering, with no fabric showing round a letter?</li>
+</ul>
+<p>From M14.7, sew a drawn badge with a word typed on it, as text, on the PE800. Plan the SVG file with
+<code>--auto</code> and Ink/Stitch Small Font in the font folder.</p>
+<ul>
+<li>Does the word stand where the drawing has it, and is its height the one the note gave?</li>
+<li>Is Small Font’s word, beside the drawing’s typeface, a word you would sew, or would you rather have had
+the text left out?</li>
+<li>Does the lettering stand where the picture has the word, and is it as tall?</li>
+<li>Are Small Font’s strokes too light beside the drawn letters?</li>
+</ul>
+<p>From M14.8, sew the word MATCH 3 times at 15 mm on the PE800: traced as shapes, in Ink/Stitch Small Font
+and in Barstitch Bold. <code>stitch lettering "MATCH" --font FOLDER --height 15</code> sets each font.</p>
+<ul>
+<li>Which font’s strokes look like the traced letters’?</li>
+<li>Do Barstitch Bold’s wide columns pull the fabric in, or sew too thick where 2 strokes meet?</li>
+<li>At 10 mm, where only Small Font sews, is the word too light beside the traced one?</li>
+</ul>
+<p>M14.9 built <code>--widen-percent</code>, off by default, and plans its choice for bold lettering under the heights
+Barstitch Bold sews (<a href="../design/image-to-embroidery.html#bold-letters-under-the-bold-fonts-heights">design</a>).
+At MC-8, sew the made-up word Hexmira at 8 and at 10 mm, each alone and on a cream field 3 mm round it,
+side by side. Small Font sews with <code>--widen-percent</code> at 0, at 10 and at 20, in files made by the setting
+itself for the 4 × 4 in hoop. Beside it sew Barstitch Bold set at that height and Barstitch Bold with its pull compensation scaled to the
+height. The automatic choice’s limits, 20 % and from 8 mm, wait for this sew-out.</p>
+<ul>
+<li>Which reads as bold as the traced block letters of the lettered patch?</li>
+<li>Are the counters of the a, the e and the R open, or filled with thread?</li>
+<li>Do Barstitch Bold’s letters touch, and does a word in it still read?</li>
+<li>At 8 mm and 20 %, the narrowest gap between 2 of Small Font’s letters is 1.0 mm by M14.9’s measure, where
+it is 1.5 mm unwidened. Do the letters still stand apart in thread, or do they touch?</li>
+<li>Is the widened Small Font stiff or thick where its strokes meet, against today’s?</li>
+</ul>
+<p>MC-8 also sews one of the owner’s traced dogs, <code>docs/fixtures/traced-dog-running-9.vectorcraft</code>, 100 mm
+tall: <code>stitch plan docs/fixtures/traced-dog-running-9.vectorcraft --auto -o dog.pes</code>. Does the fur read as
+fur, the face and the eyes as hers, and do its jump threads, which the PE800 doesn’t cut, take long to
+snip? 3 rows of its fills show beside thin lines of fur of another colour (M13.18): do they show?</p>
+<p>M13.27 changed what the dog sews: 2 blobs of its fur that sewed as satin columns are fills now, as a small
+star is (<a href="../design/image-to-embroidery.html#which-stitch-a-shape-gets">which stitch a shape gets</a>). MC-8 also sews the demo’s badge, <code>web/templates/alpine-night.svg</code>, twice:
+<code>stitch plan web/templates/alpine-night.svg --auto -o badge.pes</code>, and the same with
+<code>--set auto_fill_outline=false</code>.</p>
+<ul>
+<li>Do the 2 stars, 5.3 and 4 mm across, read as stars of 4 points when they are filled?</li>
+<li>With the outline, are the stars’ points sharper, and is the run round the moon and the mountains on the
+fill’s edge or beside it?</li>
+</ul>
+<p>M13.8 changed what a VectorCraft document sews without a switch. It is digitized automatically, as <code>--auto</code>
+digitized it. <code>--no-auto</code> sews it as drawn
+(<a href="../design/image-to-embroidery.html#automatic-digitizing-by-default">the default</a>). A stroke round a fill
+sews thicker by default, as a satin column on the fill’s edge: the drawn reader fixture went from 2.74 to
+3.85 fills. MC-8 sews the kit’s drawn circle, once with
+<code>stitch plan</code> and once with <code>--no-auto</code>. Does the column on its edge sew stiff or pucker, and is the
+default the one to keep?</p>
+<p>M13.31 moved the 2 buttons of TS-13D to a sheet of their own, TS-13E, so that VectorCraft exports each
+sheet with room in its budget (<a href="../design/compatibility-gate.html#level-a--abi-contract-fast-minutes">compatibility gate</a>).
+No rule changed.</p>
+<p>M13.28 changed what every automatic design sews: each fill sews an outline now
+(<a href="../design/image-to-embroidery.html#an-outline-round-a-fill">an outline round a fill</a>).</p>
+<ul>
+<li>Does the moon’s outline, 18 stitches round a circle 9.6 mm across, read as round?</li>
+<li>M13.17 runs the thread under shapes sewn later in place of 13 of the dog’s jumps, and of one of the
+badge’s (<a href="../design/image-to-embroidery.html#runs-in-place-of-jumps">runs in place of jumps</a>). Does a run show through the shape over it, as a ridge or
+as a darker line under a light thread? Does one peek out at the edge of a fill?</li>
+<li>On the dog, do the outlines sharpen the fur’s edges or draw lines that the photo doesn’t have?</li>
+<li>An outline sews through a stretch of its edge under a later shape. Does that run show through the shape
+that covers it, or raise it?</li>
+</ul>
+<p>M13.22 changed the order that the digitized halves of TS-13A, TS-13C and TS-13D sew in, and the dog’s.
+The elements now sew in the order that changes thread least
+(<a href="../design/image-to-embroidery.html#sewing-order">sewing order</a>), which MC-8 checks:</p>
+<ul>
+<li>Count the dog’s rethreads at the machine. Do they match the colour changes that <code>stitch inspect dog.pes</code>
+gives, and is each thread’s turn as long as the plan says?</li>
+<li>Some satin columns now sew before the fill beside them and reach 1 mm under it, where every column sewed
+after its fill. Along the dog’s columns of fur, does the fill’s edge show on the column, or fabric
+between them?</li>
+<li>A thread that sews once jumps where it changed before. Are the dog’s long jump threads, some across the
+whole design, in the way of the stitches sewn after them, or sewn down by them?</li>
+</ul>
+<p>M13.21 changed what the digitized halves of TS-13A and TS-13C sew, and what the dog sews. Automatic digitizing now chooses a part’s stitches from its geometry
+(<a href="../design/image-to-embroidery.html#which-stitch-a-shape-gets">which stitch a shape gets</a>), and its bounds
+are StitchCraft’s own values, which MC-8 confirms or changes:</p>
+<ul>
+<li>On TS-13A, the 2 large badges’ blue squares are fills, whole under their gold discs, where they were satin
+columns round the discs with stitches of 8 mm at the corners. The 3 small badges’ squares are columns
+still. Which sews flatter, and does the gold disc lie flat on the fill?</li>
+<li>On TS-13C, the fill of the star’s middle goes on into each point as far as a disc 4 mm across fits. The
+tips sew as columns. Does a point read as well as it did as one column from its cut 6.6 mm wide?</li>
+<li>Sew the dog twice, as planned and with <strong>Fill uneven parts</strong> off (<code>--set auto_fill_uneven=false</code>), which
+sews its ragged patches as columns again. <code>stitch inspect</code> gives each file’s thread changes and jumps.
+Which reads better, and which takes longer at the machine?</li>
+<li>A blob sews as a small fill, where a column bent into its corners. Compare the dog’s nostrils and the
+buttons’ dots of TS-13D with a satin dot drawn by hand. Does a fill 1 to 2 mm across sew cleanly without
+an underlay?</li>
+<li>The longest satin stitch between a column’s rails is 7 mm. Is that the right limit on the fabric sewn?</li>
+</ul>
+<p>M13.16 changed what the digitized half of every TS-13 sheet sews, and what the dog sews. A design digitized automatically now sews a base layer first, an open underlay under all of
+it, and its fills sew no underlay of their own. Its neighbours overlap by 1 mm where they overlapped by
+0.4 mm. Its fills turn from row to row in a stitch 0.3 mm long at the outline
+(<a href="../design/image-to-embroidery.html#covering-the-fabric">covering the fabric</a>). Whether an underlay belongs
+under dense fills is disputed among digitizers, and no source gives an overlap in millimetres. Both
+defaults are StitchCraft’s own, set from measurements on pictures, and MC-8 confirms them on fabric or
+changes them:</p>
+<ul>
+<li>Sew the dog on black fabric twice, as planned and with the base layer off. The Auto effect’s dialog in
+VectorCraft turns it off (<code>auto_base_layer</code>), and each fill then sews its own underlay.</li>
+<li>On black, does fabric show between patches, with the base layer and without it?</li>
+<li>At M13.21 the top thread of this dog had 0 slivers, and left less than 0.001 % of the design bare. The
+measure passes slivers up to 0.4 mm² over the base layer or within 0.4 mm of the design’s outline, and 0.5 % bare
+in all (<code>auto_base_sliver_mm2</code>, <code>auto_base_bare_percent</code>). Both limits are StitchCraft’s own, set from
+the 4 traced dogs. With the base layer on, can a sliver be found by eye, and does the base layer’s
+thread hide it? The running dog in 6 threads had the largest, one sliver of 0.26 mm²: sew it on black
+too when the first dog leaves the question open.</li>
+<li>Does the base layer’s thread show beside a patch’s edge, or through a lighter fill sewn over it? The
+base layer lies 0.4 mm inside the design’s outline, a value of StitchCraft’s own, and the measure doesn’t
+model how far real thread pulls an edge in. At M13.16, by the measure, 0.23 mm² of base thread lay uncovered
+within 0.4 mm of this dog’s outline on another colour, the nearest 0.18 mm from it, against 0.02 mm²
+with the base layer 0.6 mm inside. The dog on turf in 9 threads had the most, 0.70 mm² against 0.07 mm²
+(<a href="../design/image-to-embroidery.html#settings-of-the-cover">the numbers</a>). Look along the outline on
+black fabric. Where base thread shows there, sew again with <code>auto_base_offset_mm</code> at −0.6 mm.</li>
+<li>Which dog lies flatter and softer, and which puckers less?</li>
+<li>Does the overlap of 1 mm show as a ridge where 2 patches meet?</li>
+<li>Do the fills’ edges sew cleanly where the rows turn, or does the thread pile up or break there?</li>
+</ul>
+<p>M13.29 measures how thick a design sews and changes nothing that sews
+(<a href="../design/image-to-embroidery.html#how-thick-a-design-sews">how thick a design sews</a>). Its limits, the
+fills of thread over one spot and the needle points per mm² that warn and that fail
+(<a href="../user/reference/params/auto.html"><code>auto_thick_warn_fills</code> and the 3 settings after it</a>), are starting
+values from public advice, which no sew-out has confirmed. MC-8 confirms them or changes them with a ladder of squares,
+test sheet TS-13F, which <code>stitch testsheet TS-13F</code> writes and the Test Sheet filter draws:</p>
+<ul>
+<li><strong>Top row:</strong> squares 15 mm a side of 1, 2, 3, 4, 5 and 6 fills on each other, each fill with the default
+rows of 0.25 mm and stitches of 3 mm, its angle turned 30° from the one under it, over one base layer.
+They measure 1 to 6 fills.</li>
+<li><strong>Middle row:</strong> the same squares with a satin outline 2 mm wide on top, sewn after every fill of the
+sheet in black.</li>
+<li><strong>Bottom row:</strong> 3 blocks 12 mm a side, each one fill cut into patches 1.5, 2 and 3 mm across that reach
+1 mm under the patch sewn after them in their row and the one below, as automatic digitizing cuts a
+traced photo.</li>
+<li>Not on the sheet: the top row with rows 0.4 mm apart, the fill that the sources call standard, which
+measures 0.6 to 3.8 fills. Draw it in VectorCraft as plain fills when the sheet leaves the limit open.</li>
+<li>Sew on medium cotton twill with one layer of medium cut-away, a 75/11 needle and 40-weight polyester,
+at the PE800’s usual speed. Sew it again on a knit T-shirt when time allows: the limit should be lower
+there.</li>
+<li>For each square, count the thread breaks and the places where the thread shreds. Listen for a thumping
+needle. Look at the needle for a bend or a burr, and at the fabric round the square for puckers. Bend
+the square, and measure how thick it is with calipers.</li>
+<li>The first square that breaks thread or thumps sets the failing limit, and the square before it, less
+one, sets the warning. Then sew the running dog in 9 threads with the cap at its most,
+<code>--set auto_thick_cap_fills=50</code>, which leaves its thread as the rules lay it. Compare where it gives
+trouble with its heat map (<code>stitch preview --style thickness</code>) and with the thickest spot that <code>SC-W0913</code>
+names.</li>
+</ul>
+<p>M13.30 changes what sews where areas overlap
+(<a href="../design/image-to-embroidery.html#less-thread-where-areas-overlap">less thread where areas overlap</a>).
+At MC-8, look at the edges between 2 fills of the digitized halves and of the traced dog:</p>
+<ul>
+<li>Along an edge that runs the way the rows do, the lower fill reaches 0.4 mm under the upper one, where
+it reached 1 mm. Does fabric or the base layer show along such an edge?</li>
+<li>Where 3 fills meet, one overlap lies under the last fill, where 2 lay. Does a spot of the base layer
+show at the corner, and is the corner flatter than it was?</li>
+<li>Under a part of a fill narrower than 3 mm, the fills beside it reach 0.5 mm. Does fabric show beside
+such a part?</li>
+<li>The base layer is one layer of rows across the fills’ rows, where it was 3 layers. Do the fills lie
+flat, and do they pucker more than with <code>auto_base_rows</code> set to <code>lattice</code>? TS-13F doesn’t compare the 2:
+each of its squares lies on the one layer. Export one traced picture twice, as planned and with
+<code>auto_base_rows</code> set to <code>lattice</code> on its shapes, and sew both.</li>
+<li>A small ragged part that sewed as a short bent satin column is a fill now. Does the fur of the traced
+dog read as well without those columns?</li>
+</ul>
+<p>M13.35 takes thread away where one shape piles it up by itself
+(<a href="../design/image-to-embroidery.html#the-thickest-spot">the thickest spot</a>). At MC-8, after TS-13F’s ladder:</p>
+<ul>
+<li>On the inside of a satin column’s bend, half the needle points stop a quarter or half of the column
+short of the rail. Does the inside of TS-13A’s blue strip and of the lettered patch’s M still look
+smooth, or does it look ragged?</li>
+<li>Locks are 4 stitches of 0.3 mm. Cut the jump threads of the traced pear’s stem and of TS-13B’s letters
+by hand. Does an end pull out?</li>
+<li>At a spot still above 4 fills, the last pass keeps one back and forth of a lock, and moves row ends
+back under the shapes sewn after them. Look where TS-13D’s white ring meets the star, and at the traced
+dogs’ seams. Is fabric showing between 2 shapes there? Is a row’s end showing past its neighbour?</li>
+<li>A satin column narrower than 2 mm walks its middle once, where it walked there and back. Do the
+lettered patch’s letters and TS-13B’s 6 mm and 10 mm words still stand up off the fabric, with sharp
+edges?</li>
+<li>An outline no longer sews through a stretch longer than 12 mm under a fill sewn after it. On the traced
+dogs, cut the jump threads this leaves. Does the edge of each outline still look whole where it meets
+the next patch?</li>
+</ul>
+<p>M13.35’s cap takes needle points out of the plan where a spot still sews above the setting
+<code>auto_thick_cap_fills</code> (<a href="../design/image-to-embroidery.html#the-cap-at-the-end-of-planning">the cap at the end of planning</a>).
+Since M13.46 it is 3.25 fills, and below 4 fills it takes none of a satin column’s top stitches nor the rows
+under its edges (<a href="../design/image-to-embroidery.html#the-cap-and-satin-columns">the cap and satin columns</a>).
+Above 4 it takes a column’s top stitches as a last resort
+(<a href="../design/image-to-embroidery.html#above-the-warnings-limit">above the warning’s limit</a>). The warning
+<code>SC-W0913</code> starts at 4 fills. TS-13F’s ladder shows where the needle starts to struggle, and it sets the
+final value of both. The reference machine trims no jump thread within a colour, so snip them before
+judging a spot. At MC-8, after the ladder:</p>
+<ul>
+<li>At how many fills did the ladder’s needle start to thump or break the thread? That sets the cap’s
+value and the limits of <code>SC-W0913</code>.</li>
+<li>The cap took a base layer’s and a fill’s turns under later shapes on the traced dogs and on TS-13C’s
+face. Is fabric showing where 2 patches meet there?</li>
+<li>Where 2 satin columns of one shape meet over a fill, the cap leaves up to 4.0 fills, as on the badges’
+blue rings, the lettered patch’s M and the dogs. Does the needle thump there? Where the cap took a
+column’s top stitch, as at the pear’s stem, the M and the dog on turf in 6 threads, are the column’s edges
+whole?</li>
+<li>Do TS-13C’s face outline and eye lines cover the face and the eyes to their edges, with no fabric showing
+along their inner sides?</li>
+</ul>
+<p>M13.36 keeps a traced letter’s counters open and its edges whole
+(<a href="../design/image-to-embroidery.html#holes-and-edges-of-columns">holes and edges of columns</a>). At MC-8, on
+the traced lettered patch beside the patch with its word as text:</p>
+<ul>
+<li>The A’s counter has no pull compensation along it. Does the cream field show through it as a
+triangle, as on the patch with its word as text? Measure it across at its base, and say whether the A reads as an A from a
+metre away.</li>
+<li>A straight column moves a crowded point no farther than its edge and a quarter of a thread. Run a
+finger along the M’s stems and the A’s legs: are their edges smooth, without the notches of MC-8’s
+first sew-out?</li>
+<li>Where the A’s legs meet its crossbar, and the M’s stems meet its diagonals, does fabric or field show
+between the columns?</li>
+<li>M13.36 gave TS-13B’s 6 mm word 2 more jump threads. Cut them by hand. Does an end pull out?</li>
+</ul>
+<p>M13.37 sews a traced letter’s straight strokes each as a column of its own
+(<a href="../design/image-to-embroidery.html#letters-sewn-as-strokes">letters sewn as strokes</a>). At MC-8, compare the
+traced lettered patch with the patch with its word as text:</p>
+<ul>
+<li>Do the M’s stems run top to bottom with level stitches, and its middle strokes stop against them, as on
+the patch with its word as text? Does the A’s apex split upright, and does its crossbar stop against both legs?</li>
+<li>Where a stroke stops against another, as the T’s stem under its bar, the H’s crossbar against its stems
+and the M’s middle strokes against its stems, does fabric show where they meet after sewing? The stroke
+that stops ends on the other’s side, and the other’s pull compensation is what reaches past that side. If
+fabric shows, the stopping stroke reaches 0.4 mm into the other again, in a step of its own.</li>
+<li>TS-13D’s emblems sew their white frames as columns along their sides, where they were filled. Do the
+frames’ corners sew cleanly, and is the stacked emblem’s white ring stiff at its thickest?</li>
+</ul>
+<p>M13.50 brings lettering that automatic digitizing places into the cap’s reach
+(<a href="../design/image-to-embroidery.html#the-cap-and-lettering">the cap and lettering</a>). At MC-8, sew a made-up word
+in each built-in font on a field, VOLKAR in Barstitch Bold 12.5 mm tall and Hexmira in Small Font 7.6 mm
+tall, each marked on a cream field 3 mm round it, from the commit before M13.50 and from the commit under
+test side by side, and the lettered patch with its word as text:</p>
+<ul>
+<li>By M13.50’s measure, Barstitch Bold’s joins sew 0.5 to 1.0 fills less since M13.50, with the running stitches hidden under its
+columns taken. Does the needle thump less at the K’s, the X’s and the W’s joins?
+Do the joins still look closed, with no fabric or field between the columns?</li>
+<li>Small Font’s joins and the patch’s M sew as before M13.50, 4.5 to 5.4 fills over the field by its measure. Does the
+needle thump there, or the thread shred? If so, the field under the letters is what MC-8 changes, since no
+rule of the cap may take a column’s top from lettering.</li>
+<li>Press each word with a thumb. Is it stiffer where the columns meet than along a stroke?</li>
+</ul>
+<p>M13.54 builds wide columns: a bar or a ring between 7 and 10 mm wide, sewn as one satin column whose
+stitches split at 7 mm (<a href="../design/image-to-embroidery.html#wide-columns">wide columns</a>). It is off by default,
+and doesn’t change any picture of the set. At MC-8, sew a bar 50 mm long and a ring 40 mm across its middle, each
+at 6, 8 and 10 mm wide, once with <code>auto_max_split_satin_width_mm</code> at 10 mm and once without it, side by
+side, in the 4 × 4 in hoop (<code>brother-pe800-4x4</code>): 12 files. Plan each of the kit’s bars and rings
+with <code>stitch plan bar-8mm.svg --auto -p brother-pe800-4x4</code>, once as it is and once with
+<code>--set auto_max_split_satin_width_mm=10</code>. At 6 mm both are satin columns, so that row shows the column the wider ones are measured against.
+Without the setting the 8 and 10 mm ones are filled.</p>
+<ul>
+<li>Does the split satin read as satin from a metre away, or as a fill? Does it read better than the fill
+beside it?</li>
+<li>Look along each split column: do its needle points fall in a line, or in a ladder of short diagonals?</li>
+<li>Press each shape with a thumb. By M13.54’s measure the split rings sew 3.5 to 3.8 fills at their thickest, where a ring
+closes, and the 10 mm ring along the inner third of its band, against 2.2 to 2.5 for the fills. Is that spot stiff, or does the needle thump there?</li>
+<li>Do the ring’s split stitches crowd on its inner edge, and does fabric show at the outer one?</li>
+</ul>
+<p>M13.18 merges the thin lines of a traced photo into the patches beside them
+(<a href="../design/image-to-embroidery.html#neighbours">neighbours</a>). It changes what the traced dogs sew, and no
+test sheet. At MC-8, sew the running dog in 9 threads from <code>main</code> before M13.18 and from after it, side by
+side:</p>
+<ul>
+<li>A ragged strand of fur narrower than 1 mm now sews as part of the patch beside it, in that patch’s
+thread. Does the dog still read as the photo does, its eyes, nose and the white blaze on its face clear?
+Which version looks more like fur?</li>
+<li>M13.18 measured 15 to 32 % fewer jump threads on the dogs. Count the ones you cut on each.</li>
+<li>M13.18 measured 0.31 fills more at the thickest spot of the dog on turf in 9 threads, where a satin column
+or a fill lies over 3 or 4 other fills. Does the needle thump there, or the thread fray?</li>
+</ul>
+<p>M13.39 keeps the parts a person marks (<a href="../design/image-to-embroidery.html#marks-that-keep-parts">marks that keep parts</a>).
+Without a mark nothing sews differently. At MC-8, sew a traced dog with a <code>stitch:keep</code> mark round each eye
+and its nose, beside the same dog without marks:</p>
+<ul>
+<li>A marked speck sews as a short running stitch, 1 to 2 mm long. Does the light in an eye show as a dot,
+and does its short stitch hold, or pull out once its jump threads are cut?</li>
+<li>A marked part sews in its own thread over the fur round it. Are its edges whole, and does fabric show
+round it?</li>
+<li>The rest of the dog sews in another order. Feel for thick spots away from the marks.</li>
+</ul>
+<p>M13.24 sews the filled parts a guide crosses as guided fills along it
+(<a href="../design/image-to-embroidery.html#a-guide-on-one-shape">a guide on one shape</a>). Without a guide nothing sews
+differently. At MC-8, sew a traced dog with a <code>stitch:guide</code> line along its back, and a leaf or a petal with
+one along its middle, each beside the same picture without guides:</p>
+<ul>
+<li>Do the rows follow the line, and does the fur or the leaf read better than with straight rows?</li>
+<li>A guided part still overlaps the parts round it. Does fabric show at its edges, where its rows end at
+other angles than straight rows do?</li>
+<li>The base layer under a guided part lies at <code>auto_fill_angle</code>. Does it show through between the bent rows?</li>
+<li>The rest of the picture sews in another order. Feel for thick spots near the guided parts.</li>
+</ul>
+<p>M13.40 sews a detail after the fills round it where that costs no thread change, when the design has
+<code>auto_details_last</code> on (<a href="../design/image-to-embroidery.html#details-last">details last</a>). It landed off,
+M13.45 turned it on by default, and M13.48 turned it off again. At MC-8, sew a traced dog with it off and on,
+side by side:</p>
+<ul>
+<li>Its eyes and nose sew after the fur round them when it is on. Are their edges whole, without fur rows
+lying over them?</li>
+<li>Measure the dark parts of the face across, and compare them with the trace. Are they smaller with it
+off?</li>
+<li>Feel for thick spots away from the face: on, a moved fill can lay more thread elsewhere.</li>
+</ul>
+<p>M13.45 turns on by default both M13.40’s details last and M13.44’s merging by likeness: a thin line that is
+a whole part of its colour sews as a line where merging it would take the picture under 0.85 of its likeness
+(<a href="../design/image-to-embroidery.html#merging-by-likeness">merging by likeness</a>). Of the repository’s
+pictures only the traced dogs and the marked patch drawn abutting sew differently. At MC-8, sew the dog on turf and the running dog in 6 threads from <code>main</code> before
+M13.45 and from after it, side by side:</p>
+<ul>
+<li>The lines it keeps sew as running stitches over the patches. Do they read as the strands of fur and the
+pale strip above the nose of the photo, or as stray thread?</li>
+<li>M13.45 measured 4 jump threads more. Cut them by hand, and say whether an end pulls out.</li>
+<li>Feel the areas at 3 fills or more, which M13.45 measured at 137 mm² before and 126 mm² after, with the
+cap at 4 fills then. Is either stiffer?</li>
+<li>On the running dog in 6 threads, the grey ring round the tan patch on its chest sews before the patch, so
+the tan lies on top. Is its edge whole, and does it read as tan from a metre away?</li>
+</ul>
+<p>M13.48 turns details last off by default again and keeps merging by likeness on. At MC-8, sew the dog on turf in 9 threads and the
+running dog in 6 threads:</p>
+<ul>
+<li>M13.48 measured 4 and 7 jump threads fewer than with M13.45. Count the cuts by hand on each.</li>
+<li>Do the eyes, the nose and the tan chest patch keep their edges with the fur sewn after them?</li>
+</ul>
+<p>M13.55 adds <code>auto_column_overlap_mm</code>, how far an area stays under a satin column that digitizing makes of a
+part of another shape (<a href="../design/image-to-embroidery.html#less-overlap-under-a-parts-column">less overlap under a part’s column</a>).
+It is empty by default, which is the whole overlap of 1 mm, until this sew-out says how little is
+enough. At MC-8, in the 4 × 4 in hoop (<code>-p brother-pe800-4x4</code>), sew a test piece drawn in code at the
+default and at 0.6, 0.4 and 0.2 mm. It has 12 tiles 20 mm wide, navy and orange fills, each edged along its
+top by a black satin column 2, 4 or 6 mm wide, straight in one column of tiles and curved in the next. Also
+sew the running dog in 9 threads at the default and at 0.4 mm:</p>
+<ul>
+<li>Along each column’s lower edge, does fabric show between the column and the fill? Look closely on the
+curved tiles, where the thread pulls the column’s stitches inward round the bend.</li>
+<li>Where the column lies on the fill, is there a ridge you can feel? Is it lower at 0.4 than at the default?</li>
+<li>Report the smallest value at which no fabric shows on any tile, and whether 2 mm columns need more than
+6 mm ones.</li>
+<li>On the dog at 0.4 mm, look for fabric beside its satin columns, and feel for the thick spots against
+the default.</li>
+</ul>
+<p>M13.56 checks the locks of every plan the engine returns, after the cap
+(<a href="../design/data-model.html#the-threads-state">the thread’s state</a>), and changes nothing that sews. On an
+automatic design the thinning pass leaves a tie-in one back and forth (<code>REQ-AUTO-074</code>): 2 needle points
+where assembly sewed 4, at 2,230 of the 5,333 tie-ins M13.56 counted. Whether a lock holds is
+<code>REQ-LCK-003</code>, still planned, which names TS-04. At MC-8, on any automatic design:</p>
+<ul>
+<li>Where a shape starts after a jump thread you cut, pull its thread tail. Does the tie-in hold, or does
+the end pull out?</li>
+</ul>
+<p>M13.56 also makes a run’s tie-off from the run’s own needle points, so a run that ends on a group of one
+point, sewn straight on from the group before it, ends with its tie-off where it ended with none
+(<a href="../design/algorithms/locks.html#placement">placement</a>). The test sheets and the repository’s designs
+sew no such run, so they sew at MC-8 as before. At MC-8, if a design ends a shape on a
+lone stitch, pull its thread tail and say whether the end holds.</p>
+<p>M13.51 adds <code>stitch plan --fewer-points</code>, off by default, which traces a picture with fewer anchors and fewer
+jags (<a href="../design/image-to-embroidery.html#outlines-thread-cant-show">outlines thread can’t show</a>). It changes
+the rule of a third to a half of each dog’s shapes. At MC-8, sew the running dog traced from its photo with
+and without the option, side by side:</p>
+<ul>
+<li>Which reads more like the photo, and which has the cleaner edges?</li>
+<li>Count the jump threads you cut on each, and feel for thick spots where a shape sews by another rule.</li>
+</ul>
+<p>M13.52 smooths each automatic area’s outline within <code>auto_smooth_mm</code>, off by default
+(<a href="../design/image-to-embroidery.html#smoothing-in-stitchcraft">smoothing in StitchCraft</a>). At MC-8, sew the
+running dog in 9 threads with <code>--set auto_smooth_mm=0.2</code> beside the dog as planned:</p>
+<ul>
+<li>Do the outlines look cleaner, and do the edges of 2 areas still meet?</li>
+<li>The pass changes the rule of some of the dog’s shapes. Does the dog still read as the photo does?</li>
+</ul>
+<h2 id="report-template"><a class="header" href="#report-template">Report template</a></h2>
+<p>The GitHub issue form <em>Sew-out report</em> asks for these fields; this is the same template for notes kept
+elsewhere:</p>
+<pre><code class="language-markdown">### Sew-out report — TS-__ — MC-__
+
+- StitchCraft version / commit:
+- File SHA-256 (from `stitch testsheet`):
+- Machine model and firmware:            Hoop:
+- Fabric / stabilizer / needle / thread / bobbin: (standard? if not, what)
+- Machine speed and trim/jump settings:
+
+| Check | Expected | Measured / observed | Rating 1–5 |
+|---|---|---|---|
+|  |  |  |  |
+
+Problems seen (loops, gaps, puckers, thread breaks, bird's nests, skipped trims):
+
+Photos attached: front ☐ back ☐ close-ups ☐ ruler visible ☐
+</code></pre>
+<h2 id="from-report-to-change"><a class="header" href="#from-report-to-change">From report to change</a></h2>
+<ol>
+<li>A maintainer reads the report and labels it <code>sewout:pass</code>, <code>sewout:tune</code> or <code>sewout:bug</code>.</li>
+<li><strong>Tune:</strong> the profile or default changes in a PR that links the report; a conformance case pins the
+new value; the docs’ parameter pages show the evidence link.</li>
+<li><strong>Bug:</strong> a failing conformance case reproducing it comes first, then the fix.</li>
+<li><strong>Pass:</strong> the checkpoint row in <code>ROADMAP.md</code> is ticked with the report link.</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../plan/roadmap.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../plan/inkstitch-usage.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../plan/roadmap.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../plan/inkstitch-usage.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

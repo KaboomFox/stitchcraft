@@ -1,0 +1,19 @@
+[
+ "**Before and after:** {sheet}",
+ "",
+ "11 pictures as this pull request sews them, against main at 6f5703b: 9 numbers got worse, 18 got better, 9 changed otherwise.",
+ "",
+ "| Picture | Number | main | this pull request |",
+ "|---|---|---:|---:|",
+ "| ts-13c-digitized | Bare, % of the design | 0.001 | 0.006 |",
+ "| dog-running-6 | Bare, % of the design | 0.011 | 0.016 |",
+ "| ts-13c-digitized | Most needle points per mm\u00b2 | 14 | 16 |",
+ "| pear | Bare, % of the design | 0 | 0.001 |",
+ "| ts-13b-digitized | Stitches astray | 17 | 18 |",
+ "\nThe sheet has the other 4.",
+ "",
+ "The editor in Chromium and `stitch` wrote the same PES and DST files, byte for byte, of alpine-night.",
+ "The editor did not export dog-on-turf-6, so nothing was compared: plug-in exceeded its instruction budget.",
+ "The panel's exports, StitchCraft's engine in the page, wrote the PES and DST files and drew the picture `stitch` makes, byte for byte, of alpine-night, dog-on-turf-6, dog-on-turf-9, dog-running-6, dog-running-9: PES 0.4 s to 3.7 s, DST 0.4 s to 3.7 s, the picture 0.6 s to 4.1 s.",
+ "Giving dog-on-turf-6 the Auto effect took 3.8 s (limit 30.0 s) until the editor had drawn them, and its PES export was refused: the middle of 3 runs in Chromium drawing in software."
+]

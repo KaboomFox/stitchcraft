@@ -1,0 +1,398 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Guardrails - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-0bb77291.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-0c8f9390.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/design/guardrails.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="guardrails"><a class="header" href="#guardrails">Guardrails</a></h1>
+<p>Guardrails keep the code clean while many people (and agents) change it. Each one below is a check
+that runs automatically — locally with <code>cargo xtask ci</code>, and on every pull request in GitHub Actions —
+so the rules hold without anyone having to remember them. Most are adopted from VectorCraft; the
+<a href="adr/0009-adopt-vectorcraft-conventions.html">ADR-0009 audit</a> says which, and what we changed.</p>
+<h2 id="the-checks"><a class="header" href="#the-checks">The checks</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Guardrail</th><th>Enforces</th><th>Configured in</th><th>Runs</th></tr>
+</thead>
+<tbody>
+<tr><td>Format</td><td>One style, no bikeshedding</td><td><code>rustfmt.toml</code></td><td><code>cargo xtask ci</code> · CI</td></tr>
+<tr><td>Clippy, warnings denied</td><td>Idiomatic, bug-prone patterns flagged</td><td>workspace <code>[lints]</code>, <code>clippy.toml</code></td><td><code>cargo xtask ci</code> · CI</td></tr>
+<tr><td><strong>No panics</strong></td><td>No <code>unwrap</code>, <code>expect</code>, <code>panic!</code>, <code>unreachable!</code>, <code>todo!</code>, <code>unimplemented!</code>, <code>dbg!</code> outside tests; <code>indexing_slicing</code> denied in parsers</td><td>workspace <code>[lints.clippy]</code>, crate attributes</td><td><code>cargo xtask ci</code> · CI</td></tr>
+<tr><td><strong>No <code>unsafe</code></strong></td><td><code>unsafe_code</code> denied in the workspace and forbidden at every crate root, the compatibility probe’s included, except the plug-in’s: its ABI shim alone may use <code>unsafe</code>, with a <code>// SAFETY:</code> comment of its own above each block</td><td>workspace <code>[lints.rust]</code>, <code>cargo xtask unsafe-audit</code></td><td><code>cargo xtask ci</code> · CI</td></tr>
+<tr><td><strong>Determinism</strong></td><td>No <code>HashMap</code>/<code>HashSet</code>, <code>RandomState</code>, platform <code>sin</code>/<code>cos</code>/<code>atan2</code>/<code>powi</code> and their kin, <code>mul_add</code>, <code>SystemTime</code> or <code>Instant</code>; no files, threads, environment or processes in library crates; <code>rand</code> and <code>getrandom</code> only through proptest</td><td><code>clippy.toml</code> <code>disallowed-types</code> / <code>disallowed-methods</code>, <code>deny.toml</code> <code>[bans]</code></td><td><code>cargo xtask ci</code> · CI</td></tr>
+<tr><td><strong>Layering</strong></td><td>Crates depend only on lower layers (<a href="architecture.html">architecture</a>); dependencies like <code>clap</code> or <code>tiny-skia</code> only where allowed</td><td><code>xtask/src/layers.rs</code> (append-only table)</td><td><code>cargo xtask layers</code> · CI</td></tr>
+<tr><td><strong>Module size</strong></td><td>Rust files warn above 800 lines, fail above 1,500 (generated files exempt)</td><td><code>xtask/src/filesize.rs</code></td><td><code>cargo xtask filesize</code> · CI</td></tr>
+<tr><td>WebAssembly</td><td>L0 to L3 crates and the plug-in build for <code>wasm32-unknown-unknown</code>, and <code>stitch</code>, built for WASI and run by wasmtime, makes every golden file of the conformance cases byte for byte</td><td><code>xtask/src/wasm.rs</code>, <code>xtask/src/conformance/wasm.rs</code></td><td><code>cargo xtask wasm</code> · <code>cargo xtask wasm --goldens</code> · CI</td></tr>
+<tr><td><strong>Movable into VectorCraft</strong></td><td>Every package is <code>stitchcraft-*</code>; crates inherit only workspace keys VectorCraft defines; tooling works from its own folder on StitchCraft’s packages (<a href="adr/0011-movable-into-vectorcraft.html">ADR-0011</a>)</td><td><code>xtask/src/layers.rs</code>, <code>xtask/src/util.rs</code>, <code>xtask/src/join.rs</code></td><td><code>move</code> job in <code>compat.yml</code> · daily and on PRs touching manifests or tooling</td></tr>
+<tr><td><strong>No GPL code</strong></td><td>No GPL/AGPL licence text, in any case, nor a module’s short GPL notice, and no pasted Python source anywhere in the repository: every text file, documents and files without an extension included (<a href="adr/0012-read-dont-copy.html">ADR-0012</a>)</td><td><code>xtask/src/cleanroom.rs</code></td><td><code>cargo xtask cleanroom</code> · CI</td></tr>
+<tr><td>Docs</td><td>Generated pages fresh and none left over; links, anchors (as mdBook makes them) and included files valid; mentioned <code>cargo xtask</code> commands exist; <code>REQ-</code> and <code>DEV-</code> ids exist, and a code is registered once its milestone is done; no long sentence on two pages; every repository path named exists; each stitch type the engine sews has a page with at least two pictures</td><td><code>xtask/src/docs.rs</code>, <code>xtask/src/docs_audit.rs</code>, <code>xtask/src/markdown.rs</code>, <code>xtask/src/stitch_pages.rs</code></td><td><code>cargo xtask docs --check</code> · CI</td></tr>
+<tr><td><strong>The published book</strong></td><td>The pages mdBook builds link only to files of the book and to ids on their pages. Their links to the repository’s files on <code>main</code>, each page’s edit link among them, name files of the checkout</td><td><code>xtask/src/book.rs</code>, <code>docs/book.toml</code></td><td><code>cargo xtask book</code> · <code>cargo xtask ci</code> · CI</td></tr>
+<tr><td><strong>Design pages follow the code</strong></td><td>Every source file of a crate or app is on a page’s <code>implements</code> comment, and a branch that changes those files changes the page too or records a <code>Design-reviewed:</code> line</td><td><code>xtask/src/design_map.rs</code>, <code>.claude/settings.json</code> (names the pages after each edit)</td><td><code>cargo xtask docs --check</code> · CI</td></tr>
+<tr><td>Docs images</td><td>Every image a page shows is one a shot in <code>docs/shots.toml</code> writes, with alt text, and regenerating to the committed file. VectorCraft’s own pictures, which its pinned release makes, regenerate to within a tolerance of theirs, and its plug-in dialogs show a label for each parameter</td><td><code>xtask/src/shots/</code>, <code>compat/vc-window/tests/shots.rs</code></td><td><code>cargo xtask shots --check</code> · CI; <code>cargo xtask shots --vectorcraft --check</code> · <code>shots-ui</code> job</td></tr>
+<tr><td>Conformance</td><td>Requirement/case consistency; every fixture has its row in the fixtures index; all cases pass; changed goldens need the <code>golden-change</code> label and a changelog line</td><td><code>xtask/src/conformance/</code>, <code>ci.yml</code>, <code>goldens.yml</code></td><td><code>cargo xtask conformance</code> · CI</td></tr>
+<tr><td>Dependencies</td><td>Licence allow-list (GPL family denied), advisories, duplicates, sources, for the workspace, the fuzz targets’ and the window probe’s. An advisory accepted is listed with its reason</td><td><code>deny.toml</code></td><td><code>cargo xtask ci</code> · CI (<code>cargo-deny</code>)</td></tr>
+<tr><td>Spelling</td><td>Typos in code, docs, commit-facing text</td><td><code>typos.toml</code></td><td>CI</td></tr>
+<tr><td><strong>Prose</strong></td><td>New Markdown lines follow the <a href="../contributing/writing-style.html">writing style</a>: the house rules and ai-tells, a style for phrasing that machine-written text overuses</td><td><code>.vale.ini</code>, <code>.vale/styles/</code>, <code>xtask/src/prose.rs</code> (Vale)</td><td><code>cargo xtask prose</code> · CI</td></tr>
+<tr><td>MSRV</td><td>Builds on the declared <code>rust-version</code></td><td>workspace <code>Cargo.toml</code></td><td>CI</td></tr>
+<tr><td>Cross-platform</td><td>Tests on Linux, macOS and Windows, among them the conformance suite’s data cases, whose machine files must equal the golden files on each, and the same machine files made as WebAssembly (<a href="determinism.html#cross-platform-check">determinism</a>)</td><td><code>ci.yml</code></td><td>CI</td></tr>
+<tr><td>API docs</td><td>Rustdoc builds without warnings: no broken, ambiguous or private intra-doc links</td><td><code>cargo xtask ci</code> (<code>RUSTDOCFLAGS=-D warnings</code>)</td><td><code>cargo xtask ci</code> · CI</td></tr>
+<tr><td><strong>Public API review</strong></td><td>Changes to a library crate’s public API show in the PR diff, as a change to its <code>public-api.txt</code></td><td><code>xtask/src/api.rs</code> (cargo-public-api, pinned)</td><td><code>cargo xtask api --check</code> · CI</td></tr>
+<tr><td><strong>Coverage ratchet</strong></td><td>No crate’s line coverage drops below its floor, and floors only go up. A crate below its floor has its untested lines named on the pull request, those only another build of a function or a closure on the line runs included</td><td><code>conformance/coverage.toml</code>, <code>xtask/src/coverage.rs</code> (cargo-llvm-cov)</td><td><code>cargo xtask coverage</code> · CI job</td></tr>
+<tr><td><strong>Performance budget</strong></td><td>Planning the reference hoop’s whole field (<code>REQ-FILL-TAT-009</code>) takes at most 2 % more instructions than recorded, and so does shrinking a region 150 mm across 300 times, as contour fill will. So does <code>stitch</code> writing each picture of automatic digitizing, the traced dogs, the pear and the TS-13 sheets, whose count the report splits into stages (<code>REQ-AUTO-083</code>). Records only go down. A count below half the record fails too: the counted function was lost. The times are reported against NFR-PERF-1’s 50 ms and NFR-PERF-3’s 200 ms, with a warning above them</td><td><code>conformance/perf.toml</code>, <code>xtask/src/perf.rs</code> and <code>xtask/src/pictures.rs</code> (valgrind’s callgrind), the engine’s <code>field</code> and <code>insets</code> examples, the <code>profiling</code> profile</td><td><code>cargo xtask perf</code> · CI job</td></tr>
+<tr><td><strong>Release build</strong></td><td>The build <code>stitch</code> and the plug-ins are published as plans as the tests’ debug build does: the engine’s release tests pass in it too. A release build is compiled more aggressively, and Rust 1.97.0 got one wrong there</td><td><code>crates/stitchcraft-engine/tests/release.rs</code>, <code>rust-toolchain.toml</code></td><td><code>perf</code> CI job</td></tr>
+<tr><td><strong>Mutation testing</strong></td><td>Tests notice changed behaviour: every mutant in the lines a pull request changes is noticed or a listed equivalent; no crate gets more mutants no test notices than recorded, and records only go down. A weekly part whose unmutated tree failed its tests, or a recorded crate with no mutant tried, fails</td><td><code>.cargo/mutants.toml</code>, <code>conformance/mutation.toml</code>, <code>xtask/src/mutants.rs</code></td><td><code>mutants.yml</code> · changed lines every PR, in 16 parts · everything weekly</td></tr>
+<tr><td><strong>Fuzzing</strong></td><td>Readers never panic, respect their caps and terminate; anything read round-trips and previews</td><td><code>fuzz/</code>, <code>stitchcraft-testkit::fuzz</code> (<a href="conformance.html#fuzzing">conformance</a>)</td><td>bodies every PR · an hour nightly</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>cargo xtask ci</code> runs everything that does not need extra tools; tools that are not installed locally
+are reported as skipped, while CI installs them and treats them as required. <code>cargo xtask</code> refuses an
+option it does not know with exit status 2, before anything runs, so a misspelt <code>--check</code> cannot run a
+command’s other mode. In GitHub Actions every
+problem a check finds is also an annotation, on the right line of the pull request’s diff when it names
+one, and a failed fuzz run puts the end of its output in one: the reason is visible without opening a
+log.</p>
+<h3 id="the-gates-in-ci"><a class="header" href="#the-gates-in-ci">The gates in CI</a></h3>
+<p>Each gate of <code>cargo xtask ci</code> belongs to one group, and <code>cargo xtask ci --group NAME</code> runs one group’s
+gates. The list of gates and groups is in <code>xtask/src/ci.rs</code> and nowhere else.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Group</th><th>Its gates</th></tr>
+</thead>
+<tbody>
+<tr><td><code>lint</code></td><td>fmt, clippy, rustdoc, layers, filesize, cleanroom, unsafe-audit, api, deny, typos</td></tr>
+<tr><td><code>test</code></td><td>test</td></tr>
+<tr><td><code>conformance</code></td><td>conformance, wasm, wasm-goldens</td></tr>
+<tr><td><code>docs</code></td><td>docs, shots, prose, book</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>ci.yml</code> runs each group as a job of its own, side by side. A round then waits for the slowest group
+and not for all gates one after another. One of xtask’s tests reads the workflow and fails when its jobs
+and the groups differ. So a gate added to <code>cargo xtask ci</code> runs in CI without a change to the workflow, and no
+edit of the workflow can leave a group out. Each job installs the tools its gates need. A gate whose tool
+is missing fails in CI, so a job that lacks a tool can’t pass.</p>
+<p>The check <code>gates (cargo xtask ci)</code>, which <code>main</code> requires, waits for the 4 jobs and passes only when
+each of them passed. It runs when one of them failed or was cancelled too, because GitHub counts a
+required check that was skipped as passed.</p>
+<p>On macOS and Windows the <code>tests</code> jobs run the same tests with cargo-nextest, as many at once as the
+runner has processors, and the doc tests with <code>cargo test --doc</code>. Most of those jobs’ time was the run
+of the tests, one test binary after another.</p>
+<p>Each run of <code>cargo xtask ci</code> ends with the time every gate took. In GitHub Actions the times are also a
+notice on the job, which the checks API gives without the log.</p>
+<h3 id="before-a-push"><a class="header" href="#before-a-push">Before a push</a></h3>
+<p><code>cargo xtask prepush</code> runs, in a few minutes, the checks that most often cost a round of CI. It is no
+gate and replaces none.</p>
+<ul>
+<li><code>cargo fmt --check</code> on every package, and Clippy and rustdoc, warnings denied, on the packages the
+branch changes. A file belongs to the package whose folder is around it, and the branch is compared
+with its merge base with <code>origin/main</code> (<code>--base REF</code> names another), uncommitted files included.</li>
+<li>The tests that compare output with numbers recorded in the repository, when the branch changes a
+package or a file they read. <code>RECORDED</code> in <code>xtask/src/prepush.rs</code> lists them. They hold the sizes and
+stitch counts of the test sheets and of the Auto effect’s sheets, the Auto effect’s explanations and
+the plug-in’s manifests.</li>
+<li>xtask’s own tests, which tie the workflows, the roadmap and the recorded files to the code.</li>
+<li>The scans and checks that take seconds: layers, filesize, cleanroom, unsafe-audit, <code>docs --check</code> and
+<code>conformance --check</code>.</li>
+<li>The API snapshots, typos and the prose lint, each where its tool is installed.</li>
+</ul>
+<p>It leaves out what takes long, which CI runs. That is the whole test suite and the run of the
+conformance suite, the pictures of the docs and the WebAssembly builds, coverage and mutation testing.</p>
+<p>Where Vale is not installed, the environment variable <code>STITCHCRAFT_PROSE_STANDIN</code> may name a program
+that checks the added lines in its place. The command runs it from the repository’s root with
+<code>--base REF</code>, and the summary says that it is not Vale.</p>
+<p>The performance budget counts instructions, because they come out the same on any machine and in any
+run, where milliseconds do not. Its check fails for a change that slows planning, on whichever runner it
+runs. The time is still measured and reported, against the budget the requirement states in milliseconds.</p>
+<p>The pictures are counted in the <code>profiling</code> profile of the root <code>Cargo.toml</code>. It is the release build
+without link-time optimization, since that would inline the stages into each other. It has line tables,
+which give callgrind the name of each function and the files of the code inlined into it. Each picture’s count is the
+whole run of <code>stitch</code>, and each stage’s is that of its functions. The table of stages, and what they found
+the first time, is in <a href="vectorcraft-integration.html#where-automatic-digitizing-spends-its-work">where automatic digitizing spends its work</a>.
+A TS-13 sheet that the profiling build writes otherwise than its golden file fails the check.</p>
+<p>Coverage counts each build of a function apart and takes the build that runs the most lines. The unit
+tests and the integration tests use separate builds, a generic function has one per type it is used with,
+and a closure is a function of its own. So a line can count as untested though the lcov report counts it
+run. Only the other kind of test runs it, or only a closure on the line runs, as with a <code>?</code> after a
+closure argument whose error the tests never bring. The coverage job names these lines and the function
+they count against. Run them from the kind of test that runs most of the function. A closure is an
+untested line of its own until a test calls it, even where the code around it runs. So a path that only
+a bug takes passes its error on without one: <code>said.extend(result.as_ref().err().cloned())</code>, then
+<code>result.ok()?</code>.</p>
+<p><code>cargo xtask coverage</code> runs the job locally. It needs cargo-llvm-cov and rustup’s <code>llvm-tools</code>. Without
+the latter, <code>LLVM_COV</code> and <code>LLVM_PROFDATA</code> can name another LLVM’s llvm-cov and llvm-profdata that read
+the toolchain’s profiles. Rust 1.99 writes raw profile format 11, which its own LLVM 23 reads and LLVM
+20’s does not.</p>
+<p>The tests run in a debug build, and <code>stitch</code> and the plug-ins are published as a release build, which is
+compiled more aggressively, with one code unit per crate and link-time optimization across crates. A
+compiler can get that wrong where the debug build is right. Rust 1.97.0 did: its release build wrote past
+the end of a vector while planning a satin column drawn as one closed path, and crashed or sewed stitches
+from elsewhere. So the <code>perf</code> job, which builds the release profile anyway, also runs the engine’s release
+tests (<code>crates/stitchcraft-engine/tests/release.rs</code>) in it: shapes a release build once planned wrong,
+whose plan they check. It runs the cases too slow for the debug build there too, the traced dogs’
+(<code>crates/stitchcraft-engine/tests/auto_photos.rs</code>), which the debug build leaves out
+(<a href="conformance.html#cases-in-the-release-build">cases in the release build</a>).</p>
+<h2 id="design-rules-reviewed-partly-linted"><a class="header" href="#design-rules-reviewed-partly-linted">Design rules (reviewed, partly linted)</a></h2>
+<ol>
+<li><strong>Everything user-visible is data first.</strong> A stitch type, parameter, diagnostic, profile or format is
+registered in its registry; UIs, docs and tests are generated from registries.</li>
+<li><strong>Validate at the edge, trust inside.</strong> Untrusted inputs are parsed into validated types once
+(<code>Mm</code>, <code>Region</code>, typed params); internal functions take those types and do not re-check.</li>
+<li><strong>Total functions.</strong> Every function returns for every input it accepts; impossible states are made
+unrepresentable by types rather than asserted.</li>
+<li><strong>Bounded work.</strong> Loops over data charge a <code>Budget</code>; recursion has an explicit depth bound.</li>
+<li><strong>No silent fallbacks.</strong> A degraded result always comes with a coded diagnostic.</li>
+<li><strong>One crate, one error enum</strong> (<code>thiserror</code>), with messages a user can act on.</li>
+<li><strong>Docs on every public item</strong> (<code>missing_docs</code> denied in library crates); module docs explain <em>why</em>.</li>
+<li><strong>Tests next to code</strong>, conformance cases in <code>conformance/</code>, integration tests in <code>tests/</code>.</li>
+</ol>
+<h2 id="contribution-flow"><a class="header" href="#contribution-flow">Contribution flow</a></h2>
+<ul>
+<li><strong>One roadmap step per PR</strong>, titled with its id: <code>M3.4: running stitch even spacing</code>. Small PRs
+(target under ~400 lines of non-generated change) review faster and revert cleanly.</li>
+<li><strong>Conventional commit scopes</strong> (<code>feat(engine):</code>, <code>fix(formats):</code>, <code>docs:</code>) feed the changelog.</li>
+<li><strong>The PR template</strong> asks for: the step id, requirements touched, cases added, docs updated, golden
+changes justified, screenshots refreshed if UI changed, whether a sew-out is needed.</li>
+<li><strong>Required checks</strong> on <code>main</code> (branch protection): the <code>ci</code> and <code>docs</code> workflows. Merges are squash
+merges; <code>main</code> is always releasable.</li>
+<li><strong>Playbooks</strong> make common changes mechanical: <a href="../contributing/playbook-new-stitch-type.html">new stitch type</a>,
+<a href="../contributing/playbook-new-param.html">new parameter</a>, <a href="../contributing/playbook-new-format.html">new format</a>,
+<a href="../contributing/playbook-new-diagnostic.html">new diagnostic</a>, and the <a href="../contributing/review-checklist.html">review checklist</a>.</li>
+<li><strong>Agents</strong> (Claude Code and others) start at <code>AGENTS.md</code>, which links here; the same gates apply.</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../design/determinism.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../design/docs-pipeline.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../design/determinism.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../design/docs-pipeline.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

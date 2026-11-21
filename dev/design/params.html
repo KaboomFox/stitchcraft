@@ -1,0 +1,543 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Parameter registry - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-9aa5b005.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-95df4fb0.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/design/params.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="parameter-registry"><a class="header" href="#parameter-registry">Parameter registry</a></h1>
+<!-- implements: crates/stitchcraft-params/src/**, crates/stitchcraft-engine/src/registry.rs, crates/stitchcraft-engine/src/common.rs -->
+<p>A parameter is declared <strong>once</strong> for the stitch types that read it, next to the generator that uses it.
+Everything else that needs to know about parameters is generated from that declaration:</p>
+<pre><code class="language-text">                        ┌──▶ typed params struct used by the generator
+                        ├──▶ validation (types, ranges, applicability) with coded diagnostics
+params! { … }  ─────────┼──▶ VectorCraft plug-in manifests (schema per plug-in, ≤ 64 params)
+(in the generator)      ├──▶ CLI help: `stitch params` (planned)
+                        ├──▶ SVG mapping (`inkstitch:&lt;key&gt;` attributes, read and write)
+                        ├──▶ reference docs pages + JSON Schema (generated, checked in CI)
+                        └──▶ proptest strategies for conformance and fuzzing (planned)
+</code></pre>
+<p>Nothing about a declaration is written twice, so its label, help, range and default cannot drift apart
+between the code, the docs and the user interfaces. The diagram is the design’s aim. <a href="#generated-outputs">Generated
+outputs</a> says which outputs exist today and which steps add the others.</p>
+<h2 id="declaring-parameters"><a class="header" href="#declaring-parameters">Declaring parameters</a></h2>
+<p>Parameters are declared with a <code>macro_rules!</code> macro (no proc-macro crate, so contributors read plain
+Rust and builds stay fast). The field name is the key; the doc comment is the help text, written for an
+embroiderer. The real declaration of the settings every stitch type shares, in
+<code>crates/stitchcraft-engine/src/common.rs</code>, starts like this:</p>
+<pre><code class="language-rust ignore">params! {
+    /// Settings every stitch type shares: lock stitches where the element's stitching starts and
+    /// ends, a trim or a stop after it, and the shortest stitch and jump.
+    pub struct CommonParams for StitchType::ALL;
+
+    "Lock stitches" {
+        /// Where the element gets lock stitches: …
+        ties: Choice = "0", label "Lock stitches",
+            options ["0" =&gt; "At the start and the end", "1" =&gt; "At the start", "2" =&gt; "At the end", "3" =&gt; "None"];
+
+        /// The shape of the lock stitches at the start. …
+        lock_start: Choice = "half_stitch", label "Start lock", choices LOCKS,
+            origin Origin::InkStitchDeviates { deviation: "DEV-LCK-001" };
+
+        /// The shape of a custom start lock: …
+        lock_custom_start: Text = "", label "Custom start lock", when lock_start == "custom";
+
+        /// How long each step of a start lock made of steps (back and forth, or custom numbers) is.
+        lock_start_scale_mm: Length = "0.7", label "Start lock size", range (0.1, 10.0),
+            when lock_start in SIZED_IN_MM;
+        …
+    }
+}</code></pre>
+<p>Each parameter is <code>key: Kind = "default", label "Label"</code>, followed by what its kind needs and what is
+not the usual: <code>range (min, max)</code> for numbers and lists, <code>options [...]</code> or <code>choices CONST</code> for choices,
+<code>applies</code> when it covers fewer stitch types than its struct, <code>defaults [Family::Fill =&gt; "4"]</code> when a
+family of stitch types has a default of its own, <code>when other == "value"</code> (or <code>when other in VALUES</code>, a
+list of them) when a user interface shows it, and an element reads it, only then, <code>origin</code> (default
+<code>Origin::InkStitch</code>) and <code>stability</code> (default <code>Stability::Stable</code>).
+A combination a kind does not take does not compile. Defaults are written as a design stores them, so
+they are checked by the same code as a design’s values. The grammar is in the <code>macros</code> module’s
+documentation.</p>
+<p>The macro expands to:</p>
+<ul>
+<li>the typed struct, <code>pub struct CommonParams { pub ties: &amp;'static str, pub lock_start_scale_mm: Mm, … }</code>,
+each field’s type given by its kind (<code>kinds</code> module), so a field and its validation cannot disagree;</li>
+<li><code>CommonParams::SPECS</code> (a <code>const</code> slice of <code>ParamSpec</code>) and <code>CommonParams::GROUP</code>;</li>
+<li><code>CommonParams::from_set(&amp;ParamSet) -&gt; Result&lt;Validated&lt;CommonParams&gt;, Vec&lt;Diagnostic&gt;&gt;</code>: every
+parameter read from its text or its default, with the clamping warnings beside the values;</li>
+<li><code>CommonParams::from_set_as(&amp;ParamSet, StitchType)</code>: the same as an element sewn as that stitch type
+reads it, with its family’s own defaults and only the parameters it uses
+(<a href="#the-parameters-an-element-reads-req-prm-004">The parameters an element reads</a>). The engine reads an element’s settings
+with it.</li>
+</ul>
+<p>The registry itself is <code>stitchcraft_engine::registry::PARAMETERS</code>, a plain <code>const</code> list of every
+declaration’s <code>GROUP</code> in the engine, next to the generators (no life-before-main tricks; adding a
+generator’s parameters is one line there). <code>stitchcraft-params</code> knows no stitch algorithm.</p>
+<h2 id="paramspec"><a class="header" href="#paramspec"><code>ParamSpec</code></a></h2>
+<pre><code class="language-rust ignore">pub struct ParamSpec {
+    pub key: &amp;'static str,          // registry key == Ink/Stitch attribute name when one exists
+    pub label: &amp;'static str,        // short UI label (English source string, translation key)
+    pub help: &amp;'static str,         // the doc comment; `help()` gives the Markdown
+    pub kind: Kind,                 // with its limits: range, options, maximum length
+    pub default: &amp;'static str,      // as a design stores it; "" for an empty optional value
+    pub family_defaults: &amp;'static [(Family, &amp;'static str)], // a family's own default: `default_for`, `in_family`
+    pub group: &amp;'static str,        // UI and docs section
+    pub applies_to: &amp;'static [StitchType],
+    pub visible_when: Option&lt;Condition&gt;,   // another key of the declaration and the values it shows and reads this for: lock_custom_start only for lock_start custom
+    pub stability: Stability,       // Stable | Experimental | Deprecated { use_instead }
+    pub origin: Origin,             // InkStitch | InkStitchDeviates { deviation } | StitchCraft
+}</code></pre>
+<p><code>InkStitchDeviates</code> names its entry in the deviations ledger (<code>conformance/deviations.toml</code>), which says
+what differs and why; the reference pages show that entry, so a deviation is described once. A <code>since</code>
+version and a registry schema version arrive with the first release, together with
+<a href="#versioning-and-migration">migrations</a>.</p>
+<h3 id="kinds-and-validation"><a class="header" href="#kinds-and-validation">Kinds and validation</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Kind</th><th>Generators get</th><th>Validation</th><th>Ink/Stitch equivalent</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Length</code></td><td><code>Mm</code></td><td>finite, within <code>range</code>; a unit may follow the number with no space: mm, in, pt</td><td><code>float</code>, unit <code>mm</code></td></tr>
+<tr><td><code>OptionalLength</code></td><td><code>Option&lt;Mm&gt;</code></td><td>as <code>Length</code>, or empty: the setting then comes from the document or the machine, or there is none. 0 counts as empty, since Ink/Stitch reads 0 as not set, and a length below 0 does too, with <code>SC-W0102</code> (<code>DEV-PRM-003</code>)</td><td><code>float</code>, unit <code>mm</code>, no default</td></tr>
+<tr><td><code>OptionalLengthWithZero</code></td><td><code>Option&lt;Mm&gt;</code></td><td>as <code>OptionalLength</code>, but only empty text is empty, and 0 is a length, as Ink/Stitch reads a satin’s shortest stitch to split</td><td><code>float</code>, unit <code>mm</code>, no default</td></tr>
+<tr><td><code>Angle</code></td><td>degrees, <code>f64</code></td><td>finite; normalized to (−180, 180]</td><td><code>float</code>, unit <code>deg</code></td></tr>
+<tr><td><code>BoundedAngle</code></td><td>degrees, <code>f64</code></td><td>finite, within range, never turned by whole turns. 270 is above a range that ends at 89, and reads as 89, as Ink/Stitch reads a zigzag stroke’s angle</td><td><code>float</code>, unit <code>deg</code></td></tr>
+<tr><td><code>Percent</code></td><td><code>f64</code></td><td>finite, within range</td><td><code>float</code>, unit <code>%</code>, or <code>int</code> for a cross stitch’s coverage, which Ink/Stitch’s fonts write as <code>50.0</code> too</td></tr>
+<tr><td><code>Number</code></td><td><code>f64</code></td><td>finite, within range, without a unit</td><td><code>float</code>, no unit</td></tr>
+<tr><td><code>Area</code></td><td>square millimetres, <code>f64</code></td><td>finite, within range, written as a number</td><td>none (Ink/Stitch has no area setting)</td></tr>
+<tr><td><code>Count</code></td><td><code>u32</code></td><td>whole, within range</td><td><code>int</code></td></tr>
+<tr><td><code>Toggle</code></td><td><code>bool</code></td><td><code>true</code> or <code>false</code> in any case, also Ink/Stitch’s <code>yes</code>, <code>y</code>, <code>t</code> and <code>1</code> for true and their opposites and <code>off</code> for false. <code>on</code> is <code>SC-E0101</code>, where Ink/Stitch reads it as false (<code>DEV-PRM-001</code>)</td><td><code>boolean</code>, <code>toggle</code></td></tr>
+<tr><td><code>Choice</code></td><td><code>&amp;'static str</code> (the id)</td><td>one of the declared ids; unknown ids are a diagnostic, not a default</td><td><code>combo</code>, <code>dropdown</code></td></tr>
+<tr><td><code>Seed</code></td><td><code>Option&lt;u64&gt;</code></td><td>any; empty means “derive from the element”; text that is not a number is hashed (FNV-1a)</td><td><code>random_seed</code></td></tr>
+<tr><td><code>LengthList</code></td><td><code>Vec&lt;Mm&gt;</code></td><td>1 to 16 values, each in range (patterns like <code>"2.5 1.0"</code>)</td><td><code>string</code>/<code>float</code> lists</td></tr>
+<tr><td><code>LengthPair</code></td><td><code>[Mm; 2]</code></td><td>1 value for both sides, or 2 for the first side and the second (a satin’s rails, or its start and end, or a cross stitch grid’s width and height). Each is in range, with units as for <code>Length</code></td><td><code>float</code>, unit <code>mm (each side)</code> or <code>mm (x y)</code></td></tr>
+<tr><td><code>PercentPair</code></td><td><code>[f64; 2]</code></td><td>as <code>LengthPair</code>, in percent</td><td><code>float</code>, unit <code>% (each side)</code></td></tr>
+<tr><td><code>OptionalLengthPair</code>, <code>OptionalPercentPair</code></td><td><code>Option&lt;[Mm; 2]&gt;</code>, <code>Option&lt;[f64; 2]&gt;</code></td><td>as <code>LengthPair</code> and <code>PercentPair</code>, or empty: the setting then comes from another one, as a zigzag underlay’s inset comes from the contour’s. 0 is a value, as Ink/Stitch reads it</td><td><code>float</code>, unit <code>mm (each side)</code> or <code>% (each side)</code>, no default</td></tr>
+<tr><td><code>PercentList</code></td><td><code>Vec&lt;f64&gt;</code></td><td>1 to 16 percentages, each in range (levels like <code>"15 30"</code>)</td><td><code>float</code>, unit <code>%</code>, read as a list</td></tr>
+<tr><td><code>CountList</code></td><td><code>Vec&lt;u32&gt;</code></td><td>1–16 whole numbers, each in range</td><td><code>string</code>/<code>int</code> lists</td></tr>
+<tr><td><code>OptionalAngle</code></td><td><code>Option&lt;f64&gt;</code></td><td>an <code>Angle</code>, or empty: a guided fill’s copies then move square to its guide, as Ink/Stitch reads an empty <code>guided_fill_angle</code></td><td><code>float</code> or <code>null</code>, unit <code>deg</code>, no default; a VectorCraft dialog doesn’t declare it</td></tr>
+<tr><td><code>OptionalAngleList</code></td><td><code>Option&lt;Vec&lt;f64&gt;&gt;</code></td><td>1 to 16 angles, each read as an <code>Angle</code>. Empty, the setting comes from another one, as a fill’s underlay angles come from its angle</td><td><code>float</code>, unit <code>deg</code>, read as a list, no default</td></tr>
+<tr><td><code>Text</code></td><td><code>String</code></td><td>stripped of the white space round it, as Ink/Stitch strips it, then at most 4,096 bytes. A grammar of its own, such as a custom lock’s, is checked where it is used</td><td><code>string</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Invalid values never fall back silently to defaults: the element gets <code>SC-E0101</code> (not a value of the
+kind; the element cannot be stitched) or <code>SC-W0102</code> (clamped into range), with the key, the value and what
+is accepted. Keys the registry does not know are kept, so they round-trip, and reported once as
+<code>SC-W0105</code>. Parsing lives in one place (<code>value</code> module), so every host reads text the same way: an SVG
+attribute, a command-line <code>key=value</code>, a VectorCraft effect record.</p>
+<p><code>SC-W0102</code> names the value used, or for a list what the list is read as, since an element may sew only
+some of a list’s values: a zigzag stroke sews its first spacing.</p>
+<p>The ranges are StitchCraft’s. Ink/Stitch sets a floor for most of its numbers and few ceilings, so many
+ranges here are narrower, and a value outside one is clamped where Ink/Stitch would sew it
+(<code>DEV-PRM-002</code>). A list holds at most 16 values, a pair 2, and no value is longer than 4,096 bytes, which
+bounds what reading one costs before any budget is charged. Longer text is <code>SC-E0101</code>, and its message
+quotes the value’s first 64 characters (<code>DEV-PRM-004</code>).</p>
+<p>Empty text, or spaces alone, is not set, whatever the kind, and the parameter takes its default
+(REQ-PRM-002). Ink/Stitch strips every value and reads an empty one so, and its settings window stores a
+field the user clears as empty text. A value is stripped of the white space round it before it is read,
+whatever its kind, text included. A custom lock’s numbers with a tab or a line end round them are numbers
+here, as there. Spaces separate the values of a list or a pair, as Ink/Stitch splits
+them. A comma separates nothing and is no decimal point, so text with one is <code>SC-E0101</code>, with a hint to
+use spaces and points. Ink/Stitch reads <code>3,5</code> or <code>45,90</code> as the default instead, without a word
+(<code>DEV-PRM-001</code>). Ink/Stitch leaves out one comma at the end of each of a fill’s underlay angles, for
+older files, and so does StitchCraft for an angle of any list.</p>
+<h3 id="the-parameters-an-element-reads-req-prm-004"><a class="header" href="#the-parameters-an-element-reads-req-prm-004">The parameters an element reads (REQ-PRM-004)</a></h3>
+<p>An element reads only the parameters its stitch type uses. Any other parameter takes its default, and
+so does one whose <code>when</code> is false for the element. Its text is kept and not checked. Ink/Stitch reads a
+setting only where its stitch type uses it, and a path keeps a satin’s settings when its stroke goes
+back to running stitch: that path must still sew, with nothing said of what it does not read. A <code>when</code>
+is read from the other parameter’s value on the element, or its default, as the element reads that
+parameter. So the audit requires the other parameter to be of the same declaration and never hidden
+itself. It must also apply to every stitch type the hidden one applies to. A host that checks a whole
+set, such as a settings panel, reads every parameter with <code>from_set</code>, declaration by declaration. It
+reads only the declarations of the families it shows: the satin column’s declaration of
+<code>zigzag_spacing_mm</code> cannot read a zigzag stroke’s 2 spacings (rule 7).</p>
+<h3 id="settings-of-automatic-digitizing"><a class="header" href="#settings-of-automatic-digitizing">Settings of automatic digitizing</a></h3>
+<p>Automatic digitizing’s rules have settings of their own, the widest satin column and the others
+(<a href="image-to-embroidery.html#settings">image to embroidery</a>, <code>REQ-AUTO-020</code>). An automatic element reads them
+before it is sewn as any stitch type, and the ordinary elements it becomes don’t. So their declaration
+applies to no stitch type: <code>pub struct AutoParams for AUTOMATIC;</code>, <code>stitchcraft_params::AUTOMATIC</code> being
+the empty list, which <code>ParamGroup::automatic</code> tells. No family’s declaration of a key is theirs
+(<code>find_for</code>), so no stitch family’s dialog shows them, and every host knows their keys (<code>find</code>). The audit
+requires each to be StitchCraft’s own, since Ink/Stitch digitizes nothing automatically, to apply to no
+stitch type of its own, and to have a key no other declaration has. The reference pages say they apply to automatic
+elements, and the JSON Schema marks each with <code>x-stitchcraft.automatic</code>.</p>
+<h3 id="settings-of-stitchcrafts-own-that-stitch-types-read"><a class="header" href="#settings-of-stitchcrafts-own-that-stitch-types-read">Settings of StitchCraft’s own that stitch types read</a></h3>
+<p>From M10.15, <code>underlays_first</code> is one of the settings every stitch type shares, declared in
+<code>CommonParams</code> with StitchCraft’s origin, off by default and experimental
+(<a href="engine-pipeline.html#underlays-first">underlays first</a>). Each stitch family’s dialog in VectorCraft shows
+it, as it shows the others of <code>CommonParams</code>. Its key is in Ink/Stitch’s namespace in an SVG file, where
+Ink/Stitch passes it over (<a href="svg-input.html#settings-of-a-shape">SVG input</a>). Should a later Ink/Stitch
+declare a setting of that name, the contract’s check below fails, and a migration renames StitchCraft’s
+(<a href="#versioning-and-migration">versioning</a>).</p>
+<p>From M13.26 <code>digitized_as</code> is another, in its own group, <code>no</code> by default: an element set to <code>part</code>, <code>base</code> or
+<code>lettering</code> sews as automatic digitizing made it, which Expand sets on each part
+(<a href="image-to-embroidery.html#expand">Expand</a>).</p>
+<h3 id="completeness-req-prm-001"><a class="header" href="#completeness-req-prm-001">Completeness (REQ-PRM-001)</a></h3>
+<p>A declaration that compiles can still be wrong: an empty range, a default outside it, a repeated option,
+a condition on a parameter that does not exist or that an element could not read it by. <code>stitchcraft_params::audit</code> lists every such problem, and
+the engine’s <code>req_prm_001_every_registered_parameter_is_complete</code> test requires the list to be empty.
+<code>cargo xtask docs --check</code> adds the cross-checks with outside data. A parameter of Ink/Stitch origin must
+be in the <a href="inkstitch-compat-contract.html">compatibility contract</a> with a compatible type and the default
+Ink/Stitch sews, and one of StitchCraft’s own must not take an Ink/Stitch key. Deviations must name ledger
+entries, and the lock and method identifiers must equal Ink/Stitch’s.</p>
+<p>The contract check also runs the other way. A row of the contract is registered when the registry
+declares its key for any of the row’s stitch types. Each stitch type of a registered row that the engine
+sews must then be one that a declaration of the key applies to. The engine sews the stitch types it plans
+without <code>SC-W0011</code>. A stitch type sewn as another is read as that one, as a legacy fill is read as a tatami
+fill (<code>DEV-FILL-014</code>). Ink/Stitch’s settings window shows some settings for a stitch type whose sewing
+doesn’t read them, and a deviation can leave a setting out. For those, an <code>[[unapplied]]</code> entry in
+<code>conformance/inkstitch-params.toml</code> names the stitch type and the keys, with the reason. An entry that
+excuses nothing fails the check, so the list can’t go stale. A row that the registry declares for none of
+its stitch types is planned, and the check leaves it out.</p>
+<h2 id="naming-rules"><a class="header" href="#naming-rules">Naming rules</a></h2>
+<ol>
+<li>
+<p>If Ink/Stitch has the parameter with the same meaning, <strong>use its attribute name verbatim</strong>
+(<code>row_spacing_mm</code>). This keeps SVG files compatible with no mapping table. A setting that Ink/Stitch
+saves on the shape and reads as it sews, without a parameter in its window, takes its name too: a
+tartan’s sett, <code>tartan</code>, which its tartan editor writes. The contract lists it with the other attributes,
+as an element’s setting. Ink/Stitch’s window gives it no type or default, and the contract compares none.</p>
+</li>
+<li>
+<p>If our meaning differs, keep the name, mark <code>origin: InkStitchDeviates</code>, and record the difference in
+the deviations ledger (<code>conformance/deviations.toml</code>). An entry that changes how other keys of
+Ink/Stitch’s read or sew lists them under <code>params</code>, and each key’s reference entry shows it.</p>
+</li>
+<li>
+<p>New parameters follow the same style: <code>snake_case</code>, a unit suffix for lengths (<code>_mm</code>), percentages
+(<code>_percent</code>) and angles where Ink/Stitch does (<code>angle</code> alone for row angles).</p>
+</li>
+<li>
+<p>Never reuse a removed key with a new meaning.</p>
+</li>
+<li>
+<p><strong>Defaults are part of the contract.</strong> For a parameter of Ink/Stitch origin the registry default is
+the value Ink/Stitch sews for an SVG that omits the attribute, and the file stitches the same way in
+both tools. That value is the default Ink/Stitch’s settings window shows, except for the few
+parameters its code reads with another value. The contract records those as <code>fallback</code>, and
+<code>conformance/inkstitch/check_params.py</code> compares every one of its getters with the contract. Better
+starting values for new objects come from <a href="#presets">presets</a> and machine profiles, never from
+changing a default.</p>
+</li>
+<li>
+<p><strong>A key belongs to its stitch types.</strong> Ink/Stitch gives some keys to several elements with their own
+defaults: <code>max_stitch_length_mm</code> is empty on manual stitch and satin columns and 4 mm on fills. The
+contract is per key and stitch type, so the contract page matches a declaration with the rows for the
+stitch types it applies to, and a declaration for a stitch type Ink/Stitch does not give the key is
+reported. A stitch type that reads a key as it sews, though Ink/Stitch’s settings window doesn’t show
+the key for it, is given the key all the same, and the contract lists it under the row’s <code>read_by</code>.
+Every fill method with an underlay reads the tatami fill’s <code>angle</code>, <code>staggers</code> and
+<code>running_stitch_length_mm</code> for it, and <code>check_params.py</code> finds those methods in Ink/Stitch’s code. Each
+family declares a key once (rule 7), and a family whose default differs gets its own
+with <code>defaults</code>, as fills do for <code>max_stitch_length_mm</code>. A family with a
+default of its own needs a value (<code>ParamSpec::in_family</code>). There an empty value means its default. A
+length of 0 or less is raised to the least the key accepts instead of counting as empty, as Ink/Stitch
+reads a fill’s longest stitch. Elsewhere an optional value left empty is no value. The engine reads an
+element’s settings with its family’s defaults (<code>from_set_as</code>). The contract page compares each row
+with the default of the row’s family. The reference page lists each family’s default and what the
+family accepts, and the JSON Schema gives the defaults under <code>x-stitchcraft.family_defaults</code>.</p>
+</li>
+<li>
+<p><strong>A family’s own kind and range.</strong> Some of Ink/Stitch’s keys differ by more than their default from
+one family to another. Its <code>zigzag_spacing_mm</code> is a list for a zigzag stroke and one number for a satin
+column, and a meander fill reads it as a number that defaults to 0. Its ripple stitch’s <code>join_style</code>
+is flat or a point, where a contour fill’s is round, mitred or bevelled. Such a key is declared again
+for the family that reads it its own way, in a declaration for that family’s stitch types
+(<code>REQ-PRM-005</code>). The registry’s audit lets a key have one declaration for each family at most, and an
+element reads the key as its family’s declaration says. <code>find_for</code> finds a family’s declaration, and
+<code>find</code> the first, which is the only one for every other key. The JSON Schema gives such a key any of
+its declarations’ schemas, each with the stitch types it applies to. The index lists the key once for
+each declaration, under its group, and the contract compares each declaration with the rows of
+Ink/Stitch’s for its stitch types. Every declaration of one of Ink/Stitch’s keys has an Ink/Stitch
+origin. The reference pages show a ledger entry that names the key with each declaration.</p>
+<p>An SVG node’s fill and its stroke read the same settings. A key of Ink/Stitch’s is never one of
+StitchCraft’s own, even for a family Ink/Stitch does not give it, because that family would read a
+value written for Ink/Stitch’s meaning. A node’s fill may also read a value that only its stroke’s
+declaration can read, such as a zigzag stroke’s 2 spacings read by a meander fill. Ink/Stitch sews that
+fill with its default, and so does StitchCraft, since M7.8: the value is the other declaration’s, and
+<code>SC-I0106</code> says the element left it (<code>REQ-PRM-006</code>). A value no declaration of the key can read is
+refused (<code>DEV-PRM-001</code>).</p>
+</li>
+</ol>
+<h2 id="generated-outputs"><a class="header" href="#generated-outputs">Generated outputs</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: left">Output</th><th style="text-align: left">Generated by</th><th style="text-align: left">Checked by</th><th style="text-align: left">Since</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: left">The reference pages, the <a href="../user/reference/params.html">index</a> and one page per declaration (<code>docs/src/user/reference/params/*.md</code>), with the deviations ledger’s entries</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left"><code>cargo xtask docs --check</code>, which fails on a stale page and on a page left from a declaration since removed (<code>cargo xtask docs</code> deletes those)</td><td style="text-align: left">M3.1</td></tr>
+<tr><td style="text-align: left"><code>docs/src/user/reference/params.schema.json</code>: the parameters as JSON values (numbers, booleans, strings, arrays, <code>null</code> for empty), for editors, presets and JSON hosts</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left">same</td><td style="text-align: left">M3.1</td></tr>
+<tr><td style="text-align: left">The <em>StitchCraft</em> column of the <a href="inkstitch-compat-contract.html">Ink/Stitch compatibility contract</a></td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left">same, plus the cross-checks above</td><td style="text-align: left">M3.1</td></tr>
+<tr><td style="text-align: left">VectorCraft manifests, one for each stitch family’s module, with each parameter’s label, unit, section, help, help page and the values that show it</td><td style="text-align: left">at runtime from the registry, when VectorCraft asks a module for its manifest (<code>stitchcraft-vc-plugin</code>’s <code>manifest</code> and <code>dialog</code>)</td><td style="text-align: left">plug-in tests validate them against VectorCraft’s manifest rules, <code>cargo xtask docs --check</code> finds each help page, the contract tests install them in VectorCraft’s host, and the window probe checks the dialogs’ rows</td><td style="text-align: left">M6.2, and the dialogs M6.10</td></tr>
+<tr><td style="text-align: left">SVG attributes read, and written for the differential’s files (<code>stitchcraft_svg::written</code>)</td><td style="text-align: left"><code>stitchcraft-svg</code>, which the registry reads them for as it reads a VectorCraft effect’s (<code>REQ-PRM-002</code>)</td><td style="text-align: left">the reader’s cases; the round-trip property test <code>REQ-PRM-003</code> is planned</td><td style="text-align: left">read from M8.1</td></tr>
+<tr><td style="text-align: left">CLI parameter help (<code>stitch params</code>, <code>--param key=value</code>)</td><td style="text-align: left">at runtime from the registry</td><td style="text-align: left">examples in <code>docs/examples.toml</code></td><td style="text-align: left">planned, in no step yet</td></tr>
+<tr><td style="text-align: left"><code>proptest</code> strategies</td><td style="text-align: left"><code>stitchcraft-testkit</code> iterates the registry</td><td style="text-align: left">used by every generator property test</td><td style="text-align: left">planned, in no step yet</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="splitting-for-vectorcraft-abi-v1"><a class="header" href="#splitting-for-vectorcraft-abi-v1">Splitting for VectorCraft ABI v1</a></h2>
+<p>VectorCraft took at most 64 parameters per plug-in, with no groups or conditional visibility, until 0.14.
+The plug-in crate builds <strong>one plug-in per stitch family</strong> for that (<code>stroke</code>, <code>satin</code>, <code>fill</code>), each
+with only the parameters that apply to it; the shared lock/trim parameters are included in each. A test
+fails if any family’s manifest exceeds 64 parameters or 64 KiB, so adding a parameter that would break
+the limit is caught in the PR, not by a user. A parameter has one value, of a kind every release takes.
+A parameter that needs a text, a seed or several values keeps its default in VectorCraft
+(<a href="vectorcraft-integration.html#plug-ins">manifests</a>), but for a tartan’s sett, which the fill dialog shows as
+text from M10.7 (<a href="vectorcraft-integration.html#a-tartans-sett">a tartan’s sett</a>). VectorCraft 0.14 adopted richer schemas from the
+<a href="rfc-vectorcraft-abi-v2.html#p2-rich-parameter-schemas">RFC</a>: labels, units, help, groups and conditions, texts
+and lists, and 256 parameters, 64 of them outside groups. Releases before it ignore the labels, units, help,
+groups and conditions, and refuse the rest. Each manifest gives a parameter the registry’s label, unit, help
+and group, and the conditions of its declaration’s <code>applies_to</code> and <code>visible_when</code> (M6.10,
+<a href="vectorcraft-integration.html#plug-ins">dialogs</a>). A parameter’s help page is its entry on the reference page
+of its declaration, which <code>ParamGroup::slug</code> names for the docs generator and the plug-in alike.
+VectorCraft shows help as plain text, so <code>stitchcraft_core::text::plain</code> takes the marks out of the
+Markdown.</p>
+<h2 id="presets"><a class="header" href="#presets">Presets</a></h2>
+<p>Presets of a stitch type’s parameters are not built, and no roadmap step plans them. The presets that
+exist are automatic digitizing’s styles (<a href="../user/reference/auto-rules.html">its rules and styles</a>). The plan:
+a preset is a named partial <code>ParamSet</code> (<code>"denim"</code>, <code>"knit, light"</code>) stored as a TOML file in a
+<code>presets</code> directory of the parameters crate. The same code as user input validates it, and a generated
+page documents it. In VectorCraft, users can also save appearance (including embroidery live effects) as
+Graphic Styles. Applying one copies its effect records into each object, and a design sews them
+(<a href="vectorcraft-integration.html#tools-vectorcrafts-own-commands">integration</a>, <code>REQ-VC-006</code>).</p>
+<h2 id="versioning-and-migration"><a class="header" href="#versioning-and-migration">Versioning and migration</a></h2>
+<p>Planned, with the first release: the registry gets a schema version, and a breaking change (renamed key,
+changed unit) comes with a migration function <code>vN → vN+1</code> and a conformance case with an old-format input.
+Built now: unknown keys from newer files are
+preserved on round trips where the host allows it, and reported once as <code>SC-W0105</code>.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../design/data-model.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../design/diagnostics.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../design/data-model.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../design/diagnostics.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

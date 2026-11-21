@@ -1,0 +1,579 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Satin column - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../../../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../searchindex-b37cbce2.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../toc-95df4fb0.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/user/reference/params/satin.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <!-- Generated by `cargo xtask docs` from `SatinParams` in the parameter registry. Edit the declaration, not this page. -->
+<h1 id="satin-parameters"><a class="header" href="#satin-parameters">Satin parameters</a></h1>
+<p>Satin column: a band of stitches between two rails.</p>
+<p>Applies to Satin column, E-stitch, S-stitch, Zigzag satin.</p>
+<h2 id="satin-column"><a class="header" href="#satin-column">Satin column</a></h2>
+<h3 id="satin_column"><a class="header" href="#satin_column"><code>satin_column</code></a></h3>
+<p><strong>Satin column.</strong> Sew the path as a satin column. Two of its subpaths are the rails, the column’s edges, and the
+others are rungs across both, which say which point of one rail goes with which of the other.
+Without rungs, the rails’ nodes pair up instead. A path of 1 subpath is the column’s centre
+line: the column is as wide as the stroke, and turns its corners as the stroke’s join does.
+Off, the path is sewn as a stroke, by its <code>stroke_method</code>.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
+<li><strong>Default:</strong> <code>false</code></li>
+<li><strong>Applies to:</strong> Running stitch, Manual stitch, Zigzag stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin</li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="satin_method"><a class="header" href="#satin_method"><code>satin_method</code></a></h3>
+<p><strong>Method.</strong> How the column is sewn. A satin column sews stitches straight across it, from one rail to the
+other and back. An E-stitch sews a spike across the column at each pair and a spine along its
+first rail between them, an edge for appliqué. An S-stitch sews one stitch across at each pair,
+every other one the other way, with a step along a rail between them: split by a longest
+stitch, they cover the column in rows, as a fill does. A zigzag satin sews a zigzag between the
+rails, every stitch slanting half the spacing along.</p>
+<ul>
+<li><strong>Accepts:</strong> one of <code>satin_column</code> (Satin column), <code>e_stitch</code> (E-stitch), <code>s_stitch</code> (S-stitch), <code>zigzag</code> (Zigzag satin)</li>
+<li><strong>Default:</strong> <code>satin_column</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="zigzag_spacing_mm"><a class="header" href="#zigzag_spacing_mm"><code>zigzag_spacing_mm</code></a></h3>
+<p><strong>Zigzag spacing.</strong> The distance from one pair of needle points across the column to the next. A satin column
+goes across and back in one spacing, an E-stitch sews a spike every spacing, and an S-stitch a
+stitch across, each the other way from the one before. In a zigzag satin the needle goes across
+and back in one spacing too, its points on the 2 rails half a spacing apart. It is measured
+across the column at its outside edge. On a curve the stitches lie closer together at the inside
+edge.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0.01 to 10 mm</li>
+<li><strong>Default:</strong> <code>0.4</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h2 id="rails"><a class="header" href="#rails">Rails</a></h2>
+<h3 id="reverse_rails"><a class="header" href="#reverse_rails"><code>reverse_rails</code></a></h3>
+<p><strong>Reverse rails.</strong> Which rails are sewn against the way they are drawn, so that both run the same way. Automatic
+reverses the second rail when it runs against the first.</p>
+<ul>
+<li><strong>Accepts:</strong> one of <code>automatic</code> (Automatic), <code>none</code> (Neither), <code>first</code> (The first), <code>second</code> (The second), <code>both</code> (Both)</li>
+<li><strong>Default:</strong> <code>automatic</code></li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-ROUTE-002.</strong> A piece of a satin column is drawn with the column’s rails in the column’s order, a rail that reverse_rails names turned back, so that the piece’s settings, the column’s, swap and turn its rails as they swap and turn the column’s. With swap_satin_rails, Ink/Stitch draws a piece with its rails as the column sews them, already swapped, and the piece’s own setting swaps them again: the piece sews its satin the other way round from the column.</li>
+</ul>
+</li>
+</ul>
+<h3 id="swap_satin_rails"><a class="header" href="#swap_satin_rails"><code>swap_satin_rails</code></a></h3>
+<p><strong>Swap rails.</strong> Make the second rail the first, which sews first in each pair and starts the column. An S-stitch
+starts on the second rail instead, and sews every other stitch from it.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
+<li><strong>Default:</strong> <code>false</code></li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-ROUTE-002.</strong> A piece of a satin column is drawn with the column’s rails in the column’s order, a rail that reverse_rails names turned back, so that the piece’s settings, the column’s, swap and turn its rails as they swap and turn the column’s. With swap_satin_rails, Ink/Stitch draws a piece with its rails as the column sews them, already swapped, and the piece’s own setting swaps them again: the piece sews its satin the other way round from the column.</li>
+</ul>
+</li>
+</ul>
+<h2 id="start-and-end"><a class="header" href="#start-and-end">Start and end</a></h2>
+<h3 id="start_at_nearest_point"><a class="header" href="#start_at_nearest_point"><code>start_at_nearest_point</code></a></h3>
+<p><strong>Start at nearest point.</strong> Start near where the elements before left the needle: on the line between the rails, or on the
+column’s edge when only that is close, then along the line under the column to its start. It
+saves a jump and a trim.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
+<li><strong>Default:</strong> <code>true</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="end_at_nearest_point"><a class="header" href="#end_at_nearest_point"><code>end_at_nearest_point</code></a></h3>
+<p><strong>End at nearest point.</strong> End near where the next element starts: the column is sewn up to the end point, along the line
+under it to its end, and back, and ends on its edge nearest the next element.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
+<li><strong>Default:</strong> <code>true</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="running_stitch_position"><a class="header" href="#running_stitch_position"><code>running_stitch_position</code></a></h3>
+<p><strong>Running stitch position.</strong> Where the line the needle follows to the start and to the end runs, in percent of the way from
+the first rail to the second: 50 is the middle.</p>
+<ul>
+<li><strong>Accepts:</strong> a percentage from 0 to 100</li>
+<li><strong>Default:</strong> <code>50</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h2 id="compensation"><a class="header" href="#compensation">Compensation</a></h2>
+<h3 id="push_compensation_mm"><a class="header" href="#push_compensation_mm"><code>push_compensation_mm</code></a></h3>
+<p><strong>Push compensation.</strong> How much shorter the column is made at its start and its end. Satin stitches push the fabric out
+along the column, so it comes out longer than drawn, and this makes up for it. Negative values
+lengthen the column. 2 values set the start, then the end.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from -10 to 10 mm, or 2 separated by a space</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h2 id="random-variation"><a class="header" href="#random-variation">Random variation</a></h2>
+<h3 id="random_width_decrease_percent"><a class="header" href="#random_width_decrease_percent"><code>random_width_decrease_percent</code></a></h3>
+<p><strong>Random width decrease.</strong> How much narrower than the compensated column a stitch may come out on each side, chosen at
+random for each stitch, in percent of the column’s width there. A ragged edge looks like fur or
+grass. 2 values set the first rail’s side, then the second’s.</p>
+<ul>
+<li><strong>Accepts:</strong> a percentage from 0 to 100, or 2 separated by a space</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="random_width_increase_percent"><a class="header" href="#random_width_increase_percent"><code>random_width_increase_percent</code></a></h3>
+<p><strong>Random width increase.</strong> How much wider than the compensated column a stitch may come out on each side, chosen at random
+for each stitch, in percent of the column’s width there. 2 values set the first rail’s side, then
+the second’s.</p>
+<ul>
+<li><strong>Accepts:</strong> a percentage from 0 to 100, or 2 separated by a space</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="random_zigzag_spacing_percent"><a class="header" href="#random_zigzag_spacing_percent"><code>random_zigzag_spacing_percent</code></a></h3>
+<p><strong>Random zigzag spacing.</strong> How much the distance to each stitch may differ from the zigzag spacing, chosen at random, in
+percent of the spacing, longer or shorter.</p>
+<ul>
+<li><strong>Accepts:</strong> a percentage from 0 to 100</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h2 id="short-stitches"><a class="header" href="#short-stitches">Short stitches</a></h2>
+<h3 id="short_stitch_inset"><a class="header" href="#short_stitch_inset"><code>short_stitch_inset</code></a></h3>
+<p><strong>Short stitch inset.</strong> How far a crowded needle point is moved in along its stitch, in percent of the stitch’s width.
+On the inside of a tight curve the needle points of a rail crowd together, and the thread piles
+up there. Moving some of them in spreads them out. Points that crowd one after another take
+turns with several values separated by spaces.</p>
+<ul>
+<li><strong>Accepts:</strong> 1 to 16 percentages from 0 to 50, separated by spaces</li>
+<li><strong>Default:</strong> <code>15</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="short_stitch_distance_mm"><a class="header" href="#short_stitch_distance_mm"><code>short_stitch_distance_mm</code></a></h3>
+<p><strong>Short stitch distance.</strong> How close a needle point may come to the last one left in place on its rail before it is moved
+in. 0 moves none.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0 to 5 mm</li>
+<li><strong>Default:</strong> <code>0.25</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h2 id="split-stitches"><a class="header" href="#split-stitches">Split stitches</a></h2>
+<h3 id="split_method"><a class="header" href="#split_method"><code>split_method</code></a></h3>
+<p><strong>Split method.</strong> How stitches longer than the longest stitch (<code>max_stitch_length_mm</code>) are split. Default splits
+each into the fewest equal parts no longer than it. Simple splits at whole multiples of it from
+the stitch’s start. Staggered moves those splits along from one stitch to the next, so the needle
+holes of neighbouring stitches do not line up in a row.</p>
+<ul>
+<li><strong>Accepts:</strong> one of <code>default</code> (Default), <code>simple</code> (Simple), <code>staggered</code> (Staggered)</li>
+<li><strong>Default:</strong> <code>default</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="random_split_jitter_percent"><a class="header" href="#random_split_jitter_percent"><code>random_split_jitter_percent</code></a></h3>
+<p><strong>Split jitter.</strong> How far each split may move at random, in percent of a part, either way. With a random split
+phase, how much each part’s length may vary instead.</p>
+<ul>
+<li><strong>Accepts:</strong> a percentage from 0 to 100</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Shown when</strong> <a href="#split_method"><code>split_method</code></a> is <code>default</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="random_split_phase"><a class="header" href="#random_split_phase"><code>random_split_phase</code></a></h3>
+<p><strong>Random split phase.</strong> Start each stitch’s splits at a random distance from its start, and space them by the longest
+stitch, instead of dividing the stitch evenly. The needle holes of neighbouring stitches then
+fall apart, at the cost of a few more stitches.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
+<li><strong>Default:</strong> <code>false</code></li>
+<li><strong>Shown when</strong> <a href="#split_method"><code>split_method</code></a> is <code>default</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="min_random_split_length_mm"><a class="header" href="#min_random_split_length_mm"><code>min_random_split_length_mm</code></a></h3>
+<p><strong>Shortest split stitch.</strong> With a random split phase, also split stitches longer than this but no longer than the longest
+stitch. 0 splits every stitch. Empty: the longest stitch.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0 to 25 mm, or empty</li>
+<li><strong>Default:</strong> empty</li>
+<li><strong>Shown when</strong> <a href="#split_method"><code>split_method</code></a> is <code>default</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="split_staggers"><a class="header" href="#split_staggers"><code>split_staggers</code></a></h3>
+<p><strong>Staggers.</strong> How many stitches the staggered splits take to come back to where they started. A fraction draws
+diagonals that show less than whole numbers do.</p>
+<ul>
+<li><strong>Accepts:</strong> a number from 0.01 to 100</li>
+<li><strong>Default:</strong> <code>4</code></li>
+<li><strong>Shown when</strong> <a href="#split_method"><code>split_method</code></a> is <code>staggered</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h2 id="centre-walk-underlay"><a class="header" href="#centre-walk-underlay">Centre walk underlay</a></h2>
+<h3 id="center_walk_underlay"><a class="header" href="#center_walk_underlay"><code>center_walk_underlay</code></a></h3>
+<p><strong>Centre walk underlay.</strong> Sew a running stitch along the middle of the column first, there and back. It holds the fabric
+still along the column, and suits narrow columns. The other underlays and the top stitches
+follow it.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
+<li><strong>Default:</strong> <code>false</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="center_walk_underlay_stitch_length_mm"><a class="header" href="#center_walk_underlay_stitch_length_mm"><code>center_walk_underlay_stitch_length_mm</code></a></h3>
+<p><strong>Centre walk stitch length.</strong> How long each stitch of the centre walk is. Between corners its stitches are spread evenly, so
+each one is at most this long.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0.1 to 25 mm</li>
+<li><strong>Default:</strong> <code>3</code></li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-RUN-003.</strong> No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column’s travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Where a satin column’s parts meet nearer than the shortest stitch, the needle’s way between them gives way to the next part’s first point, and so does an underlay’s last point or the column’s start, which moves there; beside a top stitch’s end, which stays where it is, the next part’s points that near it give way instead. Ink/Stitch’s running stitch has no shortest stitch, and it joins a satin column’s parts as they are; its plan later drops stitches no longer than the element’s shortest stitch, 0.1 mm by default, keeping the stitch before. Beside an underlay’s last point, it drops the top stitches’ first needle points, and the column’s end is shorter.</li>
+</ul>
+</li>
+</ul>
+<h3 id="center_walk_underlay_stitch_tolerance_mm"><a class="header" href="#center_walk_underlay_stitch_tolerance_mm"><code>center_walk_underlay_stitch_tolerance_mm</code></a></h3>
+<p><strong>Centre walk tolerance.</strong> How far a centre walk stitch may stray from the middle of the column on a curve. A smaller
+tolerance follows curves more closely, with more and shorter stitches.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0.01 to 5 mm</li>
+<li><strong>Default:</strong> <code>0.2</code></li>
+<li><strong>Ink/Stitch:</strong> same key; StitchCraft differs:
+<ul>
+<li><strong>DEV-SAT-004.</strong> The centre walk underlay keeps within center_walk_underlay_stitch_tolerance_mm of its line, and follows points that far apart. Ink/Stitch declares that parameter but uses running_stitch_tolerance_mm in its place, the tolerance of the satin’s travel to its start and end. Both are 0.2 mm unless a file sets them.</li>
+</ul>
+</li>
+</ul>
+<h3 id="center_walk_underlay_repeats"><a class="header" href="#center_walk_underlay_repeats"><code>center_walk_underlay_repeats</code></a></h3>
+<p><strong>Centre walk repeats.</strong> How many times the centre walk is sewn: 2 goes there and back, 3 there, back and there again.
+An odd number ends at the column’s end, and the rest of the column is then sewn from its end.</p>
+<ul>
+<li><strong>Accepts:</strong> a whole number from 1 to 100</li>
+<li><strong>Default:</strong> <code>2</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="center_walk_underlay_position"><a class="header" href="#center_walk_underlay_position"><code>center_walk_underlay_position</code></a></h3>
+<p><strong>Centre walk position.</strong> Where the centre walk runs, in percent of the way from the first rail to the second: 50 is the
+middle.</p>
+<ul>
+<li><strong>Accepts:</strong> a percentage from 0 to 100</li>
+<li><strong>Default:</strong> <code>50</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h2 id="contour-underlay"><a class="header" href="#contour-underlay">Contour underlay</a></h2>
+<h3 id="contour_underlay"><a class="header" href="#contour_underlay"><code>contour_underlay</code></a></h3>
+<p><strong>Contour underlay.</strong> Sew a running stitch along each edge of the column, a little inside it, after any centre walk.
+It holds the edges still and keeps them crisp.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
+<li><strong>Default:</strong> <code>false</code></li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-SAT-011.</strong> After an odd centre walk, which turns a zigzag satin’s run round, StitchCraft stops the contour underlay’s sides where it stops them without one: at the zigzag’s last point on the first rail, and its first and last on the second, in the order the column places them. Ink/Stitch looks for those points in the order the top stitches are sewn, after it has turned them round, and finds the first points where it means the last. Its first side is not cut, and its second shrinks to a stub: on a column 10 mm long and 4 mm wide at a zigzag spacing of 2 mm, 0.2 mm long.</li>
+</ul>
+</li>
+</ul>
+<h3 id="contour_underlay_stitch_length_mm"><a class="header" href="#contour_underlay_stitch_length_mm"><code>contour_underlay_stitch_length_mm</code></a></h3>
+<p><strong>Contour stitch length.</strong> How long each stitch of the contour is. Between corners its stitches are spread evenly, so each
+one is at most this long.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0.1 to 25 mm</li>
+<li><strong>Default:</strong> <code>3</code></li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-RUN-003.</strong> No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column’s travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Where a satin column’s parts meet nearer than the shortest stitch, the needle’s way between them gives way to the next part’s first point, and so does an underlay’s last point or the column’s start, which moves there; beside a top stitch’s end, which stays where it is, the next part’s points that near it give way instead. Ink/Stitch’s running stitch has no shortest stitch, and it joins a satin column’s parts as they are; its plan later drops stitches no longer than the element’s shortest stitch, 0.1 mm by default, keeping the stitch before. Beside an underlay’s last point, it drops the top stitches’ first needle points, and the column’s end is shorter.</li>
+</ul>
+</li>
+</ul>
+<h3 id="contour_underlay_stitch_tolerance_mm"><a class="header" href="#contour_underlay_stitch_tolerance_mm"><code>contour_underlay_stitch_tolerance_mm</code></a></h3>
+<p><strong>Contour tolerance.</strong> How far a contour stitch may stray from its line on a curve. A smaller tolerance follows curves
+more closely, with more and shorter stitches.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0.01 to 5 mm</li>
+<li><strong>Default:</strong> <code>0.2</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="contour_underlay_inset_mm"><a class="header" href="#contour_underlay_inset_mm"><code>contour_underlay_inset_mm</code></a></h3>
+<p><strong>Contour inset.</strong> How far inside each rail the contour runs, so that it does not show past the top stitches. It
+also stops short of the column’s start by the first rail’s value and of its end by the
+second’s. 2 values set the first rail’s side, then the second’s.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from -10 to 10 mm, or 2 separated by a space</li>
+<li><strong>Default:</strong> <code>0.4</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="contour_underlay_inset_percent"><a class="header" href="#contour_underlay_inset_percent"><code>contour_underlay_inset_percent</code></a></h3>
+<p><strong>Contour inset (% of width).</strong> More inset, in percent of the column’s width at each point, added to the length above. 2 values
+set the first rail’s side, then the second’s.</p>
+<ul>
+<li><strong>Accepts:</strong> a percentage from -100 to 100, or 2 separated by a space</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h2 id="zigzag-underlay"><a class="header" href="#zigzag-underlay">Zigzag underlay</a></h2>
+<h3 id="zigzag_underlay"><a class="header" href="#zigzag_underlay"><code>zigzag_underlay</code></a></h3>
+<p><strong>Zigzag underlay.</strong> Sew a sparse zigzag across the column, to its end and back, before the top stitches. It lifts
+them off the fabric and makes a wide column look fuller.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
+<li><strong>Default:</strong> <code>false</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="zigzag_underlay_spacing_mm"><a class="header" href="#zigzag_underlay_spacing_mm"><code>zigzag_underlay_spacing_mm</code></a></h3>
+<p><strong>Zigzag underlay spacing.</strong> How far apart the zigzag’s points on each rail are, each way.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0.01 to 10 mm</li>
+<li><strong>Default:</strong> <code>3</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="zigzag_underlay_inset_mm"><a class="header" href="#zigzag_underlay_inset_mm"><code>zigzag_underlay_inset_mm</code></a></h3>
+<p><strong>Zigzag underlay inset.</strong> How far inside each rail the zigzag’s points are. Empty: half the contour’s inset, which puts
+them between the contour and the edge. 2 values set the first rail’s side, then the second’s.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from -10 to 10 mm, or 2 separated by a space, or empty</li>
+<li><strong>Default:</strong> empty</li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="zigzag_underlay_inset_percent"><a class="header" href="#zigzag_underlay_inset_percent"><code>zigzag_underlay_inset_percent</code></a></h3>
+<p><strong>Zigzag underlay inset (% of width).</strong> More inset, in percent of the column’s width at each point, added to the length above. Empty:
+half the contour’s. 2 values set the first rail’s side, then the second’s.</p>
+<ul>
+<li><strong>Accepts:</strong> a percentage from -100 to 100, or 2 separated by a space, or empty</li>
+<li><strong>Default:</strong> empty</li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="zigzag_underlay_max_stitch_length_mm"><a class="header" href="#zigzag_underlay_max_stitch_length_mm"><code>zigzag_underlay_max_stitch_length_mm</code></a></h3>
+<p><strong>Zigzag underlay longest stitch.</strong> Split zigzag stitches longer than this into equal parts. Empty: none is split.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0.1 to 25 mm, or empty (0 or less counts as empty)</li>
+<li><strong>Default:</strong> empty</li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column’s deviates so. Ink/Stitch reads a manual stitch’s as not set at 0 or below too, and doesn’t warn.</li>
+</ul>
+</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../user/reference/params/ripple.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../user/reference/params/pull.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../user/reference/params/ripple.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../user/reference/params/pull.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../searcher-09f2665d.js"></script>
+
+        <script src="../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../highlight-abc7f01d.js"></script>
+        <script src="../../../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

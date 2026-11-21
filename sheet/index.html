@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StitchCraft, before and after</title>
+<style>
+:root { color-scheme: light dark; --line: #8886; --worse: #c62828; --better: #2e7d32; }
+body { font: 15px/1.5 system-ui, sans-serif; margin: 0 auto; max-width: 1200px; padding: 16px; }
+table { border-collapse: collapse; margin: 12px 0; }
+th, td { border: 1px solid var(--line); padding: 4px 8px; text-align: right; }
+th:first-child, td:first-child { text-align: left; }
+.worse { color: var(--worse); font-weight: 600; }
+.better { color: var(--better); }
+.was { opacity: .65; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 8px 0 28px; }
+.pair.one { grid-template-columns: 1fr; }
+figure { margin: 0; }
+figure img { max-width: 100%; height: auto; border: 1px solid var(--line); background: #f4efe6; }
+.scroll { overflow-x: auto; }
+</style>
+<h1>Before and after</h1>
+<p>The standard pictures as this revision sews them, at <code>3ce5969b1d</code>. Every number is measured by the functions the conformance cases use.</p>
+<h2>Numbers</h2>
+<div class="scroll"><table>
+<tr><th>Picture</th><th>Stitches</th><th>Thread changes</th><th>Jumps</th><th>Jump threads left to cut</th><th>Stitches astray</th><th>Slivers</th><th>Bare, % of the design</th><th>Thickest spot, fills</th><th>At 3 fills or more, mm²</th><th>Most needle points per mm²</th><th>Detail lost, % of each colour&#x27;s parts</th></tr>
+<tr><td><a href="#dog-on-turf-6">dog-on-turf-6</a></td><td>9,530</td><td>8</td><td>69</td><td>60</td><td>4</td><td>0</td><td>0.041</td><td>3.870</td><td>54.250</td><td>25</td><td>14.394</td></tr>
+<tr><td><a href="#dog-on-turf-9">dog-on-turf-9</a></td><td>10,100</td><td>12</td><td>75</td><td>62</td><td>3</td><td>0</td><td>0.039</td><td>3.974</td><td>63.750</td><td>28</td><td>17.137</td></tr>
+<tr><td><a href="#dog-running-6">dog-running-6</a></td><td>10,630</td><td>8</td><td>58</td><td>49</td><td>1</td><td>0</td><td>0.011</td><td>3.919</td><td>53.500</td><td>26</td><td>10.185</td></tr>
+<tr><td><a href="#dog-running-9">dog-running-9</a></td><td>11,779</td><td>11</td><td>76</td><td>64</td><td>4</td><td>0</td><td>0.019</td><td>3.984</td><td>94</td><td>24</td><td>7.895</td></tr>
+<tr><td><a href="#pear">pear</a></td><td>4,628</td><td>2</td><td>5</td><td>2</td><td>0</td><td>0</td><td>0</td><td>3.992</td><td>10.500</td><td>18</td><td>0</td></tr>
+<tr><td><a href="#lettered-patch">lettered-patch</a></td><td>4,000</td><td>2</td><td>11</td><td>8</td><td>0</td><td>0</td><td>0.003</td><td>3.978</td><td>38.750</td><td>14</td><td>0</td></tr>
+<tr><td><a href="#ts-13a-digitized">ts-13a-digitized</a></td><td>11,484</td><td>2</td><td>21</td><td>18</td><td>0</td><td>1</td><td>0.012</td><td>3.986</td><td>19.500</td><td>14</td><td>0</td></tr>
+<tr><td><a href="#ts-13b-digitized">ts-13b-digitized</a></td><td>6,868</td><td>4</td><td>51</td><td>46</td><td>17</td><td>0</td><td>0.066</td><td>3.845</td><td>3.250</td><td>13</td><td>0</td></tr>
+<tr><td><a href="#ts-13c-digitized">ts-13c-digitized</a></td><td>5,949</td><td>4</td><td>18</td><td>13</td><td>3</td><td>0</td><td>0.001</td><td>3.924</td><td>83.750</td><td>14</td><td>0</td></tr>
+<tr><td><a href="#ts-13d-digitized">ts-13d-digitized</a></td><td>7,928</td><td>3</td><td>16</td><td>12</td><td>0</td><td>0</td><td>0.001</td><td>3.972</td><td>41.500</td><td>15</td><td>0</td></tr>
+<tr><td><a href="#ts-13e-digitized">ts-13e-digitized</a></td><td>2,712</td><td>2</td><td>8</td><td>5</td><td>0</td><td>0</td><td>0</td><td>3.241</td><td>2.500</td><td>10</td><td>0</td></tr>
+</table></div>
+<p>A number in red got worse and one in green got better. More stitches are neither.</p>
+<h2>In the browser</h2>
+<p>The editor in Chromium and <code>stitch</code> wrote the same PES and DST files, byte for byte, of alpine-night.</p>
+<p>The editor did not export dog-on-turf-6, so nothing was compared: plug-in exceeded its instruction budget.</p>
+<p>The panel&#x27;s exports, StitchCraft&#x27;s engine in the page, wrote the PES and DST files and drew the picture <code>stitch</code> makes, byte for byte, of alpine-night, dog-on-turf-6, dog-on-turf-9, dog-running-6, dog-running-9: PES 0.4 s to 4.1 s, DST 0.4 s to 3.7 s, the picture 0.6 s to 4.2 s.</p>
+<p>Giving dog-on-turf-6 the Auto effect took 3.4 s (limit 30.0 s) until the editor had drawn them, and its PES export was refused: the middle of 3 runs in Chromium drawing in software.</p>
+<div class="pair one"><figure><img src="after/editor.png" alt="The editor with the plug-ins of this revision" loading="lazy"><figcaption>The editor with the plug-ins of this revision</figcaption></figure></div>
+<h2>Pictures</h2>
+<h3 id="dog-on-turf-6">dog-on-turf-6</h3>
+<div class="pair one"><figure><img src="after/dog-on-turf-6.png" alt="dog-on-turf-6 in this revision" loading="lazy"><figcaption>dog-on-turf-6 in this revision</figcaption></figure></div>
+<h3 id="dog-on-turf-9">dog-on-turf-9</h3>
+<div class="pair one"><figure><img src="after/dog-on-turf-9.png" alt="dog-on-turf-9 in this revision" loading="lazy"><figcaption>dog-on-turf-9 in this revision</figcaption></figure></div>
+<h3 id="dog-running-6">dog-running-6</h3>
+<div class="pair one"><figure><img src="after/dog-running-6.png" alt="dog-running-6 in this revision" loading="lazy"><figcaption>dog-running-6 in this revision</figcaption></figure></div>
+<h3 id="dog-running-9">dog-running-9</h3>
+<div class="pair one"><figure><img src="after/dog-running-9.png" alt="dog-running-9 in this revision" loading="lazy"><figcaption>dog-running-9 in this revision</figcaption></figure></div>
+<h3 id="pear">pear</h3>
+<div class="pair one"><figure><img src="after/pear.png" alt="pear in this revision" loading="lazy"><figcaption>pear in this revision</figcaption></figure></div>
+<h3 id="lettered-patch">lettered-patch</h3>
+<div class="pair one"><figure><img src="after/lettered-patch.png" alt="lettered-patch in this revision" loading="lazy"><figcaption>lettered-patch in this revision</figcaption></figure></div>
+<h3 id="ts-13a-digitized">ts-13a-digitized</h3>
+<div class="pair one"><figure><img src="after/ts-13a-digitized.png" alt="ts-13a-digitized in this revision" loading="lazy"><figcaption>ts-13a-digitized in this revision</figcaption></figure></div>
+<h3 id="ts-13b-digitized">ts-13b-digitized</h3>
+<div class="pair one"><figure><img src="after/ts-13b-digitized.png" alt="ts-13b-digitized in this revision" loading="lazy"><figcaption>ts-13b-digitized in this revision</figcaption></figure></div>
+<h3 id="ts-13c-digitized">ts-13c-digitized</h3>
+<div class="pair one"><figure><img src="after/ts-13c-digitized.png" alt="ts-13c-digitized in this revision" loading="lazy"><figcaption>ts-13c-digitized in this revision</figcaption></figure></div>
+<h3 id="ts-13d-digitized">ts-13d-digitized</h3>
+<div class="pair one"><figure><img src="after/ts-13d-digitized.png" alt="ts-13d-digitized in this revision" loading="lazy"><figcaption>ts-13d-digitized in this revision</figcaption></figure></div>
+<h3 id="ts-13e-digitized">ts-13e-digitized</h3>
+<div class="pair one"><figure><img src="after/ts-13e-digitized.png" alt="ts-13e-digitized in this revision" loading="lazy"><figcaption>ts-13e-digitized in this revision</figcaption></figure></div>
+<p>This run built the tools in 80 s and planned and measured the pictures in 68 s.</p>
+</html>

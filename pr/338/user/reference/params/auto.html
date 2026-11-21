@@ -1,0 +1,636 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Automatic digitizing - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../../../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../searchindex-b37cbce2.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../toc-95df4fb0.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/user/reference/params/auto.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <!-- Generated by `cargo xtask docs` from `AutoParams` in the parameter registry. Edit the declaration, not this page. -->
+<h1 id="auto-parameters"><a class="header" href="#auto-parameters">Auto parameters</a></h1>
+<p>Automatic digitizing: the settings of the rules that choose the stitches of a shape without settings
+from its geometry. Each rule goes by the settings of the shape it digitizes, and a shape that sets none
+takes the defaults, as every shape does with <code>--auto</code>. The machine checkpoint MC-8 confirms the
+defaults or changes them. The settings of the last section, Advanced, are the rules’ bounds: no dialog
+shows them, and <code>stitch plan --set</code> sets them.</p>
+<p>Applies to automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type.</p>
+<h2 id="stitches-by-shape"><a class="header" href="#stitches-by-shape">Stitches by shape</a></h2>
+<h3 id="auto_stitch"><a class="header" href="#auto_stitch"><code>auto_stitch</code></a></h3>
+<p><strong>Stitch.</strong> The stitch the shape sews as. Left at <code>auto</code>, each part of it sews by the first rule that it
+matches, from its geometry. <code>run</code> sews every part as a running stitch along its centre lines,
+<code>satin</code> sews each part no wider than the widest satin column as satin columns along them, and
+<code>fill</code> fills the shape whole. A part that can’t sew as asked goes by the rules: a speck, a part
+without a centre line, and for <code>satin</code> a part too narrow or too wide for a column.</p>
+<ul>
+<li><strong>Accepts:</strong> one of <code>auto</code> (Chosen by the rules), <code>run</code> (Running stitch), <code>satin</code> (Satin columns), <code>fill</code> (Tatami fill)</li>
+<li><strong>Default:</strong> <code>auto</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_prefer"><a class="header" href="#auto_prefer"><code>auto_prefer</code></a></h3>
+<p><strong>Satin or fill.</strong> Which way the rules lean where a part could sew as satin columns or as a fill. <code>satin</code> moves 3
+bounds together by half, so that more parts sew as columns: the least slenderness is divided by
+1.5, and the most a width varies and the narrowest piece that stays in a fill are multiplied by
+it. <code>fill</code> moves them the other way, and <code>balanced</code> leaves them as they are set.</p>
+<ul>
+<li><strong>Accepts:</strong> one of <code>satin</code> (Prefer satin columns), <code>balanced</code> (Balanced), <code>fill</code> (Prefer fills)</li>
+<li><strong>Default:</strong> <code>balanced</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_fill_uneven"><a class="header" href="#auto_fill_uneven"><code>auto_fill_uneven</code></a></h3>
+<p><strong>Fill uneven parts.</strong> Whether a part of several centre lines whose width varies along them is filled. On, such a part
+is a tatami fill: the ragged patches of a traced photo sew flat, and a ragged thin line merges
+into the area beside it. Off, it sews a satin column along each line, and a thin line runs along
+its middle, as a drawing made of strokes of changing width may want.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
+<li><strong>Default:</strong> <code>true</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_fill_angle"><a class="header" href="#auto_fill_angle"><code>auto_fill_angle</code></a></h3>
+<p><strong>Fill angle.</strong> The angle of the rows of every fill that automatic digitizing makes, as a fill’s <code>angle</code> gives
+it. One angle for the whole design lets a small filled part lie flat beside the fills round it.</p>
+<ul>
+<li><strong>Accepts:</strong> an angle in degrees</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_fill_outline"><a class="header" href="#auto_fill_outline"><code>auto_fill_outline</code></a></h3>
+<p><strong>Outline round fills.</strong> Whether each fill that automatic digitizing makes sews an outline: a running stitch round its
+edge, after its rows, in its own thread. The outline draws the edge of a small shape as one
+line, where the ends of its rows would leave its points blunt. It sews only where the edge
+shows: not where a shape sewn after the fill covers the edge. The design goes by the setting of
+its lowest automatic shape.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
+<li><strong>Default:</strong> <code>true</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h2 id="neighbours"><a class="header" href="#neighbours">Neighbours</a></h2>
+<h3 id="auto_overlap_mm"><a class="header" href="#auto_overlap_mm"><code>auto_overlap_mm</code></a></h3>
+<p><strong>Overlap.</strong> How far an area reaches under each shape sewn after it that it touches, and how far inside the
+edge of an area, or of a part sewn as a line or a column, that is sewn after it and covers it the
+area is cut away. The thread pulls stitches in
+from the edges of their shape, and without the overlap fabric shows between shapes that only
+meet. A satin column reaches as far past a rail that a shape sewn after it runs along.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0 to 2 mm</li>
+<li><strong>Default:</strong> <code>1</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_pull_compensation_mm"><a class="header" href="#auto_pull_compensation_mm"><code>auto_pull_compensation_mm</code></a></h3>
+<p><strong>Pull compensation.</strong> How far a satin column sews past a rail with no shape sewn after the column beside it: its pull
+compensation there. The thread pulls a column in from its rails, and a column that sews this far
+past them is as wide as drawn. Along a rail where a shape sewn after the column runs for more
+than half the rail’s length, the column sews past the rail by the overlap instead.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0 to 2 mm</li>
+<li><strong>Default:</strong> <code>0.4</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_ignore_background"><a class="header" href="#auto_ignore_background"><code>auto_ignore_background</code></a></h3>
+<p><strong>Leave out the background.</strong> Whether the lowest shape is left out when it is the picture’s background: an area under the
+other shapes that covers the whole design. A background is usually the fabric’s own colour, and
+sewing it doubles the stitches and stiffens the design. What shows of it inside the picture sews
+still, as a white disc on a badge traced with its colours stacked does. Off, all of it that shows
+sews, as of any area.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
+<li><strong>Default:</strong> <code>true</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h2 id="base-layer"><a class="header" href="#base-layer">Base layer</a></h2>
+<h3 id="auto_base_layer"><a class="header" href="#auto_base_layer"><code>auto_base_layer</code></a></h3>
+<p><strong>Base layer.</strong> Whether one base layer sews first under the whole design: an open fill under what the
+automatic shapes paint together, every stitch of it underlay. On fabric of another
+colour than the design, thread of one colour then lies under a slit between 2 shapes. The fills
+on it sew no underlay of their own. Off, each fill sews the underlay of its settings. The design
+goes by the settings its lowest automatic shape has for the base layer.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
+<li><strong>Default:</strong> <code>true</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_base_stitch_length_mm"><a class="header" href="#auto_base_stitch_length_mm"><code>auto_base_stitch_length_mm</code></a></h3>
+<p><strong>Base layer’s stitch length.</strong> How long the base layer’s stitches are. Its rows lie this length times 0.866 apart, so that
+its needle points make triangles with sides this long, as the stitches of Ink/Stitch’s
+Knockdown Fill do. Shorter stitches hide more of the fabric and sew longer.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 1 to 6 mm</li>
+<li><strong>Default:</strong> <code>3</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_base_keep_holes"><a class="header" href="#auto_base_keep_holes"><code>auto_base_keep_holes</code></a></h3>
+<p><strong>Base layer keeps holes.</strong> Whether the base layer keeps the holes of the design’s outer shape. Off, it sews across them.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
+<li><strong>Default:</strong> <code>true</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h2 id="advanced"><a class="header" href="#advanced">Advanced</a></h2>
+<h3 id="auto_max_satin_width_mm"><a class="header" href="#auto_max_satin_width_mm"><code>auto_max_satin_width_mm</code></a></h3>
+<p><strong>Widest satin column.</strong> The widest a line or a part of an area sews as a satin column, and the longest stitch such a
+column sews between its rails: satin stitches any longer lie loose. A line up to this wide is a
+satin column as wide as the line, and a wider one fills the area it paints. A part of an area
+wider than this somewhere is filled. As a traced picture’s layers are flattened, an area that
+is filled is filled whole under the areas that fill its holes. The value is the machine’s
+longest satin stitch, so a shape may set it lower and never higher.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 1 to 7 mm</li>
+<li><strong>Default:</strong> <code>7</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_max_split_satin_width_mm"><a class="header" href="#auto_max_split_satin_width_mm"><code>auto_max_split_satin_width_mm</code></a></h3>
+<p><strong>Widest split satin column.</strong> The widest a part of an area, or a line, sews as one satin column whose stitches are split, when it
+is wider than the widest satin column. Such a part has one centre line, and its width varies by no
+more than <code>auto_max_unevenness</code>: a border, a ring or a bar. Its stitches split into pieces no
+longer than the widest satin column, at random places, so that their needle holes don’t line up.
+At its default, the widest satin column, no part is split, and every part that wide is filled.
+The trade sews satin up to about 10 mm wide so. A split column keeps satin’s sheen where a fill
+reads flat, but it sews thicker than a fill and with about half as much thread again. Off by
+default until a sew-out confirms it.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 7 to 12 mm</li>
+<li><strong>Default:</strong> <code>7</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_min_triple_run_width_mm"><a class="header" href="#auto_min_triple_run_width_mm"><code>auto_min_triple_run_width_mm</code></a></h3>
+<p><strong>Narrowest triple run.</strong> The narrowest running stitch sewn as a triple run, each stitch sewn 3 times (bean stitch 1). A
+line no wider than the design’s narrowest satin stroke runs, and from this width it sews bolder
+than one stitch, which is as fine as the thread. A narrow part of an area is as wide as the
+circles that fit inside it along its centre line.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0 to 10 mm</li>
+<li><strong>Default:</strong> <code>0.5</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_min_slenderness"><a class="header" href="#auto_min_slenderness"><code>auto_min_slenderness</code></a></h3>
+<p><strong>Least slenderness of a column.</strong> How long for its width a part is, at the least, to sew as satin columns: its area divided by
+its width squared. A part less slender is compact, a blob with no way to run, and is filled. A
+rectangle is as slender as it is long for its width, and a disc measures 0.8.</p>
+<ul>
+<li><strong>Accepts:</strong> a number from 0 to 20</li>
+<li><strong>Default:</strong> <code>3</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_max_unevenness"><a class="header" href="#auto_max_unevenness"><code>auto_max_unevenness</code></a></h3>
+<p><strong>Most a column’s width varies.</strong> How much the width of a part of several centre lines varies along them, at the most, for it to
+sew as satin columns: the standard deviation of its width divided by its width. A part more
+uneven is filled, unless <code>auto_fill_uneven</code> is off. A part of one centre line isn’t held to it:
+a leaf and a tapering stroke sew well as one column.</p>
+<ul>
+<li><strong>Accepts:</strong> a number from 0 to 5</li>
+<li><strong>Default:</strong> <code>0.3</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_min_line_unevenness"><a class="header" href="#auto_min_line_unevenness"><code>auto_min_line_unevenness</code></a></h3>
+<p><strong>Least a merged line’s width varies.</strong> How much the width of a thin line varies along it, at the least, for it to merge into the shape
+beside it (<code>auto_fill_uneven</code>): the standard deviation of its width divided by its width. A thin
+line is a part narrower than the narrowest satin stroke everywhere. The ragged strands that soft
+shading and fur trace into vary by 0.09 to 0.46, and merge. A line drawn with an even pen varies
+by less, and sews as a line.</p>
+<ul>
+<li><strong>Accepts:</strong> a number from 0 to 5</li>
+<li><strong>Default:</strong> <code>0.05</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_min_likeness"><a class="header" href="#auto_min_likeness"><code>auto_min_likeness</code></a></h3>
+<p><strong>Least likeness kept when lines merge.</strong> The least likeness of the picture that merging thin lines keeps. A part is a piece of one colour of
+1 mm² or more in which a disc a thread across fits, and the likeness is the mean over the colours
+of the share of their parts kept. A thin line that touches no other piece of its colour is a part
+of its own, and merged into a neighbour of another colour it is a part lost: a twig, the rim of a
+petal, a shadow. Such lines merge, those of the colours with the most parts and the smallest first,
+while the picture keeps this likeness, and the others sew as lines. At 0 every thin line merges,
+and at 1 none that is a part does. Keeping lines adds running stitches and jump threads, and it
+changes the order the blocks sew in: the cap (<code>auto_thick_cap_fills</code>) keeps the spots that order
+piles up within it. Lower it for fewer jump threads where the detail matters less.</p>
+<ul>
+<li><strong>Accepts:</strong> a number from 0 to 1</li>
+<li><strong>Default:</strong> <code>0.85</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_max_reach"><a class="header" href="#auto_max_reach"><code>auto_max_reach</code></a></h3>
+<p><strong>Farthest a column reaches from its line.</strong> How far a part reaches from one of its centre lines on both sides of the line, at the most, for
+it to sew as satin columns: the distance, divided by the radius of the widest circle that fits
+inside the part centred on its lines. A column’s edges lie as far from its line as that circle
+reaches, so it measures 1, on one side or the other. A star measures 1.6 to 2.6: its centre line
+runs from one point to another, and its other points lie far from the line on both sides. One
+column along that line would sew them as bumps, so a part that reaches farther is filled. A
+sharp corner reaches far on one side only, and stays a column.</p>
+<ul>
+<li><strong>Accepts:</strong> a number from 1 to 20</li>
+<li><strong>Default:</strong> <code>1.4</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_min_fill_width_mm"><a class="header" href="#auto_min_fill_width_mm"><code>auto_min_fill_width_mm</code></a></h3>
+<p><strong>Narrowest piece of a fill.</strong> The narrowest piece of an area that stays in its fill. A piece narrower than this leaves the
+fill of an area wider than a satin column and sews by the rules, as a line or as columns. A
+piece as wide or wider stays, so that a wing 6 mm wide isn’t cut from the fill of its body.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 1 to 7 mm</li>
+<li><strong>Default:</strong> <code>4</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_min_area_mm2"><a class="header" href="#auto_min_area_mm2"><code>auto_min_area_mm2</code></a></h3>
+<p><strong>Smallest area.</strong> The smallest area sewn. An area, or a part of one, smaller than this is a speck, which would sew a
+knot: it is merged into the area beside it that it shares the longest edge with, or left out
+when it shares none.</p>
+<ul>
+<li><strong>Accepts:</strong> an area from 0 to 10 mm²</li>
+<li><strong>Default:</strong> <code>1</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_base_offset_mm"><a class="header" href="#auto_base_offset_mm"><code>auto_base_offset_mm</code></a></h3>
+<p><strong>Base layer’s offset.</strong> How far outside the design’s outer shape the base layer’s edge lies: inside it when negative, so
+that no base stitch shows beside a shape once the thread has pulled the shape’s edge in. By
+default it lies as far inside as a satin column’s pull compensation reaches outside.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from -3 to 3 mm</li>
+<li><strong>Default:</strong> <code>-0.4</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_base_rows"><a class="header" href="#auto_base_rows"><code>auto_base_rows</code></a></h3>
+<p><strong>Base layer’s rows.</strong> Which way the base layer’s rows run. <code>across</code> sews one layer, its rows across those of the
+fills on it, <code>auto_fill_angle</code> turned by 90°: the underlay a fill is usually given, once under
+the whole design. <code>lattice</code> sews 3 layers 60° apart, as Ink/Stitch’s Knockdown Fill does. That
+holds down the pile of a towel or a fleece, and lays 3 times the thread under the design.</p>
+<ul>
+<li><strong>Accepts:</strong> one of <code>across</code> (Across the fills’ rows), <code>lattice</code> (In 3 directions)</li>
+<li><strong>Default:</strong> <code>across</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_base_sliver_mm2"><a class="header" href="#auto_base_sliver_mm2"><code>auto_base_sliver_mm2</code></a></h3>
+<p><strong>Largest sliver.</strong> The largest gap in the top thread that is left to the base layer: a sliver. Where thin shapes
+meet, the top thread can leave a place this small bare, and the base layer’s thread shows there
+in place of the fabric. Nothing sews differently by this value. It is a limit of the check of a
+design’s cover: a larger gap fails the check, and so does a gap with no base layer under it.</p>
+<ul>
+<li><strong>Accepts:</strong> an area from 0 to 2 mm²</li>
+<li><strong>Default:</strong> <code>0.4</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_base_bare_percent"><a class="header" href="#auto_base_bare_percent"><code>auto_base_bare_percent</code></a></h3>
+<p><strong>Most left to the base layer.</strong> The most of the design’s area that the top thread may leave bare over the base layer, the
+slivers and the places narrower than a thread together. Nothing sews differently by this value.
+It is the other limit of the check of a design’s cover. A design without a base layer is held to
+0.15 % and to no gap at all.</p>
+<ul>
+<li><strong>Accepts:</strong> a percentage from 0 to 5</li>
+<li><strong>Default:</strong> <code>0.5</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_thick_warn_fills"><a class="header" href="#auto_thick_warn_fills"><code>auto_thick_warn_fills</code></a></h3>
+<p><strong>Thread that warns, in fills.</strong> How many fills of thread over one spot make the design sew thick. A fill is what rows 0.25 mm
+apart lay, the default spacing of a fill’s rows. Nothing sews differently by this value: planning
+warns of a place of 1 mm² or more with as much thread, which a person should look at. One layer of satin
+over a fill lays 2 to 3 fills and sews well, and 2 dense layers on a fill, 4, risk broken needles.
+It is a starting value for a 75/11 needle and 40-weight polyester thread, which a sew-out has to
+confirm. The design goes by the settings its
+lowest automatic shape has for the 4 limits of its thickness.</p>
+<ul>
+<li><strong>Accepts:</strong> a number from 0.5 to 50</li>
+<li><strong>Default:</strong> <code>4</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_thick_fail_fills"><a class="header" href="#auto_thick_fail_fills"><code>auto_thick_fail_fills</code></a></h3>
+<p><strong>Thread that fails, in fills.</strong> How many fills of thread over one spot fail: the warning gives the area with as much, and the
+heat map draws it in its last colour. A value under the warning’s limit reads as that limit.</p>
+<ul>
+<li><strong>Accepts:</strong> a number from 0.5 to 50</li>
+<li><strong>Default:</strong> <code>6</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_thick_warn_points"><a class="header" href="#auto_thick_warn_points"><code>auto_thick_warn_points</code></a></h3>
+<p><strong>Needle points that warn, per mm².</strong> How many needle points to a square millimetre make the design sew thick, the locks left out.
+Planning warns of a place of 1 mm² or more with as many. The rows of a fill end at its edge, 5 to
+a square millimetre there, so this is what the edges of 3 fills on each other make. A starting
+value, as the limit of thread.</p>
+<ul>
+<li><strong>Accepts:</strong> a number from 0.5 to 200</li>
+<li><strong>Default:</strong> <code>15</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_thick_fail_points"><a class="header" href="#auto_thick_fail_points"><code>auto_thick_fail_points</code></a></h3>
+<p><strong>Needle points that fail, per mm².</strong> How many needle points to a square millimetre fail, what the edges of 6 fills on each other
+make: the warning gives the area with as many. A value under the warning’s limit reads as that
+limit.</p>
+<ul>
+<li><strong>Accepts:</strong> a number from 0.5 to 200</li>
+<li><strong>Default:</strong> <code>30</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_thick_cap_fills"><a class="header" href="#auto_thick_cap_fills"><code>auto_thick_cap_fills</code></a></h3>
+<p><strong>Most thread on a spot, in fills.</strong> The most fills of thread a spot of a millimetre sews: what planning aims at. Where a spot sews
+more once the design is planned, a last pass and then the cap take thread there that other
+stitches cover: travel, the base layer, a shape’s thread under later shapes, and a shape’s own top
+stitches where they are doubled. The cap leaves a satin column’s top stitches as they are, adds no
+jump thread, and what shows keeps its colour. A note says what is left above the cap, and the
+warning comes only at its own limit. A starting value for a 75/11 needle and 40-weight polyester
+thread, which a sew-out has to confirm. The design goes by the setting of its lowest automatic
+shape.</p>
+<ul>
+<li><strong>Accepts:</strong> a number from 1 to 50</li>
+<li><strong>Default:</strong> <code>3.25</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_details_last"><a class="header" href="#auto_details_last"><code>auto_details_last</code></a></h3>
+<p><strong>Details sew last.</strong> Whether a detail sews after the larger areas round it, where that costs no thread change: an
+automatic area that the shapes round it close in on, smaller than an area it meets, as an eye is in
+the fur round it. Sewn last, the detail keeps the later fills’ rows off its edge. Off by default:
+a fill that moves for a detail can wait for a later batch of its thread, which adds jump threads
+to cut by hand, and on traced photos it shows no more of the picture. Turn it on where an eye or a
+mark must keep its edge clear. The design goes by the setting of its lowest automatic shape.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
+<li><strong>Default:</strong> <code>false</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_smooth_mm"><a class="header" href="#auto_smooth_mm"><code>auto_smooth_mm</code></a></h3>
+<p><strong>Smooth outlines.</strong> How far a point of an area’s outline may move when the outline is smoothed, before anything is
+digitized. A traced outline wobbles by less than a thread is wide, and the wobble sews short
+stitches and ragged edges. Corners stay, an edge 2 areas share is smoothed once so that no gap
+opens, and a ring’s area changes by a tenth at most. 0, the default, sews every outline as drawn.
+0.2 mm, half a thread, cut short stitches on every traced picture measured, but it also changes
+which parts sew as satin columns, and not always for the better.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0 to 1 mm</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+<h3 id="auto_column_overlap_mm"><a class="header" href="#auto_column_overlap_mm"><code>auto_column_overlap_mm</code></a></h3>
+<p><strong>Overlap under a column.</strong> How far an area stays under a satin column that digitizing makes of a part of another shape and
+sews after it: the area is cut away that far inside the column’s edge, and reaches that far under
+it where they meet. Left empty, the default, it is the overlap, as everywhere else. A column’s
+thread pulls its stitches in by about its pull compensation, 0.4 mm, so less than that may show
+fabric between the fill and the column. Less overlap sews thinner where a column edges a fill, but
+only a sew-out shows how little is enough. A value above the overlap reads as the overlap. Under
+an area, a running line or a satin column drawn as a stroke, lettering’s too, the overlap stays.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0 to 2 mm, or empty</li>
+<li><strong>Default:</strong> empty</li>
+<li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
+<li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../user/reference/params/path-fill.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../user/reference/glossary.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../user/reference/params/path-fill.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../user/reference/glossary.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../searcher-09f2665d.js"></script>
+
+        <script src="../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../highlight-abc7f01d.js"></script>
+        <script src="../../../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

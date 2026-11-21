@@ -1,0 +1,1044 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Fills - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../searchindex-b37cbce2.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../toc-95df4fb0.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/design/algorithms/fills.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="fill-generators"><a class="header" href="#fill-generators">Fill generators</a></h1>
+<!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/normalize/simplify.rs, crates/stitchcraft-engine/src/generators/tatami/**, crates/stitchcraft-engine/src/generators/contour/**, crates/stitchcraft-engine/src/generators/meander/**, crates/stitchcraft-engine/src/generators/circular/**, crates/stitchcraft-engine/src/generators/smoothing.rs, crates/stitchcraft-engine/src/generators/pull.rs -->
+<p>A fill covers the area its path bounds, its <a href="#region">region</a>, with rows of stitches. Tatami is P1 (M5);
+contour, meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).
+Cross stitch, sewn from M10.1, is described on a page of its own (<a href="cross-stitch.html">cross stitch</a>).
+Ink/Stitch’s legacy fill is not planned, and is sewn as a tatami fill (<a href="#legacy-fill-not-planned">below</a>).</p>
+<p>A fill sews the drawing’s shape with Ink/Stitch’s stitches. Ink/Stitch’s rows, their spacing and stagger,
+the order it sews them in, its travel, underlay and compensation are what make its fills look good
+embroidered. StitchCraft keeps them, with their parameters’ names and defaults, and a file sews alike in
+both. Where the area Ink/Stitch fills departs from the drawing, StitchCraft follows the drawing, and a
+diagnostic says where the two differ. A part Ink/Stitch leaves out without a word is left out with a
+warning.</p>
+<p>A fill whose <code>fill</code> setting is off sews nothing, and nothing is said of it, as in Ink/Stitch
+(<code>REQ-FILL-003</code>). The path’s outline, if it has one, is sewn as its stroke settings say, and the element
+before it still ends near its area, as Ink/Stitch’s does.</p>
+<p>A fill starts nearest the needle, where the elements before it left it, and ends nearest what the next
+element offers (<a href="#5-parts">section 5</a>). Its start and end positions take their place, which a design
+places with Ink/Stitch’s start and end commands or VectorCraft’s start and end markers, and the element
+before a fill with a start position ends nearest that (<code>REQ-GEN-001</code>). Every method uses them but the
+contour fill’s end, which lies where its rings end.</p>
+<p>A fill cut to clips, its SVG clip paths or VectorCraft clipping objects, fills the part of its region inside
+every one (<code>REQ-GEN-005</code>). The region is cut when it is built, before the underlay, <code>expand_mm</code> and the
+method see it, as Ink/Stitch cuts its shape, so <code>expand_mm</code> grows the cut area past the clip’s edge. Parts
+the cut leaves too small to sew are left out as any are (<code>SC-W0303</code>), and a fill wholly outside its clips
+isn’t sewn (<code>SC-W0013</code>).</p>
+<h2 id="region"><a class="header" href="#region">Region</a></h2>
+<p>A fill’s region is the area an SVG renderer paints for its path, in parts with holes
+(<code>stitchcraft_engine::normalize::region</code>, <code>REQ-FILL-001</code>):</p>
+<ol>
+<li><strong>Rings.</strong> Each subpath is flattened within a tenth of a CSS pixel, as Ink/Stitch flattens a fill’s
+outline, and closed. A subpath of fewer than 3 distinct points bounds nothing and is left out
+(<code>DEV-FILL-002</code>).</li>
+<li><strong>Cuts.</strong> Wherever 2 segments cross, touch or run along each other, both are cut there, on a grid of
+2⁻³⁵ mm, about 2.9 × 10⁻¹¹ mm. The rings’ points go on the grid, much as Ink/Stitch puts a fill’s
+shape on a grid of 10⁻¹⁰ CSS pixels, about 2.6 × 10⁻¹¹ mm. So the corners that shapes share, which
+relative path data and transforms leave a few units in the last place apart, become one point, and a
+gap or an overlap that narrow closes. A segment that passes through the cell of a corner, or of a
+point where 2 segments cross, is bent through that point. This is snap rounding, and the edges then
+meet only at their ends however rounding left the drawing. Before it, crossings worked out in floating
+point and snapped to points nearby could leave 2 edges crossing with no point between them, and whole
+faces filled or empty against the rule. On the grid, which side of a line a point lies on and which
+way a ring turns are decided exactly. A stretch drawn more than once becomes one edge that counts how
+many times it was drawn each way.</li>
+<li><strong>Faces.</strong> The edges bound faces. Outside everything the winding number is 0, and crossing an edge
+from its right to its left adds its count. Every face’s winding number follows from its neighbours’
+in whole numbers.</li>
+<li><strong>Fill rule.</strong> A face is filled when its winding number is not 0 (<code>nonzero</code>, SVG’s default) or is odd
+(<code>evenodd</code>). Ink/Stitch’s area differs in 2 ways, and StitchCraft follows the drawing in both
+(<code>DEV-FILL-001</code>). Ink/Stitch takes every subpath but the largest as a hole. Where <code>nonzero</code> fills a
+face inside that even-odd leaves empty, StitchCraft fills it, and <code>SC-I0306</code> says Ink/Stitch leaves it
+empty. And Ink/Stitch repairs a shape that is not valid by merging the subpaths’ lines, a stretch drawn
+twice into one, and filling the faces they bound by how deeply they nest. A face beside the outside
+nests in nothing, and is always filled. Where the fill rule leaves such a face empty, a notch drawn as a
+hole along the outline or a subpath drawn twice, <code>SC-I0313</code> says Ink/Stitch fills it.</li>
+<li><strong>Rings of the parts.</strong> The edges between filled and empty faces are joined into rings with the
+filled side on their right. Outlines turn clockwise and holes counter-clockwise in y-up axes, the other
+way round on screen, where y points down. Where rings meet at a point, they are joined the way GEOS
+joins them, the geometry library behind Ink/Stitch’s shapes. Parts that touch at a point stay apart. A
+hole that touches its outline stays a hole. Each ring starts at its point that comes first in the
+drawing, and parts and holes keep the drawing’s order too.</li>
+<li><strong>Parts too small to sew.</strong> A part of 3 square CSS pixels or less (0.21 mm²) is too small for a row
+of stitches and is left out. Ink/Stitch leaves it out without a word. StitchCraft says so with
+<code>SC-W0303</code> (<code>REQ-FILL-002</code>). A fill under 20 square CSS pixels (1.4 mm²) gets <code>SC-W0304</code>, as
+Ink/Stitch warns of it. A fill in parts gets <code>SC-W0307</code>, since each part is sewn on its own.</li>
+</ol>
+<p>The work is charged to the element’s budget, one unit for each point, edge bent and grid point tested
+against it, pair of edges whose spans along x overlap, half edge, ring compared with a face or an outline,
+and point walked to find a ring’s bounds or its place among the faces and outlines (<code>REQ-FILL-004</code>). Each
+ring’s bounds are found once. A ring that bounds no face is located only in the faces whose bounds cover
+its own, and a hole apart from every outline only in the outlines whose bounds cover its own.</p>
+<p>The cuts cost the most where a region is shrunk again and again (<a href="offset.html#speed">offset curves</a>). The
+hot points, the corners and the points where edges cross, are kept in a sorted list. For each round they
+are also put in a grid of buckets over their bounds, as many each way as the square root of their number.
+A segment seeks the cells it passes through among the points of the buckets within a half cell of it,
+and the edges that may cross it among those put in the same buckets (<code>REQ-FILL-006</code>). A bucket keeps its points
+in order of x, and 2 binary searches find the points between a segment’s ends along x: only those are tested.
+2 edges in a bucket are tested for an exact crossing only when their bounds along y meet. Since M13.30
+these searches find the same points with less work: TS-13B, run natively, takes 0.37 G fewer instructions. When the
+edges together would fill more than 4 buckets each, the buckets are made larger. The memory used
+then grows only as fast as the number of edges. Before M13.23 both searches went through everything within a segment’s span along x. The raw
+outline of a traced photo’s background shrunk by 3.5 mm is some 85,000 short edges that lie many times
+over each other, and cutting it took 950 million units of work, more than the budget of 500 million.
+An area drawn like it for the requirement’s case ran out of work as well. With the buckets that case
+takes 21.5 million units, and the photo’s background gives the same points as with the budget lifted.
+Each edge is worked out once,
+however many times the rings draw it. A ring is rebuilt when one of its edges is bent. A round’s crossings
+join the hot points at once, merged into the sorted list. The arrangement finds each point’s number by its
+place in that list, and groups the steps the rings take by their lower point. The steps between the same 2
+points, either way round, then lie side by side in a group, and are one edge.
+From M13.33 the rings are kept as the places of their points in that list while they are bent. The
+edges of a round are then sorted by grouping them by their lower place, which costs a step for each
+edge where a sort of the points compared each many times. Bending checks an edge again only where it
+may now pass a hot point. A new edge, made by bending, may pass any of them. An older one passed none
+when it was last checked, so after a round of crossings the search for it covers the cells that round
+made hot, if its bounds meet theirs. The points come out the same, for less work charged. The order of the edges round each
+point is sorted once, for the faces and for the rings of the parts: the order of those kept is the
+order of all with the others left out.
+Property tests draw random rings on a grid, and random rings with float coordinates beside near-copies of
+themselves, moved or turned by a hair or drawn back, and count how many times they wind round points off
+the edges. Such a point lies in the region exactly when the fill rule fills it, unless it lies in a part
+left out. Every ring found is simple and turns the right way, and the edges the rings are cut into meet
+only at their ends. Drawings of shapes that share corners and edges, written with relative path data as
+Inkscape writes them, fill their shapes’ area, in 1 part where the shapes share edges.</p>
+<p>Regions are combined by the same cuts and faces (<code>stitchcraft_engine::normalize::region::ops</code>), as
+automatic digitizing combines the shapes of a picture where they meet
+(<a href="../image-to-embroidery.html#neighbours">Neighbours</a>). A region’s parts never overlap and its outlines turn
+clockwise. Its rings then wind -1 times round each point inside it and 0 times round every other point. Of
+the faces that the rings of 2 regions bound, the union keeps those some ring winds round and the
+intersection those wound -2 times. The difference first reverses the second region’s rings, then keeps the
+faces wound -1 times. A region grows or shrinks by each part’s offset curves, with round corners
+(<code>normalize::offset</code>), and the parts grown are joined, since they may then overlap. An intersection leaves out
+the parts of either region that no part of the other comes near, and a difference those of the second.
+The parts are taken in groups, each part’s bounds within 2⁻²⁰ mm of another’s of its group, about 32,000
+cells of the grid. The rings of 2 groups then neither meet nor bend each other’s edges, and their points
+are numbered in the same order with the others there or not. So each group’s faces, rings and parts come
+out the same, and a group whose faces the operation keeps none of can be left out. Growing a region for
+its intersection with another (<code>buffered_near</code>) grows only the groups whose bounds, grown by the
+distance, come within 2⁻²⁰ mm of the other’s.</p>
+<h2 id="tatami-fill"><a class="header" href="#tatami-fill">Tatami fill</a></h2>
+<p>Parallel rows of running stitches across the region, with the needle points of neighbouring rows offset
+so they never line up into visible furrows. Most fills in most designs are tatami. Each step below sews
+as Ink/Stitch sews, on StitchCraft’s region, unless it says where it differs. The roadmap’s M5 steps
+build them in this order.</p>
+<p><strong>Parameters:</strong> <code>angle</code>, <code>row_spacing_mm</code>, <code>end_row_spacing_mm</code>, <code>max_stitch_length_mm</code>, <code>staggers</code>,
+<code>skip_last</code>, <code>underpath</code>, <code>running_stitch_length_mm</code>, <code>running_stitch_tolerance_mm</code>, <code>gap_fill_rows</code>,
+<code>pull_compensation_mm</code>, <code>pull_compensation_percent</code>, <code>expand_mm</code>, <code>random_seed</code>,
+<code>enable_random_stitch_length</code>, <code>random_stitch_length_jitter_percent</code>; underlay: <code>fill_underlay</code>,
+<code>fill_underlay_angle</code>, <code>fill_underlay_row_spacing_mm</code>, <code>fill_underlay_max_stitch_length_mm</code>,
+<code>fill_underlay_inset_mm</code>, <code>fill_underlay_skip_last</code>, <code>underlay_underpath</code>.</p>
+<h3 id="1-rows"><a class="header" href="#1-rows">1. Rows</a></h3>
+<p>Rows are laid across each part of the region on its own (<code>stitchcraft_engine::generators::tatami::rows</code>,
+since M5.2). They run at <code>angle</code>, counter-clockwise from horizontal on screen: at 0° left to right, at
+90° up the screen. Measured across them from the design’s origin, the first row of a part lies the
+largest whole number of <code>row_spacing_mm</code> from the origin that does not pass the part, and the rows follow
+it <code>row_spacing_mm</code> apart up to the part’s far side, with none on it (<code>REQ-FILL-TAT-002</code>). Fills side by
+side at the same angle and spacing then share their rows. Angles of whole right angles are exact, so rows
+at 0° or 90° run exactly along the drawing’s axes. The nth row lies n spacings past the first, multiplied
+out, since a spacing such as 0.1 mm rounds in binary, and added up row by row its rounding grew into a
+row on the far side.</p>
+<p>With <code>end_row_spacing_mm</code>, each step to the next row is the row spacing plus the difference to the end
+spacing times the distance from the first row over the part’s height. The spacing then reaches the end
+spacing a part’s height from the first row. Ink/Stitch carries the change on beyond that. Over a part
+only a few rows tall, a shrinking spacing then turns so small that the rows pile up short of the far side
+without end. StitchCraft keeps the end spacing from there on (<code>DEV-FILL-003</code>).</p>
+<p>A row’s <em>segments</em> are the stretches of it in the part, its outline included, split at every point where
+the row meets the outline (<code>REQ-FILL-TAT-010</code>). Those are the points where it crosses the outline or the
+outline touches it from inside, and both ends of a stretch where it runs along the outline. A row along
+an edge is then a segment of its own, and a row that only touches the part at a point has none. This is
+how GEOS, the library behind Ink/Stitch’s shapes, cuts a line with a polygon. Its answers for 2,511 rows
+across 406 random polygons of grid squares and half squares, 98 of them with holes, are recorded and
+checked (<code>conformance/fixtures/geometry/shapely-rows.txt</code>).
+Which stretches lie inside is decided by counting the edges that cross the row, each over its height
+from its lower end up to but not including its upper end.</p>
+<p>A side drawn on a row lies a hair off it by the time it is cut: the region puts its corners on a grid
+2.9e-11 mm wide, and the row’s place rounds. So a point of the outline within 1e-9 mm of a row lies on
+it, and a row within 1e-9 mm of a part’s far side lies on that side, and is left out. A part’s first and
+last rows, and the segments of a row drawn along a side, then don’t depend on the rounding. Ink/Stitch’s
+do (<code>DEV-FILL-012</code>).</p>
+<p>The top rows alone, laid over each part grown by <code>expand_mm</code> as the fill grows it, are what a preview
+shows of a fill too costly to sew within the preview’s budget (<code>generate::rows</code>, since M6.3). Laying
+them costs a small part of sewing the fill, since no needle point is placed and no route is searched. A
+28 mm square takes 626 units of the engine’s work for its rows, and 62,532 to sew.</p>
+<h3 id="2-needle-points-along-a-row"><a class="header" href="#2-needle-points-along-a-row">2. Needle points along a row</a></h3>
+<p>A row’s needle points lie on a grid along it, as Ink/Stitch places them
+(<code>stitchcraft_engine::generators::tatami::stitches</code>, since M5.3). The grid’s points are the longest
+stitch apart, <code>max_stitch_length_mm</code>. A fill always has one: 4 mm when it is not set or left empty, and
+0.1 mm, with <code>SC-W0102</code>, when it is 0 or less, as in Ink/Stitch. One shorter than twice the shortest
+stitch is raised to that, with <code>SC-W0402</code>, as a running stitch’s length is, and so is the underlay’s: rows
+stitched shorter would sew stitches the plan merges. Ink/Stitch stitches them as set. Measured along the rows from
+the design’s origin, they lie at whole numbers of stitches plus the row’s offset (<code>REQ-FILL-TAT-003</code>). A
+row’s number is how far across the rows it lies from the origin, over <code>row_spacing_mm</code>, rounded to the
+nearest whole number, halves to the even one. Its offset is the fractional part of that number over
+<code>staggers</code>, times the longest stitch. Each row’s points then lie a <code>staggers</code>-th of a stitch along from the row
+before’s and come back after <code>staggers</code> rows, so neighbouring rows never line them up into furrows. A
+fraction of a stagger draws diagonals that show less. A negative <code>staggers</code> staggers the rows the other
+way, and 0 counts as 1, which lines every row’s points up, as in Ink/Stitch. Fills side by side at the
+same angle share the grid, as they share their rows.</p>
+<p>A segment is sewn from one end to the other, as routing decides. It takes its start, then every
+grid point past the start and before the end, and then its end, unless <code>skip_last</code> is on or the last
+point lies within 0.1 mm of it. A start on the grid is sewn once. Sewn the other way, a segment takes the
+same grid points.</p>
+<p>With <code>enable_random_stitch_length</code>, random lengths take the grid’s place. The point nearest the start
+lies a random share of the longest stitch past it, and each next one a stitch on, longer or shorter by up to
+<code>random_stitch_length_jitter_percent</code> of it, while they lie before the end. The draws come from the
+element’s generator, seeded with <code>random_seed</code>, in the order the segments are sewn. Ink/Stitch seeds a
+generator for each segment, and its random values differ (<code>DEV-FILL-004</code>).</p>
+<h3 id="3-routing-every-segment-once"><a class="header" href="#3-routing-every-segment-once">3. Routing: every segment once</a></h3>
+<p>Each part’s segments are sewn once each, in the order Ink/Stitch routes them
+(<code>stitchcraft_engine::generators::tatami::route</code>, since M5.4, <code>REQ-FILL-TAT-001</code>).</p>
+<ol>
+<li>
+<p><strong>Order.</strong> The segments are taken row by row, across the rows, and within a row by how far their start
+lies from the corner of the part’s bounding box where x and y are least. Each runs along its row.</p>
+</li>
+<li>
+<p><strong>Graph.</strong> Each segment is an edge between its 2 ends, and the ends are nodes. A node belongs to the
+ring nearest it, or to the outline when a hole is as near. Its place is its distance along that ring
+from the ring’s start. Along each ring an edge joins each node to the next, and every other one of those
+stretches, from the first, gets a second edge. A node then meets its row and 3 stretches of ring, an
+even number of edges. Ink/Stitch’s graph knows an edge between 2 nodes by its kind, so a ring of 2
+nodes doubles only one of its 2 stretches. This graph does the same.</p>
+</li>
+<li>
+<p><strong>Start and end.</strong> The fill starts at the point of its rings nearest the needle and ends at the point
+nearest its next stitch, which its end position or else the next element’s shape gives (section 5). Each of the 2 points gets a
+node, which splits the stretch of that ring whose chord passes nearest it. Then the node nearest the
+needle is where the fill starts, and the one nearest the next stitch where it ends. Without a needle
+the fill starts at its first segment’s start, and without a next element it ends where it starts. Only
+rings that rows reach are looked at. Ink/Stitch joins an unreached ring with straight lines, which it
+sews as rows (<code>DEV-FILL-006</code>).</p>
+</li>
+<li>
+<p><strong>Even degrees.</strong> A row through a corner of the outline, or one along it, shares a node with the row
+beside it, and some nodes then meet an odd number of edges. Ink/Stitch adds paths between such nodes
+that may run along rows, and sews those rows a second time. StitchCraft pairs the odd nodes so that the
+needle’s way between pairs is shortest in all and joins each pair with an edge. Up to 16 nodes every
+pairing is weighed, and past that each node pairs with the nearest left, its ways to the others found
+only as it pairs: memory then grows with the nodes, not with their pairs. No row is sewn twice
+(<code>DEV-FILL-006</code>). A pairing edge stands for the way between its 2 nodes that Ink/Stitch’s paths double:
+one edge where a row or a stretch of ring joins the 2, and several otherwise. Travel along it is never a
+handover between neighbouring rows for <code>skip_last</code>, and it ends a stretch for gap-fill rows only where it
+stands for several.</p>
+</li>
+<li>
+<p><strong>Walk.</strong> Ink/Stitch walks a copy of the graph, which its graph library makes by adding the edges
+again, node by node in the order the nodes came, each node’s edges in its own order. So in the copy a
+node lists first its neighbours that came before it, in the order they came, and then the others,
+itself included, in its own order. The walk starts at the end node. At each node it takes the node’s
+row if one is left, and otherwise the node’s first edge left. A node lists its edges neighbour by
+neighbour, each neighbour’s in the order they came. A neighbour whose last edge is taken drops out of
+the list. When the walk reaches a node with no edge left it steps back, and the edges, in the order it
+steps back over them, are the route. The route comes back to the end node, and before it the needle
+runs from the fill’s start to that node. The running stitches between rows then mostly come just
+before the rows beside them, which cover them, and the rows go back and forth like a mown lawn.</p>
+</li>
+<li>
+<p><strong>Between rows.</strong> Steps between rows in a row are one stretch, from where the last row ended to where
+the next starts. The needle travels it under the rows (section 4), or with <code>underpath</code> off along the
+ring between 2 points of one ring, the shorter way round, and between 2 rings the shortest way along
+rings and rows (<code>DEV-FILL-006</code>). Ink/Stitch’s needle takes the way round with fewer nodes of its
+graph, a node every CSS pixel along the outline’s sides, which is about the shorter way but not always
+(<code>DEV-FILL-011</code>). It sews running stitches of the first <code>running_stitch_length_mm</code>, at least twice the
+shortest stitch, within <code>running_stitch_tolerance_mm</code>. Ink/Stitch reads a fill’s value as one number,
+and sews a value of several in its default, 2.5 mm (<code>DEV-SAT-005</code>). The first running stitch would sew
+the row’s end again, so it is left out. With <code>skip_last</code> the row’s end is not sewn, and the first
+running stitch stays unless the next row starts beside it.</p>
+</li>
+<li>
+<p><strong>The shortest stitch.</strong> Rows the row spacing apart start and end nearer each other than the shortest
+stitch a machine sews well, and a row’s first grid point can lie just past its start. A needle point
+nearer the one before it than the shortest stitch is left out, as Ink/Stitch leaves out points nearer
+than its own shortest stitch. A part’s last point stays, and the points before it that are too near it
+go instead, unless that would bring it within the shortest stitch of the part’s first: then it goes
+itself. This is finalize’s rule, applied in the generator. Where the rows lie nearer each other than the
+machine’s shortest stitch and meet an edge square on, each row hands over to the next in a stitch too
+short to sew, so the next row’s first needle point is left out (<code>DEV-FIN-001</code>). The thread then runs
+from the row’s end to the next row’s second needle point, and a sliver at each row’s start shows. On
+the Brother, whose shortest stitch is 0.3 mm, a bar 5 mm wide at Ink/Stitch’s default of 0.25 mm is
+97 % covered, and at 0.3 mm or more it is covered to its edges (<code>REQ-FILL-TAT-004</code>). Ink/Stitch’s
+shortest stitch, 0.1 mm by default, keeps the handover. Along an edge at a slant to the rows, their
+ends lie farther apart: the spacing over the sine of the angle between edge and rows, 0.35 mm at 45°
+for rows 0.25 mm apart, which the Brother sews.</p>
+<p><code>turn_stitches</code>, StitchCraft’s own switch, keeps the handover on such a machine (<code>REQ-FILL-TAT-014</code>),
+and a guided fill’s lines read it too (<a href="guided.html#sewing-the-lines">guided fill</a>).
+A turn is a stitch shorter than the shortest stitch between 2 stitches that run opposite ways. Its 2
+needle points move apart along the edge, each by half of the length the turn lacks, and the turn is
+then as long as the shortest stitch: 0.3 mm for rows 0.25 mm apart, each point 0.025 mm off its row.
+A row’s last needle point nearer the turn than the shortest stitch is left out for it. The switch is
+off by default, so a fill with settings sews as before. Automatic digitizing turns it on for its
+fills, whose edges must cover (<a href="../image-to-embroidery.html#covering-the-fabric">covering the fabric</a>).</p>
+</li>
+</ol>
+<p>The route follows Ink/Stitch’s from the same graph. StitchCraft’s rings start where the drawing starts
+them, and Ink/Stitch’s where GEOS’s overlay starts them, so which stretches are doubled, and with them the
+route, can differ (<code>DEV-FILL-005</code>).</p>
+<h3 id="4-travel-under-the-rows"><a class="header" href="#4-travel-under-the-rows">4. Travel under the rows</a></h3>
+<p>With <code>underpath</code>, on by default, the needle runs between rows inside the part, under the rows sewn
+after it, which cover it, as Ink/Stitch’s does (<code>stitchcraft_engine::generators::tatami::underpath</code>,
+since M5.5, <code>REQ-FILL-TAT-005</code>).</p>
+<ol>
+<li><strong>Lines.</strong> 3 gratings of lines cross the part, laid as rows are (section 1). 2 of them lie at 45° to
+the rows, one either way, their lines 2 mm apart, and the third square to the rows, its lines √2 mm
+apart. A part smaller than 10,000 square CSS pixels (700 mm²) has less room, and its lines lie half as
+far apart. The square lines pass through the crossings of the others, so the 3 make one network. Its
+nodes are the crossings, the lines’ ends on the rings and the route’s nodes, and along each ring an
+edge joins each node to the next. A crossing within 0.005 px of a node already found is that node.
+Where either 45° grating misses the part, the needle runs as with <code>underpath</code> off. Ink/Stitch smooths
+that way as it smooths a way under the rows, step 4, and StitchCraft keeps to the rings
+(<code>DEV-FILL-013</code>).</li>
+<li><strong>Costs.</strong> A piece of line costs its length in CSS pixels over its distance from the part’s rings,
+simplified within 0.5 mm, plus a tenth of a pixel. A stretch of ring costs 3 times the straight line
+between its ends. Travel then keeps to the middle of the part, away from its edges.</li>
+<li><strong>Sewn rows close lines.</strong> Once a row is sewn, the pieces of line that cross it close, and no later
+travel follows them over it.</li>
+<li><strong>The way.</strong> The needle takes the cheapest way. The way is cut into points 10 px apart within 4 px of
+it, the corners of the points after its start are cut 5 times, a quarter of the way along each side
+from each end, and its own ends go back at either end: it leaves its start straight and curves from
+there. Then it is kept inside the part. Where it leaves the part or runs along a ring, the ring takes
+its place, the shorter way round, from where it leaves to where it comes back: the hole it leaves into,
+or else the outline. It is sewn in running stitches as in section 3.</li>
+<li><strong>A hole between the lines.</strong> Where no line joins the 2 points, as for a hole small enough to lie
+between the lines, the needle runs along the rings and rows, as with <code>underpath</code> off. Ink/Stitch goes
+straight there, but it travels between 2 rings only from the fill’s start to its end, before any row
+is sewn. StitchCraft also travels between rings to pair nodes (<code>DEV-FILL-006</code>), after rows are sewn,
+which a straight way would cross.</li>
+<li><strong>A needle inside the part.</strong> The fill starts at the node of the network nearest the needle (since
+M5.7). For a needle on the rings or outside the part, that is the route’s start. For one inside, as
+after an inset underlay, it is a node inside, and the needle travels the cheapest way from there to the
+route’s start, or on to the end of the route’s first stretch of travel, as Ink/Stitch’s does.</li>
+</ol>
+<p>Equally cheap ways, the simplified rings and the points a way is cut into follow StitchCraft’s own rules,
+so the way can differ from Ink/Stitch’s in its details (<code>DEV-FILL-007</code>).</p>
+<p>Travel asks the rings where a point lies on them, how far a line lies from them, and where a stitch meets
+them or lies inside. Each question looks only at the ring sides near its point, line or stitch, filed in a
+grid of square cells about as many as the sides, and gets the answer a look at every side would give
+(<code>REQ-FILL-TAT-013</code>).</p>
+<h3 id="5-parts"><a class="header" href="#5-parts">5. Parts</a></h3>
+<p>A region in parts sews them one at a time, as Ink/Stitch sews them (<code>REQ-FILL-TAT-008</code>, since M5.4).
+The part nearest the needle goes first, a part the needle is in being 0 away. With no needle, the part
+with the least x goes first. Ink/Stitch sorts the parts with a stable sort. GEOS’s repair gave the parts
+of 400 of 400 random fills tied at their least x in order of their point of least x, and of least y
+among the points level with it (shapely 2.2.0, GEOS 3.14.1). Parts that tie go in that order here too.
+Each part ends at its point nearest the next part. The last ends at the point of the fill nearest its
+next stitch. That is the next element’s first stitch when it lies in the fill. Of a satin column’s
+rails, the start of the first that lies in the fill is the next stitch, and of a fill’s parts, the first
+outline’s start that does. Failing those, for a fill after a fill, it is the first start of this fill’s
+outlines that lies in the next, and otherwise the fill’s point nearest the next element. Ink/Stitch’s
+geometry library finds it so (<a href="satin.html#start-and-end">satin</a>).
+A start position is the needle the parts are ordered by, and the first part starts nearest it. Each part
+after starts nearest where the part before ended, as without one, where Ink/Stitch starts each part
+nearest its start command (<code>DEV-FILL-023</code>). An end position is the last part’s next stitch
+(<code>REQ-GEN-001</code>).
+Each part is a group of its own, which assembly joins to the next as it joins any 2 groups:
+straight on within the collapse length, and otherwise with a jump and the ties and trims the element’s
+settings give. <code>SC-W0307</code> says the fill is in parts.</p>
+<h3 id="6-underlay"><a class="header" href="#6-underlay">6. Underlay</a></h3>
+<p>Before its top rows, each part sews its underlay, on by default (<code>REQ-FILL-TAT-011</code>, since M5.6). The
+underlay is a layer of rows for each angle in <code>fill_underlay_angle</code>, in the order given, or with none set
+one at <code>angle + 90°</code>, square to the top rows. A layer’s rows lie evenly <code>fill_underlay_row_spacing_mm</code>
+apart (default: 3 times the row spacing), with no end spacing. Their needle points lie on the stagger
+grid with the fill’s <code>staggers</code>, <code>fill_underlay_max_stitch_length_mm</code> apart (default: the fill’s longest
+stitch), never at random lengths. <code>fill_underlay_skip_last</code> and <code>underlay_underpath</code> take the place of
+<code>skip_last</code> and <code>underpath</code>.</p>
+<p>Each layer is routed as the top rows are (sections 3 and 4). It starts at the point of the part’s rings
+nearest the needle and ends there, as Ink/Stitch routes a fill with nothing to end near. The next layer,
+and then the top rows, start where it ended, so a part is still one run. A layer with no row is sewn round
+the part’s outline from its start, as the top rows are (section 8), and <code>SC-I0308</code> says so. The needle
+goes on to that start as Ink/Stitch’s stitch plan joins a layer to the next one: straight on within the
+element’s jump length, and farther with a jump. The generator makes that join itself, because Ink/Stitch
+never forces locks after a layer of underlay, where assembly would after any group of an element with
+<code>force_lock_stitches</code>.</p>
+<p>From M10.15 a fill in a run of <code>underlays_first</code> sews the underlay of every part before any top rows. Its
+underlay and its top rows each start and end by their own neighbours
+(<a href="../engine-pipeline.html#underlays-first">engine pipeline</a>). Its underlay takes the parts nearest the needle
+first, from its start position when it has one. Each of a part’s layers then ends nearest the next part,
+and the last part’s nearest what the next layer offers, where the top rows would end
+(<code>tatami::sew::underlay_sewn</code>). Its top is the fill sewn without its underlay, which ends at its end
+position when it has one. Every fill method with this underlay sews it so, and a cross stitch fill, which
+has none, is sewn whole in the second pass.</p>
+<p>The underlay is sewn on the part shrunk by <code>fill_underlay_inset_mm</code>, and the top rows on the part grown by
+<code>expand_mm</code>, or shrunk where it is negative (<code>REQ-FILL-TAT-012</code>, since M5.7). A part is grown or shrunk
+as GEOS buffers a polygon, which Ink/Stitch calls, with round corners of 16 segments to a quarter circle
+(<code>stitchcraft_engine::normalize::offset</code>). Each ring is offset, the offsets are cut where they cross, and
+the faces they wind round clockwise at least once are the area. Before offsetting, GEOS leaves out a ring
+that shrinking wears away. After, it leaves out a small ring’s offset that has turned inside out. The
+engine follows both rules. The polygons agree with shapely’s within a nanometre for 330 random polygons,
+some at the edges of both rules (<code>conformance/oracle/buffer.py</code>).</p>
+<p>Shrinking can cut a part into pieces. Each piece is sewn on its own, in order of its point of least x, and
+of least y among pieces level with each other: a run of pieces, each with its least x within a nanometre
+of the one before. That is GEOS’s order in all but a few cases, where GEOS orders
+pieces with a sliver among them, or pieces level at their least x, as it walks its graph (<code>DEV-FILL-008</code>).
+Every layer of the underlay is sewn on one piece before the next, each starting nearest the needle. Each
+piece’s top rows start nearest the needle too, after the piece before, and end nearest the next part or
+element. Ink/Stitch starts every piece’s top rows nearest where the needle was before the first
+(<code>DEV-FILL-008</code>). Ink/Stitch sews each piece’s top rows as a group of its own. With
+<code>force_lock_stitches</code>, so does StitchCraft: assembly ties each off and jumps to the next, however near. Where shrinking wears a part away entirely, the part itself is sewn, as in Ink/Stitch,
+and <code>SC-W0310</code> (inset) or <code>SC-W0309</code> (expand) says so, as Ink/Stitch warns. Ink/Stitch also warns of an
+inset that wears a part away when the fill has no underlay to inset, and StitchCraft does not.</p>
+<h3 id="7-pull-compensation-and-gap-fill-rows"><a class="header" href="#7-pull-compensation-and-gap-fill-rows">7. Pull compensation and gap-fill rows</a></h3>
+<p>The thread pulls a row in at its ends. Each top row’s segment is lengthened at both ends by
+<code>pull_compensation_mm</code> plus <code>pull_compensation_percent</code> of its length (<code>REQ-FILL-TAT-006</code>, since M5.8).
+The first value applies at the end the rows start from at the fill’s angle. A second value, if given,
+applies at the other end. Where 2 segments of a row meet end to end, because the row only touches the
+outline there from inside or runs along it (section 1), the row goes on in the part. Both segments end at
+that point as they are, so the row is sewn once through it, as through Ink/Stitch’s rebuilt part, where the
+row is one segment. Ink/Stitch moves a satin’s stitches with the same function, and the two settings are declared once
+for both (<code>stitchcraft_engine::generators::pull</code>). A fill reads a value below 0 as 0, as Ink/Stitch does,
+and <code>SC-W0312</code> says so. The route is planned on the part as drawn. The needle’s ways keep their course,
+but each starts where the row before it ends and ends where the next row starts, both lengthened.
+Underlay is not compensated, as in Ink/Stitch.</p>
+<p>Ink/Stitch rebuilds the part round the lengthened rows, each widened by half the row spacing with round
+ends, and smooths the outline. Its rows then reach up to half a row spacing further, and it fills holes
+smaller than a row spacing squared and holes the widened rows close over. Where the widened rows form
+separate pieces, it keeps only the largest. StitchCraft keeps the part’s holes, gaps and pieces, which the designer drew
+(<code>DEV-FILL-009</code>).</p>
+<p>Where the route leaves a stretch of more than 3 rows for another, the fabric can open a gap along its
+last row before the rows past it are sewn. There, <code>gap_fill_rows</code>, rounded up to an even number, sews
+that many more rows past the last one, back and forth, and comes back to where it ended
+(<code>REQ-FILL-TAT-007</code>, since M5.8). A stretch’s rows are counted as Ink/Stitch counts them: the rows
+reached by travel. The route’s first row is one of them, because Ink/Stitch’s route always starts with
+travel, of no length where it starts on that row. Ink/Stitch’s gap fill ends a stretch where the walk
+goes from one row to the next by more than one edge once the loops between them are taken out, and so does
+this one. An edge that comes back to a node where an earlier one of those edges ended takes out the edges
+since, and itself, but a loop back to the row it left stays. So travel out and back before a handover to the
+row beside ends a stretch, and so does a pairing edge that stands for a way of several. The extra rows go
+on the way the stretch went, away from the last row sewn before the last one in another row. A last row
+sewn on through a joint is 2 segments of one row, and the way comes from the row before them, as
+Ink/Stitch takes it from the row the needle left for that row. Each extra row is the next row of the
+grid, the stretch of its segment beside the extra row before it, or the last row for the first,
+lengthened as the rows are. The extra rows are one strip, stop at the part’s edge, and stop where the part
+ends. The hop from each to the next, and the way back, are kept inside the part as travel is. Ink/Stitch
+repeats the last row a spacing further each time, and a repeat can run outside the part (<code>DEV-FILL-010</code>).
+Underlay has no gap-fill rows.</p>
+<h3 id="8-no-rows"><a class="header" href="#8-no-rows">8. No rows</a></h3>
+<p>A part thinner than the row spacing has no row. It is sewn as a running stitch round its outline, from
+the outline’s start, as Ink/Stitch sews it, and <code>SC-W0305</code> says so (since M5.4). A layer of underlay with
+no row is sewn so too, and <code>SC-I0308</code> says so (since M5.6). Where the fill rule leaves every face empty,
+the fill sews nothing, and <code>SC-W0303</code> says so.</p>
+<h3 id="properties-conformance"><a class="header" href="#properties-conformance">Properties (conformance)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Requirement</th><th>Property</th></tr>
+</thead>
+<tbody>
+<tr><td><code>REQ-FILL-TAT-001</code></td><td>Every row segment is covered exactly once by top stitches</td></tr>
+<tr><td><code>REQ-FILL-TAT-002</code></td><td>Measured row spacing equals the parameter (± 2 %), or follows the start→end gradient</td></tr>
+<tr><td><code>REQ-FILL-TAT-003</code></td><td>Needle points follow the stagger grid: a row’s points lie a <code>staggers</code>-th of the longest stitch along from the row before’s, and no 2 neighbouring rows line them up. A segment ends at its end unless <code>skip_last</code> is on or its last point lies within 0.1 mm of it</td></tr>
+<tr><td><code>REQ-FILL-TAT-004</code></td><td>Coverage (<code>stitchcraft_testkit::metrics</code>): rasterized at 0.05 mm with 0.4 mm thread width, ≥ 98 % of the region is covered at spacings from the machine’s shortest stitch to 0.4 mm, since M5.9</td></tr>
+<tr><td><code>REQ-FILL-TAT-005</code></td><td>With <code>underpath</code>, travel takes the cheapest way along the lines under the rows not sewn yet, and its way lies inside the region (± 0.05 mm)</td></tr>
+<tr><td><code>REQ-FILL-TAT-006</code></td><td>Each top row extends past its segment’s ends by the compensation; the part keeps its holes and pieces</td></tr>
+<tr><td><code>REQ-FILL-TAT-007</code></td><td>Gap-fill rows follow a stretch of more than 3 rows, which ends where Ink/Stitch’s gap fill ends one; all rows, gap-fill rows included, and the stitches between them lie inside the part within its compensation</td></tr>
+<tr><td><code>REQ-FILL-TAT-008</code></td><td>A region in parts sews each part on its own, nearest the needle first, each ending nearest the next part, the last nearest the next element</td></tr>
+<tr><td><code>REQ-FILL-TAT-009</code></td><td>A 130 × 180 mm rectangle at 0.4 mm, the reference hoop’s whole field, plans within the NFR-PERF-1 budget, guarded by <code>cargo xtask perf</code> since M5.9</td></tr>
+<tr><td><code>REQ-FILL-TAT-011</code></td><td>Before its top rows a part sews a layer of underlay for every angle, which starts and ends at its point nearest the needle, where the top rows then start</td></tr>
+<tr><td><code>REQ-FILL-TAT-012</code></td><td>The underlay covers the part shrunk by its inset and the top rows the part grown by <code>expand_mm</code>, as shapely buffers it, within a nanometre</td></tr>
+<tr><td><code>REQ-FILL-TAT-013</code></td><td>Questions about the rings look only at their sides near each point, line and stitch, and answer as a look at every side would: a 70 mm square with 14 × 14 round holes and a 120 × 60 mm background with 60 detailed holes plan within a tenth of the default work budget</td></tr>
+<tr><td><code>REQ-FILL-TAT-014</code></td><td>With <code>turn_stitches</code>, a turn between 2 rows closer together than the shortest stitch stays a stitch that long, and every row of a rectangle has a needle point on both sides</td></tr>
+</tbody>
+</table>
+</div>
+<p>Machine checkpoint MC-4 sews a density ladder, an angle set and a fill-with-outline registration test
+to tune pull compensation (<a href="../../plan/machine-testing.html">machine testing</a>).</p>
+<h2 id="contour-fill"><a class="header" href="#contour-fill">Contour fill</a></h2>
+<p>Rings that follow the region’s outline inward, like growth rings (P2, M7.7), as Ink/Stitch sews its contour
+fill (read at <code>d59c9ab</code>, the commit the differential pins, and at <code>6555892</code>, a commit outside the pin’s history,
+so <code>REQ-FILL-CON-008</code>’s differential checks the description against the pinned Ink/Stitch). Each part of the region is
+filled on its own, with <code>row_spacing_mm</code> between its rings, d below.</p>
+<h3 id="rings"><a class="header" href="#rings">Rings</a></h3>
+<p>The rings come in levels. Level 0 is the part’s outline and its holes, as drawn. Each level after it comes
+from the one before, in 3 steps.</p>
+<ol>
+<li>The outline ring is shrunk by d, without its holes.</li>
+<li>Each hole ring is grown by d, and the outer edge of its growth is kept. A hole whose growth
+closes on itself loses what it encloses, which gets no more rings. The arms of a C-shaped hole meet
+that way.</li>
+<li>The grown holes are joined and taken from the shrunk outline. What is left falls into pieces, each an
+outline with its holes, and the pieces make the next level.</li>
+</ol>
+<p>Shrinking and growing are GEOS’s buffer (<a href="offset.html#buffers-a-fills-part-grown-or-shrunk">offset curves</a>),
+with the corners <code>join_style</code> gives. Round corners, <code>0</code> and the default, have 8 segments to a quarter
+circle. Mitred corners, <code>1</code>, have a limit of 10 times the distance, and bevelled corners, <code>2</code>, are cut
+straight across. An outline shrinks with joins at its inward corners only, and a hole grows with them at
+its outward corners. With mitred corners, a ring lies
+farther than d from the one before at a joined corner: √2 d at a right angle. Each ring is simplified
+within 0.01 CSS pixel. A piece smaller than 0.1 square CSS pixel, 0.007 mm², is dropped with its holes. The
+levels end when nothing is left.</p>
+<p>Ink/Stitch repairs the grown holes as a set of polygons, which keeps what 2 overlapping growths share as
+an island of material: a small ring of its own, where a spiral can end. StitchCraft joins them
+(<code>DEV-FILL-015</code>).</p>
+<p>The rings make a tree. An outline ring’s children are the outline rings shrunk from it, several where the
+part narrows and parts in two. A hole works the other way: the ring grown from a hole is the parent of
+the ring it grew from. A hole’s largest ring hangs under the outline ring of the level where its growth
+met the outline, or where nothing was left. So the tree runs from the part’s outline in to its middles, and
+out again to each hole. With <code>clockwise</code> on, the default, every ring runs clockwise as the drawing shows
+it (y down), and the other way with it off.</p>
+<h3 id="inner-to-outer"><a class="header" href="#inner-to-outer">Inner to outer</a></h3>
+<p><code>contour_strategy</code> <code>0</code>, the default, sews one path through the tree, ring by ring and depth first. It
+starts on the outline at its point nearest the needle.</p>
+<ul>
+<li><strong>In.</strong> For each child of a ring, the needle takes the first point along the ring within 1.5 d of the
+child, from where the ring starts and in its direction, or within 2.05 d where no point is that near.
+A child farther than 2.05 d from every point of the ring is not sewn, and neither is any ring under it
+(<code>SC-W0311</code>). The children are sewn in the order of their points along the ring, and the needle steps
+across to each child’s point nearest its own.</li>
+<li><strong>Out.</strong> A child is sewn round, its own children the same way, to one row spacing short of where it
+was entered. The needle steps back to the ring a row spacing past the point it left, and goes on to the
+next child’s point. After its last child, a ring is sewn round to one row spacing short of its start,
+or whole when what is left of it is no longer than d. The fill ends on the outline, a row spacing short
+of where it began.</li>
+<li><strong>Directions.</strong> A ring with a child sewn runs in its direction. A ring with none runs the other way,
+as the middles do, and the outlines of the holes and of a part too thin for a second level. The step
+out of a
+ring with children of its own then crosses the step into it. With <code>avoid_self_crossing</code> on, the
+directions alternate level by level down the tree instead, the outline in its direction, and the steps
+don’t cross.</li>
+<li><strong>Smoothing.</strong> A <code>smoothness_mm</code> above 0 smooths the path. It is spaced as a running stitch 5 times the
+smoothness long, within 2 times it, and its corners are cut 5 times, each point replaced by the points
+a quarter and three quarters along its sides, its ends kept. The path is then kept inside the part, as
+a tatami fill’s travel is (<a href="#4-travel-under-the-rows">section 4</a>), and cut again where its rings began,
+at the same share of its length. StitchCraft’s running stitch keeps a point on each corner of the path
+it spaces, where Ink/Stitch’s evenly spaced points may cut one, and the smoothed path takes more
+stitches than Ink/Stitch’s (<code>DEV-FILL-017</code>).</li>
+</ul>
+<h3 id="single-and-double-spiral"><a class="header" href="#single-and-double-spiral">Single and double spiral</a></h3>
+<p><code>contour_strategy</code> <code>1</code> sews one spiral in from the outline, and <code>2</code> two, one in and one back out. Both
+follow a chain of rings from the outline inward. Each ring goes on to its one child, or to the child whose
+middle lies nearest its own, the middle of a ring being that of its line, weighted by length. The rings
+not chosen are not sewn, nor any ring under them (<code>SC-W0311</code>). At a hole, the next outline ring is
+usually the nearer, and the rings round the hole are then not sewn.</p>
+<ul>
+<li><strong>A turn</strong> goes from a ring to the next in the chain. Both rings are cut into N points, 20 to each
+<code>max_stitch_length_mm</code> of the outer ring’s length. The points lie evenly along each ring from its start,
+and each list then starts again at its point nearest the needle. Point i of the turn lies on the line from the outer
+ring’s point i to the inner ring’s point i, i/(N − 1) of the way. Each turn is simplified within 0.1
+CSS pixel, and the turns are joined end to end, each without its last point but the last.</li>
+<li><strong>With <code>1</code></strong>, the spiral turns from the outline in to the last ring of the chain. It ends near the
+points nearest the needle.</li>
+<li><strong>With <code>2</code></strong>, the spiral turns in on the chain’s rings 0, 2, 4 and on, and back out on rings 1, 3, 5 and
+on, reversed. It ends on ring 1 near where it began. With 3 rings it is one turn, and ring 1 is not
+sewn.</li>
+<li>Neither smooths, nor is kept inside the part. A turn between rings of different shapes can cut across.</li>
+<li>A chain too short for a turn, of one ring with <code>1</code> or of 2 or fewer with <code>2</code>, is sewn inner to outer,
+with <code>SC-I0315</code>. Ink/Stitch fails on such a part at <code>d59c9ab</code>, and sews nothing of it
+at <code>6555892</code> (<code>DEV-FILL-016</code>).</li>
+</ul>
+<h3 id="stitches"><a class="header" href="#stitches">Stitches</a></h3>
+<p>The path is sewn as a running stitch of <code>max_stitch_length_mm</code>, within <code>running_stitch_tolerance_mm</code>,
+at random lengths when <code>enable_random_stitch_length</code> is on (<a href="strokes.html#running-stitch">running stitch</a>).
+Bean stitch comes next, then the repeats. Each repeat adds a copy of everything sewn so far, the other way
+round, as Ink/Stitch’s does, and <code>k</code> repeats sew 2^(k−1) passes. A stroke’s repeats sew <code>k</code> passes.</p>
+<p>The path is kept as its stretches: along one ring between steps, or one turn of a spiral. Each stretch,
+and each step between 2 of them, is stitched as a span of its own. The running stitch spreads a span’s
+stitches evenly, and splits those that stray from a curve too tight for them (<code>DEV-RUN-002</code>). Over a
+whole spiral, from its wide outer turns to its tight middle, that halved the inner stitches and sewed some
+30 % more stitches than Ink/Stitch, whose stitches each shorten to fit. A ring, or a turn, curves about as
+tightly all along.</p>
+<h3 id="how-it-compares-with-inkstitch"><a class="header" href="#how-it-compares-with-inkstitch">How it compares with Ink/Stitch</a></h3>
+<p>TS-11B, the contour fills’ test sheet, sews each strategy, each join style, a hole, rings that part and
+rings that alternate, and a smoothed path. Sewn by both programs, Ink/Stitch run as a black box
+(<code>REQ-FILL-CON-008</code>), the sheet takes 10,611 stitches against Ink/Stitch’s 9,885, 7 % more, its size,
+threads, trims and jumps are the same, and the thread footprints overlap by 0.99. Sample by sample, the
+rings lie where Ink/Stitch’s lie, and the stitches along them differ as a running stitch’s do
+(<code>DEV-RUN-001</code>, <code>DEV-RUN-002</code>): 2 to 12 % more of them, and 68 to 96 % of each program’s thread within
+0.05 mm of the other’s, the most on the mitred star’s straight sides and the least on the discs, where 2
+stitches along one curve, placed differently, lie farthest apart. The smoothed leaf takes 17 % more
+(<code>DEV-FILL-017</code>).</p>
+<h3 id="start-end-and-underlay"><a class="header" href="#start-end-and-underlay">Start, end and underlay</a></h3>
+<p>Each part sews the tatami fill’s underlay first (<a href="#6-underlay">section 6</a>), on by default, at <code>angle</code> +
+90° with 3 row spacings between its rows. Each part’s underlay starts nearest the stitch before it, and
+its rings nearest the underlay’s last stitch. Before the first part, that stitch is the fill’s start
+position where it has one (<code>REQ-GEN-001</code>), and otherwise the last stitch of the elements before, or the
+origin. The parts go in order of their distance from the first part’s start. An end
+position has nothing to replace, as in Ink/Stitch: the fill ends where its strategy ends.</p>
+<h3 id="properties-conformance-1"><a class="header" href="#properties-conformance-1">Properties (conformance)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Requirement</th><th>Property</th></tr>
+</thead>
+<tbody>
+<tr><td><code>REQ-FILL-CON-001</code></td><td>A disc’s rings lie a row spacing apart (± 5 %) down to its middle, every one sewn, clockwise as drawn or the other way with <code>clockwise</code> off; the outlines shrunk and the holes grown agree with shapely’s buffer within a nanometre, for each join style, on 538 polygons</td></tr>
+<tr><td><code>REQ-FILL-CON-002</code></td><td>Inner to outer starts at the outline’s point nearest the needle and steps in to the middle first. It ends on the outline a row spacing short of where it began</td></tr>
+<tr><td><code>REQ-FILL-CON-003</code></td><td>A smoothed path stays inside the part, out of its holes</td></tr>
+<tr><td><code>REQ-FILL-CON-004</code></td><td>Single spiral starts at the outline’s point nearest the needle and ends in the middle. Double spiral ends on the ring inside the outline, near where it began</td></tr>
+<tr><td><code>REQ-FILL-CON-005</code></td><td>A part too narrow for its spiral is sewn inner to outer, with <code>SC-I0315</code></td></tr>
+<tr><td><code>REQ-FILL-CON-006</code></td><td><code>k</code> repeats sew 2^(k−1) passes, bean stitch sews each stitch 3 times, and random lengths follow the seed</td></tr>
+<tr><td><code>REQ-FILL-CON-007</code></td><td>The underlay’s rows come first and the rings go on from them, with no jump</td></tr>
+<tr><td><code>REQ-FILL-CON-008</code></td><td>TS-11B sews in Ink/Stitch as in StitchCraft, by the differential’s measures</td></tr>
+</tbody>
+</table>
+</div>
+<p>Like every test sheet’s, TS-11B’s fills sew the same mirrored, turned half round, or drawn again the other way round or from another point.</p>
+<h2 id="meander-fill"><a class="header" href="#meander-fill">Meander fill</a></h2>
+<p>A line that wanders through a network of short lines without passing a point twice, as a quilter’s
+meander does (P2, M7.8), as Ink/Stitch sews its meander fill (read at <code>d59c9ab</code>). Each part of the region
+is sewn on its own, after the tatami fill’s underlay (<a href="#6-underlay">section 6</a>), grown by <code>expand_mm</code>, as
+a contour fill’s is (<a href="#start-end-and-underlay">start, end and underlay</a>).</p>
+<h3 id="tiles"><a class="header" href="#tiles">Tiles</a></h3>
+<p>A tile is a network that repeats. It is given by a cell and the 2 steps that repeat it, with the lines of
+one cell, each from a point of the cell to a point of the cell or of a cell beside it. StitchCraft’s tiles
+are its own, made in code: 7 of the 11 regular and semiregular tilings of the plane by polygons. A
+tiling’s sides are its lines, each 2 mm long at a <code>meander_scale_percent</code> of 100 %.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Tile (<code>meander_pattern</code>)</th><th>Polygons round each point</th><th>Lines that meet</th></tr>
+</thead>
+<tbody>
+<tr><td><code>honeycomb</code>, the default</td><td>3 hexagons</td><td>3</td></tr>
+<tr><td><code>squares</code></td><td>4 squares</td><td>4</td></tr>
+<tr><td><code>triangles</code></td><td>6 triangles</td><td>6</td></tr>
+<tr><td><code>octagons-squares</code></td><td>2 octagons and a square</td><td>3</td></tr>
+<tr><td><code>hexagons-triangles</code></td><td>a triangle, a hexagon, a triangle and a hexagon</td><td>4</td></tr>
+<tr><td><code>hexagons-squares-triangles</code></td><td>a triangle, a square, a hexagon and a square</td><td>4</td></tr>
+<tr><td><code>squares-triangles</code></td><td>3 triangles and 2 squares</td><td>5</td></tr>
+</tbody>
+</table>
+</div>
+<p>The 2 tilings with dodecagons are left out. Every way round a dodecagon is 11 lines, more than the 7 of a
+detour (<a href="#the-path">the path</a>). Over a square 100 mm a side, the path left out 91 % of the network of
+dodecagons and triangles. It left out 32 % of the network that adds hexagons and squares to dodecagons.
+The 2 snub tilings are not made yet.</p>
+<p>Ink/Stitch’s tiles are pictures in its repository, which StitchCraft does not copy. A meander fill set to
+one of their ids, such as its default <code>N3-11a</code>, sews StitchCraft’s default tile, and <code>SC-W0316</code> names the
+tile it stood for (<code>DEV-FILL-018</code>).</p>
+<h3 id="the-network"><a class="header" href="#the-network">The network</a></h3>
+<p>The tile is scaled by <code>meander_scale_percent</code>, one percentage or 2 for across and down, each at least
+1 %. It is turned by <code>meander_angle</code> clockwise as the drawing shows it, and repeated so that a point of it
+lies at the middle of the part’s bounds. Each line that lies wholly inside the part, touching its outline
+at most, joins its 2 ends. A line with a free end, one no other line meets, is taken away, and then again,
+until every point meets 2 lines or more. Where the lines left fall into pieces, the pieces are joined by
+the shortest straight lines between their points that join them all, as few as join them (a minimum
+spanning tree of the pieces, measured between their nearest points).</p>
+<p>A part too small for any line, or whose lines all have free ends, has no network. It is sewn as a running
+stitch round its outline, as a tatami fill’s part too thin for rows is, and <code>SC-W0317</code> says so
+(<code>DEV-FILL-019</code>). Ink/Stitch stops the whole fill with an error there.</p>
+<h3 id="the-path"><a class="header" href="#the-path">The path</a></h3>
+<p>The path runs from the point of the network nearest the needle, or else the outline’s first point, to
+the point nearest where it is to end. That is the point of the part nearest the next part, or for the
+last part its end position or else the next element’s offer, or else the point of the outline half way
+round it from the start.
+Where the 2 are one point, it ends at the point next nearest.</p>
+<ol>
+<li>It begins as the path of fewest lines between them.</li>
+<li>Its lines are kept in a list and drawn from it at random, the seed’s draw choosing a place in the list
+(its last line moved to the place of the one drawn). Where the network allows, each line drawn is
+replaced by the first detour of 2 to 7 lines that a search finds through points the path has not
+passed. The detour’s lines go into the list.</li>
+<li>When the list is empty, the pairs of lines one after the other along the path are drawn from at random
+in the same way, and a pair is replaced by a detour of 3 to 10 lines that leaves out the point between
+them. The first pair replaced puts its detour’s lines in the list, and step 2 goes on.</li>
+<li>The path is done when no pair can be replaced.</li>
+</ol>
+<p>The search for a detour goes depth first from the detour’s first point, trying the points farthest from
+its last point first, and takes the first detour it finds. That is the long way round where there is one,
+which reaches into the points not passed. Taken the short way first, the detour of a line of a triangle
+passes the triangle’s third point, and a path of such detours hems itself in. Over a square 100 mm a
+side, the path through the tiling of hexagons and triangles passed 69 % of its points that way and 94 %
+with the long way first, for a third of the search’s work. Ink/Stitch’s search tries the points as its
+graph stores them, and its random numbers differ from StitchCraft’s. The 2 programs’ paths differ for
+one seed (<code>DEV-FILL-020</code>).</p>
+<h3 id="stitches-1"><a class="header" href="#stitches-1">Stitches</a></h3>
+<p>The path is smoothed by <code>smoothness_mm</code> as inner to outer’s is (<a href="#inner-to-outer">smoothing</a>). With
+<code>zigzag_spacing_mm</code> above 0, it is cut into points half the spacing apart. Each point but the last is
+moved half <code>zigzag_width_mm</code> across the path. The first goes to the right of the way to the next point as
+the drawing shows it, and the next to the left, one side and then the other. With <code>clip</code> on, the path is kept inside the part as
+drawn, before it was grown by <code>expand_mm</code>, as a tatami fill’s travel is
+(<a href="#4-travel-under-the-rows">section 4</a>). The path, unless it zigzags and is not clipped, is sewn as a
+running stitch of <code>running_stitch_length_mm</code> within <code>running_stitch_tolerance_mm</code>. Bean stitch comes
+next, then the repeats, which double the stitching each time, as the contour fill’s do.</p>
+<p>A node’s fill and stroke read the same settings, and a zigzag stroke keeps 2 spacings in
+<code>zigzag_spacing_mm</code>, which a meander fill cannot read as its one. The fill sews without a zigzag, as
+Ink/Stitch’s does, and <code>SC-I0106</code> says that it left the value to the stroke (<code>REQ-PRM-006</code>).</p>
+<h3 id="test-sheet"><a class="header" href="#test-sheet">Test sheet</a></h3>
+<p>TS-11C, the meander fills’ test sheet, sews 6 tiles on discs and the seventh on a star, with a zigzag
+kept inside a rectangle and a leaf whose tile is turned and whose path is smoothed. Its tiles are
+StitchCraft’s own. Ink/Stitch has no tile with their ids and sews each sample with one of its own tiles,
+so the sheet’s differential case excuses the stitches and the overlap (<code>DEV-FILL-018</code>).</p>
+<h3 id="properties-conformance-2"><a class="header" href="#properties-conformance-2">Properties (conformance)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Requirement</th><th>Property</th></tr>
+</thead>
+<tbody>
+<tr><td><code>REQ-FILL-MEA-001</code></td><td>Each tile’s points meet as many lines as its tiling has polygons round them, every line a side long; the lines sew 2 mm long at 100 %, scaled across and down apart and turned as set, with a point at the middle of the part</td></tr>
+<tr><td><code>REQ-FILL-MEA-002</code></td><td>Each line of the network lies inside the part and out of its holes, and each of its points meets 2 lines or more; pieces apart are joined by their nearest points; a part with no network is sewn round its outline, with <code>SC-W0317</code></td></tr>
+<tr><td><code>REQ-FILL-MEA-003</code></td><td>The path passes no point twice. It runs from the point nearest the start to the point nearest the end, with no line or pair left that a detour could replace, as the seed draws it</td></tr>
+<tr><td><code>REQ-FILL-MEA-004</code></td><td>A zigzag sews 2 points to each millimetre of the path, and clipped stays inside the part; <code>k</code> repeats sew 2^(k−1) passes and bean stitch sews each stitch 3 times; a smoothed path turns less sharply</td></tr>
+<tr><td><code>REQ-FILL-MEA-005</code></td><td>The underlay’s rows come first and the path goes on from them, with no jump; each part ends near the next; one of Ink/Stitch’s tiles sews the honeycomb, with <code>SC-W0316</code></td></tr>
+<tr><td><code>REQ-PRM-006</code></td><td>A meander fill or a satin column given a zigzag stroke’s 2 spacings sews with its own default, with <code>SC-I0106</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="circular-fill"><a class="header" href="#circular-fill">Circular fill</a></h2>
+<p>A spiral round the middle of each part, cut by the part’s outline (P2, M7.9), as Ink/Stitch sews its
+circular fill (read at <code>d59c9ab</code>). Each part of the region is sewn on its own, after the tatami fill’s
+underlay (<a href="#6-underlay">section 6</a>), grown by <code>expand_mm</code>, nearest the needle first, each ending near the
+next part and the last near the next element, as a meander fill’s are.</p>
+<h3 id="circles"><a class="header" href="#circles">Circles</a></h3>
+<p>The circles lie round the middle of the part. That is the fill’s target point where its design places one
+with Ink/Stitch’s <code>target_point</code> command (<code>REQ-FILL-CIR-008</code>), and otherwise the part’s centroid. Every
+part turns round the same target point, as in Ink/Stitch, and it may lie outside the part. The first circle has a radius
+of 0.1 CSS pixel, so that the spiral ends at the middle. From <code>row_spacing_mm</code> out, each circle lies a row
+spacing past the last, until one lies 2 spacings past the part’s farthest point. That point is the one
+farthest from the middle, as the discrete Hausdorff distance Ink/Stitch takes finds it.</p>
+<p>With <code>end_row_spacing_mm</code>, the circles fade. The step from a circle to the next is the row spacing plus a
+share of the way to the end spacing: the share the circle’s radius is of the farthest point’s distance.
+The circles then lie the row spacing apart at the middle and the end spacing apart at the farthest point.
+They stop 2 end spacings past it, and past the farthest point the step stays at the end spacing.
+Ink/Stitch’s goes on changing there. Fading to under half the row spacing over a small part, its steps
+shrink towards 0 short of the last circle, which it never reaches (<code>DEV-FILL-021</code>).</p>
+<p>Each circle has 64 sides, as GEOS buffers a point for Ink/Stitch. It starts at its right-hand point and
+turns up first as the drawing shows it.</p>
+<h3 id="the-spiral-and-its-pieces"><a class="header" href="#the-spiral-and-its-pieces">The spiral and its pieces</a></h3>
+<p>The spiral is the contour fill’s double spiral through the circles, from the outermost circle’s first
+point (<a href="#single-and-double-spiral">single and double spiral</a>). It turns in on every other circle and back
+out on the others, and the running stitch’s first length cuts each turn into points. It starts and ends
+outside the part, past its farthest point.</p>
+<p>The part cuts the spiral wherever it meets one of the part’s rings. There the spiral crosses a ring or
+touches one, or starts or stops running along one. Each stretch between 2 such points lies inside the
+part or outside it, and the stretches inside are the spiral’s pieces, a stretch along a ring among them.
+They keep the spiral’s order and direction. 2 stretches that meet where the spiral touches a ring from
+inside stay 2 pieces. GEOS leaves them so when it cuts a line by a polygon for Ink/Stitch. Only the sides of the
+rings near each side of the spiral are looked at.</p>
+<p>A round part’s spiral may enter it once and leave it once, one piece. Any other’s leaves and enters again
+at each turn past the circle inside the outline, in many pieces.</p>
+<h3 id="sewing"><a class="header" href="#sewing">Sewing</a></h3>
+<p>Each piece is sewn as a running stitch of <code>running_stitch_length_mm</code> within
+<code>running_stitch_tolerance_mm</code>, at random lengths when they are on. Each turn of the spiral is a span of the
+running stitch, and each step between turns another, as for the contour fill’s spiral
+(<a href="#stitches">stitches</a>).</p>
+<ul>
+<li><strong>One piece</strong> is sewn after the way along the outline from the needle to where the piece starts. Then
+comes the way along the outline from where it ends to the end, as Ink/Stitch sews it. Each way runs
+the shorter way round the outline. Ink/Stitch’s runs along the outline from where the outline starts,
+without passing its start, which depends on how the outline was drawn (<code>DEV-FILL-022</code>). A way whose
+needle or end isn’t known is left out.</li>
+<li><strong>Several pieces</strong> are routed as a tatami fill’s rows are (<a href="#3-routing-every-segment-once">section 3</a>),
+each piece a row between its ends. Each is sewn once from the end the route enters it by, every needle
+point of its running stitch, but its last with <code>skip_last</code>. Between pieces the needle moves as a tatami
+fill’s does between rows (<a href="#4-travel-under-the-rows">section 4</a>). It runs under the pieces not sewn yet
+along lines at 45° and square to the fill’s <code>angle</code>, and with <code>underpath</code> off along the rings and the
+pieces. A way along a piece follows its curve, which lies inside the part where the straight line
+between its ends need not.</li>
+<li><strong>No piece</strong>: a part that lies between 2 turns of the spiral sews a running stitch round its outline
+from the outline’s start. Ink/Stitch’s falls back to the same, and <code>SC-W0305</code> says so.</li>
+</ul>
+<p>The route joins pieces by the rings their ends lie on. Should no piece join 2 such rings, the needle
+jumps, which for a circular fill is a bug (<code>SC-E0009</code>). A guided fill’s rows can lie so, and it says
+<code>SC-W0333</code> instead (<a href="guided.html#sewing-the-lines">guided fill</a>).</p>
+<p>A part that lies within its row spacing of its middle is too small for the spiral. It is sewn as one
+circle with a radius of the row spacing round its middle, from the circle’s right-hand point, as Ink/Stitch
+sews it. <code>SC-W0318</code> says so, as the circle may stick out of so small a part.</p>
+<p>Bean stitch then sews each stitch back and forth, but the travel between pieces, which Ink/Stitch’s
+leaves out of it. Each stitch of travel still takes its turn in <code>bean_stitch_repeats</code>’s list. The repeats
+double the stitching each time, as the contour fill’s do. Circular fills have no <code>smoothness_mm</code>, as in
+Ink/Stitch.</p>
+<h3 id="test-sheet-1"><a class="header" href="#test-sheet-1">Test sheet</a></h3>
+<p>TS-11B’s bottom row sews 3 circular fills. The disc round its hole set off its middle and the star are the
+contour rows’ shapes, and a rectangle’s circles fade from 0.25 mm at its middle to 1 mm at its corners.
+The differential compares the sheet with Ink/Stitch’s sewing of it (<code>REQ-FILL-CIR-007</code>).</p>
+<h3 id="properties-conformance-3"><a class="header" href="#properties-conformance-3">Properties (conformance)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Requirement</th><th>Property</th></tr>
+</thead>
+<tbody>
+<tr><td><code>REQ-FILL-CIR-001</code></td><td>The circles lie round the part’s centroid, from 0.1 CSS pixel and then a row spacing apart, or fading as Ink/Stitch grades them and at the end spacing past the farthest point, out to 2 spacings past it, each of 64 sides from its right-hand point, turning up as drawn</td></tr>
+<tr><td><code>REQ-FILL-CIR-002</code></td><td>The double spiral through them is cut where it meets the part’s rings, and its pieces are the stretches inside, in order along it and running its way</td></tr>
+<tr><td><code>REQ-FILL-CIR-003</code></td><td>One piece is joined to the needle and the end along the outline the shorter way round, all a running stitch with a span for each turn</td></tr>
+<tr><td><code>REQ-FILL-CIR-004</code></td><td>Several pieces are routed as a tatami fill’s rows, each sewn once as stitched, without its last point with <code>skip_last</code>, the needle travelling under the pieces not sewn yet</td></tr>
+<tr><td><code>REQ-FILL-CIR-005</code></td><td>A part within a row spacing of its middle is one circle that size, with <code>SC-W0318</code>, and the outline of a part the spiral misses is sewn round, with <code>SC-W0305</code></td></tr>
+<tr><td><code>REQ-FILL-CIR-006</code></td><td>The underlay comes first, each part ends near the next, bean stitch leaves the travel out but counts it, and <code>k</code> repeats sew 2^(k−1) passes</td></tr>
+<tr><td><code>REQ-FILL-CIR-007</code></td><td>TS-11B’s circular fills sew in Ink/Stitch as in StitchCraft by the differential’s measures</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="guided-fill-p3"><a class="header" href="#guided-fill-p3">Guided fill (P3)</a></h2>
+<p>Rows that follow a guide line drawn with the fill. From M10.9 the guide is copied across each part a row
+spacing at a time, its copies cut by the part, and the lines inside routed as a circular fill’s pieces are,
+after the tatami fill’s underlay (<a href="guided.html">guided fill</a>). From M10.10 Ink/Stitch’s
+parallel offset and buffer strategies, which offset the guide instead, are sewn too.</p>
+<h2 id="linear-gradient-fill-p3"><a class="header" href="#linear-gradient-fill-p3">Linear gradient fill (P3)</a></h2>
+<p>Rows square to the fill’s linear gradient, which go to its stops’ colours in a fixed pattern between each 2
+stops, from M10.12 (<a href="gradient.html">linear gradient fill</a>). Its rows are cut by the region and its
+colours’ rows routed as a tatami fill’s rows are, each part after the tatami fill’s underlay in the first
+stop’s colour, which the sewing of a tatami fill’s parts lends it. <code>skip_last</code> shortens its rows, and the
+tatami fill’s <code>expand_mm</code> grows its parts. A colour’s rows sew in that colour’s thread as a colour block
+for each part, and the underlay ends no colour block
+(<a href="../engine-pipeline.html#several-threads-in-one-element">several threads in one element</a>).</p>
+<h2 id="tartan-fill-p3"><a class="header" href="#tartan-fill-p3">Tartan fill (P3)</a></h2>
+<p>A woven plaid from a stripe specification, its sett, which gives the warp’s and the weft’s stripes. Each
+colour’s rows slant across them at <code>tartan_angle</code> and are taken in turns of <code>rows_per_thread</code> (M10.6), or
+lie in the bands of a herringbone, which slant one way and then the other (M10.7, <a href="tartan.html">tartan fill</a>).
+Its colours’ lines are routed as a tatami fill’s rows are, each part
+after the tatami fill’s underlay, which the sewing of a tatami fill’s parts lends it, layers and all. Its
+needle points are thinned to the shortest stitch as a tatami fill’s are, and <code>skip_last</code> shortens its rows.
+The underlay sews in the fill’s own thread and ends no colour block, and each colour’s rows, then its runs,
+sew in that colour’s thread, each a colour block (M10.5).</p>
+<h2 id="cross-stitch-p3"><a class="header" href="#cross-stitch-p3">Cross stitch (P3)</a></h2>
+<p>A cross in each cell of a grid that the region covers enough of, simple and flipped from M10.1, and every
+other method of Ink/Stitch’s from M10.2 (<a href="cross-stitch.html">cross stitch</a>). Half crosses route their rows
+as this page’s tatami fill routes its rows, with <code>underpath</code> off (<a href="#3-routing-every-segment-once">section 3</a>). It takes its parts in a tatami fill’s order (<a href="#5-parts">section 5</a>), and
+its <code>expand_mm</code> from the tatami fill’s settings, which grows the region before its cells are chosen.</p>
+<h2 id="legacy-fill-not-planned"><a class="header" href="#legacy-fill-not-planned">Legacy fill (not planned)</a></h2>
+<p>Ink/Stitch’s first fill method, which it keeps for its older files: it gives <code>legacy_fill</code> to a fill whose
+<code>auto_fill</code> is off when it opens one. Its rows lie on a tatami fill’s grating, with a tatami fill’s needle
+points along them (<code>staggers</code>, <code>skip_last</code>), and it sews no underlay. It sews each stretch of rows that
+join on its own, back and forth, with no travel stitches between stretches; <code>flip</code> starts its rows from
+the other side, and <code>reverse</code> sews the whole fill backwards.</p>
+<p>StitchCraft does not build it, since the method exists for Ink/Stitch’s older files. A fill set to it is
+sewn as a tatami fill with its settings and no underlay, and <code>SC-W0314</code> says so (<code>REQ-FILL-005</code>). Nor does
+it take pull compensation, random stitch lengths or gap-filling rows, which Ink/Stitch’s legacy fill has no
+use for, but its area grows by <code>expand_mm</code> as in Ink/Stitch. It is a tatami fill in every other way too.
+The element before it ends near its area, and its rows are routed and joined by travel stitches as a
+tatami fill’s are, between its start and end positions where it has them. Ink/Stitch’s legacy fill takes
+its parts in order of their distance from its start command and uses it no further (<code>DEV-FILL-014</code>).
+<code>flip</code> and <code>reverse</code> are not planned, and a legacy fill that sets them gets <code>SC-W0105</code>, though a ripple
+stitch reads a <code>reverse</code> of its own (M10.8). Ink/Stitch reads them for its legacy fill alone, so a fill
+of another method leaves <code>reverse</code> to the node’s stroke without a word, as it leaves every stroke’s
+setting. The VectorCraft plug-in’s fill dialog does not offer the method.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../design/algorithms/offset.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../design/algorithms/guided.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../design/algorithms/offset.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../design/algorithms/guided.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../mark-09e88c2c.min.js"></script>
+        <script src="../../searcher-09f2665d.js"></script>
+
+        <script src="../../clipboard-1626706a.min.js"></script>
+        <script src="../../highlight-abc7f01d.js"></script>
+        <script src="../../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
