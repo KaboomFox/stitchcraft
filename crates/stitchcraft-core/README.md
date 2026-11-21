@@ -12,8 +12,10 @@ Layer **L0**. The foundations every other crate builds on.
 | `budget` | `Budget` and `Meter`: deterministic work limits; exhaustion becomes diagnostic `SC-E0004` |
 | `diag` | `Diagnostic`, `Severity`, `Fix`, and the **registry**: every `Code` with its title and explanation |
 | `element` | `ElementId`, the host's stable id for one object of the design |
+| `text` | Doc comments made into Markdown, and into plain text for a host such as VectorCraft's dialogs: the help that every registry takes from its `///` comments |
 
-The diagnostics registry is one `registry!` block in `src/diag/registry.rs`. An entry's doc comment is the
+The diagnostics registry is one `registry!` block in `src/diag/registry.rs`, with automatic digitizing's
+codes, `SC-x09xx`, in `src/diag/registry/auto.rs`. An entry's doc comment is the
 explanation users read in `stitch explain` and in the diagnostics index. Tests reject an entry without one.
 
 ## Invariants

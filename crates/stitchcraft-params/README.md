@@ -3,8 +3,9 @@
 Layer **L0** (may use `stitchcraft-core`). The parameter registry's building blocks. A parameter is
 declared with the `params!` macro next to the code that uses it, once for each family of stitch types that
 reads it. Typed structs, validation, the reference docs, the JSON Schema and VectorCraft's plug-in
-manifests are made from that declaration, and later CLI help, SVG attribute mapping and property-test
-strategies will be too.
+manifests are made from that declaration. CLI help, the SVG reader's attribute mapping and property-test
+strategies made from it are planned (`docs/src/design/params.md`): the SVG reader reads an element's
+attributes by name and shares only `toggle`.
 
 Design: `docs/src/design/params.md`, `docs/src/design/adr/0003-parameter-registry.md`.
 
@@ -12,6 +13,8 @@ Design: `docs/src/design/params.md`, `docs/src/design/adr/0003-parameter-registr
 
 - `params!` (`macros.rs`): the declaration; the field name is the key, the doc comment the help text.
 - `ParamSpec`, `Kind`, `ParamGroup` (`spec.rs`): what the registry knows about a parameter.
+- The kinds a declaration names (`kinds.rs`), such as `Length`, each with the Rust type its typed field
+  gets and the `Kind` its spec records, so a field's type and its validation can't disagree.
 - `ParamSet` (`set.rs`) holds an element's parameters as its design stores them, keys and text. Each
   declaration's `from_set` reads them into a typed view, and `from_set_as` reads them as an element of one
   stitch type does, leaving out the parameters that stitch type does not use.
