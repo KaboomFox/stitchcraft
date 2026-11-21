@@ -742,8 +742,8 @@ mod tests {
         let (white, top) = (Rgb::new(255, 255, 255), 90);
         assert_eq!((keyed.width, keyed.height), (440, 180));
         // Each box is 100 pixels wide from the margin's 20, and 30 high from 10 rows under the strip's top.
-        for (n, colour) in STEPS.iter().enumerate() {
-            let (from, to) = (20 + 100 * n as u32, 119 + 100 * n as u32);
+        for (n, colour) in (0u32..).zip(STEPS.iter()) {
+            let (from, to) = (20 + 100 * n, 119 + 100 * n);
             assert_eq!([pixel(&keyed, from, top + 10), pixel(&keyed, to, top + 39)], [*colour; 2], "{n}");
             assert_eq!([pixel(&keyed, from + 50, top + 9), pixel(&keyed, from + 50, top + 40)], [white; 2], "{n}");
         }
