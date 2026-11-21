@@ -14,7 +14,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   exporters' dialog, whose option is now on by default. `--no-auto` is refused beside `--auto`, with a
   picture and with `stitch expand`. SVG files sew as before, and `--auto` still asks for automatic
   digitizing there. A bug-report bundle records `auto` when the run digitized automatically, so an old
-  bundle replays as it was recorded. No golden file changes.
+  bundle replays as it was recorded. The golden files stay as they were.
 - M13.20: a kept colour (`REQ-AUTO-160`). `stitch plan --keep-colour COLOUR`, and `stitch expand` with it,
   gives a colour of a picture a thread at any `--colours`: a thread by its name in any case, `#rrggbb` for
   the nearest thread, or a pixel `X,Y` of the picture for the thread nearest its colour. VectorCraft then

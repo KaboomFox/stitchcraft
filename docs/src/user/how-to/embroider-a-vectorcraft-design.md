@@ -76,8 +76,8 @@ With the [exporters installed](../install.md#the-vectorcraft-plug-ins), choose *
 As**, and **PES embroidery (StitchCraft)** or **DST embroidery (StitchCraft)** as the format. Once the file
 is picked, a dialog shows 2 options:
 
-- **Digitize automatically**, on unless you turn it off, which chooses the stitches of the objects
-  without a StitchCraft effect by their width, as `stitch export` does. Off, those objects sew as drawn,
+- **Digitize automatically** chooses the stitches of the objects without a StitchCraft effect by their
+  width, as `stitch export` does. It is on by default. Off, those objects sew as drawn,
   as with `stitch export --no-auto`. The objects the Auto effect reaches are digitized automatically
   either way.
 - **Machine**, the machine and hoop the design is planned for: `document`, the one the document keeps

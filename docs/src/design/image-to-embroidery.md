@@ -130,8 +130,8 @@ the default digitized and how many sew as their effects say, and that `--no-auto
 isn't said when `--auto` is given, or when no shape is digitized by default. The VectorCraft reader counts
 the elements that are automatic only because the reading asked (`VectorCraft::by_default`): an element an
 Auto effect reaches is automatic by the effect, and isn't counted. `stitch plan` says the notice first. A
-picture, a bug-report bundle and the exporters don't say it: a picture is always digitized automatically,
-and the exporters' option is on in their dialog, where the person sees it. Of the traced badge
+picture is always digitized automatically, so its run has no notice. A bug-report bundle has none either.
+The exporters' option shows in their dialog, and the exporters don't repeat it. Of the traced badge
 with a Fill effect on one of its 4 shapes, the case of `REQ-AUTO-165`, `stitch plan` says:
 
 ```text
@@ -140,8 +140,8 @@ info SC-I0924: 3 shapes without StitchCraft effects are digitized automatically,
 
 **Markers.** A `stitch:start` or `stitch:end` marker grouped with a shape the default digitizes is unused
 (`SC-W0807`), as with `--auto`. Whether such a shape should count as set by hand is the owner's open
-question, so the reader decides it in one place, `by_paints` in `stitchcraft_vectorcraft::document`, and no
-case pins it as a requirement.
+question. The rule is written in one function, `by_paints` in `stitchcraft_vectorcraft::document`, and no case pins
+it as a requirement.
 
 **The opt-out.** `--no-auto` sews the shapes without effects as drawn: every area a tatami fill and every
 line a running stitch, in paint order (`REQ-CLI-026`). It is refused beside `--auto`, with a picture, which
@@ -174,8 +174,8 @@ out (`SC-W0906`) where the plain reading fills it. The dogs sew a few hundred fe
 more thread changes, and the running dog in 9 threads has more area at 3 fills, 94 mm² against 79, as the
 pear has, 10.5 against 4.8. On the drawn shapes of `drawing-format1` the default sews thicker. A stroke
 round a fill becomes a satin column on the fill's edge, and the cap thins no column's top stitches
-(`REQ-AUTO-112`), so 10 mm² stay above the cap and under the warning. M13.8 changes no rule for it: it is a known cost of the
-default, measured on the whole set, which MC-8's sew-out weighs ([machine testing](../plan/machine-testing.md)). Planning takes about 10 times as
+(`REQ-AUTO-112`), so 10 mm² stay above the cap and under the warning. M13.8 doesn't change a rule for it. The cost is
+known, and MC-8's sew-out weighs it ([machine testing](../plan/machine-testing.md)). Planning takes about 10 times as
 long, 2.3 s against 0.2 s for the dogs in a debug build at optimization level 1. `ribbons` sews too
 many stitches for a PES file either way (`SC-E0602`), as a reader fixture may.
 
