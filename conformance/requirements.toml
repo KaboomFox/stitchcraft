@@ -3666,7 +3666,7 @@ level = "L2"
 statement = "The cap of a design digitized automatically, the most thread in fills that a spot of a millimetre may sew, is the setting `auto_thick_cap_fills`, 3.25 by default, an advanced setting of the shape beside the limits of how thick it sews (REQ-AUTO-062), from 1 to 50. The design goes by its lowest automatic shape's, as it goes by those limits. The last pass (REQ-AUTO-074) and the cap at the end of planning (REQ-AUTO-100) take thread above it, and no other rule reads it."
 rationale = "The owner, on 2026-11-18: one general cap at the end of planning, which every design meets whatever its shapes and their order. MC-8's ladder of squares (TS-13F) will set the real failing and warning limits, so the cap is a setting and not a constant: its value changes with a sew-out report, as a profile's do. M13.46 lowered it from 4 to 3.25, the lowest of 4, 3.75, 3.5, 3.25 and 3 at which every requirement holds on every repository design, with satin columns left whole (REQ-AUTO-112) and their edges covered once pulled (REQ-AUTO-114). At 3 the cap joins a base layer's hidden row ends across its rows, which REQ-AUTO-028 holds straight. Spots that satin columns hold stay above it and are reported, not counted against it."
 milestone = "M13"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-AUTO-100"
@@ -3675,7 +3675,7 @@ level = "L2"
 statement = "After the last pass (REQ-AUTO-074), where a spot of a millimetre of a design digitized automatically still sews more than the cap (REQ-AUTO-099), measured as the plan is, the cap takes needle points out of the plan's runs, looking at nothing but its stitches, their roles and elements, and the measure. A needle point taken out joins the 2 stitches beside it into one. A stitch covers the places within half a thread, 0.2 mm, of it. A needle point may go when one of its 2 stitches lays thread in a spot above the cap, the joined stitch is no longer than the longest stitch of its element and kind (top stitches, or the others) and no shorter than the shorter of the 2 or the machine's shortest, and it is one of these, taken in this order, each going through the plan from its end: an underlay or travel stitch's point, when top stitches sewn after it cover all of the joined stitch; a shape's top stitch's point, when the top stitches of shapes sewn after it cover all that its 2 stitches covered; and a shape's top stitch's point, when its own other top stitches and those of shapes sewn after it cover all that its 2 stitches covered. A joined top stitch lays its thread only where its shape's own top thread or a later shape's lies, and as the plan keeps its needle points, off the machine's grid, it is no shorter than the shorter of the 2 or the machine's shortest. A lock's needle points and the one after a lock stay. No point is taken that would leave the thickest spot that the joined stitch lays thread in thicker than both the cap and what it was, or a spot it lays thread in that was at the warning's limit or under it above that limit. The cap cuts no run, so it adds no jump, trim or thread change: each needle point it leaves is one of the plan's, in the same order, and it takes no lock."
 rationale = "At the spots that the last pass left above 4 fills, measured in pieces of 0.2 mm on 2026-11-18, 36 to 52 % of the thread is top thread that shows, 43 to 60 % top thread under a fill or more of the shapes sewn after it, 2 to 7 % the base layer, up to 3 % locks and up to 2 % travel, on every test design, the traced dogs and 4 other traced photos. The last pass takes hidden top thread only at a row's end turning within 1 mm, so not a satin column's stitches, which cross it, and never top thread that shows, though some of it covers nothing that other stitches don't: a column's points crowded in a bend or a join, a fill's short rows bunched at a tip. A needle point taken out of a run takes thread only where the run turns there, and leaves no jump thread. Judged by what still covers each place, it changes no colour that shows and bares next to nothing: the bare-fabric measure, on pixels of 0.05 mm, found the bare share of TS-13A's digitized half 0.0133 % where it was 0.0118 %, and of 2 traced photos 0.001 % higher, and no other design's higher. Joined stitches no longer than the longer of the 2 left the dogs at 4.02 to 4.18 fills, and no longer than their element's longest at 4.00."
 milestone = "M13"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-AUTO-101"
@@ -3684,7 +3684,7 @@ level = "L2"
 statement = "SC-I1119 says what the last pass took and then what the cap took, of each of its 3 kinds, in millimetres and places, the area above the cap before and after, and the thickest spot left, whenever a spot of the plan was above the cap, also when nothing could be taken (REQ-AUTO-113). The cap has the work budget once and charges each stitch it looks at and each step along a stitch it measures. A needle point goes only once it is judged whole: when the budget runs out, the plan keeps the points the cap took until then, measured again with the budget's work once more, and SC-I1119 says what the cap took before it ran out; when it runs out before it took any, the plan is kept as the last pass left it, and SC-I1119 says so. The cap's work grows as the design does: its last resort judges, for each point it takes, only the points whose stitches pass within 1 mm of the thickest spot, which alone can lower it."
 rationale = "No silent fallbacks: a design that keeps a spot above the cap says where, so that the person can change the shapes or the setting there. A cap that took nothing once its work ran out left a large design as thick as the pass left it, the traced dog in the logo style at 7.1 fills, though every point it had taken was judged whole and may go."
 milestone = "M13"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-AUTO-102"
@@ -3693,7 +3693,7 @@ level = "L2"
 statement = "Digitized automatically, each design of the cases of REQ-AUTO-073 and the 4 traced dogs sews no spot of a millimetre above the warning's limit, 4 fills, and above the cap only where satin columns' top stitches, which the cap leaves below that limit (REQ-AUTO-112), lay the thread above it, but on the dogs that the cases list, where fills alone meet, whose top shows. Each has the jumps, trims, thread changes, jump threads and likeness (REQ-AUTO-093) it has with the cap at 50, fewer stitches where a spot was above the cap, no more slivers, and a bare share within its cover's limit (`auto_base_bare_percent`)."
 rationale = "Measured with the prototype on 2026-11-18: the badges came from 4.40 to 3.99 fills, TS-13A from 4.28 to 3.99, TS-13C from 4.49 to 3.95, TS-13D from 4.23 to 3.97, the pear from 4.20 to 3.86, the lettered patch from 4.00 to 3.98, and the dogs from 4.69, 4.80, 4.62 and 5.63 to 4.00, with 1 to 187 needle points fewer, and the same jump threads, thread changes, slivers and likeness."
 milestone = "M13"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-AUTO-103"
@@ -3702,7 +3702,7 @@ level = "L2"
 statement = "With the thin lines kept at a likeness of 0.85 (`auto_min_likeness`, M13.44) and with the details sewn last (`auto_details_last`, M13.40), each design of REQ-AUTO-102 still sews no spot of a millimetre above 4 fills, the warning's limit, and above the cap only where satin columns' top stitches lie, with the jumps, jump threads, thread changes and likeness that the setting gives it without the cap."
 rationale = "Each of those settings changes the order the blocks sew in, which moves where fills start and end and which shape reaches under which, so a spot far from the change can pile up thread. Each step tried to plan twice and keep the thinner plan, which doubled a traced photo's export. Measured with the prototype on 2026-11-18 on each step's branch: with the details last, the dog on turf in 6 threads rose from 4.69 to 5.49 fills and the running dog in 6 from 4.62 to 5.03, and the cap brought both to 4.00. M13.45 turned both settings on by default and added the cases. M13.48 turned the details last off by default again, and the cases set both settings themselves."
 milestone = "M13"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-AUTO-112"
@@ -3711,7 +3711,7 @@ level = "L2"
 statement = "Below the warning's limit (`auto_thick_warn_fills`, 4 fills, REQ-AUTO-113), the cap at the end of planning (REQ-AUTO-100) takes no needle point of a top stitch of a satin column that digitizing made: each of a column's top stitches stays where digitizing laid it, so the column keeps its edge and its stitches' angle to it (REQ-AUTO-017). A column's underlay and travel, and the stitches of every other shape under it or beside it, are the cap's to take as REQ-AUTO-100 says. Above the warning's limit a spot is too thick to sew well, which outweighs a column's edge: there the last pass counts a column's thread as hiding a row's end, and the cap's 3 kinds go first, judging a column's stitches as drawn, before they go down to the cap. As a last resort, where a spot still sews above the warning's limit once the cap's kinds are done, the cap takes top points of the columns whose stitches lay thread in such a spot, one at a time, as a shape's own doubled top: of those that may go and lower the thickest spot by half as much as the one that lowers it most, or more, first one whose joined stitch turns less than 45 degrees from the stitch into the point, across the column rather than along its edge, and then the one that turns least. It stops once no spot is above the limit."
 rationale = "The cap's test of cover asks only whether the places along a needle point's 2 stitches lie within half a thread of other top thread. In a column, the stitches beside a point lie 0.4 mm apart or closer and always pass it, at an inner edge or a bend most of all, where they crowd. Measured on 2026-11-19 with the cap at 3 fills on TS-13C's and the lettered patch's digitized shapes, the cap took 95 points of columns: 46 of a column's own doubled stitches, each a point on one edge whose 2 stitches across became 1 stitch of 0.4 mm along the other edge, which notches the edge, and 49 under later shapes, whose joined stitches run 45 degrees across the column, which shows wherever the later shape's edge pulls in. At 4 fills the cap changed the columns of 9 of the 20 repository designs and of 2 of the 4 traced photos, a TS-13C column by 9 points. A satin column is the surface a person sees, so the simplest rule is the one taken: the cap takes none of its top stitches. Left whole everywhere, the columns held spots at up to 5.25 fills on a traced dog with the cap at 3.25, where the cap had held every design and dog to 4.00 by taking their points: a step made for a home machine can't raise the thickest spot. So above the warning's limit a column's point may go, the one that changes the column least, and only until the limit. Measured on 2026-11-19 against main on the repository designs and the 4 traced dogs: no spot above 4.00 fills, and 20 column points taken where main took 38, 19 notches where main made 24 and 1 stitch more than 10 degrees from square where main made 4. A point that lowers the thickest spot by little changes a column for nothing: preferring the least change alone took 5 points of a traced dog's 2 columns where main took 2."
 milestone = "M13"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-AUTO-113"
@@ -3720,7 +3720,7 @@ level = "L2"
 statement = "The cap (REQ-AUTO-099) is what planning aims at, and SC-I1119 tells what planning took for it and what it left above it. The limits of REQ-AUTO-061 are what a person acts on: SC-W0913 warns of a place at a warning's limit or over it, and never names the cap. The warning's limit of thread is 4 fills."
 rationale = "A spot that satin columns hold stays above the cap, on 14 of the 20 repository designs at the cap's default, by up to 2 fills. A warning that fires on nearly every design is noise. One layer of satin over a fill, which the trade sews without a second thought, measures 2 to 3 fills, and 2 dense layers on a fill, which risk broken needles and thread, measure 4 or more. So the warning starts at 4, and only a place of 1 mm² there is told: a speck where 2 columns meet is said by SC-I1119."
 milestone = "M13"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-AUTO-114"
@@ -3729,7 +3729,7 @@ level = "L2"
 statement = "Below the warning's limit (REQ-AUTO-112), neither the last pass (REQ-AUTO-074) nor the cap (REQ-AUTO-100) takes the thread under a satin column's edge that keeps the edge covered once the fabric pulls the column in, as REQ-AUTO-007 measures it. The last pass counts no satin column's thread as hiding a row's end. The cap counts a column's top stitch as covering a place only as the fabric pulls it, shortened by the overlap of areas (`auto_overlap_mm`) at each end where the thread turns by 10 degrees or more. And where taking a needle point makes a top stitch beside it turn where it ran straight on, the part that the pull then moves in must stay covered."
 rationale = "With the cap at 3.5, TS-13C's face columns covered 0.982 of the edges under them, where REQ-AUTO-007 holds them to 0.99. Traced on 2026-11-19: the last pass moved the face's and the eyes' row ends back from under the columns, and the cap took 44 points of the face's rows there by its second kind, where it took 5 at 4. Either alone left the edges at 0.982 or 0.983. Those row ends are the overlap that keeps fabric from showing once the fabric pulls a column in, and both read a column's stitches where they are drawn. A ring of satin on a disc's edge, capped at 2 fills, covered 0.965 of its inner edge where it covered all of it. Judging every covering stitch as pulled, fills' too, kept that overlap everywhere but left the cap nearly nothing to take: the dogs sewed up to 5.63 fills with the cap at 4. Only a column pulls in so hard that its edge needs the rows under it, so the rule is a column's."
 milestone = "M13"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-AUTO-119"

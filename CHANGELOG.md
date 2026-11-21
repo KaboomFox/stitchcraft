@@ -332,7 +332,7 @@ What a user can do with this version, before its first release. The entries belo
     629 mm² at 3 fills or more, which is a quarter to a third of each. Their thickest spots have 7.9 to
     8.5 fills.
     The 1 mm that areas reach under their neighbours causes most of it
-    ([the numbers](docs/src/design/image-to-embroidery.md#what-todays-designs-measure)).
+    ([the numbers](docs/src/design/image-to-embroidery.md#what-designs-measured-before-m1330)).
   - VectorCraft shows 500 characters of an export's warning. A longer one, as `SC-W0913` is, now ends at
     its last whole sentence that fits.
   - Every design sews as before, and the golden files are unchanged. TS-13's 5 sheets are told
