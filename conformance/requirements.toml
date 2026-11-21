@@ -257,6 +257,24 @@ rationale = "A number says how thick the thickest spot is, and only a picture sh
 milestone = "M13"
 status = "active"
 
+[[req]]
+id = "REQ-RND-005"
+area = "render"
+level = "L2"
+statement = "A scene can carry guides, lines of the design that are not sewn (`Scene::guides`): the renderer draws them thin and grey under the stitches, in every style, and the picture is large enough to hold them. A scene of a plan has none. A docs shot with `guides = true` gives its scene each element's outline, its guide line and its anchor line, and the design's automatic guides."
+rationale = "A ripple stitch follows its guide line and a satin column its rails, and neither is sewn. A picture that doesn't draw them can't show what the stitches follow."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-RND-006"
+area = "render"
+level = "L2"
+statement = "A thickness picture can have a key (`Settings::keyed`): a strip under the picture with a box in the colour of each step the style draws, from grey to red, and under each border between 2 boxes the number of fills where the next step starts, taken from the limits the style draws with. Only the thickness style has a key. A docs shot asks for it with `key = true`."
+rationale = "A heat map without a key can't be read: the reader has to find in the text which colour means how many fills."
+milestone = "M13"
+status = "active"
+
 # ── Parameters ─────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]

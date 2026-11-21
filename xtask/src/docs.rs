@@ -409,9 +409,14 @@ fn adr_index(root: &Path, findings: &mut Findings) -> Result<(), String> {
 }
 
 /// Images have alt text; a local image in the book is one a shot in `docs/shots.toml` declares, at the path
-/// the shot writes it to (`cargo xtask shots` checks the shots' own alt texts).
+/// the shot writes it to (`cargo xtask shots` checks the shots' own alt texts), and a shot drawn with its jump
+/// threads cut says so ([`shots::unsaid`]).
 fn images(root: &Path, pages: &[(PathBuf, String)], findings: &mut Findings) -> Result<(), String> {
     let shots = shots::load(root)?;
+    // A picture drawn with its jump threads cut says so wherever a page shows it.
+    for problem in shots.iter().filter_map(|shot| shots::unsaid(shot).map(|problem| format!("docs/shots.toml: shot `{}`: {problem}", shot.id))) {
+        findings.error(problem);
+    }
     let src = root.join(DOCS_SRC);
     for (path, text) in pages {
         for link in markdown::links(text).into_iter().filter(|l| l.image) {

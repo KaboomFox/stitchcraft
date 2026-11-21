@@ -9,6 +9,9 @@
 //!   the thread was cut. Jumps are not holes: the thread runs straight from hole to hole however the
 //!   frame travelled, so where a jump stopped on the way changes nothing on the fabric.
 //! - **Marks**, the trims the machine makes and the stops, where the needle is when they happen.
+//! - **Guides**, lines of the design that are not sewn, such as a ripple stitch's guide line or a satin
+//!   column's rails, which a picture in the docs draws to show what the stitches follow (`REQ-RND-005`). A
+//!   plan doesn't know them, so a scene of a plan has none; whoever has the design adds them.
 //!
 //! **What cuts the thread is the machine's** ([`TrimSupport`], from its profile). A thread change cuts,
 //! and so does a stop, which PES and DST write as a thread change: the reference PE800 cuts at both
@@ -101,6 +104,8 @@ pub struct Scene {
     pub holes: Vec<Hole>,
     /// The trims and stops.
     pub marks: BTreeSet<Mark>,
+    /// Lines of the design that are not sewn, each a polyline, drawn under the stitches (`REQ-RND-005`).
+    pub guides: Vec<Vec<GridPoint>>,
 }
 
 impl Scene {
@@ -153,10 +158,11 @@ impl Scene {
         Ok(scene)
     }
 
-    /// The smallest and the largest position shown, or `None` when the scene has no holes.
+    /// The smallest and the largest position shown, guides' included, or `None` when the scene has no holes.
     pub fn bounds(&self) -> Option<(GridPoint, GridPoint)> {
         self.holes.first()?;
-        let points = self.holes.iter().map(|h| h.at).chain(self.marks.iter().map(|m| m.at()));
+        let guides = self.guides.iter().flatten().copied();
+        let points = self.holes.iter().map(|h| h.at).chain(self.marks.iter().map(|m| m.at())).chain(guides);
         points.fold(None, |bounds, p| match bounds {
             None => Some((p, p)),
             Some((lo, hi)) => Some((GridPoint { x: p.x.min(lo.x), y: p.y.min(lo.y) }, GridPoint { x: p.x.max(hi.x), y: p.y.max(hi.y) })),

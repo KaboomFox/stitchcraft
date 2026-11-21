@@ -402,6 +402,18 @@ panels = [
 ]
 
 [[shot]]
+id = "ripple-guide-drawn"
+kind = "stitch"
+fixture = "docs/fixtures/ripple-guide.svg"
+style = "simple"
+scale = 10.0
+guides = true
+alt = "A wave 12 mm long, drawn thin and grey at the bottom, sewn as a ripple stitch of 4 copies along its guide line, the grey arch on the right. Neither grey line is sewn. The copies, thin green lines with a dot at each needle hole, are joined end to end in a loop above the arch, from the left to the right."
+panels = [
+  { caption = "4 copies, to 40 %", params = { stroke_method = "ripple_stitch", line_count = "4", scale_end = "40" } },
+]
+
+[[shot]]
 id = "e-stitch-spacing"
 kind = "stitch"
 fixture = "docs/fixtures/e-stitch.svg"
@@ -1206,6 +1218,28 @@ style = "realistic"
 scale = 10.0
 allow = ["SC-I0901", "SC-I0912", "SC-I0923", "SC-I0907", "SC-I0904", "SC-I0908", "SC-I0909", "SC-I0504", "SC-W0913", "SC-I1119"]
 alt = "The same shapes digitized automatically. The blob sews as a small tatami fill, and so does the letter T, bar and stem. The blob with tails sews as a fill with a triple run along each tail. The nose sews as one fill with the 2 nostrils sewn on it. The leaf sews as one satin column from tip to tip."
+
+[[shot]]
+id = "auto-rules-cut"
+kind = "stitch"
+fixture = "docs/fixtures/rules.svg"
+auto = true
+style = "realistic"
+scale = 10.0
+cut_jumps = true
+allow = ["SC-I0901", "SC-I0912", "SC-I0923", "SC-I0907", "SC-I0904", "SC-I0908", "SC-I0909", "SC-I0504", "SC-W0913", "SC-I1119"]
+alt = "The same shapes digitized automatically, with their jump threads cut by hand, as a person cuts them after the machine has sewn the design: no thread joins one shape to the next."
+
+[[shot]]
+id = "auto-rules-thickness"
+kind = "stitch"
+fixture = "docs/fixtures/rules.svg"
+auto = true
+style = "thickness"
+scale = 10.0
+key = true
+allow = ["SC-I0901", "SC-I0912", "SC-I0923", "SC-I0907", "SC-I0904", "SC-I0908", "SC-I0909", "SC-I0504", "SC-W0913", "SC-I1119"]
+alt = "How thick the same shapes sew, as a heat map on white with its key under it. The shapes are grey, under 2 fills of thread, with a few small yellow spots of 2 fills or more, the largest where the nostrils sew on the nose. The key is a bar of 4 colours, grey, yellow, orange and red, with the number of fills where each colour starts under its left end: 2, 4 and 6."
 
 [[shot]]
 id = "auto-parts-drawn"
