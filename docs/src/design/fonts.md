@@ -557,8 +557,7 @@ So a line is fitted to the length its text most likely had in the drawing (`obje
    height is set at that height, and `SC-W1117` gives its length and its place's.
 
 The anchor and the baseline are the same through all of it, and a centred line is centred on its anchor
-still. On the badge, "Camp
-Fox" now sews 10.0 mm tall and 72.0 mm long, inside the badge.
+still. On the badge, the title now sews 10.0 mm tall and 72.0 mm long, inside the badge.
 
 The estimate is for the proportional typefaces text is commonly set in. It was measured on 7 fonts
 installed on the build machine, with their own advances and kerning, as a line's length over its font size
