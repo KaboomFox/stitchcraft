@@ -243,14 +243,15 @@ struct Split {
 }
 
 /// The shape `later` of `shapes` grown by [`TOUCHING`], split in its parts at least `width` wide and its
-/// narrower ones, as `found` has it or with `meter`'s work; `None` for a shape that paints nothing. A satin
-/// column and a part's line or column are open whole. Of an area, the wide parts are those a disc `width`
-/// across fits on: the area shrunk by half the width and grown again by as much.
-fn split_of(shapes: &mut Shapes, later: usize, width: f64, found: &mut [Option<Split>], meter: &mut Meter) -> Result<Option<Split>, Failed> {
+/// narrower ones, as `found` has it or with `meter`'s work. A satin column and a part's line or column are
+/// open whole. Of an area, the wide parts are those a disc `width` across fits on: the area shrunk by half
+/// the width and grown again by as much. A shape that paints nothing has no parts, though [`near_later`]
+/// finds none such: it goes by what a shape paints, which nothing changes while an area is taken.
+fn split_of(shapes: &mut Shapes, later: usize, width: f64, found: &mut [Option<Split>], meter: &mut Meter) -> Result<Split, Failed> {
     if let Some(Some(known)) = found.get(later).filter(|known| known.as_ref().is_some_and(|known| known.width == width)) {
-        return Ok(Some(known.clone()));
+        return Ok(known.clone());
     }
-    let Some(grown) = shapes.grown(later, meter)? else { return Ok(None) };
+    let grown = shapes.grown(later, meter)?.unwrap_or_default();
     // The width is what a split found once is found again by: without it the split is made again, the same.
     let mut split = Split { width, ..Split::default() };
     match shapes.kind(later) {
@@ -267,7 +268,7 @@ fn split_of(shapes: &mut Shapes, later: usize, width: f64, found: &mut [Option<S
     if let Some(slot) = found.get_mut(later) {
         *slot = Some(split.clone());
     }
-    Ok(Some(split))
+    Ok(split)
 }
 
 /// How many overlaps wide a part of an area is at the least for an area sewn before it to reach its whole
@@ -472,12 +473,11 @@ fn beside(shapes: &mut Shapes, index: usize, reach: Reach, split: &mut [Option<S
         if column {
             painted.extend_from_slice(covers(shapes, index, later));
         }
-        if let Some(parts) = split_of(shapes, later, WIDE * reach.along, split, meter)? {
-            wide.extend(parts.wide);
-            narrow.extend(parts.narrow);
-            (if column { &mut columns } else { &mut open }).extend(parts.open);
-            lines.extend(parts.lines);
-        }
+        let parts = split_of(shapes, later, WIDE * reach.along, split, meter)?;
+        wide.extend(parts.wide);
+        narrow.extend(parts.narrow);
+        (if column { &mut columns } else { &mut open }).extend(parts.open);
+        lines.extend(parts.lines);
     }
     // Every shape that comes near it is in one of the 5, and the areas and parts among them in `covering` too.
     if wide.is_empty() && narrow.is_empty() && open.is_empty() && lines.is_empty() && columns.is_empty() {
