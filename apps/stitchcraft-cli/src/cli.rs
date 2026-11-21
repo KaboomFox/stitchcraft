@@ -529,7 +529,7 @@ pub enum PreviewStyle {
     Realistic,
     /// Every stitch, needle hole, move, trim and stop, for checking a design.
     Simple,
-    /// How thick the design sews: grey thread, yellow from 2 fills of it over one spot, orange from 3 and
+    /// How thick the design sews: grey thread, yellow from 2 fills of it over one spot, orange from 4 and
     /// red from 6.
     Thickness,
 }
@@ -572,5 +572,25 @@ impl From<Format> for FormatId {
             Format::Pes => FormatId::PesV1,
             Format::Dst => FormatId::Dst,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use clap::ValueEnum;
+    use stitchcraft_plan::thickness::{Limits, ORDINARY};
+
+    use super::PreviewStyle;
+
+    #[test]
+    fn req_rnd_004_the_thickness_styles_help_names_the_steps_the_renderer_draws() {
+        let value = PreviewStyle::Thickness.to_possible_value().unwrap();
+        let help = value.get_help().unwrap().to_string().replace('\n', " ");
+        let steps = format!(
+            "yellow from {ORDINARY} fills of it over one spot, orange from {} and red from {}",
+            Limits::DEFAULT.warn_fills,
+            Limits::DEFAULT.fail_fills
+        );
+        assert!(help.contains(&steps), "{steps:?} is not in {help:?}");
     }
 }

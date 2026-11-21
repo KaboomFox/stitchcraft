@@ -279,9 +279,9 @@ params! {
         auto_base_bare_percent: Percent = "0.5", label "Most left to the base layer", range (0.0, 5.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
-        /// How many fills of thread over one spot make the design sew thick. A fill is what rows 0.4 mm
-        /// apart lay, the width of the thread. Nothing sews differently by this value: planning warns of a
-        /// place of 1 mm² or more with as much thread, which a person should look at. One layer of satin
+        /// How many fills of thread over one spot make the design sew thick. A fill is what rows 0.25 mm
+        /// apart lay, the default spacing of a fill's rows. Nothing sews differently by this value: planning
+        /// warns of a place of 1 mm² or more with as much thread, which a person should look at. One layer of satin
         /// over a fill lays 2 to 3 fills and sews well, and 2 dense layers on a fill, 4, risk broken needles.
         /// It is a starting value for a 75/11 needle and 40-weight polyester thread, which a sew-out has to
         /// confirm. The design goes by the settings its

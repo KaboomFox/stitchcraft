@@ -454,7 +454,7 @@
     },
     "auto_thick_warn_fills": {
       "default": 4.0,
-      "description": "How many fills of thread over one spot make the design sew thick. A fill is what rows 0.4 mm apart lay, the width of the thread. Nothing sews differently by this value: planning warns of a place of 1 mm² or more with as much thread, which a person should look at. One layer of satin over a fill lays 2 to 3 fills and sews well, and 2 dense layers on a fill, 4, risk broken needles. It is a starting value for a 75/11 needle and 40-weight polyester thread, which a sew-out has to confirm. The design goes by the settings its lowest automatic shape has for the 4 limits of its thickness.",
+      "description": "How many fills of thread over one spot make the design sew thick. A fill is what rows 0.25 mm apart lay, the default spacing of a fill's rows. Nothing sews differently by this value: planning warns of a place of 1 mm² or more with as much thread, which a person should look at. One layer of satin over a fill lays 2 to 3 fills and sews well, and 2 dense layers on a fill, 4, risk broken needles. It is a starting value for a 75/11 needle and 40-weight polyester thread, which a sew-out has to confirm. The design goes by the settings its lowest automatic shape has for the 4 limits of its thickness.",
       "maximum": 50.0,
       "minimum": 0.5,
       "title": "Thread that warns, in fills",
