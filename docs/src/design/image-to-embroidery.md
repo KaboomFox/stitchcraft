@@ -219,7 +219,7 @@ as a line where `photo` merges it into its neighbour. So the wrong style costs:
 
 | Picture | In its own style | In the other |
 |---|---|---|
-| A traced photo | its thin lines merge, and it sews thin | `logo`: 2 to 11 times the area at 3 fills, up to 7.1 fills, the cap out of budget (`SC-W0913`) |
+| A traced photo | its thin lines merge, and it sews thin | `logo`: 2 to 11 times the area at 3 fills, up to 7.1 fills, the cap out of budget (`SC-W0913`). With the cap's work fixed ([The cap at the end of planning](#the-cap-at-the-end-of-planning)), up to 5.5 fills |
 | Flat art, lettering or a drawing | its lines and columns sew as drawn | `photo`: up to 20 % of its detail lost, as lines merge into fills (`SC-I0915`) |
 
 Some designs sew alike in both: a badge of broad flat shapes, a drawing of even lines or a sky of flat
@@ -2199,8 +2199,38 @@ within 1 mm of a spot above the cap, and judges cover by the top stitches within
 found once. Places farther off count as not covered, and that keeps the points of a long stitch. Each kind goes
 through the plan up to 4 times, and stops once a time takes nothing or no spot is above the cap. It keeps
 the last pass's measure up to date with the pass's own helpers, so the design is still measured once. It
-works on copies. When it runs out of work, the plan stays as the last pass left it, and `SC-I1119` says
-so.
+works on copies.
+
+**Its work** (`REQ-AUTO-101`). The cap has the work budget once. A needle point goes only once it has been
+judged whole, so a cap that runs out of work keeps the points it took until then. The plan they leave is
+measured again with the budget's work once more. `SC-I1119` then says what the cap took before it ran out.
+A cap that runs out before it takes a point leaves the plan as the last pass left it, and says so.
+
+Until this fix the last resort judged every column point near a spot above the warning's limit, in full,
+for each point it took: its cover and the measure with the joined stitch. Its work grew with the number of
+those points times the number it took, so it grew with the square of the design. A point can lower the
+thickest spot only when its 2 stitches pass within 1 mm of it and lay thread there. The cap now judges
+those points alone. Each point taken then costs the work of the points round its spot. The traced dog in 9 colours,
+planned in the `logo` style, needed 598 million units against the budget of 500 million, 587 million of
+them in the last resort. The cap ran out and took nothing, and the dog sewed 7.1 fills thick where the
+`photo` style sews 4.0. It now takes 22.5 million units, 12 million of them in the last resort, and sews
+4.6 fills thick, the plan the old cap made with no limit on its work. 4 columns far apart take 4 times the work of
+one, where they took 15 times.
+
+Measured on 2026-11-20 on the set of [Choosing a style](#choosing-a-style), 28 pictures planned in both
+styles, against `main` at `a1887433`. 52 of the 56 plans sew byte for byte as before, and 2 plan in neither,
+refused by the bug of a column's pull compensation (`SC-E0101`). The 4 that change are those whose cap ran
+out of work, all in `logo`. The area is what is left at the cap, 3.25 fills or more:
+
+| Picture, `logo` | Thickest spot | Area at the cap | Stitches | Jumps | Time to plan |
+|---|---:|---:|---:|---:|---:|
+| Traced dog on turf, 9 colours | 7.1 to 4.6 fills | 445 to 379 mm² | 10,454 to 9,852 | 85 to 85 | 14.7 to 4.2 s |
+| Traced running dog, 6 colours | 6.9 to 4.9 fills | 457 to 398 mm² | 11,065 to 10,473 | 65 to 65 | 11.1 to 4.0 s |
+| Traced running dog, 9 colours | 6.9 to 4.7 fills | 465 to 387 mm² | 12,041 to 11,381 | 89 to 89 | 12.4 to 4.0 s |
+| A badge, flat art photographed and traced | 7.0 to 5.5 fills | 352 to 342 mm² | 17,284 to 17,021 | 17 to 17 | 21.5 to 8.5 s |
+
+No cap of the set runs out of work any more. In `photo` the same dogs sew 3.9 to 4.0 fills: the last resort
+stops when no column point lowers the thickest spot, so `logo` keeps more of a photo's thread.
 
 Until M13.46 the cap took a satin column's top stitches too. Where a column's points crowded in a bend,
 the third kind could take one. The stitch left then crossed part of the column only. On TS-13C's face
