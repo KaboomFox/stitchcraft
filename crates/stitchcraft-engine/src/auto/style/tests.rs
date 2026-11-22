@@ -22,7 +22,7 @@ fn styles() -> (Bounds, Bounds) {
 /// A part sewn by `rule`, no wider than a satin column, `width` wide and with `area`, whose width varies by
 /// `unevenness` along `lines` centre lines.
 fn part(rule: RuleId, (area, width): (f64, f64), unevenness: f64, lines: usize) -> Fired {
-    Fired { rule, measures: Some(Measures { area, breadth: Breadth::Medium, width, unevenness, lines, reach: 1.0 }) }
+    Fired { rule, measures: Some(Measures { area, breadth: Breadth::Medium, width, unevenness, lines, reach: 1.0, fill_wide: false }) }
 }
 
 /// An automatic square with `params`.

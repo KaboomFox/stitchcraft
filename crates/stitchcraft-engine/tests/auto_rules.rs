@@ -700,11 +700,14 @@ fn req_auto_030_unlike_subjects_sew_by_the_same_rules() {
     ];
     let recorded = [
         BTreeMap::from([("area", 2), ("compact", 2), ("line", 1), ("refused", 2), ("uneven", 4)]),
-        BTreeMap::from([("area", 3), ("column", 3), ("uneven", 2)]),
-        BTreeMap::from([("area", 5), ("column", 11), ("line", 1)]),
-        BTreeMap::from([("area", 4), ("column", 10)]),
+        // Since M13.59 a part of one line 4 mm wide whose width swells and tapers is filled whole, and a broad
+        // part's tapering pieces stay in its fill (REQ-AUTO-174, REQ-AUTO-175): the pear's tip, the star's 5
+        // points, the emblems' white discs and 5 of the ink drawing's strokes.
+        BTreeMap::from([("area", 3), ("column", 2), ("uneven", 3)]),
+        BTreeMap::from([("area", 5), ("column", 6), ("line", 1), ("uneven", 5)]),
+        BTreeMap::from([("area", 6), ("column", 8)]),
         BTreeMap::from([("area", 2), ("column", 2), ("compact", 14)]),
-        BTreeMap::from([("area", 1), ("column", 9), ("compact", 1), ("line", 6), ("uneven", 1)]),
+        BTreeMap::from([("area", 1), ("column", 4), ("compact", 1), ("line", 6), ("uneven", 6)]),
     ];
     let found: Vec<(&str, &BTreeMap<&str, usize>)> = subjects.iter().map(|(name, fired)| (*name, fired)).collect();
     assert_eq!(found, subjects.iter().map(|(name, _)| *name).zip(&recorded).collect::<Vec<_>>());
