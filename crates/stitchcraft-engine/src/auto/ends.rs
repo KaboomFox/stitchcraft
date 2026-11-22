@@ -436,12 +436,21 @@ mod tests {
     #[test]
     fn a_fold_is_the_sharpest_corner_nearest_the_end_in_reach() {
         let fold = |points: &[(f64, f64)], width: f64| folded(&rail(points), width, &mut Budget::DEFAULT.meter()).unwrap();
-        // A corner at half the rail's length is in reach; of 2 corners as sharp, the nearer the end is the fold.
+        // A corner at half the rail's length is in reach, and one past it isn't; of 2 corners as sharp, the nearer
+        // the end is the fold.
         assert_eq!(fold(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)], 4.0), 10.0);
+        assert_eq!(fold(&[(0.0, 0.0), (4.0, 0.0), (4.0, 10.0)], 5.0), 0.0);
         assert_eq!(fold(&[(-40.0, 0.0), (10.0, 0.0), (10.0, 10.0), (20.0, 10.0)], 10.0), 10.0);
         // A corner 0.3 widths from the end or farther: 1 mm is a fold of a column 2 mm wide, 0.3 mm isn't.
         assert_eq!(fold(&[(-20.0, 0.0), (0.0, 0.0), (0.0, 1.0)], 2.0), 1.0);
         assert_eq!(fold(&[(-20.0, 0.0), (0.0, 0.0), (0.0, 0.3)], 2.0), 0.0);
+    }
+
+    #[test]
+    fn a_point_farther_back_than_a_rail_is_long_is_its_start() {
+        let line = rail(&[(0.0, 0.0), (3.0, 0.0)]);
+        assert_eq!(back(&line, 5.0, &mut Budget::DEFAULT.meter()).unwrap(), Some(p(0.0, 0.0)));
+        assert_eq!(back(&line, 1.0, &mut Budget::DEFAULT.meter()).unwrap(), Some(p(2.0, 0.0)));
     }
 
     #[test]
