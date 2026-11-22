@@ -725,7 +725,7 @@ fn fanned(crowd: f64) -> (StitchPlan, BTreeSet<ElementRef>, BTreeMap<ElementRef,
 
 #[test]
 fn req_auto_171_the_cap_pulls_a_fan_s_crowded_points_in_above_the_limit() {
-    let (sewn, column, pulls) = fanned(0.05);
+    let (mut sewn, column, pulls) = fanned(0.05);
     let before = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap().most(Measure::Fills).value;
     assert!(before > 4.0, "{before}");
     let rules = Rules { cap: 3.0, limit: 4.0, columns: &column, pulls: &pulls, ..rules() };
@@ -745,7 +745,7 @@ fn req_auto_171_the_cap_pulls_a_fan_s_crowded_points_in_above_the_limit() {
     // Without the shares, or under the warning's limit, nothing is pulled in.
     let (capped, _, _) = cap(&mut sewn.clone(), &Rules { pulls: NO_PULLS, ..rules });
     assert!(capped.is_none_or(|capped| capped.pulled == [0, 0]));
-    let (capped, _, _) = cap(&mut sewn.clone(), &Rules { limit: 50.0, ..rules });
+    let (capped, _, _) = cap(&mut sewn, &Rules { limit: 50.0, ..rules });
     assert!(capped.is_none_or(|capped| capped.pulled == [0, 0]));
 }
 
@@ -771,14 +771,14 @@ fn req_auto_171_a_cap_out_of_work_while_it_pulls_points_in_keeps_what_it_pulled(
 const SPACED: f64 = 0.4 / (1.0 + crate::generators::satin::OFF);
 
 /// The fan with `crowd`, ready for the cap, with `rules`: its plan and measure, given to `check`.
-fn judged(crowd: f64, shares: Vec<f64>, check: impl Fn(&mut Cap, Point, &mut Meter)) {
+fn judged(crowd: f64, shares: &[f64], check: impl Fn(&mut Cap, Point, &mut Meter)) {
     spaced(crowd, shares, SPACED, check);
 }
 
 /// [`judged`], for a column with zigzag spacing `spacing`.
-fn spaced(crowd: f64, shares: Vec<f64>, spacing: f64, check: impl Fn(&mut Cap, Point, &mut Meter)) {
+fn spaced(crowd: f64, shares: &[f64], spacing: f64, check: impl Fn(&mut Cap, Point, &mut Meter)) {
     let (mut sewn, column, _) = fanned(crowd);
-    let pulls: BTreeMap<ElementRef, Pullable> = column.iter().map(|element| (*element, Pullable { shares: shares.clone(), spacing })).collect();
+    let pulls: BTreeMap<ElementRef, Pullable> = column.iter().map(|element| (*element, Pullable { shares: shares.to_vec(), spacing })).collect();
     let rules = Rules { cap: 3.0, limit: 4.0, columns: &column, pulls: &pulls, ..rules() };
     let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
     let spot = thickness.most(Measure::Fills).at;
@@ -802,7 +802,7 @@ fn req_auto_171_a_point_is_crowded_closer_than_its_column_s_spacing_to_its_rail_
     let open = (0, 12);
     let moves = BTreeMap::new();
     for (crowd, pulled) in [(0.05, true), (0.3, true), (0.4, false), (0.5, false)] {
-        judged(crowd, vec![0.25, 0.5], |cap, _, meter| {
+        judged(crowd, &[0.25, 0.5], |cap, _, meter| {
             let near = cap.pass.thickness.point(cap.pass.stitch(crowded).unwrap().0);
             let first = cap.pulled(crowded, 0, &moves, near, meter).unwrap();
             assert_eq!(first.is_some(), pulled, "{crowd}");
@@ -812,13 +812,13 @@ fn req_auto_171_a_point_is_crowded_closer_than_its_column_s_spacing_to_its_rail_
     // Points 0.4 mm apart in a column spaced 0.39 mm lie within 5 % of it, as a bend's inside keeps them
     // (`REQ-SAT-030`): crowded. In one spaced 0.37 mm they lie more than 5 % past it.
     for (spacing, pulled) in [(0.39, true), (0.37, false)] {
-        spaced(0.4, vec![0.25, 0.5], spacing, |cap, _, meter| {
+        spaced(0.4, &[0.25, 0.5], spacing, |cap, _, meter| {
             let near = cap.pass.thickness.point(cap.pass.stitch(crowded).unwrap().0);
             assert_eq!(cap.pulled(crowded, 0, &moves, near, meter).unwrap().is_some(), pulled, "{spacing}");
             assert_eq!(cap.pulled(open, 0, &moves, near, meter).unwrap().is_some(), pulled, "{spacing}");
         });
     }
-    judged(0.05, vec![0.25, 0.5], |cap, _, meter| {
+    judged(0.05, &[0.25, 0.5], |cap, _, meter| {
         let here = cap.pass.stitch(crowded).unwrap().0;
         let near = cap.pass.thickness.point(here);
         // It moves a quarter of the way to the middle of its stitches' other ends, from where it first was.
@@ -850,7 +850,7 @@ fn req_auto_171_a_point_is_crowded_closer_than_its_column_s_spacing_to_its_rail_
         assert_eq!(cap.pass.thickness.at(Measure::Fills, near), was);
     });
     // A column whose shares are none moves no point.
-    judged(0.05, Vec::new(), |cap, spot, meter| assert!(cap.pulled(crowded, 0, &moves, spot, meter).unwrap().is_none()));
+    judged(0.05, &[], |cap, spot, meter| assert!(cap.pulled(crowded, 0, &moves, spot, meter).unwrap().is_none()));
 }
 
 /// Whether the cap would pull in entry `point` of `sewn`, a column's whose shares and spacing are the
@@ -903,9 +903,9 @@ fn req_auto_171_a_point_between_its_own_column_s_top_stitches_only_is_looked_at(
     for (x, y) in [(0.0, 0.25), (4.0, 0.25)] {
         builder.stitch(p(x, y), Provenance::new(two, Role::Top));
     }
-    let sewn = builder.finish();
+    let mut sewn = builder.finish();
     // Entries: the jump, 2 of underlay, then the top from entry 3 to 7, and the other column's.
     assert!(pulls_in(&mut sewn.clone(), (0, 5), (2.0, -0.25), 0.3), "a point between 2 of its own top stitches");
     assert!(!pulls_in(&mut sewn.clone(), (0, 3), (2.0, -0.5), 0.3), "from its underlay");
-    assert!(!pulls_in(&mut sewn.clone(), (0, 7), (2.0, 0.0), 0.3), "to the other column");
+    assert!(!pulls_in(&mut sewn, (0, 7), (2.0, 0.0), 0.3), "to the other column");
 }
