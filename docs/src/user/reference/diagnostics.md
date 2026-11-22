@@ -133,6 +133,8 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0922`](#sc-w0922) | Warning | What Expand couldn't keep |
 | [`SC-I0923`](#sc-i0923) | Info | Style that changes how a design sews |
 | [`SC-I0924`](#sc-i0924) | Info | Shapes digitized by default |
+| [`SC-W0925`](#sc-w0925) | Warning | Thread threaded more than once |
+| [`SC-I0926`](#sc-i0926) | Info | Lines sewn before the fills beside them |
 | [`SC-E1001`](#sc-e1001) | Error | Nothing to route |
 | [`SC-I1002`](#sc-i1002) | Info | Element left out of the route |
 | [`SC-W1003`](#sc-w1003) | Warning | Piece of a routed satin column may sew otherwise |
@@ -1867,6 +1869,33 @@ The message gives both counts. To sew the shapes without effects as drawn, plan 
 `--no-auto`, or turn the exporter's Digitize automatically option off. To sew one shape as drawn,
 apply StitchCraft's Fill or Stroke effect to it. The notice isn't given with `--auto`, which asks
 for automatic digitizing, or when the default digitized no shape.
+
+## SC-W0925
+
+**Warning** — Thread threaded more than once
+
+`--auto` threads each thread once where the shapes as drawn allow it (`auto_thread_once`, on by
+default): a line that borders a fill sews after it only where that costs no thread change. Shapes
+that overlap keep their paint order, so where a shade is drawn both under and over another, as a roof
+drawn over a chimney's outline that is drawn over the chimney, their threads must each be threaded
+more than once. The warning is said once for each such group of threads, of a shape lying under a
+shape of another thread of the group. Its message names that shape and a shape of the group lying
+under a shape of this one's thread, and how many times each thread of the group is threaded.
+
+To thread each thread once, change the drawing so that each shade lies at one depth: cut away what the
+upper shape hides of the lower one, or join the shapes of one shade.
+
+## SC-I0926
+
+**Info** — Lines sewn before the fills beside them
+
+With `auto_thread_once` on, as by default, a line that borders a fill of another thread sews after it
+only where that costs no thread change. Elsewhere it sews in the batch of its thread, before the
+fill, and the fill's rows end on it: their pull compensation may cover up to half the line's thread
+on that side, and a line with such fills on 2 sides may hardly show. The notice counts those lines and
+names the ones with such fills on the most sides, the smallest first, so that a person can look at
+them. To sew every line after the fills beside it, turn `auto_thread_once` off: some threads are then
+threaded more than once.
 
 ## SC-E1001
 

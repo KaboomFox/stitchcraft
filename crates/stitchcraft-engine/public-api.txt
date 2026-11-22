@@ -32,6 +32,7 @@ pub stitchcraft_engine::auto::rules::Rule::id: stitchcraft_engine::auto::rules::
 pub stitchcraft_engine::auto::rules::Rule::is: &'static str
 pub stitchcraft_engine::auto::rules::Rule::label: &'static str
 pub stitchcraft_engine::auto::rules::Rule::sewn: &'static str
+pub const stitchcraft_engine::auto::THREAD_ONCE: &str
 pub const stitchcraft_engine::auto::rules::LEAN: f64
 pub const stitchcraft_engine::auto::rules::MOST_CROWDING: f64
 pub const stitchcraft_engine::auto::rules::PRESETS: [stitchcraft_engine::auto::rules::Preset; 2]
@@ -82,6 +83,7 @@ pub stitchcraft_engine::auto::AutoParams::auto_thick_fail_fills: <stitchcraft_pa
 pub stitchcraft_engine::auto::AutoParams::auto_thick_fail_points: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_thick_warn_fills: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_thick_warn_points: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_thread_once: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 impl stitchcraft_engine::auto::AutoParams
 pub const stitchcraft_engine::auto::AutoParams::GROUP: stitchcraft_params::spec::ParamGroup
 pub const stitchcraft_engine::auto::AutoParams::SPECS: &'static [stitchcraft_params::spec::ParamSpec]
