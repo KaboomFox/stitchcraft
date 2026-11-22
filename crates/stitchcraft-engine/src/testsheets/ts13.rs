@@ -185,7 +185,7 @@ mod tests {
         // Each sheet's size, its conformance case's to the micrometre, and its stitches: what MC-8 sews, which
         // changes with any change to what a picture sews.
         let recorded = [
-            ("TS-13A", [126.001, 167.98], 23_699),
+            ("TS-13A", [126.001, 167.98], 23_779),
             ("TS-13B", [110.594, 148.4], 14_425),
             ("TS-13C", [111.397, 107.75], 10_012),
             ("TS-13D", [89.8, 100.4], 19_237),

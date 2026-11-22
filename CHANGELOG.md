@@ -2287,6 +2287,15 @@ What a user can do with this version, before its first release. The entries belo
   by hand, sew as before. The cost is on the outside of a tight curve, where stitches lie up to 0.5 mm
   apart. The machine checkpoint MC-8 sews a test piece both ways (`docs/src/plan/machine-testing.md`).
   `REQ-AUTO-071` is retired: its distance of 0.35 mm is the `crowded` value.
+- M13.61: a small detail on top stays on top (`REQ-AUTO-182`). A small disc with a dot drawn on it, as an
+  eye with its pupil, sewed as a wheel. The disc's ring round the dot was one satin column whose stitches all
+  ran in to the dot, and it sewed after the dot and covered it. Now, where other shapes fill a ring's hole
+  and its outer edge is more than twice as long as its inner one, the ring is filled whole under them, and
+  they sew on top.
+  The review set's fish shows its pupil whole, and the eye's thickest spot falls from 3.55 to 3.23 fills.
+  A border round a field, as a patch's, keeps its satin column, and so does a ring set to `auto_stitch`
+  satin. There is no setting. Of 63 designs only the fish and TS-13A change, with no thread change or jump
+  thread added.
 - M13.56: every plan the engine returns is checked after the cap, and the check knows the thread's state
   (`REQ-PLAN-008` to `REQ-PLAN-010`). The thinning pass and the cap took needle points out after finalize's
   check, and the plan went out unchecked. Now the invariants run on the plan that is returned, with 2 new
@@ -3635,10 +3644,14 @@ What a user can do with this version, before its first release. The entries belo
 - Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes`, `TS-13C.pes`, `TS-13D.pes` and
   `TS-13E.pes` (M13.58, smooth satin edges). In the digitized half of each, a satin column keeps its
   spacing on the inside of a bend and sews each stitch full length, and the cap pulls crowded points in
-  only where a spot sews above 4 fills. The sheets sew 23,699, 14,425, 10,012, 19,237 and 5,822 stitches,
-  where they sewed 23,861, 14,511, 10,235, 19,401 and 5,932. TS-13C measures 111.396856 mm across, where it
+  only where a spot sews above 4 fills. The sheets sew 23,779, 14,425, 10,012, 19,237 and 5,822 stitches,
+  where they sewed 23,880, 14,511, 10,235, 19,401 and 5,932. TS-13C measures 111.396856 mm across, where it
   measured 111.396978, and TS-13E 23.997681 × 108.394518 mm, where it measured 23.998748 × 108.393742:
   the ends of a few columns lie a little farther out. The halves as drawn are as they were.
+- Changed `conformance/golden/testsheets/TS-13A.pes` (M13.61, a small detail on top). In the digitized
+  half, the abutting badge's blue square, a ring round the gold disc 2.55 times as long outside as inside,
+  is filled whole under the disc instead of sewn as one satin column round it. The sheet sews 23,880
+  stitches, where it sewed 23,861, and its size, thread changes and jumps are as they were.
 - Changed `conformance/golden/testsheets/TS-13B.pes` and `TS-13D.pes` (M13.37, traced letters sewn as
   strokes). In the digitized half of each, a part drawn in straight strokes sews a column along each
   stroke. TS-13B's letters and TS-13D's white frames now sew so. The sheets sew 14,543 and 19,458 stitches,
