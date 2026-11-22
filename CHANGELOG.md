@@ -2284,7 +2284,9 @@ What a user can do with this version, before its first release. The entries belo
   default, sets the length, and automatic digitizing sets it from `auto_point_taper_mm`, 2 mm by default:
   `--set auto_point_taper_mm=0` sews the blunt ends of before. On 64 designs no design sews above 4 fills
   that sewed at 4 or under, and the area above the cap falls on every set. Several thickest spots now rest
-  just under 4 fills, where the cap stops. GOLDENS_PLACEHOLDER
+  just under 4 fills, where the cap stops: the 2 badges and TS-13A at 3.99, where they sewed 3.96 and 3.95,
+  and the running dog in 6 threads at 3.99, where it sewed 3.92. Golden files: TS-13A, TS-13B and TS-13C,
+  whose digitized columns that end in points sew them narrower (TS-13B 3 stitches fewer).
 - M13.57: less thread where satin columns meet (`REQ-AUTO-167` to `REQ-AUTO-169`). Where 2 satin columns
   that automatic digitizing made lie side by side, the one sewn first reached 1 mm, its whole overlap, under
   the other, and the other laid 0.4 mm back over it: 1.4 mm of 2 columns' stitches on each other along the

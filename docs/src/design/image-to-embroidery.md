@@ -1792,23 +1792,25 @@ designs other than the photos. A point's excess is its sewn width less its drawn
   Every end whose rails meet is a drawn point of the shape, a slanted end's farthest corner as well, so the
   taper applies at each, and M13.60's cases pass with it.
 
-With the taper over 2 mm, on each set:
+The build, measured again on `main` with M13.57's columns that reach 0.4 mm under a later satin column, sews
+the set as the prototype did. With the taper over 2 mm, on each set:
 
-- The 6 photos' area above the cap falls from 29.5 to 27.0 mm², their thickest spots unchanged. The bird's
-  4.37 fills is `main`'s own.
-- The engine's 16 designs' area above the cap falls from 105.25 to 101.0 mm². The 2 badges rise from 3.96
+- The 64 designs planned by the command line, the wedges of the sew-out piece among them: the area above the
+  cap falls from 1,208.75 to 1,197.0 mm², the photos' from 28.75 to 25.5, and 25 of 319,181 stitches go.
+  The 38 points that show sew 0.17 mm wider than drawn 0.5 mm from their tips at the median, where they
+  sewed 0.78. The bird's 4.37 fills is `main`'s own.
+- The engine's 16 designs' area above the cap falls from 104.5 to 100.25 mm². The 2 badges rise from 3.96
   to 3.99 fills, TS-13A from 3.95 to 3.99.
 - 18 sheets of traced letters sew 572.0 mm² above the cap, where they sewed 571.5. One sheet's thickest spot
   rises from 3.97 to 3.99 and 2 fall. The 2 above 4 are `main`'s own, at 4.18 and 4.44.
-- The release-only dog cases, run at opt-level 1: the area at 3 fills falls from 5,025, 6,400, 5,275 and
-  9,300 hundredths of a mm² to 4,950, 6,050, 4,900 and 8,650. The thickest spots move from 3.99, 3.91, 3.92
-  and 3.98 to 3.96, 3.91, 3.99 and 4.00, and no dog sews above the cap on fills alone. With details last
-  (`req_auto_103`) no dog sews above 4.
-- On the CLI's set the mug rises from 3.33 to 3.47, its base layer's route doubled at a spot, and the running
-  dogs from 3.92 to 3.99 and from 3.98 to 4.00. No design sews above 4 that sewed at 4 or under.
+- The release-only dog cases, run at opt-level 1: the area at 3 fills falls from 50.25, 64.0, 52.75 and
+  91.0 mm² to 49.5, 60.5, 49.0 and 84.75. The thickest spots move from 3.99, 3.91, 3.92 and 3.99 to 3.96,
+  3.91, 3.99 and 3.98. With details last (`req_auto_103`) no dog sews above 4.
+- On the command line's set the mug rises from 3.33 to 3.47 fills, its base layer's route doubled at a
+  spot, and the running dog in 6 threads from 3.92 to 3.99. No design sews above 4 that sewed at 4 or under.
 - The cases of [a column's ends](#a-columns-ends), the traced letters' (`REQ-AUTO-085`), the shapes that
-  swell and taper and the small details pass. Of the engine's cases only TS-13's recorded sizes and the
-  recorded peaks of `tests/auto_peaks.rs` change. Stitches fall by 31 of 206,264.
+  swell and taper and the small details pass. TS-13A, TS-13B and TS-13C sew their points narrower, and
+  TS-13B sews 3 stitches fewer.
 
 The pictures looked at (the sunrise's rays, the wedges, the mug's saucer, the rules' leaf, TS-13B's m, a
 dog) show each point drawn to its tip. The travel stitches across the sunrise's sky are as on `main`.
@@ -1838,8 +1840,8 @@ inside the shape.
 
 #### Open points
 
-- **The cap's greed.** Several thickest spots now rest just under the warning's limit: the running dogs at
-  3.99 and 4.00 fills, the 2 badges and TS-13A at 3.99, a sheet of letters at 3.99. The area above the cap
+- **The cap's greed.** Several thickest spots now rest just under the warning's limit: the running dog in 6 threads at
+  3.99 fills, the 2 badges and TS-13A at 3.99, a sheet of letters at 3.99. The area above the cap
   falls on every set. The cap takes a column's top points only above 4 fills, one spot after another, so a
   point that lowers one spot changes where it stops at another (a hold on the compensation and the cap,
   above). A cap that looks at the spots it leaves just under 4 would settle these. That is a step of its
