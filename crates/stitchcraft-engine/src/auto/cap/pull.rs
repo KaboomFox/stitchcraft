@@ -24,13 +24,13 @@ use crate::normalize::near::to_side;
 /// A point the cap may move, as it would move: its 2 stitches as they are and as they would be, and where
 /// the point would go.
 #[derive(Clone, Copy, Debug)]
-struct Move {
-    point: Entry,
-    removed: [SewnStitch; 2],
-    added: [SewnStitch; 2],
+pub(super) struct Move {
+    pub(super) point: Entry,
+    pub(super) removed: [SewnStitch; 2],
+    pub(super) added: [SewnStitch; 2],
     /// Where the point is, and where it would go.
-    from: Point,
-    to: Point,
+    pub(super) from: Point,
+    pub(super) to: Point,
 }
 
 impl Cap<'_, '_> {
@@ -87,7 +87,7 @@ impl Cap<'_, '_> {
     /// hasn't; and its 2 stitches, moved, no shorter than the machine's shortest and no longer than its
     /// longest. It moves from where it was before it first moved towards the middle of its 2 stitches' other
     /// ends, by the share of the way: a quarter, and later half, as a column moves its crowded points in.
-    fn pulled(
+    pub(super) fn pulled(
         &self,
         point: Entry,
         times: usize,
@@ -102,13 +102,10 @@ impl Cap<'_, '_> {
             return Ok(None);
         };
         let ours = |at: usize| pass.stitch((block, at)).is_some_and(|(_, role, other)| role == Role::Top && other == element);
-        if role != Role::Top {
-            return Ok(None);
-        }
         let (Some(from), Some(to)) = (pass.beside(point, false, meter)?, pass.beside(point, true, meter)?) else { return Ok(None) };
         let (Some(into), Some(out)) = (pass.sewn(block, from, index), pass.sewn(block, index, to)) else { return Ok(None) };
         let place = pass.thickness.placed(spot);
-        if !ours(from) || !ours(to) || (to_side(place, into.from, into.to) > NEAR && to_side(place, out.from, out.to) > NEAR) {
+        if role != Role::Top || !ours(from) || !ours(to) || (to_side(place, into.from, into.to) > NEAR && to_side(place, out.from, out.to) > NEAR) {
             return Ok(None);
         }
         // Its neighbours on its rail: 2 points before it and after it in its run.
@@ -135,7 +132,7 @@ impl Cap<'_, '_> {
 
     /// How many fills `pulled` would take from `spot`, which sews `was`: the measure with the moved stitches,
     /// and back.
-    fn lowers(&mut self, pulled: &Move, was: f64, spot: Point, meter: &mut Meter) -> Result<f64, Exhausted> {
+    pub(super) fn lowers(&mut self, pulled: &Move, was: f64, spot: Point, meter: &mut Meter) -> Result<f64, Exhausted> {
         let thickness = &mut *self.pass.thickness;
         for stitch in &pulled.removed {
             thickness.remove(stitch, meter)?;
