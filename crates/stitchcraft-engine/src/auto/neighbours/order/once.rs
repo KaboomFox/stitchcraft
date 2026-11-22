@@ -24,6 +24,7 @@ use stitchcraft_plan::Rgb;
 
 use super::fewest::{self, Found};
 use super::{Facts, Order, Shapes};
+use crate::normalize::region::ops::area_of;
 
 /// The batches of `run` with the fewest thread changes, and the thread the base layer sews in: `base`, the
 /// largest area's thread, unless the row found with no thread sewing changes thread less, counting a change
@@ -57,10 +58,52 @@ fn threads(order: &Order<'_>, run: &[usize], found: &Found) -> Vec<[Option<Rgb>;
     found.batches.iter().map(|batch| [facts(batch.first()).and_then(Facts::first), facts(batch.last()).and_then(Facts::last)]).collect()
 }
 
-/// What is said of the threads that the shapes as drawn hold both before and after another ([`twice`]), with
-/// the work of `budget`: `SC-I0907` when that needs more, and no shape is named.
-pub(super) fn told(order: &Order<'_>, shapes: &Shapes, budget: &Budget) -> Vec<Diagnostic> {
-    twice(order, shapes, &mut budget.meter()).unwrap_or_else(|_| vec![untold(budget.max_work)])
+/// What is said of the threads that the shapes as drawn hold both before and after another ([`twice`]), and
+/// of the lines sewn before a fill beside them ([`buried`]) in the order `sewn`, with the work of `budget`:
+/// `SC-I0907` when that needs more, and no shape is named.
+pub(super) fn told(order: &Order<'_>, sewn: &[usize], shapes: &Shapes, budget: &Budget) -> Vec<Diagnostic> {
+    let meter = &mut budget.meter();
+    let said = twice(order, shapes, meter).and_then(|mut said| {
+        said.extend(buried(order, sewn, shapes, meter)?);
+        Ok(said)
+    });
+    said.unwrap_or_else(|_| vec![untold(budget.max_work)])
+}
+
+/// How many of the lines sewn before a fill beside them a notice names.
+const NAMED: usize = 3;
+
+/// `SC-I0926` counting the lines that sew before a fill of another thread they border, in the order `sewn`, so
+/// that each thread is threaded once: the fill's rows end on such a line and cover up to half its thread on
+/// that side (`REQ-AUTO-188`). It names the [`NAMED`] with such fills on the most sides, of those the ones
+/// that paint least, as the lines most of whose thread may be covered; `None` when no line sews so. With
+/// `meter`'s work: a unit for each line and fill they border, and for each line named.
+fn buried(order: &Order<'_>, sewn: &[usize], shapes: &Shapes, meter: &mut Meter) -> Result<Option<Diagnostic>, Exhausted> {
+    meter.charge((sewn.len() + order.lined.len()) as u64)?;
+    let at: BTreeMap<usize, usize> = sewn.iter().enumerate().map(|(place, &index)| (index, place)).collect();
+    let thread = |index: usize| order.facts.get(index).and_then(Facts::first);
+    let mut sides: BTreeMap<usize, usize> = BTreeMap::new();
+    for &(fill, line) in order.lined.iter().filter(|&&(fill, line)| thread(fill) != thread(line)) {
+        if let (Some(line_at), Some(fill_at)) = (at.get(&line), at.get(&fill)) {
+            *sides.entry(line).or_insert(0) += usize::from(line_at < fill_at);
+        }
+    }
+    sides.retain(|_, count| *count > 0);
+    meter.charge(sides.len() as u64)?;
+    let mut worst: Vec<(Reverse<usize>, f64, usize)> =
+        sides.iter().map(|(&line, &count)| (Reverse(count), shapes.paint(line).map_or(0.0, |(_, parts)| area_of(parts)), line)).collect();
+    worst.sort_by(|a, b| a.0.cmp(&b.0).then(a.1.total_cmp(&b.1)).then(a.2.cmp(&b.2)));
+    let named: Vec<String> = worst.iter().take(NAMED).filter_map(|&(_, _, line)| name(shapes, line)).map(|name| format!("\"{name}\"")).collect();
+    let count = sides.len();
+    let lines = if count == 1 { "1 line sews".to_string() } else { format!("{count} lines sew") };
+    let message = format!(
+        "{lines} before a fill of another thread beside them, so that each thread is threaded once: the fill's rows end on the line and \
+         may cover up to half its thread on that side. Those with such fills on the most sides, the smallest first: {}.",
+        named.join(", ")
+    );
+    let fix = Fix::Hint("To sew every line after the fills beside it, turn `auto_thread_once` off: some threads are then threaded more than once.".to_string());
+    let said = |(_, _, line): &(Reverse<usize>, f64, usize)| shapes.id(*line).map(|id| Diagnostic::new(Code::AutoLinesFirst, message.clone()).with_element(id).with_fix(fix.clone()));
+    Ok(worst.first().and_then(said))
 }
 
 /// `SC-I0907` when finding the threads that the shapes as drawn hold both before and after another needed more
@@ -147,6 +190,12 @@ fn reaches(held: &BTreeMap<(Rgb, Rgb), Vec<(usize, usize)>>, from: Rgb, to: Rgb,
     Ok(false)
 }
 
+/// The name of element `index` of `shapes`, or its id when it has none.
+fn name(shapes: &Shapes, index: usize) -> Option<String> {
+    let element = shapes.elements.get(index)?;
+    Some(element.name.clone().unwrap_or_else(|| element.id.as_str().to_string()))
+}
+
 /// `SC-W0925` of the `group` of threads, `thread` one of them, each sewn `times` times: of the first shape of
 /// `thread` lying under a shape of another thread of the group, naming that shape and a shape of the group
 /// lying under a shape of `thread`, one of the first shape's thread when there is one.
@@ -165,10 +214,7 @@ fn named(
         .filter(|(pair, _)| pair.1 == thread && inside(pair))
         .flat_map(|(pair, shapes)| shapes.iter().map(move |shape| (pair, shape)))
         .min_by_key(|(pair, shape)| (pair.0 != over, **shape))?;
-    let name = |index: usize| {
-        let element = shapes.elements.get(index)?;
-        Some(element.name.clone().unwrap_or_else(|| element.id.as_str().to_string()))
-    };
+    let name = |index: usize| name(shapes, index);
     let threaded: Vec<String> = group
         .iter()
         .map(|colour| match times.get(colour).copied().unwrap_or(0) {

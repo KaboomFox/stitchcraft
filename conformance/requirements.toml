@@ -3841,6 +3841,15 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-AUTO-188"
+area = "auto"
+level = "L2"
+statement = "With auto_thread_once on, a running line that sews before a fill of another thread it borders, so that each thread is threaded once, keeps the share of its thread recorded for a line round a fill on a broad fill of the line's thread: of a line 0.3, 0.6 and 0.8 mm wide 0.491, 0.823 and 0.924 of its top thread show, where with the setting off each shows whole. SC-I0926 counts the lines of a design that sew before a fill of another thread beside them, and names the 3 with such fills on the most sides, of those the ones that paint least."
+rationale = "A fill sewn after a line ends its rows on it, and their pull compensation covers the line's thread on that side: the narrower the line, the more of it. Measured on 78 designs (M13.63), 36 fur lines of the 4 traced dogs newly show less than half their thread, the worst 2, 13 and 15 %, while 18 of the 37 that main hides show more, and no line of the drawings, the fixtures, the test pictures or the TS-13 halves does. The likeness of every design is as it was. Holding the fill's pull compensation back from the line would leave the fabric to show where the rows pull in, so nothing is held back, and the notice says where to look."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-AUTO-071"
 area = "auto"
 level = "L2"

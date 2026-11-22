@@ -16,7 +16,7 @@ use std::collections::BTreeMap;
 use stitchcraft_engine::PlanOutcome;
 use stitchcraft_engine::design::{Design, DesignSettings, Element};
 use stitchcraft_engine::testsheets::SHEETS;
-use stitchcraft_plan::{Rgb, StitchPlan, Thread};
+use stitchcraft_plan::{Rgb, Role, StitchPlan, Thread};
 use stitchcraft_testkit::designs::{along, automatic, fill, in_place, line, planned, rings, widened};
 
 type Pt = (f64, f64);
@@ -169,4 +169,87 @@ fn req_auto_187_a_shade_drawn_under_and_over_another_is_named() {
     // It is said of one of the shapes that lie under a shape of the other thread.
     let named = said.first().and_then(|said| said.element.as_ref()).map(ToString::to_string);
     assert!(matches!(named.as_deref(), Some("chimney" | "chimney-outline")), "{said:?}");
+}
+
+/// The share of the top thread of element `id` of `plan` that no later top stitch covers: each top stitch
+/// a band 0.4 mm wide, a thread, painted in the order they sew on a grid of 0.05 mm.
+fn shown(plan: &StitchPlan, id: &str) -> f64 {
+    const STEP: f64 = 0.05;
+    const HALF: f64 = 0.2;
+    let tops: Vec<(bool, [f64; 4])> = plan
+        .sewn_stitches()
+        .iter()
+        .filter(|stitch| stitch.role == Role::Top)
+        .filter_map(|stitch| {
+            let element = plan.blocks.get(stitch.block)?.stitches.get(stitch.index)?.origin.element?;
+            let own = plan.element(element).is_some_and(|element| element.as_str() == id);
+            Some((own, [stitch.from.x(), stitch.from.y(), stitch.to.x(), stitch.to.y()]))
+        })
+        .collect();
+    let mut top: BTreeMap<(i64, i64), bool> = BTreeMap::new();
+    let mut own: Vec<(i64, i64)> = Vec::new();
+    for (mine, [ax, ay, bx, by]) in tops {
+        let cell = |v: f64| (v / STEP).round() as i64;
+        let (dx, dy) = (bx - ax, by - ay);
+        let length = dx * dx + dy * dy;
+        for row in cell(ay.min(by) - HALF)..=cell(ay.max(by) + HALF) {
+            for column in cell(ax.min(bx) - HALF)..=cell(ax.max(bx) + HALF) {
+                let (px, py) = (column as f64 * STEP, row as f64 * STEP);
+                let along = if length > 0.0 { (((px - ax) * dx + (py - ay) * dy) / length).clamp(0.0, 1.0) } else { 0.0 };
+                let (qx, qy) = (ax + along * dx - px, ay + along * dy - py);
+                if qx * qx + qy * qy <= HALF * HALF {
+                    top.insert((column, row), mine);
+                    if mine {
+                        own.push((column, row));
+                    }
+                }
+            }
+        }
+    }
+    own.sort_unstable();
+    own.dedup();
+    own.iter().filter(|cell| top.get(cell) == Some(&true)).count() as f64 / own.len().max(1) as f64
+}
+
+/// The sew-out piece with its navy line `width` mm wide, each shape with `params`.
+fn lined(width: f64, params: &[(&str, &str)]) -> Vec<Element> {
+    let shape = |id: &str, rings: &[&[Pt]], thread: &Thread| automatic(fill(id, rings, thread, params));
+    vec![
+        shape("dark", &[&rect(2.0, 2.0, 58.0, 42.0)], &NAVY),
+        shape("line", &[&rect(16.0 - width, 12.0 - width, 44.0 + width, 32.0 + width), &hole(16.0, 12.0, 44.0, 32.0)], &NAVY),
+        shape("light", &[&rect(16.0, 12.0, 44.0, 32.0)], &CREAM),
+        shape("gold", &[&rect(62.0, 32.0, 70.0, 42.0)], &GOLD),
+    ]
+}
+
+/// `REQ-AUTO-188`: how much of a navy line's thread still shows round a cream fill sewn after it, as recorded on
+/// 2026-11-22, for lines 0.3, 0.6, 0.8 and 1.5 mm wide, in thousandths: with `auto_thread_once` on, as by
+/// default, and off, which sews the line after the fill, as before M13.63. A line narrower than the narrowest
+/// satin stroke sews as a running stitch along its middle, and the cream fill's rows, sewn after it, reach
+/// their pull compensation onto it. The line 1.5 mm wide sews as a satin column, which sews after the fill
+/// either way (rule 4).
+#[test]
+fn req_auto_188_a_line_sewn_before_the_fill_beside_it_keeps_the_share_recorded() {
+    let share = |width: f64, params: &[(&str, &str)]| {
+        let outcome = placed(lined(width, params));
+        let plan = plan_of(&outcome);
+        (width, (shown(plan, "svg:line:fill").max(shown(plan, "line")) * 1000.0).round())
+    };
+    let on: Vec<(f64, f64)> = [0.3, 0.6, 0.8, 1.5].iter().map(|&width| share(width, &[])).collect();
+    let off: Vec<(f64, f64)> = [0.3, 0.6, 0.8, 1.5].iter().map(|&width| share(width, &[("auto_thread_once", "false")])).collect();
+    // On, the cream rows cover about half of the 0.3 mm line's thread, and less of the wider lines', whose thread
+    // lies farther from the fill's edge. Off, the line's thread shows whole. The column is the same either way.
+    assert_eq!((on, off), (vec![(0.3, 491.0), (0.6, 823.0), (0.8, 924.0), (1.5, 514.0)], vec![(0.3, 1000.0), (0.6, 1000.0), (0.8, 1000.0), (1.5, 514.0)]));
+}
+
+/// `SC-I0926`: the sew-out piece's navy line sews before the cream fill it borders, and the notice counts it and
+/// names it. With `auto_thread_once` off it sews after the fill, and nothing is said.
+#[test]
+fn diag_sc_i0926_a_line_sewn_before_the_fill_beside_it_is_counted_and_named() {
+    let codes = |outcome: &PlanOutcome| outcome.diagnostics.iter().filter(|said| said.code.to_string() == "SC-I0926").cloned().collect::<Vec<_>>();
+    let said = codes(&placed(piece(&[])));
+    assert_eq!(said.len(), 1, "{said:?}");
+    assert!(said.iter().all(|said| said.message.starts_with("1 line sews before a fill of another thread beside them") && said.message.contains("\"line\"")), "{said:?}");
+    assert_eq!(said.first().and_then(|said| said.element.as_ref()).map(ToString::to_string).as_deref(), Some("line"));
+    assert!(codes(&placed(piece(&[("auto_thread_once", "false")]))).is_empty());
 }

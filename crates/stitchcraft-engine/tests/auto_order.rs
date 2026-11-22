@@ -75,7 +75,7 @@ fn req_auto_010_each_thread_sews_as_long_as_it_can() {
         square("b2", (55.0, 0.0), 10.0, &BLUE),
     ]);
     assert_eq!(ids, ["r1", "r2", "b2", "b1"]);
-    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 3."]);
+    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own: threaded 2 times, with 1 thread change, where paint order is threaded 4 times."]);
 }
 
 /// The ids of `elements` in the order they sew, every element ordered (`--sort-colours`), and what `SC-I0907`
@@ -98,12 +98,12 @@ fn req_auto_010_shapes_that_overlap_keep_their_paint_order() {
         set(square("r2", (15.0, 20.0), 10.0, &RED)),
     ]);
     assert_eq!(ids, ["r1", "r2", "b"]);
-    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 2."]);
+    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own: threaded 2 times, with 1 thread change, where paint order is threaded 3 times."]);
     // Automatic, the squares are flattened first (REQ-AUTO-023): each sews what shows of it, and they only
     // meet, so the reds sew one after the other.
     let (ids, said) = sewn(stacked());
     assert_eq!(ids, ["r1", "r2", "b"]);
-    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 2."]);
+    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own: threaded 2 times, with 1 thread change, where paint order is threaded 3 times."]);
 }
 
 #[test]
@@ -134,7 +134,7 @@ fn req_auto_010_a_line_sews_after_the_fill_it_borders() {
     let running = line("running", &[(0.0, -0.25), (10.0, -0.25)], 0.5, &BLUE);
     let (ids, said) = sewn(vec![column, running, square("square", (0.0, 0.0), 10.0, &RED)]);
     assert_eq!(ids, ["square", "running", "column"]);
-    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 1."]);
+    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own: threaded 2 times, with 1 thread change, where paint order is threaded 2 times."]);
     // A blue square far away, a red square, and a blue line drawn along the red square's top edge: the line
     // waits for the square it borders, and so does the blue square, or blue would sew twice.
     let (ids, said) = sewn(vec![
@@ -143,7 +143,7 @@ fn req_auto_010_a_line_sews_after_the_fill_it_borders() {
         line("line", &[(0.0, 10.25), (10.0, 10.25)], 0.5, &BLUE),
     ]);
     assert_eq!(ids, ["square", "line", "far"]);
-    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 2."]);
+    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own: threaded 2 times, with 1 thread change, where paint order is threaded 3 times."]);
     // A line drawn first across the square's corner, 3.5 mm from it, has a box that meets the square's, but
     // it borders nothing and keeps its place.
     let (ids, said) = sewn(vec![line("line", &[(20.0, 5.0), (5.0, 20.0)], 0.5, &BLUE), square("square", (0.0, 0.0), 10.0, &RED)]);
@@ -211,7 +211,7 @@ fn req_auto_010_elements_with_settings_keep_their_order_and_automatic_ones_move_
     };
     let (ids, said) = sewn(elements());
     assert_eq!(ids, ["s1", "s2", "a", "s3"]);
-    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own, with 2 thread changes where paint order has 3."]);
+    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own: threaded 3 times, with 2 thread changes, where paint order is threaded 4 times."]);
     // A design without automatic elements sews as drawn, and says nothing of its order.
     let (ids, said) = sewn(elements().into_iter().take(3).collect());
     assert_eq!((ids, said), (vec!["s1".to_string(), "s2".to_string(), "s3".to_string()], Vec::new()));
@@ -223,7 +223,7 @@ fn req_auto_011_sort_colours_orders_the_elements_with_settings_too() {
         || vec![set(square("s1", (0.0, 0.0), 10.0, &RED)), set(square("s2", (20.0, 0.0), 10.0, &BLUE)), set(square("s3", (40.0, 0.0), 10.0, &RED))];
     let (ids, said) = order_of(elements(), true, Code::AutoOrder);
     assert_eq!(ids, ["s1", "s3", "s2"]);
-    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 2."]);
+    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own: threaded 2 times, with 1 thread change, where paint order is threaded 3 times."]);
     // What overlaps still keeps its paint order.
     let (ids, _) = order_of(
         vec![set(square("s1", (0.0, 0.0), 10.0, &RED)), set(square("s2", (5.0, 0.0), 10.0, &BLUE)), set(square("s3", (10.0, 0.0), 10.0, &RED))],
@@ -256,7 +256,7 @@ fn req_auto_010_nothing_moves_across_a_stop() {
 fn diag_sc_i0907_the_elements_are_sewn_in_an_order_of_their_own() {
     let (ids, said) = sewn(vec![square("r1", (0.0, 0.0), 10.0, &RED), square("b", (20.0, 0.0), 10.0, &BLUE), square("r2", (40.0, 0.0), 10.0, &RED)]);
     assert_eq!(ids, ["r1", "r2", "b"]);
-    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 2."]);
+    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own: threaded 2 times, with 1 thread change, where paint order is threaded 3 times."]);
     assert_eq!(Code::AutoOrder.id(), "SC-I0907");
 }
 
@@ -271,7 +271,7 @@ fn req_auto_010_an_automatic_element_drawn_over_one_with_settings_sews_after_it(
         square("apart", (40.0, 0.0), 10.0, &BLUE),
     ]);
     assert_eq!(ids, ["set", "apart", "on", "far"]);
-    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 3."]);
+    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own: threaded 2 times, with 1 thread change, where paint order is threaded 4 times."]);
 }
 
 #[test]
@@ -284,14 +284,14 @@ fn req_auto_010_a_part_thinner_than_twice_the_tolerance_overlaps_what_it_crosses
         line("red", &[(10.0, -10.0), (10.0, 10.0)], 0.1, &RED),
     ]);
     assert_eq!(ids, ["blue", "red", "far"]);
-    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 2."]);
+    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own: threaded 2 times, with 1 thread change, where paint order is threaded 3 times."]);
     // A comb drawn over a red line, a tooth 0.1 mm wide reaching across the line: the comb sews after the
     // line, and the blue square far away with the comb.
     let teeth = [(0.0, 5.0), (10.0, 5.0), (10.0, -5.0), (10.1, -5.0), (10.1, 5.0), (20.0, 5.0), (20.0, 15.0), (0.0, 15.0)];
     let comb = automatic(fill("comb", &[&teeth], &BLUE, &[]));
     let (ids, said) = sewn(vec![square("far", (100.0, 0.0), 10.0, &BLUE), line("line", &[(0.0, 0.0), (20.0, 0.0)], 0.8, &RED), comb]);
     assert_eq!(ids, ["line", "comb", "far"]);
-    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 2."]);
+    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own: threaded 2 times, with 1 thread change, where paint order is threaded 3 times."]);
 }
 
 #[test]
@@ -306,7 +306,7 @@ fn req_auto_010_a_speck_left_out_has_no_place_in_the_order() {
         square("left", (-20.0, 0.0), 10.0, &RED),
     ]);
     assert_eq!(ids, ["first", "left", "right"]);
-    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own, with 0 thread changes where paint order has 0."]);
+    assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own: threaded once, with 0 thread changes, where paint order is threaded once."]);
 }
 
 /// A shape of a random design, on a half-millimetre grid: from `(x, y)` halves of a millimetre, `size`

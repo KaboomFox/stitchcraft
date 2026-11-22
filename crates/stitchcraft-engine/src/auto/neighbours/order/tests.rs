@@ -173,13 +173,14 @@ fn req_auto_012_an_order_that_needs_more_work_than_the_budget_sews_the_elements_
             "info SC-I0907: Choosing the order the elements sew in needed more than the work budget of 7 units, so this element and the \
              others not placed by then sew in paint order, after those placed. [b1]"
                 .to_string(),
-            "info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 3.".to_string(),
+            "info SC-I0907: The elements are sewn in an order of their own: threaded 2 times, with 1 thread change, where paint order is threaded 4 times.".to_string(),
         ]
     );
-    // With less than the first element's 4 units, nothing is placed, and the design sews in paint order.
+    // With less than the first element's 4 units, nothing is placed, and the design sews in paint order. Nor
+    // are the lines sewn before their fills looked for, which is said too.
     let (ids, said) = ordered_with(squares(), &Budget::DEFAULT, &Budget { max_work: 3, ..Budget::DEFAULT });
     assert_eq!(ids, ["r1", "b1", "r2", "b2"]);
-    assert_eq!(said.len(), 2, "{said:?}");
+    assert_eq!(said.len(), 3, "{said:?}");
 }
 
 #[test]
@@ -257,6 +258,7 @@ fn a_line_waits_for_no_fill_it_borders_beyond_an_element_kept_in_its_place() {
         under: None,
         once: true,
         overlaps: Vec::new(),
+        lined: Vec::new(),
         found: Vec::new(),
         chosen: None,
     };
@@ -289,6 +291,7 @@ fn req_auto_012_nothing_moves_across_an_element_kept_in_its_place_and_each_sews_
         under: None,
         once: true,
         overlaps: Vec::new(),
+        lined: Vec::new(),
         found: Vec::new(),
         chosen: None,
     };
@@ -317,6 +320,7 @@ fn threaded(colours: &[&[Rgb]]) -> (Vec<usize>, usize, usize) {
         under: None,
         once: true,
         overlaps: Vec::new(),
+        lined: Vec::new(),
         found: Vec::new(),
         chosen: None,
     };
@@ -450,7 +454,7 @@ fn req_auto_037_the_elements_sew_in_the_order_that_changes_thread_least() {
     let squares = || vec![square("r1", (-100.0, 0.0), 10.0, &RED), square("b1", (0.0, 0.0), 10.0, &BLUE), square("r2", (5.0, 0.0), 10.0, &RED)];
     let (ids, said) = ordered_with(squares(), &Budget::DEFAULT, &Budget::DEFAULT);
     assert_eq!(ids, ["b1", "r2", "r1"]);
-    assert_eq!(messages(&said), ["info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 2."]);
+    assert_eq!(messages(&said), ["info SC-I0907: The elements are sewn in an order of their own: threaded 2 times, with 1 thread change, where paint order is threaded 3 times."]);
     // With less work than a row of the search costs, each thread sews while it lasts, as before M13.22, which
     // is paint order here, and that is said.
     let work = fewest::STATE - 1;
@@ -511,14 +515,15 @@ fn req_auto_037_a_satin_column_sews_after_the_fill_it_borders_where_that_costs_n
     ];
     let (ids, said) = ordered_with(columns, &Budget::DEFAULT, &Budget::DEFAULT);
     assert_eq!(ids, ["rs", "rc", "bs", "bc"]);
-    assert_eq!(messages(&said), ["info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 2."]);
+    assert_eq!(messages(&said), ["info SC-I0907: The elements are sewn in an order of their own: threaded 2 times, with 1 thread change, where paint order is threaded 3 times."]);
     // Lines there go as the columns do (`REQ-AUTO-184`): the red line sews with the red square, and the thread
     // changes once. With `auto_thread_once` off they sew after their squares, as they are drawn, and the thread
     // changes twice (`REQ-AUTO-186`).
     let line = |id: &str, x: f64, thread: &Thread| running(id, &[(x + 11.0, 0.0), (x + 11.0, 10.0)], 2.0, thread);
     let lines = || vec![square("rs", (0.0, 0.0), 10.0, &RED), line("bl", 0.0, &BLUE), square("bs", (50.0, 0.0), 10.0, &BLUE), line("rl", 50.0, &RED)];
     let (ids, said) = ordered_with(lines(), &Budget::DEFAULT, &Budget::DEFAULT);
-    assert_eq!((ids, said.len()), (["rs", "rl", "bs", "bl"].map(String::from).to_vec(), 1));
+    assert_eq!(ids, ["rs", "rl", "bs", "bl"]);
+    assert_eq!(said.iter().map(|said| said.code.to_string()).collect::<Vec<_>>(), ["SC-I0907", "SC-I0926"]);
     let (ids, said, _) = ordered_by(lines(), &Budget::DEFAULT, &Budget::DEFAULT, None, Rules { last: true, once: false });
     assert_eq!((ids, said.len()), (["rs", "bl", "bs", "rl"].map(String::from).to_vec(), 0));
 }
@@ -576,6 +581,7 @@ pub(super) fn sewn(
         under: None,
         once: true,
         overlaps: Vec::new(),
+        lined: Vec::new(),
         found: Vec::new(),
         chosen: None,
     };
@@ -733,6 +739,7 @@ fn req_auto_096_a_detail_is_closed_in_and_smaller_than_the_area_it_meets() {
         under: None,
         once: true,
         overlaps: Vec::new(),
+        lined: Vec::new(),
         found: Vec::new(),
         chosen: None,
     };

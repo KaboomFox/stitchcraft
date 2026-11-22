@@ -336,6 +336,15 @@ macro_rules! auto_codes {
         /// To thread each thread once, change the drawing so that each shade lies at one depth: cut away what the
         /// upper shape hides of the lower one, or join the shapes of one shade.
         AutoThreadedAgain = "SC-W0925", Warning, "Thread threaded more than once";
+
+        /// With `auto_thread_once` on, as by default, a line that borders a fill of another thread sews after it
+        /// only where that costs no thread change. Elsewhere it sews in the batch of its thread, before the
+        /// fill, and the fill's rows end on it: their pull compensation may cover up to half the line's thread
+        /// on that side, and a line with such fills on 2 sides may hardly show. The notice counts those lines and
+        /// names the ones with such fills on the most sides, the smallest first, so that a person can look at
+        /// them. To sew every line after the fills beside it, turn `auto_thread_once` off: some threads are then
+        /// threaded more than once.
+        AutoLinesFirst = "SC-I0926", Info, "Lines sewn before the fills beside them";
         } }
     };
 }

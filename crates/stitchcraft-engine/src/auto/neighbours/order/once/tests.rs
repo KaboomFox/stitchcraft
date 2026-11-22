@@ -119,16 +119,22 @@ fn req_auto_187_the_shapes_named_are_those_of_the_first_thread_and_the_thread_ov
         under: None,
         once: true,
         overlaps: vec![(6, 0), (0, 1), (1, 2), (3, 4), (4, 5)],
+        lined: vec![(2, 1), (0, 1), (4, 3), (5, 3), (2, 2)],
         found: vec![(vec![6], vec![vec![6]]), (vec![0, 1, 2, 3, 4, 5], vec![vec![0], vec![1], vec![3], vec![2, 4], vec![5]])],
         chosen: None,
     };
     let warning = "warning SC-W0925: This shape lies under \"s1\", and \"s1\" lies under \"s2\": their threads lie both under and over each \
                    other, so no order threads each thread once. The threads are threaded #0000c8 once, #00a000 2 times, #c80000 2 \
                    times. [s0]";
+    // The blue s1 sews before the red s2 it borders, and the green s3 before the red s4 and the green s5:
+    // s3 has a fill of another thread sewn after it on one side, as s1 has, and is named after it.
+    let lines = "info SC-I0926: 2 lines sew before a fill of another thread beside them, so that each thread is threaded once: the fill's \
+                 rows end on the line and may cover up to half its thread on that side. Those with such fills on the most sides, the \
+                 smallest first: \"s1\", \"s3\". [s1]";
     let mut first = None;
     for work in 0..200 {
-        let said = messages(&told(&order, &shapes, &Budget { max_work: work, ..Budget::DEFAULT }));
-        if said == [warning] {
+        let said = messages(&told(&order, &[6, 0, 1, 3, 2, 4, 5], &shapes, &Budget { max_work: work, ..Budget::DEFAULT }));
+        if said == [warning.to_string(), lines.to_string()] {
             first = first.or(Some(work));
         } else {
             assert_eq!(
@@ -140,5 +146,5 @@ fn req_auto_187_the_shapes_named_are_those_of_the_first_thread_and_the_thread_ov
             );
         }
     }
-    assert_eq!(first, Some(136));
+    assert_eq!(first, Some(150));
 }

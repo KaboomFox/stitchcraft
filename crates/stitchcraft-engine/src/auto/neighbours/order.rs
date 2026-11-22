@@ -154,6 +154,7 @@ pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, u
         under,
         once,
         overlaps: Vec::new(),
+        lined: Vec::new(),
         found: Vec::new(),
         chosen: None,
     };
@@ -178,7 +179,7 @@ pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, u
     }
     said.extend(early(&order.details, &sewing.order));
     if once {
-        said.extend(once::told(&order, shapes, budget));
+        said.extend(once::told(&order, &sewing.order, shapes, budget));
     }
     // The elements left out go last, where they are left out.
     sewing.order.extend((0..shapes.len()).filter(|&index| shapes.left_out(index)));
@@ -293,6 +294,8 @@ struct Order<'o> {
     once: bool,
     /// Each pair of elements whose paint overlaps, the lower and the upper, in the order they were found.
     overlaps: Vec<(usize, usize)>,
+    /// Each line that borders a fill, as the fill and the line, in the order they were found.
+    lined: Vec<(usize, usize)>,
     /// Each run whose batches were found, and its batches, each the elements it sews.
     found: Vec<(Vec<usize>, Vec<Vec<usize>>)>,
     /// The thread the base layer sews in when the order chose another than the one it was given.
@@ -368,8 +371,16 @@ impl Order<'_> {
                     self.graph.add(index, other);
                     self.overlaps.push((index, other));
                 }
-                Beside::Border(fill, line) if self.once || shapes.column(line).is_some() => self.wished.push((fill, line)),
-                Beside::Border(fill, line) => self.borders.push((fill, line)),
+                Beside::Border(fill, line) => {
+                    if shapes.column(line).is_none() {
+                        self.lined.push((fill, line));
+                    }
+                    if self.once || shapes.column(line).is_some() {
+                        self.wished.push((fill, line));
+                    } else {
+                        self.borders.push((fill, line));
+                    }
+                }
                 Beside::Meet(first, second) => {
                     if self.detail(shapes, second, first, meter)? {
                         self.details.push((first, second));
@@ -745,10 +756,17 @@ fn changes(order: &[usize], facts: &[Facts]) -> usize {
 }
 
 /// `SC-I0907` saying the elements sew in an order of their own, with `after` thread changes where paint
-/// order has `before`.
+/// order has `before`, and so how many times the machine is threaded each way: once more than it changes
+/// thread, as a person with a machine of one needle counts.
 fn summary(before: usize, after: usize) -> Diagnostic {
     let changes = |count: usize| if count == 1 { "1 thread change".to_string() } else { format!("{count} thread changes") };
-    let message = format!("The elements are sewn in an order of their own, with {} where paint order has {before}.", changes(after));
+    let threaded = |count: usize| if count == 0 { "once".to_string() } else { format!("{} times", count + 1) };
+    let message = format!(
+        "The elements are sewn in an order of their own: threaded {}, with {}, where paint order is threaded {}.",
+        threaded(after),
+        changes(after),
+        threaded(before)
+    );
     Diagnostic::new(Code::AutoOrder, message)
 }
 
