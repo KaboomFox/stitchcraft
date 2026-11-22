@@ -3310,9 +3310,9 @@ whole. So the logo style also says so (`REQ-AUTO-169`).
 **As built.** A column that digitizing made reaches `auto_column_reach_mm` past a rail along which a satin
 column sewn after it runs for more than half the rail's length. Along any other shape it reaches the overlap,
 and a rail along both reaches the smaller. Setting 1 mm sews exactly as main did. The build was measured again
-on main after M13.58, M13.60 and M13.61, which changed what sews there. The set is 37 designs: the 31 of the
-first table that still exist, the lettered patch the cases draw, and the 6 traced photos that M13.58 and M13.60
-measured. The 9 local photos of the first table were deleted and are left out. TS-13A to TS-13E plan the same
+on main after M13.58, M13.60 and M13.61, which changed what sews there. The set is 37 designs. 31 of them are the
+first table's that still exist, with the lettered patch the cases draw. The other 6 are the traced photos
+that M13.58 and M13.60 measured. The 9 local photos of the first table were deleted and are left out. TS-13A to TS-13E plan the same
 with the rule, so their golden files don't move.
 
 | Style | Reach | Designs changed | Designs above 4 | mm² at 3.25 or more | mm² at 4 or more | Bare fabric, mm² |
@@ -3332,8 +3332,8 @@ navy showing through between 2 of its rings is gone.
 
 One design's thickest spot rose. The traced pear, under the default style, sews 3.95 fills at its stem,
 where 2 satin columns lie side by side, and sewed 3.86. Its area at 3.25 fills or more fell from 3.5 to 2.75
-mm². On main that spot sews 4.38 fills before the cap, above the warning's limit, so the cap pulls 2 crowded
-points in and takes 6.3 mm of doubled top stitches there. With the shorter reach it stays under 4 before the
+mm². On main that spot sews 4.38 fills before the cap, above the warning's limit. There the cap pulls 2 crowded
+points in and takes 6.3 mm of doubled top stitches. With a column 0.4 mm under the other, the spot stays under 4 before the
 cap, and the cap, which leaves a column's top stitches below the limit, takes 1.7 mm. The cap acts only
 above 4, so a spot it used to lower to 3.86 can now rest at 3.95. That is an open point for a later step on
 the cap. No design sews above 4 fills that sewed at 4 or under it on main.

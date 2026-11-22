@@ -2281,8 +2281,8 @@ What a user can do with this version, before its first release. The entries belo
   the other, and the other laid 0.4 mm back over it: 1.4 mm of 2 columns' stitches on each other along the
   join, the thickest spots of designs with many columns. Now the first reaches 0.4 mm under the other, its
   pull compensation. Along a fill or any other shape sewn after it, it still reaches the whole overlap. The
-  new advanced setting `auto_column_reach_mm`, from 0 to 2 mm, sets the reach: `--set
-  auto_column_reach_mm=1` sews as before. Under the logo style, where a design still ends at 4 fills or
+  new advanced setting `auto_column_reach_mm`, from 0 to 2 mm, sets how far the column lies under the
+  other, and `--set auto_column_reach_mm=1` sews as before. Under the logo style, where a design still ends at 4 fills or
   more and a shape that prefers satin columns lies at the thickest spot, the thickness warning `SC-W0913`
   adds that `--style photo` fills more of the design, which often sews thinner. The machine checkpoint
   sews a test piece of columns meeting (`docs/src/plan/machine-testing.md`). The key is
