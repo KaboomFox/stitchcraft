@@ -3647,6 +3647,10 @@ What a user can do with this version, before its first release. The entries belo
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13C.pes` (M13.60, clean ends of satin columns). In the digitized
+  half, the balloon string's lower end, which a curved edge cuts, sews square to the string up to its end.
+  The sheet sews 10,013 stitches, where it sewed 10,012, and its size, thread changes and jumps are as they
+  were.
 - Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes`, `TS-13C.pes`, `TS-13D.pes` and
   `TS-13E.pes` (M13.58, smooth satin edges). In the digitized half of each, a satin column keeps its
   spacing on the inside of a bend and sews each stitch full length, and the cap pulls crowded points in

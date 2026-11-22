@@ -1493,32 +1493,38 @@ expanded and drawn by hand ([Expand](#expand)).
   starts where the last ended. Curves, closed lines and corners whose miter its limit cuts square keep one
   column.
 
-Measured on the 63 designs again with the build:
+Measured on the 63 designs again with the build, on `main` with M13.58's smooth satin edges and with both
+rules:
 
 | | `main` | Built |
 |---|---:|---:|
-| Ends with a stitch over 20° | 69 | 63 |
-| End stitches over 20° | 227 | 168 |
-| The drawings' end stitches over 20° | 69 | 31 |
+| Ends with a stitch over 20° | 64 | 61 |
+| End stitches over 20° | 216 | 165 |
+| The drawings' end stitches over 20° | 65 | 29 |
 | `SC-W0208` | 14 | 6 |
-| Area above the cap, mm² | 1,281.2 | 1,282.5 |
-| Stitches | 319,809 | 319,823 |
+| Area above the cap, mm² | 1,243.0 | 1,240.5 |
+| Stitches | 318,133 | 318,186 |
 
 Drawn lines 3 mm and 5 mm wide, turning 60°, 90° and 120°, were added to the set. A turn of 60° keeps one
-column. At 90° and 120° the 8 `SC-W0208` of `main` go, no gap opens where the legs meet on the bisector, and
-the area above the cap falls from 12.5 to 1.0 mm². The thickest spot of the line 3 mm wide turning 90° rises
-from 2.13 to 2.95 fills, and of the line 5 mm wide turning 120° from 3.93 to 3.95, at its miter's point. A
-parallelogram slanted 45° at both ends leans 9° and 13° where it leaned 32° and 34°.
+column. At 90° and 120°, `main` sews each corner as one column whose stitches are no longer shortened, up to
+3.78 fills thick and with 0.5 to 1.0 mm² of fabric showing within 3 mm of the corner. Mitred, no fabric
+shows there, the thickest spot is 2.95 to 3.95 fills, and the area above the cap falls from 5.75 to
+1.0 mm². A turn of 60° keeps its knot at the inside of the corner: 3.83 fills on the line 5 mm wide, where
+it was 2.63 before M13.58. A parallelogram slanted 45° at both ends leans 9° and 13° where it leaned 32°
+and 34°. A middle leg 1.2 to 2 widths long between 2 sharp corners leans 3.7° at most, as the mean of 2
+stitches.
 
 At the zigzag's inner corners the 2 legs' stitches meet: 13 or 14 stitches have their middles within 1 mm
-of each, against 5 to 7 on `main`. The shortest stitch there is 2.1 mm, and the zigzag's shortest is
-0.41 mm, longer than the machine's 0.3 mm. Its needle points lie 0.03 to 0.09 mm past each miter's point,
-against 0.2 to 0.37 mm on `main`.
+of each, against 5 to 7 when it sewed as one column. The shortest stitch there is 2.1 mm, and the zigzag's
+shortest is 0.41 mm, longer than the machine's 0.3 mm. Its needle points lie 0.03 to 0.09 mm past each
+miter's point, against 0.2 to 0.37 mm as one column. Its thickest spot is 2.81 fills, where `main` with
+M13.58 sews 3.50.
 
-What got worse: the zigzag's thickest spot rose from 2.36 to 2.81 fills and a photographed cat's from 3.91
-to 3.94. The area above the cap rose by 1.0 mm² on TS-13C, 0.75 mm² and 0.25 mm² on 2 running dogs. A
-column 0.59 mm wide of a photographed building reaches 0.2 mm farther past its curved end, and a fleck of
-the cat 0.73 mm wide has 5 stitches over 20° where it had 2, its most lean the same. The sew-out at the next
+What got worse: the sunrise's thickest spot rose from 3.91 to 3.98 fills, though its area above the cap fell
+from 7.0 to 5.25 mm². The photographed cat's area above the cap rose by 0.5 mm². A column 0.59 mm wide of a
+photographed building reaches 0.2 mm farther past its curved end, and a fleck of the cat 0.73 mm wide has 5
+stitches over 20° where it had 2, its most lean the same. The rules leave curves as they are, and the wavy zigzag fixture's
+cusp sews 3.73 fills as on `main`. The sew-out at the next
 machine checkpoint sews the bands and lines as `main` plans them and with M13.60 ([machine
 testing](../plan/machine-testing.md)).
 
