@@ -396,7 +396,14 @@ mod tests {
             MIN_AREA,
         ];
         let cover = ["auto_base_offset_mm", "auto_base_rows", "auto_base_sliver_mm2", "auto_base_bare_percent"];
-        let thick = ["auto_thick_warn_fills", "auto_thick_fail_fills", "auto_thick_warn_points", "auto_thick_fail_points", "auto_thick_cap_fills", SHORT_STITCHES];
+        let thick = [
+            "auto_thick_warn_fills",
+            "auto_thick_fail_fills",
+            "auto_thick_warn_points",
+            "auto_thick_fail_points",
+            "auto_thick_cap_fills",
+            SHORT_STITCHES,
+        ];
         assert_eq!(
             keys,
             [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..], &thick[..], &[DETAILS_LAST, "auto_smooth_mm", COLUMN_OVERLAP]].concat()

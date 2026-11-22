@@ -309,7 +309,8 @@ mod tests {
         let spot = Spot { value: 5.0, at: Point::ORIGIN };
         let thinned = Thinned { taken: [0.0; 4], times: [0; 4], above: Over::default(), left: Over::default(), thickest: spot };
         let said = |times: usize, ran_out: bool| {
-            let capped = Capped { taken: [0.5, 0.0, 0.0, 0.0], times: [times, 0, 0, 0], left: Over::default(), thickest: spot, ran_out, pulled: [0; 2] };
+            let capped =
+                Capped { taken: [0.5, 0.0, 0.0, 0.0], times: [times, 0, 0, 0], left: Over::default(), thickest: spot, ran_out, pulled: [0; 2] };
             note(&thinned, &Ok(Some(capped)), 4.0).message
         };
         let (out, whole, nothing, none) = (said(1, true), said(1, false), said(0, true), said(0, false));
@@ -482,8 +483,15 @@ mod tests {
         // A plan within the cap is not gone through, and 2 fills say nothing.
         let (within, mut kept) = (plan(0, 2), plan(0, 2));
         assert!(
-            finished(&mut kept, &held, (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new(), &BTreeMap::new()), profile, &Names::default(), &Budget::DEFAULT)
-                .is_empty()
+            finished(
+                &mut kept,
+                &held,
+                (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new(), &BTreeMap::new()),
+                profile,
+                &Names::default(),
+                &Budget::DEFAULT
+            )
+            .is_empty()
         );
         assert_eq!(kept, within);
         // With the work to measure it and not to thin it, the plan stays as it is, and SC-I1119 says so.
@@ -510,7 +518,14 @@ mod tests {
         assert!(pass > measure, "{pass} {measure}");
         let budget = Budget { max_work: measure, ..Budget::DEFAULT };
         let mut kept = sewn.clone();
-        let said = finished(&mut kept, &held, (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new(), &BTreeMap::new()), profile, &Names::default(), &budget);
+        let said = finished(
+            &mut kept,
+            &held,
+            (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new(), &BTreeMap::new()),
+            profile,
+            &Names::default(),
+            &budget,
+        );
         assert_eq!(
             said.first().map(|said| (said.code, said.message.as_str())),
             Some((Code::AutoThinned, "No thread was taken from the spots above 4 fills: the last pass needs more work than the budget allows.")),
