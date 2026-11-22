@@ -767,10 +767,18 @@ fn req_auto_171_a_cap_out_of_work_while_it_pulls_points_in_keeps_what_it_pulled(
     assert!(pulled_some > 0, "{enough}");
 }
 
+/// The spacing of a column whose points 0.4 mm apart lie just as far apart as crowds: 5 % past it.
+const SPACED: f64 = 0.4 / (1.0 + crate::generators::satin::OFF);
+
 /// The fan with `crowd`, ready for the cap, with `rules`: its plan and measure, given to `check`.
 fn judged(crowd: f64, shares: Vec<f64>, check: impl Fn(&mut Cap, Point, &mut Meter)) {
+    spaced(crowd, shares, SPACED, check);
+}
+
+/// [`judged`], for a column with zigzag spacing `spacing`.
+fn spaced(crowd: f64, shares: Vec<f64>, spacing: f64, check: impl Fn(&mut Cap, Point, &mut Meter)) {
     let (mut sewn, column, _) = fanned(crowd);
-    let pulls: BTreeMap<ElementRef, Pullable> = column.iter().map(|element| (*element, Pullable { shares: shares.clone(), spacing: 0.4 })).collect();
+    let pulls: BTreeMap<ElementRef, Pullable> = column.iter().map(|element| (*element, Pullable { shares: shares.clone(), spacing })).collect();
     let rules = Rules { cap: 3.0, limit: 4.0, columns: &column, pulls: &pulls, ..rules() };
     let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
     let spot = thickness.most(Measure::Fills).at;
@@ -788,8 +796,8 @@ fn judged(crowd: f64, shares: Vec<f64>, check: impl Fn(&mut Cap, Point, &mut Met
 #[test]
 fn req_auto_171_a_point_is_crowded_closer_than_its_column_s_spacing_to_its_rail_s_neighbour() {
     // The fan's points sit at entries 1 to 21 of its block, after its jump: entry 11 is on the crowded
-    // rail, between 2 others there, and entry 12 on the open rail, 0.4 mm from its neighbours: the spacing,
-    // so not crowded.
+    // rail, between 2 others there, and entry 12 on the open rail, 0.4 mm from its neighbours: 5 % past the
+    // spacing, so not crowded.
     let crowded = (0, 11);
     let open = (0, 12);
     let moves = BTreeMap::new();
@@ -799,6 +807,15 @@ fn req_auto_171_a_point_is_crowded_closer_than_its_column_s_spacing_to_its_rail_
             let first = cap.pulled(crowded, 0, &moves, near, meter).unwrap();
             assert_eq!(first.is_some(), pulled, "{crowd}");
             assert!(cap.pulled(open, 0, &moves, near, meter).unwrap().is_none(), "{crowd}");
+        });
+    }
+    // Points 0.4 mm apart in a column spaced 0.39 mm lie within 5 % of it, as a bend's inside keeps them
+    // (`REQ-SAT-030`): crowded. In one spaced 0.37 mm they lie more than 5 % past it.
+    for (spacing, pulled) in [(0.39, true), (0.37, false)] {
+        spaced(0.4, vec![0.25, 0.5], spacing, |cap, _, meter| {
+            let near = cap.pass.thickness.point(cap.pass.stitch(crowded).unwrap().0);
+            assert_eq!(cap.pulled(crowded, 0, &moves, near, meter).unwrap().is_some(), pulled, "{spacing}");
+            assert_eq!(cap.pulled(open, 0, &moves, near, meter).unwrap().is_some(), pulled, "{spacing}");
         });
     }
     judged(0.05, vec![0.25, 0.5], |cap, _, meter| {

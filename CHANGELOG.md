@@ -3635,7 +3635,7 @@ What a user can do with this version, before its first release. The entries belo
 - Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes`, `TS-13C.pes`, `TS-13D.pes` and
   `TS-13E.pes` (M13.58, smooth satin edges). In the digitized half of each, a satin column keeps its
   spacing on the inside of a bend and sews each stitch full length, and the cap pulls crowded points in
-  only where a spot sews above 4 fills. The sheets sew 23,699, 14,425, 10,011, 19,237 and 5,822 stitches,
+  only where a spot sews above 4 fills. The sheets sew 23,699, 14,425, 10,012, 19,237 and 5,822 stitches,
   where they sewed 23,861, 14,511, 10,235, 19,401 and 5,932. TS-13C measures 111.396856 mm across, where it
   measured 111.396978, and TS-13E 23.997681 × 108.394518 mm, where it measured 23.998748 × 108.393742:
   the ends of a few columns lie a little farther out. The halves as drawn are as they were.

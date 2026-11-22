@@ -32,6 +32,7 @@ pub mod drawn;
 mod ends;
 mod lie;
 mod pairs;
+pub(crate) use pairs::OFF;
 mod short;
 mod split;
 mod underlay;

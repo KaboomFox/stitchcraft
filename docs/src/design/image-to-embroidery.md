@@ -1168,10 +1168,10 @@ column crowds in a gentle curve, and TS-13A's in a fan.
 - **Thickness decides where an end moves in** (`REQ-AUTO-171`). Where a spot still sews above the warning's
   limit once the cap's 3 kinds are done, the cap's last resort first pulls in crowded points of the
   columns there that move no point in as they are made. A point is crowded when it lies closer than its
-  column's spacing, 0.4 mm, to its rail's point before or after it. With the spacing kept on the inside, a
-  column's inside points lie the spacing apart only within 5 %, and at 0.35 mm 2 traced dogs, with their
-  thin lines kept and their details sewn last, sewed 4.12 and 4.04 fills, where they sewed under 4 before:
-  no point there was crowded enough to move. A point moves in along its 2 stitches, towards the middle of
+  column's spacing and 5 % to its rail's point before or after it: 0.42 mm at the spacing of 0.4 mm. The
+  inside of a bend keeps its points the spacing apart within 5 %, so this takes in every point there. At
+  0.35 mm, 2 traced dogs with their details sewn last sewed 4.12 and 4.04 fills, and at the spacing itself
+  one still sewed 4.04, where both sewed under 4 before: their points lay 0.41 mm apart, and none moved. A point moves in along its 2 stitches, towards the middle of
   their other ends, from where it first was, by its column's first inset and then by its second. Of those that lower the thickest spot, the one that lowers it most moves first, one
   at a time. A point whose 2 neighbours on its rail have both moved stays. The edge keeps every other
   stitch. A lettering column's points stay, and a column that pairs evenly moves a point no farther past its

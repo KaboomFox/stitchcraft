@@ -37,8 +37,9 @@ pub(crate) type Pair = [Point; 2];
 /// Lengths below this, in millimetres, count as none: a hundredth of a CSS pixel, as in Ink/Stitch.
 const NO_LENGTH: f64 = 0.01 * MM_PER_SVG_PX;
 
-/// How far off the spacing a pair may land, as a fraction of it, before it moves.
-const OFF: f64 = 0.05;
+/// How far off the spacing a pair may land, as a fraction of it, before it moves: the cap counts a point
+/// as crowded within it (`REQ-AUTO-171`).
+pub(crate) const OFF: f64 = 0.05;
 
 /// How many times a pair moves at most.
 const MOVES: u32 = 2;

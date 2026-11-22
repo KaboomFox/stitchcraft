@@ -19,6 +19,7 @@ use stitchcraft_plan::{Role, SewnStitch};
 
 use super::{Cap, NEAR, Ribbon, cell};
 use crate::auto::thin::Entry;
+use crate::generators::satin::OFF;
 use crate::normalize::near::to_side;
 
 /// A satin column whose crowded needle points the cap may pull in (`REQ-AUTO-171`): the shares of a stitch
@@ -122,7 +123,7 @@ impl Cap<'_, '_> {
         let before = pass.beside((block, from), false, meter)?.filter(|at| ours(*at));
         let after = pass.beside((block, to), true, meter)?.filter(|at| ours(*at));
         let apart = |at: Option<usize>| at.and_then(|at| pass.stitch((block, at))).map_or(f64::INFINITY, |(there, _, _)| there.distance(here));
-        if at_least(apart(before).min(apart(after)), column.spacing) {
+        if at_least(apart(before).min(apart(after)), column.spacing * (1.0 + OFF)) {
             return Ok(None);
         }
         let moved = [before, after].into_iter().flatten().filter(|at| moves.contains_key(&(block, *at))).count();
