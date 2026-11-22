@@ -73,6 +73,7 @@ pub stitchcraft_engine::auto::AutoParams::auto_min_triple_run_width_mm: <stitchc
 pub stitchcraft_engine::auto::AutoParams::auto_overlap_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_prefer: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_pull_compensation_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_short_stitches: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_smooth_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_stitch: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_thick_cap_fills: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
@@ -100,6 +101,7 @@ pub fn stitchcraft_engine::auto::Held::of(&stitchcraft_params::set::ParamSet) ->
 pub fn stitchcraft_engine::auto::Held::values(&self) -> [(&'static str, alloc::string::String); 6]
 pub const stitchcraft_engine::auto::ADVANCED: &str
 pub const stitchcraft_engine::auto::COLUMN_OVERLAP: &str
+pub const stitchcraft_engine::auto::BEND_OPENED: f64
 pub const stitchcraft_engine::auto::CONTOUR_FROM: stitchcraft_core::units::Mm
 pub const stitchcraft_engine::auto::CROWDED_CLOSER_THAN: f64
 pub const stitchcraft_engine::auto::CROWDED_INSETS: &str
@@ -125,6 +127,7 @@ pub const stitchcraft_engine::auto::OUTLINE_TOLERANCE: stitchcraft_core::units::
 pub const stitchcraft_engine::auto::OUTLINE_WIDTH: stitchcraft_core::units::Mm
 pub const stitchcraft_engine::auto::OVERLAP: &str
 pub const stitchcraft_engine::auto::PREFER: &str
+pub const stitchcraft_engine::auto::SHORT_STITCHES: &str
 pub const stitchcraft_engine::auto::STITCH: &str
 pub const stitchcraft_engine::auto::TOUCHING: f64
 pub const stitchcraft_engine::auto::WARNING_CHARS: usize
@@ -732,6 +735,7 @@ pub stitchcraft_engine::generators::satin::SatinLengths::min_stitch: stitchcraft
 pub stitchcraft_engine::generators::satin::SatinLengths::tolerance: stitchcraft_core::units::Mm
 pub stitchcraft_engine::generators::satin::SatinLengths::travel: stitchcraft_core::units::Mm
 pub struct stitchcraft_engine::generators::satin::SatinParams
+pub stitchcraft_engine::generators::satin::SatinParams::bend_open_percent: <stitchcraft_params::kinds::Percent as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::center_walk_underlay: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::center_walk_underlay_position: <stitchcraft_params::kinds::Percent as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::center_walk_underlay_repeats: <stitchcraft_params::kinds::Count as stitchcraft_params::kinds::ParamKind>::Value
@@ -771,6 +775,7 @@ pub const stitchcraft_engine::generators::satin::SatinParams::GROUP: stitchcraft
 pub const stitchcraft_engine::generators::satin::SatinParams::SPECS: &'static [stitchcraft_params::spec::ParamSpec]
 pub fn stitchcraft_engine::generators::satin::SatinParams::from_set(&stitchcraft_params::set::ParamSet) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
 pub fn stitchcraft_engine::generators::satin::SatinParams::from_set_as(&stitchcraft_params::set::ParamSet, stitchcraft_params::stitch_type::StitchType) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
+pub const stitchcraft_engine::generators::satin::BEND_OPEN: &str
 pub const stitchcraft_engine::generators::satin::CENTER_WALK_UNDERLAY: &str
 pub const stitchcraft_engine::generators::satin::CENTER_WALK_UNDERLAY_REPEATS: &str
 pub const stitchcraft_engine::generators::satin::CONTOUR_UNDERLAY: &str
