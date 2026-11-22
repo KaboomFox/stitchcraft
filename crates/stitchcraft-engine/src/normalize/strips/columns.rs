@@ -75,11 +75,11 @@ use crate::normalize::triangulation::Broken;
 /// The sharpest turn a line takes at a junction's middle and still sews as one column: the cosine of the angle
 /// between its 2 ways from there, 120°, for a turn of 60°. Each way is measured as a junction's branches are,
 /// to the line's first point at least the junction triangle's longest edge away.
-const CORNER: f64 = -0.5;
+pub(crate) const CORNER: f64 = -0.5;
 
 /// How far from square to the line an edge across a column's end may lie, and the column still end along
 /// it: the sine of 20°.
-const SQUARE: f64 = 0.342_020_143_325_668_7;
+pub(crate) const SQUARE: f64 = 0.342_020_143_325_668_7;
 
 /// How far, in millimetres, a point may lie off the line through the points before it and still be on a
 /// straight edge of the outline: the points added along an edge lie on it to within the region's grid.

@@ -123,8 +123,9 @@ fn req_auto_003_a_line_up_to_7_mm_is_a_satin_column_as_wide_as_it_is_drawn() {
         (Stitches::Satin, Stitches::Satin, Stitches::Satin, Stitches::FilledStroke)
     );
     assert!(Stitches::Satin.across() && Stitches::FilledStroke.across() && !Stitches::Running.across() && !Stitches::Fill.across());
-    // A line 3 mm wide sews as the satin column drawn as that line, keeping its other settings.
-    let line = with(drawn("line", &[(0.0, 0.0), (20.0, 0.0), (20.0, 15.0)], 3.0), &[("trim_after", "true")]);
+    // A line 3 mm wide sews as the satin column drawn as that line, keeping its other settings. It turns by 45°:
+    // one turning by more than 60° sews a column per leg (REQ-AUTO-178).
+    let line = with(drawn("line", &[(0.0, 0.0), (20.0, 0.0), (30.0, 10.0)], 3.0), &[("trim_after", "true")]);
     let column = as_satin(line.clone(), 3.0);
     assert_eq!(made(&line), vec![column.clone()]);
     // Planned with the cap above every spot: its miter's corner fans above the warning's limit, and there the

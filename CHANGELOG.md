@@ -2276,6 +2276,12 @@ What a user can do with this version, before its first release. The entries belo
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.60: clean ends of satin columns (`REQ-AUTO-177`, `REQ-AUTO-178`). Where a slanted or curved edge
+  cut a column's end, as a circle cuts a band, its stitches spread like a fan along the column, over the
+  shape beside it. Now they stay square to the column up to the end and grow shorter into the
+  corner. A line that turns by more than 60° at a sharp corner sewed one column round it, whose stitches
+  fanned round the inside of the corner. Now it sews a column for each leg, and the legs meet on the
+  corner's bisector. A narrow line walks its whole length once, then sews its legs back from its far end.
 - M13.58: smooth satin edges (`REQ-AUTO-170` to `REQ-AUTO-173`, `REQ-SAT-030`). A satin column that
   automatic digitizing makes sews every stitch from edge to edge, and keeps its spacing on the inside of a
   bend: the outside opens to 0.5 mm at the most, by the satin column's new setting `bend_open_percent`,
@@ -3641,6 +3647,10 @@ What a user can do with this version, before its first release. The entries belo
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13C.pes` (M13.60, clean ends of satin columns). In the digitized
+  half, the balloon string's lower end, which a curved edge cuts, sews square to the string up to its end.
+  The sheet sews 10,013 stitches, where it sewed 10,012, and its size, thread changes and jumps are as they
+  were.
 - Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes`, `TS-13C.pes`, `TS-13D.pes` and
   `TS-13E.pes` (M13.58, smooth satin edges). In the digitized half of each, a satin column keeps its
   spacing on the inside of a bend and sews each stitch full length, and the cap pulls crowded points in
