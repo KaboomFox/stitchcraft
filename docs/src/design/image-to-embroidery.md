@@ -846,7 +846,7 @@ stitches lie over its underlay and its first, as on a 6 mm column (3.35 fills ov
 passes 3 fills along the inner third of its band all round: its inner rail is 15 mm from the centre against
 25 mm for the outer. Its stitches lie 1.67 times as close there, over the zigzag underlay. The bare
 fabric lies in a thin band along the inner edge of the curved columns, the arch and the stroked circle,
-where the crowded needle points move in along their stitches (`REQ-AUTO-071`). It is a satin column's own,
+where the crowded needle points moved in along their stitches (`REQ-AUTO-071`, retired in M13.58). It is a satin column's own,
 5.92 mm² on the sheet 6 mm wide. The bars and the rings leave none. The short stitches and the jumps of a
 fill's row ends mostly go.
 
@@ -1113,8 +1113,8 @@ middles, and its A's counter, 0.56 mm across inside, isn't kept open.
 
 ### Smooth satin edges
 
-M13.58 plans this section's rules (`REQ-AUTO-170` to `REQ-AUTO-173`, `REQ-SAT-030`). Until it is built, a column moves its
-crowded points in as [The thickest spot](#the-thickest-spot) says.
+M13.58 built this section's rules (`REQ-AUTO-170` to `REQ-AUTO-173`, `REQ-SAT-030`). Before it, a column moved its
+crowded points in as it was made (`REQ-AUTO-071`, retired), which is now the `crowded` value of `auto_short_stitches`.
 
 The owner reviewed 18 simple drawings sewn by automatic digitizing on 2026-11-21. On most of them the
 biggest fault was the small stitches. On the inside of a curve every other stitch of a satin column ends
@@ -1163,15 +1163,16 @@ column crowds in a gentle curve, and TS-13A's in a fan.
   column sewn at a spacing of 0.5 mm along that edge. A bend whose inside radius is 0.8 of its outside's or
   more sews with no crowding at all, and a tighter one crowds by the ratio of its radii over 1.25.
 - **Every stitch runs full length as it is made** (`REQ-AUTO-170`). An automatic column moves no needle
-  point in.
+  point in: digitizing sets its `short_stitch_distance_mm` to 0, and its `short_stitch_inset` to 25 50, the
+  first held as `REQ-AUTO-085` holds it, which is what the cap pulls a point in by.
 - **Thickness decides where an end moves in** (`REQ-AUTO-171`). Where a spot still sews above the warning's
   limit once the cap's 3 kinds are done, the cap's last resort first pulls in crowded points of the
-  columns there. A point is crowded when it lies closer than 0.35 mm to its rail's point before or after
-  it. A point moves in along its 2 stitches, towards the middle of their other ends, by a quarter of the
-  way and then by half. Of those that lower the thickest spot, the one that lowers it most moves first, one
+  columns there that move no point in as they are made. A point is crowded when it lies closer than 0.35 mm
+  to its rail's point before or after it. A point moves in along its 2 stitches, towards the middle of
+  their other ends, from where it first was, by its column's first inset and then by its second. Of those that lower the thickest spot, the one that lowers it most moves first, one
   at a time. A point whose 2 neighbours on its rail have both moved stays. The edge keeps every other
   stitch. A lettering column's points stay, and a column that pairs evenly moves a point no farther past its
-  edge than `REQ-AUTO-085` holds it. It stops once no spot is above the limit or no point lowers it, and then
+  edge than `REQ-AUTO-085` holds it, since its first inset is held. It stops once no spot is above the limit or no point lowers it, and then
   the last resort takes points as `REQ-AUTO-112` says.
 - **SC-I1119 counts what moved** (`REQ-AUTO-172`). The note says how many column points the cap pulled in,
   and where.
@@ -1188,7 +1189,8 @@ draws, and lettering, keep 0. The rules are in these files:
 |---|---|
 | Spacing on the inside | `generators/satin/pairs.rs`, the gap between 2 pairs |
 | No point moved in as made | `auto/mod.rs`, `satin_params` |
-| Crowded points pulled in | `auto/cap.rs`, the last resort, before points are taken |
+| Crowded points pulled in | `auto/cap/pull.rs`, before the cap's last resort takes points |
+| The columns it may pull in | `pipeline.rs`, the automatic columns with `short_stitch_distance_mm` 0 |
 | The setting | `auto/params.rs`, a rule of automatic digitizing |
 
 The cap moves needle points for the first time. Until now it only took them out. A moved point keeps its
@@ -2302,8 +2304,8 @@ On the traced dogs every kind adds a little at the peaks. At their spots of 4 fi
 fills, the overlap 0.85, a fill's rows 0.45, its turns and travel 0.6 to 0.8, the outline 0.3 to 0.4 and
 the locks 0.2 to 0.45. In a third of those spots 5 elements or more meet, each with 0.3 fill or more.
 
-2 rules for single shapes come first. An automatic column moves its crowded needle points in
-(`REQ-AUTO-071`): a point closer than 0.35 mm to the last one left on its rail moves in by 25 % of its
+2 rules for single shapes come first. An automatic column moved its crowded needle points in
+(`REQ-AUTO-071`, until [Smooth satin edges](#smooth-satin-edges) made it the `crowded` setting): a point closer than 0.35 mm to the last one left on its rail moves in by 25 % of its
 stitch, the next by 50 %, as digitizing programs shorten stitches in a sharp turn. A rail's points lie
 0.4 mm apart on a straight column, so no straight column loses any of its width. A larger distance takes
 more thread away only because it thins every column's edges. And everything digitizing makes locks in

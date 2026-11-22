@@ -538,6 +538,30 @@ for fabric showing between it and the fill, and for a ridge where the two lie on
 [Image to embroidery](../../design/image-to-embroidery.md#less-overlap-under-a-parts-column) gives the
 numbers.
 
+### Smooth satin edges
+
+A satin column's stitches run from edge to edge, and on the inside of a curve they keep their spacing: the
+outside opens up to 0.5 mm, where a straight column's stitches lie 0.4 mm apart. Its inside edge sews as one
+row. A stitch ends short of the edge only where the spot would otherwise sew more than 4 fills of thread,
+where a column fans into a corner over other shapes. There the plan pulls the crowded ends in, a quarter
+of the column and then half, and the report says how many (`SC-I1119`).
+
+**Short stitches** (`auto_short_stitches`) gives the look from before:
+
+```sh
+stitch plan drawing.svg --auto -o drawing.pes --set auto_short_stitches=crowded
+```
+
+With `crowded` every column keeps its spacing on the outside, and every end closer than 0.35 mm to the one
+before it on its edge moves in, a quarter of the column and then half in turn. A column sews a little less
+thread at the inside of its curves so, and its inside edge shows a second row of short ends. A shape that
+sets `short_stitch_distance_mm` or `short_stitch_inset` keeps its own either way, and so does one that sets
+`bend_open_percent`, the satin column's own setting for how far the outside opens.
+
+The cost of the default is on the outside of a tight curve. Its stitches lie up to 0.5 mm apart, and
+on a thin fabric a thread-thin gap can show between them. Sew the test piece of the next machine
+checkpoint both ways before you change the setting on a whole design.
+
 ### Changing the choice
 
 Each shape says which rule chose its stitches, with the numbers that decided it (`SC-I0912`, in the report

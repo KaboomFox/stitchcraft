@@ -147,13 +147,14 @@ pub const OUTLINE_WIDTH: Mm = Mm::from_tenths(4);
 pub const OUTLINE_TOLERANCE: Mm = Mm::from_tenths(1);
 
 /// How close, in millimetres, a needle point of an automatic satin column may come to the last one left in
-/// place on its rail before it is moved in along its stitch (`REQ-AUTO-071`): closer than the 0.4 mm that a
+/// place on its rail before it is moved in along its stitch, with `auto_short_stitches` `crowded` (`REQ-AUTO-173`),
+/// and how close a crowded point lies where the cap may pull it in (`REQ-AUTO-171`): closer than the 0.4 mm that a
 /// rail's points lie apart on a straight column, so that only the points of a curve's inside crowd, where a
 /// column fans and lays up to 4 fills of thread by itself, and every stitch of a straight one spans it.
 pub const CROWDED_CLOSER_THAN: f64 = 0.35;
 
 /// How far the crowded needle points of an automatic satin column ([`CROWDED_CLOSER_THAN`]) are moved in, in
-/// percent of their stitch's width, taking turns (`REQ-AUTO-071`): a quarter and a half, so that of 3
+/// percent of their stitch's width, taking turns (`REQ-AUTO-171`, `REQ-AUTO-173`): a quarter and a half, so that of 3
 /// stitches that fan to one point one reaches it, one ends a quarter of the column short of it and one half.
 pub const CROWDED_INSETS: &str = "25 50";
 
