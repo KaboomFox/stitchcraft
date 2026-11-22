@@ -3155,8 +3155,8 @@ by taking needle points out. 2 kinds of design still ended above the cap or the 
 since the cap's last resort was fixed (#327), 4 traced pictures ended at 4.6 to 5.5 fills, where `--style photo`
 sews them at 3.9 to 4.0. And since M13.8 a drawn document is digitized automatically by default, and the drawn
 fixture went from 2.74 to 3.85 fills. M13.57 measured what lies stacked there and prototyped 6 ways to take
-it away. Its first phase changes nothing that sews: the rule, its setting and a message are planned
-(`REQ-AUTO-167` to `REQ-AUTO-169`).
+it away. The build phase made the rule, its setting and the message (`REQ-AUTO-167` to `REQ-AUTO-169`),
+measured again on main as it was after M13.58, M13.60 and M13.61.
 
 **How it was measured.** Every document of the set was planned with main's engine at `de4f7934`, under the
 default style, whose values are the photo style's, and under the logo style. The set is made of the repository's
@@ -3288,14 +3288,15 @@ The candidates compare as follows.
 Previews of 3 unlike designs, a traced dog and a lettered badge under the logo style and a drawn badge
 under the default style, were drawn before and after f and d and looked at. f looks as main's engine does,
 and the spots at 4 fills or more are mostly gone from the thickness preview. d shows lighter, striped
-columns. The pictures are of the owner's photos and stay outside the repository. The build phase adds one
-drawn in code, 2 columns meeting before and after, to the docs' pictures.
+columns. The pictures are of the owner's photos and stay outside the repository. The docs' picture of 2 columns
+meeting is planned from `docs/fixtures/joins.svg`, at the default and at 1 mm
+([where satin columns meet](../user/stitches/automatic.md#where-satin-columns-meet)).
 
 **The rule.** M13.57 builds f (`REQ-AUTO-167`). It is a default with a setting, `auto_column_reach_mm`
 (`REQ-AUTO-168`), 0.4 mm by default, from 0 to 2 mm, where 1 mm sews as before:
 
 - It acts on the cause the measure shows, a column's reach under a later column, with no second plan, size
-  limit or guard for a picture. It didn't sew any design thicker on either style, and didn't add a stitch astray,
+  limit or guard for a picture. On main at `de4f7934` it didn't sew any design thicker on either style, and didn't add a stitch astray,
   a jump thread or a thread change.
 - The bare-fabric measure doesn't pull stitches in, so it can't say how little reach is enough on fabric,
   and it rose on 9 designs of 30 under the logo style. The setting is the control if the sew-out shows
@@ -3305,6 +3306,37 @@ drawn in code, 2 columns meeting before and after, to the docs' pictures.
 It doesn't take the logo style under the limit: 20 designs of 39 stay above 4 fills. What is left there is
 the same 2 columns' tops, which the last resort doesn't thin, and lettering's columns, which it leaves
 whole. So the logo style also says so (`REQ-AUTO-169`).
+
+**As built.** A column that digitizing made reaches `auto_column_reach_mm` past a rail along which a satin
+column sewn after it runs for more than half the rail's length. Along any other shape it reaches the overlap,
+and a rail along both reaches the smaller. Setting 1 mm sews exactly as main did. The build was measured again
+on main after M13.58, M13.60 and M13.61, which changed what sews there. The set is 37 designs: the 31 of the
+first table that still exist, the lettered patch the cases draw, and the 6 traced photos that M13.58 and M13.60
+measured. The 9 local photos of the first table were deleted and are left out. TS-13A to TS-13E plan the same
+with the rule, so their golden files don't move.
+
+| Style | Reach | Designs changed | Designs above 4 | mm² at 3.25 or more | mm² at 4 or more | Bare fabric, mm² |
+|---|---|---:|---:|---:|---:|---:|
+| logo | 1 mm, main | | 17 | 4,827 | 743.8 | 199.9 |
+| logo | 0.3 mm | 20 | 13 | 3,443 | 167.2 | 213.8 |
+| logo | 0.4 mm, the default | 20 | 14 | 3,588 | 182.5 | 212.3 |
+| logo | 0.6 mm | 20 | 14 | 3,972 | 308.5 | 207.1 |
+| default | 1 mm, main | | 6 | 896 | 1.2 | 40.8 |
+| default | 0.4 mm, the default | 9 | 4 | 536 | 1.2 | 40.8 |
+
+On that main, 2 columns' tops on each other still make 91 % of the logo style's area at 4 fills or more. At
+0.4 mm the logo style keeps a quarter of that area, and the default style 60 % of its area at 3.25. 0.3 mm
+takes a little more, but bares fabric on 10 designs. Bare fabric rose on 9 logo designs, by 2.61 mm² at most,
+on the snap badge, whose count of gaps stayed 2. Its realistic preview shows its joins closed, and main's
+navy showing through between 2 of its rings is gone.
+
+One design's thickest spot rose. The traced pear, under the default style, sews 3.95 fills at its stem,
+where 2 satin columns lie side by side, and sewed 3.86. Its area at 3.25 fills or more fell from 3.5 to 2.75
+mm². On main that spot sews 4.38 fills before the cap, above the warning's limit, so the cap pulls 2 crowded
+points in and takes 6.3 mm of doubled top stitches there. With the shorter reach it stays under 4 before the
+cap, and the cap, which leaves a column's top stitches below the limit, takes 1.7 mm. The cap acts only
+above 4, so a spot it used to lower to 3.86 can now rest at 3.95. That is an open point for a later step on
+the cap. No design sews above 4 fills that sewed at 4 or under it on main.
 
 **The message.** When a design ends with a spot at the limit or above it, and a shape digitizing made lays
 thread there and has `auto_prefer` set to `satin`, as the logo style sets it, `SC-W0913`'s hint reads:
