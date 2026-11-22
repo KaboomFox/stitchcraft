@@ -119,12 +119,14 @@ jumps and colour changes, which the rethreads and the cuts at the machine are co
 | Words on a cream field (Hexmira at 8 and 10 mm, Hexmira 7.6 mm tall, and VOLKAR in Barstitch Bold 12.5 mm tall) | M14.9, M13.50 | Made by hand: a cream field drawn 3 mm round the word, with the word set on it as text |
 | Bars and rings 6, 8 and 10 mm wide | M13.54 | `bar-8mm.svg` and its relatives from the commands after this table |
 | The test piece of 12 tiles under satin columns | M13.55 | Made by hand. Its tiles are fills 20 mm wide in navy and in orange, with a black satin column along each tile's top, straight on some tiles and curved on the others, in widths from 2 to 6 mm. No file of the repository draws it |
+| 2 mirrored leaves, a crescent and 2 rays, once as `main` plans them and once with M13.59 | M13.59 | `one-shape.svg` from the commands after this table, `stitch plan one-shape.svg --auto -o one-shape.pes` at each commit. Look at whether the leaves sew alike, whether the crescent's fill and outline reach its points with no seam, and how sharp each ray's point sews against its pull compensation held to 40 % |
 | A circle 40 mm across, its fill in one colour and a 2 mm stroke round it in another | M13.8 | Made by hand in VectorCraft, without StitchCraft effects. `stitch plan circle.vectorcraft -o circle.pes`, and again with `--no-auto` |
 
-The arc, and the bars and the rings of M13.54, each written by one command from nothing but the command
+The arc, the bars and the rings of M13.54, and M13.59's shapes, each written by one command from nothing but the command
 itself:
 
 ```sh
+printf '<svg xmlns="http://www.w3.org/2000/svg" width="80mm" height="40mm" viewBox="0 0 80 40"><path fill="#3a7d44" d="M16.5 10Q8 5 2 11Q9 16 16.5 10Z"/><path fill="#3a7d44" d="M17 15Q25 9 32 14Q25 20 17 15Z"/><path fill="#f4d9a0" d="M45 3Q22 18 45 33Q38 18 45 3Z"/><path fill="#e8a900" d="M55 30L56 8L57 30Z"/><path fill="#e8a900" d="M62.2 30L63 10L63.8 30Z"/></svg>\n' > one-shape.svg
 printf '<svg xmlns="http://www.w3.org/2000/svg" width="110mm" height="60mm" viewBox="0 0 110 60"><path d="M 10 55 A 45 45 0 0 1 100 55" fill="none" stroke="#000"/></svg>\n' > arc.svg
 for w in 6 8 10; do
   awk -v w=$w 'BEGIN { printf "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"60mm\" height=\"20mm\" viewBox=\"0 0 60 20\"><path fill=\"#0a55a3\" d=\"M5 %gH55V%gH5Z\"/></svg>\n", 10 - w / 2, 10 + w / 2 }' > bar-${w}mm.svg
