@@ -235,8 +235,9 @@ The fill then looks like a satin column without the fan. A dot is the smallest c
 **An uneven part is filled** (`REQ-AUTO-032`) for what its columns would do: a part of several lines sews a column along each, and
 the columns meet at its junctions. Where the strokes are even, as a letter's are, the columns meet cleanly.
 Where the width swells and shrinks, each column fans at its ends and the outline sews scalloped. A part of
-one line isn't held to its evenness: a leaf and a tapering stroke narrow smoothly, and one satin column
-sews each well. M13.59 plans to hold such a part to it once it is 4 mm wide
+one line is held to its evenness once it is 4 mm wide somewhere, and is then filled whole, with no piece
+leaving the fill: a leaf or a lens sews as one fill with its outline. A narrower one, a ray or a tapering
+stroke, narrows smoothly, and one satin column sews it well
 ([shapes whose width swells and tapers](#shapes-whose-width-swells-and-tapers)). A piece of an uneven part that is narrower than the narrowest satin stroke leaves the
 fill, cut as a narrow part of a broad one is ([Shapes in parts](#stitch-types-by-width)), and sews as a line.
 The measure is of the whole part, so a letter of a thick and a thin stroke is uneven too, though each
@@ -432,9 +433,9 @@ changes stay as they were:
 
 ### Shapes whose width swells and tapers
 
-Planned (M13.59, `REQ-AUTO-174` to `REQ-AUTO-176`, `REQ-SAT-031`). A shape whose width swells and tapers
+Built in M13.59 (`REQ-AUTO-174` to `REQ-AUTO-176`, `REQ-SAT-031`). A shape whose width swells and tapers
 sews as one fill with its outline. A piece of a broad part whose width falls to a point stays in the
-part's fill, and a satin column that narrows to a point sews to a point. Nothing of it is built yet. The owner reviewed 18 drawings
+part's fill, and a satin column that narrows to a point sews to a point. The owner reviewed 18 drawings
 sewn by automatic digitizing on 2026-11-21, and 3 of her notes have one cause, the choice between a satin
 column and a fill for a shape whose width changes along it:
 
@@ -521,9 +522,9 @@ bound still parts twins, on specks. e, an outline round a column among outlined 
 with n no column 4 mm or wider is left of a pointed oval. The remaining columns keep about one width (bars,
 rings, strokes, letters) or are narrower than a fill's narrowest piece (rays, strands of fur).
 
-#### The proposal
+#### The rules
 
-n + b + d, by the settings there are, as rules:
+The owner chose n + b + d on 2026-11-22. They are built by the settings there are:
 
 - **A part of one line** at least `auto_min_fill_width_mm` (4 mm) wide somewhere, whose width varies by
   more than `auto_max_unevenness` (0.3) of itself, is filled whole when `auto_fill_uneven` is on: a leaf, a
@@ -545,6 +546,49 @@ shape can't be set apart from the others, and Expand serves that.
 What changes besides: `REQ-AUTO-032` no longer exempts a part of one line, and the column of the rules'
 fixture `rules.svg` (its leaf, 4 mm wide) and the star points of `star.svg` and TS-13C sew as fills. The
 sew-out of the leaves, the crescent and the rays at MC-8 confirms or changes the 40 %.
+
+How it is built. The rules measure a part of one line against a fill's narrowest piece only when its width
+varies by more than the bound and uneven parts are filled (`Measures::fill_wide`, in
+`auto::columns::measured`): that shrinks the part once, and other parts cost nothing more. A piece that
+tapers is kept in the fill as the narrow parts are sorted (`auto::narrow`), and its shape's `auto_stitch`
+of `satin` keeps it a column. The satin column's processor holds each side's move
+(`generators::satin::compensation`), its share drawn at random included, so a column with random width
+still draws its numbers as before.
+
+#### Built, measured on main with M13.58 and M13.61
+
+Measured on 2026-11-22 on main at `54424808`, which has M13.58's satin edges and M13.61's wheels, against
+the build, on the set above. Area is at the cap (3.25 fills) or above:
+
+| Set | Area above the cap | Above 4 fills | Jump threads |
+|---|---|---|---|
+| The 18 drawings | 66.4 to 64.1 mm² | none, as on main | 125 to 124 |
+| The fixtures | 2.7 to 1.2 mm² | none | 63 to 59 |
+| The traced documents | 369.2 to 349.3 mm² | none | 335, as on main |
+| 4 photos | 59.3 to 44.1 mm² | 1.2 mm², as on main | 1,103 to 1,101 |
+| The engine's set | 121.25 to 107.25 mm² | none | 171 to 167 |
+| 18 sheets of letters | 669.25 to 666.25 mm² | 13 mm² on one sheet, as on main | 2,027, as on main |
+
+- **Points.** 0.5 mm from each ray's point, the rays sew 0.00 to 0.32 mm wide, where main sews 0.90 to 0.98.
+  The crescent's, the leaves' and the lake's points sew 0.00 to 0.35 mm wide as fills. The leaves sew alike.
+- **TS-13D.** The white disc round the abutting emblem's star is a ring whose width varies between the
+  star's points, of one line and wider than 4 mm in places. It is filled whole under the star now, and the
+  star sews on it with its points whole. The sheet's thickest spot falls from 3.97 to 3.79 fills, and its
+  area above the cap from 19.25 to 3.25 mm². M13.61 left it a column, since its rails differ by 1.12 times.
+- **The hold alone,** measured against the build with `pull_compensation_max_percent` left empty, still
+  points the rays: M13.58 changed no pull compensation. It costs a little thickness at points:
+  the badges' thickest spot rises from 3.96 to 3.99 fills, the pear's from 3.86 to 3.95, TS-13A's from 3.95
+  to 3.98, and 2 sheets of letters from 3.90 to 3.96 and from 3.95 to 3.98. Each stays under 4. A column's
+  stitches near its point keep their spacing over a narrower width.
+- **Worse.** The flower's right leaf, filled with its outline over the stem's column, sews 1.2 mm² above
+  the cap, where main sews none. The sunrise sews 7.5 mm² above it, where main sews 7.0, at its rays' points.
+- **Time.** Planning the drawings and the traced documents took 12.39 s on main and 12.45 s with the build,
+  the fastest of 3 runs each.
+- **A crescent's points.** The outline runs through each point once, in along one edge and out along the
+  other (`REQ-AUTO-175`'s case). The fill's last rows reach to 0.2 mm from the point, and their turns run
+  0.1 to 0.2 mm beside the outline for the last 0.5 mm. In a preview they read as a fork. They lie under the
+  outline's thread, which is 0.4 mm wide. Holding a fill back from an outline at its points would move
+  every outlined fill, and is left for a step of its own.
 
 M13.58 keeps a column's spacing on the inside of a bend and pulls stitch ends in only where a spot would
 sew above 4 fills. A pointed oval sewn as a column fans its stitches round its ends, and M13.58 would open the

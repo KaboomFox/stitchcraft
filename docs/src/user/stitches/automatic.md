@@ -187,7 +187,7 @@ thin stroke, a blob with 2 tails, a nose with 2 nostrils and a leaf.
 **Digitized**
 
 <!-- shot: auto-rules -->
-![The same shapes digitized automatically. The blob sews as a small tatami fill, and so does the letter T, bar and stem. The blob with tails sews as a fill with a triple run along each tail. The nose sews as one fill with the 2 nostrils sewn on it. The leaf, which swells from its points to 4 mm wide, sews as one fill with its outline.](../../images/generated/auto-rules.png)
+![The same shapes digitized automatically. The blob sews as a small tatami fill, and so does the letter T, bar and stem. The blob with tails sews as a fill with a triple run along each tail. The nose sews as one fill with the 2 nostrils sewn on it. The leaf sews as one satin column from tip to tip.](../../images/generated/auto-rules.png)
 <!-- /shot -->
 
 The T shows the rule's limit. Each of its strokes is even, but they are unlike each other, so the letter as

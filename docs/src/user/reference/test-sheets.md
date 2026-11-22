@@ -339,7 +339,7 @@ After sewing, check:
 
 ## TS-13B — Pictures digitized automatically: letters and lines traced as areas
 
-110.6 × 148.4 mm · 14425 stitches, 67 jumps, 66 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+110.6 × 148.4 mm · 14426 stitches, 67 jumps, 66 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -363,7 +363,7 @@ After sewing, check:
 
 ## TS-13C — Pictures digitized automatically: lines, and shapes in parts
 
-111.4 × 107.8 mm · 10012 stitches, 31 jumps, 30 trims, 9 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+111.4 × 107.8 mm · 9970 stitches, 27 jumps, 26 trims, 9 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -386,7 +386,7 @@ After sewing, check:
 
 ## TS-13D — Pictures digitized automatically: a traced emblem
 
-89.8 × 100.4 mm · 19237 stitches, 22 jumps, 21 trims, 10 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+89.8 × 100.4 mm · 19534 stitches, 23 jumps, 22 trims, 10 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -394,7 +394,7 @@ Drawn as a design whose shapes StitchCraft digitizes automatically, as `--auto` 
 
 ![TS-13D as it will sew: 2 emblems, a navy square in a white frame with a red star on a white disc and 3 gold bars, traced abutting and stacked, twice. At the top, digitized, both emblems sew alike: one navy fill under the disc and the bars, the bars satin columns, and the white round each star a satin column. At the bottom, in paint order, every shape is a fill.](../../images/generated/testsheet-ts-13d.png)
 
-Threads: White, Prussian Blue, Red, Deep Gold, White, Deep Gold, Red, Prussian Blue, Prussian Blue (stop), Red, White, Deep Gold.
+Threads: White, Prussian Blue, Red, Deep Gold, White, Deep Gold, Red, Prussian Blue, Prussian Blue (stop), White, Red, Deep Gold.
 
 After sewing, check:
 

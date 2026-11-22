@@ -2276,6 +2276,19 @@ What a user can do with this version, before its first release. The entries belo
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.59: shapes whose width swells and tapers (`REQ-AUTO-174` to `REQ-AUTO-176`, `REQ-SAT-031`). A part
+  of an automatic shape whose width swells and tapers, a leaf, a lens or a petal, is filled whole with its
+  outline once it is 4 mm wide somewhere (`auto_min_fill_width_mm`). It sewed as a satin column, or was
+  filled when its column crowded, so 2 like leaves could sew 2 ways. A narrower one, such as a ray, keeps
+  its column. A broad shape's points that taper, a crescent's tips or a star's, stay in its fill, where
+  they sewed as columns beside it. An even stick or string still sews as a column over the fill. The white
+  disc round TS-13D's star is filled whole now, and the star sews on it whole. Automatic satin columns hold
+  their pull compensation to 40 % of each stitch's width, by the satin column's new setting
+  `pull_compensation_max_percent`, so a ray sews to its point: 0.5 mm from its point it sews at most
+  0.32 mm wide, where it sewed up to 0.98 mm. The `satin` choice of `auto_prefer`, the `logo` style and a
+  shape's `auto_stitch` keep columns as before. The area that sews 3.25 fills or more falls on every set
+  measured. The cost is at points: 4 designs and 2 sheets of letters sew up to 0.09 fills thicker at their
+  thickest spot, each under 4. MC-8 sews 2 leaves, a crescent and 2 rays both ways.
 - M13.58: smooth satin edges (`REQ-AUTO-170` to `REQ-AUTO-173`, `REQ-SAT-030`). A satin column that
   automatic digitizing makes sews every stitch from edge to edge, and keeps its spacing on the inside of a
   bend: the outside opens to 0.5 mm at the most, by the satin column's new setting `bend_open_percent`,

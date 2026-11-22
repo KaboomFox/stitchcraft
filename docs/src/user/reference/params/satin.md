@@ -125,6 +125,19 @@ lengthen the column. 2 values set the start, then the end.
 - **Default:** `0`
 - **Ink/Stitch:** same key, meaning and default
 
+### `pull_compensation_max_percent`
+
+**Most pull compensation.** The farthest pull compensation moves each end of a stitch out, in percent of the stitch's width.
+A column that narrows to a point then narrows to it: at 40, a stitch sews at most 1.8 times as
+wide as drawn on each side's move. A move inward isn't held. Empty, pull compensation moves the
+ends as far as it says. 2 values set the first rail's side, then the second's. Automatic
+digitizing sets 40 on its columns.
+
+- **Accepts:** a percentage from 0 to 100, or 2 separated by a space, or empty
+- **Default:** empty
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
 ## Random variation
 
 ### `random_width_decrease_percent`
