@@ -1209,6 +1209,13 @@ mod tests {
             [crowds(&tight, &[], low), crowds(&tight, &[], low - 1), crowds(&tight, &[], 0)],
             [Ok(true), Err(Exhausted::Work), Err(Exhausted::Work)]
         );
+        // Measuring it is a unit for each corner of its two rails, on top of finding its column.
+        let mut meter = Budget::DEFAULT.meter();
+        let found = strips::columns(&tight, piece(&tight), &[], 1.0, &mut meter).unwrap().unwrap().unwrap();
+        let [column] = found.as_slice() else { panic!("{} columns", found.len()) };
+        let corners = u64::try_from(column.rails[0].len() + column.rails[1].len()).unwrap();
+        assert!(column.rails.iter().all(|rail| rail.len() > 2), "{corners}");
+        assert_eq!(low, all - meter.work_left() + corners);
     }
 
     #[test]
