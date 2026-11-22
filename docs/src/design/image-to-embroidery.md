@@ -3306,7 +3306,7 @@ it.
 
 ### A small detail on top
 
-(`REQ-AUTO-182`, planned, M13.61.) The owner reviewed 18 drawings sewn by automatic digitizing on
+(`REQ-AUTO-182`, M13.61.) The owner reviewed 18 drawings sewn by automatic digitizing on
 2026-11-21. Of the fish she wrote: "biggest issues is the black part of the eye". The eye is a white disc
 4.4 mm across on the body, and the pupil a black disc 1.8 mm across on the eye. It sewed as a wheel of white
 stitches that all ran in to the pupil, and the black showed only between their ends. The rule she was shown
@@ -3391,26 +3391,40 @@ bend. The eye's ring is all bend, 5 to 1 between its rails once compensated. Its
 M13.58's rule alone makes the eye worse. With rule a there is no ring left to bend, and the 2 rules don't
 meet.
 
-**The rule proposed: a.** A part of an automatic area with holes that other automatic areas fill is held to
-the crowding bound too. When it would sew as one satin column that sews more than 2 mm of one rail to 1 mm
-of the other, the area is digitized whole beneath those details with its holes closed. A ring that
-doesn't crowd, an outline 3 mm wide round a disc 10 mm across, keeps its column, and so does a ring on bare
-fabric. The rule is stated by geometry alone and uses the bound the rules already have, so it needs no
-setting: `auto_stitch` set to satin on the shape still sews a column. It changes 4 of 63 designs and no thread change
-or jump thread.
+**Phase 1 proposed rule a,** a ring whose holes other automatic areas fill held to the crowding bound, as
+it measured it on 63 designs. The owner said yes on 2026-11-22, with no setting.
 
-**What gets worse.** The 4 designs sew 197 more stitches, 140 of them on TS-13D. TS-13D also says `SC-I0504` once more, for 4 needle points merged
-in the white's fill: its list of what it says and its check of the white round the star change in the build.
-The fills' outlines are polygons of chords up to 1.1 mm. They lie 0.08 to 0.09 mm inside the circle, under
-a thread's width, and the queued step on small circles takes them up. Jump threads are as before.
+**The build measures the bound from end to end of the rails.** It ran the engine's own test pictures too, and one
+of them showed what the 63 designs didn't. The lettered patch is a red plate with a cream field stacked on
+it, and shown, the plate is a border 3 mm wide round the field. Measured by a stretch, as `REQ-AUTO-068`
+measures a part without holes, the border crowds at each of its cut corners, more than 2 mm of its outer
+edge to 1 mm of its inner one. Rule a filled it whole under the field: the patch lost its satin border,
+sewed 108 more stitches, and its thickest spot rose from 3.98 to 4.00 fills. So the ring is measured from end
+to end of its rails. It closes its holes only when one of its rails, the whole way round, is more than 2 times as long as
+the other, a wheel.
 
-**Pictures,** each as main sews it beside rule a, were looked at close up: the fish's eye, TS-13D's disc
-and star, TS-13A's badge, and the night sky's star and dot, which don't change.
+| Ring | Its column's rails, outside / inside | Crowds a stretch | Crowds as a whole |
+|---|---|---|---|
+| The fish's eye round its pupil | 13.82 / 5.65 mm, 2.45 | yes | yes: filled under the pupil |
+| TS-13A's abutting badge, a square round a gold disc | 48.00 / 18.84 mm, 2.55 | yes | yes: filled under the disc |
+| TS-13D's white disc round its star | 57.17 / 51.13 mm, 1.12 | yes, at the star's points | no: a column, as on main |
+| The lettered patch's border round its field | 177.86 / 157.37 mm, 1.13 | yes, at its corners | no: a column, as on main |
+| The guard ring, 3 mm wide round a disc 10 mm across | 50.26 / 31.41 mm, 1.60 | no | no |
 
-**For the build.** `columns.rs` holds a ring to the bound when `layers.rs` looks for details.
-`REQ-AUTO-068` then says that rings round details are measured, and `REQ-AUTO-023` that a crowded ring
-closes its holes. `ts13.rs` changes TS-13D's list and check, and the goldens of TS-13A and TS-13D are blessed. The
-eye goes on the next machine checkpoint's list.
+On the 63 designs only the fish and TS-13A change, where rule a changed 4. TS-13A sews 19 more stitches and the fish 10, and TS-13A's
+digitized half sews down 8 of its 18 jump threads where it sewed down 9. No thread change or jump thread is
+added, and no design sews thicker. In the cases a square border and a round one,, each 3 mm wide round a
+field stacked on it, keep their columns. `columns.rs` measures the ring (`ring_crowds`) when `layers.rs`
+looks for details. The rule has no setting: `auto_stitch` set to satin, or to run, still sews a ring as
+asked.
+
+**Open points, measured and left to later steps.** TS-13D's white is a ring whose hole is the star, so its
+width varies between the star's points and its notches. Its column sews after the star it borders, and its
+inner ends are pulled over the star's points. That is not this step's test: a wheel is. Measured with
+M13.59's prototype (a part whose width varies by more than 0.3 filled whole), the ring, 2.87 mm wide on
+average and varying by 0.39, is filled whole under the star. The round fills'
+outlines are polygons of chords up to 1.1 mm, which lie 0.08 to 0.09 mm inside the circle, under a
+thread's width.
 
 ### Runs in place of jumps
 

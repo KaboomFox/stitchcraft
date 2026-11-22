@@ -112,7 +112,6 @@ fn rows(elements: Vec<Element>, thread: &Thread) -> f64 {
 }
 
 #[test]
-#[ignore = "planned: M13.61 builds the rule for small details on top"]
 fn req_auto_182_a_disc_with_a_dot_on_it_sews_whole_under_the_dot() {
     // Shown, the eye is a ring round the pupil 0.9 to 1.7 mm wide, whose column would sew 2.4 mm of its
     // outer rail to 1 mm of its inner one. Held to the crowding bound, it is no column: its hole closes, and
@@ -122,7 +121,6 @@ fn req_auto_182_a_disc_with_a_dot_on_it_sews_whole_under_the_dot() {
 }
 
 #[test]
-#[ignore = "planned: M13.61 builds the rule for small details on top"]
 fn req_auto_182_the_dot_sews_after_the_disc_and_shows() {
     let ids = order(fish());
     let at = |id: &str| ids.iter().position(|sewn| sewn.starts_with(id)).unwrap();
@@ -133,7 +131,6 @@ fn req_auto_182_the_dot_sews_after_the_disc_and_shows() {
 }
 
 #[test]
-#[ignore = "planned: M13.61 builds the rule for small details on top"]
 fn req_auto_182_the_discs_stitches_run_in_rows_not_a_wheel() {
     // Measured on main 1952f48c: 0.26 of the eye's stitches ran one way, a wheel; filled, its rows do.
     let share = rows(fish(), &WHITE);
@@ -154,7 +151,44 @@ fn req_auto_182_a_ring_that_doesnt_crowd_keeps_its_column() {
 }
 
 #[test]
-#[ignore = "planned: M13.61 builds the rule for small details on top"]
+fn req_auto_182_a_border_round_a_field_on_top_keeps_its_column() {
+    // A red plate with a cream field 3 mm inside it stacked on top, as a patch is drawn: shown, the plate is a
+    // border 3 mm wide round the field. A square border crowds a stretch at each corner, more than 2 mm of its
+    // outer edge to 1 mm of its inner one, but the whole way round it is 1.11 times as long outside as inside,
+    // and a round one 1.15 times: no wheel. Both stay a satin column round the field.
+    let red = Thread::new(Rgb::new(200, 0, 0));
+    // The square's corners are cut, 4.5 mm on the plate and less on the field, so that the border is 3 mm
+    // wide all round, as the patches drawn in the repository are.
+    let square = |id: &str, inset: f64, thread: &Thread| {
+        let (a, b, c) = (inset, 70.0 - inset, 40.0 - inset);
+        let cut = 4.5 - inset * (std::f64::consts::FRAC_PI_8).tan();
+        area(id, &[&[(a + cut, a), (b - cut, a), (b, a + cut), (b, c - cut), (b - cut, c), (a + cut, c), (a, c - cut), (a, a + cut)]], thread)
+    };
+    let shapes = [
+        ("square", vec![square("border", 0.0, &red), square("field", 3.0, &WHITE)]),
+        (
+            "round",
+            vec![area("border", &[&ellipse((35.0, 35.0), 23.0, 23.0, 96)], &red), area("field", &[&ellipse((35.0, 35.0), 20.0, 20.0, 96)], &WHITE)],
+        ),
+    ];
+    for (name, elements) in shapes {
+        let rule = rule_of(elements, "border");
+        assert!(rule.contains("column"), "{name}: the border keeps its column: {rule}");
+    }
+}
+
+#[test]
+fn req_auto_182_a_disc_asked_to_sew_as_satin_keeps_its_column() {
+    // The eye set to sew as satin columns (`auto_stitch`): it is sewn as asked, a column round the pupil,
+    // crowded or not.
+    let mut elements = fish();
+    elements[1] = automatic(fill("eye", &[&ellipse(EYE.0, EYE.1, EYE.1, 64)], &WHITE, &[("auto_stitch", "satin")]));
+    let rule = rule_of(elements, "eye");
+    // Shown, it is still the ring round the pupil, 1.29 mm wide on average, sewn along its one centre line.
+    assert!(rule.contains("rule asked") && rule.contains("1 centre line"), "the eye sews as asked: {rule}");
+}
+
+#[test]
 fn req_auto_182_a_ring_round_nothing_keeps_its_column() {
     // The eye's white as a ring of its own on bare fabric: no area fills its hole, so nothing sews on top, and
     // a fill in its place would sew in pieces round the hole. It keeps its column, crowded or not, as before.
