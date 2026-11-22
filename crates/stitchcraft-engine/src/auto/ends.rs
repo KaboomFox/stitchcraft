@@ -215,27 +215,32 @@ pub(super) fn squared(rails: [Vec<Point>; 2], rungs: Vec<[Point; 2]>, width: f64
     if rails.iter().any(|rail| rail.len() < 2) {
         return Ok((rails, rungs));
     }
-    // The column's finish, then its start, the rails walked back for it.
+    // The column's finish, then its start, the rails walked back for it. Each end is measured on the rails as
+    // they come, so that the edge one end joins to a rail is no corner of the other's.
+    let given = rails.clone();
     for start in [false, true] {
+        let mut own = given.clone();
         if start {
-            rails.iter_mut().for_each(|rail| rail.reverse());
+            own.iter_mut().for_each(|rail| rail.reverse());
         }
-        if let Some((way, body, added)) = end(&mut rails, width, meter)? {
-            let station = |p: Point| p.x() * way.0 + p.y() * way.1;
-            let tip = rails[0].last().copied();
-            // The column's rungs from where the end closes in, near the end: a column that turns back on
-            // itself has rungs at the same stations farther along it.
-            let near = |p: Point| tip.is_some_and(|tip| tip.distance(p) < (station(tip) - body).abs() + REACH * width);
-            meter.charge(u64::try_from(rungs.len()).unwrap_or(u64::MAX))?;
-            rungs.retain(|rung| station(rung[0]).max(station(rung[1])) <= body - 0.05 || !near(rung[0]));
-            if start {
-                rungs.splice(0..0, added.into_iter().rev());
-            } else {
-                rungs.extend(added);
+        let Some((way, body, added)) = end(&mut own, width, meter)? else { continue };
+        let station = |p: Point| p.x() * way.0 + p.y() * way.1;
+        let tip = own[0].last().copied();
+        // The column's rungs from where the end closes in, near the end: a column that turns back on itself
+        // has rungs at the same stations farther along it.
+        let near = |p: Point| tip.is_some_and(|tip| tip.distance(p) < (station(tip) - body).abs() + REACH * width);
+        meter.charge(u64::try_from(rungs.len()).unwrap_or(u64::MAX))?;
+        rungs.retain(|rung| station(rung[0]).max(station(rung[1])) <= body - 0.05 || !near(rung[0]));
+        // The end edge joined to the rail that stops first.
+        for (rail, (own, given)) in rails.iter_mut().zip(own.iter().zip(&given)) {
+            if let Some(&joined) = own.last().filter(|_| own.len() > given.len()) {
+                if start { rail.insert(0, joined) } else { rail.push(joined) }
             }
         }
         if start {
-            rails.iter_mut().for_each(|rail| rail.reverse());
+            rungs.splice(0..0, added.into_iter().rev());
+        } else {
+            rungs.extend(added);
         }
     }
     Ok((rails, rungs))

@@ -1311,11 +1311,12 @@ expanded and drawn by hand ([Expand](#expand)).
   drawn with its rails and rungs. An end edge within 20° of square stays the column's end, the bound at which
   a part's column ends along an edge, and its stitches lean with it. The sunrise's band 1.5 mm tall ends so:
   a circle cuts it 15° from square, and its stitches lean 15° and 17°, none over 20°.
-- **A fold belongs to its end.** A corner of a rail is an end edge folded into it only when it lies nearer
-  that end than the rail's other end. Once a short column's slanted finish joins its rail, that rail turns
-  there, and the start took it for its own fold. The way it measured then lay along the finish's edge, and a
-  leg of a line 5 mm wide leaned 43.5° at its start. The running dog's end that leaned 53° in phase 1 now
-  leans as on `main`.
+- **Each end on the rails as they come.** Each end is measured on the column's rails as they come, and the
+  end edge one end joins to a rail is no corner of the other's. A corner of a rail is an end edge folded into
+  it only when it lies nearer that end than the rail's other end. Measured one end after the other, a short
+  column's start took its finish's joined edge for its own fold or for a bend: a leg of a line 5 mm wide
+  leaned 43.5° at its start, and the middle leg 10 mm long of a U-shaped line 5 mm wide leaned 41°. The
+  running dog's end that leaned 53° in phase 1 now leans as on `main`.
 - **Mitred legs.** An open stroke drawn with straight segments and a miter join, whose rails pair its points one
   for one, is cut at each corner turning more than 60°. Each leg is a column of its own, named after the
   subpath with `~leg1`, `~leg2` and so on from its start. A line that walks its middle once sews that walk as

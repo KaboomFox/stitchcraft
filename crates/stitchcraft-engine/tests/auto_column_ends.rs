@@ -231,3 +231,47 @@ fn req_auto_178_a_wider_line_turning_60_degrees_stays_one_column() {
         assert_eq!(ids, ["line"], "{width} mm");
     }
 }
+
+/// How far the top stitches of the element `id` that cross the line from `from` to `to` lean from square to it,
+/// in degrees: the most of each 2 stitches' mean, so that the satin's own zigzag cancels.
+fn leg_lean(outcome: &PlanOutcome, id: &str, from: Pt, to: Pt) -> f64 {
+    let plan = outcome.plan.as_ref().unwrap();
+    let length = hypot(to.0 - from.0, to.1 - from.1);
+    let way = ((to.0 - from.0) / length, (to.1 - from.1) / length);
+    let side = |p: Pt| (p.0 - from.0) * -way.1 + (p.1 - from.1) * way.0;
+    let along = |p: Pt| (p.0 - from.0) * way.0 + (p.1 - from.1) * way.1;
+    let points: Vec<Pt> = plan
+        .sewn_stitches()
+        .into_iter()
+        .filter(|s| s.role == Role::Top && !s.is_lock())
+        .filter(|s| plan.blocks[s.block].stitches[s.index].origin.element.is_some_and(|e| plan.elements[e.index()].to_string() == id))
+        .map(|s| (s.to.x(), s.to.y()))
+        .collect();
+    // A top stitch lies beside the one 2 before it; an underlay's zigzag, tagged as the top, doesn't.
+    let leans: Vec<f64> = points
+        .windows(3)
+        .filter(|three| side(three[1]) * side(three[2]) < 0.0 && (0.0..=length).contains(&along(three[1])))
+        .filter(|three| hypot(three[2].0 - three[0].0, three[2].1 - three[0].1) < 1.0)
+        .map(|three| {
+            let (dx, dy) = (three[2].0 - three[1].0, three[2].1 - three[1].1);
+            let signed = to_degrees(atan2(dx * way.0 + dy * way.1, (dx * -way.1 + dy * way.0).abs()));
+            if side(three[2]) > 0.0 { signed } else { -signed }
+        })
+        .collect();
+    assert!(leans.len() > 10, "{id} crosses its line {} times", leans.len());
+    leans.windows(2).map(|pair| (pair[0] + pair[1]).abs() / 2.0).fold(0.0, f64::max)
+}
+
+#[test]
+fn req_auto_178_a_leg_shorter_than_3_widths_between_2_sharp_corners_sews_square() {
+    // Lines 5 mm wide whose middle leg, 10 mm or 6 mm long, turns 90° at both ends: one way back (a U), one on
+    // (a Z). Its ends are measured on its rails as they come: the edge one end joins to a rail is no corner of
+    // the other's. Measured 2026-11-22 before that: the middle legs leaned up to 43° and 41° at their starts.
+    for (name, points) in
+        [("u", [(5.0, 20.0), (25.0, 20.0), (25.0, 30.0), (5.0, 30.0)]), ("z", [(5.0, 20.0), (25.0, 20.0), (25.0, 26.0), (45.0, 26.0)])]
+    {
+        let outcome = planned(vec![automatic(widened(along(name, polylines(&[&points]), &RED, &[]), 5.0))]);
+        let lean = leg_lean(&outcome, &format!("{name}~leg2"), points[1], points[2]);
+        assert!(lean <= 15.0, "{name}: the middle leg's stitches lie square to it: {lean:.1}°");
+    }
+}
