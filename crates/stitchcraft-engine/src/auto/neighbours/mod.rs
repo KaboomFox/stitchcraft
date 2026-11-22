@@ -107,6 +107,24 @@ pub(super) fn no_area(area: f64) -> bool {
     area <= NO_AREA
 }
 
+/// How far an automatic satin column sews past a rail that a shape sewn after it runs along, in millimetres.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(super) struct Past {
+    /// Past a rail along any shape: its area's overlap (`REQ-AUTO-029`).
+    pub(super) overlap: f64,
+    /// Past a rail along a satin column: `auto_column_reach_mm`, and no more than the overlap
+    /// (`REQ-AUTO-167`). The column on top lays its own pull compensation back over the rail.
+    pub(super) column: f64,
+}
+
+impl Past {
+    /// The reach of a column made of a shape with the settings `rules`.
+    pub(super) fn of(rules: &AutoParams) -> Past {
+        let overlap = rules.auto_overlap_mm.get();
+        Past { overlap, column: rules.auto_column_reach_mm.get().min(overlap) }
+    }
+}
+
 /// An element as automatic digitizing sews it.
 pub(super) struct Sewn {
     /// The element.
@@ -117,9 +135,10 @@ pub(super) struct Sewn {
     /// Whether automatic digitizing made it, so that it moves in the order whether or not the design asks
     /// for every element ordered.
     pub(super) automatic: bool,
-    /// Its area's overlap when automatic digitizing made it a line or a column: how far a satin column sews
-    /// past a rail that a shape sewn after it runs along (`REQ-AUTO-029`). `None` for any other element.
-    pub(super) reach: Option<f64>,
+    /// How far it sews past a rail that a shape sewn after it runs along when automatic digitizing made it a
+    /// line or a column, by its area's settings (`REQ-AUTO-029`, `REQ-AUTO-167`). `None` for any other
+    /// element.
+    pub(super) reach: Option<Past>,
     /// The place in the design of the shape it is a part of: the parts of a shape sewn as several elements
     /// keep their order.
     pub(super) shape: usize,
@@ -279,8 +298,8 @@ struct Shapes {
     changed: Vec<bool>,
     /// Whether each element is left out.
     removed: Vec<bool>,
-    /// Each automatic line's or column's overlap ([`Sewn::reach`]).
-    reach: Vec<Option<f64>>,
+    /// How far each automatic line or column sews past a rail ([`Sewn::reach`]).
+    reach: Vec<Option<Past>>,
     /// What each element that is no automatic area paints, once found: known from the start for a part's
     /// line or column.
     painted: Vec<Option<Painted>>,
@@ -397,9 +416,9 @@ impl Shapes {
         self.is_area(index) || self.reach.get(index).is_some_and(Option::is_some)
     }
 
-    /// The overlap of element `index` when it is a satin column that automatic digitizing made and that
-    /// sews.
-    fn column(&self, index: usize) -> Option<f64> {
+    /// How far element `index` sews past a rail when it is a satin column that automatic digitizing made and
+    /// that sews.
+    fn column(&self, index: usize) -> Option<Past> {
         if self.left_out(index) || !self.satin(index) {
             return None;
         }
@@ -419,19 +438,18 @@ impl Shapes {
         rails_once(element, stitch_type, known, meter)
     }
 
-    /// Makes the satin column `index` sew `overlap` past each of its rails that `under` names, in the order
-    /// they are sewn, and past the other by that rail's own pull compensation: Ink/Stitch's
+    /// Makes the satin column `index` sew past each of its rails by what `reaches` gives it, in the order
+    /// they are sewn, and past a rail given none by that rail's own pull compensation: Ink/Stitch's
     /// `pull_compensation_mm` takes one length for both rails or a length for each, and a column along a
     /// hole kept open already has one for each (`REQ-AUTO-084`). A column whose pull compensation can't be
     /// read, or is out of its range, keeps it as it is, and planning says so when it reads it.
-    fn reach_past(&mut self, index: usize, under: [bool; 2], overlap: f64) {
+    fn reach_past(&mut self, index: usize, reaches: [Option<f64>; 2]) {
         let Some(element) = self.elements.get_mut(index) else { return };
         let Ok(Validated { params: pull, warnings }) = PullParams::from_set(&element.params) else { return };
         if !warnings.is_empty() {
             return;
         }
-        let past: Vec<String> =
-            under.iter().zip(pull.pull_compensation_mm).map(|(&under, own)| if under { overlap } else { own.get() }.to_string()).collect();
+        let past: Vec<String> = reaches.iter().zip(pull.pull_compensation_mm).map(|(&reach, own)| reach.unwrap_or(own.get()).to_string()).collect();
         element.params.set(PULL_COMPENSATION, past.join(" ").as_str());
     }
 

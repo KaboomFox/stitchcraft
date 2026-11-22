@@ -3,7 +3,8 @@
 //! photos, each
 //! cut out by a mask checked by hand and traced by VectorCraft in 6 and in 9 threads (`docs/fixtures/README.md`
 //! › The traced dogs), digitized, planned with their stitches where they draw their shapes, and measured as
-//! `tests/auto_fabric.rs` measures the test pictures.
+//! `tests/auto_fabric.rs` measures the test pictures. Under the logo style, the warning of how thick one sews
+//! names the photo style (`REQ-AUTO-169`).
 //!
 //! **Release only.** A traced dog is about a hundred shapes. In the tests' debug build each takes some 15 s to
 //! digitize and 30 s to measure, so that build leaves these cases out, and CI's `perf` job runs them in the
@@ -15,6 +16,7 @@
 
 use std::sync::OnceLock;
 
+use stitchcraft_core::{Code, Fix};
 use stitchcraft_engine::auto;
 use stitchcraft_engine::design::{Design, Element};
 use stitchcraft_plan::{Rgb, StitchPlan};
@@ -239,7 +241,8 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
     // With clean column ends (M13.60), the dog on turf in 6 threads leaves 60 and the one in 9 shows 6 moves.
     // With shapes that swell and taper filled whole and tapering pieces kept in their fill (M13.59), the dog on
     // turf in 6 threads leaves 59.
-    let recorded = [("dog-on-turf-6", 3, 59), ("dog-on-turf-9", 6, 62), ("dog-running-6", 3, 49), ("dog-running-9", 10, 64)];
+    // With a column 0.4 mm under a later column (M13.57), the running dog in 9 threads shows 9 moves.
+    let recorded = [("dog-on-turf-6", 3, 59), ("dog-on-turf-9", 6, 62), ("dog-running-6", 3, 49), ("dog-running-9", 9, 64)];
     let recorded = recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps));
     assert_eq!((found, apart), (listed, recorded.to_vec()), "the stitches astray, as found and as listed in ASTRAY, and the moves and jumps");
 }
@@ -301,8 +304,10 @@ fn req_auto_027_digitized_dogs_show_no_fabric_and_leave_the_slivers_recorded() {
 /// 52.5, 63.75, 52.5 and 91.75 before a column's ends were squared and a line's sharp corners mitred (M13.60), and
 /// 52.25, 64.0, 52.75 and 93.0 before shapes that swell and taper were filled whole (M13.59). The
 /// case fails when a number changes, so that a change that piles thread up again shows here.
+/// With a column 0.4 mm under a later column (M13.57), the running dog in 9 threads sews 91 mm² there, where it
+/// sewed 93.
 const THICK: [(&str, f64, f64); 4] =
-    [("dog-on-turf-6", 5025.0, 0.0), ("dog-on-turf-9", 6400.0, 0.0), ("dog-running-6", 5275.0, 0.0), ("dog-running-9", 9300.0, 0.0)];
+    [("dog-on-turf-6", 5025.0, 0.0), ("dog-on-turf-9", 6400.0, 0.0), ("dog-running-6", 5275.0, 0.0), ("dog-running-9", 9100.0, 0.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -331,7 +336,9 @@ fn req_auto_067_digitized_dogs_sew_thick_on_the_area_recorded() {
 /// 3.97 and 3.98, all under the warning's limit. With clean column ends (M13.60), the running dog in 6 threads
 /// sews 3.92 at its thickest, its spot of fills alone that M13.46 measured: the column's spot it had above it is
 /// lower.
-const THICKEST: [(&str, f64); 4] = [("dog-on-turf-6", 399.0), ("dog-on-turf-9", 391.0), ("dog-running-6", 392.0), ("dog-running-9", 398.0)];
+/// With a column 0.4 mm under a later column (M13.57), the running dog in 9 threads sews 3.99 at a spot of satin
+/// columns, where it sewed 3.98 at its spot of fills alone.
+const THICKEST: [(&str, f64); 4] = [("dog-on-turf-6", 399.0), ("dog-on-turf-9", 391.0), ("dog-running-6", 392.0), ("dog-running-9", 399.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -346,7 +353,8 @@ fn req_auto_073_digitized_dogs_sew_their_thickest_spot_as_recorded() {
 /// takes only where a shape lays it twice. The list only shrinks, but for the running dog in 6 threads, whose
 /// spot of fills alone at 3.92, measured with M13.46, became its thickest when its columns' spot fell below it
 /// with clean column ends (M13.60).
-const FILLS_ALONE: [(&str, f64); 2] = [("dog-running-6", 392.0), ("dog-running-9", 398.0)];
+/// The running dog in 9 threads left the list with M13.57: its thickest spot, 3.99, lies where satin columns sew.
+const FILLS_ALONE: [(&str, f64); 1] = [("dog-running-6", 392.0)];
 
 /// The cap at the end of planning (REQ-AUTO-100) takes thread wherever a dog still sews above the cap, so
 /// that what is left above it is satin columns' top stitches, which it leaves below the warning's limit
@@ -454,8 +462,10 @@ fn req_auto_094_digitized_dogs_keep_their_likeness_as_recorded() {
 /// With details last off by default again (M13.48), it keeps 97. With smooth satin edges (M13.58), whose lines
 /// open on the outside of their bends, the dogs in 9 threads keep 103 and 94 parts, and 0.905 and 0.965 of
 /// their likeness, where they kept 0.947 and 0.983.
+/// With a column 0.4 mm under a later column (M13.57), the dogs in 9 threads keep 105 and 95 parts, and 0.924
+/// and 0.971 of their likeness.
 const LINED: [(&str, usize, usize, f64); 4] =
-    [("dog-on-turf-6", 97, 96, 986.0), ("dog-on-turf-9", 111, 103, 905.0), ("dog-running-6", 77, 74, 979.0), ("dog-running-9", 100, 94, 965.0)];
+    [("dog-on-turf-6", 97, 96, 986.0), ("dog-on-turf-9", 111, 105, 924.0), ("dog-running-6", 77, 74, 979.0), ("dog-running-9", 100, 95, 971.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -477,4 +487,30 @@ fn req_auto_093_a_dog_whose_thin_lines_merge_keeps_less_of_its_detail() {
     for ((_, _, merged, _), (name, _, lined, _)) in LIKE.iter().zip(LINED) {
         assert!(lined > *merged, "{name}");
     }
+}
+
+/// `REQ-AUTO-169`: under the logo style, a design that ends above the warning's limit where satin columns of
+/// automatic shapes lie is told that the photo style fills more of it. The traced dog on turf in 6 threads
+/// ends at 4.20 fills under the logo style, measured by M13.57 with its reach, and at 3.99 under the photo
+/// style, which is the default, whose warning keeps its hint as it is.
+#[test]
+#[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
+fn req_auto_169_the_logo_style_names_the_photo_style_when_a_design_ends_above_the_limit() {
+    let (_, dog) = pictures::dogs().into_iter().find(|(name, _)| name == "dog-on-turf-6").unwrap();
+    let logo = auto::rules::PRESETS.iter().find(|preset| preset.name == "logo").unwrap();
+    let styled = dog.elements().iter().cloned().map(|mut element: Element| {
+        for &(key, value) in logo.values {
+            element.params.set(key, value);
+        }
+        element
+    });
+    let styled = Design::new(styled.collect(), dog.settings).unwrap();
+    let outcome = in_place(&styled);
+    let warned = outcome.diagnostics.iter().find(|said| said.code == Code::AutoThick).unwrap();
+    let Some(Fix::Hint(hint)) = &warned.fix else { panic!("{warned:?}") };
+    assert!(hint.contains("`--style photo`"), "{hint}");
+    // Under the photo style no shape leans to satin columns, and no warning names a style.
+    let photo = in_place(&dog);
+    let named = |said: &stitchcraft_core::Diagnostic| matches!(&said.fix, Some(Fix::Hint(hint)) if hint.contains("`--style photo`"));
+    assert!(photo.diagnostics.iter().filter(|said| said.code == Code::AutoThick).all(|said| !named(said)), "{:?}", photo.diagnostics);
 }

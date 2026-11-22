@@ -97,11 +97,11 @@ use guides::Guides;
 use marks::Marks;
 #[cfg(test)]
 pub(crate) use neighbours::default_base_layer;
-use neighbours::{Background, Sewn, no_area, parts_of, speck};
+use neighbours::{Background, Past, Sewn, no_area, parts_of, speck};
 pub use neighbours::{TOUCHING, is_part};
 pub use params::{
-    ADVANCED, AutoParams, COLUMN_OVERLAP, DETAILS_LAST, FILL_ANGLE, FILL_OUTLINE, FILL_UNEVEN, IGNORE_BACKGROUND, LONGEST_SATIN_STITCH, MAX_REACH,
-    MAX_SATIN_WIDTH, MAX_SPLIT_SATIN_WIDTH, MAX_UNEVENNESS, MIN_AREA, MIN_FILL_WIDTH, MIN_LIKENESS, MIN_LINE_UNEVENNESS, MIN_SLENDERNESS,
+    ADVANCED, AutoParams, COLUMN_OVERLAP, COLUMN_REACH, DETAILS_LAST, FILL_ANGLE, FILL_OUTLINE, FILL_UNEVEN, IGNORE_BACKGROUND, LONGEST_SATIN_STITCH,
+    MAX_REACH, MAX_SATIN_WIDTH, MAX_SPLIT_SATIN_WIDTH, MAX_UNEVENNESS, MIN_AREA, MIN_FILL_WIDTH, MIN_LIKENESS, MIN_LINE_UNEVENNESS, MIN_SLENDERNESS,
     MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, SHORT_STITCHES, STITCH, TAPER, WIDEST_SPLIT_SATIN,
 };
 use rules::{Asked, Bounds, Fired, Measures, RuleId};
@@ -435,6 +435,10 @@ pub(crate) struct Sewing<'d> {
     /// every element but those with settings. Planning runs the thread under later shapes between them
     /// where it would jump (`REQ-AUTO-053`).
     pub(crate) made: BTreeSet<ElementId>,
+    /// The ids of the elements digitizing made of shapes that lean to satin columns as the logo style sets
+    /// them, where the photo style would sew the design otherwise ([`style::leaning`]): the thickness
+    /// warning names the photo style where one lays thread at the thickest spot (`REQ-AUTO-169`).
+    pub(crate) leaning: BTreeSet<ElementId>,
 }
 
 /// Whether a hole of an area may be kept open ([`OPEN_HOLE`]), given the box round it and `meter` to charge.
@@ -474,7 +478,7 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
         // The elements set as digitizing's own sew as it made them (`REQ-AUTO-143`).
         let elements = expand::marked(Cow::Borrowed(design.elements()), &mut base, &mut made);
         let limits = expand::limits(None, &made, &design.settings);
-        return Sewing { elements, diagnostics, base, made, limits };
+        return Sewing { elements, diagnostics, base, made, limits, leaning: BTreeSet::new() };
     }
     let mut diagnostics = Vec::new();
     // Each mark's area and each guide's line are read once, before the shapes are cut to their clips.
@@ -542,7 +546,7 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
         diagnostics.extend(made.diagnostics);
         let part = |(element, part): (Element, Option<Polygon>)| Sewn {
             area: matches!(element.shape, Shape::Fill { .. }).then(|| rules.clone()),
-            reach: matches!(element.shape, Shape::Stroke { .. }).then(|| rules.auto_overlap_mm.get()),
+            reach: matches!(element.shape, Shape::Stroke { .. }).then(|| Past::of(rules)),
             element: turning(element),
             automatic: true,
             shape: index,
@@ -578,7 +582,6 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
         counts.add(stitches);
     }
     diagnostics.splice(0..0, counts.said());
-    diagnostics.extend(tally.said());
     let set: BTreeSet<&ElementId> = elements.iter().filter(|element| !element.automatic).map(|element| &element.id).collect();
     let mut elements = beside.elements;
     let mut made: BTreeSet<ElementId> = elements.iter().filter(|element| !set.contains(&element.id)).map(|element| element.id.clone()).collect();
@@ -589,7 +592,9 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     let mut base = beside.base;
     let elements = expand::marked(Cow::Owned(elements), &mut base, &mut made);
     let limits = expand::limits(limits, &made, &design.settings);
-    Sewing { elements, diagnostics, base, made, limits }
+    let leaning = style::leaning(&tally, &elements, &made);
+    diagnostics.extend(tally.said());
+    Sewing { elements, diagnostics, base, made, limits, leaning }
 }
 
 /// `design` as automatic digitizing sews its colours: each thin line that merges into a neighbour

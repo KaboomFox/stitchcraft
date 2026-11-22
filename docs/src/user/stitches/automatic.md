@@ -544,6 +544,34 @@ for fabric showing between it and the fill, and for a ridge where the two lie on
 [Image to embroidery](../../design/image-to-embroidery.md#less-overlap-under-a-parts-column) gives the
 numbers.
 
+### Where satin columns meet
+
+Where 2 satin columns that digitizing made lie side by side, the one sewn first lies a little way under
+the other, so that no fabric shows along the join. The column sewn on top lays its own pull compensation,
+0.4 mm, back over the join, and so the one under it lies 0.4 mm under it too. **Reach under a column**
+(`auto_column_reach_mm`) sets how far:
+
+```sh
+stitch plan logo.svg --auto -o logo.pes --set auto_column_reach_mm=1
+```
+
+1 mm, the whole overlap, sews as StitchCraft did before M13.57: 1.4 mm of 2 columns' stitches then lie on
+each other along every join, and designs with many columns, under `--style logo` most of all, sewed their
+thickest spots there. Along a fill, or along any other shape sewn after it, a column still lies the whole
+overlap under it. A value above the overlap reads as the overlap, and no dialog shows the setting.
+
+<!-- shot: auto-column-reach -->
+| 0.4 mm, the default | 1 mm, as before |
+|:-:|:-:|
+| ![How thick the bars and rings of joins.svg sew, as heat maps on white. 3 pairs of red and blue bars 2 to 4 mm wide stand side by side. A red ring 3 mm wide lies round a blue one. Grey is under 2 fills of thread, and yellow 2 fills or more. At 0.4 mm, the default, the yellow line along each join between 2 columns is narrow. At 1 mm, as before, it is wider, where the column sewn first lies 1 mm under the other., 0.4 mm, the default](../../images/generated/auto-column-reach-1.png) | ![How thick the bars and rings of joins.svg sew, as heat maps on white. 3 pairs of red and blue bars 2 to 4 mm wide stand side by side. A red ring 3 mm wide lies round a blue one. Grey is under 2 fills of thread, and yellow 2 fills or more. At 0.4 mm, the default, the yellow line along each join between 2 columns is narrow. At 1 mm, as before, it is wider, where the column sewn first lies 1 mm under the other., 1 mm, as before](../../images/generated/auto-column-reach-2.png) |
+<!-- /shot -->
+
+The bars and rings of `docs/fixtures/joins.svg`, sewn at the default and at 1 mm, show it in the thickness
+style: the band along each join is narrower at the default. Only a sew-out shows whether 0.4 mm is enough
+on your fabric. Sew a small piece first, and look along each join for fabric between the columns, on curves
+most of all. If it shows, set `auto_column_reach_mm` to 0.6 mm or more.
+[Image to embroidery](../../design/image-to-embroidery.md#columns-stacked-on-columns) gives the numbers.
+
 ### Smooth satin edges
 
 A satin column's stitches run from edge to edge, and on the inside of a curve they keep their spacing: the

@@ -156,3 +156,20 @@ fn items_are_listed_with_and_before_the_last() {
     assert_eq!([listed(&items(0)), listed(&items(1)), listed(&items(2)), listed(&items(3))], ["", "1", "1 and 2", "1, 2 and 3"]);
     assert_eq!([counted(1, "a", "b"), counted(0, "a", "b"), counted(2, "a", "b")], ["1 a", "0 b", "2 b"]);
 }
+
+#[test]
+fn req_auto_169_the_leaning_elements_are_those_made_of_shapes_that_prefer_satin_where_the_photo_style_differs() {
+    let named = |id: &str, params: &[(&str, &str)]| Element { id: ElementId::new(id).unwrap(), ..square(params) };
+    let elements = [named("logo", &[(PREFER, "satin")]), named("balanced", &[(PREFER, "balanced")]), named("drawn", &[(PREFER, "satin")])];
+    let made: BTreeSet<ElementId> = ["logo", "balanced"].into_iter().map(|id| ElementId::new(id).unwrap()).collect();
+    let leaning_by = |tally: &Tally| leaning(tally, &elements, &made).into_iter().map(|id| id.as_str().to_string()).collect::<Vec<_>>();
+    // A thin line the photo style would merge: the photo style sews the design otherwise.
+    let mut photo = Tally::default();
+    photo.lines(0, 1);
+    assert_eq!(leaning_by(&photo), ["logo"]);
+    // Only the logo style would sew it otherwise, or nothing differs: no element leans.
+    let mut logo = Tally::default();
+    logo.lines(1, 0);
+    assert!(leaning_by(&logo).is_empty());
+    assert!(leaning_by(&Tally::default()).is_empty());
+}

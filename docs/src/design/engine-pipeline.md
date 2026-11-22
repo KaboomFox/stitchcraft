@@ -479,7 +479,8 @@ column's top stitches below the warning's limit, with the budget's work once mor
 `short_stitch_distance_mm` 0, with their insets: above the warning's limit the cap pulls their crowded
 points in first ([smooth satin edges](image-to-embroidery.md#smooth-satin-edges)).
 Planning adds `SC-W0913` when the design sews thick and returns the plan all the
-same ([how thick a design sews](image-to-embroidery.md#how-thick-a-design-sews)).
+same. The warning's hint names the photo style where a shape that the logo style leans to satin columns lies
+at the thickest spot (`REQ-AUTO-169`) ([how thick a design sews](image-to-embroidery.md#how-thick-a-design-sews)).
 
 ## 7. Incremental and parallel planning
 
