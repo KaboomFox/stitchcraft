@@ -84,7 +84,6 @@ fn piece(params: &[(&str, &str)]) -> Vec<Element> {
 /// and the navy fill lies under the cream one. Before M13.63 the navy fill sewed first, the cream fill after
 /// it, and the line after the cream fill, so navy was threaded twice: 4 threadings and 3 changes.
 #[test]
-#[ignore = "planned: M13.63 builds one thread, one pass"]
 fn req_auto_184_a_dark_line_round_a_light_fill_on_a_dark_fill_threads_each_thread_once() {
     let outcome = placed(piece(&[]));
     let plan = plan_of(&outcome);
@@ -98,7 +97,6 @@ fn req_auto_184_a_dark_line_round_a_light_fill_on_a_dark_fill_threads_each_threa
 /// lets the most lines sew after their fills is taken. Before M13.63 black was threaded twice, for the words
 /// and for the lines. With the lines sewn first the panes' rows covered the lines 0.3 and 0.6 mm wide.
 #[test]
-#[ignore = "planned: M13.63 builds one thread, one pass"]
 fn req_auto_184_ts_13b_threads_once_and_its_lines_sew_after_the_panes() {
     let sheet = SHEETS.iter().find(|sheet| sheet.id == "TS-13B").unwrap().design().unwrap().unwrap();
     let shapes: Vec<Element> = sheet.elements().iter().filter(|element| element.automatic).cloned().collect();
@@ -130,7 +128,6 @@ fn req_auto_184_ts_13b_threads_once_and_its_lines_sew_after_the_panes() {
 /// the order starts with. Before M13.63 the base layer sewed in pink, then the stem in green, then the head
 /// in pink again.
 #[test]
-#[ignore = "planned: M13.63 builds one thread, one pass"]
 fn req_auto_185_the_base_layer_sews_in_the_thread_the_order_starts_with() {
     let stem = automatic(widened(line("stem", (0.0, 20.0), 30.0, &GREEN, &[]), 2.5));
     let head = area("head", &[&rect(24.0, 8.0, 48.0, 32.0)], &PINK);
@@ -143,7 +140,6 @@ fn req_auto_185_the_base_layer_sews_in_the_thread_the_order_starts_with() {
 /// `REQ-AUTO-186`: with `auto_thread_once` off, the line sews after the fill it borders, as before M13.63, and
 /// the sew-out piece's navy is threaded twice. The setting is known: nothing says it isn't.
 #[test]
-#[ignore = "planned: M13.63 builds one thread, one pass"]
 fn req_auto_186_auto_thread_once_off_sews_each_line_after_its_fill() {
     let outcome = placed(piece(&[("auto_thread_once", "false")]));
     assert!(outcome.diagnostics.iter().all(|said| !said.message.contains("auto_thread_once")), "{:?}", outcome.diagnostics);
@@ -156,7 +152,6 @@ fn req_auto_186_auto_thread_once_off_sews_each_line_after_its_fill() {
 /// the roof, so no order threads each thread once. `SC-W0925` says so once, of a shape that lies under a shape
 /// of the other thread: the chimney under its outline, or the outline under the roof.
 #[test]
-#[ignore = "planned: M13.63 builds one thread, one pass"]
 fn req_auto_187_a_shade_drawn_under_and_over_another_is_named() {
     let outline = |id: &str, ring: &[Pt]| automatic(widened(along(id, rings(&[ring]), &BROWN, &[]), 0.8));
     let chimney = rect(40.0, 10.0, 45.0, 22.0);

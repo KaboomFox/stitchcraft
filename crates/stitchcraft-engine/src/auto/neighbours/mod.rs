@@ -152,7 +152,7 @@ pub(super) struct Sewn {
 /// `base`, the settings the design's base layer goes by and the ids the design has given out, the base layer
 /// sews before the first element that automatic digitizing made (`base`, `REQ-AUTO-028`).
 pub(super) fn beside(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget, how: How<'_>, base: Option<(&AutoParams, &mut Labels)>) -> Beside {
-    let How { sorted, outlined, last, marks } = how;
+    let How { sorted, outlined, last, once, marks } = how;
     let moving: Vec<order::Moving> =
         sewn.iter().map(|sewn| order::Moving { free: sorted || sewn.automatic, made: sewn.automatic, shape: sewn.shape }).collect();
     let made: BTreeSet<ElementId> = sewn.iter().filter(|sewn| sewn.automatic).map(|sewn| sewn.element.id.clone()).collect();
@@ -160,10 +160,16 @@ pub(super) fn beside(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget
     let mut said = specks::merged(&mut shapes, marks, budget);
     // The base layer lies under the shapes as they are once the specks are merged, before any reaches under
     // another.
-    let laid = base.map(|(rules, taken)| base::laid(&mut shapes, rules, taken, budget)).unwrap_or_default();
-    // The base layer's thread is sewing when the elements that automatic digitizing made start.
+    let mut laid = base.map(|(rules, taken)| base::laid(&mut shapes, rules, taken, budget)).unwrap_or_default();
+    // The base layer's thread is sewing when the elements that automatic digitizing made start. It sews in
+    // the thread the order starts with, which is the largest area's where an order as good starts with it
+    // (`REQ-AUTO-185`).
     let under = laid.pieces.first().map(|piece| piece.thread.color);
-    said.extend(order::ordered(&mut shapes, &moving, budget, under, last));
+    let ordered = order::ordered(&mut shapes, &moving, budget, under, order::Rules { last, once });
+    said.extend(ordered.said);
+    if let Some(thread) = ordered.under.and_then(|colour| shapes.elements.iter().find(|element| element.thread.color == colour)) {
+        laid.threaded(&thread.thread.clone());
+    }
     // An area's edge shows where no shape sewn after it covers it: found in the order they sew, before any
     // area reaches under another.
     let (outlines, unfound) = if outlined { outline::outlines(&mut shapes, budget) } else { Default::default() };
@@ -190,6 +196,9 @@ pub(super) struct How<'m> {
     pub(super) outlined: bool,
     /// Whether the details sew last where that costs no thread change (`order::ordered`, `REQ-AUTO-098`).
     pub(super) last: bool,
+    /// Whether each thread is threaded once where the shapes allow it: a line sews after the fill it borders
+    /// only where that costs no thread change (`order::ordered`, `REQ-AUTO-184`).
+    pub(super) once: bool,
     /// The marks, whose specks don't merge (`REQ-AUTO-104`).
     pub(super) marks: &'m Marks,
 }

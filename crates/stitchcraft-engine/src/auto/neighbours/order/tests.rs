@@ -14,22 +14,22 @@ use crate::auto::AutoParams;
 use crate::auto::neighbours::{Past, Sewn, under};
 use crate::design::{Cap, DesignSettings, FillRule, Path, Segment, Subpath};
 
-const RED: Thread = Thread::new(Rgb::new(200, 0, 0));
-const BLUE: Thread = Thread::new(Rgb::new(0, 0, 200));
-const GREEN: Thread = Thread::new(Rgb::new(0, 160, 0));
+pub(super) const RED: Thread = Thread::new(Rgb::new(200, 0, 0));
+pub(super) const BLUE: Thread = Thread::new(Rgb::new(0, 0, 200));
+pub(super) const GREEN: Thread = Thread::new(Rgb::new(0, 160, 0));
 
-fn p(x: f64, y: f64) -> Point {
+pub(super) fn p(x: f64, y: f64) -> Point {
     Point::new(x, y).unwrap()
 }
 
 /// A path through `points`, `closed` or open.
-fn through(points: &[(f64, f64)], closed: bool) -> Path {
+pub(super) fn through(points: &[(f64, f64)], closed: bool) -> Path {
     let (&(x, y), rest) = points.split_first().unwrap();
     Path { subpaths: vec![Subpath { start: p(x, y), segments: rest.iter().map(|&(x, y)| Segment::Line(p(x, y))).collect(), closed }] }
 }
 
 /// An element `id` of `shape`, sewn with `thread`, without settings.
-fn element(id: &str, shape: Shape, thread: &Thread) -> Element {
+pub(super) fn element(id: &str, shape: Shape, thread: &Thread) -> Element {
     Element {
         id: ElementId::new(id).unwrap(),
         name: None,
@@ -44,21 +44,21 @@ fn element(id: &str, shape: Shape, thread: &Thread) -> Element {
 }
 
 /// An automatic area `id`, the square `size` wide from `(x, y)`, sewn with `thread`, a shape of its own.
-fn square(id: &str, (x, y): (f64, f64), size: f64, thread: &Thread) -> Sewn {
+pub(super) fn square(id: &str, (x, y): (f64, f64), size: f64, thread: &Thread) -> Sewn {
     let ring = [(x, y), (x, y + size), (x + size, y + size), (x + size, y)];
     let shape = Shape::Fill { path: through(&ring, true), rule: FillRule::NonZero, gradient: None };
     Sewn { element: element(id, shape, thread), area: Some(AutoParams::defaults()), automatic: true, reach: None, shape: usize::MAX, part: None }
 }
 
 /// An automatic running line `id` along `points`, `width` wide, sewn with `thread`, a shape of its own.
-fn running(id: &str, points: &[(f64, f64)], width: f64, thread: &Thread) -> Sewn {
+pub(super) fn running(id: &str, points: &[(f64, f64)], width: f64, thread: &Thread) -> Sewn {
     let shape = Shape::Stroke { path: through(points, false), width: Mm::new(width).unwrap(), join: Join::Round, cap: Cap::Butt };
     Sewn { element: element(id, shape, thread), area: None, automatic: true, reach: None, shape: usize::MAX, part: None }
 }
 
 /// An automatic satin column `id` along the middle of the part with `corners`, sewn with `thread`, which
 /// reaches 1 mm under a shape sewn after it.
-fn column(id: &str, corners: &[(f64, f64)], thread: &Thread) -> Sewn {
+pub(super) fn column(id: &str, corners: &[(f64, f64)], thread: &Thread) -> Sewn {
     let part = Polygon { outline: corners.iter().map(|&(x, y)| p(x, y)).collect(), holes: Vec::new() };
     let middle = |a: usize, b: usize| ((corners[a].0 + corners[b].0) / 2.0, (corners[a].1 + corners[b].1) / 2.0);
     let line = running(id, &[middle(0, 3), middle(1, 2)], 2.0, thread);
@@ -68,24 +68,31 @@ fn column(id: &str, corners: &[(f64, f64)], thread: &Thread) -> Sewn {
 
 /// `sewn` in the order it sews in, each shape's paint found with `painting` and the order with `budget`;
 /// its ids, and what is said of it. Each element is a shape of its own unless it says which it is a part of.
-fn ordered_with(sewn: Vec<Sewn>, painting: &Budget, budget: &Budget) -> (Vec<String>, Vec<Diagnostic>) {
+pub(super) fn ordered_with(sewn: Vec<Sewn>, painting: &Budget, budget: &Budget) -> (Vec<String>, Vec<Diagnostic>) {
     ordered_under(sewn, painting, budget, None)
 }
 
 /// [`ordered_with`], the thread `under` sewing when the elements start.
-fn ordered_under(sewn: Vec<Sewn>, painting: &Budget, budget: &Budget, under: Option<Rgb>) -> (Vec<String>, Vec<Diagnostic>) {
+pub(super) fn ordered_under(sewn: Vec<Sewn>, painting: &Budget, budget: &Budget, under: Option<Rgb>) -> (Vec<String>, Vec<Diagnostic>) {
+    let (ids, said, _) = ordered_by(sewn, painting, budget, under, Rules { last: true, once: true });
+    (ids, said)
+}
+
+/// [`ordered_under`] by `rules`; and the thread the base layer sews in when the order chose another.
+pub(super) fn ordered_by(sewn: Vec<Sewn>, painting: &Budget, budget: &Budget, under: Option<Rgb>, rules: Rules) -> (Vec<String>, Vec<Diagnostic>, Option<Rgb>) {
     let settings = DesignSettings::default();
     let shape = |index: usize, sewn: &Sewn| if sewn.shape == usize::MAX { index } else { sewn.shape };
     let moving: Vec<Moving> =
         sewn.iter().enumerate().map(|(index, sewn)| Moving { free: sewn.automatic, made: sewn.automatic, shape: shape(index, sewn) }).collect();
     let mut shapes = Shapes::new(sewn, &settings, painting);
-    let mut said = super::ordered(&mut shapes, &moving, budget, under, true);
+    let ordered = super::ordered(&mut shapes, &moving, budget, under, rules);
+    let mut said = ordered.said;
     said.append(&mut shapes.said);
-    (shapes.elements.iter().map(|element| element.id.as_str().to_string()).collect(), said)
+    (shapes.elements.iter().map(|element| element.id.as_str().to_string()).collect(), said, ordered.under)
 }
 
 /// What `said` says, as a user reads it, each followed by the element it names, if any, in brackets.
-fn messages(said: &[Diagnostic]) -> Vec<String> {
+pub(super) fn messages(said: &[Diagnostic]) -> Vec<String> {
     said.iter().map(|d| d.element.as_ref().map_or_else(|| d.to_string(), |id| format!("{d} [{id}]"))).collect()
 }
 
@@ -248,6 +255,10 @@ fn a_line_waits_for_no_fill_it_borders_beyond_an_element_kept_in_its_place() {
         kept: BTreeSet::from([1]),
         unsought: None,
         under: None,
+        once: true,
+        overlaps: Vec::new(),
+        found: Vec::new(),
+        chosen: None,
     };
     let mut sewing = Sewing::default();
     order.sew(&[vec![0], vec![1], vec![2]], &mut sewing, &Budget::DEFAULT).unwrap();
@@ -276,6 +287,10 @@ fn req_auto_012_nothing_moves_across_an_element_kept_in_its_place_and_each_sews_
         kept: BTreeSet::from([1]),
         unsought: None,
         under: None,
+        once: true,
+        overlaps: Vec::new(),
+        found: Vec::new(),
+        chosen: None,
     };
     let mut sewing = Sewing::default();
     order.sew(&[vec![0], vec![1], vec![2, 3, 4]], &mut sewing, &Budget::DEFAULT).unwrap();
@@ -300,6 +315,10 @@ fn threaded(colours: &[&[Rgb]]) -> (Vec<usize>, usize, usize) {
         kept: BTreeSet::new(),
         unsought: None,
         under: None,
+        once: true,
+        overlaps: Vec::new(),
+        found: Vec::new(),
+        chosen: None,
     };
     let mut sewing = Sewing::default();
     let painted: Vec<usize> = (0..facts.len()).collect();
@@ -493,18 +512,21 @@ fn req_auto_037_a_satin_column_sews_after_the_fill_it_borders_where_that_costs_n
     let (ids, said) = ordered_with(columns, &Budget::DEFAULT, &Budget::DEFAULT);
     assert_eq!(ids, ["rs", "rc", "bs", "bc"]);
     assert_eq!(messages(&said), ["info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 2."]);
-    // Lines there, which can't reach under a fill, sew after their squares, as they are drawn, and the thread
-    // changes twice.
+    // Lines there go as the columns do (`REQ-AUTO-184`): the red line sews with the red square, and the thread
+    // changes once. With `auto_thread_once` off they sew after their squares, as they are drawn, and the thread
+    // changes twice (`REQ-AUTO-186`).
     let line = |id: &str, x: f64, thread: &Thread| running(id, &[(x + 11.0, 0.0), (x + 11.0, 10.0)], 2.0, thread);
-    let lines = vec![square("rs", (0.0, 0.0), 10.0, &RED), line("bl", 0.0, &BLUE), square("bs", (50.0, 0.0), 10.0, &BLUE), line("rl", 50.0, &RED)];
-    let (ids, said) = ordered_with(lines, &Budget::DEFAULT, &Budget::DEFAULT);
+    let lines = || vec![square("rs", (0.0, 0.0), 10.0, &RED), line("bl", 0.0, &BLUE), square("bs", (50.0, 0.0), 10.0, &BLUE), line("rl", 50.0, &RED)];
+    let (ids, said) = ordered_with(lines(), &Budget::DEFAULT, &Budget::DEFAULT);
+    assert_eq!((ids, said.len()), (["rs", "rl", "bs", "bl"].map(String::from).to_vec(), 1));
+    let (ids, said, _) = ordered_by(lines(), &Budget::DEFAULT, &Budget::DEFAULT, None, Rules { last: true, once: false });
     assert_eq!((ids, said.len()), (["rs", "bl", "bs", "rl"].map(String::from).to_vec(), 0));
 }
 
 /// The order of the elements of `runs`, each sewn in the thread of `threads`, with `rules` of what sews
 /// before what and each column of `wished` after its fill where that costs nothing, found with `budget`; and
 /// the first element of the run that the search gave up at.
-fn sewn(
+pub(super) fn sewn(
     threads: &[&Thread],
     runs: &[Vec<usize>],
     rules: &[(usize, usize)],
@@ -529,6 +551,10 @@ fn sewn(
         kept: BTreeSet::new(),
         unsought: None,
         under: None,
+        once: true,
+        overlaps: Vec::new(),
+        found: Vec::new(),
+        chosen: None,
     };
     let mut sewing = Sewing::default();
     let placed = order.sew(runs, &mut sewing, budget);
@@ -682,6 +708,10 @@ fn req_auto_096_a_detail_is_closed_in_and_smaller_than_the_area_it_meets() {
         kept: BTreeSet::new(),
         unsought: None,
         under: None,
+        once: true,
+        overlaps: Vec::new(),
+        found: Vec::new(),
+        chosen: None,
     };
     let mut detail = |detail: usize, other: usize| order.detail(&mut shapes, detail, other, &mut Budget::DEFAULT.meter()).unwrap();
     // The mark (2) is closed in and smaller than a square of the pinwheel (3), and no smaller than itself.

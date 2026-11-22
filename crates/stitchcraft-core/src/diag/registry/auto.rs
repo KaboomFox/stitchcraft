@@ -324,6 +324,18 @@ macro_rules! auto_codes {
         /// apply StitchCraft's Fill or Stroke effect to it. The notice isn't given with `--auto`, which asks
         /// for automatic digitizing, or when the default digitized no shape.
         AutoByDefault = "SC-I0924", Info, "Shapes digitized by default";
+
+        /// `--auto` threads each thread once where the shapes as drawn allow it (`auto_thread_once`, on by
+        /// default): a line that borders a fill sews after it only where that costs no thread change. Shapes
+        /// that overlap keep their paint order, so where a shade is drawn both under and over another, as a roof
+        /// drawn over a chimney's outline that is drawn over the chimney, their threads must each be threaded
+        /// more than once. The warning is said once for each such group of threads, of a shape lying under a
+        /// shape of another thread of the group. Its message names that shape and a shape of the group lying
+        /// under a shape of this one's thread, and how many times each thread of the group is threaded.
+        ///
+        /// To thread each thread once, change the drawing so that each shade lies at one depth: cut away what the
+        /// upper shape hides of the lower one, or join the shapes of one shade.
+        AutoThreadedAgain = "SC-W0925", Warning, "Thread threaded more than once";
         } }
     };
 }

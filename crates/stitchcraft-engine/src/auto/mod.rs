@@ -102,7 +102,7 @@ pub use neighbours::{TOUCHING, is_part};
 pub use params::{
     ADVANCED, AutoParams, COLUMN_OVERLAP, COLUMN_REACH, DETAILS_LAST, FILL_ANGLE, FILL_OUTLINE, FILL_UNEVEN, IGNORE_BACKGROUND, LONGEST_SATIN_STITCH,
     MAX_REACH, MAX_SATIN_WIDTH, MAX_SPLIT_SATIN_WIDTH, MAX_UNEVENNESS, MIN_AREA, MIN_FILL_WIDTH, MIN_LIKENESS, MIN_LINE_UNEVENNESS, MIN_SLENDERNESS,
-    MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, SHORT_STITCHES, STITCH, WIDEST_SPLIT_SATIN,
+    MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, SHORT_STITCHES, STITCH, THREAD_ONCE, WIDEST_SPLIT_SATIN,
 };
 use rules::{Asked, Bounds, Fired, Measures, RuleId};
 pub use thick::{Held, WARNING_CHARS};
@@ -562,8 +562,11 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     let outlined = lowest.is_some_and(|rules| rules.auto_fill_outline);
     // The details sew last only when the lowest automatic shape asks for it (`REQ-AUTO-098`).
     let last = lowest.is_some_and(|rules| rules.auto_details_last);
+    // Each thread is threaded once where the shapes allow it unless the lowest automatic shape turns it off
+    // (`REQ-AUTO-184`, `REQ-AUTO-186`).
+    let once = lowest.is_none_or(|rules| rules.auto_thread_once);
     let limits = lowest.map(thick::held);
-    let how = neighbours::How { sorted: design.sort_colours, outlined, last, marks: &marks };
+    let how = neighbours::How { sorted: design.sort_colours, outlined, last, once, marks: &marks };
     let mut beside = neighbours::beside(sewn, &design.settings, budget, how, base.map(|rules| (rules, &mut taken)));
     diagnostics.extend(std::mem::take(&mut beside.said));
     diagnostics.extend(marks.said(automatic));

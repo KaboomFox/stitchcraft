@@ -62,6 +62,33 @@ pub(super) struct Laid {
     pub(super) pieces: Vec<Element>,
     /// What is said of it.
     pub(super) said: Vec<Diagnostic>,
+    /// Its area in mm², when it has pieces.
+    area: f64,
+}
+
+impl Laid {
+    /// The base layer sewn in `thread`, the thread the order starts with (`REQ-AUTO-185`), and said so.
+    pub(super) fn threaded(&mut self, thread: &Thread) {
+        if self.pieces.iter().all(|piece| piece.thread == *thread) {
+            return;
+        }
+        for piece in &mut self.pieces {
+            piece.thread = thread.clone();
+        }
+        let said = sews_first(&self.pieces, self.area);
+        for told in self.said.iter_mut().filter(|told| told.code == Code::AutoBase) {
+            told.message.clone_from(&said.message);
+        }
+    }
+}
+
+/// `SC-I0909` of the base layer of `pieces` and `area` mm², in their thread.
+fn sews_first(pieces: &[Element], area: f64) -> Diagnostic {
+    let (count, thread) = (pieces.len(), pieces.first().map(|piece| piece.thread.color.to_string()).unwrap_or_default());
+    let parts = if count == 1 { "1 piece".to_string() } else { format!("{count} pieces") };
+    let message = format!("A base layer of {} mm² in {parts} sews first under the design, in the thread {thread}.", mm(area));
+    let off = Fix::Hint("To sew the design without a base layer, turn `auto_base_layer` off.".to_string());
+    Diagnostic::new(Code::AutoBase, message).with_fix(off)
 }
 
 /// The base layer under the automatic elements of `shapes`, by the settings `rules`, its pieces named with
@@ -69,24 +96,19 @@ pub(super) struct Laid {
 /// sew no underlay of their own. It says `SC-I0909` of the base layer, or of a design that has room for
 /// none, and `SC-W0910` when its shape needs more work than the budget allows.
 pub(super) fn laid(shapes: &mut Shapes, rules: &AutoParams, taken: &mut Labels, budget: &Budget) -> Laid {
-    let off = Fix::Hint("To sew the design without a base layer, turn `auto_base_layer` off.".to_string());
     match pieces(shapes, rules, taken, &mut budget.meter()) {
         Ok(None) => Laid::default(),
-        Ok(Some((pieces, _))) if pieces.is_empty() => {
+        Ok(Some((pieces, area))) if pieces.is_empty() => {
             let message = "No part of the design is wide enough for a base layer, so it sews none, and each fill sews the underlay of its settings.";
-            Laid { pieces, said: vec![Diagnostic::new(Code::AutoBase, message)] }
+            Laid { pieces, said: vec![Diagnostic::new(Code::AutoBase, message)], area }
         }
-        Ok(Some((pieces, area))) => {
-            let (count, thread) = (pieces.len(), pieces.first().map(|piece| piece.thread.color.to_string()).unwrap_or_default());
-            let parts = if count == 1 { "1 piece".to_string() } else { format!("{count} pieces") };
-            let message = format!("A base layer of {} mm² in {parts} sews first under the design, in the thread {thread}.", mm(area));
-            Laid { pieces, said: vec![Diagnostic::new(Code::AutoBase, message).with_fix(off)] }
-        }
+        Ok(Some((pieces, area))) => Laid { said: vec![sews_first(&pieces, area)], pieces, area },
         Err(failed) => {
             let consequence = "the design sews no base layer, and each fill sews the underlay of its settings";
             Laid {
                 pieces: Vec::new(),
                 said: vec![failed.said_of_all(Code::AutoBaseLeftOut, "the shape of the base layer", consequence, budget.max_work)],
+                area: 0.0,
             }
         }
     }
