@@ -3475,23 +3475,23 @@ whole. So the logo style also says so (`REQ-AUTO-169`).
 **As built.** A column that digitizing made reaches `auto_column_reach_mm` past a rail along which a satin
 column sewn after it runs for more than half the rail's length. Along any other shape it reaches the overlap,
 and a rail along both reaches the smaller. Setting 1 mm sews exactly as main did. The build was measured again
-on main after M13.58, M13.60 and M13.61, which changed what sews there. The set is 37 designs. 31 of them are the
+on main after M13.58, M13.59, M13.60 and M13.61, which changed what sews there. The set is 37 designs. 31 of them are the
 first table's that still exist, with the lettered patch the cases draw. The other 6 are the traced photos
 that M13.58 and M13.60 measured. The 9 local photos of the first table were deleted and are left out. TS-13A to TS-13E plan the same
 with the rule, so their golden files don't move.
 
 | Style | Reach | Designs changed | Designs above 4 | mm² at 3.25 or more | mm² at 4 or more | Bare fabric, mm² |
 |---|---|---:|---:|---:|---:|---:|
-| logo | 1 mm, main | | 17 | 4,827 | 743.8 | 199.9 |
-| logo | 0.3 mm | 20 | 13 | 3,443 | 167.2 | 213.8 |
-| logo | 0.4 mm, the default | 20 | 14 | 3,588 | 182.5 | 212.3 |
-| logo | 0.6 mm | 20 | 14 | 3,972 | 308.5 | 207.1 |
-| default | 1 mm, main | | 6 | 896 | 1.2 | 40.8 |
-| default | 0.4 mm, the default | 9 | 4 | 536 | 1.2 | 40.8 |
+| logo | 1 mm, main | | 17 | 4,820 | 742.8 | 198.5 |
+| logo | 0.4 mm, the default | 19 | 14 | 3,584 | 182.5 | 210.9 |
+| default | 1 mm, main | | 6 | 881 | 1.2 | 40.8 |
+| default | 0.4 mm, the default | 8 | 4 | 521 | 1.2 | 40.8 |
 
 On that main, 2 columns' tops on each other still make 91 % of the logo style's area at 4 fills or more. At
-0.4 mm the logo style keeps a quarter of that area, and the default style 60 % of its area at 3.25. 0.3 mm
-takes a little more, but bares fabric on 10 designs. Bare fabric rose on 9 logo designs, by 2.61 mm² at most,
+0.4 mm the logo style keeps a quarter of that area, and the default style 59 % of its area at 3.25. Measured
+before M13.59 with the prototype, 0.3 mm took a little more, 167.2 mm² at 4 fills where 0.4 mm left 182.5, but
+bared fabric on 10 designs, and 0.6 mm left 308.5 mm². M13.59 fills more shapes whole and changed these totals
+by less than 2 %. Bare fabric rose on 9 logo designs, by 2.61 mm² at most,
 on the snap badge, whose count of gaps stayed 2. Its realistic preview shows its joins closed, and main's
 navy showing through between 2 of its rings is gone.
 
