@@ -189,7 +189,7 @@ fn req_auto_176_a_ray_keeps_its_point() {
 }
 
 #[test]
-fn req_sat_031_pull_compensation_is_held_to_a_share_of_the_stitchs_width() {
+fn req_sat_031_pull_compensation_is_held_to_a_share_of_the_stitch_s_width() {
     // A satin column whose rails meet in a point, 2 mm apart at their start, with 0.4 mm of pull compensation
     // held to 40 % of each stitch's width on each side: a stitch drawn w wide sews at most 1.8 w.
     let rails = polylines(&[&[(0.0, 0.0), (10.0, 1.0)], &[(0.0, 2.0), (10.0, 1.0)]]);
