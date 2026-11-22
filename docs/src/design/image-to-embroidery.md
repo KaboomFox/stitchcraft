@@ -1301,13 +1301,56 @@ The pictures looked at (the band, the zigzag, the letter C, a dog) show the fans
 band 1.5 mm tall above the sunrise's 5 mm one fanning by 2 stitches, since its end is too short for a
 straight stretch, and a short stitch of each leg crossing at the zigzag's lower points.
 
-#### The proposal
+#### What is built
 
-(a) and (d) as rules, with no setting (REQ-AUTO-177, REQ-AUTO-178). They change only ends and corners whose
-stitches spread like a fan, and no design sews thicker than the cap where it sewed under it. A setting would
-only keep the fan. A shape that should sew otherwise can be expanded and drawn by hand ([Expand](#expand)). The sew-out at
-the next machine checkpoint sews a band whose ends a circle cuts, a band with a 45° end and a zigzag line,
-once as `main` plans them and once with M13.60. The build phase starts on the owner's choice.
+The owner chose (a) and (d) on 2026-11-22, as rules with no setting (REQ-AUTO-177, REQ-AUTO-178,
+`stitchcraft_engine::auto::ends`). A setting would only keep the fan. A shape that should sew otherwise can be
+expanded and drawn by hand ([Expand](#expand)).
+
+- **Square ends.** Each end of a part's column that isn't a ring is squared as (a) says, before the column is
+  drawn with its rails and rungs. An end edge within 20° of square stays the column's end, the bound at which
+  a part's column ends along an edge, and its stitches lean with it. The sunrise's band 1.5 mm tall ends so:
+  a circle cuts it 15° from square, and its stitches lean 15° and 17°, none over 20°.
+- **A fold belongs to its end.** A corner of a rail is an end edge folded into it only when it lies nearer
+  that end than the rail's other end. Once a short column's slanted finish joins its rail, that rail turns
+  there, and the start took it for its own fold. The way it measured then lay along the finish's edge, and a
+  leg of a line 5 mm wide leaned 43.5° at its start. The running dog's end that leaned 53° in phase 1 now
+  leans as on `main`.
+- **Mitred legs.** An open stroke drawn with straight segments and a miter join, whose rails pair its points one
+  for one, is cut at each corner turning more than 60°. Each leg is a column of its own, named after the
+  subpath with `~leg1`, `~leg2` and so on from its start. A line that walks its middle once sews that walk as
+  a running stitch under the subpath's own name, then its legs' tops from the far end back with no underlay.
+  A wider line sews its legs in turn from its start, each with its underlay, and each ends where the next
+  starts. A corner whose miter its limit cuts square, a curve and a closed line keep one column.
+
+Measured on the 63 designs again with the build:
+
+| | `main` | Built |
+|---|---:|---:|
+| Ends with a stitch over 20° | 69 | 63 |
+| End stitches over 20° | 227 | 168 |
+| The drawings' end stitches over 20° | 69 | 31 |
+| `SC-W0208` | 14 | 6 |
+| Area above the cap, mm² | 1,281.2 | 1,282.5 |
+| Stitches | 319,809 | 319,823 |
+
+Drawn lines 3 mm and 5 mm wide, turning 60°, 90° and 120°, were added to the set. A turn of 60° keeps one
+column. At 90° and 120° the 8 `SC-W0208` of `main` go, no gap opens where the legs meet on the bisector, and
+the area above the cap falls from 12.5 to 1.0 mm². The thickest spot of the line 3 mm wide turning 90° rises
+from 2.13 to 2.95 fills, and of the line 5 mm wide turning 120° from 3.93 to 3.95, at its miter's point. A
+parallelogram slanted 45° at both ends leans 9° and 13° where it leaned 32° and 34°.
+
+At the zigzag's inner corners the 2 legs' stitches meet: 13 or 14 stitches have their middles within 1 mm
+of each, against 5 to 7 on `main`. The shortest stitch there is 2.1 mm, and the zigzag's shortest is
+0.41 mm, longer than the machine's 0.3 mm. Its needle points lie 0.03 to 0.09 mm past each miter's point,
+against 0.2 to 0.37 mm on `main`.
+
+What got worse: the zigzag's thickest spot rose from 2.36 to 2.81 fills and a photographed cat's from 3.91
+to 3.94. The area above the cap rose by 1.0 mm² on TS-13C, 0.75 mm² and 0.25 mm² on 2 running dogs. A
+column 0.59 mm wide of a photographed building reaches 0.2 mm farther past its curved end, and a fleck of
+the cat 0.73 mm wide has 5 stitches over 20° where it had 2, its most lean the same. The sew-out at the next
+machine checkpoint sews the bands and lines as `main` plans them and with M13.60 ([machine
+testing](../plan/machine-testing.md)).
 
 ## Neighbours
 

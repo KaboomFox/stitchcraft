@@ -180,3 +180,54 @@ fn req_auto_178_a_line_turning_60_degrees_or_less_stays_one_column() {
     let ids: std::collections::BTreeSet<String> = plan.elements.iter().map(ToString::to_string).filter(|id| id.starts_with("gentle")).collect();
     assert_eq!(ids.len(), 1, "a line turning 30° sews as one column: {ids:?}");
 }
+
+#[test]
+fn req_auto_177_a_parallelogram_sews_square_at_both_its_slanted_ends() {
+    // Both ends slanted by 45°, each column end edge folding into the other rail.
+    let outcome = planned(vec![area("slab", &[(5.0, 5.0), (45.0, 5.0), (50.0, 10.0), (10.0, 10.0)])]);
+    let middle = middle_y(&outcome, "slab");
+    let stitches = stitches_of(&outcome, "slab", |p| p.1 - middle);
+    assert!(stitches.len() > 100, "the band sews as a satin column: {} top stitches", stitches.len());
+    // Measured before M13.60: up to 29.4° at its ends.
+    let lean = most_lean_at_ends(&stitches, 5.0, 1.5);
+    assert!(lean <= 15.0, "the stitches stay square into both points: {lean:.1}°");
+}
+
+/// A line `width` wide along x for 17 mm, then 15 mm turned by `turn` degrees, then 17 mm along x again.
+fn bent_line(width: f64, turn: f64) -> Element {
+    let (s, c) = sin_cos(turn.to_radians());
+    let corner = (22.0 + 15.0 * c, 20.0 + 15.0 * s);
+    let points = [(5.0, 20.0), (22.0, 20.0), corner, (corner.0 + 17.0, corner.1)];
+    automatic(widened(along("line", polylines(&[&points]), &RED, &[]), width))
+}
+
+#[test]
+fn req_auto_178_a_wider_line_sews_mitred_corners_with_no_seam() {
+    for width in [3.0, 5.0] {
+        for turn in [90.0, 120.0] {
+            let elements = vec![bent_line(width, turn)];
+            let design = stitchcraft_engine::design::Design::new(elements.clone(), Default::default()).unwrap();
+            let outcome = stitchcraft_testkit::designs::in_place(&design);
+            let plan = outcome.plan.as_ref().unwrap();
+            let ids: std::collections::BTreeSet<String> = plan.elements.iter().map(ToString::to_string).collect();
+            assert_eq!(ids, ["line~leg1", "line~leg2", "line~leg3"].map(String::from).into(), "{width} mm, {turn}°: a column per leg");
+            let leaning: Vec<_> = outcome.diagnostics.iter().filter(|d| d.code == Code::SatinStitchesLean).collect();
+            assert!(leaning.is_empty(), "{width} mm, {turn}°: {leaning:?}");
+            // Where the legs meet, no fabric shows: the top stitches leave no gap.
+            let cover = fabric::cover(&design, plan, fabric::GAP);
+            assert_eq!(cover.gaps, 0, "{width} mm, {turn}°: {cover:?}");
+            // Measured on 2026-11-22: 2.95 to 3.96 fills, against 2.13 to 3.93 as one column.
+            let thickest = fabric::thickness(plan, &fabric::Limits::DEFAULT).fills.value;
+            assert!(thickest < 4.0, "{width} mm, {turn}°: {thickest:.2} fills");
+        }
+    }
+}
+
+#[test]
+fn req_auto_178_a_wider_line_turning_60_degrees_stays_one_column() {
+    for width in [3.0, 5.0] {
+        let outcome = planned(vec![bent_line(width, 60.0)]);
+        let ids: Vec<String> = outcome.plan.as_ref().unwrap().elements.iter().map(ToString::to_string).collect();
+        assert_eq!(ids, ["line"], "{width} mm");
+    }
+}
