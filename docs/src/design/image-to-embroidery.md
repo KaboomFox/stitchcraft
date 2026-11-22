@@ -1320,8 +1320,9 @@ expanded and drawn by hand ([Expand](#expand)).
   for one, is cut at each corner turning more than 60°. Each leg is a column of its own, named after the
   subpath with `~leg1`, `~leg2` and so on from its start. A line that walks its middle once sews that walk as
   a running stitch under the subpath's own name, then its legs' tops from the far end back with no underlay.
-  A wider line sews its legs in turn from its start, each with its underlay, and each ends where the next
-  starts. A corner whose miter its limit cuts square, a curve and a closed line keep one column.
+  A wider line sews its legs from its start, one after the other, with an underlay for each, and the next leg
+  starts where the last ended. Curves, closed lines and corners whose miter its limit cuts square keep one
+  column.
 
 Measured on the 63 designs again with the build:
 

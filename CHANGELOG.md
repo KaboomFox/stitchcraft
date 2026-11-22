@@ -2276,9 +2276,9 @@ What a user can do with this version, before its first release. The entries belo
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
-- M13.60: a satin column's ends stay clean (`REQ-AUTO-177`, `REQ-AUTO-178`). Where a slanted or curved edge
-  cut a column's end, as a circle cuts a band, its stitches spread like a fan along the column and reached
-  over what lay beside it. Now they stay square to the column up to the end and grow shorter into the
+- M13.60: clean ends of satin columns (`REQ-AUTO-177`, `REQ-AUTO-178`). Where a slanted or curved edge
+  cut a column's end, as a circle cuts a band, its stitches spread like a fan along the column, over the
+  shape beside it. Now they stay square to the column up to the end and grow shorter into the
   corner. A line that turns by more than 60° at a sharp corner sewed one column round it, whose stitches
   fanned round the inside of the corner. Now it sews a column for each leg, and the legs meet on the
   corner's bisector. A narrow line walks its whole length once, then sews its legs back from its far end.
