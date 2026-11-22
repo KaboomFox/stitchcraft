@@ -60,7 +60,7 @@ const NONE: &BTreeSet<ElementRef> = &BTreeSet::new();
 
 /// No lettering's columns.
 const NO_PULL: &BTreeMap<ElementRef, crate::auto::cap::Pull> = &BTreeMap::new();
-const NO_PULLS: &BTreeMap<ElementRef, Vec<f64>> = &BTreeMap::new();
+const NO_PULLS: &BTreeMap<ElementRef, crate::auto::cap::Pullable> = &BTreeMap::new();
 
 fn rules() -> Rules<'static> {
     Rules { cap: 4.0, limit: 4.0, base: NONE, columns: NONE, lettering: NO_PULL, pulls: NO_PULLS, overlap: 0.0, shortest: 0.3, longest: 12.1 }
@@ -716,10 +716,10 @@ fn fan(crowd: f64) -> Vec<(f64, f64)> {
 }
 
 /// The fan's column, its element, and its shares when the cap may pull its points in.
-fn fanned(crowd: f64) -> (StitchPlan, BTreeSet<ElementRef>, BTreeMap<ElementRef, Vec<f64>>) {
+fn fanned(crowd: f64) -> (StitchPlan, BTreeSet<ElementRef>, BTreeMap<ElementRef, Pullable>) {
     let sewn = plan(&[("fan", Role::Top, fan(crowd))]);
     let column: BTreeSet<ElementRef> = ElementRef::from_index(0).into_iter().collect();
-    let pulls = column.iter().map(|element| (*element, vec![0.25, 0.5])).collect();
+    let pulls = column.iter().map(|element| (*element, Pullable { shares: vec![0.25, 0.5], spacing: 0.4 })).collect();
     (sewn, column, pulls)
 }
 
@@ -770,7 +770,7 @@ fn req_auto_171_a_cap_out_of_work_while_it_pulls_points_in_keeps_what_it_pulled(
 /// The fan with `crowd`, ready for the cap, with `rules`: its plan and measure, given to `check`.
 fn judged(crowd: f64, shares: Vec<f64>, check: impl Fn(&mut Cap, Point, &mut Meter)) {
     let (mut sewn, column, _) = fanned(crowd);
-    let pulls: BTreeMap<ElementRef, Vec<f64>> = column.iter().map(|element| (*element, shares.clone())).collect();
+    let pulls: BTreeMap<ElementRef, Pullable> = column.iter().map(|element| (*element, Pullable { shares: shares.clone(), spacing: 0.4 })).collect();
     let rules = Rules { cap: 3.0, limit: 4.0, columns: &column, pulls: &pulls, ..rules() };
     let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
     let spot = thickness.most(Measure::Fills).at;
@@ -786,9 +786,10 @@ fn judged(crowd: f64, shares: Vec<f64>, check: impl Fn(&mut Cap, Point, &mut Met
 }
 
 #[test]
-fn req_auto_171_a_point_is_crowded_closer_than_0_35_mm_to_its_rail_s_neighbour() {
+fn req_auto_171_a_point_is_crowded_closer_than_its_column_s_spacing_to_its_rail_s_neighbour() {
     // The fan's points sit at entries 1 to 21 of its block, after its jump: entry 11 is on the crowded
-    // rail, between 2 others there, and entry 12 on the open rail, 0.4 mm from its neighbours.
+    // rail, between 2 others there, and entry 12 on the open rail, 0.4 mm from its neighbours: the spacing,
+    // so not crowded.
     let crowded = (0, 11);
     let open = (0, 12);
     let moves = BTreeMap::new();
@@ -833,4 +834,61 @@ fn req_auto_171_a_point_is_crowded_closer_than_0_35_mm_to_its_rail_s_neighbour()
     });
     // A column whose shares are none moves no point.
     judged(0.05, Vec::new(), |cap, spot, meter| assert!(cap.pulled(crowded, 0, &moves, spot, meter).unwrap().is_none()));
+}
+
+/// Whether the cap would pull in entry `point` of `sewn`, a column's whose shares and spacing are the
+/// defaults, for the spot at `spot`, with the machine's shortest stitch `shortest`.
+fn pulls_in(sewn: &mut StitchPlan, point: Entry, spot: (f64, f64), shortest: f64) -> bool {
+    let column: BTreeSet<ElementRef> = ElementRef::from_index(0).into_iter().collect();
+    let pulls: BTreeMap<ElementRef, Pullable> = column.iter().map(|element| (*element, Pullable { shares: vec![0.25, 0.5], spacing: 0.4 })).collect();
+    let rules = Rules { cap: 3.0, limit: 4.0, columns: &column, pulls: &pulls, shortest, ..rules() };
+    let mut thickness = Thickness::of(sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let cap = Cap {
+        pass: Pass::new(sewn, &mut thickness, &rules),
+        ribbons: Ribbons::default(),
+        longest: BTreeMap::new(),
+        taken: [0.0; 4],
+        times: [0; 4],
+        pulled: [0; 2],
+    };
+    cap.pulled(point, 0, &BTreeMap::new(), p(spot.0, spot.1), &mut Budget::DEFAULT.meter()).unwrap().is_some()
+}
+
+#[test]
+fn req_auto_171_a_point_whose_stitches_pass_1_mm_from_the_spot_or_nearer_is_looked_at() {
+    // The point at (4, 0), entry 3, crowds its rail's point 0.25 mm before it. Its stitch in runs along
+    // y = 0 and its stitch out slants up to y = 0.25: a spot 1 mm below the first is near enough, and one
+    // farther from both is not, whichever is the nearer.
+    let level_in = || plan(&[("column", Role::Top, vec![(4.0, -0.25), (0.0, 0.0), (4.0, 0.0), (0.0, 0.25), (4.0, 0.25)])]);
+    assert!(pulls_in(&mut level_in(), (0, 3), (2.0, -1.0), 0.3));
+    assert!(!pulls_in(&mut level_in(), (0, 3), (2.0, -1.5), 0.3));
+    let level_out = || plan(&[("column", Role::Top, vec![(4.0, -0.25), (0.0, -0.25), (4.0, 0.0), (0.0, 0.0), (4.0, 0.25)])]);
+    assert!(pulls_in(&mut level_out(), (0, 3), (2.0, 1.0), 0.3));
+    assert!(pulls_in(&mut level_out(), (0, 3), (2.0, 0.5), 0.3));
+    assert!(!pulls_in(&mut level_out(), (0, 3), (2.0, 1.5), 0.3));
+    // A stitch moved in no shorter than the machine's shortest: a quarter of 4 mm in leaves 3 mm.
+    assert!(!pulls_in(&mut level_in(), (0, 3), (2.0, -1.0), 3.5));
+}
+
+#[test]
+fn req_auto_171_a_point_between_its_own_column_s_top_stitches_only_is_looked_at() {
+    // A column whose top starts after its underlay and runs straight on into another column's top, with no
+    // jump: its first top point comes from its underlay, and its last goes to the other column.
+    let mut builder = PlanBuilder::new(Thread::new(Rgb::new(0, 0, 0)));
+    let (one, two) = (builder.element(ElementId::new("one").unwrap()).unwrap(), builder.element(ElementId::new("two").unwrap()).unwrap());
+    builder.jump(p(4.0, -1.0), Provenance::new(one, Role::Travel));
+    for (x, y) in [(4.0, -1.0), (0.0, -1.0)] {
+        builder.stitch(p(x, y), Provenance::new(one, Role::Underlay));
+    }
+    for (x, y) in [(4.0, -0.5), (0.0, -0.25), (4.0, -0.25), (0.0, 0.0), (4.0, 0.0)] {
+        builder.stitch(p(x, y), Provenance::new(one, Role::Top));
+    }
+    for (x, y) in [(0.0, 0.25), (4.0, 0.25)] {
+        builder.stitch(p(x, y), Provenance::new(two, Role::Top));
+    }
+    let sewn = builder.finish();
+    // Entries: the jump, 2 of underlay, then the top from entry 3 to 7, and the other column's.
+    assert!(pulls_in(&mut sewn.clone(), (0, 5), (2.0, -0.25), 0.3), "a point between 2 of its own top stitches");
+    assert!(!pulls_in(&mut sewn.clone(), (0, 3), (2.0, -0.5), 0.3), "from its underlay");
+    assert!(!pulls_in(&mut sewn.clone(), (0, 7), (2.0, 0.0), 0.3), "to the other column");
 }

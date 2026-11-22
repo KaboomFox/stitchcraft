@@ -27,7 +27,7 @@ use stitchcraft_params::Family;
 use stitchcraft_plan::{MachineProfile, StitchPlan};
 
 use crate::assemble::{Assembled, assemble_routed};
-use crate::auto::cap::Pull;
+use crate::auto::cap::{Pull, Pullable};
 use crate::auto::thick::Pulls;
 use crate::auto::{Sewing, sewing, thick};
 use crate::check;
@@ -132,7 +132,8 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
         .filter_map(|(element, _)| {
             let satin = SatinParams::from_set(&element.params).ok()?.params;
             let shares = satin.short_stitch_inset.iter().map(|percent| percent / 100.0).collect();
-            (satin.short_stitch_distance_mm.get() <= 0.0).then(|| (element.id.clone(), shares))
+            let column = Pullable { shares, spacing: satin.zigzag_spacing_mm.get() };
+            (satin.short_stitch_distance_mm.get() <= 0.0).then(|| (element.id.clone(), column))
         })
         .collect();
     let names = named(design, (&elements, &base, &generated), profile, budget, &mut diagnostics);

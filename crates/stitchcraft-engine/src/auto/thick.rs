@@ -18,7 +18,7 @@ use stitchcraft_plan::{ElementRef, MachineProfile, StitchPlan};
 
 use stitchcraft_params::ParamSet;
 
-use super::cap::{self, Capped, Pull};
+use super::cap::{self, Capped, Pull, Pullable};
 use super::thin::{self, Thinned};
 use super::{AutoParams, OVERLAP};
 use crate::names::Names;
@@ -124,7 +124,7 @@ pub(crate) fn finished(
             let (base, made, columns) = (refs(&|id| base.contains(id)), refs(&|id| made.contains(id)), refs(&|id| columns.contains(id)));
             let lettering: BTreeMap<ElementRef, Pull> =
                 plan.elements.iter().enumerate().filter_map(|(at, id)| Some((ElementRef::from_index(at)?, *lettering.get(id)?))).collect();
-            let pulls: BTreeMap<ElementRef, Vec<f64>> =
+            let pulls: BTreeMap<ElementRef, Pullable> =
                 plan.elements.iter().enumerate().filter_map(|(at, id)| Some((ElementRef::from_index(at)?, pulls.get(id)?.clone()))).collect();
             let rules = thin::Rules {
                 cap: held.cap,
@@ -175,7 +175,7 @@ pub(crate) type Reach<'a> = (&'a [ElementId], &'a BTreeSet<ElementId>, &'a BTree
 
 /// The satin columns whose crowded needle points the cap may pull in, by their ids, each with the shares of a
 /// stitch they move in by, in turn (`REQ-AUTO-171`).
-pub(crate) type Pulls = BTreeMap<ElementId, Vec<f64>>;
+pub(crate) type Pulls = BTreeMap<ElementId, Pullable>;
 
 /// What is said of how thick `plan` sews against the limits `held`, with nothing taken: a design whose
 /// elements all sew by their own settings, a person's lettering among them (`REQ-AUTO-124`). It is measured

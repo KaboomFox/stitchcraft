@@ -12,14 +12,25 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use stitchcraft_core::units::at_least;
 use stitchcraft_core::{Exhausted, Meter, Point};
 use stitchcraft_plan::thickness::Measure;
 use stitchcraft_plan::{Role, SewnStitch};
 
 use super::{Cap, NEAR, Ribbon, cell};
-use crate::auto::CROWDED_CLOSER_THAN;
 use crate::auto::thin::Entry;
 use crate::normalize::near::to_side;
+
+/// A satin column whose crowded needle points the cap may pull in (`REQ-AUTO-171`): the shares of a stitch
+/// its points move in by, in turn, its `short_stitch_inset`, and its zigzag spacing, which a point closer than
+/// to its rail's point before or after it crowds.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Pullable {
+    /// The shares, from 0 to 1.
+    pub(crate) shares: Vec<f64>,
+    /// The spacing, in millimetres.
+    pub(crate) spacing: f64,
+}
 
 /// A point the cap may move, as it would move: its 2 stitches as they are and as they would be, and where
 /// the point would go.
@@ -67,13 +78,13 @@ impl Cap<'_, '_> {
                 continue;
             }
             self.pass.moved(pulled.point, pulled.to);
-            moves.insert(pulled.point, (times + 1, first));
+            moves.insert(pulled.point, (times.saturating_add(1), first));
             places.insert((cell(spot.x()), cell(spot.y())));
-            // The 2 stitches cover as they now lie, pulled in as they were.
-            for (was, now) in pulled.removed.iter().zip(pulled.added) {
-                if let Some(ribbon) = self.ribbons.kill((was.block, was.index)) {
-                    self.ribbons.add(Ribbon::of((now.from, now.to), ribbon.cut, ribbon.at, ribbon.element).firm(ribbon.firm), meter)?;
-                }
+            // The 2 stitches cover as they now lie, pulled in as they were: those near a spot above the cap.
+            let near: Vec<(Ribbon, SewnStitch)> =
+                pulled.removed.iter().zip(pulled.added).filter_map(|(was, now)| Some((self.ribbons.kill((was.block, was.index))?, now))).collect();
+            for (ribbon, now) in near {
+                self.ribbons.add(Ribbon::of((now.from, now.to), ribbon.cut, ribbon.at, ribbon.element).firm(ribbon.firm), meter)?;
             }
         }
         self.pulled = [moves.len(), places.len()];
@@ -82,7 +93,7 @@ impl Cap<'_, '_> {
 
     /// How entry `point`, moved `times` before, would move in, by the share of its column's next turn: `None`
     /// when it may not. It must be a top point of a column of the rules' `pulls` between 2 stitches of its
-    /// column, one of which passes within [`NEAR`] of `spot`; closer than [`CROWDED_CLOSER_THAN`] to the point
+    /// column, one of which passes within [`NEAR`] of `spot`; closer than its column's spacing to the point
     /// before or after it on its rail; not both of whose neighbours there have moved (`moves`) while it
     /// hasn't; and its 2 stitches, moved, no shorter than the machine's shortest and no longer than its
     /// longest. It moves from where it was before it first moved towards the middle of its 2 stitches' other
@@ -98,9 +109,8 @@ impl Cap<'_, '_> {
         let pass = &self.pass;
         let (block, index) = point;
         let Some((here, role, element)) = pass.stitch(point) else { return Ok(None) };
-        let Some(share) = element.and_then(|element| pass.rules.pulls.get(&element)).and_then(|shares| shares.get(times)).copied() else {
-            return Ok(None);
-        };
+        let Some(column) = element.and_then(|element| pass.rules.pulls.get(&element)) else { return Ok(None) };
+        let Some(&share) = column.shares.get(times) else { return Ok(None) };
         let ours = |at: usize| pass.stitch((block, at)).is_some_and(|(_, role, other)| role == Role::Top && other == element);
         let (Some(from), Some(to)) = (pass.beside(point, false, meter)?, pass.beside(point, true, meter)?) else { return Ok(None) };
         let (Some(into), Some(out)) = (pass.sewn(block, from, index), pass.sewn(block, index, to)) else { return Ok(None) };
@@ -112,7 +122,7 @@ impl Cap<'_, '_> {
         let before = pass.beside((block, from), false, meter)?.filter(|at| ours(*at));
         let after = pass.beside((block, to), true, meter)?.filter(|at| ours(*at));
         let apart = |at: Option<usize>| at.and_then(|at| pass.stitch((block, at))).map_or(f64::INFINITY, |(there, _, _)| there.distance(here));
-        if apart(before).min(apart(after)) >= CROWDED_CLOSER_THAN {
+        if at_least(apart(before).min(apart(after)), column.spacing) {
             return Ok(None);
         }
         let moved = [before, after].into_iter().flatten().filter(|at| moves.contains_key(&(block, *at))).count();

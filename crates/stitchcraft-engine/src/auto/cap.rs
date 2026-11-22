@@ -702,5 +702,6 @@ pub(crate) fn kinds(capped: &Capped) -> String {
 }
 
 mod pull;
+pub(crate) use pull::Pullable;
 #[cfg(test)]
 mod tests;

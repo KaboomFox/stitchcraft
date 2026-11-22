@@ -67,7 +67,7 @@ const NONE: &BTreeSet<ElementRef> = &BTreeSet::new();
 
 /// No lettering's columns.
 const NO_PULL: &BTreeMap<ElementRef, crate::auto::cap::Pull> = &BTreeMap::new();
-const NO_PULLS: &BTreeMap<ElementRef, Vec<f64>> = &BTreeMap::new();
+const NO_PULLS: &BTreeMap<ElementRef, crate::auto::cap::Pullable> = &BTreeMap::new();
 
 fn rules(base: &BTreeSet<ElementRef>) -> Rules<'_> {
     Rules { cap: 4.0, limit: 4.0, base, columns: NONE, lettering: NO_PULL, pulls: NO_PULLS, overlap: 1.0, shortest: 0.3, longest: 12.1 }

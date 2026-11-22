@@ -124,7 +124,7 @@ pub(crate) struct Rules<'r> {
     /// The satin columns among `columns` that move no needle point in as they are made, each with the shares
     /// of a stitch its crowded points move in by, in turn: where a spot sews above the warning's limit, the cap
     /// pulls their crowded points in (`REQ-AUTO-171`).
-    pub(crate) pulls: &'r BTreeMap<ElementRef, Vec<f64>>,
+    pub(crate) pulls: &'r BTreeMap<ElementRef, super::cap::Pullable>,
     /// How far a row's end may move back along its row, in millimetres: the overlap of areas.
     pub(crate) overlap: f64,
     /// The machine's shortest stitch, in millimetres, which no stitch the pass shortens goes under.
