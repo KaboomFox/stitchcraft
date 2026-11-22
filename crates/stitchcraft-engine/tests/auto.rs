@@ -9,10 +9,10 @@
 
 use stitchcraft_core::{Budget, Code, Mm, Point, math};
 use stitchcraft_engine::PlanOutcome;
-use stitchcraft_engine::auto::{BEND_OPENED, CROWDED_INSETS, Stitches, digitize, digitized, underlay};
+use stitchcraft_engine::auto::{BEND_OPENED, CROWDED_INSETS, PULL_HELD, Stitches, digitize, digitized, underlay};
 use stitchcraft_engine::common::{LOCK_END, LOCK_END_SCALE, LOCK_START, LOCK_START_SCALE};
 use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Join, Path, Segment, Shape, Subpath};
-use stitchcraft_engine::generators::satin::{BEND_OPEN, SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET};
+use stitchcraft_engine::generators::satin::{BEND_OPEN, PULL_COMPENSATION_MAX, SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET};
 use stitchcraft_engine::normalize::region;
 use stitchcraft_engine::normalize::stroke::SHAPE_TOLERANCE;
 use stitchcraft_params::ParamSet;
@@ -47,6 +47,8 @@ fn satin(width: f64) -> Vec<(&'static str, String)> {
     params.extend(underlay(Mm::new(width).unwrap()).iter().map(|&key| (key, "true".to_string())));
     // It moves no crowded point in as it is made, and keeps its spacing on the inside of a bend (`REQ-AUTO-170`).
     params.extend([(SHORT_STITCH_DISTANCE, "0".to_string()), (SHORT_STITCH_INSET, CROWDED_INSETS.to_string()), (BEND_OPEN, BEND_OPENED.to_string())]);
+    // Its pull compensation is held to a share of each stitch's width (`REQ-AUTO-176`).
+    params.push((PULL_COMPENSATION_MAX, PULL_HELD.to_string()));
     params
 }
 

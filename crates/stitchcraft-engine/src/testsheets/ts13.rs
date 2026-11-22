@@ -24,7 +24,7 @@
 //! its pictures: which shapes it digitized, what it did with the specks and the stacked badge, and so on.
 
 use stitchcraft_core::Code::{
-    self, AutoBase, AutoDigitized, AutoLayers, AutoOrder, AutoSatinFilled, AutoSpeck, AutoThick, AutoThinned, AutoUnder, FillPartsApart,
+    self, AutoBase, AutoDigitized, AutoLayers, AutoOrder, AutoSatinFilled, AutoSpeck, AutoStyle, AutoThick, AutoThinned, AutoUnder, FillPartsApart,
     StitchesMerged,
 };
 
@@ -65,9 +65,10 @@ pub(super) const LETTERS_SAY: [Code; 6] = [AutoDigitized, AutoOrder, AutoUnder, 
 
 /// What the engine says of TS-13C, in order: how many shapes it digitized, the pupils and hairs that no
 /// satin column can follow, filled; the face, digitized whole under the eyes in its holes; the order; the
-/// areas that reach under others; the base layer; the eyes, sewn in parts in both halves; the needle points left
-/// out; and what the last pass took. No place of 1 mm² sews 4 fills, the warning's limit (`REQ-AUTO-113`).
-pub(super) const LINES_AND_PARTS_SAY: [Code; 14] = [
+/// areas that reach under others; the base layer; that the `logo` style would sew the star's points as
+/// columns, which stay in its fill (`REQ-AUTO-175`); the eyes, sewn in parts in both halves; the needle points
+/// left out; and what the last pass took. No place of 1 mm² sews 4 fills, the warning's limit (`REQ-AUTO-113`).
+pub(super) const LINES_AND_PARTS_SAY: [Code; 15] = [
     AutoDigitized,
     AutoSatinFilled,
     AutoSatinFilled,
@@ -78,6 +79,7 @@ pub(super) const LINES_AND_PARTS_SAY: [Code; 14] = [
     AutoOrder,
     AutoUnder,
     AutoBase,
+    AutoStyle,
     FillPartsApart,
     FillPartsApart,
     StitchesMerged,
@@ -89,8 +91,11 @@ pub(super) const LINES_AND_PARTS_SAY: [Code; 14] = [
 /// others and those cut away under their details; the base layer; and where the design sews thick. The
 /// white round each emblem, a square ring along which no satin column could be drawn, was filled until
 /// M13.37, and an outline then started at its fill's last stitch, which left needle points out
-/// (`REQ-AUTO-051`): drawn in straight strokes, it sews a column along each (`REQ-AUTO-087`).
-pub(super) const LAYERS_SAY: [Code; 7] = [AutoDigitized, AutoLayers, AutoOrder, AutoUnder, AutoBase, AutoThinned, AutoThick];
+/// (`REQ-AUTO-051`): drawn in straight strokes, it sews a column along each (`REQ-AUTO-087`). The white disc
+/// round the abutting emblem's star, whose width swells and tapers between the star's points, is filled whole
+/// under the star since M13.59 (`REQ-AUTO-174`), and its outline starting at its fill's last stitch leaves
+/// needle points out again.
+pub(super) const LAYERS_SAY: [Code; 8] = [AutoDigitized, AutoLayers, AutoOrder, AutoUnder, AutoBase, StitchesMerged, AutoThinned, AutoThick];
 
 /// What the engine says of TS-13E, in order: as of TS-13D, and the needle points left out where an outline
 /// starts at its fill's last stitch. A button's rim is a ring a column follows.

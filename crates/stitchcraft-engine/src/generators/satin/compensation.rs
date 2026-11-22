@@ -214,7 +214,7 @@ mod tests {
     #[test]
     fn random_steps_and_shares_fill_their_ranges() {
         let mut rng = SplitMix64::new(7);
-        let mut processor = Processor { pull: [0.0, 0.0], least: [0.1, -0.2], range: [0.2, 0.0], jitter: 0.25, rng: Some(&mut rng) };
+        let mut processor = Processor { pull: [0.0, 0.0], least: [0.1, -0.2], range: [0.2, 0.0], jitter: 0.25, most: None, rng: Some(&mut rng) };
         let (mut steps, mut sides) = (Vec::new(), Vec::new());
         for _ in 0..1000 {
             steps.push(processor.step());
@@ -230,7 +230,7 @@ mod tests {
         assert!((-3.0..-2.98).contains(&outmost) && (-1.02..=-1.0).contains(&inmost), "{outmost} {inmost}");
         // A step never gets shorter than a hundredth of the spacing.
         let mut rng = SplitMix64::new(7);
-        let mut wild = Processor { pull: [0.0, 0.0], least: [0.0, 0.0], range: [0.0, 0.0], jitter: 5.0, rng: Some(&mut rng) };
+        let mut wild = Processor { pull: [0.0, 0.0], least: [0.0, 0.0], range: [0.0, 0.0], jitter: 5.0, most: None, rng: Some(&mut rng) };
         let steps: Vec<f64> = (0..100).map(|_| wild.step()).collect();
         assert!(steps.iter().all(|step| *step >= SHORTEST_STEP) && steps.contains(&SHORTEST_STEP), "{steps:?}");
     }
@@ -245,12 +245,30 @@ mod tests {
     }
 
     #[test]
+    fn req_sat_031_pull_compensation_is_held_to_a_share_of_each_stitch() {
+        // 0.4 mm on each side of a stitch 0.5 mm wide, held to 40 % and 30 %: 0.2 and 0.15 mm.
+        assert_eq!(held([0.4, 0.4], [0.0, 0.0], Some([0.4, 0.3]), 0.5), [0.2, 0.15]);
+        // With 10 % of the width as well, the millimetres make up the rest: 0.15 and 0.1 of 0.5.
+        let [a, b] = held([0.4, 0.4], [0.1, 0.1], Some([0.4, 0.3]), 0.5);
+        assert!((a - 0.15).abs() < 1e-12 && (b - 0.1).abs() < 1e-12, "{a} {b}");
+        // A side that moves out exactly its share, or less, or in, keeps its millimetres, and so does one
+        // not held.
+        assert_eq!(held([0.2, -0.3], [0.0, 0.0], Some([0.4, 0.4]), 0.5), [0.2, -0.3]);
+        assert_eq!(held([0.4, 0.4], [0.0, 0.0], None, 0.5), [0.4, 0.4]);
+        // A column's processor holds its pairs: 0.4 mm on a stitch 0.5 mm wide moves each end 0.2 mm out.
+        let mut rng = SplitMix64::new(7);
+        let mut processor = Processor { pull: [0.4, 0.4], least: [0.0, 0.0], range: [0.0, 0.0], jitter: 0.0, most: Some([0.4, 0.4]), rng: Some(&mut rng) };
+        let [a, b] = processor.widened([p(0.0, 0.0), p(0.0, 0.5)]);
+        assert!(near(a, p(0.0, -0.2)) && near(b, p(0.0, 0.7)), "{a:?} {b:?}");
+    }
+
+    #[test]
     fn a_roll_maps_to_a_step_and_to_shares_as_in_ink_stitch() {
         // The rolls the processor takes, in order: one for a step, then one for each side of a pair.
         let mut rolls = SplitMix64::new(3);
         let (step_roll, roll_a, roll_b) = (rolls.next_f64(), rolls.next_f64(), rolls.next_f64());
         let mut rng = SplitMix64::new(3);
-        let mut processor = Processor { pull: [0.0, 0.0], least: [0.1, 0.2], range: [0.3, 0.4], jitter: 0.25, rng: Some(&mut rng) };
+        let mut processor = Processor { pull: [0.0, 0.0], least: [0.1, 0.2], range: [0.3, 0.4], jitter: 0.25, most: None, rng: Some(&mut rng) };
         assert_eq!(processor.step(), 1.0 + (step_roll - 0.5) * 2.0 * 0.25);
         let [a, b] = processor.widened([p(0.0, 0.0), p(0.0, 10.0)]);
         assert!((a.y() + 10.0 * (0.1 + roll_a * 0.3)).abs() < 1e-12, "{a:?}");

@@ -1030,6 +1030,28 @@ mod tests {
     }
 
     #[test]
+    fn req_auto_174_a_part_of_one_uneven_line_is_measured_against_a_fills_narrowest_piece() {
+        // A diamond 20 mm long: its widest circle is 4.85 mm across when it is 5 mm wide, and 2.97 mm when 3.
+        let diamond = |width: f64| part(&[(0.0, 0.0), (10.0, -width / 2.0), (20.0, 0.0), (10.0, width / 2.0)], &[]);
+        let measure = |part: &Polygon, bounds: &Bounds, work: u64| {
+            let mut meter = Budget { max_work: work, ..Budget::DEFAULT }.meter();
+            let edges = Edges::of(part, piece(part), &mut Budget::DEFAULT.meter()).unwrap();
+            let (found, _) = sewn(part);
+            measured(part, &found, &edges, bounds, &mut meter).map(|measures| measures.map(|m| (m.lines, m.fill_wide)))
+        };
+        let all = Budget::DEFAULT.max_work;
+        assert_eq!(measure(&diamond(5.0), &bounds(1.0), all), Ok(Some((1, true))));
+        assert_eq!(measure(&diamond(3.0), &bounds(1.0), all), Ok(Some((1, false))));
+        // Not where uneven parts aren't filled, and not for an even band 5 mm wide.
+        let kept = Bounds { fill_uneven: false, ..bounds(1.0) };
+        assert_eq!(measure(&diamond(5.0), &kept, all), Ok(Some((1, false))));
+        assert_eq!(measure(&band(5.0), &bounds(1.0), all), Ok(Some((1, false))));
+        // Measuring it is work: with less than it takes, the meter runs out.
+        let needed = (0..all).find(|&work| measure(&diamond(5.0), &bounds(1.0), work).is_ok()).unwrap();
+        assert!(needed > 0 && measure(&diamond(5.0), &bounds(1.0), needed - 1).is_err());
+    }
+
+    #[test]
     fn req_auto_031_a_part_whose_lines_have_no_width_has_no_measures() {
         // A band's column with its centre line moved onto the band's edge: no circle fits on it, so the part
         // has no width to be slender or uneven by.
@@ -1037,13 +1059,13 @@ mod tests {
         let mut meter = Budget::DEFAULT.meter();
         let edges = Edges::of(&band, piece(&band), &mut meter).unwrap();
         let (found, _) = sewn(&band);
-        assert!(measured(&band, &found, &edges, &mut meter).unwrap().is_some_and(|measures| measures.width > 2.9));
+        assert!(measured(&band, &found, &edges, &bounds(1.0), &mut meter).unwrap().is_some_and(|measures| measures.width > 2.9));
         let edge = Line { points: [2.0, 10.0, 18.0].map(|x| Point::new(x, 0.0).unwrap()).to_vec(), closed: false };
         let mut on_the_edge = found;
         for column in &mut on_the_edge {
             column.line = edge.clone();
         }
-        assert_eq!(measured(&band, &on_the_edge, &edges, &mut meter), Ok(None));
+        assert_eq!(measured(&band, &on_the_edge, &edges, &bounds(1.0), &mut meter), Ok(None));
     }
 
     #[test]

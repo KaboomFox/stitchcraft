@@ -309,3 +309,16 @@ fn req_auto_153_a_wide_part_has_one_centre_line_and_an_even_width() {
     // Leaning towards satin loosens the evenness, as for a part of several lines.
     assert!(bounds(&[(MAX_SPLIT_SATIN_WIDTH, "10"), (PREFER, "satin")]).is_wide(8.5, 1, 0.4));
 }
+
+#[test]
+fn req_auto_174_a_part_of_one_uneven_line_is_filled_when_it_is_as_wide_as_a_fill_somewhere() {
+    let wide = |unevenness: f64| Measures { fill_wide: true, ..part(80.0, 3.0, unevenness, 1) };
+    assert_eq!(choose(&wide(0.31), &bounds(&[])), RuleId::Uneven);
+    // Exactly the bound is even, and a narrower part keeps its column.
+    assert_eq!(choose(&wide(0.3), &bounds(&[])), RuleId::Column);
+    assert_eq!(choose(&part(80.0, 3.0, 0.31, 1), &bounds(&[])), RuleId::Column);
+    // Not when uneven parts aren't filled.
+    assert_eq!(choose(&wide(0.31), &bounds(&[("auto_fill_uneven", "false")])), RuleId::Column);
+    let raised = bounds(&[]);
+    assert!(raised.one_uneven_line(1, 0.301) && !raised.one_uneven_line(1, 0.3) && !raised.one_uneven_line(2, 0.4));
+}

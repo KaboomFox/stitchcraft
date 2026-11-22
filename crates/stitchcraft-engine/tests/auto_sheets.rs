@@ -140,14 +140,14 @@ fn req_auto_010_ts13_no_shape_sews_over_one_drawn_over_it() {
     // disc, which fill its hole. The blue square's ring is as narrow as a satin column, but a column round the
     // gold disc would sew stitches of 7.3 mm at the square's corners, so it is refused (REQ-AUTO-035) and the
     // square is filled whole under the gold disc, which sews on it (REQ-AUTO-033). In the emblems, the navy square is digitized whole under the white disc,
-    // the star and the bars, and the white disc is narrower than a satin column round the star, which sews
-    // after the star's fill it borders; the stacked emblem's white is the white round the square too, which
-    // sews where it will. On the face, every line lies on the pink face, the eyes' lines and
+    // the star and the bars. The white disc round the star, a ring whose width swells and tapers between the
+    // star's points, is filled whole under the star since M13.59 (`REQ-AUTO-174`), and the star sews on it;
+    // the stacked emblem's white is the white round the square too, which sews where it will. On the face, every line lies on the pink face, the eyes' lines and
     // pupils on the white eyes, each brow on its eye's line, and the hairs on the outline.
     for (id, picture, over) in [
         ("TS-13A", "ts13a:auto:badge-stacked", &[("red", "blue"), ("red", "gold"), ("blue", "gold")][..]),
         ("TS-13A", "ts13a:auto:badge-abutting", &[("red", "blue"), ("red", "gold"), ("blue", "gold")][..]),
-        ("TS-13D", "ts13d:auto:emblem-abutting", &[("navy", "disc"), ("navy", "star"), ("navy", "bar-1"), ("star", "disc")][..]),
+        ("TS-13D", "ts13d:auto:emblem-abutting", &[("navy", "disc"), ("navy", "star"), ("navy", "bar-1"), ("disc", "star")][..]),
         ("TS-13D", "ts13d:auto:emblem-stacked", &[("navy", "star"), ("navy", "gold")][..]),
         ("TS-13E", "ts13e:auto:button-abutting", &[("disc", "dot-1"), ("disc", "dot-4"), ("disc", "rim")][..]),
         ("TS-13E", "ts13e:auto:button-stacked", &[("disc", "dot-1"), ("disc", "dot-4"), ("disc", "rim")][..]),
@@ -253,9 +253,8 @@ fn off_square(plan: &StitchPlan, prefix: &str, square: impl Fn(Point) -> Option<
 
 #[test]
 fn req_auto_017_ts13_satin_columns_lie_square_to_their_strokes() {
-    // Round a ring or a bend, a column's rungs point at the middle its stroke turns round; across a star's
-    // point, square to the line from the star's middle to its tip. Each lies within 10° of that, along a
-    // point from its tip to its cut too.
+    // Round a ring or a bend, a column's rungs point at the middle its stroke turns round, each within 10° of
+    // that. The star's points, which sewed as columns, stay in its fill since M13.59 (`REQ-AUTO-175`).
     let mut measured: Vec<(String, Vec<(Point, f64)>)> = Vec::new();
     let round = |middle: Point| move |at: Point| Some(towards(middle, at));
     // With the cap at its default: the cap at the end of planning takes no top stitch of a column
@@ -274,11 +273,6 @@ fn req_auto_017_ts13_satin_columns_lie_square_to_their_strokes() {
     measured.push(("the face's outline".into(), off_square(plan, "ts13c:auto:face:outline", round(face))));
     measured.push(("the eyes' lines".into(), off_square(plan, "ts13c:auto:face:eye-lines", |at| Some(towards(nearer_eye(at), at)))));
     measured.push(("the smile".into(), off_square(plan, "ts13c:auto:face:smile", round(smiles_middle))));
-    let star = corners(drawn(design, "ts13c:auto:star:star"));
-    let star_middle = p(star.iter().map(|q| q.x()).sum::<f64>() / star.len() as f64, star.iter().map(|q| q.y()).sum::<f64>() / star.len() as f64);
-    let across = move |at: Point| Some((-(at.y() - star_middle.y()), at.x() - star_middle.x()));
-    // The star's middle is a fill, and its points the columns named after it.
-    measured.push(("the star's points".into(), off_square(plan, "ts13c:auto:star:star#", across)));
     // The C's bend, left of its middle, away from its round ends.
     let (design, plan) = sheet("TS-13B");
     for height in ["15", "10", "6"] {
