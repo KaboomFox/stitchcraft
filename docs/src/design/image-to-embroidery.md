@@ -1194,6 +1194,121 @@ longer says that its stitches lean. The 4 mm word runs along its letters' middle
 test picture sews as it did. Taking the strokes from the centre lines instead fails: the M's middle stroke
 is free for only 1.5 widths, too short to fit a line to.
 
+### A column's ends
+
+The owner reviewed 18 drawings sewn by automatic digitizing on 2026-11-21. Of the sunrise she wrote "main
+issues are the blue bottom band". That band is 5 mm tall, and a circle cuts its ends. It sews as a column
+whose stitches spread like a fan at both ends, over the border beside it. Of the mug she wrote "biggest
+issues is handle", a curved band that meets the cup. M13.60 measured every end of every automatic column,
+to find whether a column's stitches can lie square to it up to its end and stop at the shape's own edge.
+
+#### A column's end today
+
+The set has 63 designs. Besides the 18 review drawings, it holds the repository's 28 SVG fixtures and 6
+traced documents (the 4 dogs, the pear and the round patch), 6 traced photos kept locally, and the digitized
+halves of TS-13A to TS-13E. At each end, the stitches whose middles lie within one
+column width of it are measured. A stitch's lean is the angle between the line from one needle point to
+the point after next and a line square to the column's way, which is the mean of its 2 rails' ways beside
+the stitch. Taken over 2 stitches, the satin's own zigzag cancels, and a square column leans 0. An end's
+kind comes from its outline: square, slanted (more than 20° from square), curved, round, pointed, or a
+column shorter than 3 widths, which is mostly a traced fleck. Needle points are measured against the drawn
+shapes of the column's colour, less how far past its rails the column sews in its middle.
+
+| Kind of end | Ends | Median of each end's most lean | Ends with a stitch over 20° | The same with (a), below |
+|---|---:|---:|---:|---:|
+| Square | 184 | 4.8° | 8 % | 4.8°, 8 % |
+| Pointed, a taper to a point | 44 | 10.7° | 9 % | 11.0°, 11 % |
+| Round | 38 | 15.8° | 34 % | 15.8°, 34 % |
+| Slanted, the edge straight | 37 | 28.5° | 62 % | 18.9°, 50 % |
+| Curved, as a circle cuts it | 21 | 24.3° | 67 % | 20.0°, 48 % |
+| A column shorter than 3 widths | 34 | 14.4° | 32 % | 13.3°, 27 % |
+
+What lies past an end, nothing, another colour or a shape of the same colour, changes these little. No end
+leaves fabric bare: 0.04 % of the area within a width of the ends on average. No needle point lies more than
+0.7 mm beyond the drawn shape past the column's own reach in its middle, and 21 ends of 358 reach 0.2 mm or
+more farther. 17 of them are traced pictures and sheets, and 4 are round-capped lines of the drawings,
+whose columns end square past the line's end, as REQ-AUTO-003 says. (a) moves none of them.
+
+The fans come from how a part's column ends (REQ-AUTO-016, [centre-line columns](algorithms/centre-lines.md#columns)).
+An end edge more than 20° from square ends at its farthest corner, so one rail runs on along the end edge to
+meet the other there. The rung nearest that end runs square to the mean of its 2 rails' ways, and one of
+them is the end edge. The rung leans by half the end's slant, and the stitches between it and the corner
+spread like a fan. Each of the sunrise band's 25 stitches within 5 mm of an end leans more than 20°, up to
+37°. Their ends lie 0.4 mm, the band's pull compensation, over the border ring, which sews before the band.
+A band with a 45° end leans 32° there.
+
+The mug's handle is a stroke whose square ends lie 1 mm inside the cup. It sews before the cup, which
+covers its ends, and they lean 8° to 9°, as its middle does. What looks ragged where it meets the cup is the
+comb of short stitches along the inside of its bend, which M13.58's step is about.
+
+Corners of drawn lines belong here too. The review set's zigzag, a line 1.5 mm wide with sharp corners,
+sews each corner as one column turning: its stitches fan round the inner corner, up to 57.7° along the
+line, and `SC-W0208` names 6 stretches, 2 at each corner. Those are 6 of the 14 `SC-W0208` of the whole
+set. A line drawn with round joins, the shield's edge, turns its 90° corner as a bend and isn't warned of.
+
+#### The candidates, measured
+
+Each candidate was prototyped and the whole set planned with it. The rows count the 324 ends of columns
+longer than 3 widths and the set's 63 designs.
+
+| | Today | (a) square ends | (a) and (d) mitred corners |
+|---|---:|---:|---:|
+| Ends with a stitch over 20° | 69 | 63 | 65 |
+| End stitches over 20° | 227 | 163 | 171 |
+| The drawings' end stitches over 20° | 69 | 20 | 28 |
+| `SC-W0208` | 14 | 12 | 6 |
+| Area above the cap, mm² | 1,281.2 | 1,282.5 | 1,282.5 |
+| Stitches | 319,780 | 319,745 | 319,788 |
+| Ends with bare fabric, share of their area | 0.04 % | 0.04 % | 0.04 % |
+
+- **(a) Square up to the end.** At an end whose last stretch runs straight, both rails within 20° of the
+  column's way for one width before it, the end's slanted or curved edge becomes part of the rail that stops
+  first, and rungs square to the way every 0.5 mm replace the column's own rungs from where either rail
+  leaves the way to the end's farthest corner. The stitches lie square and grow shorter into the corner.
+  The way at the end is the mean of the 2 rails' ways over their last half width, past an end edge folded
+  into one rail. The sunrise's band leans 6.8° at most where it leaned 37°, a 45° end 9.6° where it leaned
+  32°, and no needle point lies farther past the drawn shape than before. Square ends, tapers to a point and
+  columns that bend into their ends are left as they are: a letter C cut along its radii keeps its stitches.
+  Most slanted ends of the traced dogs and photos are left too, since their columns wander before their ends.
+- **(b) Run under the shape of one's colour.** Of the ends that meet a shape of their own colour, those of
+  drawn shapes lean 3° to 9°. A part's column ends under the column it meets by its pull compensation
+  (REQ-AUTO-016), and a split shape's columns sew after its fill and reach over it (REQ-AUTO-019). Nothing
+  measured is left for (b) to mend, so it isn't proposed.
+- **(c) A cap along a slanted end.** With (a) the fabric at an end doesn't show, so a cap isn't needed.
+- **(d) Mitred corners.** A line whose centre line turns by more than 60° at a corner drawn sharp, the
+  bound a part's lines are cut at ([centre-line columns](algorithms/centre-lines.md#columns)), sews as one column per
+  leg, each ending on the corner's bisector, from its inner corner to the miter's point, and squared as (a)
+  squares a slanted end. A line narrow enough to walk its middle once (REQ-AUTO-075) walks its whole centre
+  line first and then sews the legs' tops back from its far end, so that no travel stitch crosses a leg. The
+  zigzag doesn't give `SC-W0208`, and a needle point lies on each miter's point, where today the nearest
+  lies 0.23 to 0.37 mm short of it.
+
+Measured with M13.59's prototype, its shapes that swell and taper filled whole, only 3 pointed ends of the
+drawings stop being columns: the lake, a leaf and the crescent's tips. The sunrise's band stays a column, so
+each finding above holds with M13.59. M13.58 changes how a column spaces its stitches in a bend, which (a)
+and (d) don't touch.
+
+#### What gets worse
+
+- With (a), 2 ends of traced pictures lean more: one of the running dog's (39° to 53°) and one fleck of a
+  photographed cat. The area above the cap rises by 1.0 mm² on TS-13C and 0.75 mm² on a dog, and a cat's
+  thickest spot from 3.91 to 3.94 fills.
+- With (d), the zigzag's thickest spot rises from 2.36 to 2.81 fills at its corners, under the cap, and it sews
+  43 stitches more. The 2 legs' needle points meet along each bisector, where a sew-out must show whether a
+  seam opens.
+
+The pictures looked at (the band, the zigzag, the letter C, a dog) show the fans gone. They still show the
+band 1.5 mm tall above the sunrise's 5 mm one fanning by 2 stitches, since its end is too short for a
+straight stretch, and a short stitch of each leg crossing at the zigzag's lower points.
+
+#### The proposal
+
+(a) and (d) as rules, with no setting (REQ-AUTO-177, REQ-AUTO-178). They change only ends and corners whose
+stitches spread like a fan, and no design sews thicker than the cap where it sewed under it. A setting would
+only keep the fan. A shape that should sew otherwise can be expanded and drawn by hand ([Expand](#expand)). The sew-out at
+the next machine checkpoint sews a band whose ends a circle cuts, a band with a 45° end and a zigzag line,
+once as `main` plans them and once with M13.60. The build phase starts on the owner's choice.
+
 ## Neighbours
 
 The shapes of a traced picture meet. VectorCraft's Abutting method traces each area with a hole where the
