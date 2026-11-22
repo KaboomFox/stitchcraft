@@ -3975,6 +3975,12 @@ With (a) and (d), on the 4 dogs:
   little more fabric shows between them: up to 2.8 times the dogs' bare share today, still under every limit,
   no patch of 1 mm² and one sliver. M13.22 counted 29 stitches astray against 21 and 4 slivers against 2 for
   this. On today's main the dogs lay 13 stitches astray where they lay 12, and leave one sliver more.
+- **What shows of a thin line.** A line sewn before the fills beside it loses up to its fills' pull
+  compensation, 0.4 mm, on each side, under their rows. The likeness measure counts the parts kept and doesn't
+  see it: the magnolia keeps 0.848 of its likeness, where it kept 0.845. Counted on the previews, each pixel
+  given to the nearest thread, 27 % less of the magnolia's dark brown shows, its branches, and 14 % less of the
+  running dog's black, where its other threads move by 2 to 9 % (jump threads count in it too). TS-13B's
+  threads move by 2 % at most, as its lines still sew after the panes.
 - **The running dog's thickest spot.** In 9 threads it rises from 3.99 to 4.15 fills, at one spot where a
   part's line sews over a satin column on a fill, with no area at 4 fills or more. The spot moves with the
   order: with (a) alone the dog on turf in 6 threads reached 4.07 instead. The build has to bring it back to 4
@@ -4028,7 +4034,8 @@ reads as a line and whether fabric shows beside it.
 magnolia and the sew-out piece, today and with (a) and (d). TS-13B's lines show as they do today. On the
 sew-out piece the line reads narrower, as the geometry above says. The running dog's mouth line looks
 narrower too, under the brown sewn after it, which the preview at 12 pixels a millimetre is too coarse to
-measure, and a brown jump thread crosses its muzzle. The house is unchanged, threaded 6 times.
+measure, and a brown jump thread crosses its muzzle. The magnolia's dark branches show thinner, as
+measured above. The house is unchanged, threaded 6 times.
 
 ### Details last
 
