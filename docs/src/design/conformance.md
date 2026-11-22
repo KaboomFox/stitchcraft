@@ -332,7 +332,8 @@ StitchCraft's own that its stitch type reads, which Ink/Stitch would pass over a
 (`sewn_alike`). So TS-17C's file has no crossing columns with their underlays first. A sheet's automatic
 shapes are digitized with `auto_short_stitches` `crowded` for the file (`stitchcraft_testkit::inkstitch::digitized`):
 by default their satin columns set `bend_open_percent`, which is StitchCraft's own, and with `crowded` they
-set Ink/Stitch's short-stitch settings instead. An element a sheet
+set Ink/Stitch's short-stitch settings instead. Their columns' `pull_compensation_max_percent`, StitchCraft's
+own too, is taken off the elements made, and both programs sew them with Ink/Stitch's pull compensation. An element a sheet
 draws as a clone of another is written as a `<use>` of it, and each command in a group with its
 connector, as Ink/Stitch's Attach Commands writes them, since Ink/Stitch moves a command its clone copies
 only from a group. Automatic digitizing chooses ordinary elements with Ink/Stitch's parameters, so
