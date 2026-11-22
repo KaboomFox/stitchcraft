@@ -280,6 +280,11 @@ up for both as Ink/Stitch does.
   ten-thousandth of a CSS pixel has no direction to move them in, and stays as it is. A tatami fill
   lengthens its rows with the same move, as Ink/Stitch does, and the 2 settings are declared once for
   both (`stitchcraft_engine::generators::pull`, [fills](fills.md#7-pull-compensation-and-gap-fill-rows)).
+  With `pull_compensation_max_percent`, StitchCraft's own and empty by default (`REQ-SAT-031`), a side
+  that would move out farther than that share of the pair's width moves out exactly that far, its random
+  share included. Its millimetres make up the rest. A side that moves in is left as it is. Near a
+  column's point a pair 0.13 mm wide moves out 0.05 mm on each side at 40 %, where 0.4 mm of compensation
+  would move it 0.4 mm.
 - **Random variation** comes from the element's generator, seeded with `random_seed`
   ([determinism](../determinism.md)). Each pair's share of the width on each side is drawn between
   `pull_compensation_percent` less `random_width_decrease_percent` and plus

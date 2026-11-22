@@ -196,7 +196,7 @@ parts** off, or use the `logo` style ([changing the choice](#changing-the-choice
 satin columns.
 
 A part whose width swells and tapers is filled whole when it is 4 mm wide somewhere
-(`auto_min_fill_width_mm`): a leaf, a lens, a petal. Its outline runs to its points, and 2 like leaves sew
+(`auto_min_fill_width_mm`), such as a leaf or a petal. Its outline runs to its points, and 2 like leaves sew
 alike. A narrower one, such as a ray, keeps its satin column. Where a broad shape narrows to a point, as a
 crescent moon's tips do, the point stays in the shape's fill, while an even stick or string still sews as a
 column over it. The `satin` choice of **Prefer** keeps a leaf a column, and so does the `logo` style.
@@ -430,7 +430,7 @@ allows to look for them, and then sews with its jumps.
 
 Each satin column digitizing makes has the underlay of its width, and 0.4 mm of pull compensation. Near a
 point, where a stitch is narrower than 1 mm, the compensation moves each end out by no more than 40 % of the
-stitch's width (`pull_compensation_max_percent`), so a ray narrows to its point instead of ending blunt:
+stitch's width (`pull_compensation_max_percent`). A ray then narrows to its point instead of ending blunt:
 
 | Column width | Underlay |
 |---|---|

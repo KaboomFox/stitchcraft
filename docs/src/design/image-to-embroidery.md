@@ -236,7 +236,7 @@ The fill then looks like a satin column without the fan. A dot is the smallest c
 the columns meet at its junctions. Where the strokes are even, as a letter's are, the columns meet cleanly.
 Where the width swells and shrinks, each column fans at its ends and the outline sews scalloped. A part of
 one line is held to its evenness once it is 4 mm wide somewhere, and is then filled whole, with no piece
-leaving the fill: a leaf or a lens sews as one fill with its outline. A narrower one, a ray or a tapering
+leaving the fill: a leaf sews as one fill with its outline. A narrower one, a ray or a tapering
 stroke, narrows smoothly, and one satin column sews it well
 ([shapes whose width swells and tapers](#shapes-whose-width-swells-and-tapers)). A piece of an uneven part that is narrower than the narrowest satin stroke leaves the
 fill, cut as a narrow part of a broad one is ([Shapes in parts](#stitch-types-by-width)), and sews as a line.
@@ -551,7 +551,7 @@ How it is built. The rules measure a part of one line against a fill's narrowest
 varies by more than the bound and uneven parts are filled (`Measures::fill_wide`, in
 `auto::columns::measured`): that shrinks the part once, and other parts cost nothing more. A piece that
 tapers is kept in the fill as the narrow parts are sorted (`auto::narrow`), and its shape's `auto_stitch`
-of `satin` keeps it a column. The satin column's processor holds each side's move
+of `satin` keeps it a column. The satin column's processor limits each side's move
 (`generators::satin::compensation`), its share drawn at random included, so a column with random width
 still draws its numbers as before.
 
@@ -576,7 +576,7 @@ the build, on the set above. Area is at the cap (3.25 fills) or above:
   star sews on it with its points whole. The sheet's thickest spot falls from 3.97 to 3.79 fills, and its
   area above the cap from 19.25 to 3.25 mm². M13.61 left it a column, since its rails differ by 1.12 times.
 - **The hold alone,** measured against the build with `pull_compensation_max_percent` left empty, still
-  points the rays: M13.58 changed no pull compensation. It costs a little thickness at points:
+  points the rays, since M13.58 didn't change pull compensation. It costs a little thickness at points:
   the badges' thickest spot rises from 3.96 to 3.99 fills, the pear's from 3.86 to 3.95, TS-13A's from 3.95
   to 3.98, and 2 sheets of letters from 3.90 to 3.96 and from 3.95 to 3.98. Each stays under 4. A column's
   stitches near its point keep their spacing over a narrower width.
