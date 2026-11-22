@@ -557,7 +557,7 @@ overlap. A value above the overlap reads as the overlap, and no dialog shows the
 <!-- shot: auto-column-reach -->
 | 0.4 mm, the default | 1 mm, as before |
 |:-:|:-:|
-| ![ALT, 0.4 mm, the default](../../images/generated/auto-column-reach-1.png) | ![ALT, 1 mm, as before](../../images/generated/auto-column-reach-2.png) |
+| ![How thick the bars and rings of joins.svg sew, as heat maps on white. 3 pairs of red and blue bars, 2 to 4 mm wide, stand side by side, and a red ring 3 mm wide lies round a blue one. Grey is under 2 fills of thread, and yellow 2 fills or more. At 0.4 mm, the default, the yellow line along each join between 2 columns is narrow. At 1 mm, as before, it is wider, where the column sewn first lies 1 mm under the other., 0.4 mm, the default](../../images/generated/auto-column-reach-1.png) | ![How thick the bars and rings of joins.svg sew, as heat maps on white. 3 pairs of red and blue bars, 2 to 4 mm wide, stand side by side, and a red ring 3 mm wide lies round a blue one. Grey is under 2 fills of thread, and yellow 2 fills or more. At 0.4 mm, the default, the yellow line along each join between 2 columns is narrow. At 1 mm, as before, it is wider, where the column sewn first lies 1 mm under the other., 1 mm, as before](../../images/generated/auto-column-reach-2.png) |
 <!-- /shot -->
 
 The bars and rings of `docs/fixtures/joins.svg`, sewn at the default and at 1 mm, show it in the thickness

@@ -1238,7 +1238,7 @@ auto = true
 style = "thickness"
 scale = 8.0
 allow = ["SC-I0901", "SC-I0912", "SC-I0923", "SC-I0904", "SC-I0907", "SC-I0908", "SC-I0909", "SC-I0504", "SC-W0913", "SC-I1119"]
-alt = "ALT"
+alt = "How thick the bars and rings of joins.svg sew, as heat maps on white. 3 pairs of red and blue bars, 2 to 4 mm wide, stand side by side, and a red ring 3 mm wide lies round a blue one. Grey is under 2 fills of thread, and yellow 2 fills or more. At 0.4 mm, the default, the yellow line along each join between 2 columns is narrow. At 1 mm, as before, it is wider, where the column sewn first lies 1 mm under the other."
 panels = [
   { caption = "0.4 mm, the default", params = { auto_column_reach_mm = "0.4" } },
   { caption = "1 mm, as before", params = { auto_column_reach_mm = "1" } },

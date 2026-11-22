@@ -28,7 +28,7 @@ traced: `traced-pear.vectorcraft` ([below](#the-traced-pear)) and the owner's do
 | `e-stitch.svg` | A curved band 4 mm wide between 2 rails | the E-stitch's spacing and swapped rails |
 | `s-stitch.svg` | A curved band 6 mm wide between 2 rails | the S-stitch's spacing and split stitches, the zigzag satin's spacing and its look beside a satin column, and the satin column's spacing and underlays |
 | `crossing.svg` | 2 bands 5 mm wide and 16 mm long between 2 rails each, a bar and a post that cross at their middles | satin columns sewn as drawn and with their underlays first |
-| `joins.svg` | Red and blue bars 2, 3 and 4 mm wide side by side, 30 mm long, and a red ring 3 mm wide round a blue one | where automatic satin columns meet (the `auto-column-reach` shot), and the machine checkpoint's test piece of joins |
+| `joins.svg` | 3 pairs of red and blue bars side by side, 2 to 4 mm wide and 30 mm long, and a red ring 3 mm wide round a blue one | where automatic satin columns meet (the `auto-column-reach` shot), and the machine checkpoint's test piece of joins |
 | `half-disc.svg` | A half disc: a straight side with 2 corners, and a curve | running stitch tolerance |
 | `parallel.svg` | 14 rows 0.6 mm apart, sewn as one path | random stitch length |
 | `nodes.svg` | Straight lines and one curve | manual stitch |
