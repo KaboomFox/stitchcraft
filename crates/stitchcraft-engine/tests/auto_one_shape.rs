@@ -12,7 +12,7 @@
 use stitchcraft_core::math::sin_cos;
 use stitchcraft_engine::design::{Element, Shape};
 use stitchcraft_plan::Role;
-use stitchcraft_testkit::designs::{RED, along, automatic, fill, planned, polylines, rules_said};
+use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, outlined, planned, polylines, rules_said};
 
 type Pt = (f64, f64);
 
@@ -79,7 +79,7 @@ fn req_auto_174_a_lens_4_mm_wide_is_filled_and_its_outline_reaches_its_points() 
     // The demo badge's lake: a flat top 30 mm long, a curved bottom 5.5 mm below it at the middle.
     let mut lake = vec![(0.0, 0.0), (30.0, 0.0)];
     lake.extend(quad((30.0, 0.0), (15.0, 11.0), (0.0, 0.0), 40).into_iter().skip(1));
-    let outcome = planned(vec![area("lake", &[&lake])]);
+    let outcome = planned(vec![outlined(fill("lake", &[&lake], &RED, &[]))]);
     let said = rules_said(&outcome);
     assert!(not_by(&said, "uneven").is_empty(), "the lake is filled: {said:?}");
     // The outline round the fill (`REQ-AUTO-051`) draws both points: a needle point within 0.15 mm of each.
@@ -116,6 +116,34 @@ fn req_auto_175_a_crescents_tips_stay_in_its_fill() {
     let [(_, message)] = said.as_slice() else { panic!("one shape: {said:?}") };
     // Its broad middle sews by the rule area, and each tip, kept in the fill, by the rule uneven.
     assert!(message.contains("area") && !message.contains("column"), "one fill to its points: {message}");
+}
+
+#[test]
+fn req_auto_175_a_crescents_outline_turns_at_each_point() {
+    // The crescent of the night drawing, on a disc of sky, both with their outlines. The outline is one line
+    // round the crescent: at each point it comes in along one edge and leaves along the other, and no other
+    // needle point of it lies within 0.5 mm of the point. Its stitches are 2.5 mm long, so the needle points
+    // before and after the point lie on the 2 edges, more than 0.5 mm apart.
+    let mut crescent = quad((0.0, 0.0), (-28.0, 15.0), (0.0, 30.0), 60);
+    crescent.extend(quad((0.0, 30.0), (-10.0, 15.0), (0.0, 0.0), 60));
+    let sky = circle((-8.0, 15.0), 22.0, 120);
+    let outcome = planned(vec![outlined(fill("sky", &[&sky], &BLUE, &[])), outlined(fill("crescent", &[&crescent], &RED, &[]))]);
+    let plan = outcome.plan.unwrap();
+    let outline = plan.elements.iter().position(|id| id.as_str() == "crescent#2").unwrap();
+    let points: Vec<Pt> = plan
+        .blocks
+        .iter()
+        .flat_map(|block| &block.stitches)
+        .filter(|stitch| stitch.origin.element.map(|element| element.index()) == Some(outline) && stitch.origin.role == Role::Top)
+        .map(|stitch| (stitch.at.x(), stitch.at.y()))
+        .collect();
+    for tip in [(0.0, 0.0), (0.0, 30.0)] {
+        let near: Vec<usize> = (0..points.len()).filter(|&k| hypot(points[k].0 - tip.0, points[k].1 - tip.1) <= 0.5).collect();
+        let [at] = near.as_slice() else { panic!("one needle point of the outline at {tip:?}: {near:?} of {points:?}") };
+        assert!(hypot(points[*at].0 - tip.0, points[*at].1 - tip.1) < 0.01, "{:?} at {tip:?}", points[*at]);
+        let (before, after) = (points[at.checked_sub(1).unwrap()], points[at + 1]);
+        assert!(hypot(before.0 - after.0, before.1 - after.1) > 0.5, "the outline turns at {tip:?}: {before:?} {after:?}");
+    }
 }
 
 #[test]
@@ -169,4 +197,5 @@ fn req_sat_031_pull_compensation_is_held_to_a_share_of_the_stitchs_width() {
     // 1 mm from the point the rails are 0.2 mm apart: 0.36 mm sewn at most.
     assert!(widest > 0.3 && widest <= 0.37, "the stitches 1 mm from the point sew {widest:.3} mm wide");
 }
+
 
