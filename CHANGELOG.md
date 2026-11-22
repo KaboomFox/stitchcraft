@@ -2283,7 +2283,7 @@ What a user can do with this version, before its first release. The entries belo
   shape's points that taper, a crescent's tips or a star's, stay in its fill, where they sewed as columns
   beside it. An even stick or string still sews as a column over the fill. The white disc round TS-13D's star
   is filled whole now, and the star sews on it whole. The `satin` choice of `auto_prefer`, the `logo` style
-  and a shape's `auto_stitch` keep columns as before. No letter changes, and the area that sews 3.25 fills
+  and a shape's `auto_stitch` keep columns as before. Letters sew as they did, and the area that sews 3.25 fills
   or more falls or stays on every set measured. A satin column that tapers to a point, as a sun's ray does,
   still ends blunt, as before.
 - M13.60: clean ends of satin columns (`REQ-AUTO-177`, `REQ-AUTO-178`). Where a slanted or curved edge
@@ -3658,8 +3658,8 @@ What a user can do with this version, before its first release. The entries belo
 
 ### Golden files
 - Changed `conformance/golden/testsheets/TS-13C.pes` and `TS-13D.pes` (M13.59, shapes whose width swells and
-  tapers). In TS-13C's digitized half, the star's 5 points stay in its fill, where they sewed as satin
-  columns, and the half jumps 9 times, where it jumped 13. In TS-13D's, the white disc round the abutting
+  tapers). In TS-13C's digitized half, the star's 5 points stay in its fill. That half jumps 9 times, where
+  it jumped 13. In TS-13D's, the white disc round the abutting
   emblem's star is filled whole under the star, where it sewed as one satin column round it. The sheets sew
   9,971 and 19,534 stitches, where they sewed 10,013 and 19,237. Their sizes, thread changes and the halves
   as drawn are as they were.

@@ -565,7 +565,7 @@ M13.61's wheels, against the build, on the set above. Area is at the cap (3.25 f
 | 18 sheets of letters | 571.5 mm², as on main | 13 mm² on one sheet, as on main | 2,026, as on main |
 
 - **Points.** The crescent's, the leaves' and the lake's points sew 0.00 to 0.35 mm wide as fills. The
-  leaves sew alike. No letter changes.
+  leaves sew alike. Letters sew as they did.
 - **TS-13D.** The white disc round the abutting emblem's star is a ring whose width varies between the
   star's points, of one line and wider than 4 mm in places. It is filled whole under the star now, and the
   star sews on it with its points whole. The sheet's thickest spot falls from 3.97 to 3.79 fills, and its
