@@ -28,7 +28,8 @@ instructions = 5362000000
 [pictures.TS-13A]
 args = ["testsheet", "TS-13A"]
 golden = "conformance/golden/testsheets/TS-13A.pes"
-instructions = 2036000000
+# M13.58: the cap pulls crowded column points in above the warning's limit, about 190 M more.
+instructions = 2214000000
 
 [pictures.TS-13B]
 args = ["testsheet", "TS-13B"]
@@ -43,7 +44,8 @@ instructions = 1950000000
 [pictures.TS-13D]
 args = ["testsheet", "TS-13D"]
 golden = "conformance/golden/testsheets/TS-13D.pes"
-instructions = 1604000000
+# M13.58: the cap pulls crowded column points in above the warning's limit, about 76 M more.
+instructions = 1684000000
 
 [pictures.TS-13E]
 args = ["testsheet", "TS-13E"]

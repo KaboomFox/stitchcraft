@@ -1248,6 +1248,16 @@ The costs of each rule:
   the outside opens 2.8 times as often past 0.55 mm for 56 fewer points. At 1.1 times 66 more points
   move in.
 
+Built (2026-11-22), the rules measure as the prototype did. On the 58 drawings, traced dogs and photos the
+cap pulled in 8, 2, 15 and 5 points, 30 in all, and the area above the cap is the prototype's to the tenth:
+69, 79 and 29 mm². The drawings sew 58,402 stitches, 1.2 % fewer than the 59,087 of before. The goose
+still sews 4.4 fills, as before. On the 16 designs of `REQ-AUTO-073` the cap pulled in 123 points, and
+no design sews above 4 fills. The patch's lettering sews 3.95 fills at its thickest, where the prototype,
+which opened lettering's bends too, sewed 3.97. TS-13D's thickest spot, 3.97 fills as before, is on the
+inside edge of the ring round its star: the ring's own top stitches lay 2.68 fills there, over the star's
+fill and the base layer, and the cap pulled 10 of its points in. Planning TS-13A takes 9.5 % more
+instructions and TS-13D 4.7 % more, the work of pulling points in (`conformance/perf.toml`).
+
 One test design shows a cost of (c). TS-13B's thickest spot becomes a place where 2 fills meet, 3.46 fills
 with no column there, which the cap can't lower and today's 3.85 column spot hides. `REQ-AUTO-073`'s case
 lists it.

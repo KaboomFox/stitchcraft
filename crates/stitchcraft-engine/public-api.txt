@@ -100,8 +100,8 @@ pub const stitchcraft_engine::auto::Held::KEYS: [&str; 6]
 pub fn stitchcraft_engine::auto::Held::of(&stitchcraft_params::set::ParamSet) -> core::result::Result<stitchcraft_engine::auto::Held, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
 pub fn stitchcraft_engine::auto::Held::values(&self) -> [(&'static str, alloc::string::String); 6]
 pub const stitchcraft_engine::auto::ADVANCED: &str
-pub const stitchcraft_engine::auto::COLUMN_OVERLAP: &str
 pub const stitchcraft_engine::auto::BEND_OPENED: f64
+pub const stitchcraft_engine::auto::COLUMN_OVERLAP: &str
 pub const stitchcraft_engine::auto::CONTOUR_FROM: stitchcraft_core::units::Mm
 pub const stitchcraft_engine::auto::CROWDED_CLOSER_THAN: f64
 pub const stitchcraft_engine::auto::CROWDED_INSETS: &str
