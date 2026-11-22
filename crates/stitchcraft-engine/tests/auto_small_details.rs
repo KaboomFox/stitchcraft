@@ -9,7 +9,7 @@
 //! wheel's ends covered it.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
-#![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
+#![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing, clippy::cast_possible_truncation)]
 
 use stitchcraft_core::Budget;
 use stitchcraft_core::math::{atan2, sin_cos};
@@ -70,7 +70,8 @@ fn distance(at: Pt, a: Pt, b: Pt) -> f64 {
     let (dx, dy) = (b.0 - a.0, b.1 - a.1);
     let along = (dx * dx + dy * dy).max(1e-12);
     let t = (((at.0 - a.0) * dx + (at.1 - a.1) * dy) / along).clamp(0.0, 1.0);
-    ((a.0 + t * dx - at.0).powi(2) + (a.1 + t * dy - at.1).powi(2)).sqrt()
+    let (x, y) = (a.0 + t * dx - at.0, a.1 + t * dy - at.1);
+    (x * x + y * y).sqrt()
 }
 
 /// The share of the spots of a 0.1 mm grid within `inside` mm of `centre` where the thread on top, the last
@@ -84,7 +85,11 @@ fn seen(elements: Vec<Element>, centre: Pt, inside: f64, thread: &Thread) -> f64
     for i in -steps..=steps {
         for j in -steps..=steps {
             let at = (centre.0 + f64::from(i) * 0.1, centre.1 + f64::from(j) * 0.1);
-            if (at.0 - centre.0).hypot(at.1 - centre.1) > inside {
+            if {
+                let (x, y) = (at.0 - centre.0, at.1 - centre.1);
+                (x * x + y * y).sqrt()
+            } > inside
+            {
                 continue;
             }
             spots += 1;
@@ -103,7 +108,7 @@ fn rows(elements: Vec<Element>, thread: &Thread) -> f64 {
         .sewn_stitches()
         .iter()
         .filter(|s| s.role == Role::Top && plan.blocks[s.block].thread.color == thread.color)
-        .filter(|s| (s.to.x() - s.from.x()).hypot(s.to.y() - s.from.y()) > 0.5)
+        .filter(|s| s.from.distance(s.to) > 0.5)
         .map(|s| atan2(s.to.y() - s.from.y(), s.to.x() - s.from.x()).to_degrees().rem_euclid(180.0))
         .collect();
     let near = |way: f64, of: f64| ((way - of + 90.0).rem_euclid(180.0) - 90.0).abs() <= 20.0;
@@ -161,7 +166,7 @@ fn req_auto_182_a_border_round_a_field_on_top_keeps_its_column() {
     // wide all round, as the patches drawn in the repository are.
     let square = |id: &str, inset: f64, thread: &Thread| {
         let (a, b, c) = (inset, 70.0 - inset, 40.0 - inset);
-        let cut = 4.5 - inset * (std::f64::consts::FRAC_PI_8).tan();
+        let cut = 4.5 - inset * (std::f64::consts::SQRT_2 - 1.0);
         area(id, &[&[(a + cut, a), (b - cut, a), (b, a + cut), (b, c - cut), (b - cut, c), (a + cut, c), (a, c - cut), (a, a + cut)]], thread)
     };
     let shapes = [

@@ -1186,7 +1186,7 @@ mod tests {
             let (a, b) = (inset, 30.0 - inset);
             vec![(a + cut, a), (b - cut, a), (b, a + cut), (b, b - cut), (b - cut, b), (a + cut, b), (a, b - cut), (a, a + cut)]
         };
-        let inner: Vec<_> = octagon(3.0, 4.5 - 3.0 * (std::f64::consts::FRAC_PI_8).tan()).into_iter().rev().collect();
+        let inner: Vec<_> = octagon(3.0, 4.5 - 3.0 * (std::f64::consts::SQRT_2 - 1.0)).into_iter().rev().collect();
         let border = part(&octagon(0.0, 4.5), &[&inner]);
         let mut meter = Budget::DEFAULT.meter();
         let found = strips::columns(&border, piece(&border), &[], 1.0, &mut meter).unwrap().unwrap().unwrap();
