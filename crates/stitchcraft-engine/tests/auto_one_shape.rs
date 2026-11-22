@@ -197,5 +197,3 @@ fn req_sat_031_pull_compensation_is_held_to_a_share_of_the_stitchs_width() {
     // 1 mm from the point the rails are 0.2 mm apart: 0.36 mm sewn at most.
     assert!(widest > 0.3 && widest <= 0.37, "the stitches 1 mm from the point sew {widest:.3} mm wide");
 }
-
-

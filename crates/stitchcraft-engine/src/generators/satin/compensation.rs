@@ -257,7 +257,8 @@ mod tests {
         assert_eq!(held([0.4, 0.4], [0.0, 0.0], None, 0.5), [0.4, 0.4]);
         // A column's processor holds its pairs: 0.4 mm on a stitch 0.5 mm wide moves each end 0.2 mm out.
         let mut rng = SplitMix64::new(7);
-        let mut processor = Processor { pull: [0.4, 0.4], least: [0.0, 0.0], range: [0.0, 0.0], jitter: 0.0, most: Some([0.4, 0.4]), rng: Some(&mut rng) };
+        let mut processor =
+            Processor { pull: [0.4, 0.4], least: [0.0, 0.0], range: [0.0, 0.0], jitter: 0.0, most: Some([0.4, 0.4]), rng: Some(&mut rng) };
         let [a, b] = processor.widened([p(0.0, 0.0), p(0.0, 0.5)]);
         assert!(near(a, p(0.0, -0.2)) && near(b, p(0.0, 0.7)), "{a:?} {b:?}");
     }
