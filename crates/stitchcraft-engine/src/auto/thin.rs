@@ -121,6 +121,10 @@ pub(crate) struct Rules<'r> {
     /// pull compensation makes up for: the cap judges their cover by it, and leaves them whole
     /// (`REQ-AUTO-121` to `REQ-AUTO-123`).
     pub(crate) lettering: &'r BTreeMap<ElementRef, super::cap::Pull>,
+    /// The satin columns among `columns` that move no needle point in as they are made, each with the shares
+    /// of a stitch its crowded points move in by, in turn: where a spot sews above the warning's limit, the cap
+    /// pulls their crowded points in (`REQ-AUTO-171`).
+    pub(crate) pulls: &'r BTreeMap<ElementRef, Vec<f64>>,
     /// How far a row's end may move back along its row, in millimetres: the overlap of areas.
     pub(crate) overlap: f64,
     /// The machine's shortest stitch, in millimetres, which no stitch the pass shortens goes under.
@@ -223,6 +227,13 @@ impl Pass<'_, '_> {
         }
     }
 
+    /// Moves entry `at`'s needle point to `place` on the measure's grid, in the plan.
+    pub(super) fn moved(&mut self, (block, index): Entry, place: Point) {
+        if let Some(entry) = self.plan.blocks.get_mut(block).and_then(|block| block.stitches.get_mut(index)) {
+            entry.at = self.thickness.point(place);
+        }
+    }
+
     /// Where entry `at` puts its needle point in the plan, as the plan's checks measure it.
     pub(super) fn at(&self, (block, index): Entry) -> Option<Point> {
         self.plan.blocks.get(block)?.stitches.get(index).map(|entry| entry.at)
@@ -232,7 +243,7 @@ impl Pass<'_, '_> {
     /// plan's checks ask, the machine's shortest stitch or a lock's (`LOCK_MIN_STITCH`) for a stitch into or
     /// out of a lock point, given with it, or as the stitch it takes the place of when that was shorter, and
     /// no longer than the machine's longest: the pass makes no stitch the machine can't sew.
-    fn long_enough(&self, stitches: &[(Option<Point>, Option<Point>, bool, f64)]) -> bool {
+    pub(super) fn long_enough(&self, stitches: &[(Option<Point>, Option<Point>, bool, f64)]) -> bool {
         stitches.iter().all(|&(from, to, lock, was)| {
             let least = if lock { LOCK_MIN_STITCH.get() } else { self.rules.shortest };
             from.zip(to)
@@ -461,9 +472,7 @@ impl Pass<'_, '_> {
         let added = [SewnStitch { to: back, ..row }, SewnStitch { from: back, to: on, ..turn }, SewnStitch { from: on, ..next }];
         if self.changed(&removed, &added, meter)? {
             for (index, point) in [(at, back), (start, on)] {
-                if let Some(entry) = self.plan.blocks.get_mut(block).and_then(|block| block.stitches.get_mut(index)) {
-                    entry.at = self.thickness.point(point);
-                }
+                self.moved((block, index), point);
             }
             self.took(kind, &removed, &added);
         }

@@ -39,7 +39,7 @@ mod underlay;
 use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::units::at_least;
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Mm, Point};
-use stitchcraft_params::{ChoiceOption, Origin, StitchType, params};
+use stitchcraft_params::{ChoiceOption, Origin, Stability, StitchType, params};
 
 use crate::design::{Hints, Join, Path};
 use crate::generators::pull::PullParams;
@@ -87,6 +87,10 @@ pub const PUSH_COMPENSATION: &str = "push_compensation_mm";
 pub const SHORT_STITCH_DISTANCE: &str = "short_stitch_distance_mm";
 /// See [`SHORT_STITCH_DISTANCE`].
 pub const SHORT_STITCH_INSET: &str = "short_stitch_inset";
+
+/// The key of the setting that keeps a satin column's spacing on the inside of a bend, opening its outside
+/// (`REQ-SAT-030`). Automatic digitizing sets it on its columns.
+pub const BEND_OPEN: &str = "bend_open_percent";
 
 /// The key of the setting that starts a satin column near where the needle is, which Ink/Stitch's update of
 /// a file older than its version 3 turns off, as it does [`END_AT_NEAREST_POINT`].
@@ -147,6 +151,15 @@ params! {
         /// across the column at its outside edge. On a curve the stitches lie closer together at the inside
         /// edge.
         zigzag_spacing_mm: Length = "0.4", label "Zigzag spacing", range (0.01, 10.0);
+
+        /// How much farther apart than the zigzag spacing the needle points on the outside of a bend may
+        /// lie, in percent of the spacing, so that those on the inside lie the spacing apart. At 0 the
+        /// spacing is kept on the outside, and the inside crowds by the ratio of the 2 radii. At 25 the
+        /// outside opens to 1.25 times the spacing before the inside crowds, and a bend whose inside radius
+        /// is 0.8 of its outside's or more doesn't crowd at all. Automatic digitizing sets 25 on its
+        /// columns.
+        bend_open_percent: Percent = "0", label "Open bends", range (0.0, 100.0),
+            origin Origin::StitchCraft, stability Stability::Experimental;
     }
 
     "Rails" {
@@ -666,7 +679,8 @@ fn top_stitches(
     meter: &mut Meter,
 ) -> Result<Top, Exhausted> {
     let (spacing, zigzag) = (params.zigzag_spacing_mm.get(), params.satin_method == StitchType::SatinZigzag.id());
-    let placed = pairs::pairs(sections, if zigzag { spacing / 2.0 } else { spacing }, &mut Processor::new(params, pull, rng), meter)?;
+    let open = 1.0 + params.bend_open_percent / 100.0;
+    let placed = pairs::opened(sections, if zigzag { spacing / 2.0 } else { spacing }, open, &mut Processor::new(params, pull, rng), meter)?;
     let zigzagged;
     let sewn: &[Pair] = if zigzag {
         zigzagged = pairs::zigzag(&placed);

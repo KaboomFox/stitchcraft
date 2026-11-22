@@ -60,9 +60,10 @@ const NONE: &BTreeSet<ElementRef> = &BTreeSet::new();
 
 /// No lettering's columns.
 const NO_PULL: &BTreeMap<ElementRef, crate::auto::cap::Pull> = &BTreeMap::new();
+const NO_PULLS: &BTreeMap<ElementRef, Vec<f64>> = &BTreeMap::new();
 
 fn rules() -> Rules<'static> {
-    Rules { cap: 4.0, limit: 4.0, base: NONE, columns: NONE, lettering: NO_PULL, overlap: 0.0, shortest: 0.3, longest: 12.1 }
+    Rules { cap: 4.0, limit: 4.0, base: NONE, columns: NONE, lettering: NO_PULL, pulls: NO_PULLS, overlap: 0.0, shortest: 0.3, longest: 12.1 }
 }
 
 /// Every element of `plan`, as digitizing made them all.
@@ -177,11 +178,16 @@ fn req_auto_100_a_shape_s_own_top_where_it_is_doubled_goes_last() {
 fn req_auto_100_every_kind_is_said_in_order() {
     let thickest =
         Thickness::of(&plan(&[("one", Role::Top, zigzag(4.0, 0.25))]), &mut Budget::DEFAULT.meter()).unwrap().unwrap().most(Measure::Fills);
-    let capped = Capped { taken: [1.0, 2.0, 3.04, 0.0], times: [1, 2, 3, 0], left: Over::default(), thickest, ran_out: false };
-    assert_eq!(
-        kinds(&capped),
-        "1.0 mm of underlay and travel in 1 place, 2.0 mm of top stitches under later shapes in 2 places, 3.0 mm of a shape's own doubled top stitches in 3 places"
-    );
+    let capped = Capped { taken: [1.0, 2.0, 3.04, 0.0], times: [1, 2, 3, 0], left: Over::default(), thickest, ran_out: false, pulled: [0; 2] };
+    let all = "1.0 mm of underlay and travel in 1 place, 2.0 mm of top stitches under later shapes in 2 places, 3.0 mm of a shape's own doubled top stitches in 3 places";
+    assert_eq!(kinds(&capped), all);
+    // The points pulled in come first (`REQ-AUTO-172`).
+    assert_eq!(done(&capped), format!("took {all}"));
+    let one = Capped { taken: [1.0, 0.0, 0.0, 0.0], times: [1, 0, 0, 0], pulled: [1, 1], ..capped.clone() };
+    assert_eq!(done(&one), "pulled in 1 point of a satin column in 1 place and took 1.0 mm of underlay and travel in 1 place");
+    let only = Capped { taken: [0.0; 4], times: [0; 4], pulled: [3, 2], ..capped };
+    assert!(only.took());
+    assert_eq!(done(&only), "pulled in 3 points of satin columns in 2 places");
 }
 
 #[test]
@@ -313,7 +319,7 @@ fn said(sewn: &StitchPlan, budget: &Budget) -> (Vec<Diagnostic>, StitchPlan) {
     let said = finished(
         &mut kept,
         &held,
-        (&[], &made, &BTreeSet::new(), &BTreeMap::new()),
+        (&[], &made, &BTreeSet::new(), &BTreeMap::new(), &BTreeMap::new()),
         stitchcraft_plan::profiles::REFERENCE,
         &crate::names::Names::default(),
         budget,

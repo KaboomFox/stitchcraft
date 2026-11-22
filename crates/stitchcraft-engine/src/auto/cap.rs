@@ -30,6 +30,10 @@
 //! A lettering column's underlay goes only where another of the lettering's columns covers it too, since it
 //! holds up its own column's top elsewhere, and the last resort takes none of a lettering column's points.
 //!
+//! **Crowded points pulled in** (`REQ-AUTO-171`, the `pull` module). Where a spot still sews above the warning's
+//! limit once the 3 kinds are done, crowded top points of the columns that move none in as they are made
+//! move in along their stitches, before the last resort takes any point out.
+//!
 //! **One measure.** The cap takes the last pass's measure and keeps it up to date stitch by stitch, as the
 //! pass does, with the pass's own helpers. Only the stitches near a spot above the cap are looked at, found
 //! once: taking thread only lowers spots.
@@ -157,12 +161,14 @@ pub(crate) struct Capped {
     pub(crate) thickest: Spot,
     /// Whether it ran out of work, and kept the points it had taken until then.
     pub(crate) ran_out: bool,
+    /// How many satin columns' top points it pulled in, and in how many places (`REQ-AUTO-172`).
+    pub(crate) pulled: [usize; 2],
 }
 
 impl Capped {
     /// Whether it took any thread.
     pub(crate) fn took(&self) -> bool {
-        self.times.iter().any(|times| *times > 0)
+        self.times.iter().any(|times| *times > 0) || self.pulled[0] > 0
     }
 }
 
@@ -209,11 +215,14 @@ pub(crate) fn capped(
             made.contains(&element) && stitch.role == Role::Top && columns.contains(&element) && !lettering.contains_key(&element)
         })
     };
-    let (last, hottest) = if thickness.most(Measure::Fills).value > rules.limit {
+    // Of those, the columns that move no point in as they are made may have their crowded points pulled in
+    // there first (`REQ-AUTO-171`).
+    let pulls = |stitch: &SewnStitch| column(stitch) && element(stitch).is_some_and(|element| rules.pulls.contains_key(&element));
+    let (last, hottest, pulled) = if thickness.most(Measure::Fills).value > rules.limit {
         let near = thickness.near(rules.limit, NEAR, meter)?;
-        (candidates(sewn, &near, column), candidates(sewn, &near, takes))
+        (candidates(sewn, &near, column), candidates(sewn, &near, takes), candidates(sewn, &near, pulls))
     } else {
-        (Vec::new(), Vec::new())
+        (Vec::new(), Vec::new(), Vec::new())
     };
     // A design whose spots above the cap lie only in shapes sewn by their own settings has nothing the cap
     // may take, and the work of the cover is spared.
@@ -240,9 +249,9 @@ pub(crate) fn capped(
             ribbons.add(ribbon.firm(pull.is_some()), meter)?;
         }
     }
-    let mut cap = Cap { pass: Pass::new(plan, thickness, rules), ribbons, longest, taken: [0.0; 4], times: [0; 4] };
-    let ran_out = cap.taking([&hottest, &points], last, meter).is_err();
-    let Cap { pass, taken, times, .. } = cap;
+    let mut cap = Cap { pass: Pass::new(plan, thickness, rules), ribbons, longest, taken: [0.0; 4], times: [0; 4], pulled: [0; 2] };
+    let ran_out = cap.taking([&hottest, &points, &pulled], last, meter).is_err();
+    let Cap { pass, taken, times, pulled, .. } = cap;
     let (plan, thickness, gone) = pass.ended();
     taken_out(plan, &gone);
     // What is left is measured with the budget's work once more. A cap out of work may have stopped part way
@@ -254,7 +263,7 @@ pub(crate) fn capped(
         thickness.resewn(plan, &mut again)?;
     }
     let left = thickness.over(Measure::Fills, rules.cap, &mut again)?;
-    Ok(Some(Capped { taken, times, left, thickest: thickness.most(Measure::Fills), ran_out }))
+    Ok(Some(Capped { taken, times, left, thickest: thickness.most(Measure::Fills), ran_out, pulled }))
 }
 
 /// The needle points of `sewn`, the plan's stitches, that the cap looks at: those of the elements `made`
@@ -283,13 +292,16 @@ struct Cap<'p, 'r> {
     longest: BTreeMap<(Option<ElementRef>, bool), f64>,
     taken: [f64; 4],
     times: [usize; 4],
+    /// How many points [`Cap::pull_in`] moved, and in how many places.
+    pulled: [usize; 2],
 }
 
 impl Cap<'_, '_> {
     /// Takes the points the cap may take, with `meter`'s work: above the warning's limit the 3 kinds go
     /// first, of `hottest`, judging a column's cover as drawn; then below it, of `points`, down to the cap,
-    /// keeping the thread under a column's edge; and last the columns' top points `last`, above the limit.
-    fn taking(&mut self, [hottest, points]: [&[Entry]; 2], last: Vec<Entry>, meter: &mut Meter) -> Result<(), Exhausted> {
+    /// keeping the thread under a column's edge; then the crowded points of `pulled` are pulled in, and last
+    /// the columns' top points `last` are taken, above the limit.
+    fn taking(&mut self, [hottest, points, pulled]: [&[Entry]; 3], last: Vec<Entry>, meter: &mut Meter) -> Result<(), Exhausted> {
         let rules = self.pass.rules;
         for (points, hot, limit) in [(hottest, true, rules.limit), (points, false, rules.cap)] {
             for kind in [Kind::Hidden, Kind::Under, Kind::Doubled] {
@@ -300,6 +312,7 @@ impl Cap<'_, '_> {
                 }
             }
         }
+        self.pull_in(pulled, meter)?;
         self.last_resort(last, meter)
     }
 
@@ -656,6 +669,19 @@ fn units(count: usize) -> u64 {
     u64::try_from(count).unwrap_or(u64::MAX)
 }
 
+/// What the cap did, in words, for the note: the points it pulled in and every kind's thread it took
+/// ([`kinds`]), or one of them.
+pub(crate) fn done(capped: &Capped) -> String {
+    let [points, at] = capped.pulled;
+    let took = kinds(capped);
+    let pulled = match points {
+        0 => return format!("took {took}"),
+        1 => format!("pulled in 1 point of a satin column in {}", super::thick::places(at)),
+        _ => format!("pulled in {points} points of satin columns in {}", super::thick::places(at)),
+    };
+    if took.is_empty() { pulled } else { format!("{pulled} and took {took}") }
+}
+
 /// Every kind's thread taken, in words, for the note: those of none are left out.
 pub(crate) fn kinds(capped: &Capped) -> String {
     let names = [
@@ -675,5 +701,6 @@ pub(crate) fn kinds(capped: &Capped) -> String {
     said.join(", ")
 }
 
+mod pull;
 #[cfg(test)]
 mod tests;

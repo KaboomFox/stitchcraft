@@ -100,12 +100,13 @@ pub(crate) fn held(rules: &AutoParams) -> Held {
 /// `budget`'s work, and the pass and the cap have the work once more each. `base` names the base layer's
 /// pieces, `made` the elements that digitizing made and the lettering it placed, whose needle points alone
 /// the cap takes, `columns` the satin columns among them, whose top stitches it leaves (`REQ-AUTO-112`), and
-/// `lettering` the lettering's columns, each with its pull (`REQ-AUTO-121`); `profile` is the machine's,
+/// `lettering` the lettering's columns, each with its pull (`REQ-AUTO-121`), and `pulls` the columns whose
+/// crowded points the cap may pull in, each with its shares (`REQ-AUTO-171`); `profile` is the machine's,
 /// whose stitches the pass keeps to. The warning names the shapes by `names`.
 pub(crate) fn finished(
     plan: &mut StitchPlan,
     held: &Held,
-    (base, made, columns, lettering): (&[ElementId], &BTreeSet<ElementId>, &BTreeSet<ElementId>, &BTreeMap<ElementId, Pull>),
+    (base, made, columns, lettering, pulls): (&[ElementId], &BTreeSet<ElementId>, &BTreeSet<ElementId>, &BTreeMap<ElementId, Pull>, &Pulls),
     profile: &MachineProfile,
     names: &Names,
     budget: &Budget,
@@ -123,12 +124,15 @@ pub(crate) fn finished(
             let (base, made, columns) = (refs(&|id| base.contains(id)), refs(&|id| made.contains(id)), refs(&|id| columns.contains(id)));
             let lettering: BTreeMap<ElementRef, Pull> =
                 plan.elements.iter().enumerate().filter_map(|(at, id)| Some((ElementRef::from_index(at)?, *lettering.get(id)?))).collect();
+            let pulls: BTreeMap<ElementRef, Vec<f64>> =
+                plan.elements.iter().enumerate().filter_map(|(at, id)| Some((ElementRef::from_index(at)?, pulls.get(id)?.clone()))).collect();
             let rules = thin::Rules {
                 cap: held.cap,
                 limit: held.limits.warn_fills,
                 base: &base,
                 columns: &columns,
                 lettering: &lettering,
+                pulls: &pulls,
                 overlap: held.overlap,
                 shortest: profile.min_stitch.get(),
                 longest: profile.max_stitch.get(),
@@ -164,6 +168,10 @@ pub(crate) fn finished(
     said
 }
 
+/// The satin columns whose crowded needle points the cap may pull in, by their ids, each with the shares of a
+/// stitch they move in by, in turn (`REQ-AUTO-171`).
+pub(crate) type Pulls = BTreeMap<ElementId, Vec<f64>>;
+
 /// What is said of how thick `plan` sews against the limits `held`, with nothing taken: a design whose
 /// elements all sew by their own settings, a person's lettering among them (`REQ-AUTO-124`). It is measured
 /// with `budget`'s work.
@@ -191,9 +199,9 @@ fn note(thinned: &Thinned, capped: &Result<Option<Capped>, Exhausted>, cap: f64)
     let pass = if thinned.took() { thin::kinds(thinned) } else { "nothing".to_string() };
     let (then, left, thickest) = match capped {
         Ok(Some(capped)) if capped.took() && capped.ran_out => {
-            (format!(", and the cap took {} before it ran out of work", cap::kinds(capped)), &capped.left, &capped.thickest)
+            (format!(", and the cap {} before it ran out of work", cap::done(capped)), &capped.left, &capped.thickest)
         }
-        Ok(Some(capped)) if capped.took() => (format!(", and the cap took {}", cap::kinds(capped)), &capped.left, &capped.thickest),
+        Ok(Some(capped)) if capped.took() => (format!(", and the cap {}", cap::done(capped)), &capped.left, &capped.thickest),
         // A cap that ran out of work before it took any thread leaves the plan as the pass left it.
         Err(_) | Ok(Some(Capped { ran_out: true, .. })) => {
             (". The cap needs more work than the budget allows, and took nothing".to_string(), &thinned.left, &thinned.thickest)
@@ -301,7 +309,7 @@ mod tests {
         let spot = Spot { value: 5.0, at: Point::ORIGIN };
         let thinned = Thinned { taken: [0.0; 4], times: [0; 4], above: Over::default(), left: Over::default(), thickest: spot };
         let said = |times: usize, ran_out: bool| {
-            let capped = Capped { taken: [0.5, 0.0, 0.0, 0.0], times: [times, 0, 0, 0], left: Over::default(), thickest: spot, ran_out };
+            let capped = Capped { taken: [0.5, 0.0, 0.0, 0.0], times: [times, 0, 0, 0], left: Over::default(), thickest: spot, ran_out, pulled: [0; 2] };
             note(&thinned, &Ok(Some(capped)), 4.0).message
         };
         let (out, whole, nothing, none) = (said(1, true), said(1, false), said(0, true), said(0, false));
@@ -427,7 +435,7 @@ mod tests {
         let said = finished(
             &mut sewn,
             &held,
-            (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new()),
+            (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new(), &BTreeMap::new()),
             stitchcraft_plan::profiles::REFERENCE,
             &Names::default(),
             &Budget::DEFAULT,
@@ -463,7 +471,7 @@ mod tests {
             codes(&finished(
                 &mut kept,
                 &held,
-                (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new()),
+                (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new(), &BTreeMap::new()),
                 profile,
                 &Names::default(),
                 &Budget::DEFAULT
@@ -474,7 +482,7 @@ mod tests {
         // A plan within the cap is not gone through, and 2 fills say nothing.
         let (within, mut kept) = (plan(0, 2), plan(0, 2));
         assert!(
-            finished(&mut kept, &held, (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new()), profile, &Names::default(), &Budget::DEFAULT)
+            finished(&mut kept, &held, (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new(), &BTreeMap::new()), profile, &Names::default(), &Budget::DEFAULT)
                 .is_empty()
         );
         assert_eq!(kept, within);
@@ -493,6 +501,7 @@ mod tests {
             base: &base,
             columns: &base,
             lettering: &BTreeMap::new(),
+            pulls: &BTreeMap::new(),
             overlap: 1.0,
             shortest: 0.3,
             longest: 12.1,
@@ -501,7 +510,7 @@ mod tests {
         assert!(pass > measure, "{pass} {measure}");
         let budget = Budget { max_work: measure, ..Budget::DEFAULT };
         let mut kept = sewn.clone();
-        let said = finished(&mut kept, &held, (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new()), profile, &Names::default(), &budget);
+        let said = finished(&mut kept, &held, (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new(), &BTreeMap::new()), profile, &Names::default(), &budget);
         assert_eq!(
             said.first().map(|said| (said.code, said.message.as_str())),
             Some((Code::AutoThinned, "No thread was taken from the spots above 4 fills: the last pass needs more work than the budget allows.")),

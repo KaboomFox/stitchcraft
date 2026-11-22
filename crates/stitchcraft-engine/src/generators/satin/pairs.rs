@@ -14,6 +14,10 @@
 //! The column starts with a pair at its start, and ends with one at its end unless the last pair is within
 //! 0.1 mm of it.
 //!
+//! A column may keep its spacing on the inside of a bend instead (`bend_open_percent`, `REQ-SAT-030`): a
+//! pair then lies the spacing from the one before at the nearer end, or at the farther end at the spacing
+//! times the opening, when that is farther. The outside opens by that much at most before the inside crowds.
+//!
 //! With random spacing, each step's spacing is drawn at random, at each section's start and after each
 //! pair, and a pair moves to lie that spacing from the one before. Pairs are measured from each other as
 //! the rails place them, and each is widened by pull compensation only as it goes into the column
@@ -47,6 +51,14 @@ const END: f64 = 0.1;
 /// Their points must fit in `meter`'s stitches left, though none is spent: the column's stitches come of
 /// them, or the lines its underlays and its needle's travel walk.
 pub(crate) fn pairs(sections: &[Section], spacing: f64, processor: &mut Processor, meter: &mut Meter) -> Result<Vec<Pair>, Exhausted> {
+    opened(sections, spacing, 1.0, processor, meter)
+}
+
+/// The pairs of needle points along `sections`, as [`pairs`] places them, but measured apart as [`gap`]
+/// measures them with the opening `open`: 1 keeps the spacing at the farther end, and more keeps it at the
+/// nearer end, the farther opening to `open` times the spacing at the most.
+pub(crate) fn opened(sections: &[Section], spacing: f64, open: f64, processor: &mut Processor, meter: &mut Meter) -> Result<Vec<Pair>, Exhausted> {
+    let gap = |pair: Pair, previous: Pair| gap(pair, previous, open);
     let mut pairs: Vec<Pair> = Vec::new();
     let mut last: Option<Pair> = None;
     for [first, second] in sections {
@@ -108,15 +120,17 @@ fn end_of([first, second]: &Section) -> Pair {
 }
 
 /// How far `pair` lies from `previous` across the column: at a right angle to `previous`, at whichever end
-/// is farther, or from `previous`'s first point when `previous` has no length.
-fn gap([a, b]: Pair, [c, d]: Pair) -> f64 {
+/// is farther, or from `previous`'s first point when `previous` has no length. With an opening `open` above
+/// 1, the nearer end's distance, or the farther end's divided by `open` when that is more.
+fn gap([a, b]: Pair, [c, d]: Pair, open: f64) -> f64 {
     let (x, y) = (d.x() - c.x(), d.y() - c.y());
     let length = c.distance(d);
     if length < NO_LENGTH {
         return distance_to_segment(c, a, b);
     }
     let across = |p: Point, q: Point| ((q.y() - p.y()) * x - (q.x() - p.x()) * y).abs() / length;
-    across(a, c).max(across(b, d))
+    let (one, two) = (across(a, c), across(b, d));
+    one.min(two).max(one.max(two) / open)
 }
 
 #[cfg(test)]
@@ -158,15 +172,28 @@ mod tests {
     fn pairs_are_apart_across_the_previous_pair_at_its_farther_end() {
         // The previous pair across x = 0; the next one 0.5 mm on at the top, 0.3 mm at the bottom.
         let previous = [p(0.0, 0.0), p(0.0, 4.0)];
-        assert_eq!(gap([p(0.3, 0.0), p(0.5, 4.0)], previous), 0.5);
-        assert_eq!(gap([p(-0.7, 0.0), p(0.2, 4.0)], previous), 0.7, "either way");
+        assert_eq!(gap([p(0.3, 0.0), p(0.5, 4.0)], previous, 1.0), 0.5);
+        assert_eq!(gap([p(-0.7, 0.0), p(0.2, 4.0)], previous, 1.0), 0.7, "either way");
         // A previous pair of no length: the distance from its point to the new pair. Shorter than a
         // hundredth of a CSS pixel (0.0026 mm) is no length.
-        assert_eq!(gap([p(3.0, -1.0), p(3.0, 1.0)], [p(0.0, 0.0), p(0.0, 0.0)]), 3.0);
-        assert_eq!(gap([p(0.3, 0.0), p(0.3, 0.4)], [p(0.0, 0.0), p(0.002, 0.0)]), 0.3);
-        assert_eq!(gap([p(0.3, 0.0), p(0.3, 0.4)], [p(0.0, 0.0), p(0.003, 0.0)]), 0.4);
+        assert_eq!(gap([p(3.0, -1.0), p(3.0, 1.0)], [p(0.0, 0.0), p(0.0, 0.0)], 1.0), 3.0);
+        assert_eq!(gap([p(0.3, 0.0), p(0.3, 0.4)], [p(0.0, 0.0), p(0.002, 0.0)], 1.0), 0.3);
+        assert_eq!(gap([p(0.3, 0.0), p(0.3, 0.4)], [p(0.0, 0.0), p(0.003, 0.0)], 1.0), 0.4);
         // Exactly a hundredth of a CSS pixel is a length, as in Ink/Stitch.
-        assert!((gap([p(0.3, 0.0), p(0.3, 0.4)], [p(0.0, 0.0), p(NO_LENGTH, 0.0)]) - 0.4).abs() < 1e-12);
+        assert!((gap([p(0.3, 0.0), p(0.3, 0.4)], [p(0.0, 0.0), p(NO_LENGTH, 0.0)], 1.0) - 0.4).abs() < 1e-12);
+    }
+
+    #[test]
+    fn an_opened_bend_measures_its_pairs_apart_at_the_nearer_end_or_the_farther_end_opened() {
+        // `REQ-SAT-030`: 0.3 mm at the nearer end, 0.5 mm at the farther.
+        let (previous, pair) = ([p(0.0, 0.0), p(0.0, 4.0)], [p(0.3, 0.0), p(0.5, 4.0)]);
+        assert!((gap(pair, previous, 1.25) - 0.4).abs() < 1e-12, "the farther end, opened by a quarter");
+        assert!((gap(pair, previous, 2.0) - 0.3).abs() < 1e-12, "the nearer end");
+        assert!((gap([p(0.5, 0.0), p(0.3, 4.0)], previous, 2.0) - 0.3).abs() < 1e-12, "either end");
+        // A straight column's pairs lie as far apart at both ends, whatever the opening.
+        let section = [vec![p(0.0, 0.0), p(1.0, 0.0)], vec![p(0.0, 4.0), p(1.0, 4.0)]];
+        let laid = |open| opened(std::slice::from_ref(&section), 0.4, open, &mut Processor::inset([0.0; 2], [0.0; 2]), &mut Budget::DEFAULT.meter());
+        assert_eq!(laid(1.25), laid(1.0));
     }
 
     // The next 3 cases sit exactly on a limit, where Ink/Stitch compares strictly. Their rails run along

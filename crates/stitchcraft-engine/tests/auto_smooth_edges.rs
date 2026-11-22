@@ -1,4 +1,4 @@
-//! Smooth satin edges (`REQ-AUTO-170` to `REQ-AUTO-173`, `REQ-SAT-030`, planned in M13.58,
+//! Smooth satin edges (`REQ-AUTO-170` to `REQ-AUTO-173`, `REQ-SAT-030`, M13.58,
 //! `docs/src/design/image-to-embroidery.md` › Smooth satin edges): an automatic satin column's stitches run
 //! full length, a bend keeps its spacing on the inside, and the cap pulls a crowded point in only where a spot
 //! would otherwise sew above the warning's limit. `auto_short_stitches` `crowded` gives today's columns.
@@ -73,10 +73,9 @@ fn gaps(points: impl Iterator<Item = Point>) -> Vec<f64> {
 }
 
 #[test]
-#[ignore = "planned: M13.58 builds smooth satin edges"]
 fn req_auto_170_a_bend_keeps_its_inside_spacing_and_every_stitch_runs_full_length() {
     // A half ring 3 mm wide whose inside is 8 mm from its centre: its outside would need 0.55 mm to keep the
-    // inside at 0.4, so the outside opens to 0.5 mm and the inside lies 0.5 x 8 / 11 apart. No end is
+    // inside at 0.4, so the outside opens to 0.5 mm and the inside lies 0.5 x 8 / 11 apart on the rails, 0.5 x 7.6 / 11.4 at the stitches' ends. No end is
     // moved in: each stitch reaches past both rails by the column's pull compensation, within 0.1 mm. Today
     // every other inside point stops 0.12 mm inside the inside rail, held there by REQ-AUTO-085.
     let plan = planned(vec![half_ring(8.0, 11.0, &[])]).plan.unwrap();
@@ -88,12 +87,22 @@ fn req_auto_170_a_bend_keeps_its_inside_spacing_and_every_stitch_runs_full_lengt
     assert!(short.is_empty(), "{short:?}");
     let outside = gaps(stitches.iter().map(|[_, outer]| *outer));
     let inside = gaps(stitches.iter().map(|[inner, _]| *inner));
+    // The stitches' ends lie on the radii widened by the pull compensation: 7.6 and 11.4 mm.
+    let ratio = (8.0 - reach) / (11.0 + reach);
     assert!(outside.iter().all(|gap| *gap <= 0.55), "{outside:?}");
-    assert!(inside.iter().all(|gap| *gap >= 0.5 * 8.0 / 11.0 - 0.04), "{inside:?}");
+    opened(&inside, 0.5 * ratio, 0.4 * ratio);
+}
+
+/// Checks that the gaps `inside` lie `wanted` apart on the whole, within the 5 % that a column's pairs may
+/// land off their spacing (`pairs`), and each farther apart than `kept`, where they would lie with the
+/// spacing kept on the outside.
+fn opened(inside: &[f64], wanted: f64, kept: f64) {
+    let mean = inside.iter().sum::<f64>() / inside.len() as f64;
+    assert!((mean / wanted - 1.0).abs() < 0.05, "{mean} against {wanted}: {inside:?}");
+    assert!(inside.iter().all(|gap| *gap > kept * 1.05), "{inside:?}");
 }
 
 #[test]
-#[ignore = "planned: M13.58 builds smooth satin edges"]
 fn req_auto_170_digitizing_sets_no_short_stitches_and_opens_a_bend() {
     let column = |params: &[(&str, &str)]| {
         let outline = [(0.0, 0.0), (30.0, 0.0), (30.0, 3.0), (0.0, 3.0)];
@@ -102,7 +111,12 @@ fn req_auto_170_digitizing_sets_no_short_stitches_and_opens_a_bend() {
     };
     let setting = |element: &Element, key: &str| element.params.iter().find(|(k, _)| *k == key).map(|(_, value)| value.to_string());
     let default = column(&[]);
-    assert_eq!([setting(&default, SHORT_STITCH_DISTANCE), setting(&default, SHORT_STITCH_INSET)], [None, None]);
+    // It moves no point in as it is made: its insets are what the cap pulls a point in by (`REQ-AUTO-171`),
+    // the first held to its edge, since a straight band's rails pair evenly (`REQ-AUTO-085`).
+    assert_eq!(
+        [setting(&default, SHORT_STITCH_DISTANCE), setting(&default, SHORT_STITCH_INSET)],
+        [Some("0".to_string()), Some("13.2 50".to_string())]
+    );
     assert_eq!(setting(&default, BEND_OPEN).as_deref(), Some("25"));
     // A shape that sets any of the 3 keeps what it sets.
     let own = column(&[(SHORT_STITCH_DISTANCE, "0.1"), (BEND_OPEN, "0")]);
@@ -134,7 +148,6 @@ fn pulled_in(design: &Design) -> (f64, usize) {
 }
 
 #[test]
-#[ignore = "planned: M13.58 builds smooth satin edges"]
 fn req_auto_171_the_cap_pulls_crowded_points_in_where_a_spot_is_above_the_limit() {
     // TS-13A's strip fans into a corner, 6.05 fills with no point moved in, 5.38 with its bend opened: the
     // cap pulls points in there. TS-13C's outline curves gently under 2 hair lines, 4.11 fills with no point
@@ -147,7 +160,6 @@ fn req_auto_171_the_cap_pulls_crowded_points_in_where_a_spot_is_above_the_limit(
 }
 
 #[test]
-#[ignore = "planned: M13.58 builds smooth satin edges"]
 fn req_auto_172_the_cap_pulls_in_a_tenth_of_today_s_short_stitches_and_says_so() {
     let mut designs: Vec<(String, Design)> = pictures::all()
         .into_iter()
@@ -171,7 +183,6 @@ fn req_auto_172_the_cap_pulls_in_a_tenth_of_today_s_short_stitches_and_says_so()
 }
 
 #[test]
-#[ignore = "planned: M13.58 builds smooth satin edges"]
 fn req_auto_173_crowded_gives_today_s_columns() {
     let outline = [(0.0, 0.0), (30.0, 0.0), (30.0, 3.0), (0.0, 3.0)];
     let made = digitize(
@@ -197,7 +208,6 @@ fn req_auto_173_crowded_gives_today_s_columns() {
 }
 
 #[test]
-#[ignore = "planned: M13.58 builds smooth satin edges"]
 fn req_sat_030_a_bend_opens_its_outside_to_keep_its_inside_spacing() {
     // A satin stroke 3 mm wide along a half circle of 9.5 mm: inside radius 8, outside 11.
     let line = arc(9.5, 0.0, std::f64::consts::PI);
@@ -212,8 +222,8 @@ fn req_sat_030_a_bend_opens_its_outside_to_keep_its_inside_spacing() {
     let (inside, outside) = column(&[]);
     assert!(outside.iter().all(|gap| (gap - 0.4).abs() < 0.04), "{outside:?}");
     assert!(inside.iter().all(|gap| *gap < 0.33), "{inside:?}");
-    // At 25 the outside opens to 0.5 mm, and the inside lies 0.5 x 8 / 11 apart, closer than 0.4 here.
+    // At 25 the outside opens to 0.5 mm, and the inside lies 0.5 x 8 / 11 apart on the whole, closer than 0.4 here.
     let (inside, outside) = column(&[(BEND_OPEN, "25")]);
     assert!(outside.iter().all(|gap| *gap <= 0.53), "{outside:?}");
-    assert!(inside.iter().all(|gap| *gap >= 0.5 * 8.0 / 11.0 - 0.03), "{inside:?}");
+    opened(&inside, 0.5 * 8.0 / 11.0, 0.4 * 8.0 / 11.0);
 }

@@ -28,6 +28,7 @@ use stitchcraft_plan::{MachineProfile, StitchPlan};
 
 use crate::assemble::{Assembled, assemble_routed};
 use crate::auto::cap::Pull;
+use crate::auto::thick::Pulls;
 use crate::auto::{Sewing, sewing, thick};
 use crate::check;
 use crate::design::{Design, Element, Lettered};
@@ -35,6 +36,7 @@ use crate::finalize::{Finalized, fitted};
 use crate::generate::layered::{Layered, underlay};
 use crate::generate::{Generated, Generation, approach, generate_with};
 use crate::generators::pull::PullParams;
+use crate::generators::satin::SatinParams;
 use crate::generators::{Layer, Neighbours};
 use crate::moves::Routing;
 use crate::names::Names;
@@ -123,6 +125,16 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
         .filter(|(element, _)| element.lettered == Some(Lettered::Digitized))
         .filter_map(|(element, _)| Some((element.id.clone(), Pull::of(&PullParams::from_set(&element.params).ok()?.params))))
         .collect();
+    // The columns that move no needle point in as they are made, but lettering's: the cap pulls their crowded
+    // points in where a spot sews above the warning's limit, by their insets (`REQ-AUTO-171`).
+    let pulls: Pulls = satins()
+        .filter(|(element, _)| element.lettered.is_none())
+        .filter_map(|(element, _)| {
+            let satin = SatinParams::from_set(&element.params).ok()?.params;
+            let shares = satin.short_stitch_inset.iter().map(|percent| percent / 100.0).collect();
+            (satin.short_stitch_distance_mm.get() <= 0.0).then(|| (element.id.clone(), shares))
+        })
+        .collect();
     let names = named(design, (&elements, &base, &generated), profile, budget, &mut diagnostics);
     let mut meter = budget.meter();
     // Where shapes sewn later cover the way between 2 elements that digitizing made, the needle runs under
@@ -143,7 +155,7 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
             // told where it sews thick (`SC-W0913`), and is written.
             let cap = |plan: &mut StitchPlan| match &limits {
                 Some(held) if reach.is_empty() => thick::measured(plan, held, &names, budget),
-                Some(held) => thick::finished(plan, held, (&base, &reach, &columns, &lettering), profile, &names, budget),
+                Some(held) => thick::finished(plan, held, (&base, &reach, &columns, &lettering, &pulls), profile, &names, budget),
                 None => Vec::new(),
             };
             let asked = check::asked(generated.iter().map(|(element, sewn)| (&element.id, sewn)));
