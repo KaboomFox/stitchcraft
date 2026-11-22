@@ -98,8 +98,9 @@ impl<'r> Processor<'r> {
         let first = sections.first().and_then(|[a, b]| Some((*a.first()?, *b.first()?)));
         let last = sections.last().and_then(|[a, b]| Some((*a.last()?, *b.last()?)));
         for (ends, taper) in [(first, start), (last, end)] {
+            // A taper of 0 is no taper: the point keeps its whole compensation, as Ink/Stitch sews it.
             if let Some((a, b)) = ends
-                && taper > 0.0
+                && taper.is_normal()
                 && a.distance(b) < shortest
             {
                 self.points.push((a.lerp(b, 0.5), taper));
@@ -140,13 +141,11 @@ impl<'r> Processor<'r> {
             }
             None => self.least,
         };
+        // Away from every point `kept` is 1, and the pair is widened by the whole compensation.
         let kept = self.kept(pair);
-        if kept < 1.0 {
-            let ([pull_a, pull_b], [percent_a, percent_b], [share_a, share_b]) = (self.pull, self.percent, shares);
-            let lost = 1.0 - kept;
-            return offset(pair, [pull_a * kept, pull_b * kept], [share_a - percent_a * lost, share_b - percent_b * lost]);
-        }
-        offset(pair, self.pull, shares)
+        let ([pull_a, pull_b], [percent_a, percent_b], [share_a, share_b]) = (self.pull, self.percent, shares);
+        let lost = 1.0 - kept;
+        offset(pair, [pull_a * kept, pull_b * kept], [share_a - percent_a * lost, share_b - percent_b * lost])
     }
 
     /// The share of its pull compensation `pair` keeps: its middle's distance from the nearest point over
@@ -329,10 +328,10 @@ mod tests {
         Processor::new(&params, &pull, rng).pointed(&sections, &params, shortest)
     }
 
-    /// How far each end of `pair`, a pair across x = `x` 1 mm wide, moves out once widened.
+    /// How far each end of `pair`, a pair across x = `x` 1 mm wide, moves out once widened: negative inward.
     fn moved(processor: &mut Processor, x: f64) -> [f64; 2] {
         let [a, b] = processor.widened([p(x, -0.5), p(x, 0.5)]);
-        [a.distance(p(x, -0.5)), b.distance(p(x, 0.5))]
+        [-0.5 - a.y(), b.y() - 0.5]
     }
 
     fn close([a, b]: [f64; 2], want: f64) -> bool {
@@ -352,7 +351,13 @@ mod tests {
         let mut rng = SplitMix64::new(1);
         let mut processor = tapered(&[("pull_compensation_percent", "50"), ("point_taper_mm", "2")], 0.0, 0.3, &mut rng);
         assert!(close(moved(&mut processor, 9.0), 0.25));
+        assert!(close(moved(&mut processor, 9.75), 0.0625));
         assert!(close(moved(&mut processor, 7.0), 0.5));
+        // A taper of 0 tapers nothing, the end pair whose rails meet included.
+        let mut rng = SplitMix64::new(1);
+        let mut processor = tapered(&[("pull_compensation_percent", "50"), ("point_taper_mm", "0")], 0.0, 0.3, &mut rng);
+        assert!(close(moved(&mut processor, 10.0), 0.5));
+        assert!(close(moved(&mut processor, 9.0), 0.5));
     }
 
     #[test]
