@@ -9,10 +9,10 @@
 
 use stitchcraft_core::{Budget, Code, Mm, Point, math};
 use stitchcraft_engine::PlanOutcome;
-use stitchcraft_engine::auto::{CROWDED_CLOSER_THAN, CROWDED_INSETS, Stitches, digitize, digitized, underlay};
+use stitchcraft_engine::auto::{BEND_OPENED, CROWDED_INSETS, Stitches, digitize, digitized, underlay};
 use stitchcraft_engine::common::{LOCK_END, LOCK_END_SCALE, LOCK_START, LOCK_START_SCALE};
 use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Join, Path, Segment, Shape, Subpath};
-use stitchcraft_engine::generators::satin::{SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET};
+use stitchcraft_engine::generators::satin::{BEND_OPEN, SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET};
 use stitchcraft_engine::normalize::region;
 use stitchcraft_engine::normalize::stroke::SHAPE_TOLERANCE;
 use stitchcraft_params::ParamSet;
@@ -45,7 +45,8 @@ fn satin(width: f64) -> Vec<(&'static str, String)> {
     let mut params =
         vec![("satin_column", "true".to_string()), ("pull_compensation_mm", pull().to_string()), ("end_at_nearest_point", "false".to_string())];
     params.extend(underlay(Mm::new(width).unwrap()).iter().map(|&key| (key, "true".to_string())));
-    params.extend([(SHORT_STITCH_DISTANCE, CROWDED_CLOSER_THAN.to_string()), (SHORT_STITCH_INSET, CROWDED_INSETS.to_string())]);
+    // It moves no crowded point in as it is made, and keeps its spacing on the inside of a bend (`REQ-AUTO-170`).
+    params.extend([(SHORT_STITCH_DISTANCE, "0".to_string()), (SHORT_STITCH_INSET, CROWDED_INSETS.to_string()), (BEND_OPEN, BEND_OPENED.to_string())]);
     params
 }
 
@@ -127,7 +128,9 @@ fn req_auto_003_a_line_up_to_7_mm_is_a_satin_column_as_wide_as_it_is_drawn() {
     let line = with(drawn("line", &[(0.0, 0.0), (20.0, 0.0), (30.0, 10.0)], 3.0), &[("trim_after", "true")]);
     let column = as_satin(line.clone(), 3.0);
     assert_eq!(made(&line), vec![column.clone()]);
-    let sewn = needle_points(&planned(vec![automatic(line)]));
+    // Planned with the cap above every spot: its miter's corner fans above the warning's limit, and there the
+    // cap pulls crowded points in (REQ-AUTO-171).
+    let sewn = needle_points(&planned(vec![automatic(with(line, &[("auto_thick_cap_fills", "50")]))]));
     assert_eq!(sewn, needle_points(&planned(vec![locked(column)])));
     // As wide as drawn once the thread pulls it in: its stitches cross the line from one edge to the other
     // and reach its pull compensation past each, 1.9 mm each side of it (REQ-AUTO-018).

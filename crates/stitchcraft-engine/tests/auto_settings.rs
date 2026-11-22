@@ -100,6 +100,9 @@ fn req_auto_020_the_rules_settings_are_stitchcraft_s_own_and_no_stitch_type_read
         ("auto_thick_warn_points", "15"),
         ("auto_thick_fail_points", "30"),
         ("auto_thick_cap_fills", "3.25"),
+        // And where a satin column's crowded points move in: only above the warning's limit (`REQ-AUTO-170`,
+        // M13.58).
+        ("auto_short_stitches", "above_limit"),
     ];
     // And the switch that sews the details last, off since it costs jump threads (`REQ-AUTO-098`, M13.48).
     // And how far an outline is smoothed, off by default (`REQ-AUTO-133`, M13.52).

@@ -55,7 +55,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Repeat parameters](params/repeat.md) | 2 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
 | [Ripple parameters](params/ripple.md) | 20 | Ripple stitch |
 | [Zigzag stroke parameters](params/zigzag-stroke.md) | 3 | Zigzag stitch |
-| [Satin parameters](params/satin.md) | 34 | Satin column, E-stitch, S-stitch, Zigzag satin |
+| [Satin parameters](params/satin.md) | 35 | Satin column, E-stitch, S-stitch, Zigzag satin |
 | [Pull parameters](params/pull.md) | 2 | Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill |
 | [Fill parameters](params/fill.md) | 2 | Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill |
 | [Tatami parameters](params/tatami.md) | 16 | Tatami fill, Contour fill, Meander fill, Circular fill, Guided fill, Linear gradient fill, Tartan fill |
@@ -65,7 +65,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Guided parameters](params/guided.md) | 3 | Guided fill |
 | [Tartan parameters](params/tartan.md) | 5 | Tartan fill |
 | [Path fill parameters](params/path-fill.md) | 3 | Contour fill, Meander fill, Circular fill |
-| [Auto parameters](params/auto.md) | 33 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
+| [Auto parameters](params/auto.md) | 34 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
 
 ## Every parameter
 
@@ -98,6 +98,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`auto_overlap_mm`](params/auto.md#auto_overlap_mm) | Overlap | Auto parameters |
 | [`auto_prefer`](params/auto.md#auto_prefer) | Satin or fill | Auto parameters |
 | [`auto_pull_compensation_mm`](params/auto.md#auto_pull_compensation_mm) | Pull compensation | Auto parameters |
+| [`auto_short_stitches`](params/auto.md#auto_short_stitches) | Short stitches | Auto parameters |
 | [`auto_smooth_mm`](params/auto.md#auto_smooth_mm) | Smooth outlines | Auto parameters |
 | [`auto_stitch`](params/auto.md#auto_stitch) | Stitch | Auto parameters |
 | [`auto_thick_cap_fills`](params/auto.md#auto_thick_cap_fills) | Most thread on a spot, in fills | Auto parameters |
@@ -108,6 +109,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`avoid_self_crossing`](params/contour.md#avoid_self_crossing) | Avoid self-crossing | Contour parameters |
 | [`bean_stitch_repeats`](params/repeat.md#bean_stitch_repeats) | Bean stitch | Repeat parameters |
 | [`bean_stitch_repeats`](params/path-fill.md#bean_stitch_repeats) | Bean stitch | Path fill parameters |
+| [`bend_open_percent`](params/satin.md#bend_open_percent) | Open bends | Satin parameters |
 | [`canvas_grid_origin`](params/cross.md#canvas_grid_origin) | Grid on the canvas | Cross parameters |
 | [`center_walk_underlay`](params/satin.md#center_walk_underlay) | Centre walk underlay | Satin parameters |
 | [`center_walk_underlay_position`](params/satin.md#center_walk_underlay_position) | Centre walk position | Satin parameters |

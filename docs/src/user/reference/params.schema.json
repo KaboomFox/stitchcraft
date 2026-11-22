@@ -395,6 +395,22 @@
         "unit": "mm"
       }
     },
+    "auto_short_stitches": {
+      "default": "above_limit",
+      "description": "Where a satin column's crowded needle points move in. `above_limit`, the default: each stitch runs from rail to rail as it is made, a bend keeps its spacing on the inside and opens its outside by a quarter at the most (`bend_open_percent` 25), and only where a spot would sew above the warning's limit does the cap pull crowded points in. `crowded`: as before, the outside keeps the spacing, and every point closer than 0.35 mm to the one before it on its rail moves in, by a quarter of its stitch and then by half. A shape that sets its own short-stitch settings keeps them either way.",
+      "enum": [
+        "above_limit",
+        "crowded"
+      ],
+      "title": "Short stitches",
+      "type": "string",
+      "x-stitchcraft": {
+        "automatic": true,
+        "group": "Advanced",
+        "origin": "stitchcraft",
+        "stability": "experimental"
+      }
+    },
     "auto_smooth_mm": {
       "default": 0.0,
       "description": "How far a point of an area's outline may move when the outline is smoothed, before anything is digitized. A traced outline wobbles by less than a thread is wide, and the wobble sews short stitches and ragged edges. Corners stay, an edge 2 areas share is smoothed once so that no gap opens, and a ring's area changes by a tenth at most. 0, the default, sews every outline as drawn. 0.2 mm, half a thread, cut short stitches on every traced picture measured, but it also changes which parts sew as satin columns, and not always for the better.",
@@ -568,6 +584,26 @@
           }
         }
       ]
+    },
+    "bend_open_percent": {
+      "default": 0.0,
+      "description": "How much farther apart than the zigzag spacing the needle points on the outside of a bend may lie, in percent of the spacing, so that those on the inside lie the spacing apart. At 0 the spacing is kept on the outside, and the inside crowds by the ratio of the 2 radii. At 25 the outside opens to 1.25 times the spacing before the inside crowds, and a bend whose inside radius is 0.8 of its outside's or more doesn't crowd at all. Automatic digitizing sets 25 on its columns.",
+      "maximum": 100.0,
+      "minimum": 0.0,
+      "title": "Open bends",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Satin column",
+        "origin": "stitchcraft",
+        "stability": "experimental",
+        "unit": "%"
+      }
     },
     "canvas_grid_origin": {
       "default": true,
@@ -3352,6 +3388,7 @@
           "satin_column",
           "satin_method",
           "zigzag_spacing_mm",
+          "bend_open_percent",
           "reverse_rails",
           "swap_satin_rails",
           "start_at_nearest_point",
@@ -3522,6 +3559,7 @@
           "auto_thick_warn_points",
           "auto_thick_fail_points",
           "auto_thick_cap_fills",
+          "auto_short_stitches",
           "auto_details_last",
           "auto_smooth_mm",
           "auto_column_overlap_mm"

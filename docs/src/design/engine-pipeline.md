@@ -475,6 +475,9 @@ that the design doesn't need, with the budget's work once more, keeping to the p
 stitch, and keeps the measure up to date (`SC-I1119`, [the thickest spot](image-to-embroidery.md#the-thickest-spot)).
 Where a spot is still above it, the cap takes needle points out of the runs of the shapes that digitizing made, but none of a satin
 column's top stitches below the warning's limit, with the budget's work once more ([the cap at the end of planning](image-to-embroidery.md#the-cap-at-the-end-of-planning)).
+`plan` hands the cap the satin columns that digitizing made and that move no point in as they are made,
+`short_stitch_distance_mm` 0, with their insets: above the warning's limit the cap pulls their crowded
+points in first ([smooth satin edges](image-to-embroidery.md#smooth-satin-edges)).
 Planning adds `SC-W0913` when the design sews thick and returns the plan all the
 same ([how thick a design sews](image-to-embroidery.md#how-thick-a-design-sews)).
 

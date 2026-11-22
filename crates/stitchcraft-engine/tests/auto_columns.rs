@@ -9,7 +9,7 @@
 use stitchcraft_core::math::{self, sin_cos};
 use stitchcraft_core::{Budget, Code, Mm, Point};
 use stitchcraft_engine::auto::{
-    CONTOUR_FROM, CROWDED_CLOSER_THAN, CROWDED_INSETS, Digitized, EDGE_REACH, OPEN_HOLE, Stitches, ZIGZAG_ABOVE, digitize, digitized,
+    CONTOUR_FROM, CROWDED_INSETS, Digitized, EDGE_REACH, OPEN_HOLE, SHORT_STITCHES, Stitches, ZIGZAG_ABOVE, digitize, digitized,
 };
 use stitchcraft_engine::design::{Design, DesignSettings, Element, Shape};
 use stitchcraft_engine::generators::passes::BEAN_STITCH_REPEATS;
@@ -279,23 +279,25 @@ fn top_stitches(element: &Element) -> Vec<[Point; 2]> {
 }
 
 #[test]
-fn req_auto_071_a_column_moves_its_crowded_needle_points_in_unless_its_shape_says_how() {
+fn req_auto_170_a_column_keeps_the_short_stitches_its_shape_sets() {
     let outline = rectangle((0.0, 0.0), (30.0, 3.0));
     let column = |params: &[(&str, &str)]| made(&fill("band", &[&outline], &RED, params)).elements[0].clone();
-    let distance = CROWDED_CLOSER_THAN.to_string();
     let set =
         |column: &Element| [setting(column, SHORT_STITCH_DISTANCE).map(str::to_string), setting(column, SHORT_STITCH_INSET).map(str::to_string)];
-    // A straight band's rails pair evenly: its first inset is held to its edge (`REQ-AUTO-085`).
-    assert_eq!(set(&column(&[])), [Some(distance), Some("13.2 50".to_string())]);
-    // A shape that sets either keeps it, and the other is Ink/Stitch's.
-    assert_eq!(set(&column(&[(SHORT_STITCH_DISTANCE, "0.1")])), [Some("0.1".to_string()), None]);
-    assert_eq!(set(&column(&[(SHORT_STITCH_INSET, "10")])), [None, Some("10".to_string())]);
+    // A shape that sets either keeps it, and the other is Ink/Stitch's, with either value of
+    // `auto_short_stitches` (`REQ-AUTO-173`).
+    for value in ["above_limit", "crowded"] {
+        assert_eq!(set(&column(&[(SHORT_STITCHES, value), (SHORT_STITCH_DISTANCE, "0.1")])), [Some("0.1".to_string()), None]);
+        assert_eq!(set(&column(&[(SHORT_STITCHES, value), (SHORT_STITCH_INSET, "10")])), [None, Some("10".to_string())]);
+    }
 }
 
 #[test]
-fn req_auto_071_a_straight_column_spans_its_width_with_every_stitch_and_a_bend_moves_its_inside_points_in() {
-    // Straight, 3 mm wide: a rail's needle points lie 0.4 mm apart, farther than the 0.35 mm that crowds
-    // them, so every top stitch crosses the whole column and its pull compensation.
+fn req_auto_173_crowded_spans_a_straight_column_with_every_stitch_and_moves_a_bend_s_inside_points_in() {
+    // With `auto_short_stitches` `crowded`, as before M13.58 (REQ-AUTO-071, retired). Straight, 3 mm wide: a
+    // rail's needle points lie 0.4 mm apart, farther than the 0.35 mm that crowds them, so every top stitch
+    // crosses the whole column and its pull compensation.
+    let shape = |id: &str, outline: &[(f64, f64)]| fill(id, &[outline], &RED, &[(SHORT_STITCHES, "crowded")]);
     let band = shape("band", &rectangle((0.0, 0.0), (30.0, 3.0)));
     let stitches = top_stitches(&band);
     // Its contour underlay, which runs along its rails, has the top's role in a plan: a stitch across is one

@@ -219,7 +219,7 @@ fn req_prm_003_the_file_of_each_sheet_drawn_as_a_design_keeps_the_elements_it_se
     let mut checked = 0;
     for sheet in testsheets::SHEETS.iter().filter(|sheet| sheet.designed()) {
         let (id, design, clones) = (sheet.id, sheet.design().unwrap().unwrap(), sheet.clones().unwrap().unwrap());
-        let (digitized, _) = stitchcraft_engine::auto::digitized(&design, &Budget::DEFAULT);
+        let (digitized, _) = stitchcraft_testkit::inkstitch::digitized(&design, &Budget::DEFAULT);
         let alike = sewn_alike(&digitized);
         let left_out: Vec<&str> = digitized.iter().filter(|e| !alike.contains(e)).map(|e| e.id.as_str()).collect();
         let own = if id == "TS-17C" { &["ts17c:crossing-first:bar", "ts17c:crossing-first:post"][..] } else { &[] };
