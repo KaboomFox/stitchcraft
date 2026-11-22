@@ -106,7 +106,7 @@ pub(crate) fn held(rules: &AutoParams) -> Held {
 pub(crate) fn finished(
     plan: &mut StitchPlan,
     held: &Held,
-    (base, made, columns, lettering, pulls): (&[ElementId], &BTreeSet<ElementId>, &BTreeSet<ElementId>, &BTreeMap<ElementId, Pull>, &Pulls),
+    (base, made, columns, lettering, pulls): Reach<'_>,
     profile: &MachineProfile,
     names: &Names,
     budget: &Budget,
@@ -167,6 +167,11 @@ pub(crate) fn finished(
     said.extend(told(plan, measured, &held.limits, names, &mut meter));
     said
 }
+
+/// The elements the pass and the cap work with, by their ids: the base layer's pieces, the elements in the
+/// cap's reach, the satin columns among them, the lettering's columns with their pull, and the columns whose
+/// crowded points the cap may pull in ([`finished`]).
+pub(crate) type Reach<'a> = (&'a [ElementId], &'a BTreeSet<ElementId>, &'a BTreeSet<ElementId>, &'a BTreeMap<ElementId, Pull>, &'a Pulls);
 
 /// The satin columns whose crowded needle points the cap may pull in, by their ids, each with the shares of a
 /// stitch they move in by, in turn (`REQ-AUTO-171`).

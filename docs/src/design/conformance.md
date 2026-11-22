@@ -329,7 +329,10 @@ writes an SVG file with, `stitchcraft_svg::written`), which StitchCraft's
 reader reads back unchanged (`REQ-PRM-003`). An element's guide line and anchor line are paths beside it
 in its own group, each started with Ink/Stitch's marker, the guide with its stroke and its settings. The file leaves out an element that sets a setting of
 StitchCraft's own that its stitch type reads, which Ink/Stitch would pass over and sew otherwise
-(`sewn_alike`). So TS-17C's file has no crossing columns with their underlays first. An element a sheet
+(`sewn_alike`). So TS-17C's file has no crossing columns with their underlays first. A sheet's automatic
+shapes are digitized with `auto_short_stitches` `crowded` for the file (`stitchcraft_testkit::inkstitch::digitized`):
+by default their satin columns set `bend_open_percent`, which is StitchCraft's own, and with `crowded` they
+set Ink/Stitch's short-stitch settings instead. An element a sheet
 draws as a clone of another is written as a `<use>` of it, and each command in a group with its
 connector, as Ink/Stitch's Attach Commands writes them, since Ink/Stitch moves a command its clone copies
 only from a group. Automatic digitizing chooses ordinary elements with Ink/Stitch's parameters, so
