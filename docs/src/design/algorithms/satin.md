@@ -280,6 +280,13 @@ up for both as Ink/Stitch does.
   ten-thousandth of a CSS pixel has no direction to move them in, and stays as it is. A tatami fill
   lengthens its rows with the same move, as Ink/Stitch does, and the 2 settings are declared once for
   both (`stitchcraft_engine::generators::pull`, [fills](fills.md#7-pull-compensation-and-gap-fill-rows)).
+- **Point taper** (`point_taper_mm`, StitchCraft's own, `REQ-SAT-032`) tapers the pull compensation into a
+  point: an end whose rails' last points lie closer together than the element's shortest stitch. A pair
+  whose middle lies within the taper of such an end keeps the share of its pull compensation, in
+  millimetres and in percent, that its distance from the end's middle is of the taper. 2 values set the
+  start, then the end. At 0, the default, every pair keeps all of it, as in Ink/Stitch. The random share is
+  drawn as before. Automatic digitizing sets 2 mm on its columns
+  ([a column's point](../image-to-embroidery.md#a-columns-point)).
 - **Random variation** comes from the element's generator, seeded with `random_seed`
   ([determinism](../determinism.md)). Each pair's share of the width on each side is drawn between
   `pull_compensation_percent` less `random_width_decrease_percent` and plus

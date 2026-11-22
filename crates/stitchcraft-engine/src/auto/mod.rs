@@ -102,7 +102,7 @@ pub use neighbours::{TOUCHING, is_part};
 pub use params::{
     ADVANCED, AutoParams, COLUMN_OVERLAP, COLUMN_REACH, DETAILS_LAST, FILL_ANGLE, FILL_OUTLINE, FILL_UNEVEN, IGNORE_BACKGROUND, LONGEST_SATIN_STITCH,
     MAX_REACH, MAX_SATIN_WIDTH, MAX_SPLIT_SATIN_WIDTH, MAX_UNEVENNESS, MIN_AREA, MIN_FILL_WIDTH, MIN_LIKENESS, MIN_LINE_UNEVENNESS, MIN_SLENDERNESS,
-    MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, SHORT_STITCHES, STITCH, WIDEST_SPLIT_SATIN,
+    MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, SHORT_STITCHES, STITCH, TAPER, WIDEST_SPLIT_SATIN,
 };
 use rules::{Asked, Bounds, Fired, Measures, RuleId};
 pub use thick::{Held, WARNING_CHARS};
@@ -122,8 +122,8 @@ use crate::generators::passes::BEAN_STITCH_REPEATS;
 use crate::generators::pull::PULL_COMPENSATION;
 use crate::generators::running::TOLERANCE;
 use crate::generators::satin::{
-    self, BEND_OPEN, CENTER_WALK_UNDERLAY, CENTER_WALK_UNDERLAY_REPEATS, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PUSH_COMPENSATION, SATIN_COLUMN,
-    SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET, START_AT_NEAREST_POINT, ZIGZAG_UNDERLAY,
+    self, BEND_OPEN, CENTER_WALK_UNDERLAY, CENTER_WALK_UNDERLAY_REPEATS, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, POINT_TAPER, PUSH_COMPENSATION,
+    SATIN_COLUMN, SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET, START_AT_NEAREST_POINT, ZIGZAG_UNDERLAY,
 };
 use crate::generators::tatami::{ANGLE, TURN_STITCHES};
 use crate::generators::{TooSmall, mm, too_small};
@@ -328,6 +328,12 @@ fn satin_params(params: &ParamSet, width: Mm, rules: &AutoParams) -> ParamSet {
     }
     if !crowded && column.get(BEND_OPEN).is_none() {
         column.set(BEND_OPEN, BEND_OPENED.to_string().as_str());
+    }
+    // Its pull compensation tapers into its points (`REQ-AUTO-183`), unless its shape says how. At 0 it sets
+    // nothing, and the column sews as Ink/Stitch sews it, as the differential's files need.
+    let taper = rules.auto_point_taper_mm.get();
+    if taper > 0.0 && column.get(POINT_TAPER).is_none() {
+        column.set(POINT_TAPER, taper.to_string().as_str());
     }
     column
 }

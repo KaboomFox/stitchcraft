@@ -330,9 +330,10 @@ reader reads back unchanged (`REQ-PRM-003`). An element's guide line and anchor 
 in its own group, each started with Ink/Stitch's marker, the guide with its stroke and its settings. The file leaves out an element that sets a setting of
 StitchCraft's own that its stitch type reads, which Ink/Stitch would pass over and sew otherwise
 (`sewn_alike`). So TS-17C's file has no crossing columns with their underlays first. A sheet's automatic
-shapes are digitized with `auto_short_stitches` `crowded` for the file (`stitchcraft_testkit::inkstitch::digitized`):
-by default their satin columns set `bend_open_percent`, which is StitchCraft's own, and with `crowded` they
-set Ink/Stitch's short-stitch settings instead. An element a sheet
+shapes are digitized with `auto_short_stitches` `crowded` and `auto_point_taper_mm` 0 for the file
+(`stitchcraft_testkit::inkstitch::digitized`): by default their satin columns set `bend_open_percent` and
+`point_taper_mm`, which are StitchCraft's own. With `crowded` they set Ink/Stitch's short-stitch settings
+instead, and at 0 they don't set a taper. An element a sheet
 draws as a clone of another is written as a `<use>` of it, and each command in a group with its
 connector, as Ink/Stitch's Attach Commands writes them, since Ink/Stitch moves a command its clone copies
 only from a group. Automatic digitizing chooses ordinary elements with Ink/Stitch's parameters, so

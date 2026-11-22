@@ -55,7 +55,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Repeat parameters](params/repeat.md) | 2 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
 | [Ripple parameters](params/ripple.md) | 20 | Ripple stitch |
 | [Zigzag stroke parameters](params/zigzag-stroke.md) | 3 | Zigzag stitch |
-| [Satin parameters](params/satin.md) | 35 | Satin column, E-stitch, S-stitch, Zigzag satin |
+| [Satin parameters](params/satin.md) | 36 | Satin column, E-stitch, S-stitch, Zigzag satin |
 | [Pull parameters](params/pull.md) | 2 | Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill |
 | [Fill parameters](params/fill.md) | 2 | Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill |
 | [Tatami parameters](params/tatami.md) | 16 | Tatami fill, Contour fill, Meander fill, Circular fill, Guided fill, Linear gradient fill, Tartan fill |
@@ -65,7 +65,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Guided parameters](params/guided.md) | 3 | Guided fill |
 | [Tartan parameters](params/tartan.md) | 5 | Tartan fill |
 | [Path fill parameters](params/path-fill.md) | 3 | Contour fill, Meander fill, Circular fill |
-| [Auto parameters](params/auto.md) | 35 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
+| [Auto parameters](params/auto.md) | 36 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
 
 ## Every parameter
 
@@ -97,6 +97,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`auto_min_slenderness`](params/auto.md#auto_min_slenderness) | Least slenderness of a column | Auto parameters |
 | [`auto_min_triple_run_width_mm`](params/auto.md#auto_min_triple_run_width_mm) | Narrowest triple run | Auto parameters |
 | [`auto_overlap_mm`](params/auto.md#auto_overlap_mm) | Overlap | Auto parameters |
+| [`auto_point_taper_mm`](params/auto.md#auto_point_taper_mm) | Point taper | Auto parameters |
 | [`auto_prefer`](params/auto.md#auto_prefer) | Satin or fill | Auto parameters |
 | [`auto_pull_compensation_mm`](params/auto.md#auto_pull_compensation_mm) | Pull compensation | Auto parameters |
 | [`auto_short_stitches`](params/auto.md#auto_short_stitches) | Short stitches | Auto parameters |
@@ -175,6 +176,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`min_random_split_length_mm`](params/satin.md#min_random_split_length_mm) | Shortest split stitch | Satin parameters |
 | [`min_stitch_length_mm`](params/common.md#min_stitch_length_mm) | Shortest stitch | Common parameters |
 | [`pattern_size_mm`](params/cross.md#pattern_size_mm) | Cell size | Cross parameters |
+| [`point_taper_mm`](params/satin.md#point_taper_mm) | Point taper | Satin parameters |
 | [`pull_compensation_mm`](params/pull.md#pull_compensation_mm) | Pull compensation | Pull parameters |
 | [`pull_compensation_percent`](params/pull.md#pull_compensation_percent) | Pull compensation (%) | Pull parameters |
 | [`push_compensation_mm`](params/satin.md#push_compensation_mm) | Push compensation | Satin parameters |

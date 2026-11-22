@@ -8,26 +8,29 @@
 //! describe the file), with Ink/Stitch's settings alone ([`Params::InkStitch`]): an element that sets one
 //! of StitchCraft's own that a stitch type reads, such as `underlays_first` (`REQ-ASM-009`), is refused, and
 //! the differential writes a sheet's file of the elements both programs sew alike, [`sewn_alike`]. It digitizes
-//! a sheet's automatic shapes with `auto_short_stitches` `crowded` ([`digitized`]): by default an automatic
-//! satin column opens its bends (`bend_open_percent`, `REQ-SAT-030`), which is StitchCraft's own, and with
-//! `crowded` it sets Ink/Stitch's short-stitch settings instead (`REQ-AUTO-173`). The tests
+//! a sheet's automatic shapes with `auto_short_stitches` `crowded` and `auto_point_taper_mm` 0 ([`digitized`]):
+//! by default an automatic satin column opens its bends (`bend_open_percent`, `REQ-SAT-030`) and tapers its
+//! pull compensation into its points (`point_taper_mm`, `REQ-SAT-032`), both StitchCraft's own. With
+//! `crowded` it sets Ink/Stitch's short-stitch settings instead (`REQ-AUTO-173`), and at 0 it tapers
+//! nothing (`REQ-AUTO-183`). The tests
 //! read the file back with StitchCraft's SVG reader, which reads each element's shape, colour and parameters
 //! as they were written (`REQ-PRM-003`, `REQ-SVG-009`).
 
 use stitchcraft_core::{Budget, Diagnostic};
-use stitchcraft_engine::auto::SHORT_STITCHES;
+use stitchcraft_engine::auto::{SHORT_STITCHES, TAPER};
 use stitchcraft_engine::design::{Design, DesignSettings, Element};
 use stitchcraft_engine::testsheets::Cloned;
 use stitchcraft_svg::written::{self, Options, Params};
 pub use stitchcraft_svg::written::{MARGIN, data, sewn_alike};
 
 /// The ordinary elements `design` sews as, as `stitchcraft_engine::auto::digitized` makes them with `budget`,
-/// its automatic shapes digitized with `auto_short_stitches` `crowded`, so that Ink/Stitch sews their satin
-/// columns alike, the setting itself left out of them; with what digitizing said. A design that can't be made again is digitized as it is.
+/// its automatic shapes digitized with `auto_short_stitches` `crowded` and `auto_point_taper_mm` 0, so that
+/// Ink/Stitch sews their satin columns alike, the settings themselves left out of them; with what digitizing said. A design that can't be made again is digitized as it is.
 pub fn digitized(design: &Design, budget: &Budget) -> (Vec<Element>, Vec<Diagnostic>) {
     let mut elements = design.elements().to_vec();
     for element in elements.iter_mut().filter(|element| element.automatic) {
         element.params.set(SHORT_STITCHES, "crowded");
+        element.params.set(TAPER, "0");
     }
     let (made, said) = match Design::new(elements, design.settings) {
         Ok(crowded) => {
@@ -44,6 +47,7 @@ pub fn digitized(design: &Design, budget: &Budget) -> (Vec<Element>, Vec<Diagnos
         .into_iter()
         .map(|mut element| {
             element.params.remove(SHORT_STITCHES);
+            element.params.remove(TAPER);
             element
         })
         .collect();

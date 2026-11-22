@@ -125,6 +125,20 @@ lengthen the column. 2 values set the start, then the end.
 - **Default:** `0`
 - **Ink/Stitch:** same key, meaning and default
 
+### `point_taper_mm`
+
+**Point taper.** Over how many millimetres before a point the pull compensation falls to 0, so that a column that
+tapers to a point sews to a point. A point is an end whose rails meet, closer together than the
+shortest stitch. A pair of needle points nearer the point than this keeps the share of its pull
+compensation that its distance from the point is of this length. At 0 every pair keeps all of it,
+and a point sews as wide as twice the compensation. 2 values set the start, then the end.
+Automatic digitizing sets `auto_point_taper_mm` on its columns.
+
+- **Accepts:** a length from 0 to 10 mm, or 2 separated by a space
+- **Default:** `0`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
 ## Random variation
 
 ### `random_width_decrease_percent`

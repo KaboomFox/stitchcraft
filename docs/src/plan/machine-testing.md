@@ -116,6 +116,7 @@ jumps and colour changes, which the rethreads and the cuts at the machine are co
 | The running dog traced from its photo, with and without `--fewer-points` | M13.51 | `stitch plan docs/fixtures/dog-running-cutout.png --auto --size 100 --colours 9 -o dog-traced.pes`, and again with `--fewer-points`. Both trace with VectorCraft's command line |
 | An eye on a body: a white disc 4.4 mm across on a broad fill, with a black disc 1.8 mm across on it, as `main` plans it and with M13.61 | M13.61 | Drawn by hand, each disc its own path stacked on the one under it, or planned from the case `fish` in `crates/stitchcraft-engine/tests/auto_small_details.rs`. TS-13A's abutting badge shows the same rule, and the lettered patch's border, which keeps its column, the rule's limit. Look at whether the black shows whole and round, and whether the white sews in rows with no wheel at its middle |
 | Column ends, as `main` plans them and with M13.60 | M13.60 | Planned from the cases in `crates/stitchcraft-engine/tests/auto_column_ends.rs`, which draw each shape in code, or drawn by hand. The bands are 5 mm tall, and a circle cuts the ends of one. The other is cut at 45° at one end. The lines are the zigzag 1.5 mm wide and lines 3 and 5 mm wide turning 90° and 120°. The review set's sunrise and zigzag show the same rules. Look at whether the stitches lie square to the band into each end, and whether fabric shows where 2 legs of a line meet |
+| 9 wedges, 1.5, 2.5 and 3.5 mm wide at their base and 8°, 14° and 20° at their tip, at `auto_point_taper_mm` 0 and 2 | M13.62 | Planned from the wedges of `crates/stitchcraft-engine/tests/auto_points.rs`, which draw them in code, or drawn by hand as narrow triangles, in one thread on bare fabric. The review set's sunrise shows the same rule on a fill. Look at whether each tip sews to a point, and whether the narrowed tip pulls in or frays |
 | A traced dog with `stitch:keep` marks, one with a `stitch:guide` line, and a leaf with a guide | M13.39, M13.24 | Made by hand in VectorCraft: no file of the repository has a mark or a guide |
 | Hexmira in Small Font at 8 and 10 mm, made bolder | M14.9 | `stitch lettering "Hexmira" --font FOLDER --height 8 --widen-percent 10 -p brother-pe800-4x4 -o hexmira.pes`, at each height and at 0, 10 and 20 %. Barstitch Bold with its pull compensation scaled to the height is made by hand |
 | Words on a cream field (Hexmira at 8 and 10 mm, Hexmira 7.6 mm tall, and VOLKAR in Barstitch Bold 12.5 mm tall) | M14.9, M13.50 | Made by hand: a cream field drawn 3 mm round the word, with the word set on it as text |
@@ -555,6 +556,14 @@ At MC-8, sew the column ends' test piece as `main` plans it and with M13.60:
   and end on the band's own edge?
 - Where 2 legs of the zigzag and of the wider lines meet, does fabric show along the bisector? Is the
   corner's point sharp, and is the inside of the corner flat or a knot?
+
+M13.62 tapers an automatic satin column's pull compensation to 0 over the last 2 mm before a point
+([a column's point](../design/image-to-embroidery.md#a-columns-point)). At MC-8, sew the 9 wedges at
+`auto_point_taper_mm` 0 and at 2:
+
+- Does each tip at 2 sew to a point, and how wide is it 1 mm from the tip, against the drawing and against 0?
+- Does the narrowed tip pull in shorter than drawn, or show fabric along its sides? Does the end's lock show
+  as a knot past the tip?
 
 M13.56 checks the locks of every plan the engine returns, after the cap
 ([the thread's state](../design/data-model.md#the-threads-state)), and changes nothing that sews. On an

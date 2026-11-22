@@ -94,13 +94,16 @@ fn hundredths(value: f64) -> f64 {
 /// abutting badge's blue was filled whole under its gold disc (M13.61). TS-13D sews 3.79, from 3.97, with its
 /// white disc filled whole under its star (M13.59, `REQ-AUTO-174`). The pear's stem sews 3.95 where it sewed
 /// 3.86 with a column 0.4 mm under a later column (M13.57): before the cap its spot stays under 4, where the cap
-/// pulls no point in and takes less of a column's doubled top. It stays under the warning's limit.
+/// pulls no point in and takes less of a column's doubled top. It stays under the warning's limit. With a
+/// column's pull compensation tapered into its points (M13.62, `REQ-AUTO-183`), the 2 badges sew 3.99 where
+/// they sewed 3.96, and TS-13A 3.99 where it sewed 3.95: the cap takes a column's top points only above 4,
+/// and a narrower point changes where it stops. Their area above the cap falls.
 const ABOVE: [(&str, f64); 8] = [
-    ("badges-abutting", 3.96),
-    ("badges-stacked", 3.96),
+    ("badges-abutting", 3.99),
+    ("badges-stacked", 3.99),
     ("pear", 3.95),
     ("lettered-patch", 3.95),
-    ("ts-13a", 3.95),
+    ("ts-13a", 3.99),
     ("ts-13b", 3.46),
     ("ts-13c", 3.93),
     ("ts-13d", 3.79),

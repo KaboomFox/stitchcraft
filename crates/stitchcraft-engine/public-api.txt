@@ -72,6 +72,7 @@ pub stitchcraft_engine::auto::AutoParams::auto_min_line_unevenness: <stitchcraft
 pub stitchcraft_engine::auto::AutoParams::auto_min_slenderness: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_min_triple_run_width_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_overlap_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_point_taper_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_prefer: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_pull_compensation_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_short_stitches: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
@@ -131,6 +132,7 @@ pub const stitchcraft_engine::auto::OVERLAP: &str
 pub const stitchcraft_engine::auto::PREFER: &str
 pub const stitchcraft_engine::auto::SHORT_STITCHES: &str
 pub const stitchcraft_engine::auto::STITCH: &str
+pub const stitchcraft_engine::auto::TAPER: &str
 pub const stitchcraft_engine::auto::TOUCHING: f64
 pub const stitchcraft_engine::auto::WARNING_CHARS: usize
 pub const stitchcraft_engine::auto::WIDEST_SPLIT_SATIN: f64
@@ -750,6 +752,7 @@ pub stitchcraft_engine::generators::satin::SatinParams::contour_underlay_stitch_
 pub stitchcraft_engine::generators::satin::SatinParams::contour_underlay_stitch_tolerance_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::end_at_nearest_point: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::min_random_split_length_mm: <stitchcraft_params::kinds::OptionalLengthWithZero as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::generators::satin::SatinParams::point_taper_mm: <stitchcraft_params::kinds::LengthPair as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::push_compensation_mm: <stitchcraft_params::kinds::LengthPair as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::random_split_jitter_percent: <stitchcraft_params::kinds::Percent as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::random_split_phase: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
@@ -782,6 +785,7 @@ pub const stitchcraft_engine::generators::satin::CENTER_WALK_UNDERLAY: &str
 pub const stitchcraft_engine::generators::satin::CENTER_WALK_UNDERLAY_REPEATS: &str
 pub const stitchcraft_engine::generators::satin::CONTOUR_UNDERLAY: &str
 pub const stitchcraft_engine::generators::satin::END_AT_NEAREST_POINT: &str
+pub const stitchcraft_engine::generators::satin::POINT_TAPER: &str
 pub const stitchcraft_engine::generators::satin::PUSH_COMPENSATION: &str
 pub const stitchcraft_engine::generators::satin::RANDOM_SPLIT_JITTER_PERCENT: &str
 pub const stitchcraft_engine::generators::satin::RANDOM_SPLIT_PHASE: &str

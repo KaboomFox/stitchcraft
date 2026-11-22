@@ -93,6 +93,10 @@ pub const SHORT_STITCH_INSET: &str = "short_stitch_inset";
 /// (`REQ-SAT-030`). Automatic digitizing sets it on its columns.
 pub const BEND_OPEN: &str = "bend_open_percent";
 
+/// The key of the setting that tapers a satin column's pull compensation into an end whose rails meet, a point
+/// (`REQ-SAT-032`). Automatic digitizing sets it on its columns.
+pub const POINT_TAPER: &str = "point_taper_mm";
+
 /// The key of the setting that starts a satin column near where the needle is, which Ink/Stitch's update of
 /// a file older than its version 3 turns off, as it does [`END_AT_NEAREST_POINT`].
 pub const START_AT_NEAREST_POINT: &str = "start_at_nearest_point";
@@ -194,6 +198,15 @@ params! {
         /// along the column, so it comes out longer than drawn, and this makes up for it. Negative values
         /// lengthen the column. 2 values set the start, then the end.
         push_compensation_mm: LengthPair = "0", label "Push compensation", range (-10.0, 10.0);
+
+        /// Over how many millimetres before a point the pull compensation falls to 0, so that a column that
+        /// tapers to a point sews to a point. A point is an end whose rails meet, closer together than the
+        /// shortest stitch. A pair of needle points nearer the point than this keeps the share of its pull
+        /// compensation that its distance from the point is of this length. At 0 every pair keeps all of it,
+        /// and a point sews as wide as twice the compensation. 2 values set the start, then the end.
+        /// Automatic digitizing sets `auto_point_taper_mm` on its columns.
+        point_taper_mm: LengthPair = "0", label "Point taper", range (0.0, 10.0),
+            origin Origin::StitchCraft, stability Stability::Experimental;
     }
 
     "Random variation" {
@@ -561,7 +574,7 @@ impl Column {
             ends::sewn(layers, top, meter)?
         } else {
             let guides = Guides::new(&self.sections, params, self.lengths, self.travel, self.cuts.clone(), meter)?;
-            let outline = outline(&self.sections, params, &self.pull, self.placed.clone(), self.drawn.clone(), meter)?;
+            let outline = outline(&self.sections, params, &self.pull, (self.placed.clone(), min_stitch), self.drawn.clone(), meter)?;
             let edges: [Vec<Point>; 2] = [outline.iter().map(|[a, _]| *a).collect(), outline.iter().map(|[_, b]| *b).collect()];
             let outline = [edges[0].as_slice(), edges[1].as_slice()];
             let start = match (hints.start, needle) {
@@ -646,14 +659,15 @@ fn outline(
     sections: &[Section],
     params: &SatinParams,
     pull: &PullParams,
-    placed: Vec<Pair>,
+    (placed, shortest): (Vec<Pair>, f64),
     mut drawn: SplitMix64,
     meter: &mut Meter,
 ) -> Result<Vec<Pair>, Exhausted> {
     if params.satin_method != StitchType::SatinZigzag.id() {
         return Ok(placed);
     }
-    pairs::pairs(sections, params.zigzag_spacing_mm.get(), &mut Processor::new(params, pull, &mut drawn), meter)
+    let mut processor = Processor::new(params, pull, &mut drawn).pointed(sections, params, shortest);
+    pairs::pairs(sections, params.zigzag_spacing_mm.get(), &mut processor, meter)
 }
 
 /// A column's top stitches, with what the rest of the column takes from their making.
@@ -681,7 +695,8 @@ fn top_stitches(
 ) -> Result<Top, Exhausted> {
     let (spacing, zigzag) = (params.zigzag_spacing_mm.get(), params.satin_method == StitchType::SatinZigzag.id());
     let open = 1.0 + params.bend_open_percent / 100.0;
-    let placed = pairs::opened(sections, if zigzag { spacing / 2.0 } else { spacing }, open, &mut Processor::new(params, pull, rng), meter)?;
+    let mut processor = Processor::new(params, pull, rng).pointed(sections, params, lengths.min_stitch.get());
+    let placed = pairs::opened(sections, if zigzag { spacing / 2.0 } else { spacing }, open, &mut processor, meter)?;
     let zigzagged;
     let sewn: &[Pair] = if zigzag {
         zigzagged = pairs::zigzag(&placed);
