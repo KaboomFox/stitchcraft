@@ -392,6 +392,21 @@ shape.
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 
+### `auto_short_stitches`
+
+**Short stitches.** Where a satin column's crowded needle points move in. `above_limit`, the default: each stitch
+runs from rail to rail as it is made, a bend keeps its spacing on the inside and opens its
+outside by a quarter at the most (`bend_open_percent` 25), and only where a spot would sew above
+the warning's limit does the cap pull crowded points in. `crowded`: as before, the outside keeps
+the spacing, and every point closer than 0.35 mm to the one before it on its rail moves in, by a
+quarter of its stitch and then by half. A shape that sets its own short-stitch settings keeps
+them either way.
+
+- **Accepts:** one of `above_limit` (Only above the limit), `crowded` (Where points crowd)
+- **Default:** `above_limit`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
 ### `auto_details_last`
 
 **Details sew last.** Whether a detail sews after the larger areas round it, where that costs no thread change: an

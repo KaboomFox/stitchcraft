@@ -967,7 +967,7 @@ stitches lie over its underlay and its first, as on a 6 mm column (3.35 fills ov
 passes 3 fills along the inner third of its band all round: its inner rail is 15 mm from the centre against
 25 mm for the outer. Its stitches lie 1.67 times as close there, over the zigzag underlay. The bare
 fabric lies in a thin band along the inner edge of the curved columns, the arch and the stroked circle,
-where the crowded needle points move in along their stitches (`REQ-AUTO-071`). It is a satin column's own,
+where the crowded needle points moved in along their stitches (`REQ-AUTO-071`, retired in M13.58). It is a satin column's own,
 5.92 mm² on the sheet 6 mm wide. The bars and the rings leave none. The short stitches and the jumps of a
 fill's row ends mostly go.
 
@@ -1231,6 +1231,174 @@ and after. The thickest spot and the jump threads include the start rule of
 
 The 15 mm word's M and C keep 5 notches where their points fan. The 4 mm word runs along its letters'
 middles, and its A's counter, 0.56 mm across inside, isn't kept open.
+
+### Smooth satin edges
+
+M13.58 built this section's rules (`REQ-AUTO-170` to `REQ-AUTO-173`, `REQ-SAT-030`). Before it, a column moved its
+crowded points in as it was made (`REQ-AUTO-071`, retired), which is now the `crowded` value of `auto_short_stitches`.
+
+The owner reviewed 18 simple drawings sewn by automatic digitizing on 2026-11-21. On most of them the
+biggest fault was the small stitches. On the inside of a curve every other stitch of a satin column ends
+short of the edge, and the short ends sew a second row inside it. Her words: "it just feels like the stitch
+needs to be longer so instead of having kind of two rows, you just have one". How thick a design sews stays
+her first concern, with the warning's limit of 4 fills.
+
+#### Crowding on the inside of a bend
+
+A column places its pairs of needle points the zigzag spacing apart at the outside of a bend, as Ink/Stitch
+does ([Top stitches](algorithms/satin.md#top-stitches-method-satin_column)). On the inside they lie closer, by the ratio of the 2
+radii. A straight column's points lie 0.4 mm apart, so a distance of 0.35 mm moves in the points of almost
+every curve. A ring 3 mm wide whose inside is 24 mm from its centre has inside points 0.353 mm apart, and 12
+scattered stitches of it end short. On the 18 drawings 1,044 needle points move in. At 0.25 mm 208 do, and
+the owner found that better.
+
+A looser distance alone breaks the limit on one test design. TS-13C's digitized half then sews 4.11 fills
+at one spot, where 3.92 is its thickest today. The spot is on the inside edge of the face's outline, a
+column 4.8 mm wide that curves gently: its inside points lie 0.316 mm apart and its outside points 0.41 mm.
+Hair lines cross it there, over the face's fill and the base layer. The layers at that spot:
+
+| Layer | Fills |
+|---|---:|
+| Base layer | 0.25 |
+| Face, fill | 1.00 |
+| Outline, satin column | 1.57 |
+| Hair, first line | 0.79 |
+| Hair, second line | 0.50 |
+
+At 0.35 mm the outline's inside points there move in, and the spot stays under 4. At 0.25 mm they don't.
+The cap's last resort (`REQ-AUTO-112`) can take a column's point out only by joining its 2 stitches into one
+along the far rail, and here no point passes its test of cover. With no point moved in at all, 4 of
+the 16 designs of `REQ-AUTO-073` sew above 4 fills. TS-13A's blue strip fans 25 stitches into a corner and lays 4.32 fills by itself, 6.05 with the gold
+fills and the base layer under it. The last resort took 575 mm of its top stitches there and left the
+corner at 6.05. The running dog in 6 threads reaches 4.1 fills at 0.20 mm where a column of 1.5 fills crosses a fill of
+1.2 fills and 3 more layers.
+
+So the stitches that crowd matter only where the layers under and over them reach the limit. TS-13C's
+column crowds in a gentle curve, and TS-13A's in a fan.
+
+#### Rules for smooth edges
+
+- **Spacing on the inside** (`REQ-AUTO-170`). An automatic column measures the spacing
+  between its pairs on the inside of a bend, and lets the outside open to 1.25 times the spacing, 0.5 mm,
+  before the inside crowds. At 0.5 mm the outside's stitches lie 1.25 thread widths apart, the cover of a
+  column sewn at a spacing of 0.5 mm along that edge. A bend whose inside radius is 0.8 of its outside's or
+  more sews with no crowding at all, and a tighter one crowds by the ratio of its radii over 1.25.
+- **Every stitch runs full length as it is made** (`REQ-AUTO-170`). An automatic column moves no needle
+  point in: digitizing sets its `short_stitch_distance_mm` to 0, and its `short_stitch_inset` to 25 50, the
+  first held as `REQ-AUTO-085` holds it, which is what the cap pulls a point in by.
+- **Thickness decides where an end moves in** (`REQ-AUTO-171`). Where a spot still sews above the warning's
+  limit once the cap's 3 kinds are done, the cap's last resort first pulls in crowded points of the
+  columns there that move no point in as they are made. A point is crowded when it lies closer than its
+  column's spacing and 5 % to its rail's point before or after it: 0.42 mm at the spacing of 0.4 mm. The
+  inside of a bend keeps its points the spacing apart within 5 %, so this takes in every point there. At
+  0.35 mm, 2 traced dogs with their details sewn last sewed 4.12 and 4.04 fills, and at the spacing itself
+  one still sewed 4.04, where both sewed under 4 before: their points lay 0.41 mm apart, and none moved. A point moves in along its 2 stitches, towards the middle of
+  their other ends, from where it first was, by its column's first inset and then by its second. Of those that lower the thickest spot, the one that lowers it most moves first, one
+  at a time. A point whose 2 neighbours on its rail have both moved stays. The edge keeps every other
+  stitch. A lettering column's points stay, and a column that pairs evenly moves a point no farther past its
+  edge than `REQ-AUTO-085` holds it, since its first inset is held. It stops once no spot is above the limit or no point lowers it, and then
+  the last resort takes points as `REQ-AUTO-112` says.
+- **SC-I1119 counts what moved** (`REQ-AUTO-172`). The note says how many column points the cap pulled in,
+  and where.
+- **Today's look is one setting away** (`REQ-AUTO-173`). `auto_short_stitches` is `above_limit` by
+  default. `crowded` gives today's columns: the spacing kept on the outside, and a point closer than 0.35 mm
+  moved in by 25 % and then 50 %, as `REQ-AUTO-071` says. A shape that sets `short_stitch_distance_mm` or
+  `short_stitch_inset` keeps its own, as before.
+
+The bend's spacing is a satin column's own setting, `bend_open_percent` (`REQ-SAT-030`), 0 by default, which keeps
+Ink/Stitch's spacing on the outside. Automatic digitizing sets 25 on its columns. A satin column a person
+draws, and lettering, keep 0. The rules are in these files:
+
+| Rule | Where |
+|---|---|
+| Spacing on the inside | `generators/satin/pairs.rs`, the gap between 2 pairs |
+| No point moved in as made | `auto/mod.rs`, `satin_params` |
+| Crowded points pulled in | `auto/cap/pull.rs`, before the cap's last resort takes points |
+| The columns it may pull in | `pipeline.rs`, the automatic columns with `short_stitch_distance_mm` 0 |
+| The setting | `auto/params.rs`, a rule of automatic digitizing |
+
+The cap moves needle points for the first time. Until now it only took them out. A moved point keeps its
+place in the run. The plan keeps its jumps, trims and thread changes (`REQ-AUTO-102`).
+
+#### Smooth edges measured
+
+Prototyped on 2026-11-21 on main `1952f48c` (a patch kept outside the repository), on 4 sets:
+
+- the 18 review drawings,
+- the repository's 29 SVG drawings in `docs/fixtures`,
+- the 4 traced dogs and the traced pear,
+- 6 traced photos outside the repository, of cats, geese, a building and a castle.
+
+A needle point counts as shortened when the plan of the same rule with no point moved in has none there.
+The area above the cap counts pieces of 1 mm² or more at 3.25 fills or more:
+
+| Rule | Shortened points: drawings, SVG, dogs, photos | Thickest | Area above the cap, mm²: drawings, dogs, photos | Stitches of the drawings |
+|---|---:|---:|---:|---:|
+| Today, 0.35 mm | 1,044, 374, 616, 119 | 4.00 | 106, 75, 31 | 59,087 |
+| 0.25 mm | 208, 79, 411, 81 | 4.00 | 166, 90, 32 | 59,057 |
+| (a) Pulled in above 4 fills | 41, 5, 26, 18 | 4.00 | 181, 104, 40 | 59,055 |
+| (c) Inside spacing, and 0.25 mm | 101, 211, 246, 60 | 4.00 | 62, 60, 29 | 58,378 |
+| (c) and (a), the rules above | 8, 2, 19, 7 | 4.00 | 69, 79, 29 | 58,376 |
+
+The goose sews 4.4 fills with every rule, as it does today. Planning takes as long with each rule, within
+the noise of the machine. On the 16 designs of `REQ-AUTO-073`, planned in place:
+
+| Rule | Shortened points | Thickest | Above 4 | Area above the cap, mm² | Rail gaps over 0.55 mm |
+|---|---:|---:|---:|---:|---:|
+| No point moved in | 0 | 6.05 | 4 designs | 210 | 82 |
+| Today, 0.35 mm | 2,310 | 4.00 | none | 92 | |
+| 0.25 mm | 1,278 | 4.11 | TS-13C | 101 | |
+| (b) 0.25 mm, TS-13C's outline at 0.35 | 1,467 | 4.00 | none | 103 | |
+| (a) Pulled in above 4 fills | 296 | 3.99 | none | 209 | |
+| (c) and (a), the outside at 1.1 times | 221 | 3.99 | none | | 134 |
+| (c) and (a), at 1.25 times | 155 | 4.00 | none | 121 | 433 |
+| (c) and (a), at 1.5 times | 99 | 4.00 | none | | 1,194 |
+
+A rail gap is the distance between a column's needle point and the one before it on the same rail. The
+bare-fabric measure (`fabric::unsewn`) found the same bare share with every rule on every design. The cases
+of `REQ-AUTO-085` pass with each rule: no notch in the patch's letters or TS-13B's words.
+
+The costs of each rule:
+
+- **(a) alone** moves in 85 to 99 % fewer points, and every crowded column sews up to 4 fills where
+  today's 0.35 mm held it lower. The area above the cap doubles on the 16 designs, from 92 to 209 mm².
+- **(b)**, 0.25 mm with a second plan, changes one column of TS-13C back to today's look all along. It
+  moves in more points than 0.25 mm alone, and it plans a design twice when a spot is above the limit.
+- **(c) alone** opens every bend's outside. At 1.25 times it removes the crowding of gentle curves at its
+  source, lays 1.2 % fewer stitches and less thread in bends. It needs (a), or a distance, where a fan
+  crowds: TS-13A's strip still sews 5.38 fills with no point moved in.
+- **(c) and (a)** move in 36 points on the 58 drawings, traced dogs and photos where today moves in 2,153.
+  The area above the cap falls on the drawings and stays within 6 % on the dogs and photos. At 1.5 times
+  the outside opens 2.8 times as often past 0.55 mm for 56 fewer points. At 1.1 times 66 more points
+  move in.
+
+Built (2026-11-22), the rules measure close to the prototype. On the 58 drawings, traced dogs and photos the
+cap pulled in 5, 22 and 5 points, 32 in all. The area above the cap is 66, 82 and 29 mm², where the
+prototype left 69, 79 and 29. The drawings sew 58,424 stitches, 1.2 % fewer than the 59,087 of before. The
+goose still sews 4.4 fills, as before, and no other design sews above 4 fills. Ten sew a tenth or 2 more
+at their thickest than before, under the limit: the shield, the photo cat and the 2 traced dogs in 6
+threads 4.0, and the zigzag fixture 3.7 at its sharp inside corner. On the 16 designs of `REQ-AUTO-073` no design sews above 4 fills. The patch's lettering
+sews 3.95 fills at its thickest, where the prototype, which opened lettering's bends too, sewed 3.97.
+TS-13D's thickest spot, 3.97 fills as before, is on the inside edge of the ring round its star: the
+ring's own top stitches lay 2.68 fills there, over the star's fill and the base layer, and the cap pulled
+its points in. A disc with a dot on it is filled whole under the dot (`REQ-AUTO-182`) and sews 3.16 fills
+either way. Asked to sew as satin, its ring is a wheel round the dot and sews 3.98 fills, where it sews
+3.70 with `crowded`. Planning TS-13A takes 9.5 % more instructions and TS-13D 4.7 % more, the work of
+pulling points in (`conformance/perf.toml`).
+
+One test design shows a cost of (c). TS-13B's thickest spot becomes a place where 2 fills meet, 3.46 fills
+with no column there, which the cap can't lower and today's 3.85 column spot hides. `REQ-AUTO-073`'s case
+lists it.
+
+#### Decisions on smooth edges
+
+1. **The rules above, by default**, at 1.25 times: the fewest ends moved in, no spot above the limit, and
+   less thread above the cap on the drawings than today.
+2. **A setting for today's look**: `auto_short_stitches` `crowded` gives today's look on a whole design, and a
+   shape's own short-stitch settings give it on one shape.
+3. **A sew-out decides the 1.25**: the test piece of MC-8's kit (`docs/src/plan/machine-testing.md`) sews
+   a mug's handle, a ring and a sharp corner both ways.
+4. **`REQ-AUTO-071` retires once the rules are built.** Its distance is kept as the `crowded` setting.
 
 ### Letters sewn as strokes
 
@@ -2274,8 +2442,8 @@ On the traced dogs every kind adds a little at the peaks. At their spots of 4 fi
 fills, the overlap 0.85, a fill's rows 0.45, its turns and travel 0.6 to 0.8, the outline 0.3 to 0.4 and
 the locks 0.2 to 0.45. In a third of those spots 5 elements or more meet, each with 0.3 fill or more.
 
-2 rules for single shapes come first. An automatic column moves its crowded needle points in
-(`REQ-AUTO-071`): a point closer than 0.35 mm to the last one left on its rail moves in by 25 % of its
+2 rules for single shapes come first. An automatic column moved its crowded needle points in
+(`REQ-AUTO-071`, until [Smooth satin edges](#smooth-satin-edges) made it the `crowded` setting): a point closer than 0.35 mm to the last one left on its rail moves in by 25 % of its
 stitch, the next by 50 %, as digitizing programs shorten stitches in a sharp turn. A rail's points lie
 0.4 mm apart on a straight column, so no straight column loses any of its width. A larger distance takes
 more thread away only because it thins every column's edges. And everything digitizing makes locks in
@@ -3424,6 +3592,128 @@ sews later. That is the cause M13.45 traced on the running dog in 6 threads. The
 design where an eye or a mark must keep its edge clear. It comes back on by default once the search's
 tie-break no longer moves a whole batch of a thread later for a wish, and the dogs show a clear gain for
 it.
+
+### A small detail on top
+
+(`REQ-AUTO-182`, M13.61.) The owner reviewed 18 drawings sewn by automatic digitizing on
+2026-11-21. Of the fish she wrote: "biggest issues is the black part of the eye". The eye is a white disc
+4.4 mm across on the body, and the pupil a black disc 1.8 mm across on the eye. It sewed as a wheel of white
+stitches that all ran in to the pupil, and the black showed only between their ends. The rule she was shown
+was: a small shape drawn over another sews last, whole, and can be seen.
+
+**What happens today, measured.** Every filled shape of 50 mm² or less that lies at least a tenth over a
+shape painted before it in another colour was measured, on main `1952f48c`, in 63 designs: the 18 drawings,
+the fixtures' SVG files and documents with the 4 traced dogs and the pear among them, 6 traced photos and
+the TS-13A to E sheets. A shape is **seen** when its own thread is on top on at least half of what shows of it,
+each stitch drawn 0.4 mm wide in sewing order. Its stitches run **in rows** when at least 0.4 of its top
+stitches longer than 0.5 mm run within 20° of their commonest way. A wheel's run every way. A probe kept
+out of the repository measured both from each plan, and `tests/auto_small_details.rs` holds them as
+cases.
+
+| Cause | Drawings, fixtures, sheets (39) | Dogs and pear (111) | Photos (820) |
+|---|---|---|---|
+| A ring round a detail sewn as one satin column, a wheel | 1, the eye: the pupil seen on 0.40 | none | none |
+| Sewn before the shape under it | 2: the pupil, a snowcap (seen, 0.83) | 9, all seen | 13, 2 not seen |
+| No wider than 1 mm, so one running line | 1, the camp's pole: seen on 0.35 | 4, all seen | 56, 5 not seen |
+| Merged: a speck under 1 mm², or a thin line or a like colour into a neighbour | none | 93, 21 not seen | 720, 529 not seen |
+| Other: whole, after the shape under it | 35, 1 not seen (a line on TS-13B, 0.47) | 5, all seen | 30, all seen |
+
+The merged shapes are the tracer's noise, merged on purpose (`SC-I0905`, `SC-I0915`). The stars, dots and
+rays on top all sew whole and in rows, after what they lie on. The night sky's dots of 1.2 to 3.2 mm² are
+small fills of 21 to 33 needle points, and the flower's middle and TS-13E's dots are fills too. The wheel is
+the eye's alone among the small shapes. The same cause sews 2 larger shapes badly: TS-13D's white disc round
+its red star sews over the star's points, and TS-13A's blue badge, a square round a gold disc, fans into its
+corners and shows fabric between its stitches.
+
+**Why the eye sews as a wheel.** The layers are flattened first (`REQ-AUTO-023`). The eye sews only what
+shows of it: a ring round the pupil, 0.9 to 1.7 mm wide. Areas that the rules fill are digitized whole under
+their details, with their holes closed, but a narrow area keeps its holes, as an outline round a letter does.
+The ring is narrow and sews as one satin column round the pupil. Its inner rail is the pupil's edge, 0.5 to
+1.3 mm from the eye's centre. Pull compensation takes the inner ends 0.4 mm further in, to 0.13 to 0.9 mm
+from the centre: 40 stitch ends on a circle 3 mm round. The column would sew 2.4 mm of its outer rail to 1 mm
+of its inner one. A column that crowds more than 2 to 1 is filled (`REQ-AUTO-068`), but a part with a hole
+isn't measured, because a fill in its place would sew in pieces round what fills the hole. Then the pupil, a
+compact fill, sews before the eye. Only a fill moves back before its details, and a column round a detail
+goes by the order's rules 2 and 4 (see [sewing order](#sewing-order)). So the white's ends cover 60 % of the black,
+and the eye's middle is the fish's thickest spot, 3.55 fills.
+
+**The cap takes no small shape.** Planned with the cap lifted, the 960 small shapes that sew gain 368 of
+9,492 needle points (3.9 %). Most are lock stitches and travel. What shows of each changes by
+0.09 of its area at most, either way, on lines of the photos. The pupil keeps 25 of its 32 points and is seen
+on 0.40 either way. The cap and the last pass don't hide a small shape: the order and the wheel do.
+
+**Candidates, measured** on all 63 designs with a prototype that was never committed. Changes are against main, and the second column counts the small shapes seen.
+
+| Candidate | Small shapes seen | Thickest, area above the cap | Stitches / thread changes / jump threads | Changes |
+|---|---|---|---|---|
+| a. The crowding bound for a ring round a detail | 410 → 411: the pupil 0.40 → 1.00 | fish 3.55 → 3.23, TS-13D's area above the cap 881 → 867 mm² | +197 (fish +10, TS-13A +19, TS-13D +140, the goose photo +28) / none / none | 4 designs |
+| b. Details last on (`auto_details_last`), with a | 411 → 411: the snowcap 0.83 → 1.00, 84 photo shapes move both ways | dogs' area above the cap up on 3 of 4 (running dog in 9 threads 36.5 → 42.3 mm²) | 1,439 fewer / none / 992 → 1,017 (dogs +1, +2, +8, +7) | 8 designs |
+| c. No cap on small shapes | no change: the cap takes no visible thread from them | not measured | not measured | none |
+| d. Line weight by drawn width (the pole) | the pole, a line 1 mm wide, sews as one running line | not measured | not measured | a queued step |
+| M13.58 alone (spacing kept on the inside, no shortened ends) | 410 → 410: the pupil 0.40 → 0.23 | fish 3.55 → 3.99 | its own (M13.58's section) | the eye worse |
+| M13.58 with a | 410 → 411: the eye as with a alone | fish 3.23, TS-13A's area at 4 fills or more 43.3 → 40.0 mm² against M13.58 alone | +100 against M13.58 alone / none / none | 3 designs |
+
+**a. The crowding bound for a ring round a detail.** The eye's ring then crowds, its holes close under
+the pupil, and the eye, a disc 4.4 mm across, is compact and filled whole. It sews in rows (0.26 → 0.73 of
+its stitches one way), before the pupil, and is cut away under it as any area digitized whole is. The pupil
+shows whole, sewn after it, and the eye's thickest spot falls to 3.23 fills. Of the 63 designs only 4
+change. TS-13D's white disc becomes a fill under its star, whose points then show, and TS-13A's badge a fill
+under its disc, with no fabric between its stitches. On the goose photo one part of 0.92 mm², merged as a
+speck before, sews 28 stitches of its own. The photo's area above the cap falls by 1 mm². Held to rings whose
+holes other areas fill, the rule keeps a ring on bare fabric a column, as a case shows. A fill in that
+ring's place would sew in pieces round the hole, and that was the reason rings weren't measured. Prototyped
+first for every ring, the bound changed the fish and the 2 sheets alone.
+
+**b. Details last on by default.** It moves 1 more small shape after the shape under it, the alpine
+snowcap. The snowcap lies in a notch of its ridge, and the layers' rule looks only at holes. It costs 25 jump threads,
+most on the dogs, and raises their area above the cap. That is the cost M13.48 measured when it turned the
+setting off (see Off by default again above). It stays a setting.
+
+**c and d.** Whether a small shape is seen depends on its stitch. A fill or a column shows whole down to the
+night sky's smallest dot, 1.2 mm² and 21 needle points. A speck under 1 mm² merges into its neighbour on
+purpose. A shape no wider than the narrowest satin stroke sews as one running line, which covers about a
+third of a shape 1 mm wide. Sewing a line as wide as it is drawn is the queued step "line weight by drawn
+width", for lines and narrow shapes alike, not this one.
+
+**M13.58 and the eye.** M13.58 keeps a column's stitches full length and spaces them on the inside of a
+bend. The eye's ring is all bend, 5 to 1 between its rails once compensated. Its inner ends crowd more: measured with M13.58's prototype, the pupil is seen on 0.23 and the eye's middle sews 3.99 fills.
+M13.58's rule alone makes the eye worse. With rule a there is no ring left to bend, and the 2 rules don't
+meet.
+
+**Phase 1 proposed rule a,** a ring whose holes other automatic areas fill held to the crowding bound, as
+it measured it on 63 designs. The owner said yes on 2026-11-22, with no setting.
+
+**The build measures the bound from end to end of the rails.** It ran the engine's own test pictures too, and one
+of them showed what the 63 designs didn't. The lettered patch is a red plate with a cream field stacked on
+it, and shown, the plate is a border 3 mm wide round the field. Measured by a stretch, as `REQ-AUTO-068`
+measures a part without holes, the border crowds at each of its cut corners, more than 2 mm of its outer
+edge to 1 mm of its inner one. Rule a filled it whole under the field: the patch lost its satin border,
+sewed 108 more stitches, and its thickest spot rose from 3.98 to 4.00 fills. So the ring is measured from end
+to end of its rails. It closes its holes only when one of its rails, the whole way round, is more than 2 times as long as
+the other, a wheel.
+
+| Ring | Its column's rails, outside / inside | Crowds a stretch | Crowds as a whole |
+|---|---|---|---|
+| The fish's eye round its pupil | 13.82 / 5.65 mm, 2.45 | yes | yes: filled under the pupil |
+| TS-13A's abutting badge, a square round a gold disc | 48.00 / 18.84 mm, 2.55 | yes | yes: filled under the disc |
+| TS-13D's white disc round its star | 57.17 / 51.13 mm, 1.12 | yes, at the star's points | no: a column, as on main |
+| The lettered patch's border round its field | 177.86 / 157.37 mm, 1.13 | yes, at its corners | no: a column, as on main |
+| The guard ring, 3 mm wide round a disc 10 mm across | 50.26 / 31.41 mm, 1.60 | no | no |
+
+On the 63 designs only the fish and TS-13A change, where rule a changed 4. TS-13A sews 19 more stitches and the fish 10, and TS-13A's
+digitized half sews down 8 of its 18 jump threads where it sewed down 9. No thread change or jump thread is
+added, and no design sews thicker. In the cases a square border and a round one,, each 3 mm wide round a
+field stacked on it, keep their columns. `columns.rs` measures the ring (`ring_crowds`) when `layers.rs`
+looks for details. The rule has no setting: `auto_stitch` set to satin, or to run, still sews a ring as
+asked.
+
+**Open points, measured and left to later steps.** TS-13D's white is a ring whose hole is the star, so its
+width varies between the star's points and its notches. Its column sews after the star it borders, and its
+inner ends are pulled over the star's points. That is not this step's test: a wheel is. Measured with
+M13.59's prototype (a part whose width varies by more than 0.3 filled whole), the ring, 2.87 mm wide on
+average and varying by 0.39, is filled whole under the star. The round fills'
+outlines are polygons of chords up to 1.1 mm, which lie 0.08 to 0.09 mm inside the circle, under a
+thread's width.
 
 ### Runs in place of jumps
 

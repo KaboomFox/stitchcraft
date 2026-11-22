@@ -472,7 +472,7 @@ fn sheet(root: &Path, id: &str, part: Option<&str>) -> Result<PathBuf, String> {
     let design =
         sheet.design().ok_or_else(|| format!("{id} is drawn stitch by stitch, and is no design to write"))?.map_err(|e| format!("{id}: {e}"))?;
     let clones = sheet.clones().unwrap_or(Ok(Vec::new())).map_err(|e| format!("{id}: {e}"))?;
-    let (all, _) = stitchcraft_engine::auto::digitized(&design, &Budget::DEFAULT);
+    let (all, _) = stitchcraft_testkit::inkstitch::digitized(&design, &Budget::DEFAULT);
     let elements: Vec<_> = stitchcraft_testkit::inkstitch::sewn_alike(&all)
         .into_iter()
         .filter(|element| part.is_none_or(|part| element.id.as_str().starts_with(part)))

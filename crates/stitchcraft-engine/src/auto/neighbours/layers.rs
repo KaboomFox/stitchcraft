@@ -50,7 +50,7 @@ use super::background::{BACKGROUND_MARGIN, inside};
 use super::order::{drawn, overlap};
 use super::under::covered;
 use super::{Failed, TOUCHING, envelope, joined, near, no_area, parts_of, speck};
-use crate::auto::columns::filled;
+use crate::auto::columns::{filled, ring_crowds};
 use crate::auto::narrow::within;
 use crate::auto::rules::Bounds;
 use crate::auto::{AutoParams, outline};
@@ -273,17 +273,20 @@ fn boxes(layers: &[Option<Layer>]) -> Vec<Vec<Envelope>> {
 /// The holes of what shows of the area `index` of `layers` that the areas fill, each with those areas, its
 /// details, with `meter`'s work: a unit for each area and each part looked at for each hole, and the work of
 /// the parts whose boxes, in `boxes` ([`boxes`]), meet the hole's. None when the area is no wider than its
-/// widest satin column everywhere, nor for a part of it that narrow. A speck in a hole is no detail: a hole
-/// that only specks fill stays open, and the specks merge into the area round them (`specks`), which closes
-/// it as a speck does. An area whose layers weren't found, sewn as drawn in its place, has no holes closed
-/// and fills none.
+/// widest satin column everywhere, nor for a part of it that narrow, but for a ring whose one column would
+/// crowd its stitches (`REQ-AUTO-182`). A speck in a hole is no detail: a hole that only specks fill stays
+/// open, and the specks merge into the area round them (`specks`), which closes it as a speck does. An area
+/// whose layers weren't found, sewn as drawn in its place, has no holes closed and fills none.
 fn details(layers: &[Option<Layer>], boxes: &[Vec<Envelope>], index: usize, narrowest: Mm, meter: &mut Meter) -> Result<Vec<Hole>, Failed> {
     let Some(layer) = layers.get(index).and_then(Option::as_ref).filter(|layer| !layer.unfound) else { return Ok(Vec::new()) };
     let mut holes = Vec::new();
     for (p, part) in layer.shown.iter().enumerate() {
         // A part that sews along its middle, as lines or as columns, keeps its holes, and so does one whose
-        // width can't be found (a bug, which its stitches say).
-        if part.holes.is_empty() || filled(part, &Bounds::of(&layer.rules, narrowest), meter)?.is_none() {
+        // width can't be found (a bug, which its stitches say). A ring whose one column would crowd its
+        // stitches is held to the bound that other parts are (`REQ-AUTO-182`): what fills its holes is
+        // looked for, as for a part that is filled.
+        let bounds = Bounds::of(&layer.rules, narrowest);
+        if part.holes.is_empty() || (filled(part, &bounds, meter)?.is_none() && !ring_crowds(part, &bounds, meter)?) {
             continue;
         }
         for (h, ring) in part.holes.iter().enumerate() {
