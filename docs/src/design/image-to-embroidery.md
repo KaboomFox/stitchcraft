@@ -541,8 +541,9 @@ strokes has no broad part to cut. A shape that should sew otherwise names its st
 `satin` sews a narrow part as columns, and `fill` fills the shape whole. Both exist today. One part of a
 shape can't be set apart from the others, and Expand serves that.
 
-What changes besides: `REQ-AUTO-032` no longer exempts a part of one line, and the column of the rules'
-fixture `rules.svg` (its leaf, 4 mm wide) and the star points of `star.svg` and TS-13C sew as fills.
+What changes besides: `REQ-AUTO-032` no longer exempts a part of one line, and the star points of
+`star.svg` and TS-13C sew in their fills. The leaf of the rules' fixture `rules.svg`, 4 mm wide at most,
+keeps its column.
 
 How it is built. The rules measure a part of one line against a fill's narrowest piece only when its width
 varies by more than the bound and uneven parts are filled (`Measures::fill_wide`, in
