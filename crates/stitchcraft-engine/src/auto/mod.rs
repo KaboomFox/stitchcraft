@@ -77,6 +77,7 @@ mod area;
 pub(crate) mod cap;
 mod clips;
 mod columns;
+mod ends;
 mod expand;
 mod guides;
 mod marks;
@@ -968,9 +969,16 @@ fn columns(element: &Element, path: &Path, style: Style, rules: &AutoParams, met
         if let Some(directions) = directions {
             let line = Path { subpaths: vec![centre_line(subpath, directions, style)] };
             // The column's rails as the satin column makes them; what it would say of them it says itself.
-            if satin::rails(&line, style.width, style.join, &mut Vec::new(), meter)?.is_some() {
-                let shape = Shape::Stroke { path: line, width: style.width, join: style.join, cap: style.cap };
-                made.add(part(element, id, shape, column.clone()), None);
+            if let Some(found) = satin::rails(&line, style.width, style.join, &mut Vec::new(), meter)? {
+                // A line that turns sharply sews a column per leg, mitred (`REQ-AUTO-178`).
+                let legs = ends::mitred(element, &id, &line, &found.rails, style, (&column, &rest), meter)?;
+                if legs.is_empty() {
+                    let shape = Shape::Stroke { path: line, width: style.width, join: style.join, cap: style.cap };
+                    made.add(part(element, id, shape, column.clone()), None);
+                }
+                for leg in legs {
+                    made.add(leg, None);
+                }
                 satin = true;
                 continue;
             }
@@ -1146,7 +1154,11 @@ fn too_far(element: &Element, width: Mm) -> Diagnostic {
 /// `id` with `#n` after it, shortened as needed to leave room for the `~2` a clash adds: the id of an
 /// element made from the one with `id`, as a route's pieces are too (`crate::route`).
 pub(crate) fn numbered(id: &ElementId, n: usize) -> Option<ElementId> {
-    let suffix = format!("#{n}");
+    suffixed(id, &format!("#{n}"))
+}
+
+/// `id` with `suffix`, its start kept as [`numbered`] keeps it.
+fn suffixed(id: &ElementId, suffix: &str) -> Option<ElementId> {
     let room = ElementId::MAX_LEN.saturating_sub(suffix.len() + CLAIM_ROOM);
     let mut base = String::new();
     for c in id.as_str().chars() {
@@ -1155,7 +1167,7 @@ pub(crate) fn numbered(id: &ElementId, n: usize) -> Option<ElementId> {
         }
         base.push(c);
     }
-    ElementId::new(base + &suffix).ok()
+    ElementId::new(base + suffix).ok()
 }
 
 /// How many shapes were digitized, by the stitches they sew as, as `SC-I0901` names them.
