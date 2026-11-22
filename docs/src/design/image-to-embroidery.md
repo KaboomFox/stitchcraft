@@ -1698,7 +1698,7 @@ testing](../plan/machine-testing.md)).
 The owner reviewed 18 drawings sewn by automatic digitizing on 2026-11-21. Among the biggest issues she named
 "the points for the rays". The sunrise's 7 rays are wedges 2.2 mm wide at their base and 14.7° at their tip,
 and each sews as a satin column that ends blunt. M13.62 measured every column end that a drawing brings to a
-point, and prototyped ways to sew it as a point without sewing thicker. Phase 1 changes nothing that sews.
+point, and prototyped ways to sew it as a point without sewing thicker.
 
 #### A column's point today
 
@@ -1811,24 +1811,44 @@ With the taper over 2 mm, on each set:
   recorded peaks of `tests/auto_peaks.rs` change. Stitches fall by 31 of 206,264.
 
 The pictures looked at (the sunrise's rays, the wedges, the mug's saucer, the rules' leaf, TS-13B's m, a
-dog) show each point drawn to its tip. They still show a column that ends at its point carry its end lock
-there, a small hook past the leaf's and the saucer's narrowed tips. A lock laid along the column's middle,
-inside the point, was not prototyped. The travel stitches across the sunrise's sky are as on `main`.
+dog) show each point drawn to its tip. The travel stitches across the sunrise's sky are as on `main`.
 
-#### What is proposed
+#### What is built
 
-The taper over 2 mm, as a default with a setting:
+The owner chose the taper over 2 mm on 2026-11-22, as a default with a setting (`REQ-SAT-032`,
+`REQ-AUTO-183`):
 
-- A satin column gets `point_taper_mm`, a setting of StitchCraft's own, 0 by default, one length or one for
-  each end. At an end whose rails meet, closer than the shortest stitch, each pair within that length of
-  the end keeps the share of its pull compensation that its distance from the end is of the length.
+- A satin column has `point_taper_mm`, a setting of StitchCraft's own, 0 by default, one length or one for
+  each end ([satin columns](algorithms/satin.md#compensation)).
 - Automatic digitizing sets it on each satin column from `auto_point_taper_mm`, 2 mm by default, unless the
-  shape sets it. A person who wants today's blunt end sets `auto_point_taper_mm` to 0, for a design with
-  `--set` or for one shape in its settings.
+  shape sets it. A person who wants the blunt end of before sets `auto_point_taper_mm` to 0, for a design
+  with `--set` or for one shape in its settings. At 0 every pair is widened by the whole
+  compensation and a point ends blunt.
 
-With a rule and no setting, a person couldn't sew today's end if the sew-out shows a point that pulls in. A setting off by
-default would leave the rays blunt. The sew-out at the next machine checkpoint sews wedges of 3 widths and
-3 tip angles at 0 and at 2 mm ([machine testing](../plan/machine-testing.md)).
+With a rule and no setting, a person couldn't sew the old end if the sew-out shows a point that pulls in. A
+setting off by default would leave the rays blunt.
+
+The build sews the set as the prototype did, design by design. A column's lock at a point follows its last
+stitches back into the column ([locks](algorithms/locks.md#placement)). Of the 18 points that sew a lock
+within 1.5 mm of their tip, every lock needle point lies within 0.06 mm of the drawn shape, where on
+`main` they lay up to 0.30 mm outside it. A leaf 12 mm long and 3 mm wide sews its locks 0.04 mm outside its
+outline at most, against 0.21 mm at 0. A lock past a narrowed tip would show as a knot. What looks like one
+in the pictures at the leaf's and the saucer's tips is the last stitch into the tip with the lock on it,
+inside the shape.
+
+#### Open points
+
+- **The cap's greed.** Several thickest spots now rest just under the warning's limit: the running dogs at
+  3.99 and 4.00 fills, the 2 badges and TS-13A at 3.99, a sheet of letters at 3.99. The area above the cap
+  falls on every set. The cap takes a column's top points only above 4 fills, one spot after another, so a
+  point that lowers one spot changes where it stops at another (a hold on the compensation and the cap,
+  above). A cap that looks at the spots it leaves just under 4 would settle these. That is a step of its
+  own.
+- **The mug's base layer.** Its thickest spot rises from 3.33 to 3.47 fills, where its base layer runs twice
+  over a spot. The base layer's route changes with the saucer's narrower tips.
+- **Wider points.** Wedges wider than about 22° at their tip are filled with their outline by the rule
+  `uneven`, and their points are drawn by the fill's outline. Only narrower wedges and the tapering ends of
+  longer parts are columns with points.
 
 ## Neighbours
 

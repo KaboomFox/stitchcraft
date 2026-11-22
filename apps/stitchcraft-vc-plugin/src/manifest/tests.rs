@@ -75,7 +75,7 @@ fn req_vc_011_each_exporter_s_manifest_is_one_vectorcraft_accepts() {
 #[test]
 fn req_vc_016_the_auto_effect_s_dialog_holds_the_rules_settings_and_its_preview_levels() {
     use stitchcraft_engine::auto::{
-        ADVANCED, AutoParams, FILL_ANGLE, FILL_OUTLINE, FILL_UNEVEN, IGNORE_BACKGROUND, MIN_AREA, OVERLAP, PREFER, STITCH,
+        ADVANCED, AutoParams, FILL_ANGLE, FILL_OUTLINE, FILL_UNEVEN, IGNORE_BACKGROUND, MIN_AREA, OVERLAP, PREFER, STITCH, TAPER,
     };
 
     let manifest = auto();
@@ -83,7 +83,7 @@ fn req_vc_016_the_auto_effect_s_dialog_holds_the_rules_settings_and_its_preview_
     assert_eq!((manifest.id.as_str(), manifest.kind), ("dev.stitchcraft.auto", "effect"));
     let keys: Vec<&str> = manifest.params.iter().map(|(key, _)| *key).collect();
     let shape = [STITCH, PREFER, FILL_UNEVEN, FILL_ANGLE, FILL_OUTLINE];
-    let neighbours = [OVERLAP, "auto_pull_compensation_mm", IGNORE_BACKGROUND];
+    let neighbours = [OVERLAP, "auto_pull_compensation_mm", TAPER, IGNORE_BACKGROUND];
     let base = ["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_keep_holes"];
     assert_eq!(keys, [&shape[..], &neighbours[..], &base[..], &[PREVIEW_LEVEL]].concat());
     // The advanced settings, the rules' bounds (the least unevenness of a thin line that merges among them, M13.18, and the

@@ -102,7 +102,7 @@ pub use neighbours::{TOUCHING, is_part};
 pub use params::{
     ADVANCED, AutoParams, COLUMN_OVERLAP, DETAILS_LAST, FILL_ANGLE, FILL_OUTLINE, FILL_UNEVEN, IGNORE_BACKGROUND, LONGEST_SATIN_STITCH, MAX_REACH,
     MAX_SATIN_WIDTH, MAX_SPLIT_SATIN_WIDTH, MAX_UNEVENNESS, MIN_AREA, MIN_FILL_WIDTH, MIN_LIKENESS, MIN_LINE_UNEVENNESS, MIN_SLENDERNESS,
-    MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, SHORT_STITCHES, STITCH, WIDEST_SPLIT_SATIN,
+    MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, SHORT_STITCHES, STITCH, TAPER, WIDEST_SPLIT_SATIN,
 };
 use rules::{Asked, Bounds, Fired, Measures, RuleId};
 pub use thick::{Held, WARNING_CHARS};
@@ -329,9 +329,11 @@ fn satin_params(params: &ParamSet, width: Mm, rules: &AutoParams) -> ParamSet {
     if !crowded && column.get(BEND_OPEN).is_none() {
         column.set(BEND_OPEN, BEND_OPENED.to_string().as_str());
     }
-    // Its pull compensation tapers into its points (`REQ-AUTO-183`), unless its shape says how.
-    if column.get(POINT_TAPER).is_none() {
-        column.set(POINT_TAPER, rules.auto_point_taper_mm.get().to_string().as_str());
+    // Its pull compensation tapers into its points (`REQ-AUTO-183`), unless its shape says how. At 0 it sets
+    // nothing, and the column sews as Ink/Stitch sews it, as the differential's files need.
+    let taper = rules.auto_point_taper_mm.get();
+    if taper > 0.0 && column.get(POINT_TAPER).is_none() {
+        column.set(POINT_TAPER, taper.to_string().as_str());
     }
     column
 }

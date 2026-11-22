@@ -58,6 +58,8 @@ pub const OVERLAP: &str = "auto_overlap_mm";
 pub const COLUMN_OVERLAP: &str = "auto_column_overlap_mm";
 /// The key of the smallest area.
 pub const MIN_AREA: &str = "auto_min_area_mm2";
+/// The key of how far before a point a satin column's pull compensation tapers (`REQ-AUTO-183`).
+pub const TAPER: &str = "auto_point_taper_mm";
 /// The key of the choice of where a satin column's crowded needle points move in.
 pub const SHORT_STITCHES: &str = "auto_short_stitches";
 /// The value of [`SHORT_STITCHES`] that moves a column's crowded points in as it is made (`REQ-AUTO-173`).
@@ -388,7 +390,7 @@ mod tests {
     fn each_key_names_a_setting_in_the_order_they_are_declared() {
         let keys: Vec<&str> = AutoParams::SPECS.iter().map(|spec| spec.key).collect();
         let shape = [STITCH, PREFER, FILL_UNEVEN, FILL_ANGLE, FILL_OUTLINE];
-        let neighbours = [OVERLAP, "auto_pull_compensation_mm", "auto_point_taper_mm", IGNORE_BACKGROUND];
+        let neighbours = [OVERLAP, "auto_pull_compensation_mm", TAPER, IGNORE_BACKGROUND];
         let base = ["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_keep_holes"];
         let bounds = [
             MAX_SATIN_WIDTH,

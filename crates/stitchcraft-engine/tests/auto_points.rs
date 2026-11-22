@@ -241,3 +241,18 @@ fn req_auto_183_a_point_s_locks_lie_inside_its_shape() {
     // Measured on 2026-11-22: 0.04 mm with the taper, 0.21 mm at 0.
     assert!(found[0] <= 0.2, "with the taper a lock needle point lies {:.2} mm outside the leaf (at 0: {:.2})", found[0], found[1]);
 }
+
+#[test]
+fn req_auto_183_each_automatic_satin_column_gets_the_taper_unless_its_shape_sets_it() {
+    let taper_of = |params: &[(&str, &str)]| {
+        let design = stitchcraft_engine::design::Design::new(vec![wedge("ray", (-12.0, 0.0), 2.5, 14.0, params)], Default::default()).unwrap();
+        let (made, _) = stitchcraft_engine::auto::digitized(&design, &stitchcraft_core::Budget::DEFAULT);
+        made.iter().map(|e| e.params.get("point_taper_mm").map(str::to_string)).collect::<Vec<_>>()
+    };
+    assert_eq!(taper_of(&[]), [Some("2".to_string())]);
+    assert_eq!(taper_of(&[("auto_point_taper_mm", "0.5")]), [Some("0.5".to_string())]);
+    // At 0 nothing is set, and the column sews as Ink/Stitch sews it.
+    assert_eq!(taper_of(&[("auto_point_taper_mm", "0")]), [None]);
+    // A shape's own taper stays.
+    assert_eq!(taper_of(&[("point_taper_mm", "1 0")]), [Some("1 0".to_string())]);
+}

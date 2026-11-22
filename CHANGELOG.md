@@ -2276,6 +2276,15 @@ What a user can do with this version, before its first release. The entries belo
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.62: points stay points (`REQ-AUTO-183`, `REQ-SAT-032`). A satin column that tapers to a point, such
+  as a sun's ray, now sews to a point. Its pull compensation falls to 0 over the last 2 mm before an end whose
+  rails meet, where each pair was widened by the whole 0.4 mm and the column ended in a bar about 0.85 mm
+  wide. A ray drawn 0.13 mm wide 0.5 mm from its tip sews 0.30 to 0.40 mm wide there, where it sewed 0.90 to
+  0.96 mm. The lock at a point lies inside the shape. A satin column's new setting `point_taper_mm`, 0 by
+  default, sets the length, and automatic digitizing sets it from `auto_point_taper_mm`, 2 mm by default:
+  `--set auto_point_taper_mm=0` sews the blunt ends of before. On 64 designs no design sews above 4 fills
+  that sewed at 4 or under, and the area above the cap falls on every set. Several thickest spots now rest
+  just under 4 fills, where the cap stops. GOLDENS_PLACEHOLDER
 - M13.59: shapes whose width swells and tapers (`REQ-AUTO-174`, `REQ-AUTO-175`). A part of an automatic
   shape whose width swells and tapers, such as a leaf or a petal, is filled whole with its outline once it is
   4 mm wide somewhere (`auto_min_fill_width_mm`). It sewed as a satin column, or was filled when its column
