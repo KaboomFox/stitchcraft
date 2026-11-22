@@ -42,7 +42,7 @@
 mod columns;
 mod strokes;
 
-pub(crate) use columns::{Column, columns};
+pub(crate) use columns::{CORNER, Column, SQUARE, columns};
 pub(crate) use strokes::strokes;
 
 use std::collections::{BTreeMap, BTreeSet};

@@ -283,7 +283,10 @@ pub(super) fn columns(
         let push = column.under.map(|under| if pushed && under.is_some() { -reach } else { 0.0 });
         let holes = [along(&column.rails[0], &kept, meter)?, along(&column.rails[1], &kept, meter)?];
         let even = crowding(&column.rails, &column.rungs, meter)? <= EVEN;
-        let Ok(drawn) = drawn::from_rails(column.rails, column.rungs, push, meter)? else { return Ok(Made::Unmade) };
+        // Its ends that close in after a straight stretch stay square to it (`REQ-AUTO-177`).
+        let (rails, rungs) =
+            if column.closed { (column.rails, column.rungs) } else { super::ends::squared(column.rails, column.rungs, width.get(), meter)? };
+        let Ok(drawn) = drawn::from_rails(rails, rungs, push, meter)? else { return Ok(Made::Unmade) };
         sewn.push(Sewn::Satin { path: drawn.path(), width, push, even, holes });
     }
     Ok(Made::Columns { sewn, rule, measures })

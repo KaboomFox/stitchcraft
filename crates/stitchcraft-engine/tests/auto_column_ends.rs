@@ -104,7 +104,6 @@ fn cut_band() -> Vec<Pt> {
 }
 
 #[test]
-#[ignore = "planned: M13.60 squares a column's ends"]
 fn req_auto_177_a_band_cut_by_a_circle_sews_square_to_its_ends() {
     let outcome = planned(vec![area("band", &cut_band())]);
     let middle = middle_y(&outcome, "band");
@@ -116,7 +115,6 @@ fn req_auto_177_a_band_cut_by_a_circle_sews_square_to_its_ends() {
 }
 
 #[test]
-#[ignore = "planned: M13.60 squares a column's ends"]
 fn req_auto_177_a_slanted_end_sews_square_and_shorter_into_its_point() {
     let outcome = planned(vec![area("slant", &[(5.0, 5.0), (45.0, 5.0), (50.0, 10.0), (5.0, 10.0)])]);
     let middle = middle_y(&outcome, "slant");
@@ -128,7 +126,6 @@ fn req_auto_177_a_slanted_end_sews_square_and_shorter_into_its_point() {
 }
 
 #[test]
-#[ignore = "planned: M13.60 squares a column's ends"]
 fn req_auto_177_a_bent_band_with_square_ends_keeps_its_stitches() {
     // Half a ring 3 mm wide, its ends cut along radii: square to the band where it ends, as a letter C's are.
     let mut ring = arc((30.0, 30.0), 13.0, (-1.2, 1.2), 24);
@@ -160,7 +157,6 @@ fn req_auto_177_a_bent_band_with_square_ends_keeps_its_stitches() {
 }
 
 #[test]
-#[ignore = "planned: M13.60 sews a line's sharp corners mitred"]
 fn req_auto_178_a_zigzag_line_sews_mitred_corners() {
     // The review set's zigzag: 1.5 mm wide, turning 127° at each of its 3 corners.
     let points = [(5.0, 40.0), (11.0, 52.0), (17.0, 40.0), (23.0, 52.0), (29.0, 40.0)];
@@ -176,7 +172,6 @@ fn req_auto_178_a_zigzag_line_sews_mitred_corners() {
 }
 
 #[test]
-#[ignore = "planned: M13.60 sews a line's sharp corners mitred"]
 fn req_auto_178_a_line_turning_60_degrees_or_less_stays_one_column() {
     let points = [(5.0, 40.0), (15.0, 40.0), (23.66, 45.0), (33.66, 45.0)];
     let line = automatic(widened(along("gentle", polylines(&[&points]), &RED, &[]), 1.5));
