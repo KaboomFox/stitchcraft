@@ -22,7 +22,7 @@ use stitchcraft_core::{ElementId, Exhausted, Meter, Point};
 use stitchcraft_params::ParamSet;
 
 use super::{Style, part, suffixed, underlay, walks_once};
-use crate::design::{Element, Join, Path, Segment, Shape};
+use crate::design::{Element, Path, Segment, Shape};
 use crate::generators::satin::drawn::from_rails;
 use crate::normalize::strips::{CORNER, SQUARE};
 
@@ -80,7 +80,8 @@ fn back(rail: &[Point], d: f64, meter: &mut Meter) -> Result<Option<Point>, Exha
         meter.charge(1)?;
         let length = near.distance(far);
         if gone + length >= d {
-            return Ok(Some(near.lerp(far, if length > 0.0 { (d - gone) / length } else { 0.0 })));
+            // A segment of no length gives a fraction that is no number, which `lerp` takes as its start.
+            return Ok(Some(near.lerp(far, (d - gone) / length)));
         }
     }
     Ok(rail.first().copied())
@@ -115,20 +116,34 @@ fn length(rail: &[Point]) -> f64 {
     rail.windows(2).map(|pair| if let [a, b] = pair { a.distance(*b) } else { 0.0 }).sum()
 }
 
-/// Where the line square to `way` at station `at` crosses `rail`, walking from its end back no farther than
-/// `within`.
-fn crossing(rail: &[Point], way: Way, at: f64, within: f64) -> Option<Point> {
+/// Where the line square to `way` at station `at` first crosses `rail`, walking from its end back. Between an
+/// end's corner and where it closes in, each rail runs through every station once: a rail that turns back on
+/// itself farther from the end is never reached.
+fn crossing(rail: &[Point], way: Way, at: f64, meter: &mut Meter) -> Result<Option<Point>, Exhausted> {
     let station = |p: Point| p.x() * way.0 + p.y() * way.1;
-    for (near, far, gone) in backwards(rail) {
-        let (s_near, s_far) = (station(near), station(far));
-        if (s_near - at) * (s_far - at) <= 0.0 && (s_near - s_far).abs() > 1e-12 {
-            return Some(near.lerp(far, (at - s_near) / (s_far - s_near)));
-        }
-        if gone + near.distance(far) > within {
-            return None;
+    for (near, far, _) in backwards(rail) {
+        meter.charge(1)?;
+        // A segment square to the way gives a fraction that is no number, or none between 0 and 1.
+        let fraction = (at - station(near)) / (station(far) - station(near));
+        if (0.0..=1.0).contains(&fraction) {
+            return Ok(Some(near.lerp(far, fraction)));
         }
     }
-    None
+    Ok(None)
+}
+
+/// The way at the end of `rails`, the last point of each, `width` wide: the mean of each rail's way over its
+/// last half width, or third of its length when that is shorter, past the first `skips` of it.
+fn way(rails: &[Vec<Point>; 2], skips: [f64; 2], width: f64, meter: &mut Meter) -> Result<Option<Way>, Exhausted> {
+    let mut sum = (0.0, 0.0);
+    for (rail, skip) in rails.iter().zip(skips) {
+        let stretch = (WAY_OVER * width).min((length(rail) / 3.0 - skip).max(0.05));
+        let (Some(near), Some(far)) = (back(rail, skip, meter)?, back(rail, skip + stretch, meter)?) else { return Ok(None) };
+        let Some(way) = unit(far, near) else { return Ok(None) };
+        sum = (sum.0 + way.0, sum.1 + way.1);
+    }
+    let (Ok(origin), Ok(tip)) = (Point::new(0.0, 0.0), Point::new(sum.0, sum.1)) else { return Ok(None) };
+    Ok(unit(origin, tip))
 }
 
 /// One end of a column, its rails walked so that the end is their last point, `width` wide: the way at the
@@ -139,15 +154,7 @@ fn end(rails: &mut [Vec<Point>; 2], width: f64, meter: &mut Meter) -> Result<Opt
     // The way at the end, each rail's over its last half width, past an end edge folded into one rail only.
     let fold = [folded(&rails[0], width, meter)?, folded(&rails[1], width, meter)?];
     let skips = if fold[0] > 0.0 && fold[1] > 0.0 { [0.0, 0.0] } else { fold };
-    let mut sum = (0.0, 0.0);
-    for (rail, &skip) in rails.iter().zip(&skips) {
-        let stretch = (WAY_OVER * width).min((length(rail) / 3.0 - skip).max(0.05));
-        let (Some(near), Some(far)) = (back(rail, skip, meter)?, back(rail, skip + stretch, meter)?) else { return Ok(None) };
-        let Some(way) = unit(far, near) else { return Ok(None) };
-        sum = (sum.0 + way.0, sum.1 + way.1);
-    }
-    let (Some(origin), Ok(tip)) = (Point::new(0.0, 0.0).ok(), Point::new(sum.0, sum.1)) else { return Ok(None) };
-    let Some(way) = unit(origin, tip) else { return Ok(None) };
+    let Some(way) = way(rails, skips, width, meter)? else { return Ok(None) };
     // A straight stretch before the end: both rails, past the folded edge, within 20° of the way for a width.
     for (rail, &skip) in rails.iter().zip(&skips) {
         for (near, far, gone) in backwards(rail) {
@@ -165,7 +172,7 @@ fn end(rails: &mut [Vec<Point>; 2], width: f64, meter: &mut Meter) -> Result<Opt
     let (Some(&first), Some(&second)) = (rails[0].last(), rails[1].last()) else { return Ok(None) };
     let mut body = f64::INFINITY;
     // A slanted end edge joins the rail that stops first, from its end to the other's.
-    if let Some(edge) = unit(first, second).filter(|_| first.distance(second) > 1e-6) {
+    if let Some(edge) = unit(first, second) {
         // An edge within 20° of square is one a column ends along ([`SQUARE`]), and its stitches with it.
         if dot(edge, way).abs() <= SQUARE {
             return Ok(None);
@@ -176,15 +183,13 @@ fn end(rails: &mut [Vec<Point>; 2], width: f64, meter: &mut Meter) -> Result<Opt
             rail.push(leading);
         }
     }
-    // Each rail, walked from its end back: the station where it last runs within 20° of the way.
+    // Each rail, walked from its end back: the station where it last runs within 20° of the way. The straight
+    // stretch makes each run so within a width of its end or its folded edge.
     for rail in rails.iter() {
-        for (near, far, gone) in backwards(rail) {
+        for (near, far, _) in backwards(rail) {
             meter.charge(1)?;
             if unit(far, near).is_some_and(|along| dot(along, way) >= STRAIGHT) {
                 body = body.min(station(near));
-                break;
-            }
-            if gone + near.distance(far) > REACH * width {
                 break;
             }
         }
@@ -193,12 +198,11 @@ fn end(rails: &mut [Vec<Point>; 2], width: f64, meter: &mut Meter) -> Result<Opt
     if !body.is_finite() || tip - body < SPACING.min(0.3) {
         return Ok(None);
     }
-    let within = (tip - body) + 2.0 * width;
     let mut rungs = Vec::new();
     let mut at = body;
     while at < tip - SPACING / 2.0 {
         meter.charge(1)?;
-        if let (Some(p), Some(q)) = (crossing(&rails[0], way, at, within), crossing(&rails[1], way, at, within))
+        if let (Some(p), Some(q)) = (crossing(&rails[0], way, at, meter)?, crossing(&rails[1], way, at, meter)?)
             && p.distance(q) > 1e-3
         {
             rungs.push([p, q]);
@@ -300,9 +304,9 @@ pub(super) fn mitred(
     (column, rest): (&ParamSet, &ParamSet),
     meter: &mut Meter,
 ) -> Result<Vec<Element>, Exhausted> {
-    let Some(subpath) = line.subpaths.first().filter(|subpath| !subpath.closed && matches!(style.join, Join::Miter { .. })) else {
-        return Ok(Vec::new());
-    };
+    // A ring's rails, and a corner a round join or a miter's limit cuts, don't pair the line's points one for one,
+    // and `legs` leaves them.
+    let Some(subpath) = line.subpaths.first() else { return Ok(Vec::new()) };
     let mut centre = vec![subpath.start];
     for segment in &subpath.segments {
         let Segment::Line(to) = segment else { return Ok(Vec::new()) };
@@ -416,6 +420,133 @@ mod tests {
         let (_, rungs) = squared(rails, Vec::new(), 5.0, &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!(rungs.len(), 20, "{rungs:?}");
         assert!(rungs.iter().all(|rung| (rung[0].y() - rung[1].y()).abs() < 1e-9), "{rungs:?}");
+    }
+
+    /// `end` of `rails`, `width` wide, with a fresh meter.
+    fn ended(rails: &[Vec<Point>; 2], width: f64) -> Option<(Way, f64, Vec<[Point; 2]>)> {
+        end(&mut rails.clone(), width, &mut Budget::DEFAULT.meter()).unwrap()
+    }
+
+    #[test]
+    fn points_closer_than_a_picometre_have_no_way() {
+        assert_eq!(unit(p(0.0, 0.0), p(1e-12, 0.0)), None);
+        assert_eq!(unit(p(0.0, 0.0), p(2e-12, 0.0)), Some((1.0, 0.0)));
+    }
+
+    #[test]
+    fn a_fold_is_the_sharpest_corner_nearest_the_end_in_reach() {
+        let fold = |points: &[(f64, f64)], width: f64| folded(&rail(points), width, &mut Budget::DEFAULT.meter()).unwrap();
+        // A corner at half the rail's length is in reach; of 2 corners as sharp, the nearer the end is the fold.
+        assert_eq!(fold(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)], 4.0), 10.0);
+        assert_eq!(fold(&[(-40.0, 0.0), (10.0, 0.0), (10.0, 10.0), (20.0, 10.0)], 10.0), 10.0);
+        // A corner 0.3 widths from the end or farther: 1 mm is a fold of a column 2 mm wide, 0.3 mm isn't.
+        assert_eq!(fold(&[(-20.0, 0.0), (0.0, 0.0), (0.0, 1.0)], 2.0), 1.0);
+        assert_eq!(fold(&[(-20.0, 0.0), (0.0, 0.0), (0.0, 0.3)], 2.0), 0.0);
+    }
+
+    #[test]
+    fn a_crossing_is_found_from_the_end_back() {
+        let line = rail(&[(2.0, 0.0), (12.0, 0.0)]);
+        let found = crossing(&line, (1.0, 0.0), 5.0, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        assert!((found.x() - 5.0).abs() < 1e-9 && found.y() == 0.0, "{found:?}");
+        assert_eq!(crossing(&line, (1.0, 0.0), 13.0, &mut Budget::DEFAULT.meter()).unwrap(), None);
+        // A segment square to the way crosses no station: the one before it does.
+        let stepped = rail(&[(0.0, 0.0), (4.0, 0.0), (4.0, 3.0)]);
+        assert_eq!(crossing(&stepped, (1.0, 0.0), 4.0, &mut Budget::DEFAULT.meter()).unwrap(), Some(p(4.0, 0.0)));
+        assert!(crossing(&stepped, (1.0, 0.0), 1.0, &mut Budget { max_work: 1, ..Budget::DEFAULT }.meter()).is_err());
+    }
+
+    #[test]
+    fn the_way_at_an_end_is_its_rails_over_half_a_width_or_a_third_of_their_length() {
+        let way = |rails: [&[(f64, f64)]; 2], skips: [f64; 2], width: f64| {
+            way(&[rail(rails[0]), rail(rails[1])], skips, width, &mut Budget::DEFAULT.meter()).unwrap().unwrap()
+        };
+        let close = |a: Way, b: Way| (a.0 - b.0).abs() < 1e-9 && (a.1 - b.1).abs() < 1e-9;
+        // The last 0.5 mm of each rail runs up at 45°, the 10 mm before along x. Over half a width of 2 mm, 1 mm,
+        // each rail's way is from 1 mm back along it to its end.
+        let bent: [&[(f64, f64)]; 2] = [&[(0.0, 0.0), (10.0, 0.0), (10.5, 0.5)], &[(0.0, 2.0), (10.0, 2.0), (10.5, 2.5)]];
+        let tilt = |run: f64, rise: f64| {
+            let length = hypot(run, rise);
+            (run / length, rise / length)
+        };
+        let slope = hypot(0.5, 0.5);
+        assert!(close(way(bent, [0.0, 0.0], 2.0), tilt(0.5 + 1.0 - slope, 0.5)));
+        // A rail 2.6 mm long: over a third of its length, 0.87 mm.
+        let short: [&[(f64, f64)]; 2] = [&[(0.0, 0.0), (1.9, 0.0), (2.4, 0.5)], &[(0.0, 2.0), (1.9, 2.0), (2.4, 2.5)]];
+        let third = (1.9 + slope) / 3.0;
+        assert!(close(way(short, [0.0, 0.0], 2.0), tilt(0.5 + third - slope, 0.5)), "{:?}", way(short, [0.0, 0.0], 2.0));
+        // Past a skip of 1 mm on a rail 6 mm long, over a third of its length less the skip: 1 mm, along x. The
+        // 4 mm before it run at 45°.
+        let diagonal = 4.0 / 2.0_f64.sqrt();
+        let skipped: [&[(f64, f64)]; 2] = [
+            &[(4.0 - diagonal, -diagonal), (4.0, 0.0), (5.0, 0.0), (5.0, 1.0)],
+            &[(4.0 - diagonal, 2.0 - diagonal), (4.0, 2.0), (5.0, 2.0), (5.0, 3.0)],
+        ];
+        let along = way(skipped, [1.0, 1.0], 4.0);
+        assert!(close(along, (1.0, 0.0)), "{along:?}");
+    }
+
+    #[test]
+    fn req_auto_177_an_end_where_both_rails_fold_is_a_point_and_keeps_its_rungs() {
+        let rails = [rail(&[(0.0, 0.0), (20.0, 0.0), (22.0, 2.5)]), rail(&[(0.0, 5.0), (20.0, 5.0), (22.0, 2.5)])];
+        assert_eq!(ended(&rails, 5.0), None);
+    }
+
+    #[test]
+    fn req_auto_177_both_rails_run_straight_for_a_width_before_the_end() {
+        // The first rail turns 45° 2 mm, a width, from its end: that corner is inside the straight stretch.
+        let rails = [rail(&[(-12.0, -10.0), (-2.0, 0.0), (0.0, 0.0)]), rail(&[(-12.0, -8.0), (-2.0, 2.0), (2.0, 2.0)])];
+        assert_eq!(ended(&rails, 2.0), None);
+        // A rail turning exactly 20° from the way runs along it; one turning more doesn't.
+        let tilted = |rise: f64| [rail(&[(-10.0, -rise * 10.0 / STRAIGHT), (0.0, 0.0), (0.5, 0.0)]), rail(&[(-10.0, 2.0), (0.0, 2.0), (2.0, 2.0)])];
+        let edge = unit(p(-10.0, -SQUARE * 10.0 / STRAIGHT), p(0.0, 0.0)).unwrap();
+        assert_eq!(dot(edge, (1.0, 0.0)), STRAIGHT, "the edge turns exactly 20°");
+        assert!(ended(&tilted(SQUARE), 1.0).is_some());
+        assert!(ended(&tilted(0.35), 1.0).is_none());
+    }
+
+    #[test]
+    fn req_auto_177_a_long_slanted_edge_closes_in_from_the_corner_that_stops_first() {
+        // An end edge 80° from square: the second rail stops 28.36 mm before the first.
+        let rails = [rail(&[(0.0, 0.0), (60.0, 0.0)]), rail(&[(0.0, 5.0), (31.64, 5.0)])];
+        let (_, body, rungs) = ended(&rails, 5.0).unwrap();
+        assert_eq!(body, 31.64);
+        assert_eq!(rungs.len(), 57);
+    }
+
+    #[test]
+    fn req_auto_177_an_end_closing_in_over_less_than_0_3_mm_keeps_its_rungs() {
+        let end_at = |x: f64| [rail(&[(-10.0, 0.0), (x, 0.0)]), rail(&[(-10.0, 0.5), (0.0, 0.5)])];
+        assert_eq!(ended(&end_at(0.2), 0.5), None);
+        let (_, body, rungs) = ended(&end_at(0.3), 0.5).unwrap();
+        assert_eq!((body, rungs.len()), (0.0, 1));
+        // From 0 to 5.25 mm: rungs at 0, 0.5 … 4.5, the last more than half a spacing short of the corner.
+        let long = [rail(&[(-10.0, 0.0), (5.25, 0.0)]), rail(&[(-10.0, 12.0), (0.0, 12.0)])];
+        assert_eq!(ended(&long, 12.0).unwrap().2.len(), 10);
+    }
+
+    #[test]
+    fn req_auto_177_a_rung_where_the_rails_meet_is_left_out() {
+        // A column 0.001 mm wide: its rungs, 1 µm long or shorter, are no rungs.
+        let rails = [rail(&[(0.0, 0.0), (10.0, 0.0)]), rail(&[(0.0, 0.001), (9.0, 0.001)])];
+        let first = crossing(&rails[0], (1.0, 0.0), 9.0, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        assert_eq!(first, p(9.0, 0.0), "the rung at 9 mm is exactly 1 µm long");
+        let (_, _, rungs) = ended(&rails, 1.0).unwrap();
+        assert!(rungs.is_empty(), "{rungs:?}");
+    }
+
+    #[test]
+    fn req_auto_177_only_rungs_near_the_end_are_replaced() {
+        // A column along -x whose end edge slants from (-95, 1) to (-100, 0): it closes in from station 95 to
+        // the tip at 100, and a rung is near the end within 5 mm and 3 widths, 8 mm, of the tip.
+        let rails = [rail(&[(-80.0, 0.0), (-100.0, 0.0)]), rail(&[(-80.0, 1.0), (-95.0, 1.0)])];
+        let far = [p(-100.0, 8.5), p(-100.0, 9.0)];
+        let edge = [p(-100.0, 8.0), p(-100.0, 9.0)];
+        let near = [p(-100.0, 6.0), p(-100.0, 7.0)];
+        let body = [p(-85.0, 0.0), p(-85.0, 1.0)];
+        let (_, rungs) = squared(rails, vec![body, far, edge, near], 1.0, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(rungs.get(..3), Some(&[body, far, edge][..]));
+        assert_eq!(rungs.len(), 13);
     }
 
     #[test]

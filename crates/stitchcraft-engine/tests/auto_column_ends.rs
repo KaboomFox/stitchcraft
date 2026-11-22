@@ -275,3 +275,20 @@ fn req_auto_178_a_leg_shorter_than_3_widths_between_2_sharp_corners_sews_square(
         assert!(lean <= 15.0, "{name}: the middle leg's stitches lie square to it: {lean:.1}°");
     }
 }
+
+#[test]
+fn req_auto_178_a_closed_line_and_round_corners_stay_one_column() {
+    // A triangle's outline drawn sharp, closed: a ring, which has no ends to mitre.
+    let triangle = stitchcraft_testkit::designs::rings(&[&[(5.0, 5.0), (25.0, 5.0), (15.0, 22.0)]]);
+    let outline = automatic(widened(along("triangle", triangle, &RED, &[]), 1.5));
+    let ids: Vec<String> = planned(vec![outline]).plan.unwrap().elements.iter().map(ToString::to_string).collect();
+    assert_eq!(ids, ["triangle"]);
+    // The zigzag with round joins turns its corners as bends.
+    let points = [(5.0, 40.0), (11.0, 52.0), (17.0, 40.0), (23.0, 52.0), (29.0, 40.0)];
+    let mut round = widened(along("round", polylines(&[&points]), &RED, &[]), 1.5);
+    if let stitchcraft_engine::design::Shape::Stroke { join, .. } = &mut round.shape {
+        *join = stitchcraft_engine::design::Join::Round;
+    }
+    let ids: Vec<String> = planned(vec![automatic(round)]).plan.unwrap().elements.iter().map(ToString::to_string).collect();
+    assert_eq!(ids, ["round"]);
+}
