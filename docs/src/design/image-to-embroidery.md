@@ -1693,6 +1693,143 @@ cusp sews 3.73 fills as on `main`. The sew-out at the next
 machine checkpoint sews the bands and lines as `main` plans them and with M13.60 ([machine
 testing](../plan/machine-testing.md)).
 
+### A column's point
+
+The owner reviewed 18 drawings sewn by automatic digitizing on 2026-11-21. Among the biggest issues she named
+"the points for the rays". The sunrise's 7 rays are wedges 2.2 mm wide at their base and 14.7° at their tip,
+and each sews as a satin column that ends blunt. M13.62 measured every column end that a drawing brings to a
+point, and prototyped ways to sew it as a point without sewing thicker. Phase 1 changes nothing that sews.
+
+#### A column's point today
+
+An end is a point by the column's rails as drawn:
+
+- The rails meet. The chord across the end is under 0.3 mm or a quarter of the column's median width.
+- Neither rail has an end edge folded into it, as [a column's ends](#a-columns-ends) finds one.
+- The 2 rails don't both turn by 60° or more within 3 widths of the end, which makes a round end.
+
+The point's angle is the angle between the rails over their last 1 mm. Along the line from the tip to the
+middle of the rails 2 mm in, the drawn width and the sewn width are measured 0.25, 0.5, 1 and 2 mm from
+the tip. The sewn width is the spread across of the column's top stitches clipped to a band 0.2 mm each side
+of the line, half the zigzag spacing. Only the zigzag's diagonals cross the line itself.
+
+The set is the review set's 18 drawings, the repository's fixtures and traced documents, 6 traced photos
+kept locally and TS-13A to TS-13E, 63 designs. It has 36 pointed ends. 29 of them show, on fabric or on
+another colour. 7 join a shape of their own colour, the mitred legs of a line among them. The
+rays' angle is 14.7°, the traced dogs' points 27° to 85°. The photos have none.
+
+| Distance from the tip | 0.25 mm | 0.5 mm | 1 mm | 2 mm |
+|---|---:|---:|---:|---:|
+| A ray, drawn | 0.06 | 0.13 | 0.26 | 0.52 |
+| A ray, sewn | 0.85 to 0.90 | 0.90 to 0.96 | 1.06 to 1.11 | 1.31 to 1.37 |
+| The 29 points, sewn wider than drawn, median | 0.84 | 0.77 | 0.82 | 0.79 |
+
+Each point sews about 0.8 mm wider than drawn at every distance. That is the automatic column's pull
+compensation, 0.4 mm on each side (`auto_pull_compensation_mm`), which every pair of needle points gets
+whatever its width. The pair at the tip has no length and stays a point. The next pair lies about 0.2 mm in,
+widened to 0.85 mm. The column ends in a bar with one stitch out to the tip. The other parts of an end
+don't make it blunt:
+
+- No stitch near a tip is shorter than the machine's 0.3 mm. The stitches into a tip are 0.41 to 1.56 mm
+  long, since the compensation makes each pair long.
+- A column that starts at its point sews its lock there, 8 needle points within 1 mm of a ray's tip. A
+  column that ends at its point sews the end's lock there.
+- The centre walk of a narrow column stops 0.6 mm short of a tip it starts from.
+- [A column's ends](#a-columns-ends) squares slanted and curved ends and leaves points as they are.
+
+The points lie on other thread. Within 1 mm of a tip the thickest spot sews 1.7 to 3.95 fills, 3.07 at the
+median, most of it the fill or overlap under the column.
+
+#### A hold on the compensation and the cap
+
+M13.59 first limited each side's pull compensation to 40 % of the stitch's width. It made 5 designs' thickest
+spots rise by up to 0.09 fills and a traced dog with its details sewn last sew 4.008 fills
+(`req_auto_103`, release only, which runs at opt-level 1 with `--include-ignored`). A held stitch is a part
+of today's stitch. The hold lays less thread at a point. Measured with the cap and the warning set to 9
+fills, so that the cap takes nothing, the dog's spot sews 5.069 fills on `main` and 5.040 held. Its
+neighbour 0.5 mm away sews 4.915 and 4.482, since the pointed column there lays 0.56 fills of thread where it
+laid 1.00. The cap then runs as usual. On `main` it took the shared column's top points down to 1.10 fills to
+bring the neighbour under 4, which held the first spot at 3.918. Held, the neighbour needed less, the cap
+took that column only to 1.33 fills, and the first spot stayed at 4.008. The other rises are the same: the
+cap is greedy and takes a column's top points only above 4 fills, so a point that lowers one spot changes
+where the cap stops at another. A rule at points has to be measured after the cap, on the release-only dog
+cases too.
+
+#### The candidates, measured
+
+Each candidate was prototyped and planned on the set. The rows give the 29 points that show and the 57
+designs other than the photos. A point's excess is its sewn width less its drawn width.
+
+| | `main` | (a) hold 40 % | (a) taper 2 mm | (a) taper 1 mm | (c) open | (b) run | taper 2 mm and (c) | taper 2 mm and (b) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Excess 0.5 mm in, median | 0.77 | 0.35 | 0.17 | 0.35 | 0.17 | −0.13 | 0.10 | −0.13 |
+| Excess 0.5 mm in, most | 1.29 | 0.95 | 0.40 | 0.74 | 0.98 | 0.98 | 0.41 | 0.41 |
+| Excess 1 mm in, median | 0.82 | 0.61 | 0.44 | 0.80 | 0.82 | 0.81 | 0.44 | 0.41 |
+| Farthest from a tip to its nearest needle point, mm | 0.75 | 0.59 | 0.51 | 0.56 | 1.31 | 1.19 | 1.25 | 1.19 |
+| Most fabric bare within 1 mm of a tip | 0 % | 0 % | 0.6 % | 0.6 % | 7.2 % | 7.5 % | 7.5 % | 7.2 % |
+| Area above the cap, mm² | 1,184.25 | 1,176.25 | 1,177.5 | 1,184.25 | 1,179.5 | 1,176.5 | 1,172.0 | 1,169.75 |
+| Designs whose thickest spot rises | | 2 | 3 | 3 | 0 | 0 | 3 | 2 |
+
+- **(a) Pull compensation that tapers with the column.** Held to a share of the width, 40 % as M13.59 had
+  it, the compensation falls at every column narrower than 1 mm, and a point sews 1.8 times as wide as
+  drawn. Held to 20 % it changes every column under 2 mm, and 6 designs' thickest spots rise by up to 0.16
+  fills. Tapered by distance, each side's compensation is the full 0.4 mm times the pair's distance from a
+  tip over a length. Columns change in the last stretch before a point and nowhere else. Over 2 mm a ray sews 0.30 to 0.40 mm
+  wide 0.5 mm from its tip, where it sewed 0.90 to 0.96, and 0.66 to 0.78 mm 1 mm in, where it sewed 1.06
+  to 1.11. The across stitch 0.2 mm from the tip falls under 0.3 mm, and the engine leaves it out, so the
+  tip is one stitch to the pair 0.6 mm in. Over 1 mm the point sews twice as wide as over 2 mm, and a dog reaches
+  4.000 fills.
+- **(b) A run to the tip.** The column stops where the drawing is 0.5 mm wide and a running stitch goes on
+  to the tip. The column's blunt end moves 1 to 2 mm back from the tip, and up to 7.5 % of the fabric
+  within 1 mm of a tip shows.
+- **(c) Fewer, longer stitches into the tip.** Where the drawing is narrower than 0.5 mm, the pairs lie
+  the spacing times 0.5 mm over the width apart, 1.5 mm at most. The pairs keep their compensation, so the
+  end stays as wide, with fewer stitches. Needle points within 1 mm of a tip fall from 208 to 95, and fabric
+  shows. With the taper the engine's shortest stitch already drops the across stitches under 0.3 mm, so (c)
+  adds nothing that (a) needs.
+- **(d) A test by symmetry.** Telling a point from a slanted end by how far each rail turns from the
+  column's way agreed with M13.60's kinds at 9 of 14 traced ends that meet, since traced outlines wander.
+  Every end whose rails meet is a drawn point of the shape, a slanted end's farthest corner as well, so the
+  taper applies at each, and M13.60's cases pass with it.
+
+With the taper over 2 mm, on each set:
+
+- The 6 photos' area above the cap falls from 29.5 to 27.0 mm², their thickest spots unchanged. The bird's
+  4.37 fills is `main`'s own.
+- The engine's 16 designs' area above the cap falls from 105.25 to 101.0 mm². The 2 badges rise from 3.96
+  to 3.99 fills, TS-13A from 3.95 to 3.99.
+- 18 sheets of traced letters sew 572.0 mm² above the cap, where they sewed 571.5. One sheet's thickest spot
+  rises from 3.97 to 3.99 and 2 fall. The 2 above 4 are `main`'s own, at 4.18 and 4.44.
+- The release-only dog cases, run at opt-level 1: the area at 3 fills falls from 5,025, 6,400, 5,275 and
+  9,300 hundredths of a mm² to 4,950, 6,050, 4,900 and 8,650. The thickest spots move from 3.99, 3.91, 3.92
+  and 3.98 to 3.96, 3.91, 3.99 and 4.00, and no dog sews above the cap on fills alone. With details last
+  (`req_auto_103`) no dog sews above 4.
+- On the CLI's set the mug rises from 3.33 to 3.47, its base layer's route doubled at a spot, and the running
+  dogs from 3.92 to 3.99 and from 3.98 to 4.00. No design sews above 4 that sewed at 4 or under.
+- The cases of [a column's ends](#a-columns-ends), the traced letters' (`REQ-AUTO-085`), the shapes that
+  swell and taper and the small details pass. Of the engine's cases only TS-13's recorded sizes and the
+  recorded peaks of `tests/auto_peaks.rs` change. Stitches fall by 31 of 206,264.
+
+The pictures looked at (the sunrise's rays, the wedges, the mug's saucer, the rules' leaf, TS-13B's m, a
+dog) show each point drawn to its tip. They still show a column that ends at its point carry its end lock
+there, a small hook past the leaf's and the saucer's narrowed tips. A lock laid along the column's middle,
+inside the point, was not prototyped. The travel stitches across the sunrise's sky are as on `main`.
+
+#### What is proposed
+
+The taper over 2 mm, as a default with a setting:
+
+- A satin column gets `point_taper_mm`, a setting of StitchCraft's own, 0 by default, one length or one for
+  each end. At an end whose rails meet, closer than the shortest stitch, each pair within that length of
+  the end keeps the share of its pull compensation that its distance from the end is of the length.
+- Automatic digitizing sets it on each satin column from `auto_point_taper_mm`, 2 mm by default, unless the
+  shape sets it. A person who wants today's blunt end sets `auto_point_taper_mm` to 0, for a design with
+  `--set` or for one shape in its settings.
+
+With a rule and no setting, a person couldn't sew today's end if the sew-out shows a point that pulls in. A setting off by
+default would leave the rays blunt. The sew-out at the next machine checkpoint sews wedges of 3 widths and
+3 tip angles at 0 and at 2 mm ([machine testing](../plan/machine-testing.md)).
+
 ## Neighbours
 
 The shapes of a traced picture meet. VectorCraft's Abutting method traces each area with a hole where the
