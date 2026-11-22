@@ -9,8 +9,11 @@
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
+use stitchcraft_core::Budget;
 use stitchcraft_core::math::sin_cos;
-use stitchcraft_engine::design::{Element, Shape};
+use stitchcraft_engine::auto::{PULL_HELD, digitize};
+use stitchcraft_engine::design::{DesignSettings, Element, Shape};
+use stitchcraft_engine::generators::satin::PULL_COMPENSATION_MAX;
 use stitchcraft_plan::Role;
 use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, outlined, planned, polylines, rules_said};
 
@@ -196,4 +199,26 @@ fn req_sat_031_pull_compensation_is_held_to_a_share_of_the_stitchs_width() {
     let widest = widest_near(vec![column], (10.0, 1.0), 1.0);
     // 1 mm from the point the rails are 0.2 mm apart: 0.36 mm sewn at most.
     assert!(widest > 0.3 && widest <= 0.37, "the stitches 1 mm from the point sew {widest:.3} mm wide");
+}
+
+#[test]
+fn req_auto_176_digitizing_holds_its_columns_pull_compensation_unless_the_shape_sets_it() {
+    let column = |params: &[(&str, &str)]| {
+        let outline = [(0.0, 0.0), (30.0, 0.0), (30.0, 3.0), (0.0, 3.0)];
+        let made = digitize(&automatic(fill("band", &[&outline], &RED, params)), &DesignSettings::default(), &mut Budget::DEFAULT.meter()).unwrap();
+        made.elements[0].params.get(PULL_COMPENSATION_MAX).map(ToString::to_string)
+    };
+    assert_eq!(column(&[]), Some(PULL_HELD.to_string()));
+    // A shape that sets it keeps what it sets, empty too: then its columns compensate as Ink/Stitch's do.
+    assert_eq!(column(&[(PULL_COMPENSATION_MAX, "")]), Some(String::new()));
+    assert_eq!(column(&[(PULL_COMPENSATION_MAX, "60")]), Some("60".to_string()));
+}
+
+#[test]
+fn req_auto_175_a_shape_that_asks_for_satin_keeps_its_tips_columns() {
+    let mut crescent = quad((0.0, 0.0), (-28.0, 15.0), (0.0, 30.0), 60);
+    crescent.extend(quad((0.0, 30.0), (-10.0, 15.0), (0.0, 0.0), 60));
+    let said = said(vec![automatic(fill("crescent", &[&crescent], &RED, &[("auto_stitch", "satin")]))]);
+    let [(_, message)] = said.as_slice() else { panic!("one shape: {said:?}") };
+    assert!(!message.contains("uneven"), "its tips leave the fill as it asks: {message}");
 }
