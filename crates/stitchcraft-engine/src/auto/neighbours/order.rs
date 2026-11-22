@@ -556,7 +556,7 @@ impl Order<'_> {
 
 /// How `second`, drawn after `first`, lies beside it, with `meter`'s work: after it when they overlap, or
 /// when what one of them paints can't be found, each with the budget's work to itself; a line bordering a
-/// fill; 2 automatic areas that meet without overlapping, when the details sew `last`; or `None`, either
+/// fill, or a satin column bordering a part's running line of another shape; 2 automatic areas that meet without overlapping, when the details sew `last`; or `None`, either
 /// way round.
 fn lie(shapes: &mut Shapes, first: usize, second: usize, last: bool, meter: &mut Meter) -> Result<Option<Beside>, Failed> {
     shapes.find(first);
@@ -567,9 +567,18 @@ fn lie(shapes: &mut Shapes, first: usize, second: usize, last: bool, meter: &mut
     if overlap(painted_first, painted_second, meter)? {
         return Ok(Some(Beside::After(second)));
     }
+    // A part's running line and a satin column of another shape: the column sews after the line where that
+    // costs no thread change (rule 4), as after a fill, since sewn first it would reach its overlap under
+    // the line's part.
+    let running = |index: usize| shapes.kind(index) == Some(Kind::Part) && !shapes.satin(index);
+    let column = |index: usize| matches!(shapes.kind(index), Some(Kind::Column | Kind::Part)) && shapes.satin(index);
+    let apart = shapes.of_shape.get(first) != shapes.of_shape.get(second);
+    let (beside, under) = (apart && running(first) && column(second), apart && running(second) && column(first));
     let (fill, line) = match (a, b) {
         (Kind::Area, Kind::Column | Kind::Line | Kind::Part) => (first, second),
         (Kind::Column | Kind::Line | Kind::Part, Kind::Area) => (second, first),
+        _ if beside => (first, second),
+        _ if under => (second, first),
         (Kind::Area, Kind::Area) if last && shapes.is_area(first) && shapes.is_area(second) => {
             return Ok(touch(shapes, first, second, meter)?.then_some(Beside::Meet(first, second)));
         }

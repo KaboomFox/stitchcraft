@@ -523,6 +523,29 @@ fn req_auto_037_a_satin_column_sews_after_the_fill_it_borders_where_that_costs_n
     assert_eq!((ids, said.len()), (["rs", "bl", "bs", "rl"].map(String::from).to_vec(), 0));
 }
 
+#[test]
+fn req_auto_037_a_satin_column_sews_after_a_parts_line_it_borders_where_that_costs_no_thread_change() {
+    // A part's running line 1 mm wide along the left edge of a column's part 2 mm wide, each of a shape of its
+    // own. Sewn first, the column would reach its overlap under the line's part, so it sews after the line,
+    // here before the square of its thread, drawn first.
+    let band = [(9.0, 0.0), (9.0, 10.0), (10.0, 10.0), (10.0, 0.0), (9.0, 0.0)];
+    let part = Some(Polygon { outline: band.iter().map(|&(x, y)| p(x, y)).collect(), holes: Vec::new() });
+    let line = |id: &str| Sewn { part: part.clone(), shape: 1, ..running(id, &[(9.5, 0.0), (9.5, 10.0)], 1.0, &RED) };
+    let col = |id: &str| Sewn { shape: 2, ..column(id, &[(10.0, 0.0), (10.0, 10.0), (12.0, 10.0), (12.0, 0.0), (10.0, 0.0)], &BLUE) };
+    let (ids, _) = ordered_with(vec![square("bs", (50.0, 0.0), 10.0, &BLUE), line("rl"), col("bc")], &Budget::DEFAULT, &Budget::DEFAULT);
+    assert_eq!(ids, ["rl", "bc", "bs"]);
+    // Drawn the other way round, the column first, it still sews after the line.
+    let (ids, _) = ordered_with(vec![col("bc"), line("rl"), square("rs", (50.0, 0.0), 10.0, &RED)], &Budget::DEFAULT, &Budget::DEFAULT);
+    assert_eq!(ids, ["rl", "rs", "bc"]);
+    // A part's line and column of one shape keep their order, and wish nothing of each other.
+    let one = |mut sewn: Sewn| {
+        sewn.shape = 1;
+        sewn
+    };
+    let (ids, _) = ordered_with(vec![one(col("bc")), one(line("rl")), square("rs", (50.0, 0.0), 10.0, &RED)], &Budget::DEFAULT, &Budget::DEFAULT);
+    assert_eq!(ids, ["bc", "rl", "rs"]);
+}
+
 /// The order of the elements of `runs`, each sewn in the thread of `threads`, with `rules` of what sews
 /// before what and each column of `wished` after its fill where that costs nothing, found with `budget`; and
 /// the first element of the run that the search gave up at.
