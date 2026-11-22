@@ -91,18 +91,17 @@ fn hundredths(value: f64) -> f64 {
 /// cap at 3.25 (`REQ-AUTO-073`). The list only shrinks. With smooth satin edges (M13.58) the buttons fall
 /// under the cap, TS-13B's thickest spot is where fills alone meet ([`FILLS_ALONE`]), and TS-13A and TS-13C
 /// sew where the cap pulled crowded points in: 3.95 and 3.93, from 3.99 and 3.92. TS-13A sewed 4.00 before its
-/// abutting badge's blue was filled whole under its gold disc (M13.61). The pear's stem sews 3.95 where it sewed
-/// 3.86 with a column 0.4 mm under a later column (M13.57): before the cap its spot stays under 4, where the cap
-/// pulls no point in and takes less of a column's doubled top. It stays under the warning's limit.
+/// abutting badge's blue was filled whole under its gold disc (M13.61). TS-13D sews 3.79, from 3.97, with its
+/// white disc filled whole under its star (M13.59, `REQ-AUTO-174`).
 const ABOVE: [(&str, f64); 8] = [
     ("badges-abutting", 3.96),
     ("badges-stacked", 3.96),
-    ("pear", 3.95),
+    ("pear", 3.86),
     ("lettered-patch", 3.95),
     ("ts-13a", 3.95),
     ("ts-13b", 3.46),
     ("ts-13c", 3.93),
-    ("ts-13d", 3.97),
+    ("ts-13d", 3.79),
 ];
 
 /// The designs whose thickest spot sews above the cap with no satin column there, with it in fills

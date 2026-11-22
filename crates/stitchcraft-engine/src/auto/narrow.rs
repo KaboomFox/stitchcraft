@@ -125,6 +125,15 @@ enum Sorting<'c> {
     Tail(&'c [[Point; 2]]),
 }
 
+/// Whether a part `sorting` says is a piece of a broad part, of an automatic shape held to `bounds`, whose
+/// columns measure `measures`, falls to a point: one line whose width varies by more than a column's may
+/// (`REQ-AUTO-175`). Its cut makes such a piece narrower than a fill's narrowest piece, so it would sew as a
+/// column beside the fill, its stitches meeting the fill's rows along the cut. A shape that asks for satin
+/// columns (`auto_stitch`) is sewn as asked.
+fn tapers(sorting: &Sorting<'_>, measures: &Measures, bounds: &Bounds) -> bool {
+    matches!(sorting, Sorting::Piece(_)) && bounds.asked == Asked::Auto && bounds.one_uneven_line(measures.lines, measures.unevenness)
+}
+
 impl Sorting<'_> {
     /// The chords the piece was cut along: none for a part.
     fn cuts(&self) -> &[[Point; 2]] {
@@ -166,11 +175,17 @@ fn sort(
             }
         }
         Found::Columns => match columns::columns(&part, bounds, by.rules, sorting.cuts(), by.open, meter)? {
+            // A piece of a broad part that falls to a point, a crescent's tip, stays in its fill (`REQ-AUTO-175`).
+            Made::Columns { measures, .. } if tapers(&sorting, &measures, bounds) => {
+                sorted.fired.push(fired(RuleId::Uneven, Some(measures)));
+                sorted.filled.push(part);
+            }
             Made::Columns { sewn, rule, measures } => {
                 sorted.fired.push(fired(rule, Some(measures)));
                 sorted.along.push(Along::Columns(Columns { part, sewn, wide: false }));
             }
-            Made::Filled(RuleId::Uneven, measures) if !matches!(sorting, Sorting::Tail(_)) => {
+            // A part of one line, a leaf, is filled whole (`REQ-AUTO-174`): its outline draws its points.
+            Made::Filled(RuleId::Uneven, measures) if !matches!(sorting, Sorting::Tail(_)) && measures.is_some_and(|m| m.lines > 1) => {
                 sorted.fired.push(fired(RuleId::Uneven, measures));
                 // Its tails, narrower than a satin stroke, leave the fill as lines.
                 let Some(split) = split::tails(&part, bounds.narrowest.get(), bounds.min_area, meter)? else { return unsplit(sorted, part, id) };

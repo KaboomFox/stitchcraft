@@ -195,6 +195,12 @@ a whole counts as ragged and is filled. For art drawn in strokes of changing thi
 parts** off, or use the `logo` style ([changing the choice](#changing-the-choice)), and the T sews as 2
 satin columns.
 
+A part whose width swells and tapers is filled whole when it is 4 mm wide somewhere
+(`auto_min_fill_width_mm`), such as a leaf or a petal. Its outline runs to its points, and 2 like leaves sew
+alike. A narrower one, such as a ray, keeps its satin column. Where a broad shape narrows to a point, as a
+crescent moon's tips do, the point stays in the shape's fill, while an even stick or string still sews as a
+column over it. The `satin` choice of **Prefer** keeps a leaf a column, and so does the `logo` style.
+
 A small star is filled too. Its centre line runs from one point to the point opposite, and one satin
 column along that line would sew the other points as bumps on its sides. StitchCraft measures how far a
 shape lies from its centre line on both sides, and fills one that lies much farther out than a column

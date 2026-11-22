@@ -100,20 +100,20 @@ pub(super) enum Made {
 
 /// What is measured of `part`, no wider than a satin column, whose columns are `found` and whose edges
 /// `edges` holds, with `meter`'s work: its area, its width along its columns' lines and how much it varies,
-/// how many lines it has, and how far it reaches from them on both sides ([`reach`]). `None` for lines of no
-/// length or no width.
-fn measured(part: &Polygon, found: &[Column], edges: &Edges, meter: &mut Meter) -> Result<Option<Measures>, Exhausted> {
+/// how many lines it has, how far it reaches from them on both sides ([`reach`]), and, held to `bounds`,
+/// whether it is as wide as a fill's narrowest piece somewhere ([`Measures::fill_wide`]). `None` for lines of
+/// no length or no width.
+fn measured(part: &Polygon, found: &[Column], edges: &Edges, bounds: &Bounds, meter: &mut Meter) -> Result<Option<Measures>, Exhausted> {
     let lines: Vec<Line> = found.iter().map(|column| column.line.clone()).collect();
     let Some(spread) = spread(edges, &lines, meter)?.filter(|spread| spread.mean.get() > 0.0) else { return Ok(None) };
     let reach = reach(edges, found, meter)?;
-    Ok(Some(Measures {
-        area: part.area(),
-        breadth: Breadth::Medium,
-        width: spread.mean.get(),
-        unevenness: spread.deviation / spread.mean.get(),
-        lines: found.len(),
-        reach,
-    }))
+    let unevenness = spread.deviation / spread.mean.get();
+    // Only a part the rule for one uneven line can fill is measured against a fill's narrowest piece
+    // (`REQ-AUTO-174`). A part `within` can't shrink, a bug, isn't held to it, as before the rule.
+    let fill_wide = bounds.fill_uneven
+        && bounds.one_uneven_line(found.len(), unevenness)
+        && within(part, Mm::new(bounds.min_fill).unwrap_or(bounds.max_satin), meter)? == Some(false);
+    Ok(Some(Measures { area: part.area(), breadth: Breadth::Medium, width: spread.mean.get(), unevenness, lines: found.len(), reach, fill_wide }))
 }
 
 /// The rule by which the rules fill `part`, of an area held to `bounds`, with `meter`'s work: an area, a
@@ -167,7 +167,7 @@ fn judged(part: &Polygon, bounds: &Bounds, meter: &mut Meter) -> Result<Option<R
     let Ok(Some(found)) = strips::columns(part, piece(part), &[], bounds.narrowest.get(), meter)? else { return Ok(None) };
     let edges = Edges::of(part, piece(part), meter)?;
     // A part without a centre line of any length is a dot, which is compact.
-    let measures = measured(part, &found, &edges, meter)?.unwrap_or(unmeasured);
+    let measures = measured(part, &found, &edges, bounds, meter)?.unwrap_or(unmeasured);
     let rule = choose(&measures, bounds);
     if let Some(rule) = as_filled(rule) {
         return Ok(Some(rule));
@@ -230,7 +230,7 @@ pub(super) fn columns(
     };
     let edges = Edges::of(part, piece(part), meter)?;
     // A part without a centre line of any length is a dot, which has no way to run: it is compact.
-    let Some(measures) = measured(part, &found, &edges, meter)? else { return Ok(Made::Filled(RuleId::Compact, None)) };
+    let Some(measures) = measured(part, &found, &edges, bounds, meter)? else { return Ok(Made::Filled(RuleId::Compact, None)) };
     let rule = choose(&measures, bounds);
     if fills(rule, bounds) {
         return Ok(Made::Filled(rule, Some(measures)));
@@ -1033,6 +1033,28 @@ mod tests {
     }
 
     #[test]
+    fn req_auto_174_a_part_of_one_uneven_line_is_measured_against_a_fills_narrowest_piece() {
+        // A diamond 20 mm long: its widest circle is 4.85 mm across when it is 5 mm wide, and 2.97 mm when 3.
+        let diamond = |width: f64| part(&[(0.0, 0.0), (10.0, -width / 2.0), (20.0, 0.0), (10.0, width / 2.0)], &[]);
+        let measure = |part: &Polygon, bounds: &Bounds, work: u64| {
+            let mut meter = Budget { max_work: work, ..Budget::DEFAULT }.meter();
+            let edges = Edges::of(part, piece(part), &mut Budget::DEFAULT.meter()).unwrap();
+            let (found, _) = sewn(part);
+            measured(part, &found, &edges, bounds, &mut meter).map(|measures| measures.map(|m| (m.lines, m.fill_wide)))
+        };
+        let all = Budget::DEFAULT.max_work;
+        assert_eq!(measure(&diamond(5.0), &bounds(1.0), all), Ok(Some((1, true))));
+        assert_eq!(measure(&diamond(3.0), &bounds(1.0), all), Ok(Some((1, false))));
+        // Not where uneven parts aren't filled, and not for an even band 5 mm wide.
+        let kept = Bounds { fill_uneven: false, ..bounds(1.0) };
+        assert_eq!(measure(&diamond(5.0), &kept, all), Ok(Some((1, false))));
+        assert_eq!(measure(&band(5.0), &bounds(1.0), all), Ok(Some((1, false))));
+        // Measuring it is work: with less than it takes, the meter runs out.
+        let needed = (0..all).find(|&work| measure(&diamond(5.0), &bounds(1.0), work).is_ok()).unwrap();
+        assert!(needed > 0 && measure(&diamond(5.0), &bounds(1.0), needed - 1).is_err());
+    }
+
+    #[test]
     fn req_auto_031_a_part_whose_lines_have_no_width_has_no_measures() {
         // A band's column with its centre line moved onto the band's edge: no circle fits on it, so the part
         // has no width to be slender or uneven by.
@@ -1040,13 +1062,13 @@ mod tests {
         let mut meter = Budget::DEFAULT.meter();
         let edges = Edges::of(&band, piece(&band), &mut meter).unwrap();
         let (found, _) = sewn(&band);
-        assert!(measured(&band, &found, &edges, &mut meter).unwrap().is_some_and(|measures| measures.width > 2.9));
+        assert!(measured(&band, &found, &edges, &bounds(1.0), &mut meter).unwrap().is_some_and(|measures| measures.width > 2.9));
         let edge = Line { points: [2.0, 10.0, 18.0].map(|x| Point::new(x, 0.0).unwrap()).to_vec(), closed: false };
         let mut on_the_edge = found;
         for column in &mut on_the_edge {
             column.line = edge.clone();
         }
-        assert_eq!(measured(&band, &on_the_edge, &edges, &mut meter), Ok(None));
+        assert_eq!(measured(&band, &on_the_edge, &edges, &bounds(1.0), &mut meter), Ok(None));
     }
 
     #[test]
