@@ -114,14 +114,17 @@ jumps and colour changes, which the rethreads and the cuts at the machine are co
 | The traced pear, as planned and with a lattice base layer | M13.30, M13.35 | `stitch plan docs/fixtures/traced-pear.vectorcraft --auto -o pear.pes`, and again with `--set auto_base_rows=lattice` |
 | The traced dogs | M13.16 to M13.55 | `stitch plan docs/fixtures/traced-dog-running-9.vectorcraft --auto -o dog.pes`, and the other 3 documents `traced-dog-*.vectorcraft` in `docs/fixtures/` the same way. For a step's setting, add its `--set`, such as `--set auto_fill_uneven=false` |
 | The running dog traced from its photo, with and without `--fewer-points` | M13.51 | `stitch plan docs/fixtures/dog-running-cutout.png --auto --size 100 --colours 9 -o dog-traced.pes`, and again with `--fewer-points`. Both trace with VectorCraft's command line |
+| An eye on a body: a white disc 4.4 mm across on a broad fill, with a black disc 1.8 mm across on it, as `main` plans it and with M13.61 | M13.61 | Drawn by hand, each disc its own path stacked on the one under it, or planned from the case `fish` in `crates/stitchcraft-engine/tests/auto_small_details.rs`. TS-13A's abutting badge shows the same rule, and the lettered patch's border, which keeps its column, the rule's limit. Look at whether the black shows whole and round, and whether the white sews in rows with no wheel at its middle |
+| Column ends, as `main` plans them and with M13.60 | M13.60 | Planned from the cases in `crates/stitchcraft-engine/tests/auto_column_ends.rs`, which draw each shape in code, or drawn by hand. The bands are 5 mm tall, and a circle cuts the ends of one. The other is cut at 45° at one end. The lines are the zigzag 1.5 mm wide and lines 3 and 5 mm wide turning 90° and 120°. The review set's sunrise and zigzag show the same rules. Look at whether the stitches lie square to the band into each end, and whether fabric shows where 2 legs of a line meet |
 | A traced dog with `stitch:keep` marks, one with a `stitch:guide` line, and a leaf with a guide | M13.39, M13.24 | Made by hand in VectorCraft: no file of the repository has a mark or a guide |
 | Hexmira in Small Font at 8 and 10 mm, made bolder | M14.9 | `stitch lettering "Hexmira" --font FOLDER --height 8 --widen-percent 10 -p brother-pe800-4x4 -o hexmira.pes`, at each height and at 0, 10 and 20 %. Barstitch Bold with its pull compensation scaled to the height is made by hand |
 | Words on a cream field (Hexmira at 8 and 10 mm, Hexmira 7.6 mm tall, and VOLKAR in Barstitch Bold 12.5 mm tall) | M14.9, M13.50 | Made by hand: a cream field drawn 3 mm round the word, with the word set on it as text |
 | Bars and rings 6, 8 and 10 mm wide | M13.54 | `bar-8mm.svg` and its relatives from the commands after this table |
 | The test piece of 12 tiles under satin columns | M13.55 | Made by hand. Its tiles are fills 20 mm wide in navy and in orange, with a black satin column along each tile's top, straight on some tiles and curved on the others, in widths from 2 to 6 mm. No file of the repository draws it |
+| The smooth-edges test piece: lines 3 mm wide drawn as a mug's handle, a ring and a sharp corner | M13.58 | `edges.svg` from the commands after this table, planned with `--auto` into `edges.pes`, and again with `--set auto_short_stitches=crowded` into `edges-today.pes`. Sew both on one piece of fabric. Check each inside edge for a second row of short ends, each outside edge for fabric showing between the stitches, and the corner for thread piling up |
 | A circle 40 mm across, its fill in one colour and a 2 mm stroke round it in another | M13.8 | Made by hand in VectorCraft, without StitchCraft effects. `stitch plan circle.vectorcraft -o circle.pes`, and again with `--no-auto` |
 
-The arc, and the bars and the rings of M13.54, each written by one command from nothing but the command
+The arc, the bars and the rings of M13.54, and the smooth-edges piece of M13.58, each written by one command from nothing but the command
 itself:
 
 ```sh
@@ -130,6 +133,7 @@ for w in 6 8 10; do
   awk -v w=$w 'BEGIN { printf "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"60mm\" height=\"20mm\" viewBox=\"0 0 60 20\"><path fill=\"#0a55a3\" d=\"M5 %gH55V%gH5Z\"/></svg>\n", 10 - w / 2, 10 + w / 2 }' > bar-${w}mm.svg
   awk -v w=$w 'BEGIN { R = 20 + w / 2; r = 20 - w / 2; printf "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"60mm\" height=\"60mm\" viewBox=\"0 0 60 60\"><path fill=\"#ed171f\" fill-rule=\"evenodd\" d=\"M%g 30A%g %g 0 1 0 %g 30A%g %g 0 1 0 %g 30Z M%g 30A%g %g 0 1 1 %g 30A%g %g 0 1 1 %g 30Z\"/></svg>\n", 30 + R, R, R, 30 - R, R, R, 30 + R, 30 + r, r, r, 30 - r, r, r, 30 + r }' > ring-${w}mm.svg
 done
+printf '<svg xmlns="http://www.w3.org/2000/svg" width="90mm" height="40mm" viewBox="0 0 90 40"><g fill="none" stroke="#0a55a3" stroke-width="3"><path d="M 11 13 A 8 8 0 1 1 11 27"/><circle cx="45" cy="20" r="12"/><path d="M 66 34 L 75 6 L 84 34" stroke-linejoin="miter"/></g></svg>\n' > edges.svg
 ```
 
 ## MC-8: the steps and their checks
@@ -524,6 +528,16 @@ sew the running dog in 9 threads at the default and at 0.4 mm:
   6 mm ones.
 - On the dog at 0.4 mm, look for fabric beside its satin columns, and feel for the thick spots against
   the default.
+
+M13.60 keeps a satin column's stitches square to it up to an end that a slanted or curved edge cuts, shorter
+into the corner, and sews a line that turns by more than 60° at a sharp corner as a column for each leg,
+the legs meeting on the corner's bisector ([a column's ends](../design/image-to-embroidery.md#a-columns-ends)).
+At MC-8, sew the column ends' test piece as `main` plans it and with M13.60:
+
+- At each end of the 2 bands, do the stitches spread along the band over the edge beside it, or lie square
+  and end on the band's own edge?
+- Where 2 legs of the zigzag and of the wider lines meet, does fabric show along the bisector? Is the
+  corner's point sharp, and is the inside of the corner flat or a knot?
 
 M13.56 checks the locks of every plan the engine returns, after the cap
 ([the thread's state](../design/data-model.md#the-threads-state)), and changes nothing that sews. On an

@@ -139,6 +139,25 @@ pub(in crate::auto) fn filled(part: &Polygon, bounds: &Bounds, meter: &mut Meter
     judged(part, bounds, meter)
 }
 
+/// Whether `part`, a ring of an area held to `bounds`, would sew as one satin column round its hole that
+/// crowds as a whole, a wheel: one of its rails, the whole way round, more than [`MOST_CROWDING`] times as long
+/// as the other. [`crowded`] leaves a ring out, since a fill in its place would sew in pieces round its hole.
+/// Where other areas fill the hole, its details, that isn't so: the layers close the hole and fill the ring
+/// whole under them (`REQ-AUTO-182`). The bound is the whole rails', not a stretch's as [`crowding`] measures
+/// it: a border round a field crowds a stretch at each corner, as any band does, but its stitches don't all
+/// run in to the middle. False for a part of several columns, as [`crowded`] says, and for a shape that asks
+/// how it sews (`auto_stitch`): it is sewn as asked. A unit of work for each corner of the rails.
+pub(in crate::auto) fn ring_crowds(part: &Polygon, bounds: &Bounds, meter: &mut Meter) -> Result<bool, Exhausted> {
+    if bounds.asked != Asked::Auto {
+        return Ok(false);
+    }
+    let Ok(Some(found)) = strips::columns(part, piece(part), &[], bounds.narrowest.get(), meter)? else { return Ok(false) };
+    let [column] = found.as_slice() else { return Ok(false) };
+    let [outer, inner] = [&column.rails[0], &column.rails[1]].map(|rail| lengths(rail).last().copied().unwrap_or(0.0));
+    meter.charge(u64::try_from(column.rails[0].len() + column.rails[1].len()).unwrap_or(u64::MAX))?;
+    Ok(crowds(outer.max(inner) / outer.min(inner)))
+}
+
 /// The rule by which the rules fill `part`, no wider than a satin column of `bounds`, judged by its columns,
 /// with `meter`'s work, as [`filled`] says. A wide part's bounds ([`Bounds::wide`]) also fill a part of
 /// several lines or of an uneven width, as an area.
@@ -180,7 +199,8 @@ fn too_long(found: &[Column], bounds: &Bounds, meter: &mut Meter) -> Result<Opti
 /// part of several columns: where one of them ends under another, as the bar of a T does, it is cut on the
 /// slant there, and its last stitches fan from a corner by the way it is drawn, under the other column.
 /// None for a part with a hole, a ring: its column runs round what fills the hole, as a border does, and a
-/// fill in its place would sew in pieces round it. None either for a part that sews by `rule` because its
+/// fill in its place would sew in pieces round it, unless the layers close the hole under its details
+/// ([`ring_crowds`]). None either for a part that sews by `rule` because its
 /// shape asks for satin columns: it is sewn as asked.
 fn crowded(part: &Polygon, found: &[Column], rule: RuleId, meter: &mut Meter) -> Result<Option<f64>, Exhausted> {
     let [column] = found else { return Ok(None) };
@@ -263,7 +283,10 @@ pub(super) fn columns(
         let push = column.under.map(|under| if pushed && under.is_some() { -reach } else { 0.0 });
         let holes = [along(&column.rails[0], &kept, meter)?, along(&column.rails[1], &kept, meter)?];
         let even = crowding(&column.rails, &column.rungs, meter)? <= EVEN;
-        let Ok(drawn) = drawn::from_rails(column.rails, column.rungs, push, meter)? else { return Ok(Made::Unmade) };
+        // Its ends that close in after a straight stretch stay square to it (`REQ-AUTO-177`).
+        let (rails, rungs) =
+            if column.closed { (column.rails, column.rungs) } else { super::ends::squared(column.rails, column.rungs, width.get(), meter)? };
+        let Ok(drawn) = drawn::from_rails(rails, rungs, push, meter)? else { return Ok(Made::Unmade) };
         sewn.push(Sewn::Satin { path: drawn.path(), width, push, even, holes });
     }
     Ok(Made::Columns { sewn, rule, measures })
@@ -1142,6 +1165,60 @@ mod tests {
         let (made, asked) = (least(&|work| with(work).is_ok()), least(&|work| asking(work).is_ok()));
         assert!(with(made).is_ok() && with(made - 1) == Err(Exhausted::Work), "{made}");
         assert!(asking(asked).is_ok() && asking(asked - 1) == Err(Exhausted::Work), "{asked}");
+    }
+
+    #[test]
+    fn req_auto_182_the_layers_hold_a_ring_to_the_crowding_bound() {
+        let crowds = |part: &Polygon, set: &[(&str, &str)], work: u64| {
+            let rules = AutoParams::from_set(&set.iter().copied().collect()).unwrap().params;
+            ring_crowds(part, &Bounds::of(&rules, Mm::new(1.0).unwrap()), &mut Budget { max_work: work, ..Budget::DEFAULT }.meter())
+        };
+        let ring = |outer: f64, inner: f64| {
+            let (o, i): (Vec<_>, Vec<_>) = (arc(outer, 48, 0.0, std::f64::consts::TAU), arc(inner, 24, 0.0, -std::f64::consts::TAU));
+            part(&o[..48], &[&i[..24]])
+        };
+        let all = Budget::DEFAULT.max_work;
+        // A ring 2 mm wide round a hole 1 mm across is 5 times as long outside as inside: a wheel. One 3 mm
+        // wide round a hole 10 mm across is 1.6 times as long: it isn't.
+        let (tight, loose) = (ring(2.5, 0.5), ring(8.0, 5.0));
+        assert_eq!([crowds(&tight, &[], all), crowds(&loose, &[], all)], [Ok(true), Ok(false)]);
+        // A border 3 mm wide round a square field with its corners cut, as a patch is drawn, crowds a stretch
+        // at each corner, more than 2 mm of its outer edge to 1 mm of its inner one, but the whole way round is
+        // less than twice as long outside as inside: a border, not a wheel.
+        let octagon = |inset: f64, cut: f64| {
+            let (a, b) = (inset, 30.0 - inset);
+            vec![(a + cut, a), (b - cut, a), (b, a + cut), (b, b - cut), (b - cut, b), (a + cut, b), (a, b - cut), (a, a + cut)]
+        };
+        let inner: Vec<_> = octagon(3.0, 4.5 - 3.0 * (std::f64::consts::SQRT_2 - 1.0)).into_iter().rev().collect();
+        let border = part(&octagon(0.0, 4.5), &[&inner]);
+        let mut meter = Budget::DEFAULT.meter();
+        let found = strips::columns(&border, piece(&border), &[], 1.0, &mut meter).unwrap().unwrap().unwrap();
+        let [column] = found.as_slice() else { panic!("{} columns", found.len()) };
+        assert!(super::crowds(crowding(&column.rails, &column.rungs, &mut meter).unwrap()));
+        assert_eq!(crowds(&border, &[], all), Ok(false));
+        // A shape that asks how it sews is sewn as asked, and a part of several columns isn't measured.
+        for asked in ["satin", "run"] {
+            assert_eq!(crowds(&tight, &[("auto_stitch", asked)], all), Ok(false), "{asked}");
+        }
+        let t = part(&[(0.0, 0.0), (12.0, 0.0), (12.0, 2.0), (7.0, 2.0), (7.0, 12.0), (5.0, 12.0), (5.0, 2.0), (0.0, 2.0)], &[]);
+        assert_eq!(crowds(&t, &[], all), Ok(false));
+        // Finding it is the part's work: with too little, it stops, both finding the column and measuring it.
+        let (mut low, mut high) = (0_u64, 1 << 24);
+        while low < high {
+            let middle = low + (high - low) / 2;
+            if crowds(&tight, &[], middle).is_ok() { high = middle } else { low = middle + 1 }
+        }
+        assert_eq!(
+            [crowds(&tight, &[], low), crowds(&tight, &[], low - 1), crowds(&tight, &[], 0)],
+            [Ok(true), Err(Exhausted::Work), Err(Exhausted::Work)]
+        );
+        // Measuring it is a unit for each corner of its two rails, on top of finding its column.
+        let mut meter = Budget::DEFAULT.meter();
+        let found = strips::columns(&tight, piece(&tight), &[], 1.0, &mut meter).unwrap().unwrap().unwrap();
+        let [column] = found.as_slice() else { panic!("{} columns", found.len()) };
+        let corners = u64::try_from(column.rails[0].len() + column.rails[1].len()).unwrap();
+        assert!(column.rails.iter().all(|rail| rail.len() > 2), "{corners}");
+        assert_eq!(low, all - meter.work_left() + corners);
     }
 
     #[test]

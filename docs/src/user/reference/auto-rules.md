@@ -64,6 +64,7 @@ A shape's settings are those of VectorCraft's Auto effect on it, or on the group
 | [`auto_thick_warn_points`](params/auto.md#auto_thick_warn_points) | 15 | no: advanced |
 | [`auto_thick_fail_points`](params/auto.md#auto_thick_fail_points) | 30 | no: advanced |
 | [`auto_thick_cap_fills`](params/auto.md#auto_thick_cap_fills) | 3.25 | no: advanced |
+| [`auto_short_stitches`](params/auto.md#auto_short_stitches) | above_limit | no: advanced |
 | [`auto_details_last`](params/auto.md#auto_details_last) | false | no: advanced |
 | [`auto_smooth_mm`](params/auto.md#auto_smooth_mm) | 0 mm | no: advanced |
 | [`auto_column_overlap_mm`](params/auto.md#auto_column_overlap_mm) |  mm | no: advanced |

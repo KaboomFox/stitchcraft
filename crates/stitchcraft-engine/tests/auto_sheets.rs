@@ -339,10 +339,12 @@ fn ts13_the_jump_threads_that_its_stitches_sew_down() {
     // word's A and T starting at the end of a column away from the needle, TS-13C's sews down 1 of its 13
     // where it sewed down 5, and TS-13E's 1 of its 4. With its letters sewn as strokes (REQ-AUTO-087)
     // TS-13B's leaves 46, 17 of them sewn down, where it left 44, 20, and TS-13D's sews down 5 of its 11 where it
-    // sewed down 3.
+    // sewed down 3. With the abutting badge's blue filled whole under its gold disc (REQ-AUTO-182), TS-13A's
+    // sews down 8 of its 18 where it sewed down 9. With smooth satin edges (M13.58) a later stitch sews down 18
+    // of TS-13B's 46.
     for (id, recorded) in [
-        ("TS-13A", [(8, 0), (18, 9)]),
-        ("TS-13B", [(6, 0), (46, 17)]),
+        ("TS-13A", [(8, 0), (18, 8)]),
+        ("TS-13B", [(6, 0), (46, 18)]),
         ("TS-13C", [(9, 4), (13, 1)]),
         ("TS-13D", [(1, 0), (11, 5)]),
         ("TS-13E", [(0, 0), (4, 1)]),

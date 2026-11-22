@@ -11,7 +11,7 @@
 use std::collections::BTreeSet;
 
 use stitchcraft_core::{Code, math};
-use stitchcraft_engine::auto::{ADVANCED, AutoParams};
+use stitchcraft_engine::auto::{ADVANCED, AutoParams, LONGEST_SATIN_STITCH};
 use stitchcraft_engine::design::{Design, DesignSettings, Element};
 use stitchcraft_engine::testsheets::find;
 use stitchcraft_plan::{Role, Stitch, StitchKind, StitchPlan};
@@ -59,7 +59,12 @@ fn among(some: &[Stitch], all: &[Stitch]) -> bool {
 /// (`REQ-AUTO-074`).
 fn among_or_moved(some: &[Stitch], all: &[Stitch]) -> bool {
     let mut rest = all.iter();
-    let moved = |stitch: &Stitch, other: &Stitch| other.kind == stitch.kind && other.origin == stitch.origin && other.at.distance(stitch.at) <= 1.0;
+    // A row's end moves back along its row by the overlap, 1 mm, and a satin column's crowded point in along
+    // its stitches by half of them at the most, half the longest satin stitch (`REQ-AUTO-171`).
+    let moved = |stitch: &Stitch, other: &Stitch| {
+        let most = if stitch.origin.role == Role::Top { LONGEST_SATIN_STITCH / 2.0 } else { 1.0 };
+        other.kind == stitch.kind && other.origin == stitch.origin && other.at.distance(stitch.at) <= most
+    };
     some.iter().all(|stitch| rest.any(|other| other == stitch || moved(stitch, other)))
 }
 
@@ -126,7 +131,11 @@ fn diag_sc_i1119_the_cap_says_what_it_took_of_each_kind_and_what_is_left() {
     let outcome = in_place(&pictures::pear());
     let said: Vec<&str> = outcome.diagnostics.iter().filter(|said| said.code == Code::AutoThinned).map(|said| said.message.as_str()).collect();
     assert_eq!(said.len(), 1, "{:?}", outcome.diagnostics);
-    assert!(said[0].contains(" fills or more. The last pass took ") && said[0].contains(", and the cap took "), "{}", said[0]);
+    assert!(
+        said[0].contains(" fills or more. The last pass took ") && said[0].contains(", and the cap ") && said[0].contains(" took "),
+        "{}",
+        said[0]
+    );
     assert!(said[0].contains("Left: ") && said[0].contains(" at 3.25 fills or more"), "{}", said[0]);
 }
 
