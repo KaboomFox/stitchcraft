@@ -2814,6 +2814,183 @@ fills, where 2 columns meet over the field between the M and the A.
   MC-8 shows decides whether a word on a patch needs more. A lighter field under the letters would be a
   setting of the field's, in a step of its own. M13.50 doesn't add one.
 
+#### Columns stacked on columns
+
+The owner's limit is 4 fills, the warning's (`SC-W0913`), and the cap of 3.25 keeps automatic designs under it
+by taking needle points out. 2 kinds of design still ended above the cap or the limit. Under `--style logo`,
+since the cap's last resort was fixed (#327), 4 traced pictures ended at 4.6 to 5.5 fills, where `--style photo`
+sews them at 3.9 to 4.0. And since M13.8 a drawn document is digitized automatically by default, and the drawn
+fixture went from 2.74 to 3.85 fills. M13.57 measured what lies stacked there and prototyped 6 ways to take
+it away. Its first phase changes nothing that sews: the rule, its setting and a message are planned
+(`REQ-AUTO-167` to `REQ-AUTO-169`).
+
+**How it was measured.** Every document of the set was planned with main's engine at `de4f7934`, under the
+default style, whose values are the photo style's, and under the logo style. The set is made of the repository's
+documents and fixtures with the traced dogs, pear and patch and the drawn fixtures among them, the test
+pictures traced by M13.42, and 13 traced photos of the owner's, which stay outside the repository. 4
+fixtures of effects and ribbons have no automatic shape and were left out, which leaves 41 designs. At each spot of 3.25 fills or
+more, the stitches in the spot's window were split by shape and by layer: a fill's top, the base layer, a
+column's top, a column's underlay, a part's running line, travel and locks. A spot's cause is the top
+thread that lies there, counting a shape that lays 0.3 fills or more. The table's rows name the causes. The split adds
+up to the measure's value within 3 %.
+
+| What lies on each other at a spot | Designs | mm² at 3.25 fills or more | mm² at 4 or more | Fills by layer there, on average |
+|---|---:|---:|---:|---|
+| 2 or more columns over a fill, of 2 or more shapes | 38 | 2,773.0 | 393.2 | column tops 2.32, fill 0.94, column underlay 0.24, base 0.12 |
+| One column over a fill | 67 | 2,428.0 | 69.2 | fill 1.37, column top 1.32, running line 0.35, column underlay 0.22, base 0.16 |
+| 2 or more columns with no fill under them, of 2 or more shapes | 37 | 1,701.5 | 481.2 | column tops 2.95, column underlay 0.38, base 0.16, travel 0.14 |
+| 2 or more columns over a fill, of one shape | 44 | 1,220.8 | 196.8 | column tops 2.17, fill 1.01, column underlay 0.28, base 0.13, running line 0.13 |
+| A running line over a fill | 45 | 342.5 | 15.5 | fill 2.27, running line 0.95, base 0.18 |
+| 2 or more columns with no fill under them, of one shape | 32 | 340.0 | 47.2 | column tops 2.68, column underlay 0.43, base 0.17 |
+| One column alone | 22 | 97.0 | 6.0 | column top 2.11, its underlay 0.72, base 0.27, running line 0.21 |
+| Fills alone | 59 | 40.5 | 0.0 | fill 2.5 to 3.2, running line 0.2 to 0.4 |
+
+The designs are counted once for each style, 82 in all. Under the default style the whole set has 32.4 mm²
+at 4 fills or more, and under the logo style 1,176.7.
+
+The table shows 4 things.
+
+- **2 columns' tops on each other** make 67 % of the area above the cap, and 92 % of the area at 4 fills
+  or more. They lay 2.2 to 3.0 fills of top thread between them. Where they
+  meet, the one sewn first sews the whole overlap, 1 mm, past its rail under the next
+  ([neighbours that overlap](#neighbours-that-overlap), `REQ-AUTO-029`), and the next lays its pull
+  compensation, 0.4 mm, back over it. That is 1.4 mm of 2 columns' stitches on each other along every join.
+- **One column over a fill** spreads over the most designs, but it lays 1.3 fills of top on 1.4 of the
+  fill's, and seldom reaches 4. The fills on the base layer sew no underlay of their own, so what lies under
+  such a column is the fill's top, its overlap under the column and the base layer.
+- **The drawn fixture** is neither. Its thickest spot, 3.85 fills, is the cyan ring, which digitizing reads
+  as one closed satin column. Its stitches crowd the inner rail: 2.33 fills of its own top, 0.86 of its
+  underlay and 0.51 of the base layer. There is no fill under it, and no candidate below changes it. It
+  stays under the limit.
+- **A part's running line over a fill** adds 0.9 fills to 2.3 of the fill's in a few places. The cap
+  takes those, and they seldom reach 4.
+
+**Why the cap leaves it.** The cap takes needle points in this order. First it takes underlay and travel that
+later top stitches cover, then a shape's top where later shapes cover it, and last a shape's own top where
+it is doubled.
+Its limits, each with its reason:
+
+- A satin column's top points stay below the warning's limit (`REQ-AUTO-112`). Taken, a point leaves a notch
+  in an edge or a stitch that leans across the column: M13.46 found 95 such points on 2 designs with the cap
+  at 3.
+- A column's underlay is tagged as its top in the plan. The cap leaves it as well. The rules of
+  `REQ-AUTO-112` were measured that way, and an underlay keeps a column's edges in place.
+- Above the limit, the last resort takes columns' top points one at a time, each one that lowers the
+  thickest spot by half as much as the best one or more, and none that takes a spot at the limit or under it
+  above it. It stops when no point does. Where 2 columns' tops lie on each other, a point taken from one
+  leaves the other's thread, and its joined stitch runs along the rail through the same spot: the spot
+  hardly falls.
+- Lettering's columns are never in the last resort (`REQ-AUTO-123`, M13.50), since thinned letters showed.
+- The base layer's rows are held straight (`REQ-AUTO-028`): with the cap at 3 it joined their ends across
+  the rows, and so the cap is 3.25.
+
+**The candidates.** Each was a prototype in the engine, measured on the designs where it and main's engine
+were both measured in full. A design whose plan a candidate didn't change keeps main's numbers.
+
+- **a.** The area cut away 0.4 mm under a part's column, M13.55's `auto_column_overlap_mm` at the value its
+  own numbers support.
+- **b.** No fill underlay under a column. Moot: the fills on the base layer sew no underlay of their own.
+- **c.** A centre walk in place of the column's usual underlay where a fill lies under it.
+- **d.** The cap opening a column's spacing evenly along the whole column, never unevenly, down to half its
+  density, where the column lies on a fill.
+- **e.** The logo style sewing a part's column as a running line where it would end above the cap.
+- **f.** Found by the measuring: a column reaches its pull compensation, 0.4 mm, past a rail under a
+  later satin column, and not the overlap. Under a later fill it reaches the overlap as before.
+
+Thickness, on the 39 designs measured with every candidate (all but the traced goose and building, which
+took 45 minutes each). "Shortened ends" counts the stitch ends the crowded rule pulls in (`REQ-AUTO-071`).
+
+| Style | Candidate | Designs changed | Thickest | Designs above 4 | mm² at 3.25 or more | mm² at 4 or more | Shortened ends | Designs made thicker |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| logo | main | | 5.64 | 24 | 6,461 | 865.0 | 24,448 | |
+| logo | a | 32 | 5.52 | 18 | 5,328 | 602.2 | 24,446 | 1 |
+| logo | c | 26 | 5.64 | 24 | 6,374 | 848.5 | 24,448 | 2 |
+| logo | d | 32 | 5.64 | 20 | 3,690 | 463.0 | 16,529 | 4 |
+| logo | e | 31 | 5.64 | 16 | 1,969 | 251.5 | 10,654 | 1 |
+| logo | f | 26 | 5.64 | 20 | 4,678 | 273.0 | 24,026 | 0 |
+| default | main | | 4.54 | 10 | 1,280 | 2.5 | 5,085 | |
+| default | a | 31 | 4.73 | 7 | 633 | 2.5 | 5,085 | 7 |
+| default | c | 11 | 5.02 | 10 | 1,268 | 5.5 | 5,085 | 1 |
+| default | d | 30 | 4.37 | 8 | 297 | 2.5 | 3,000 | 1 |
+| default | e | 3 | 4.54 | 9 | 1,136 | 2.5 | 4,556 | 0 |
+| default | f | 11 | 4.54 | 7 | 662 | 2.5 | 4,956 | 0 |
+
+The rest of the measures, on the 30 designs that took less than 45 minutes to measure with every
+candidate, under the logo style, where the candidates change most:
+
+| Candidate | Bare fabric, mm² | Stitches astray | Jump threads | Thread changes | Stitches | Seconds to plan | Designs made worse, and by how much at most |
+|---|---:|---:|---:|---:|---:|---:|---|
+| main | 177.8 | 3,264 | 2,409 | 164 | 452,626 | 494 | |
+| a | 183.2 | 3,267 | 2,407 | 164 | 451,875 | 513 | bare fabric on 11, 1.72 mm², and 1 to 2 jump threads and stitches astray on 2 |
+| c | 177.8 | 3,264 | 2,409 | 164 | 452,590 | 509 | thickest spot on 2, 0.49 fills, and area at 4 fills on 2 |
+| d | 192.2 | 3,578 | 2,461 | 164 | 443,104 | 413 | bare fabric on 14, 3.48 mm², stitches astray on 3, 274, jump threads on 6, 15, and detail on 1 |
+| e | 558.4 | 8,313 | 2,575 | 168 | 439,881 | 389 | bare fabric on 13, 62.2 mm², stitches astray on 20, 1,430, jump threads on 12, and detail on 4, 16.7 points |
+| f | 189.1 | 3,264 | 2,408 | 164 | 453,497 | 378 | bare fabric on 9, 2.66 mm² |
+
+Under the default style f changed 9 of these designs, and made 1 worse, by 0.16 mm² of bare fabric.
+
+A design counts as made worse by more than 0.02 fills, 1 mm², 0.1 mm² of bare fabric, 1 stitch astray, 1
+jump thread or thread change, or half a point of detail.
+
+The candidates compare as follows.
+
+- **a** lowers the area at 3.25 fills by half on the default style, but sewed 7 designs thicker there, a
+  traced label from 3.98 to 4.73 fills.
+- **b** has nothing to take.
+- **c** hardly moves a spot, and the round patch, whose columns a person drew, sewed 5.02 fills where it
+  sewed 4.54.
+- **d** opens the columns' spacing where 2 meet, and its stitches lie farther apart: the previews show
+  lighter, striped columns on the badge and the lettering. It sewed 4 designs thicker, a traced dog from
+  4.62 to 4.93 fills.
+- **e** takes most of the area at 4 fills away, but a running line in place of a column leaves the fill's
+  edge bare: 3 times the bare fabric and 2.5 times the stitches astray.
+- **f** takes 68 % of the area at 4 fills or more away under the logo style, and half the area at 3.25 under
+  the default, and sews no design thicker, with no stitch astray, jump thread or thread change more. Its cost
+  is bare fabric, up to 2.7 mm² more on 9 designs of 30, where the bare-fabric measure doesn't pull
+  stitches in. On the traced goose and building it changed less than 0.02 fills.
+- **a and f together** took the logo style to 188.0 mm² at 4 fills, but sewed 2 designs thicker, a traced dog
+  from 4.62 to 4.83 fills, and 5 under the default style.
+
+Previews of 3 unlike designs, a traced dog and a lettered badge under the logo style and a drawn badge
+under the default style, were drawn before and after f and d and looked at. f looks as main's engine does,
+and the spots at 4 fills or more are mostly gone from the thickness preview. d shows lighter, striped
+columns. The pictures are of the owner's photos and stay outside the repository. The build phase adds one
+drawn in code, 2 columns meeting before and after, to the docs' pictures.
+
+**The rule.** M13.57 builds f (`REQ-AUTO-167`). It is a default with a setting, `auto_column_reach_mm`
+(`REQ-AUTO-168`), 0.4 mm by default, from 0 to 2 mm, where 1 mm sews as before:
+
+- It acts on the cause the measure shows, a column's reach under a later column, with no second plan, size
+  limit or guard for a picture. It didn't sew any design thicker on either style, and didn't add a stitch astray,
+  a jump thread or a thread change.
+- The bare-fabric measure doesn't pull stitches in, so it can't say how little reach is enough on fabric,
+  and it rose on 9 designs of 30 under the logo style. The setting is the control if the sew-out shows
+  fabric between 2 columns. The rule goes on the next machine checkpoint's list
+  ([machine testing](../plan/machine-testing.md)).
+
+It doesn't take the logo style under the limit: 20 designs of 39 stay above 4 fills. What is left there is
+the same 2 columns' tops, which the last resort doesn't thin, and lettering's columns, which it leaves
+whole. So the logo style also says so (`REQ-AUTO-169`).
+
+**The message.** When a design ends with a spot at the limit or above it, and a shape digitizing made lays
+thread there and has `auto_prefer` set to `satin`, as the logo style sets it, `SC-W0913`'s hint reads:
+
+> Sew a test piece of it first. `stitch preview --style thickness` draws the thick places. The logo style
+> sews more of this design as satin columns, which lie on each other there: `--style photo` fills more of
+> it, which often sews thinner.
+
+The hint is `SC-W0913`'s own, not a new code: the warning already names the place and what lies there. It
+names the photo style, which sewed every design measured thinner. It doesn't name `auto_column_reach_mm`,
+which is on by default.
+
+**Shortened stitch ends.** Automatic digitizing pulls a column's crowded stitch ends in (`REQ-AUTO-071`,
+`REQ-AUTO-085`), and M13.58 measures a rule that keeps every stitch full length unless a spot would sew
+above 4 fills. Rule f takes 0.6 mm off a column's width along a join, and so a few crowded ends with it:
+24,026 where main pulls in 24,448 under the logo style. It lowers the thickest spots where columns meet, which gives M13.58's rule more room there. d
+pulled in far fewer ends, 16,529, because its stitches lie farther apart, but it showed as lighter,
+striped columns on every preview. The drawn fixture's ring is a case for M13.58: its inner rail's ends are
+pulled in today, and sewn full length they lay more thread at its thickest spot.
+
 ## Likeness
 
 Each merge of automatic digitizing takes a jump thread or a thread change away: a speck (`REQ-AUTO-008`)
