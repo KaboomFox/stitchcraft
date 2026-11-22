@@ -135,9 +135,8 @@ stitches still lie where they shouldn't, beside thin pieces of fur. They are 1.8
 other traced dogs. The thin straight lines are jumps between patches of one colour, which the reference
 machine leaves for you to cut by hand, as it leaves the pear's: 64 of them. Where patches sewn later cover a
 way from one patch to the next, StitchCraft sews the thread under them instead ([jump threads](#jump-threads)).
-The dog changes thread 11 times in its 9 threads, since a line sews after the fill it borders: with **Fill
-uneven parts** off it changes thread less often and jumps more often
-([what it costs](../../design/image-to-embroidery.md#what-it-costs)).
+The dog's 9 threads are threaded 9 times, with 8 thread changes: each thread sews all its shapes at once
+([each thread threaded once](../../design/image-to-embroidery.md#each-thread-threaded-once)).
 
 ## How it chooses the stitches
 
@@ -380,12 +379,14 @@ The shapes sew in an order StitchCraft chooses. 6 rules decide it, each where th
 choice:
 
 1. Of 2 shapes that overlap, the lower sews first, as drawn.
-2. A running line sews after a fill it borders, and covers its edge.
-3. The thread changes as seldom as rules 1 and 2 allow. On a machine with one needle, each change is a
-   rethread by hand. Each thread sews every shape it can before the next thread starts, and StitchCraft
-   searches for the row of threads with the fewest changes.
-4. A satin column sews after a fill it borders where that costs no thread change. Where it sews first, it
-   reaches 1 mm under the fill.
+2. A running line sews after a fill it borders where that costs no thread change, and covers its edge.
+   Elsewhere it sews with its thread, before the fill, and the fill's rows end on it.
+3. The thread changes as seldom as rule 1 allows. On a machine with one needle, each change is a rethread
+   by hand, so a design of 6 threads is threaded 6 times wherever its shapes allow it. Each thread sews
+   every shape it can before the next thread starts, and StitchCraft searches for the row of threads with
+   the fewest changes. The base layer sews first, in the thread that row starts with.
+4. A satin column sews after a fill or a part's running line it borders where that costs no thread change.
+   Where it sews first, it reaches 1 mm under the fill.
 5. A detail, such as an eye or a mark on a patch, sews after the larger shapes round it where that costs
    no thread change, so that no fill's rows lie over it. Any shape whose neighbours close in on it and
    are larger counts as one. StitchCraft finds it by its outline and its neighbours alone, not by what
@@ -397,12 +398,14 @@ choice:
    fills.
 6. Of the shapes a thread may sew, the nearest sews next.
 
-One thread or another comes back where the rules need it. Dark outlines sew after the light fills they
-border, and a dark fill under those sews before them. A picture in 6 threads changes thread 5 times at
-least. Traced from a photo in 6 threads, a dog changes thread 8 times, and in 9 threads 12 times.
-Fewer thread changes leave more jump threads to cut, because the machine cuts the thread at a change and
-not at a jump. `stitch plan` says how often the thread changes, and `SC-I0907` compares the order with
-paint order.
+A thread comes back only where a shade is drawn both under and over another, as a roof drawn over a
+chimney's outline that is drawn over the chimney: `SC-W0925` names the shapes, so that you can change the
+drawing. Traced from a photo in 6 threads, a dog is threaded 6 times, and in 9 threads 9 times. A dark line
+of fur then sews with the dark fill under the light fill it borders, and the light fill's rows end on it and
+cover up to half of its thread on that side: `SC-I0926` counts those lines and names the ones to look at.
+On a machine with several needles that changes thread by itself, `--set auto_thread_once=false` sews every
+line after the fills beside it, as before M13.63. A thread is then threaded again where that needs it. `stitch plan`
+says how often the machine is threaded, and `SC-I0907` compares the order with paint order.
 
 ### Jump threads
 
@@ -415,7 +418,7 @@ outline that follows a fill, in the fill's own thread, lies where the outline wi
 
 What is left are the jumps that nothing sewn later covers:
 
-- the jumps of the thread that sews last, and of the lines that sew after the fills they border
+- the jumps of the thread that sews last
 - a jump across a shape sewn earlier, or across bare fabric
 - a jump whose end lies more than 0.8 mm from the nearest place that a later shape covers
 - the jumps between shapes with settings of their own, which sew as you set them

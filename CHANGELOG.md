@@ -2276,6 +2276,19 @@ What a user can do with this version, before its first release. The entries belo
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.63: each thread threaded once (`REQ-AUTO-184` to `REQ-AUTO-188`). On a machine with one needle each
+  thread change is a rethread by hand, so a design digitized automatically now threads each thread once
+  wherever its shapes allow it: a design of 6 threads is threaded 6 times. A line sews after the fill it
+  borders only where that costs no thread change, as a satin column does, and elsewhere with its thread,
+  before the fill, whose rows end on it. The base layer sews in the thread the order starts with. A satin
+  column sews after a part's running line it borders where that costs no thread change, so that it doesn't
+  reach its overlap under the line. On 78 designs 74 thread each thread once, where 65 did: the 4 traced dogs
+  are threaded 6, 9, 6 and 9 times, where they were 9, 13, 9 and 12, and photos traced in 9 and 12 threads
+  10 and 12 times, where they were 47 and 48. A thin line sewn before the fill beside it shows less of its
+  thread: on the dogs 36 fur lines newly show less than half of it, and `SC-I0926` counts such lines and names
+  the ones to look at. Where a shade is drawn both under and over another, `SC-W0925` names the shapes, and
+  the thread is threaded again. `--set auto_thread_once=false` sews every line after the fills beside it, as
+  before. `SC-I0907` now says how many times the machine is threaded beside the thread changes.
 - M13.62: points stay points (`REQ-AUTO-183`, `REQ-SAT-032`). A satin column that tapers to a point, such
   as a sun's ray, now sews to a point. Its pull compensation falls to 0 over the last 2 mm before an end whose
   rails meet, where each pair was widened by the whole 0.4 mm and the column ended in a bar about 0.85 mm
@@ -3679,6 +3692,10 @@ What a user can do with this version, before its first release. The entries belo
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13B.pes` (M13.63, each thread threaded once). Its digitized half
+  threads each of its 4 threads once, the base layer's red first and the black words and lines last, after
+  the panes, where black was threaded twice. The sheet sews 14,415 stitches, where it sewed 14,422, and is
+  110.511 mm wide, where it was 110.594.
 - Changed `conformance/golden/testsheets/TS-13C.pes` and `TS-13D.pes` (M13.59, shapes whose width swells and
   tapers). In TS-13C's digitized half, the star's 5 points stay in its fill. That half jumps 9 times, where
   it jumped 13. In TS-13D's, the white disc round the abutting
