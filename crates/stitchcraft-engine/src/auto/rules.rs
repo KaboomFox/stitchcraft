@@ -154,8 +154,9 @@ pub const RULES: [Rule; 10] = [
         id: RuleId::Area,
         label: "Area",
         is: "wider than {auto_max_satin_width_mm} somewhere",
-        sewn: "a tatami fill. A piece of it narrower than {auto_min_fill_width_mm} leaves the fill when the rules below make it a line or a column",
-        bounds: &[MAX_SATIN_WIDTH, MIN_FILL_WIDTH],
+        sewn: "a tatami fill. A piece of it narrower than {auto_min_fill_width_mm} leaves the fill when the rules below make it a line or a column, \
+               unless it is one line whose width varies by more than {auto_max_unevenness} of itself",
+        bounds: &[MAX_SATIN_WIDTH, MIN_FILL_WIDTH, MAX_UNEVENNESS],
     },
     Rule {
         id: RuleId::Compact,
@@ -167,9 +168,11 @@ pub const RULES: [Rule; 10] = [
     Rule {
         id: RuleId::Uneven,
         label: "Uneven",
-        is: "of several centre lines, with a width that varies along them by more than {auto_max_unevenness} of itself",
-        sewn: "a tatami fill. A piece of it narrower than the narrowest satin stroke leaves the fill as a line",
-        bounds: &[MAX_UNEVENNESS, FILL_UNEVEN, PREFER],
+        is: "of several centre lines, or of one at least {auto_min_fill_width_mm} wide somewhere, with a width that varies along them by more \
+             than {auto_max_unevenness} of itself",
+        sewn: "a tatami fill. A piece of a part of several lines narrower than the narrowest satin stroke leaves the fill as a line, and a part \
+               of one line is filled whole",
+        bounds: &[MAX_UNEVENNESS, MIN_FILL_WIDTH, FILL_UNEVEN, PREFER],
     },
     Rule {
         id: RuleId::Arms,
@@ -344,6 +347,13 @@ impl Bounds {
         lines == 1 && thousandths(unevenness) <= thousandths(self.max_unevenness)
     }
 
+    /// Whether a part of `lines` centre lines along which its width varies by `unevenness` of itself has one
+    /// line and is more uneven than a column of several lines may be: a leaf, a lens, or a piece that falls to
+    /// a point (`REQ-AUTO-174`, `REQ-AUTO-175`).
+    pub(crate) fn one_uneven_line(&self, lines: usize, unevenness: f64) -> bool {
+        lines == 1 && thousandths(unevenness) > thousandths(self.max_unevenness)
+    }
+
     /// How broad a stroke `width` millimetres wide is, or a part that is that wide at its widest.
     pub(crate) fn breadth(&self, width: f64) -> Breadth {
         if micrometres(width) <= micrometres(self.narrowest.get()) {
@@ -404,19 +414,23 @@ pub(crate) struct Measures {
     /// circle that fits inside it on its lines (`auto::narrow::reach`): 1 for a column, whose rails lie as far
     /// from its line as that circle reaches. 0 for a stroke, and for a part whose columns weren't looked for.
     pub(crate) reach: f64,
+    /// Whether it is as wide as the narrowest piece that stays in a fill somewhere ([`Bounds::min_fill`]):
+    /// measured only for a part of one line more uneven than its bounds allow ([`Bounds::one_uneven_line`]),
+    /// when uneven parts are filled, and false for any other (`REQ-AUTO-174`).
+    pub(crate) fill_wide: bool,
 }
 
 impl Measures {
     /// The measures of a stroke `width` millimetres wide, held to `bounds`: one line of even width, as long
     /// as it likes.
     pub(crate) fn of_stroke(width: f64, bounds: &Bounds) -> Measures {
-        Measures { area: f64::INFINITY, breadth: bounds.breadth(width), width, unevenness: 0.0, lines: 1, reach: 0.0 }
+        Measures { area: f64::INFINITY, breadth: bounds.breadth(width), width, unevenness: 0.0, lines: 1, reach: 0.0, fill_wide: false }
     }
 
     /// The measures of a part of `area` square millimetres that is `breadth` broad, whose centre lines
     /// weren't looked for.
     pub(crate) fn of_breadth(area: f64, breadth: Breadth) -> Measures {
-        Measures { area, breadth, width: 0.0, unevenness: 0.0, lines: 0, reach: 0.0 }
+        Measures { area, breadth, width: 0.0, unevenness: 0.0, lines: 0, reach: 0.0, fill_wide: false }
     }
 
     /// How long it is for its width: its area over its width squared. 0 for a part without a width.
@@ -446,7 +460,13 @@ pub(crate) fn choose(measures: &Measures, bounds: &Bounds) -> RuleId {
         Breadth::Broad if bounds.is_wide(measures.width, measures.lines, measures.unevenness) => RuleId::Wide,
         Breadth::Broad => RuleId::Area,
         Breadth::Medium if thousandths(measures.slenderness()) < thousandths(bounds.min_slenderness) => RuleId::Compact,
-        Breadth::Medium if bounds.fill_uneven && measures.lines > 1 && thousandths(measures.unevenness) > thousandths(bounds.max_unevenness) => {
+        // A part of one line is held to the bound when it is as wide as a fill's narrowest piece somewhere
+        // (`REQ-AUTO-174`): a leaf or a lens is filled whole, and a ray keeps its column.
+        Breadth::Medium
+            if bounds.fill_uneven
+                && (measures.lines > 1 || measures.fill_wide)
+                && thousandths(measures.unevenness) > thousandths(bounds.max_unevenness) =>
+        {
             RuleId::Uneven
         }
         Breadth::Medium if thousandths(measures.reach) > thousandths(bounds.max_reach) => RuleId::Arms,

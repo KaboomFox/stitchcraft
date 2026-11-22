@@ -13,7 +13,7 @@ fn bounds(set: &[(&str, &str)]) -> Bounds {
 /// A part no wider than a satin column, with these measures, that reaches from its lines as far as a column
 /// does.
 fn part(area: f64, width: f64, unevenness: f64, lines: usize) -> Measures {
-    Measures { area, breadth: Breadth::Medium, width, unevenness, lines, reach: 1.0 }
+    Measures { area, breadth: Breadth::Medium, width, unevenness, lines, reach: 1.0, fill_wide: false }
 }
 
 /// A part of one centre line, 2 mm wide and slender, that reaches `reach` times as far from its line on both

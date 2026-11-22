@@ -187,13 +187,19 @@ thin stroke, a blob with 2 tails, a nose with 2 nostrils and a leaf.
 **Digitized**
 
 <!-- shot: auto-rules -->
-![The same shapes digitized automatically. The blob sews as a small tatami fill, and so does the letter T, bar and stem. The blob with tails sews as a fill with a triple run along each tail. The nose sews as one fill with the 2 nostrils sewn on it. The leaf sews as one satin column from tip to tip.](../../images/generated/auto-rules.png)
+![The same shapes digitized automatically. The blob sews as a small tatami fill, and so does the letter T, bar and stem. The blob with tails sews as a fill with a triple run along each tail. The nose sews as one fill with the 2 nostrils sewn on it. The leaf, which swells from its points to 4 mm wide, sews as one fill with its outline.](../../images/generated/auto-rules.png)
 <!-- /shot -->
 
 The T shows the rule's limit. Each of its strokes is even, but they are unlike each other, so the letter as
 a whole counts as ragged and is filled. For art drawn in strokes of changing thickness, turn **Fill uneven
 parts** off, or use the `logo` style ([changing the choice](#changing-the-choice)), and the T sews as 2
 satin columns.
+
+A part whose width swells and tapers is filled whole when it is 4 mm wide somewhere
+(`auto_min_fill_width_mm`): a leaf, a lens, a petal. Its outline runs to its points, and 2 like leaves sew
+alike. A narrower one, such as a ray, keeps its satin column. Where a broad shape narrows to a point, as a
+crescent moon's tips do, the point stays in the shape's fill, while an even stick or string still sews as a
+column over it. The `satin` choice of **Prefer** keeps a leaf a column, and so does the `logo` style.
 
 A small star is filled too. Its centre line runs from one point to the point opposite, and one satin
 column along that line would sew the other points as bumps on its sides. StitchCraft measures how far a
@@ -422,7 +428,9 @@ allows to look for them, and then sews with its jumps.
 
 ### Settings by width
 
-Each satin column digitizing makes has the underlay of its width, and 0.4 mm of pull compensation:
+Each satin column digitizing makes has the underlay of its width, and 0.4 mm of pull compensation. Near a
+point, where a stitch is narrower than 1 mm, the compensation moves each end out by no more than 40 % of the
+stitch's width (`pull_compensation_max_percent`), so a ray narrows to its point instead of ending blunt:
 
 | Column width | Underlay |
 |---|---|

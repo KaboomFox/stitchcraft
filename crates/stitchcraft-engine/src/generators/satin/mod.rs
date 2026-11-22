@@ -93,6 +93,10 @@ pub const SHORT_STITCH_INSET: &str = "short_stitch_inset";
 /// (`REQ-SAT-030`). Automatic digitizing sets it on its columns.
 pub const BEND_OPEN: &str = "bend_open_percent";
 
+/// The key of the setting that holds pull compensation to a share of each stitch's width (`REQ-SAT-031`).
+/// Automatic digitizing sets it on its columns.
+pub const PULL_COMPENSATION_MAX: &str = "pull_compensation_max_percent";
+
 /// The key of the setting that starts a satin column near where the needle is, which Ink/Stitch's update of
 /// a file older than its version 3 turns off, as it does [`END_AT_NEAREST_POINT`].
 pub const START_AT_NEAREST_POINT: &str = "start_at_nearest_point";
@@ -194,6 +198,14 @@ params! {
         /// along the column, so it comes out longer than drawn, and this makes up for it. Negative values
         /// lengthen the column. 2 values set the start, then the end.
         push_compensation_mm: LengthPair = "0", label "Push compensation", range (-10.0, 10.0);
+
+        /// The farthest pull compensation moves each end of a stitch out, in percent of the stitch's width.
+        /// A column that narrows to a point then narrows to it: at 40, a stitch sews at most 1.8 times as
+        /// wide as drawn on each side's move. A move inward isn't held. Empty, pull compensation moves the
+        /// ends as far as it says. 2 values set the first rail's side, then the second's. Automatic
+        /// digitizing sets 40 on its columns.
+        pull_compensation_max_percent: OptionalPercentPair = "", label "Most pull compensation", range (0.0, 100.0),
+            origin Origin::StitchCraft, stability Stability::Experimental;
     }
 
     "Random variation" {

@@ -100,20 +100,20 @@ pub(super) enum Made {
 
 /// What is measured of `part`, no wider than a satin column, whose columns are `found` and whose edges
 /// `edges` holds, with `meter`'s work: its area, its width along its columns' lines and how much it varies,
-/// how many lines it has, and how far it reaches from them on both sides ([`reach`]). `None` for lines of no
-/// length or no width.
-fn measured(part: &Polygon, found: &[Column], edges: &Edges, meter: &mut Meter) -> Result<Option<Measures>, Exhausted> {
+/// how many lines it has, how far it reaches from them on both sides ([`reach`]), and, held to `bounds`,
+/// whether it is as wide as a fill's narrowest piece somewhere ([`Measures::fill_wide`]). `None` for lines of
+/// no length or no width.
+fn measured(part: &Polygon, found: &[Column], edges: &Edges, bounds: &Bounds, meter: &mut Meter) -> Result<Option<Measures>, Exhausted> {
     let lines: Vec<Line> = found.iter().map(|column| column.line.clone()).collect();
     let Some(spread) = spread(edges, &lines, meter)?.filter(|spread| spread.mean.get() > 0.0) else { return Ok(None) };
     let reach = reach(edges, found, meter)?;
-    Ok(Some(Measures {
-        area: part.area(),
-        breadth: Breadth::Medium,
-        width: spread.mean.get(),
-        unevenness: spread.deviation / spread.mean.get(),
-        lines: found.len(),
-        reach,
-    }))
+    let unevenness = spread.deviation / spread.mean.get();
+    // Only a part the rule for one uneven line can fill is measured against a fill's narrowest piece
+    // (`REQ-AUTO-174`). A part `within` can't shrink, a bug, isn't held to it, as before the rule.
+    let fill_wide = bounds.fill_uneven
+        && bounds.one_uneven_line(found.len(), unevenness)
+        && within(part, Mm::new(bounds.min_fill).unwrap_or(bounds.max_satin), meter)? == Some(false);
+    Ok(Some(Measures { area: part.area(), breadth: Breadth::Medium, width: spread.mean.get(), unevenness, lines: found.len(), reach, fill_wide }))
 }
 
 /// The rule by which the rules fill `part`, of an area held to `bounds`, with `meter`'s work: an area, a
@@ -167,7 +167,7 @@ fn judged(part: &Polygon, bounds: &Bounds, meter: &mut Meter) -> Result<Option<R
     let Ok(Some(found)) = strips::columns(part, piece(part), &[], bounds.narrowest.get(), meter)? else { return Ok(None) };
     let edges = Edges::of(part, piece(part), meter)?;
     // A part without a centre line of any length is a dot, which is compact.
-    let measures = measured(part, &found, &edges, meter)?.unwrap_or(unmeasured);
+    let measures = measured(part, &found, &edges, bounds, meter)?.unwrap_or(unmeasured);
     let rule = choose(&measures, bounds);
     if let Some(rule) = as_filled(rule) {
         return Ok(Some(rule));
@@ -230,7 +230,7 @@ pub(super) fn columns(
     };
     let edges = Edges::of(part, piece(part), meter)?;
     // A part without a centre line of any length is a dot, which has no way to run: it is compact.
-    let Some(measures) = measured(part, &found, &edges, meter)? else { return Ok(Made::Filled(RuleId::Compact, None)) };
+    let Some(measures) = measured(part, &found, &edges, bounds, meter)? else { return Ok(Made::Filled(RuleId::Compact, None)) };
     let rule = choose(&measures, bounds);
     if fills(rule, bounds) {
         return Ok(Made::Filled(rule, Some(measures)));

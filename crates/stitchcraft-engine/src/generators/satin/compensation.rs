@@ -7,7 +7,9 @@
 //! of the stitch's width, with one value for both sides or one for each. Negative values move them inward,
 //! and two ends that would cross meet instead, where their moves divide the stitch. A stitch whose ends are
 //! one point has no direction to move them in and stays as it is. A tatami fill lengthens its rows with
-//! the same move (`generators::pull`). **Push compensation** takes
+//! the same move (`generators::pull`). `pull_compensation_max_percent`, StitchCraft's own, holds each
+//! side's outward move to that share of the stitch's width (`REQ-SAT-031`), so that a column narrowing to a
+//! point still narrows: 0.4 mm on a stitch 0.13 mm wide would sew it 0.93 mm wide. **Push compensation** takes
 //! `push_compensation_mm` off each rail at the column's start and end, before the rails are cut into
 //! sections, or adds it along the rail's first or last segment where it is negative. A rail that taking it
 //! off would leave shorter than half a CSS pixel keeps its length (`SC-W0211`), as in Ink/Stitch.
@@ -53,6 +55,8 @@ pub(crate) struct Processor<'r> {
     range: [f64; 2],
     /// How far a step may be from the zigzag spacing at random, either way, as a fraction of it.
     jitter: f64,
+    /// The farthest each side moves out, as a fraction of the stitch's width: `None` when not held.
+    most: Option<[f64; 2]>,
     /// The element's generator; `None` for an underlay, which draws nothing.
     rng: Option<&'r mut SplitMix64>,
 }
@@ -71,6 +75,7 @@ impl<'r> Processor<'r> {
             least: [pull_a - decrease_a, pull_b - decrease_b],
             range: [decrease_a + increase_a, decrease_b + increase_b],
             jitter: params.random_zigzag_spacing_percent / 100.0,
+            most: params.pull_compensation_max_percent.map(fraction),
             rng: Some(rng),
         }
     }
@@ -79,7 +84,7 @@ impl<'r> Processor<'r> {
     /// draws nothing: each step is the spacing, and each pair is moved in as negative pull compensation
     /// moves it.
     pub(crate) fn inset(mm: [f64; 2], share: [f64; 2]) -> Processor<'static> {
-        Processor { pull: mm.map(|mm| -mm), least: share.map(|share| -share), range: [0.0; 2], jitter: 0.0, rng: None }
+        Processor { pull: mm.map(|mm| -mm), least: share.map(|share| -share), range: [0.0; 2], jitter: 0.0, most: None, rng: None }
     }
 
     /// The next step to a stitch, as a multiple of the zigzag spacing.
@@ -98,8 +103,19 @@ impl<'r> Processor<'r> {
             }
             None => self.least,
         };
-        offset(pair, self.pull, shares)
+        let width = pair[0].distance(pair[1]);
+        offset(pair, held(self.pull, shares, self.most, width), shares)
     }
+}
+
+/// Pull compensation of `pull` millimetres on each side, with `shares` of a stitch `width` millimetres wide,
+/// held so that neither side moves out farther than its `most` share of the width (`REQ-SAT-031`): the
+/// millimetres each side then moves by besides its share. A side that moves no farther, or in, keeps them.
+fn held(pull: [f64; 2], shares: [f64; 2], most: Option<[f64; 2]>, width: f64) -> [f64; 2] {
+    let Some(most) = most else { return pull };
+    let hold = |mm: f64, share: f64, most: f64| if mm + share * width > most * width { (most - share) * width } else { mm };
+    let ([mm_a, mm_b], [share_a, share_b], [most_a, most_b]) = (pull, shares, most);
+    [hold(mm_a, share_a, most_a), hold(mm_b, share_b, most_b)]
 }
 
 /// Which ends of a column push compensation of `push` millimetres, at its start and its end, lengthens: those
