@@ -405,8 +405,10 @@ fn req_auto_029_a_column_along_a_hole_kept_open_sews_under_a_shape_beside_it_and
     let reach = rules().auto_pull_compensation_mm.get();
     // A frame 40 mm by 5 round a slot 1 mm high, and a band drawn after it along its top: no shape drawn later
     // meets the slot, which the frame's columns keep open, and the column along the frame's top sews 1 mm
-    // under the band. Each column has a length for each rail, the overlap or its own compensation.
-    let frame = automatic(fill("frame", &[&rectangle((0.0, 0.0), (40.0, 5.0)), &rectangle((2.0, 3.0), (38.0, 2.0))], &RED, &[]));
+    // under the band. Each column has a length for each rail, the overlap or its own compensation. The band
+    // sews as a satin column, so the frame's reach under a column is set to the overlap (`REQ-AUTO-167`).
+    let reach_under = [("auto_column_reach_mm", "1")];
+    let frame = automatic(fill("frame", &[&rectangle((0.0, 0.0), (40.0, 5.0)), &rectangle((2.0, 3.0), (38.0, 2.0))], &RED, &reach_under));
     let band = automatic(shape("band", &rectangle((0.0, 5.0), (40.0, 10.0))));
     let design = Design::new(vec![frame.clone(), band.clone()], DesignSettings::default()).unwrap();
     let (made, _) = digitized(&design, &Budget::DEFAULT);

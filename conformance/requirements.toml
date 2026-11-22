@@ -3229,7 +3229,7 @@ level = "L2"
 statement = "When a design ends with a spot at the warning's limit or above it (SC-W0913) and an automatic shape that lays thread there has `auto_prefer` set to `satin`, as the logo style sets it, and the photo style would sew some part of the design otherwise, as SC-I0923 counts them (REQ-AUTO-151), the warning's hint adds that the logo style sews more of the design as satin columns, which lie on each other there, and that `--style photo` fills more of it, which often sews thinner. Any other design keeps the hint as it is. Nothing that sews changes."
 rationale = "The owner asked for it as M13.57's first change. Measured on main at de4f7934, of the 26 designs the logo style left above 4 fills, 22 sewed thinner under the photo style, the 4 traced dogs at 3.87 to 3.98 fills where the logo style sews 4.62 to 4.95. The other 4 sewed the same, their thickest spots where both styles sew alike, so the hint promises no limit. No measure of a picture chooses the style reliably (REQ-AUTO-150), so the person chooses, and the warning names the other choice where it matters."
 milestone = "M13"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-AUTO-163"

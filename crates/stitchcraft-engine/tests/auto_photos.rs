@@ -3,7 +3,8 @@
 //! photos, each
 //! cut out by a mask checked by hand and traced by VectorCraft in 6 and in 9 threads (`docs/fixtures/README.md`
 //! › The traced dogs), digitized, planned with their stitches where they draw their shapes, and measured as
-//! `tests/auto_fabric.rs` measures the test pictures.
+//! `tests/auto_fabric.rs` measures the test pictures. Under the logo style, the warning of how thick one sews
+//! names the photo style (`REQ-AUTO-169`).
 //!
 //! **Release only.** A traced dog is about a hundred shapes. In the tests' debug build each takes some 15 s to
 //! digitize and 30 s to measure, so that build leaves these cases out, and CI's `perf` job runs them in the
@@ -15,6 +16,7 @@
 
 use std::sync::OnceLock;
 
+use stitchcraft_core::{Code, Fix};
 use stitchcraft_engine::auto;
 use stitchcraft_engine::design::{Design, Element};
 use stitchcraft_plan::{Rgb, StitchPlan};
@@ -474,4 +476,30 @@ fn req_auto_093_a_dog_whose_thin_lines_merge_keeps_less_of_its_detail() {
     for ((_, _, merged, _), (name, _, lined, _)) in LIKE.iter().zip(LINED) {
         assert!(lined > *merged, "{name}");
     }
+}
+
+/// `REQ-AUTO-169`: under the logo style, a design that ends above the warning's limit where satin columns of
+/// automatic shapes lie is told that the photo style fills more of it. The traced dog on turf in 6 threads
+/// ends at 4.20 fills under the logo style, measured by M13.57 with its reach, and at 3.99 under the photo
+/// style, which is the default, whose warning keeps its hint as it is.
+#[test]
+#[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
+fn req_auto_169_the_logo_style_names_the_photo_style_when_a_design_ends_above_the_limit() {
+    let (_, dog) = pictures::dogs().into_iter().find(|(name, _)| name == "dog-on-turf-6").unwrap();
+    let logo = auto::rules::PRESETS.iter().find(|preset| preset.name == "logo").unwrap();
+    let styled = dog.elements().iter().cloned().map(|mut element: Element| {
+        for &(key, value) in logo.values {
+            element.params.set(key, value);
+        }
+        element
+    });
+    let styled = Design::new(styled.collect(), dog.settings).unwrap();
+    let outcome = in_place(&styled);
+    let warned = outcome.diagnostics.iter().find(|said| said.code == Code::AutoThick).unwrap();
+    let Some(Fix::Hint(hint)) = &warned.fix else { panic!("{warned:?}") };
+    assert!(hint.contains("`--style photo`"), "{hint}");
+    // Under the photo style no shape leans to satin columns, and no warning names a style.
+    let photo = in_place(&dog);
+    let named = |said: &stitchcraft_core::Diagnostic| matches!(&said.fix, Some(Fix::Hint(hint)) if hint.contains("`--style photo`"));
+    assert!(photo.diagnostics.iter().filter(|said| said.code == Code::AutoThick).all(|said| !named(said)), "{:?}", photo.diagnostics);
 }

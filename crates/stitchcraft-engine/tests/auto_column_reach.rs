@@ -1,6 +1,6 @@
-//! Satin columns stacked on fills and on each other (`REQ-AUTO-167` to `REQ-AUTO-169`, M13.57): how far a
-//! column reaches under a later satin column, the setting that sets it, and what the warning of how thick a
-//! design sews says of the logo style.
+//! Satin columns stacked on fills and on each other (`REQ-AUTO-167`, `REQ-AUTO-168`, M13.57): how far a
+//! column reaches under a later satin column, and the setting that sets it. What the warning of how thick a
+//! design sews says of the logo style (`REQ-AUTO-169`) is a case of `tests/auto_photos.rs`, on a traced dog.
 //!
 //! Design: `docs/src/design/image-to-embroidery.md` › Columns stacked on columns. M13.57 measured that most
 //! of the area above the cap, under the logo style, is 2 columns' tops on each other where one reaches the
@@ -11,12 +11,11 @@
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
-use stitchcraft_core::{Budget, Code, Fix};
+use stitchcraft_core::Budget;
 use stitchcraft_engine::auto;
 use stitchcraft_engine::design::{Design, DesignSettings, Element};
 use stitchcraft_plan::Thread;
-use stitchcraft_testkit::designs::{BLUE, RED, automatic, fill, in_place, unbased};
-use stitchcraft_testkit::pictures;
+use stitchcraft_testkit::designs::{BLUE, RED, automatic, fill, unbased};
 
 /// The setting the cases plan with: how far a column reaches past a rail under a later satin column.
 const REACH: &str = "auto_column_reach_mm";
@@ -64,29 +63,4 @@ fn req_auto_168_the_setting_sets_the_reach_under_a_later_column() {
     assert_eq!(reaches(&[(REACH, "0")], column()), [0.0, 0.4]);
     // Above the overlap, it reads as the overlap.
     assert_eq!(reaches(&[(REACH, "1.5"), ("auto_overlap_mm", "0.8")], column()), [0.4, 0.8]);
-}
-
-/// `REQ-AUTO-169`: under the logo style, a design that ends above the warning's limit where satin columns of
-/// automatic shapes lie is told that the photo style fills more of it. The traced dog on turf in 6 threads
-/// ends at 4.95 fills under the logo style on main at `de4f7934`, and at 3.87 under the photo style, which is
-/// the default. Release only, as `tests/auto_photos.rs` is: a whole dog takes minutes in the debug build.
-#[test]
-#[ignore = "planned: M13.57 builds the logo style's hint"]
-fn req_auto_169_the_logo_style_names_the_photo_style_when_a_design_ends_above_the_limit() {
-    let (_, dog) = pictures::dogs().into_iter().find(|(name, _)| name == "dog-on-turf-6").unwrap();
-    let logo = auto::rules::PRESETS.iter().find(|preset| preset.name == "logo").unwrap();
-    let styled = dog.elements().iter().cloned().map(|mut element: Element| {
-        for &(key, value) in logo.values {
-            element.params.set(key, value);
-        }
-        element
-    });
-    let styled = Design::new(styled.collect(), dog.settings).unwrap();
-    let outcome = in_place(&styled);
-    let warned = outcome.diagnostics.iter().find(|said| said.code == Code::AutoThick).unwrap();
-    let Some(Fix::Hint(hint)) = &warned.fix else { panic!("{warned:?}") };
-    assert!(hint.contains("`--style photo`"), "{hint}");
-    // Under the photo style the dog stays under the limit, and nothing names a style.
-    let photo = in_place(&dog);
-    assert!(photo.diagnostics.iter().all(|said| said.code != Code::AutoThick), "{:?}", photo.diagnostics);
 }
