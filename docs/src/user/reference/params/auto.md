@@ -449,3 +449,18 @@ an area, a running line or a satin column drawn as a stroke, lettering's too, th
 - **Default:** empty
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_column_reach_mm`
+
+**Reach under a column.** How far a satin column that digitizing makes reaches past its edge where a satin column sewn after
+it lies along that edge. The column on top lays its own pull compensation, 0.4 mm, back over the
+edge, so the default, 0.4 mm, keeps 2 columns' stitches from lying on each other the whole overlap
+wide, which sewed the thickest spots of designs with many columns. 1 mm, the overlap's default,
+sews as before. Only a sew-out shows how little is enough: set it higher if fabric shows between 2
+columns. A value above the overlap reads as the overlap. Along a fill, or along a line, the column
+reaches the overlap as before.
+
+- **Accepts:** a length from 0 to 2 mm
+- **Default:** `0.4`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version

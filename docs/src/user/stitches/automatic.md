@@ -555,6 +555,9 @@ thickest spots there. Along a fill, or along any other shape sewn after it, a co
 overlap. A value above the overlap reads as the overlap, and no dialog shows the setting.
 
 <!-- shot: auto-column-reach -->
+| 0.4 mm, the default | 1 mm, as before |
+|:-:|:-:|
+| ![ALT, 0.4 mm, the default](../../images/generated/auto-column-reach-1.png) | ![ALT, 1 mm, as before](../../images/generated/auto-column-reach-2.png) |
 <!-- /shot -->
 
 The bars and rings of `docs/fixtures/joins.svg`, sewn at the default and at 1 mm, show it in the thickness
