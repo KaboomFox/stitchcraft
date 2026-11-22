@@ -3304,6 +3304,114 @@ design where an eye or a mark must keep its edge clear. It comes back on by defa
 tie-break no longer moves a whole batch of a thread later for a wish, and the dogs show a clear gain for
 it.
 
+### A small detail on top
+
+(`REQ-AUTO-182`, planned, M13.61.) The owner reviewed 18 drawings sewn by automatic digitizing on
+2026-11-21. Of the fish she wrote: "biggest issues is the black part of the eye". The eye is a white disc
+4.4 mm across on the body, and the pupil a black disc 1.8 mm across on the eye. It sewed as a wheel of white
+stitches that all ran in to the pupil, and the black showed only between their ends. The rule she was shown
+was: a small shape drawn over another sews last, whole, and can be seen.
+
+**What happens today, measured.** Every filled shape of 50 mm² or less that lies at least a tenth over a
+shape painted before it in another colour was measured, on main `1952f48c`, in 63 designs: the 18 drawings,
+the fixtures' SVG files and documents with the 4 traced dogs and the pear among them, 6 traced photos and
+the TS-13A to E sheets. A shape is **seen** when its own thread is on top on at least half of what shows of it,
+each stitch drawn 0.4 mm wide in sewing order. Its stitches run **in rows** when at least 0.4 of its top
+stitches longer than 0.5 mm run within 20° of their commonest way. A wheel's run every way. A probe kept
+out of the repository measured both from each plan, and `tests/auto_small_details.rs` holds them as
+cases.
+
+| Cause | Drawings, fixtures, sheets (39) | Dogs and pear (111) | Photos (820) |
+|---|---|---|---|
+| A ring round a detail sewn as one satin column, a wheel | 1, the eye: the pupil seen on 0.40 | none | none |
+| Sewn before the shape under it | 2: the pupil, a snowcap (seen, 0.83) | 9, all seen | 13, 2 not seen |
+| No wider than 1 mm, so one running line | 1, the camp's pole: seen on 0.35 | 4, all seen | 56, 5 not seen |
+| Merged: a speck under 1 mm², or a thin line or a like colour into a neighbour | none | 93, 21 not seen | 720, 529 not seen |
+| Other: whole, after the shape under it | 35, 1 not seen (a line on TS-13B, 0.47) | 5, all seen | 30, all seen |
+
+The merged shapes are the tracer's noise, merged on purpose (`SC-I0905`, `SC-I0915`). The stars, dots and
+rays on top all sew whole and in rows, after what they lie on. The night sky's dots of 1.2 to 3.2 mm² are
+small fills of 21 to 33 needle points, and the flower's middle and TS-13E's dots are fills too. The wheel is
+the eye's alone among the small shapes. The same cause sews 2 larger shapes badly: TS-13D's white disc round
+its red star sews over the star's points, and TS-13A's blue badge, a square round a gold disc, fans into its
+corners and shows fabric between its stitches.
+
+**Why the eye sews as a wheel.** The layers are flattened first (`REQ-AUTO-023`). The eye sews only what
+shows of it: a ring round the pupil, 0.9 to 1.7 mm wide. Areas that the rules fill are digitized whole under
+their details, with their holes closed, but a narrow area keeps its holes, as an outline round a letter does.
+The ring is narrow and sews as one satin column round the pupil. Its inner rail is the pupil's edge, 0.5 to
+1.3 mm from the eye's centre. Pull compensation takes the inner ends 0.4 mm further in, to 0.13 to 0.9 mm
+from the centre: 40 stitch ends on a circle 3 mm round. The column would sew 2.4 mm of its outer rail to 1 mm
+of its inner one. A column that crowds more than 2 to 1 is filled (`REQ-AUTO-068`), but a part with a hole
+isn't measured, because a fill in its place would sew in pieces round what fills the hole. Then the pupil, a
+compact fill, sews before the eye. Only a fill moves back before its details, and a column round a detail
+goes by the order's rules 2 and 4 (see [sewing order](#sewing-order)). So the white's ends cover 60 % of the black,
+and the eye's middle is the fish's thickest spot, 3.55 fills.
+
+**The cap takes no small shape.** Planned with the cap lifted, the 960 small shapes that sew gain 368 of
+9,492 needle points (3.9 %). Most are lock stitches and travel. What shows of each changes by
+0.09 of its area at most, either way, on lines of the photos. The pupil keeps 25 of its 32 points and is seen
+on 0.40 either way. The cap and the last pass don't hide a small shape: the order and the wheel do.
+
+**Candidates, measured** on all 63 designs with a prototype that was never committed. Changes are against main, and the second column counts the small shapes seen.
+
+| Candidate | Small shapes seen | Thickest, area above the cap | Stitches / thread changes / jump threads | Changes |
+|---|---|---|---|---|
+| a. The crowding bound for a ring round a detail | 410 → 411: the pupil 0.40 → 1.00 | fish 3.55 → 3.23, TS-13D's area above the cap 881 → 867 mm² | +197 (fish +10, TS-13A +19, TS-13D +140, the goose photo +28) / none / none | 4 designs |
+| b. Details last on (`auto_details_last`), with a | 411 → 411: the snowcap 0.83 → 1.00, 84 photo shapes move both ways | dogs' area above the cap up on 3 of 4 (running dog in 9 threads 36.5 → 42.3 mm²) | 1,439 fewer / none / 992 → 1,017 (dogs +1, +2, +8, +7) | 8 designs |
+| c. No cap on small shapes | no change: the cap takes no visible thread from them | not measured | not measured | none |
+| d. Line weight by drawn width (the pole) | the pole, a line 1 mm wide, sews as one running line | not measured | not measured | a queued step |
+| M13.58 alone (spacing kept on the inside, no shortened ends) | 410 → 410: the pupil 0.40 → 0.23 | fish 3.55 → 3.99 | its own (M13.58's section) | the eye worse |
+| M13.58 with a | 410 → 411: the eye as with a alone | fish 3.23, TS-13A's area at 4 fills or more 43.3 → 40.0 mm² against M13.58 alone | +100 against M13.58 alone / none / none | 3 designs |
+
+**a. The crowding bound for a ring round a detail.** The eye's ring then crowds, its holes close under
+the pupil, and the eye, a disc 4.4 mm across, is compact and filled whole. It sews in rows (0.26 → 0.73 of
+its stitches one way), before the pupil, and is cut away under it as any area digitized whole is. The pupil
+shows whole, sewn after it, and the eye's thickest spot falls to 3.23 fills. Of the 63 designs only 4
+change. TS-13D's white disc becomes a fill under its star, whose points then show, and TS-13A's badge a fill
+under its disc, with no fabric between its stitches. On the goose photo one part of 0.92 mm², merged as a
+speck before, sews 28 stitches of its own. The photo's area above the cap falls by 1 mm². Held to rings whose
+holes other areas fill, the rule keeps a ring on bare fabric a column, as a case shows. A fill in that
+ring's place would sew in pieces round the hole, and that was the reason rings weren't measured. Prototyped
+first for every ring, the bound changed the fish and the 2 sheets alone.
+
+**b. Details last on by default.** It moves 1 more small shape after the shape under it, the alpine
+snowcap. The snowcap lies in a notch of its ridge, and the layers' rule looks only at holes. It costs 25 jump threads,
+most on the dogs, and raises their area above the cap. That is the cost M13.48 measured when it turned the
+setting off (see Off by default again above). It stays a setting.
+
+**c and d.** Whether a small shape is seen depends on its stitch. A fill or a column shows whole down to the
+night sky's smallest dot, 1.2 mm² and 21 needle points. A speck under 1 mm² merges into its neighbour on
+purpose. A shape no wider than the narrowest satin stroke sews as one running line, which covers about a
+third of a shape 1 mm wide. Sewing a line as wide as it is drawn is the queued step "line weight by drawn
+width", for lines and narrow shapes alike, not this one.
+
+**M13.58 and the eye.** M13.58 keeps a column's stitches full length and spaces them on the inside of a
+bend. The eye's ring is all bend, 5 to 1 between its rails once compensated. Its inner ends crowd more: measured with M13.58's prototype, the pupil is seen on 0.23 and the eye's middle sews 3.99 fills.
+M13.58's rule alone makes the eye worse. With rule a there is no ring left to bend, and the 2 rules don't
+meet.
+
+**The rule proposed: a.** A part of an automatic area with holes that other automatic areas fill is held to
+the crowding bound too. When it would sew as one satin column that sews more than 2 mm of one rail to 1 mm
+of the other, the area is digitized whole beneath those details with its holes closed. A ring that
+doesn't crowd, an outline 3 mm wide round a disc 10 mm across, keeps its column, and so does a ring on bare
+fabric. The rule is stated by geometry alone and uses the bound the rules already have, so it needs no
+setting: `auto_stitch` set to satin on the shape still sews a column. It changes 4 of 63 designs and no thread change
+or jump thread.
+
+**What gets worse.** The 4 designs sew 197 more stitches, 140 of them on TS-13D. TS-13D also says `SC-I0504` once more, for 4 needle points merged
+in the white's fill: its list of what it says and its check of the white round the star change in the build.
+The fills' outlines are polygons of chords up to 1.1 mm. They lie 0.08 to 0.09 mm inside the circle, under
+a thread's width, and the queued step on small circles takes them up. Jump threads are as before.
+
+**Pictures,** each as main sews it beside rule a, were looked at close up: the fish's eye, TS-13D's disc
+and star, TS-13A's badge, and the night sky's star and dot, which don't change.
+
+**For the build.** `columns.rs` holds a ring to the bound when `layers.rs` looks for details.
+`REQ-AUTO-068` then says that rings round details are measured, and `REQ-AUTO-023` that a crowded ring
+closes its holes. `ts13.rs` changes TS-13D's list and check, and the goldens of TS-13A and TS-13D are blessed. The
+eye goes on the next machine checkpoint's list.
+
 ### Runs in place of jumps
 
 Between 2 shapes of one thread the needle jumps, and a machine with one needle cuts no thread at a jump:
