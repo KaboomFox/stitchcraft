@@ -574,8 +574,9 @@ M13.61's wheels, against the build, on the set above. Area is at the cap (3.25 f
   traced dog on turf in 6 threads sews 50.25 mm² at 3 fills or more, where it sewed 52.25.
 - **Worse.** The flower's right leaf, filled with its outline over the stem's column, sews 1.2 mm² above
   the cap, where main sews none, and its thickest spot rises from about 3.5 to 3.6 fills.
-- **Time.** Planning the drawings and the traced documents took 13.22 s on main and 13.46 s with the build
-  and its hold, the fastest of 3 runs each, against 12.39 and 12.45 s on the earlier main.
+- **Time.** Planning the drawings and the traced documents took 25.08 s on main and 25.13 s with the build,
+  the fastest of 4 runs each on a machine busy with another build. Another round of 3 runs measured 3.2 %
+  more, within the noise of such runs.
 - **Points that stay blunt.** A satin column that tapers to a point, as a sun's ray does, still ends about
   0.9 mm wide 0.5 mm from its point, since pull compensation moves each needle point 0.4 mm out however
   narrow the stitch. Holding the compensation to 40 % of the stitch's width pointed the rays, 0.00 to

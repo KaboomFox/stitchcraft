@@ -3657,6 +3657,12 @@ What a user can do with this version, before its first release. The entries belo
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13C.pes` and `TS-13D.pes` (M13.59, shapes whose width swells and
+  tapers). In TS-13C's digitized half, the star's 5 points stay in its fill, where they sewed as satin
+  columns, and the half jumps 9 times, where it jumped 13. In TS-13D's, the white disc round the abutting
+  emblem's star is filled whole under the star, where it sewed as one satin column round it. The sheets sew
+  9,971 and 19,534 stitches, where they sewed 10,013 and 19,237. Their sizes, thread changes and the halves
+  as drawn are as they were.
 - Changed `conformance/golden/testsheets/TS-13C.pes` (M13.60, clean ends of satin columns). In the digitized
   half, the balloon string's lower end, which a curved edge cuts, sews square to the string up to its end.
   The sheet sews 10,013 stitches, where it sewed 10,012, and its size, thread changes and jumps are as they
