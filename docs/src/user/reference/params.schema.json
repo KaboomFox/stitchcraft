@@ -1987,34 +1987,6 @@
         "unit": "mm"
       }
     },
-    "pull_compensation_max_percent": {
-      "default": null,
-      "description": "The farthest pull compensation moves each end of a stitch out, in percent of the stitch's width. A column that narrows to a point then narrows to it: at 40, a stitch sews at most 1.8 times as wide as drawn on each side's move. A move inward isn't held. Empty, pull compensation moves the ends as far as it says. 2 values set the first rail's side, then the second's. Automatic digitizing sets 40 on its columns.",
-      "items": {
-        "maximum": 100.0,
-        "minimum": 0.0,
-        "type": "number"
-      },
-      "maxItems": 2,
-      "minItems": 1,
-      "title": "Most pull compensation",
-      "type": [
-        "array",
-        "null"
-      ],
-      "x-stitchcraft": {
-        "applies_to": [
-          "satin_column",
-          "e_stitch",
-          "s_stitch",
-          "zigzag"
-        ],
-        "group": "Compensation",
-        "origin": "stitchcraft",
-        "stability": "experimental",
-        "unit": "%"
-      }
-    },
     "pull_compensation_mm": {
       "default": [
         0.0
@@ -3423,7 +3395,6 @@
           "end_at_nearest_point",
           "running_stitch_position",
           "push_compensation_mm",
-          "pull_compensation_max_percent",
           "random_width_decrease_percent",
           "random_width_increase_percent",
           "random_zigzag_spacing_percent",

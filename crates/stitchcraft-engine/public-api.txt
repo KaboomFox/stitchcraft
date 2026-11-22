@@ -127,7 +127,6 @@ pub const stitchcraft_engine::auto::OUTLINE_TOLERANCE: stitchcraft_core::units::
 pub const stitchcraft_engine::auto::OUTLINE_WIDTH: stitchcraft_core::units::Mm
 pub const stitchcraft_engine::auto::OVERLAP: &str
 pub const stitchcraft_engine::auto::PREFER: &str
-pub const stitchcraft_engine::auto::PULL_HELD: f64
 pub const stitchcraft_engine::auto::SHORT_STITCHES: &str
 pub const stitchcraft_engine::auto::STITCH: &str
 pub const stitchcraft_engine::auto::TOUCHING: f64
@@ -749,7 +748,6 @@ pub stitchcraft_engine::generators::satin::SatinParams::contour_underlay_stitch_
 pub stitchcraft_engine::generators::satin::SatinParams::contour_underlay_stitch_tolerance_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::end_at_nearest_point: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::min_random_split_length_mm: <stitchcraft_params::kinds::OptionalLengthWithZero as stitchcraft_params::kinds::ParamKind>::Value
-pub stitchcraft_engine::generators::satin::SatinParams::pull_compensation_max_percent: <stitchcraft_params::kinds::OptionalPercentPair as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::push_compensation_mm: <stitchcraft_params::kinds::LengthPair as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::random_split_jitter_percent: <stitchcraft_params::kinds::Percent as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::random_split_phase: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
@@ -782,7 +780,6 @@ pub const stitchcraft_engine::generators::satin::CENTER_WALK_UNDERLAY: &str
 pub const stitchcraft_engine::generators::satin::CENTER_WALK_UNDERLAY_REPEATS: &str
 pub const stitchcraft_engine::generators::satin::CONTOUR_UNDERLAY: &str
 pub const stitchcraft_engine::generators::satin::END_AT_NEAREST_POINT: &str
-pub const stitchcraft_engine::generators::satin::PULL_COMPENSATION_MAX: &str
 pub const stitchcraft_engine::generators::satin::PUSH_COMPENSATION: &str
 pub const stitchcraft_engine::generators::satin::RANDOM_SPLIT_JITTER_PERCENT: &str
 pub const stitchcraft_engine::generators::satin::RANDOM_SPLIT_PHASE: &str

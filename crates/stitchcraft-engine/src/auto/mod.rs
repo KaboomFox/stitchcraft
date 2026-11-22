@@ -122,8 +122,8 @@ use crate::generators::passes::BEAN_STITCH_REPEATS;
 use crate::generators::pull::PULL_COMPENSATION;
 use crate::generators::running::TOLERANCE;
 use crate::generators::satin::{
-    self, BEND_OPEN, CENTER_WALK_UNDERLAY, CENTER_WALK_UNDERLAY_REPEATS, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PULL_COMPENSATION_MAX,
-    PUSH_COMPENSATION, SATIN_COLUMN, SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET, START_AT_NEAREST_POINT, ZIGZAG_UNDERLAY,
+    self, BEND_OPEN, CENTER_WALK_UNDERLAY, CENTER_WALK_UNDERLAY_REPEATS, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PUSH_COMPENSATION, SATIN_COLUMN,
+    SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET, START_AT_NEAREST_POINT, ZIGZAG_UNDERLAY,
 };
 use crate::generators::tatami::{ANGLE, TURN_STITCHES};
 use crate::generators::{TooSmall, mm, too_small};
@@ -164,12 +164,6 @@ pub const CROWDED_INSETS: &str = "25 50";
 /// `bend_open_percent`. At 25 the outside's points lie 0.5 mm apart at the most, 1.25 threads, and a bend
 /// whose inside radius is 0.8 of its outside's or more doesn't crowd.
 pub const BEND_OPENED: f64 = 25.0;
-
-/// How far an automatic satin column's pull compensation may move each end of a stitch out, in percent of the
-/// stitch's width (`REQ-AUTO-176`, `REQ-SAT-031`): its `pull_compensation_max_percent`. At 40 a stitch sews at
-/// most 1.8 times as wide as drawn, so a column 0.13 mm wide near its point sews 0.23 mm there, not 0.93, and
-/// one 1 mm wide or wider keeps the whole 0.4 mm.
-pub const PULL_HELD: f64 = 40.0;
 
 /// How far past its rail as drawn a crowded needle point of an automatic satin column whose rails pair evenly
 /// (`columns::EVEN`) may move in, in millimetres (`REQ-AUTO-085`): a quarter of a thread. Its first inset is
@@ -334,10 +328,6 @@ fn satin_params(params: &ParamSet, width: Mm, rules: &AutoParams) -> ParamSet {
     }
     if !crowded && column.get(BEND_OPEN).is_none() {
         column.set(BEND_OPEN, BEND_OPENED.to_string().as_str());
-    }
-    // Its pull compensation is held near a point, so it narrows to it (`REQ-AUTO-176`).
-    if column.get(PULL_COMPENSATION_MAX).is_none() {
-        column.set(PULL_COMPENSATION_MAX, PULL_HELD.to_string().as_str());
     }
     column
 }

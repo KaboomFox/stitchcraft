@@ -1227,15 +1227,6 @@ milestone = "M4"
 status = "active"
 
 [[req]]
-id = "REQ-SAT-031"
-area = "satin"
-level = "L2"
-statement = "A satin column's pull_compensation_max_percent, StitchCraft's own, from 0 to 100 and empty by default, holds each side's outward move by pull compensation (REQ-SAT-001) to that percent of the stitch's width, one value for both sides or one for each. Empty, the move is as REQ-SAT-001 gives it, as in Ink/Stitch. A negative move and an underlay's inset are not held."
-rationale = "Pull compensation of 0.4 mm moves each end of a stitch 0.13 mm wide out to 0.93 mm, so a column that narrows to a point sews blunt: the review set's rays sewed 0.91 to 1.00 mm wide 0.5 mm from their points (measured 2026-11-22, M13.59). Held to 40 %, a stitch sews at most 1.8 times as wide as drawn, and the rays sewed 0.20 to 0.32 mm wide there. A column 1 mm wide or wider keeps the whole 0.4 mm."
-milestone = "M13"
-status = "active"
-
-[[req]]
 id = "REQ-SAT-002"
 area = "satin"
 level = "L2"
@@ -3621,15 +3612,6 @@ area = "auto"
 level = "L2"
 statement = "A narrow piece cut from a broad part (REQ-AUTO-019) whose one centre line's width varies by more than `auto_max_unevenness`, 0.3, of itself stays in the broad part's fill, whatever `auto_fill_uneven` is. An even piece, and a piece of several centre lines, sews by the rules as before: a lollipop's stick and a balloon's string leave the fill."
 rationale = "A crescent sewed as a fill with a satin column at each tip, which zigzagged and left a seam along the cut (the owner's review, 2026-11-21). Each piece is narrower than 4 mm by the cut, so a tapering tip always measured as a column. Kept in the fill, the crescent and a star's points sew as one fill outlined to their points, and the stick of a disc on a stick still leaves it (measured 2026-11-22, M13.59: 7 pieces of the review set and fixtures, 2 of the dogs and pear, 18 of the engine's set and 2 of the photos)."
-milestone = "M13"
-status = "active"
-
-[[req]]
-id = "REQ-AUTO-176"
-area = "auto"
-level = "L2"
-statement = "Each satin column that automatic digitizing makes sets pull_compensation_max_percent (REQ-SAT-031) to 40, so a column that narrows to a point sews no wider than 1.8 times its width near the point."
-rationale = "The review set's rays, narrow wedges sewn as columns, ended blunt: 0.91 to 1.00 mm wide 0.5 mm from their points, where they are drawn 0.13 mm wide. Measured 2026-11-22 (M13.59) at 40 %: 0.20 to 0.32 mm. No design sewed above 4 fills that sewed under it, and 16 of 18 sheets of letters changed by 129 of 333,608 stitches, 2 of them 0.1 to 0.2 fills thicker at their thickest, under 4. The sew-out at MC-8 confirms the share."
 milestone = "M13"
 status = "active"
 

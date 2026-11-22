@@ -363,7 +363,7 @@ After sewing, check:
 
 ## TS-13C — Pictures digitized automatically: lines, and shapes in parts
 
-111.4 × 107.8 mm · 10013 stitches, 31 jumps, 30 trims, 9 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+111.4 × 107.8 mm · 9971 stitches, 27 jumps, 26 trims, 9 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -376,7 +376,7 @@ Threads: Flesh Pink, White, Black, Deep Gold, Red, Red (stop), Flesh Pink, White
 After sewing, check:
 
 - The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left to right: a face drawn with black lines, a star, and a balloon on its string.
-- The bottom half changes thread 4 times and jumps 14 times, the top half 4 and 17 times. The base layer's thread and pieces are among the top half's. How long does each half take?
+- The bottom half changes thread 4 times and jumps 14 times, the top half 4 and 13 times. The base layer's thread and pieces are among the top half's. How long does each half take?
 - The face's outline is 4 mm wide, its eyes' 2 mm and its brows' 1 mm. On the top half, the outlines sew as satin columns and the brows as triple runs. Do the columns cover the edges of the pink and white areas beside them? Do the triple runs look as wide as the brows are drawn?
 - The smile is 2 mm wide with round caps, and on the top half its column ends square, 1 mm past each end of its line, where the round cap ends. How far does its corner show past the round end?
 - The pupils are small rings, and the 3 hairs hairpins, which turn more tightly than they are wide: the top half fills them. How solid do they sew beside the columns round them?
@@ -386,7 +386,7 @@ After sewing, check:
 
 ## TS-13D — Pictures digitized automatically: a traced emblem
 
-89.8 × 100.4 mm · 19237 stitches, 22 jumps, 21 trims, 10 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+89.8 × 100.4 mm · 19534 stitches, 23 jumps, 22 trims, 10 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -394,12 +394,12 @@ Drawn as a design whose shapes StitchCraft digitizes automatically, as `--auto` 
 
 ![TS-13D as it will sew: 2 emblems, a navy square in a white frame with a red star on a white disc and 3 gold bars, traced abutting and stacked, twice. At the top, digitized, both emblems sew alike: one navy fill under the disc and the bars, the bars satin columns, and the white round each star a satin column. At the bottom, in paint order, every shape is a fill.](../../images/generated/testsheet-ts-13d.png)
 
-Threads: White, Prussian Blue, Red, Deep Gold, White, Deep Gold, Red, Prussian Blue, Prussian Blue (stop), Red, White, Deep Gold.
+Threads: White, Prussian Blue, Red, Deep Gold, White, Deep Gold, Red, Prussian Blue, Prussian Blue (stop), White, Red, Deep Gold.
 
 After sewing, check:
 
 - The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left to right: an emblem traced abutting and the same emblem traced stacked, each 42 mm wide, a navy square with a white disc, a red star on the disc and 3 gold bars, on white.
-- The bottom half changes thread 7 times and jumps 8 times, the top half 3 and 14 times. The base layer's thread and pieces are among the top half's. How long does each half take?
+- The bottom half changes thread 7 times and jumps 8 times, the top half 3 and 15 times. The base layer's thread and pieces are among the top half's. How long does each half take?
 - On the bottom half, the stacked emblem sews each colour whole under the colours drawn over it, the white under everything. How stiff is it beside the abutting one? On the top half, it sews only what shows of each colour: does it sew as the abutting emblem beside it?
 - On the top half, each navy square is one fill under the white disc and the bars, which sew after it, cut away 1 mm inside their edges. The white round each star, narrower than a satin column there, is a satin column round it. On the bottom half, the abutting emblem's navy sews round the disc and between the bars as drawn. Which sews better between the bars? Does fabric or a ridge show round the bars, the disc and the star?
 - On the top half, the gold bars sew as satin columns, 2.1 mm tall as drawn. Do they keep their height, and do their ends stay square?

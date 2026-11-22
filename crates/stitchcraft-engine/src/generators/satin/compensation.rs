@@ -7,9 +7,7 @@
 //! of the stitch's width, with one value for both sides or one for each. Negative values move them inward,
 //! and two ends that would cross meet instead, where their moves divide the stitch. A stitch whose ends are
 //! one point has no direction to move them in and stays as it is. A tatami fill lengthens its rows with
-//! the same move (`generators::pull`). `pull_compensation_max_percent`, StitchCraft's own, holds each
-//! side's outward move to that share of the stitch's width (`REQ-SAT-031`), so that a column narrowing to a
-//! point still narrows: 0.4 mm on a stitch 0.13 mm wide would sew it 0.93 mm wide. **Push compensation** takes
+//! the same move (`generators::pull`). **Push compensation** takes
 //! `push_compensation_mm` off each rail at the column's start and end, before the rails are cut into
 //! sections, or adds it along the rail's first or last segment where it is negative. A rail that taking it
 //! off would leave shorter than half a CSS pixel keeps its length (`SC-W0211`), as in Ink/Stitch.
@@ -55,8 +53,6 @@ pub(crate) struct Processor<'r> {
     range: [f64; 2],
     /// How far a step may be from the zigzag spacing at random, either way, as a fraction of it.
     jitter: f64,
-    /// The farthest each side moves out, as a fraction of the stitch's width: `None` when not held.
-    most: Option<[f64; 2]>,
     /// The element's generator; `None` for an underlay, which draws nothing.
     rng: Option<&'r mut SplitMix64>,
 }
@@ -75,7 +71,6 @@ impl<'r> Processor<'r> {
             least: [pull_a - decrease_a, pull_b - decrease_b],
             range: [decrease_a + increase_a, decrease_b + increase_b],
             jitter: params.random_zigzag_spacing_percent / 100.0,
-            most: params.pull_compensation_max_percent.map(fraction),
             rng: Some(rng),
         }
     }
@@ -84,7 +79,7 @@ impl<'r> Processor<'r> {
     /// draws nothing: each step is the spacing, and each pair is moved in as negative pull compensation
     /// moves it.
     pub(crate) fn inset(mm: [f64; 2], share: [f64; 2]) -> Processor<'static> {
-        Processor { pull: mm.map(|mm| -mm), least: share.map(|share| -share), range: [0.0; 2], jitter: 0.0, most: None, rng: None }
+        Processor { pull: mm.map(|mm| -mm), least: share.map(|share| -share), range: [0.0; 2], jitter: 0.0, rng: None }
     }
 
     /// The next step to a stitch, as a multiple of the zigzag spacing.
@@ -103,19 +98,8 @@ impl<'r> Processor<'r> {
             }
             None => self.least,
         };
-        let width = pair[0].distance(pair[1]);
-        offset(pair, held(self.pull, shares, self.most, width), shares)
+        offset(pair, self.pull, shares)
     }
-}
-
-/// Pull compensation of `pull` millimetres on each side, with `shares` of a stitch `width` millimetres wide,
-/// held so that neither side moves out farther than its `most` share of the width (`REQ-SAT-031`): the
-/// millimetres each side then moves by besides its share. A side that moves no farther, or in, keeps them.
-fn held(pull: [f64; 2], shares: [f64; 2], most: Option<[f64; 2]>, width: f64) -> [f64; 2] {
-    let Some(most) = most else { return pull };
-    let hold = |mm: f64, share: f64, most: f64| if mm + share * width > most * width { (most - share) * width } else { mm };
-    let ([mm_a, mm_b], [share_a, share_b], [most_a, most_b]) = (pull, shares, most);
-    [hold(mm_a, share_a, most_a), hold(mm_b, share_b, most_b)]
 }
 
 /// Which ends of a column push compensation of `push` millimetres, at its start and its end, lengthens: those
@@ -214,7 +198,7 @@ mod tests {
     #[test]
     fn random_steps_and_shares_fill_their_ranges() {
         let mut rng = SplitMix64::new(7);
-        let mut processor = Processor { pull: [0.0, 0.0], least: [0.1, -0.2], range: [0.2, 0.0], jitter: 0.25, most: None, rng: Some(&mut rng) };
+        let mut processor = Processor { pull: [0.0, 0.0], least: [0.1, -0.2], range: [0.2, 0.0], jitter: 0.25, rng: Some(&mut rng) };
         let (mut steps, mut sides) = (Vec::new(), Vec::new());
         for _ in 0..1000 {
             steps.push(processor.step());
@@ -230,7 +214,7 @@ mod tests {
         assert!((-3.0..-2.98).contains(&outmost) && (-1.02..=-1.0).contains(&inmost), "{outmost} {inmost}");
         // A step never gets shorter than a hundredth of the spacing.
         let mut rng = SplitMix64::new(7);
-        let mut wild = Processor { pull: [0.0, 0.0], least: [0.0, 0.0], range: [0.0, 0.0], jitter: 5.0, most: None, rng: Some(&mut rng) };
+        let mut wild = Processor { pull: [0.0, 0.0], least: [0.0, 0.0], range: [0.0, 0.0], jitter: 5.0, rng: Some(&mut rng) };
         let steps: Vec<f64> = (0..100).map(|_| wild.step()).collect();
         assert!(steps.iter().all(|step| *step >= SHORTEST_STEP) && steps.contains(&SHORTEST_STEP), "{steps:?}");
     }
@@ -245,31 +229,12 @@ mod tests {
     }
 
     #[test]
-    fn req_sat_031_pull_compensation_is_held_to_a_share_of_each_stitch() {
-        // 0.4 mm on each side of a stitch 0.5 mm wide, held to 40 % and 30 %: 0.2 and 0.15 mm.
-        assert_eq!(held([0.4, 0.4], [0.0, 0.0], Some([0.4, 0.3]), 0.5), [0.2, 0.15]);
-        // With 10 % of the width as well, the millimetres make up the rest: 0.15 and 0.1 of 0.5.
-        let [a, b] = held([0.4, 0.4], [0.1, 0.1], Some([0.4, 0.3]), 0.5);
-        assert!((a - 0.15).abs() < 1e-12 && (b - 0.1).abs() < 1e-12, "{a} {b}");
-        // A side that moves out exactly its share, or less, or in, keeps its millimetres, and so does one
-        // not held.
-        assert_eq!(held([0.2, -0.3], [0.0, 0.0], Some([0.4, 0.4]), 0.5), [0.2, -0.3]);
-        assert_eq!(held([0.4, 0.4], [0.0, 0.0], None, 0.5), [0.4, 0.4]);
-        // A column's processor holds its pairs: 0.4 mm on a stitch 0.5 mm wide moves each end 0.2 mm out.
-        let mut rng = SplitMix64::new(7);
-        let mut processor =
-            Processor { pull: [0.4, 0.4], least: [0.0, 0.0], range: [0.0, 0.0], jitter: 0.0, most: Some([0.4, 0.4]), rng: Some(&mut rng) };
-        let [a, b] = processor.widened([p(0.0, 0.0), p(0.0, 0.5)]);
-        assert!(near(a, p(0.0, -0.2)) && near(b, p(0.0, 0.7)), "{a:?} {b:?}");
-    }
-
-    #[test]
     fn a_roll_maps_to_a_step_and_to_shares_as_in_ink_stitch() {
         // The rolls the processor takes, in order: one for a step, then one for each side of a pair.
         let mut rolls = SplitMix64::new(3);
         let (step_roll, roll_a, roll_b) = (rolls.next_f64(), rolls.next_f64(), rolls.next_f64());
         let mut rng = SplitMix64::new(3);
-        let mut processor = Processor { pull: [0.0, 0.0], least: [0.1, 0.2], range: [0.3, 0.4], jitter: 0.25, most: None, rng: Some(&mut rng) };
+        let mut processor = Processor { pull: [0.0, 0.0], least: [0.1, 0.2], range: [0.3, 0.4], jitter: 0.25, rng: Some(&mut rng) };
         assert_eq!(processor.step(), 1.0 + (step_roll - 0.5) * 2.0 * 0.25);
         let [a, b] = processor.widened([p(0.0, 0.0), p(0.0, 10.0)]);
         assert!((a.y() + 10.0 * (0.1 + roll_a * 0.3)).abs() < 1e-12, "{a:?}");

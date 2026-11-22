@@ -237,7 +237,9 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
     // With smooth satin edges (M13.58), the dog on turf in 6 threads leaves 61 and the running dog in 9
     // shows 10 moves.
     // With clean column ends (M13.60), the dog on turf in 6 threads leaves 60 and the one in 9 shows 6 moves.
-    let recorded = [("dog-on-turf-6", 3, 60), ("dog-on-turf-9", 6, 62), ("dog-running-6", 3, 49), ("dog-running-9", 10, 64)];
+    // With shapes that swell and taper filled whole and tapering pieces kept in their fill (M13.59), the dog on
+    // turf in 6 threads leaves 59.
+    let recorded = [("dog-on-turf-6", 3, 59), ("dog-on-turf-9", 6, 62), ("dog-running-6", 3, 49), ("dog-running-9", 10, 64)];
     let recorded = recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps));
     assert_eq!((found, apart), (listed, recorded.to_vec()), "the stitches astray, as found and as listed in ASTRAY, and the moves and jumps");
 }
@@ -296,10 +298,11 @@ fn req_auto_027_digitized_dogs_show_no_fabric_and_leave_the_slivers_recorded() {
 /// again (M13.48), and 131.25, 149.0, 129.0 and 176.5 with the cap at 4, before it left satin columns whole below
 /// the warning's limit and was 3.25 (M13.46), and 54.25, 63.75, 53.5 and 94.0 before satin columns kept their
 /// spacing on the inside of a bend and moved crowded points in only above the warning's limit (M13.58), and
-/// 52.5, 63.75, 52.5 and 91.75 before a column's ends were squared and a line's sharp corners mitred (M13.60). The
+/// 52.5, 63.75, 52.5 and 91.75 before a column's ends were squared and a line's sharp corners mitred (M13.60), and
+/// 52.25, 64.0, 52.75 and 93.0 before shapes that swell and taper were filled whole (M13.59). The
 /// case fails when a number changes, so that a change that piles thread up again shows here.
 const THICK: [(&str, f64, f64); 4] =
-    [("dog-on-turf-6", 5225.0, 0.0), ("dog-on-turf-9", 6400.0, 0.0), ("dog-running-6", 5275.0, 0.0), ("dog-running-9", 9300.0, 0.0)];
+    [("dog-on-turf-6", 5025.0, 0.0), ("dog-on-turf-9", 6400.0, 0.0), ("dog-running-6", 5275.0, 0.0), ("dog-running-9", 9300.0, 0.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]

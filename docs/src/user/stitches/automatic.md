@@ -428,9 +428,7 @@ allows to look for them, and then sews with its jumps.
 
 ### Settings by width
 
-Each satin column digitizing makes has the underlay of its width, and 0.4 mm of pull compensation. Near a
-point, where a stitch is narrower than 1 mm, the compensation moves each end out by no more than 40 % of the
-stitch's width (`pull_compensation_max_percent`). A ray then narrows to its point instead of ending blunt:
+Each satin column digitizing makes has the underlay of its width, and 0.4 mm of pull compensation:
 
 | Column width | Underlay |
 |---|---|

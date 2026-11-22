@@ -1,21 +1,18 @@
-//! Shapes whose width swells and tapers (`REQ-AUTO-174` to `REQ-AUTO-176`, `REQ-SAT-031`, M13.59): a shape that swells
-//! and tapers sews as one area, twins sew alike, and a narrow shape that tapers keeps its point.
+//! Shapes whose width swells and tapers (`REQ-AUTO-174`, `REQ-AUTO-175`, M13.59): a shape that swells and tapers
+//! sews as one area, twins sew alike, and a broad shape's tapering points stay in its fill.
 //!
 //! Design: `docs/src/design/image-to-embroidery.md` › Shapes whose width swells and tapers. Each case draws its shapes in
 //! code, after the review set's drawings: 2 mirrored leaves, a lake as a half lens, a crescent, a lollipop, a
-//! bar, a ring and a ray. Before M13.59 the leaves and the lake sewed as satin columns, the crescent as a fill
-//! with a satin column at each tip, and a ray's column ended 0.85 mm wide.
+//! bar, a ring and a ray. Before M13.59 the leaves and the lake sewed as satin columns, and the crescent as a
+//! fill with a satin column at each tip.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
-use stitchcraft_core::Budget;
 use stitchcraft_core::math::sin_cos;
-use stitchcraft_engine::auto::{PULL_HELD, digitize};
-use stitchcraft_engine::design::{DesignSettings, Element, Shape};
-use stitchcraft_engine::generators::satin::PULL_COMPENSATION_MAX;
+use stitchcraft_engine::design::Element;
 use stitchcraft_plan::Role;
-use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, outlined, planned, polylines, rules_said};
+use stitchcraft_testkit::designs::{BLUE, RED, automatic, fill, outlined, planned, rules_said};
 
 type Pt = (f64, f64);
 
@@ -163,55 +160,6 @@ fn req_auto_175_an_even_piece_still_leaves_the_fill() {
     let said = said(vec![area("lollipop", &[&lollipop])]);
     let [(_, message)] = said.as_slice() else { panic!("one shape: {said:?}") };
     assert!(message.contains("column"), "its stick leaves the fill: {message}");
-}
-
-/// How far across the widest top stitch of `elements`, planned, spans a column that runs along x to its
-/// point `tip`, among the stitches whose 2 ends lie no more than `within` mm before the point along it. A
-/// zigzag stitch also steps along the column by the spacing, so its length isn't its width.
-fn widest_near(elements: Vec<Element>, tip: Pt, within: f64) -> f64 {
-    let plan = planned(elements).plan.unwrap();
-    let near = |x: f64| (tip.0 - x).abs() <= within;
-    plan.sewn_stitches()
-        .iter()
-        .filter(|s| s.role == Role::Top && near(s.from.x()) && near(s.to.x()))
-        .map(|s| (s.to.y() - s.from.y()).abs())
-        .fold(0.0, f64::max)
-}
-
-#[test]
-fn req_auto_176_a_ray_keeps_its_point() {
-    // A ray 9 mm long and 2 mm wide at its base: 1.1 mm from its point it is drawn 0.24 mm wide. Before
-    // M13.59 its column moved each needle point out by 0.4 mm, and sewed 1.04 mm wide there. Held to 40 %
-    // of the width on each side, it sews 1.8 times as wide as drawn at the most: 0.44 mm.
-    let ray = [(0.0, -1.0), (9.0, 0.0), (0.0, 1.0)];
-    let widest = widest_near(vec![area("ray", &[&ray])], (9.0, 0.0), 1.1);
-    assert!(widest > 0.3 && widest <= 0.44, "the stitches 1.1 mm from the point sew {widest:.3} mm wide");
-}
-
-#[test]
-fn req_sat_031_pull_compensation_is_held_to_a_share_of_the_stitch_s_width() {
-    // A satin column whose rails meet in a point, 2 mm apart at their start, with 0.4 mm of pull compensation
-    // held to 40 % of each stitch's width on each side: a stitch drawn w wide sews at most 1.8 w.
-    let rails = polylines(&[&[(0.0, 0.0), (10.0, 1.0)], &[(0.0, 2.0), (10.0, 1.0)]]);
-    let params = [("satin_column", "true"), ("pull_compensation_mm", "0.4"), ("pull_compensation_max_percent", "40")];
-    let column = along("ray", rails, &RED, &params);
-    assert!(matches!(column.shape, Shape::Stroke { .. }));
-    let widest = widest_near(vec![column], (10.0, 1.0), 1.0);
-    // 1 mm from the point the rails are 0.2 mm apart: 0.36 mm sewn at most.
-    assert!(widest > 0.3 && widest <= 0.37, "the stitches 1 mm from the point sew {widest:.3} mm wide");
-}
-
-#[test]
-fn req_auto_176_digitizing_holds_its_columns_pull_compensation_unless_the_shape_sets_it() {
-    let column = |params: &[(&str, &str)]| {
-        let outline = [(0.0, 0.0), (30.0, 0.0), (30.0, 3.0), (0.0, 3.0)];
-        let made = digitize(&automatic(fill("band", &[&outline], &RED, params)), &DesignSettings::default(), &mut Budget::DEFAULT.meter()).unwrap();
-        made.elements[0].params.get(PULL_COMPENSATION_MAX).map(ToString::to_string)
-    };
-    assert_eq!(column(&[]), Some(PULL_HELD.to_string()));
-    // A shape that sets it keeps what it sets, empty too: then its columns compensate as Ink/Stitch's do.
-    assert_eq!(column(&[(PULL_COMPENSATION_MAX, "")]), Some(String::new()));
-    assert_eq!(column(&[(PULL_COMPENSATION_MAX, "60")]), Some("60".to_string()));
 }
 
 #[test]
