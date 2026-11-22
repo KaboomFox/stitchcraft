@@ -120,9 +120,10 @@ jumps and colour changes, which the rethreads and the cuts at the machine are co
 | Words on a cream field (Hexmira at 8 and 10 mm, Hexmira 7.6 mm tall, and VOLKAR in Barstitch Bold 12.5 mm tall) | M14.9, M13.50 | Made by hand: a cream field drawn 3 mm round the word, with the word set on it as text |
 | Bars and rings 6, 8 and 10 mm wide | M13.54 | `bar-8mm.svg` and its relatives from the commands after this table |
 | The test piece of 12 tiles under satin columns | M13.55 | Made by hand. Its tiles are fills 20 mm wide in navy and in orange, with a black satin column along each tile's top, straight on some tiles and curved on the others, in widths from 2 to 6 mm. No file of the repository draws it |
+| The smooth-edges test piece: lines 3 mm wide drawn as a mug's handle, a ring and a sharp corner | M13.58 | `edges.svg` from the commands after this table, planned with `--auto` into `edges.pes`, and again with `--set auto_short_stitches=crowded` into `edges-today.pes`. Sew both on one piece of fabric. Check each inside edge for a second row of short ends, each outside edge for fabric showing between the stitches, and the corner for thread piling up |
 | A circle 40 mm across, its fill in one colour and a 2 mm stroke round it in another | M13.8 | Made by hand in VectorCraft, without StitchCraft effects. `stitch plan circle.vectorcraft -o circle.pes`, and again with `--no-auto` |
 
-The arc, and the bars and the rings of M13.54, each written by one command from nothing but the command
+The arc, the bars and the rings of M13.54, and the smooth-edges piece of M13.58, each written by one command from nothing but the command
 itself:
 
 ```sh
@@ -131,6 +132,7 @@ for w in 6 8 10; do
   awk -v w=$w 'BEGIN { printf "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"60mm\" height=\"20mm\" viewBox=\"0 0 60 20\"><path fill=\"#0a55a3\" d=\"M5 %gH55V%gH5Z\"/></svg>\n", 10 - w / 2, 10 + w / 2 }' > bar-${w}mm.svg
   awk -v w=$w 'BEGIN { R = 20 + w / 2; r = 20 - w / 2; printf "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"60mm\" height=\"60mm\" viewBox=\"0 0 60 60\"><path fill=\"#ed171f\" fill-rule=\"evenodd\" d=\"M%g 30A%g %g 0 1 0 %g 30A%g %g 0 1 0 %g 30Z M%g 30A%g %g 0 1 1 %g 30A%g %g 0 1 1 %g 30Z\"/></svg>\n", 30 + R, R, R, 30 - R, R, R, 30 + R, 30 + r, r, r, 30 - r, r, r, 30 + r }' > ring-${w}mm.svg
 done
+printf '<svg xmlns="http://www.w3.org/2000/svg" width="90mm" height="40mm" viewBox="0 0 90 40"><g fill="none" stroke="#0a55a3" stroke-width="3"><path d="M 11 13 A 8 8 0 1 1 11 27"/><circle cx="45" cy="20" r="12"/><path d="M 66 34 L 75 6 L 84 34" stroke-linejoin="miter"/></g></svg>\n' > edges.svg
 ```
 
 ## MC-8: the steps and their checks

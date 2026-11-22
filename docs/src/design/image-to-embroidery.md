@@ -846,7 +846,7 @@ stitches lie over its underlay and its first, as on a 6 mm column (3.35 fills ov
 passes 3 fills along the inner third of its band all round: its inner rail is 15 mm from the centre against
 25 mm for the outer. Its stitches lie 1.67 times as close there, over the zigzag underlay. The bare
 fabric lies in a thin band along the inner edge of the curved columns, the arch and the stroked circle,
-where the crowded needle points move in along their stitches (`REQ-AUTO-071`). It is a satin column's own,
+where the crowded needle points moved in along their stitches (`REQ-AUTO-071`, retired in M13.58). It is a satin column's own,
 5.92 mm² on the sheet 6 mm wide. The bars and the rings leave none. The short stitches and the jumps of a
 fill's row ends mostly go.
 
@@ -1110,6 +1110,174 @@ and after. The thickest spot and the jump threads include the start rule of
 
 The 15 mm word's M and C keep 5 notches where their points fan. The 4 mm word runs along its letters'
 middles, and its A's counter, 0.56 mm across inside, isn't kept open.
+
+### Smooth satin edges
+
+M13.58 built this section's rules (`REQ-AUTO-170` to `REQ-AUTO-173`, `REQ-SAT-030`). Before it, a column moved its
+crowded points in as it was made (`REQ-AUTO-071`, retired), which is now the `crowded` value of `auto_short_stitches`.
+
+The owner reviewed 18 simple drawings sewn by automatic digitizing on 2026-11-21. On most of them the
+biggest fault was the small stitches. On the inside of a curve every other stitch of a satin column ends
+short of the edge, and the short ends sew a second row inside it. Her words: "it just feels like the stitch
+needs to be longer so instead of having kind of two rows, you just have one". How thick a design sews stays
+her first concern, with the warning's limit of 4 fills.
+
+#### Crowding on the inside of a bend
+
+A column places its pairs of needle points the zigzag spacing apart at the outside of a bend, as Ink/Stitch
+does ([Top stitches](algorithms/satin.md#top-stitches-method-satin_column)). On the inside they lie closer, by the ratio of the 2
+radii. A straight column's points lie 0.4 mm apart, so a distance of 0.35 mm moves in the points of almost
+every curve. A ring 3 mm wide whose inside is 24 mm from its centre has inside points 0.353 mm apart, and 12
+scattered stitches of it end short. On the 18 drawings 1,044 needle points move in. At 0.25 mm 208 do, and
+the owner found that better.
+
+A looser distance alone breaks the limit on one test design. TS-13C's digitized half then sews 4.11 fills
+at one spot, where 3.92 is its thickest today. The spot is on the inside edge of the face's outline, a
+column 4.8 mm wide that curves gently: its inside points lie 0.316 mm apart and its outside points 0.41 mm.
+Hair lines cross it there, over the face's fill and the base layer. The layers at that spot:
+
+| Layer | Fills |
+|---|---:|
+| Base layer | 0.25 |
+| Face, fill | 1.00 |
+| Outline, satin column | 1.57 |
+| Hair, first line | 0.79 |
+| Hair, second line | 0.50 |
+
+At 0.35 mm the outline's inside points there move in, and the spot stays under 4. At 0.25 mm they don't.
+The cap's last resort (`REQ-AUTO-112`) can take a column's point out only by joining its 2 stitches into one
+along the far rail, and here no point passes its test of cover. With no point moved in at all, 4 of
+the 16 designs of `REQ-AUTO-073` sew above 4 fills. TS-13A's blue strip fans 25 stitches into a corner and lays 4.32 fills by itself, 6.05 with the gold
+fills and the base layer under it. The last resort took 575 mm of its top stitches there and left the
+corner at 6.05. The running dog in 6 threads reaches 4.1 fills at 0.20 mm where a column of 1.5 fills crosses a fill of
+1.2 fills and 3 more layers.
+
+So the stitches that crowd matter only where the layers under and over them reach the limit. TS-13C's
+column crowds in a gentle curve, and TS-13A's in a fan.
+
+#### Rules for smooth edges
+
+- **Spacing on the inside** (`REQ-AUTO-170`). An automatic column measures the spacing
+  between its pairs on the inside of a bend, and lets the outside open to 1.25 times the spacing, 0.5 mm,
+  before the inside crowds. At 0.5 mm the outside's stitches lie 1.25 thread widths apart, the cover of a
+  column sewn at a spacing of 0.5 mm along that edge. A bend whose inside radius is 0.8 of its outside's or
+  more sews with no crowding at all, and a tighter one crowds by the ratio of its radii over 1.25.
+- **Every stitch runs full length as it is made** (`REQ-AUTO-170`). An automatic column moves no needle
+  point in: digitizing sets its `short_stitch_distance_mm` to 0, and its `short_stitch_inset` to 25 50, the
+  first held as `REQ-AUTO-085` holds it, which is what the cap pulls a point in by.
+- **Thickness decides where an end moves in** (`REQ-AUTO-171`). Where a spot still sews above the warning's
+  limit once the cap's 3 kinds are done, the cap's last resort first pulls in crowded points of the
+  columns there that move no point in as they are made. A point is crowded when it lies closer than its
+  column's spacing and 5 % to its rail's point before or after it: 0.42 mm at the spacing of 0.4 mm. The
+  inside of a bend keeps its points the spacing apart within 5 %, so this takes in every point there. At
+  0.35 mm, 2 traced dogs with their details sewn last sewed 4.12 and 4.04 fills, and at the spacing itself
+  one still sewed 4.04, where both sewed under 4 before: their points lay 0.41 mm apart, and none moved. A point moves in along its 2 stitches, towards the middle of
+  their other ends, from where it first was, by its column's first inset and then by its second. Of those that lower the thickest spot, the one that lowers it most moves first, one
+  at a time. A point whose 2 neighbours on its rail have both moved stays. The edge keeps every other
+  stitch. A lettering column's points stay, and a column that pairs evenly moves a point no farther past its
+  edge than `REQ-AUTO-085` holds it, since its first inset is held. It stops once no spot is above the limit or no point lowers it, and then
+  the last resort takes points as `REQ-AUTO-112` says.
+- **SC-I1119 counts what moved** (`REQ-AUTO-172`). The note says how many column points the cap pulled in,
+  and where.
+- **Today's look is one setting away** (`REQ-AUTO-173`). `auto_short_stitches` is `above_limit` by
+  default. `crowded` gives today's columns: the spacing kept on the outside, and a point closer than 0.35 mm
+  moved in by 25 % and then 50 %, as `REQ-AUTO-071` says. A shape that sets `short_stitch_distance_mm` or
+  `short_stitch_inset` keeps its own, as before.
+
+The bend's spacing is a satin column's own setting, `bend_open_percent` (`REQ-SAT-030`), 0 by default, which keeps
+Ink/Stitch's spacing on the outside. Automatic digitizing sets 25 on its columns. A satin column a person
+draws, and lettering, keep 0. The rules are in these files:
+
+| Rule | Where |
+|---|---|
+| Spacing on the inside | `generators/satin/pairs.rs`, the gap between 2 pairs |
+| No point moved in as made | `auto/mod.rs`, `satin_params` |
+| Crowded points pulled in | `auto/cap/pull.rs`, before the cap's last resort takes points |
+| The columns it may pull in | `pipeline.rs`, the automatic columns with `short_stitch_distance_mm` 0 |
+| The setting | `auto/params.rs`, a rule of automatic digitizing |
+
+The cap moves needle points for the first time. Until now it only took them out. A moved point keeps its
+place in the run. The plan keeps its jumps, trims and thread changes (`REQ-AUTO-102`).
+
+#### Smooth edges measured
+
+Prototyped on 2026-11-21 on main `1952f48c` (a patch kept outside the repository), on 4 sets:
+
+- the 18 review drawings,
+- the repository's 29 SVG drawings in `docs/fixtures`,
+- the 4 traced dogs and the traced pear,
+- 6 traced photos outside the repository, of cats, geese, a building and a castle.
+
+A needle point counts as shortened when the plan of the same rule with no point moved in has none there.
+The area above the cap counts pieces of 1 mm² or more at 3.25 fills or more:
+
+| Rule | Shortened points: drawings, SVG, dogs, photos | Thickest | Area above the cap, mm²: drawings, dogs, photos | Stitches of the drawings |
+|---|---:|---:|---:|---:|
+| Today, 0.35 mm | 1,044, 374, 616, 119 | 4.00 | 106, 75, 31 | 59,087 |
+| 0.25 mm | 208, 79, 411, 81 | 4.00 | 166, 90, 32 | 59,057 |
+| (a) Pulled in above 4 fills | 41, 5, 26, 18 | 4.00 | 181, 104, 40 | 59,055 |
+| (c) Inside spacing, and 0.25 mm | 101, 211, 246, 60 | 4.00 | 62, 60, 29 | 58,378 |
+| (c) and (a), the rules above | 8, 2, 19, 7 | 4.00 | 69, 79, 29 | 58,376 |
+
+The goose sews 4.4 fills with every rule, as it does today. Planning takes as long with each rule, within
+the noise of the machine. On the 16 designs of `REQ-AUTO-073`, planned in place:
+
+| Rule | Shortened points | Thickest | Above 4 | Area above the cap, mm² | Rail gaps over 0.55 mm |
+|---|---:|---:|---:|---:|---:|
+| No point moved in | 0 | 6.05 | 4 designs | 210 | 82 |
+| Today, 0.35 mm | 2,310 | 4.00 | none | 92 | |
+| 0.25 mm | 1,278 | 4.11 | TS-13C | 101 | |
+| (b) 0.25 mm, TS-13C's outline at 0.35 | 1,467 | 4.00 | none | 103 | |
+| (a) Pulled in above 4 fills | 296 | 3.99 | none | 209 | |
+| (c) and (a), the outside at 1.1 times | 221 | 3.99 | none | | 134 |
+| (c) and (a), at 1.25 times | 155 | 4.00 | none | 121 | 433 |
+| (c) and (a), at 1.5 times | 99 | 4.00 | none | | 1,194 |
+
+A rail gap is the distance between a column's needle point and the one before it on the same rail. The
+bare-fabric measure (`fabric::unsewn`) found the same bare share with every rule on every design. The cases
+of `REQ-AUTO-085` pass with each rule: no notch in the patch's letters or TS-13B's words.
+
+The costs of each rule:
+
+- **(a) alone** moves in 85 to 99 % fewer points, and every crowded column sews up to 4 fills where
+  today's 0.35 mm held it lower. The area above the cap doubles on the 16 designs, from 92 to 209 mm².
+- **(b)**, 0.25 mm with a second plan, changes one column of TS-13C back to today's look all along. It
+  moves in more points than 0.25 mm alone, and it plans a design twice when a spot is above the limit.
+- **(c) alone** opens every bend's outside. At 1.25 times it removes the crowding of gentle curves at its
+  source, lays 1.2 % fewer stitches and less thread in bends. It needs (a), or a distance, where a fan
+  crowds: TS-13A's strip still sews 5.38 fills with no point moved in.
+- **(c) and (a)** move in 36 points on the 58 drawings, traced dogs and photos where today moves in 2,153.
+  The area above the cap falls on the drawings and stays within 6 % on the dogs and photos. At 1.5 times
+  the outside opens 2.8 times as often past 0.55 mm for 56 fewer points. At 1.1 times 66 more points
+  move in.
+
+Built (2026-11-22), the rules measure close to the prototype. On the 58 drawings, traced dogs and photos the
+cap pulled in 5, 22 and 5 points, 32 in all. The area above the cap is 66, 82 and 29 mm², where the
+prototype left 69, 79 and 29. The drawings sew 58,424 stitches, 1.2 % fewer than the 59,087 of before. The
+goose still sews 4.4 fills, as before, and no other design sews above 4 fills. Ten sew a tenth or 2 more
+at their thickest than before, under the limit: the shield, the photo cat and the 2 traced dogs in 6
+threads 4.0, and the zigzag fixture 3.7 at its sharp inside corner. On the 16 designs of `REQ-AUTO-073` no design sews above 4 fills. The patch's lettering
+sews 3.95 fills at its thickest, where the prototype, which opened lettering's bends too, sewed 3.97.
+TS-13D's thickest spot, 3.97 fills as before, is on the inside edge of the ring round its star: the
+ring's own top stitches lay 2.68 fills there, over the star's fill and the base layer, and the cap pulled
+its points in. A disc with a dot on it is filled whole under the dot (`REQ-AUTO-182`) and sews 3.16 fills
+either way. Asked to sew as satin, its ring is a wheel round the dot and sews 3.98 fills, where it sews
+3.70 with `crowded`. Planning TS-13A takes 9.5 % more instructions and TS-13D 4.7 % more, the work of
+pulling points in (`conformance/perf.toml`).
+
+One test design shows a cost of (c). TS-13B's thickest spot becomes a place where 2 fills meet, 3.46 fills
+with no column there, which the cap can't lower and today's 3.85 column spot hides. `REQ-AUTO-073`'s case
+lists it.
+
+#### Decisions on smooth edges
+
+1. **The rules above, by default**, at 1.25 times: the fewest ends moved in, no spot above the limit, and
+   less thread above the cap on the drawings than today.
+2. **A setting for today's look**: `auto_short_stitches` `crowded` gives today's look on a whole design, and a
+   shape's own short-stitch settings give it on one shape.
+3. **A sew-out decides the 1.25**: the test piece of MC-8's kit (`docs/src/plan/machine-testing.md`) sews
+   a mug's handle, a ring and a sharp corner both ways.
+4. **`REQ-AUTO-071` retires once the rules are built.** Its distance is kept as the `crowded` setting.
 
 ### Letters sewn as strokes
 
@@ -2153,8 +2321,8 @@ On the traced dogs every kind adds a little at the peaks. At their spots of 4 fi
 fills, the overlap 0.85, a fill's rows 0.45, its turns and travel 0.6 to 0.8, the outline 0.3 to 0.4 and
 the locks 0.2 to 0.45. In a third of those spots 5 elements or more meet, each with 0.3 fill or more.
 
-2 rules for single shapes come first. An automatic column moves its crowded needle points in
-(`REQ-AUTO-071`): a point closer than 0.35 mm to the last one left on its rail moves in by 25 % of its
+2 rules for single shapes come first. An automatic column moved its crowded needle points in
+(`REQ-AUTO-071`, until [Smooth satin edges](#smooth-satin-edges) made it the `crowded` setting): a point closer than 0.35 mm to the last one left on its rail moves in by 25 % of its
 stitch, the next by 50 %, as digitizing programs shorten stitches in a sharp turn. A rail's points lie
 0.4 mm apart on a straight column, so no straight column loses any of its width. A larger distance takes
 more thread away only because it thins every column's edges. And everything digitizing makes locks in

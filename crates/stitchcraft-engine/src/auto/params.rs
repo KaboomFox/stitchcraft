@@ -58,6 +58,10 @@ pub const OVERLAP: &str = "auto_overlap_mm";
 pub const COLUMN_OVERLAP: &str = "auto_column_overlap_mm";
 /// The key of the smallest area.
 pub const MIN_AREA: &str = "auto_min_area_mm2";
+/// The key of the choice of where a satin column's crowded needle points move in.
+pub const SHORT_STITCHES: &str = "auto_short_stitches";
+/// The value of [`SHORT_STITCHES`] that moves a column's crowded points in as it is made (`REQ-AUTO-173`).
+pub const CROWDED: &str = "crowded";
 /// The key of the switch that leaves the background out.
 pub const IGNORE_BACKGROUND: &str = "auto_ignore_background";
 
@@ -320,6 +324,17 @@ params! {
         auto_thick_cap_fills: Number = "3.25", label "Most thread on a spot, in fills", range (1.0, 50.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
+        /// Where a satin column's crowded needle points move in. `above_limit`, the default: each stitch
+        /// runs from rail to rail as it is made, a bend keeps its spacing on the inside and opens its
+        /// outside by a quarter at the most (`bend_open_percent` 25), and only where a spot would sew above
+        /// the warning's limit does the cap pull crowded points in. `crowded`: as before, the outside keeps
+        /// the spacing, and every point closer than 0.35 mm to the one before it on its rail moves in, by a
+        /// quarter of its stitch and then by half. A shape that sets its own short-stitch settings keeps
+        /// them either way.
+        auto_short_stitches: Choice = "above_limit", label "Short stitches",
+            options ["above_limit" => "Only above the limit", "crowded" => "Where points crowd"],
+            origin Origin::StitchCraft, stability Stability::Experimental;
+
         /// Whether a detail sews after the larger areas round it, where that costs no thread change: an
         /// automatic area that the shapes round it close in on, smaller than an area it meets, as an eye is in
         /// the fur round it. Sewn last, the detail keeps the later fills' rows off its edge. Off by default:
@@ -381,7 +396,14 @@ mod tests {
             MIN_AREA,
         ];
         let cover = ["auto_base_offset_mm", "auto_base_rows", "auto_base_sliver_mm2", "auto_base_bare_percent"];
-        let thick = ["auto_thick_warn_fills", "auto_thick_fail_fills", "auto_thick_warn_points", "auto_thick_fail_points", "auto_thick_cap_fills"];
+        let thick = [
+            "auto_thick_warn_fills",
+            "auto_thick_fail_fills",
+            "auto_thick_warn_points",
+            "auto_thick_fail_points",
+            "auto_thick_cap_fills",
+            SHORT_STITCHES,
+        ];
         assert_eq!(
             keys,
             [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..], &thick[..], &[DETAILS_LAST, "auto_smooth_mm", COLUMN_OVERLAP]].concat()

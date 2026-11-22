@@ -101,7 +101,7 @@ pub use neighbours::{TOUCHING, is_part};
 pub use params::{
     ADVANCED, AutoParams, COLUMN_OVERLAP, DETAILS_LAST, FILL_ANGLE, FILL_OUTLINE, FILL_UNEVEN, IGNORE_BACKGROUND, LONGEST_SATIN_STITCH, MAX_REACH,
     MAX_SATIN_WIDTH, MAX_SPLIT_SATIN_WIDTH, MAX_UNEVENNESS, MIN_AREA, MIN_FILL_WIDTH, MIN_LIKENESS, MIN_LINE_UNEVENNESS, MIN_SLENDERNESS,
-    MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, STITCH, WIDEST_SPLIT_SATIN,
+    MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, SHORT_STITCHES, STITCH, WIDEST_SPLIT_SATIN,
 };
 use rules::{Asked, Bounds, Fired, Measures, RuleId};
 pub use thick::{Held, WARNING_CHARS};
@@ -121,7 +121,7 @@ use crate::generators::passes::BEAN_STITCH_REPEATS;
 use crate::generators::pull::PULL_COMPENSATION;
 use crate::generators::running::TOLERANCE;
 use crate::generators::satin::{
-    self, CENTER_WALK_UNDERLAY, CENTER_WALK_UNDERLAY_REPEATS, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PUSH_COMPENSATION, SATIN_COLUMN,
+    self, BEND_OPEN, CENTER_WALK_UNDERLAY, CENTER_WALK_UNDERLAY_REPEATS, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PUSH_COMPENSATION, SATIN_COLUMN,
     SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET, START_AT_NEAREST_POINT, ZIGZAG_UNDERLAY,
 };
 use crate::generators::tatami::{ANGLE, TURN_STITCHES};
@@ -147,15 +147,22 @@ pub const OUTLINE_WIDTH: Mm = Mm::from_tenths(4);
 pub const OUTLINE_TOLERANCE: Mm = Mm::from_tenths(1);
 
 /// How close, in millimetres, a needle point of an automatic satin column may come to the last one left in
-/// place on its rail before it is moved in along its stitch (`REQ-AUTO-071`): closer than the 0.4 mm that a
+/// place on its rail before it is moved in along its stitch, with `auto_short_stitches` `crowded` (`REQ-AUTO-173`),
+/// and how close a crowded point lies where the cap may pull it in (`REQ-AUTO-171`): closer than the 0.4 mm that a
 /// rail's points lie apart on a straight column, so that only the points of a curve's inside crowd, where a
 /// column fans and lays up to 4 fills of thread by itself, and every stitch of a straight one spans it.
 pub const CROWDED_CLOSER_THAN: f64 = 0.35;
 
 /// How far the crowded needle points of an automatic satin column ([`CROWDED_CLOSER_THAN`]) are moved in, in
-/// percent of their stitch's width, taking turns (`REQ-AUTO-071`): a quarter and a half, so that of 3
+/// percent of their stitch's width, taking turns (`REQ-AUTO-171`, `REQ-AUTO-173`): a quarter and a half, so that of 3
 /// stitches that fan to one point one reaches it, one ends a quarter of the column short of it and one half.
 pub const CROWDED_INSETS: &str = "25 50";
+
+/// How much farther apart than its spacing an automatic satin column's needle points may lie on the outside of
+/// a bend, in percent, so that those on the inside lie the spacing apart (`REQ-AUTO-170`, `REQ-SAT-030`): its
+/// `bend_open_percent`. At 25 the outside's points lie 0.5 mm apart at the most, 1.25 threads, and a bend
+/// whose inside radius is 0.8 of its outside's or more doesn't crowd.
+pub const BEND_OPENED: f64 = 25.0;
 
 /// How far past its rail as drawn a crowded needle point of an automatic satin column whose rails pair evenly
 /// (`columns::EVEN`) may move in, in millimetres (`REQ-AUTO-085`): a quarter of a thread. Its first inset is
@@ -309,10 +316,17 @@ fn satin_params(params: &ParamSet, width: Mm, rules: &AutoParams) -> ParamSet {
     if walks_once(width) && column.get(START_AT_NEAREST_POINT).is_none() {
         column.set(START_AT_NEAREST_POINT, "false");
     }
-    // Its crowded needle points move in, unless its shape says how (`REQ-AUTO-071`).
+    // Its crowded needle points move in as it is made with `crowded` (`REQ-AUTO-173`). By default none
+    // does: its bend keeps the spacing on the inside, and the cap pulls points in by its insets only where a
+    // spot sews above the warning's limit (`REQ-AUTO-170`, `REQ-AUTO-171`). A shape that says how keeps it.
+    let crowded = rules.auto_short_stitches == params::CROWDED;
     if column.get(SHORT_STITCH_DISTANCE).is_none() && column.get(SHORT_STITCH_INSET).is_none() {
-        column.set(SHORT_STITCH_DISTANCE, CROWDED_CLOSER_THAN.to_string().as_str());
+        let distance = if crowded { CROWDED_CLOSER_THAN } else { 0.0 };
+        column.set(SHORT_STITCH_DISTANCE, distance.to_string().as_str());
         column.set(SHORT_STITCH_INSET, CROWDED_INSETS);
+    }
+    if !crowded && column.get(BEND_OPEN).is_none() {
+        column.set(BEND_OPEN, BEND_OPENED.to_string().as_str());
     }
     column
 }

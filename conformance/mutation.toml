@@ -590,6 +590,12 @@ why = "it only ends the rounds early: a needle point goes only where one of its 
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/auto/cap.rs"
+mutant = "replace > with >= in capped"
+line = "let (last, hottest, pulled) = if thickness.most(Measure::Fills).value > rules.limit {"
+why = "at a thickest spot exactly at the warning's limit no spot is above it: the hottest round, the pull-in and the last resort each test `above` first and take or move nothing, so the 3 lists only cost the work of finding them"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/cap.rs"
 mutant = "replace > with >= in Cap<'_, '_>::taken_out"
 line = "if [&into, &out].iter().all(|stitch| to_side(place, stitch.from, stitch.to) > NEAR) {"
 why = "a stitch exactly 1 mm from the thickest spot lays no thread there: the measure lays a stitch's thread on the 4 spots round each cell it crosses, at most a cell's diagonal and a lane, 0.81 mm, from it. Such a point lowers the spot by nothing and the last resort never chooses it, judged or not. Only the work charged changes"

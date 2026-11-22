@@ -310,6 +310,11 @@ along the column as it was.
      within 0.1 mm of it.
    - With `random_zigzag_spacing_percent`, each step's spacing is drawn at random (*Compensation*), and
      a pair moves to lie that spacing from the one before.
+   - With `bend_open_percent`, StitchCraft's own and 0 by default (`REQ-SAT-030`), a pair is measured at the
+     nearer end instead, or at the farther end divided by 1 plus that percentage, whichever is more. At 25
+     the outside of a bend opens to 1.25 times the spacing before the inside closes up, so a gentle bend
+     keeps the spacing on its inside. Automatic digitizing sets 25
+     ([Smooth satin edges](../image-to-embroidery.md#smooth-satin-edges)).
 2. **Compensate width.** Each pair is widened by pull compensation as it is placed, with its random
    share (*Compensation*).
 3. **Short stitches on curves,** as in Ink/Stitch, where they are on by default. On the inside of a

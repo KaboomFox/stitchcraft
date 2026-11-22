@@ -47,6 +47,20 @@ edge.
 - **Default:** `0.4`
 - **Ink/Stitch:** same key, meaning and default
 
+### `bend_open_percent`
+
+**Open bends.** How much farther apart than the zigzag spacing the needle points on the outside of a bend may
+lie, in percent of the spacing, so that those on the inside lie the spacing apart. At 0 the
+spacing is kept on the outside, and the inside crowds by the ratio of the 2 radii. At 25 the
+outside opens to 1.25 times the spacing before the inside crowds, and a bend whose inside radius
+is 0.8 of its outside's or more doesn't crowd at all. Automatic digitizing sets 25 on its
+columns.
+
+- **Accepts:** a percentage from 0 to 100
+- **Default:** `0`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
 ## Rails
 
 ### `reverse_rails`
