@@ -170,3 +170,17 @@ fn req_auto_175_a_shape_that_asks_for_satin_keeps_its_tips_columns() {
     let [(_, message)] = said.as_slice() else { panic!("one shape: {said:?}") };
     assert!(!message.contains("uneven"), "its tips leave the fill as it asks: {message}");
 }
+
+#[test]
+fn req_auto_174_a_leaf_on_a_thin_stalk_is_filled_whole() {
+    // A leaf 40 mm long and 5 mm wide on a stalk 0.6 mm wide and 6 mm long, narrower than the narrowest satin
+    // stroke, 1 mm: one centre line. A part of several lines would let the stalk leave the fill as a line
+    // (REQ-AUTO-032). A part of one line is filled whole, its stalk too.
+    let mut leaf = vec![(-6.0, 0.3), (-6.0, -0.3), (2.0, -0.3)];
+    leaf.extend(quad((0.0, 0.0), (20.0, -5.0), (40.0, 0.0), 80).into_iter().filter(|p| p.0 > 2.4));
+    leaf.extend(quad((40.0, 0.0), (20.0, 5.0), (0.0, 0.0), 80).into_iter().filter(|p| p.0 > 2.4));
+    leaf.push((2.0, 0.3));
+    let said = said(vec![area("leaf", &[&leaf])]);
+    let [(_, message)] = said.as_slice() else { panic!("one shape: {said:?}") };
+    assert!(message.starts_with("This shape sews by the rule uneven ("), "one part, filled whole: {message}");
+}
