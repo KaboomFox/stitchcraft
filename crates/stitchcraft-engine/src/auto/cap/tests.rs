@@ -183,7 +183,7 @@ fn req_auto_100_every_kind_is_said_in_order() {
     assert_eq!(kinds(&capped), all);
     // The points pulled in come first (`REQ-AUTO-172`).
     assert_eq!(done(&capped), format!("took {all}"));
-    let one = Capped { taken: [1.0, 0.0, 0.0, 0.0], times: [1, 0, 0, 0], pulled: [1, 1], ..capped.clone() };
+    let one = Capped { taken: [1.0, 0.0, 0.0, 0.0], times: [1, 0, 0, 0], pulled: [1, 1], ..capped };
     assert_eq!(done(&one), "pulled in 1 point of a satin column in 1 place and took 1.0 mm of underlay and travel in 1 place");
     let only = Capped { taken: [0.0; 4], times: [0; 4], pulled: [3, 2], ..capped };
     assert!(only.took());

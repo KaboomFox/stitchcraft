@@ -553,7 +553,7 @@ stitch plan drawing.svg --auto -o drawing.pes --set auto_short_stitches=crowded
 ```
 
 With `crowded` every column keeps its spacing on the outside, and every end closer than 0.35 mm to the one
-before it on its edge moves in, a quarter of the column, and the next one half. A column sews a little less
+before it on its edge moves in by a quarter of the column. The next such end moves in by half. A column sews a little less
 thread at the inside of its curves so, and its inside edge shows a second row of short ends. A shape that
 sets `short_stitch_distance_mm` or `short_stitch_inset` sews by those settings either way, and so does one
 that sets `bend_open_percent`, the satin column's setting for how far the outside opens.

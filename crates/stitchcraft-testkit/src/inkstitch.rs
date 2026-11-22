@@ -29,7 +29,7 @@ pub fn digitized(design: &Design, budget: &Budget) -> (Vec<Element>, Vec<Diagnos
     for element in elements.iter_mut().filter(|element| element.automatic) {
         element.params.set(SHORT_STITCHES, "crowded");
     }
-    let (made, said) = match Design::new(elements, design.settings.clone()) {
+    let (made, said) = match Design::new(elements, design.settings) {
         Ok(crowded) => {
             let (made, said) = stitchcraft_engine::auto::digitized(&crowded, budget);
             (made.into_owned(), said)

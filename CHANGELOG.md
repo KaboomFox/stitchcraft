@@ -2276,6 +2276,17 @@ What a user can do with this version, before its first release. The entries belo
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.58: smooth satin edges (`REQ-AUTO-170` to `REQ-AUTO-173`, `REQ-SAT-030`). A satin column that
+  automatic digitizing makes sews every stitch from edge to edge, and keeps its spacing on the inside of a
+  bend: the outside opens to 0.5 mm at the most, by the satin column's new setting `bend_open_percent`,
+  which digitizing sets to 25. The inside edge of a curve sews as one row, where every other stitch ended
+  short of it before. The plan pulls crowded ends in by a quarter of the column, and later by half, only
+  at a spot above the warning's limit of 4 fills. `SC-I1119` says how many points it pulled in, and where. The new automatic-digitizing setting `auto_short_stitches` gives the
+  old look with `crowded`: `--set auto_short_stitches=crowded`. A shape that sets `short_stitch_distance_mm`,
+  `short_stitch_inset` or `bend_open_percent` sews by them, as before. Lettering, and satin columns drawn
+  by hand, sew as before. The cost is on the outside of a tight curve, where stitches lie up to 0.5 mm
+  apart. The machine checkpoint MC-8 sews a test piece both ways (`docs/src/plan/machine-testing.md`).
+  `REQ-AUTO-071` is retired: its distance of 0.35 mm is the `crowded` value.
 - M13.56: every plan the engine returns is checked after the cap, and the check knows the thread's state
   (`REQ-PLAN-008` to `REQ-PLAN-010`). The thinning pass and the cap took needle points out after finalize's
   check, and the plan went out unchecked. Now the invariants run on the plan that is returned, with 2 new
@@ -3621,6 +3632,13 @@ What a user can do with this version, before its first release. The entries belo
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes`, `TS-13C.pes`, `TS-13D.pes` and
+  `TS-13E.pes` (M13.58, smooth satin edges). In the digitized half of each, a satin column keeps its
+  spacing on the inside of a bend and sews each stitch full length, and the cap pulls crowded points in
+  only where a spot sews above 4 fills. The sheets sew 23,699, 14,425, 10,011, 19,237 and 5,822 stitches,
+  where they sewed 23,861, 14,511, 10,235, 19,401 and 5,932. TS-13C measures 111.396856 mm across, where it
+  measured 111.396978, and TS-13E 23.997681 × 108.394518 mm, where it measured 23.998748 × 108.393742:
+  the ends of a few columns lie a little farther out. The halves as drawn are as they were.
 - Changed `conformance/golden/testsheets/TS-13B.pes` and `TS-13D.pes` (M13.37, traced letters sewn as
   strokes). In the digitized half of each, a part drawn in straight strokes sews a column along each
   stroke. TS-13B's letters and TS-13D's white frames now sew so. The sheets sew 14,543 and 19,458 stitches,
