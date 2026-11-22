@@ -28,6 +28,8 @@ struct Move {
     point: Entry,
     removed: [SewnStitch; 2],
     added: [SewnStitch; 2],
+    /// Where the point is, and where it would go.
+    from: Point,
     to: Point,
 }
 
@@ -38,7 +40,8 @@ impl Cap<'_, '_> {
     /// they are used up, when both its neighbours on its rail have moved before it, or when the measure
     /// refuses the move (`Pass::changed`). A unit of work for each point looked at each time.
     pub(super) fn pull_in(&mut self, points: &[Entry], meter: &mut Meter) -> Result<(), Exhausted> {
-        let mut moves: BTreeMap<Entry, usize> = BTreeMap::new();
+        // How often each point moved, and where it was before it first did.
+        let mut moves: BTreeMap<Entry, (usize, Point)> = BTreeMap::new();
         let mut refused: BTreeSet<(Entry, usize)> = BTreeSet::new();
         let mut places: BTreeSet<(i64, i64)> = BTreeSet::new();
         while self.above(self.pass.rules.limit, meter)? {
@@ -47,7 +50,7 @@ impl Cap<'_, '_> {
             let mut best: Option<(f64, Move)> = None;
             for &point in points {
                 meter.charge(1)?;
-                let times = moves.get(&point).copied().unwrap_or(0);
+                let times = moves.get(&point).map_or(0, |(times, _)| *times);
                 if refused.contains(&(point, times)) {
                     continue;
                 }
@@ -58,13 +61,13 @@ impl Cap<'_, '_> {
                 }
             }
             let Some((_, pulled)) = best else { break };
-            let times = moves.get(&pulled.point).copied().unwrap_or(0);
+            let (times, first) = moves.get(&pulled.point).copied().unwrap_or((0, pulled.from));
             if !self.pass.changed(&pulled.removed, &pulled.added, meter)? {
                 refused.insert((pulled.point, times));
                 continue;
             }
             self.pass.moved(pulled.point, pulled.to);
-            moves.insert(pulled.point, times + 1);
+            moves.insert(pulled.point, (times + 1, first));
             places.insert((cell(spot.x()), cell(spot.y())));
             // The 2 stitches cover as they now lie, pulled in as they were.
             for (was, now) in pulled.removed.iter().zip(pulled.added) {
@@ -82,8 +85,16 @@ impl Cap<'_, '_> {
     /// column, one of which passes within [`NEAR`] of `spot`; closer than [`CROWDED_CLOSER_THAN`] to the point
     /// before or after it on its rail; not both of whose neighbours there have moved (`moves`) while it
     /// hasn't; and its 2 stitches, moved, no shorter than the machine's shortest and no longer than its
-    /// longest. It moves towards the middle of its 2 stitches' other ends.
-    fn pulled(&self, point: Entry, times: usize, moves: &BTreeMap<Entry, usize>, spot: Point, meter: &mut Meter) -> Result<Option<Move>, Exhausted> {
+    /// longest. It moves from where it was before it first moved towards the middle of its 2 stitches' other
+    /// ends, by the share of the way: a quarter, and later half, as a column moves its crowded points in.
+    fn pulled(
+        &self,
+        point: Entry,
+        times: usize,
+        moves: &BTreeMap<Entry, (usize, Point)>,
+        spot: Point,
+        meter: &mut Meter,
+    ) -> Result<Option<Move>, Exhausted> {
         let pass = &self.pass;
         let (block, index) = point;
         let Some((here, role, element)) = pass.stitch(point) else { return Ok(None) };
@@ -112,13 +123,14 @@ impl Cap<'_, '_> {
             return Ok(None);
         }
         let middle = into.from.lerp(out.to, 0.5);
-        let to_place = pass.thickness.placed(pass.thickness.point(here.lerp(middle, share)));
+        let first = moves.get(&point).map_or(here, |(_, first)| *first);
+        let to_place = pass.thickness.placed(pass.thickness.point(first.lerp(middle, share)));
         let added = [SewnStitch { to: to_place, ..into }, SewnStitch { from: to_place, ..out }];
         let (first, last, now) = (pass.at((block, from)), pass.at((block, to)), Some(pass.thickness.point(to_place)));
         if !pass.long_enough(&[(first, now, false, f64::INFINITY), (now, last, false, f64::INFINITY)]) {
             return Ok(None);
         }
-        Ok(Some(Move { point, removed: [into, out], added, to: to_place }))
+        Ok(Some(Move { point, removed: [into, out], added, from: here, to: to_place }))
     }
 
     /// How many fills `pulled` would take from `spot`, which sews `was`: the measure with the moved stitches,
