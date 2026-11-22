@@ -49,17 +49,16 @@ fn column() -> Element {
 /// `REQ-AUTO-167`: a column reaches its pull compensation, 0.4 mm, past a rail under a later satin column, and
 /// still the whole overlap, 1 mm, under a later fill. Before M13.57 it reached 1 mm under both.
 #[test]
-#[ignore = "planned: M13.57 builds the reach under a later column"]
 fn req_auto_167_a_column_reaches_its_pull_compensation_under_a_later_column() {
     assert_eq!(reaches(&[], column()), [0.4, 0.4]);
-    let square = rect("blue", (3.0, 0.0), (20.0, 30.0), &BLUE, &[]);
+    // A person's fill drawn over the strip's right millimetre sews after it, and is no column.
+    let square = fill("blue", &[&[(2.0, 0.0), (22.0, 0.0), (22.0, 30.0), (2.0, 30.0)]], &BLUE, &[]);
     assert_eq!(reaches(&[], square), [0.4, 1.0]);
 }
 
 /// `REQ-AUTO-168`: `auto_column_reach_mm` sets that reach, from 0 to the overlap: 1 sews as before M13.57,
 /// and 0 ends the column at its rail there. The other rail keeps its pull compensation.
 #[test]
-#[ignore = "planned: M13.57 builds the reach under a later column"]
 fn req_auto_168_the_setting_sets_the_reach_under_a_later_column() {
     assert_eq!(reaches(&[(REACH, "1")], column()), [0.4, 1.0]);
     assert_eq!(reaches(&[(REACH, "0")], column()), [0.0, 0.4]);

@@ -538,6 +538,31 @@ for fabric showing between it and the fill, and for a ridge where the two lie on
 [Image to embroidery](../../design/image-to-embroidery.md#less-overlap-under-a-parts-column) gives the
 numbers.
 
+### Where satin columns meet
+
+Where 2 satin columns that digitizing made lie side by side, the one sewn first reaches a little way under
+the other, so that no fabric shows along the join. The column sewn on top lays its own pull compensation,
+0.4 mm, back over the join, and so the one under it reaches 0.4 mm too. **Reach under a column**
+(`auto_column_reach_mm`) sets how far:
+
+```sh
+stitch plan logo.svg --auto -o logo.pes --set auto_column_reach_mm=1
+```
+
+1 mm, the whole overlap, sews as StitchCraft did before M13.57: 1.4 mm of 2 columns' stitches then lie on
+each other along every join, and designs with many columns, under `--style logo` most of all, sewed their
+thickest spots there. Along a fill, or along any other shape sewn after it, a column still reaches the whole
+overlap. A value above the overlap reads as the overlap, and no dialog shows the setting.
+
+<!-- shot: auto-column-reach -->
+<!-- /shot -->
+
+The bars and rings of `docs/fixtures/joins.svg`, sewn at the default and at 1 mm, show it in the thickness
+style: the band along each join is narrower at the default. Only a sew-out shows whether 0.4 mm is enough
+on your fabric. Sew a small piece first, and look along each join for fabric between the columns, on curves
+most of all. If it shows, set the reach to 0.6 mm or more.
+[Image to embroidery](../../design/image-to-embroidery.md#columns-stacked-on-columns) gives the numbers.
+
 ### Smooth satin edges
 
 A satin column's stitches run from edge to edge, and on the inside of a curve they keep their spacing: the

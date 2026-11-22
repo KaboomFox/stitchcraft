@@ -1231,6 +1231,20 @@ allow = ["SC-I0901", "SC-I0912", "SC-I0923", "SC-I0907", "SC-I0904", "SC-I0908",
 alt = "The same shapes digitized automatically, with their jump threads cut by hand, as a person cuts them after the machine has sewn the design: no thread joins one shape to the next."
 
 [[shot]]
+id = "auto-column-reach"
+kind = "stitch"
+fixture = "docs/fixtures/joins.svg"
+auto = true
+style = "thickness"
+scale = 8.0
+allow = ["SC-I0901", "SC-I0912", "SC-I0923", "SC-I0904", "SC-I0907", "SC-I0908", "SC-I0909", "SC-I0504", "SC-W0913", "SC-I1119"]
+alt = "ALT"
+panels = [
+  { caption = "0.4 mm, the default", params = { auto_column_reach_mm = "0.4" } },
+  { caption = "1 mm, as before", params = { auto_column_reach_mm = "1" } },
+]
+
+[[shot]]
 id = "auto-rules-thickness"
 kind = "stitch"
 fixture = "docs/fixtures/rules.svg"

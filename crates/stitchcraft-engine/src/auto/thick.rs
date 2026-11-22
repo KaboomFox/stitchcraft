@@ -35,6 +35,21 @@ pub const WARNING_CHARS: usize = 500;
 /// and this are kept short enough to be shown whole, the advice first.
 const HINT: &str = "Sew a test piece of it first. `stitch preview --style thickness` draws the thick places.";
 
+/// What the hint adds where a shape that leans to satin columns, as the logo style sets it, lays thread at
+/// the thickest spot and the photo style would sew the design otherwise (`REQ-AUTO-169`): the logo style's
+/// columns lie on each other there, and the photo style fills more of the design.
+fn leaning_hint() -> String {
+    let name = |fill_uneven: bool| super::style::other(fill_uneven).map_or("other", |preset| preset.name);
+    let (logo, photo) = (name(true), name(false));
+    format!(
+        "{HINT} The {logo} style sews more of this design as satin columns, which lie on each other there: `--style {photo}` fills more of it, which often sews thinner."
+    )
+}
+
+/// The names the warning gives the shapes by, and the elements whose shapes lean to satin columns
+/// ([`leaning_hint`]).
+pub(crate) type Told<'t> = (&'t Names, &'t BTreeSet<ElementId>);
+
 /// The limits that `rules` set.
 pub(crate) fn limits(rules: &AutoParams) -> Limits {
     Limits {
@@ -102,13 +117,14 @@ pub(crate) fn held(rules: &AutoParams) -> Held {
 /// the cap takes, `columns` the satin columns among them, whose top stitches it leaves (`REQ-AUTO-112`), and
 /// `lettering` the lettering's columns, each with its pull (`REQ-AUTO-121`), and `pulls` the columns whose
 /// crowded points the cap may pull in, each with its shares (`REQ-AUTO-171`); `profile` is the machine's,
-/// whose stitches the pass keeps to. The warning names the shapes by `names`.
+/// whose stitches the pass keeps to. The warning names the shapes by `told`'s names, and says more of the
+/// logo style where one of its leaning elements lies at the thickest spot.
 pub(crate) fn finished(
     plan: &mut StitchPlan,
     held: &Held,
     (base, made, columns, lettering, pulls): Reach<'_>,
     profile: &MachineProfile,
-    names: &Names,
+    told_by: Told<'_>,
     budget: &Budget,
 ) -> Vec<Diagnostic> {
     let mut meter = budget.meter();
@@ -164,7 +180,7 @@ pub(crate) fn finished(
             measure
         })
     });
-    said.extend(told(plan, measured, &held.limits, names, &mut meter));
+    said.extend(told(plan, measured, &held.limits, told_by, &mut meter));
     said
 }
 
@@ -180,10 +196,10 @@ pub(crate) type Pulls = BTreeMap<ElementId, Pullable>;
 /// What is said of how thick `plan` sews against the limits `held`, with nothing taken: a design whose
 /// elements all sew by their own settings, a person's lettering among them (`REQ-AUTO-124`). It is measured
 /// with `budget`'s work.
-pub(crate) fn measured(plan: &StitchPlan, held: &Held, names: &Names, budget: &Budget) -> Vec<Diagnostic> {
+pub(crate) fn measured(plan: &StitchPlan, held: &Held, told_by: Told<'_>, budget: &Budget) -> Vec<Diagnostic> {
     let mut meter = budget.meter();
     let measured = Thickness::of(plan, &mut meter);
-    told(plan, measured, &held.limits, names, &mut meter).into_iter().collect()
+    told(plan, measured, &held.limits, told_by, &mut meter).into_iter().collect()
 }
 
 /// What a design holds to when no automatic shape gives its limits: the default settings of the rules
@@ -231,29 +247,44 @@ fn note(thinned: &Thinned, capped: &Result<Option<Capped>, Exhausted>, cap: f64)
 pub(crate) fn said(plan: &StitchPlan, limits: &Limits, budget: &Budget) -> Option<Diagnostic> {
     let mut meter = budget.meter();
     let measured = Thickness::of(plan, &mut meter);
-    told(plan, measured, limits, &Names::default(), &mut meter)
+    told(plan, measured, limits, (&Names::default(), &BTreeSet::new()), &mut meter)
 }
 
-/// What is said of `plan`, `measured`, against `limits`, the report made with `meter`'s work and its shapes
-/// named by `names`.
-fn told(plan: &StitchPlan, measured: Result<Option<Thickness>, Exhausted>, limits: &Limits, names: &Names, meter: &mut Meter) -> Option<Diagnostic> {
+/// What is said of `plan`, `measured`, against `limits`, the report made with `meter`'s work, its shapes
+/// named by `names`, and the logo style named where one of `leaning` lays thread at the thickest spot.
+fn told(
+    plan: &StitchPlan,
+    measured: Result<Option<Thickness>, Exhausted>,
+    limits: &Limits,
+    (names, leaning): Told<'_>,
+    meter: &mut Meter,
+) -> Option<Diagnostic> {
     let measured = measured.and_then(|thickness| thickness.map(|thickness| thickness.report(plan, limits, meter)).transpose());
-    let message = match measured {
-        Ok(Some(report)) if report.warns() => fitted(&|named| message(plan, &report, limits, names, named), WARNING_CHARS),
+    let (message, hint) = match measured {
+        Ok(Some(report)) if report.warns() => {
+            let leans = |layer: &Layer| {
+                let id = layer.element.and_then(|element| plan.elements.get(element.index()));
+                layer.top + layer.under > 0.0 && id.is_some_and(|id| leaning.contains(id))
+            };
+            let hint = if report.stack.iter().any(leans) { leaning_hint() } else { HINT.to_string() };
+            (fitted(&|named| message(plan, &report, limits, names, named), &hint, WARNING_CHARS), hint)
+        }
         Ok(_) => return None,
-        Err(_) => "How thick the design sews was not measured: it is larger than 500 mm, or measuring it needs more work than the budget allows."
-            .to_string(),
+        Err(_) => (
+            "How thick the design sews was not measured: it is larger than 500 mm, or measuring it needs more work than the budget allows."
+                .to_string(),
+            HINT.to_string(),
+        ),
     };
-    let hint = HINT;
-    Some(Diagnostic::new(Code::AutoThick, message).with_fix(Fix::Hint(hint.to_string())))
+    Some(Diagnostic::new(Code::AutoThick, message).with_fix(Fix::Hint(hint)))
 }
 
 /// The warning's message that `make` makes naming as many stacked shapes as it is given, from [`NAMED`] down:
-/// the first whose line, with its hint, has `most` characters or fewer, or else the one naming 1. Names as
+/// the first whose line, with its `hint`, has `most` characters or fewer, or else the one naming 1. Names as
 /// long as the machine's threads have can make a line of 3 too long for VectorCraft.
-fn fitted(make: &dyn Fn(usize) -> String, most: usize) -> String {
+fn fitted(make: &dyn Fn(usize) -> String, hint: &str, most: usize) -> String {
     let fits =
-        |message: &String| Diagnostic::new(Code::AutoThick, message.clone()).with_fix(Fix::Hint(HINT.to_string())).one_line().chars().count() <= most;
+        |message: &String| Diagnostic::new(Code::AutoThick, message.clone()).with_fix(Fix::Hint(hint.to_string())).one_line().chars().count() <= most;
     (2..=NAMED).rev().map(make).find(fits).unwrap_or_else(|| make(1))
 }
 
@@ -402,6 +433,28 @@ mod tests {
     }
 
     #[test]
+    fn req_auto_169_the_hint_names_the_photo_style_where_a_leaning_shape_lies_at_the_thickest_spot() {
+        let limits = Limits { warn_fills: 3.0, fail_fills: 4.5, warn_points: 12.0, fail_points: 16.0 };
+        let plan = plan(4, 1);
+        let hint = |leaning: &[&str]| {
+            let leaning: BTreeSet<ElementId> = leaning.iter().map(|id| ElementId::new(*id).unwrap()).collect();
+            let mut meter = Budget::DEFAULT.meter();
+            let measured = Thickness::of(&plan, &mut meter);
+            let warned = told(&plan, measured, &limits, (&Names::default(), &leaning), &mut meter).unwrap();
+            let Some(Fix::Hint(hint)) = warned.fix else { return String::new() };
+            hint
+        };
+        let named = format!(
+            "{HINT} The logo style sews more of this design as satin columns, which lie on each other there: `--style photo` fills more of it, which often sews thinner."
+        );
+        assert_eq!(hint(&["s2"]), named);
+        assert_eq!(leaning_hint(), named);
+        // A leaning shape elsewhere, or none, leaves the hint as it is.
+        assert_eq!(hint(&["s9"]), HINT);
+        assert_eq!(hint(&[]), HINT);
+    }
+
+    #[test]
     fn diag_sc_w0913_gives_the_most_of_each_measure_and_what_is_stacked() {
         let limits = Limits { warn_fills: 3.0, fail_fills: 4.5, warn_points: 12.0, fail_points: 16.0 };
         let warned = said(&plan(4, 1), &limits, &Budget::DEFAULT).unwrap();
@@ -425,7 +478,7 @@ mod tests {
                 1,
             )
         };
-        let fit = |most: usize| fitted(&make, most).matches("Wisteria").count();
+        let fit = |most: usize| fitted(&make, HINT, most).matches("Wisteria").count();
         let length = |shown: usize| Diagnostic { message: make(shown), ..warned.clone() }.one_line().chars().count();
         assert_eq!([fit(length(3)), fit(length(3) - 1), fit(length(2)), fit(length(2) - 1), fit(0)], [3, 2, 2, 1, 1]);
         // 3 names of the machine's longest thread name make a line too long to show whole.
@@ -443,7 +496,7 @@ mod tests {
             &held,
             (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new(), &BTreeMap::new()),
             stitchcraft_plan::profiles::REFERENCE,
-            &Names::default(),
+            (&Names::default(), &BTreeSet::new()),
             &Budget::DEFAULT,
         );
         let codes: Vec<Code> = said.iter().map(|said| said.code).collect();
@@ -479,7 +532,7 @@ mod tests {
                 &held,
                 (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new(), &BTreeMap::new()),
                 profile,
-                &Names::default(),
+                (&Names::default(), &BTreeSet::new()),
                 &Budget::DEFAULT
             )),
             [Code::AutoThinned, Code::AutoThick]
@@ -493,7 +546,7 @@ mod tests {
                 &held,
                 (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new(), &BTreeMap::new()),
                 profile,
-                &Names::default(),
+                (&Names::default(), &BTreeSet::new()),
                 &Budget::DEFAULT
             )
             .is_empty()
@@ -528,7 +581,7 @@ mod tests {
             &held,
             (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new(), &BTreeMap::new()),
             profile,
-            &Names::default(),
+            (&Names::default(), &BTreeSet::new()),
             &budget,
         );
         assert_eq!(

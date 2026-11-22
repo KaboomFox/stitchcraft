@@ -122,6 +122,7 @@ jumps and colour changes, which the rethreads and the cuts at the machine are co
 | Bars and rings 6, 8 and 10 mm wide | M13.54 | `bar-8mm.svg` and its relatives from the commands after this table |
 | The test piece of 12 tiles under satin columns | M13.55 | Made by hand. Its tiles are fills 20 mm wide in navy and in orange, with a black satin column along each tile's top, straight on some tiles and curved on the others, in widths from 2 to 6 mm. No file of the repository draws it |
 | The smooth-edges test piece: lines 3 mm wide drawn as a mug's handle, a ring and a sharp corner | M13.58 | `edges.svg` from the commands after this table, planned with `--auto` into `edges.pes`, and again with `--set auto_short_stitches=crowded` into `edges-today.pes`. Sew both on one piece of fabric. Check each inside edge for a second row of short ends, each outside edge for fabric showing between the stitches, and the corner for thread piling up |
+| Satin columns meeting: bars 2, 3 and 4 mm wide side by side and 2 rings round each other, as `main` plans them and with M13.57 | M13.57 | `stitch plan docs/fixtures/joins.svg --auto -o joins.pes`, and again with `--set auto_column_reach_mm=1` into `joins-1mm.pes` |
 | A circle 40 mm across, its fill in one colour and a 2 mm stroke round it in another | M13.8 | Made by hand in VectorCraft, without StitchCraft effects. `stitch plan circle.vectorcraft -o circle.pes`, and again with `--no-auto` |
 
 The arc, the bars and the rings of M13.54, and the smooth-edges piece of M13.58, each written by one command from nothing but the command
@@ -528,6 +529,20 @@ sew the running dog in 9 threads at the default and at 0.4 mm:
   6 mm ones.
 - On the dog at 0.4 mm, look for fabric beside its satin columns, and feel for the thick spots against
   the default.
+
+M13.57 makes a satin column that digitizing made reach 0.4 mm, its pull compensation, under a satin column
+sewn after it beside it, where it reached the whole overlap of 1 mm
+([columns stacked on columns](../design/image-to-embroidery.md#columns-stacked-on-columns)).
+`auto_column_reach_mm` sets the reach, and 1 mm sews as before. The bare-fabric measure doesn't pull
+stitches in, so only this sew-out says whether 0.4 mm is enough. At MC-8, sew `joins.pes` and
+`joins-1mm.pes` side by side, and the dog on turf in 6 threads with `--style logo` at the default and at
+`--set auto_column_reach_mm=1`:
+
+- Along each join between a red and a blue column, does fabric show at the default? Look closely on the
+  rings, where the thread pulls the stitches in round the curve, and on the 2 mm bars.
+- Feel each join: is the ridge lower at the default than at 1 mm? Does the needle thump less on the dog's
+  thickest spots?
+- If fabric shows, sew the joins again at 0.6 mm and report the smallest reach at which none shows.
 
 M13.60 keeps a satin column's stitches square to it up to an end that a slanted or curved edge cuts, shorter
 into the corner, and sews a line that turns by more than 60° at a sharp corner as a column for each leg,

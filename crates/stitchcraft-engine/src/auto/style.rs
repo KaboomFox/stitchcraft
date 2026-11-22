@@ -19,11 +19,11 @@
 //! off its narrow pieces (`auto_min_fill_width_mm`, which `auto_prefer` leans too) is not counted, nor the
 //! lines a merge keeps for the picture's likeness. A design whose counts are all 0 is said nothing.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix};
 
-use super::params::{AutoParams, FILL_UNEVEN};
+use super::params::{AutoParams, FILL_UNEVEN, PREFER};
 use super::rules::{Bounds, Fired, PRESETS, Preset, RuleId, choose, fills};
 use crate::design::Element;
 
@@ -32,6 +32,20 @@ use crate::design::Element;
 pub(super) fn other(fill_uneven: bool) -> Option<&'static Preset> {
     let sets = |preset: &Preset, value: &str| preset.values.iter().any(|(key, set)| *key == FILL_UNEVEN && *set == value);
     PRESETS.iter().find(|preset| sets(preset, if fill_uneven { "false" } else { "true" }))
+}
+
+/// The ids of the elements of `elements` that `made` holds and whose shape leans to satin columns as the
+/// style without `auto_fill_uneven` sets `auto_prefer`, the logo style, when `tally` counts something the
+/// other style, the photo style, would sew otherwise; none when it counts nothing (`REQ-AUTO-169`). The
+/// thickness warning names the other style where such an element lays thread at the thickest spot.
+pub(super) fn leaning(tally: &Tally, elements: &[Element], made: &BTreeSet<ElementId>) -> BTreeSet<ElementId> {
+    let (Some(leaning), Some(other)) = (other(true), other(false)) else { return BTreeSet::new() };
+    let Some(&(_, prefer)) = leaning.values.iter().find(|(key, _)| *key == PREFER) else { return BTreeSet::new() };
+    if tally.counts.get(other.name).is_none_or(Count::is_empty) {
+        return BTreeSet::new();
+    }
+    let leans = |element: &&Element| made.contains(&element.id) && element.params.get(PREFER) == Some(prefer);
+    elements.iter().filter(leans).map(|element| element.id.clone()).collect()
 }
 
 /// For each of `elements`, by its place, the settings of the rules that the other style gives it: its own

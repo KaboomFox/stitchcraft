@@ -56,6 +56,8 @@ pub const MIN_FILL_WIDTH: &str = "auto_min_fill_width_mm";
 pub const OVERLAP: &str = "auto_overlap_mm";
 /// The key of the overlap under a part's satin column.
 pub const COLUMN_OVERLAP: &str = "auto_column_overlap_mm";
+/// The key of how far a satin column reaches under a later satin column.
+pub const COLUMN_REACH: &str = "auto_column_reach_mm";
 /// The key of the smallest area.
 pub const MIN_AREA: &str = "auto_min_area_mm2";
 /// The key of the choice of where a satin column's crowded needle points move in.
@@ -362,6 +364,16 @@ params! {
         /// an area, a running line or a satin column drawn as a stroke, lettering's too, the overlap stays.
         auto_column_overlap_mm: OptionalLengthWithZero = "", label "Overlap under a column", range (0.0, 2.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
+
+        /// How far a satin column that digitizing makes reaches past its edge where a satin column sewn after
+        /// it lies along that edge. The column on top lays its own pull compensation, 0.4 mm, back over the
+        /// edge, so the default, 0.4 mm, keeps 2 columns' stitches from lying on each other the whole overlap
+        /// wide, which sewed the thickest spots of designs with many columns. 1 mm, the overlap's default,
+        /// sews as before. Only a sew-out shows how little is enough: set it higher if fabric shows between 2
+        /// columns. A value above the overlap reads as the overlap. Along a fill, or along a line, the column
+        /// reaches the overlap as before.
+        auto_column_reach_mm: Length = "0.4", label "Reach under a column", range (0.0, 2.0),
+            origin Origin::StitchCraft, stability Stability::Experimental;
     }
 }
 
@@ -406,12 +418,21 @@ mod tests {
         ];
         assert_eq!(
             keys,
-            [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..], &thick[..], &[DETAILS_LAST, "auto_smooth_mm", COLUMN_OVERLAP]].concat()
+            [
+                &shape[..],
+                &neighbours[..],
+                &base[..],
+                &bounds[..],
+                &cover[..],
+                &thick[..],
+                &[DETAILS_LAST, "auto_smooth_mm", COLUMN_OVERLAP, COLUMN_REACH]
+            ]
+            .concat()
         );
-        // The bounds, the base layer's offset and rows, the 2 limits of the cover's check, the 4 limits of the thickness and its cap, the switch of the details and the smoothing and the overlap under a column
+        // The bounds, the base layer's offset and rows, the 2 limits of the cover's check, the 4 limits of the thickness and its cap, the switch of the details and the smoothing, the overlap under a column and the reach under one
         // are the advanced settings, which no dialog shows.
         let advanced: Vec<&str> = AutoParams::SPECS.iter().filter(|spec| spec.group == ADVANCED).map(|spec| spec.key).collect();
-        assert_eq!(advanced, [&bounds[..], &cover[..], &thick[..], &[DETAILS_LAST, "auto_smooth_mm", COLUMN_OVERLAP]].concat());
+        assert_eq!(advanced, [&bounds[..], &cover[..], &thick[..], &[DETAILS_LAST, "auto_smooth_mm", COLUMN_OVERLAP, COLUMN_REACH]].concat());
     }
 
     #[test]
