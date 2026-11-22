@@ -375,7 +375,7 @@ mod tests {
             element: Element { shape: stroke, params: ParamSet::default(), ..filled("l", std::slice::from_ref(&left)) },
             area: None,
             automatic: true,
-            reach: Some(1.0),
+            reach: Some(crate::auto::neighbours::Past { overlap: 1.0, column: 0.4 }),
             shape: 1,
             part: None,
         };

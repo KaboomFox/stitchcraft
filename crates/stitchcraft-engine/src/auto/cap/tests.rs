@@ -321,7 +321,7 @@ fn said(sewn: &StitchPlan, budget: &Budget) -> (Vec<Diagnostic>, StitchPlan) {
         &held,
         (&[], &made, &BTreeSet::new(), &BTreeMap::new(), &BTreeMap::new()),
         stitchcraft_plan::profiles::REFERENCE,
-        &crate::names::Names::default(),
+        (&crate::names::Names::default(), &std::collections::BTreeSet::new()),
         budget,
     );
     (said, kept)

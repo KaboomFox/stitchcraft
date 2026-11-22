@@ -2276,6 +2276,17 @@ What a user can do with this version, before its first release. The entries belo
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.57: less thread where satin columns meet (`REQ-AUTO-167` to `REQ-AUTO-169`). Where 2 satin columns
+  that automatic digitizing made lie side by side, the one sewn first reached 1 mm, its whole overlap, under
+  the other, and the other laid 0.4 mm back over it: 1.4 mm of 2 columns' stitches on each other along the
+  join, the thickest spots of designs with many columns. Now the first reaches 0.4 mm under the other, its
+  pull compensation. Along a fill or any other shape sewn after it, it still reaches the whole overlap. The
+  new advanced setting `auto_column_reach_mm`, from 0 to 2 mm, sets how far the column lies under the
+  other, and `--set auto_column_reach_mm=1` sews as before. Under the logo style, where a design still ends at 4 fills or
+  more and a shape that prefers satin columns lies at the thickest spot, the thickness warning `SC-W0913`
+  adds that `--style photo` fills more of the design, which often sews thinner. The machine checkpoint
+  sews a test piece of columns meeting (`docs/src/plan/machine-testing.md`). The key is
+  `stitchcraft_engine::auto::COLUMN_REACH`.
 - M13.59: shapes whose width swells and tapers (`REQ-AUTO-174`, `REQ-AUTO-175`). A part of an automatic
   shape whose width swells and tapers, such as a leaf or a petal, is filled whole with its outline once it is
   4 mm wide somewhere (`auto_min_fill_width_mm`). It sewed as a satin column, or was filled when its column

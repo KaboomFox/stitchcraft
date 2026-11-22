@@ -471,7 +471,8 @@ fn a_column_whose_neighbours_need_more_work_than_the_budget_keeps_its_pull_compe
     };
     // The column's pull compensation and what is said, its neighbours found with `work`.
     let reached = |work: u64| {
-        let column = Sewn { element: column.clone(), area: None, automatic: true, reach: Some(1.0), shape: 0, part: None };
+        let column =
+            Sewn { element: column.clone(), area: None, automatic: true, reach: Some(Past { overlap: 1.0, column: 0.4 }), shape: 0, part: None };
         let settings = DesignSettings::default();
         let mut shapes = Shapes::new(vec![column, area("square", (0.0, 13.0), (10.0, 23.0))], &settings, &Budget::DEFAULT);
         let said = under::reached(&mut shapes, &Budget { max_work: work, ..Budget::DEFAULT });
@@ -500,7 +501,7 @@ fn column_made(part: Option<Polygon>) -> Sewn {
     let rail = |y: f64| Subpath { start: p(2.0, y), segments: vec![Segment::Line(p(8.0, y))], closed: false };
     let shape = Shape::stroke(Path { subpaths: vec![rail(4.0), rail(7.0)] });
     let element = Element { shape, params: [("satin_column", "true")].into_iter().collect(), ..filled("column", &[]) };
-    Sewn { element, area: None, automatic: true, reach: Some(1.0), shape: 0, part }
+    Sewn { element, area: None, automatic: true, reach: Some(Past { overlap: 1.0, column: 0.4 }), shape: 0, part }
 }
 
 /// What `said` says of columns that sew past a rail.
@@ -581,7 +582,7 @@ fn req_auto_029_a_column_sews_the_overlap_past_a_rail_and_keeps_the_other_rails_
             column.element.params.set(PULL_COMPENSATION, pull);
         }
         let mut shapes = Shapes::new(vec![column], &settings, &Budget::DEFAULT);
-        shapes.reach_past(0, under, 1.5);
+        shapes.reach_past(0, under.map(|under| under.then_some(1.5)));
         shapes.elements[0].params.get(PULL_COMPENSATION).map(str::to_string)
     };
     let past = |pull: Option<&str>, under: [bool; 2]| past(pull, under).unwrap();
@@ -598,6 +599,14 @@ fn req_auto_029_a_column_sews_the_overlap_past_a_rail_and_keeps_the_other_rails_
 }
 
 #[test]
+fn req_auto_167_each_rail_sews_past_by_its_own_reach() {
+    let settings = DesignSettings::default();
+    let mut shapes = Shapes::new(vec![column_made(None)], &settings, &Budget::DEFAULT);
+    shapes.reach_past(0, [Some(0.4), Some(1.0)]);
+    assert_eq!(shapes.elements[0].params.get(PULL_COMPENSATION), Some("0.4 1"));
+}
+
+#[test]
 fn a_columns_rails_are_found_once_for_what_it_paints_and_where_it_sews_past_a_rail() {
     let settings = DesignSettings::default();
     let mut shapes = Shapes::new(vec![column_made(None)], &settings, &Budget::DEFAULT);
@@ -609,7 +618,7 @@ fn a_columns_rails_are_found_once_for_what_it_paints_and_where_it_sews_past_a_ra
     let (first, work) = rails(&mut shapes);
     assert!(first.is_some() && work > 0, "{first:?}, {work}");
     // Asked for again, they are the same for no work, also once the column sews past a rail.
-    shapes.reach_past(0, [true, false], 1.0);
+    shapes.reach_past(0, [Some(1.0), None]);
     assert_eq!(rails(&mut shapes), (first.clone(), 0));
     assert_eq!(rails_of(&shapes.elements[0], shapes.stitch_types[0].unwrap(), &mut Budget::DEFAULT.meter()).unwrap(), first);
     // What the column paints lies between them: with its rails known it is found with less work, the same.

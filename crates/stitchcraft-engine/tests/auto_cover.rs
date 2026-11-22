@@ -335,7 +335,7 @@ fn req_auto_029_an_area_reaches_1_mm_under_the_neighbour_sewn_after_it() {
 }
 
 #[test]
-fn req_auto_029_a_satin_column_reaches_1_mm_under_the_neighbour_sewn_after_it_and_no_wider_elsewhere() {
+fn req_auto_029_a_satin_column_reaches_its_pull_compensation_under_a_column_sewn_after_it_and_no_wider_elsewhere() {
     // 2 strips 3 mm wide and 30 mm long that meet at x = 3: each sews as a satin column along y.
     let strips = design(vec![rect("red", (0.0, 0.0), (3.0, 30.0), &RED), rect("blue", (3.0, 0.0), (3.0, 30.0), &BLUE)]);
     let plan = plan(&strips);
@@ -344,9 +344,10 @@ fn req_auto_029_a_satin_column_reaches_1_mm_under_the_neighbour_sewn_after_it_an
     let red_first = red.first().unwrap().0 < blue.first().unwrap().0;
     // Past its outer side each column reaches its pull compensation, 0.4 mm, whichever sews first.
     assert!((-red_left - 0.4).abs() < 0.1 && (blue_right - 6.4).abs() < 0.1, "{red_left} and {blue_right}");
-    // Where they meet, the one sewn first reaches 1 mm under the other, which sews 0.4 mm over it.
+    // Where they meet, the one sewn first reaches 0.4 mm under the other, which sews 0.4 mm over it: a later
+    // column takes its pull compensation, not the overlap (`REQ-AUTO-167`).
     let (under, over) = if red_first { (red_right - 3.0, 3.0 - blue_left) } else { (3.0 - blue_left, red_right - 3.0) };
-    assert!((under - OVERLAP).abs() < 0.1, "the column sewn first reaches {under:.2} mm under the other");
+    assert!((under - 0.4).abs() < 0.1, "the column sewn first reaches {under:.2} mm under the other");
     assert!((over - 0.4).abs() < 0.1, "the column sewn after reaches {over:.2} mm over the first");
 }
 
@@ -501,7 +502,9 @@ fn req_auto_029_a_column_reaches_under_a_neighbour_that_runs_along_more_than_hal
     // A strip 3 mm wide and 30 mm long, a satin column along y, and a blue one beside it from y = 0, sewn
     // after it: `along` mm of the red column's right rail.
     let reach = |along: f64| {
-        let strips = design(vec![rect("red", (0.0, 0.0), (3.0, 30.0), &RED), rect("blue", (3.0, 0.0), (3.0, along), &BLUE)]);
+        // With the reach under a column at the overlap, the column sews as it does along any shape.
+        let red = with(rect("red", (0.0, 0.0), (3.0, 30.0), &RED), &[("auto_column_reach_mm", "1")]);
+        let strips = design(vec![red, rect("blue", (3.0, 0.0), (3.0, along), &BLUE)]);
         let (elements, said) = auto::digitized(&strips, &Budget::DEFAULT);
         let red = elements.iter().find(|element| element.id.as_str() == "red").unwrap();
         let said: Vec<String> = said.iter().filter(|d| d.code == Code::AutoUnder).map(|d| d.message.clone()).collect();
@@ -517,9 +520,9 @@ fn req_auto_029_a_column_reaches_under_a_neighbour_that_runs_along_more_than_hal
     assert!(said.iter().any(|message| message.ends_with("1 satin column sews 1 mm past a rail, under the shape sewn after it there.")), "{said:?}");
     // 2 columns with such a neighbour, one with an overlap of its own.
     let two = design(vec![
-        rect("red", (0.0, 0.0), (3.0, 30.0), &RED),
+        with(rect("red", (0.0, 0.0), (3.0, 30.0), &RED), &[("auto_column_reach_mm", "1")]),
         rect("blue", (3.0, 0.0), (3.0, 30.0), &BLUE),
-        with(rect("gold", (40.0, 0.0), (3.0, 30.0), &RED), &[("auto_overlap_mm", "0.8")]),
+        with(rect("gold", (40.0, 0.0), (3.0, 30.0), &RED), &[("auto_overlap_mm", "0.8"), ("auto_column_reach_mm", "1")]),
         rect("navy", (43.0, 0.0), (3.0, 30.0), &BLUE),
     ]);
     let (_, said) = auto::digitized(&two, &Budget::DEFAULT);

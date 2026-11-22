@@ -88,10 +88,10 @@ fn req_vc_016_the_auto_effect_s_dialog_holds_the_rules_settings_and_its_preview_
     assert_eq!(keys, [&shape[..], &neighbours[..], &base[..], &[PREVIEW_LEVEL]].concat());
     // The advanced settings, the rules' bounds (the least unevenness of a thin line that merges among them, M13.18, and the
     // least likeness that merging keeps, M13.44), the base layer's offset, the 2 limits of the cover's check and the 4
-    // of how thick the design sews (M13.29) with its cap (M13.35), the switch that sews the details last (M13.40), the smoothing of outlines (M13.52), the widest split satin column (M13.54), the overlap under a part's column (M13.55) and where a column's crowded points move in (M13.58), have no row: the dialog holds 12 rows, one fewer than the 13 that made it 3 px taller than its window. The
+    // of how thick the design sews (M13.29) with its cap (M13.35), the switch that sews the details last (M13.40), the smoothing of outlines (M13.52), the widest split satin column (M13.54), the overlap under a part's column (M13.55), the reach under a later column (M13.57) and where a column's crowded points move in (M13.58), have no row: the dialog holds 12 rows, one fewer than the 13 that made it 3 px taller than its window. The
     // outline's switch has a row (M13.28), and the offset, the base layer's finest adjustment, gave it its place.
     let advanced: Vec<&str> = AutoParams::SPECS.iter().filter(|spec| spec.group == ADVANCED).map(|spec| spec.key).collect();
-    assert_eq!(advanced.len(), 23);
+    assert_eq!(advanced.len(), 24);
     assert!(advanced.contains(&MIN_AREA) && advanced.iter().all(|key| !keys.contains(key)), "{advanced:?}");
     assert_eq!(keys.len() + advanced.len(), AutoParams::SPECS.len() + 1);
     // Each setting's row has the registry's label, unit, section, help and page, and always shows: the

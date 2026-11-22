@@ -52,7 +52,7 @@
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Meter, Point};
 use stitchcraft_params::{Family, StitchType};
 
-use super::{Failed, Kind, Shapes, TOUCHING, envelope, joined, near, no_area};
+use super::{Failed, Kind, Past, Shapes, TOUCHING, envelope, joined, near, no_area};
 use crate::auto::AutoParams;
 use crate::generators::mm;
 use crate::generators::tatami::rows::axes;
@@ -77,9 +77,9 @@ pub(super) fn reached(shapes: &mut Shapes, budget: &Budget) -> Vec<Diagnostic> {
         if shapes.kind(index) == Some(Kind::Part) {
             said.extend(hidden(shapes, index, budget));
         }
-        if let (Some(id), Some(overlap)) = (shapes.id(index), shapes.column(index)) {
-            match widened(shapes, index, overlap, &mut budget.meter()) {
-                Ok(reaches) => columns.extend(reaches.then_some(overlap)),
+        if let (Some(id), Some(past)) = (shapes.id(index), shapes.column(index)) {
+            match widened(shapes, index, past, &mut budget.meter()) {
+                Ok(reaches) => columns.extend(reaches),
                 Err(failed) => {
                     let (finding, consequence) =
                         ("where this satin column meets the shapes sewn after it", "it sews its pull compensation past both rails");
@@ -376,30 +376,45 @@ fn parted(rim: &mut Rim, before: &[Option<Rim>], meter: &mut Meter) -> Result<Op
 /// How far apart the places lie where a rail is looked at for a shape beside it, at most, in millimetres.
 const RAIL_STEP: f64 = 0.5;
 
-/// Makes the automatic satin column `index` of `shapes` sew `overlap` past each rail that a shape sewn after
-/// it runs along for more than half the rail's length, with `meter`'s work, and says whether it has such a
-/// rail (`REQ-AUTO-029`). A rail with none keeps its own pull compensation, so the column grows no
+/// Makes the automatic satin column `index` of `shapes` sew past each rail that a shape sewn after it runs
+/// along for more than half the rail's length, with `meter`'s work, and returns how far it sews past one
+/// when it has such a rail, the least of its 2 when they differ (`REQ-AUTO-029`). Past a rail along a satin
+/// column sewn after it, it sews `past.column`, and past any other `past.overlap` (`REQ-AUTO-167`): the
+/// column on top lays its own pull compensation back over the rail, and a whole overlap under it sewed 2
+/// columns' tops on each other. A rail with none keeps its own pull compensation, so the column grows no
 /// wider over a shape sewn before it or over fabric. A line goes over the column, and a part's line or
 /// column of the column's own shape paints the part the column is in, so neither is a shape beside it.
-fn widened(shapes: &mut Shapes, index: usize, overlap: f64, meter: &mut Meter) -> Result<bool, Failed> {
-    let Some(rails) = shapes.rails(index, meter)? else { return Ok(false) };
+fn widened(shapes: &mut Shapes, index: usize, past: Past, meter: &mut Meter) -> Result<Option<f64>, Failed> {
+    let Some(rails) = shapes.rails(index, meter)? else { return Ok(None) };
     let points: Vec<Point> = rails.iter().flatten().copied().collect();
     let bounds = Envelope::of(&points);
-    let mut beside = Vec::new();
+    let (mut beside, mut columns) = (Vec::new(), Vec::new());
     for later in index + 1..shapes.len() {
         meter.charge(1)?;
         let own = shapes.kind(later) == Some(Kind::Part) && shapes.of_shape.get(later) == shapes.of_shape.get(index);
         if own || shapes.kind(later) == Some(Kind::Line) || !shapes.bounds(later).is_some_and(|other| near(&bounds, TOUCHING, &other)) {
             continue;
         }
-        beside.extend(shapes.grown(later, meter)?.into_iter().flatten());
+        let grown = shapes.grown(later, meter)?.into_iter().flatten();
+        if shapes.satin(later) { columns.extend(grown) } else { beside.extend(grown) }
     }
-    let [first, second] = &rails;
-    let under = [runs_along(first, &beside, meter)?, runs_along(second, &beside, meter)?];
-    if under.contains(&true) {
-        shapes.reach_past(index, under, overlap);
+    let mut reaches = [None; 2];
+    for (reach, rail) in reaches.iter_mut().zip(&rails) {
+        // A rail along a column reaches the column's reach, the smaller, even where a fill lies along it too.
+        let along = |shapes: &[Polygon], meter: &mut Meter| runs_along(rail, shapes, meter);
+        *reach = if along(&columns, meter)? {
+            Some(past.column)
+        } else if along(&[beside.as_slice(), columns.as_slice()].concat(), meter)? {
+            Some(past.overlap)
+        } else {
+            None
+        };
     }
-    Ok(under.contains(&true))
+    if reaches == [None; 2] {
+        return Ok(None);
+    }
+    shapes.reach_past(index, reaches);
+    Ok(reaches.into_iter().flatten().reduce(f64::min))
 }
 
 /// Whether the shapes `beside` cover more than half the length of `rail`, with `meter`'s work: the rail is

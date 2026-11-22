@@ -11,7 +11,7 @@ use stitchcraft_plan::Thread;
 
 use super::*;
 use crate::auto::AutoParams;
-use crate::auto::neighbours::{Sewn, under};
+use crate::auto::neighbours::{Past, Sewn, under};
 use crate::design::{Cap, DesignSettings, FillRule, Path, Segment, Subpath};
 
 const RED: Thread = Thread::new(Rgb::new(200, 0, 0));
@@ -63,7 +63,7 @@ fn column(id: &str, corners: &[(f64, f64)], thread: &Thread) -> Sewn {
     let middle = |a: usize, b: usize| ((corners[a].0 + corners[b].0) / 2.0, (corners[a].1 + corners[b].1) / 2.0);
     let line = running(id, &[middle(0, 3), middle(1, 2)], 2.0, thread);
     let element = Element { params: [("satin_column", "true")].into_iter().collect(), ..line.element };
-    Sewn { element, reach: Some(1.0), part: Some(part), ..line }
+    Sewn { element, reach: Some(Past { overlap: 1.0, column: 0.4 }), part: Some(part), ..line }
 }
 
 /// `sewn` in the order it sews in, each shape's paint found with `painting` and the order with `budget`;

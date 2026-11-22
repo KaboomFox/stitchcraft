@@ -142,6 +142,21 @@
         "unit": "mm"
       }
     },
+    "auto_column_reach_mm": {
+      "default": 0.4,
+      "description": "How far a satin column that digitizing makes reaches past its edge where a satin column sewn after it lies along that edge. The column on top lays its own pull compensation, 0.4 mm, back over the edge, so the default, 0.4 mm, keeps 2 columns' stitches from lying on each other the whole overlap wide, which sewed the thickest spots of designs with many columns. 1 mm, the overlap's default, sews as before. Only a sew-out shows how little is enough: set it higher if fabric shows between 2 columns. A value above the overlap reads as the overlap. Along a fill, or along a line, the column reaches the overlap as before.",
+      "maximum": 2.0,
+      "minimum": 0.0,
+      "title": "Reach under a column",
+      "type": "number",
+      "x-stitchcraft": {
+        "automatic": true,
+        "group": "Advanced",
+        "origin": "stitchcraft",
+        "stability": "experimental",
+        "unit": "mm"
+      }
+    },
     "auto_details_last": {
       "default": false,
       "description": "Whether a detail sews after the larger areas round it, where that costs no thread change: an automatic area that the shapes round it close in on, smaller than an area it meets, as an eye is in the fur round it. Sewn last, the detail keeps the later fills' rows off its edge. Off by default: a fill that moves for a detail can wait for a later batch of its thread, which adds jump threads to cut by hand, and on traced photos it shows no more of the picture. Turn it on where an eye or a mark must keep its edge clear. The design goes by the setting of its lowest automatic shape.",
@@ -3562,7 +3577,8 @@
           "auto_short_stitches",
           "auto_details_last",
           "auto_smooth_mm",
-          "auto_column_overlap_mm"
+          "auto_column_overlap_mm",
+          "auto_column_reach_mm"
         ],
         "name": "AutoParams",
         "title": "Auto parameters"
