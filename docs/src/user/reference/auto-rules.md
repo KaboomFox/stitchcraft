@@ -41,6 +41,7 @@ A shape's settings are those of VectorCraft's Auto effect on it, or on the group
 | [`auto_fill_outline`](params/auto.md#auto_fill_outline) | true | yes |
 | [`auto_overlap_mm`](params/auto.md#auto_overlap_mm) | 1 mm | yes |
 | [`auto_pull_compensation_mm`](params/auto.md#auto_pull_compensation_mm) | 0.4 mm | yes |
+| [`auto_point_taper_mm`](params/auto.md#auto_point_taper_mm) | 2 mm | yes |
 | [`auto_ignore_background`](params/auto.md#auto_ignore_background) | true | yes |
 | [`auto_base_layer`](params/auto.md#auto_base_layer) | true | yes |
 | [`auto_base_stitch_length_mm`](params/auto.md#auto_base_stitch_length_mm) | 3 mm | yes |

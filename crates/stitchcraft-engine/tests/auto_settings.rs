@@ -76,7 +76,8 @@ fn req_auto_020_the_rules_settings_are_stitchcraft_s_own_and_no_stitch_type_read
     assert!(PARAMETERS.contains(&&AutoParams::GROUP) && AutoParams::GROUP.automatic());
     let defaults: Vec<(&str, &str)> = AutoParams::SPECS.iter().map(|spec| (spec.key, spec.default)).collect();
     let shape = [(STITCH, "auto"), (PREFER, "balanced"), (FILL_UNEVEN, "true"), (FILL_ANGLE, "0"), ("auto_fill_outline", "true")];
-    let neighbours = [(OVERLAP, "1"), (PULL, "0.4"), (IGNORE_BACKGROUND, "true")];
+    // A column's pull compensation tapers into its points over 2 mm (`REQ-AUTO-183`, M13.62).
+    let neighbours = [(OVERLAP, "1"), (PULL, "0.4"), ("auto_point_taper_mm", "2"), (IGNORE_BACKGROUND, "true")];
     let base = [("auto_base_layer", "true"), ("auto_base_stitch_length_mm", "3"), ("auto_base_keep_holes", "true")];
     // The advanced settings: the rules' bounds, then the base layer's offset and the 2 limits of the cover's check.
     let bounds = [

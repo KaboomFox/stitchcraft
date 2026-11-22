@@ -122,8 +122,8 @@ use crate::generators::passes::BEAN_STITCH_REPEATS;
 use crate::generators::pull::PULL_COMPENSATION;
 use crate::generators::running::TOLERANCE;
 use crate::generators::satin::{
-    self, BEND_OPEN, CENTER_WALK_UNDERLAY, CENTER_WALK_UNDERLAY_REPEATS, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PUSH_COMPENSATION, SATIN_COLUMN,
-    SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET, START_AT_NEAREST_POINT, ZIGZAG_UNDERLAY,
+    self, BEND_OPEN, CENTER_WALK_UNDERLAY, CENTER_WALK_UNDERLAY_REPEATS, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, POINT_TAPER, PUSH_COMPENSATION,
+    SATIN_COLUMN, SHORT_STITCH_DISTANCE, SHORT_STITCH_INSET, START_AT_NEAREST_POINT, ZIGZAG_UNDERLAY,
 };
 use crate::generators::tatami::{ANGLE, TURN_STITCHES};
 use crate::generators::{TooSmall, mm, too_small};
@@ -328,6 +328,10 @@ fn satin_params(params: &ParamSet, width: Mm, rules: &AutoParams) -> ParamSet {
     }
     if !crowded && column.get(BEND_OPEN).is_none() {
         column.set(BEND_OPEN, BEND_OPENED.to_string().as_str());
+    }
+    // Its pull compensation tapers into its points (`REQ-AUTO-183`), unless its shape says how.
+    if column.get(POINT_TAPER).is_none() {
+        column.set(POINT_TAPER, rules.auto_point_taper_mm.get().to_string().as_str());
     }
     column
 }

@@ -363,6 +363,21 @@
         "unit": "mm"
       }
     },
+    "auto_point_taper_mm": {
+      "default": 2.0,
+      "description": "Over how many millimetres before a point a satin column's pull compensation falls to 0, so that a shape that tapers to a point, such as a sun's ray, sews to a point. Each satin column gets it as its `point_taper_mm` unless its shape sets that. At 0 a point keeps the whole compensation and ends blunt, as wide as twice the pull compensation.",
+      "maximum": 5.0,
+      "minimum": 0.0,
+      "title": "Point taper",
+      "type": "number",
+      "x-stitchcraft": {
+        "automatic": true,
+        "group": "Neighbours",
+        "origin": "stitchcraft",
+        "stability": "experimental",
+        "unit": "mm"
+      }
+    },
     "auto_prefer": {
       "default": "balanced",
       "description": "Which way the rules lean where a part could sew as satin columns or as a fill. `satin` moves 3 bounds together by half, so that more parts sew as columns: the least slenderness is divided by 1.5, and the most a width varies and the narrowest piece that stays in a fill are multiplied by it. `fill` moves them the other way, and `balanced` leaves them as they are set.",
@@ -1987,6 +2002,33 @@
         "unit": "mm"
       }
     },
+    "point_taper_mm": {
+      "default": [
+        0.0
+      ],
+      "description": "Over how many millimetres before a point the pull compensation falls to 0, so that a column that tapers to a point sews to a point. A point is an end whose rails meet, closer together than the shortest stitch. A pair of needle points nearer the point than this keeps the share of its pull compensation that its distance from the point is of this length. At 0 every pair keeps all of it, and a point sews as wide as twice the compensation. 2 values set the start, then the end. Automatic digitizing sets `auto_point_taper_mm` on its columns.",
+      "items": {
+        "maximum": 10.0,
+        "minimum": 0.0,
+        "type": "number"
+      },
+      "maxItems": 2,
+      "minItems": 1,
+      "title": "Point taper",
+      "type": "array",
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Compensation",
+        "origin": "stitchcraft",
+        "stability": "experimental",
+        "unit": "mm"
+      }
+    },
     "pull_compensation_mm": {
       "default": [
         0.0
@@ -3395,6 +3437,7 @@
           "end_at_nearest_point",
           "running_stitch_position",
           "push_compensation_mm",
+          "point_taper_mm",
           "random_width_decrease_percent",
           "random_width_increase_percent",
           "random_zigzag_spacing_percent",
@@ -3536,6 +3579,7 @@
           "auto_fill_outline",
           "auto_overlap_mm",
           "auto_pull_compensation_mm",
+          "auto_point_taper_mm",
           "auto_ignore_background",
           "auto_base_layer",
           "auto_base_stitch_length_mm",

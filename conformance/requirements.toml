@@ -1496,7 +1496,7 @@ level = "L2"
 statement = "A satin column's `point_taper_mm` (StitchCraft's, 0 by default, one length or one for its start and one for its end) tapers its pull compensation into an end whose rails meet, closer than the element's shortest stitch: a pair of needle points within that length of such an end keeps the share of its pull compensation, in millimetres and in percent, that its distance from the end is of the length. At 0, and at an end whose rails don't meet, every pair is widened as Ink/Stitch widens it."
 rationale = "Pull compensation moves each needle point outward by the same amount whatever the pair's width, so a column that narrows to a point ends in a bar twice the compensation wide. Measured 2026-11-22 (M13.62): a wedge drawn 0.13 mm wide 0.5 mm from its tip sewed 0.90 to 0.96 mm wide there with 0.4 mm of compensation. Tapered over 2 mm it sews 0.30 to 0.40 mm, and the columns' other pairs are as before."
 milestone = "M13"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-ROUTE-001"
@@ -3415,7 +3415,7 @@ level = "L2"
 statement = "Automatic digitizing sets each satin column's `point_taper_mm` (REQ-SAT-032) to `auto_point_taper_mm`, 2 mm by default and 0 to 5 mm, unless the shape sets it. A wedge of the sew-out piece, 1.5 to 3.5 mm wide at its base and 8° to 20° at its tip, sews no wider at d mm from its tip than its drawn width 0.2 mm farther in plus 0.4 times d + 0.2, plus 0.05 mm, for d of 0.5 and 1 mm. A needle point lies within 0.15 mm of its drawn tip, and no top stitch is shorter than the machine's shortest stitch. 3 mm and more from the tip it sews its full compensation. At `auto_point_taper_mm` 0 it sews 0.7 mm or more wider than drawn 0.5 mm from its tip, as before the setting. A band's square end sews as at 0, and a wedge over a fill sews no thicker at its thickest spot than at 0."
 rationale = "The owner's review of 18 drawings (2026-11-21) named 'the points for the rays': the sunrise's rays, wedges 14.7° at their tip, ended blunt. Measured 2026-11-22 (M13.62) on 63 designs, the 29 pointed ends that show sewed 0.77 mm wider than drawn 0.5 mm from their tips at the median. Tapered over 2 mm, 0.17. No design sewed above 4 fills that sewed at 4 or under, the release-only dog cases included, and the area above the cap fell on every set. A hold of the compensation to 40 % of each stitch's width changed every narrow column and, through the cap's landing, made a dog with its details last sew 4.008 fills. The setting gives back today's blunt end at 0."
 milestone = "M13"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-AUTO-018"

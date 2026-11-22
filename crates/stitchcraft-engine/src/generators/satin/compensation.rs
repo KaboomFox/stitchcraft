@@ -12,6 +12,13 @@
 //! sections, or adds it along the rail's first or last segment where it is negative. A rail that taking it
 //! off would leave shorter than half a CSS pixel keeps its length (`SC-W0211`), as in Ink/Stitch.
 //!
+//! **Points** (`REQ-SAT-032`). An end whose rails meet, closer together than the shortest stitch, is a point.
+//! Pull compensation moves every pair's ends out by the same amount whatever its width, so a column that
+//! narrows to a point ends in a bar twice the compensation wide, with one stitch out to the point. Within
+//! `point_taper_mm` of a point, a pair keeps the share of its pull compensation, in millimetres and in
+//! percent, that its middle's distance from the point is of that length: none at the point, all of it from
+//! that length on. The random share is drawn as before, so the draws stay as they were.
+//!
 //! **Random variation** comes from the element's generator. On each side, a stitch's share of the width
 //! is drawn between `pull_compensation_percent` less `random_width_decrease_percent` and plus
 //! `random_width_increase_percent`. Each step to the next stitch is drawn between the zigzag spacing less
@@ -29,6 +36,7 @@ use stitchcraft_core::{Exhausted, Meter, Point};
 
 use crate::generators::pull::{PullParams, SAME_POINT, away, offset};
 use crate::generators::satin::SatinParams;
+use crate::generators::satin::column::Section;
 use crate::generators::satin::pairs::Pair;
 use crate::normalize::along::Along;
 
@@ -55,6 +63,11 @@ pub(crate) struct Processor<'r> {
     jitter: f64,
     /// The element's generator; `None` for an underlay, which draws nothing.
     rng: Option<&'r mut SplitMix64>,
+    /// The share of the width each side moves out by for pull compensation alone, as fractions: the part of
+    /// `least` that a point's taper scales.
+    percent: [f64; 2],
+    /// The column's points, each with the length over which its pull compensation tapers.
+    points: Vec<(Point, f64)>,
 }
 
 impl<'r> Processor<'r> {
@@ -72,14 +85,42 @@ impl<'r> Processor<'r> {
             range: [decrease_a + increase_a, decrease_b + increase_b],
             jitter: params.random_zigzag_spacing_percent / 100.0,
             rng: Some(rng),
+            percent: [pull_a, pull_b],
+            points: Vec::new(),
         }
+    }
+
+    /// This processor with the points of the column along `sections` that its `point_taper_mm` tapers: its
+    /// start and its end where the rails' points lie closer together than `shortest`, the element's shortest
+    /// stitch, and the taper there is more than 0.
+    pub(crate) fn pointed(mut self, sections: &[Section], params: &SatinParams, shortest: f64) -> Processor<'r> {
+        let [start, end] = params.point_taper_mm.map(|mm| mm.get());
+        let first = sections.first().and_then(|[a, b]| Some((*a.first()?, *b.first()?)));
+        let last = sections.last().and_then(|[a, b]| Some((*a.last()?, *b.last()?)));
+        for (ends, taper) in [(first, start), (last, end)] {
+            if let Some((a, b)) = ends
+                && taper > 0.0
+                && a.distance(b) < shortest
+            {
+                self.points.push((a.lerp(b, 0.5), taper));
+            }
+        }
+        self
     }
 
     /// The processor of an underlay inset by `mm` millimetres plus `share` of the width on each side, which
     /// draws nothing: each step is the spacing, and each pair is moved in as negative pull compensation
     /// moves it.
     pub(crate) fn inset(mm: [f64; 2], share: [f64; 2]) -> Processor<'static> {
-        Processor { pull: mm.map(|mm| -mm), least: share.map(|share| -share), range: [0.0; 2], jitter: 0.0, rng: None }
+        Processor {
+            pull: mm.map(|mm| -mm),
+            least: share.map(|share| -share),
+            range: [0.0; 2],
+            jitter: 0.0,
+            rng: None,
+            percent: [0.0; 2],
+            points: Vec::new(),
+        }
     }
 
     /// The next step to a stitch, as a multiple of the zigzag spacing.
@@ -88,7 +129,8 @@ impl<'r> Processor<'r> {
         (1.0 + (rng.next_f64() - 0.5) * 2.0 * self.jitter).max(SHORTEST_STEP)
     }
 
-    /// `pair` widened by pull compensation, with each side's random share drawn.
+    /// `pair` widened by pull compensation, with each side's random share drawn, and the pull compensation
+    /// tapered near a point.
     pub(crate) fn widened(&mut self, pair: Pair) -> Pair {
         let ([least_a, least_b], [range_a, range_b]) = (self.least, self.range);
         let shares = match self.rng.as_deref_mut() {
@@ -98,7 +140,20 @@ impl<'r> Processor<'r> {
             }
             None => self.least,
         };
+        let kept = self.kept(pair);
+        if kept < 1.0 {
+            let ([pull_a, pull_b], [percent_a, percent_b], [share_a, share_b]) = (self.pull, self.percent, shares);
+            let lost = 1.0 - kept;
+            return offset(pair, [pull_a * kept, pull_b * kept], [share_a - percent_a * lost, share_b - percent_b * lost]);
+        }
         offset(pair, self.pull, shares)
+    }
+
+    /// The share of its pull compensation `pair` keeps: its middle's distance from the nearest point over
+    /// that point's taper, 1 at the most.
+    fn kept(&self, [a, b]: Pair) -> f64 {
+        let middle = a.lerp(b, 0.5);
+        self.points.iter().map(|&(point, taper)| (point.distance(middle) / taper).min(1.0)).fold(1.0, f64::min)
     }
 }
 
@@ -198,7 +253,15 @@ mod tests {
     #[test]
     fn random_steps_and_shares_fill_their_ranges() {
         let mut rng = SplitMix64::new(7);
-        let mut processor = Processor { pull: [0.0, 0.0], least: [0.1, -0.2], range: [0.2, 0.0], jitter: 0.25, rng: Some(&mut rng) };
+        let mut processor = Processor {
+            pull: [0.0, 0.0],
+            least: [0.1, -0.2],
+            range: [0.2, 0.0],
+            jitter: 0.25,
+            rng: Some(&mut rng),
+            percent: [0.0; 2],
+            points: Vec::new(),
+        };
         let (mut steps, mut sides) = (Vec::new(), Vec::new());
         for _ in 0..1000 {
             steps.push(processor.step());
@@ -214,7 +277,15 @@ mod tests {
         assert!((-3.0..-2.98).contains(&outmost) && (-1.02..=-1.0).contains(&inmost), "{outmost} {inmost}");
         // A step never gets shorter than a hundredth of the spacing.
         let mut rng = SplitMix64::new(7);
-        let mut wild = Processor { pull: [0.0, 0.0], least: [0.0, 0.0], range: [0.0, 0.0], jitter: 5.0, rng: Some(&mut rng) };
+        let mut wild = Processor {
+            pull: [0.0, 0.0],
+            least: [0.0, 0.0],
+            range: [0.0, 0.0],
+            jitter: 5.0,
+            rng: Some(&mut rng),
+            percent: [0.0; 2],
+            points: Vec::new(),
+        };
         let steps: Vec<f64> = (0..100).map(|_| wild.step()).collect();
         assert!(steps.iter().all(|step| *step >= SHORTEST_STEP) && steps.contains(&SHORTEST_STEP), "{steps:?}");
     }
@@ -234,10 +305,84 @@ mod tests {
         let mut rolls = SplitMix64::new(3);
         let (step_roll, roll_a, roll_b) = (rolls.next_f64(), rolls.next_f64(), rolls.next_f64());
         let mut rng = SplitMix64::new(3);
-        let mut processor = Processor { pull: [0.0, 0.0], least: [0.1, 0.2], range: [0.3, 0.4], jitter: 0.25, rng: Some(&mut rng) };
+        let mut processor = Processor {
+            pull: [0.0, 0.0],
+            least: [0.1, 0.2],
+            range: [0.3, 0.4],
+            jitter: 0.25,
+            rng: Some(&mut rng),
+            percent: [0.0; 2],
+            points: Vec::new(),
+        };
         assert_eq!(processor.step(), 1.0 + (step_roll - 0.5) * 2.0 * 0.25);
         let [a, b] = processor.widened([p(0.0, 0.0), p(0.0, 10.0)]);
         assert!((a.y() + 10.0 * (0.1 + roll_a * 0.3)).abs() < 1e-12, "{a:?}");
         assert!((b.y() - 10.0 - 10.0 * (0.2 + roll_b * 0.4)).abs() < 1e-12, "{b:?}");
+    }
+
+    /// A processor of `settings`, with the points of a column whose rails run from x = 0 to x = 10, 2 mm apart
+    /// at x = 0 and `end` mm apart at x = 10, and `shortest` the element's shortest stitch.
+    fn tapered<'r>(settings: &[(&str, &str)], end: f64, shortest: f64, rng: &'r mut SplitMix64) -> Processor<'r> {
+        let set: stitchcraft_params::ParamSet = settings.iter().copied().collect();
+        let (params, pull) = (SatinParams::from_set(&set).unwrap().params, PullParams::from_set(&set).unwrap().params);
+        let sections = [[vec![p(0.0, -1.0), p(10.0, -end / 2.0)], vec![p(0.0, 1.0), p(10.0, end / 2.0)]]];
+        Processor::new(&params, &pull, rng).pointed(&sections, &params, shortest)
+    }
+
+    /// How far each end of `pair`, a pair across x = `x` 1 mm wide, moves out once widened.
+    fn moved(processor: &mut Processor, x: f64) -> [f64; 2] {
+        let [a, b] = processor.widened([p(x, -0.5), p(x, 0.5)]);
+        [a.distance(p(x, -0.5)), b.distance(p(x, 0.5))]
+    }
+
+    fn close([a, b]: [f64; 2], want: f64) -> bool {
+        (a - want).abs() < 1e-9 && (b - want).abs() < 1e-9
+    }
+
+    #[test]
+    fn req_sat_032_a_pair_near_a_point_keeps_its_share_of_the_pull_compensation() {
+        let mut rng = SplitMix64::new(1);
+        let mut processor = tapered(&[("pull_compensation_mm", "0.4"), ("point_taper_mm", "2")], 0.0, 0.3, &mut rng);
+        // The point is (10, 0): a pair 0.5 mm from it keeps a quarter, 1 mm a half, 2 mm and more all of it.
+        assert!(close(moved(&mut processor, 9.5), 0.1), "{:?}", moved(&mut processor, 9.5));
+        assert!(close(moved(&mut processor, 9.0), 0.2));
+        assert!(close(moved(&mut processor, 8.0), 0.4));
+        assert!(close(moved(&mut processor, 3.0), 0.4));
+        // The pull compensation in percent tapers alike: 50 % of 1 mm, half of it kept 1 mm from the point.
+        let mut rng = SplitMix64::new(1);
+        let mut processor = tapered(&[("pull_compensation_percent", "50"), ("point_taper_mm", "2")], 0.0, 0.3, &mut rng);
+        assert!(close(moved(&mut processor, 9.0), 0.25));
+        assert!(close(moved(&mut processor, 7.0), 0.5));
+    }
+
+    #[test]
+    fn req_sat_032_only_an_end_whose_rails_meet_closer_than_the_shortest_stitch_is_a_point() {
+        let pull = ("pull_compensation_mm", "0.4");
+        // Rails 0.29 mm apart at the end, with a shortest stitch of 0.3 mm: a point.
+        let mut rng = SplitMix64::new(1);
+        assert!(close(moved(&mut tapered(&[pull, ("point_taper_mm", "2")], 0.29, 0.3, &mut rng), 9.0), 0.2));
+        // 0.3 mm apart: no point, and the pair keeps its compensation.
+        let mut rng = SplitMix64::new(1);
+        assert!(close(moved(&mut tapered(&[pull, ("point_taper_mm", "2")], 0.3, 0.3, &mut rng), 9.0), 0.4));
+        // A taper of 0 at the end, given for the start only: none there.
+        let mut rng = SplitMix64::new(1);
+        assert!(close(moved(&mut tapered(&[pull, ("point_taper_mm", "2 0")], 0.0, 0.3, &mut rng), 9.0), 0.4));
+        // The start, 2 mm wide, is no point either way.
+        let mut rng = SplitMix64::new(1);
+        assert!(close(moved(&mut tapered(&[pull, ("point_taper_mm", "2")], 0.0, 0.3, &mut rng), 0.5), 0.4));
+    }
+
+    #[test]
+    fn req_sat_032_a_point_at_the_start_tapers_by_its_own_length() {
+        let mut rng = SplitMix64::new(1);
+        let set: stitchcraft_params::ParamSet = [("pull_compensation_mm", "0.4"), ("point_taper_mm", "1 3")].into_iter().collect();
+        let (params, pull) = (SatinParams::from_set(&set).unwrap().params, PullParams::from_set(&set).unwrap().params);
+        // Rails that meet at both ends, (0, 0) and (10, 0), 2 mm apart at x = 5.
+        let sections = [[vec![p(0.0, 0.0), p(5.0, -1.0), p(10.0, 0.0)], vec![p(0.0, 0.0), p(5.0, 1.0), p(10.0, 0.0)]]];
+        let mut processor = Processor::new(&params, &pull, &mut rng).pointed(&sections, &params, 0.3);
+        // 0.5 mm from the start, whose taper is 1 mm: half. 1.5 mm from the end, whose taper is 3 mm: half.
+        assert!(close(moved(&mut processor, 0.5), 0.2));
+        assert!(close(moved(&mut processor, 8.5), 0.2));
+        assert!(close(moved(&mut processor, 5.0), 0.4));
     }
 }

@@ -142,6 +142,13 @@ params! {
         auto_pull_compensation_mm: Length = "0.4", label "Pull compensation", range (0.0, 2.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
+        /// Over how many millimetres before a point a satin column's pull compensation falls to 0, so that a
+        /// shape that tapers to a point, such as a sun's ray, sews to a point. Each satin column gets it as its
+        /// `point_taper_mm` unless its shape sets that. At 0 a point keeps the whole compensation and ends
+        /// blunt, as wide as twice the pull compensation.
+        auto_point_taper_mm: Length = "2", label "Point taper", range (0.0, 5.0),
+            origin Origin::StitchCraft, stability Stability::Experimental;
+
         /// Whether the lowest shape is left out when it is the picture's background: an area under the
         /// other shapes that covers the whole design. A background is usually the fabric's own colour, and
         /// sewing it doubles the stitches and stiffens the design. What shows of it inside the picture sews
@@ -381,7 +388,7 @@ mod tests {
     fn each_key_names_a_setting_in_the_order_they_are_declared() {
         let keys: Vec<&str> = AutoParams::SPECS.iter().map(|spec| spec.key).collect();
         let shape = [STITCH, PREFER, FILL_UNEVEN, FILL_ANGLE, FILL_OUTLINE];
-        let neighbours = [OVERLAP, "auto_pull_compensation_mm", IGNORE_BACKGROUND];
+        let neighbours = [OVERLAP, "auto_pull_compensation_mm", "auto_point_taper_mm", IGNORE_BACKGROUND];
         let base = ["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_keep_holes"];
         let bounds = [
             MAX_SATIN_WIDTH,

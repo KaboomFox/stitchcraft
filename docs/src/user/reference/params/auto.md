@@ -99,6 +99,18 @@ than half the rail's length, the column sews past the rail by the overlap instea
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 
+### `auto_point_taper_mm`
+
+**Point taper.** Over how many millimetres before a point a satin column's pull compensation falls to 0, so that a
+shape that tapers to a point, such as a sun's ray, sews to a point. Each satin column gets it as its
+`point_taper_mm` unless its shape sets that. At 0 a point keeps the whole compensation and ends
+blunt, as wide as twice the pull compensation.
+
+- **Accepts:** a length from 0 to 5 mm
+- **Default:** `2`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
 ### `auto_ignore_background`
 
 **Leave out the background.** Whether the lowest shape is left out when it is the picture's background: an area under the

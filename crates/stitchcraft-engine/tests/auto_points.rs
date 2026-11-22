@@ -1,5 +1,5 @@
 //! Points stay points (`REQ-AUTO-183`, `REQ-SAT-032`, M13.62): a satin column that tapers to a point ends in a
-//! point, without sewing thicker. Planned: the cases are ignored until the build phase.
+//! point, without sewing thicker.
 //!
 //! Design: `docs/src/design/image-to-embroidery.md` › A column's point. Each case draws its wedges in code, after
 //! the review set's sunrise, whose rays are wedges 2.2 mm wide at their base and 14.7° at their tip. On `main`
@@ -10,7 +10,7 @@
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
-use stitchcraft_core::math::{atan2, hypot, tan, to_degrees, to_radians};
+use stitchcraft_core::math::{atan2, cos, hypot, sin, tan, to_degrees, to_radians};
 use stitchcraft_engine::PlanOutcome;
 use stitchcraft_engine::design::Element;
 use stitchcraft_plan::Role;
@@ -75,7 +75,6 @@ fn drawn(angle: f64, d: f64) -> f64 {
 }
 
 #[test]
-#[ignore = "planned: M13.62 builds a column's point"]
 fn req_auto_183_a_wedge_sews_its_point_no_wider_than_drawn_near_its_tip() {
     let mut wrong = Vec::new();
     for (element, tip, width, angle) in wedges(&[]) {
@@ -103,7 +102,6 @@ fn req_auto_183_a_wedge_sews_its_point_no_wider_than_drawn_near_its_tip() {
 }
 
 #[test]
-#[ignore = "planned: M13.62 builds a column's point"]
 fn req_auto_183_a_wedge_s_tip_is_covered_and_no_stitch_is_shorter_than_the_machine_sews() {
     for (element, tip, _, _) in wedges(&[]) {
         let id = element.id.to_string();
@@ -123,7 +121,6 @@ fn req_auto_183_a_wedge_s_tip_is_covered_and_no_stitch_is_shorter_than_the_machi
 }
 
 #[test]
-#[ignore = "planned: M13.62 builds a column's point"]
 fn req_auto_183_a_taper_of_0_keeps_today_s_end() {
     for (element, tip, width, angle) in wedges(&[("auto_point_taper_mm", "0")]) {
         let id = element.id.to_string();
@@ -134,7 +131,6 @@ fn req_auto_183_a_taper_of_0_keeps_today_s_end() {
 }
 
 #[test]
-#[ignore = "planned: M13.62 builds a column's point"]
 fn req_auto_183_a_point_over_a_fill_sews_no_thicker_than_without_the_taper() {
     // The sunrise's rays lie on its sky: a wedge over an automatic square, its tip 3 mm inside the square.
     let sky = |params: &[(&str, &str)]| automatic(fill("sky", &[&[(0.0, 0.0), (30.0, 0.0), (30.0, 20.0), (0.0, 20.0)]], &BLUE, params));
@@ -147,7 +143,6 @@ fn req_auto_183_a_point_over_a_fill_sews_no_thicker_than_without_the_taper() {
 }
 
 #[test]
-#[ignore = "planned: M13.62 builds a column's point"]
 fn req_auto_183_a_square_end_keeps_its_compensation() {
     // A band 3 mm tall with square ends: its rails don't meet at an end, so nothing of it changes.
     let band = |params: &[(&str, &str)]| planned(vec![automatic(fill("band", &[&[(5.0, 5.0), (35.0, 5.0), (35.0, 8.0), (5.0, 8.0)]], &RED, params))]);
@@ -159,7 +154,6 @@ fn req_auto_183_a_square_end_keeps_its_compensation() {
 }
 
 #[test]
-#[ignore = "planned: M13.62 builds a column's point"]
 fn req_sat_032_a_satin_column_s_pull_compensation_falls_to_0_over_its_point_taper() {
     // A manual satin column of 2 rails that meet at its end, 2.4 mm apart at its start, 12 mm long.
     let column = |taper: Option<&str>| {
@@ -180,4 +174,70 @@ fn req_sat_032_a_satin_column_s_pull_compensation_falls_to_0_over_its_point_tape
     // At 3 mm, past the taper, the pairs are as without one.
     let (a, b) = (sewn_width(&column(None), "satin", tip, 3.0), sewn_width(&column(Some("2")), "satin", tip, 3.0));
     assert!((a - b).abs() <= 0.02, "3 mm in: {a:.2} without a taper, {b:.2} with");
+}
+
+/// A leaf 12 mm long and 3 mm wide, its 2 sides arcs that meet in a point at each end, as the review set's
+/// rules fixture draws one: an automatic satin column whose start and end are points.
+fn leaf() -> Vec<Pt> {
+    // Each side is an arc through the leaf's 2 points (0, 0) and (12, 0) and the middle of the other side's
+    // width, 1.5 mm off the axis: a circle of radius 12.75 mm about (6, -11.25) or (6, 11.25).
+    let (half, sag) = (6.0, 1.5);
+    let radius = (half * half + sag * sag) / (2.0 * sag);
+    let arc = |side: f64| -> Vec<Pt> {
+        let centre = (half, -side * (radius - sag));
+        let (from, to) = (atan2(-centre.1, -centre.0), atan2(-centre.1, 2.0 * half - centre.0));
+        (0..=24)
+            .map(|k| {
+                let a = from + (to - from) * f64::from(k) / 24.0;
+                (centre.0 + radius * cos(a), centre.1 + radius * sin(a))
+            })
+            .collect()
+    };
+    let mut ring = arc(1.0);
+    ring.extend(arc(-1.0).into_iter().rev().skip(1));
+    ring.pop();
+    ring.iter().map(|&(x, y)| (x - 6.0, y)).collect()
+}
+
+/// How far `p` lies outside the polygon `ring`: 0 inside.
+fn outside(p: Pt, ring: &[Pt]) -> f64 {
+    let n = ring.len();
+    let (mut inside, mut nearest) = (false, f64::MAX);
+    for i in 0..n {
+        let (a, b) = (ring[i], ring[(i + 1) % n]);
+        if (a.1 > p.1) != (b.1 > p.1) && p.0 < (b.0 - a.0) * (p.1 - a.1) / (b.1 - a.1) + a.0 {
+            inside = !inside;
+        }
+        let (dx, dy) = (b.0 - a.0, b.1 - a.1);
+        let t = (((p.0 - a.0) * dx + (p.1 - a.1) * dy) / (dx * dx + dy * dy).max(1e-12)).clamp(0.0, 1.0);
+        nearest = nearest.min(hypot(p.0 - a.0 - t * dx, p.1 - a.1 - t * dy));
+    }
+    if inside { 0.0 } else { nearest }
+}
+
+/// The farthest any lock needle point of `id` lies outside `ring`, of those within 1.5 mm of one of `tips`.
+fn locks_outside(outcome: &PlanOutcome, id: &str, ring: &[Pt], tips: &[Pt]) -> f64 {
+    let plan = outcome.plan.as_ref().unwrap();
+    plan.sewn_stitches()
+        .into_iter()
+        .filter(|s| s.is_lock())
+        .filter(|s| plan.blocks[s.block].stitches[s.index].origin.element.map(|e| plan.elements[e.index()].to_string()).as_deref() == Some(id))
+        .map(|s| (s.to.x(), s.to.y()))
+        .filter(|&(x, y)| tips.iter().any(|t| hypot(x - t.0, y - t.1) < 1.5))
+        .map(|p| outside(p, ring))
+        .fold(0.0, f64::max)
+}
+
+#[test]
+fn req_auto_183_a_point_s_locks_lie_inside_its_shape() {
+    // The lock at each point goes back along the column's last stitches, which the taper brings inside the
+    // point, so no needle point of it lies farther outside the drawn shape than half a thread's width.
+    let ring = leaf();
+    let mut found = Vec::new();
+    for taper in ["2", "0"] {
+        let outcome = planned(vec![automatic(fill("leaf", &[&ring], &RED, &[("auto_point_taper_mm", taper)]))]);
+        found.push(locks_outside(&outcome, "leaf", &ring, &[(-6.0, 0.0), (6.0, 0.0)]));
+    }
+    // Measured on 2026-11-22: 0.04 mm with the taper, 0.21 mm at 0.
+    assert!(found[0] <= 0.2, "with the taper a lock needle point lies {:.2} mm outside the leaf (at 0: {:.2})", found[0], found[1]);
 }
