@@ -239,7 +239,8 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
     // With smooth satin edges (M13.58), the dog on turf in 6 threads leaves 61 and the running dog in 9
     // shows 10 moves.
     // With clean column ends (M13.60), the dog on turf in 6 threads leaves 60 and the one in 9 shows 6 moves.
-    let recorded = [("dog-on-turf-6", 3, 60), ("dog-on-turf-9", 6, 62), ("dog-running-6", 3, 49), ("dog-running-9", 10, 64)];
+    // With a column 0.4 mm under a later column (M13.57), the running dog in 9 threads shows 9 moves.
+    let recorded = [("dog-on-turf-6", 3, 60), ("dog-on-turf-9", 6, 62), ("dog-running-6", 3, 49), ("dog-running-9", 9, 64)];
     let recorded = recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps));
     assert_eq!((found, apart), (listed, recorded.to_vec()), "the stitches astray, as found and as listed in ASTRAY, and the moves and jumps");
 }
@@ -298,10 +299,11 @@ fn req_auto_027_digitized_dogs_show_no_fabric_and_leave_the_slivers_recorded() {
 /// again (M13.48), and 131.25, 149.0, 129.0 and 176.5 with the cap at 4, before it left satin columns whole below
 /// the warning's limit and was 3.25 (M13.46), and 54.25, 63.75, 53.5 and 94.0 before satin columns kept their
 /// spacing on the inside of a bend and moved crowded points in only above the warning's limit (M13.58), and
-/// 52.5, 63.75, 52.5 and 91.75 before a column's ends were squared and a line's sharp corners mitred (M13.60). The
+/// 52.5, 63.75, 52.5 and 91.75 before a column's ends were squared and a line's sharp corners mitred (M13.60). With
+/// a column 0.4 mm under a later column (M13.57), the running dog in 9 threads sews 91 mm² there, where it sewed 93. The
 /// case fails when a number changes, so that a change that piles thread up again shows here.
 const THICK: [(&str, f64, f64); 4] =
-    [("dog-on-turf-6", 5225.0, 0.0), ("dog-on-turf-9", 6400.0, 0.0), ("dog-running-6", 5275.0, 0.0), ("dog-running-9", 9300.0, 0.0)];
+    [("dog-on-turf-6", 5225.0, 0.0), ("dog-on-turf-9", 6400.0, 0.0), ("dog-running-6", 5275.0, 0.0), ("dog-running-9", 9100.0, 0.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -329,8 +331,9 @@ fn req_auto_067_digitized_dogs_sew_thick_on_the_area_recorded() {
 /// 3.97, 3.92 and 3.98, the running dogs' at spots of fills alone. With smooth satin edges (M13.58), 3.99, 3.91,
 /// 3.97 and 3.98, all under the warning's limit. With clean column ends (M13.60), the running dog in 6 threads
 /// sews 3.92 at its thickest, its spot of fills alone that M13.46 measured: the column's spot it had above it is
-/// lower.
-const THICKEST: [(&str, f64); 4] = [("dog-on-turf-6", 399.0), ("dog-on-turf-9", 391.0), ("dog-running-6", 392.0), ("dog-running-9", 398.0)];
+/// lower. With a column 0.4 mm under a later column (M13.57), the running dog in 9 threads sews 3.99 at a spot
+/// of satin columns, where it sewed 3.98 at its spot of fills alone.
+const THICKEST: [(&str, f64); 4] = [("dog-on-turf-6", 399.0), ("dog-on-turf-9", 391.0), ("dog-running-6", 392.0), ("dog-running-9", 399.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -344,8 +347,9 @@ fn req_auto_073_digitized_dogs_sew_their_thickest_spot_as_recorded() {
 /// on 2026-11-19 (REQ-AUTO-102): 4 fills and the base layer meet, and the top of each shows, which the cap
 /// takes only where a shape lays it twice. The list only shrinks, but for the running dog in 6 threads, whose
 /// spot of fills alone at 3.92, measured with M13.46, became its thickest when its columns' spot fell below it
-/// with clean column ends (M13.60).
-const FILLS_ALONE: [(&str, f64); 2] = [("dog-running-6", 392.0), ("dog-running-9", 398.0)];
+/// with clean column ends (M13.60). The running dog in 9 threads left the list with M13.57: its thickest spot,
+/// 3.99, lies where satin columns sew.
+const FILLS_ALONE: [(&str, f64); 1] = [("dog-running-6", 392.0)];
 
 /// The cap at the end of planning (REQ-AUTO-100) takes thread wherever a dog still sews above the cap, so
 /// that what is left above it is satin columns' top stitches, which it leaves below the warning's limit
@@ -452,9 +456,10 @@ fn req_auto_094_digitized_dogs_keep_their_likeness_as_recorded() {
 /// running dog in 9 threads sewed in another order, and it kept 96 parts, where it kept 97. Not traced further.
 /// With details last off by default again (M13.48), it keeps 97. With smooth satin edges (M13.58), whose lines
 /// open on the outside of their bends, the dogs in 9 threads keep 103 and 94 parts, and 0.905 and 0.965 of
-/// their likeness, where they kept 0.947 and 0.983.
+/// their likeness, where they kept 0.947 and 0.983. With a column 0.4 mm under a later column (M13.57), they keep
+/// 105 and 95 parts, and 0.924 and 0.971 of their likeness.
 const LINED: [(&str, usize, usize, f64); 4] =
-    [("dog-on-turf-6", 97, 96, 986.0), ("dog-on-turf-9", 111, 103, 905.0), ("dog-running-6", 77, 74, 979.0), ("dog-running-9", 100, 94, 965.0)];
+    [("dog-on-turf-6", 97, 96, 986.0), ("dog-on-turf-9", 111, 105, 924.0), ("dog-running-6", 77, 74, 979.0), ("dog-running-9", 100, 95, 971.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
