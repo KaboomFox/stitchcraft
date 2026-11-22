@@ -262,10 +262,8 @@ fn told(
     let measured = measured.and_then(|thickness| thickness.map(|thickness| thickness.report(plan, limits, meter)).transpose());
     let (message, hint) = match measured {
         Ok(Some(report)) if report.warns() => {
-            let leans = |layer: &Layer| {
-                let id = layer.element.and_then(|element| plan.elements.get(element.index()));
-                layer.top + layer.under > 0.0 && id.is_some_and(|id| leaning.contains(id))
-            };
+            // A layer of the stack lays thread at the spot: the stack holds no layer without any.
+            let leans = |layer: &Layer| layer.element.and_then(|element| plan.elements.get(element.index())).is_some_and(|id| leaning.contains(id));
             let hint = if report.stack.iter().any(leans) { leaning_hint() } else { HINT.to_string() };
             (fitted(&|named| message(plan, &report, limits, names, named), &hint, WARNING_CHARS), hint)
         }
