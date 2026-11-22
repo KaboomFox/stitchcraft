@@ -220,6 +220,7 @@ another.
 | `SC-W0922` | Warning | What Expand couldn't keep (lettering that became its columns, a shape left out for its budget, and a part a VectorCraft document has without its clips, each named) | M13 |
 | `SC-I0923` | Info | Style that changes how a design sews (the thin lines merged or kept and the parts filled or sewn as satin columns that the other style would sew another way, with that style's name) | M13 |
 | `SC-I0924` | Info | Shapes digitized by default (a VectorCraft document planned without `--auto` or `--no-auto`, said once: the count of shapes digitized by default, and the count of those set by hand) | M13 |
+| `SC-W0925` | Warning | Thread threaded more than once (a shade drawn both under and over another, so that no order sews each thread in one batch: the message names a shape lying under a shape of another thread and the shape over it, planned by M13.63) | M13 |
 | `SC-E1001` | Error | Nothing to route (no element the tool can take among those given, a satin column for Auto-Route Satin Columns or a stroke for Auto-Route Running Stitch: they stay as they were) | M10 |
 | `SC-I1002` | Info | Element left out of the route (a fill, a shape digitized automatically, settings that don't read, rails that can't be made, no length, a stroke whose first subpath ends where it starts, or a satin column among running stitches: kept as it is) | M10 |
 | `SC-W1003` | Warning | Piece of a routed satin column may sew otherwise (read back, it has other rails or pairs other points: it is kept) | M10 |

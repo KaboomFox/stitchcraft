@@ -122,16 +122,18 @@ jumps and colour changes, which the rethreads and the cuts at the machine are co
 | Bars and rings 6, 8 and 10 mm wide | M13.54 | `bar-8mm.svg` and its relatives from the commands after this table |
 | The test piece of 12 tiles under satin columns | M13.55 | Made by hand. Its tiles are fills 20 mm wide in navy and in orange, with a black satin column along each tile's top, straight on some tiles and curved on the others, in widths from 2 to 6 mm. No file of the repository draws it |
 | 2 mirrored leaves, a crescent and 2 rays, once as `main` plans them and once with M13.59 | M13.59 | `one-shape.svg` from the commands after this table, `stitch plan one-shape.svg --auto -o one-shape.pes` at each commit. Look at whether the leaves sew alike and whether the crescent's fill and outline reach its points with no seam. The rays sew as on `main`, blunt at their points, for the step that will point a column |
+| A cream fill with a navy line round it on a broad navy fill, with a gold square beside them, as `main` plans it and with M13.63 | M13.63 | `one-pass.svg` from the commands after this table, `stitch plan one-pass.svg --auto -o one-pass.pes` at each commit. Count the threadings: 4 on `main`, 3 with M13.63 |
 | The smooth-edges test piece: lines 3 mm wide drawn as a mug's handle, a ring and a sharp corner | M13.58 | `edges.svg` from the commands after this table, planned with `--auto` into `edges.pes`, and again with `--set auto_short_stitches=crowded` into `edges-today.pes`. Sew both on one piece of fabric. Check each inside edge for a second row of short ends, each outside edge for fabric showing between the stitches, and the corner for thread piling up |
 | Satin columns meeting, as `main` plans them and with M13.57: bars 2 to 4 mm wide side by side in pairs, with 2 rings round each other | M13.57 | `stitch plan docs/fixtures/joins.svg --auto -o joins.pes`, and again with `--set auto_column_reach_mm=1` into `joins-1mm.pes` |
 | A circle 40 mm across, its fill in one colour and a 2 mm stroke round it in another | M13.8 | Made by hand in VectorCraft, without StitchCraft effects. `stitch plan circle.vectorcraft -o circle.pes`, and again with `--no-auto` |
 
-The arc, the bars and the rings of M13.54, the smooth-edges piece of M13.58 and M13.59's shapes, each written by one command from nothing but the command
+The arc, the bars and the rings of M13.54, the smooth-edges piece of M13.58, M13.59's shapes and M13.63's piece, each written by one command from nothing but the command
 itself:
 
 ```sh
 printf '<svg xmlns="http://www.w3.org/2000/svg" width="80mm" height="40mm" viewBox="0 0 80 40"><path fill="#3a7d44" d="M16.5 10Q8 5 2 11Q9 16 16.5 10Z"/><path fill="#3a7d44" d="M17 15Q25 9 32 14Q25 20 17 15Z"/><path fill="#f4d9a0" d="M45 3Q22 18 45 33Q38 18 45 3Z"/><path fill="#e8a900" d="M55 30L56 8L57 30Z"/><path fill="#e8a900" d="M62.2 30L63 10L63.8 30Z"/></svg>\n' > one-shape.svg
 printf '<svg xmlns="http://www.w3.org/2000/svg" width="110mm" height="60mm" viewBox="0 0 110 60"><path d="M 10 55 A 45 45 0 0 1 100 55" fill="none" stroke="#000"/></svg>\n' > arc.svg
+printf '<svg xmlns="http://www.w3.org/2000/svg" width="72mm" height="44mm" viewBox="0 0 72 44"><path fill="#1d3557" d="M2 2H58V42H2Z"/><path fill="#1d3557" fill-rule="evenodd" d="M15.2 11.2H44.8V32.8H15.2Z M16 12H44V32H16Z"/><path fill="#f4e8c9" d="M16 12H44V32H16Z"/><path fill="#e8a900" d="M62 32H70V42H62Z"/></svg>\n' > one-pass.svg
 for w in 6 8 10; do
   awk -v w=$w 'BEGIN { printf "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"60mm\" height=\"20mm\" viewBox=\"0 0 60 20\"><path fill=\"#0a55a3\" d=\"M5 %gH55V%gH5Z\"/></svg>\n", 10 - w / 2, 10 + w / 2 }' > bar-${w}mm.svg
   awk -v w=$w 'BEGIN { R = 20 + w / 2; r = 20 - w / 2; printf "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"60mm\" height=\"60mm\" viewBox=\"0 0 60 60\"><path fill=\"#ed171f\" fill-rule=\"evenodd\" d=\"M%g 30A%g %g 0 1 0 %g 30A%g %g 0 1 0 %g 30Z M%g 30A%g %g 0 1 1 %g 30A%g %g 0 1 1 %g 30Z\"/></svg>\n", 30 + R, R, R, 30 - R, R, R, 30 + R, 30 + r, r, r, 30 - r, r, r, 30 + r }' > ring-${w}mm.svg
@@ -585,6 +587,17 @@ running dog in 9 threads with `--set auto_smooth_mm=0.2` beside the dog as plann
 
 - Do the outlines look cleaner, and do the edges of 2 areas still meet?
 - The pass changes the rule of some of the dog's shapes. Does the dog still read as the photo does?
+
+M13.63 plans that each thread of an automatic design is threaded once wherever its shapes allow it
+([each thread threaded once](../design/image-to-embroidery.md#each-thread-threaded-once)). A line then sews before
+the fill it borders where sewing it after would thread its thread again, and the fill's rows end on it, their
+pull compensation reaching the middle of the line's thread. At MC-8, sew the one-pass piece as `main` plans it
+and with M13.63, side by side:
+
+- Count the rethreads on each. Does the navy line still read as a line round the cream fill with M13.63, or
+  do the cream rows hide it?
+- Does fabric show between the cream fill and the line on either piece? Measure the widest gap.
+- Count the jump threads you cut on each.
 
 ## Report template
 
