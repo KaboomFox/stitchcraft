@@ -125,7 +125,10 @@ cells of the grid. The rings of 2 groups then neither meet nor bend each other's
 are numbered in the same order with the others there or not. So each group's faces, rings and parts come
 out the same, and a group whose faces the operation keeps none of can be left out. Growing a region for
 its intersection with another (`buffered_near`) grows only the groups whose bounds, grown by the
-distance, come within 2⁻²⁰ mm of the other's.
+distance, come within 2⁻²⁰ mm of the other's. A region clipped to a window (`windowed`) keeps the parts within
+it whole, leaves out those beyond it and clips those across its edge ring by ring. The neighbours' overlaps
+combine regions so, and there a cut edge can round a cell apart
+([the overlaps' work](../image-to-embroidery.md#the-overlaps-work)).
 
 ## Tatami fill
 

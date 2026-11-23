@@ -536,5 +536,53 @@ fn req_auto_158_with_the_setting_at_the_overlap_an_area_takes_the_steps_it_took_
 }
 
 /// The work the square of the case above needs on the steps an area took before the setting, counted when
-/// the case was written: those steps charge as they did, and setting the columns apart charges more.
-const BEFORE_WORK: u64 = 24_477;
+/// the case was written, and again when the window round an area (`REQ-AUTO-205`) added its looks at the
+/// shapes beside it: those steps charge as they did, and setting the columns apart charges more.
+const BEFORE_WORK: u64 = 24_632;
+
+/// `REQ-AUTO-205`: the part of a neighbour that lies beyond the window round an area takes no part in the
+/// area's overlaps. The square from (0, 0) to (10, 10) meets an area sewn after it, a square to its right
+/// with a second part, a circle 80 mm away drawn with 50 points or with 2,000. Once the neighbour's own
+/// growth and split are found, which a design does once for each shape, the circle's points cost the square
+/// only the looks that leave them out of its window: a unit for each point of what the neighbour paints and
+/// of its wide and narrow parts, under 6 units for each point the circle gains (21,499 units with 50
+/// points, 31,149 with 2,000, when the case was written). On main f1689168 they went into every union of
+/// the square's neighbours, about 260 units for each point: 38,826 units with 50 points, 544,080 with 2,000.
+#[test]
+fn req_auto_205_a_neighbour_s_part_beyond_the_window_costs_the_overlaps_no_geometry() {
+    let work = |points: u32| {
+        let sewn = || {
+            let rules = AutoParams::from_set(&Default::default()).unwrap().params;
+            let parts = [square((10.0, 0.0), (20.0, 10.0)), crate::auto::neighbours::tests::circle((100.0, 5.0), 5.0, points)];
+            let beside_it = Sewn { element: filled("beside", &parts), area: Some(rules), automatic: true, reach: None, shape: 1, part: None };
+            vec![area("square", (0.0, 0.0), (10.0, 10.0)), beside_it]
+        };
+        least(|meter| {
+            let settings = DesignSettings::default();
+            let mut shapes = Shapes::new(sewn(), &settings, &Budget::DEFAULT);
+            let reach = Reach::of(shapes.rules(0).unwrap());
+            let mut split = vec![None; shapes.len()];
+            split_of(&mut shapes, 1, WIDE * reach.along, &mut split, &mut Budget::DEFAULT.meter()).unwrap();
+            beside(&mut shapes, 0, reach, &mut split, meter).is_ok()
+        })
+    };
+    let (few, many) = (work(50), work(2_000));
+    assert!(many < few + 6 * 1_950, "{few} units with 50 points, {many} with 2,000");
+}
+
+/// `REQ-AUTO-205`: the windows' sizes. Round an area of 2 mm overlap, 3 overlaps, 4 times `TOUCHING` and
+/// 0.5 mm past its bounds. Round what it crosses of a line's part, 4 times `TOUCHING` and 0.5 mm. Round a
+/// kind of shape it reaches 0.7 mm under, 0.7 and 0.5 mm.
+#[test]
+fn req_auto_205_each_window_reaches_as_far_as_its_step_needs() {
+    let bounds = Envelope { min_x: 0.0, min_y: 1.0, max_x: 10.0, max_y: 20.0 };
+    let grown = |window: Envelope, by: f64| {
+        let want = Envelope { min_x: -by, min_y: 1.0 - by, max_x: 10.0 + by, max_y: 20.0 + by };
+        assert!((window.min_x - want.min_x).abs() < 1e-12 && (window.max_y - want.max_y).abs() < 1e-12, "{window:?} against {want:?}");
+        assert!((window.min_y - want.min_y).abs() < 1e-12 && (window.max_x - want.max_x).abs() < 1e-12, "{window:?} against {want:?}");
+    };
+    let reach = Reach { along: 2.0, across: 0.4, column: 2.0, angle: 0.0 };
+    grown(reach.window(&bounds), 3.0 * 2.0 + 4.0 * TOUCHING + 0.5);
+    grown(beyond(&bounds), 4.0 * TOUCHING + 0.5);
+    grown(within(&bounds, 0.7), 0.7 + 0.5);
+}

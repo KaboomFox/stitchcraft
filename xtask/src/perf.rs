@@ -511,10 +511,10 @@ mod tests {
             names.sort_unstable();
             names
         });
-        // The traced dogs, the pear and the TS-13 sheets, each sheet against its golden file.
+        // The traced dogs, the pear and the TS-13 sheets, each against its golden file (`REQ-AUTO-206`).
         assert_eq!(committed.pictures.len(), 11);
         for (name, picture) in &committed.pictures {
-            assert_eq!(picture.golden.is_some(), name.starts_with("TS-13"), "{name}");
+            assert!(picture.golden.is_some(), "{name}");
         }
         assert_eq!(toml_key("TS-13A"), "TS-13A");
         assert_eq!(toml_key("a dog"), "\"a dog\"");
