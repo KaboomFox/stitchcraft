@@ -98,11 +98,9 @@ impl Cap<'_, '_> {
                     continue;
                 }
                 let Some(pulled) = self.pulled(point, times, &self.moves, spot, meter)? else { continue };
-                if below && !pulled.knot && self.shows(&pulled, meter)? {
-                    continue;
-                }
                 let lowered = self.lowers(&pulled, was, spot, meter)?;
-                if lowered > 0.0 && best.as_ref().is_none_or(|(most, _)| lowered > *most) {
+                // Whether its new end shows is asked only of a point that would be chosen: it costs the most.
+                if lowered > 0.0 && best.as_ref().is_none_or(|(most, _)| lowered > *most) && !(below && !pulled.knot && self.shows(&pulled, meter)?) {
                     best = Some((lowered, pulled));
                 }
             }
