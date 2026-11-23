@@ -569,3 +569,20 @@ fn req_auto_205_a_neighbour_s_part_beyond_the_window_costs_the_overlaps_no_geome
     let (few, many) = (work(50), work(2_000));
     assert!(many < few + 6 * 1_950, "{few} units with 50 points, {many} with 2,000");
 }
+
+/// `REQ-AUTO-205`: the windows' sizes. Round an area of 2 mm overlap, 3 overlaps, 4 times `TOUCHING` and
+/// 0.5 mm past its bounds. Round what it crosses of a line's part, 4 times `TOUCHING` and 0.5 mm. Round a
+/// kind of shape it reaches 0.7 mm under, 0.7 and 0.5 mm.
+#[test]
+fn req_auto_205_each_window_reaches_as_far_as_its_step_needs() {
+    let bounds = Envelope { min_x: 0.0, min_y: 1.0, max_x: 10.0, max_y: 20.0 };
+    let grown = |window: Envelope, by: f64| {
+        let want = Envelope { min_x: -by, min_y: 1.0 - by, max_x: 10.0 + by, max_y: 20.0 + by };
+        assert!((window.min_x - want.min_x).abs() < 1e-12 && (window.max_y - want.max_y).abs() < 1e-12, "{window:?} against {want:?}");
+        assert!((window.min_y - want.min_y).abs() < 1e-12 && (window.max_x - want.max_x).abs() < 1e-12, "{window:?} against {want:?}");
+    };
+    let reach = Reach { along: 2.0, across: 0.4, column: 2.0, angle: 0.0 };
+    grown(reach.window(&bounds), 3.0 * 2.0 + 4.0 * TOUCHING + 0.5);
+    grown(beyond(&bounds), 4.0 * TOUCHING + 0.5);
+    grown(within(&bounds, 0.7), 0.7 + 0.5);
+}

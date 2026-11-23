@@ -2623,7 +2623,7 @@ edge. Each step keeps only what lies at least 0.5 mm inside its window, and ther
 the same sets as whole ones. Each point the window looks at costs a unit of work, so a far part of a
 neighbour costs a look and no geometry.
 
-There is no setting. Nothing sews otherwise for the window, so a person has nothing to choose.
+There is no setting, because the window sews every design as it sewed before.
 
 **The regions, bit for bit.** An edge the window cuts ends at a new point, which the grid
 rounds, so inside the window the edge may turn by less than a grid cell, 2^-35 mm. A crossing on it may
@@ -2680,8 +2680,11 @@ raised upstream), the dogs would take 49 to 68 % of it, against 72 to 98 % befor
 90 % of its budget, against 89 to 98 %.
 
 **Room on the sheets.** TS-13A spends 54 % of its work on its fills' stitches and 10 % on the overlaps. The
-window takes 1.2 % off it, so by the same ratio it takes about 83.8 % of its budget, against 84.8 %. The
-gate stays at 85 %, and a step that adds work to TS-13A's fills needs to take it off the fills.
+window takes 1.2 % off it. CI's compatibility job counted its export at 84.1 % of its budget with the
+window, against 84.8 % on main, and TS-13B to TS-13D at 72.8, 75.6 and 64.2 %, against 75.3, 77.6 and
+65.8 %. The gate stays at 85 %, and a step that adds work to TS-13A's fills needs to take it off the fills.
+CI's perf job counted the dogs at 11.8 to 14.8 billion instructions and the pear at 2.0 billion, and
+their records follow.
 
 ### On black fabric
 

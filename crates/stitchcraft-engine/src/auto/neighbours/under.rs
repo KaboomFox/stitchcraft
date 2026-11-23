@@ -305,6 +305,12 @@ impl Reach {
         Reach { along, across: rules.auto_pull_compensation_mm.get().min(along), column, angle: rules.auto_fill_angle }
     }
 
+    /// The window round an area with this reach whose bounds are `bounds`, which the shapes beside it are
+    /// taken within ([`beside`]).
+    fn window(self, bounds: &Envelope) -> Envelope {
+        around(bounds, WINDOW_OVERLAPS * self.along + WINDOW_TOUCHING * TOUCHING + SLACK)
+    }
+
     /// The reach under a narrow shape: [`UNDER_NARROW`] of it along the rows, and no more across them.
     fn narrow(self) -> Reach {
         let along = self.along * UNDER_NARROW;
@@ -512,7 +518,7 @@ fn beside(shapes: &mut Shapes, index: usize, reach: Reach, split: &mut [Option<S
     // beside it are taken within its window (`REQ-AUTO-205`): it is cut away up to an overlap inside their
     // edges, reaches up to an overlap beyond its own and on under them by as much again, and each region
     // that comes of them is right up to an overlap inside the window's edge.
-    let window = around(&bounds, WINDOW_OVERLAPS * reach.along + WINDOW_TOUCHING * TOUCHING + SLACK);
+    let window = reach.window(&bounds);
     let covering = windowed(covering, &window, meter)?;
     let (wide, narrow) = (windowed(wide, &window, meter)?, windowed(narrow, &window, meter)?);
     let (open, lines) = (windowed(open, &window, meter)?, windowed(lines, &window, meter)?);
@@ -563,15 +569,14 @@ fn beside(shapes: &mut Shapes, index: usize, reach: Reach, split: &mut [Option<S
     } else {
         // Only the shapes' parts whose growth reaches the line's part are grown ([`buffered_near`]), and only
         // within the window round what it crosses.
-        let crossed = envelope(&across).map_or(window, |crossed| around(&crossed, WINDOW_TOUCHING * TOUCHING + SLACK));
+        let crossed = envelope(&across).map_or(window, |crossed| beyond(&crossed));
         let (covers, lines) = (windowed(covers.clone(), &crossed, meter)?, windowed(lines.clone(), &crossed, meter)?);
         let outside = joined(buffered_near(&joined(difference(&covers, &lines, meter))?, 2.0 * TOUCHING, &across, meter))?;
         joined(intersection(&across, &outside, meter))?
     };
     let from = if beyond.is_empty() { contact } else { joined(union([contact.as_slice(), beyond.as_slice()], meter))? };
     // Each kind of shape is reached under from what lies within its reach of it: within its window.
-    let from_near =
-        |to: &[Polygon], by: f64, meter: &mut Meter| windowed(from.clone(), &envelope(to).map_or(window, |to| around(&to, by + SLACK)), meter);
+    let from_near = |to: &[Polygon], by: f64, meter: &mut Meter| windowed(from.clone(), &envelope(to).map_or(window, |to| within(&to, by)), meter);
     let under_wide =
         if wide.is_empty() { Vec::new() } else { joined(intersection(&reach.grown(&from_near(&wide, reach.along, meter)?, meter)?, &wide, meter))? };
     let under_narrow = if narrow.is_empty() {
@@ -611,6 +616,18 @@ const WINDOW_TOUCHING: f64 = 4.0;
 /// How far inside its window's edge, at the least, a step keeps what it finds, in millimetres: a region
 /// clipped to the window is right there, though a cut edge may lie a grid cell apart (`REQ-AUTO-206`).
 const SLACK: f64 = 0.5;
+
+/// The window round what an area crosses of a line's part, whose bounds are `crossed`, which the shapes
+/// beyond the line's part are taken within: they are grown by twice [`TOUCHING`] to meet it.
+fn beyond(crossed: &Envelope) -> Envelope {
+    around(crossed, WINDOW_TOUCHING * TOUCHING + SLACK)
+}
+
+/// The window round a kind of shape whose bounds are `to`, which an area reaching `by` under it reaches
+/// from.
+fn within(to: &Envelope, by: f64) -> Envelope {
+    around(to, by + SLACK)
+}
 
 /// `bounds` grown by `by` on every side: the window of a step that keeps only what lies within `by` of them.
 fn around(bounds: &Envelope, by: f64) -> Envelope {

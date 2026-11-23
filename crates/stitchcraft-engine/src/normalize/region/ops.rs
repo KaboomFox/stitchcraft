@@ -469,6 +469,24 @@ mod tests {
     }
 
     #[test]
+    fn req_auto_205_a_point_on_a_side_of_the_window_is_kept_once() {
+        let p = |x: f64, y: f64| Point::new(x, y).unwrap();
+        let ring = |points: &[(f64, f64)]| Polygon { outline: points.iter().map(|&(x, y)| p(x, y)).collect(), holes: Vec::new() };
+        // Diamonds with a corner on 3 of the window's sides each, and the fourth corner past the last side.
+        let right = ring(&[(0.0, 5.0), (5.0, 10.0), (12.0, 5.0), (5.0, 0.0), (0.0, 5.0)]);
+        let left = ring(&[(10.0, 5.0), (5.0, 0.0), (-2.0, 5.0), (5.0, 10.0), (10.0, 5.0)]);
+        let clipped = windowed(vec![right, left], &window((0.0, 0.0), (10.0, 10.0)), &mut meter()).unwrap();
+        assert_eq!(
+            points(&clipped[0].outline),
+            [(0.0, 5.0), (5.0, 10.0), (10.0, 6.428571428571429), (10.0, 3.5714285714285716), (5.0, 0.0), (0.0, 5.0)]
+        );
+        assert_eq!(
+            points(&clipped[1].outline),
+            [(10.0, 5.0), (5.0, 0.0), (0.0, 3.5714285714285716), (0.0, 6.428571428571429), (5.0, 10.0), (10.0, 5.0)]
+        );
+    }
+
+    #[test]
     fn req_auto_205_a_part_whose_clipped_point_cant_be_made_is_kept_whole_and_every_look_is_charged() {
         let p = |x: f64, y: f64| Point::new(x, y).unwrap();
         // Where an edge 2e308 long crosses the window's side, the numbers pass what a float holds.
