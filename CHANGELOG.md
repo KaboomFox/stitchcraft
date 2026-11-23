@@ -3704,6 +3704,10 @@ What a user can do with this version, before its first release. The entries belo
   shortens a value nor refuses the file.
 
 ### Golden files
+- Added `conformance/golden/pictures/` (M13.66, the overlaps made cheaper): the machine files of the 4 traced
+  dogs and the traced pear that `cargo xtask perf` counts, as main f1689168 writes them, 105 KB in all
+  (`REQ-AUTO-206`). The perf job now compares each traced picture's file with its golden file byte for byte,
+  as it compared the sheets'. No existing golden file changes, and nothing sews differently.
 - Changed `conformance/golden/testsheets/TS-13B.pes` (M13.63, each thread threaded once). Its digitized half
   threads each of its 4 threads once, the base layer's red first and the black words and lines last, after
   the panes, where black was threaded twice. The sheet sews 14,415 stitches, where it sewed 14,422, and is

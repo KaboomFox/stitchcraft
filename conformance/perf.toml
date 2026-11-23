@@ -57,20 +57,25 @@ instructions = 640000000
 
 [pictures.dog-on-turf-6]
 args = ["export", "docs/fixtures/traced-dog-on-turf-6.vectorcraft"]
+golden = "conformance/golden/pictures/dog-on-turf-6.pes"
 instructions = 20255000000
 
 [pictures.dog-on-turf-9]
 args = ["export", "docs/fixtures/traced-dog-on-turf-9.vectorcraft"]
+golden = "conformance/golden/pictures/dog-on-turf-9.pes"
 instructions = 20720000000
 
 [pictures.dog-running-6]
 args = ["export", "docs/fixtures/traced-dog-running-6.vectorcraft"]
+golden = "conformance/golden/pictures/dog-running-6.pes"
 instructions = 20562000000
 
 [pictures.dog-running-9]
 args = ["export", "docs/fixtures/traced-dog-running-9.vectorcraft"]
+golden = "conformance/golden/pictures/dog-running-9.pes"
 instructions = 24011000000
 
 [pictures.pear]
 args = ["export", "docs/fixtures/traced-pear.vectorcraft"]
+golden = "conformance/golden/pictures/pear.pes"
 instructions = 2306000000
