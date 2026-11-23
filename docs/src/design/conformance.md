@@ -392,6 +392,7 @@ drawn from a copy of Ink/Stitch's file kept for the docs, which the nightly run 
 Ink/Stitch writes:
 
 <!-- shot: differential-ring -->
+![The inkstitch-ring case as the differential draws it: Ink/Stitch's machine file and StitchCraft's side by side at one scale, each with its stitches, size, place, threads, trims and jumps, and a third panel of where their thread lies apart, with the overlap and the verdict.](../images/generated/differential-ring.png)
 <!-- /shot -->
 
 **Routes.** A route is a design of its own, so sewing StitchCraft's route in both programs would compare 2

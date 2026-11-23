@@ -133,7 +133,9 @@ pub fn draw(title: &str, verdict: &str, rows: &[Compared], theirs: &Side, ours: 
 
     // The title, with the scale's bar of 10 mm at its right.
     let unit = if small { 1.5 } else { 2.5 };
-    text(&mut canvas, &format!("{title}  {verdict}"), PAD as f32, PAD as f32, unit, INK);
+    // Small, the verdict first, which a long title would push out of the picture.
+    let heading = if small { format!("{verdict}  {title}") } else { format!("{title}  {verdict}") };
+    text(&mut canvas, &heading, PAD as f32, PAD as f32, unit, INK);
     if !small {
         let bar = 10.0 * scale;
         let x = width as f32 - PAD as f32 - bar;
@@ -462,6 +464,25 @@ mod tests {
         // Small, for a contact sheet.
         let small = Pixmap::decode_png(&draw("huge", "agrees", &[], &side("Ink/Stitch"), &side("StitchCraft"), true).unwrap().png).unwrap();
         assert_eq!(small.width(), PAD + 3 * ((404.4_f32 * 0.3).ceil() as u32 + PAD));
+    }
+
+    #[test]
+    fn the_docs_draw_a_case_from_ink_stitch_s_kept_file_as_the_differential_draws_it() {
+        let root = util::root();
+        let kept = "docs/fixtures/differential/inkstitch-ring.inkstitch.pes";
+        let png = super::super::shot(&root, "inkstitch-ring", kept).unwrap();
+        assert_eq!(png, std::fs::read(root.join(super::super::PICTURES).join("inkstitch-ring.png")).unwrap());
+        assert!(Pixmap::decode_png(&png).is_ok());
+        // The kept file is the one the shot compares Ink/Stitch's with: a copy that differs is stale.
+        assert!(super::super::stale_shots(&root, "inkstitch-ring", &std::fs::read(root.join(kept)).unwrap()).is_empty());
+        assert_eq!(super::super::stale_shots(&root, "inkstitch-ring", b"#PES"), [format!(
+            "{kept} is not the PES file Ink/Stitch writes of inkstitch-ring now: write that over it, and run cargo xtask shots"
+        )]);
+        assert!(super::super::stale_shots(&root, "inkstitch-fill-rect", b"#PES").is_empty());
+        // Only a case of a design file, and only with its file kept.
+        assert!(super::super::shot(&root, "inkstitch-ts04", kept).unwrap_err().contains("no Ink/Stitch differential case of a design file"));
+        assert!(super::super::shot(&root, "inkstitch-nothing", kept).unwrap_err().contains("there is no case"));
+        assert!(super::super::shot(&root, "inkstitch-ring", "docs/fixtures/missing.pes").unwrap_err().starts_with("docs/fixtures/missing.pes"));
     }
 
     #[test]

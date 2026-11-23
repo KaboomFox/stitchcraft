@@ -568,6 +568,8 @@ mod tests {
             key: false,
             fabric: None,
             scale: Some(2.0),
+            case: None,
+            inkstitch: None,
             report: String::new(),
             layout: Layout::Columns,
             plugins: Vec::new(),
@@ -724,6 +726,16 @@ mod tests {
             assert_eq!(foreign(&shot(&format!("kind = \"photo\"\n{option}"))), [refused], "{option}");
             assert!(foreign(&shot(&format!("kind = \"stitch\"\n{option}"))).is_empty(), "{option}");
         }
+    }
+
+    #[test]
+    fn a_differential_shot_s_case_and_file_are_its_own() {
+        let shot = |toml: &str| -> Shot { toml::from_str(&format!("id = \"probe\"\nalt = \"A probe\"\n{toml}")).unwrap() };
+        let refused = "`case` and `inkstitch` are a differential shot's";
+        for option in ["case = \"inkstitch-ring\"", "inkstitch = \"a.pes\""] {
+            assert_eq!(foreign(&shot(&format!("kind = \"stitch\"\n{option}"))), [refused], "{option}");
+        }
+        assert!(foreign(&shot("kind = \"stitch\"")).is_empty());
     }
 
     /// The plan [`part`] gives of the sheet `id` for `shot`.

@@ -331,7 +331,8 @@ impl Sewn {
         let file = self.job.file.strip_suffix(".svg").unwrap_or(&self.job.file);
         let title = format!("{} {file} {}", self.job.font, self.job.index);
         let sides = (Side { name: "Ink/Stitch", plan: theirs.0, measured: theirs.1 }, Side { name: "StitchCraft", plan: ours.0, measured: ours.1 });
-        let said = self.verdict.name();
+        let said = said(&self.verdict);
+        let said = said.as_str();
         if matches!(self.verdict, Verdict::Excused(_) | Verdict::Known(_) | Verdict::Differs(_)) {
             let path = root.join(super::differential::PICTURES).join("fonts").join(&self.job.font).join(format!("{file}-{:04}.png", self.job.index));
             self.picture = Some(picture::pictured(&path, &title, said, &self.rows, &sides.0, &sides.1));
@@ -339,6 +340,28 @@ impl Sewn {
         if first {
             self.small = picture::draw(&title, said, &self.rows, &sides.0, &sides.1, true).ok().map(|drawn| drawn.png);
         }
+    }
+}
+
+/// The verdict a glyph's picture gives: its name, with the ledger's entries an excused glyph's excuses
+/// name, or the steps a known difference's name.
+fn said(verdict: &Verdict) -> String {
+    let named = |how: &[String], word: &str| {
+        let ids: BTreeSet<&str> = how
+            .iter()
+            .flat_map(|line| line.split(|c: char| !(c.is_ascii_alphanumeric() || c == '-' || c == '.')))
+            .filter(|token| {
+                let next = token.strip_prefix(word).and_then(|rest| rest.chars().next());
+                next.is_some_and(|c| c.is_ascii_digit() || c.is_ascii_uppercase())
+            })
+            .map(|token| token.trim_end_matches('.'))
+            .collect();
+        ids.into_iter().collect::<Vec<_>>().join(", ")
+    };
+    match verdict {
+        Verdict::Excused(how) if !named(how, "DEV-").is_empty() => format!("excused by {}", named(how, "DEV-")),
+        Verdict::Known(how) if !named(how, "M").is_empty() => format!("known: {}", named(how, "M")),
+        other => other.name().to_string(),
     }
 }
 
@@ -523,6 +546,19 @@ mod tests {
     fn a_glyph_s_design_is_written_under_its_font_and_file() {
         let job = Job { font: "f".into(), file: "ltr/latin.svg".into(), index: 7, name: "A".into() };
         assert_eq!(job.path(Path::new("/r")), Path::new("/r").join(WRITTEN).join("f").join("ltr/latin-0007.svg"));
+    }
+
+    #[test]
+    fn a_glyph_s_picture_names_the_ledger_s_entries_that_excuse_it() {
+        let how = |lines: &[&str]| lines.iter().map(|line| line.to_string()).collect::<Vec<_>>();
+        let excused = Verdict::Excused(how(&["trims differ, as DEV-FMT-001 says.", "size differ, as DEV-SAT-013 says", "jumps, as DEV-FMT-001 says"]));
+        assert_eq!(said(&excused), "excused by DEV-FMT-001, DEV-SAT-013");
+        assert_eq!(said(&Verdict::Known(how(&["Measures differ (known: M9.9)"]))), "known: M9.9");
+        // Without an entry or a step named, the verdict's name.
+        assert_eq!(said(&Verdict::Excused(how(&["StitchCraft refuses it"]))), "excused");
+        assert_eq!(said(&Verdict::Known(Vec::new())), "known");
+        assert_eq!(said(&Verdict::Differs(how(&["DEV-X-001"]))), "differs");
+        assert_eq!(said(&Verdict::Agrees), "agrees");
     }
 
     #[test]
