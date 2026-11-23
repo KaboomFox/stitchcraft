@@ -41,3 +41,18 @@ fn req_auto_083_each_picture_the_budget_counts_is_a_command_stitch_reads() {
         assert!(picture["instructions"].as_integer().unwrap() > 0, "{name}");
     }
 }
+
+/// `REQ-AUTO-206`: every picture the budget counts has a golden file, the traced ones too, so that the
+/// perf job checks byte for byte that a step which makes the work cheaper changes nothing that sews. The
+/// traced pictures' golden files are written by main before the window is built. The case above then
+/// takes a traced picture with its golden file too.
+#[test]
+#[ignore = "planned: M13.66 gives the traced pictures their golden files"]
+fn req_auto_206_each_picture_the_budget_counts_has_a_golden_file() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let record: toml::Table = std::fs::read_to_string(root.join("conformance/perf.toml")).unwrap().parse().unwrap();
+    for (name, picture) in record["pictures"].as_table().unwrap() {
+        let golden = picture.get("golden").and_then(toml::Value::as_str).unwrap_or_else(|| panic!("{name} has no golden file"));
+        assert!(root.join(golden).is_file(), "{name}: {golden}");
+    }
+}

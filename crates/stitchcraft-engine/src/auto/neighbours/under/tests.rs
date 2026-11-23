@@ -538,3 +538,32 @@ fn req_auto_158_with_the_setting_at_the_overlap_an_area_takes_the_steps_it_took_
 /// The work the square of the case above needs on the steps an area took before the setting, counted when
 /// the case was written: those steps charge as they did, and setting the columns apart charges more.
 const BEFORE_WORK: u64 = 24_477;
+
+/// `REQ-AUTO-205`: the part of a neighbour that lies beyond the window round an area takes no part in the
+/// area's overlaps. The square from (0, 0) to (10, 10) meets an area sewn after it, a square to its right
+/// with a second part, a circle 80 mm away drawn with 50 points or with 2,000. Once the neighbour's own
+/// growth and split are found, which a design does once for each shape, the square needs at most a unit more
+/// for each point the circle gains: the look that leaves it out. On main f1689168 the circle's points went
+/// into every union of the square's neighbours, and each cost the square many units.
+#[test]
+#[ignore = "planned: M13.66 builds the window round an area"]
+fn req_auto_205_a_neighbour_s_part_beyond_the_window_costs_the_overlaps_no_geometry() {
+    let work = |points: u32| {
+        let sewn = || {
+            let rules = AutoParams::from_set(&Default::default()).unwrap().params;
+            let parts = [square((10.0, 0.0), (20.0, 10.0)), crate::auto::neighbours::tests::circle((100.0, 5.0), 5.0, points)];
+            let beside_it = Sewn { element: filled("beside", &parts), area: Some(rules), automatic: true, reach: None, shape: 1, part: None };
+            vec![area("square", (0.0, 0.0), (10.0, 10.0)), beside_it]
+        };
+        least(|meter| {
+            let settings = DesignSettings::default();
+            let mut shapes = Shapes::new(sewn(), &settings, &Budget::DEFAULT);
+            let reach = Reach::of(shapes.rules(0).unwrap());
+            let mut split = vec![None; shapes.len()];
+            split_of(&mut shapes, 1, WIDE * reach.along, &mut split, &mut Budget::DEFAULT.meter()).unwrap();
+            beside(&mut shapes, 0, reach, &mut split, meter).is_ok()
+        })
+    };
+    let (few, many) = (work(50), work(2_000));
+    assert!(many <= few + 1_950, "{few} units with 50 points, {many} with 2,000");
+}

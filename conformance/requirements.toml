@@ -4210,6 +4210,24 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-AUTO-205"
+area = "auto"
+level = "L2"
+statement = "Where an automatic area reaches under the shapes sewn after it and is cut away under them, each region it combines them in takes only what lies within a window round the place its result can be: the area's bounds grown by 3 overlaps, 4 times TOUCHING and 0.5 mm for the shapes beside it, the bounds of a line's part crossed grown by 4 times TOUCHING and 0.5 mm for the shapes beyond it, and the bounds of each kind of shape it reaches under grown by its reach under that kind and 0.5 mm for what it reaches from. A part of a shape wholly within its window is taken as it is, one wholly beyond it is left out, and one across its edge is clipped to it. So a part of a neighbour that lies beyond the window costs the area's overlaps no geometry, only the look that leaves it out, a unit of work for each point."
+rationale = "On a traced dog the overlaps took 71 to 75 % of the work (CI's perf job on f08be379), and its export needs an estimated 6.5 to 8.9 times what VectorCraft allows. Every union of an area's neighbours took each neighbour whole, and a dog's large areas meet most of the small ones. Measured with a prototype on 2026-11-23 (M13.66), the window took 39 to 47 % off the dogs' overlaps and 27 to 35 % off their whole runs, 8.5 % off the pear and 0.3 to 3.7 % off TS-13A, B, D and E, and every machine file stayed the same byte for byte."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-206"
+area = "auto"
+level = "L2"
+statement = "Making the overlaps cheaper changes nothing that sews: the window of REQ-AUTO-205 takes the same regions as sets, and every golden file and the machine file of every picture of conformance/perf.toml stay the same byte for byte. Each picture the perf job counts has a golden file, the traced ones too, written by main before the window is built, and the perf job compares each picture's file with it."
+rationale = "The step is about work only. The owner sews traced pictures, and a change in a stitch would need a sew-out. Clipping to a window cuts edges where they cross it, so the grid rounding of a region's points may differ there by a cell, 2^-35 mm: with the prototype, 882 of the 885 final regions of the 84 designs tried were the same bit for bit, the 3 of one drawing differed in their bits with the same number of points, and its machine file was the same. Only the perf job writes the traced pictures, so their golden files are what holds that to account."
+milestone = "M13"
+status = "planned"
+
+[[req]]
 id = "REQ-AUTO-037"
 area = "auto"
 level = "L2"
