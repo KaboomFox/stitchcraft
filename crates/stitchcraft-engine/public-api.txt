@@ -32,7 +32,6 @@ pub stitchcraft_engine::auto::rules::Rule::id: stitchcraft_engine::auto::rules::
 pub stitchcraft_engine::auto::rules::Rule::is: &'static str
 pub stitchcraft_engine::auto::rules::Rule::label: &'static str
 pub stitchcraft_engine::auto::rules::Rule::sewn: &'static str
-pub const stitchcraft_engine::auto::THREAD_ONCE: &str
 pub const stitchcraft_engine::auto::rules::LEAN: f64
 pub const stitchcraft_engine::auto::rules::MOST_CROWDING: f64
 pub const stitchcraft_engine::auto::rules::PRESETS: [stitchcraft_engine::auto::rules::Preset; 2]
@@ -135,6 +134,7 @@ pub const stitchcraft_engine::auto::PREFER: &str
 pub const stitchcraft_engine::auto::SHORT_STITCHES: &str
 pub const stitchcraft_engine::auto::STITCH: &str
 pub const stitchcraft_engine::auto::TAPER: &str
+pub const stitchcraft_engine::auto::THREAD_ONCE: &str
 pub const stitchcraft_engine::auto::TOUCHING: f64
 pub const stitchcraft_engine::auto::WARNING_CHARS: usize
 pub const stitchcraft_engine::auto::WIDEST_SPLIT_SATIN: f64
