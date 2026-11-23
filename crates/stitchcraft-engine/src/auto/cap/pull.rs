@@ -95,13 +95,17 @@ impl Cap<'_, '_> {
     pub(super) fn pull_in(&mut self, points: &[Entry], level: f64, skip: bool, meter: &mut Meter) -> Result<(), Exhausted> {
         let limit = self.pass.rules.limit;
         let hold = held_at(level, limit);
-        // Going on past a spot, only the spots the points' stitches lay thread in are looked at ([`Hot`]).
-        let mut hot = if skip { Some(Hot::of(&self.pass, points, level, meter)?) } else { None };
+        // Going on past a spot, only the spots the points' stitches lay thread in are looked at ([`Hot`]), and
+        // only while a spot is above the level.
+        let mut hot = if skip && self.above(level, meter)? { Some(Hot::of(&self.pass, &self.ribbons, points, level, meter)?) } else { None };
+        if skip && hot.is_none() {
+            return Ok(());
+        }
         loop {
             let (index, spot, near) = match hot.as_mut() {
                 Some(hot) => {
                     let Some((index, spot)) = hot.next(self.pass.thickness, meter)? else { break };
-                    (Some(index), spot.at, hot.near(index))
+                    (Some(index), spot.at, hot.near(&self.pass, &self.ribbons, spot.at, meter)?)
                 }
                 None if self.above(level, meter)? => (None, self.pass.thickness.most(Measure::Fills).at, points.to_vec()),
                 None => break,
@@ -134,12 +138,7 @@ impl Cap<'_, '_> {
             }
             self.pass.moved(pulled.point, pulled.to);
             if let Some(hot) = hot.as_mut() {
-                // The points on either side share the moved stitches.
-                let [into, out] = pulled.added;
-                let (block, _) = pulled.point;
-                let sharing =
-                    [pulled.point, (block, out.index)].into_iter().chain(self.pass.beside(pulled.point, false, meter)?.map(|at| (block, at)));
-                hot.add(self.pass.thickness, &sharing.collect::<Vec<Entry>>(), &[into, out], meter)?;
+                hot.add(self.pass.thickness, &pulled.added, meter)?;
             }
             self.moves.insert(pulled.point, (times.saturating_add(1), first));
             self.places.insert((cell(spot.x()), cell(spot.y())));

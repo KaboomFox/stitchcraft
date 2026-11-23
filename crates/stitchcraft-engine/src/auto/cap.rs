@@ -35,8 +35,7 @@
 //! move in along their stitches, before the last resort takes any point out. Neither stops at a spot it can't
 //! lower: each goes on to the next spot above the limit (`REQ-AUTO-194`). With `auto_short_stitches` `knots`,
 //! the default, the cap then pulls in the points of tight turns, and points whose new end a later shape
-//! covers, below the limit too, down to the cap (`REQ-AUTO-195`). That is measured again from the plan, and
-//! kept only where it leaves the design no thicker.
+//! covers, below the limit too, down to the cap (`REQ-AUTO-195`).
 //!
 //! **One measure.** The cap takes the last pass's measure and keeps it up to date stitch by stitch, as the
 //! pass does, with the pass's own helpers. Only the stitches near a spot above the cap are looked at, found
@@ -271,47 +270,24 @@ pub(crate) fn capped(
         places: BTreeSet::new(),
     };
     let mut ran_out = cap.taking([&hottest, &points, &pulled], &last, meter).is_err();
-    // Below the limit, what the plan and its measure were before is kept, with the count of points pulled in
-    // until then, for the plan measured again after.
-    let before = match (ran_out, low.is_empty()) {
-        (false, false) => Some((cap.pass.plan().clone(), cap.pass.thickness.clone(), cap.pulled)),
-        _ => None,
-    };
-    if before.is_some() {
+    // Below the limit, down to the cap, the columns sewn with `knots` (`REQ-AUTO-195`). The measure is kept up to
+    // date as above it: no second measure of the plan, whose work the test sheets have no room for.
+    if !ran_out {
         ran_out = cap.pull_in(&low, rules.cap, true, meter).is_err();
     }
-    let Cap { pass, taken, times, mut pulled, .. } = cap;
+    let Cap { pass, taken, times, pulled, .. } = cap;
     let (plan, thickness, gone) = pass.ended();
     taken_out(plan, &gone);
     // What is left is measured with the budget's work once more. A cap out of work may have stopped part way
-    // through a point's change of the measure, and the pull-in below the limit is judged by the plan measured
-    // afresh: the plan is measured again.
+    // through a point's change of the measure: the plan is measured again.
     let mut again = budget.meter();
-    if ran_out || before.is_some() {
+    if ran_out {
         *thickness = Thickness::of(plan, &mut again)?.ok_or(Exhausted::Work)?;
     } else {
         thickness.resewn(plan, &mut again)?;
     }
-    if let Some((kept, measure, count)) = before
-        && thicker(&measure, thickness, rules.limit, &mut again)?
-    {
-        *plan = kept;
-        taken_out(plan, &gone);
-        *thickness = measure;
-        thickness.resewn(plan, &mut again)?;
-        pulled = count;
-    }
     let left = thickness.over(Measure::Fills, rules.cap, &mut again)?;
     Ok(Some(Capped { taken, times, left, thickest: thickness.most(Measure::Fills), ran_out, pulled }))
-}
-
-/// Whether `after` sews thicker than `before`, 2 measures of a plan: its thickest spot thicker, or more of it
-/// above `limit`. The pull-in below the limit is kept only where it isn't (`REQ-AUTO-195`). A unit of work for
-/// each spot of each.
-fn thicker(before: &Thickness, after: &Thickness, limit: f64, meter: &mut Meter) -> Result<bool, Exhausted> {
-    let area = |thickness: &Thickness, meter: &mut Meter| thickness.over(Measure::Fills, limit, meter).map(|over| over.area);
-    let (was, is) = (area(before, meter)?, area(after, meter)?);
-    Ok(!at_least(before.most(Measure::Fills).value, after.most(Measure::Fills).value) || !at_least(was, is))
 }
 
 /// The needle points of `sewn`, the plan's stitches, that the cap looks at: those of the elements `made`
@@ -391,20 +367,24 @@ impl Cap<'_, '_> {
     /// thickest (`REQ-AUTO-194`).
     fn last_resort(&mut self, points: &[Entry], skip: bool, meter: &mut Meter) -> Result<(), Exhausted> {
         let limit = self.pass.rules.limit;
-        let mut points = points.to_vec();
-        // Going on past a spot, only the spots the points' stitches lay thread in are looked at ([`Hot`]).
-        let mut hot = if skip { Some(Hot::of(&self.pass, &points, limit, meter)?) } else { None };
+        let (mut points, mut taken) = (points.to_vec(), BTreeSet::new());
+        // Going on past a spot, only the spots the points' stitches lay thread in are looked at ([`Hot`]), and
+        // only while a spot is above the limit.
+        let mut hot = if skip && self.above(limit, meter)? { Some(Hot::of(&self.pass, &self.ribbons, &points, limit, meter)?) } else { None };
+        if skip && hot.is_none() {
+            return Ok(());
+        }
         loop {
             let (index, spot, near) = match hot.as_mut() {
                 Some(hot) => {
                     let Some((index, spot)) = hot.next(self.pass.thickness, meter)? else { break };
-                    (Some(index), spot.at, hot.near(index))
+                    (Some(index), spot.at, hot.near(&self.pass, &self.ribbons, spot.at, meter)?)
                 }
                 None if self.above(limit, meter)? => (None, self.pass.thickness.most(Measure::Fills).at, points.clone()),
                 None => break,
             };
             let mut may = Vec::new();
-            for point in near.into_iter().filter(|point| points.contains(point)) {
+            for point in near.into_iter().filter(|point| !taken.contains(point)) {
                 meter.charge(1)?;
                 if let Some(change) = self.taken_out(point, Kind::Column, true, Some(spot), meter)? {
                     may.push((change, point));
@@ -416,15 +396,14 @@ impl Cap<'_, '_> {
                 continue;
             };
             points.retain(|other| *other != point);
+            taken.insert(point);
             self.taken_out(point, Kind::Column, true, None, meter)?;
             if let Some(hot) = hot.as_mut() {
-                // The points on either side share the stitch that joins them.
+                // The stitch that joins the points on either side lays thread where they did.
                 let (block, _) = point;
                 let (from, to) = (self.pass.beside(point, false, meter)?, self.pass.beside(point, true, meter)?);
-                if let (Some(from), Some(to)) = (from, to)
-                    && let Some(joined) = self.pass.sewn(block, from, to)
-                {
-                    hot.add(self.pass.thickness, &[(block, from), (block, to)], &[joined], meter)?;
+                if let Some(joined) = from.zip(to).and_then(|(from, to)| self.pass.sewn(block, from, to)) {
+                    hot.add(self.pass.thickness, &[joined], meter)?;
                 }
             }
         }

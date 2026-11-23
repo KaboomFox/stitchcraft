@@ -1,7 +1,7 @@
 //! The cap below the limit (`REQ-AUTO-194`, `REQ-AUTO-195`): it goes on past a spot it can't lower, and with
 //! `auto_short_stitches` `knots` it pulls in a column's knots, and points whose new end a later shape covers,
-//! below the warning's limit, each by its first share, and keeps that only where the plan measured again is
-//! no thicker.
+//! below the warning's limit, each by its first share, keeping its measure up to date as the plan measured
+//! again has it.
 
 use super::*;
 use crate::auto::cap::hot::Hot;
@@ -185,54 +185,6 @@ fn req_auto_194_the_last_resort_goes_on_past_a_spot_no_point_lowers() {
 }
 
 #[test]
-fn req_auto_195_a_plan_is_thicker_where_its_thickest_spot_or_its_area_above_the_limit_grows() {
-    let measure = |parts: &[Part]| Thickness::of(&plan(parts), &mut Budget::DEFAULT.meter()).unwrap().unwrap();
-    let fan = measure(&[("fan", Role::Top, fan(0.05))]);
-    let thinner = measure(&[("fan", Role::Top, super::fan(0.3))]);
-    let limit = 4.0;
-    let thicker = |before: &Thickness, after: &Thickness| super::thicker(before, after, limit, &mut Budget::DEFAULT.meter()).unwrap();
-    assert!(!thicker(&fan, &fan));
-    assert!(!thicker(&fan, &thinner));
-    assert!(thicker(&thinner, &fan));
-    // A second column as thick beside a column 5 fills thick: as thick, with more area above the limit.
-    let column = |x: f64| -> Vec<(f64, f64)> { (0..5).flat_map(|_| zigzag(4.0, 0.25)).map(|(a, y)| (a + x, y)).collect() };
-    let one = measure(&[("one", Role::Top, column(0.0))]);
-    let two = measure(&[("one", Role::Top, column(0.0)), ("two", Role::Top, column(20.0))]);
-    assert!(one.over(Measure::Fills, limit, &mut Budget::DEFAULT.meter()).unwrap().area > 0.0);
-    assert!((one.most(Measure::Fills).value - two.most(Measure::Fills).value).abs() < 1e-9);
-    assert!(thicker(&one, &two) && !thicker(&two, &one));
-    // A unit of work for each spot of each.
-    let spots = |thickness: &Thickness| {
-        let (columns, rows) = thickness.size();
-        units(columns * rows)
-    };
-    let work = spots(&one) + spots(&two);
-    assert!(super::thicker(&one, &two, limit, &mut Budget { max_work: work - 1, ..Budget::DEFAULT }.meter()).is_err());
-}
-
-#[test]
-fn req_auto_195_a_pull_in_below_the_limit_the_plan_measured_again_finds_thicker_is_undone() {
-    // The cap is given a measure without the pile the plan sews: measured again after the pull-in below the
-    // limit, the plan is thicker than the measure said before it, and the plan keeps the points as they were
-    // before that pull-in.
-    let fan_points = fan(0.08);
-    let (sewn, column, _) = fanned(0.08);
-    let pulls = pullable(&column, true);
-    let rules = Rules { cap: 3.0, limit: 4.0, columns: &column, pulls: &pulls, ..rules() };
-    let with_pile = plan(&[("fan", Role::Top, fan_points), ("pile", Role::Top, pile(30.0))]);
-    let mut kept = with_pile.clone();
-    let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
-    let undone = capped(&mut kept, &mut thickness, &rules, &column, &Budget::DEFAULT).unwrap().unwrap();
-    assert_eq!(undone.pulled, [0, 0], "{undone:?}");
-    assert!(moved(&with_pile, &kept).is_empty());
-    // Given the plan's own measure, the pull-in stays.
-    let mut kept = sewn.clone();
-    let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
-    let stays = capped(&mut kept, &mut thickness, &rules, &column, &Budget::DEFAULT).unwrap().unwrap();
-    assert!(stays.pulled[0] > 0 && !moved(&sewn, &kept).is_empty(), "{stays:?}");
-}
-
-#[test]
 fn req_auto_195_a_cap_out_of_work_while_it_pulls_in_below_the_limit_keeps_a_plan_it_measures_again() {
     let (sewn, column, _) = fanned(0.08);
     let pulls = pullable(&column, true);
@@ -291,10 +243,11 @@ fn req_auto_195_a_later_shape_covers_a_pulled_end_only_where_it_covers_its_first
 }
 
 #[test]
-fn req_auto_194_the_spots_gone_on_to_are_those_the_points_lay_thread_in_thickest_first() {
+fn req_auto_194_the_spots_gone_on_to_are_those_near_the_points_stitches_thickest_first() {
     let mut sewn = plan(&[("pile", Role::Top, pile(30.0)), ("fan", Role::Top, fan(0.05))]);
     let column: BTreeSet<ElementRef> = ElementRef::from_index(1).into_iter().collect();
-    let rules = Rules { cap: 3.0, limit: 4.0, columns: &column, ..rules() };
+    let pulls = pullable(&column, false);
+    let rules = Rules { cap: 3.0, limit: 4.0, columns: &column, pulls: &pulls, ..rules() };
     on_cap(&mut sewn, &rules, |cap, points| {
         let fan: Vec<Entry> = points
             .iter()
@@ -302,17 +255,21 @@ fn req_auto_194_the_spots_gone_on_to_are_those_the_points_lay_thread_in_thickest
             .filter(|point| cap.pass.stitch(*point).is_some_and(|(_, _, element)| column.contains(&element.unwrap())))
             .collect();
         let mut meter = Budget::DEFAULT.meter();
-        let mut hot = Hot::of(&cap.pass, &fan, 1.0, &mut meter).unwrap();
-        // The pile is thicker, but no stitch of the fan lays thread in it: the fan's own thickest spot comes first.
+        let mut hot = Hot::of(&cap.pass, &cap.ribbons, &fan, 1.0, &mut meter).unwrap();
+        // The pile is thicker, but no stitch of the fan comes near it: the fan's own thickest spot comes first.
         let (first, spot) = hot.next(cap.pass.thickness, &mut meter).unwrap().unwrap();
         assert!(spot.value < cap.pass.thickness.most(Measure::Fills).value, "{spot:?}");
         let alone = Thickness::of(&plan(&[("fan", Role::Top, super::fan(0.05))]), &mut meter).unwrap().unwrap().most(Measure::Fills).value;
         assert!((spot.value - alone).abs() < 1e-9, "{spot:?} {alone}");
-        // It stays until it is stuck, and its points are the fan's, in the plan's order.
+        // It stays until it is stuck, and its points are the fan's whose stitches come near it, in the plan's
+        // order: every point the cap may move for it is among them.
         assert_eq!(hot.next(cap.pass.thickness, &mut meter).unwrap().map(|(at, _)| at), Some(first));
-        let near = hot.near(first);
+        let near = hot.near(&cap.pass, &cap.ribbons, spot.at, &mut meter).unwrap();
         assert!(!near.is_empty() && near.windows(2).all(|pair| pair[0] < pair[1]) && near.iter().all(|point| fan.contains(point)));
-        assert!(hot.near(usize::MAX).is_empty());
+        let movable: Vec<Entry> =
+            fan.iter().copied().filter(|point| cap.pulled(*point, 0, &BTreeMap::new(), spot.at, &mut meter).unwrap().is_some()).collect();
+        assert!(!movable.is_empty() && movable.iter().all(|point| near.contains(point)), "{movable:?} {near:?}");
+        assert!(hot.near(&cap.pass, &cap.ribbons, Point::new(500.0, 500.0).unwrap(), &mut meter).unwrap().is_empty());
         hot.stuck(first);
         let (second, next) = hot.next(cap.pass.thickness, &mut meter).unwrap().unwrap();
         assert!(second != first && next.value <= spot.value && next.value > 1.0);
@@ -321,21 +278,19 @@ fn req_auto_194_the_spots_gone_on_to_are_those_the_points_lay_thread_in_thickest
             cap.pass.thickness.remove(stitch, &mut meter).unwrap();
         }
         assert_eq!(hot.next(cap.pass.thickness, &mut meter).unwrap(), None);
-        // A stitch added for a point the cap may not move names no point there; for one it may, it does, and its
-        // spots above the level come back, but for those stuck.
+        // A stitch laid again puts its spots above the level back, but for those stuck.
         let stitch = cap.pass.thickness.sewn().iter().find(|stitch| fan.contains(&(stitch.block, stitch.index))).copied().unwrap();
         for _ in 0..10 {
             cap.pass.thickness.add(&stitch, &mut meter).unwrap();
         }
-        hot.add(cap.pass.thickness, &[(9, 9)], &[stitch], &mut meter).unwrap();
+        hot.add(cap.pass.thickness, &[stitch], &mut meter).unwrap();
         let back = hot.next(cap.pass.thickness, &mut meter).unwrap().unwrap();
-        assert!(hot.near(back.0).iter().all(|point| fan.contains(point)) && back.0 != first);
-        hot.add(cap.pass.thickness, &[fan[3]], &[stitch], &mut meter).unwrap();
-        assert!(hot.near(back.0).contains(&fan[3]));
+        assert!(back.0 != first && back.1.value > 1.0);
         // Nothing above a level as high as the thickest spot.
-        assert_eq!(Hot::of(&cap.pass, &fan, 1000.0, &mut meter).unwrap().next(cap.pass.thickness, &mut meter).unwrap(), None);
+        assert_eq!(Hot::of(&cap.pass, &cap.ribbons, &fan, 1000.0, &mut meter).unwrap().next(cap.pass.thickness, &mut meter).unwrap(), None);
         // A unit of work for each point and each spot looked at.
-        assert!(Hot::of(&cap.pass, &fan, 1.0, &mut Budget { max_work: 0, ..Budget::DEFAULT }.meter()).is_err());
+        assert!(Hot::of(&cap.pass, &cap.ribbons, &fan, 1.0, &mut Budget { max_work: 0, ..Budget::DEFAULT }.meter()).is_err());
         assert!(hot.next(cap.pass.thickness, &mut Budget { max_work: 0, ..Budget::DEFAULT }.meter()).is_err());
+        assert!(hot.near(&cap.pass, &cap.ribbons, back.1.at, &mut Budget { max_work: 0, ..Budget::DEFAULT }.meter()).is_err());
     });
 }

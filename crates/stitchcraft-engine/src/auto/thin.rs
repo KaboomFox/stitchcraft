@@ -191,11 +191,6 @@ impl<'p, 'r> Pass<'p, 'r> {
         Pass { plan, thickness, rules, gone: BTreeSet::new(), taken: [0.0; 4], times: [0; 4] }
     }
 
-    /// The plan as the pass has changed it so far, with the entries it took out still in it.
-    pub(super) fn plan(&self) -> &StitchPlan {
-        self.plan
-    }
-
     /// The pass's plan, its measure and the entries it took out.
     pub(super) fn ended(self) -> (&'p mut StitchPlan, &'p mut Thickness, BTreeSet<Entry>) {
         (self.plan, self.thickness, self.gone)
