@@ -16,13 +16,14 @@
 //! a later shape covers. Each moves by its first share only, as `REQ-AUTO-085` holds a column's edge, and no
 //! pull makes a spot above the limit thicker: a pulled point lays its thread in the spots beside it.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use stitchcraft_core::units::at_least;
 use stitchcraft_core::{Exhausted, Meter, Point};
 use stitchcraft_plan::thickness::{Measure, PIXEL};
 use stitchcraft_plan::{ElementRef, Role, SewnStitch};
 
+use super::hot::Hot;
 use super::{Cap, NEAR, Ribbon, cell};
 use crate::auto::thin::Entry;
 use crate::generators::satin::OFF;
@@ -69,6 +70,18 @@ pub(super) struct Move {
     pub(super) element: Option<ElementRef>,
 }
 
+/// What the pull-in down to `level` holds a spot above the warning's `limit` to: below the limit, no spot
+/// above it gets thicker (`REQ-AUTO-195`); at the limit, `None`, as `Pass::changed` holds it.
+pub(super) fn held_at(level: f64, limit: f64) -> Option<f64> {
+    (level < limit).then_some(limit)
+}
+
+/// Whether a point that lowers the spot by `lowered` fills is chosen over the best so far, which lowered it by
+/// `most`: it must lower it, and by more, so that of points that lower it alike the one sewn first moves.
+pub(super) fn better(lowered: f64, most: Option<f64>) -> bool {
+    lowered > 0.0 && most.is_none_or(|most| lowered > most)
+}
+
 impl Cap<'_, '_> {
     /// Pulls in crowded top points of the columns of `pulls` among `points` while a spot sews above `level`,
     /// one at a time: of those whose stitches pass within [`NEAR`] of the thickest spot, the one that lowers it
@@ -81,17 +94,22 @@ impl Cap<'_, '_> {
     /// each time.
     pub(super) fn pull_in(&mut self, points: &[Entry], level: f64, skip: bool, meter: &mut Meter) -> Result<(), Exhausted> {
         let limit = self.pass.rules.limit;
-        let hold = (level < limit).then_some(limit);
-        let mut stuck = BTreeSet::new();
-        while let Some((index, most)) = self.pass.thickness.most_besides(Measure::Fills, &stuck, meter)? {
-            if most.value <= level {
-                break;
-            }
-            let spot = most.at;
+        let hold = held_at(level, limit);
+        // Going on past a spot, only the spots the points' stitches lay thread in are looked at ([`Hot`]).
+        let mut hot = if skip { Some(Hot::of(&self.pass, points, level, meter)?) } else { None };
+        loop {
+            let (index, spot, near) = match hot.as_mut() {
+                Some(hot) => {
+                    let Some((index, spot)) = hot.next(self.pass.thickness, meter)? else { break };
+                    (Some(index), spot.at, hot.near(index))
+                }
+                None if self.above(level, meter)? => (None, self.pass.thickness.most(Measure::Fills).at, points.to_vec()),
+                None => break,
+            };
             let was = self.pass.thickness.at(Measure::Fills, spot);
             let below = at_least(limit, was);
             let mut best: Option<(f64, Move)> = None;
-            for &point in points {
+            for point in near {
                 meter.charge(1)?;
                 let times = self.moves.get(&point).map_or(0, |(times, _)| *times);
                 if self.refused.contains(&(point, times)) || (below && times > 0) {
@@ -100,15 +118,13 @@ impl Cap<'_, '_> {
                 let Some(pulled) = self.pulled(point, times, &self.moves, spot, meter)? else { continue };
                 let lowered = self.lowers(&pulled, was, spot, meter)?;
                 // Whether its new end shows is asked only of a point that would be chosen: it costs the most.
-                if lowered > 0.0 && best.as_ref().is_none_or(|(most, _)| lowered > *most) && !(below && !pulled.knot && self.shows(&pulled, meter)?) {
+                if better(lowered, best.as_ref().map(|(most, _)| *most)) && !(below && !pulled.knot && self.shows(&pulled, meter)?) {
                     best = Some((lowered, pulled));
                 }
             }
             let Some((_, pulled)) = best else {
-                if !skip {
-                    break;
-                }
-                stuck.insert(index);
+                let (Some(hot), Some(index)) = (hot.as_mut(), index) else { break };
+                hot.stuck(index);
                 continue;
             };
             let (times, first) = self.moves.get(&pulled.point).copied().unwrap_or((0, pulled.from));
@@ -117,6 +133,14 @@ impl Cap<'_, '_> {
                 continue;
             }
             self.pass.moved(pulled.point, pulled.to);
+            if let Some(hot) = hot.as_mut() {
+                // The points on either side share the moved stitches.
+                let [into, out] = pulled.added;
+                let (block, _) = pulled.point;
+                let sharing =
+                    [pulled.point, (block, out.index)].into_iter().chain(self.pass.beside(pulled.point, false, meter)?.map(|at| (block, at)));
+                hot.add(self.pass.thickness, &sharing.collect::<Vec<Entry>>(), &[into, out], meter)?;
+            }
             self.moves.insert(pulled.point, (times.saturating_add(1), first));
             self.places.insert((cell(spot.x()), cell(spot.y())));
             // The 2 stitches cover as they now lie, pulled in as they were: those near a spot above the cap.

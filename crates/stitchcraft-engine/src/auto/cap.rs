@@ -50,6 +50,7 @@ use stitchcraft_core::{Budget, Exhausted, Meter, Point, math};
 use stitchcraft_plan::thickness::{Measure, Over, PIXEL, STRAIGHT_ON, Spot, THREAD, Thickness, Zone};
 use stitchcraft_plan::{ElementRef, Role, SewnStitch, StitchPlan};
 
+use self::hot::Hot;
 use super::thin::{Entry, Pass, Rules, taken_out};
 use crate::normalize::near::to_side;
 
@@ -272,7 +273,10 @@ pub(crate) fn capped(
     let mut ran_out = cap.taking([&hottest, &points, &pulled], &last, meter).is_err();
     // Below the limit, what the plan and its measure were before is kept, with the count of points pulled in
     // until then, for the plan measured again after.
-    let before = (!ran_out && !low.is_empty()).then(|| (cap.pass.plan().clone(), cap.pass.thickness.clone(), cap.pulled));
+    let before = match (ran_out, low.is_empty()) {
+        (false, false) => Some((cap.pass.plan().clone(), cap.pass.thickness.clone(), cap.pulled)),
+        _ => None,
+    };
     if before.is_some() {
         ran_out = cap.pull_in(&low, rules.cap, true, meter).is_err();
     }
@@ -386,27 +390,43 @@ impl Cap<'_, '_> {
     /// (`REQ-AUTO-101`). Where no point lowers the thickest spot, it stops, or with `skip` goes on to the next
     /// thickest (`REQ-AUTO-194`).
     fn last_resort(&mut self, points: &[Entry], skip: bool, meter: &mut Meter) -> Result<(), Exhausted> {
-        let (mut points, mut stuck) = (points.to_vec(), BTreeSet::new());
-        while let Some((index, most)) = self.pass.thickness.most_besides(Measure::Fills, &stuck, meter)? {
-            if most.value <= self.pass.rules.limit {
-                break;
-            }
+        let limit = self.pass.rules.limit;
+        let mut points = points.to_vec();
+        // Going on past a spot, only the spots the points' stitches lay thread in are looked at ([`Hot`]).
+        let mut hot = if skip { Some(Hot::of(&self.pass, &points, limit, meter)?) } else { None };
+        loop {
+            let (index, spot, near) = match hot.as_mut() {
+                Some(hot) => {
+                    let Some((index, spot)) = hot.next(self.pass.thickness, meter)? else { break };
+                    (Some(index), spot.at, hot.near(index))
+                }
+                None if self.above(limit, meter)? => (None, self.pass.thickness.most(Measure::Fills).at, points.clone()),
+                None => break,
+            };
             let mut may = Vec::new();
-            for &point in &points {
+            for point in near.into_iter().filter(|point| points.contains(point)) {
                 meter.charge(1)?;
-                if let Some(change) = self.taken_out(point, Kind::Column, true, Some(most.at), meter)? {
+                if let Some(change) = self.taken_out(point, Kind::Column, true, Some(spot), meter)? {
                     may.push((change, point));
                 }
             }
             let Some(point) = chosen(&may) else {
-                if !skip {
-                    break;
-                }
-                stuck.insert(index);
+                let (Some(hot), Some(index)) = (hot.as_mut(), index) else { break };
+                hot.stuck(index);
                 continue;
             };
             points.retain(|other| *other != point);
             self.taken_out(point, Kind::Column, true, None, meter)?;
+            if let Some(hot) = hot.as_mut() {
+                // The points on either side share the stitch that joins them.
+                let (block, _) = point;
+                let (from, to) = (self.pass.beside(point, false, meter)?, self.pass.beside(point, true, meter)?);
+                if let (Some(from), Some(to)) = (from, to)
+                    && let Some(joined) = self.pass.sewn(block, from, to)
+                {
+                    hot.add(self.pass.thickness, &[(block, from), (block, to)], &[joined], meter)?;
+                }
+            }
         }
         Ok(())
     }
@@ -765,6 +785,7 @@ pub(crate) fn kinds(capped: &Capped) -> String {
     said.join(", ")
 }
 
+mod hot;
 mod pull;
 pub(crate) use pull::Pullable;
 #[cfg(test)]

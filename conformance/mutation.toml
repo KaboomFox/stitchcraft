@@ -19,6 +19,12 @@ stitchcraft-vectorcraft = 2
 # changes (`cargo xtask mutants --changed`); any other mutant there that no test notices fails it.
 
 [[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/cap/pull.rs"
+mutant = "replace > with >= in Cap<'_, '_>::shows"
+line = "Ok(!self.ribbons.covers(&end, |ribbon: &Ribbon| ribbon.at > after && ribbon.element != element, false, meter)?)"
+why = "the top stitch at the moved point's own stitch out is its column's, which the element test leaves out either way"
+
+[[equivalent]]
 file = "crates/stitchcraft-engine/src/testsheets/ts06.rs"
 mutant = "replace < with <= in build"
 line = "let from_left = before.is_none_or(|before| before < place);"

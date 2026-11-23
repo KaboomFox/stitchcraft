@@ -339,25 +339,19 @@ fn req_auto_061_the_thickest_spot_is_a_corner_of_the_cells() {
 }
 
 #[test]
-fn req_auto_194_the_thickest_spot_besides_some_is_found_as_the_thickest() {
+fn req_auto_194_a_spot_is_found_by_its_place_in_the_measure() {
     let mut thickness = drawn(&[]);
     thickness.fills[2 * 12 + 7] = 4.25;
-    thickness.fills[3 * 12 + 1] = 4.0;
-    thickness.fills[5 * 12 + 1] = 4.0;
-    let besides = |spots: &[usize]| thickness.most_besides(Measure::Fills, &spots.iter().copied().collect(), &mut meter()).unwrap();
-    let spot = |at: usize| Spot { value: thickness.fills[at], at: thickness.point(thickness.grid.spot(at)) };
-    assert_eq!(besides(&[]), Some((2 * 12 + 7, spot(2 * 12 + 7))));
-    // Of spots with the same value, the last is the one named, as the thickest.
-    assert_eq!(besides(&[2 * 12 + 7]), Some((5 * 12 + 1, spot(5 * 12 + 1))));
-    assert_eq!(besides(&[2 * 12 + 7, 5 * 12 + 1]), Some((3 * 12 + 1, spot(3 * 12 + 1))));
-    assert_eq!(besides(&(0..144).collect::<Vec<usize>>()), None);
-    assert_eq!(
-        thickness.most_besides(Measure::Points, &BTreeSet::new(), &mut meter()).unwrap().map(|(_, spot)| spot),
-        Some(thickness.most(Measure::Points))
-    );
-    // A unit of work for each spot.
-    let work = least(&|meter| thickness.most_besides(Measure::Fills, &BTreeSet::new(), meter).is_ok());
-    assert_eq!(work, 144);
+    thickness.points[5 * 12 + 1] = 9.0;
+    assert_eq!(thickness.at_spot(Measure::Fills, 2 * 12 + 7), Some(thickness.most(Measure::Fills)));
+    assert_eq!(thickness.at_spot(Measure::Points, 5 * 12 + 1), Some(thickness.most(Measure::Points)));
+    assert_eq!(thickness.at_spot(Measure::Fills, 0), Some(Spot { value: 0.5, at: p(1.0, 2.0) }));
+    assert_eq!((thickness.at_spot(Measure::Fills, 143).is_some(), thickness.at_spot(Measure::Fills, 144)), (true, None));
+    // The spots a stitch lays thread in are named by the same places.
+    let stitch = placed(&thickness, stitch((2.0, 3.0), (3.0, 3.0)));
+    for (at, fills) in thickness.spots(&stitch, &mut meter()).unwrap() {
+        assert_eq!(thickness.at_spot(Measure::Fills, at).map(|spot| spot.value), Some(fills));
+    }
 }
 
 #[test]
