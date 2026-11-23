@@ -107,7 +107,7 @@ pub(super) fn limits(rules: Option<Held>, made: &BTreeSet<ElementId>, settings: 
 /// needs more, as said. The error is `Design::new`'s, which the elements of a design's digitizing never
 /// give.
 pub fn expand(design: &Design, profile: &MachineProfile, budget: &Budget) -> Result<(Design, Vec<Diagnostic>), Diagnostic> {
-    let Sewing { elements, mut diagnostics, base, made, limits, .. } = sewing(design, budget);
+    let Sewing { elements, mut diagnostics, base, made, limits, .. } = sewing(design, budget, false);
     let order: Vec<&ElementId> = elements.iter().map(|element| &element.id).collect();
     let names = Names::given(design, (&elements, &base, &order), profile.palette.palette(), &mut budget.meter()).unwrap_or_else(|exhausted| {
         diagnostics.push(exhausted.diagnostic(budget, None));

@@ -108,7 +108,14 @@ fn req_auto_020_the_rules_settings_are_stitchcraft_s_own_and_no_stitch_type_read
     // And the switch that sews the details last, off since it costs jump threads (`REQ-AUTO-098`, M13.48).
     // And how far an outline is smoothed, off by default (`REQ-AUTO-133`, M13.52).
     // And the overlap under a part's satin column, empty, which is the overlap (`REQ-AUTO-158`, M13.55).
-    let details = [("auto_details_last", "false"), ("auto_smooth_mm", "0"), ("auto_column_overlap_mm", ""), ("auto_column_reach_mm", "0.4")];
+    // And each thread threaded once, on by default (`REQ-AUTO-186`, M13.63).
+    let details = [
+        ("auto_details_last", "false"),
+        ("auto_thread_once", "true"),
+        ("auto_smooth_mm", "0"),
+        ("auto_column_overlap_mm", ""),
+        ("auto_column_reach_mm", "0.4"),
+    ];
     assert_eq!(defaults, [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..], &thick[..], &details[..]].concat());
     let advanced: Vec<&str> = AutoParams::SPECS.iter().filter(|spec| spec.group == ADVANCED).map(|spec| spec.key).collect();
     assert_eq!(advanced, bounds.iter().chain(&cover).chain(&thick).chain(&details).map(|(key, _)| *key).collect::<Vec<_>>());

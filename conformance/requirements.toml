@@ -3823,6 +3823,60 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-AUTO-184"
+area = "auto"
+level = "L2"
+statement = "With auto_thread_once on, as by default, a line that touches a fill without overlapping it sews after the fill only where that costs no thread change: of the rows of batches with the fewest changes (REQ-AUTO-037), the search takes the one in which fewer lines and satin columns sew before a fill they touch, and a line waits for a later batch of its thread when the row has one after the fill. Otherwise it sews in a batch of its thread before the fill, whose rows end on it. A design whose shapes, as drawn, let each thread sew in one batch is threaded once for each thread, with one change fewer than it has threads."
+rationale = "The owner's machine has one needle, and each change is a rethread by hand: 'Please expect 1 color is one rethreading, so 9 layers would be 9 rethreads' (2026-11-22). Measured on 77 designs (M13.63), 97 of the 103 threadings beyond one a thread came from a line sewing after every fill it touches: the traced dogs were threaded 9, 13, 9 and 12 times in 6 and 9 threads, and photos traced in 9 and 12 threads 47 and 48 times, the search having run out of work. With lines sewing after their fills only where that costs no change, the dogs are threaded once a thread and the 2 photos 10 and 12 times. The fills' rows then end on some lines, which show narrower: 27 % less of a traced magnolia's dark brown branches shows, and the dogs leave up to 2.8 times the fabric bare that they leave today, under every limit, with one sliver more. auto_thread_once off (REQ-AUTO-186) keeps today's order."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-185"
+area = "auto"
+level = "L2"
+statement = "The base layer (REQ-AUTO-028) sews in the thread that an order with the fewest thread changes starts with, so that it adds no change: the rows of batches are searched once with the thread that paints the largest area sewing and once with no thread sewing, and the base layer takes the largest area's thread unless the row found with none sewing has fewer changes, or as few and more lines and columns after their fills, counting a change into its first batch from that thread. Then it takes the thread of that row's first batch."
+rationale = "The base layer sewed in the largest area's thread before every automatic element. Where that thread's shapes lie over another thread's, it was threaded twice: the review set's flower sewed its base layer in pink, its stem in green and its head in pink again. Measured (M13.63), the flower and TS-13B are threaded once a thread, and TS-13B's black lines still sew after its panes, which the base layer in black would have put before them, where the panes' rows covered the lines 0.3 and 0.6 mm wide."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-186"
+area = "auto"
+level = "L2"
+statement = "auto_thread_once is a setting of the automatic shapes, on by default. Off, the order is the one before M13.63: a line that touches a fill without overlapping it sews after the fill, as REQ-AUTO-010 had it, even where its thread is then threaded again; the base layer sews in the largest area's thread; and a satin column wishes nothing of a part's running line beside it (REQ-AUTO-037). The design goes by the setting of its lowest automatic shape."
+rationale = "A machine with several needles changes thread without a person, and its owner may rather have each line sew over the edge of the fill it borders. The owner prefers a setting a person chooses to machinery that guesses. The setting is the control that gives today's result: with the base layer's thread chosen either way, the running dog in 9 threads sewed 4.42 fills with auto_details_last on, where main sews 3.97."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-187"
+area = "auto"
+level = "L2"
+statement = "With auto_thread_once on, when shapes that overlap hold a group of threads of a run both before and after each other, as a shade drawn both under and over another does, so that a thread of the group is sewn in more than one batch, SC-W0925 says so once for the group, of the first shape of the group's first thread in the run that lies under a shape of another thread of the group. It names that shape and a shape of the group lying under a shape of the first thread, one of the second shape's thread when there is one, and how many times each thread of the group is threaded. Its fix says to change the drawing so that each shade lies at one depth: cut away what the upper shape hides of the lower one, or join the shapes of one shade."
+rationale = "Measured on 77 designs (M13.63), 4 have a shade truly under and over another: the review set's house, whose roof is drawn over its chimney's outline, and 3 traced photos. Each costs a threading, 2 on the house. Cutting the lower shapes away automatically mended them all, but it chose on its own which shape loses its depth and made a traced cat sew 4.23 fills thick. The house with its outlines cut where the roof covers them sews each thread once, so the person, told which shapes, can mend the drawing."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-188"
+area = "auto"
+level = "L2"
+statement = "With auto_thread_once on, a running line that sews before a fill of another thread it borders, so that each thread is threaded once, keeps the share of its thread recorded for a line round a fill on a broad fill of the line's thread: of a line 0.3, 0.6 and 0.8 mm wide 0.491, 0.823 and 0.924 of its top thread show, where with the setting off each shows whole. SC-I0926 counts the lines of a design that sew before a fill of another thread beside them, and names the 3 with such fills on the most sides, of those the ones that paint least."
+rationale = "A fill sewn after a line ends its rows on it, and their pull compensation covers the line's thread on that side: the narrower the line, the more of it. Measured on 78 designs (M13.63), 37 fur lines of the 4 traced dogs newly show less than half their thread, the worst 2, 13 and 13 %, while 18 of the 37 that main hides show more, and no line of the drawings, the fixtures, the test pictures or the TS-13 halves does. The likeness of every design is as it was. Holding the fill's pull compensation back from the line would leave the fabric to show where the rows pull in, so nothing is held back, and the notice says where to look."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-189"
+area = "auto"
+level = "L2"
+statement = "Thickness comes before threading. When a design digitized automatically with auto_thread_once on, as by default, sews a spot above the warning's limit (auto_thick_warn_fills) and the same design planned with each line after the fills it borders, as with auto_thread_once off, sews at the limit or under it everywhere, that plan comes back, and SC-W0927 says how many more times its threads are threaded and how many times in all. When both plans sew above the limit, or the first sews at it or under it, the first comes back as it was. Only a plan above the limit, of which the thickness warning (SC-W0913) is said, in an order that the strict rules would not allow (a line before a fill it borders, the base layer in another thread than the largest area's, or a satin column held after a part's running line) is planned a second time, with the budget's work: an order they allow is itself a strict order with as few thread changes. Each plan's thickest spot is the one the cap at the end of planning measured, so no plan is measured twice."
+rationale = "A line sewn before a fill it borders saves threading its thread again (REQ-AUTO-184), and the fill's rows then end on the line, where the last pass and the cap may take less of them: on 78 designs measured (M13.63) none went above 4 fills at the default settings, but with auto_details_last on the dog on turf in 6 threads sewed 4.07 and the running dog in 6 threads 4.18, where main sews 3.96 and 3.99. The owner's first concern is whether her machine sews a design, so the limit outweighs the threadings saved. Planned again with each line after its fills, both sew under 4, with 3 more threadings each."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-AUTO-071"
 area = "auto"
 level = "L2"
