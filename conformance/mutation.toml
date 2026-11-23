@@ -31,6 +31,24 @@ line = "let now = thickness.at_spot(Measure::Fills, at).filter(|spot| spot.value
 why = "a spot comes into the queue only above the level, and a spot whose thread changed is looked at again with its new value: none sews exactly the level, as a float that thread was taken from never lands on it"
 
 [[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/cap/hot.rs"
+mutant = "replace > with >= in Hot::next"
+line = "if fills > self.level && !self.stuck.contains(&spot) {"
+why = "a spot queued at the level is dropped when it comes up: `Hot::next` names a spot only when its value is above the level"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/cap/hot.rs"
+mutant = "replace && with || in Hot::next"
+line = "if fills > self.level && !self.stuck.contains(&spot) {"
+why = "a spot queued at the level or under it, or one stuck, is dropped when it comes up: `Hot::next` names a spot only when it is above the level and not stuck"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/cap/hot.rs"
+mutant = "replace > with >= in Hot::of"
+line = "for (at, _) in values.iter().enumerate().filter(|(_, value)| **value > level) {"
+why = "a spot queued at the level is dropped when it comes up: `Hot::next` names a spot only when its value is above the level"
+
+[[equivalent]]
 file = "crates/stitchcraft-plan/src/thickness.rs"
 mutant = "replace match guard times < 0.0 && at == spot with true in Thickness::laid_by"
 line = "Some(at) if times < 0.0 && at == spot => None,"

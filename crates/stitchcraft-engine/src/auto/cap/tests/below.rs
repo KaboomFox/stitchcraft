@@ -243,6 +243,9 @@ fn req_auto_195_a_later_shape_covers_a_pulled_end_only_where_it_covers_its_first
         capped.map_or(0, |capped| capped.pulled[0])
     };
     assert!(pulled(5.95) > 0);
+    // At x = 5.9 it covers to 6.1, the first 0.1 mm and not 0.2 mm of it: the end is judged by its first
+    // 0.1 mm however far the point moved.
+    assert!(pulled(5.9) > 0);
     // At x = 5.8 the run covers to 6.0 only: the new end's first 0.1 mm shows.
     assert_eq!(pulled(5.8), 0);
 }
@@ -458,4 +461,38 @@ fn req_auto_195_below_the_limit_a_knot_moves_by_its_first_share_only_however_thi
     assert!(capped.unwrap().pulled[0] > 0);
     let moves = moved(&sewn, &pulled);
     assert!(moves.iter().all(|(a, b)| a.x() == 4.0 && (b.x() - 3.0).abs() <= 0.05), "{moves:?}");
+}
+
+#[test]
+fn req_auto_195_below_the_limit_a_covered_end_moves_by_its_first_share_only() {
+    // The fan 8 mm wide has no knot. Runs of another shape sewn later at x = 5.95 and 3.95 cover the ends of
+    // its points pulled in a quarter of the way, near x = 6, and half of it, near x = 4. With the cap far under
+    // the fan, below the limit each point moves once, to x = 6, though its second share's end is covered too.
+    let mut parts: Vec<Part> = vec![("fan", Role::Top, wide_fan(0.25, 8.0))];
+    parts.extend([5.95, 3.95].map(|x| ("over", Role::Top, vec![(x, -1.0), (x, 5.0)])));
+    let sewn = plan(&parts);
+    let column: BTreeSet<ElementRef> = ElementRef::from_index(0).into_iter().collect();
+    let pulls = pullable(&column, true);
+    let rules = Rules { cap: 0.5, limit: 4.0, columns: &column, pulls: &pulls, ..rules() };
+    let mut pulled = sewn.clone();
+    let (capped, _, _) = cap(&mut pulled, &rules);
+    assert!(capped.unwrap().pulled[0] > 0);
+    let moves = moved(&sewn, &pulled);
+    assert!(!moves.is_empty() && moves.iter().all(|(a, b)| a.x() == 8.0 && (b.x() - 6.0).abs() <= 0.05), "{moves:?}");
+}
+
+#[test]
+fn req_auto_112_below_the_limit_the_last_resort_costs_only_its_look_at_the_thickest_spot() {
+    // With no spot above the limit, the last resort looks once at whether one is, and stops: it goes through
+    // none of its points.
+    let column_points: Vec<(f64, f64)> = (0..5).flat_map(|_| zigzag(4.0, 0.25)).collect();
+    let mut sewn = plan(&[("column", Role::Top, column_points)]);
+    let column: BTreeSet<ElementRef> = ElementRef::from_index(0).into_iter().collect();
+    let rules = Rules { cap: 3.0, limit: 50.0, columns: &column, ..rules() };
+    on_cap(&mut sewn, &rules, |cap, points| {
+        let (columns, rows) = cap.pass.thickness.size();
+        let mut meter = Budget { max_work: units(columns * rows), ..Budget::DEFAULT }.meter();
+        cap.last_resort(points, false, &mut meter).unwrap();
+        assert_eq!(cap.times[Kind::Column.at()], 0);
+    });
 }
