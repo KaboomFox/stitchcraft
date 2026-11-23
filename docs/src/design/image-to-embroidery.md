@@ -3830,6 +3830,32 @@ covers them, all of them at knots or above 4: 63 below the limit. On the heart b
 no point moves. The pear under the logo style has 2 points pulled in at knots, and M13.58's edges piece one,
 as in the prototype.
 
+**With each thread threaded once.** M13.63 merged while this step was built. Measured again on main `f08be379`,
+with M13.63, at opt-level 1:
+
+| Set | Main: mm² at 3.25 or more | Built |
+| --- | --- | --- |
+| 67 designs, default style | 161.8 | 136.5 |
+| 67 designs, logo style | 1,152.2, 25.5 above 4 | 791.0, 1.0 above 4 |
+| The engine's 16 designs | 100.2 | 58.2, 190 points pulled in |
+| 18 sheets of letters | 572.0, thickest 4.44 | 373.2, thickest 4.00 |
+| 4 dogs, details last | 66.2 | 51.2 |
+
+No design's thickest spot rose. The thickness guard of M13.63 (`REQ-AUTO-189`) plans a design again with each
+line after its fills when the order that threads each thread once sews above 4. It reads the thickest spot
+from the cap's measure, which this step lowers. On main it plans the goose under both styles, the building and 3 traced dogs
+under the logo style again, and keeps the first order for all of them. With this step the goose, the building
+and the dog on turf in 9 threads keep it too. The dog on turf and the running dog in 6 threads now sew 3.99
+fills with each line after its fills, at the limit or under it, where that order sewed above 4 on main.
+So the guard keeps that order for them and says so with `SC-W0927`: they are threaded more times. With details last, the 2 dogs in 6 threads fall
+back as on main, to 3.95 and 3.96 fills. The guard's cases pass as they stand.
+
+M13.63 left 2 spots for this step, with details last and each thread threaded once: on the dog on turf in 6
+threads, 4.07 fills where a white fill's rows end at a narrow end over another fill, a line and the base layer.
+On the running dog in 6 threads, 4.18 fills where 4 fills meet at a point with the ends and locks of 3 running
+lines. This step leaves both as they are: 4.066 and 4.176 fills. The pull-in and the last resort move only
+satin columns' top points, and no such point lowers either spot.
+
 **Open points.** Where a design still rests just under 4 after c, a column lies whole over a fill: TS-13A's strip
 of 2.56 fills over 1.00 of fill and 0.25 of base sews 3.99, and the traced running dog 3.98. No point there is
 crowded. Taking that column's points, or the fill's rows under it, shows, and is a step of its own.

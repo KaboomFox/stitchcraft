@@ -2280,9 +2280,10 @@ What a user can do with this version, before its first release. The entries belo
   of 3.25, automatic digitizing now pulls in the stitch ends of a satin column's tight turns, where the ends
   on the inside lie closer than half the spacing, and ends that a shape sewn later covers, each by a quarter
   of the column. On a gentle curve the plan moves no end in. A line 5 mm wide turning by 60° sews 3.09 fills
-  at the turn, where it sewed 3.83. On 67 designs the area at 3.25 fills or more falls from 158.5 to 140.2 mm²
-  under the default style and from 1,295.0 to 912.5 mm² under the logo style, and no design's thickest spot
-  rises. It is `auto_short_stitches` `knots`, the new default, and `--set auto_short_stitches=above_limit`
+  at the turn, where it sewed 3.83. On 67 designs the area at 3.25 fills or more falls from 161.8 to 136.5 mm²
+  under the default style and from 1,152.2 to 791.0 mm² under the logo style, and no design's thickest spot
+  rises. Under the logo style 2 traced dogs in 6 threads now sew at the limit or under it with each line
+  after its fills, and take that order (`SC-W0927`), threaded more times. It is `auto_short_stitches` `knots`, the new default, and `--set auto_short_stitches=above_limit`
   sews the columns of M13.58.
 - M13.63: each thread threaded once (`REQ-AUTO-184` to `REQ-AUTO-189`). On a machine with one needle each
   thread change is a rethread by hand, so a design digitized automatically now threads each thread once
@@ -2796,7 +2797,7 @@ What a user can do with this version, before its first release. The entries belo
   kept the cap from the automatic shapes' spots: TS-13A sews 35.25 mm² at 4 fills or more, where it sewed
   39.50, less than the 39.25 of its hand-set half alone. 2 sheets of traced letters that sewed 4.44 and 4.18
   fills now sew 4.00. With the pull-in below the limit, the area above 4 fills under the logo style falls
-  from 27.8 to 1.2 mm² on 67 designs.
+  from 25.5 to 1.0 mm² on 67 designs.
 - M13.56: a run of stitches that ended on one stitch, sewn straight on from the stitches before it,
   could end without its tie-off. The tie-off is now made from the whole run's stitches. The new check of
   the plan's locks found it in a random test design. None of the repository's designs sews such a run.
