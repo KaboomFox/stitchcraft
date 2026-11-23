@@ -3792,7 +3792,7 @@ one (`REQ-AUTO-194`). Then, below the limit and down to the cap, it pulls in a c
 tight turns, closer than half the spacing to their rail's neighbour, and points whose new end a later shape
 covers. Each moves by its column's first share only, and no spot above the limit gets thicker (`REQ-AUTO-195`).
 Both come with a value of the existing setting `auto_short_stitches`, `knots`, which a person sets. This step
-lands the rule and its fix as that value: by default nothing sews differently from main. `above_limit`, the
+adds the rule and its fix as that value: by default nothing sews differently from main. `above_limit`, the
 columns of M13.58, stays the default for now, and `crowded` gives the columns of before M13.58
 (`REQ-AUTO-196`). The default waits for room in VectorCraft's export budget, as the next paragraphs say.
 
