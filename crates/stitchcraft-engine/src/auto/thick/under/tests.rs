@@ -36,6 +36,13 @@ fn outcome(plan: StitchPlan) -> PlanOutcome {
     PlanOutcome { plan: Some(plan), diagnostics: vec![Diagnostic::new(Code::AutoThick, "thick")], names: Names::default() }
 }
 
+/// The strict plan `made` gives back, or a panic when it is planned again without one. Every case plans
+/// through this one closure type, so the guard has one build in the unit tests and coverage counts its lines
+/// together.
+fn again(made: Option<(PlanOutcome, Option<f64>)>) -> impl FnOnce() -> (PlanOutcome, Option<f64>) {
+    move || made.expect("planned again")
+}
+
 fn codes(outcome: &PlanOutcome) -> Vec<Code> {
     outcome.diagnostics.iter().map(|said| said.code).collect()
 }
@@ -45,31 +52,31 @@ fn req_auto_189_a_design_threaded_once_above_the_limit_sews_strictly_when_that_i
     // Threaded once: 6.08 fills in navy. With each line after its fills: 1.34 fills, navy threaded twice.
     let once = || outcome(zigzag(0.05, &[NAVY]));
     let strict = || (outcome(zigzag(0.25, &[NAVY, CREAM, NAVY])), Some(1.34));
-    let kept = under(once(), (4.0, 6.08), strict);
+    let kept = under(once(), (4.0, 6.08), again(Some(strict())));
     assert_eq!(kept.plan, strict().0.plan);
     assert_eq!(codes(&kept), [Code::AutoThick, Code::AutoThreadedForThickness]);
     // A strict plan at the limit is at the limit or under it.
     assert_eq!(
-        codes(&under(once(), (4.0, 6.08), || (outcome(zigzag(0.25, &[NAVY, CREAM])), Some(4.0)))),
+        codes(&under(once(), (4.0, 6.08), again(Some((outcome(zigzag(0.25, &[NAVY, CREAM])), Some(4.0)))))),
         [Code::AutoThick, Code::AutoThreadedForThickness]
     );
     // Both above the limit, or the strict plan not made or not measured: the plan threaded once comes back.
     // Each plan's thickest spot is the one the cap measured, which the guard reads and doesn't measure again:
     // a plan of 1.34 fills that the cap measured at 4.5 is above the limit.
-    assert_eq!(under(once(), (4.0, 6.08), || (outcome(zigzag(0.25, &[NAVY, CREAM])), Some(4.5))), once());
-    assert_eq!(under(once(), (4.0, 6.08), || (PlanOutcome { plan: None, ..once() }, Some(1.0))), once());
-    assert_eq!(under(once(), (4.0, 6.08), || (outcome(zigzag(0.25, &[NAVY])), None)), once());
+    assert_eq!(under(once(), (4.0, 6.08), again(Some((outcome(zigzag(0.25, &[NAVY, CREAM])), Some(4.5))))), once());
+    assert_eq!(under(once(), (4.0, 6.08), again(Some((PlanOutcome { plan: None, ..once() }, Some(1.0))))), once());
+    assert_eq!(under(once(), (4.0, 6.08), again(Some((outcome(zigzag(0.25, &[NAVY])), None)))), once());
     // At the limit or under it, or without the thickness warning (a spot above the limit too small to warn of),
     // the design isn't planned again.
     let quiet = || PlanOutcome { diagnostics: Vec::new(), ..once() };
-    assert_eq!(under(quiet(), (4.0, 6.08), || panic!("planned again")), quiet());
-    assert_eq!(under(once(), (4.0, 4.0), || panic!("planned again")), once());
-    assert_eq!(under(PlanOutcome { plan: None, ..once() }, (4.0, 6.08), || panic!("planned again")), PlanOutcome { plan: None, ..once() });
+    assert_eq!(under(quiet(), (4.0, 6.08), again(None)), quiet());
+    assert_eq!(under(once(), (4.0, 4.0), again(None)), once());
+    assert_eq!(under(PlanOutcome { plan: None, ..once() }, (4.0, 6.08), again(None)), PlanOutcome { plan: None, ..once() });
 }
 
 #[test]
 fn diag_sc_w0927_says_how_many_more_times_the_threads_are_threaded() {
-    let kept = under(outcome(zigzag(0.05, &[NAVY])), (4.0, 6.08), || (outcome(zigzag(0.25, &[NAVY, CREAM, NAVY])), Some(1.34)));
+    let kept = under(outcome(zigzag(0.05, &[NAVY])), (4.0, 6.08), again(Some((outcome(zigzag(0.25, &[NAVY, CREAM, NAVY])), Some(1.34)))));
     let said = kept.diagnostics.iter().find(|said| said.code == Code::AutoThreadedForThickness).unwrap();
     assert_eq!(
         said.message,
