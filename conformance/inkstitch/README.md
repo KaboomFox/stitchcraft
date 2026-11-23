@@ -62,7 +62,7 @@ Ink/Stitch's machine files stay in the run's artifact.
 
 The run draws each case that both programs sew to `target/conformance/differential-site/pictures/<case>.png`,
 Ink/Stitch's file beside StitchCraft's and where their thread lies apart, and writes the report as a web
-page with the pictures, `target/conformance/differential-site/index.html`. That folder holds nothing else. The glyph differential's pictures are
+page with the pictures, `target/conformance/differential-site/index.html`. The run fails if any other file is in that folder. The glyph differential's pictures are
 under `pictures/fonts/<font>/`, the contact sheet of its excused glyphs is `pictures/fonts-excused.png`,
 and that of its sample is `pictures/fonts-sample.png`.
 [Conformance](../../docs/src/design/conformance.md#l3--inkstitch-differential-nightly) says what they show.

@@ -390,8 +390,7 @@ excuses are drawn small on a contact sheet, each titled with the entries that ex
 sheet shows the sample's first glyph of each font. CI publishes the report with its pictures on the
 documentation site, and `conformance/inkstitch/README.md` says where.
 
-The picture below is an example of how a comparison picture is laid out, not a comparison with
-Ink/Stitch. Both of its sides are StitchCraft's plans of the fill patch, with its rows at 0 degrees and at
+The picture below shows how a comparison picture is laid out, as an example. Both of its sides are StitchCraft's plans of the fill patch, with its rows at 0 degrees and at
 60, since no file Ink/Stitch writes is kept in the repository
 ([ADR-0012](adr/0012-read-dont-copy.md)). The real comparisons are in the
 [nightly report](https://kaboomfox.github.io/stitchcraft/differential/).
