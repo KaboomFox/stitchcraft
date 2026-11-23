@@ -211,7 +211,6 @@ pub(crate) fn capped(
     let takes = |stitch: &SewnStitch| {
         element(stitch).is_some_and(|element| made.contains(&element) && !(stitch.role == Role::Top && columns.contains(&element)))
     };
-    let points = candidates(sewn, &near, takes);
     // Where a spot still sews above the warning's limit, a column's top points near it are the last resort:
     // not a lettering column's, whose look is the font's (`REQ-AUTO-123`).
     let column = |stitch: &SewnStitch| {
@@ -224,7 +223,8 @@ pub(crate) fn capped(
     let pulls = |stitch: &SewnStitch| column(stitch) && element(stitch).is_some_and(|element| rules.pulls.contains_key(&element));
     let (last, hottest, pulled) = if thickness.most(Measure::Fills).value > rules.limit {
         let near = thickness.near(rules.limit, NEAR, meter)?;
-        (candidates(sewn, &near, column), candidates(sewn, &near, takes), candidates(sewn, &near, pulls))
+        let [last, hottest, pulled] = candidates(sewn, &near, [&column, &takes, &pulls]);
+        (last, hottest, pulled)
     } else {
         (Vec::new(), Vec::new(), Vec::new())
     };
@@ -232,7 +232,7 @@ pub(crate) fn capped(
     // (`REQ-AUTO-195`).
     let knots =
         |stitch: &SewnStitch| column(stitch) && element(stitch).is_some_and(|element| rules.pulls.get(&element).is_some_and(|pull| pull.knots));
-    let low = candidates(sewn, &near, knots);
+    let [points, low] = candidates(sewn, &near, [&takes, &knots]);
     // A design whose spots above the cap lie only in shapes sewn by their own settings has nothing the cap
     // may take, and the work of the cover is spared.
     if points.is_empty() && last.is_empty() && low.is_empty() {
@@ -290,21 +290,24 @@ pub(crate) fn capped(
     Ok(Some(Capped { taken, times, left, thickest: thickness.most(Measure::Fills), ran_out, pulled }))
 }
 
-/// The needle points of `sewn`, the plan's stitches, that the cap looks at: those of the elements `made`
-/// whose stitch in or out touches `near`, the cells near a spot above the cap, in the plan's order.
-fn candidates(sewn: &[SewnStitch], near: &Zone, made: impl Fn(&SewnStitch) -> bool) -> Vec<Entry> {
-    let mut points = BTreeSet::new();
+/// The needle points of `sewn`, the plan's stitches, that the cap looks at: for each of `made`, those of its
+/// elements whose stitch in or out touches `near`, the cells near a spot above the cap, in the plan's order.
+/// The plan is gone through once for them all.
+fn candidates<const N: usize>(sewn: &[SewnStitch], near: &Zone, made: [&dyn Fn(&SewnStitch) -> bool; N]) -> [Vec<Entry>; N] {
+    let mut points: [BTreeSet<Entry>; N] = std::array::from_fn(|_| BTreeSet::new());
     let mut before: Option<&SewnStitch> = None;
     for stitch in sewn {
         if near.touches(stitch) {
             // The point the stitch ends at, and the one it starts at: the end of the stitch before it in its
             // block.
             let start = before.filter(|before| before.block == stitch.block);
-            points.extend([Some(stitch), start].into_iter().flatten().filter(|point| made(point)).map(|point| (point.block, point.index)));
+            for (points, made) in points.iter_mut().zip(made) {
+                points.extend([Some(stitch), start].into_iter().flatten().filter(|point| made(point)).map(|point| (point.block, point.index)));
+            }
         }
         before = Some(stitch);
     }
-    points.into_iter().collect()
+    points.map(|points| points.into_iter().collect())
 }
 
 /// The plan being capped, and what is known of it.
@@ -532,16 +535,7 @@ impl Cap<'_, '_> {
         if let Some(spot) = asked {
             // How much it lowers the thickest spot: the measure with the joined stitch, and back.
             let was = self.pass.thickness.at(Measure::Fills, spot);
-            let thickness = &mut *self.pass.thickness;
-            for stitch in [into, out] {
-                thickness.remove(&stitch, meter)?;
-            }
-            thickness.add(&joined, meter)?;
-            let lowered = was - thickness.at(Measure::Fills, spot);
-            thickness.remove(&joined, meter)?;
-            for stitch in [into, out] {
-                thickness.add(&stitch, meter)?;
-            }
+            let lowered = self.pass.thickness.tried(&[into, out], &[joined], meter, |thickness| was - thickness.at(Measure::Fills, spot))?;
             return Ok(Some(Change { lowered, ..change }));
         }
         if !self.pass.changed(&[into, out], &[joined], meter)? {

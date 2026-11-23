@@ -41,6 +41,7 @@
 //! of a square millimetre round it. Only a piece of [`PIECE`] mm² or more counts, 4 spots, since 3 rows that
 //! cross in one point are no fault.
 
+use std::cell::Cell;
 use std::collections::BTreeMap;
 
 use stitchcraft_core::{Exhausted, Meter, Point, Rect};
@@ -399,7 +400,7 @@ impl Zone {
 }
 
 /// How thick a plan sews, spot by spot (see the module's docs).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct Thickness {
     /// Where the grid is laid from: its places are from here.
     origin: Point,
@@ -412,6 +413,17 @@ pub struct Thickness {
     /// The stitches measured, in places: [`Thickness::stack`] follows those near a spot again, and the plan
     /// is not gone through a second time for them.
     sewn: Vec<SewnStitch>,
+    /// The spot with the most fills, the last of those as thick, once [`Thickness::most`] has found it: a pass
+    /// that asks after each change of a stitch finds it again only where the change took thread from it.
+    top: Cell<Option<usize>>,
+}
+
+/// Two measures are equal when their grids, values and stitches are: which spot each has found to be the
+/// thickest so far is no part of what they measure.
+impl PartialEq for Thickness {
+    fn eq(&self, other: &Thickness) -> bool {
+        (&self.origin, &self.grid, &self.fills, &self.points, &self.sewn) == (&other.origin, &other.grid, &other.fills, &other.points, &other.sewn)
+    }
 }
 
 impl Thickness {
@@ -455,11 +467,12 @@ impl Thickness {
             }
         }
         // A window is 1 mm², so its sums are per square millimetre as they are.
-        Ok(Some(Thickness { origin, fills: grid.windows(&thread, ROWS), points: grid.windows(&holes, 1.0), grid, sewn }))
+        Ok(Some(Thickness { origin, fills: grid.windows(&thread, ROWS), points: grid.windows(&holes, 1.0), grid, sewn, top: Cell::new(None) }))
     }
 
-    /// The values of `measure`, by row then column.
-    fn values(&self, measure: Measure) -> &[f64] {
+    /// The values of `measure`, by row then column: by their places in the measure, as [`Thickness::spots`]
+    /// and [`Thickness::at_spot`] name spots.
+    pub fn values(&self, measure: Measure) -> &[f64] {
         match measure {
             Measure::Fills => &self.fills,
             Measure::Points => &self.points,
@@ -505,12 +518,21 @@ impl Thickness {
         if values.is_empty() {
             return Spot { value: 0.0, at: Point::ORIGIN };
         }
+        if measure == Measure::Fills
+            && let Some(at) = self.top.get()
+            && let Some(value) = values.get(at)
+        {
+            return Spot { value: *value, at: self.point(self.grid.spot(at)) };
+        }
         // No value is under 0, so the first comparison holds, and an equal value later takes the place.
         let (mut most, mut value) = (0, 0.0);
         for (at, next) in values.iter().enumerate() {
             if *next >= value {
                 (most, value) = (at, *next);
             }
+        }
+        if measure == Measure::Fills {
+            self.top.set(Some(most));
         }
         Spot { value, at: self.point(self.grid.spot(most)) }
     }
@@ -608,7 +630,14 @@ impl Thickness {
     /// A measure of nothing on this one's grid, to which a pass adds a part of the plan.
     pub fn blank(&self) -> Thickness {
         let spots = self.fills.len();
-        Thickness { origin: self.origin, grid: self.grid.clone(), fills: vec![0.0; spots], points: vec![0.0; spots], sewn: Vec::new() }
+        Thickness {
+            origin: self.origin,
+            grid: self.grid.clone(),
+            fills: vec![0.0; spots],
+            points: vec![0.0; spots],
+            sewn: Vec::new(),
+            top: Cell::new(None),
+        }
     }
 
     /// Adds `stitch`'s thread and needle point to the measure, as measuring the plan would. A unit of work for
@@ -624,19 +653,57 @@ impl Thickness {
         self.laid_by(stitch, -1.0, meter)
     }
 
+    /// What `look` sees of the measure with `removed` taken out and `added` put in, and the measure as it was
+    /// after: the stitches go back in the opposite order, and the thickest spot found before is kept, as no
+    /// stitch changed. A unit of work for each step along each stitch, twice.
+    pub fn tried<R>(
+        &mut self,
+        removed: &[SewnStitch],
+        added: &[SewnStitch],
+        meter: &mut Meter,
+        look: impl FnOnce(&Thickness) -> R,
+    ) -> Result<R, Exhausted> {
+        let top = self.top.get();
+        for stitch in removed {
+            self.remove(stitch, meter)?;
+        }
+        for stitch in added {
+            self.add(stitch, meter)?;
+        }
+        let seen = look(self);
+        for stitch in added {
+            self.remove(stitch, meter)?;
+        }
+        for stitch in removed {
+            self.add(stitch, meter)?;
+        }
+        self.top.set(top);
+        Ok(seen)
+    }
+
     /// Lays `stitch`'s thread and hole `times` over on the spots: each cell adds to the 4 at its corners.
     fn laid_by(&mut self, stitch: &SewnStitch, times: f64, meter: &mut Meter) -> Result<(), Exhausted> {
         let length = stitch.length();
         let steps = steps(length);
         meter.charge(units(index(steps)))?;
         let (grid, fills, points) = (&self.grid, &mut self.fills, &mut self.points);
+        // The thickest spot found stays the thickest while thread is only taken from other spots, and while
+        // thread is added, but to a spot that becomes as thick or thicker, later in the measure.
+        let mut top = self.top.get();
         laid(grid, stitch, length, steps, |cell, length| {
             for spot in grid.corners(cell) {
                 if let Some(sum) = fills.get_mut(spot) {
                     *sum += times * length * ROWS;
                 }
+                let value = |at: usize| fills.get(at).copied().unwrap_or(0.0);
+                top = match top {
+                    Some(at) if times < 0.0 && at == spot => None,
+                    Some(at) if times > 0.0 && (value(spot) > value(at) || (value(spot) == value(at) && spot > at)) => Some(spot),
+                    _ => top,
+                };
             }
         });
+        self.top.set(top);
         let hole = grid.holding(stitch.to.x(), stitch.to.y()).filter(|_| !stitch.is_lock());
         for spot in hole.map(|cell| grid.corners(cell)).into_iter().flatten() {
             if let Some(sum) = points.get_mut(spot) {

@@ -31,8 +31,8 @@ pub(super) struct Hot {
     queue: BTreeSet<(u64, usize)>,
     /// The points that may be moved or taken.
     points: BTreeSet<Entry>,
-    /// Their elements: only top stitches of these can be theirs.
-    elements: BTreeSet<Option<ElementRef>>,
+    /// Their elements, by their places in the plan's elements: only top stitches of these can be theirs.
+    elements: Vec<bool>,
     /// The spots none of the points lowered.
     stuck: BTreeSet<usize>,
     /// The level: a spot at it or under it is done.
@@ -45,15 +45,31 @@ impl Hot {
     /// looked at.
     pub(super) fn of(pass: &Pass, ribbons: &Ribbons, points: &[Entry], level: f64, meter: &mut Meter) -> Result<Hot, Exhausted> {
         meter.charge(units(points.len()))?;
-        let elements = points.iter().filter_map(|point| pass.stitch(*point)).map(|(_, _, element)| element).collect();
-        let mut hot = Hot { points: points.iter().copied().collect(), elements, level, ..Hot::default() };
+        let mut hot = Hot { points: points.iter().copied().collect(), level, ..Hot::default() };
+        for element in points.iter().filter_map(|point| pass.stitch(*point)).filter_map(|(_, _, element)| element) {
+            let at = element.index();
+            if hot.elements.len() <= at {
+                hot.elements.resize(at.saturating_add(1), false);
+            }
+            if let Some(ours) = hot.elements.get_mut(at) {
+                *ours = true;
+            }
+        }
+        // The cells with a live top stitch of the points' elements filed in them, or in a cell beside them.
+        let mut near = BTreeSet::new();
+        for (&(x, y), filed) in &ribbons.cells {
+            meter.charge(units(filed.len()))?;
+            if filed.iter().filter_map(|index| ribbons.ribbons.get(*index)).any(|ribbon| ribbon.alive && hot.ours(ribbon.element)) {
+                near.extend((x - 1..=x + 1).flat_map(|x| (y - 1..=y + 1).map(move |y| (x, y))));
+            }
+        }
         let thickness = &*pass.thickness;
-        let (columns, rows) = thickness.size();
-        let count = columns.saturating_mul(rows);
-        meter.charge(units(count))?;
-        for at in 0..count {
-            let Some(spot) = thickness.at_spot(Measure::Fills, at).filter(|spot| spot.value > level) else { continue };
-            if !hot.stitches(thickness, ribbons, spot.at, meter)?.is_empty() {
+        let values = thickness.values(Measure::Fills);
+        meter.charge(units(values.len()))?;
+        for (at, _) in values.iter().enumerate().filter(|(_, value)| **value > level) {
+            let Some(spot) = thickness.at_spot(Measure::Fills, at) else { continue };
+            let place = thickness.placed(spot.at);
+            if near.contains(&(cell(place.x()), cell(place.y()))) {
                 hot.queue.insert((spot.value.to_bits(), at));
             }
         }
@@ -70,7 +86,7 @@ impl Hot {
         for cell in (x - 1..=x + 1).flat_map(|x| (y - 1..=y + 1).map(move |y| (x, y))) {
             for ribbon in ribbons.cells.get(&cell).into_iter().flatten().filter_map(|index| ribbons.ribbons.get(*index)) {
                 meter.charge(1)?;
-                if ribbon.alive && self.elements.contains(&ribbon.element) {
+                if ribbon.alive && self.ours(ribbon.element) {
                     found.insert(ribbon.at);
                 }
             }
@@ -121,6 +137,11 @@ impl Hot {
             }
         }
         Ok(None)
+    }
+
+    /// Whether `element` is one of the points'.
+    fn ours(&self, element: Option<ElementRef>) -> bool {
+        element.is_some_and(|element| self.elements.get(element.index()).copied().unwrap_or(false))
     }
 
     /// Notes that no point lowered the spot `at`: it isn't looked at again.

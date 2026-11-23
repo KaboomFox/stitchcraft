@@ -453,12 +453,12 @@ fn req_auto_100_a_point_is_looked_at_when_its_stitch_out_comes_near_a_spot_above
             .position(|stitch| stitch.kind == StitchKind::Normal && stitch.origin.role == Role::Underlay && stitch.at.x() == x)
             .unwrap()
     };
-    let points = candidates(thickness.sewn(), &near, |_| true);
+    let [points] = candidates(thickness.sewn(), &near, [&|_: &SewnStitch| true]);
     assert!(points.contains(&(0, at(8.0))) && points.contains(&(0, at(0.5))) && !points.contains(&(0, at(12.0))), "{points:?}");
     // Only the points of the elements digitizing made.
     let run = ElementRef::from_index(1);
     let element = |stitch: &SewnStitch| sewn.blocks[stitch.block].stitches[stitch.index].origin.element;
-    let points = candidates(thickness.sewn(), &near, |stitch| element(stitch) == run);
+    let [points] = candidates(thickness.sewn(), &near, [&|stitch: &SewnStitch| element(stitch) == run]);
     assert_eq!(points, [(0, at(8.0)), (0, at(0.5))]);
 }
 

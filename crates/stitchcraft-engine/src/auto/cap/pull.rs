@@ -218,20 +218,6 @@ impl Cap<'_, '_> {
     /// How many fills `pulled` would take from `spot`, which sews `was`: the measure with the moved stitches,
     /// and back.
     pub(super) fn lowers(&mut self, pulled: &Move, was: f64, spot: Point, meter: &mut Meter) -> Result<f64, Exhausted> {
-        let thickness = &mut *self.pass.thickness;
-        for stitch in &pulled.removed {
-            thickness.remove(stitch, meter)?;
-        }
-        for stitch in &pulled.added {
-            thickness.add(stitch, meter)?;
-        }
-        let lowered = was - thickness.at(Measure::Fills, spot);
-        for stitch in &pulled.added {
-            thickness.remove(stitch, meter)?;
-        }
-        for stitch in &pulled.removed {
-            thickness.add(stitch, meter)?;
-        }
-        Ok(lowered)
+        self.pass.thickness.tried(&pulled.removed, &pulled.added, meter, |thickness| was - thickness.at(Measure::Fills, spot))
     }
 }
