@@ -19,7 +19,9 @@
 //! Work goes only where a result needs it: with an empty region on either side, the result is known, and a
 //! part grown alone or parts shrunk, which stay apart, are not joined again. Nor do parts far from the
 //! other region take part in an intersection or a difference ([`kept`]): an area's neighbours lie all
-//! round it, and most of each is far from the strip where it meets them.
+//! round it, and most of each is far from the strip where it meets them. And where a caller needs a result
+//! only inside a window, it combines its regions clipped to the window ([`windowed`]), so that the points of
+//! a large neighbour far beyond it cost no geometry.
 
 use stitchcraft_core::{Exhausted, Meter, Point};
 
@@ -245,6 +247,119 @@ pub(crate) fn buffered_with(parts: &[Polygon], distance: f64, corners: Corners, 
     union([moved.as_slice()], meter)
 }
 
+/// `parts`, a region, clipped to `window`: a part whose bounds lie within the window as it is, one whose
+/// bounds lie beyond it or only touch it left out, and one across its edge clipped ring by ring, each side of the window in
+/// turn ([`clipped`]). Inside the window the result covers what `parts` cover, so an operation on it gives
+/// there what the operation on `parts` gives, and a step that keeps only what lies well inside the window
+/// keeps the same region (`REQ-AUTO-205`). The rings cut at the window end at new points, which the grid of
+/// [`area`] rounds, so an edge cut there may run a cell apart from where it ran, 2^-35 mm, and so may a
+/// point rounded on it. A part whose clipped point can't be made, a coordinate past what a float holds, is
+/// kept whole: whole, it gives the same region, only dearer. One unit of `meter` for each point of a part's
+/// outline looked at for its bounds, and for each point a ring clipped holds on each side of the window.
+pub(crate) fn windowed(parts: Vec<Polygon>, window: &Envelope, meter: &mut Meter) -> Result<Vec<Polygon>, Exhausted> {
+    let mut kept = Vec::with_capacity(parts.len());
+    for part in parts {
+        meter.charge(part.outline.len() as u64)?;
+        let bounds = Envelope::of(&part.outline);
+        if bounds.min_x >= window.min_x && bounds.max_x <= window.max_x && bounds.min_y >= window.min_y && bounds.max_y <= window.max_y {
+            kept.push(part);
+        } else if bounds.max_x > window.min_x && bounds.min_x < window.max_x && bounds.max_y > window.min_y && bounds.min_y < window.max_y {
+            match clipped_part(&part, window, meter)? {
+                Some(Some(clipped)) => kept.push(clipped),
+                Some(None) => {}
+                None => kept.push(part),
+            }
+        }
+    }
+    Ok(kept)
+}
+
+/// `part` clipped to `window` ([`windowed`]): `Some(None)` when nothing of its outline is left, and `None`
+/// when a clipped point can't be made.
+fn clipped_part(part: &Polygon, window: &Envelope, meter: &mut Meter) -> Result<Option<Option<Polygon>>, Exhausted> {
+    let Some(outline) = clipped(&part.outline, window, meter)? else { return Ok(None) };
+    if outline.is_empty() {
+        return Ok(Some(None));
+    }
+    let mut holes = Vec::with_capacity(part.holes.len());
+    for hole in &part.holes {
+        let Some(hole) = clipped(hole, window, meter)? else { return Ok(None) };
+        if !hole.is_empty() {
+            holes.push(hole);
+        }
+    }
+    Ok(Some(Some(Polygon { outline, holes })))
+}
+
+/// A side of a window: the points it keeps, and where an edge crosses it.
+#[derive(Clone, Copy)]
+enum Side {
+    /// The points at its least x or further right.
+    Left,
+    /// The points at its greatest x or further left.
+    Right,
+    /// The points at its least y or higher.
+    Bottom,
+    /// The points at its greatest y or lower.
+    Top,
+}
+
+impl Side {
+    /// Whether `window`'s side keeps `p`.
+    fn keeps(self, p: Point, window: &Envelope) -> bool {
+        match self {
+            Side::Left => p.x() >= window.min_x,
+            Side::Right => p.x() <= window.max_x,
+            Side::Bottom => p.y() >= window.min_y,
+            Side::Top => p.y() <= window.max_y,
+        }
+    }
+
+    /// Where the edge from `a` to `b`, which `window`'s side keeps one end of, crosses the side's line; `None`
+    /// should the point be beyond what a float holds.
+    fn crossing(self, a: Point, b: Point, window: &Envelope) -> Option<Point> {
+        let at = |from: f64, to: f64, line: f64| (line - from) / (to - from);
+        match self {
+            Side::Left | Side::Right => {
+                let x = if matches!(self, Side::Left) { window.min_x } else { window.max_x };
+                Point::new(x, a.y() + at(a.x(), b.x(), x) * (b.y() - a.y())).ok()
+            }
+            Side::Bottom | Side::Top => {
+                let y = if matches!(self, Side::Bottom) { window.min_y } else { window.max_y };
+                Point::new(a.x() + at(a.y(), b.y(), y) * (b.x() - a.x()), y).ok()
+            }
+        }
+    }
+}
+
+/// The closed `ring` clipped to `window`, closed again, as Sutherland and Hodgman clip a ring to a box: for
+/// each side in turn, the points it keeps, and between a point it keeps and one it doesn't, where their edge
+/// crosses it. Empty when no point is left; `None` should a crossing be beyond what a float holds. One unit
+/// of `meter` for each point on each side.
+fn clipped(ring: &[Point], window: &Envelope, meter: &mut Meter) -> Result<Option<Vec<Point>>, Exhausted> {
+    let mut points: Vec<Point> = ring.split_last().map_or_else(Vec::new, |(_, open)| open.to_vec());
+    for side in [Side::Left, Side::Right, Side::Bottom, Side::Top] {
+        meter.charge(points.len() as u64)?;
+        let Some(&last) = points.last() else { break };
+        let mut kept = Vec::with_capacity(points.len() + 4);
+        let mut before = last;
+        for &p in &points {
+            let (was, is) = (side.keeps(before, window), side.keeps(p, window));
+            if was != is {
+                let Some(crossing) = side.crossing(before, p, window) else { return Ok(None) };
+                kept.push(crossing);
+            }
+            if is {
+                kept.push(p);
+            }
+            before = p;
+        }
+        points = kept;
+    }
+    points.extend(points.first().copied());
+    Ok(Some(points))
+}
+
 /// The area `parts` cover, in square millimetres.
 pub(crate) fn area_of(parts: &[Polygon]) -> f64 {
     parts.iter().map(Polygon::area).sum()
@@ -280,6 +395,100 @@ mod tests {
 
     fn near(got: f64, want: f64) -> bool {
         (got - want).abs() < 1e-9
+    }
+
+    /// The window from `(x0, y0)` to `(x1, y1)`.
+    fn window((x0, y0): (f64, f64), (x1, y1): (f64, f64)) -> Envelope {
+        Envelope { min_x: x0, min_y: y0, max_x: x1, max_y: y1 }
+    }
+
+    /// The points of `ring`.
+    fn points(ring: &[Point]) -> Vec<(f64, f64)> {
+        ring.iter().map(|q| (q.x(), q.y())).collect()
+    }
+
+    /// The least work with which `windowed` takes `parts` to `within`, found by trying each budget from none:
+    /// with any less, it runs out.
+    fn least_windowed(parts: &[Polygon], within: &Envelope) -> u64 {
+        let ran = |work: u64| windowed(parts.to_vec(), within, &mut Budget { max_work: work, ..Budget::DEFAULT }.meter()).is_ok();
+        (0..1_000).find(|&work| ran(work)).unwrap()
+    }
+
+    #[test]
+    fn req_auto_205_a_part_within_the_window_is_kept_as_it_is_and_one_beyond_or_touching_it_is_left_out() {
+        let part = square((0.0, 0.0), (10.0, 10.0));
+        // Its bounds on the window's sides: within, as it is, for a look at its 5 points.
+        let on = window((0.0, 0.0), (10.0, 10.0));
+        assert_eq!(windowed(vec![part.clone()], &on, &mut meter()).unwrap(), vec![part.clone()]);
+        assert_eq!(least_windowed(std::slice::from_ref(&part), &on), 5);
+        // A hair past any side, it is clipped, which looks at its points again for each side.
+        for past in [
+            window((0.001, 0.0), (10.0, 10.0)),
+            window((0.0, 0.0), (9.999, 10.0)),
+            window((0.0, 0.001), (10.0, 10.0)),
+            window((0.0, 0.0), (10.0, 9.999)),
+        ] {
+            assert!(least_windowed(std::slice::from_ref(&part), &past) > 5, "{past:?}");
+        }
+        // Beyond each side, or only touching it, it is left out.
+        for beyond in [
+            window((10.0, 0.0), (20.0, 10.0)),
+            window((-10.0, 0.0), (0.0, 10.0)),
+            window((0.0, 10.0), (10.0, 20.0)),
+            window((0.0, -10.0), (10.0, 0.0)),
+        ] {
+            assert!(windowed(vec![part.clone()], &beyond, &mut meter()).unwrap().is_empty(), "{beyond:?}");
+        }
+    }
+
+    #[test]
+    fn req_auto_205_a_part_across_the_window_is_clipped_to_it_ring_by_ring() {
+        let p = |x: f64, y: f64| Point::new(x, y).unwrap();
+        // A triangle clipped by 3 sides, each edge crossing a side where it crosses its line.
+        let triangle = Polygon { outline: vec![p(0.0, 0.0), p(0.0, 10.0), p(10.0, 0.0), p(0.0, 0.0)], holes: Vec::new() };
+        let clipped = windowed(vec![triangle.clone()], &window((1.0, -1.0), (8.0, 7.0)), &mut meter()).unwrap();
+        assert_eq!(clipped.len(), 1);
+        assert_eq!(points(&clipped[0].outline), [(8.0, 0.0), (1.0, 0.0), (1.0, 7.0), (3.0, 7.0), (8.0, 2.0), (8.0, 0.0)]);
+        // The 4 points of the triangle's outline for its bounds, and the points each side is given: 3 to the
+        // left and to the right, and 4 after the right side to the bottom and to the top.
+        assert_eq!(least_windowed(std::slice::from_ref(&triangle), &window((1.0, -1.0), (8.0, 7.0))), 4 + 3 + 3 + 4 + 4);
+        // A square half inside keeps the hole inside, and a hole beyond the window goes.
+        let hole = |from: (f64, f64), to: (f64, f64)| holed(square((0.0, 0.0), (1.0, 1.0)), from, to).holes[0].clone();
+        let part =
+            Polygon { outline: square((5.0, 0.0), (15.0, 10.0)).outline, holes: vec![hole((6.0, 4.0), (8.0, 6.0)), hole((12.0, 4.0), (14.0, 6.0))] };
+        let clipped = windowed(vec![part], &window((0.0, -1.0), (10.0, 20.0)), &mut meter()).unwrap();
+        assert_eq!(points(&clipped[0].outline), [(10.0, 0.0), (5.0, 0.0), (5.0, 10.0), (10.0, 10.0), (10.0, 0.0)]);
+        assert_eq!(clipped[0].holes.len(), 1);
+        assert!(near(area_of(&clipped), 46.0), "{}", area_of(&clipped));
+        // An L whose bounds meet the window but which lies outside it leaves nothing.
+        let l = Polygon {
+            outline: vec![p(0.0, 0.0), p(0.0, 10.0), p(2.0, 10.0), p(2.0, 2.0), p(10.0, 2.0), p(10.0, 0.0), p(0.0, 0.0)],
+            holes: Vec::new(),
+        };
+        assert!(windowed(vec![l], &window((5.0, 5.0), (9.0, 9.0)), &mut meter()).unwrap().is_empty());
+    }
+
+    #[test]
+    fn req_auto_205_a_part_whose_clipped_point_cant_be_made_is_kept_whole_and_every_look_is_charged() {
+        let p = |x: f64, y: f64| Point::new(x, y).unwrap();
+        // Where an edge 2e308 long crosses the window's side, the numbers pass what a float holds.
+        let huge = Polygon { outline: vec![p(-1e308, -1e308), p(-1e308, 1e308), p(1e308, 1e308), p(-1e308, -1e308)], holes: Vec::new() };
+        let kept = windowed(vec![huge.clone()], &window((0.0, 0.0), (1.0, 1.0)), &mut meter()).unwrap();
+        assert_eq!(kept, vec![huge]);
+        // So too where a hole's crossing can't be made.
+        let holed_huge = Polygon {
+            outline: square((-2.0, -2.0), (2.0, 2.0)).outline,
+            holes: vec![vec![p(-1e308, -1e308), p(1e308, 1e308), p(-1e308, 1e308), p(-1e308, -1e308)]],
+        };
+        assert_eq!(windowed(vec![holed_huge.clone()], &window((0.0, 0.0), (1.0, 1.0)), &mut meter()).unwrap(), vec![holed_huge]);
+        // With a unit less than it needs, at any of its looks, it runs out.
+        let part = holed(square((5.0, 0.0), (15.0, 10.0)), (6.0, 4.0), (8.0, 6.0));
+        let within = window((0.0, -1.0), (10.0, 20.0));
+        let least = least_windowed(std::slice::from_ref(&part), &within);
+        assert_eq!(least, 5 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4);
+        for work in 0..least {
+            assert!(windowed(vec![part.clone()], &within, &mut Budget { max_work: work, ..Budget::DEFAULT }.meter()).is_err(), "{work}");
+        }
     }
 
     #[test]
