@@ -51,6 +51,7 @@ pub stitchcraft_core::diag::Code::AutoStyle
 pub stitchcraft_core::diag::Code::AutoThick
 pub stitchcraft_core::diag::Code::AutoThinned
 pub stitchcraft_core::diag::Code::AutoThreadedAgain
+pub stitchcraft_core::diag::Code::AutoThreadedForThickness
 pub stitchcraft_core::diag::Code::AutoUnder
 pub stitchcraft_core::diag::Code::BudgetExhausted
 pub stitchcraft_core::diag::Code::BundleUnreadable
@@ -353,6 +354,7 @@ pub stitchcraft_core::Code::AutoStyle
 pub stitchcraft_core::Code::AutoThick
 pub stitchcraft_core::Code::AutoThinned
 pub stitchcraft_core::Code::AutoThreadedAgain
+pub stitchcraft_core::Code::AutoThreadedForThickness
 pub stitchcraft_core::Code::AutoUnder
 pub stitchcraft_core::Code::BudgetExhausted
 pub stitchcraft_core::Code::BundleUnreadable

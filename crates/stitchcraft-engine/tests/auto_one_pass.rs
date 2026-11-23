@@ -173,6 +173,8 @@ fn req_auto_187_a_shade_drawn_under_and_over_another_is_named() {
 
 /// The share of the top thread of element `id` of `plan` that no later top stitch covers: each top stitch
 /// a band 0.4 mm wide, a thread, painted in the order they sew on a grid of 0.05 mm.
+// A cell of a plan 500 mm across at most: a whole number far inside an i64.
+#[allow(clippy::cast_possible_truncation)]
 fn shown(plan: &StitchPlan, id: &str) -> f64 {
     const STEP: f64 = 0.05;
     const HALF: f64 = 0.2;
@@ -239,7 +241,10 @@ fn req_auto_188_a_line_sewn_before_the_fill_beside_it_keeps_the_share_recorded()
     let off: Vec<(f64, f64)> = [0.3, 0.6, 0.8, 1.5].iter().map(|&width| share(width, &[("auto_thread_once", "false")])).collect();
     // On, the cream rows cover about half of the 0.3 mm line's thread, and less of the wider lines', whose thread
     // lies farther from the fill's edge. Off, the line's thread shows whole. The column is the same either way.
-    assert_eq!((on, off), (vec![(0.3, 491.0), (0.6, 823.0), (0.8, 924.0), (1.5, 514.0)], vec![(0.3, 1000.0), (0.6, 1000.0), (0.8, 1000.0), (1.5, 514.0)]));
+    assert_eq!(
+        (on, off),
+        (vec![(0.3, 491.0), (0.6, 823.0), (0.8, 924.0), (1.5, 514.0)], vec![(0.3, 1000.0), (0.6, 1000.0), (0.8, 1000.0), (1.5, 514.0)])
+    );
 }
 
 /// `SC-I0926`: the sew-out piece's navy line sews before the cream fill it borders, and the notice counts it and
@@ -249,7 +254,11 @@ fn diag_sc_i0926_a_line_sewn_before_the_fill_beside_it_is_counted_and_named() {
     let codes = |outcome: &PlanOutcome| outcome.diagnostics.iter().filter(|said| said.code.to_string() == "SC-I0926").cloned().collect::<Vec<_>>();
     let said = codes(&placed(piece(&[])));
     assert_eq!(said.len(), 1, "{said:?}");
-    assert!(said.iter().all(|said| said.message.starts_with("1 line sews before a fill of another thread beside them") && said.message.contains("\"line\"")), "{said:?}");
+    assert!(
+        said.iter()
+            .all(|said| said.message.starts_with("1 line sews before a fill of another thread beside them") && said.message.contains("\"line\"")),
+        "{said:?}"
+    );
     assert_eq!(said.first().and_then(|said| said.element.as_ref()).map(ToString::to_string).as_deref(), Some("line"));
     assert!(codes(&placed(piece(&[("auto_thread_once", "false")]))).is_empty());
 }

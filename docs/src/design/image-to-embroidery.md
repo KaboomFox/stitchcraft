@@ -4128,7 +4128,8 @@ and 2 notices. Rule 2 and rule 3 of the [sewing order](#sewing-order) now read:
    touches a fill without overlapping it sews after the fill and covers its edge where the row of batches with
    the fewest changes allows it, as a column does by rule 4. Otherwise it sews in the batch of its thread,
    before the fill, and the fill's rows end on it. With `auto_thread_once` off (`REQ-AUTO-186`) it always sews
-   after the fill, as before M13.63.
+   after the fill, and the whole order is the one before M13.63: the base layer keeps the largest area's thread
+   and rule 4 doesn't hold for a part's running line.
 3. **The fewest thread changes.** The base layer sews before the first automatic element, in the thread that
    the order with the fewest changes starts with (`REQ-AUTO-185`). The search is made once from the largest
    area's thread and once with no thread sewing, and the base layer keeps the largest area's thread unless the
@@ -4139,6 +4140,15 @@ shape that it borders, where that costs no thread change. Sewn first, the column
 the line's part (`REQ-AUTO-029`). With one pass the running dog in 9 threads sewed a part's column, then a
 part's running line along it, on a fill, and the column's overlap under the line made a spot of 4.15 fills,
 where main sewed 3.26 there with the column last. With the column after the line the spot sews 3.96 fills.
+
+**Thickness before threading** (`REQ-AUTO-189`). A line sewn before its fill can raise a spot: the fill's
+rows end over the line, where the last pass and the cap could take their ends under a line sewn after it.
+With `auto_details_last` on, 2 traced dogs sewed 4.07 and 4.18 fills that way, where main sews 3.96 and 3.99.
+The owner's first concern is whether her machine sews the design. So a design threaded once that sews a spot
+above the warning's limit is planned again with each line after the fills it borders, as with
+`auto_thread_once` off, the order before M13.63. When that plan sews at the limit or under it, it comes back,
+and `SC-W0927` says how many more times the threads are threaded. Both dogs then sew as main sews them, each
+threaded 3 times more. Only a plan the thickness warning is said of pays for the second plan.
 
 `SC-W0925` (`REQ-AUTO-187`) names the shapes where a shade is drawn under and over another, and `SC-I0926`
 (`REQ-AUTO-188`) counts the lines that sew before a fill of another thread beside them and names the 3 with
@@ -4211,6 +4221,12 @@ on top sew as they did: only the designs named above change.
   step needs a rule for the depth under which every design stays at or under the cap, measured on the set.
 - **The lines a fill sews over.** A remedy would end the fill's rows short of the line's thread without letting
   the fabric show where they pull in. The sew-out piece shows whether the lines read and whether fabric shows.
+- **The fallback is for the whole design.** Sewing only some threads' lines after their fills could keep a
+  design under the limit at fewer threadings.
+- **Fill tips and line ends at one point.** Where the tips of several fills meet the ends of running lines and
+  their locks, the cap can't take the thread today: it moves a row's end or joins 2 stitches, and these are
+  neither. A fill or a line sewn earlier raises what later fills lay there. Taking the row ends over a line sewn
+  before back to the line's edge, tried for this step, didn't lower such a spot. The cap's step owns it.
 
 **The sew-out piece.** A navy fill 56 mm by 40 mm, broad enough to be digitized whole, a cream fill 28 mm by
 20 mm drawn on it, a navy line 0.8 mm wide round the cream fill, abutting it as a traced line abuts its fill,

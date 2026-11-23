@@ -331,6 +331,9 @@ fn stacked(plan: &StitchPlan, stack: &[Layer], names: &Names, named: usize) -> S
     if others == 0 { named.join(", ") } else { format!("{} and {others} more", named.join(", ")) }
 }
 
+mod under;
+pub(crate) use under::under;
+
 #[cfg(test)]
 mod tests {
     use stitchcraft_core::{ElementId, Point};

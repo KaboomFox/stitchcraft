@@ -60,7 +60,20 @@ pub struct PlanOutcome {
 /// work to itself, and the stitches the elements before it left; assembling and finalizing have the work
 /// once more, and the design `budget`'s stitches.
 pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanOutcome {
-    let Sewing { elements, mut diagnostics, base, made, limits, leaning } = sewing(design, budget);
+    let (outcome, once) = planned(design, profile, budget, false);
+    // Thickness comes before threading: a design threaded once that sews too thick is planned again with each
+    // line after the fills it borders (`REQ-AUTO-189`).
+    match once {
+        Some(limit) => thick::under(outcome, limit, || planned(design, profile, budget, true).0, budget),
+        None => outcome,
+    }
+}
+
+/// [`plan`] once, each line after the fills it borders when `strict` (`REQ-AUTO-189`), and the warning's
+/// limit of thickness, in fills, when automatic digitizing threaded each thread once where the shapes allow it.
+fn planned(design: &Design, profile: &MachineProfile, budget: &Budget, strict: bool) -> (PlanOutcome, Option<f64>) {
+    let Sewing { elements, mut diagnostics, base, made, limits, leaning, once } = sewing(design, budget, strict);
+    let once = limits.as_ref().filter(|_| once).map(|held| held.limits.warn_fills);
     let candidates: Vec<Candidate> = elements.iter().map(|element| Candidate::of(element, &design.settings)).collect();
     let (steps, lone) = steps(&candidates);
     diagnostics.extend(lone.into_iter().filter_map(|(k, why)| elements.get(k).map(|element| alone(element, why))));
@@ -90,7 +103,7 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
             Err(said) => {
                 diagnostics.extend(said);
                 let names = named(design, (&elements, &base, &generated), profile, budget, &mut diagnostics);
-                return PlanOutcome { plan: None, diagnostics, names };
+                return (PlanOutcome { plan: None, diagnostics, names }, None);
             }
         };
         // A top whose work ran out skips its element: its underlay is left out too, and its stitches come back.
@@ -173,7 +186,7 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
         }
     };
     names.tell(&mut diagnostics);
-    PlanOutcome { plan, diagnostics, names }
+    (PlanOutcome { plan, diagnostics, names }, once)
 }
 
 /// `plan`, finalized, through the stages that come after finalize, `cap` (on an automatic design the

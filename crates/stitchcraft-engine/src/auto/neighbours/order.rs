@@ -421,7 +421,7 @@ impl Order<'_> {
         for &other in later {
             meter.charge(1)?;
             if self.near(index, other) {
-                found.extend(lie(shapes, index, other, self.last, meter)?);
+                found.extend(lie(shapes, index, other, (self.last, self.once), meter)?);
             }
         }
         Ok(found)
@@ -444,17 +444,14 @@ impl Order<'_> {
             // sewing when that element's run starts. Where elements with settings of the same run sew before
             // that element, the base layer sews between them and it, and may change thread once more than
             // the batches found count.
-            let base = if run.iter().any(|&index| self.moving.get(index).is_some_and(|moving| moving.made)) {
-                self.under.take()
-            } else {
-                None
-            };
+            let base = if run.iter().any(|&index| self.moving.get(index).is_some_and(|moving| moving.made)) { self.under.take() } else { None };
             sewing.thread = base.or(sewing.thread);
             let at = |place: usize| run.get(place).copied();
             let searched = seeking.as_mut().map(|meter| match base {
-                // The base layer sews in the thread the best order starts with (`REQ-AUTO-185`).
-                Some(base) => once::based(self, run, base, meter),
-                None => fewest::fewest(&self.sought(run, sewing.thread), meter).map(|found| (found, sewing.thread)),
+                // The base layer sews in the thread the best order starts with (`REQ-AUTO-185`), with
+                // `auto_thread_once` on; off, in the largest area's, as before M13.63 (`REQ-AUTO-186`).
+                Some(base) if self.once => once::based(self, run, base, meter),
+                _ => fewest::fewest(&self.sought(run, sewing.thread), meter).map(|found| (found, sewing.thread)),
             });
             match searched {
                 Some(Ok((found, starts))) => {
@@ -567,9 +564,9 @@ impl Order<'_> {
 
 /// How `second`, drawn after `first`, lies beside it, with `meter`'s work: after it when they overlap, or
 /// when what one of them paints can't be found, each with the budget's work to itself; a line bordering a
-/// fill, or a satin column bordering a part's running line of another shape; 2 automatic areas that meet without overlapping, when the details sew `last`; or `None`, either
+/// fill, or, with `auto_thread_once` on (`once`), a satin column bordering a part's running line of another shape; 2 automatic areas that meet without overlapping, when the details sew `last`; or `None`, either
 /// way round.
-fn lie(shapes: &mut Shapes, first: usize, second: usize, last: bool, meter: &mut Meter) -> Result<Option<Beside>, Failed> {
+fn lie(shapes: &mut Shapes, first: usize, second: usize, (last, once): (bool, bool), meter: &mut Meter) -> Result<Option<Beside>, Failed> {
     shapes.find(first);
     shapes.find(second);
     let (Some((a, painted_first)), Some((b, painted_second))) = (shapes.paint(first), shapes.paint(second)) else {
@@ -583,7 +580,8 @@ fn lie(shapes: &mut Shapes, first: usize, second: usize, last: bool, meter: &mut
     // the line's part.
     let running = |index: usize| shapes.kind(index) == Some(Kind::Part) && !shapes.satin(index);
     let column = |index: usize| matches!(shapes.kind(index), Some(Kind::Column | Kind::Part)) && shapes.satin(index);
-    let apart = shapes.of_shape.get(first) != shapes.of_shape.get(second);
+    // Only with `auto_thread_once` on: off, the order is as before M13.63 (`REQ-AUTO-186`).
+    let apart = once && shapes.of_shape.get(first) != shapes.of_shape.get(second);
     let (beside, under) = (apart && running(first) && column(second), apart && running(second) && column(first));
     let (fill, line) = match (a, b) {
         (Kind::Area, Kind::Column | Kind::Line | Kind::Part) => (first, second),

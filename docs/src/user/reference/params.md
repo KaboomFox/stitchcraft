@@ -65,7 +65,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Guided parameters](params/guided.md) | 3 | Guided fill |
 | [Tartan parameters](params/tartan.md) | 5 | Tartan fill |
 | [Path fill parameters](params/path-fill.md) | 3 | Contour fill, Meander fill, Circular fill |
-| [Auto parameters](params/auto.md) | 36 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
+| [Auto parameters](params/auto.md) | 37 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
 
 ## Every parameter
 

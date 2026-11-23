@@ -441,7 +441,10 @@ thread, before the fill, whose rows then end on it: a design of 6 threads is thr
 line sews after every fill it borders and covers the fill's edge, even where its thread is then
 threaded again, as a machine with several needles that changes thread by itself allows. Where a
 shade is drawn both under and over another, no order threads each thread once, and `SC-W0925` names
-the shapes. The design goes by the setting of its lowest automatic shape.
+the shapes. Thickness comes first: where threading once leaves a spot above the warning's limit and
+the order with each line after its fills doesn't, the design sews in that order, and `SC-W0927` says
+how many more times its threads are threaded. The design goes by the setting of its lowest automatic
+shape.
 
 - **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `true`

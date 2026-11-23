@@ -24,8 +24,8 @@
 //! its pictures: which shapes it digitized, what it did with the specks and the stacked badge, and so on.
 
 use stitchcraft_core::Code::{
-    self, AutoBase, AutoDigitized, AutoLayers, AutoOrder, LockStitchLengthened, AutoSatinFilled, AutoSpeck, AutoStyle, AutoThick, AutoThinned, AutoUnder, FillPartsApart,
-    StitchesMerged,
+    self, AutoBase, AutoDigitized, AutoLayers, AutoOrder, AutoSatinFilled, AutoSpeck, AutoStyle, AutoThick, AutoThinned, AutoUnder, FillPartsApart,
+    LockStitchLengthened, StitchesMerged,
 };
 
 use super::designed::Drawing;

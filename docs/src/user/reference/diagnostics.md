@@ -135,6 +135,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-I0924`](#sc-i0924) | Info | Shapes digitized by default |
 | [`SC-W0925`](#sc-w0925) | Warning | Thread threaded more than once |
 | [`SC-I0926`](#sc-i0926) | Info | Lines sewn before the fills beside them |
+| [`SC-W0927`](#sc-w0927) | Warning | Threads threaded again to stay under the thickness limit |
 | [`SC-E1001`](#sc-e1001) | Error | Nothing to route |
 | [`SC-I1002`](#sc-i1002) | Info | Element left out of the route |
 | [`SC-W1003`](#sc-w1003) | Warning | Piece of a routed satin column may sew otherwise |
@@ -1896,6 +1897,21 @@ on that side, and a line with such fills on 2 sides may hardly show. The notice 
 names the ones with such fills on the most sides, the smallest first, so that a person can look at
 them. To sew every line after the fills beside it, turn `auto_thread_once` off: some threads are then
 threaded more than once.
+
+## SC-W0927
+
+**Warning** — Threads threaded again to stay under the thickness limit
+
+Thickness comes before threading. With `auto_thread_once` on, as by default, a line may sew before a
+fill it borders so that each thread is threaded once, and the fill's rows then end on the line. Where
+that order leaves a spot above the warning's limit (`auto_thick_warn_fills`), the design is planned
+again with each line after the fills it borders, as with `auto_thread_once` off. When that plan sews
+at the limit or under it, it is the one that comes back, and this warning says how many more times
+its threads are threaded. When both plans sew above the limit, the first comes back and only the
+thickness warning (`SC-W0913`) is said.
+
+To thread each thread once all the same, change the drawing where the thickness warning points: what
+lies there sews too thick in that order.
 
 ## SC-E1001
 

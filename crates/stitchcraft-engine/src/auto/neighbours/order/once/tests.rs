@@ -28,16 +28,22 @@ fn req_auto_185_the_base_layer_sews_in_the_thread_the_best_order_starts_with() {
 }
 
 #[test]
+fn req_auto_186_with_auto_thread_once_off_the_base_layer_keeps_the_largest_area_s_thread() {
+    // The blue square under the larger red one: with the setting off the base layer sews in red, the thread it
+    // is given, as before M13.63, and the order changes thread twice from it.
+    let head = || vec![square("b", (0.0, 0.0), 10.0, &BLUE), square("r", (5.0, -5.0), 20.0, &RED)];
+    let off = Rules { last: true, once: false };
+    let (ids, _, chosen) = ordered_by(head(), &Budget::DEFAULT, &Budget::DEFAULT, Some(RED.color), off);
+    assert_eq!((ids, chosen), (vec!["b".to_string(), "r".to_string()], None));
+}
+
+#[test]
 fn req_auto_185_of_orders_as_good_the_base_layer_takes_one_that_sews_more_lines_after_their_fills() {
     // A large green square, and apart a red one with a green line along its edge. From green the line sews
     // with the square, before the red fill. From red the thread changes as often, and the line sews after the
     // fill it borders, so the base layer sews in red.
     let sewn = || {
-        vec![
-            square("g", (100.0, 0.0), 30.0, &GREEN),
-            square("r", (0.0, 0.0), 10.0, &RED),
-            running("gl", &[(11.0, 0.0), (11.0, 10.0)], 2.0, &GREEN),
-        ]
+        vec![square("g", (100.0, 0.0), 30.0, &GREEN), square("r", (0.0, 0.0), 10.0, &RED), running("gl", &[(11.0, 0.0), (11.0, 10.0)], 2.0, &GREEN)]
     };
     let (ids, _, chosen) = ordered_by(sewn(), &Budget::DEFAULT, &Budget::DEFAULT, Some(GREEN.color), ONCE);
     assert_eq!((ids, chosen), (["r", "gl", "g"].map(String::from).to_vec(), Some(RED.color)));
@@ -68,14 +74,21 @@ fn req_auto_187_a_shade_drawn_under_and_over_another_is_named_once() {
     let warned: Vec<String> = messages(&said).into_iter().filter(|message| message.contains("SC-W0925")).collect();
     assert_eq!(
         warned,
-        [
-            "warning SC-W0925: This shape lies under \"outline\", and \"outline\" lies under \"roof\": their threads lie both under and over \
-             each other, so no order threads each thread once. The threads are threaded #0000c8 2 times, #c80000 2 times. [chimney]"
-        ]
+        ["warning SC-W0925: This shape lies under \"outline\", and \"outline\" lies under \"roof\": their threads lie both under and over \
+             each other, so no order threads each thread once. The threads are threaded #0000c8 2 times, #c80000 2 times. [chimney]"]
     );
     // With `auto_thread_once` off nothing is said of it.
     let (_, said, _) = ordered_by(house(), &Budget::DEFAULT, &Budget::DEFAULT, None, Rules { last: true, once: false });
     assert!(messages(&said).iter().all(|message| !message.contains("SC-W0925")));
+}
+
+#[test]
+fn diag_sc_w0925_names_a_shape_of_a_shade_drawn_under_and_over_another_and_says_how_to_thread_once() {
+    let (_, said, _) = ordered_by(house(), &Budget::DEFAULT, &Budget::DEFAULT, None, ONCE);
+    let warned: Vec<_> = said.iter().filter(|said| said.code == stitchcraft_core::Code::AutoThreadedAgain).collect();
+    assert_eq!(warned.len(), 1);
+    assert_eq!(warned.first().and_then(|said| said.element.as_ref()).map(ToString::to_string).as_deref(), Some("chimney"));
+    assert!(warned.iter().all(|said| said.fix.is_some()), "{warned:?}");
 }
 
 #[test]
@@ -86,8 +99,10 @@ fn req_auto_187_a_thread_sewn_twice_for_no_overlap_is_not_named() {
         sewn.automatic = false;
         sewn
     };
-    let mut sewn: Vec<_> =
-        [square("r1", (0.0, 0.0), 10.0, &RED), square("b", (50.0, 0.0), 10.0, &BLUE), square("r2", (100.0, 0.0), 10.0, &RED)].into_iter().map(set).collect();
+    let mut sewn: Vec<_> = [square("r1", (0.0, 0.0), 10.0, &RED), square("b", (50.0, 0.0), 10.0, &BLUE), square("r2", (100.0, 0.0), 10.0, &RED)]
+        .into_iter()
+        .map(set)
+        .collect();
     sewn.push(square("g", (150.0, 0.0), 10.0, &GREEN));
     let (ids, said, _) = ordered_by(sewn, &Budget::DEFAULT, &Budget::DEFAULT, None, ONCE);
     assert_eq!(ids, ["g", "r1", "b", "r2"]);

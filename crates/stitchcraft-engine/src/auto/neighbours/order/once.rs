@@ -101,8 +101,12 @@ fn buried(order: &Order<'_>, sewn: &[usize], shapes: &Shapes, meter: &mut Meter)
          may cover up to half its thread on that side. Those with such fills on the most sides, the smallest first: {}.",
         named.join(", ")
     );
-    let fix = Fix::Hint("To sew every line after the fills beside it, turn `auto_thread_once` off: some threads are then threaded more than once.".to_string());
-    let said = |(_, _, line): &(Reverse<usize>, f64, usize)| shapes.id(*line).map(|id| Diagnostic::new(Code::AutoLinesFirst, message.clone()).with_element(id).with_fix(fix.clone()));
+    let fix = Fix::Hint(
+        "To sew every line after the fills beside it, turn `auto_thread_once` off: some threads are then threaded more than once.".to_string(),
+    );
+    let said = |(_, _, line): &(Reverse<usize>, f64, usize)| {
+        shapes.id(*line).map(|id| Diagnostic::new(Code::AutoLinesFirst, message.clone()).with_element(id).with_fix(fix.clone()))
+    };
     Ok(worst.first().and_then(said))
 }
 
@@ -207,8 +211,11 @@ fn named(
     times: &BTreeMap<Rgb, usize>,
 ) -> Option<Diagnostic> {
     let inside = |pair: &&(Rgb, Rgb)| group.contains(&pair.0) && group.contains(&pair.1);
-    let (&(_, over), &(lower, upper)) =
-        held.iter().filter(|(pair, _)| pair.0 == thread && inside(pair)).flat_map(|(pair, shapes)| shapes.iter().map(move |shape| (pair, shape))).min_by_key(|(_, shape)| **shape)?;
+    let (&(_, over), &(lower, upper)) = held
+        .iter()
+        .filter(|(pair, _)| pair.0 == thread && inside(pair))
+        .flat_map(|(pair, shapes)| shapes.iter().map(move |shape| (pair, shape)))
+        .min_by_key(|(_, shape)| **shape)?;
     let (_, &(under, on)) = held
         .iter()
         .filter(|(pair, _)| pair.1 == thread && inside(pair))

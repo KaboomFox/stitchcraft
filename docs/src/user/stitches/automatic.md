@@ -407,6 +407,10 @@ On a machine with several needles that changes thread by itself, `--set auto_thr
 line after the fills beside it, as before M13.63. A thread is then threaded again where that needs it. `stitch plan`
 says how often the machine is threaded, and `SC-I0907` compares the order with paint order.
 
+Thickness comes first. When the order that threads each thread once leaves a spot thicker than the warning's
+limit, 4 fills by default, and sewing each line after the fills beside it keeps the design at the limit or
+under it, the design sews that way: `SC-W0927` says how many more times its threads are threaded.
+
 ### Jump threads
 
 Between 2 shapes of one thread that don't touch, the needle jumps. A machine with one needle, such as the

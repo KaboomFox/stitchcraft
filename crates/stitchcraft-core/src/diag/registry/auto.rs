@@ -345,6 +345,18 @@ macro_rules! auto_codes {
         /// them. To sew every line after the fills beside it, turn `auto_thread_once` off: some threads are then
         /// threaded more than once.
         AutoLinesFirst = "SC-I0926", Info, "Lines sewn before the fills beside them";
+
+        /// Thickness comes before threading. With `auto_thread_once` on, as by default, a line may sew before a
+        /// fill it borders so that each thread is threaded once, and the fill's rows then end on the line. Where
+        /// that order leaves a spot above the warning's limit (`auto_thick_warn_fills`), the design is planned
+        /// again with each line after the fills it borders, as with `auto_thread_once` off. When that plan sews
+        /// at the limit or under it, it is the one that comes back, and this warning says how many more times
+        /// its threads are threaded. When both plans sew above the limit, the first comes back and only the
+        /// thickness warning (`SC-W0913`) is said.
+        ///
+        /// To thread each thread once all the same, change the drawing where the thickness warning points: what
+        /// lies there sews too thick in that order.
+        AutoThreadedForThickness = "SC-W0927", Warning, "Threads threaded again to stay under the thickness limit";
         } }
     };
 }

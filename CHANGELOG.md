@@ -2276,7 +2276,7 @@ What a user can do with this version, before its first release. The entries belo
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
-- M13.63: each thread threaded once (`REQ-AUTO-184` to `REQ-AUTO-188`). On a machine with one needle each
+- M13.63: each thread threaded once (`REQ-AUTO-184` to `REQ-AUTO-189`). On a machine with one needle each
   thread change is a rethread by hand, so a design digitized automatically now threads each thread once
   wherever its shapes allow it: a design of 6 threads is threaded 6 times. A line sews after the fill it
   borders only where that costs no thread change, as a satin column does, and elsewhere with its thread,
@@ -2288,7 +2288,11 @@ What a user can do with this version, before its first release. The entries belo
   thread: on the dogs 36 fur lines newly show less than half of it, and `SC-I0926` counts such lines and names
   the ones to look at. Where a shade is drawn both under and over another, `SC-W0925` names the shapes, and
   the thread is threaded again. `--set auto_thread_once=false` sews every line after the fills beside it, as
-  before. `SC-I0907` now says how many times the machine is threaded beside the thread changes.
+  before. `SC-I0907` now says how many times the machine is threaded beside the thread changes. Thickness
+  comes first: a design threaded once that sews a spot above the warning's limit is planned again with each
+  line after the fills beside it, and sews that way when that keeps it at the limit or under it, and
+  `SC-W0927` says how many more times its threads are threaded. With `auto_details_last` on, 2 traced dogs
+  sew that way, each threaded 3 times more.
 - M13.62: points stay points (`REQ-AUTO-183`, `REQ-SAT-032`). A satin column that tapers to a point, such
   as a sun's ray, now sews to a point. Its pull compensation falls to 0 over the last 2 mm before an end whose
   rails meet, where each pair was widened by the whole 0.4 mm and the column ended in a bar about 0.85 mm

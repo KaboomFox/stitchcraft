@@ -79,7 +79,13 @@ pub(super) fn ordered_under(sewn: Vec<Sewn>, painting: &Budget, budget: &Budget,
 }
 
 /// [`ordered_under`] by `rules`; and the thread the base layer sews in when the order chose another.
-pub(super) fn ordered_by(sewn: Vec<Sewn>, painting: &Budget, budget: &Budget, under: Option<Rgb>, rules: Rules) -> (Vec<String>, Vec<Diagnostic>, Option<Rgb>) {
+pub(super) fn ordered_by(
+    sewn: Vec<Sewn>,
+    painting: &Budget,
+    budget: &Budget,
+    under: Option<Rgb>,
+    rules: Rules,
+) -> (Vec<String>, Vec<Diagnostic>, Option<Rgb>) {
     let settings = DesignSettings::default();
     let shape = |index: usize, sewn: &Sewn| if sewn.shape == usize::MAX { index } else { sewn.shape };
     let moving: Vec<Moving> =
@@ -454,7 +460,12 @@ fn req_auto_037_the_elements_sew_in_the_order_that_changes_thread_least() {
     let squares = || vec![square("r1", (-100.0, 0.0), 10.0, &RED), square("b1", (0.0, 0.0), 10.0, &BLUE), square("r2", (5.0, 0.0), 10.0, &RED)];
     let (ids, said) = ordered_with(squares(), &Budget::DEFAULT, &Budget::DEFAULT);
     assert_eq!(ids, ["b1", "r2", "r1"]);
-    assert_eq!(messages(&said), ["info SC-I0907: The elements are sewn in an order of their own: threaded 2 times, with 1 thread change, where paint order is threaded 3 times."]);
+    assert_eq!(
+        messages(&said),
+        [
+            "info SC-I0907: The elements are sewn in an order of their own: threaded 2 times, with 1 thread change, where paint order is threaded 3 times."
+        ]
+    );
     // With less work than a row of the search costs, each thread sews while it lasts, as before M13.22, which
     // is paint order here, and that is said.
     let work = fewest::STATE - 1;
@@ -515,7 +526,12 @@ fn req_auto_037_a_satin_column_sews_after_the_fill_it_borders_where_that_costs_n
     ];
     let (ids, said) = ordered_with(columns, &Budget::DEFAULT, &Budget::DEFAULT);
     assert_eq!(ids, ["rs", "rc", "bs", "bc"]);
-    assert_eq!(messages(&said), ["info SC-I0907: The elements are sewn in an order of their own: threaded 2 times, with 1 thread change, where paint order is threaded 3 times."]);
+    assert_eq!(
+        messages(&said),
+        [
+            "info SC-I0907: The elements are sewn in an order of their own: threaded 2 times, with 1 thread change, where paint order is threaded 3 times."
+        ]
+    );
     // Lines there go as the columns do (`REQ-AUTO-184`): the red line sews with the red square, and the thread
     // changes once. With `auto_thread_once` off they sew after their squares, as they are drawn, and the thread
     // changes twice (`REQ-AUTO-186`).
@@ -549,6 +565,19 @@ fn req_auto_037_a_satin_column_sews_after_a_parts_line_it_borders_where_that_cos
     };
     let (ids, _) = ordered_with(vec![one(col("bc")), one(line("rl")), square("rs", (50.0, 0.0), 10.0, &RED)], &Budget::DEFAULT, &Budget::DEFAULT);
     assert_eq!(ids, ["bc", "rl", "rs"]);
+}
+
+#[test]
+fn req_auto_186_with_auto_thread_once_off_a_column_wishes_nothing_of_a_part_s_line() {
+    // The part's line and the column of REQ-AUTO-037's case, with the setting off: the column keeps no wish
+    // to sew after the line, as before M13.63, and sews with the blue square drawn first.
+    let band = [(9.0, 0.0), (9.0, 10.0), (10.0, 10.0), (10.0, 0.0), (9.0, 0.0)];
+    let part = Some(Polygon { outline: band.iter().map(|&(x, y)| p(x, y)).collect(), holes: Vec::new() });
+    let line = Sewn { part, shape: 1, ..running("rl", &[(9.5, 0.0), (9.5, 10.0)], 1.0, &RED) };
+    let col = Sewn { shape: 2, ..column("bc", &[(10.0, 0.0), (10.0, 10.0), (12.0, 10.0), (12.0, 0.0), (10.0, 0.0)], &BLUE) };
+    let off = Rules { last: true, once: false };
+    let (ids, _, _) = ordered_by(vec![square("bs", (50.0, 0.0), 10.0, &BLUE), line, col], &Budget::DEFAULT, &Budget::DEFAULT, None, off);
+    assert_eq!(ids, ["bs", "bc", "rl"]);
 }
 
 /// The order of the elements of `runs`, each sewn in the thread of `threads`, with `rules` of what sews
