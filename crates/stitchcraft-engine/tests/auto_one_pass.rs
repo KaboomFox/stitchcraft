@@ -232,7 +232,8 @@ fn lined(width: f64, params: &[(&str, &str)]) -> Vec<Element> {
 /// default, and off, which sews the line after the fill, as before M13.63. A line narrower than the narrowest
 /// satin stroke sews as a running stitch along its middle, and the cream fill's rows, sewn after it, reach
 /// their pull compensation onto it. The line 1.5 mm wide sews as a satin column, which sews after the fill
-/// either way (rule 4).
+/// either way (rule 4). With the cap working below the limit (M13.64), 521 of it shows,
+/// where 514 did.
 #[test]
 fn req_auto_188_a_line_sewn_before_the_fill_beside_it_keeps_the_share_recorded() {
     let share = |width: f64, params: &[(&str, &str)]| {
@@ -246,7 +247,7 @@ fn req_auto_188_a_line_sewn_before_the_fill_beside_it_keeps_the_share_recorded()
     // lies farther from the fill's edge. Off, the line's thread shows whole. The column is the same either way.
     assert_eq!(
         (on, off),
-        (vec![(0.3, 491.0), (0.6, 823.0), (0.8, 924.0), (1.5, 514.0)], vec![(0.3, 1000.0), (0.6, 1000.0), (0.8, 1000.0), (1.5, 514.0)])
+        (vec![(0.3, 491.0), (0.6, 823.0), (0.8, 924.0), (1.5, 521.0)], vec![(0.3, 1000.0), (0.6, 1000.0), (0.8, 1000.0), (1.5, 521.0)])
     );
 }
 

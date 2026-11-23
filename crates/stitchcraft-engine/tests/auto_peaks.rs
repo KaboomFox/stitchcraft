@@ -99,6 +99,8 @@ fn hundredths(value: f64) -> f64 {
 /// they sewed 3.96, and TS-13A 3.99 where it sewed 3.95: the cap takes a column's top points only above 4,
 /// and a narrower point changes where it stops. Their area above the cap falls. With each thread threaded once
 /// (M13.63) TS-13B's digitized half sews in another order, its base layer red, and sews 3.40 at its thickest.
+/// With the cap pulling points in below the limit at tight turns and under later shapes (M13.64, `REQ-AUTO-195`),
+/// TS-13C sews 3.89 where it sewed 3.93 and TS-13D 3.75 where it sewed 3.79.
 const ABOVE: [(&str, f64); 8] = [
     ("badges-abutting", 3.99),
     ("badges-stacked", 3.99),
@@ -106,8 +108,8 @@ const ABOVE: [(&str, f64); 8] = [
     ("lettered-patch", 3.86),
     ("ts-13a", 3.99),
     ("ts-13b", 3.4),
-    ("ts-13c", 3.93),
-    ("ts-13d", 3.79),
+    ("ts-13c", 3.89),
+    ("ts-13d", 3.75),
 ];
 
 /// The designs whose thickest spot sews above the cap with no satin column there, with it in fills
