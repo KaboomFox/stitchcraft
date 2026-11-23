@@ -460,6 +460,11 @@ fn req_auto_100_a_point_is_looked_at_when_its_stitch_out_comes_near_a_spot_above
     let element = |stitch: &SewnStitch| sewn.blocks[stitch.block].stitches[stitch.index].origin.element;
     let [points] = candidates(thickness.sewn(), &near, [&|stitch: &SewnStitch| element(stitch) == run]);
     assert_eq!(points, [(0, at(8.0)), (0, at(0.5))]);
+    // Several kinds at once are each as one alone, in one pass.
+    let [all, ran, none] =
+        candidates(thickness.sewn(), &near, [&|_: &SewnStitch| true, &|stitch: &SewnStitch| element(stitch) == run, &|_: &SewnStitch| false]);
+    let [alone] = candidates(thickness.sewn(), &near, [&|_: &SewnStitch| true]);
+    assert_eq!((all, ran, none), (alone, points, Vec::new()));
 }
 
 #[test]
