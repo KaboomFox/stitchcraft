@@ -370,6 +370,35 @@ TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills' shee
 paths, of each kind of command, which both programs sew at the same nodes (`REQ-LCK-005`).
 `conformance/inkstitch/README.md` says how to run it by hand and how to add a case.
 
+**Pictures.** A person reviews the differential by looking. Each case both programs sew is drawn
+(M8.14, `xtask/src/conformance/differential/picture.rs`). The picture has 3 panels from the 2 PES files as
+StitchCraft's reader read them back, the plans the measures judge. Ink/Stitch's file and StitchCraft's
+are each drawn by the engine's own preview in its realistic style, as `stitch preview` draws them, at one
+scale and in one frame. A difference of place shows as one. The third panel shows where the 2
+footprints differ, on the grid the overlap is measured on and with their centres made one, as the
+overlap counts them (`stitchcraft_testkit::metrics::footprint_map`). Thread only Ink/Stitch sews is
+orange, thread only StitchCraft sews is blue, and thread both sew is grey. A title gives the case's
+name and its verdict, which is `agrees`, `fails`, or `excused by` and the ledger's entries that excuse it. Under each
+side are its measures, each the text of the report's table, with `!` after one outside its tolerance, and
+its threads as swatches. The scale fits the longer side of a panel's frame into 400 pixels, at 5 pixels a
+millimetre at most. A huge design makes a picture no larger than a small one. The letters are
+straight strokes, as the thickness key's figures are. A picture is then the same bytes on every computer.
+A panel the preview can't draw is left empty, and the report says the picture is degraded and why. The
+report shows each case's picture below its table, the failed cases first, then the excused ones. The
+glyph differential draws the glyphs that differ or are known differences whole. The glyphs the ledger
+excuses are drawn small on a contact sheet, each titled with the entries that excuse it, and another
+sheet shows the sample's first glyph of each font. CI publishes the report with its pictures on the
+documentation site, and `conformance/inkstitch/README.md` says where.
+
+The picture below shows how a comparison picture is laid out, as an example. Both of its sides are StitchCraft's plans of the fill patch, with its rows at 0 degrees and at
+60, since no file Ink/Stitch writes is kept in the repository
+([ADR-0012](adr/0012-read-dont-copy.md)). The real comparisons are in the
+[nightly report](https://kaboomfox.github.io/stitchcraft/differential/).
+
+<!-- shot: differential-layout -->
+![How the differential lays out a picture, here of 2 of StitchCraft's own plans of the fill patch, its rows at 0 degrees and at 60: the 2 side by side at one scale, each with its stitches, size, place, threads, trims and jumps, and a third panel of where their thread lies apart, with the overlap.](../images/generated/differential-layout.png)
+<!-- /shot -->
+
 **Routes.** A route is a design of its own, so sewing StitchCraft's route in both programs would compare 2
 sewings of one route. A case with a `[route]` table instead routes elements of a sheet in each program
 (`REQ-ROUTE-008`, `REQ-ROUTE-013`, `xtask/src/conformance/routing.rs`). The table's `tool` names

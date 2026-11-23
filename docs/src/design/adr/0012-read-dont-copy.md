@@ -39,6 +39,9 @@ guessing them makes interoperability bugs.
   copied.
 - `cargo xtask cleanroom` still fails on GPL licence text and on pasted Python source. It no longer fails
   on Ink/Stitch file paths, so a design doc can link the source it read.
+- A file that Ink/Stitch writes, even from our own drawing, is not committed to the repository or published
+  on its Pages site. The differential compares such files on the machine that makes them, and shows
+  pictures and measures of them (the owner's decision of 2026-11-23).
 
 ## Alternatives considered
 
