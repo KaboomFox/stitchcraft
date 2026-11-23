@@ -34,6 +34,16 @@ pub struct Outcome {
     pub notes: Vec<String>,
     /// What it measured, for its report (the Ink/Stitch differential).
     pub details: Vec<String>,
+    /// The pictures of both programs' files it drew, for its report (the Ink/Stitch differential).
+    pub pictures: Vec<Picture>,
+}
+
+/// A picture of a case of the Ink/Stitch differential: where it is, relative to the repository root, and
+/// why a part of it is missing, if one is.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Picture {
+    pub path: String,
+    pub degraded: Vec<String>,
 }
 
 impl Outcome {
@@ -60,6 +70,7 @@ pub fn run_data_case(root: &Path, case: &DataCase, bless: bool) -> Outcome {
         skipped: None,
         notes: Vec::new(),
         details: Vec::new(),
+        pictures: Vec::new(),
     };
     match &case.spec {
         Spec::Testsheet { sheet, profile, expect } => testsheet(root, sheet, profile, expect, bless, &mut outcome),
@@ -237,6 +248,7 @@ pub fn run_rust_cases(root: &Path, cases: &[RustCase]) -> Result<Vec<Outcome>, S
                 skipped,
                 notes: Vec::new(),
                 details: Vec::new(),
+                pictures: Vec::new(),
             }
         })
         .collect())

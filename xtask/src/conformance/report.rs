@@ -199,6 +199,7 @@ mod tests {
             skipped: None,
             notes: Vec::new(),
             details: Vec::new(),
+            pictures: Vec::new(),
         }
     }
 

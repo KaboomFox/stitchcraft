@@ -30,6 +30,11 @@
 //! `stitch plan` does. A glyph that a program fails on is said, with why. The case fails when a glyph
 //! differs by a measure no excuse explains, or a program fails on it, as a case of the differential does.
 //!
+//! **Pictures** ([`super::differential::picture`]): each glyph that is excused, a known difference or
+//! differs is drawn, Ink/Stitch's file beside StitchCraft's, to `fonts/<font>/` under the differential's
+//! [`PICTURES`](super::differential::PICTURES), and a run of the sample draws a contact sheet of the first
+//! glyph of each font, [`SAMPLE_SHEET`]. The case's report shows them.
+//!
 //! **The report** ([`report`]): `target/conformance/fonts.md` and `target/conformance/fonts.json`. The design
 //! of each glyph that differs, or didn't sew, stays in [`WRITTEN`] with Ink/Stitch's PES file of it, where a
 //! reviewer can open them.
@@ -48,13 +53,18 @@ use stitchcraft_params::StitchType;
 use stitchcraft_plan::{MachineProfile, StitchPlan, profiles};
 
 use super::differential::{self, Compared, Inkstitch, Measured, Ran};
-use super::runner::Outcome;
+use super::differential::picture::{self, Side};
+use super::runner::{Outcome, Picture};
 use crate::corpus::{self, Font};
 use crate::util;
 use excuses::{Excuses, Traits};
 
 /// Where each glyph's design is written, relative to the repository root.
 pub const WRITTEN: &str = "target/conformance/fonts";
+/// The contact sheet of the sample's first glyph of each font, relative to the repository root.
+pub const SAMPLE_SHEET: &str = "target/conformance/differential/pictures/fonts-sample.png";
+/// How many glyphs a row of the contact sheet holds.
+const SHEET_COLUMNS: usize = 6;
 /// The deviation by which StitchCraft refuses an element whose setting it can't read, where Ink/Stitch sews
 /// the setting's default.
 pub const REFUSED: &str = "DEV-PRM-001";
@@ -148,7 +158,7 @@ impl Verdict {
 }
 
 /// A glyph to sew: its font, its file and its place there, and its name.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct Job {
     font: String,
     file: String,
@@ -175,6 +185,10 @@ struct Sewn {
     rows: Vec<Compared>,
     /// The excuses that excused its measures, by their place in their file.
     used: BTreeSet<usize>,
+    /// Its picture, when it is excused, a known difference or differs.
+    picture: Option<Picture>,
+    /// Its small picture for the contact sheet, when it is the first glyph of its font in the sample.
+    small: Option<Vec<u8>>,
 }
 
 /// Runs the glyph differential with `options`: the fonts' verdicts go to `outcome`.
@@ -194,8 +208,21 @@ pub fn run(root: &Path, options: &Options, outcome: &mut Outcome) {
     };
     let (jobs, problems) = jobs(&fonts, options);
     outcome.failures.extend(problems);
-    let sewn = sew_all(root, &inkstitch, &fonts, &jobs, &excuses);
+    let sewn = sew_all(root, &inkstitch, &fonts, &jobs, &excuses, !options.every);
     report::write(root, &fonts, &sewn, &excuses, options, outcome);
+    outcome.pictures.extend(sewn.iter().filter_map(|glyph| glyph.picture.clone()));
+    if !options.every {
+        let smalls: Vec<Vec<u8>> = sewn.iter().filter_map(|glyph| glyph.small.clone()).collect();
+        let path = root.join(SAMPLE_SHEET);
+        let written = picture::sheet(&smalls, SHEET_COLUMNS).and_then(|png| {
+            let wrote = path.parent().map_or(Ok(()), std::fs::create_dir_all).and_then(|()| std::fs::write(&path, png));
+            wrote.map_err(|e| format!("{}: {e}", util::rel(&path)))
+        });
+        outcome.pictures.push(match written {
+            Ok(()) => Picture { path: util::rel(&path), degraded: Vec::new() },
+            Err(e) => Picture { path: String::new(), degraded: vec![format!("no contact sheet: {e}")] },
+        });
+    }
 }
 
 /// The glyphs `options` asks for, of the fonts the corpus takes, each with its place in its file, and what
@@ -235,7 +262,10 @@ fn jobs(fonts: &[Font], options: &Options) -> (Vec<Job>, Vec<String>) {
 
 /// Sews every glyph of `jobs`, as many at a time as there are cores: the glyph files are read one after
 /// another, and each glyph's design handed to the next free worker.
-fn sew_all(root: &Path, inkstitch: &Inkstitch, fonts: &[Font], jobs: &[Job], excuses: &Excuses) -> Vec<Sewn> {
+/// With `sample`, the first glyph of each font is drawn small for the contact sheet.
+fn sew_all(root: &Path, inkstitch: &Inkstitch, fonts: &[Font], jobs: &[Job], excuses: &Excuses, sample: bool) -> Vec<Sewn> {
+    let firsts: BTreeSet<&Job> =
+        jobs.iter().enumerate().filter(|(k, job)| sample && jobs.iter().position(|other| other.font == job.font) == Some(*k)).map(|(_, job)| job).collect();
     let workers = std::thread::available_parallelism().map_or(1, usize::from);
     let (send, receive) = mpsc::sync_channel::<(Job, Result<String, String>)>(workers * 2);
     let receive = Mutex::new(receive);
@@ -247,8 +277,11 @@ fn sew_all(root: &Path, inkstitch: &Inkstitch, fonts: &[Font], jobs: &[Job], exc
                     let next = receive.lock().ok().and_then(|receive| receive.recv().ok());
                     let Some((job, design)) = next else { break };
                     let glyph = match design {
-                        Ok(design) => sew(root, inkstitch, job, &design, excuses),
-                        Err(e) => Sewn { job, traits: Traits::default(), verdict: Verdict::Failed(e), rows: Vec::new(), used: BTreeSet::new() },
+                        Ok(design) => {
+                            let first = firsts.contains(&job);
+                            sew(root, inkstitch, job, &design, excuses, first)
+                        }
+                        Err(e) => Sewn { verdict: Verdict::Failed(e), ..Sewn::new(job) },
                     };
                     if let Ok(mut sewn) = sewn.lock() {
                         sewn.push(glyph);
@@ -286,10 +319,34 @@ fn sew_all(root: &Path, inkstitch: &Inkstitch, fonts: &[Font], jobs: &[Job], exc
     sewn
 }
 
-/// Sews the glyph of `job`, whose design is `design`, in both programs, and judges it.
-fn sew(root: &Path, inkstitch: &Inkstitch, job: Job, design: &str, excuses: &Excuses) -> Sewn {
+impl Sewn {
+    /// `job`, not yet sewn: it agrees until it is.
+    fn new(job: Job) -> Sewn {
+        Sewn { job, traits: Traits::default(), verdict: Verdict::Agrees, rows: Vec::new(), used: BTreeSet::new(), picture: None, small: None }
+    }
+
+    /// Draws its picture, when its verdict asks for one, and its small one when it is `first` in its font,
+    /// from both programs' plans.
+    fn draw(&mut self, root: &Path, first: bool, ours: (&StitchPlan, &Measured), theirs: (&StitchPlan, &Measured)) {
+        let file = self.job.file.strip_suffix(".svg").unwrap_or(&self.job.file);
+        let title = format!("{} {file} {}", self.job.font, self.job.index);
+        let sides = (Side { name: "Ink/Stitch", plan: theirs.0, measured: theirs.1 }, Side { name: "StitchCraft", plan: ours.0, measured: ours.1 });
+        let said = self.verdict.name();
+        if matches!(self.verdict, Verdict::Excused(_) | Verdict::Known(_) | Verdict::Differs(_)) {
+            let path = root.join(super::differential::PICTURES).join("fonts").join(&self.job.font).join(format!("{file}-{:04}.png", self.job.index));
+            self.picture = Some(picture::pictured(&path, &title, said, &self.rows, &sides.0, &sides.1));
+        }
+        if first {
+            self.small = picture::draw(&title, said, &self.rows, &sides.0, &sides.1, true).ok().map(|drawn| drawn.png);
+        }
+    }
+}
+
+/// Sews the glyph of `job`, whose design is `design`, in both programs, and judges it; `first`, the first
+/// glyph of its font in the sample, is drawn small for the contact sheet.
+fn sew(root: &Path, inkstitch: &Inkstitch, job: Job, design: &str, excuses: &Excuses, first: bool) -> Sewn {
     let path = job.path(root);
-    let mut sewn = Sewn { job, traits: Traits::default(), verdict: Verdict::Agrees, rows: Vec::new(), used: BTreeSet::new() };
+    let mut sewn = Sewn::new(job);
     let written = path.parent().map_or(Ok(()), std::fs::create_dir_all).and_then(|()| std::fs::write(&path, design));
     if let Err(e) = written {
         sewn.verdict = Verdict::Failed(format!("{}: {e}", util::rel(&path)));
@@ -321,7 +378,9 @@ fn sew(root: &Path, inkstitch: &Inkstitch, job: Job, design: &str, excuses: &Exc
                             let (verdict, used) =
                                 excuses.judge(&sewn.job.font, &sewn.job.name, &sewn.traits, &sewn.rows, (our_plan, &ours), (their_plan, &theirs));
                             sewn.used = used;
-                            verdict
+                            sewn.verdict = verdict;
+                            sewn.draw(root, first, (our_plan, &ours), (their_plan, &theirs));
+                            sewn.verdict.clone()
                         }
                         // Neither program writes a file of the glyph, or a file that sews.
                         (None, None) => Verdict::Agrees,

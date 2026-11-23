@@ -158,6 +158,8 @@ pub fn run(check_only: bool, filter: Option<&str>, bless: Option<&str>, differen
         let dir = root.join("target/conformance");
         std::fs::create_dir_all(&dir)
             .and_then(|()| std::fs::write(dir.join("differential.md"), &markdown))
+            .and_then(|()| std::fs::create_dir_all(dir.join("differential")))
+            .and_then(|()| std::fs::write(dir.join("differential/index.html"), differential::page::html(&markdown)))
             .map_err(|e| format!("{}: {e}", dir.display()))?;
         summarize(&markdown, &mut findings);
         for o in &outcomes {

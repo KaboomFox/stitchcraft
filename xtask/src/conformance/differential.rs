@@ -48,7 +48,14 @@
 //! ([`undone`]), a measure the deviation excuses is measured again on the file undone, and the excuse holds
 //! only when the measure then agrees. So an excuse can't hide a difference of another kind: Ink/Stitch's
 //! jumps that go nowhere (`DEV-FMT-001`) excuse as many trims and jumps as there are of them, and no more.
+//!
+//! **Pictures.** Each case both programs sew is drawn, Ink/Stitch's file beside StitchCraft's and where their
+//! thread lies apart, labelled with the measures and the verdict ([`picture`]), into [`PICTURES`], and the
+//! report shows it, as does its web page, `index.html` beside them ([`page`]).
 
+mod letters;
+pub mod page;
+pub mod picture;
 mod undo;
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -74,6 +81,8 @@ pub const PIN: &str = "conformance/inkstitch/pin.toml";
 pub const STUBS: &str = "conformance/inkstitch/stubs";
 /// Where the SVG files written for test sheets go, relative to the repository root.
 pub const WRITTEN: &str = "target/conformance/differential";
+/// Where each case's picture goes, relative to the repository root: `<case>.png`.
+pub const PICTURES: &str = "target/conformance/differential/pictures";
 /// Ink/Stitch's configuration folder, relative to the repository root, and the settings it holds: the
 /// stitch-plan cache off.
 pub const CONFIG: &str = "target/conformance/inkstitch-config";
@@ -343,12 +352,19 @@ pub fn run(root: &Path, subject: &Subject, excused: &BTreeMap<String, String>, o
         // `load_cases` draws letters for centre-lines cases alone.
         Subject::Letters(_) => return outcome.failures.push("an inkstitch case sews a design or a test sheet, not letters".to_string()),
     };
-    judged(theirs, ours, excused, outcome);
+    judged(root, theirs, ours, excused, outcome);
 }
 
 /// Measures and judges Ink/Stitch's machine file `theirs` against StitchCraft's `ours`, either of which may
-/// be why there is none, with the measures `excused` excuses by a deviation's id, as [`run`] judges them.
-pub(super) fn judged(theirs: Result<Vec<u8>, String>, ours: Result<Vec<u8>, String>, excused: &BTreeMap<String, String>, outcome: &mut Outcome) {
+/// be why there is none, with the measures `excused` excuses by a deviation's id, as [`run`] judges them, and
+/// draws the case's picture under `root` ([`picture::pictured`]).
+pub(super) fn judged(
+    root: &Path,
+    theirs: Result<Vec<u8>, String>,
+    ours: Result<Vec<u8>, String>,
+    excused: &BTreeMap<String, String>,
+    outcome: &mut Outcome,
+) {
     let measured = |bytes: &[u8], who: &str| -> Result<(StitchPlan, Measured), String> {
         let plan = stitchcraft_formats::decode(bytes).map_err(|e| format!("{who}'s PES file doesn't read: {e}"))?.plan;
         let measured = Measured::of(&plan).ok_or_else(|| format!("{who}'s PES file has no needle point"))?;
@@ -371,7 +387,17 @@ pub(super) fn judged(theirs: Result<Vec<u8>, String>, ours: Result<Vec<u8>, Stri
         .into_iter()
         .filter_map(|deviation| Some((deviation.clone(), compare(&ours, &Measured::of(&undone(deviation, &their_plan, &our_plan)?)?))))
         .collect();
-    judge(compare(&ours, &theirs), excused, &again, outcome);
+    let (rows, before) = (compare(&ours, &theirs), outcome.failures.len());
+    judge(rows.clone(), excused, &again, outcome);
+    let said = picture::verdict(outcome.failures.len() > before, &rows, excused);
+    let sides = (picture::Side { name: "Ink/Stitch", plan: &their_plan, measured: &theirs }, picture::Side {
+        name: "StitchCraft",
+        plan: &our_plan,
+        measured: &ours,
+    });
+    let path = root.join(PICTURES).join(format!("{}.png", outcome.case));
+    let drawn = picture::pictured(&path, &outcome.case, &said, &rows, &sides.0, &sides.1);
+    outcome.pictures.push(drawn);
 }
 
 /// Judges the `compared` measures, with those `excused` excuses, and the measures compared `again` with
@@ -492,13 +518,14 @@ fn sheet(root: &Path, id: &str, part: Option<&str>) -> Result<PathBuf, String> {
     Ok(path)
 }
 
-/// The differential report, Markdown: each case's measures for both programs, failures first. `commit` is
-/// StitchCraft's, and `pin` Ink/Stitch's.
+/// The differential report, Markdown: each case's measures for both programs and its picture, the failed
+/// cases first, then the excused ones, those that agree and those skipped. `commit` is StitchCraft's, and
+/// `pin` Ink/Stitch's. A picture's link is relative to `target/conformance/`, where the report is.
 pub fn report(outcomes: &[Outcome], commit: &str, pin: &str) -> String {
     let short = pin.get(..7).unwrap_or(pin);
     let mut out = format!("# Ink/Stitch differential\n\nStitchCraft at `{commit}`, against Ink/Stitch at `{short}` ({PIN}).\n\n");
     let mut order: Vec<&Outcome> = outcomes.iter().collect();
-    order.sort_by_key(|o| (!o.failed(), o.skipped.is_some()));
+    order.sort_by_key(|o| (!o.failed(), o.notes.is_empty(), o.skipped.is_some()));
     for o in order {
         let mark = if o.skipped.is_some() {
             "⏭"
@@ -526,6 +553,15 @@ pub fn report(outcomes: &[Outcome], commit: &str, pin: &str) -> String {
             for detail in &o.details {
                 out.push_str(detail);
                 out.push('\n');
+            }
+        }
+        for picture in &o.pictures {
+            if !picture.path.is_empty() {
+                let link = picture.path.strip_prefix("target/conformance/").unwrap_or(&picture.path);
+                out.push_str(&format!("\n![{}: Ink/Stitch's file, StitchCraft's and where they differ]({link})\n", o.case));
+            }
+            for why in &picture.degraded {
+                out.push_str(&format!("\n- picture degraded: {why}\n"));
             }
         }
         out.push('\n');
@@ -673,6 +709,7 @@ mod tests {
             skipped: None,
             notes: Vec::new(),
             details: Vec::new(),
+            pictures: Vec::new(),
         }
     }
 
