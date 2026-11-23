@@ -439,9 +439,10 @@ pub(crate) struct Sewing<'d> {
     /// them, where the photo style would sew the design otherwise ([`style::leaning`]): the thickness
     /// warning names the photo style where one lays thread at the thickest spot (`REQ-AUTO-169`).
     pub(crate) leaning: BTreeSet<ElementId>,
-    /// Whether each thread is threaded once where the shapes allow it (`auto_thread_once`, `REQ-AUTO-184`): a
-    /// design so sewn that is too thick is planned again with each line after the fills it borders
-    /// (`REQ-AUTO-189`).
+    /// Whether each thread is threaded once where the shapes allow it (`auto_thread_once`, `REQ-AUTO-184`) in
+    /// an order that the strict rules, those of the setting off, wouldn't allow: a design so sewn that is too
+    /// thick is planned again with each line after the fills it borders (`REQ-AUTO-189`). An order they
+    /// allow is itself a strict order with as few thread changes, so there is nothing to weigh.
     pub(crate) once: bool,
 }
 
@@ -602,6 +603,8 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget, strict: bool) -> S
     let limits = expand::limits(limits, &made, &design.settings);
     let leaning = style::leaning(&tally, &elements, &made);
     diagnostics.extend(tally.said());
+    // Only an order that the strict rules wouldn't allow can be thicker than the strict one (`REQ-AUTO-189`).
+    let once = once && !beside.strict;
     Sewing { elements, diagnostics, base, made, limits, leaning, once }
 }
 

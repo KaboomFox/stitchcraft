@@ -245,5 +245,24 @@ fn named(
     Some(Diagnostic::new(Code::AutoThreadedAgain, message).with_element(shapes.id(lower)?).with_fix(fix))
 }
 
+/// Whether `sewn`, the order found with `auto_thread_once` on, is one that the strict rules allow too, those of
+/// `auto_thread_once` off (`REQ-AUTO-186`): no line sews before a fill it borders, the base layer keeps the
+/// thread it was given, and no satin column sews after a part's running line it was held after by rule 4
+/// widened. Such an order is a strict order with as few thread changes, so a design too thick in it would be
+/// as thick sewn strictly (`REQ-AUTO-189`). A line kept before its fill by what must sew before what counts
+/// too: the strict rules would allow it, but it is not looked into. A unit of work for each element and pair,
+/// out of `budget`'s work; one out of work counts the order as one the strict rules don't allow.
+pub(super) fn allowed(order: &Order<'_>, sewn: &[usize], budget: &Budget) -> bool {
+    let mut meter = budget.meter();
+    if meter.charge((sewn.len() + order.lined.len() + order.held.len()) as u64).is_err() {
+        return false;
+    }
+    let at: BTreeMap<usize, usize> = sewn.iter().enumerate().map(|(place, &index)| (index, place)).collect();
+    let before = |first: usize, second: usize| at.get(&first).zip(at.get(&second)).is_some_and(|(first, second)| first < second);
+    order.chosen.is_none()
+        && !order.lined.iter().any(|&(fill, line)| before(line, fill))
+        && !order.held.iter().any(|&(line, column)| before(line, column))
+}
+
 #[cfg(test)]
 mod tests;

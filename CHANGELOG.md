@@ -2285,7 +2285,7 @@ What a user can do with this version, before its first release. The entries belo
   reach its overlap under the line. On 78 designs 74 thread each thread once, where 65 did: the 4 traced dogs
   are threaded 6, 9, 6 and 9 times, where they were 9, 13, 9 and 12, and photos traced in 9 and 12 threads
   10 and 12 times, where they were 47 and 48. A thin line sewn before the fill beside it shows less of its
-  thread: on the dogs 36 fur lines newly show less than half of it, and `SC-I0926` counts such lines and names
+  thread: on the dogs 37 fur lines newly show less than half of it, and `SC-I0926` counts such lines and names
   the ones to look at. Where a shade is drawn both under and over another, `SC-W0925` names the shapes, and
   the thread is threaded again. `--set auto_thread_once=false` sews every line after the fills beside it, as
   before. `SC-I0907` now says how many times the machine is threaded beside the thread changes. Thickness

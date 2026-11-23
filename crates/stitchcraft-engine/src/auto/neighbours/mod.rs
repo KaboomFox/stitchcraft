@@ -184,7 +184,7 @@ pub(super) fn beside(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget
     // The order leaves the base layer before the first element that automatic digitizing made.
     let first = elements.iter().position(|element| made.contains(&element.id)).unwrap_or(elements.len());
     elements.splice(first..first, laid.pieces);
-    Beside { elements, said, sewing, base, outlines }
+    Beside { elements, said, sewing, base, outlines, strict: ordered.strict }
 }
 
 /// How the neighbours are sewn ([`beside`]).
@@ -216,6 +216,9 @@ pub(super) struct Beside {
     /// For each automatic area whose edge shows, when the design asks for outlines, its id and the lines of
     /// its outline. An area left out since is still listed.
     pub(super) outlines: Vec<(ElementId, Vec<Line>)>,
+    /// Whether the order is one the strict rules, those of `auto_thread_once` off, allow too
+    /// (`REQ-AUTO-189`).
+    pub(super) strict: bool,
 }
 
 /// What a shape paints, to the order and to an automatic area sewn before it.

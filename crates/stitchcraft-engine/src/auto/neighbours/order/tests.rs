@@ -265,6 +265,7 @@ fn a_line_waits_for_no_fill_it_borders_beyond_an_element_kept_in_its_place() {
         once: true,
         overlaps: Vec::new(),
         lined: Vec::new(),
+        held: Vec::new(),
         found: Vec::new(),
         chosen: None,
     };
@@ -298,6 +299,7 @@ fn req_auto_012_nothing_moves_across_an_element_kept_in_its_place_and_each_sews_
         once: true,
         overlaps: Vec::new(),
         lined: Vec::new(),
+        held: Vec::new(),
         found: Vec::new(),
         chosen: None,
     };
@@ -327,6 +329,7 @@ fn threaded(colours: &[&[Rgb]]) -> (Vec<usize>, usize, usize) {
         once: true,
         overlaps: Vec::new(),
         lined: Vec::new(),
+        held: Vec::new(),
         found: Vec::new(),
         chosen: None,
     };
@@ -611,6 +614,7 @@ pub(super) fn sewn(
         once: true,
         overlaps: Vec::new(),
         lined: Vec::new(),
+        held: Vec::new(),
         found: Vec::new(),
         chosen: None,
     };
@@ -769,6 +773,7 @@ fn req_auto_096_a_detail_is_closed_in_and_smaller_than_the_area_it_meets() {
         once: true,
         overlaps: Vec::new(),
         lined: Vec::new(),
+        held: Vec::new(),
         found: Vec::new(),
         chosen: None,
     };

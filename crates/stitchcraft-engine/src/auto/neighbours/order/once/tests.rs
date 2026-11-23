@@ -135,6 +135,7 @@ fn req_auto_187_the_shapes_named_are_those_of_the_first_thread_and_the_thread_ov
         once: true,
         overlaps: vec![(6, 0), (0, 1), (1, 2), (3, 4), (4, 5)],
         lined: vec![(2, 1), (0, 1), (4, 3), (5, 3), (2, 2)],
+        held: Vec::new(),
         found: vec![(vec![6], vec![vec![6]]), (vec![0, 1, 2, 3, 4, 5], vec![vec![0], vec![1], vec![3], vec![2, 4], vec![5]])],
         chosen: None,
     };

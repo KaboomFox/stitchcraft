@@ -7,7 +7,8 @@
 //! the last pass and the cap may take of them changes: a row's end under a later line is hidden, one over an
 //! earlier line shows. Where several fills and lines meet, that can raise a spot above the limit. The owner's
 //! first concern is whether her machine sews the design, so the thickness limit outweighs the threadings
-//! saved. Only a design above the limit pays for the second plan.
+//! saved. Only a design above the limit, in an order that the strict rules wouldn't allow, pays for the second
+//! plan: an order they allow is itself a strict order with as few thread changes (`Sewing::once`).
 
 use stitchcraft_core::{Budget, Code, Diagnostic};
 use stitchcraft_plan::StitchPlan;

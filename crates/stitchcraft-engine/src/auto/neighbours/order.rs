@@ -122,6 +122,10 @@ pub(super) struct Ordered {
     pub(super) said: Vec<Diagnostic>,
     /// The thread the base layer sews in when the order chose another than the one it was given.
     pub(super) under: Option<Rgb>,
+    /// Whether the order is one the strict rules allow too, those of `auto_thread_once` off: no line sews
+    /// before a fill it borders, the base layer keeps the thread it was given, and no column is held after a
+    /// part's running line (`REQ-AUTO-189`). Without `auto_thread_once` it always is.
+    pub(super) strict: bool,
 }
 
 /// `shapes` put in the order they sew in, each element moving round the others as `moving` says, and what
@@ -135,7 +139,7 @@ pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, u
     let Rules { last, once } = rules;
     let live: Vec<usize> = (0..shapes.len()).filter(|&index| !shapes.left_out(index)).collect();
     if !live.iter().any(|&index| moving.get(index).is_some_and(|moving| moving.free)) {
-        return Ordered { said: Vec::new(), under: None };
+        return Ordered { said: Vec::new(), under: None, strict: true };
     }
     let reaches: Vec<Option<Envelope>> = (0..shapes.len()).map(|index| reach(shapes, index)).collect();
     let facts: Vec<Facts> = shapes.elements.iter().zip(reaches).map(|(element, reach)| Facts::of(element, reach)).collect();
@@ -155,6 +159,7 @@ pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, u
         once,
         overlaps: Vec::new(),
         lined: Vec::new(),
+        held: Vec::new(),
         found: Vec::new(),
         chosen: None,
     };
@@ -178,13 +183,16 @@ pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, u
         said.push(summary(changes(&live, &facts), changes(&sewing.order, &facts)));
     }
     said.extend(early(&order.details, &sewing.order));
+    // Whether the order is one that the strict rules, those of `auto_thread_once` off, allow too
+    // (`REQ-AUTO-189`).
+    let strict = !once || once::allowed(&order, &sewing.order, budget);
     if once {
         said.extend(once::told(&order, &sewing.order, shapes, budget));
     }
     // The elements left out go last, where they are left out.
     sewing.order.extend((0..shapes.len()).filter(|&index| shapes.left_out(index)));
     shapes.reorder(&sewing.order);
-    Ordered { said, under: order.chosen }
+    Ordered { said, under: order.chosen, strict }
 }
 
 /// What the order needs to know of an element.
@@ -296,6 +304,9 @@ struct Order<'o> {
     overlaps: Vec<(usize, usize)>,
     /// Each line that borders a fill, as the fill and the line, in the order they were found.
     lined: Vec<(usize, usize)>,
+    /// Each part's running line that a satin column of another shape borders, and the column, in the order
+    /// they were found: rule 4 widened, with `auto_thread_once` on.
+    held: Vec<(usize, usize)>,
     /// Each run whose batches were found, and its batches, each the elements it sews.
     found: Vec<(Vec<usize>, Vec<Vec<usize>>)>,
     /// The thread the base layer sews in when the order chose another than the one it was given.
@@ -374,6 +385,9 @@ impl Order<'_> {
                 Beside::Border(fill, line) => {
                     if shapes.column(line).is_none() {
                         self.lined.push((fill, line));
+                    } else if shapes.kind(fill) != Some(Kind::Area) {
+                        // A column beside a part's running line: rule 4 widened, with `auto_thread_once` on.
+                        self.held.push((fill, line));
                     }
                     if self.once || shapes.column(line).is_some() {
                         self.wished.push((fill, line));

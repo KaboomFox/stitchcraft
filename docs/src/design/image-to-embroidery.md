@@ -4148,7 +4148,11 @@ The owner's first concern is whether her machine sews the design. So a design th
 above the warning's limit is planned again with each line after the fills it borders, as with
 `auto_thread_once` off, the order before M13.63. When that plan sews at the limit or under it, it comes back,
 and `SC-W0927` says how many more times the threads are threaded. Both dogs then sew as main sews them, each
-threaded 3 times more. Only a plan the thickness warning is said of pays for the second plan.
+threaded 3 times more. Only a plan that the thickness warning is said of, in an order the strict rules
+wouldn't allow, pays for the second plan: a line before a fill it borders, the base layer in another thread,
+or a column held after a part's line. An order they allow is itself a strict order with as few thread
+changes, so there is nothing to weigh. Main's search may break a tie between such orders another way, so
+that it sews the same plan as main is measured on the set, not proved.
 
 `SC-W0925` (`REQ-AUTO-187`) names the shapes where a shade is drawn under and over another, and `SC-I0926`
 (`REQ-AUTO-188`) counts the lines that sew before a fill of another thread beside them and names the 3 with
@@ -4159,26 +4163,33 @@ raster. The notice `SC-I0907` now says how many times the machine is threaded be
 #### Measured with the build
 
 The whole set, 78 designs with the sew-out piece, planned with the build in the tests' build at opt-level 1,
-and measured as above. The build sews as the prototype of (a) and (d) did on every design, but where rule 4
-now moves a column after a part's line.
+and measured as above, on main with M13.62. The build sews as the prototype of (a) and (d) did on every design,
+but where rule 4 now moves a column after a part's line. At the default settings no design falls back to the
+order with each line after its fills: the thickness guard plans again only the 9 designs that sew above 4
+fills, and each is above 4 that way too. With `auto_details_last` on, the dog on turf and the running dog in
+6 threads fall back, each threaded 3 times more, and sew as main sews them.
 
 | On 78 designs | main | built |
 |---|---:|---:|
 | Threading each thread once | 65 | 74 |
 | Threadings beyond one a thread | 104 | 5 |
-| Jump threads to cut, on 70 designs | 437 | 409 |
-| Stitches astray, on 70 designs | 1,638 | 1,637 |
+| Jump threads to cut, on 70 designs | 437 | 410 |
+| Stitches astray, on 70 designs | 1,638 | 1,636 |
 | Slivers, on 70 designs | 2 | 3 |
-| Area above the cap, mm² | 309.8 | 326.0 |
+| Area above the cap, mm² | 281.0 | 301.0 |
 | Area at 4 fills or more, mm² | 0 | 0 |
 | Designs above 4 fills that were at or under 4 | | none |
 
 | Traced dog | Threaded | Jump threads | Stitches astray | Slivers | Bare, thousandths of a percent | Thickest spot, fills |
 |---|---|---|---|---|---|---|
-| On turf, 6 threads | 9 → 6 | 59 → 49 | 4 → 2 | 0 → 1 | 39 → 68 | 3.99 → 3.99 |
-| On turf, 9 threads | 13 → 9 | 62 → 59 | 3 → 2 | 0 → 0 | 37 → 41 | 3.91 → 3.95 |
-| Running, 6 threads | 9 → 6 | 49 → 41 | 1 → 3 | 0 → 0 | 11 → 31 | 3.92 → 4.00 |
-| Running, 9 threads | 12 → 9 | 64 → 55 | 4 → 2 | 0 → 0 | 21 → 58 | 3.99 → 3.99 |
+| On turf, 6 threads | 9 → 6 | 59 → 49 | 4 → 2 | 0 → 1 | 41 → 68 | 3.96 → 3.99 |
+| On turf, 9 threads | 13 → 9 | 62 → 59 | 3 → 2 | 0 → 0 | 38 → 44 | 3.91 → 3.95 |
+| Running, 6 threads | 9 → 6 | 49 → 41 | 1 → 3 | 0 → 0 | 12 → 31 | 3.99 → 3.91 |
+| Running, 9 threads | 12 → 9 | 64 → 56 | 4 → 1 | 0 → 0 | 21 → 56 | 3.98 → 3.97 |
+
+The area at 3 fills or more on the dogs is 75.75, 51.75, 55.25 and 96.25 mm², where main sews 49.5, 60.5, 49.0
+and 84.75: a fill's rows that end over a line sewn before it are not taken, as rows under a later line were. It
+is a cost of this step, and the cap's step owns it.
 
 The coleus and the magnolia are threaded 10 and 12 times where they were 47 and 48. The flower and TS-13B's
 digitized half are threaded 4 times where they were 5, and a traced bird 6 times where it was 11. The magnolia's thickest spot
@@ -4188,21 +4199,23 @@ falls from 4.52 to 4.05 fills. The order's search keeps 133 and 1,452 rows on th
 
 - **What shows of a thin line.** A line sewn before a fill beside it loses up to the fill's pull compensation,
   0.4 mm, under the fill's rows. Measured on each running line of the set, as the share of its top thread that
-  no later stitch covers. On the 4 traced dogs 36 fur lines newly show less than half their thread, the worst
-  2, 13 and 15 %. 18 of the 37 that main hides as much now show more, so 55 lines show less than half where main
-  has 37. No line of
-  the drawings, the fixtures, the test pictures or the TS-13 halves does, and the likeness of every design is
-  as it was. Round a fill on the sew-out piece's dark fill, a line 0.3, 0.6 and 0.8 mm wide keeps 0.49, 0.82
+  no later stitch covers. On the 4 traced dogs 37 fur lines newly show less than half their thread, the worst
+  2, 13 and 13 %. 18 of the 37 that main hides as much now show more, so 56 lines show less than half where main
+  has 37. On the 2 photos traced locally, measured whole only for the build, 80 of the magnolia's lines and 81
+  of the coleus's show less than half where main's 19 and 30 do. No line of
+  the drawings, the fixtures, the test pictures or the TS-13 halves does, and the likeness of every design
+  measured is as it was. Round a fill on the sew-out piece's dark fill, a line 0.3, 0.6 and 0.8 mm wide keeps 0.49, 0.82
   and 0.92 of its thread, where with the setting off it keeps all of it (`REQ-AUTO-188`). Holding the fill's
   pull compensation back to the line's near edge gives the stitches of (b), which left more fabric bare. Held
   back to the line's thread, our measure wouldn't show a gap, but it doesn't model the pull: on the machine the
   rows would pull in about 0.4 mm short of the line. So nothing is held back, `SC-I0926` names where to look,
   and the sew-out piece decides.
 - **Fabric beside the lines.** For the same reason a little more fabric shows between a line and a fill sewn
-  after it: up to 2.8 times the dogs' bare share, still under every limit, with one sliver more.
-- **The area above the cap.** It rises on the dog on turf in 6 threads from 15.0 to 23.3 mm², in 9 threads from
-  8.3 to 12.5 mm², on the coleus from 7.8 to 15.8 mm² and on the magnolia from 29.3 to 32.0 mm², and falls on 5
-  designs. No design has an area at 4 fills or more, and none rises above 4 that was at or under it.
+  after it: up to 2.8 times the dogs' bare share, with one sliver more, and on the 2 photos traced locally 3.9
+  and 1.6 times, with 1 and 2 slivers more. Every design stays under the limits.
+- **The area above the cap.** It rises on the dog on turf in 6 threads from 14.0 to 23.0 mm², in 9 threads from
+  8.0 to 10.0 mm², on the running dog in 6 threads from 11.0 to 13.25 mm², on the coleus from 6.5 to 13.5 mm² and
+  on the magnolia from 16.5 to 26.25 mm², and falls on 4 designs. No design has an area at 4 fills or more, and none rises above 4 that was at or under it.
 - **The base layer's thread.** On 5 designs the base layer sews in another thread: the flower in green, TS-13B
   in red, 2 dogs in white and one in tan. Under a slit it shows that thread, where it showed the largest area's.
 - **Jump threads.** The machine cuts at a change of thread and not at a jump. Fewer changes leave fewer jump

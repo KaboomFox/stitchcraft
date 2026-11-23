@@ -220,3 +220,6 @@ fn named(
         Names::default()
     })
 }
+
+#[cfg(test)]
+mod tests;

@@ -78,12 +78,8 @@ const ACROSS: &str = "A row of an automatic fill shows on another colour for 1 m
 /// Why a stitch of an outline shows on another colour.
 const OUTLINE: &str = "A stitch of a fill's outline (REQ-AUTO-051) shows on another colour for 1 mm or more. The outline is one ring round its fill, and the stitch lies along it, its ends within 0.15 mm of the ring. The fill is a thin, ragged shape of a traced photo beside others of its kind. What lies beside the ring there was not traced.";
 
-/// Why a stitch shows on another colour since both settings that reorder the blocks are on.
-const REORDERED: &str = "A row of an automatic fill, or a stitch of a fill's outline, shows on another colour for 1 mm or more since M13.45 turned on the setting that keeps thin lines (REQ-AUTO-095). The blocks sew in another order, so the fill starts, ends and turns elsewhere. Not traced further.";
-
+/// Why a stitch shows on another colour since each thread is threaded once.
 const ONE_PASS: &str = "A row of an automatic fill, or a stitch of a fill's outline, shows on another colour for 1 mm or more since M13.63 threads each thread once (REQ-AUTO-184). The blocks sew in another order, so the fill starts, ends and turns elsewhere, and a line sews before a fill beside it. Not traced further.";
-
-const MOVED: &str = "A row of an automatic fill shows on another colour for 1 mm or more. The same fill had a row astray a row or 2 away before M13.18 merged the ragged thin lines beside it into their neighbours (REQ-AUTO-090), which moved its rows. Not traced further.";
 
 /// Every stitch of the dogs astray today. The case fails when another stitch is astray, and when one of these
 /// no longer is, so the list shrinks as each is fixed. M13.18 merged the ragged thin lines into their
@@ -110,7 +106,7 @@ const MOVED: &str = "A row of an automatic fill shows on another colour for 1 mm
 /// 2 rows and a stitch of an outline more show, and a stitch of an outline is sewn the other way: 18. Which
 /// change moved each was not traced. M13.45 keeps more lines and sews details last by default, which changes
 /// the order of the blocks: a row of the dog on turf in 6 threads and one of the running dog in 9 no longer
-/// show, a row of the dog on turf in 9 threads does ([`REORDERED`]), and a stitch of an outline of the running
+/// show, a row of the dog on turf in 9 threads does, and a stitch of an outline of the running
 /// dog in 6 is sewn the other way: 12. With details last off by default again (M13.48), the stitches of the
 /// running dogs' outlines are sewn as before M13.45, and the row of the dog on turf in 9 threads the other way.
 /// With the cap at 3.25 (M13.46), the row of `vc:68:fill` on the dog on turf in 6 threads, and of `vc:78:fill`
