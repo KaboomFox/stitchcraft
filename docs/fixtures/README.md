@@ -34,7 +34,7 @@ traced: `traced-pear.vectorcraft` ([below](#the-traced-pear)) and the owner's do
 | `nodes.svg` | Straight lines and one curve | manual stitch |
 | `lock.svg` | An 8 mm line | lock shapes |
 | `wide.svg` | A 210 mm border, wider than the reference hoop | the `plan-too-wide` example |
-| `fill.svg` | A patch 32 mm by 20 mm with rounded corners and a round hole | the tatami fill's angle, staggers and underlay; the contour fill's path; the linear gradient fill without a gradient |
+| `fill.svg` | A patch 32 mm by 20 mm with rounded corners and a round hole | the tatami fill's angle, staggers and underlay; the layout of the differential's pictures (the `differential-layout` shot); the contour fill's path; the linear gradient fill without a gradient |
 | `star.svg` | A star, its points 15 mm from its middle and its inner corners 6 mm | the contour fill's strategies and corners |
 | `heart.svg` | A heart 32 mm wide and 29 mm tall | cross stitch: its grid, coverage and threads |
 | `meander.svg` | A square 30 mm a side with rounded corners | the meander fill's tiles, scale, angle and line, and the circular fill's spacing and travel |

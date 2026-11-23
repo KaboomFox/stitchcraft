@@ -32,7 +32,8 @@
 //! stitches, as for coverage. The overlap is the pixels in both footprints as a share of those in either,
 //! intersection over union: 1 for the same stitches, 0 for stitches far apart. **Footprint within** a
 //! tolerance is the share of one set's footprint that the other's covers once grown by the tolerance: it
-//! overlooks stitches that run a little apart, where the overlap would count them.
+//! overlooks stitches that run a little apart, where the overlap would count them. [`footprint_map`] gives
+//! the overlap's 2 footprints on their grid, from which the differential draws where they differ.
 
 use std::collections::BTreeMap;
 
@@ -69,6 +70,33 @@ pub fn footprint_within(a: &[[Point; 2]], b: &[[Point; 2]], tolerance: f64) -> f
     if all == 0 { 1.0 } else { inside as f64 / all as f64 }
 }
 
+/// The footprints [`footprint_overlap`] compares, on its grid of pixels: what a picture of where 2 sets of
+/// stitches put their thread apart is drawn from, so that it shows what the overlap measures.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Footprints {
+    /// The centre of the pixel at the top left, the first of the first row.
+    pub first: Point,
+    /// The side of a pixel, in millimetres: [`PIXEL`].
+    pub pixel: f64,
+    /// How many pixels a row has.
+    pub columns: usize,
+    /// How many rows there are.
+    pub rows: usize,
+    /// For each pixel, row by row, whether the first set's thread covers it.
+    pub a: Vec<bool>,
+    /// For each pixel, row by row, whether the second set's thread covers it.
+    pub b: Vec<bool>,
+}
+
+/// The footprints of the thread of `a`'s and `b`'s stitches on the grid [`footprint_overlap`] measures them
+/// on: no pixel when neither has a stitch.
+pub fn footprint_map(a: &[[Point; 2]], b: &[[Point; 2]]) -> Footprints {
+    match mapped(a, b, THREAD / 2.0, THREAD / 2.0, PIXEL) {
+        Some((grid, a, b)) => Footprints { first: grid.first, pixel: grid.pixel, columns: grid.columns, rows: grid.rows, a, b },
+        None => Footprints { first: Point::ORIGIN, pixel: PIXEL, columns: 0, rows: 0, a: Vec::new(), b: Vec::new() },
+    }
+}
+
 /// The share `footprint_overlap` gives, the thread reaching `reach` either side of a stitch, on pixels
 /// `pixel` wide.
 fn overlap_share(a: &[[Point; 2]], b: &[[Point; 2]], reach: f64, pixel: f64) -> f64 {
@@ -81,7 +109,12 @@ fn overlap_share(a: &[[Point; 2]], b: &[[Point; 2]], reach: f64, pixel: f64) -> 
 /// The footprints of `a`'s and `b`'s threads, reaching `reach_a` and `reach_b` either side of a stitch, on one
 /// grid of pixels `pixel` wide around both: for each pixel, whether its centre lies within reach of a stitch.
 fn footprints(a: &[[Point; 2]], b: &[[Point; 2]], reach_a: f64, reach_b: f64, pixel: f64) -> (Vec<bool>, Vec<bool>) {
-    let Some(ends) = Rect::around(a.iter().chain(b).flatten().copied()) else { return (Vec::new(), Vec::new()) };
+    mapped(a, b, reach_a, reach_b, pixel).map_or_else(|| (Vec::new(), Vec::new()), |(_, a, b)| (a, b))
+}
+
+/// The grid [`footprints`] lays round both sets and their footprints on it: `None` when neither has a stitch.
+fn mapped(a: &[[Point; 2]], b: &[[Point; 2]], reach_a: f64, reach_b: f64, pixel: f64) -> Option<(Grid, Vec<bool>, Vec<bool>)> {
+    let ends = Rect::around(a.iter().chain(b).flatten().copied())?;
     let reach = reach_a.max(reach_b);
     let grow = |q: Point, by: f64| Point::new(q.x() + by, q.y() + by).unwrap_or(q);
     let grid = Grid::new(ends.include(grow(ends.min(), -reach)).include(grow(ends.max(), reach)), pixel);
@@ -97,7 +130,8 @@ fn footprints(a: &[[Point; 2]], b: &[[Point; 2]], reach_a: f64, reach_b: f64, pi
         }
         covered
     };
-    (footprint(a, reach_a), footprint(b, reach_b))
+    let (a, b) = (footprint(a, reach_a), footprint(b, reach_b));
+    Some((grid, a, b))
 }
 
 /// The share of `edges`, polylines where 2 shapes meet, that the thread of `plan`'s top stitches covers once
@@ -402,6 +436,30 @@ mod tests {
         let band = [[p(-1.0, 0.0), p(1.0, 0.0)]];
         let share = overlap_share(&dot, &band, 1.0, 0.5);
         assert!(share > 0.3 && share < 1.0, "{share}");
+    }
+
+    #[test]
+    fn the_footprints_overlap_measures_are_given_on_their_grid() {
+        // 2 stitches 10 mm long, 1 mm apart: the grid reaches half a thread round both, a pixel at a time.
+        let (ours, theirs) = ([[p(0.0, 0.0), p(10.0, 0.0)]], [[p(0.0, 1.0), p(10.0, 1.0)]]);
+        let map = footprint_map(&ours, &theirs);
+        assert_eq!((map.columns, map.rows, map.pixel), (208, 28, PIXEL));
+        assert!((map.first.x() - (-0.2 + PIXEL / 2.0)).abs() < 1e-9 && (map.first.y() - (-0.2 + PIXEL / 2.0)).abs() < 1e-9, "{:?}", map.first);
+        assert_eq!((map.a.len(), map.b.len()), (208 * 28, 208 * 28));
+        // Each thread covers its own rows alone: the first pixel is the first's, the last the second's.
+        assert_eq!((map.a.first(), map.b.first(), map.a.last(), map.b.last()), (Some(&false), Some(&false), Some(&false), Some(&false)));
+        let row = |set: &[bool], row: usize| set.iter().skip(row * 208).take(208).filter(|&&x| x).count();
+        assert_eq!((row(&map.a, 4), row(&map.b, 4), row(&map.a, 24), row(&map.b, 24)), (208, 0, 0, 208));
+        // What the overlap counts, from the map: both over either.
+        let both = map.a.iter().zip(&map.b).filter(|(a, b)| **a && **b).count();
+        let either = map.a.iter().zip(&map.b).filter(|(a, b)| **a || **b).count();
+        assert_eq!((both, footprint_overlap(&ours, &theirs)), (0, 0.0));
+        assert!(either > 0);
+        let same = footprint_map(&ours, &ours);
+        assert_eq!(same.a, same.b);
+        // Neither with a stitch: no pixel.
+        let none = footprint_map(&[], &[]);
+        assert_eq!((none.columns, none.rows, none.a.len(), none.b.len(), none.pixel), (0, 0, 0, 0, PIXEL));
     }
 
     #[test]
