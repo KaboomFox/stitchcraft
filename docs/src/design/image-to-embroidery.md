@@ -2598,7 +2598,7 @@ without changing a stitch: the bar is the same machine file, byte for byte.
   arrangement of its rings, snap rounded on a grid (`normalize::region::snap`). The rounding alone takes
   half of a dog's whole run, and growing regions takes 31 %.
 - Allocating and copying memory take about 10 % of a dog's run, inside that geometry.
-- No pair of shapes far apart costs geometry: `near_later` compares their bounds first. Work repeated on
+- `near_later` compares the bounds of 2 shapes first, so a pair far apart costs no geometry. Work repeated on
   the same input is 1.9 % of the region operations' time on a dog, so a cache would win little.
 - Every union of an area's neighbours took each neighbour whole. A dog's large areas lie beside most of
   its small ones, so each small area paid for the points of every large one beside it. On one dog thinned
@@ -2663,12 +2663,12 @@ by as little would sew differently too. The golden files of the sheets, the plan
 
 The counts are of a local build, which counts within 4 % of CI's, and the perf job's records follow CI's.
 TS-13C crashes valgrind on that machine, and CI counts it. The dogs' overlaps fell by 39 to 47 %, and the
-thinned dog's to 0.30, 1.38, 3.57 and 7.89 billion. No run took more memory.
+thinned dog's to 0.30, 1.38, 3.57 and 7.89 billion. Every run took as much memory as before, or less.
 
 **Other ways.** The rounding redoes its bookkeeping for every edge in each round. Counted on a dog, most
 of its rounding does 3 rounds, and doing only the edges that changed would save about one of them, some 4 %
 of a dog and nearly nothing on TS-13A. The split into parts by the rules takes 7 % of a dog and 22 % of the
-pear. Neither is a step yet.
+pear. Both wait for a step of their own.
 
 **The dogs and VectorCraft's budget.** The count inside VectorCraft can't be read on the machine the step
 was measured on, which has no WebAssembly target. On the sheets CI's compatibility job counts 4.16 to 4.57
