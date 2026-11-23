@@ -209,7 +209,7 @@ mod tests {
         let job = Job { font: font.into(), file: "ltr.svg".into(), index, name: format!("g{index}") };
         let traits = Traits { types: vec!["satin_column"], ..Traits::default() };
         let rows = vec![(Measure::Stitches, "10".to_string(), "20".to_string(), false)];
-        Sewn { job, traits, verdict, rows, used: used.iter().copied().collect(), picture: None, small: None }
+        Sewn { job, traits, verdict, rows, used: used.iter().copied().collect(), picture: None, excused: None, small: None }
     }
 
     #[test]

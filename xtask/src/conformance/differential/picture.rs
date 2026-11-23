@@ -20,7 +20,10 @@
 //!   one side's alone, grey when it holds both sides' thread.
 //!
 //! **Bounded and the same everywhere.** The scale fits the frame's longer side into [`CELL`] pixels, at
-//! most [`Settings::DEFAULT_SCALE`] a millimetre, so a huge design makes a picture no larger than a small one.
+//! most [`MOST_SCALE`] a millimetre, so a huge design makes a picture no larger than a small one. The
+//! realistic style's thread is detail a PNG file can't pack, so a picture's bytes grow with its pixels: at
+//! 8 pixels a millimetre and 600 a side, a run's pictures took 45 MB on the site, where these limits keep a
+//! run's folder under 15 MB.
 //! Letters are straight strokes ([`super::letters`]), so a picture is the same bytes on every machine, like
 //! the docs' shots. A panel the preview can't draw is left empty, and the picture says it is degraded and why
 //! ([`Drawn::degraded`]), which the report repeats.
@@ -45,13 +48,17 @@ use crate::conformance::runner::Picture;
 use crate::util;
 
 /// The longer side of a panel's frame at most, in pixels.
-pub const CELL: f32 = 600.0;
+pub const CELL: f32 = 400.0;
+/// The most pixels a millimetre: a stitch's thread, 0.4 mm, is still 2 pixels wide.
+pub const MOST_SCALE: f32 = 5.0;
 /// The longer side of a panel's frame at most on a contact sheet, in pixels.
-pub const SMALL_CELL: f32 = 140.0;
+pub const SMALL_CELL: f32 = 120.0;
 /// The room round and between panels, in pixels.
 const PAD: u32 = 10;
 /// A panel's least width: room for its longest line of measures.
 const LEAST_WIDTH: u32 = 250;
+/// A small picture's panel's least width: room in its 3 for a verdict naming 2 of the ledger's entries.
+const SMALL_LEAST_WIDTH: u32 = 110;
 
 /// Thread only Ink/Stitch sews there: Okabe–Ito orange.
 pub const INKSTITCH_ONLY: [u8; 3] = [0xE6, 0x9F, 0x00];
@@ -121,12 +128,12 @@ pub fn draw(title: &str, verdict: &str, rows: &[Compared], theirs: &Side, ours: 
     let (frame_w, frame_h) = frame.map_or((0.0, 0.0), |(x0, y0, x1, y1)| (x1 - x0, y1 - y0));
     let (cell_w, cell_h) = (frame_w.max(grid_mm(map.columns)), frame_h.max(grid_mm(map.rows)));
     let most = if small { SMALL_CELL } else { CELL };
-    let scale = ((most / cell_w.max(cell_h).max(1.0)).min(Settings::DEFAULT_SCALE) * 10.0).floor() / 10.0;
+    let scale = ((most / cell_w.max(cell_h).max(1.0)).min(MOST_SCALE) * 10.0).floor() / 10.0;
     let scale = scale.max(Settings::MIN_SCALE);
-    let least = if small { 0 } else { LEAST_WIDTH };
+    let least = if small { SMALL_LEAST_WIDTH } else { LEAST_WIDTH };
     let (w, h) = (((cell_w * scale).ceil() as u32).max(least), ((cell_h * scale).ceil() as u32).max(1));
 
-    let (title_h, head_h, lines) = if small { (16, 0, 0) } else { (34, 20, 7) };
+    let (title_h, head_h, lines) = if small { (30, 0, 0) } else { (34, 20, 7) };
     let line_h = 15;
     let width = PAD + 3 * (w + PAD);
     let height = PAD + title_h + head_h + h + lines * line_h + PAD;
@@ -137,9 +144,13 @@ pub fn draw(title: &str, verdict: &str, rows: &[Compared], theirs: &Side, ours: 
 
     // The title, with the scale's bar of 10 mm at its right.
     let unit = if small { 1.5 } else { 2.5 };
-    // Small, the verdict first, which a long title would push out of the picture.
-    let heading = if small { format!("{verdict}  {title}") } else { format!("{title}  {verdict}") };
-    text(&mut canvas, &heading, PAD as f32, PAD as f32, unit, INK);
+    // Small, the verdict on a line of its own above the title, so that a long title can't push it out.
+    if small {
+        text(&mut canvas, verdict, PAD as f32, PAD as f32, unit, INK);
+        text(&mut canvas, title, PAD as f32, PAD as f32 + 13.0, unit, INK);
+    } else {
+        text(&mut canvas, &format!("{title}  {verdict}"), PAD as f32, PAD as f32, unit, INK);
+    }
     if !small {
         let bar = 10.0 * scale;
         let x = width as f32 - PAD as f32 - bar;
@@ -382,10 +393,10 @@ mod tests {
         let path = root.join(super::super::PICTURES).join("square.png");
         assert_eq!(judged_case.pictures, [Picture { path: util::rel(&path), degraded: Vec::new() }]);
         let picture = Pixmap::decode_png(&std::fs::read(&path).unwrap()).unwrap();
-        // 3 panels of the least width, the overlap's grid of 14.4 mm, with the margins, at 8 pixels a millimetre
+        // 3 panels of the least width, the overlap's grid of 14.4 mm, with the margins, at 5 pixels a millimetre
         // being narrower.
         assert_eq!(picture.width(), PAD + 3 * (LEAST_WIDTH + PAD));
-        assert_eq!(picture.height(), PAD + 34 + 20 + (14.4_f32 * 8.0).ceil() as u32 + 7 * 15 + PAD);
+        assert_eq!(picture.height(), PAD + 34 + 20 + (14.4_f32 * 5.0).ceil() as u32 + 7 * 15 + PAD);
         let markdown = report(&[judged_case], "abc1234", "d59c9ab");
         assert!(markdown.contains("](target/xtask-tests/differential-pictures/target/conformance/differential/pictures/square.png)"), "{markdown}");
         assert!(markdown.contains("![square: Ink/Stitch's file, StitchCraft's and where they differ]("), "{markdown}");
@@ -467,14 +478,17 @@ mod tests {
         let drawn = draw("huge", "agrees", &[], &side("Ink/Stitch"), &side("StitchCraft"), false).unwrap();
         assert!(drawn.degraded.is_empty());
         let picture = Pixmap::decode_png(&drawn.png).unwrap();
-        // The overlap's grid, 404.4 mm with the margins, in 600 pixels: 1.4 pixels a millimetre.
-        assert_eq!(picture.width(), PAD + 3 * ((404.4_f32 * 1.4).ceil() as u32 + PAD));
+        // The overlap's grid, 404.4 mm with the margins, in 400 pixels: 0.9 pixels a millimetre.
+        assert_eq!(picture.width(), PAD + 3 * ((404.4_f32 * 0.9).ceil() as u32 + PAD));
         assert!(picture.width() <= PAD + 3 * (CELL as u32 + PAD) && picture.height() <= 2 * CELL as u32);
         let again = draw("huge", "agrees", &[], &side("Ink/Stitch"), &side("StitchCraft"), false).unwrap();
         assert_eq!(drawn, again);
         // Small, for a contact sheet.
         let small = Pixmap::decode_png(&draw("huge", "agrees", &[], &side("Ink/Stitch"), &side("StitchCraft"), true).unwrap().png).unwrap();
-        assert_eq!(small.width(), PAD + 3 * ((404.4_f32 * 0.3).ceil() as u32 + PAD));
+        // At 0.2 pixels a millimetre its panels would be 81 pixels wide, narrower than the least.
+        assert_eq!((404.4_f32 * 0.2).ceil() as u32, 81);
+        assert_eq!(small.width(), PAD + 3 * (SMALL_LEAST_WIDTH + PAD));
+        assert_eq!(small.height(), PAD + 30 + (404.4_f32 * 0.2).ceil() as u32 + PAD);
     }
 
     #[test]

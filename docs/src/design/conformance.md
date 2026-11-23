@@ -380,13 +380,14 @@ overlap counts them (`stitchcraft_testkit::metrics::footprint_map`). Thread only
 orange, thread only StitchCraft sews is blue, and thread both sew is grey. A title gives the case's
 name and its verdict, which is `agrees`, `fails`, or `excused by` and the ledger's entries that excuse it. Under each
 side are its measures, each the text of the report's table, with `!` after one outside its tolerance, and
-its threads as swatches. The scale fits the longer side of a panel's frame into 600 pixels, at 8 pixels a
+its threads as swatches. The scale fits the longer side of a panel's frame into 400 pixels, at 5 pixels a
 millimetre at most. A huge design makes a picture no larger than a small one. The letters are
 straight strokes, as the thickness key's figures are. A picture is then the same bytes on every computer.
 A panel the preview can't draw is left empty, and the report says the picture is degraded and why. The
 report shows each case's picture below its table, the failed cases first, then the excused ones. The
-glyph differential draws only the glyphs that differ, are excused or are known differences, and a
-contact sheet of the sample's first glyph of each font. CI publishes the report with its pictures on the
+glyph differential draws the glyphs that differ or are known differences whole. The glyphs the ledger
+excuses are drawn small on a contact sheet, each titled with the entries that excuse it, and another
+sheet shows the sample's first glyph of each font. CI publishes the report with its pictures on the
 documentation site, and `conformance/inkstitch/README.md` says where. This is the `inkstitch-ring` case,
 drawn from a copy of Ink/Stitch's file kept for the docs, which the nightly run checks against the file
 Ink/Stitch writes.

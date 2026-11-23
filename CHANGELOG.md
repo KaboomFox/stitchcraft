@@ -24,7 +24,7 @@ What a user can do with this version, before its first release. The entries belo
   judge, at one scale, with a third panel of where their thread lies apart. The case's measures and its
   verdict are written in it. The report shows them, the failed and the excused cases first, and is
   written as a web page too, `target/conformance/differential/index.html`. The glyph differential draws the
-  glyphs that differ or are excused, and a contact sheet of its sample. CI publishes the nightly report
+  glyphs that differ, a contact sheet of those the ledger excuses, and one of its sample. CI publishes the nightly report
   with its pictures at `/differential/` on the documentation site, and a pull request's beside its preview.
   Every design sews as before, and the golden files stay as they were.
 - M13.8: VectorCraft documents are digitized automatically by default (`REQ-AUTO-163` to `REQ-AUTO-166`,

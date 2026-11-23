@@ -30,10 +30,12 @@
 //! `stitch plan` does. A glyph that a program fails on is said, with why. The case fails when a glyph
 //! differs by a measure no excuse explains, or a program fails on it, as a case of the differential does.
 //!
-//! **Pictures** ([`super::differential::picture`]): each glyph that is excused, a known difference or
-//! differs is drawn, Ink/Stitch's file beside StitchCraft's, to `fonts/<font>/` under the differential's
-//! [`PICTURES`](super::differential::PICTURES), and a run of the sample draws a contact sheet of the first
-//! glyph of each font, [`SAMPLE_SHEET`]. The case's report shows them.
+//! **Pictures** ([`super::differential::picture`]): each glyph that differs or is a known difference is
+//! drawn, Ink/Stitch's file beside StitchCraft's, to `fonts/<font>/` under the differential's
+//! [`PICTURES`](super::differential::PICTURES). The excused glyphs are drawn small in a contact sheet,
+//! [`EXCUSED_SHEET`], each titled with the ledger's entries that excuse it: a night's sample excuses a
+//! hundred glyphs, and drawn whole they took 29 MB of the site. A run of the sample also draws a contact
+//! sheet of the first glyph of each font, [`SAMPLE_SHEET`]. The case's report shows them.
 //!
 //! **The report** ([`report`]): `target/conformance/fonts.md` and `target/conformance/fonts.json`. The design
 //! of each glyph that differs, or didn't sew, stays in [`WRITTEN`] with Ink/Stitch's PES file of it, where a
@@ -63,6 +65,8 @@ use excuses::{Excuses, Traits};
 pub const WRITTEN: &str = "target/conformance/fonts";
 /// The contact sheet of the sample's first glyph of each font, relative to the repository root.
 pub const SAMPLE_SHEET: &str = "target/conformance/differential/pictures/fonts-sample.png";
+/// The contact sheet of the excused glyphs, relative to the repository root.
+pub const EXCUSED_SHEET: &str = "target/conformance/differential/pictures/fonts-excused.png";
 /// How many glyphs a row of the contact sheet holds.
 const SHEET_COLUMNS: usize = 6;
 /// The deviation by which StitchCraft refuses an element whose setting it can't read, where Ink/Stitch sews
@@ -157,6 +161,18 @@ impl Verdict {
     }
 }
 
+/// The contact sheet of the small pictures `smalls`, written to `path`: where it is, or why there is none.
+fn contact_sheet(path: &Path, smalls: &[Vec<u8>]) -> Picture {
+    let written = picture::sheet(smalls, SHEET_COLUMNS).and_then(|png| {
+        let wrote = path.parent().map_or(Ok(()), std::fs::create_dir_all).and_then(|()| std::fs::write(path, png));
+        wrote.map_err(|e| format!("{}: {e}", util::rel(path)))
+    });
+    match written {
+        Ok(()) => Picture { path: util::rel(path), degraded: Vec::new() },
+        Err(e) => Picture { path: String::new(), degraded: vec![format!("no contact sheet: {e}")] },
+    }
+}
+
 /// A glyph to sew: its font, its file and its place there, and its name.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct Job {
@@ -185,8 +201,10 @@ struct Sewn {
     rows: Vec<Compared>,
     /// The excuses that excused its measures, by their place in their file.
     used: BTreeSet<usize>,
-    /// Its picture, when it is excused, a known difference or differs.
+    /// Its picture, when it is a known difference or differs.
     picture: Option<Picture>,
+    /// Its small picture for the contact sheet of the excused glyphs, when it is excused.
+    excused: Option<Vec<u8>>,
     /// Its small picture for the contact sheet, when it is the first glyph of its font in the sample.
     small: Option<Vec<u8>>,
 }
@@ -211,17 +229,13 @@ pub fn run(root: &Path, options: &Options, outcome: &mut Outcome) {
     let sewn = sew_all(root, &inkstitch, &fonts, &jobs, &excuses, !options.every);
     report::write(root, &fonts, &sewn, &excuses, options, outcome);
     outcome.pictures.extend(sewn.iter().filter_map(|glyph| glyph.picture.clone()));
+    let excused: Vec<Vec<u8>> = sewn.iter().filter_map(|glyph| glyph.excused.clone()).collect();
+    if !excused.is_empty() {
+        outcome.pictures.push(contact_sheet(&root.join(EXCUSED_SHEET), &excused));
+    }
     if !options.every {
         let smalls: Vec<Vec<u8>> = sewn.iter().filter_map(|glyph| glyph.small.clone()).collect();
-        let path = root.join(SAMPLE_SHEET);
-        let written = picture::sheet(&smalls, SHEET_COLUMNS).and_then(|png| {
-            let wrote = path.parent().map_or(Ok(()), std::fs::create_dir_all).and_then(|()| std::fs::write(&path, png));
-            wrote.map_err(|e| format!("{}: {e}", util::rel(&path)))
-        });
-        outcome.pictures.push(match written {
-            Ok(()) => Picture { path: util::rel(&path), degraded: Vec::new() },
-            Err(e) => Picture { path: String::new(), degraded: vec![format!("no contact sheet: {e}")] },
-        });
+        outcome.pictures.push(contact_sheet(&root.join(SAMPLE_SHEET), &smalls));
     }
 }
 
@@ -326,7 +340,16 @@ fn sew_all(root: &Path, inkstitch: &Inkstitch, fonts: &[Font], jobs: &[Job], exc
 impl Sewn {
     /// `job`, not yet sewn: it agrees until it is.
     fn new(job: Job) -> Sewn {
-        Sewn { job, traits: Traits::default(), verdict: Verdict::Agrees, rows: Vec::new(), used: BTreeSet::new(), picture: None, small: None }
+        Sewn {
+            job,
+            traits: Traits::default(),
+            verdict: Verdict::Agrees,
+            rows: Vec::new(),
+            used: BTreeSet::new(),
+            picture: None,
+            excused: None,
+            small: None,
+        }
     }
 
     /// Draws its picture, when its verdict asks for one, and its small one when it is `first` in its font,
@@ -337,12 +360,16 @@ impl Sewn {
         let sides = (Side { name: "Ink/Stitch", plan: theirs.0, measured: theirs.1 }, Side { name: "StitchCraft", plan: ours.0, measured: ours.1 });
         let said = said(&self.verdict);
         let said = said.as_str();
-        if matches!(self.verdict, Verdict::Excused(_) | Verdict::Known(_) | Verdict::Differs(_)) {
+        let small = || picture::draw(&title, said, &self.rows, &sides.0, &sides.1, true).ok().map(|drawn| drawn.png);
+        if matches!(self.verdict, Verdict::Excused(_)) {
+            self.excused = small();
+        }
+        if matches!(self.verdict, Verdict::Known(_) | Verdict::Differs(_)) {
             let path = root.join(super::differential::PICTURES).join("fonts").join(&self.job.font).join(format!("{file}-{:04}.png", self.job.index));
             self.picture = Some(picture::pictured(&path, &title, said, &self.rows, &sides.0, &sides.1));
         }
         if first {
-            self.small = picture::draw(&title, said, &self.rows, &sides.0, &sides.1, true).ok().map(|drawn| drawn.png);
+            self.small = small();
         }
     }
 }
@@ -550,6 +577,20 @@ mod tests {
     fn a_glyph_s_design_is_written_under_its_font_and_file() {
         let job = Job { font: "f".into(), file: "ltr/latin.svg".into(), index: 7, name: "A".into() };
         assert_eq!(job.path(Path::new("/r")), Path::new("/r").join(WRITTEN).join("f").join("ltr/latin-0007.svg"));
+    }
+
+    #[test]
+    fn a_contact_sheet_is_written_or_says_why_not() {
+        let dir = util::root().join("target/xtask-tests/fonts-contact-sheet");
+        std::fs::create_dir_all(&dir).unwrap();
+        let small = tiny_skia::Pixmap::new(4, 3).unwrap().encode_png().unwrap();
+        let path = dir.join("sheet.png");
+        assert_eq!(contact_sheet(&path, &[small.clone(), small.clone()]), Picture { path: util::rel(&path), degraded: Vec::new() });
+        let sheet = tiny_skia::Pixmap::decode_png(&std::fs::read(&path).unwrap()).unwrap();
+        assert_eq!((sheet.width(), sheet.height()), (8, 3));
+        std::fs::write(dir.join("file"), "").unwrap();
+        let nowhere = contact_sheet(&dir.join("file/sheet.png"), &[small]);
+        assert!(nowhere.path.is_empty() && nowhere.degraded[0].starts_with("no contact sheet: "), "{nowhere:?}");
     }
 
     #[test]
