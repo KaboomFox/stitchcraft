@@ -3799,23 +3799,26 @@ columns of M13.58, apart from `REQ-AUTO-194`, and `crowded` the columns of befor
 The cap runs its pull-in and its last resort as before, each stopping at the first spot where every point
 fails to lower it, and then runs both again, going on past such spots. Main's first run is kept as it was so that a large letter sheet
 doesn't run the last resort out of work, as the measuring found. Going on, they look only at the spots that
-their points' stitches lay thread in, since a point lowers a spot only by taking thread out of it. They keep
-those spots in order of their thread, thickest first, with the points whose stitches lay thread in each,
-and put a spot whose thread changed back in its place. Going through every spot of the measure for each spot
-passed by, and every point for each spot, cost TS-13D, whose hand-set half sews far above 4 fills, 25 times
-its plan's work. Then come the pull-ins below the limit, on the columns
-sewn with `knots`, of points near a spot above the cap. A point is a knot when its rail's neighbour lies
-closer than half the column's zigzag spacing, compared as lengths are, so a neighbour exactly 0.2 mm away
-makes none. Its new end is covered when a top stitch of another shape sewn later covers the first 0.1 mm of
-its way back. The cap's measure is held during these pulls: no spot that a moved stitch lays thread in ends
-thicker than the larger of what it was and the limit. Before them the plan and its measure are kept. After them
-the plan is measured afresh, and the pulls below the limit are undone when that measure's thickest spot is
-thicker, or its area above the limit larger, than the kept measure says. That check guards against the drift
-seen in the prototype. It found nothing to undo on the engine's set or the CLI set.
-It costs plan time where many columns crowd: for each spot it works on, the pull-in looks at every point near
-a spot above the cap. Measured at opt-level 1 on a shared machine after M13.63, the 18 letter sheets took 52.8
-s where main took 29.1 s, the largest 11.9 s where it took 4.9 s. The engine's 16 designs took 3 s where
-they took 2 s.
+have a top stitch of their points' shapes near, from the stitches the cap already files by cells of a
+millimetre for their cover, and only at the points at either end of such a stitch: the points that the cap
+looked at before, of those whose stitches come within 1 mm of the spot, in the same order. They keep those
+spots in order of their thread, thickest first, and put a spot whose thread changed back in its place. Going
+through every spot of the measure for each spot passed by, and every point for each spot, cost TS-13D, whose
+hand-set half sews far above 4 fills, 25 times its plan's work. Then come the pull-ins below the limit, on the
+columns sewn with `knots`, of points near a spot above the cap. A point is a knot when its rail's neighbour
+lies closer than half the column's zigzag spacing, compared as lengths are, so a neighbour exactly 0.2 mm
+away makes none. Its new end is covered when a top stitch of another shape sewn later covers the first 0.1 mm
+of its way back. The cap's measure is held during these pulls: no spot that a moved stitch lays thread in
+ends thicker than the larger of what it was and the limit. The measure is kept up to date as above the limit,
+with no second measure of the plan: the test sheets' work has no room for one. A first build measured the
+plan afresh after the pulls and would undo them where that measure was thicker. On the engine's set and the
+67 designs it found nothing to undo, and the cases of `REQ-AUTO-195` check the kept measure against the plan
+measured afresh.
+
+The pass costs work where it moves points. Measured with callgrind at opt-level 1 against main `f08be379`,
+the cap's own work on TS-13A rises from 328 to 474 million instructions, 4.5 % of the sheet's: it pulls in 23
+points there below the limit. On TS-13B it rises by 39 million and on TS-13E by 25 million. The 18 letter
+sheets took 52.8 s where main took 29.1 s, at opt-level 1 on a shared machine.
 
 Measured on the build, `a0d380b7` on main `acdda98f`, at opt-level 1, as the prototype was:
 
