@@ -86,12 +86,31 @@ class PublishTest(unittest.TestCase):
                 self.assertEqual(publisher.git('show', 'FETCH_HEAD:pr/99/index.html', cwd=repo).stdout, 'first')
                 # A repeated cleanup is a no-op, and traversal is refused.
                 publisher.publish('pr/1', None)
-                for destination in ('pr/../dev', 'pr/0', 'v1', 'v0.1/x', 'latest', 'sheet/x', 'sheets', ''):
+                for destination in ('pr/../dev', 'pr/0', 'v1', 'v0.1/x', 'latest', 'sheet/x', 'sheets', '', 'differential/x', 'pr/2/sheet'):
                     with self.assertRaises(ValueError):
                         publisher.publish(destination, str(site))
                 for kept in ('v0.1', 'sheet'):
                     with self.assertRaises(ValueError):
                         publisher.publish(kept, None)
+                # A preview's differential is published beside it, and kept when the preview is published again.
+                (site / 'index.html').write_text('report')
+                publisher.publish('pr/2/differential', str(site))
+                publisher.publish('differential', str(site))
+                (site / 'index.html').write_text('second')
+                publisher.publish('pr/2', str(site))
+                publisher.git('fetch', 'origin', 'gh-pages', cwd=repo)
+                self.assertEqual(publisher.git('show', 'FETCH_HEAD:pr/2/differential/index.html', cwd=repo).stdout, 'report')
+                self.assertEqual(publisher.git('show', 'FETCH_HEAD:pr/2/index.html', cwd=repo).stdout, 'second')
+                self.assertEqual(publisher.git('show', 'FETCH_HEAD:differential/index.html', cwd=repo).stdout, 'report')
+                with self.assertRaises(ValueError):
+                    publisher.publish('differential', None)
+                # Removing the preview removes its differential too.
+                publisher.publish('pr/2', None)
+                publisher.git('fetch', 'origin', 'gh-pages', cwd=repo)
+                tree = publisher.git('ls-tree', '-r', '--name-only', 'FETCH_HEAD', cwd=repo).stdout
+                self.assertNotIn('pr/2/', tree)
+                self.assertIn('differential/index.html', tree)
+                publisher.publish('pr/2', str(site))
                 # Publishing what is there already pushes nothing.
                 before = publisher.git('ls-remote', 'origin', 'gh-pages', cwd=repo).stdout
                 publisher.publish('pr/2', str(site))

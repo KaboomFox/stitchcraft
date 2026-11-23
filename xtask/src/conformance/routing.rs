@@ -81,7 +81,7 @@ pub fn read(table: &toml::Table) -> Result<Routing, String> {
 pub fn run(root: &Path, case: &str, sheet: &str, routing: &Routing, excused: &BTreeMap<String, String>, outcome: &mut Outcome) {
     let Some(inkstitch) = Inkstitch::ready(root, outcome) else { return };
     match routed(root, &inkstitch, case, sheet, routing) {
-        Ok((theirs, ours)) => differential::judged(theirs, ours, excused, outcome),
+        Ok((theirs, ours)) => differential::judged(root, theirs, ours, excused, outcome),
         Err(e) => outcome.failures.push(e),
     }
 }
