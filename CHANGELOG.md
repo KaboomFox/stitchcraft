@@ -2289,7 +2289,7 @@ What a user can do with this version, before its first release. The entries belo
   on the inside lie closer than half the spacing, and ends that a shape sewn later covers, each by a quarter
   of the column. On a gentle curve the plan moves no end in. A line 5 mm wide turning by 60° sews 3.09 fills
   at the turn, where it sewed 3.83. On 67 designs the area at 3.25 fills or more falls from 161.8 to 136.5 mm²
-  under the default style and from 1,152.2 to 792.8 mm² under the logo style, and no design's thickest spot
+  under the default style and from 1,152.2 to 791.0 mm² under the logo style, and no design's thickest spot
   rises. Under the logo style 2 traced dogs in 6 threads now sew at the limit or under it with each line
   after its fills, and take that order (`SC-W0927`), threaded more times. It is `auto_short_stitches` `knots`, the new default, and `--set auto_short_stitches=above_limit`
   sews the columns of M13.58.

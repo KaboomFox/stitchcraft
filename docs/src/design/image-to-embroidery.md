@@ -3815,10 +3815,16 @@ plan afresh after the pulls and would undo them where that measure was thicker. 
 67 designs it found nothing to undo, and the cases of `REQ-AUTO-195` check the kept measure against the plan
 measured afresh.
 
-The pass costs work where it moves points. Measured with callgrind at opt-level 1 against main `f08be379`,
-the cap's own work on TS-13A rises from 328 to 474 million instructions, 4.5 % of the sheet's: it pulls in 23
-points there below the limit. On TS-13B it rises by 39 million and on TS-13E by 25 million. The 18 letter
-sheets took 52.8 s where main took 29.1 s, at opt-level 1 on a shared machine.
+The pass costs work where it moves points, and the test sheets' exports in VectorCraft have little room: the gate
+of `compat/vc-contract/tests/contract.rs` fails a sheet above 85 % of the instructions VectorCraft allows an
+export, and TS-13A uses 84.8 % on main. So the cap was made cheaper where it already worked. The measure keeps
+the thickest spot it found until a change takes thread from that spot or makes another as thick, so the cap's
+checks of whether a spot is above a level no longer go through every spot after each change. A change only
+tried, to see how much it would lower a spot, keeps that spot too. The cap finds its candidate points for each
+zone in one pass over the plan, not one pass for each kind. Measured with callgrind at opt-level 1, with `knots`
+on, TS-13A takes 3,219 million instructions where main takes 3,228, TS-13B 2,534 where main takes 2,566 and
+TS-13E 1,582 where main takes 1,592. Every sheet sews byte for byte as before these changes. The 18 letter
+sheets took 27 s where main took 29 s.
 
 Measured on the build, `a0d380b7` on main `acdda98f`, at opt-level 1, as the prototype was:
 
@@ -3847,8 +3853,8 @@ with M13.63, at opt-level 1:
 | Set | Main: mm² at 3.25 or more | Built |
 | --- | --- | --- |
 | 67 designs, default style | 161.8 | 136.5 |
-| 67 designs, logo style | 1,152.2, 25.5 above 4 | 792.8, 1.0 above 4 |
-| The engine's 16 designs | 100.2 | 58.2, 189 points pulled in |
+| 67 designs, logo style | 1,152.2, 25.5 above 4 | 791.0, 1.0 above 4 |
+| The engine's 16 designs | 100.2 | 58.2, 190 points pulled in |
 | 18 sheets of letters | 572.0, thickest 4.44 | 348.8, thickest 4.00 |
 | 4 dogs, details last | 66.2 | 51.2 |
 
