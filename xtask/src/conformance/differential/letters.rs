@@ -74,7 +74,7 @@ pub fn segments(c: char) -> Vec<((f32, f32), (f32, f32))> {
     let mut out = Vec::new();
     for line in strokes(c) {
         let digits: Vec<f32> = line.chars().filter_map(|d| d.to_digit(10)).map(|d| d as f32).collect();
-        let points: Vec<(f32, f32)> = digits.chunks_exact(2).map(|pair| (pair[0], pair[1])).collect();
+        let points: Vec<(f32, f32)> = digits.as_chunks::<2>().0.iter().map(|&[x, y]| (x, y)).collect();
         out.extend(points.windows(2).map(|pair| (pair[0], pair[1])));
     }
     out
