@@ -49,10 +49,13 @@ fn req_auto_189_a_design_threaded_once_above_the_limit_sews_strictly_when_that_i
     assert_eq!(kept.plan, strict().0.plan);
     assert_eq!(codes(&kept), [Code::AutoThick, Code::AutoThreadedForThickness]);
     // Both above the limit, or the strict plan not made or not measured: the plan threaded once comes back.
-    assert_eq!(under(once(), (4.0, 6.08), || (outcome(zigzag(0.05, &[NAVY, CREAM])), Some(4.5))), once());
+    // Each plan's thickest spot is the one the cap measured, which the guard reads and doesn't measure again:
+    // a plan of 1.34 fills that the cap measured at 4.5 is above the limit.
+    assert_eq!(under(once(), (4.0, 6.08), || (outcome(zigzag(0.25, &[NAVY, CREAM])), Some(4.5))), once());
     assert_eq!(under(once(), (4.0, 6.08), || (PlanOutcome { plan: None, ..once() }, Some(1.0))), once());
     assert_eq!(under(once(), (4.0, 6.08), || (outcome(zigzag(0.25, &[NAVY])), None)), once());
-    // At the limit or under it, or without the thickness warning, the design isn't planned again.
+    // At the limit or under it, or without the thickness warning (a spot above the limit too small to warn of),
+    // the design isn't planned again.
     let quiet = || PlanOutcome { diagnostics: Vec::new(), ..once() };
     assert_eq!(under(quiet(), (4.0, 6.08), || panic!("planned again")), quiet());
     assert_eq!(under(once(), (4.0, 4.0), || panic!("planned again")), once());
