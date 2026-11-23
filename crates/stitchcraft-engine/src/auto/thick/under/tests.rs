@@ -1,7 +1,7 @@
 // Test data: small counts of rows, from sizes given in whole steps.
 #![allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 
-use stitchcraft_core::{Code, ElementId, Point};
+use stitchcraft_core::{Code, Diagnostic, ElementId, Point};
 use stitchcraft_plan::{PlanBuilder, Provenance, Rgb, Role, StitchPlan, Thread};
 
 use super::{threadings, under};
@@ -33,7 +33,7 @@ fn zigzag(apart: f64, threads: &[Rgb]) -> StitchPlan {
 
 /// `plan` as planning gives it back.
 fn outcome(plan: StitchPlan) -> PlanOutcome {
-    PlanOutcome { plan: Some(plan), diagnostics: Vec::new(), names: Names::default() }
+    PlanOutcome { plan: Some(plan), diagnostics: vec![Diagnostic::new(Code::AutoThick, "thick")], names: Names::default() }
 }
 
 fn codes(outcome: &PlanOutcome) -> Vec<Code> {
@@ -47,12 +47,14 @@ fn req_auto_189_a_design_threaded_once_above_the_limit_sews_strictly_when_that_i
     let strict = || (outcome(zigzag(0.25, &[NAVY, CREAM, NAVY])), Some(1.34));
     let kept = under(once(), (4.0, 6.08), strict);
     assert_eq!(kept.plan, strict().0.plan);
-    assert_eq!(codes(&kept), [Code::AutoThreadedForThickness]);
+    assert_eq!(codes(&kept), [Code::AutoThick, Code::AutoThreadedForThickness]);
     // Both above the limit, or the strict plan not made or not measured: the plan threaded once comes back.
     assert_eq!(under(once(), (4.0, 6.08), || (outcome(zigzag(0.05, &[NAVY, CREAM])), Some(4.5))), once());
     assert_eq!(under(once(), (4.0, 6.08), || (PlanOutcome { plan: None, ..once() }, Some(1.0))), once());
     assert_eq!(under(once(), (4.0, 6.08), || (outcome(zigzag(0.25, &[NAVY])), None)), once());
-    // At the limit or under it, the design isn't planned again.
+    // At the limit or under it, or without the thickness warning, the design isn't planned again.
+    let quiet = || PlanOutcome { diagnostics: Vec::new(), ..once() };
+    assert_eq!(under(quiet(), (4.0, 6.08), || panic!("planned again")), quiet());
     assert_eq!(under(once(), (4.0, 4.0), || panic!("planned again")), once());
     assert_eq!(under(PlanOutcome { plan: None, ..once() }, (4.0, 6.08), || panic!("planned again")), PlanOutcome { plan: None, ..once() });
 }

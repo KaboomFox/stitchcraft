@@ -4148,11 +4148,11 @@ The owner's first concern is whether her machine sews the design. So a design th
 above the warning's limit is planned again with each line after the fills it borders, as with
 `auto_thread_once` off, the order before M13.63. When that plan sews at the limit or under it, it comes back,
 and `SC-W0927` says how many more times the threads are threaded. Both dogs then sew as main sews them, each
-threaded 3 times more. Only a plan above the limit, in an order the strict rules wouldn't allow, pays for the
-second plan: a line before a fill it borders, the base layer in another thread, or a column held after a
-part's line. An order they allow is itself a strict order with as few thread changes, so there is nothing to
-weigh. Main's search may break a tie between such orders another way, so that it sews the same plan as main
-is measured on the set, not proved. The guard reads each plan's thickest spot from the cap's measure, so no
+threaded 3 times more. A plan above the limit pays for the second plan only when the strict rules wouldn't
+allow its order: where a line sews before a fill it borders or a column is held after a part's line, and
+where the base layer has another thread than the largest area's. An order they allow is itself a strict order with as few thread
+changes, so there is nothing to weigh. Main's search may break a tie between such orders another way. That
+such a design sews as main does is measured on the set, not proved. The guard reads each plan's thickest spot from the cap's measure, so no
 plan is measured twice: measured again, the dog on turf in 6 threads took 7 % more instructions.
 
 `SC-W0925` (`REQ-AUTO-187`) names the shapes where a shade is drawn under and over another, and `SC-I0926`

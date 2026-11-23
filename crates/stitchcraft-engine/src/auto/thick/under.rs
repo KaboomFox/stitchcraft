@@ -22,7 +22,9 @@ use crate::PlanOutcome;
 /// more times its threads are threaded. Each plan's thickest spot is the one the cap at the end of planning
 /// measured, so no plan is measured twice. A design that can't be planned again sews as it was planned.
 pub(crate) fn under(outcome: PlanOutcome, (limit, once): (f64, f64), strict: impl FnOnce() -> (PlanOutcome, Option<f64>)) -> PlanOutcome {
-    let Some(threaded) = outcome.plan.as_ref().map(threadings).filter(|_| once > limit) else { return outcome };
+    // Only a plan the thickness warning is said of: a spot above the limit too small to warn of is no reason.
+    let warned = outcome.diagnostics.iter().any(|said| said.code == Code::AutoThick);
+    let Some(threaded) = outcome.plan.as_ref().map(threadings).filter(|_| warned && once > limit) else { return outcome };
     let (mut again, most) = strict();
     let (Some(plan), Some(most)) = (again.plan.as_ref(), most) else { return outcome };
     if most > limit {
