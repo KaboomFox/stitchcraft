@@ -611,7 +611,7 @@ it. At MC-8, sew the one-pass piece with the default and with
 - On the dog, find the fur lines that `SC-I0926` names. Do they still read as lines?
 - Count the jump threads you cut on each.
 
-M13.65 makes a fill sewn after a line end where its thread meets the line's, and leaves the fill's outline off that edge ([a line sewn before its fill stays seen](../design/image-to-embroidery.md#a-line-sewn-before-its-fill-stays-seen)). Our measure places the stitches where they lie, and on fabric the rows pull in. At MC-8, sew the lines-first piece 3 ways side by side: with the default, with `auto_fill_to_line` off and with `auto_line_gap_mm` at -0.2:
+M13.65 makes a fill sewn after a line end where its thread meets the line's, and leaves the fill's outline off that edge ([lines sewn before their fills](../design/image-to-embroidery.md#lines-sewn-before-their-fills)). Our measure places the stitches where they lie, and on fabric the rows pull in. At MC-8, sew the lines-first piece 3 ways side by side: with the default, with `auto_fill_to_line` off and with `auto_line_gap_mm` at -0.2:
 
 - Does each navy line read whole round its cream square? Which of the 3 shows the line 0.3 mm wide best?
 - Does fabric show between a cream square and its line? Measure the widest gap on each.

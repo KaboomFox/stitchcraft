@@ -4200,7 +4200,7 @@ falls from 4.52 to 4.05 fills. The order's search keeps 133 and 1,452 rows on th
 #### What gets worse
 
 - **What shows of a thin line.** A line sewn before a fill beside it loses the part of its thread that the fill's
-  outline and its rows' ends lie on ([a line sewn before its fill stays seen](#a-line-sewn-before-its-fill-stays-seen)). Measured on each running line of the set, as the share of its top thread that
+  outline and its rows' ends lie on ([lines sewn before their fills](#lines-sewn-before-their-fills)). Measured on each running line of the set, as the share of its top thread that
   no later stitch covers. On the 4 traced dogs 37 fur lines newly show less than half their thread, the worst
   2, 13 and 13 %. 18 of the 37 that main hides as much now show more, so 56 lines show less than half where main
   has 37. On the traced magnolia and the traced coleus leaf, measured whole only for the build, 80 and 81
@@ -4255,6 +4255,198 @@ and a gold square beside them (`docs/src/plan/machine-testing.md` › MC-8: the 
 twice, since the navy fill sews before the cream fill and the line after it. With one pass the line sews with the navy fill, and the
 cream fill's rows end on it. Sewn both ways side by side, it shows what the trade costs on fabric: whether the
 line still reads as a line and whether fabric shows beside it.
+
+### Lines sewn before their fills
+
+M13.63 threads each thread once, and a line then sews before a fill of another thread it borders where
+sewing it after would thread its thread again ([each thread threaded once](#each-thread-threaded-once)). The
+owner's first concern stays how thick a design sews. Her second, for this step, is fabric showing beside an
+outline. M13.65 measured how much of each such line the fills sewn after it hide, and why, and tried 6 rules
+on the set. This section is the spec: nothing that sews has changed yet.
+
+#### Where the thread of a line goes today
+
+The set is M13.63's: 75 designs measured whole (the sew-out piece below, the test pictures, the pear, the
+lettered patch, TS-13A to TS-13E whole and digitized, the 18 review drawings, the SVG fixtures, the round patch
+and the 4 traced dogs) and 8 photos traced locally, 2 of them in 9 and 12 threads. A line here is a part's
+running line or satin column, an automatic satin column or a line digitized from a stroke. For each line that
+sews before an automatic area of another thread it borders, a probe measures the share of its top thread, a
+band 0.4 mm wide along each stitch, that no later top stitch covers, on a grid of 0.05 mm. The probe lists the
+shapes that cover the rest.
+
+On the 75 designs measured whole, 96 lines sew before an area of another thread they border: 83 on the 4
+traced dogs, 8 satin columns of TS-13A's badges and 5 on the sew-out piece. No line of the drawings or the
+fixtures sews before an area it borders and over it. On the 6 traced photos 84 lines do, most of them
+narrower than 0.4 mm, and on the 2 photos traced in 9 and 12 threads 315.
+
+| Lines sewn before a fill they border | lines | median share seen | under half |
+|---|---:|---:|---:|
+| 4 traced dogs, running lines | 64 | 0.58 | 24 |
+| 4 traced dogs, satin columns | 19 | 0.44 | 11 |
+| TS-13A's badges, satin columns | 8 | 0.78 | 0 |
+| The sew-out piece | 5 | 0.49 | 3 |
+| 6 traced photos, running lines | 84 | 0.30 | 60 |
+| 2 photos in 9 and 12 threads, running lines | 307 | 0.58 | 122 |
+| 2 photos in 9 and 12 threads, satin columns | 8 | 0.66 | 3 |
+
+4 things cover such a line, each measured on the sew-out piece and read in the code:
+
+- **The area's outline.** An automatic area's outline (`auto_fill_outline`, on by default) runs along its
+  edge where no shape sewn after the area covers it (`auto::neighbours::outline`). A line sewn before the
+  area doesn't count, and the outline runs along the line, 0.15 mm from the middle of a line 0.3 mm wide. Left
+  out along such lines, the sew-out piece's line shows 0.50 of its thread where it shows 0.34.
+- **The rows' thread.** The rows end on the area's edge, and their thread lies half a thread, 0.2 mm, past
+  it. Where a line's part is narrower than about 0.8 mm, its thread and that, the rows lie on the line.
+  Automatic areas have no pull compensation: the probe found none on the 75 designs. What
+  [each thread threaded once](#each-thread-threaded-once) took for the fill's pull compensation is the
+  outline and the thread of the rows' ends.
+- **A satin column's own pull compensation.** A column sews 0.4 mm past each rail as drawn, into the area
+  beside it, and the area sewn after it covers that band. Sewn, the column's thread pulls it back about that
+  far.
+- **Other lines on top.** On the traced dogs much of what covers a line sewn before a fill is another line, a
+  part's running line or satin column of another shape sewn after it. A rule for areas leaves those as they are.
+
+Where a line's part is wider than that, nothing covers the rest of the part: the area beside it gives the part
+up to the line, and the line's running stitch covers 0.4 mm of it. That is the other side of the cost, the
+fabric beside the line that [each thread threaded once](#each-thread-threaded-once) found on the 2 photos in 9 and 12
+threads.
+
+#### The candidates, measured
+
+Each candidate is a prototype behind settings of the environment, never committed, measured with the same
+probe. `seen` is the median share of the lines sewn before a fill they border, and `under half` how many of
+them show less than half of their thread. A gap is a place a disc 0.35 mm across fits on fabric that no top
+stitch covers ([covering the fabric](#covering-the-fabric)), and a fault one that the cover's check counts.
+`pulled` counts the gaps once every top stitch is pulled in 0.4 mm where the thread turns, as
+`metrics::edge_coverage` pulls them: our cover measures the stitches where they lie, and on the machine a
+fill's rows pull in at their ends. `thicker` gives the designs whose thickest spot rises, and `threadings`
+the threadings more than `main`: a design threaded once that sews above the limit is planned again with each
+line after its fills (`REQ-AUTO-189`). On the 75 designs measured whole:
+
+| | seen | under half | faults | gaps, mm² | pulled gaps, mm² | thicker | threadings | stitches |
+|---|---:|---:|---:|---:|---:|---|---:|---:|
+| main | 0.59 | 38 of 99 | 355 | 354, 332.4 | 621, 390 | 0 | 193 | 284647 |
+| (e) the outline only | 0.66 | 23 of 81 | +0 | +0, +0.0 | -5, -1 | 1, to 3.99 | +3 | +33 |
+| (a) −0.1 | 0.69 | 26 of 98 | +9 | +29, +15.3 | +56, +150 | 1, to 3.97 | +0 | -408 |
+| (a) 0 | 0.70 | 23 of 99 | +12 | +33, +19.9 | +44, +172 | 1, to 3.97 | +0 | -361 |
+| (a) +0.1 | 0.70 | 23 of 101 | +24 | +46, +36.6 | +50, +203 | 0 | +0 | -454 |
+| (b) | 0.61 | 38 of 99 | +0 | +0, +0.0 | +62, +9 | 2, to 4.00 | +0 | +253 |
+
+For (d) and its variants the probe leaves out a stroke's line drawn under the area, as (d) does, so `main`
+counts 96 lines here:
+
+| | seen | under half | faults | gaps, mm² | pulled gaps, mm² | thicker | threadings | stitches |
+|---|---:|---:|---:|---:|---:|---|---:|---:|
+| main | 0.58 | 38 of 96 | 355 | 354, 332.4 | 621, 390 | 0 | 193 | 284647 |
+| (d) | 0.65 | 32 of 92 | +0 | +0, +0.0 | +26, +10 | 2, to 3.99 | +0 | +53 |
+| (d), auto_line_gap_mm −0.2 | 0.66 | 20 of 73 | +0 | +0, +0.0 | -11, -2 | 2, to 4.00 | +3 | +52 |
+| (d) with reach | 0.67 | 21 of 73 | +0 | -1, -0.2 | +7, +4 | 2, to 3.99 | +3 | +267 |
+
+- **(a) The fill held back from the line.** The area's region is held back from the line so that its
+  thread stays a margin from the line's: −0.1, 0 and 0.1 mm, half the line's sewn width plus 0.1, 0.2 and
+  0.3 mm from a running line's middle. It is measured from a satin column's rails as sewn, its pull
+  compensation included, and the outline leaves the line out, without which nothing changes. The lines show
+  0.70 of their thread and the columns 0.80 to 0.83, but every margin opens 29 to 46 new gaps, up to
+  2.28 mm². Where lines lie close together, the strip of the area between them is narrower than the 2 bands
+  held back and sews nothing, and a column's band is 0.8 mm wide. The picture
+  `dog-running-9-gap-main-vs-a0.png` in the work folder shows one.
+- **(b) Only the row ends over the line move back.** A row's last needle point moves back along its row to
+  where its thread meets the line's, never shorter than the machine's shortest stitch. On the sew-out piece
+  182 of 1,076 row ends move, and the outline still runs on the line: the lines show 0.61 of their thread.
+- **(c) No pull compensation along the line.** Automatic areas have none, and every design sews as on `main`.
+- **(e) The outline only.** The outline leaves out the edge along a line sewn before the area, and nothing
+  else changes: 0.66. On the running dog in 6 threads the plan threaded once sews 4.05 fills, and it is
+  planned again with its lines after their fills, 3 threadings more.
+- **(d) The fill meets the line**, found by measuring (1). The outline leaves the line out as in (e). The
+  area's region ends where its thread meets the line's: a thread, 0.4 mm, from a running line's middle, and
+  from a satin column's rails as drawn, so that the column's own pull compensation still lies under the area.
+  It is held back only next to what stays at least 1 mm wide, so that no strip between lines is lost. A line
+  of a stroke counts only where it is drawn over the area: the house's chimney is drawn under the roof, and
+  held back from it the roof showed the chimney's hidden outline. On the 75 designs the gaps are those of `main`,
+  and 68 of them sew the same stitches.
+- **(d) with reach** also lets the area reach into the line's part up to where its thread meets the line's,
+  within its overlap, as it reached under the part when the line sewed after it. On the 75 designs
+  one gap fewer shows, but the running dog in 6 threads then sews above the limit threaded once, and it is planned
+  again with its lines after their fills.
+
+The 8 traced photos plan in 2 to 5 minutes each here, so the measure of what sews astray and of likeness was
+left out for them. On all 83 designs, (d) and (d) with reach against `main`. A design planned again with its
+lines after their fills has no line sewn before a fill left, so it drops out of `seen` and `under half`:
+
+| | seen | under half | faults | gaps, mm² | pulled gaps, mm² | thicker | threadings | stitches |
+|---|---:|---:|---:|---:|---:|---|---:|---:|
+| main | 0.54 | 223 of 495 | 369 | 376, 341.0 | 1524, 711 | 0 | 230 | 492380 |
+| (d) | 0.58 | 129 of 322 | -1 | -1, -2.0 | +6, +69 | 4, to 4.45 | +40 | +458 |
+| (d) with reach | 0.60 | 161 of 459 | -1 | -2, -0.2 | +27, +101 | 2, to 3.99 | +6 | +783 |
+
+On the traced coleus leaf in 9 threads (d) sews 4.04 fills at one spot, 0.04 above the limit on no area at all,
+and the whole design is planned again with its lines after their fills: 46 threadings where it had 9. The
+traced building does the same, 9 threadings for 6, and the traced bird, above the limit on `main` already,
+rises from 4.37 to 4.45 fills. With reach the coleus leaf is threaded 9 times at 3.96 fills, the bird
+falls to 4.17 fills and the magnolia from 4.05 to 3.99. Only the building and the running dog in 6 threads
+are planned again, 3 threadings more each. Why the reach keeps the coleus leaf's spot under the limit wasn't
+looked into: both spots lie on no area above it, where the cap's work at the end of planning decides.
+
+The gaps beside the lines stay. Of the 8 faults of the coleus leaf on `main`, 7 stay with reach, and the 3 on
+the magnolia stay, 2 of them larger, 0.338 to 0.455 mm² and 0.128 to 0.193 mm², where the area is now held
+back from the line beside the gap. Why the reach doesn't close them is an open point.
+
+On M13.64, whose cap lowers spots below the limit too, (d) with reach measured on the 75 designs as on
+`main`: the lines show 0.68 of their thread where they show 0.59, no gap opens, and the running dog in 6 threads
+is still planned again with its lines after their fills, at 3.97 fills.On the 8 photos, planned
+only, it threads and sews as on `main` at f08be379: the building is still planned again, 9 threadings for 6,
+the coleus leaf keeps its 9, and the bird and the magnolia sew 4.17 and 3.99 fills. (d) without reach still
+threads the coleus leaf 46 times on M13.64.
+
+#### The recommendation
+
+Build (d) with reach. It is the only candidate that keeps more of the lines seen on every kind of design
+without a new fault: on the 83 designs 161 lines show less than half their thread where 223 did, the median
+share rises from 0.54 to 0.60, the gaps are 2 fewer, and no design sews above 4 fills that sews at or under it
+on `main`. Its costs are 6 threadings on 2 designs planned again for thickness, and 27 more gaps once the rows
+are pulled in, which only the sew-out piece can confirm or clear. It closes none of the gaps that M13.63
+opened beside the lines: a step of its own.
+
+#### The settings
+
+`auto_fill_to_line`, on by default: rule (d) with reach. Off, an area sews as it is traced and outlined, as
+before M13.65, step for step. `auto_line_gap_mm`, 0 by default, sets how far the area's thread stays from the line's:
+negative values lap the rows onto the line by that much. Our measure doesn't pull the rows in, so MC-8's
+sew-out sets this value. For today's result, turn `auto_fill_to_line` off, for a design or for one shape.
+
+#### What doesn't change
+
+Only lines sewn before the area count, so an area beside a line sewn after it is planned as before. So is an
+area beside another area, and lettering. On the 75 designs measured whole, 68 sew the same stitches: every
+drawing, fixture and test picture, the pear, the lettered patch and TS-13B to TS-13E. TS-13A's badges, whose
+blue columns sew before the gold fills, change, and so do the 4 dogs and the sew-out piece.
+
+TS-13A already takes 84.8 % of the work VectorCraft allows an export, and its compatibility gate fails a
+sheet above 85 %. Its plan took 0.69 to 1.03 s with and without the prototype, 3 runs each on a busy machine:
+no rise shows at that resolution. The prototype looks at every shape sewn before each area. The build takes
+the pairs of a fill and a line beside it that the order already knows, so a design with no line sewn before
+a fill does no more work than today, and the gate's count of instructions on TS-13A is the check.
+
+#### The sew-out piece
+
+A broad navy fill 64 mm by 40 mm, a cream square 22 mm by 24 mm in a navy line 0.3 mm wide, which sews as a
+running stitch, a cream square of the same size in a navy line 1.2 mm wide, which sews as 4 satin columns, and
+a gold square beside them. A line 1 mm wide sews as 2 running lines, so the satin line is 1.2 mm wide. With
+one pass the navy lines sew with the navy fill, before the cream squares. On `main` the thin line shows 0.34
+of its thread and the columns 0.49 to 0.59. With (d), with reach or without, they show 0.97 and 0.64 to
+0.71, and no gap opens.
+Planned with the default, without the rule and with `auto_line_gap_mm` at −0.2, it shows whether the lines
+read whole and whether fabric shows between a line and the cream once the rows pull in
+(`docs/src/plan/machine-testing.md` › MC-8: the kit).
+
+#### Open points
+
+- **A line on a line.** A part's line sewn after another line lies on it. A rule for lines that cross or
+  meet is a step of its own.
+- **The gaps beside the lines.** M13.63's gaps on the 2 photos in 9 and 12 threads stay with every candidate.
+- **A column's band.** Held back from a column's rails as sewn, the area showed the column whole in our
+  measure, but opened gaps between columns, and on fabric the column pulls in. The sew-out piece shows which
+  is right.
 
 ### Details last
 
