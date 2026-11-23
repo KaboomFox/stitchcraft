@@ -269,6 +269,13 @@ fn read(element: &Element, said: &mut Vec<Diagnostic>) -> Option<AutoParams> {
     rules
 }
 
+/// Whether the cap may pull in the crowded points of an automatic satin column sewn with `set` below the
+/// warning's limit as well, at its tight turns and under later shapes: with `auto_short_stitches` `knots`
+/// (`REQ-AUTO-195`). A set that doesn't read pulls in nothing there.
+pub(crate) fn knots(set: &ParamSet) -> bool {
+    AutoParams::from_set(set).is_ok_and(|read| read.params.auto_short_stitches == params::KNOTS)
+}
+
 /// The underlays an automatic satin column `width` wide turns on (`REQ-AUTO-018`), each width compared to
 /// the micrometre: a centre walk below [`CONTOUR_FROM`], a contour up to [`ZIGZAG_ABOVE`], and a contour and a
 /// zigzag wider. A narrow column needs only a walk down its middle to hold its stitches up; a wider one a
@@ -317,9 +324,10 @@ fn satin_params(params: &ParamSet, width: Mm, rules: &AutoParams) -> ParamSet {
     if walks_once(width) && column.get(START_AT_NEAREST_POINT).is_none() {
         column.set(START_AT_NEAREST_POINT, "false");
     }
-    // Its crowded needle points move in as it is made with `crowded` (`REQ-AUTO-173`). By default none
-    // does: its bend keeps the spacing on the inside, and the cap pulls points in by its insets only where a
-    // spot sews above the warning's limit (`REQ-AUTO-170`, `REQ-AUTO-171`). A shape that says how keeps it.
+    // Its crowded needle points move in as it is made with `crowded` (`REQ-AUTO-173`). Otherwise none
+    // does: its bend keeps the spacing on the inside, and the cap pulls points in by its insets where a spot
+    // sews above the warning's limit, and with `knots` at tight turns below it (`REQ-AUTO-170`,
+    // `REQ-AUTO-171`, `REQ-AUTO-195`). A shape that says how keeps it.
     let crowded = rules.auto_short_stitches == params::CROWDED;
     if column.get(SHORT_STITCH_DISTANCE).is_none() && column.get(SHORT_STITCH_INSET).is_none() {
         let distance = if crowded { CROWDED_CLOSER_THAN } else { 0.0 };

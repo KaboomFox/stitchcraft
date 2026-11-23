@@ -3784,6 +3784,221 @@ pulled in far fewer ends, 16,529, because its stitches lie farther apart, but it
 striped columns on every preview. The drawn fixture's ring is a case for M13.58: its inner rail's ends are
 pulled in today, and sewn full length they lay more thread at its thickest spot.
 
+#### The cap below the limit
+
+The cap aims at 3.25 fills (`auto_thick_cap_fills`) and the owner's limit is 4 (`SC-W0913`). Since M13.58 the cap
+takes a satin column's points only where a spot would sew above 4: it pulls crowded points in, then takes points
+out as its last resort ([smooth satin edges](#smooth-satin-edges)). The fixes of 2026-11-22 each left spots resting
+just under 4 where main had them lower, and none above. M13.64 measured where designs rest between the cap and
+the limit, and why, and prototyped 6 rules. The owner chose c and e, built in M13.64's second phase
+([what was built](#what-was-built)).
+
+**How it was measured.** A probe in the prototype wrote one row for each plan after the cap, from the plan
+measured afresh. Each spot of 3.25 fills or more was split by layer, and the spot was given one cause, the first
+that fits. The causes are a spot still above 4, a column's top where the spot was above 4 before the cap ("the cap
+stopped at the limit"), a column's top under 4 all along, lettering, shapes sewn by their own settings, and fills
+alone. The set is 67 designs under the default and the logo style. It holds the 18 drawings of the owner's review,
+the repository's 30 SVG fixtures and 6 traced documents, 6 traced photos of the owner's, which stay outside the
+repository, M13.60's corners, M13.62's wedges, M13.58's edges piece and the bends and turns drawn for the
+Ink/Stitch comparison. The 5 TS-13 sheets were planned whole by `stitch testsheet` and as their digitized halves
+by the engine, with the engine's 16 designs of `REQ-AUTO-073`, 18 sheets of traced letters and the 4 dogs with
+details last (`req_auto_103`). The CLI ran at opt-level 1, as did the release-only dog cases. Numbers are on main
+at `acdda98f`.
+
+**Where designs rest, and why.** Under the default style the set has 224.5 mm² of spots at 3.25 fills or more.
+64 % of it is a column's top under 4 all along, 10 % a column's top where the cap stopped at the limit, and 26 %
+fills alone. Under the logo style it has 1,500.5 mm², of which 65 % is a column's top under 4 and 25 % a column's top where
+the cap stopped at the limit. 7 % is still above 4, and 3 % is fills alone. The engine's set is 79 % and 21 % columns, the letters 72 % and 22 %
+columns and 6 % above 4, the dogs 64 % and 16 % columns and 20 % fills. Lettering is 0.25 mm² on one design. So
+columns hold 3 quarters of the area or more: the cap leaves them whole under 4. Fills alone are what the cap's own
+kinds can't take without baring fabric. M13.63's rule for a fill's row ends over a line sewn before it acts there,
+and they are counted apart here. Under the 2 styles, 15 plans of the set rest between 3.9 and 4 fills.
+
+**The cap stops at the first spot it can't lower.** The pull-in and the last resort each work on the thickest spot
+and stop when no point lowers it. Every other spot above 4 is then left as it is. On TS-13A the half set by hand
+sews 5.31 fills, which the cap may not touch, and the whole sheet keeps 39.50 mm² at 4 fills or more where its
+hand-set half has 39.25 alone. Going on to the next spot instead takes the whole sheet to 35.25. On the letters it
+takes the 2 sheets above 4, at 4.44 and 4.18 fills, to 4.00, and under the logo style 3 of the 4 traced dogs from
+4.09 to 4.16 fills to 4.00 or under, the fourth from 4.17 to 4.09. It moves nothing on a design whose thickest spot the cap lowers.
+
+**What smooth edges cost.** A pulled-in point is a stitch end inside the column's edge, a second row where several
+sit side by side. The pull-in was prototyped down to 3.75, 3.5 and 3.25 fills everywhere, each point moved by its
+first share only below 4. Under the default style, on the 61 designs without the photos, the area at 3.25 fills or
+more and the points pulled in were:
+
+| Pull-in down to | Area at 3.25 or more (mm²) | Points pulled in (shown) | Logo style area | Logo style points |
+| --- | --- | --- | --- | --- |
+| 4, main | 133.0 | 24 (23) | 901.2 | 287 |
+| 4, going on past a spot it can't lower | 133.0 | 24 (23) | 860.8 | 454 |
+| 3.75 | 119.2 | 102 (95) | 715.2 | 1,122 |
+| 3.5 | 88.0 | 255 (238) | 461.0 | 2,165 |
+| 3.25 | 61.2 | 602 (571) | 301.0 | 3,478 |
+
+Each square millimetre taken off moves 5.7 points from 4 to 3.75, 4.9 from 3.75 to 3.5 and 12.9 from 3.5 to 3.25
+(4.6, 4.1 and 8.2 under the logo style). A point "shown" is one whose new end no later shape covers: 93 %. The
+cost shows on the review's heart banner. Pulled in down to 3.5, 34 points along the banner's inside edge end a
+quarter of the column short. They show as red teeth along the edge, the second row of ends that M13.58 took away,
+for 15.2 to 11.8 mm² and a thickest spot of 3.85 to 3.84 fills. The lettered patch's M shows a notch, a pit 0.045
+mm², where a point moved by its second share. `REQ-AUTO-085` limits only the first share.
+
+**Knots at tight turns.** Where a column turns tightly, its inside crowds into a knot: a 5 mm line turning by 60°
+sews 3.83 fills, a 3 mm band whose end hooks back 3.71 and the zigzag's cusp 3.73. A point there lies closer to its
+rail's neighbour than half the spacing, 0.2 mm, which is where the rails' lengths differ by 2.5 times or more, the
+outside being opened to 0.5 mm at the most (`REQ-AUTO-170`). Pulling in only such points, and points whose new end
+a later shape covers, below 4 and down to the cap, the corner sews 3.09 fills, the hook 3.24 and the cusp 3.24.
+The banner, the shield and the pear keep their edges. At 0.1 mm the hook stays at 3.27, and at 0.3 mm the banner
+gets 4 points and the shield 2: gentle bends start there.
+
+**The candidates.** Each was planned on every design of the set. The last column names each design whose thickest spot rose.
+
+| Candidate | Default area | Points | Logo area | Engine's set | Letters (thickest) | Dogs, details last | Thickest spots that rose |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| main | 133.0 | 24 | 901.2 | 100.2 | 572.0 (4.44) | 73.0 | |
+| a: pull-in down to 3.5 everywhere | 88.0 | 255 | 461.0 | 28.0 | 333.8 (3.98) | 45.5 | none, teeth on gentle bends |
+| b: as a, down to 3.25, choosing the point that lowers every spot above the level most | 42.2 | 510 | 247.0 | 7.8 | 57.0 (4.16) | 18.5 | 3, up to 0.08 fills |
+| c: knots and covered ends only, down to the cap | 114.2 | 120 | 594.5 | 56.8 | 373.5 (4.00) | 62.8 | none |
+| d: fewer stitches into a knot as made, at 0.1 mm | 133.2 | 14 | 851.8 | 80.2 | 507.0 (4.18) | not run | 3, up to 0.61 fills |
+| d2: M13.60's mitre at turns over 45° | 129.5 | 20 | 897.8 | not run | not run | not run | 1, 0.04 fills |
+| e: going on past a spot it can't lower | 133.0 | 24 | 860.8 | 100.2 | 516.0 (4.00) | 73.0 | none |
+
+All but d and d2 go on past a spot the cap can't lower. a, b and c hold their pull-in so that no spot above 4
+gets thicker: without that hold, pulling in down to 3.25 took a letters sheet from 4.44 to 6.16 fills, and with
+the hold on every move of the cap, not only on the pull-in's, the traced dogs rose from 4.16 to 6.40. Taken before
+the cap's work above 4, the pull-in below it ran a letters sheet out of work. d sets `short_stitch_distance_mm` on
+automatic columns, 0.1 and 0.167 mm, so that points closer than that move in as they are made. Its moved ends
+crowd again a quarter of the way in: the 60° corner rose from 3.83 to 3.95 fills and a traced dog under the logo
+style from 4.16 to 4.77. d2 is the Ink/Stitch comparison's advice (`notes/inkstitch-check-work`, section 2): sew a
+sharp turn as 2 joined pieces. M13.60's mitre cuts only the corners of a line drawn straight, so it reaches the 60°
+corner, 3.83 to 3.45 with 43 more stitches, and no curve, cusp or closed line: the hook and the zigzag keep their
+knots. The pull-in at knots lowers the corner further, to 3.09, as one column with the same stitches. The last resort
+taken down to 3.25 as well took 133.0 to 38.0 in the default style and adds little to the pull-in's 42.5: it
+takes visible column points, and isn't proposed.
+
+**What must not get worse.** Candidate c moves no point of the banner, the shield, the pear under the default
+style or the review's mug. The engine's suites of smooth edges, column ends, points, traced
+letters, columns, cover, one shape and small details pass, and `REQ-AUTO-172`'s bound holds at 204 points. What
+fails is what records the change: `REQ-AUTO-073`'s list, whose badges fall from 3.99 to 3.98 fills, the lettered
+patch from 3.95 to 3.86, TS-13C from 3.93 to 3.89 and TS-13D from 3.79 to 3.75. The release-only dog cases, run at
+opt-level 1, keep every thickest spot or lower it, 3.91 to 3.77 on the dog on turf in 9 threads. Their recorded area at 3
+fills falls on all 4, from 8,475 to 8,150 on the running dog in 9 threads, which leaves one sliver more. Bare fabric is unchanged on the engine's
+sets. The 6 photos fall under the logo style from 4.67 to 4.36 fills on the goose and from 4.48 to 4.36 on the cat.
+With all 67 designs, the default style's area falls from 158.5 to 139.5 mm² and the logo style's from 1,295.0 to
+874.2, its area above 4 from 27.8 to 1.2. Plan times moved within the noise of a shared machine. With c the cap's
+own measure agreed with the plan measured afresh on every design. With the
+knot taken at 0.1 or 0.3 mm, or the pull-in down to 3.25 everywhere, one traced dog under the logo style ended
+thicker than the cap's measure said, 4.35 against 4.02: an update of the measure during the pull-in misses
+something there. The build re-measures after the pull-in below the limit, and keeps it only where no spot ends
+thicker.
+
+**The rule (c and e).** The cap goes on to the next spot above the limit when no point lowers the thickest
+one (`REQ-AUTO-194`). Then, below the limit and down to the cap, it pulls in a column's crowded points at its
+tight turns, closer than half the spacing to their rail's neighbour, and points whose new end a later shape
+covers. Each moves by its column's first share only, and no spot above the limit gets thicker (`REQ-AUTO-195`).
+Both come with a value of the existing setting `auto_short_stitches`, `knots`, which a person sets. This step
+adds the rule and its fix as that value: by default nothing sews differently from main. `above_limit`, the
+columns of M13.58, stays the default for now, and `crowded` gives the columns of before M13.58
+(`REQ-AUTO-196`). The default waits for room in VectorCraft's export budget, as the next paragraphs say.
+
+##### What was built
+
+The cap runs its pull-in and its last resort as before, each stopping at the first spot where every point
+fails to lower it. Where a column of its is sewn with `knots`, it then runs both again, going on past such spots. Main's first run is kept as it was so that a large letter sheet
+doesn't run the last resort out of work, as the measuring found. Going on, they look only at the spots that
+have a top stitch of their points' shapes near, from the stitches the cap already files by cells of a
+millimetre for their cover. For a spot, the points looked at are those at either end of such a stitch. Among
+them are all the points with a stitch within 1 mm of the spot that the cap looked at before, in the same
+order. The spots
+wait in order of their thread, thickest first. A spot whose thread changed goes back in its new place. Going
+through every spot of the measure for each spot passed by, and every point for each spot, cost TS-13D, whose
+hand-set half sews far above 4 fills, 25 times its plan's work. Then come the pull-ins below the limit, on the
+columns sewn with `knots`, of points near a spot above the cap. A point is a knot when its rail's neighbour
+lies closer than half the column's zigzag spacing, compared as lengths are, so a neighbour exactly 0.2 mm
+away makes none. Its new end is covered when a top stitch of another shape sewn later covers the first 0.1 mm
+of its way back. The cap's measure is held during these pulls: no spot that a moved stitch lays thread in
+ends thicker than the larger of what it was and the limit. The measure is kept up to date as above the limit,
+with no second measure of the plan: the test sheets' work has no room for one. A first build measured the
+plan afresh after the pulls and would undo them where that measure was thicker. On the engine's set and the
+67 designs it found nothing to undo, and the cases of `REQ-AUTO-195` check the kept measure against the plan
+measured afresh.
+
+The pass costs work where it moves points, and the test sheets' exports in VectorCraft have little room: the gate
+of `compat/vc-contract/tests/contract.rs` fails a sheet above 85 % of the instructions VectorCraft allows an
+export, and TS-13A uses 84.8 % on main. So the cap was made cheaper where it already worked. The measure keeps
+the thickest spot it found until a change takes thread from that spot or makes another as thick, so the cap's
+checks of whether a spot is above a level no longer go through every spot after each change. A change only
+tried, to see how much it would lower a spot, keeps that spot too. The cap finds its candidate points for each
+zone in one pass over the plan, not one pass for each kind. Measured with callgrind at opt-level 1, with `knots`
+on, TS-13A takes 3,219 million instructions where main takes 3,228, TS-13B 2,534 where main takes 2,566 and
+TS-13E 1,582 where main takes 1,592. Every sheet sews byte for byte as before these changes. The 18 letter
+sheets took 27 s where main took 29 s.
+
+That held CI's native perf records, but not the gate: inside VectorCraft, compiled to WebAssembly, TS-13A's
+export took 9,261 million of the 10,609 million instructions allowed with `knots` by default, 87.3 %, where it
+takes 8,993 million on main. The native savings from keeping the thickest spot between changes were not there in
+the WebAssembly build, whose instructions count differently, while the pull-in's own work was. That is
+why the perf job passed and the gate failed. So `knots` stays a
+value to set. `REQ-AUTO-194` alone by default failed the gate too: TS-13A's export took 9,127 million
+instructions, 86.0 %, while natively at opt-level 1 it took 3,175 million where main takes 3,228. So the fix
+comes with `knots` as well. With `above_limit`, the default, the cap runs only what main runs and sews byte
+for byte as main, in 3,140 million instructions at opt-level 1 on TS-13A. Going on past spots costs TS-13A
+about 35 million natively, 1.1 % of its work. The default flips to `knots` in a step of its own once a test
+sheet has that room in VectorCraft's export budget. With `knots` TS-13A takes 87.3 % of it, and with
+`REQ-AUTO-194` alone 86.0 %. It has to fall under 85 %, where main takes 84.8 %: from 87.3 %, about 2.7 % of
+its work. M13.66's window on
+the neighbours' overlaps gives about 1.2 % of that, and the rest has to come off the fills' stitches or off the
+pull-in's own work in WebAssembly. The tables below measure the setting's effect: the set planned with `knots`.
+
+Measured on the build, `a0d380b7` on main `acdda98f`, at opt-level 1, as the prototype was:
+
+| Set | Main: mm² at 3.25 or more | Built | Prototype | Points pulled in, built (prototype) |
+| --- | --- | --- | --- | --- |
+| 67 designs, default style | 158.5 | 140.2 | 139.5 | 124 (137) |
+| 67 designs, logo style | 1,295.0, 27.8 above 4 | 912.5, 1.2 above 4 | 874.2, 1.2 above 4 | 2,132 (2,298) |
+| The engine's 16 designs | 100.2 | 58.2 | 56.8 | 189 (204) |
+| 18 sheets of letters | 572.0, thickest 4.44 | 373.0, thickest 4.00 | 373.5 | 1,885 (1,956) |
+| 4 dogs, details last | 73.0 | 63.8 | 62.8 | 55 (63) |
+
+No design's thickest spot rose against main on any set, and the cap's own measure agreed with the plan
+measured afresh on every design. The build pulls in fewer points than the prototype. The prototype
+compared distances without slack, and it took a point whose neighbour lies 0.2 mm away, short by rounding
+alone, as a knot. Run with a knot of 0.1999999 mm the prototype pulls none on the star fixture under the logo
+style, where at 0.2 it pulls one. So the 2 badges keep 3.99 fills, where the prototype sewed 3.98, and the
+anchor 3.93 where it sewed 3.91. The 60° corner sews 3.09 fills, the bends' hook 3.24 and the zigzag's cusp
+3.24, as in the prototype. Of the 124 points pulled in under the default style, 91 end where no later shape
+covers them, all of them at knots or above 4: 63 below the limit. On the heart banner, the shield and the mug
+no point moves. The pear under the logo style has 2 points pulled in at knots, and M13.58's edges piece one,
+as in the prototype.
+
+**With each thread threaded once.** M13.63 merged while this step was built. Measured again on main `f08be379`,
+with M13.63, at opt-level 1:
+
+| Set | Main: mm² at 3.25 or more | Built |
+| --- | --- | --- |
+| 67 designs, default style | 161.8 | 136.5 |
+| 67 designs, logo style | 1,152.2, 25.5 above 4 | 791.0, 1.0 above 4 |
+| The engine's 16 designs | 100.2 | 58.2, 190 points pulled in |
+| 18 sheets of letters | 572.0, thickest 4.44 | 348.8, thickest 4.00 |
+| 4 dogs, details last | 66.2 | 51.2 |
+
+No design's thickest spot rose. The thickness guard of M13.63 (`REQ-AUTO-189`) plans a design again with each
+line after its fills when the order that threads each thread once sews above 4. It reads the thickest spot
+from the cap's measure, which this step lowers. On main it plans the goose under both styles, the building and 3 traced dogs
+under the logo style again, and keeps the first order for all of them. With `knots` the goose, the building
+and the dog on turf in 9 threads keep it too. The dog on turf and the running dog in 6 threads now sew 3.99
+fills with each line after its fills, at the limit or under it, where that order sewed above 4 on main.
+So the guard keeps that order for them and says so with `SC-W0927`: they are threaded more times. With details last, the 2 dogs in 6 threads fall
+back as on main, to 3.95 and 3.96 fills. The guard's cases pass as they stand.
+
+M13.63 left 2 spots for this step, with details last and each thread threaded once: on the dog on turf in 6
+threads, 4.07 fills where a white fill's rows end at a narrow end over another fill, a line and the base layer.
+On the running dog in 6 threads, 4.18 fills where 4 fills meet at a point with the ends and locks of 3 running
+lines. With `knots`, this step leaves both as they are: 4.066 and 4.176 fills. The pull-in and the last resort move only
+satin columns' top points, and no such point lowers either spot.
+
+**Open points.** Where a design still rests just under 4 after c, a column lies whole over a fill: TS-13A's strip
+of 2.56 fills over 1.00 of fill and 0.25 of base sews 3.99, and the traced running dog 3.98. No point there is
+crowded. Taking that column's points, or the fill's rows under it, shows, and is a step of its own.
+
 ## Likeness
 
 Each merge of automatic digitizing takes a jump thread or a thread change away: a speck (`REQ-AUTO-008`)

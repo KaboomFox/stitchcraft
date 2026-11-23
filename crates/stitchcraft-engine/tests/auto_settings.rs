@@ -102,7 +102,7 @@ fn req_auto_020_the_rules_settings_are_stitchcraft_s_own_and_no_stitch_type_read
         ("auto_thick_fail_points", "30"),
         ("auto_thick_cap_fills", "3.25"),
         // And where a satin column's crowded points move in: only above the warning's limit (`REQ-AUTO-170`,
-        // M13.58).
+        // M13.58). `knots` pulls them in below it too (`REQ-AUTO-195`, M13.64), not yet by default.
         ("auto_short_stitches", "above_limit"),
     ];
     // And the switch that sews the details last, off since it costs jump threads (`REQ-AUTO-098`, M13.48).

@@ -226,7 +226,14 @@ fn drawn(over: &[usize]) -> Thickness {
         fills[*at] = 3.0;
     }
     let points = fills.iter().map(|fills| if *fills == 3.0 { 4.0 } else { 0.0 }).collect();
-    Thickness { origin: Point::ORIGIN, grid: Grid { corner: (1.0, 2.0), columns: 11, rows: 11 }, fills, points, sewn: Vec::new() }
+    Thickness {
+        origin: Point::ORIGIN,
+        grid: Grid { corner: (1.0, 2.0), columns: 11, rows: 11 },
+        fills,
+        points,
+        sewn: Vec::new(),
+        top: Cell::new(None),
+    }
 }
 
 /// The spots of the block of `across` by `down` spots whose first is in `column` and `row`, of 12 columns.
@@ -329,6 +336,7 @@ fn req_auto_061_the_thickest_spot_is_a_corner_of_the_cells() {
         fills: Vec::new(),
         points: Vec::new(),
         sewn: Vec::new(),
+        top: Cell::new(None),
     };
     assert_eq!(none.most(Measure::Fills), Spot { value: 0.0, at: Point::ORIGIN });
     // Of spots with the same value, the last is the one named.
@@ -336,6 +344,22 @@ fn req_auto_061_the_thickest_spot_is_a_corner_of_the_cells() {
     assert_eq!(equal.most(Measure::Fills), Spot { value: 3.0, at: equal.grid.spot(4 * 12 + 4) });
     assert_eq!(drawn(&[]).most(Measure::Fills), Spot { value: 0.5, at: grid.spot(143) });
     assert_eq!(drawn(&[]).most(Measure::Points), Spot { value: 0.0, at: grid.spot(143) });
+}
+
+#[test]
+fn req_auto_194_a_spot_is_found_by_its_place_in_the_measure() {
+    let mut thickness = drawn(&[]);
+    thickness.fills[2 * 12 + 7] = 4.25;
+    thickness.points[5 * 12 + 1] = 9.0;
+    assert_eq!(thickness.at_spot(Measure::Fills, 2 * 12 + 7), Some(thickness.most(Measure::Fills)));
+    assert_eq!(thickness.at_spot(Measure::Points, 5 * 12 + 1), Some(thickness.most(Measure::Points)));
+    assert_eq!(thickness.at_spot(Measure::Fills, 0), Some(Spot { value: 0.5, at: p(1.0, 2.0) }));
+    assert_eq!((thickness.at_spot(Measure::Fills, 143).is_some(), thickness.at_spot(Measure::Fills, 144)), (true, None));
+    // The spots a stitch lays thread in are named by the same places.
+    let stitch = placed(&thickness, stitch((2.0, 3.0), (3.0, 3.0)));
+    for (at, fills) in thickness.spots(&stitch, &mut meter()).unwrap() {
+        assert_eq!(thickness.at_spot(Measure::Fills, at).map(|spot| spot.value), Some(fills));
+    }
 }
 
 #[test]
@@ -665,4 +689,83 @@ fn req_auto_074_the_pass_s_measures_stop_when_the_work_runs_out() {
     let over = thickness.fills.iter().filter(|fills| **fills > 30.0).count();
     assert_eq!(over, 1);
     assert_eq!(least(&|meter| thickness.near(30.0, 0.5, meter).is_ok()), spots + 16);
+}
+
+#[test]
+fn req_auto_100_the_thickest_spot_found_is_the_one_a_fresh_look_finds_after_every_change() {
+    // Stitches added and taken out over and under each other, ties among them: after each change the
+    // thickest spot is the one found by going through every spot, the last of those as thick.
+    let mut thickness = drawn(&[]);
+    let fresh = |thickness: &Thickness| Thickness { top: Cell::new(None), ..thickness.clone() }.most(Measure::Fills);
+    let stitches = [
+        placed(&thickness, stitch((2.0, 3.0), (5.0, 3.0))),
+        placed(&thickness, stitch((2.0, 3.0), (5.0, 3.0))),
+        placed(&thickness, stitch((3.0, 2.5), (3.0, 6.0))),
+        placed(&thickness, stitch((4.5, 4.5), (6.0, 6.0))),
+        placed(&thickness, stitch((2.0, 5.0), (6.0, 5.0))),
+    ];
+    let mut meter = meter();
+    assert_eq!(thickness.most(Measure::Fills), fresh(&thickness));
+    for (k, stitch) in stitches.iter().enumerate() {
+        thickness.add(stitch, &mut meter).unwrap();
+        assert_eq!(thickness.most(Measure::Fills), fresh(&thickness), "add {k}");
+    }
+    for (k, stitch) in stitches.iter().enumerate().rev() {
+        thickness.remove(stitch, &mut meter).unwrap();
+        assert_eq!(thickness.most(Measure::Fills), fresh(&thickness), "remove {k}");
+        thickness.add(&stitches[0], &mut meter).unwrap();
+        assert_eq!(thickness.most(Measure::Fills), fresh(&thickness), "add again {k}");
+    }
+    // The spot found is no part of what 2 measures compare by.
+    let found = thickness.clone();
+    let _ = found.most(Measure::Fills);
+    assert_eq!(Thickness { top: Cell::new(None), ..thickness.clone() }, found);
+}
+
+#[test]
+fn req_auto_100_a_change_tried_leaves_the_measure_as_it_was_and_sees_it_changed() {
+    let mut thickness = drawn(&[]);
+    let (one, two) = (placed(&thickness, stitch((2.0, 3.0), (5.0, 3.0))), placed(&thickness, stitch((3.0, 2.5), (3.0, 6.0))));
+    let mut meter = meter();
+    thickness.add(&one, &mut meter).unwrap();
+    let was = thickness.clone();
+    let before = thickness.most(Measure::Fills);
+    let at = p(3.0, 3.0);
+    let seen = thickness.tried(&[one], &[two, two], &mut meter, |tried| (tried.at(Measure::Fills, at), tried.most(Measure::Fills))).unwrap();
+    let mut changed = was.clone();
+    changed.remove(&one, &mut meter).unwrap();
+    changed.add(&two, &mut meter).unwrap();
+    changed.add(&two, &mut meter).unwrap();
+    assert_eq!(seen, (changed.at(Measure::Fills, at), changed.most(Measure::Fills)));
+    assert!(near(thickness.at(Measure::Fills, at), was.at(Measure::Fills, at)));
+    assert_eq!(thickness.most(Measure::Fills), before);
+    // A unit of work for each step along each stitch, twice.
+    let work = least(&|meter| was.clone().tried(&[one], &[], meter, |_| ()).is_ok());
+    let once = least(&|meter| was.clone().remove(&one, meter).is_ok());
+    assert_eq!(work, 2 * once);
+}
+
+#[test]
+fn req_auto_100_the_thickest_spot_found_follows_ties_and_a_lowered_spot() {
+    // 2 stitches alike, on the grid alike, the second 2 mm further on: their spots are as thick, and of spots
+    // as thick the later one is named.
+    let mut thickness = drawn(&[]);
+    let (first, second) = (placed(&thickness, stitch((2.0, 3.0), (5.0, 3.0))), placed(&thickness, stitch((2.0, 5.0), (5.0, 5.0))));
+    let mut meter = meter();
+    let y = |thickness: &Thickness| thickness.most(Measure::Fills).at.y();
+    // The first twice and the second once: the first is thicker. Taking one of its stitches out makes them as
+    // thick, and the second, later, is named.
+    thickness.add(&first, &mut meter).unwrap();
+    thickness.add(&first, &mut meter).unwrap();
+    thickness.add(&second, &mut meter).unwrap();
+    assert!((y(&thickness) - 3.0).abs() < 0.3, "{}", y(&thickness));
+    thickness.remove(&first, &mut meter).unwrap();
+    assert!((y(&thickness) - 5.0).abs() < 0.3, "{}", y(&thickness));
+    // Thread added to the first until it is as thick keeps the second named; one more makes the first.
+    thickness.add(&second, &mut meter).unwrap();
+    assert!((y(&thickness) - 5.0).abs() < 0.3, "{}", y(&thickness));
+    thickness.add(&first, &mut meter).unwrap();
+    assert!((y(&thickness) - 5.0).abs() < 0.3, "as thick: {}", y(&thickness));
+    thickness.add(&first, &mut meter).unwrap();
+    assert!((y(&thickness) - 3.0).abs() < 0.3, "{}", y(&thickness));
 }

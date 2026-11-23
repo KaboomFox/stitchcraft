@@ -484,7 +484,9 @@ Where a spot is still above it, the cap takes needle points out of the runs of t
 column's top stitches below the warning's limit, with the budget's work once more ([the cap at the end of planning](image-to-embroidery.md#the-cap-at-the-end-of-planning)).
 `plan` hands the cap the satin columns that digitizing made and that move no point in as they are made,
 `short_stitch_distance_mm` 0, with their insets: above the warning's limit the cap pulls their crowded
-points in first ([smooth satin edges](image-to-embroidery.md#smooth-satin-edges)).
+points in first ([smooth satin edges](image-to-embroidery.md#smooth-satin-edges)). It also says which of them
+the shape's `auto_short_stitches` sets to `knots`, whose tight turns the cap pulls in below the limit too
+([the cap below the limit](image-to-embroidery.md#the-cap-below-the-limit)).
 Planning adds `SC-W0913` when the design sews thick and returns the plan all the
 same. The warning's hint names the photo style where a shape that the logo style leans to satin columns lies
 at the thickest spot (`REQ-AUTO-169`) ([how thick a design sews](image-to-embroidery.md#how-thick-a-design-sews)).

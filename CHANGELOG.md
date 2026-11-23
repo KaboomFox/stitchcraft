@@ -19,6 +19,19 @@ What a user can do with this version, before its first release. The entries belo
 - In VectorCraft, StitchCraft's live effects, filters and exporters sew a document as `stitch export` does.
 
 ### Added
+- M13.64: `auto_short_stitches` `knots` (`REQ-AUTO-194` to `REQ-AUTO-196`), a value a person sets. By
+  default nothing sews differently. With it, automatic digitizing also thins a satin column below 4 fills,
+  down to the cap of 3.25. It pulls in the stitch ends of a tight turn, where the ends on the inside lie
+  closer than half the spacing. It also pulls in ends that a shape sewn later covers. Each moves in by a
+  quarter of the column. On a gentle curve the plan moves no end in. A line 5 mm wide turning by 60° sews 3.09
+  fills at the turn, where it sews 3.83 by default. With it too, the cap no longer stops at the first spot
+  above 4 fills that it can't lower, and goes on to the next one: on TS-13A a spot of the half set by hand
+  kept it from the digitized half's spots. 2 sheets of traced letters that sew 4.44 and 4.18 fills sew 4.00
+  with it. On 67 designs the area at 3.25 fills or more falls from 161.8 to 136.5 mm² under the default style
+  and from 1,152.2 to 791.0 mm² under the logo style, and no design's thickest spot rises. Set
+  `--set auto_short_stitches=knots` to use it. The default stays `above_limit` for now: TS-13A's export in
+  VectorCraft would take 87.3 % of the instructions VectorCraft allows it with `knots`, where the
+  compatibility gate stops at 85 %. The default flips in a step of its own once a test sheet has that room.
 - M8.14: the Ink/Stitch differential draws pictures. Each case that both programs sew gets a picture of
   Ink/Stitch's file beside StitchCraft's, drawn by the engine's preview from the PES files the measures
   judge, at one scale, with a third panel of where their thread lies apart. The case's measures and its

@@ -406,15 +406,19 @@ shape.
 
 ### `auto_short_stitches`
 
-**Short stitches.** Where a satin column's crowded needle points move in. `above_limit`, the default: each stitch
-runs from rail to rail as it is made, a bend keeps its spacing on the inside and opens its
-outside by a quarter at the most (`bend_open_percent` 25), and only where a spot would sew above
-the warning's limit does the cap pull crowded points in. `crowded`: as before, the outside keeps
-the spacing, and every point closer than 0.35 mm to the one before it on its rail moves in, by a
-quarter of its stitch and then by half. A shape that sets its own short-stitch settings keeps
-them either way.
+**Short stitches.** Where a satin column's crowded needle points move in. Each stitch runs from rail to rail as it
+is made, and a bend keeps its spacing on the inside and opens its outside by a quarter at the
+most (`bend_open_percent` 25). `above_limit`, the default: the cap pulls crowded points in only
+where a spot would sew above the warning's limit. `knots`: as well, below the limit and down to the
+cap, it pulls in only the points of a tight turn, closer than half the spacing to the next point on
+their rail, and points whose new end a later shape covers, each by a quarter of its stitch, so that
+an edge that shows keeps one row of stitch ends. Above the limit the cap then goes on past a spot
+it can't lower, to the others.
+`crowded`: as before M13.58, the outside keeps the spacing, and every point closer than 0.35 mm
+to the one before it on its rail moves in, by a quarter of its stitch and then by half. A shape
+that sets its own short-stitch settings keeps them in each case.
 
-- **Accepts:** one of `above_limit` (Only above the limit), `crowded` (Where points crowd)
+- **Accepts:** one of `above_limit` (Only above the limit), `knots` (At tight turns), `crowded` (Where points crowd)
 - **Default:** `above_limit`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version

@@ -143,13 +143,14 @@ fn planned(design: &Design, profile: &MachineProfile, budget: &Budget, strict: b
         .filter_map(|(element, _)| Some((element.id.clone(), Pull::of(&PullParams::from_set(&element.params).ok()?.params))))
         .collect();
     // The columns that move no needle point in as they are made, but lettering's: the cap pulls their crowded
-    // points in where a spot sews above the warning's limit, by their insets (`REQ-AUTO-171`).
+    // points in where a spot sews above the warning's limit, by their insets (`REQ-AUTO-171`), and with
+    // `auto_short_stitches` `knots` at tight turns and under later shapes below it (`REQ-AUTO-195`).
     let pulls: Pulls = satins()
         .filter(|(element, _)| element.lettered.is_none())
         .filter_map(|(element, _)| {
             let satin = SatinParams::from_set(&element.params).ok()?.params;
             let shares = satin.short_stitch_inset.iter().map(|percent| percent / 100.0).collect();
-            let column = Pullable { shares, spacing: satin.zigzag_spacing_mm.get() };
+            let column = Pullable { shares, spacing: satin.zigzag_spacing_mm.get(), knots: crate::auto::knots(&element.params) };
             (satin.short_stitch_distance_mm.get() <= 0.0).then(|| (element.id.clone(), column))
         })
         .collect();

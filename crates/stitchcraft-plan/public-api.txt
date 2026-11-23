@@ -215,6 +215,7 @@ impl stitchcraft_plan::thickness::Thickness
 pub fn stitchcraft_plan::thickness::Thickness::add(&mut self, &stitchcraft_plan::plan::SewnStitch, &mut stitchcraft_core::budget::Meter) -> core::result::Result<(), stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_plan::thickness::Thickness::at(&self, stitchcraft_plan::thickness::Measure, stitchcraft_core::units::Point) -> f64
 pub fn stitchcraft_plan::thickness::Thickness::at_place(&self, stitchcraft_plan::thickness::Measure, stitchcraft_core::units::Point) -> f64
+pub fn stitchcraft_plan::thickness::Thickness::at_spot(&self, stitchcraft_plan::thickness::Measure, usize) -> core::option::Option<stitchcraft_plan::thickness::Spot>
 pub fn stitchcraft_plan::thickness::Thickness::blank(&self) -> stitchcraft_plan::thickness::Thickness
 pub fn stitchcraft_plan::thickness::Thickness::hottest(&self, &stitchcraft_plan::plan::SewnStitch, &mut stitchcraft_core::budget::Meter) -> core::result::Result<f64, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_plan::thickness::Thickness::most(&self, stitchcraft_plan::thickness::Measure) -> stitchcraft_plan::thickness::Spot
@@ -231,6 +232,10 @@ pub fn stitchcraft_plan::thickness::Thickness::sewn(&self) -> &[stitchcraft_plan
 pub fn stitchcraft_plan::thickness::Thickness::size(&self) -> (usize, usize)
 pub fn stitchcraft_plan::thickness::Thickness::spots(&self, &stitchcraft_plan::plan::SewnStitch, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::collections::btree::map::BTreeMap<usize, f64>, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_plan::thickness::Thickness::stack(&self, &stitchcraft_plan::plan::StitchPlan, stitchcraft_core::units::Point, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::vec::Vec<stitchcraft_plan::thickness::Layer>, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_plan::thickness::Thickness::tried<R>(&mut self, &[stitchcraft_plan::plan::SewnStitch], &[stitchcraft_plan::plan::SewnStitch], &mut stitchcraft_core::budget::Meter, impl core::ops::function::FnOnce(&stitchcraft_plan::thickness::Thickness) -> R) -> core::result::Result<R, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_plan::thickness::Thickness::values(&self, stitchcraft_plan::thickness::Measure) -> &[f64]
+impl core::cmp::PartialEq for stitchcraft_plan::thickness::Thickness
+pub fn stitchcraft_plan::thickness::Thickness::eq(&self, &stitchcraft_plan::thickness::Thickness) -> bool
 pub struct stitchcraft_plan::thickness::Zone
 impl stitchcraft_plan::thickness::Zone
 pub fn stitchcraft_plan::thickness::Zone::touches(&self, &stitchcraft_plan::plan::SewnStitch) -> bool
