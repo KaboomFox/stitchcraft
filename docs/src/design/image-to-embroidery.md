@@ -3830,12 +3830,15 @@ sheets took 27 s where main took 29 s.
 
 That held CI's native perf records, but not the gate: inside VectorCraft, compiled to WebAssembly, TS-13A's
 export took 9,261 million of the 10,609 million instructions allowed with `knots` by default, 87.3 %, where it
-takes 8,993 million on main. The plug-in's code counts its instructions differently from the native build, and
-the work cut from the measure saved less there than the pull-in below the limit costs. So `knots` stays a
+takes 8,993 million on main. The native savings from keeping the thickest spot between changes did not carry
+over to the WebAssembly build, whose instructions count differently, while the pull-in's own work did. That is
+why the perf job passed and the gate failed. So `knots` stays a
 value to set. With `above_limit`, the default, the cap does the work of main and of `REQ-AUTO-194` alone, and
 takes less than on main: TS-13A 3,175 million instructions at opt-level 1, TS-13B 2,531 million, TS-13E 1,581
-million. The default flips to `knots` in a step of its own once the neighbours' overlaps, 11 to 23 % of a
-sheet's work, cost less. The tables below measure the setting's effect: the set planned with `knots`.
+million. The default flips to `knots` in a step of its own once a test sheet has that room in VectorCraft's
+export budget. TS-13A has to fall from 87.3 % to under 85 % of it, about 2.7 % of its work. M13.66's window on
+the neighbours' overlaps gives about 1.2 % of that, and the rest has to come off the fills' stitches or off the
+pull-in's own work in WebAssembly. The tables below measure the setting's effect: the set planned with `knots`.
 
 Measured on the build, `a0d380b7` on main `acdda98f`, at opt-level 1, as the prototype was:
 

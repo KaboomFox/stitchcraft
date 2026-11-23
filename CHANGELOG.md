@@ -27,7 +27,7 @@ What a user can do with this version, before its first release. The entries belo
   fills or more falls from 161.8 to 136.5 mm² under the default style and from 1,152.2 to 791.0 mm² under the
   logo style, and no design's thickest spot rises. The default stays `above_limit`: TS-13A's export in
   VectorCraft would take 87.3 % of the instructions VectorCraft allows it, where the compatibility gate stops at
-  85 %. Set `--set auto_short_stitches=knots` to use it.
+  85 %. Set `--set auto_short_stitches=knots` to use it. The default flips once a test sheet has that room.
 - M8.14: the Ink/Stitch differential draws pictures. Each case that both programs sew gets a picture of
   Ink/Stitch's file beside StitchCraft's, drawn by the engine's preview from the PES files the measures
   judge, at one scale, with a third panel of where their thread lies apart. The case's measures and its
