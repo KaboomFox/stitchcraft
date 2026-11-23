@@ -53,6 +53,19 @@ this one. It runs Ink/Stitch with its stitch-plan cache off, from a settings fil
 `target/conformance/inkstitch-config/`: the cache keeps a clone's stitches across files whose commands
 differ, and gave the stitches of an earlier run.
 
+### Pictures
+
+The run draws each case that both programs sew to `target/conformance/differential/pictures/<case>.png`,
+Ink/Stitch's file beside StitchCraft's and where their thread lies apart, and writes the report as a web
+page with the pictures, `target/conformance/differential/index.html`. The glyph differential's pictures are
+under `pictures/fonts/<font>/`, and the contact sheet of its sample is `pictures/fonts-sample.png`.
+[Conformance](../../docs/src/design/conformance.md#l3--inkstitch-differential-nightly) says what they show.
+After the nightly run, `.github/workflows/differential.yml` publishes the page with its pictures at
+<https://kaboomfox.github.io/stitchcraft/differential/>. A pull request's run publishes them beside its
+preview, at `https://kaboomfox.github.io/stitchcraft/pr/<number>/differential/`, when the pull request
+comes from a branch of this repository. A fork's run publishes nothing, and its pictures are in the
+run's artifact.
+
 ## Ink/Stitch's fonts
 
 `cargo xtask corpus` fetches the archive of inkstitch/embroidery-fonts at the commit `fonts.toml` pins, checks

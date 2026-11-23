@@ -21,7 +21,7 @@
 
 mod cases;
 mod centre_lines;
-mod differential;
+pub(crate) mod differential;
 mod font;
 pub mod fonts;
 mod oracle;

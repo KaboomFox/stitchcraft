@@ -14,6 +14,10 @@
 //! (`picture.rs`): a design's areas filled flat in their colours, or a photo drawn in code. They are
 //! compared byte for byte too.
 //!
+//! `differential` shots are the Ink/Stitch differential's pictures of a case, Ink/Stitch's file beside
+//! StitchCraft's, drawn as the differential draws them from a copy of Ink/Stitch's file kept in the
+//! repository (`crate::conformance::differential::shot`), and compared byte for byte.
+//!
 //! `vectorcraft-render` and `vectorcraft-ui` shots are VectorCraft's own pictures, which only
 //! `--vectorcraft` makes, on Linux with the pinned release (`vectorcraft.rs`): the `shots-ui` job's work.
 //! Without it they must only be declared well and committed.
@@ -67,7 +71,7 @@ struct ShotsFile {
 pub struct Shot {
     /// The image's name: `images/generated/<id>.png`, or `images/photos/<id>.<ext>`.
     pub id: String,
-    /// How it is made: `stitch`, `picture`, `vectorcraft-render`, `vectorcraft-ui` or `photo`.
+    /// How it is made: `stitch`, `picture`, `differential`, `vectorcraft-render`, `vectorcraft-ui` or `photo`.
     pub kind: String,
     /// The alternative text; pages that show the image use it.
     #[serde(default)]
@@ -121,6 +125,14 @@ pub struct Shot {
     /// absent). `vectorcraft-render` shots: pixels per point, VectorCraft's `--scale` (1 when absent).
     #[serde(default)]
     pub scale: Option<f32>,
+    /// `differential` shots: the Ink/Stitch differential's case whose picture is drawn, one of a design file.
+    #[serde(default)]
+    pub case: Option<String>,
+    /// `differential` shots: Ink/Stitch's PES file of the case, kept in the repository, since the docs'
+    /// checks run without Ink/Stitch. The differential's nightly run fails while it isn't what Ink/Stitch
+    /// writes.
+    #[serde(default)]
+    pub inkstitch: Option<String>,
     /// `photo` shots: the sew-out report.
     #[serde(default)]
     pub report: String,
@@ -253,6 +265,16 @@ pub fn run(check_only: bool, vectorcraft: bool) -> Result<(), String> {
                 Ok(png) => keep(&root, &shot.id, &png, check_only, &mut findings, Same::Bytes),
                 Err(e) => findings.error(format!("shot `{}`: {e}", shot.id)),
             },
+            crate::conformance::differential::SHOT => {
+                let made = match (&shot.case, &shot.inkstitch) {
+                    (Some(case), Some(kept)) => crate::conformance::differential::shot(&root, case, kept),
+                    _ => Err("a differential shot names its `case` and Ink/Stitch's file of it, `inkstitch`".to_string()),
+                };
+                match made {
+                    Ok(png) => keep(&root, &shot.id, &png, check_only, &mut findings, Same::Bytes),
+                    Err(e) => findings.error(format!("shot `{}`: {e}", shot.id)),
+                }
+            }
             vectorcraft::RENDER | vectorcraft::UI => vectorcraft::committed(&root, shot, &mut findings),
             other => findings.error(format!("shot `{}`: unknown kind `{other}`", shot.id)),
         }
@@ -289,6 +311,9 @@ fn foreign(shot: &Shot) -> Vec<String> {
     }
     if shot.fabric.is_some() && shot.kind != "stitch" {
         found.push("`fabric` is a stitch shot's".to_string());
+    }
+    if shot.case.is_some() || shot.inkstitch.is_some() {
+        found.push("`case` and `inkstitch` are a differential shot's".to_string());
     }
     if (shot.guides || shot.cut_jumps || shot.key) && shot.kind != "stitch" {
         found.push("`guides`, `cut_jumps` and `key` are a stitch shot's".to_string());

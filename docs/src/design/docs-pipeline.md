@@ -337,11 +337,14 @@ per `stitch` shot of each sheet, so a new sheet gets its picture by declaring a 
 - A pull request from a branch of the repository → `web.yml` publishes its preview to `/pr/<number>/`.
 - Push to `main` → `web.yml` also publishes main's own [before and after sheet](before-after-sheet.md) to
   `/sheet/`. A pull request's sheet is the folder `sheet/` of its preview.
+- The Ink/Stitch differential's runs → `differential.yml` publishes the report with its pictures, main's
+  to `/differential/` and a pull request's to the folder `differential/` of its preview, which `web.yml`
+  keeps when it publishes the preview again (`conformance/inkstitch/README.md`, Pictures).
 
 ### One publisher, and a branch of one commit
 
-The site is the `gh-pages` branch. `docs.yml` writes the book to it, and `web.yml` the demo and the previews. Runs of both can end at the
-same moment. Each writes through
+The site is the `gh-pages` branch. `docs.yml` writes the book to it, `web.yml` the demo and the previews,
+and `differential.yml` the differential's report. Their runs can end at the same moment. Each writes through
 `.github/scripts/publish-web.py`, which does 2 things.
 
 - It replaces the one folder it is given on the branch's newest state, and pushes only if the branch is

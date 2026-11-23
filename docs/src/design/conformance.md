@@ -370,6 +370,30 @@ TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills' shee
 paths, of each kind of command, which both programs sew at the same nodes (`REQ-LCK-005`).
 `conformance/inkstitch/README.md` says how to run it by hand and how to add a case.
 
+**Pictures.** A person reviews the differential by looking, so each case both programs sew is drawn
+(M8.14, `xtask/src/conformance/differential/picture.rs`). The picture has 3 panels from the 2 PES files as
+StitchCraft's reader read them back, the plans the measures judge. Ink/Stitch's file and StitchCraft's
+are each drawn by the engine's own preview in its realistic style, as `stitch preview` draws them, at one
+scale and in one frame, so that a difference of place shows as one. The third panel shows where the 2
+footprints differ, on the grid the overlap is measured on and with their centres made one, as the
+overlap counts them (`stitchcraft_testkit::metrics::footprint_map`). Thread only Ink/Stitch sews is
+orange, thread only StitchCraft sews is blue, and thread both sew is grey. A title gives the case's
+name and its verdict: it agrees, it is excused by the ledger's entries it names, or it fails. Under each
+side are its measures, each the text of the report's table, with `!` after one outside its tolerance, and
+its threads as swatches. The scale fits the longer side of a panel's frame into 600 pixels, at 8 pixels a
+millimetre at most, so a huge design makes a picture no larger than a small one. The letters are
+straight strokes, as the thickness key's figures are, so a picture is the same bytes on every computer.
+A panel the preview can't draw is left empty, and the report says the picture is degraded and why. The
+report shows each case's picture below its table, the failed cases first, then the excused ones. The
+glyph differential draws only the glyphs that differ, are excused or are known differences, and a
+contact sheet of the sample's first glyph of each font. CI publishes the report with its pictures on the
+documentation site, and `conformance/inkstitch/README.md` says where. This is the `inkstitch-ring` case,
+drawn from a copy of Ink/Stitch's file kept for the docs, which the nightly run checks against the file
+Ink/Stitch writes:
+
+<!-- shot: differential-ring -->
+<!-- /shot -->
+
 **Routes.** A route is a design of its own, so sewing StitchCraft's route in both programs would compare 2
 sewings of one route. A case with a `[route]` table instead routes elements of a sheet in each program
 (`REQ-ROUTE-008`, `REQ-ROUTE-013`, `xtask/src/conformance/routing.rs`). The table's `tool` names

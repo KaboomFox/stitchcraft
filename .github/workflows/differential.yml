@@ -5,7 +5,10 @@
 # automatic digitizing sews them along. The `fonts` case sews a sample of the glyphs of Ink/Stitch's fonts
 # (M8.6), which `cargo xtask corpus` fetches at a pinned commit. Every Sunday every glyph is sewn, in 6 parts
 # dealt out in turn. The report is the job's summary, and an artifact with the SVG files written for test
-# sheets, the pictures of both programs' lines, and the fonts' report with the glyphs that differ.
+# sheets, the pictures of both programs' lines, and the fonts' report with the glyphs that differ. Each case
+# both programs sew is drawn, Ink/Stitch's file beside StitchCraft's (M8.14), and `publish` puts the report
+# with its pictures on the Pages site: the nightly run's at /differential/, a pull request's beside its
+# preview at /pr/<number>/differential/.
 name: differential
 
 on:
@@ -67,6 +70,38 @@ jobs:
             target/conformance/fonts.json
             target/conformance/fonts/
           if-no-files-found: ignore
+
+  publish:
+    # As web.yml publishes previews: main's runs, and a pull request from a branch of this repository whose
+    # author is its owner, a member or a collaborator. A fork's run publishes nothing. A run whose cases
+    # failed publishes too, since its failed cases are what a reviewer wants to see.
+    name: publish (main → /differential/, a trusted pull request → /pr/<number>/differential/)
+    needs: inkstitch
+    if: >-
+      !cancelled() && needs.inkstitch.result != 'skipped' &&
+      ((github.event_name != 'pull_request' && github.ref == 'refs/heads/main') ||
+       (github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: inkstitch-differential
+          path: target/publish
+      # The one way to write to the Pages branch (docs/src/design/docs-pipeline.md, Publishing).
+      - name: Publish the report and its pictures
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if [ -n "$PR_NUMBER" ]; then dest="pr/$PR_NUMBER/differential"; else dest=differential; fi
+          python3 -I .github/scripts/publish-web.py "$dest" target/publish/differential
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          echo "The report with its pictures: https://${owner}.github.io/${GITHUB_REPOSITORY#*/}/${dest}/" >> "$GITHUB_STEP_SUMMARY"
 
   every-glyph:
     # Each part sews a sixth of the glyphs, dealt out in turn, as many at a time as the runner has cores.

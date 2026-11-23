@@ -21,6 +21,7 @@ traced: `traced-pear.vectorcraft` ([below](#the-traced-pear)) and the owner's do
 | `traced-dog-running-6.vectorcraft` | The running dog, traced 100 mm tall in 6 threads, its legs tan | the same cases, and 4 shapes of its ear alone (`dog_shapes`) |
 | `traced-dog-running-9.vectorcraft` | The running dog, traced 100 mm tall in 9 threads, its mouth dark brown | the `auto-dog-traced` and `auto-dog` shots, and the same cases |
 | `wave.svg` | A smooth wave | running stitch length |
+| `differential/inkstitch-ring.inkstitch.pes` | The PES file Ink/Stitch, at the commit `conformance/inkstitch/pin.toml` names, writes of the `inkstitch-ring` case's design, `conformance/fixtures/inkstitch/ring.svg`. The docs' checks run without Ink/Stitch, so its picture is drawn from this copy, and the differential's nightly run fails while the copy isn't what Ink/Stitch writes | the `differential-ring` shot, the differential's picture on the conformance page |
 | `zigzag.svg` | The same wave, drawn 3 mm wide | the zigzag stroke's spacing and angle, and a satin column drawn as one path |
 | `ripple.svg` | An arch, half a circle 30 mm across, open at the bottom | the ripple stitch's lines and joins |
 | `ripple-guide.svg` | A wave 12 mm long, grouped with an arch that Ink/Stitch's guide-line marker makes a guide | the ripple stitch's guide lines |
