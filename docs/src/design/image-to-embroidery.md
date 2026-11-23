@@ -3808,6 +3808,10 @@ thicker than the larger of what it was and the limit. Before them the plan and i
 the plan is measured afresh, and the pulls below the limit are undone when that measure's thickest spot is
 thicker, or its area above the limit larger, than the kept measure says. That check guards against the drift
 seen in the prototype. It found nothing to undo on the engine's set or the CLI set.
+It costs plan time where many columns crowd: for each spot it works on, the pull-in looks at every point near
+a spot above the cap. Measured at opt-level 1 on a shared machine after M13.63, the 18 letter sheets took 61.5
+s where main took 29.1 s, the largest 13.5 s where it took 4.9 s. The engine's 16 designs took 3.1 s where they
+took 2.0 s, and the dogs as long as before.
 
 Measured on the build, `a0d380b7` on main `acdda98f`, at opt-level 1, as the prototype was:
 
