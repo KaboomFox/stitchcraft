@@ -48,6 +48,11 @@ fn req_auto_189_a_design_threaded_once_above_the_limit_sews_strictly_when_that_i
     let kept = under(once(), (4.0, 6.08), strict);
     assert_eq!(kept.plan, strict().0.plan);
     assert_eq!(codes(&kept), [Code::AutoThick, Code::AutoThreadedForThickness]);
+    // A strict plan at the limit is at the limit or under it.
+    assert_eq!(
+        codes(&under(once(), (4.0, 6.08), || (outcome(zigzag(0.25, &[NAVY, CREAM])), Some(4.0)))),
+        [Code::AutoThick, Code::AutoThreadedForThickness]
+    );
     // Both above the limit, or the strict plan not made or not measured: the plan threaded once comes back.
     // Each plan's thickest spot is the one the cap measured, which the guard reads and doesn't measure again:
     // a plan of 1.34 fills that the cap measured at 4.5 is above the limit.

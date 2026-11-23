@@ -97,6 +97,17 @@ pub(super) fn ordered_by(
     (shapes.elements.iter().map(|element| element.id.as_str().to_string()).collect(), said, ordered.under)
 }
 
+/// Whether the order of `sewn`, with `auto_thread_once` on and the base layer in `under`, is one that the
+/// strict rules allow too (`REQ-AUTO-189`).
+pub(super) fn strict_by(sewn: Vec<Sewn>, under: Option<Rgb>) -> bool {
+    let settings = DesignSettings::default();
+    let shape = |index: usize, sewn: &Sewn| if sewn.shape == usize::MAX { index } else { sewn.shape };
+    let moving: Vec<Moving> =
+        sewn.iter().enumerate().map(|(index, sewn)| Moving { free: sewn.automatic, made: sewn.automatic, shape: shape(index, sewn) }).collect();
+    let mut shapes = Shapes::new(sewn, &settings, &Budget::DEFAULT);
+    super::ordered(&mut shapes, &moving, &Budget::DEFAULT, under, Rules { last: true, once: true }).strict
+}
+
 /// What `said` says, as a user reads it, each followed by the element it names, if any, in brackets.
 pub(super) fn messages(said: &[Diagnostic]) -> Vec<String> {
     said.iter().map(|d| d.element.as_ref().map_or_else(|| d.to_string(), |id| format!("{d} [{id}]"))).collect()
@@ -788,4 +799,48 @@ fn req_auto_096_a_detail_is_closed_in_and_smaller_than_the_area_it_meets() {
 #[test]
 fn req_auto_096_a_detail_paired_with_itself_sews_neither_before_nor_after_itself() {
     assert_eq!(early(&[(2, 2)], &[0, 1, 2]), None);
+}
+
+#[test]
+fn req_auto_189_an_order_the_strict_rules_allow_is_told_from_one_they_dont() {
+    let beside = |x: f64| [(x + 10.0, 0.0), (x + 10.0, 10.0), (x + 12.0, 10.0), (x + 12.0, 0.0), (x + 10.0, 0.0)];
+    let line = |id: &str, x: f64, thread: &Thread| running(id, &[(x + 11.0, 0.0), (x + 11.0, 10.0)], 2.0, thread);
+    // 2 squares apart, and a column after the square it borders, as the strict rules sew it too.
+    assert!(strict_by(vec![square("rs", (0.0, 0.0), 10.0, &RED), square("bs", (50.0, 0.0), 10.0, &BLUE)], None));
+    assert!(strict_by(vec![square("rs", (0.0, 0.0), 10.0, &RED), column("bc", &beside(0.0), &BLUE)], None));
+    // A line after the square it borders, where that costs no thread change.
+    assert!(strict_by(vec![square("rs", (0.0, 0.0), 10.0, &RED), line("bl", 0.0, &BLUE)], None));
+    // A line before a square it borders, which the strict rules sew after it.
+    let lines = vec![square("rs", (0.0, 0.0), 10.0, &RED), line("bl", 0.0, &BLUE), square("bs", (50.0, 0.0), 10.0, &BLUE), line("rl", 50.0, &RED)];
+    assert!(!strict_by(lines, None));
+    // The base layer in another thread than the one it was given: the blue square sews first.
+    assert!(!strict_by(vec![square("b", (0.0, 0.0), 10.0, &BLUE), square("r", (5.0, -5.0), 20.0, &RED)], Some(RED.color)));
+    // A column held after a part's running line of another shape, which the strict rules don't hold.
+    let band = [(9.0, 0.0), (9.0, 10.0), (10.0, 10.0), (10.0, 0.0), (9.0, 0.0)];
+    let part = Some(Polygon { outline: band.iter().map(|&(x, y)| p(x, y)).collect(), holes: Vec::new() });
+    let held = Sewn { part, shape: 1, ..running("rl", &[(9.5, 0.0), (9.5, 10.0)], 1.0, &RED) };
+    let col = Sewn { shape: 2, ..column("bc", &[(10.0, 0.0), (10.0, 10.0), (12.0, 10.0), (12.0, 0.0), (10.0, 0.0)], &BLUE) };
+    assert!(!strict_by(vec![square("bs", (50.0, 0.0), 10.0, &BLUE), held, col], None));
+}
+
+#[test]
+fn req_auto_037_only_a_satin_column_waits_for_a_parts_running_line_beside_it() {
+    // A red part's running line beside a blue part's running line, and a line of a stroke beside a blue
+    // column: no line waits for the other, nor the column for the stroke's line, and with a blue square drawn
+    // first the order is the strict one.
+    let part = |id: &str, x: f64, shape: usize, thread: &Thread| {
+        let band = [(x, 0.0), (x, 10.0), (x + 1.0, 10.0), (x + 1.0, 0.0), (x, 0.0)];
+        let part = Some(Polygon { outline: band.iter().map(|&(x, y)| p(x, y)).collect(), holes: Vec::new() });
+        Sewn { part, shape, ..running(id, &[(x + 0.5, 0.0), (x + 0.5, 10.0)], 1.0, thread) }
+    };
+    let (ids, _) = ordered_with(
+        vec![square("bs", (50.0, 0.0), 10.0, &BLUE), part("rl", 9.0, 1, &RED), part("bl", 10.0, 2, &BLUE)],
+        &Budget::DEFAULT,
+        &Budget::DEFAULT,
+    );
+    assert_eq!(ids, ["bs", "bl", "rl"]);
+    let stroke = Sewn { shape: 1, ..running("rl", &[(9.5, 0.0), (9.5, 10.0)], 1.0, &RED) };
+    let col = Sewn { shape: 2, ..column("bc", &[(10.0, 0.0), (10.0, 10.0), (12.0, 10.0), (12.0, 0.0), (10.0, 0.0)], &BLUE) };
+    let (ids, _) = ordered_with(vec![square("bs", (50.0, 0.0), 10.0, &BLUE), stroke, col], &Budget::DEFAULT, &Budget::DEFAULT);
+    assert_eq!(ids, ["bs", "bc", "rl"]);
 }

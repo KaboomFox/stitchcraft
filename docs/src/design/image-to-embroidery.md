@@ -4203,8 +4203,8 @@ falls from 4.52 to 4.05 fills. The order's search keeps 133 and 1,452 rows on th
   0.4 mm, under the fill's rows. Measured on each running line of the set, as the share of its top thread that
   no later stitch covers. On the 4 traced dogs 37 fur lines newly show less than half their thread, the worst
   2, 13 and 13 %. 18 of the 37 that main hides as much now show more, so 56 lines show less than half where main
-  has 37. On the 2 photos traced locally, measured whole only for the build, 80 of the magnolia's lines and 81
-  of the coleus's show less than half where main's 19 and 30 do. No line of
+  has 37. On the traced magnolia and the traced coleus leaf, measured whole only for the build, 80 and 81
+  lines show less than half where main's 19 and 30 do. No line of
   the drawings, the fixtures, the test pictures or the TS-13 halves does, and the likeness of every design
   measured is as it was. Round a fill on the sew-out piece's dark fill, a line 0.3, 0.6 and 0.8 mm wide keeps 0.49, 0.82
   and 0.92 of its thread, where with the setting off it keeps all of it (`REQ-AUTO-188`). Holding the fill's
@@ -4212,10 +4212,15 @@ falls from 4.52 to 4.05 fills. The order's search keeps 133 and 1,452 rows on th
   back to the line's thread, our measure wouldn't show a gap, but it doesn't model the pull: on the machine the
   rows would pull in about 0.4 mm short of the line. So nothing is held back, `SC-I0926` names where to look,
   and the sew-out piece decides.
-- **Fabric beside the lines.** For the same reason a little more fabric shows between a line and a fill sewn
-  after it: up to 2.8 times the dogs' bare share, with one sliver more, and on the 2 photos traced locally 3.9
-  and 1.6 times, with 1 and 2 slivers more. The dogs stay under every limit. On the magnolia the cover's check
-  finds 3 faults where main's finds none, and on the coleus 8 where main's finds 7: not traced further.
+- **Fabric beside the lines.** An area reaches its overlap only under the shapes sewn after it
+  (`auto::neighbours::under`, `beside` with `near_later`). Where a part's running line sews before the areas
+  beside it, none of them reaches under the line's part, so the line's whole part is left to the line, whose
+  running stitch covers only its middle. Sewn after them, the line had the first area's overlap under all of
+  its part. On the dogs the bare share rises up to 2.8 times, with 1 sliver more, all under the limits. On the
+  traced magnolia the cover's check finds 3 new gaps of 0.13 to 0.61 mm² where main finds none. On the traced
+  coleus leaf it finds 2 new gaps of 0.30 and 0.63 mm², and 3 that grow from 0.12 to 1.07, 0.74 to 1.20 and
+  0.19 to 0.65 mm². No design of the repository's own set changes its count of gaps. Keeping the line's part
+  to the area, and keeping the line seen, is the next step's.
 - **The area above the cap.** It rises on the dog on turf in 6 threads from 14.0 to 23.0 mm², in 9 threads from
   8.0 to 10.0 mm², on the running dog in 6 threads from 11.0 to 13.25 mm², on the coleus from 6.5 to 13.5 mm² and
   on the magnolia from 16.5 to 26.25 mm², and falls on 4 designs. No design has an area at 4 fills or more, and none rises above 4 that was at or under it.

@@ -135,6 +135,9 @@ fn req_auto_185_the_base_layer_sews_in_the_thread_the_order_starts_with() {
     let plan = plan_of(&outcome);
     assert_eq!(threaded(plan), BTreeMap::from([(GREEN.color, 1), (PINK.color, 1)]));
     assert_eq!(plan.blocks.first().map(|block| block.thread.color), Some(GREEN.color));
+    // `SC-I0909` names the thread the base layer sews in.
+    let base: Vec<&str> = outcome.diagnostics.iter().filter(|said| said.code.to_string() == "SC-I0909").map(|said| said.message.as_str()).collect();
+    assert!(base.len() == 1 && base.iter().all(|message| message.ends_with(&format!("in the thread {}.", GREEN.color))), "{base:?}");
 }
 
 /// `REQ-AUTO-186`: with `auto_thread_once` off, the line sews after the fill it borders, as before M13.63, and
@@ -261,4 +264,16 @@ fn diag_sc_i0926_a_line_sewn_before_the_fill_beside_it_is_counted_and_named() {
     );
     assert_eq!(said.first().and_then(|said| said.element.as_ref()).map(ToString::to_string).as_deref(), Some("line"));
     assert!(codes(&placed(piece(&[("auto_thread_once", "false")]))).is_empty());
+}
+
+/// `REQ-AUTO-189`: the sew-out piece held to a limit of 0.5 fills sews above it threaded once and with its line
+/// after the cream fill alike, so it sews as it was planned, threaded once, and only the thickness warning is
+/// said.
+#[test]
+fn req_auto_189_a_design_above_the_limit_either_way_keeps_the_plan_threaded_once() {
+    let outcome = placed(piece(&[("auto_thick_warn_fills", "0.5")]));
+    let plan = plan_of(&outcome);
+    assert_eq!(threaded(plan), BTreeMap::from([(NAVY.color, 1), (CREAM.color, 1), (GOLD.color, 1)]));
+    let codes: Vec<String> = outcome.diagnostics.iter().map(|said| said.code.to_string()).collect();
+    assert!(codes.contains(&"SC-W0913".to_string()) && !codes.contains(&"SC-W0927".to_string()), "{codes:?}");
 }

@@ -16,7 +16,7 @@
 //! and measured it made a traced cat sew 4.23 fills thick. So `SC-W0925` names the shapes, and the person
 //! changes the drawing.
 
-use std::cmp::Reverse;
+use std::cmp::{Ordering, Reverse};
 use std::collections::{BTreeMap, BTreeSet};
 
 use stitchcraft_core::{Budget, Code, Diagnostic, Exhausted, Fix, Meter};
@@ -85,7 +85,7 @@ fn buried(order: &Order<'_>, sewn: &[usize], shapes: &Shapes, meter: &mut Meter)
     let mut sides: BTreeMap<usize, usize> = BTreeMap::new();
     for &(fill, line) in order.lined.iter().filter(|&&(fill, line)| thread(fill) != thread(line)) {
         if let (Some(line_at), Some(fill_at)) = (at.get(&line), at.get(&fill)) {
-            *sides.entry(line).or_insert(0) += usize::from(line_at < fill_at);
+            *sides.entry(line).or_insert(0) += usize::from(line_at.cmp(fill_at) == Ordering::Less);
         }
     }
     sides.retain(|_, count| *count > 0);
@@ -255,11 +255,14 @@ fn named(
 /// out of `budget`'s work; one out of work counts the order as one the strict rules don't allow.
 pub(super) fn allowed(order: &Order<'_>, sewn: &[usize], budget: &Budget) -> bool {
     let mut meter = budget.meter();
-    if meter.charge((sewn.len() + order.lined.len() + order.held.len()) as u64).is_err() {
-        return false;
+    for count in [sewn.len(), order.lined.len(), order.held.len()] {
+        if meter.charge(count as u64).is_err() {
+            return false;
+        }
     }
     let at: BTreeMap<usize, usize> = sewn.iter().enumerate().map(|(place, &index)| (index, place)).collect();
-    let before = |first: usize, second: usize| at.get(&first).zip(at.get(&second)).is_some_and(|(first, second)| first < second);
+    // Two elements never share a place.
+    let before = |first: usize, second: usize| at.get(&first).zip(at.get(&second)).is_some_and(|(first, second)| first.cmp(second) == Ordering::Less);
     order.chosen.is_none()
         && !order.lined.iter().any(|&(fill, line)| before(line, fill))
         && !order.held.iter().any(|&(line, column)| before(line, column))

@@ -69,9 +69,6 @@ pub(super) struct Laid {
 impl Laid {
     /// The base layer sewn in `thread`, the thread the order starts with (`REQ-AUTO-185`), and said so.
     pub(super) fn threaded(&mut self, thread: &Thread) {
-        if self.pieces.iter().all(|piece| piece.thread == *thread) {
-            return;
-        }
         for piece in &mut self.pieces {
             piece.thread = thread.clone();
         }

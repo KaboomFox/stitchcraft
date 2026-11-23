@@ -6,7 +6,7 @@ use stitchcraft_core::Budget;
 
 use super::super::tests::{BLUE, GREEN, RED, messages, ordered_by, running, square};
 use super::super::{Facts, Graph, Moving, Order, Rules};
-use super::told;
+use super::{allowed, told};
 use crate::auto::neighbours::Shapes;
 use crate::design::DesignSettings;
 
@@ -163,4 +163,53 @@ fn req_auto_187_the_shapes_named_are_those_of_the_first_thread_and_the_thread_ov
         }
     }
     assert_eq!(first, Some(150));
+    // Every line after the fills it borders and the base layer in its thread: an order the strict rules allow
+    // (`REQ-AUTO-189`), told with a unit of work for each element and pair. Short of that, it counts as one
+    // they don't allow, and the design may be planned again.
+    let strict = [6, 0, 2, 1, 4, 5, 3];
+    let work = |max_work: u64| allowed(&order, &strict, &Budget { max_work, ..Budget::DEFAULT });
+    assert!(work(12) && !work(11) && !work(6));
+    assert!(!allowed(&order, &[6, 0, 1, 3, 2, 4, 5], &Budget::DEFAULT));
+}
+
+/// The `SC-W0925` messages said of the shapes of `sewn`, threaded once where they allow it.
+fn warned(sewn: Vec<crate::auto::neighbours::Sewn>) -> Vec<String> {
+    let (_, said, _) = ordered_by(sewn, &Budget::DEFAULT, &Budget::DEFAULT, None, ONCE);
+    messages(&said).into_iter().filter(|message| message.contains("SC-W0925")).collect()
+}
+
+#[test]
+fn diag_sc_w0925_names_shapes_of_the_threads_that_lie_under_and_over_each_other_only() {
+    // The house, and apart from it a red square under a green one, drawn first: green lies under no red, so
+    // the warning names the house's shapes as before.
+    let mut sewn = vec![square("red", (100.0, 0.0), 10.0, &RED), square("green", (105.0, 0.0), 10.0, &GREEN)];
+    sewn.extend(house());
+    assert_eq!(
+        warned(sewn),
+        ["warning SC-W0925: This shape lies under \"outline\", and \"outline\" lies under \"roof\": their threads lie both under and over \
+             each other, so no order threads each thread once. The threads are threaded #0000c8 2 times, #c80000 2 times. [chimney]"]
+    );
+    // And with a blue square under a red one, drawn first: the shape of the first thread named lies under one
+    // of the other thread.
+    let mut sewn = vec![square("blue", (100.0, 0.0), 10.0, &BLUE), square("red", (105.0, 0.0), 10.0, &RED)];
+    sewn.extend(house());
+    assert_eq!(
+        warned(sewn),
+        ["warning SC-W0925: This shape lies under \"red\", and \"chimney\" lies under \"outline\": their threads lie both under and over \
+             each other, so no order threads each thread once. The threads are threaded #0000c8 2 times, #c80000 2 times. [blue]"]
+    );
+    // 3 threads, each lying under the next: red under blue, blue under green, green under red.
+    let sewn = vec![
+        square("r", (0.0, 0.0), 10.0, &RED),
+        square("b", (5.0, 0.0), 10.0, &BLUE),
+        square("b2", (50.0, 0.0), 10.0, &BLUE),
+        square("g", (55.0, 0.0), 10.0, &GREEN),
+        square("g2", (100.0, 0.0), 10.0, &GREEN),
+        square("r2", (105.0, 0.0), 10.0, &RED),
+    ];
+    assert_eq!(
+        warned(sewn),
+        ["warning SC-W0925: This shape lies under \"b\", and \"g2\" lies under \"r2\": their threads lie both under and over \
+             each other, so no order threads each thread once. The threads are threaded #0000c8 once, #00a000 once, #c80000 2 times. [r]"]
+    );
 }
