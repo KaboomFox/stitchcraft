@@ -191,6 +191,11 @@ impl<'p, 'r> Pass<'p, 'r> {
         Pass { plan, thickness, rules, gone: BTreeSet::new(), taken: [0.0; 4], times: [0; 4] }
     }
 
+    /// The plan as the pass has changed it so far, with the entries it took out still in it.
+    pub(super) fn plan(&self) -> &StitchPlan {
+        self.plan
+    }
+
     /// The pass's plan, its measure and the entries it took out.
     pub(super) fn ended(self) -> (&'p mut StitchPlan, &'p mut Thickness, BTreeSet<Entry>) {
         (self.plan, self.thickness, self.gone)
@@ -269,6 +274,13 @@ impl Pass<'_, '_> {
     /// returned. Fills within [`LENGTH_SLACK`](stitchcraft_core::units::LENGTH_SLACK) of each
     /// other count as equal, as lengths do.
     pub(super) fn changed(&mut self, removed: &[SewnStitch], added: &[SewnStitch], meter: &mut Meter) -> Result<bool, Exhausted> {
+        self.held(removed, added, None, meter)
+    }
+
+    /// As [`Pass::changed`], and with `hold` no spot that `added` lays thread in ends thicker than the larger
+    /// of what it was and `hold`: the cap's pull-in below the warning's limit makes no spot above the limit
+    /// thicker (`REQ-AUTO-195`).
+    pub(super) fn held(&mut self, removed: &[SewnStitch], added: &[SewnStitch], hold: Option<f64>, meter: &mut Meter) -> Result<bool, Exhausted> {
         // A stitch that crosses a thick spot may make a thinner one thicker, but none that was at the warning's
         // limit or under it goes above it.
         let spots = |thickness: &Thickness, meter: &mut Meter| -> Result<BTreeMap<usize, f64>, Exhausted> {
@@ -288,7 +300,9 @@ impl Pass<'_, '_> {
         let after = spots(self.thickness, meter)?;
         let (cap, limit) = (self.rules.cap, self.rules.limit);
         let most = |spots: &BTreeMap<usize, f64>| spots.values().fold(0.0_f64, |most, fills| most.max(*fills));
-        let raised = after.iter().any(|(spot, fills)| at_least(limit, before.get(spot).copied().unwrap_or(0.0)) && !at_least(limit, *fills));
+        let was = |spot: &usize| before.get(spot).copied().unwrap_or(0.0);
+        let raised = after.iter().any(|(spot, fills)| at_least(limit, was(spot)) && !at_least(limit, *fills));
+        let raised = raised || hold.is_some_and(|hold| after.iter().any(|(spot, fills)| !at_least(hold.max(was(spot)), *fills)));
         if at_least(cap.max(most(&before)), most(&after)) && !raised {
             return Ok(true);
         }

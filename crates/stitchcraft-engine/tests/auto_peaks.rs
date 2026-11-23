@@ -97,16 +97,19 @@ fn hundredths(value: f64) -> f64 {
 /// pulls no point in and takes less of a column's doubled top. It stays under the warning's limit. With a
 /// column's pull compensation tapered into its points (M13.62, `REQ-AUTO-183`), the 2 badges sew 3.99 where
 /// they sewed 3.96, and TS-13A 3.99 where it sewed 3.95: the cap takes a column's top points only above 4,
-/// and a narrower point changes where it stops. Their area above the cap falls.
+/// and a narrower point changes where it stops. Their area above the cap falls. With the cap pulling points in
+/// below the limit at tight turns and under later shapes (M13.64, `REQ-AUTO-195`), the lettered patch sews 3.86
+/// where it sewed 3.95, TS-13C 3.89 where it sewed 3.93 and TS-13D 3.75 where it sewed 3.79. The badges and
+/// TS-13A keep theirs.
 const ABOVE: [(&str, f64); 8] = [
     ("badges-abutting", 3.99),
     ("badges-stacked", 3.99),
     ("pear", 3.95),
-    ("lettered-patch", 3.95),
+    ("lettered-patch", 3.86),
     ("ts-13a", 3.99),
     ("ts-13b", 3.46),
-    ("ts-13c", 3.93),
-    ("ts-13d", 3.79),
+    ("ts-13c", 3.89),
+    ("ts-13d", 3.75),
 ];
 
 /// The designs whose thickest spot sews above the cap with no satin column there, with it in fills

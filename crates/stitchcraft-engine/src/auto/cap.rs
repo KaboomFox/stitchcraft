@@ -32,7 +32,11 @@
 //!
 //! **Crowded points pulled in** (`REQ-AUTO-171`, the `pull` module). Where a spot still sews above the warning's
 //! limit once the 3 kinds are done, crowded top points of the columns that move none in as they are made
-//! move in along their stitches, before the last resort takes any point out.
+//! move in along their stitches, before the last resort takes any point out. Neither stops at a spot it can't
+//! lower: each goes on to the next spot above the limit (`REQ-AUTO-194`). With `auto_short_stitches` `knots`,
+//! the default, the cap then pulls in the points of tight turns, and points whose new end a later shape
+//! covers, below the limit too, down to the cap (`REQ-AUTO-195`). That is measured again from the plan, and
+//! kept only where it leaves the design no thicker.
 //!
 //! **One measure.** The cap takes the last pass's measure and keeps it up to date stitch by stitch, as the
 //! pass does, with the pass's own helpers. Only the stitches near a spot above the cap are looked at, found
@@ -224,9 +228,14 @@ pub(crate) fn capped(
     } else {
         (Vec::new(), Vec::new(), Vec::new())
     };
+    // And of those, the columns sewn with `knots` below the limit too, near a spot above the cap
+    // (`REQ-AUTO-195`).
+    let knots =
+        |stitch: &SewnStitch| column(stitch) && element(stitch).is_some_and(|element| rules.pulls.get(&element).is_some_and(|pull| pull.knots));
+    let low = candidates(sewn, &near, knots);
     // A design whose spots above the cap lie only in shapes sewn by their own settings has nothing the cap
     // may take, and the work of the cover is spared.
-    if points.is_empty() && last.is_empty() {
+    if points.is_empty() && last.is_empty() && low.is_empty() {
         return Ok(None);
     }
     let reach = thickness.near(rules.cap, REACH, meter)?;
@@ -249,21 +258,56 @@ pub(crate) fn capped(
             ribbons.add(ribbon.firm(pull.is_some()), meter)?;
         }
     }
-    let mut cap = Cap { pass: Pass::new(plan, thickness, rules), ribbons, longest, taken: [0.0; 4], times: [0; 4], pulled: [0; 2] };
-    let ran_out = cap.taking([&hottest, &points, &pulled], last, meter).is_err();
-    let Cap { pass, taken, times, pulled, .. } = cap;
+    let mut cap = Cap {
+        pass: Pass::new(plan, thickness, rules),
+        ribbons,
+        longest,
+        taken: [0.0; 4],
+        times: [0; 4],
+        pulled: [0; 2],
+        moves: BTreeMap::new(),
+        refused: BTreeSet::new(),
+        places: BTreeSet::new(),
+    };
+    let mut ran_out = cap.taking([&hottest, &points, &pulled], &last, meter).is_err();
+    // Below the limit, what the plan and its measure were before is kept, with the count of points pulled in
+    // until then, for the plan measured again after.
+    let before = (!ran_out && !low.is_empty()).then(|| (cap.pass.plan().clone(), cap.pass.thickness.clone(), cap.pulled));
+    if before.is_some() {
+        ran_out = cap.pull_in(&low, rules.cap, true, meter).is_err();
+    }
+    let Cap { pass, taken, times, mut pulled, .. } = cap;
     let (plan, thickness, gone) = pass.ended();
     taken_out(plan, &gone);
     // What is left is measured with the budget's work once more. A cap out of work may have stopped part way
-    // through a point's change of the measure: the plan is measured again.
+    // through a point's change of the measure, and the pull-in below the limit is judged by the plan measured
+    // afresh: the plan is measured again.
     let mut again = budget.meter();
-    if ran_out {
+    if ran_out || before.is_some() {
         *thickness = Thickness::of(plan, &mut again)?.ok_or(Exhausted::Work)?;
     } else {
         thickness.resewn(plan, &mut again)?;
     }
+    if let Some((kept, measure, count)) = before
+        && thicker(&measure, thickness, rules.limit, &mut again)?
+    {
+        *plan = kept;
+        taken_out(plan, &gone);
+        *thickness = measure;
+        thickness.resewn(plan, &mut again)?;
+        pulled = count;
+    }
     let left = thickness.over(Measure::Fills, rules.cap, &mut again)?;
     Ok(Some(Capped { taken, times, left, thickest: thickness.most(Measure::Fills), ran_out, pulled }))
+}
+
+/// Whether `after` sews thicker than `before`, 2 measures of a plan: its thickest spot thicker, or more of it
+/// above `limit`. The pull-in below the limit is kept only where it isn't (`REQ-AUTO-195`). A unit of work for
+/// each spot of each.
+fn thicker(before: &Thickness, after: &Thickness, limit: f64, meter: &mut Meter) -> Result<bool, Exhausted> {
+    let area = |thickness: &Thickness, meter: &mut Meter| thickness.over(Measure::Fills, limit, meter).map(|over| over.area);
+    let (was, is) = (area(before, meter)?, area(after, meter)?);
+    Ok(!at_least(before.most(Measure::Fills).value, after.most(Measure::Fills).value) || !at_least(was, is))
 }
 
 /// The needle points of `sewn`, the plan's stitches, that the cap looks at: those of the elements `made`
@@ -294,14 +338,21 @@ struct Cap<'p, 'r> {
     times: [usize; 4],
     /// How many points [`Cap::pull_in`] moved, and in how many places.
     pulled: [usize; 2],
+    /// How often each point pulled in moved, and where it was before it first did, over every pull-in.
+    moves: BTreeMap<Entry, (usize, Point)>,
+    /// The points whose next move the measure refused, with how often they had moved.
+    refused: BTreeSet<(Entry, usize)>,
+    /// The cells of the spots points were pulled in at.
+    places: BTreeSet<(i64, i64)>,
 }
 
 impl Cap<'_, '_> {
     /// Takes the points the cap may take, with `meter`'s work: above the warning's limit the 3 kinds go
     /// first, of `hottest`, judging a column's cover as drawn; then below it, of `points`, down to the cap,
     /// keeping the thread under a column's edge; then the crowded points of `pulled` are pulled in, and last
-    /// the columns' top points `last` are taken, above the limit.
-    fn taking(&mut self, [hottest, points, pulled]: [&[Entry]; 3], last: Vec<Entry>, meter: &mut Meter) -> Result<(), Exhausted> {
+    /// the columns' top points `last` are taken, above the limit. Those 2 each stop at the first spot they
+    /// can't lower, and then go again, on past such spots (`REQ-AUTO-194`).
+    fn taking(&mut self, [hottest, points, pulled]: [&[Entry]; 3], last: &[Entry], meter: &mut Meter) -> Result<(), Exhausted> {
         let rules = self.pass.rules;
         for (points, hot, limit) in [(hottest, true, rules.limit), (points, false, rules.cap)] {
             for kind in [Kind::Hidden, Kind::Under, Kind::Doubled] {
@@ -312,8 +363,11 @@ impl Cap<'_, '_> {
                 }
             }
         }
-        self.pull_in(pulled, meter)?;
-        self.last_resort(last, meter)
+        for skip in [false, true] {
+            self.pull_in(pulled, rules.limit, skip, meter)?;
+            self.last_resort(last, skip, meter)?;
+        }
+        Ok(())
     }
 
     /// Whether a spot is still above `limit`, in fills. A unit of work for each spot.
@@ -329,18 +383,28 @@ impl Cap<'_, '_> {
     /// stitch into it. A unit of work for each point looked at each time. Only a point whose stitches lay
     /// thread at the thickest spot can lower it, and only such a point is judged further, so that each point
     /// taken costs the work of the points round its spot, not of every point near a spot above the limit
-    /// (`REQ-AUTO-101`).
-    fn last_resort(&mut self, mut points: Vec<Entry>, meter: &mut Meter) -> Result<(), Exhausted> {
-        while self.above(self.pass.rules.limit, meter)? {
-            let spot = self.pass.thickness.most(Measure::Fills).at;
+    /// (`REQ-AUTO-101`). Where no point lowers the thickest spot, it stops, or with `skip` goes on to the next
+    /// thickest (`REQ-AUTO-194`).
+    fn last_resort(&mut self, points: &[Entry], skip: bool, meter: &mut Meter) -> Result<(), Exhausted> {
+        let (mut points, mut stuck) = (points.to_vec(), BTreeSet::new());
+        while let Some((index, most)) = self.pass.thickness.most_besides(Measure::Fills, &stuck, meter)? {
+            if most.value <= self.pass.rules.limit {
+                break;
+            }
             let mut may = Vec::new();
             for &point in &points {
                 meter.charge(1)?;
-                if let Some(change) = self.taken_out(point, Kind::Column, true, Some(spot), meter)? {
+                if let Some(change) = self.taken_out(point, Kind::Column, true, Some(most.at), meter)? {
                     may.push((change, point));
                 }
             }
-            let Some(point) = chosen(&may) else { break };
+            let Some(point) = chosen(&may) else {
+                if !skip {
+                    break;
+                }
+                stuck.insert(index);
+                continue;
+            };
             points.retain(|other| *other != point);
             self.taken_out(point, Kind::Column, true, None, meter)?;
         }

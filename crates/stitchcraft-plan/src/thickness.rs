@@ -41,7 +41,7 @@
 //! of a square millimetre round it. Only a piece of [`PIECE`] mm² or more counts, 4 spots, since 3 rows that
 //! cross in one point are no fault.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use stitchcraft_core::{Exhausted, Meter, Point, Rect};
 
@@ -513,6 +513,22 @@ impl Thickness {
             }
         }
         Spot { value, at: self.point(self.grid.spot(most)) }
+    }
+
+    /// The largest value of `measure` of a spot not in `besides`, by its place in the measure as
+    /// [`Thickness::spots`] gives it, and the last spot that has it, as [`Thickness::most`]; `None` when every
+    /// spot is in `besides`. A unit of work for each spot. The cap goes on past a spot it can't lower with it
+    /// (`REQ-AUTO-194`).
+    pub fn most_besides(&self, measure: Measure, besides: &BTreeSet<usize>, meter: &mut Meter) -> Result<Option<(usize, Spot)>, Exhausted> {
+        let values = self.values(measure);
+        meter.charge(units(values.len()))?;
+        let mut most: Option<(usize, f64)> = None;
+        for (at, value) in values.iter().enumerate().filter(|(at, _)| !besides.contains(at)) {
+            if most.is_none_or(|(_, before)| *value >= before) {
+                most = Some((at, *value));
+            }
+        }
+        Ok(most.map(|(at, value)| (at, Spot { value, at: self.point(self.grid.spot(at)) })))
     }
 
     /// What of the plan has `limit` of `measure` or more, in pieces of [`PIECE`] or more. A unit of work for

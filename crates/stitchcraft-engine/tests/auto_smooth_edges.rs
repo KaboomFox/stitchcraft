@@ -178,7 +178,8 @@ fn req_auto_172_the_cap_pulls_in_a_tenth_of_today_s_short_stitches_and_says_so()
         assert!(thickest <= limit + 1e-9, "{name}: {thickest:.2} fills");
         total += count;
     }
-    // 2,310 points move in at 0.35 mm today (2026-11-21), and the cap pulled 155 in on the prototype.
+    // 2,310 points move in at 0.35 mm (2026-11-21), and the cap pulled 155 in on the prototype. With the
+    // pull-in below the limit at tight turns and under later shapes (M13.64, REQ-AUTO-195) it pulls in more.
     assert!(total > 0 && total < 231, "{total}");
 }
 

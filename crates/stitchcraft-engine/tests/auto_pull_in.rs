@@ -46,7 +46,6 @@ fn area_at(design: &Design, limit: f64) -> f64 {
 }
 
 #[test]
-#[ignore = "planned: M13.64 builds the cap below the limit"]
 fn req_auto_194_a_spot_the_cap_cannot_lower_does_not_stop_it_lowering_the_others() {
     // TS-13A's half set by hand sews 5.31 fills, which the cap may not touch. On main at `acdda98f` the cap
     // stops there: the whole sheet has 39.50 mm² at 4 fills or more, the hand-set half alone 39.25, and the
@@ -62,7 +61,6 @@ fn req_auto_194_a_spot_the_cap_cannot_lower_does_not_stop_it_lowering_the_others
 }
 
 #[test]
-#[ignore = "planned: M13.64 builds the cap below the limit"]
 fn req_auto_195_a_column_sewn_round_a_sharp_turn_sews_no_knot() {
     // A 5 mm line turning by 60° stays one column (REQ-AUTO-178) and fans into a knot on the inside of the
     // turn: 3.83 fills on main, where the cap pulls in only above 4. Pulled in at the knot down to the cap, the
@@ -72,7 +70,6 @@ fn req_auto_195_a_column_sewn_round_a_sharp_turn_sews_no_knot() {
 }
 
 #[test]
-#[ignore = "planned: M13.64 builds the cap below the limit"]
 fn req_auto_195_the_engine_s_set_sews_thinner_with_few_points_pulled_in() {
     // REQ-AUTO-073's designs: 100.2 mm² at 3.25 fills or more and 95 points pulled in on main at `acdda98f`.
     // Pulled in at tight turns and under later shapes down to the cap, the area falls by a third or more, no
@@ -105,7 +102,6 @@ fn req_auto_195_the_engine_s_set_sews_thinner_with_few_points_pulled_in() {
 }
 
 #[test]
-#[ignore = "planned: M13.64 builds the cap below the limit"]
 fn req_auto_196_above_limit_keeps_the_columns_of_m13_58() {
     // With `above_limit` the cap pulls points in only above the limit, as on main at `acdda98f`: the 60° corner
     // keeps its 3.83 fills, and the cap pulls in the 4 points it pulls there today. By default it pulls in more.

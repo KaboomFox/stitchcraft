@@ -1,0 +1,252 @@
+//! The cap below the limit (`REQ-AUTO-194`, `REQ-AUTO-195`): it goes on past a spot it can't lower, and with
+//! `auto_short_stitches` `knots` it pulls in a column's knots, and points whose new end a later shape covers,
+//! below the warning's limit, each by its first share, and keeps that only where the plan measured again is
+//! no thicker.
+
+use super::*;
+
+/// The shares of a column pulled in by its insets, 25 and 50.
+const SHARES: [f64; 2] = [0.25, 0.5];
+
+/// The columns of `column`, whose points the cap pulls in, below the limit too when `knots`.
+fn pullable(column: &BTreeSet<ElementRef>, knots: bool) -> BTreeMap<ElementRef, Pullable> {
+    column.iter().map(|element| (*element, Pullable { shares: SHARES.to_vec(), spacing: 0.4, knots })).collect()
+}
+
+/// The needle points of `plan` that moved, as they were and as they are in `now`.
+fn moved(plan: &StitchPlan, now: &StitchPlan) -> Vec<(Point, Point)> {
+    let at = |plan: &StitchPlan| -> Vec<Point> { plan.stitches().filter(|s| s.kind == StitchKind::Normal).map(|s| s.at).collect() };
+    at(plan).into_iter().zip(at(now)).filter(|(a, b)| a != b).collect()
+}
+
+/// A pile of thread at x = `x`, 3 mm long, sewn 60 times: far thicker than the limit.
+fn pile(x: f64) -> Vec<(f64, f64)> {
+    (0..60).map(|k| (x, if k % 2 == 0 { 0.0 } else { 3.0 })).collect()
+}
+
+/// `check` run on the cap of `sewn` with `rules`, before it took anything, with every entry of its first
+/// block as the points it may move or take.
+fn on_cap(sewn: &mut StitchPlan, rules: &Rules, check: impl FnOnce(&mut Cap, &[Entry])) {
+    let mut thickness = Thickness::of(sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let points: Vec<Entry> = (0..sewn.blocks[0].stitches.len()).map(|index| (0, index)).collect();
+    // Every top stitch covers as sewn.
+    // Every top stitch covers as sewn, and the longest stitch of each element is known, as the cap finds them.
+    let (mut ribbons, mut longest) = (Ribbons::default(), BTreeMap::new());
+    for stitch in thickness.sewn() {
+        let element = sewn.blocks[stitch.block].stitches[stitch.index].origin.element;
+        let most: &mut f64 = longest.entry((element, stitch.role == Role::Top)).or_default();
+        *most = most.max(stitch.length());
+        if stitch.role == Role::Top {
+            ribbons
+                .add(Ribbon::of((stitch.from, stitch.to), (0.0, 0.0), (stitch.block, stitch.index), element), &mut Budget::DEFAULT.meter())
+                .unwrap();
+        }
+    }
+    let mut cap = Cap {
+        pass: Pass::new(sewn, &mut thickness, rules),
+        ribbons,
+        longest,
+        taken: [0.0; 4],
+        times: [0; 4],
+        pulled: [0; 2],
+        moves: BTreeMap::new(),
+        refused: BTreeSet::new(),
+        places: BTreeSet::new(),
+    };
+    check(&mut cap, &points);
+}
+
+#[test]
+fn req_auto_195_below_the_limit_the_cap_pulls_a_knot_in_by_its_first_share() {
+    // The fan's crowded rail has its points 0.08 mm apart, closer than half the spacing: a knot. It sews 3.90
+    // fills, between the cap and the limit.
+    let (mut sewn, column, _) = fanned(0.08);
+    let before = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap().most(Measure::Fills).value;
+    assert!(before > 3.0 && before <= 4.0, "{before}");
+    let pulls = pullable(&column, true);
+    let rules = Rules { cap: 3.0, limit: 4.0, columns: &column, pulls: &pulls, ..rules() };
+    let mut pulled = sewn.clone();
+    let (capped, kept, measured) = cap(&mut pulled, &rules);
+    let capped = capped.unwrap();
+    assert!(capped.pulled[0] > 0 && capped.took() && !capped.ran_out, "{capped:?}");
+    assert!(measures_as(&kept, &measured));
+    assert!(measured.most(Measure::Fills).value <= 3.0, "{}", measured.most(Measure::Fills).value);
+    assert_eq!(capped.thickest, measured.most(Measure::Fills));
+    // Each moved point moved once, a quarter of the way from the crowded rail at x = 4 to the open one at 0.
+    let moves = moved(&sewn, &pulled);
+    assert_eq!(moves.len(), capped.pulled[0]);
+    assert!(moves.iter().all(|(a, b)| a.x() == 4.0 && (b.x() - 3.0).abs() <= 0.05), "{moves:?}");
+    // With `above_limit` nothing is pulled in under the limit.
+    let pulls = pullable(&column, false);
+    let (capped, _, _) = cap(&mut sewn.clone(), &Rules { pulls: &pulls, ..rules });
+    assert!(capped.as_ref().is_none_or(|capped| capped.pulled == [0, 0]), "{capped:?}");
+    // Nor at the cap or under it.
+    let (capped, _, _) = cap(&mut sewn, &Rules { cap: before, ..rules });
+    assert!(capped.as_ref().is_none_or(|capped| capped.pulled == [0, 0]), "{capped:?}");
+}
+
+#[test]
+fn req_auto_195_below_the_limit_a_point_off_a_knot_moves_only_under_a_later_shape() {
+    // The fan's crowded rail has its points 0.25 mm apart: crowded, as the inside of a bend, but no knot.
+    // Its points, moved a quarter of the way in, end near x = 3. A run of another shape at x = 3.05 covers
+    // those ends when it sews after the fan, and not before it, nor as the fan's own.
+    let fan = fan(0.25);
+    let over: Vec<(f64, f64)> = vec![(3.05, -1.0), (3.05, 5.0)];
+    let pulled_in = |parts: &[Part], made: &[&str]| -> (usize, StitchPlan, StitchPlan) {
+        let sewn = plan(parts);
+        let column: BTreeSet<ElementRef> =
+            made.iter().filter_map(|id| sewn.elements.iter().position(|e| e.as_str() == *id)).filter_map(ElementRef::from_index).collect();
+        let pulls = pullable(&column, true);
+        let rules = Rules { cap: 1.5, limit: 2.5, columns: &column, pulls: &pulls, ..rules() };
+        let mut pulled = sewn.clone();
+        let (capped, _, measured) = cap(&mut pulled, &rules);
+        assert!(measured.most(Measure::Fills).value <= 2.5, "{}", measured.most(Measure::Fills).value);
+        (capped.map_or(0, |capped| capped.pulled[0]), sewn, pulled)
+    };
+    let (alone, _, _) = pulled_in(&[("fan", Role::Top, fan.clone())], &["fan"]);
+    assert_eq!(alone, 0);
+    let (covered, sewn, pulled) = pulled_in(&[("fan", Role::Top, fan.clone()), ("over", Role::Top, over.clone())], &["fan"]);
+    assert!(covered > 0, "{covered}");
+    let moves = moved(&sewn, &pulled);
+    assert!(moves.iter().all(|(a, b)| a.x() == 4.0 && (b.x() - 3.0).abs() <= 0.05), "{moves:?}");
+    let (before, _, _) = pulled_in(&[("over", Role::Top, over.clone()), ("fan", Role::Top, fan.clone())], &["fan"]);
+    assert_eq!(before, 0);
+    let (own, _, _) = pulled_in(&[("fan", Role::Top, fan), ("fan", Role::Top, over)], &["fan"]);
+    assert_eq!(own, 0);
+}
+
+#[test]
+fn req_auto_195_a_pull_below_the_limit_makes_no_spot_above_the_limit_thicker() {
+    // A pull lays thread in the spots beside the one it lowers. Held at a level, no spot it lays thread in
+    // ends thicker than the larger of what it was and that level: at 0 every spot that gains thread refuses
+    // it, and the measure stays as it was; at 50 none does.
+    judged(0.05, &SHARES, |cap, _, meter| {
+        let crowded = (0, 11);
+        let near = cap.pass.thickness.point(cap.pass.stitch(crowded).unwrap().0);
+        let pulled = cap.pulled(crowded, 0, &BTreeMap::new(), near, meter).unwrap().unwrap();
+        let was = cap.pass.thickness.clone();
+        assert!(!cap.pass.held(&pulled.removed, &pulled.added, Some(0.0), meter).unwrap());
+        assert!(measures_as(cap.pass.thickness, &was));
+        assert!(cap.pass.held(&pulled.removed, &pulled.added, Some(50.0), meter).unwrap());
+        assert!(!measures_as(cap.pass.thickness, &was));
+    });
+    judged(0.05, &SHARES, |cap, _, meter| {
+        let crowded = (0, 11);
+        let near = cap.pass.thickness.point(cap.pass.stitch(crowded).unwrap().0);
+        let pulled = cap.pulled(crowded, 0, &BTreeMap::new(), near, meter).unwrap().unwrap();
+        assert!(cap.pass.held(&pulled.removed, &pulled.added, None, meter).unwrap());
+    });
+}
+
+#[test]
+fn req_auto_194_the_pull_in_goes_on_past_a_spot_no_point_lowers() {
+    // A pile no point of the fan lays thread in is the thickest spot: the pull-in stops there, or goes on to
+    // the fan's spot with `skip`.
+    let mut sewn = plan(&[("pile", Role::Top, pile(30.0)), ("fan", Role::Top, fan(0.05))]);
+    let column: BTreeSet<ElementRef> = ElementRef::from_index(1).into_iter().collect();
+    let pulls = pullable(&column, false);
+    let rules = Rules { cap: 3.0, limit: 4.0, columns: &column, pulls: &pulls, ..rules() };
+    for (skip, pulls) in [(false, false), (true, true)] {
+        on_cap(&mut sewn.clone(), &rules, |cap, points| {
+            cap.pull_in(points, 4.0, skip, &mut Budget::DEFAULT.meter()).unwrap();
+            assert_eq!(cap.pulled[0] > 0, pulls, "{skip}");
+        });
+    }
+    // Each spot costs a unit of work for each spot of the measure as it is looked for.
+    on_cap(&mut sewn, &rules, |cap, points| {
+        let (columns, rows) = cap.pass.thickness.size();
+        let mut meter = Budget { max_work: units(columns * rows), ..Budget::DEFAULT }.meter();
+        assert!(cap.pull_in(points, 4.0, true, &mut meter).is_err());
+    });
+}
+
+#[test]
+fn req_auto_194_the_last_resort_goes_on_past_a_spot_no_point_lowers() {
+    // A pile of a shape sewn by its own settings, which the cap may not touch, is the thickest spot. A column
+    // sewing 5 fills beside it loses top points with `skip`, not without it; and the cap, which runs both,
+    // takes them and leaves the column under the limit.
+    let column_points: Vec<(f64, f64)> = (0..5).flat_map(|_| zigzag(4.0, 0.25)).collect();
+    let sewn = plan(&[("pile", Role::Top, pile(30.0)), ("column", Role::Top, column_points)]);
+    let column: BTreeSet<ElementRef> = ElementRef::from_index(1).into_iter().collect();
+    let rules = Rules { cap: 3.0, limit: 4.0, columns: &column, ..rules() };
+    for (skip, takes) in [(false, false), (true, true)] {
+        on_cap(&mut sewn.clone(), &rules, |cap, points| {
+            cap.last_resort(points, skip, &mut Budget::DEFAULT.meter()).unwrap();
+            assert_eq!(cap.times[Kind::Column.at()] > 0, takes, "{skip}");
+        });
+    }
+    let mut capped_plan = sewn.clone();
+    let mut thickness = Thickness::of(&capped_plan, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let done = capped(&mut capped_plan, &mut thickness, &rules, &column, &Budget::DEFAULT).unwrap().unwrap();
+    assert!(done.times[Kind::Column.at()] > 0, "{done:?}");
+    let at = |plan: &StitchPlan| Thickness::of(plan, &mut Budget::DEFAULT.meter()).unwrap().unwrap().at(Measure::Fills, p(2.0, 1.5));
+    assert!(at(&sewn) > 4.0 && at(&capped_plan) <= 4.0, "{} {}", at(&sewn), at(&capped_plan));
+}
+
+#[test]
+fn req_auto_195_a_plan_is_thicker_where_its_thickest_spot_or_its_area_above_the_limit_grows() {
+    let measure = |parts: &[Part]| Thickness::of(&plan(parts), &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let fan = measure(&[("fan", Role::Top, fan(0.05))]);
+    let thinner = measure(&[("fan", Role::Top, super::fan(0.3))]);
+    let limit = 4.0;
+    let thicker = |before: &Thickness, after: &Thickness| super::thicker(before, after, limit, &mut Budget::DEFAULT.meter()).unwrap();
+    assert!(!thicker(&fan, &fan));
+    assert!(!thicker(&fan, &thinner));
+    assert!(thicker(&thinner, &fan));
+    // A second column as thick beside a column 5 fills thick: as thick, with more area above the limit.
+    let column = |x: f64| -> Vec<(f64, f64)> { (0..5).flat_map(|_| zigzag(4.0, 0.25)).map(|(a, y)| (a + x, y)).collect() };
+    let one = measure(&[("one", Role::Top, column(0.0))]);
+    let two = measure(&[("one", Role::Top, column(0.0)), ("two", Role::Top, column(20.0))]);
+    assert!(one.over(Measure::Fills, limit, &mut Budget::DEFAULT.meter()).unwrap().area > 0.0);
+    assert!((one.most(Measure::Fills).value - two.most(Measure::Fills).value).abs() < 1e-9);
+    assert!(thicker(&one, &two) && !thicker(&two, &one));
+    // A unit of work for each spot of each.
+    let spots = |thickness: &Thickness| {
+        let (columns, rows) = thickness.size();
+        units(columns * rows)
+    };
+    let work = spots(&one) + spots(&two);
+    assert!(super::thicker(&one, &two, limit, &mut Budget { max_work: work - 1, ..Budget::DEFAULT }.meter()).is_err());
+}
+
+#[test]
+fn req_auto_195_a_pull_in_below_the_limit_the_plan_measured_again_finds_thicker_is_undone() {
+    // The cap is given a measure without the pile the plan sews: measured again after the pull-in below the
+    // limit, the plan is thicker than the measure said before it, and the plan keeps the points as they were
+    // before that pull-in.
+    let fan_points = fan(0.08);
+    let (sewn, column, _) = fanned(0.08);
+    let pulls = pullable(&column, true);
+    let rules = Rules { cap: 3.0, limit: 4.0, columns: &column, pulls: &pulls, ..rules() };
+    let with_pile = plan(&[("fan", Role::Top, fan_points), ("pile", Role::Top, pile(30.0))]);
+    let mut kept = with_pile.clone();
+    let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let undone = capped(&mut kept, &mut thickness, &rules, &column, &Budget::DEFAULT).unwrap().unwrap();
+    assert_eq!(undone.pulled, [0, 0], "{undone:?}");
+    assert!(moved(&with_pile, &kept).is_empty());
+    // Given the plan's own measure, the pull-in stays.
+    let mut kept = sewn.clone();
+    let mut thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let stays = capped(&mut kept, &mut thickness, &rules, &column, &Budget::DEFAULT).unwrap().unwrap();
+    assert!(stays.pulled[0] > 0 && !moved(&sewn, &kept).is_empty(), "{stays:?}");
+}
+
+#[test]
+fn req_auto_195_a_cap_out_of_work_while_it_pulls_in_below_the_limit_keeps_a_plan_it_measures_again() {
+    let (sewn, column, _) = fanned(0.08);
+    let pulls = pullable(&column, true);
+    let rules = Rules { cap: 3.0, limit: 4.0, columns: &column, pulls: &pulls, ..rules() };
+    let thickness = Thickness::of(&sewn, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let enough = least(&sewn, &thickness, &rules);
+    let mut ran_out = 0;
+    for max_work in 0..enough {
+        let (mut plan, mut measure) = (sewn.clone(), thickness.clone());
+        let Ok(Some(capped)) = capped(&mut plan, &mut measure, &rules, &all(&sewn), &Budget { max_work, ..Budget::DEFAULT }) else { continue };
+        assert!(capped.ran_out, "{max_work}: {capped:?}");
+        let measured = Thickness::of(&plan, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        assert!(measures_as(&measure, &measured), "{max_work}");
+        assert_eq!(capped.thickest, measured.most(Measure::Fills), "{max_work}");
+        ran_out += 1;
+    }
+    assert!(ran_out > 0, "{enough}");
+}

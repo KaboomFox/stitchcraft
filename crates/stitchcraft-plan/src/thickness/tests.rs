@@ -339,6 +339,28 @@ fn req_auto_061_the_thickest_spot_is_a_corner_of_the_cells() {
 }
 
 #[test]
+fn req_auto_194_the_thickest_spot_besides_some_is_found_as_the_thickest() {
+    let mut thickness = drawn(&[]);
+    thickness.fills[2 * 12 + 7] = 4.25;
+    thickness.fills[3 * 12 + 1] = 4.0;
+    thickness.fills[5 * 12 + 1] = 4.0;
+    let besides = |spots: &[usize]| thickness.most_besides(Measure::Fills, &spots.iter().copied().collect(), &mut meter()).unwrap();
+    let spot = |at: usize| Spot { value: thickness.fills[at], at: thickness.point(thickness.grid.spot(at)) };
+    assert_eq!(besides(&[]), Some((2 * 12 + 7, spot(2 * 12 + 7))));
+    // Of spots with the same value, the last is the one named, as the thickest.
+    assert_eq!(besides(&[2 * 12 + 7]), Some((5 * 12 + 1, spot(5 * 12 + 1))));
+    assert_eq!(besides(&[2 * 12 + 7, 5 * 12 + 1]), Some((3 * 12 + 1, spot(3 * 12 + 1))));
+    assert_eq!(besides(&(0..144).collect::<Vec<usize>>()), None);
+    assert_eq!(
+        thickness.most_besides(Measure::Points, &BTreeSet::new(), &mut meter()).unwrap().map(|(_, spot)| spot),
+        Some(thickness.most(Measure::Points))
+    );
+    // A unit of work for each spot.
+    let work = least(&|meter| thickness.most_besides(Measure::Fills, &BTreeSet::new(), meter).is_ok());
+    assert_eq!(work, 144);
+}
+
+#[test]
 fn req_auto_062_the_stack_names_each_elements_thread_in_the_window() {
     let rows = rows(1);
     let base = [(0.0, 5.05), (10.0, 5.05), (10.0, 5.25), (0.0, 5.25)];
