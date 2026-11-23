@@ -440,11 +440,10 @@ pub(super) fn judged(
     let (rows, before) = (compare(&ours, &theirs), outcome.failures.len());
     judge(rows.clone(), excused, &again, outcome);
     let said = picture::verdict(outcome.failures.len() > before, &rows, excused);
-    let sides = (picture::Side { name: "Ink/Stitch", plan: &their_plan, measured: &theirs }, picture::Side {
-        name: "StitchCraft",
-        plan: &our_plan,
-        measured: &ours,
-    });
+    let sides = (
+        picture::Side { name: "Ink/Stitch", plan: &their_plan, measured: &theirs },
+        picture::Side { name: "StitchCraft", plan: &our_plan, measured: &ours },
+    );
     let path = root.join(PICTURES).join(format!("{}.png", outcome.case));
     let drawn = picture::pictured(&path, &outcome.case, &said, &rows, &sides.0, &sides.1);
     outcome.pictures.push(drawn);
@@ -832,7 +831,10 @@ mod tests {
         excused.notes.push("trims differ".into());
         excused.pictures.push(Picture { path: "target/conformance/differential/pictures/excused.png".into(), degraded: vec!["why".into()] });
         let report = report(&[skipped, passed, excused, failed], "abc1234", "d59c9ab1e390285a6c67822436ffd9ba9843d8b4");
-        assert!(report.contains("\n![excused: Ink/Stitch's file, StitchCraft's and where they differ](differential/pictures/excused.png)\n"), "{report}");
+        assert!(
+            report.contains("\n![excused: Ink/Stitch's file, StitchCraft's and where they differ](differential/pictures/excused.png)\n"),
+            "{report}"
+        );
         assert!(report.contains("\n- picture degraded: why\n"), "{report}");
         assert!(report.contains("StitchCraft at `abc1234`, against Ink/Stitch at `d59c9ab`"), "{report}");
         let at = |what: &str| report.find(what).unwrap_or_else(|| panic!("no {what}: {report}"));

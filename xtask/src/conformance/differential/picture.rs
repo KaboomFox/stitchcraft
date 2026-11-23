@@ -25,6 +25,10 @@
 //! the docs' shots. A panel the preview can't draw is left empty, and the picture says it is degraded and why
 //! ([`Drawn::degraded`]), which the report repeats.
 
+// Pixels and millimetres are converted back and forth here: every value is a size or a place within a picture
+// whose sides are a few thousand pixels at most, so no conversion loses what matters.
+#![allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss)]
+
 use stitchcraft_core::Budget;
 use stitchcraft_plan::{StitchPlan, profiles};
 use stitchcraft_render::raster::MARGIN_MM;
@@ -208,10 +212,13 @@ pub fn draw(title: &str, verdict: &str, rows: &[Compared], theirs: &Side, ours: 
             };
             let px = ((column as f32 + 0.5) * map.pixel as f32 * scale + ox - x as f32).floor();
             let py = ((row as f32 + 0.5) * map.pixel as f32 * scale + oy - top as f32).floor();
-            if px >= 0.0 && py >= 0.0 && (px as u32) < w && (py as u32) < h {
-                if let Some(spot) = seen.get_mut((py as u32 * w + px as u32) as usize) {
-                    *spot |= flag;
-                }
+            if px >= 0.0
+                && py >= 0.0
+                && (px as u32) < w
+                && (py as u32) < h
+                && let Some(spot) = seen.get_mut((py as u32 * w + px as u32) as usize)
+            {
+                *spot |= flag;
             }
         }
     }
@@ -380,7 +387,7 @@ mod tests {
         assert_eq!(picture.width(), PAD + 3 * (LEAST_WIDTH + PAD));
         assert_eq!(picture.height(), PAD + 34 + 20 + (14.4_f32 * 8.0).ceil() as u32 + 7 * 15 + PAD);
         let markdown = report(&[judged_case], "abc1234", "d59c9ab");
-        assert!(markdown.contains(&format!("](xtask-tests/differential-pictures/target/conformance/differential/pictures/square.png)")) || markdown.contains("square.png)"), "{markdown}");
+        assert!(markdown.contains("](target/xtask-tests/differential-pictures/target/conformance/differential/pictures/square.png)"), "{markdown}");
         assert!(markdown.contains("![square: Ink/Stitch's file, StitchCraft's and where they differ]("), "{markdown}");
         // A case one program doesn't sew has no picture.
         let mut alone = outcome("alone");
@@ -423,7 +430,11 @@ mod tests {
     #[test]
     fn a_picture_says_whether_the_case_agrees_is_excused_or_fails() {
         let row = |measure: Measure, within: bool| (measure, "1".to_string(), "2".to_string(), within);
-        let excused = BTreeMap::from([("trims".to_string(), "DEV-FMT-001".to_string()), ("jumps".to_string(), "DEV-FMT-001".to_string()), ("size".to_string(), "DEV-X-002".to_string())]);
+        let excused = BTreeMap::from([
+            ("trims".to_string(), "DEV-FMT-001".to_string()),
+            ("jumps".to_string(), "DEV-FMT-001".to_string()),
+            ("size".to_string(), "DEV-X-002".to_string()),
+        ]);
         let rows = [row(Measure::Trims, false), row(Measure::Jumps, false), row(Measure::Size, true)];
         assert_eq!(verdict(false, &rows, &excused), "excused by DEV-FMT-001");
         let both = [row(Measure::Trims, false), row(Measure::Size, false)];
@@ -475,9 +486,10 @@ mod tests {
         assert!(Pixmap::decode_png(&png).is_ok());
         // The kept file is the one the shot compares Ink/Stitch's with: a copy that differs is stale.
         assert!(super::super::stale_shots(&root, "inkstitch-ring", &std::fs::read(root.join(kept)).unwrap()).is_empty());
-        assert_eq!(super::super::stale_shots(&root, "inkstitch-ring", b"#PES"), [format!(
-            "{kept} is not the PES file Ink/Stitch writes of inkstitch-ring now: write that over it, and run cargo xtask shots"
-        )]);
+        assert_eq!(
+            super::super::stale_shots(&root, "inkstitch-ring", b"#PES"),
+            [format!("{kept} is not the PES file Ink/Stitch writes of inkstitch-ring now: write that over it, and run cargo xtask shots")]
+        );
         assert!(super::super::stale_shots(&root, "inkstitch-fill-rect", b"#PES").is_empty());
         // Only a case of a design file, and only with its file kept.
         assert!(super::super::shot(&root, "inkstitch-ts04", kept).unwrap_err().contains("no Ink/Stitch differential case of a design file"));

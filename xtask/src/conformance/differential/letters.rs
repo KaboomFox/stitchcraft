@@ -3,14 +3,12 @@
 //! **Why strokes.** The repository keeps no font, and a font's outlines would bring curves, whose drawing
 //! isn't the same on every platform. The thickness key draws its figures as a calculator's 7 bars for the same
 //! reason (`stitchcraft-render`'s `key`). A picture's labels need letters too, so each character here is a
-//! few straight lines on a grid 4 wide and 6 high, which tiny-skia draws with arithmetic alone: a picture
+//! few straight lines on a grid 4 wide and 6 high, from its top left corner, which tiny-skia draws with arithmetic alone: a picture
 //! is the same bytes wherever it is drawn, as `cargo xtask shots` needs. Only capitals are drawn, and a
 //! character without strokes of its own is drawn as a question mark.
 
 /// A character's width on the grid, and the room after it: a character takes 6 units.
 pub const ADVANCE: f32 = 6.0;
-/// A character's height on the grid.
-pub const HEIGHT: f32 = 6.0;
 
 /// The lines of `c`, each a run of points on the grid from its top left corner, `x` then `y`, a digit each.
 fn strokes(c: char) -> &'static [&'static str] {
@@ -99,7 +97,7 @@ mod tests {
             let lines = segments(c);
             assert!(!lines.is_empty(), "{c}");
             assert!(lines.iter().all(|&((x0, y0), (x1, y1))| [x0, x1].iter().all(|x| (0.0..=4.0).contains(x))
-                && [y0, y1].iter().all(|y| (0.0..=HEIGHT).contains(y))), "{c}: {lines:?}");
+                && [y0, y1].iter().all(|y| (0.0..=6.0).contains(y))), "{c}: {lines:?}");
             // Each character's look is its own, and none is the stand-in for those without strokes.
             assert_ne!(lines, segments('\u{1F9F5}'), "{c}");
         }

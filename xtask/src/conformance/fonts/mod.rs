@@ -52,8 +52,8 @@ use stitchcraft_engine::generate::stitch_type_of;
 use stitchcraft_params::StitchType;
 use stitchcraft_plan::{MachineProfile, StitchPlan, profiles};
 
-use super::differential::{self, Compared, Inkstitch, Measured, Ran};
 use super::differential::picture::{self, Side};
+use super::differential::{self, Compared, Inkstitch, Measured, Ran};
 use super::runner::{Outcome, Picture};
 use crate::corpus::{self, Font};
 use crate::util;
@@ -264,8 +264,12 @@ fn jobs(fonts: &[Font], options: &Options) -> (Vec<Job>, Vec<String>) {
 /// another, and each glyph's design handed to the next free worker.
 /// With `sample`, the first glyph of each font is drawn small for the contact sheet.
 fn sew_all(root: &Path, inkstitch: &Inkstitch, fonts: &[Font], jobs: &[Job], excuses: &Excuses, sample: bool) -> Vec<Sewn> {
-    let firsts: BTreeSet<&Job> =
-        jobs.iter().enumerate().filter(|(k, job)| sample && jobs.iter().position(|other| other.font == job.font) == Some(*k)).map(|(_, job)| job).collect();
+    let firsts: BTreeSet<&Job> = jobs
+        .iter()
+        .enumerate()
+        .filter(|(k, job)| sample && jobs.iter().position(|other| other.font == job.font) == Some(*k))
+        .map(|(_, job)| job)
+        .collect();
     let workers = std::thread::available_parallelism().map_or(1, usize::from);
     let (send, receive) = mpsc::sync_channel::<(Job, Result<String, String>)>(workers * 2);
     let receive = Mutex::new(receive);
@@ -551,7 +555,8 @@ mod tests {
     #[test]
     fn a_glyph_s_picture_names_the_ledger_s_entries_that_excuse_it() {
         let how = |lines: &[&str]| lines.iter().map(|line| line.to_string()).collect::<Vec<_>>();
-        let excused = Verdict::Excused(how(&["trims differ, as DEV-FMT-001 says.", "size differ, as DEV-SAT-013 says", "jumps, as DEV-FMT-001 says"]));
+        let excused =
+            Verdict::Excused(how(&["trims differ, as DEV-FMT-001 says.", "size differ, as DEV-SAT-013 says", "jumps, as DEV-FMT-001 says"]));
         assert_eq!(said(&excused), "excused by DEV-FMT-001, DEV-SAT-013");
         assert_eq!(said(&Verdict::Known(how(&["Measures differ (known: M9.9)"]))), "known: M9.9");
         // Without an entry or a step named, the verdict's name.

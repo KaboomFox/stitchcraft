@@ -26,7 +26,7 @@ What a user can do with this version, before its first release. The entries belo
   written as a web page too, `target/conformance/differential/index.html`. The glyph differential draws the
   glyphs that differ or are excused, and a contact sheet of its sample. CI publishes the nightly report
   with its pictures at `/differential/` on the documentation site, and a pull request's beside its preview.
-  Nothing sews otherwise, and the golden files stay as they were.
+  Every design sews as before, and the golden files stay as they were.
 - M13.8: VectorCraft documents are digitized automatically by default (`REQ-AUTO-163` to `REQ-AUTO-166`,
   `REQ-CLI-026`, `REQ-CLI-027`, `REQ-VC-036`). `stitch plan` and `stitch export` now read a `.vectorcraft`
   file as `--auto` read it, and write the same machine file. A shape with a StitchCraft Fill, Satin or
