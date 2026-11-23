@@ -3710,6 +3710,12 @@ What a user can do with this version, before its first release. The entries belo
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes`, `TS-13C.pes`, `TS-13D.pes` and `TS-13E.pes`
+  (M13.64, the cap works below the limit too). In the digitized half of each, the cap pulls in a satin
+  column's points at its tight turns below 4 fills, down to the cap. In TS-13A it also goes on past the spot
+  of the half set by hand, which it may not lower, and takes 2 more points of a column above 4: the sheet sews
+  23,777 stitches, where it sewed 23,779. The other sheets keep their stitch counts and sizes, and the halves
+  as drawn are as they were.
 - Changed `conformance/golden/testsheets/TS-13B.pes` (M13.63, each thread threaded once). Its digitized half
   threads each of its 4 threads once, the base layer's red first and the black words and lines last, after
   the panes, where black was threaded twice. The sheet sews 14,415 stitches, where it sewed 14,422, and is
