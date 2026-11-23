@@ -1,6 +1,6 @@
 # Engine pipeline
 
-<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/generate/**, crates/stitchcraft-engine/src/generators/next.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/check.rs, crates/stitchcraft-engine/src/check/**, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, crates/stitchcraft-engine/src/underlays_first.rs, crates/stitchcraft-engine/src/underlays_first/**, apps/stitchcraft-cli/src/commands/plan.rs, apps/stitchcraft-cli/src/commands/plan/** -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/generate/**, crates/stitchcraft-engine/src/generators/next.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/check.rs, crates/stitchcraft-engine/src/check/**, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, crates/stitchcraft-engine/src/underlays_first.rs, crates/stitchcraft-engine/src/underlays_first/**, apps/stitchcraft-cli/src/commands/plan.rs, apps/stitchcraft-cli/src/commands/plan/**, crates/stitchcraft-engine/src/pipeline/** -->
 
 From a `Design` to a checked `StitchPlan`. Each stage is a module in `stitchcraft-engine` with its
 own tests; stages communicate only through the types in the [data model](data-model.md).
@@ -33,13 +33,20 @@ budget's work to itself, naming its parts included, and one that needs more is l
 width says is sewn otherwise or left out with a warning.
 
 The digitized elements are then sewn as neighbours, in an order of their own. What overlaps keeps its
-paint order, and a line sews after the fill it borders. Then the thread changes as seldom as it can, the
-nearest element next ([image to embroidery](image-to-embroidery.md#sewing-order), `SC-I0907`). Elements
+paint order, and a line sews after the fill it borders where that costs no thread change
+(`auto_thread_once`). Then the thread changes as seldom as it can, the nearest element next
+([image to embroidery](image-to-embroidery.md#sewing-order), `SC-I0907`). Elements
 with settings keep their order among themselves, unless `--sort-colours` is given. The switch brings a
 design without automatic elements through this stage too. An element sewn in several threads moves as one,
 its colours together and in their order (`REQ-AUTO-024`). With `auto_details_last` on, the details sew
 after the larger areas round them where that costs no thread change
 ([details last](image-to-embroidery.md#details-last), `REQ-AUTO-098`).
+
+Thickness comes before threading (`REQ-AUTO-189`). `plan` plans a design once. When the order threads each
+thread once in a way that `auto_thread_once` off wouldn't allow, and the cap at the end of planning leaves a
+spot above the warning's limit that `SC-W0913` is said of, the design is planned a second time with that
+setting's order. That plan comes back when its thickest spot is at the limit or under it, with `SC-W0927`
+([each thread threaded once](image-to-embroidery.md#each-thread-threaded-once)).
 
 ## 1. Normalize
 

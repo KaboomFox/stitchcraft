@@ -102,7 +102,7 @@ pub use neighbours::{TOUCHING, is_part};
 pub use params::{
     ADVANCED, AutoParams, COLUMN_OVERLAP, COLUMN_REACH, DETAILS_LAST, FILL_ANGLE, FILL_OUTLINE, FILL_UNEVEN, IGNORE_BACKGROUND, LONGEST_SATIN_STITCH,
     MAX_REACH, MAX_SATIN_WIDTH, MAX_SPLIT_SATIN_WIDTH, MAX_UNEVENNESS, MIN_AREA, MIN_FILL_WIDTH, MIN_LIKENESS, MIN_LINE_UNEVENNESS, MIN_SLENDERNESS,
-    MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, SHORT_STITCHES, STITCH, TAPER, WIDEST_SPLIT_SATIN,
+    MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, SHORT_STITCHES, STITCH, TAPER, THREAD_ONCE, WIDEST_SPLIT_SATIN,
 };
 use rules::{Asked, Bounds, Fired, Measures, RuleId};
 pub use thick::{Held, WARNING_CHARS};
@@ -423,7 +423,7 @@ impl Digitized {
 /// `SC-I0907`, `SC-I0904`). A design without automatic elements that doesn't ask for its threads sorted
 /// comes back as it is.
 pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>, Vec<Diagnostic>) {
-    let Sewing { elements, diagnostics, .. } = sewing(design, budget);
+    let Sewing { elements, diagnostics, .. } = sewing(design, budget, false);
     (elements, diagnostics)
 }
 
@@ -447,6 +447,11 @@ pub(crate) struct Sewing<'d> {
     /// them, where the photo style would sew the design otherwise ([`style::leaning`]): the thickness
     /// warning names the photo style where one lays thread at the thickest spot (`REQ-AUTO-169`).
     pub(crate) leaning: BTreeSet<ElementId>,
+    /// Whether each thread is threaded once where the shapes allow it (`auto_thread_once`, `REQ-AUTO-184`) in
+    /// an order that the strict rules, those of the setting off, wouldn't allow: a design so sewn that is too
+    /// thick is planned again with each line after the fills it borders (`REQ-AUTO-189`). An order they
+    /// allow is itself a strict order with as few thread changes, so there is nothing to weigh.
+    pub(crate) once: bool,
 }
 
 /// Whether a hole of an area may be kept open ([`OPEN_HOLE`]), given the box round it and `meter` to charge.
@@ -477,8 +482,9 @@ fn meets(a: Rect, b: Rect) -> bool {
     a.min().x() <= b.max().x() && b.min().x() <= a.max().x() && a.min().y() <= b.max().y() && b.min().y() <= a.max().y()
 }
 
-/// [`digitized`], with the ids of the base layer's pieces.
-pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
+/// [`digitized`], with the ids of the base layer's pieces. When `strict`, each line sews after the fills it
+/// borders, as with `auto_thread_once` off (`REQ-AUTO-189`).
+pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget, strict: bool) -> Sewing<'d> {
     let automatic = design.elements().iter().any(|element| element.automatic);
     if !design.sort_colours && !automatic {
         let diagnostics = marks::unused_all(&design.marks, &design.guides);
@@ -486,7 +492,7 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
         // The elements set as digitizing's own sew as it made them (`REQ-AUTO-143`).
         let elements = expand::marked(Cow::Borrowed(design.elements()), &mut base, &mut made);
         let limits = expand::limits(None, &made, &design.settings);
-        return Sewing { elements, diagnostics, base, made, limits, leaning: BTreeSet::new() };
+        return Sewing { elements, diagnostics, base, made, limits, leaning: BTreeSet::new(), once: false };
     }
     let mut diagnostics = Vec::new();
     // Each mark's area and each guide's line are read once, before the shapes are cut to their clips.
@@ -576,8 +582,11 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     let outlined = lowest.is_some_and(|rules| rules.auto_fill_outline);
     // The details sew last only when the lowest automatic shape asks for it (`REQ-AUTO-098`).
     let last = lowest.is_some_and(|rules| rules.auto_details_last);
+    // Each thread is threaded once where the shapes allow it unless the lowest automatic shape turns it off
+    // (`REQ-AUTO-184`, `REQ-AUTO-186`).
+    let once = !strict && lowest.is_none_or(|rules| rules.auto_thread_once);
     let limits = lowest.map(thick::held);
-    let how = neighbours::How { sorted: design.sort_colours, outlined, last, marks: &marks };
+    let how = neighbours::How { sorted: design.sort_colours, outlined, last, once, marks: &marks };
     let mut beside = neighbours::beside(sewn, &design.settings, budget, how, base.map(|rules| (rules, &mut taken)));
     diagnostics.extend(std::mem::take(&mut beside.said));
     diagnostics.extend(marks.said(automatic));
@@ -602,7 +611,9 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     let limits = expand::limits(limits, &made, &design.settings);
     let leaning = style::leaning(&tally, &elements, &made);
     diagnostics.extend(tally.said());
-    Sewing { elements, diagnostics, base, made, limits, leaning }
+    // Only an order that the strict rules wouldn't allow can be thicker than the strict one (`REQ-AUTO-189`).
+    let once = once && !beside.strict;
+    Sewing { elements, diagnostics, base, made, limits, leaning, once }
 }
 
 /// `design` as automatic digitizing sews its colours: each thin line that merges into a neighbour

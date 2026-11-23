@@ -32,6 +32,8 @@ pub const FILL_UNEVEN: &str = "auto_fill_uneven";
 pub const FILL_OUTLINE: &str = "auto_fill_outline";
 /// The key of the switch that sews the details last.
 pub const DETAILS_LAST: &str = "auto_details_last";
+/// The key of the switch that threads each thread once where the shapes allow it.
+pub const THREAD_ONCE: &str = "auto_thread_once";
 /// The key of the fills' angle.
 pub const FILL_ANGLE: &str = "auto_fill_angle";
 /// The key of the widest satin column.
@@ -361,6 +363,19 @@ params! {
         auto_details_last: Toggle = "false", label "Details sew last",
             origin Origin::StitchCraft, stability Stability::Experimental;
 
+        /// Whether each thread is threaded once wherever the shapes as drawn allow it. On, the default, a line
+        /// that borders a fill sews after it only where that costs no thread change, and otherwise with its
+        /// thread, before the fill, whose rows then end on it: a design of 6 threads is threaded 6 times. Off, a
+        /// line sews after every fill it borders and covers the fill's edge, even where its thread is then
+        /// threaded again, as a machine with several needles that changes thread by itself allows. Where a
+        /// shade is drawn both under and over another, no order threads each thread once, and `SC-W0925` names
+        /// the shapes. Thickness comes first: where threading once leaves a spot above the warning's limit and
+        /// the order with each line after its fills doesn't, the design sews in that order, and `SC-W0927` says
+        /// how many more times its threads are threaded. The design goes by the setting of its lowest automatic
+        /// shape.
+        auto_thread_once: Toggle = "true", label "Thread each colour once",
+            origin Origin::StitchCraft, stability Stability::Experimental;
+
         /// How far a point of an area's outline may move when the outline is smoothed, before anything is
         /// digitized. A traced outline wobbles by less than a thread is wide, and the wobble sews short
         /// stitches and ragged edges. Corners stay, an edge 2 areas share is smoothed once so that no gap
@@ -440,14 +455,17 @@ mod tests {
                 &bounds[..],
                 &cover[..],
                 &thick[..],
-                &[DETAILS_LAST, "auto_smooth_mm", COLUMN_OVERLAP, COLUMN_REACH]
+                &[DETAILS_LAST, THREAD_ONCE, "auto_smooth_mm", COLUMN_OVERLAP, COLUMN_REACH]
             ]
             .concat()
         );
-        // The bounds, the base layer's offset and rows, the 2 limits of the cover's check, the 4 limits of the thickness and its cap, the switch of the details and the smoothing, the overlap under a column and the reach under one
+        // The bounds, the base layer's offset and rows, the 2 limits of the cover's check, the 4 limits of the thickness and its cap, the switches of the details and of one threading, the smoothing, the overlap under a column and the reach under one
         // are the advanced settings, which no dialog shows.
         let advanced: Vec<&str> = AutoParams::SPECS.iter().filter(|spec| spec.group == ADVANCED).map(|spec| spec.key).collect();
-        assert_eq!(advanced, [&bounds[..], &cover[..], &thick[..], &[DETAILS_LAST, "auto_smooth_mm", COLUMN_OVERLAP, COLUMN_REACH]].concat());
+        assert_eq!(
+            advanced,
+            [&bounds[..], &cover[..], &thick[..], &[DETAILS_LAST, THREAD_ONCE, "auto_smooth_mm", COLUMN_OVERLAP, COLUMN_REACH]].concat()
+        );
     }
 
     #[test]

@@ -316,7 +316,7 @@ fn said(sewn: &StitchPlan, budget: &Budget) -> (Vec<Diagnostic>, StitchPlan) {
     let held = Held { limits: Limits::DEFAULT, overlap: 0.0, cap: 4.0 };
     let mut kept = sewn.clone();
     let made: BTreeSet<ElementId> = sewn.elements.iter().cloned().collect();
-    let said = finished(
+    let (said, _) = finished(
         &mut kept,
         &held,
         (&[], &made, &BTreeSet::new(), &BTreeMap::new(), &BTreeMap::new()),

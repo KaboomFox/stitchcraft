@@ -337,10 +337,11 @@ fn ts13_the_jump_threads_that_its_stitches_sew_down() {
     // sews down 8 of its 18 where it sewed down 9. With smooth satin edges (M13.58) a later stitch sews down 18
     // of TS-13B's 46. With a star's points kept in its fill (REQ-AUTO-175), TS-13C's digitized half leaves 9,
     // 1 of them sewn down, where it left 13, and TS-13D's, its white disc filled whole under its star, sews
-    // down 4 of its 11.
+    // down 4 of its 11. With each thread threaded once (M13.63) TS-13B's black sews once, after its base layer in
+    // red, and a later stitch sews down 22 of its 46.
     for (id, recorded) in [
         ("TS-13A", [(8, 0), (18, 8)]),
-        ("TS-13B", [(6, 0), (46, 18)]),
+        ("TS-13B", [(6, 0), (46, 22)]),
         ("TS-13C", [(9, 4), (9, 1)]),
         ("TS-13D", [(1, 0), (11, 4)]),
         ("TS-13E", [(0, 0), (4, 1)]),
@@ -355,11 +356,12 @@ fn ts13_the_jump_threads_that_its_stitches_sew_down() {
 }
 
 /// How often the digitized half of each TS-13 sheet changes thread, from the stop after the half as drawn on,
-/// and one less than its threads, which no order betters. TS-13B's base layer and letters are black, and so
-/// are the lines of its windows, which sew after the fills they border: black sews twice. Before M13.22 the
+/// and one less than its threads, which no order betters. TS-13B's letters are black, and so are the lines of
+/// its windows, which sewed after the fills they border, so that black sewed twice. With each thread threaded
+/// once (M13.63) its base layer sews in red and its lines still after the panes, and black sews once. Before M13.22 the
 /// halves of TS-13A to TS-13C changed thread 5, 4 and 5 times, and that of TS-13D, which had TS-13E's buttons
 /// until M13.31, 8 times.
-const CHANGES: [(&str, usize, usize); 5] = [("TS-13A", 2, 2), ("TS-13B", 4, 3), ("TS-13C", 4, 4), ("TS-13D", 3, 3), ("TS-13E", 2, 2)];
+const CHANGES: [(&str, usize, usize); 5] = [("TS-13A", 2, 2), ("TS-13B", 3, 3), ("TS-13C", 4, 4), ("TS-13D", 3, 3), ("TS-13E", 2, 2)];
 
 #[test]
 fn req_auto_037_the_digitized_halves_of_the_ts13_sheets_change_thread_as_seldom_as_their_lines_allow() {

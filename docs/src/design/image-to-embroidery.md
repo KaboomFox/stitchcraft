@@ -3986,7 +3986,8 @@ rules.
 2. **A line after the fill it borders.** A line that touches a fill without overlapping it sews after the
    fill and covers its edge. Its running stitch is as wide as its thread. It can't reach under the fill, and a
    fill sewn after it lays the ends of its rows on it. Rule 1 comes first. A line that rule 1 already sews
-   before the fill, through the shapes it overlaps, keeps its place.
+   before the fill, through the shapes it overlaps, keeps its place. M13.63 plans that it gives way where it
+   costs a threading ([each thread threaded once](#each-thread-threaded-once)).
 3. **The fewest thread changes** (`REQ-AUTO-037`, M13.22). Within rules 1 and 2 the elements sew in
    batches of one thread. Once a thread is sewing, every element of it that is free to sew does, and those
    they free: an element is free when every element that must sew before it has. Sewing more of a thread
@@ -4163,6 +4164,250 @@ too long to digitize and measure in the tests' debug build, so CI's `perf` job r
 release build ([conformance](conformance.md#cases-in-the-release-build)). The pieces of the dogs that
 showed fabric before the rules above, the paw of the dog on turf and the running dog's ear, are cases of
 `tests/auto_fabric.rs` too.
+
+### Each thread threaded once
+
+The owner's machine has one needle, and each change of thread is a rethread by hand. Of the traced dogs she
+wrote on 2026-11-22 that each colour should be sewn in one go, "this is also because of depth: on a sewing, a
+shade is all one depth". In her answers she added "Please expect 1 color is one rethreading, so 9 layers would
+be 9 rethreads". So a design of N threads should be threaded N times. All of one shade then sews together,
+with N − 1 changes. M13.63 measured where the extra threadings come from and
+what sewing each thread once costs. How thick a design sews is still her first concern (the limit of 4 fills,
+`SC-W0913`), and a rule must hold on every design of the varied set.
+
+#### The extra threadings today
+
+The set has 77 designs: the 18 review drawings, the repository's 30 SVG fixtures and its traced round patch,
+the 9 test pictures, the traced pear, the lettered patch, the digitized halves of TS-13A to TS-13E, the 4 traced
+dogs and 8 traced photos kept locally, 2 of them traced in 9 and 12 threads. The TS-13 sheets as a whole are
+left out: their drawn halves have settings and sew in paint order. A design is threaded once for each run of
+colour blocks in its plan. Where it is threaded more often than it has threads, the order's rules are read as a
+graph of threads, with an arrow from one thread to another wherever an element of the first must sew before
+an element of the second. An order threads each thread once exactly when that graph has no loop, and each loop
+names the shapes that close it.
+
+| Design | Threads | Threaded | By rule 2 and the search | By the base layer | By shapes drawn under and over |
+|---|---:|---:|---:|---:|---:|
+| Dog on turf, 6 threads | 6 | 9 | 3 | 0 | 0 |
+| Dog on turf, 9 threads | 9 | 13 | 4 | 0 | 0 |
+| Running dog, 6 threads | 6 | 9 | 3 | 0 | 0 |
+| Running dog, 9 threads | 9 | 12 | 3 | 0 | 0 |
+| A traced bird | 6 | 11 | 5 | 0 | 0 |
+| A traced building | 6 | 10 | 3 | 0 | 1 |
+| A traced cat | 6 | 9 | 2 | 0 | 1 |
+| A traced coleus leaf, 9 threads | 9 | 47 | 37 | 0 | 1 |
+| A traced magnolia, 12 threads | 12 | 48 | 36 | 0 | 0 |
+| TS-13B, digitized half | 4 | 5 | 1 | 0 | 0 |
+| The flower of the review set | 4 | 5 | 0 | 1 | 0 |
+| The house of the review set | 4 | 6 | 0 | 0 | 2 |
+
+The other 65 designs thread each thread once. Of the 103 threadings beyond one a thread, 97 come from rule 2,
+[a line after the fill it borders](#sewing-order). A dark line of fur borders a lighter fill that lies on a
+dark fill. The dark fill sews before the light fill and the line after it, and the dark thread is threaded twice. In the traced photos lines of
+each shade border fills of the others, and rule 2 alone makes loops through up to 6 threads. On the coleus
+and the magnolia traced in 9 and 12 threads the search for the fewest changes ran out of work after 204,000 and
+312,000 rows, and the order fell back to sewing each thread while it lasts: 47 and 48 threadings.
+
+One threading comes from the base layer. It sews in the thread of the largest area, before every automatic
+element. The flower's pink head lies over its green stem, so pink can't sew first: the base layer sews pink,
+then the stem green, then the head pink again.
+
+5 come from shapes truly drawn under and over another shade, in 4 designs of the 77: the house, and 3 traced
+photos. The house's red chimney has a brown outline, and the red roof is drawn over the chimney's foot and its
+outline, with a brown outline of its own. Red lies under brown at the chimney and over it at the roof. In the
+building a dark fill digitized whole lies under a grey part's line, and a grey fill digitized whole under a
+dark part's line elsewhere. None of the dogs, the pear, the test pictures, the fixtures or the other 17 drawings
+has a shade under and over another.
+
+Each element of the set sews in one thread. The underlay of each element sews in its own thread just before
+its top stitches, so it doesn't add a threading. No search ran out on the other 75
+designs.
+
+#### The candidates, measured
+
+Each candidate was prototyped and the set planned with it, in the tests' build at opt-level 1. The fabric is
+measured as the dogs' cases measure it (`stitchcraft_testkit::fabric`), on the 69 designs that are planned
+quickly enough. The 2 photos traced in 9 and 12 threads are left out of the totals and named apart. (b) and
+(c) were measured with a first form of (d), whose base layer took the first thread of the free search.
+
+| On 75 designs | Today | (a) Rule 2 gives way | (a) and (d) the base layer | (a) and (b) a fill ends short | (a) and (c) the lower shape is cut |
+|---|---:|---:|---:|---:|---:|
+| Threading each thread once | 65 | 71 | 72 | 72 | 75 |
+| Threadings beyond one a thread | 29 | 5 | 4 | 4 | 0 |
+| Jump threads to cut | 435 | 412 | 418 | 435 | 420 |
+| Stitches astray | 1,638 | 1,618 | 1,641 | 1,635 | 1,630 |
+| Slivers | 2 | 3 | 3 | 5 | 3 |
+| Area above the cap, mm² | 272.8 | 277.0 | 271.5 | 245.0 | 270.5 |
+| Designs newly above 4 fills | none | 1 | 1 | 1 | 2 |
+| Rows the order's search keeps | 2,990 | 1,360 | 1,220 | 2,496 | 2,373 |
+
+- **(a) Rule 2 gives way, as rules 4 and 5 do.** A line sews after the fill it borders where that costs no
+  threading, and otherwise with its thread. Of the orders with the fewest threadings the search takes the one
+  with the most lines after their fills, as it does for columns. The dogs are threaded once a thread, 5, 8, 5
+  and 8 changes where they had 8, 12, 8 and 11. The base layer still adds the flower's threading. Alone, (a)
+  starts every design in the base layer's thread, and on TS-13B that put the black lines before the panes:
+  the panes' rows, pull compensation included, covered the lines 0.3 and 0.6 mm wide. The likeness measure
+  doesn't see that, since the lines are a small share of the black.
+- **(d) The base layer sews in the thread the best order starts with.** The search is made once from the
+  largest area's thread and once with no thread sewing. The base layer takes the largest area's thread unless
+  the free search finds an order with fewer threadings, or as few with more lines after their fills, and then
+  the thread that order starts with. The flower's base layer sews in green, and TS-13B's in red: its black
+  words and lines sew last, its lines after the panes as today. 0.066 % of its area is bare, where 0.069 % was,
+  and 0.225 % with (a) alone.
+- **(b) A fill sewn after a line ends short of it.** A fill is cut back by its pull compensation, 0.4 mm, from
+  a line sewn before it, so that its rows don't cover the line. The lines show, but fabric opens beside them:
+  the dogs' bare share grows 1.6 to 3.4 times more, and the set has 2 slivers more. (a) alone sews TS-13B's
+  lines first, and with (b) as well its bare share grows from 0.07 % to 0.77 %. At
+  0.2 mm a traced bird sewed 6.6 fills thick. Reaching onto the line instead, half its width, covered the
+  lines and cost the dogs up to 0.06 of their likeness. The proposal leaves both out.
+- **(c) The lower shape of a loop is cut away.** Where the graph of threads still has a loop, the direction of
+  it whose arrows are all an automatic area under a shape of another thread, with the least overlap, gives
+  way: those areas sew after the shapes on them and are cut away under them, as an abutting trace sews. Every
+  design is threaded once a thread. The house's red fills end at their outlines and its thickest spot falls
+  from 3.88 to 3.63 fills, but a traced cat's rises from 3.87 to 4.23. Kept as rule 2 and cut where loops
+  close, (c) doesn't reach the dogs: there rule 2 alone closes the loops, a dark line beside a grey fill and a
+  grey line beside a dark fill.
+
+The coleus and the magnolia traced in 9 and 12 threads are threaded 10 and 12 times with (a) and (d), where
+they were 47 and 48, and the search keeps 133 and 1,452 rows. The magnolia's thickest spot falls from 4.52 to
+4.00 fills. With one pass the search mostly takes one batch a thread, and it no longer runs out on these photos.
+
+#### What is built
+
+The owner asked for one threading per colour in so many words, and M13.63 builds (a) and (d), with a setting
+and 2 notices. Rule 2 and rule 3 of the [sewing order](#sewing-order) now read:
+
+2. **A line after the fill it borders, where that costs no thread change** (`REQ-AUTO-184`). A line that
+   touches a fill without overlapping it sews after the fill and covers its edge where the row of batches with
+   the fewest changes allows it, as a column does by rule 4. Otherwise it sews in the batch of its thread,
+   before the fill, and the fill's rows end on it. With `auto_thread_once` off (`REQ-AUTO-186`) it always sews
+   after the fill, and the whole order is the one before M13.63: the base layer keeps the largest area's thread
+   and rule 4 doesn't hold for a part's running line.
+3. **The fewest thread changes.** The base layer sews before the first automatic element, in the thread that
+   the order with the fewest changes starts with (`REQ-AUTO-185`). The search is made once from the largest
+   area's thread and once with no thread sewing, and the base layer keeps the largest area's thread unless the
+   free order changes thread less, or as little and sews more lines and columns after their fills.
+
+Rule 4 now holds for a part's running line too: a satin column sews after a part's running line of another
+shape that it borders, where that costs no thread change. Sewn first, the column reaches its overlap under
+the line's part (`REQ-AUTO-029`). With one pass the running dog in 9 threads sewed a part's column, then a
+part's running line along it, on a fill, and the column's overlap under the line made a spot of 4.15 fills,
+where main sewed 3.26 there with the column last. With the column after the line the spot sews 3.96 fills.
+
+**Thickness before threading** (`REQ-AUTO-189`). A line sewn before its fill can raise a spot: the fill's
+rows end over the line, where the last pass and the cap could take their ends under a line sewn after it.
+With `auto_details_last` on, 2 traced dogs sewed 4.07 and 4.18 fills that way, where main sews 3.96 and 3.99.
+The owner's first concern is whether her machine sews the design. So a design threaded once that sews a spot
+above the warning's limit is planned again with each line after the fills it borders, as with
+`auto_thread_once` off, the order before M13.63. When that plan sews at the limit or under it, it comes back,
+and `SC-W0927` says how many more times the threads are threaded. Both dogs then sew as main sews them, each
+threaded 3 times more. A plan above the limit pays for the second plan only when the strict rules wouldn't
+allow its order: where a line sews before a fill it borders or a column is held after a part's line, and
+where the base layer has another thread than the largest area's. An order they allow is itself a strict order with as few thread
+changes, so there is nothing to weigh. Main's search may break a tie between such orders another way. That
+such a design sews as main does is measured on the set, not proved. The guard reads each plan's thickest spot from the cap's measure, so no
+plan is measured twice: measured again, the dog on turf in 6 threads took 7 % more instructions.
+
+`SC-W0925` (`REQ-AUTO-187`) names the shapes where a shade is drawn under and over another, and `SC-I0926`
+(`REQ-AUTO-188`) counts the lines that sew before a fill of another thread beside them and names the 3 with
+such fills on the most sides, the smallest first. Both are found from the order and the shapes, with no
+raster. The notice `SC-I0907` now says how many times the machine is threaded beside the thread changes:
+"threaded 6 times, with 5 thread changes, where paint order is threaded 9 times".
+
+#### Measured with the build
+
+The whole set, 78 designs with the sew-out piece, planned with the build in the tests' build at opt-level 1,
+and measured as above, on main with M13.62. The build sews as the prototype of (a) and (d) did on every design,
+but where rule 4 now moves a column after a part's line. 9 designs sew above 4 fills at the default
+settings. The thickness guard plans 2 of them again, the goose and the magnolia, whose orders the strict rules
+wouldn't allow. Sewn strictly they are above 4 too, at 4.37 and 4.52. Each keeps its first plan. With
+`auto_details_last` on, the dog on turf and the running dog in 6 threads fall back, each threaded 3 times
+more, and sew as main sews them.
+
+| On 78 designs | main | built |
+|---|---:|---:|
+| Threading each thread once | 65 | 74 |
+| Threadings beyond one a thread | 104 | 5 |
+| Jump threads to cut, on 70 designs | 437 | 410 |
+| Stitches astray, on 70 designs | 1,638 | 1,636 |
+| Slivers, on 70 designs | 2 | 3 |
+| Area above the cap, mm² | 281.0 | 301.0 |
+| Area at 4 fills or more, mm² | 0 | 0 |
+| Designs above 4 fills that were at or under 4 | | none |
+
+| Traced dog | Threaded | Jump threads | Stitches astray | Slivers | Bare, thousandths of a percent | Thickest spot, fills |
+|---|---|---|---|---|---|---|
+| On turf, 6 threads | 9 → 6 | 59 → 49 | 4 → 2 | 0 → 1 | 41 → 68 | 3.96 → 3.99 |
+| On turf, 9 threads | 13 → 9 | 62 → 59 | 3 → 2 | 0 → 0 | 38 → 44 | 3.91 → 3.95 |
+| Running, 6 threads | 9 → 6 | 49 → 41 | 1 → 3 | 0 → 0 | 12 → 31 | 3.99 → 3.91 |
+| Running, 9 threads | 12 → 9 | 64 → 56 | 4 → 1 | 0 → 0 | 21 → 56 | 3.98 → 3.97 |
+
+The area at 3 fills or more on the dogs is 75.75, 51.75, 55.25 and 96.25 mm², where main sews 49.5, 60.5, 49.0
+and 84.75: a fill's rows that end over a line sewn before it are not taken, as rows under a later line were. It
+is a cost of this step, and the cap's step owns it.
+
+The coleus and the magnolia are threaded 10 and 12 times where they were 47 and 48. The flower and TS-13B's
+digitized half are threaded 4 times where they were 5, and a traced bird 6 times where it was 11. The magnolia's thickest spot
+falls from 4.52 to 4.05 fills. The order's search keeps 133 and 1,452 rows on the 2 photos, where it ran out.
+
+#### What gets worse
+
+- **What shows of a thin line.** A line sewn before a fill beside it loses up to the fill's pull compensation,
+  0.4 mm, under the fill's rows. Measured on each running line of the set, as the share of its top thread that
+  no later stitch covers. On the 4 traced dogs 37 fur lines newly show less than half their thread, the worst
+  2, 13 and 13 %. 18 of the 37 that main hides as much now show more, so 56 lines show less than half where main
+  has 37. On the traced magnolia and the traced coleus leaf, measured whole only for the build, 80 and 81
+  lines show less than half where main's 19 and 30 do. No line of
+  the drawings, the fixtures, the test pictures or the TS-13 halves does, and the likeness of every design
+  measured is as it was. Round a fill on the sew-out piece's dark fill, a line 0.3, 0.6 and 0.8 mm wide keeps 0.49, 0.82
+  and 0.92 of its thread, where with the setting off it keeps all of it (`REQ-AUTO-188`). Holding the fill's
+  pull compensation back to the line's near edge gives the stitches of (b), which left more fabric bare. Held
+  back to the line's thread, our measure wouldn't show a gap, but it doesn't model the pull: on the machine the
+  rows would pull in about 0.4 mm short of the line. So nothing is held back, `SC-I0926` names where to look,
+  and the sew-out piece decides.
+- **Fabric beside the lines.** An area reaches its overlap only under the shapes sewn after it
+  (`auto::neighbours::under`, `beside` with `near_later`). Where a part's running line sews before the areas
+  beside it, none of them reaches under the line's part, so the line's whole part is left to the line, whose
+  running stitch covers only its middle. Sewn after them, the line had the first area's overlap under all of
+  its part. On the dogs the bare share rises up to 2.8 times, with 1 sliver more, all under the limits. On the
+  traced magnolia the cover's check finds 3 new gaps of 0.13 to 0.61 mm² where main finds none. On the traced
+  coleus leaf it finds 2 new gaps of 0.30 and 0.63 mm², and 3 that grow from 0.12 to 1.07, 0.74 to 1.20 and
+  0.19 to 0.65 mm². No design of the repository's own set changes its count of gaps. Keeping the line's part
+  to the area, and keeping the line seen, is the next step's.
+- **The area above the cap.** It rises on the dog on turf in 6 threads from 14.0 to 23.0 mm², in 9 threads from
+  8.0 to 10.0 mm², on the running dog in 6 threads from 11.0 to 13.25 mm², on the coleus from 6.5 to 13.5 mm² and
+  on the magnolia from 16.5 to 26.25 mm², and falls on 4 designs. No design has an area at 4 fills or more, and none rises above 4 that was at or under it.
+- **The base layer's thread.** On 5 designs the base layer sews in another thread: the flower in green, TS-13B
+  in red, 2 dogs in white and one in tan. Under a slit it shows that thread, where it showed the largest area's.
+- **Jump threads.** The machine cuts at a change of thread and not at a jump. Fewer changes leave fewer jump
+  threads, but a thread that sews once crosses farther: the running dog's brown jumps across its muzzle.
+
+The lettered patch, the digitized halves of TS-13A and TS-13C to TS-13E, and the fish whose eye M13.61 keeps
+on top sew as they did: only the designs named above change.
+
+#### Open points
+
+- **A shade at 2 depths.** 5 threadings are left in 4 designs. The house has 2, and a traced building, a traced
+  cat and the coleus have one each. `SC-W0925` names the shapes so that a person can change the drawing, and the house with its
+  hidden outlines cut away sews each thread once. A later step could sew them once too. Candidate (c) cut away the lower shape where a loop
+  of threads closes, and every design of the set was threaded once a thread. Its rule chose the shape that
+  loses its depth by the least overlap, and the traced cat then sewed 4.23 fills thick where it sewed 3.87. The
+  step needs a rule for the depth under which every design stays at or under the cap, measured on the set.
+- **The lines a fill sews over.** A remedy would end the fill's rows short of the line's thread without letting
+  the fabric show where they pull in. The sew-out piece shows whether the lines read and whether fabric shows.
+- **The fallback is for the whole design.** Sewing only some threads' lines after their fills could keep a
+  design under the limit at fewer threadings.
+- **Fill tips and line ends at one point.** Where the tips of several fills meet the ends of running lines and
+  their locks, the cap can't take the thread today: it moves a row's end or joins 2 stitches, and these are
+  neither. A fill or a line sewn earlier raises what later fills lay there. Taking the row ends over a line sewn
+  before back to the line's edge, tried for this step, didn't lower such a spot. The cap's step owns it.
+
+**The sew-out piece.** A navy fill 56 mm by 40 mm, broad enough to be digitized whole, a cream fill 28 mm by
+20 mm drawn on it, a navy line 0.8 mm wide round the cream fill, abutting it as a traced line abuts its fill,
+and a gold square beside them (`docs/src/plan/machine-testing.md` › MC-8: the kit). On main navy is threaded
+twice, since the navy fill sews before the cream fill and the line after it. With one pass the line sews with the navy fill, and the
+cream fill's rows end on it. Sewn both ways side by side, it shows what the trade costs on fabric: whether the
+line still reads as a line and whether fabric shows beside it.
 
 ### Details last
 
