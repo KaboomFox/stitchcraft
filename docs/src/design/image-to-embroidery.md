@@ -3798,8 +3798,12 @@ columns of M13.58, apart from `REQ-AUTO-194`, and `crowded` the columns of befor
 
 The cap runs its pull-in and its last resort as before, each stopping at the first spot where every point
 fails to lower it, and then runs both again, going on past such spots. Main's first run is kept as it was so that a large letter sheet
-doesn't run the last resort out of work, as the measuring found. The thickest spot left besides those passed
-by comes from the measure (`Thickness::most_besides`). Then come the pull-ins below the limit, on the columns
+doesn't run the last resort out of work, as the measuring found. Going on, they look only at the spots that
+their points' stitches lay thread in, since a point lowers a spot only by taking thread out of it. They keep
+those spots in order of their thread, thickest first, with the points whose stitches lay thread in each,
+and put a spot whose thread changed back in its place. Going through every spot of the measure for each spot
+passed by, and every point for each spot, cost TS-13D, whose hand-set half sews far above 4 fills, 25 times
+its plan's work. Then come the pull-ins below the limit, on the columns
 sewn with `knots`, of points near a spot above the cap. A point is a knot when its rail's neighbour lies
 closer than half the column's zigzag spacing, compared as lengths are, so a neighbour exactly 0.2 mm away
 makes none. Its new end is covered when a top stitch of another shape sewn later covers the first 0.1 mm of
@@ -3809,9 +3813,9 @@ the plan is measured afresh, and the pulls below the limit are undone when that 
 thicker, or its area above the limit larger, than the kept measure says. That check guards against the drift
 seen in the prototype. It found nothing to undo on the engine's set or the CLI set.
 It costs plan time where many columns crowd: for each spot it works on, the pull-in looks at every point near
-a spot above the cap. Measured at opt-level 1 on a shared machine after M13.63, the 18 letter sheets took 61.5
-s where main took 29.1 s, the largest 13.5 s where it took 4.9 s. The engine's 16 designs took 3.1 s where they
-took 2.0 s, and the dogs as long as before.
+a spot above the cap. Measured at opt-level 1 on a shared machine after M13.63, the 18 letter sheets took 52.8
+s where main took 29.1 s, the largest 11.9 s where it took 4.9 s. The engine's 16 designs took 3 s where
+they took 2 s.
 
 Measured on the build, `a0d380b7` on main `acdda98f`, at opt-level 1, as the prototype was:
 
@@ -3840,9 +3844,9 @@ with M13.63, at opt-level 1:
 | Set | Main: mm² at 3.25 or more | Built |
 | --- | --- | --- |
 | 67 designs, default style | 161.8 | 136.5 |
-| 67 designs, logo style | 1,152.2, 25.5 above 4 | 791.0, 1.0 above 4 |
-| The engine's 16 designs | 100.2 | 58.2, 190 points pulled in |
-| 18 sheets of letters | 572.0, thickest 4.44 | 373.2, thickest 4.00 |
+| 67 designs, logo style | 1,152.2, 25.5 above 4 | 792.8, 1.0 above 4 |
+| The engine's 16 designs | 100.2 | 58.2, 189 points pulled in |
+| 18 sheets of letters | 572.0, thickest 4.44 | 348.8, thickest 4.00 |
 | 4 dogs, details last | 66.2 | 51.2 |
 
 No design's thickest spot rose. The thickness guard of M13.63 (`REQ-AUTO-189`) plans a design again with each
