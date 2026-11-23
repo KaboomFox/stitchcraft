@@ -65,7 +65,7 @@ fn req_auto_195_a_column_sewn_round_a_sharp_turn_sews_no_knot() {
     // A 5 mm line turning by 60° stays one column (REQ-AUTO-178) and fans into a knot on the inside of the
     // turn: 3.83 fills on main, where the cap pulls in only above 4. Pulled in at the knot down to the cap, the
     // prototype sewed 3.09.
-    let (thickest, pulled) = thickest_and_pulled(&planned(vec![bent_line(60.0, &[])]));
+    let (thickest, pulled) = thickest_and_pulled(&planned(vec![bent_line(60.0, &[(SHORT_STITCHES, "knots")])]));
     assert!(thickest <= 3.5 && pulled > 4, "{thickest:.3} fills, {pulled} points pulled in");
 }
 
@@ -90,7 +90,11 @@ fn req_auto_195_the_engine_s_set_sews_thinner_with_few_points_pulled_in() {
     let (cap, limit) = (rules().auto_thick_cap_fills, rules().auto_thick_warn_fills);
     let (mut area, mut total) = (0.0, 0);
     for (name, design) in &designs {
-        let outcome = in_place(design);
+        let mut elements = design.elements().to_vec();
+        for element in elements.iter_mut().filter(|element| element.automatic) {
+            element.params.set(SHORT_STITCHES, "knots");
+        }
+        let outcome = in_place(&Design::new(elements, design.settings).unwrap());
         let (thickest, pulled) = thickest_and_pulled(&outcome);
         assert!(thickest <= limit + 1e-9, "{name}: {thickest:.3} fills");
         let plan = outcome.plan.unwrap();
@@ -103,10 +107,11 @@ fn req_auto_195_the_engine_s_set_sews_thinner_with_few_points_pulled_in() {
 
 #[test]
 fn req_auto_196_above_limit_keeps_the_columns_of_m13_58() {
-    // With `above_limit` the cap pulls points in only above the limit, as on main at `acdda98f`: the 60° corner
-    // keeps its 3.83 fills, and the cap pulls in the 4 points it pulls there today. By default it pulls in more.
-    let (today, pulled) = thickest_and_pulled(&planned(vec![bent_line(60.0, &[(SHORT_STITCHES, "above_limit")])]));
+    // With `above_limit`, the default, the cap pulls points in only above the limit, as on main at `acdda98f`:
+    // the 60° corner keeps its 3.83 fills, and the cap pulls in the 4 points it pulls there today. With `knots`
+    // it pulls in more.
+    let (today, pulled) = thickest_and_pulled(&planned(vec![bent_line(60.0, &[])]));
     assert!((today - 3.826).abs() < 0.005 && pulled == 4, "{today:.3} fills, {pulled} points pulled in");
-    let (thickest, more) = thickest_and_pulled(&planned(vec![bent_line(60.0, &[])]));
+    let (thickest, more) = thickest_and_pulled(&planned(vec![bent_line(60.0, &[(SHORT_STITCHES, "knots")])]));
     assert!(thickest < today - 0.2 && more > pulled, "{thickest:.3} fills, {more} points pulled in");
 }

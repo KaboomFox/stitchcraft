@@ -587,15 +587,18 @@ row. A stitch ends short of the edge where the spot would otherwise sew more tha
 where a column fans into a corner over other shapes. There the plan pulls the crowded ends in, a quarter
 of the column and then half, and the report says how many (`SC-I1119`).
 
-Below 4 fills, down to the cap of 3.25, the plan pulls in only the ends of a tight turn and ends that a
-shape sewn later covers, each by a quarter of the column. A tight turn is where the ends on the inside lie
-closer than half the column's spacing, 0.2 mm: a line 5 mm wide turning by 60° sews 3.1 fills there, where
-it sewed 3.8. On a gentle curve the plan moves no end in. This is `knots`, the default of **Short
-stitches** (`auto_short_stitches`). `above_limit` pulls ends in only above 4 fills, as before M13.64:
+**Short stitches** (`auto_short_stitches`) set to `knots` also thins a column below 4 fills, down to the
+cap of 3.25. There the plan pulls in only the ends of a tight turn and ends that a shape sewn later
+covers, each by a quarter of the column. A tight turn is where the ends on the inside lie closer than half
+the column's spacing, 0.2 mm: a line 5 mm wide turning by 60° sews 3.1 fills there, where it sews 3.8 by
+default. On a gentle curve the plan moves no end in.
 
 ```sh
-stitch plan drawing.svg --auto -o drawing.pes --set auto_short_stitches=above_limit
+stitch plan drawing.svg --auto -o drawing.pes --set auto_short_stitches=knots
 ```
+
+It costs planning time where many columns turn tightly, and it is not yet the default for that reason: a
+design sewn through VectorCraft has a limit on the work its export may take.
 
 **Short stitches** also gives the look from before M13.58:
 

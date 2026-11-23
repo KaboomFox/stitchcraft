@@ -19,6 +19,48 @@ stitchcraft-vectorcraft = 2
 # changes (`cargo xtask mutants --changed`); any other mutant there that no test notices fails it.
 
 [[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/cap/hot.rs"
+mutant = "replace && with || in Hot::stitches"
+line = "if ribbon.alive && self.ours(ribbon.element) {"
+why = "a stitch of another shape, or one taken out, names entries that are none of the points, and `Hot::near` keeps only the points"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/cap/hot.rs"
+mutant = "replace > with >= in Hot::next"
+line = "let now = thickness.at_spot(Measure::Fills, at).filter(|spot| spot.value > self.level && !self.stuck.contains(&at));"
+why = "a spot comes into the queue only above the level, and a spot whose thread changed is looked at again with its new value: none sews exactly the level, as a float that thread was taken from never lands on it"
+
+[[equivalent]]
+file = "crates/stitchcraft-plan/src/thickness.rs"
+mutant = "replace match guard times < 0.0 && at == spot with true in Thickness::laid_by"
+line = "Some(at) if times < 0.0 && at == spot => None,"
+why = "forgetting the thickest spot found after any change only makes `most` go through the spots again, and it finds the same spot"
+
+[[equivalent]]
+file = "crates/stitchcraft-plan/src/thickness.rs"
+mutant = "replace < with <= in Thickness::laid_by"
+line = "Some(at) if times < 0.0 && at == spot => None,"
+why = "`times` is 1 or -1, never 0"
+
+[[equivalent]]
+file = "crates/stitchcraft-plan/src/thickness.rs"
+mutant = "replace && with || in Thickness::laid_by"
+line = "Some(at) if times < 0.0 && at == spot => None,"
+why = "forgetting the thickest spot found after more changes only makes `most` go through the spots again, and it finds the same spot"
+
+[[equivalent]]
+file = "crates/stitchcraft-plan/src/thickness.rs"
+mutant = "replace == with != in Thickness::laid_by"
+line = "Some(at) if times < 0.0 && at == spot => None,"
+why = "forgetting the thickest spot found when a stitch takes thread from any other spot only makes `most` go through the spots again, and it finds the same spot"
+
+[[equivalent]]
+file = "crates/stitchcraft-plan/src/thickness.rs"
+mutant = "replace > with >= in Thickness::laid_by"
+line = "Some(at) if times > 0.0 && (value(spot) > value(at) || (value(spot) == value(at) && spot > at)) => Some(spot),"
+why = "`times > 0.0`: `times` is 1 or -1, never 0; `spot > at`: a spot as thick as itself is itself"
+
+[[equivalent]]
 file = "crates/stitchcraft-engine/src/auto/cap/pull.rs"
 mutant = "replace > with >= in Cap<'_, '_>::shows"
 line = "Ok(!self.ribbons.covers(&end, |ribbon: &Ribbon| ribbon.at > after && ribbon.element != element, false, meter)?)"

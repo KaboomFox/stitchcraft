@@ -19,6 +19,15 @@ What a user can do with this version, before its first release. The entries belo
 - In VectorCraft, StitchCraft's live effects, filters and exporters sew a document as `stitch export` does.
 
 ### Added
+- M13.64: `auto_short_stitches` `knots` (`REQ-AUTO-195`, `REQ-AUTO-196`). With it, automatic digitizing
+  also thins a satin column below 4 fills, down to the cap of 3.25: it pulls in the stitch ends of a tight
+  turn, where the ends on the inside lie closer than half the spacing, and ends that a shape sewn later
+  covers, each by a quarter of the column. On a gentle curve the plan moves no end in. A line 5 mm wide
+  turning by 60° sews 3.09 fills at the turn, where it sews 3.83 by default. On 67 designs the area at 3.25
+  fills or more falls from 161.8 to 136.5 mm² under the default style and from 1,152.2 to 791.0 mm² under the
+  logo style, and no design's thickest spot rises. The default stays `above_limit`: TS-13A's export in
+  VectorCraft would take 87.3 % of the instructions VectorCraft allows it, where the compatibility gate stops at
+  85 %. Set `--set auto_short_stitches=knots` to use it.
 - M8.14: the Ink/Stitch differential draws pictures. Each case that both programs sew gets a picture of
   Ink/Stitch's file beside StitchCraft's, drawn by the engine's preview from the PES files the measures
   judge, at one scale, with a third panel of where their thread lies apart. The case's measures and its
@@ -2284,32 +2293,6 @@ What a user can do with this version, before its first release. The entries belo
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
-- M13.64: the cap works below the limit too (`REQ-AUTO-195`, `REQ-AUTO-196`). Below 4 fills, down to the cap
-  of 3.25, automatic digitizing now pulls in the stitch ends of a satin column's tight turns, where the ends
-  on the inside lie closer than half the spacing, and ends that a shape sewn later covers, each by a quarter
-  of the column. On a gentle curve the plan moves no end in. A line 5 mm wide turning by 60° sews 3.09 fills
-  at the turn, where it sewed 3.83. On 67 designs the area at 3.25 fills or more falls from 161.8 to 136.5 mm²
-  under the default style and from 1,152.2 to 791.0 mm² under the logo style, and no design's thickest spot
-  rises. Under the logo style 2 traced dogs in 6 threads now sew at the limit or under it with each line
-  after its fills, and take that order (`SC-W0927`), threaded more times. It is `auto_short_stitches` `knots`, the new default, and `--set auto_short_stitches=above_limit`
-  sews the columns of M13.58.
-- M13.63: each thread threaded once (`REQ-AUTO-184` to `REQ-AUTO-189`). On a machine with one needle each
-  thread change is a rethread by hand, so a design digitized automatically now threads each thread once
-  wherever its shapes allow it: a design of 6 threads is threaded 6 times. A line sews after the fill it
-  borders only where that costs no thread change, as a satin column does, and elsewhere with its thread,
-  before the fill, whose rows end on it. The base layer sews in the thread the order starts with. A satin
-  column sews after a part's running line it borders where that costs no thread change, so that it doesn't
-  reach its overlap under the line. On 78 designs 74 thread each thread once, where 65 did: the 4 traced dogs
-  are threaded 6, 9, 6 and 9 times, where they were 9, 13, 9 and 12, and photos traced in 9 and 12 threads
-  10 and 12 times, where they were 47 and 48. A thin line sewn before the fill beside it shows less of its
-  thread: on the dogs 37 fur lines newly show less than half of it, and `SC-I0926` counts such lines and names
-  the ones to look at. Where a shade is drawn both under and over another, `SC-W0925` names the shapes, and
-  the thread is threaded again. `--set auto_thread_once=false` sews every line after the fills beside it, as
-  before. `SC-I0907` now says how many times the machine is threaded beside the thread changes. Thickness
-  comes first. Where threading once leaves a spot above the warning's limit, the design is planned again with
-  each line after the fills beside it. If that keeps it at the limit or under it, it sews that way, and
-  `SC-W0927` says how many more times its threads are threaded. With `auto_details_last` on, 2 traced dogs
-  sew that way, each threaded 3 times more.
 - M13.62: points stay points (`REQ-AUTO-183`, `REQ-SAT-032`). A satin column that tapers to a point, such
   as a sun's ray, now sews to a point. Its pull compensation falls to 0 over the last 2 mm before an end whose
   rails meet, where each pair was widened by the whole 0.4 mm and the column ended in a bar about 0.85 mm
@@ -2804,8 +2787,7 @@ What a user can do with this version, before its first release. The entries belo
   pull-in and its last resort now go on to the next such spot. A spot of shapes sewn by their own settings
   kept the cap from the automatic shapes' spots: TS-13A sews 35.25 mm² at 4 fills or more, where it sewed
   39.50, less than the 39.25 of its hand-set half alone. 2 sheets of traced letters that sewed 4.44 and 4.18
-  fills now sew 4.00. With the pull-in below the limit, the area above 4 fills under the logo style falls
-  from 25.5 to 1.0 mm² on 67 designs.
+  fills now sew 4.00. The cap's own work fell too: TS-13A plans in fewer instructions than before.
 - M13.56: a run of stitches that ended on one stitch, sewn straight on from the stitches before it,
   could end without its tie-off. The tie-off is now made from the whole run's stitches. The new check of
   the plan's locks found it in a random test design. None of the repository's designs sews such a run.
@@ -3719,12 +3701,10 @@ What a user can do with this version, before its first release. The entries belo
   shortens a value nor refuses the file.
 
 ### Golden files
-- Changed `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes`, `TS-13C.pes`, `TS-13D.pes` and `TS-13E.pes`
-  (M13.64, the cap works below the limit too). In the digitized half of each, the cap pulls in a satin
-  column's points at its tight turns below 4 fills, down to the cap. In TS-13A it also goes on past the spot
-  of the half set by hand, which it may not lower, and takes 2 more points of a column above 4: the sheet sews
-  23,777 stitches, where it sewed 23,779. The other sheets keep their stitch counts and sizes, and the halves
-  as drawn are as they were.
+- Changed `conformance/golden/testsheets/TS-13A.pes` (M13.64, the cap goes on past a spot it can't lower). In
+  the digitized half, the cap goes on past the spot of the half set by hand, which it may not lower, and takes
+  2 more points of a column above 4 fills: the sheet sews 23,777 stitches, where it sewed 23,779. Its size and
+  the half as drawn are as they were.
 - Changed `conformance/golden/testsheets/TS-13B.pes` (M13.63, each thread threaded once). Its digitized half
   threads each of its 4 threads once, the base layer's red first and the black words and lines last, after
   the panes, where black was threaded twice. The sheet sews 14,415 stitches, where it sewed 14,422, and is

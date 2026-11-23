@@ -3791,8 +3791,10 @@ thicker.
 one (`REQ-AUTO-194`). Then, below the limit and down to the cap, it pulls in a column's crowded points at its
 tight turns, closer than half the spacing to their rail's neighbour, and points whose new end a later shape
 covers. Each moves by its column's first share only, and no spot above the limit gets thicker (`REQ-AUTO-195`).
-It is a value of the existing setting `auto_short_stitches`, `knots`, the default. `above_limit` gives the
-columns of M13.58, apart from `REQ-AUTO-194`, and `crowded` the columns of before M13.58 (`REQ-AUTO-196`).
+It is a value of the existing setting `auto_short_stitches`, `knots`, which a person sets: `above_limit`, the
+columns of M13.58 apart from `REQ-AUTO-194`, stays the default for now, and `crowded` gives the columns of
+before M13.58 (`REQ-AUTO-196`). The default waits for room in VectorCraft's export budget, as the next
+paragraphs say. The fix `REQ-AUTO-194` works with every value.
 
 ##### What was built
 
@@ -3800,9 +3802,9 @@ The cap runs its pull-in and its last resort as before, each stopping at the fir
 fails to lower it, and then runs both again, going on past such spots. Main's first run is kept as it was so that a large letter sheet
 doesn't run the last resort out of work, as the measuring found. Going on, they look only at the spots that
 have a top stitch of their points' shapes near, from the stitches the cap already files by cells of a
-millimetre for their cover, and only at the points at either end of such a stitch: the points that the cap
-looked at before, of those whose stitches come within 1 mm of the spot, in the same order. They keep those
-spots in order of their thread, thickest first, and put a spot whose thread changed back in its place. Going
+millimetre for their cover. For a spot they look at the points at either end of such a stitch: the points that
+the cap looked at before, of those whose stitches come within 1 mm of the spot, in the same order. The spots
+wait in order of their thread, thickest first. A spot whose thread changed goes back in its new place. Going
 through every spot of the measure for each spot passed by, and every point for each spot, cost TS-13D, whose
 hand-set half sews far above 4 fills, 25 times its plan's work. Then come the pull-ins below the limit, on the
 columns sewn with `knots`, of points near a spot above the cap. A point is a knot when its rail's neighbour
@@ -3825,6 +3827,15 @@ zone in one pass over the plan, not one pass for each kind. Measured with callgr
 on, TS-13A takes 3,219 million instructions where main takes 3,228, TS-13B 2,534 where main takes 2,566 and
 TS-13E 1,582 where main takes 1,592. Every sheet sews byte for byte as before these changes. The 18 letter
 sheets took 27 s where main took 29 s.
+
+That held CI's native perf records, but not the gate: inside VectorCraft, compiled to WebAssembly, TS-13A's
+export took 9,261 million of the 10,609 million instructions allowed with `knots` by default, 87.3 %, where it
+takes 8,993 million on main. The plug-in's code counts its instructions differently from the native build, and
+the work cut from the measure saved less there than the pull-in below the limit costs. So `knots` stays a
+value to set. With `above_limit`, the default, the cap does the work of main and of `REQ-AUTO-194` alone, and
+takes less than on main: TS-13A 3,175 million instructions at opt-level 1, TS-13B 2,531 million, TS-13E 1,581
+million. The default flips to `knots` in a step of its own once the neighbours' overlaps, 11 to 23 % of a
+sheet's work, cost less. The tables below measure the setting's effect: the set planned with `knots`.
 
 Measured on the build, `a0d380b7` on main `acdda98f`, at opt-level 1, as the prototype was:
 
@@ -3861,7 +3872,7 @@ with M13.63, at opt-level 1:
 No design's thickest spot rose. The thickness guard of M13.63 (`REQ-AUTO-189`) plans a design again with each
 line after its fills when the order that threads each thread once sews above 4. It reads the thickest spot
 from the cap's measure, which this step lowers. On main it plans the goose under both styles, the building and 3 traced dogs
-under the logo style again, and keeps the first order for all of them. With this step the goose, the building
+under the logo style again, and keeps the first order for all of them. With `knots` the goose, the building
 and the dog on turf in 9 threads keep it too. The dog on turf and the running dog in 6 threads now sew 3.99
 fills with each line after its fills, at the limit or under it, where that order sewed above 4 on main.
 So the guard keeps that order for them and says so with `SC-W0927`: they are threaded more times. With details last, the 2 dogs in 6 threads fall
@@ -3870,7 +3881,7 @@ back as on main, to 3.95 and 3.96 fills. The guard's cases pass as they stand.
 M13.63 left 2 spots for this step, with details last and each thread threaded once: on the dog on turf in 6
 threads, 4.07 fills where a white fill's rows end at a narrow end over another fill, a line and the base layer.
 On the running dog in 6 threads, 4.18 fills where 4 fills meet at a point with the ends and locks of 3 running
-lines. This step leaves both as they are: 4.066 and 4.176 fills. The pull-in and the last resort move only
+lines. With `knots`, this step leaves both as they are: 4.066 and 4.176 fills. The pull-in and the last resort move only
 satin columns' top points, and no such point lowers either spot.
 
 **Open points.** Where a design still rests just under 4 after c, a column lies whole over a fill: TS-13A's strip

@@ -35,6 +35,10 @@ pub(super) struct Hot {
     elements: Vec<bool>,
     /// The spots none of the points lowered.
     stuck: BTreeSet<usize>,
+    /// Stitches the cap has laid since, whose spots are put in their places before the next spot is named.
+    laid: Vec<SewnStitch>,
+    /// Points the cap has taken out since, whose joined stitches are laid.
+    taken: Vec<Entry>,
     /// The level: a spot at it or under it is done.
     level: f64,
 }
@@ -106,23 +110,35 @@ impl Hot {
         Ok(near.into_iter().collect())
     }
 
-    /// Puts each spot above the level that `stitches`, as the plan now sews them, lay thread in in its place. A
-    /// unit of work for each step along each stitch.
-    pub(super) fn add(&mut self, thickness: &Thickness, stitches: &[SewnStitch], meter: &mut Meter) -> Result<(), Exhausted> {
-        for stitch in stitches {
-            for (spot, fills) in thickness.spots(stitch, meter)? {
+    /// Notes that the cap laid `stitches`: their spots above the level are put in their places before the next
+    /// spot is named.
+    pub(super) fn laid(&mut self, stitches: &[SewnStitch]) {
+        self.laid.extend_from_slice(stitches);
+    }
+
+    /// Notes that the cap took `point` out: the stitch that now joins the points on either side lays thread
+    /// where they did.
+    pub(super) fn taken(&mut self, point: Entry) {
+        self.taken.push(point);
+    }
+
+    /// The thickest spot above the level that isn't stuck, by its place in the measure, as `pass`'s measure now
+    /// has it, once the stitches laid since are in their places; `None` when there is none. It stays in its
+    /// place until it is stuck or its thread changes. A unit of work for each spot looked at, and for each step
+    /// along each stitch laid.
+    pub(super) fn next(&mut self, pass: &Pass, meter: &mut Meter) -> Result<Option<(usize, Spot)>, Exhausted> {
+        for (block, at) in std::mem::take(&mut self.taken) {
+            let (from, to) = (pass.beside((block, at), false, meter)?, pass.beside((block, at), true, meter)?);
+            self.laid.extend(from.zip(to).and_then(|(from, to)| pass.sewn(block, from, to)));
+        }
+        let thickness = &*pass.thickness;
+        for stitch in std::mem::take(&mut self.laid) {
+            for (spot, fills) in thickness.spots(&stitch, meter)? {
                 if fills > self.level && !self.stuck.contains(&spot) {
                     self.queue.insert((fills.to_bits(), spot));
                 }
             }
         }
-        Ok(())
-    }
-
-    /// The thickest spot above the level that isn't stuck, by its place in the measure, as `thickness` now
-    /// measures it; `None` when there is none. It stays in its place until it is stuck or its thread changes. A
-    /// unit of work for each spot looked at.
-    pub(super) fn next(&mut self, thickness: &Thickness, meter: &mut Meter) -> Result<Option<(usize, Spot)>, Exhausted> {
         while let Some(&(bits, at)) = self.queue.last() {
             meter.charge(1)?;
             let now = thickness.at_spot(Measure::Fills, at).filter(|spot| spot.value > self.level && !self.stuck.contains(&at));

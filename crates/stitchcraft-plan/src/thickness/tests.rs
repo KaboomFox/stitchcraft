@@ -744,3 +744,28 @@ fn req_auto_100_a_change_tried_leaves_the_measure_as_it_was_and_sees_it_changed(
     let once = least(&|meter| was.clone().remove(&one, meter).is_ok());
     assert_eq!(work, 2 * once);
 }
+
+#[test]
+fn req_auto_100_the_thickest_spot_found_follows_ties_and_a_lowered_spot() {
+    // 2 stitches alike, on the grid alike, the second 2 mm further on: their spots are as thick, and of spots
+    // as thick the later one is named.
+    let mut thickness = drawn(&[]);
+    let (first, second) = (placed(&thickness, stitch((2.0, 3.0), (5.0, 3.0))), placed(&thickness, stitch((2.0, 5.0), (5.0, 5.0))));
+    let mut meter = meter();
+    let y = |thickness: &Thickness| thickness.most(Measure::Fills).at.y();
+    // The first twice and the second once: the first is thicker. Taking one of its stitches out makes them as
+    // thick, and the second, later, is named.
+    thickness.add(&first, &mut meter).unwrap();
+    thickness.add(&first, &mut meter).unwrap();
+    thickness.add(&second, &mut meter).unwrap();
+    assert!((y(&thickness) - 3.0).abs() < 0.3, "{}", y(&thickness));
+    thickness.remove(&first, &mut meter).unwrap();
+    assert!((y(&thickness) - 5.0).abs() < 0.3, "{}", y(&thickness));
+    // Thread added to the first until it is as thick keeps the second named; one more makes the first.
+    thickness.add(&second, &mut meter).unwrap();
+    assert!((y(&thickness) - 5.0).abs() < 0.3, "{}", y(&thickness));
+    thickness.add(&first, &mut meter).unwrap();
+    assert!((y(&thickness) - 5.0).abs() < 0.3, "as thick: {}", y(&thickness));
+    thickness.add(&first, &mut meter).unwrap();
+    assert!((y(&thickness) - 3.0).abs() < 0.3, "{}", y(&thickness));
+}

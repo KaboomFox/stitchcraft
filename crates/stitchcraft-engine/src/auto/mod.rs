@@ -270,8 +270,8 @@ fn read(element: &Element, said: &mut Vec<Diagnostic>) -> Option<AutoParams> {
 }
 
 /// Whether the cap may pull in the crowded points of an automatic satin column sewn with `set` below the
-/// warning's limit as well, at its tight turns and under later shapes: with `auto_short_stitches` `knots`, the
-/// default (`REQ-AUTO-195`). A set that doesn't read pulls in nothing there.
+/// warning's limit as well, at its tight turns and under later shapes: with `auto_short_stitches` `knots`
+/// (`REQ-AUTO-195`). A set that doesn't read pulls in nothing there.
 pub(crate) fn knots(set: &ParamSet) -> bool {
     AutoParams::from_set(set).is_ok_and(|read| read.params.auto_short_stitches == params::KNOTS)
 }

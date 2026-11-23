@@ -255,9 +255,9 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
 /// and 21, far under the cover's limit of 500. With a column's pull compensation tapered into its points
 /// (M13.62), 41, 38, 12 and 20. With each thread threaded once (M13.63), a line sews before a fill beside it and
 /// the fill's rows end on it: 68, 44, 31 and 56, and the dog on turf in 6 threads leaves a sliver of 0.18 mm² beside a
-/// line, still far under the limits. With the cap working below the limit (M13.64), 69, 45, 32 and 56.
+/// line, still far under the limits.
 const SLIVERS: [(&str, usize, usize, f64, f64); 4] =
-    [("dog-on-turf-6", 1, 0, 18.0, 69.0), ("dog-on-turf-9", 0, 0, 0.0, 45.0), ("dog-running-6", 0, 0, 0.0, 32.0), ("dog-running-9", 0, 0, 0.0, 56.0)];
+    [("dog-on-turf-6", 1, 0, 18.0, 68.0), ("dog-on-turf-9", 0, 0, 0.0, 44.0), ("dog-running-6", 0, 0, 0.0, 31.0), ("dog-running-9", 0, 0, 0.0, 56.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -301,10 +301,9 @@ fn req_auto_027_digitized_dogs_show_no_fabric_and_leave_the_slivers_recorded() {
 /// With a column 0.4 mm under a later column (M13.57), the running dog in 9 threads sews 91 mm² there, where it
 /// sewed 93. With a column's pull compensation tapered into its points (M13.62), 49.5, 60.5, 49.0 and 84.75. With
 /// each thread threaded once (M13.63), 75.75, 51.75, 55.25 and 96.25: a fill's rows that end over a line sewn
-/// before it can't be taken as the rows under a later line were. The cap's step owns the area. With the cap
-/// pulling points in below the limit at tight turns and under later shapes (M13.64), 72.25, 48.5, 52.0 and 88.25.
+/// before it can't be taken as the rows under a later line were. The cap's step owns the area.
 const THICK: [(&str, f64, f64); 4] =
-    [("dog-on-turf-6", 7225.0, 0.0), ("dog-on-turf-9", 4850.0, 0.0), ("dog-running-6", 5200.0, 0.0), ("dog-running-9", 8825.0, 0.0)];
+    [("dog-on-turf-6", 7575.0, 0.0), ("dog-on-turf-9", 5175.0, 0.0), ("dog-running-6", 5525.0, 0.0), ("dog-running-9", 9625.0, 0.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -341,9 +340,7 @@ fn req_auto_067_digitized_dogs_sew_thick_on_the_area_recorded() {
 /// fills alone.
 /// With each thread threaded once (M13.63), 3.99, 3.95, 3.91 and 3.97: the dog on turf in 6 threads at a spot of
 /// 4 fills, their lines and the base layer, and the running dog in 9 threads where satin columns sew.
-/// With the cap pulling points in below the limit (M13.64), the dog on turf in 9 threads sews 3.80 and the running
-/// dog in 9 threads 3.96.
-const THICKEST: [(&str, f64); 4] = [("dog-on-turf-6", 399.0), ("dog-on-turf-9", 380.0), ("dog-running-6", 391.0), ("dog-running-9", 396.0)];
+const THICKEST: [(&str, f64); 4] = [("dog-on-turf-6", 399.0), ("dog-on-turf-9", 395.0), ("dog-running-6", 391.0), ("dog-running-9", 397.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -364,9 +361,7 @@ fn req_auto_073_digitized_dogs_sew_their_thickest_spot_as_recorded() {
 /// With each thread threaded once (M13.63), the running dog in 9 threads leaves it, its thickest spot 3.97 where
 /// columns sew, and the dog on turf in 6 threads, at 3.99, and the running dog in 6, at 3.91, join it: a line sews
 /// before the fills beside it there, whose row ends the cap can't take over the line. The cap's step owns them.
-/// With the cap pulling points in below the limit (M13.64), the running dog in 9 threads joins it again: its
-/// columns' spot falls under its spot of fills alone, 3.96.
-const FILLS_ALONE: [(&str, f64); 3] = [("dog-on-turf-6", 399.0), ("dog-running-6", 391.0), ("dog-running-9", 396.0)];
+const FILLS_ALONE: [(&str, f64); 2] = [("dog-on-turf-6", 399.0), ("dog-running-6", 391.0)];
 
 /// The cap at the end of planning (REQ-AUTO-100) takes thread wherever a dog still sews above the cap, so
 /// that what is left above it is satin columns' top stitches, which it leaves below the warning's limit
@@ -417,14 +412,12 @@ fn req_auto_103_digitized_dogs_with_lines_kept_and_details_last_sew_above_the_ca
 /// its thread changes, with `auto_thread_once` on, as by default, and whether `SC-W0927` is said, and with it
 /// off. Off, the order is the one before M13.63 (REQ-AUTO-186), and each dog sews as main sews it. On, the 2
 /// dogs in 6 threads, threaded once, sewed 4.07 and 4.18 fills: they fall back to the order with each line
-/// after its fills, which is under the limit, and are threaded 3 times more (REQ-AUTO-189). With the cap pulling
-/// points in below the limit (M13.64), the 2 dogs in 6 threads still fall back, to 3.95 and 3.96, and the dogs in
-/// 9 threads sew 3.80 and 3.83 threaded once.
+/// after its fills, which is under the limit, and are threaded 3 times more (REQ-AUTO-189).
 const DETAILS_LAST: [(&str, f64, usize, bool, f64, usize); 4] = [
-    ("dog-on-turf-6", 395.0, 8, true, 395.0, 8),
-    ("dog-on-turf-9", 380.0, 8, false, 376.0, 12),
-    ("dog-running-6", 396.0, 8, true, 396.0, 8),
-    ("dog-running-9", 383.0, 8, false, 397.0, 11),
+    ("dog-on-turf-6", 396.0, 8, true, 396.0, 8),
+    ("dog-on-turf-9", 395.0, 8, false, 391.0, 12),
+    ("dog-running-6", 399.0, 8, true, 399.0, 8),
+    ("dog-running-9", 395.0, 8, false, 397.0, 11),
 ];
 
 #[test]
@@ -521,11 +514,9 @@ fn req_auto_094_digitized_dogs_keep_their_likeness_as_recorded() {
 /// With a column's pull compensation tapered into its points (M13.62), the dog on turf in 9 threads keeps 106
 /// parts and 0.933 of its likeness, and the running dog in 6 threads 75 parts and 0.986.
 /// With each thread threaded once (M13.63), the blocks sew in another order: the dogs keep 97, 105, 74 and 95
-/// parts, and 1.000, 0.960, 0.977 and 0.958 of their likeness. Not traced further. With the cap pulling points in
-/// below the limit (M13.64), the dog on turf in 6 threads keeps 96 parts and 0.986, and the running dog in 9
-/// threads 0.945.
+/// parts, and 1.000, 0.960, 0.977 and 0.958 of their likeness. Not traced further.
 const LINED: [(&str, usize, usize, f64); 4] =
-    [("dog-on-turf-6", 97, 96, 986.0), ("dog-on-turf-9", 111, 105, 960.0), ("dog-running-6", 77, 74, 977.0), ("dog-running-9", 100, 95, 945.0)];
+    [("dog-on-turf-6", 97, 97, 1000.0), ("dog-on-turf-9", 111, 105, 960.0), ("dog-running-6", 77, 74, 977.0), ("dog-running-9", 100, 95, 958.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]

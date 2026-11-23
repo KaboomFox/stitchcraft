@@ -380,7 +380,7 @@ impl Cap<'_, '_> {
         loop {
             let (index, spot, near) = match hot.as_mut() {
                 Some(hot) => {
-                    let Some((index, spot)) = hot.next(self.pass.thickness, meter)? else { break };
+                    let Some((index, spot)) = hot.next(&self.pass, meter)? else { break };
                     (Some(index), spot.at, hot.near(&self.pass, &self.ribbons, spot.at, meter)?)
                 }
                 None if self.above(limit, meter)? => (None, self.pass.thickness.most(Measure::Fills).at, points.clone()),
@@ -402,12 +402,7 @@ impl Cap<'_, '_> {
             taken.insert(point);
             self.taken_out(point, Kind::Column, true, None, meter)?;
             if let Some(hot) = hot.as_mut() {
-                // The stitch that joins the points on either side lays thread where they did.
-                let (block, _) = point;
-                let (from, to) = (self.pass.beside(point, false, meter)?, self.pass.beside(point, true, meter)?);
-                if let Some(joined) = from.zip(to).and_then(|(from, to)| self.pass.sewn(block, from, to)) {
-                    hot.add(self.pass.thickness, &[joined], meter)?;
-                }
+                hot.taken(point);
             }
         }
         Ok(())

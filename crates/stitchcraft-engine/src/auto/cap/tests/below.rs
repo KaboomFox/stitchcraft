@@ -257,13 +257,13 @@ fn req_auto_194_the_spots_gone_on_to_are_those_near_the_points_stitches_thickest
         let mut meter = Budget::DEFAULT.meter();
         let mut hot = Hot::of(&cap.pass, &cap.ribbons, &fan, 1.0, &mut meter).unwrap();
         // The pile is thicker, but no stitch of the fan comes near it: the fan's own thickest spot comes first.
-        let (first, spot) = hot.next(cap.pass.thickness, &mut meter).unwrap().unwrap();
+        let (first, spot) = hot.next(&cap.pass, &mut meter).unwrap().unwrap();
         assert!(spot.value < cap.pass.thickness.most(Measure::Fills).value, "{spot:?}");
         let alone = Thickness::of(&plan(&[("fan", Role::Top, super::fan(0.05))]), &mut meter).unwrap().unwrap().most(Measure::Fills).value;
         assert!((spot.value - alone).abs() < 1e-9, "{spot:?} {alone}");
         // It stays until it is stuck, and its points are the fan's whose stitches come near it, in the plan's
         // order: every point the cap may move for it is among them.
-        assert_eq!(hot.next(cap.pass.thickness, &mut meter).unwrap().map(|(at, _)| at), Some(first));
+        assert_eq!(hot.next(&cap.pass, &mut meter).unwrap().map(|(at, _)| at), Some(first));
         let near = hot.near(&cap.pass, &cap.ribbons, spot.at, &mut meter).unwrap();
         assert!(!near.is_empty() && near.windows(2).all(|pair| pair[0] < pair[1]) && near.iter().all(|point| fan.contains(point)));
         let movable: Vec<Entry> =
@@ -271,26 +271,186 @@ fn req_auto_194_the_spots_gone_on_to_are_those_near_the_points_stitches_thickest
         assert!(!movable.is_empty() && movable.iter().all(|point| near.contains(point)), "{movable:?} {near:?}");
         assert!(hot.near(&cap.pass, &cap.ribbons, Point::new(500.0, 500.0).unwrap(), &mut meter).unwrap().is_empty());
         hot.stuck(first);
-        let (second, next) = hot.next(cap.pass.thickness, &mut meter).unwrap().unwrap();
+        let (second, next) = hot.next(&cap.pass, &mut meter).unwrap().unwrap();
         assert!(second != first && next.value <= spot.value && next.value > 1.0);
         // A spot whose thread falls takes its new place; under the level it is done.
         for stitch in cap.pass.thickness.sewn().to_vec().iter().filter(|stitch| fan.contains(&(stitch.block, stitch.index))) {
             cap.pass.thickness.remove(stitch, &mut meter).unwrap();
         }
-        assert_eq!(hot.next(cap.pass.thickness, &mut meter).unwrap(), None);
+        assert_eq!(hot.next(&cap.pass, &mut meter).unwrap(), None);
         // A stitch laid again puts its spots above the level back, but for those stuck.
         let stitch = cap.pass.thickness.sewn().iter().find(|stitch| fan.contains(&(stitch.block, stitch.index))).copied().unwrap();
         for _ in 0..10 {
             cap.pass.thickness.add(&stitch, &mut meter).unwrap();
         }
-        hot.add(cap.pass.thickness, &[stitch], &mut meter).unwrap();
-        let back = hot.next(cap.pass.thickness, &mut meter).unwrap().unwrap();
+        hot.laid(&[stitch]);
+        let back = hot.next(&cap.pass, &mut meter).unwrap().unwrap();
         assert!(back.0 != first && back.1.value > 1.0);
         // Nothing above a level as high as the thickest spot.
-        assert_eq!(Hot::of(&cap.pass, &cap.ribbons, &fan, 1000.0, &mut meter).unwrap().next(cap.pass.thickness, &mut meter).unwrap(), None);
+        assert_eq!(Hot::of(&cap.pass, &cap.ribbons, &fan, 1000.0, &mut meter).unwrap().next(&cap.pass, &mut meter).unwrap(), None);
         // A unit of work for each point and each spot looked at.
         assert!(Hot::of(&cap.pass, &cap.ribbons, &fan, 1.0, &mut Budget { max_work: 0, ..Budget::DEFAULT }.meter()).is_err());
-        assert!(hot.next(cap.pass.thickness, &mut Budget { max_work: 0, ..Budget::DEFAULT }.meter()).is_err());
+        assert!(hot.next(&cap.pass, &mut Budget { max_work: 0, ..Budget::DEFAULT }.meter()).is_err());
         assert!(hot.near(&cap.pass, &cap.ribbons, back.1.at, &mut Budget { max_work: 0, ..Budget::DEFAULT }.meter()).is_err());
     });
+}
+
+#[test]
+fn req_auto_194_the_spots_gone_on_to_are_in_the_cells_round_the_points_stitches_and_take_new_places() {
+    // A column 5 fills thick, and a frame of another shape round it far off, which only widens the measure.
+    let column_points: Vec<(f64, f64)> = (0..5).flat_map(|_| zigzag(4.0, 0.25)).collect();
+    let frame = vec![(-6.0, -6.0), (10.0, -6.0), (10.0, 10.0), (-6.0, 10.0)];
+    let mut sewn = plan(&[("column", Role::Top, column_points), ("frame", Role::Top, frame)]);
+    let column: BTreeSet<ElementRef> = ElementRef::from_index(0).into_iter().collect();
+    let rules = Rules { cap: 3.0, limit: 4.0, columns: &column, ..rules() };
+    on_cap(&mut sewn, &rules, |cap, points| {
+        let ours: Vec<Entry> = points
+            .iter()
+            .copied()
+            .filter(|point| cap.pass.stitch(*point).is_some_and(|(_, _, element)| element == ElementRef::from_index(0)))
+            .collect();
+        let mut meter = Budget::DEFAULT.meter();
+        // The cells the column's top stitches are filed in.
+        let filed: Vec<(i64, i64)> = cap
+            .ribbons
+            .cells
+            .iter()
+            .filter(|(_, at)| at.iter().any(|at| cap.ribbons.ribbons[*at].element == ElementRef::from_index(0)))
+            .map(|(cell, _)| *cell)
+            .collect();
+        let (x0, x1) = (filed.iter().map(|c| c.0).min().unwrap(), filed.iter().map(|c| c.0).max().unwrap());
+        let (y0, y1) = (filed.iter().map(|c| c.1).min().unwrap(), filed.iter().map(|c| c.1).max().unwrap());
+        // Every spot of the measure is above a level under 0: those queued lie in the filed cells and the cells
+        // round them, and no farther.
+        let mut hot = Hot::of(&cap.pass, &cap.ribbons, &ours, -1.0, &mut meter).unwrap();
+        let mut cells = Vec::new();
+        while let Some((at, spot)) = hot.next(&cap.pass, &mut meter).unwrap() {
+            let place = cap.pass.thickness.placed(spot.at);
+            cells.push((cell(place.x()), cell(place.y())));
+            hot.stuck(at);
+        }
+        let range = |cells: &[(i64, i64)], x: bool| {
+            let v: Vec<i64> = cells.iter().map(|c| if x { c.0 } else { c.1 }).collect();
+            (*v.iter().min().unwrap(), *v.iter().max().unwrap())
+        };
+        assert_eq!((range(&cells, true), range(&cells, false)), ((x0 - 1, x1 + 1), (y0 - 1, y1 + 1)));
+        // A spot as thick as the level is not above it.
+        let mut zero = Hot::of(&cap.pass, &cap.ribbons, &ours, 0.0, &mut meter).unwrap();
+        while let Some((at, spot)) = zero.next(&cap.pass, &mut meter).unwrap() {
+            assert!(spot.value > 0.0);
+            zero.stuck(at);
+        }
+        // The points near a spot are those of stitches filed in its cell or one beside it.
+        let hot = Hot::of(&cap.pass, &cap.ribbons, &ours, 1.0, &mut meter).unwrap();
+        let near = |x: i64, y: i64| {
+            let at = cap.pass.thickness.point(Point::new(x as f64 + 0.5, y as f64 + 0.5).unwrap());
+            hot.near(&cap.pass, &cap.ribbons, at, &mut Budget::DEFAULT.meter()).unwrap().len()
+        };
+        let (xm, ym) = ((x0 + x1) / 2, (y0 + y1) / 2);
+        assert!(near(x1 + 1, ym) > 0 && near(x0 - 1, ym) > 0 && near(xm, y1 + 1) > 0 && near(xm, y0 - 1) > 0);
+        assert_eq!((near(x1 + 2, ym), near(x0 - 2, ym), near(xm, y1 + 2), near(xm, y0 - 2)), (0, 0, 0, 0));
+    });
+}
+
+#[test]
+fn req_auto_194_a_spot_whose_thread_changed_takes_its_new_place_and_one_stuck_stays_out() {
+    let (mut sewn, column, _) = fanned(0.05);
+    let rules = Rules { cap: 3.0, limit: 4.0, columns: &column, ..rules() };
+    on_cap(&mut sewn, &rules, |cap, points| {
+        let mut meter = Budget::DEFAULT.meter();
+        let mut hot = Hot::of(&cap.pass, &cap.ribbons, points, 1.0, &mut meter).unwrap();
+        let (first, _) = hot.next(&cap.pass, &mut meter).unwrap().unwrap();
+        // Thread taken from the thickest spot until another is thicker: that one comes first now.
+        let through: Vec<SewnStitch> = cap
+            .pass
+            .thickness
+            .sewn()
+            .iter()
+            .filter(|stitch| cap.pass.thickness.spots(stitch, &mut Budget::DEFAULT.meter()).unwrap().contains_key(&first))
+            .copied()
+            .collect();
+        let others = |thickness: &Thickness| {
+            thickness.values(Measure::Fills).iter().enumerate().filter(|(at, _)| *at != first).map(|(_, value)| *value).fold(0.0_f64, f64::max)
+        };
+        for stitch in &through {
+            if cap.pass.thickness.values(Measure::Fills)[first] < others(cap.pass.thickness) {
+                break;
+            }
+            cap.pass.thickness.remove(stitch, &mut meter).unwrap();
+        }
+        let now = cap.pass.thickness.values(Measure::Fills)[first];
+        assert!(now > 1.0 && now < others(cap.pass.thickness), "{now}");
+        let (next, spot) = hot.next(&cap.pass, &mut meter).unwrap().unwrap();
+        assert!(next != first && spot == cap.pass.thickness.most(Measure::Fills), "{spot:?}");
+        // Stuck, it stays out, though a stitch laid through it again makes it the thickest.
+        hot.stuck(next);
+        for stitch in &through {
+            cap.pass.thickness.add(stitch, &mut meter).unwrap();
+        }
+        hot.laid(&through);
+        let mut seen = Vec::new();
+        while let Some((at, _)) = hot.next(&cap.pass, &mut meter).unwrap() {
+            seen.push(at);
+            hot.stuck(at);
+        }
+        assert!(seen.contains(&first) && !seen.contains(&next), "{seen:?}");
+    });
+}
+
+#[test]
+fn req_auto_194_a_point_taken_out_puts_the_spots_of_its_joined_stitch_in_their_places() {
+    let column_points: Vec<(f64, f64)> = (0..5).flat_map(|_| zigzag(4.0, 0.25)).collect();
+    let mut sewn = plan(&[("column", Role::Top, column_points)]);
+    let column: BTreeSet<ElementRef> = ElementRef::from_index(0).into_iter().collect();
+    let rules = Rules { cap: 3.0, limit: 4.0, columns: &column, ..rules() };
+    on_cap(&mut sewn, &rules, |cap, points| {
+        let mut meter = Budget::DEFAULT.meter();
+        // Every spot is stuck: none comes up, until a point is taken out and its joined stitch laid.
+        let mut hot = Hot::of(&cap.pass, &cap.ribbons, points, 1.0, &mut meter).unwrap();
+        while let Some((at, _)) = hot.next(&cap.pass, &mut meter).unwrap() {
+            hot.stuck(at);
+        }
+        let mut fresh = Hot::of(&cap.pass, &cap.ribbons, &[], 1.0, &mut meter).unwrap();
+        assert_eq!(fresh.next(&cap.pass, &mut meter).unwrap(), None);
+        let point = (0, 10);
+        assert!(cap.taken_out(point, Kind::Column, true, None, &mut meter).unwrap().is_some());
+        fresh.taken(point);
+        let (at, spot) = fresh.next(&cap.pass, &mut meter).unwrap().unwrap();
+        assert!(spot.value > 1.0 && cap.pass.thickness.values(Measure::Fills)[at] == spot.value);
+        // Laying them costs a unit of work for each step along the joined stitch, and the points beside.
+        let mut again = Hot::of(&cap.pass, &cap.ribbons, &[], 1.0, &mut meter).unwrap();
+        again.taken((0, 11));
+        assert!(again.next(&cap.pass, &mut Budget { max_work: 0, ..Budget::DEFAULT }.meter()).is_err());
+        let mut laid = Hot::of(&cap.pass, &cap.ribbons, &[], 1.0, &mut meter).unwrap();
+        laid.laid(&cap.pass.thickness.sewn()[..1]);
+        assert!(laid.next(&cap.pass, &mut Budget { max_work: 0, ..Budget::DEFAULT }.meter()).is_err());
+    });
+}
+
+#[test]
+fn req_auto_112_the_last_resort_takes_a_column_s_points_only_above_the_limit() {
+    let column_points: Vec<(f64, f64)> = (0..5).flat_map(|_| zigzag(4.0, 0.25)).collect();
+    let sewn = plan(&[("column", Role::Top, column_points)]);
+    let column: BTreeSet<ElementRef> = ElementRef::from_index(0).into_iter().collect();
+    for (limit, takes) in [(4.0, true), (50.0, false)] {
+        let rules = Rules { cap: 3.0, limit, columns: &column, ..rules() };
+        on_cap(&mut sewn.clone(), &rules, |cap, points| {
+            cap.last_resort(points, false, &mut Budget::DEFAULT.meter()).unwrap();
+            assert_eq!(cap.times[Kind::Column.at()] > 0, takes, "{limit}");
+        });
+    }
+}
+
+#[test]
+fn req_auto_195_below_the_limit_a_knot_moves_by_its_first_share_only_however_thick_it_stays() {
+    // With the cap far under the fan, its knots could move twice: below the limit they move once, a quarter of
+    // the way.
+    let (sewn, column, _) = fanned(0.08);
+    let pulls = pullable(&column, true);
+    let rules = Rules { cap: 1.0, limit: 4.0, columns: &column, pulls: &pulls, ..rules() };
+    let mut pulled = sewn.clone();
+    let (capped, _, _) = cap(&mut pulled, &rules);
+    assert!(capped.unwrap().pulled[0] > 0);
+    let moves = moved(&sewn, &pulled);
+    assert!(moves.iter().all(|(a, b)| a.x() == 4.0 && (b.x() - 3.0).abs() <= 0.05), "{moves:?}");
 }

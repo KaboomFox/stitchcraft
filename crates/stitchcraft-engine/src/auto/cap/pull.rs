@@ -104,7 +104,7 @@ impl Cap<'_, '_> {
         loop {
             let (index, spot, near) = match hot.as_mut() {
                 Some(hot) => {
-                    let Some((index, spot)) = hot.next(self.pass.thickness, meter)? else { break };
+                    let Some((index, spot)) = hot.next(&self.pass, meter)? else { break };
                     (Some(index), spot.at, hot.near(&self.pass, &self.ribbons, spot.at, meter)?)
                 }
                 None if self.above(level, meter)? => (None, self.pass.thickness.most(Measure::Fills).at, points.to_vec()),
@@ -138,7 +138,7 @@ impl Cap<'_, '_> {
             }
             self.pass.moved(pulled.point, pulled.to);
             if let Some(hot) = hot.as_mut() {
-                hot.add(self.pass.thickness, &pulled.added, meter)?;
+                hot.laid(&pulled.added);
             }
             self.moves.insert(pulled.point, (times.saturating_add(1), first));
             self.places.insert((cell(spot.x()), cell(spot.y())));
