@@ -245,6 +245,10 @@ The quality check against Ink/Stitch ran on 2026-11-22, ahead of the docs review
 7. Pull compensation near a column's point. Measured in Ink/Stitch only: held to 15 to 20 % of the width, a point sews nearly as drawn. The amount needs a sew-out.
 8. The outside of a bend. Ink/Stitch keeps it closed. StitchCraft opens it to 0.5 mm, which leaves slits narrower than a thread. Whether they show on fabric is a question for a sew-out.
 9. The quality check as a part of the differential. The 15 drawings and their measures were made by hand for this check. They are to run with the differential's nightly report, so that each step's effect on them shows. It belongs with M8.
+10. Lettering whose satin columns are narrower than 1 mm. At its least scale a small font sews 92 % of its satin stitches under 1 mm, and the holes of its letters close below that scale. Such a text is to say so, with the scale at which its columns are 1 mm wide. It belongs with M14.
+11. A lock on a thick spot. Of 216 lock ends on the 15 drawings, 31 are on a spot at 3.25 fills or more and lay 0.35 fills there. A lock is to move to a thinner needle point of its run. The gain is not measured.
+12. Lettering laid out by StitchCraft sews thicker than the same word laid out by Ink/Stitch and sewn by StitchCraft: 4.18 fills against 3.56 on one word at 75 % of its font's size. One font also sews 13 % more stitches. Both are to be reproduced as cases first. They belong with M14.
+13. A traced picture's export inside VectorCraft. An export may use 10 billion instructions and 4,000 more for each byte of the document. The largest test sheet uses 84.8 % of that. A traced dog needs an estimated 6.5 to 8.9 times as much, most of it for the overlaps of neighbours, so VectorCraft stops its export and only the command line sews it. The overlaps are to be made cheaper. The heavy budget of the RFC's P10 is not yet raised upstream.
 
 The owner left out, on 2026-11-23, a manual control that sews across one jump instead of leaving a thread to cut.
 
