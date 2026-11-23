@@ -4214,7 +4214,8 @@ falls from 4.52 to 4.05 fills. The order's search keeps 133 and 1,452 rows on th
   and the sew-out piece decides.
 - **Fabric beside the lines.** For the same reason a little more fabric shows between a line and a fill sewn
   after it: up to 2.8 times the dogs' bare share, with one sliver more, and on the 2 photos traced locally 3.9
-  and 1.6 times, with 1 and 2 slivers more. Every design stays under the limits.
+  and 1.6 times, with 1 and 2 slivers more. The dogs stay under every limit. On the magnolia the cover's check
+  finds 3 faults where main's finds none, and on the coleus 8 where main's finds 7: not traced further.
 - **The area above the cap.** It rises on the dog on turf in 6 threads from 14.0 to 23.0 mm², in 9 threads from
   8.0 to 10.0 mm², on the running dog in 6 threads from 11.0 to 13.25 mm², on the coleus from 6.5 to 13.5 mm² and
   on the magnolia from 16.5 to 26.25 mm², and falls on 4 designs. No design has an area at 4 fills or more, and none rises above 4 that was at or under it.
