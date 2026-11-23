@@ -2289,8 +2289,8 @@ What a user can do with this version, before its first release. The entries belo
   the ones to look at. Where a shade is drawn both under and over another, `SC-W0925` names the shapes, and
   the thread is threaded again. `--set auto_thread_once=false` sews every line after the fills beside it, as
   before. `SC-I0907` now says how many times the machine is threaded beside the thread changes. Thickness
-  comes first: a design threaded once that sews a spot above the warning's limit is planned again with each
-  line after the fills beside it, and sews that way when that keeps it at the limit or under it, and
+  comes first. Where threading once leaves a spot above the warning's limit, the design is planned again with
+  each line after the fills beside it. If that keeps it at the limit or under it, it sews that way, and
   `SC-W0927` says how many more times its threads are threaded. With `auto_details_last` on, 2 traced dogs
   sew that way, each threaded 3 times more.
 - M13.62: points stay points (`REQ-AUTO-183`, `REQ-SAT-032`). A satin column that tapers to a point, such

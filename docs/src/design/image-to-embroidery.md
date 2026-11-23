@@ -4164,10 +4164,11 @@ raster. The notice `SC-I0907` now says how many times the machine is threaded be
 
 The whole set, 78 designs with the sew-out piece, planned with the build in the tests' build at opt-level 1,
 and measured as above, on main with M13.62. The build sews as the prototype of (a) and (d) did on every design,
-but where rule 4 now moves a column after a part's line. At the default settings no design falls back to the
-order with each line after its fills: the thickness guard plans again only the 9 designs that sew above 4
-fills, and each is above 4 that way too. With `auto_details_last` on, the dog on turf and the running dog in
-6 threads fall back, each threaded 3 times more, and sew as main sews them.
+but where rule 4 now moves a column after a part's line. 9 designs sew above 4 fills at the default
+settings. The thickness guard plans 2 of them again, the goose and the magnolia, whose orders the strict rules
+wouldn't allow. Sewn strictly they are above 4 too, at 4.37 and 4.52. Each keeps its first plan. With
+`auto_details_last` on, the dog on turf and the running dog in 6 threads fall back, each threaded 3 times
+more, and sew as main sews them.
 
 | On 78 designs | main | built |
 |---|---:|---:|

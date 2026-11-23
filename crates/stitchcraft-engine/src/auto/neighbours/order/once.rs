@@ -248,8 +248,9 @@ fn named(
 /// Whether `sewn`, the order found with `auto_thread_once` on, is one that the strict rules allow too, those of
 /// `auto_thread_once` off (`REQ-AUTO-186`): no line sews before a fill it borders, the base layer keeps the
 /// thread it was given, and no satin column sews after a part's running line it was held after by rule 4
-/// widened. Such an order is a strict order with as few thread changes, so a design too thick in it would be
-/// as thick sewn strictly (`REQ-AUTO-189`). A line kept before its fill by what must sew before what counts
+/// widened. Such an order is a strict order with as few thread changes, so the thickness guard has nothing to
+/// weigh (`REQ-AUTO-189`); the strict search may break a tie between such orders another way, which the set
+/// measures. A line kept before its fill by what must sew before what counts
 /// too: the strict rules would allow it, but it is not looked into. A unit of work for each element and pair,
 /// out of `budget`'s work; one out of work counts the order as one the strict rules don't allow.
 pub(super) fn allowed(order: &Order<'_>, sewn: &[usize], budget: &Budget) -> bool {
