@@ -126,7 +126,7 @@ pub(crate) fn finished(
     profile: &MachineProfile,
     told_by: Told<'_>,
     budget: &Budget,
-) -> Vec<Diagnostic> {
+) -> (Vec<Diagnostic>, Option<f64>) {
     let mut meter = budget.meter();
     let mut said = Vec::new();
     let measured = Thickness::of(plan, &mut meter).map(|thickness| {
@@ -180,8 +180,11 @@ pub(crate) fn finished(
             measure
         })
     });
+    // The thickest spot of what comes back, as measured: the thickness guard needs no measure of its own
+    // (`REQ-AUTO-189`).
+    let thickest = measured.as_ref().ok().and_then(Option::as_ref).map(|thickness| thickness.most(Measure::Fills).value);
     said.extend(told(plan, measured, &held.limits, told_by, &mut meter));
-    said
+    (said, thickest)
 }
 
 /// The elements the pass and the cap work with, by their ids: the base layer's pieces, the elements in the
@@ -492,7 +495,7 @@ mod tests {
         // and `SC-I1119` what is left above the cap.
         let mut sewn = plan(4, 1);
         let held = Held { limits: Limits::DEFAULT, overlap: 1.0, cap: 3.0 };
-        let said = finished(
+        let (said, _) = finished(
             &mut sewn,
             &held,
             (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new(), &BTreeMap::new()),
@@ -528,14 +531,17 @@ mod tests {
         let mut kept = sewn.clone();
         let codes = |said: &[Diagnostic]| said.iter().map(|said| said.code).collect::<Vec<_>>();
         assert_eq!(
-            codes(&finished(
-                &mut kept,
-                &held,
-                (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new(), &BTreeMap::new()),
-                profile,
-                (&Names::default(), &BTreeSet::new()),
-                &Budget::DEFAULT
-            )),
+            codes(
+                &finished(
+                    &mut kept,
+                    &held,
+                    (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new(), &BTreeMap::new()),
+                    profile,
+                    (&Names::default(), &BTreeSet::new()),
+                    &Budget::DEFAULT
+                )
+                .0
+            ),
             [Code::AutoThinned, Code::AutoThick]
         );
         assert_eq!(kept, sewn);
@@ -550,6 +556,7 @@ mod tests {
                 (&Names::default(), &BTreeSet::new()),
                 &Budget::DEFAULT
             )
+            .0
             .is_empty()
         );
         assert_eq!(kept, within);
@@ -577,7 +584,7 @@ mod tests {
         assert!(pass > measure, "{pass} {measure}");
         let budget = Budget { max_work: measure, ..Budget::DEFAULT };
         let mut kept = sewn.clone();
-        let said = finished(
+        let (said, _) = finished(
             &mut kept,
             &held,
             (&[], &BTreeSet::new(), &BTreeSet::new(), &BTreeMap::new(), &BTreeMap::new()),
