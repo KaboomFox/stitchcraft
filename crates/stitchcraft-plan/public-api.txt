@@ -218,6 +218,7 @@ pub fn stitchcraft_plan::thickness::Thickness::at_place(&self, stitchcraft_plan:
 pub fn stitchcraft_plan::thickness::Thickness::blank(&self) -> stitchcraft_plan::thickness::Thickness
 pub fn stitchcraft_plan::thickness::Thickness::hottest(&self, &stitchcraft_plan::plan::SewnStitch, &mut stitchcraft_core::budget::Meter) -> core::result::Result<f64, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_plan::thickness::Thickness::most(&self, stitchcraft_plan::thickness::Measure) -> stitchcraft_plan::thickness::Spot
+pub fn stitchcraft_plan::thickness::Thickness::most_besides(&self, stitchcraft_plan::thickness::Measure, &alloc::collections::btree::set::BTreeSet<usize>, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::option::Option<(usize, stitchcraft_plan::thickness::Spot)>, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_plan::thickness::Thickness::near(&self, f64, f64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_plan::thickness::Zone, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_plan::thickness::Thickness::of(&stitchcraft_plan::plan::StitchPlan, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::option::Option<stitchcraft_plan::thickness::Thickness>, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_plan::thickness::Thickness::of_stitches(&[stitchcraft_plan::plan::SewnStitch], &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::option::Option<stitchcraft_plan::thickness::Thickness>, stitchcraft_core::budget::Exhausted>

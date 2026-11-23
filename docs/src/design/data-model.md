@@ -374,7 +374,8 @@ no tie-off. From M13.56 a tie-off is made from the run's own points
 `stitchcraft_plan::thickness` measures a plan's thread, in fills, and its needle points per mm² in the
 square millimetre round each spot. It lives beside the plan, so that the engine's warning and the
 renderer's heat map are one measure, which the test kit reads too. [Image to embroidery](image-to-embroidery.md#how-thick-a-design-sews)
-defines the 2 measures and their limits.
+defines the 2 measures and their limits. The measure names its thickest spot, and the thickest besides
+spots a caller passes by, as the cap does with a spot it can't lower.
 
 ## Threads and palettes
 

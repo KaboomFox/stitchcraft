@@ -2276,6 +2276,14 @@ What a user can do with this version, before its first release. The entries belo
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.64: the cap works below the limit too (`REQ-AUTO-195`, `REQ-AUTO-196`). Below 4 fills, down to the cap
+  of 3.25, automatic digitizing now pulls in the stitch ends of a satin column's tight turns, where the ends
+  on the inside lie closer than half the spacing, and ends that a shape sewn later covers, each by a quarter
+  of the column. On a gentle curve the plan moves no end in. A line 5 mm wide turning by 60° sews 3.09 fills
+  at the turn, where it sewed 3.83. On 67 designs the area at 3.25 fills or more falls from 158.5 to 140.2 mm²
+  under the default style and from 1,295.0 to 912.5 mm² under the logo style, and no design's thickest spot
+  rises. It is `auto_short_stitches` `knots`, the new default, and `--set auto_short_stitches=above_limit`
+  sews the columns of M13.58.
 - M13.62: points stay points (`REQ-AUTO-183`, `REQ-SAT-032`). A satin column that tapers to a point, such
   as a sun's ray, now sews to a point. Its pull compensation falls to 0 over the last 2 mm before an end whose
   rails meet, where each pair was widened by the whole 0.4 mm and the column ended in a bar about 0.85 mm
@@ -2766,6 +2774,12 @@ What a user can do with this version, before its first release. The entries belo
   scans every text file, documents included.
 
 ### Fixed
+- M13.64: the cap stopped at the first spot above 4 fills that it could not lower (`REQ-AUTO-194`). Its
+  pull-in and its last resort now go on to the next such spot. A spot of shapes sewn by their own settings
+  kept the cap from the automatic shapes' spots: TS-13A sews 35.25 mm² at 4 fills or more, where it sewed
+  39.50, less than the 39.25 of its hand-set half alone. 2 sheets of traced letters that sewed 4.44 and 4.18
+  fills now sew 4.00. With the pull-in below the limit, the area above 4 fills under the logo style falls
+  from 27.8 to 1.2 mm² on 67 designs.
 - M13.56: a run of stitches that ended on one stitch, sewn straight on from the stitches before it,
   could end without its tie-off. The tie-off is now made from the whole run's stitches. The new check of
   the plan's locks found it in a random test design. None of the repository's designs sews such a run.

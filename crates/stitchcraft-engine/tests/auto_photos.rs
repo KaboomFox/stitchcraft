@@ -262,9 +262,10 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
 /// more rows under later shapes, 38, 38, 11 and 21, and with its last resort above the warning's limit, 41, 39, 11
 /// and 19. With smooth satin edges (M13.58), 36, 37, 11 and 21, and with clean column ends (M13.60), 39, 37, 11
 /// and 21, far under the cover's limit of 500. With a column's pull compensation tapered into its points
-/// (M13.62), 41, 38, 12 and 20.
+/// (M13.62), 41, 38, 12 and 20. With the cap pulling points in below the limit at tight turns (M13.64), 41, 38, 12
+/// and 21.
 const SLIVERS: [(&str, usize, usize, f64, f64); 4] =
-    [("dog-on-turf-6", 0, 0, 0.0, 41.0), ("dog-on-turf-9", 0, 0, 0.0, 38.0), ("dog-running-6", 0, 0, 0.0, 12.0), ("dog-running-9", 0, 0, 0.0, 20.0)];
+    [("dog-on-turf-6", 0, 0, 0.0, 41.0), ("dog-on-turf-9", 0, 0, 0.0, 38.0), ("dog-running-6", 0, 0, 0.0, 12.0), ("dog-running-9", 0, 0, 0.0, 21.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -306,9 +307,11 @@ fn req_auto_027_digitized_dogs_show_no_fabric_and_leave_the_slivers_recorded() {
 /// 52.25, 64.0, 52.75 and 93.0 before shapes that swell and taper were filled whole (M13.59). The
 /// case fails when a number changes, so that a change that piles thread up again shows here.
 /// With a column 0.4 mm under a later column (M13.57), the running dog in 9 threads sews 91 mm² there, where it
-/// sewed 93. With a column's pull compensation tapered into its points (M13.62), 49.5, 60.5, 49.0 and 84.75.
+/// sewed 93. With a column's pull compensation tapered into its points (M13.62), 49.5, 60.5, 49.0 and 84.75. With
+/// the cap pulling points in below the limit at tight turns and under later shapes (M13.64), 48.0, 58.75, 47.5 and
+/// 81.75.
 const THICK: [(&str, f64, f64); 4] =
-    [("dog-on-turf-6", 4950.0, 0.0), ("dog-on-turf-9", 6050.0, 0.0), ("dog-running-6", 4900.0, 0.0), ("dog-running-9", 8475.0, 0.0)];
+    [("dog-on-turf-6", 4800.0, 0.0), ("dog-on-turf-9", 5875.0, 0.0), ("dog-running-6", 4750.0, 0.0), ("dog-running-9", 8175.0, 0.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -343,7 +346,9 @@ fn req_auto_067_digitized_dogs_sew_thick_on_the_area_recorded() {
 /// dog in 6 threads sews 3.99 where a column lies over fills, since the cap takes a column's top points only
 /// above 4 and a narrower point changes where it stops. The running dog in 9 threads is back at its spot of
 /// fills alone.
-const THICKEST: [(&str, f64); 4] = [("dog-on-turf-6", 396.0), ("dog-on-turf-9", 391.0), ("dog-running-6", 399.0), ("dog-running-9", 398.0)];
+/// With the cap pulling points in below the limit at tight turns and under later shapes (M13.64), 3.95, 3.77,
+/// 3.97 and 3.98.
+const THICKEST: [(&str, f64); 4] = [("dog-on-turf-6", 395.0), ("dog-on-turf-9", 377.0), ("dog-running-6", 397.0), ("dog-running-9", 398.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -383,9 +388,14 @@ fn req_auto_102_digitized_dogs_sew_above_the_cap_only_on_satin_columns() {
     assert_eq!(listed, FILLS_ALONE.map(|(name, thickest)| (name.to_string(), thickest)), "{above:?}");
 }
 
+/// The dogs with details last whose thickest spot sews above the cap with no satin column there, in hundredths of
+/// a fill (REQ-AUTO-103). With the cap pulling points in below the limit (M13.64), the running dog in 9 threads
+/// sews its column's spot under its spot of fills alone, 3.97. The list only shrinks.
+const DETAILS_LAST_FILLS_ALONE: [(&str, f64); 1] = [("dog-running-9", 397.0)];
+
 /// The dogs keep their thin lines at a likeness of 0.85, as by default, and sew their details last, which each
 /// shape here turns on since M13.48 turned it off by default (REQ-AUTO-103), and still sew above the cap only
-/// where satin columns' top stitches lie (REQ-AUTO-112).
+/// where satin columns' top stitches lie (REQ-AUTO-112), but on the dogs listed.
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
 fn req_auto_103_digitized_dogs_with_lines_kept_and_details_last_sew_above_the_cap_only_on_satin_columns() {
@@ -405,7 +415,9 @@ fn req_auto_103_digitized_dogs_with_lines_kept_and_details_last_sew_above_the_ca
             above.push((name.clone(), thickest, columns));
         }
     }
-    assert!(above.is_empty(), "{above:?}");
+    assert!(above.iter().all(|(_, thickest, _)| *thickest <= rules().auto_thick_warn_fills + 1e-9), "{above:?}");
+    let listed: Vec<(String, f64)> = above.iter().map(|(name, thickest, _)| (name.clone(), hundredths(*thickest))).collect();
+    assert_eq!(listed, DETAILS_LAST_FILLS_ALONE.map(|(name, thickest)| (name.to_string(), thickest)), "{above:?}");
 }
 
 /// How often each traced dog's thread changes: as sewn, the fewest that any order has in which each shape
@@ -472,9 +484,10 @@ fn req_auto_094_digitized_dogs_keep_their_likeness_as_recorded() {
 /// With a column 0.4 mm under a later column (M13.57), the dogs in 9 threads keep 105 and 95 parts, and 0.924
 /// and 0.971 of their likeness.
 /// With a column's pull compensation tapered into its points (M13.62), the dog on turf in 9 threads keeps 106
-/// parts and 0.933 of its likeness, and the running dog in 6 threads 75 parts and 0.986.
+/// parts and 0.933 of its likeness, and the running dog in 6 threads 75 parts and 0.986. With the cap pulling
+/// points in below the limit (M13.64), the running dog in 9 threads keeps 96 parts and 0.977 of its likeness.
 const LINED: [(&str, usize, usize, f64); 4] =
-    [("dog-on-turf-6", 97, 96, 986.0), ("dog-on-turf-9", 111, 106, 933.0), ("dog-running-6", 77, 75, 986.0), ("dog-running-9", 100, 95, 971.0)];
+    [("dog-on-turf-6", 97, 96, 986.0), ("dog-on-turf-9", 111, 106, 933.0), ("dog-running-6", 77, 75, 986.0), ("dog-running-9", 100, 96, 977.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]

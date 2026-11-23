@@ -3687,7 +3687,8 @@ The cap aims at 3.25 fills (`auto_thick_cap_fills`) and the owner's limit is 4 (
 takes a satin column's points only where a spot would sew above 4: it pulls crowded points in, then takes points
 out as its last resort ([smooth satin edges](#smooth-satin-edges)). The fixes of 2026-11-22 each left spots resting
 just under 4 where main had them lower, and none above. M13.64 measured where designs rest between the cap and
-the limit, and why, and prototyped 6 rules. Nothing that sews changed in that phase.
+the limit, and why, and prototyped 6 rules. The owner chose c and e, built in M13.64's second phase
+([what was built](#what-was-built)).
 
 **How it was measured.** A probe in the prototype wrote one row for each plan after the cap, from the plan
 measured afresh. Each spot of 3.25 fills or more was split by layer, and the spot was given one cause, the first
@@ -3770,8 +3771,8 @@ knots. The pull-in at knots lowers the corner further, to 3.09, as one column wi
 taken down to 3.25 as well took 133.0 to 38.0 in the default style and adds little to the pull-in's 42.5: it
 takes visible column points, and isn't proposed.
 
-**What must not get worse.** Candidate c moves no point of M13.58's edges piece with its ring, arc and corner, of
-the banner, the shield, the pear or the review's mug. The engine's suites of smooth edges, column ends, points, traced
+**What must not get worse.** Candidate c moves no point of the banner, the shield, the pear under the default
+style or the review's mug. The engine's suites of smooth edges, column ends, points, traced
 letters, columns, cover, one shape and small details pass, and `REQ-AUTO-172`'s bound holds at 204 points. What
 fails is what records the change: `REQ-AUTO-073`'s list, whose badges fall from 3.99 to 3.98 fills, the lettered
 patch from 3.95 to 3.86, TS-13C from 3.93 to 3.89 and TS-13D from 3.79 to 3.75. The release-only dog cases, run at
@@ -3786,12 +3787,48 @@ thicker than the cap's measure said, 4.35 against 4.02: an update of the measure
 something there. The build re-measures after the pull-in below the limit, and keeps it only where no spot ends
 thicker.
 
-**Proposed rule (c).** The cap goes on to the next spot above the limit when no point lowers the thickest one
-(`REQ-AUTO-194`). Then, below the limit and down to the cap, it pulls in a column's crowded points at its tight
-turns, closer than half the spacing to their rail's neighbour, and points whose new end a later shape covers. Each
-moves by its column's first share only, and no spot above the limit gets thicker (`REQ-AUTO-195`). It is a value of
-the existing setting `auto_short_stitches`, `knots`, the default. `above_limit` gives today's columns, apart from
-`REQ-AUTO-194`, and `crowded` the columns of before M13.58 (`REQ-AUTO-196`).
+**The rule (c and e).** The cap goes on to the next spot above the limit when no point lowers the thickest
+one (`REQ-AUTO-194`). Then, below the limit and down to the cap, it pulls in a column's crowded points at its
+tight turns, closer than half the spacing to their rail's neighbour, and points whose new end a later shape
+covers. Each moves by its column's first share only, and no spot above the limit gets thicker (`REQ-AUTO-195`).
+It is a value of the existing setting `auto_short_stitches`, `knots`, the default. `above_limit` gives the
+columns of M13.58, apart from `REQ-AUTO-194`, and `crowded` the columns of before M13.58 (`REQ-AUTO-196`).
+
+##### What was built
+
+The cap runs its pull-in and its last resort as before, each stopping at the first spot where every point
+fails to lower it, and then runs both again, going on past such spots. Main's first run is kept as it was so that a large letter sheet
+doesn't run the last resort out of work, as the measuring found. The thickest spot left besides those passed
+by comes from the measure (`Thickness::most_besides`). Then come the pull-ins below the limit, on the columns
+sewn with `knots`, of points near a spot above the cap. A point is a knot when its rail's neighbour lies
+closer than half the column's zigzag spacing, compared as lengths are, so a neighbour exactly 0.2 mm away
+makes none. Its new end is covered when a top stitch of another shape sewn later covers the first 0.1 mm of
+its way back. The cap's measure is held during these pulls: no spot that a moved stitch lays thread in ends
+thicker than the larger of what it was and the limit. Before them the plan and its measure are kept. After them
+the plan is measured afresh, and the pulls below the limit are undone when that measure's thickest spot is
+thicker, or its area above the limit larger, than the kept measure says. That check guards against the drift
+seen in the prototype. It found nothing to undo on the engine's set or the CLI set.
+
+Measured on the build, `a0d380b7` on main `acdda98f`, at opt-level 1, as the prototype was:
+
+| Set | Main: mm² at 3.25 or more | Built | Prototype | Points pulled in, built (prototype) |
+| --- | --- | --- | --- | --- |
+| 67 designs, default style | 158.5 | 140.2 | 139.5 | 124 (137) |
+| 67 designs, logo style | 1,295.0, 27.8 above 4 | 912.5, 1.2 above 4 | 874.2, 1.2 above 4 | 2,132 (2,298) |
+| The engine's 16 designs | 100.2 | 58.2 | 56.8 | 189 (204) |
+| 18 sheets of letters | 572.0, thickest 4.44 | 373.0, thickest 4.00 | 373.5 | 1,885 (1,956) |
+| 4 dogs, details last | 73.0 | 63.8 | 62.8 | 55 (63) |
+
+No design's thickest spot rose against main on any set, and the cap's own measure agreed with the plan
+measured afresh on every design. The build pulls in fewer points than the prototype. The prototype
+compared distances without slack, and it took a point whose neighbour lies 0.2 mm away, short by rounding
+alone, as a knot. Run with a knot of 0.1999999 mm the prototype pulls none on the star fixture under the logo
+style, where at 0.2 it pulls one. So the 2 badges keep 3.99 fills, where the prototype sewed 3.98, and the
+anchor 3.93 where it sewed 3.91. The 60° corner sews 3.09 fills, the bends' hook 3.24 and the zigzag's cusp
+3.24, as in the prototype. Of the 124 points pulled in under the default style, 91 end where no later shape
+covers them, all of them at knots or above 4: 63 below the limit. On the heart banner, the shield and the mug
+no point moves. The pear under the logo style has 2 points pulled in at knots, and M13.58's edges piece one,
+as in the prototype.
 
 **Open points.** Where a design still rests just under 4 after c, a column lies whole over a fill: TS-13A's strip
 of 2.56 fills over 1.00 of fill and 0.25 of base sews 3.99, and the traced running dog 3.98. No point there is

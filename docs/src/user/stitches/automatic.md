@@ -576,11 +576,21 @@ most of all. If it shows, set `auto_column_reach_mm` to 0.6 mm or more.
 
 A satin column's stitches run from edge to edge, and on the inside of a curve they keep their spacing: the
 outside opens up to 0.5 mm, where a straight column's stitches lie 0.4 mm apart. Its inside edge sews as one
-row. A stitch ends short of the edge only where the spot would otherwise sew more than 4 fills of thread,
+row. A stitch ends short of the edge where the spot would otherwise sew more than 4 fills of thread,
 where a column fans into a corner over other shapes. There the plan pulls the crowded ends in, a quarter
 of the column and then half, and the report says how many (`SC-I1119`).
 
-**Short stitches** (`auto_short_stitches`) gives the look from before:
+Below 4 fills, down to the cap of 3.25, the plan pulls in only the ends of a tight turn and ends that a
+shape sewn later covers, each by a quarter of the column. A tight turn is where the ends on the inside lie
+closer than half the column's spacing, 0.2 mm: a line 5 mm wide turning by 60° sews 3.1 fills there, where
+it sewed 3.8. On a gentle curve the plan moves no end in. This is `knots`, the default of **Short
+stitches** (`auto_short_stitches`). `above_limit` pulls ends in only above 4 fills, as before M13.64:
+
+```sh
+stitch plan drawing.svg --auto -o drawing.pes --set auto_short_stitches=above_limit
+```
+
+**Short stitches** also gives the look from before M13.58:
 
 ```sh
 stitch plan drawing.svg --auto -o drawing.pes --set auto_short_stitches=crowded
