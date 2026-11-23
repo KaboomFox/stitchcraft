@@ -24,8 +24,10 @@
 //! the report says so, and the table here is changed with it. The table is a report: only each picture's
 //! whole count is guarded.
 //!
-//! **What sews doesn't change.** Each sheet's file is compared with its golden file, byte for byte, so the
-//! counted build is checked to sew as the tests' build does.
+//! **What sews doesn't change.** Each picture's file is compared with its golden file, byte for byte, so the
+//! counted build is checked to sew as the tests' build does. The traced pictures have theirs too
+//! (`REQ-AUTO-206`): only this job writes them, and a step that makes the work cheaper must leave them as
+//! they are.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};

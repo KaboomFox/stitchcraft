@@ -4231,8 +4231,26 @@ status = "planned"
 id = "REQ-AUTO-083"
 area = "auto"
 level = "L2"
-statement = "`cargo xtask perf` counts, with valgrind's callgrind, the instructions the release build of stitch takes to write each picture of automatic digitizing as VectorCraft's exporter writes it: the 4 traced dogs and the pear exported with the Auto effect, and the 6 TS-13 sheets written by `stitch testsheet`. Each count has its record in conformance/perf.toml, and a count above its record by more than 2 % fails, as a benchmark's does. The report gives each picture's count by stage of automatic digitizing, each stage the instructions of the functions that do it with all they call, and the rest of the run as one more row, and the time the command takes. Each picture's arguments are kept with its record, and are a command stitch reads. Counting changes no stitch: each sheet's file is written as its golden file has it."
+statement = "`cargo xtask perf` counts, with valgrind's callgrind, the instructions the release build of stitch takes to write each picture of automatic digitizing as VectorCraft's exporter writes it: the 4 traced dogs and the pear exported with the Auto effect, and the 6 TS-13 sheets written by `stitch testsheet`. Each count has its record in conformance/perf.toml, and a count above its record by more than 2 % fails, as a benchmark's does. The report gives each picture's count by stage of automatic digitizing, each stage the instructions of the functions that do it with all they call, and the rest of the run as one more row, and the time the command takes. Each picture's arguments are kept with its record, and are a command stitch reads. Counting changes no stitch: each picture's file is written as its golden file has it, the traced pictures' included (REQ-AUTO-206)."
 rationale = "A traced dog's export needs several times what VectorCraft allows it, and a step that makes digitizing dearer goes unseen until the compatibility gate fails a test sheet. The counts by stage say where the work goes, and the records hold each change to account, as they hold the fill and the insets."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-205"
+area = "auto"
+level = "L2"
+statement = "Where an automatic area reaches under the shapes sewn after it and is cut away under them, each region it combines them in takes only what lies within a window round the place its result can be: the area's bounds grown by 3 overlaps, 4 times TOUCHING and 0.5 mm for the shapes beside it, the bounds of a line's part crossed grown by 4 times TOUCHING and 0.5 mm for the shapes beyond it, the bounds of each kind of shape it reaches under grown by its overlap under that kind and 0.5 mm for what it reaches from, and the bounds of its own overlap grown by 0.5 mm for the overlaps of the areas sewn before it. A part within its window is taken as it is, one beyond it or only touching it is left out, and one across its edge is clipped to it ring by ring. A part of a neighbour beyond the window costs the area's overlaps no geometry, only the looks that leave it out, a unit of work for each point looked at."
+rationale = "On a traced dog the overlaps took 71 to 75 % of the work (CI's perf job on f08be379), and its export needs an estimated 6.5 to 8.9 times what VectorCraft allows. Every union of an area's neighbours took each neighbour whole, and a dog's large areas meet most of the small ones. Measured on 2026-11-23 (M13.66), the window took 39 to 47 % off the dogs' overlaps and 27 to 35 % off their whole runs, 8.5 % off the pear and 0.3 to 3.8 % off TS-13A, B, D and E. Whole parts by their bounds kept under half of that, and only the exact grouping of whole parts, which saves nothing, keeps every region bit for bit whatever the drawing."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-206"
+area = "auto"
+level = "L2"
+statement = "Making the overlaps cheaper changes nothing that sews: inside each step's window the regions of REQ-AUTO-205 are the same sets as the whole ones, a point of an edge the window cuts moving by a grid cell (2^-35 mm) at most, and every golden file stays the same byte for byte. Each picture the perf job counts has a golden file, the traced ones too, written by main f1689168 before the window, and the perf job compares each picture's machine file with it."
+rationale = "The step is about work only. The owner sews traced pictures, and a change in a stitch would need a sew-out. An edge cut at the window ends at a new point, which the grid rounds, so a crossing on it may round to the next cell: of the 885 final regions of 84 designs, the 3 of one drawing had 5 points a cell apart, and its machine file was the same. A machine file's points lie on a grid of 0.1 mm, and a cell changes one only where a value the planner rounds or compares lies within a cell of its edge, which can't be ruled out for every drawing. Only the perf job writes the traced pictures, so their golden files hold that to account."
 milestone = "M13"
 status = "active"
 

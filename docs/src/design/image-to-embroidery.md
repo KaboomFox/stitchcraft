@@ -2583,6 +2583,109 @@ The numbers show 4 things.
 The sew-out ([machine testing](../plan/machine-testing.md)) sews a test piece of fills edged by columns
 2, 4 and 6 mm wide at each value, and the running dog in 9 threads at the default and at 0.4 mm.
 
+### The overlaps' work
+
+VectorCraft stops an export that runs past its budget
+([an export that finishes](vectorcraft-integration.md#an-export-that-finishes)). A traced dog needs
+several times that budget, so it sews only from the command line, and on a traced dog the overlaps of this
+page took 71 to 75 % of the work. M13.66 measured that work by stage and by function, and made it cheaper
+without changing a stitch: the bar is the same machine file, byte for byte.
+
+**The work measured.** Measured on 2026-11-23 with callgrind, as the perf job counts
+(`xtask/src/pictures.rs`), on a build of main f1689168:
+
+- Nearly all of it is geometry. Each union, intersection, difference and growth of a region is one
+  arrangement of its rings, snap rounded on a grid (`normalize::region::snap`). The rounding alone takes
+  half of a dog's whole run, and growing regions takes 31 %.
+- Allocating and copying memory take about 10 % of a dog's run, inside that geometry.
+- `near_later` compares the bounds of 2 shapes first, so a pair far apart costs no geometry. Work repeated on
+  the same input is 1.9 % of the region operations' time on a dog, so a cache would win little.
+- Every union of an area's neighbours took each neighbour whole. A dog's large areas lie beside most of
+  its small ones, so each small area paid for the points of every large one beside it. On one dog thinned
+  to 25, 49, 73 and 97 of its shapes, the overlaps took 0.41, 1.84, 5.57 and 15.0 billion instructions,
+  close to the cube of the number of shapes.
+
+**The window.** Only what lies near an area can change what it reaches under or where it is cut away
+(`REQ-AUTO-205`). So each region an area combines its neighbours in takes them only within a window
+(`ops::windowed`):
+
+| What is combined | Its window |
+|---|---|
+| The shapes beside the area | the area's bounds, grown by 3 overlaps, 4 times `TOUCHING` and 0.5 mm |
+| The shapes beyond a line's part the area crosses | the bounds of what it crosses, grown by 4 times `TOUCHING` and 0.5 mm |
+| The places the area reaches from, for each kind of shape | that kind's bounds, grown by the overlap the area keeps under it and 0.5 mm |
+| The overlaps that areas sewn before it already sew | the bounds of its own overlap, grown by 0.5 mm |
+
+Parts wholly inside the window are taken as they are. Those beyond it, or only touching it, are left out.
+One across the edge is clipped to the window, ring by ring, with the window's sides as the clipping lines.
+The area is cut away up to an overlap inside the shapes beside it and reaches up to 2 overlaps past its
+edge. Each step keeps only what lies at least 0.5 mm inside its window, and there the clipped regions are
+the same sets as whole ones. Each point the window looks at costs a unit of work, so a far part of a
+neighbour costs a look and no geometry.
+
+There is no setting, because the window sews every design as it sewed before.
+
+**The regions, bit for bit.** An edge the window cuts ends at a new point, which the grid
+rounds, so inside the window the edge may turn by less than a grid cell, 2^-35 mm. A crossing on it may
+then round to the next cell. Of the 885 regions the overlaps leave in 84 designs (the golden files'
+sheets and plans, the 18 review drawings, the repository's SVG fixtures with `--auto` and its VectorCraft
+documents), 882 were the same bit for bit. The 3 of the shield had 5 points one cell apart, with as
+many points, and its machine file was the same. Ways that keep every region exact were measured too:
+
+| Way, measured on 2026-11-23 | Regions the same | Dog on turf, 6 threads | Running dog, 9 threads | Pear | TS-13A |
+|---|---:|---:|---:|---:|---:|
+| Clipped to the window, as built | 882 of 885 | -35.1 % | -30.3 % | -8.5 % | -1.2 % |
+| Whole parts whose bounds meet the window | 885 | -14.5 % | -8.7 % | -5.9 % | -0.1 % |
+| Whole parts, with every part within 10 mm of one kept | 885 | 0.0 % | -0.3 % | 0.0 % | 0.0 % |
+
+Only the last is exact whatever the drawing. Snap rounding bends an edge through each hot point it passes,
+anywhere along its length, so a point left out or added a cell from a kept edge can change it. The last way
+leaves out only groups whose bounds lie apart, as an intersection already does (`ops::kept`), and so saves
+nothing. The second keeps whole parts, and a dropped part a cell from a kept one could still move it. The
+clip keeps the most work off and moves a point by a cell at most. A machine file's points lie on a grid of
+0.1 mm. A cell can change one only if a value that the planner rounds or compares lies within a cell of
+its edge. That can't be ruled out for every drawing, but a drawing nudged
+by as little would sew differently too. The golden files of the sheets, the plans and the traced pictures
+(`REQ-AUTO-206`) are what check it, and none moved.
+
+| Picture | Main, millions | With the window |
+|---|---:|---:|
+| TS-13A | 2,228 | -1.2 % |
+| TS-13B | 1,798 | -3.8 % |
+| TS-13D | 1,688 | -2.1 % |
+| TS-13E | 1,151 | -0.3 % |
+| TS-13F | 665 | 0 |
+| Traced pear | 2,202 | -8.5 % |
+| Dog on turf, 6 threads | 20,246 | -35.1 % |
+| Dog on turf, 9 threads | 17,299 | -27.5 % |
+| Running dog, 6 threads | 17,558 | -32.6 % |
+| Running dog, 9 threads | 21,452 | -30.3 % |
+
+The counts are of a local build, which counts within 4 % of CI's, and the perf job's records follow CI's.
+TS-13C crashes valgrind on that machine, and CI counts it. The dogs' overlaps fell by 39 to 47 %, and the
+thinned dog's to 0.30, 1.38, 3.57 and 7.89 billion. Every run took as much memory as before, or less.
+
+**Other ways.** The rounding redoes its bookkeeping for every edge in each round. Counted on a dog, most
+of its rounding does 3 rounds, and doing only the edges that changed would save about one of them, some 4 %
+of a dog and nearly nothing on TS-13A. The split into parts by the rules takes 7 % of a dog and 22 % of the
+pear. Both wait for a step of their own.
+
+**The dogs and VectorCraft's budget.** The count inside VectorCraft can't be read on the machine the step
+was measured on, which has no WebAssembly target. On the sheets CI's compatibility job counts 4.16 to 4.57
+times the native count. By that ratio the dogs take 447 to 621 % of their budget with the window, against
+650 to 885 % before. The rest of a dog's run, with no overlaps at all, would still take 188 to 250 %. So
+cheaper work alone doesn't make a dog export inside VectorCraft. With the heavy budget that StitchCraft's
+RFC proposes ([P10](rfc-vectorcraft-abi-v2.md#p10-an-export-budget-that-fits-a-traced-photo), not yet
+raised upstream), the dogs would take 49 to 68 % of it, against 72 to 98 % before. The pear takes 82 to
+90 % of its budget, against 89 to 98 %.
+
+**Room on the sheets.** TS-13A spends 54 % of its work on its fills' stitches and 10 % on the overlaps. The
+window takes 1.2 % off it. CI's compatibility job counted its export at 84.1 % of its budget with the
+window, against 84.8 % on main, and TS-13B to TS-13D at 72.8, 75.6 and 64.2 %, against 75.3, 77.6 and
+65.8 %. The gate stays at 85 %, and a step that adds work to TS-13A's fills needs to take it off the fills.
+CI's perf job counted the dogs at 11.8 to 14.8 billion instructions and the pear at 2.0 billion, and
+their records follow.
+
 ### On black fabric
 
 A preview is drawn on unbleached cotton or on white. `Settings::on` of the renderer names another fabric

@@ -25,10 +25,12 @@ fn req_auto_083_each_picture_the_budget_counts_is_a_command_stitch_reads() {
         let cli = Cli::try_parse_from(["stitch"].into_iter().chain(args.iter().copied()).chain(["-o", "out.pes"]))
             .unwrap_or_else(|e| panic!("{name}: {e}"));
         match (&cli.command, picture.get("golden").and_then(toml::Value::as_str)) {
-            // A traced picture is exported digitized automatically, as a VectorCraft document is by default.
-            (Command::Plan(plan), None) => {
+            // A traced picture is exported digitized automatically, as a VectorCraft document is by default,
+            // and has its golden file among the pictures' (`REQ-AUTO-206`).
+            (Command::Plan(plan), Some(golden)) => {
                 assert!(plan.reading.reading(Source::of(&plan.design)).auto, "{name} is digitized automatically");
                 assert!(root.join(&plan.design).is_file(), "{name}: {}", plan.design.display());
+                assert_eq!(golden, format!("conformance/golden/pictures/{name}.pes"));
             }
             // A sheet is written by `stitch testsheet`, and is its golden file.
             (Command::Testsheet(sheet), Some(golden)) => {
@@ -39,5 +41,18 @@ fn req_auto_083_each_picture_the_budget_counts_is_a_command_stitch_reads() {
             (command, golden) => panic!("{name}: {command:?} against {golden:?}"),
         }
         assert!(picture["instructions"].as_integer().unwrap() > 0, "{name}");
+    }
+}
+
+/// `REQ-AUTO-206`: every picture the budget counts has a golden file, the traced ones too, so that the
+/// perf job checks byte for byte that a step which makes the work cheaper changes nothing that sews. The
+/// traced pictures' golden files were written by main f1689168, before the window of `REQ-AUTO-205`.
+#[test]
+fn req_auto_206_each_picture_the_budget_counts_has_a_golden_file() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let record: toml::Table = std::fs::read_to_string(root.join("conformance/perf.toml")).unwrap().parse().unwrap();
+    for (name, picture) in record["pictures"].as_table().unwrap() {
+        let golden = picture.get("golden").and_then(toml::Value::as_str).unwrap_or_else(|| panic!("{name} has no golden file"));
+        assert!(root.join(golden).is_file(), "{name}: {golden}");
     }
 }

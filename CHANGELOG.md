@@ -2297,6 +2297,29 @@ What a user can do with this version, before its first release. The entries belo
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M13.66: a traced picture's overlaps made cheaper (`REQ-AUTO-205`, `REQ-AUTO-206`). Each step of an
+  automatic area's overlaps now takes the shapes beside it only within a window round the place its result
+  can be, clipped to it, so a large neighbour's far points cost no geometry. The traced dogs plan with 27 to
+  35 % fewer instructions, the pear with 8.5 % and the TS-13 sheets with up to 3.8 % fewer, and every design
+  sews as before: the golden files stay as they were. A dog still needs more than VectorCraft allows an
+  export, so it still sews from the command line.
+- M13.63: each thread threaded once (`REQ-AUTO-184` to `REQ-AUTO-189`). On a machine with one needle each
+  thread change is a rethread by hand, so a design digitized automatically now threads each thread once
+  wherever its shapes allow it: a design of 6 threads is threaded 6 times. A line sews after the fill it
+  borders only where that costs no thread change, as a satin column does, and elsewhere with its thread,
+  before the fill, whose rows end on it. The base layer sews in the thread the order starts with. A satin
+  column sews after a part's running line it borders where that costs no thread change, so that it doesn't
+  reach its overlap under the line. On 78 designs 74 thread each thread once, where 65 did: the 4 traced dogs
+  are threaded 6, 9, 6 and 9 times, where they were 9, 13, 9 and 12, and photos traced in 9 and 12 threads
+  10 and 12 times, where they were 47 and 48. A thin line sewn before the fill beside it shows less of its
+  thread: on the dogs 37 fur lines newly show less than half of it, and `SC-I0926` counts such lines and names
+  the ones to look at. Where a shade is drawn both under and over another, `SC-W0925` names the shapes, and
+  the thread is threaded again. `--set auto_thread_once=false` sews every line after the fills beside it, as
+  before. `SC-I0907` now says how many times the machine is threaded beside the thread changes. Thickness
+  comes first. Where threading once leaves a spot above the warning's limit, the design is planned again with
+  each line after the fills beside it. If that keeps it at the limit or under it, it sews that way, and
+  `SC-W0927` says how many more times its threads are threaded. With `auto_details_last` on, 2 traced dogs
+  sew that way, each threaded 3 times more.
 - M13.62: points stay points (`REQ-AUTO-183`, `REQ-SAT-032`). A satin column that tapers to a point, such
   as a sun's ray, now sews to a point. Its pull compensation falls to 0 over the last 2 mm before an end whose
   rails meet, where each pair was widened by the whole 0.4 mm and the column ended in a bar about 0.85 mm
@@ -3700,6 +3723,10 @@ What a user can do with this version, before its first release. The entries belo
   shortens a value nor refuses the file.
 
 ### Golden files
+- Added `conformance/golden/pictures/` (M13.66, the overlaps made cheaper): the machine files of the 4 traced
+  dogs and the traced pear that `cargo xtask perf` counts, as main f1689168 writes them, 105 KB in all
+  (`REQ-AUTO-206`). The perf job now compares each traced picture's file with its golden file byte for byte,
+  as it compared the sheets'. The existing golden files stay as they were, and nothing sews differently.
 - Changed `conformance/golden/testsheets/TS-13B.pes` (M13.63, each thread threaded once). Its digitized half
   threads each of its 4 threads once, the base layer's red first and the black words and lines last, after
   the panes, where black was threaded twice. The sheet sews 14,415 stitches, where it sewed 14,422, and is
