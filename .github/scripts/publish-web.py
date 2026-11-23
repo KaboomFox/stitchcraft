@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """Publish one folder of the Pages site, and leave every other folder as it is.
 
-Why this file exists: 2 workflows publish to the `gh-pages` branch, the book (docs.yml) and the browser demo
-with its previews (web.yml), and runs of both can end at the same moment. Each one publishes through this
+Why this file exists: 3 workflows publish to the `gh-pages` branch, the book (docs.yml), the browser demo
+with its previews (web.yml) and the Ink/Stitch differential's report with its pictures (differential.yml),
+and their runs can end at the same moment. Each one publishes through this
 script, which is the one way to write to the branch (docs/src/design/docs-pipeline.md, Publishing):
 
 - It replaces the one folder it is given on the branch's newest state, and pushes only if the branch is
   still at that state (`--force-with-lease`). When another run got there first, it starts again from that
   run's state, so neither loses the other's folder.
+- A pull request's preview, `pr/<number>`, holds its differential's report in `pr/<number>/differential`,
+  which another workflow publishes: replacing the preview keeps that folder, and removing it removes both.
 - It writes the branch as one commit without a parent. The editor and each preview's modules are tens of
   megabytes that change with every push, and a history of them would grow without bound.
 """
@@ -29,8 +32,9 @@ def git(*args, cwd, check=True):
 
 
 def publish(destination, source):
-    if not re.fullmatch(r'app|dev|sheet|site-root|v[0-9]+\.[0-9]+|pr/[1-9][0-9]*', destination):
-        raise ValueError('Destination must be app, dev, sheet, site-root, v<major>.<minor> or pr/<positive number>')
+    if not re.fullmatch(r'app|dev|sheet|differential|site-root|v[0-9]+\.[0-9]+|pr/[1-9][0-9]*(/differential)?', destination):
+        raise ValueError('Destination must be app, dev, sheet, differential, site-root, v<major>.<minor>, '
+                         'pr/<positive number> or pr/<positive number>/differential')
     source = Path(source).resolve() if source else None
     if source and not (source / 'index.html').is_file():
         raise ValueError('The built site must contain index.html')
@@ -41,7 +45,9 @@ def publish(destination, source):
     repository = Path.cwd()
     remote = git('remote', 'get-url', 'origin', cwd=repository).stdout.strip()
     with tempfile.TemporaryDirectory(prefix='stitchcraft-pages-') as folder:
-        work = Path(folder)
+        # The site's checkout, and beside it room for a preview's differential while the preview is replaced.
+        work, kept = Path(folder) / 'site', Path(folder) / 'kept-differential'
+        work.mkdir()
         git('init', cwd=work)
         git('remote', 'add', 'origin', remote, cwd=work)
         # Checkout v7 keeps its scoped header behind includeIf. Resolve it in the
@@ -73,9 +79,17 @@ def publish(destination, source):
                     shutil.copyfile(path, work / path.name)
             else:
                 target = work / destination
+                nested = target / 'differential'
+                if source and re.fullmatch(r'pr/[1-9][0-9]*', destination) and nested.is_dir():
+                    shutil.rmtree(kept, ignore_errors=True)
+                    shutil.move(nested, kept)
                 shutil.rmtree(target, ignore_errors=True)
                 if source:
                     shutil.copytree(source, target)
+                if kept.is_dir():
+                    if not nested.exists():
+                        shutil.move(kept, nested)
+                    shutil.rmtree(kept, ignore_errors=True)
             (work / '.nojekyll').touch()
             git('add', '-A', cwd=work)
             tree = git('write-tree', cwd=work).stdout.strip()
