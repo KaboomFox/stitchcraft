@@ -49,15 +49,24 @@ fn area_at(design: &Design, limit: f64) -> f64 {
 fn req_auto_194_a_spot_the_cap_cannot_lower_does_not_stop_it_lowering_the_others() {
     // TS-13A's half set by hand sews 5.31 fills, which the cap may not touch. On main at `acdda98f` the cap
     // stops there: the whole sheet has 39.50 mm² at 4 fills or more, the hand-set half alone 39.25, and the
-    // shapes that digitizing made keep spots above 4 that the cap could lower. Going on to the next spot, it
-    // takes the whole sheet to 35.25, under what the hand-set half has alone.
+    // shapes that digitizing made keep spots above 4 that the cap could lower. It still does by default. With
+    // `knots` on the shapes digitizing made, it goes on to the next spot, and takes the whole sheet under what
+    // the hand-set half has alone.
     let sheet = SHEETS.iter().find(|sheet| sheet.id == "TS-13A").unwrap();
     let whole = sheet.design().unwrap().unwrap();
     let hand: Vec<Element> = whole.elements().iter().filter(|element| !element.automatic).cloned().collect();
     let hand = Design::new(hand, whole.settings).unwrap();
+    let mut knotted = whole.elements().to_vec();
+    for element in knotted.iter_mut().filter(|element| element.automatic) {
+        element.params.set(SHORT_STITCHES, "knots");
+    }
+    let knotted = Design::new(knotted, whole.settings).unwrap();
     let limit = rules().auto_thick_warn_fills;
-    let (both, alone) = (area_at(&whole, limit), area_at(&hand, limit));
-    assert!(both < alone, "the whole sheet has {both:.2} mm² at {limit} fills or more, its hand-set half {alone:.2}");
+    let (by_default, knots, alone) = (area_at(&whole, limit), area_at(&knotted, limit), area_at(&hand, limit));
+    assert!(
+        by_default > alone && knots < alone,
+        "{by_default:.2} mm² at {limit} fills or more by default, {knots:.2} with knots, its hand-set half {alone:.2}"
+    );
 }
 
 #[test]

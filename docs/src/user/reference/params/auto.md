@@ -412,7 +412,8 @@ most (`bend_open_percent` 25). `above_limit`, the default: the cap pulls crowded
 where a spot would sew above the warning's limit. `knots`: as well, below the limit and down to the
 cap, it pulls in only the points of a tight turn, closer than half the spacing to the next point on
 their rail, and points whose new end a later shape covers, each by a quarter of its stitch, so that
-an edge that shows keeps one row of stitch ends.
+an edge that shows keeps one row of stitch ends. Above the limit the cap then goes on past a spot
+it can't lower, to the others.
 `crowded`: as before M13.58, the outside keeps the spacing, and every point closer than 0.35 mm
 to the one before it on its rail moves in, by a quarter of its stitch and then by half. A shape
 that sets its own short-stitch settings keeps them in each case.

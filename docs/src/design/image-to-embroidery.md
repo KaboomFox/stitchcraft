@@ -3791,15 +3791,15 @@ thicker.
 one (`REQ-AUTO-194`). Then, below the limit and down to the cap, it pulls in a column's crowded points at its
 tight turns, closer than half the spacing to their rail's neighbour, and points whose new end a later shape
 covers. Each moves by its column's first share only, and no spot above the limit gets thicker (`REQ-AUTO-195`).
-It is a value of the existing setting `auto_short_stitches`, `knots`, which a person sets: `above_limit`, the
-columns of M13.58 apart from `REQ-AUTO-194`, stays the default for now, and `crowded` gives the columns of
-before M13.58 (`REQ-AUTO-196`). The default waits for room in VectorCraft's export budget, as the next
-paragraphs say. The fix `REQ-AUTO-194` works with every value.
+Both come with a value of the existing setting `auto_short_stitches`, `knots`, which a person sets. This step
+lands the rule and its fix as that value: by default nothing sews differently from main. `above_limit`, the
+columns of M13.58, stays the default for now, and `crowded` gives the columns of before M13.58
+(`REQ-AUTO-196`). The default waits for room in VectorCraft's export budget, as the next paragraphs say.
 
 ##### What was built
 
 The cap runs its pull-in and its last resort as before, each stopping at the first spot where every point
-fails to lower it, and then runs both again, going on past such spots. Main's first run is kept as it was so that a large letter sheet
+fails to lower it. Where a column of its is sewn with `knots`, it then runs both again, going on past such spots. Main's first run is kept as it was so that a large letter sheet
 doesn't run the last resort out of work, as the measuring found. Going on, they look only at the spots that
 have a top stitch of their points' shapes near, from the stitches the cap already files by cells of a
 millimetre for their cover. For a spot, the points looked at are those at either end of such a stitch. Among
@@ -3831,13 +3831,17 @@ sheets took 27 s where main took 29 s.
 
 That held CI's native perf records, but not the gate: inside VectorCraft, compiled to WebAssembly, TS-13A's
 export took 9,261 million of the 10,609 million instructions allowed with `knots` by default, 87.3 %, where it
-takes 8,993 million on main. The native savings from keeping the thickest spot between changes did not carry
-over to the WebAssembly build, whose instructions count differently, while the pull-in's own work did. That is
+takes 8,993 million on main. The native savings from keeping the thickest spot between changes were not there in
+the WebAssembly build, whose instructions count differently, while the pull-in's own work was. That is
 why the perf job passed and the gate failed. So `knots` stays a
-value to set. With `above_limit`, the default, the cap runs only what main runs and `REQ-AUTO-194`, and
-takes less than on main: TS-13A 3,175 million instructions at opt-level 1, TS-13B 2,531 million, TS-13E 1,581
-million. The default flips to `knots` in a step of its own once a test sheet has that room in VectorCraft's
-export budget. TS-13A has to fall from 87.3 % to under 85 % of it, about 2.7 % of its work. M13.66's window on
+value to set. `REQ-AUTO-194` alone by default failed the gate too: TS-13A's export took 9,127 million
+instructions, 86.0 %, while natively at opt-level 1 it took 3,175 million where main takes 3,228. So the fix
+comes with `knots` as well. With `above_limit`, the default, the cap runs only what main runs and sews byte
+for byte as main, in 3,140 million instructions at opt-level 1 on TS-13A. Going on past spots costs TS-13A
+about 35 million natively, 1.1 % of its work. The default flips to `knots` in a step of its own once a test
+sheet has that room in VectorCraft's export budget. With `knots` TS-13A takes 87.3 % of it, and with
+`REQ-AUTO-194` alone 86.0 %. It has to fall under 85 %, where main takes 84.8 %: from 87.3 %, about 2.7 % of
+its work. M13.66's window on
 the neighbours' overlaps gives about 1.2 % of that, and the rest has to come off the fills' stitches or off the
 pull-in's own work in WebAssembly. The tables below measure the setting's effect: the set planned with `knots`.
 

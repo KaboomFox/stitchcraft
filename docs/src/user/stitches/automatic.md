@@ -591,7 +591,8 @@ of the column and then half, and the report says how many (`SC-I1119`).
 cap of 3.25. There the plan pulls in only the ends of a tight turn and ends that a shape sewn later
 covers, each by a quarter of the column. A tight turn is where the ends on the inside lie closer than half
 the column's spacing, 0.2 mm: a line 5 mm wide turning by 60° sews 3.1 fills there, where it sews 3.8 by
-default. On a gentle curve the plan moves no end in.
+default. On a gentle curve the plan moves no end in. Above 4 fills it also goes on past a spot it can't
+thin, such as one of shapes sewn by their own settings, and thins the others.
 
 ```sh
 stitch plan drawing.svg --auto -o drawing.pes --set auto_short_stitches=knots

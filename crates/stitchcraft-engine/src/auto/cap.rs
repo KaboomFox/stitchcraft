@@ -32,10 +32,10 @@
 //!
 //! **Crowded points pulled in** (`REQ-AUTO-171`, the `pull` module). Where a spot still sews above the warning's
 //! limit once the 3 kinds are done, crowded top points of the columns that move none in as they are made
-//! move in along their stitches, before the last resort takes any point out. Neither stops at a spot it can't
-//! lower: each goes on to the next spot above the limit (`REQ-AUTO-194`). With `auto_short_stitches` `knots`,
-//! the default, the cap then pulls in the points of tight turns, and points whose new end a later shape
-//! covers, below the limit too, down to the cap (`REQ-AUTO-195`).
+//! move in along their stitches, before the last resort takes any point out. Each stops at the first spot it
+//! can't lower. With `auto_short_stitches` `knots` on a column of the cap's, each goes on to the next spot above
+//! the limit (`REQ-AUTO-194`). The cap then pulls in the points of tight turns, and points whose new end a later
+//! shape covers, below the limit too, down to the cap (`REQ-AUTO-195`).
 //!
 //! **One measure.** The cap takes the last pass's measure and keeps it up to date stitch by stitch, as the
 //! pass does, with the pass's own helpers. Only the stitches near a spot above the cap are looked at, found
@@ -334,7 +334,8 @@ impl Cap<'_, '_> {
     /// first, of `hottest`, judging a column's cover as drawn; then below it, of `points`, down to the cap,
     /// keeping the thread under a column's edge; then the crowded points of `pulled` are pulled in, and last
     /// the columns' top points `last` are taken, above the limit. Those 2 each stop at the first spot they
-    /// can't lower, and then go again, on past such spots (`REQ-AUTO-194`).
+    /// can't lower, and where a column of the cap's is sewn with `knots`, go again, on past such spots
+    /// (`REQ-AUTO-194`).
     fn taking(&mut self, [hottest, points, pulled]: [&[Entry]; 3], last: &[Entry], meter: &mut Meter) -> Result<(), Exhausted> {
         let rules = self.pass.rules;
         for (points, hot, limit) in [(hottest, true, rules.limit), (points, false, rules.cap)] {
@@ -346,7 +347,10 @@ impl Cap<'_, '_> {
                 }
             }
         }
-        for skip in [false, true] {
+        // Going on past such spots comes with `knots` for now: the test sheets have no room in VectorCraft's
+        // export budget for its work by default.
+        let skips: &[bool] = if rules.pulls.values().any(|pull| pull.knots) { &[false, true] } else { &[false] };
+        for &skip in skips {
             self.pull_in(pulled, rules.limit, skip, meter)?;
             self.last_resort(last, skip, meter)?;
         }

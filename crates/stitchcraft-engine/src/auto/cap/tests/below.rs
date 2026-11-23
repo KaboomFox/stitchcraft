@@ -164,8 +164,9 @@ fn req_auto_194_the_pull_in_goes_on_past_a_spot_no_point_lowers() {
 #[test]
 fn req_auto_194_the_last_resort_goes_on_past_a_spot_no_point_lowers() {
     // A pile of a shape sewn by its own settings, which the cap may not touch, is the thickest spot. A column
-    // sewing 5 fills beside it loses top points with `skip`, not without it; and the cap, which runs both,
-    // takes them and leaves the column under the limit.
+    // sewing 5 fills beside it loses top points with `skip`, not without it; and the cap, which runs both when
+    // a column of its is sewn with `knots`, takes them and leaves the column under the limit. Without `knots`
+    // it stops at the pile, as before M13.64.
     let column_points: Vec<(f64, f64)> = (0..5).flat_map(|_| zigzag(4.0, 0.25)).collect();
     let sewn = plan(&[("pile", Role::Top, pile(30.0)), ("column", Role::Top, column_points)]);
     let column: BTreeSet<ElementRef> = ElementRef::from_index(1).into_iter().collect();
@@ -176,12 +177,16 @@ fn req_auto_194_the_last_resort_goes_on_past_a_spot_no_point_lowers() {
             assert_eq!(cap.times[Kind::Column.at()] > 0, takes, "{skip}");
         });
     }
-    let mut capped_plan = sewn.clone();
-    let mut thickness = Thickness::of(&capped_plan, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
-    let done = capped(&mut capped_plan, &mut thickness, &rules, &column, &Budget::DEFAULT).unwrap().unwrap();
-    assert!(done.times[Kind::Column.at()] > 0, "{done:?}");
     let at = |plan: &StitchPlan| Thickness::of(plan, &mut Budget::DEFAULT.meter()).unwrap().unwrap().at(Measure::Fills, p(2.0, 1.5));
-    assert!(at(&sewn) > 4.0 && at(&capped_plan) <= 4.0, "{} {}", at(&sewn), at(&capped_plan));
+    for knots in [false, true] {
+        let pulls = pullable(&column, knots);
+        let rules = Rules { pulls: &pulls, ..rules };
+        let mut capped_plan = sewn.clone();
+        let mut thickness = Thickness::of(&capped_plan, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        let done = capped(&mut capped_plan, &mut thickness, &rules, &column, &Budget::DEFAULT).unwrap().unwrap();
+        assert_eq!(done.times[Kind::Column.at()] > 0 || done.pulled[0] > 0, knots, "{done:?}");
+        assert_eq!(at(&capped_plan) <= 4.0, knots, "{knots}: {} {}", at(&sewn), at(&capped_plan));
+    }
 }
 
 #[test]
