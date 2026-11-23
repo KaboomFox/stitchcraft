@@ -277,11 +277,11 @@ fn req_auto_195_a_later_shape_covers_a_pulled_end_only_where_it_covers_its_first
     // 0.2 mm round it, to x = 6.15: the first 0.1 mm of the way back from the new end, and no more of it.
     let pulled = |over_x: f64| {
         let over: Vec<(f64, f64)> = vec![(over_x, -1.0), (over_x, 5.0)];
-        let sewn = plan(&[("fan", Role::Top, wide_fan(0.25, 8.0)), ("over", Role::Top, over)]);
+        let mut sewn = plan(&[("fan", Role::Top, wide_fan(0.25, 8.0)), ("over", Role::Top, over)]);
         let column: BTreeSet<ElementRef> = ElementRef::from_index(0).into_iter().collect();
         let pulls = pullable(&column, true);
         let rules = Rules { cap: 1.5, limit: 2.5, columns: &column, pulls: &pulls, ..rules() };
-        let (capped, _, measured) = cap(&mut sewn.clone(), &rules);
+        let (capped, _, measured) = cap(&mut sewn, &rules);
         assert!(measured.most(Measure::Fills).value <= 2.5);
         capped.map_or(0, |capped| capped.pulled[0])
     };
