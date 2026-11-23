@@ -2583,15 +2583,15 @@ The numbers show 4 things.
 The sew-out ([machine testing](../plan/machine-testing.md)) sews a test piece of fills edged by columns
 2, 4 and 6 mm wide at each value, and the running dog in 9 threads at the default and at 0.4 mm.
 
-### What the overlaps cost
+### The overlaps' work
 
 VectorCraft stops an export that runs past its budget
 ([an export that finishes](vectorcraft-integration.md#an-export-that-finishes)). A traced dog needs
 several times that budget, so it sews only from the command line, and on a traced dog the overlaps of this
-page take 71 to 75 % of the work. M13.66 measured where that work goes and how to do the same work with
-less. Nothing that sews may change: the bar for every way tried is the same machine file, byte for byte.
+page take 71 to 75 % of the work. M13.66 measured that work by stage and by function, and tried doing
+the same work with less. Nothing that sews may change: the bar for every way tried is the same machine file, byte for byte.
 
-**Where the work goes.** Measured on 2026-11-23 with callgrind, as the perf job counts
+**The work measured.** Measured on 2026-11-23 with callgrind, as the perf job counts
 (`xtask/src/pictures.rs`), on a build of main f1689168:
 
 - Nearly all of it is geometry. Each union, intersection, difference and growth of a region is one
@@ -2612,11 +2612,11 @@ less. Nothing that sews may change: the bar for every way tried is the same mach
 |---|---|
 | The shapes beside the area | the area's bounds, grown by 3 overlaps, 4 times `TOUCHING` and 0.5 mm |
 | The shapes beyond a line's part the area crosses | the bounds of what it crosses, grown by 4 times `TOUCHING` and 0.5 mm |
-| What the area reaches from, for each kind of shape | that kind's bounds, grown by the reach under it and 0.5 mm |
-| What areas sewn before it already sew under a shape | the bounds of its own overlap, grown by 0.5 mm |
+| The places the area reaches from, for each kind of shape | that kind's bounds, grown by the overlap the area keeps under it and 0.5 mm |
+| The overlaps that areas sewn before it already sew | the bounds of its own overlap, grown by 0.5 mm |
 
-A part wholly inside its window is taken as it is, and one wholly outside is left out. A part across the
-edge is clipped to the window, ring by ring, with the window's sides as the clipping lines. What each step
+Parts wholly inside the window are taken as they are, and those wholly outside are left out. One across
+the edge is clipped to the window, ring by ring, with the window's sides as the clipping lines. What each step
 keeps lies at least 0.5 mm inside the edge, so the clipped regions are the same sets there.
 The new edges along the window and the corners cut there change the rounding of an edge they cut by up
 to a grid cell, 2^-35 mm (`REQ-AUTO-206`).
@@ -2641,12 +2641,12 @@ repository's SVG fixtures digitized with `--auto` and its VectorCraft documents 
 byte. Of the 885 regions the overlaps left in those designs, 882 stayed the same bit for bit. The 3 of the
 shield differ in their bits with as many points, and its machine file is the same. No run took more memory.
 
-**What else was tried.** The rounding redoes its bookkeeping for every edge in each round. Counted on a
+**Other ways.** The rounding redoes its bookkeeping for every edge in each round. Counted on a
 dog, most of its rounding does 3 rounds, and doing only the edges that changed would save about one of
 them, some 4 % of a dog and nearly nothing on TS-13A. The split into parts by the rules takes 7 % of a
 dog and 22 % of the pear. Neither is a step yet.
 
-**What the dogs still need.** The count inside VectorCraft can't be read on this machine, which has no
+**The dogs and VectorCraft's budget.** The count inside VectorCraft can't be read on this machine, which has no
 WebAssembly target. On the sheets CI's compatibility job counts 4.16 to 4.57 times the native count. By
 that ratio the dogs would take 447 to 621 % of their budget with the window, against 650 to 885 % on main.
 The rest of a dog's run, with no overlaps at all, would still take 188 to 250 %. So cheaper work alone
