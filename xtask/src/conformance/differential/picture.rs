@@ -60,9 +60,9 @@ const LEAST_WIDTH: u32 = 250;
 /// A small picture's panel's least width: room in its 3 for a verdict naming 2 of the ledger's entries.
 const SMALL_LEAST_WIDTH: u32 = 110;
 
-/// Thread only Ink/Stitch sews there: Okabe–Ito orange.
+/// Thread only the first side, Ink/Stitch's in the differential, sews there: Okabe–Ito orange.
 pub const INKSTITCH_ONLY: [u8; 3] = [0xE6, 0x9F, 0x00];
-/// Thread only StitchCraft sews there: Okabe–Ito blue.
+/// Thread only the second side, StitchCraft's in the differential, sews there: Okabe–Ito blue.
 pub const STITCHCRAFT_ONLY: [u8; 3] = [0x00, 0x72, 0xB2];
 /// Thread both sew there.
 pub const BOTH: [u8; 3] = [0x9E, 0x9E, 0x9E];
@@ -78,7 +78,7 @@ pub struct Drawn {
 
 /// One side of the picture: a program's name, its plan as read back from its PES file, and its measures.
 pub struct Side<'a> {
-    pub name: &'static str,
+    pub name: &'a str,
     pub plan: &'a StitchPlan,
     pub measured: &'a Measured,
 }
@@ -248,7 +248,8 @@ pub fn draw(title: &str, verdict: &str, rows: &[Compared], theirs: &Side, ours: 
     }
     if !small {
         let mut y = (top + h + 6) as f32;
-        for (shade, said) in [(INKSTITCH_ONLY, "Ink/Stitch only"), (STITCHCRAFT_ONLY, "StitchCraft only"), (BOTH, "both")] {
+        let (first, second) = (format!("{} only", theirs.name), format!("{} only", ours.name));
+        for (shade, said) in [(INKSTITCH_ONLY, first.as_str()), (STITCHCRAFT_ONLY, second.as_str()), (BOTH, "both")] {
             fill(&mut canvas, x as f32, y, 12.0, 12.0, shade);
             text(&mut canvas, said, x as f32 + 18.0, y + 1.5, 1.5, INK);
             y += line_h as f32;
@@ -398,7 +399,10 @@ mod tests {
         assert_eq!(picture.width(), PAD + 3 * (LEAST_WIDTH + PAD));
         assert_eq!(picture.height(), PAD + 34 + 20 + (14.4_f32 * 5.0).ceil() as u32 + 7 * 15 + PAD);
         let markdown = report(&[judged_case], "abc1234", "d59c9ab");
-        assert!(markdown.contains("](target/xtask-tests/differential-pictures/target/conformance/differential/pictures/square.png)"), "{markdown}");
+        assert!(
+            markdown.contains("](target/xtask-tests/differential-pictures/target/conformance/differential-site/pictures/square.png)"),
+            "{markdown}"
+        );
         assert!(markdown.contains("![square: Ink/Stitch's file, StitchCraft's and where they differ]("), "{markdown}");
         // A case one program doesn't sew has no picture.
         let mut alone = outcome("alone");
@@ -492,23 +496,24 @@ mod tests {
     }
 
     #[test]
-    fn the_docs_draw_a_case_from_ink_stitch_s_kept_file_as_the_differential_draws_it() {
-        let root = util::root();
-        let kept = "docs/fixtures/differential/inkstitch-ring.inkstitch.pes";
-        let png = super::super::shot(&root, "inkstitch-ring", kept).unwrap();
-        assert_eq!(png, std::fs::read(root.join(super::super::PICTURES).join("inkstitch-ring.png")).unwrap());
-        assert!(Pixmap::decode_png(&png).is_ok());
-        // The kept file is the one the shot compares Ink/Stitch's with: a copy that differs is stale.
-        assert!(super::super::stale_shots(&root, "inkstitch-ring", &std::fs::read(root.join(kept)).unwrap()).is_empty());
-        assert_eq!(
-            super::super::stale_shots(&root, "inkstitch-ring", b"#PES"),
-            [format!("{kept} is not the PES file Ink/Stitch writes of inkstitch-ring now: write that over it, and run cargo xtask shots")]
-        );
-        assert!(super::super::stale_shots(&root, "inkstitch-fill-rect", b"#PES").is_empty());
-        // Only a case of a design file, and only with its file kept.
-        assert!(super::super::shot(&root, "inkstitch-ts04", kept).unwrap_err().contains("no Ink/Stitch differential case of a design file"));
-        assert!(super::super::shot(&root, "inkstitch-nothing", kept).unwrap_err().contains("there is no case"));
-        assert!(super::super::shot(&root, "inkstitch-ring", "docs/fixtures/missing.pes").unwrap_err().starts_with("docs/fixtures/missing.pes"));
+    fn an_example_is_laid_out_as_a_case_with_the_sides_labelled_as_given() {
+        let red = Rgb::new(237, 23, 31);
+        let (close, wide) = (rows(red, 10.0, 0.4, 0.0), rows(red, 10.0, 0.8, 0.0));
+        let png = super::super::example("square.svg", ("rows 0.4 mm", &close), ("rows 0.8 mm", &wide)).unwrap();
+        let picture = Pixmap::decode_png(&png).unwrap();
+        assert_eq!(picture.width(), PAD + 3 * (LEAST_WIDTH + PAD));
+        // The same as a case's picture of the same 2 files, as read back, with their labels.
+        let back = |plan: &StitchPlan| stitchcraft_formats::decode(&encoded(plan, "x").unwrap()).unwrap().plan;
+        let (close, wide) = (back(&close), back(&wide));
+        let (first, second) = (Measured::of(&close).unwrap(), Measured::of(&wide).unwrap());
+        let rows = super::super::compare(&second, &first);
+        let sides = (Side { name: "rows 0.4 mm", plan: &close, measured: &first }, Side { name: "rows 0.8 mm", plan: &wide, measured: &second });
+        assert_eq!(png, draw("square.svg", "differ", &rows, &sides.0, &sides.1, false).unwrap().png);
+        // 2 plans that agree by every measure say so.
+        let same = super::super::example("square.svg", ("a", &close), ("b", &close)).unwrap();
+        let rows = super::super::compare(&first, &first);
+        let sides = (Side { name: "a", plan: &close, measured: &first }, Side { name: "b", plan: &close, measured: &first });
+        assert_eq!(same, draw("square.svg", "agree", &rows, &sides.0, &sides.1, false).unwrap().png);
     }
 
     #[test]

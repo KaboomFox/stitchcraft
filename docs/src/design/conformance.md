@@ -388,12 +388,16 @@ report shows each case's picture below its table, the failed cases first, then t
 glyph differential draws the glyphs that differ or are known differences whole. The glyphs the ledger
 excuses are drawn small on a contact sheet, each titled with the entries that excuse it, and another
 sheet shows the sample's first glyph of each font. CI publishes the report with its pictures on the
-documentation site, and `conformance/inkstitch/README.md` says where. This is the `inkstitch-ring` case,
-drawn from a copy of Ink/Stitch's file kept for the docs, which the nightly run checks against the file
-Ink/Stitch writes.
+documentation site, and `conformance/inkstitch/README.md` says where.
 
-<!-- shot: differential-ring -->
-![The inkstitch-ring case as the differential draws it, with Ink/Stitch's machine file and StitchCraft's side by side at one scale, each with its stitches, size, place, threads, trims and jumps, and a third panel of where their thread lies apart, with the overlap and the verdict.](../images/generated/differential-ring.png)
+The picture below is an example of how a comparison picture is laid out, not a comparison with
+Ink/Stitch. Both of its sides are StitchCraft's plans of the fill patch, with its rows at 0 degrees and at
+60, since no file Ink/Stitch writes is kept in the repository
+([ADR-0012](adr/0012-read-dont-copy.md)). The real comparisons are in the
+[nightly report](https://kaboomfox.github.io/stitchcraft/differential/).
+
+<!-- shot: differential-layout -->
+![How the differential lays out a picture, here of 2 of StitchCraft's own plans of the fill patch, its rows at 0 degrees and at 60: the 2 side by side at one scale, each with its stitches, size, place, threads, trims and jumps, and a third panel of where their thread lies apart, with the overlap.](../images/generated/differential-layout.png)
 <!-- /shot -->
 
 **Routes.** A route is a design of its own, so sewing StitchCraft's route in both programs would compare 2

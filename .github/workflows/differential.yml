@@ -6,8 +6,8 @@
 # (M8.6), which `cargo xtask corpus` fetches at a pinned commit. Every Sunday every glyph is sewn, in 6 parts
 # dealt out in turn. The report is the job's summary, and an artifact with the SVG files written for test
 # sheets, the pictures of both programs' lines, and the fonts' report with the glyphs that differ. Each case
-# both programs sew is drawn, Ink/Stitch's file beside StitchCraft's (M8.14), and `publish` puts the report
-# with its pictures on the Pages site: the nightly run's at /differential/, a pull request's beside its
+# both programs sew is drawn, Ink/Stitch's file beside StitchCraft's (M8.14), and `publish` puts the report's
+# page with its pictures, and nothing else, on the Pages site: the nightly run's at /differential/, a pull request's beside its
 # preview at /pr/<number>/differential/.
 name: differential
 
@@ -66,6 +66,7 @@ jobs:
           path: |
             target/conformance/differential.md
             target/conformance/differential/
+            target/conformance/differential-site/
             target/conformance/fonts.md
             target/conformance/fonts.json
             target/conformance/fonts/
@@ -93,13 +94,18 @@ jobs:
         with:
           name: inkstitch-differential
           path: target/publish
+      # Only the report's page and its pictures: no file Ink/Stitch wrote reaches the site (ADR-0012).
+      - name: The folder holds the page and pictures alone
+        run: |
+          extra=$(find target/publish/differential-site -type f ! -name '*.png' ! -path 'target/publish/differential-site/index.html')
+          if [ -n "$extra" ]; then echo "::error::Not published, since only the page and its pictures are: $extra"; exit 1; fi
       # The one way to write to the Pages branch (docs/src/design/docs-pipeline.md, Publishing).
       - name: Publish the report and its pictures
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           if [ -n "$PR_NUMBER" ]; then dest="pr/$PR_NUMBER/differential"; else dest=differential; fi
-          python3 -I .github/scripts/publish-web.py "$dest" target/publish/differential
+          python3 -I .github/scripts/publish-web.py "$dest" target/publish/differential-site
           owner="${GITHUB_REPOSITORY_OWNER,,}"
           echo "The report with its pictures: https://${owner}.github.io/${GITHUB_REPOSITORY#*/}/${dest}/" >> "$GITHUB_STEP_SUMMARY"
 

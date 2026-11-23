@@ -64,9 +64,9 @@ use excuses::{Excuses, Traits};
 /// Where each glyph's design is written, relative to the repository root.
 pub const WRITTEN: &str = "target/conformance/fonts";
 /// The contact sheet of the sample's first glyph of each font, relative to the repository root.
-pub const SAMPLE_SHEET: &str = "target/conformance/differential/pictures/fonts-sample.png";
+pub const SAMPLE_SHEET: &str = "target/conformance/differential-site/pictures/fonts-sample.png";
 /// The contact sheet of the excused glyphs, relative to the repository root.
-pub const EXCUSED_SHEET: &str = "target/conformance/differential/pictures/fonts-excused.png";
+pub const EXCUSED_SHEET: &str = "target/conformance/differential-site/pictures/fonts-excused.png";
 /// How many glyphs a row of the contact sheet holds.
 const SHEET_COLUMNS: usize = 6;
 /// The deviation by which StitchCraft refuses an element whose setting it can't read, where Ink/Stitch sews

@@ -1,11 +1,15 @@
-//! The differential's report as a web page (M8.14): `target/conformance/differential/index.html`, which the
+//! The differential's report as a web page (M8.14): `target/conformance/differential-site/index.html`, which the
 //! differential's workflow publishes with the pictures beside it.
 //!
 //! **Why from the Markdown.** The report is Markdown, the job's summary, and a page is what a person opens
 //! on the site. The page is that Markdown turned into HTML line by line, so it says nothing the report
 //! doesn't: headings, list items, tables and pictures, with code and nothing else marked inside a line. The
-//! report's links to pictures are relative to `target/conformance/`, and the page lies in `differential/`
+//! report's links to pictures are relative to `target/conformance/`, and the page lies in `differential-site/`
 //! under it, so they lose that folder's name.
+
+use std::path::Path;
+
+use crate::util;
 
 /// The page of the report `markdown`.
 pub fn html(markdown: &str) -> String {
@@ -52,7 +56,7 @@ pub fn html(markdown: &str) -> String {
             let row: String = cells.iter().map(|cell| format!("<{tag}>{}</{tag}>", inline(cell))).collect();
             out.push_str(&format!("<tr>{row}</tr>\n"));
         } else if let Some((alt, link)) = image(line) {
-            let link = link.strip_prefix("differential/").unwrap_or(link);
+            let link = link.strip_prefix("differential-site/").unwrap_or(link);
             out.push_str(&format!("<p><a href=\"{0}\"><img src=\"{0}\" alt=\"{1}\" loading=\"lazy\"></a></p>\n", escape(link), escape(alt)));
         } else if !line.trim().is_empty() {
             out.push_str(&format!("<p>{}</p>\n", inline(line)));
@@ -66,6 +70,27 @@ pub fn html(markdown: &str) -> String {
     }
     out.push_str("</body>\n</html>\n");
     out
+}
+
+/// The files under `dir`, the folder that is published, that are neither the page, `index.html`, nor a
+/// picture: none, since a file Ink/Stitch wrote must never reach the site (ADR-0012), and the run writes
+/// Ink/Stitch's machine files elsewhere for its artifact.
+pub fn unpublishable(dir: &Path) -> Vec<String> {
+    let mut found = Vec::new();
+    let mut folders = vec![dir.to_path_buf()];
+    while let Some(folder) = folders.pop() {
+        let Ok(entries) = std::fs::read_dir(&folder) else { continue };
+        for path in entries.flatten().map(|entry| entry.path()) {
+            let picture = path.extension().is_some_and(|ext| ext == "png");
+            if path.is_dir() {
+                folders.push(path);
+            } else if !(picture || path == dir.join("index.html")) {
+                found.push(util::rel(&path));
+            }
+        }
+    }
+    found.sort();
+    found
 }
 
 /// The alternative text and the link of a line that is a picture alone, `![alt](link)`.
@@ -96,10 +121,29 @@ mod tests {
     use super::*;
 
     #[test]
+    fn only_the_page_and_its_pictures_are_published() {
+        let site = util::root().join("target/xtask-tests/differential-site");
+        let _ = std::fs::remove_dir_all(&site);
+        std::fs::create_dir_all(site.join("pictures/fonts/a")).unwrap();
+        for file in ["index.html", "pictures/ring.png", "pictures/fonts/a/b-0001.png"] {
+            std::fs::write(site.join(file), "").unwrap();
+        }
+        assert!(unpublishable(&site).is_empty());
+        // A machine file Ink/Stitch wrote, its route, or any other file, is found wherever it is.
+        for file in ["ts-16.inkstitch.pes", "pictures/route.routed.svg", "pictures/fonts/a/index.html"] {
+            std::fs::write(site.join(file), "").unwrap();
+        }
+        let rel = |file: &str| util::rel(&site.join(file));
+        assert_eq!(unpublishable(&site), [rel("pictures/fonts/a/index.html"), rel("pictures/route.routed.svg"), rel("ts-16.inkstitch.pes")]);
+        // No folder, nothing to publish.
+        assert!(unpublishable(&site.join("missing")).is_empty());
+    }
+
+    #[test]
     fn the_page_says_what_the_report_says_in_html() {
         let markdown = "# Ink/Stitch differential\n\nStitchCraft at `abc`.\n\n## ❌ `ring` (a.toml)\n\n- ❌ size differ\n- excused: x < y\n\n\
                         | Measure | StitchCraft | Ink/Stitch | |\n|---|---|---|---|\n| size | 1 | 2 | ❌ |\n\n\
-                        ![ring: both](differential/pictures/ring.png)\n";
+                        ![ring: both](differential-site/pictures/ring.png)\n";
         let page = html(markdown);
         assert!(page.starts_with("<!doctype html>"), "{page}");
         assert!(page.contains("<h1>Ink/Stitch differential</h1>\n<p>StitchCraft at <code>abc</code>.</p>"), "{page}");

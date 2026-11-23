@@ -153,15 +153,21 @@ pub fn run(check_only: bool, filter: Option<&str>, bless: Option<&str>, differen
     let (l3, requirements): (Vec<_>, Vec<_>) = requirements.into_iter().partition(|r| r.level == "L3");
     let data: Vec<_> = data.into_iter().filter(|c| selected(&c.id, &c.requirements) && is_differential(c) == differential).collect();
     if differential {
+        // The folder that is published holds this run's pictures alone.
+        let site = root.join(differential::SITE);
+        let _ = std::fs::remove_dir_all(&site);
         let outcomes: Vec<runner::Outcome> = data.iter().map(|c| runner::run_data_case(&root, c, false)).collect();
         let markdown = differential::report(&outcomes, &commit(), &differential::pinned(&root)?);
         let dir = root.join("target/conformance");
         std::fs::create_dir_all(&dir)
             .and_then(|()| std::fs::write(dir.join("differential.md"), &markdown))
-            .and_then(|()| std::fs::create_dir_all(dir.join("differential")))
-            .and_then(|()| std::fs::write(dir.join("differential/index.html"), differential::page::html(&markdown)))
+            .and_then(|()| std::fs::create_dir_all(&site))
+            .and_then(|()| std::fs::write(site.join("index.html"), differential::page::html(&markdown)))
             .map_err(|e| format!("{}: {e}", dir.display()))?;
         summarize(&markdown, &mut findings);
+        for file in differential::page::unpublishable(&site) {
+            findings.error(format!("{file} would be published, and only the report's page and its pictures are (ADR-0012)"));
+        }
         for o in &outcomes {
             if o.failed() {
                 findings.error(format!("{} ({}): {}", o.case, o.file, o.failures.join("; ")));

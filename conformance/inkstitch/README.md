@@ -55,9 +55,14 @@ differ, and gave the stitches of an earlier run.
 
 ### Pictures
 
-The run draws each case that both programs sew to `target/conformance/differential/pictures/<case>.png`,
+A file that Ink/Stitch writes, even from our own drawing, is never committed or published
+([ADR-0012](../../docs/src/design/adr/0012-read-dont-copy.md), the owner's decision of 2026-11-23). The
+differential compares such files where it makes them, and publishes only pictures and measures of them.
+Ink/Stitch's machine files stay in the run's artifact.
+
+The run draws each case that both programs sew to `target/conformance/differential-site/pictures/<case>.png`,
 Ink/Stitch's file beside StitchCraft's and where their thread lies apart, and writes the report as a web
-page with the pictures, `target/conformance/differential/index.html`. The glyph differential's pictures are
+page with the pictures, `target/conformance/differential-site/index.html`. That folder holds nothing else. The glyph differential's pictures are
 under `pictures/fonts/<font>/`, the contact sheet of its excused glyphs is `pictures/fonts-excused.png`,
 and that of its sample is `pictures/fonts-sample.png`.
 [Conformance](../../docs/src/design/conformance.md#l3--inkstitch-differential-nightly) says what they show.

@@ -81,8 +81,12 @@ pub const PIN: &str = "conformance/inkstitch/pin.toml";
 pub const STUBS: &str = "conformance/inkstitch/stubs";
 /// Where the SVG files written for test sheets go, relative to the repository root.
 pub const WRITTEN: &str = "target/conformance/differential";
+/// The folder the differential's workflow publishes, relative to the repository root: the report as a web
+/// page and its pictures, and nothing else. A file Ink/Stitch wrote is never published (ADR-0012), so the
+/// files the run writes for a reviewer, Ink/Stitch's among them, stay in [`WRITTEN`].
+pub const SITE: &str = "target/conformance/differential-site";
 /// Where each case's picture goes, relative to the repository root: `<case>.png`.
-pub const PICTURES: &str = "target/conformance/differential/pictures";
+pub const PICTURES: &str = "target/conformance/differential-site/pictures";
 /// Ink/Stitch's configuration folder, relative to the repository root, and the settings it holds: the
 /// stitch-plan cache off.
 pub const CONFIG: &str = "target/conformance/inkstitch-config";
@@ -339,11 +343,7 @@ pub fn run(root: &Path, subject: &Subject, excused: &BTreeMap<String, String>, o
     let (theirs, ours) = match subject {
         Subject::File(design) => {
             let path = root.join("conformance").join(design);
-            let theirs = inkstitch.pes(root, &path);
-            if let Ok(bytes) = &theirs {
-                outcome.failures.extend(stale_shots(root, &outcome.case, bytes));
-            }
-            (theirs, sewn(&path, design))
+            (inkstitch.pes(root, &path), sewn(&path, design))
         }
         Subject::Sheet(id) => match sheet(root, id, None) {
             Ok(path) => (inkstitch.pes(root, &path).and_then(|bytes| kept(&path, bytes)), sewn(&path, id)),
@@ -359,50 +359,31 @@ pub fn run(root: &Path, subject: &Subject, excused: &BTreeMap<String, String>, o
     judged(root, theirs, ours, excused, outcome);
 }
 
-/// The docs' copies of Ink/Stitch's file `bytes` of the case `case` that differ from it, each said: a
-/// `differential` shot draws its picture from a copy kept in the repository, since the docs' checks run
-/// without Ink/Stitch ([`shot`]).
-fn stale_shots(root: &Path, case: &str, bytes: &[u8]) -> Vec<String> {
-    let shots = crate::shots::load(root).unwrap_or_default();
-    let kept = shots.iter().filter(|shot| shot.kind == SHOT && shot.case.as_deref() == Some(case)).filter_map(|shot| shot.inkstitch.as_deref());
-    kept.filter(|file| std::fs::read(root.join(file)).ok().as_deref() != Some(bytes))
-        .map(|file| format!("{file} is not the PES file Ink/Stitch writes of {case} now: write that over it, and run cargo xtask shots"))
-        .collect()
-}
-
-/// The kind of shot (`docs/shots.toml`) that draws a case's picture for the docs.
+/// The kind of shot (`docs/shots.toml`) that shows how the differential lays out its pictures.
 pub const SHOT: &str = "differential";
 
-/// The picture of the case `id`, one of a design file, as the differential draws it, from Ink/Stitch's PES
-/// file of it kept in the repository at `kept` and StitchCraft's file sewn now: for the docs, whose checks
-/// run without Ink/Stitch. The nightly run checks that the kept file is still what Ink/Stitch writes.
-pub fn shot(root: &Path, id: &str, kept: &str) -> Result<Vec<u8>, String> {
-    let mut findings = util::Findings::default();
-    let cases = super::cases::load_cases(root, &mut findings);
-    let case = cases.iter().find(|case| case.id == id).ok_or_else(|| format!("there is no case `{id}`"))?;
-    let super::cases::Spec::Inkstitch { subject: Subject::File(design), excused, route: None } = &case.spec else {
-        return Err(format!("`{id}` is no Ink/Stitch differential case of a design file"));
+/// A picture laid out as the differential lays out a case's, of 2 of StitchCraft's plans of one design called
+/// `title`, each `(label, plan)`, written to PES and read back as the differential reads its files: for the
+/// docs, which show the layout without a file Ink/Stitch wrote (ADR-0012). Its verdict says only whether the
+/// 2 agree by every measure.
+pub fn example(title: &str, first: (&str, &StitchPlan), second: (&str, &StitchPlan)) -> Result<Vec<u8>, String> {
+    let read = |(label, plan): (&str, &StitchPlan)| -> Result<(StitchPlan, Measured), String> {
+        let plan = stitchcraft_formats::decode(&encoded(plan, label)?).map_err(|e| format!("{label}: {e}"))?.plan;
+        let measured = Measured::of(&plan).ok_or_else(|| format!("{label} has no needle point"))?;
+        Ok((plan, measured))
     };
-    let theirs = std::fs::read(root.join(kept)).map_err(|e| format!("{kept}: {e}"))?;
-    let ours = sewn(&root.join("conformance").join(design), design);
-    let mut outcome = Outcome {
-        case: id.to_string(),
-        kind: "data",
-        file: case.file.clone(),
-        requirements: case.requirements.clone(),
-        failures: Vec::new(),
-        outputs: Vec::new(),
-        skipped: None,
-        notes: Vec::new(),
-        details: Vec::new(),
-        pictures: Vec::new(),
-    };
-    judged(root, Ok(theirs), ours, excused, &mut outcome);
-    let picture = outcome.pictures.first().ok_or_else(|| format!("{id}: no picture: {}", outcome.failures.join("; ")))?;
-    if let Some(why) = picture.degraded.first() {
-        return Err(format!("{id}: {why}"));
+    let ((first_plan, first_measured), (second_plan, second_measured)) = (read(first)?, read(second)?);
+    let rows = compare(&second_measured, &first_measured);
+    let verdict = if rows.iter().all(|row| row.3) { "agree" } else { "differ" };
+    let sides = (
+        picture::Side { name: first.0, plan: &first_plan, measured: &first_measured },
+        picture::Side { name: second.0, plan: &second_plan, measured: &second_measured },
+    );
+    let drawn = picture::draw(title, verdict, &rows, &sides.0, &sides.1, false)?;
+    match drawn.degraded.first() {
+        Some(why) => Err(format!("{title}: {why}")),
+        None => Ok(drawn.png),
     }
-    std::fs::read(root.join(&picture.path)).map_err(|e| format!("{}: {e}", picture.path))
 }
 
 /// Measures and judges Ink/Stitch's machine file `theirs` against StitchCraft's `ours`, either of which may
@@ -829,10 +810,10 @@ mod tests {
         let skipped = Outcome { skipped: Some("no Ink/Stitch".into()), ..outcome("skipped") };
         let mut excused = outcome("excused");
         excused.notes.push("trims differ".into());
-        excused.pictures.push(Picture { path: "target/conformance/differential/pictures/excused.png".into(), degraded: vec!["why".into()] });
+        excused.pictures.push(Picture { path: "target/conformance/differential-site/pictures/excused.png".into(), degraded: vec!["why".into()] });
         let report = report(&[skipped, passed, excused, failed], "abc1234", "d59c9ab1e390285a6c67822436ffd9ba9843d8b4");
         assert!(
-            report.contains("\n![excused: Ink/Stitch's file, StitchCraft's and where they differ](differential/pictures/excused.png)\n"),
+            report.contains("\n![excused: Ink/Stitch's file, StitchCraft's and where they differ](differential-site/pictures/excused.png)\n"),
             "{report}"
         );
         assert!(report.contains("\n- picture degraded: why\n"), "{report}");

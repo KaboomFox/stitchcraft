@@ -14,9 +14,10 @@
 //! (`picture.rs`): a design's areas filled flat in their colours, or a photo drawn in code. They are
 //! compared byte for byte too.
 //!
-//! `differential` shots are the Ink/Stitch differential's pictures of a case, Ink/Stitch's file beside
-//! StitchCraft's, drawn as the differential draws them from a copy of Ink/Stitch's file kept in the
-//! repository (`crate::conformance::differential::shot`), and compared byte for byte.
+//! `differential` shots show how the Ink/Stitch differential lays out a case's picture, drawn from 2 of
+//! StitchCraft's plans of one design, its `sides`, each labelled with what it is
+//! (`crate::conformance::differential::example`). No file Ink/Stitch wrote is in the repository
+//! (ADR-0012), so the docs' picture compares StitchCraft with itself. They are compared byte for byte.
 //!
 //! `vectorcraft-render` and `vectorcraft-ui` shots are VectorCraft's own pictures, which only
 //! `--vectorcraft` makes, on Linux with the pinned release (`vectorcraft.rs`): the `shots-ui` job's work.
@@ -125,14 +126,10 @@ pub struct Shot {
     /// absent). `vectorcraft-render` shots: pixels per point, VectorCraft's `--scale` (1 when absent).
     #[serde(default)]
     pub scale: Option<f32>,
-    /// `differential` shots: the Ink/Stitch differential's case whose picture is drawn, one of a design file.
+    /// `differential` shots: the 2 sides of the picture, each StitchCraft's plan of `fixture` with its
+    /// parameters set on every element, labelled with its caption, which says what it is.
     #[serde(default)]
-    pub case: Option<String>,
-    /// `differential` shots: Ink/Stitch's PES file of the case, kept in the repository, since the docs'
-    /// checks run without Ink/Stitch. The differential's nightly run fails while it isn't what Ink/Stitch
-    /// writes.
-    #[serde(default)]
-    pub inkstitch: Option<String>,
+    pub sides: Vec<Panel>,
     /// `photo` shots: the sew-out report.
     #[serde(default)]
     pub report: String,
@@ -266,10 +263,7 @@ pub fn run(check_only: bool, vectorcraft: bool) -> Result<(), String> {
                 Err(e) => findings.error(format!("shot `{}`: {e}", shot.id)),
             },
             crate::conformance::differential::SHOT => {
-                let made = match (&shot.case, &shot.inkstitch) {
-                    (Some(case), Some(kept)) => crate::conformance::differential::shot(&root, case, kept),
-                    _ => Err("a differential shot names its `case` and Ink/Stitch's file of it, `inkstitch`".to_string()),
-                };
+                let made = differential(&root, shot);
                 match made {
                     Ok(png) => keep(&root, &shot.id, &png, check_only, &mut findings, Same::Bytes),
                     Err(e) => findings.error(format!("shot `{}`: {e}", shot.id)),
@@ -312,8 +306,8 @@ fn foreign(shot: &Shot) -> Vec<String> {
     if shot.fabric.is_some() && shot.kind != "stitch" {
         found.push("`fabric` is a stitch shot's".to_string());
     }
-    if shot.case.is_some() || shot.inkstitch.is_some() {
-        found.push("`case` and `inkstitch` are a differential shot's".to_string());
+    if !shot.sides.is_empty() {
+        found.push("`sides` are a differential shot's".to_string());
     }
     if (shot.guides || shot.cut_jumps || shot.key) && shot.kind != "stitch" {
         found.push("`guides`, `cut_jumps` and `key` are a stitch shot's".to_string());
@@ -462,14 +456,32 @@ fn picked(sheet: &testsheets::TestSheet, shot: &Shot) -> Result<Design, String> 
     Design::new(picked, design.settings).map_err(|d| format!("{id}: {d}"))
 }
 
+/// The picture of a `differential` shot: its 2 `sides`, StitchCraft's plans of its `fixture`, laid out as
+/// the differential lays out a case ([`crate::conformance::differential::example`]).
+fn differential(root: &Path, shot: &Shot) -> Result<Vec<u8>, String> {
+    let fixture = shot.fixture.as_deref().ok_or("a differential shot names its design, `fixture`")?;
+    let [first, second] = shot.sides.as_slice() else {
+        return Err("a differential shot has 2 `sides`, each a caption and parameters".to_string());
+    };
+    let plans = planned(root, fixture, shot, &shot.sides)?;
+    let [first_plan, second_plan] = plans.as_slice() else { return Err(format!("{fixture}: not 2 plans")) };
+    let title = Path::new(fixture).file_name().and_then(|name| name.to_str()).unwrap_or(fixture);
+    crate::conformance::differential::example(title, (&first.caption, first_plan), (&second.caption, second_plan))
+}
+
 /// The plans of the design in `fixture`, read as `stitch plan` reads it: one per panel of `shot`, each with
 /// its panel's parameters set on every element, or the design as it is without panels.
 fn designs(root: &Path, fixture: &str, shot: &Shot) -> Result<Vec<StitchPlan>, String> {
+    let unchanged = [Panel { caption: String::new(), params: BTreeMap::new() }];
+    planned(root, fixture, shot, if shot.panels.is_empty() { &unchanged[..] } else { &shot.panels[..] })
+}
+
+/// The plans of the design in `fixture` for `shot`, one per panel of `panels`, each with its parameters set
+/// on every element.
+fn planned(root: &Path, fixture: &str, shot: &Shot, panels: &[Panel]) -> Result<Vec<StitchPlan>, String> {
     let bytes = util::read_bytes(&root.join(fixture))?;
     let reading = stitchcraft_engine::design::Reading { auto: shot.auto, ..Default::default() };
     let (read, warnings) = Source::of(Path::new(fixture)).read(&bytes, reading).map_err(|d| format!("{fixture}: {d}"))?;
-    let unchanged = [Panel { caption: String::new(), params: BTreeMap::new() }];
-    let panels = if shot.panels.is_empty() { &unchanged[..] } else { &shot.panels[..] };
     panels
         .iter()
         .map(|panel| {
@@ -568,8 +580,7 @@ mod tests {
             key: false,
             fabric: None,
             scale: Some(2.0),
-            case: None,
-            inkstitch: None,
+            sides: Vec::new(),
             report: String::new(),
             layout: Layout::Columns,
             plugins: Vec::new(),
@@ -729,13 +740,21 @@ mod tests {
     }
 
     #[test]
-    fn a_differential_shot_s_case_and_file_are_its_own() {
+    fn a_differential_shot_s_sides_are_its_own_and_are_2() {
         let shot = |toml: &str| -> Shot { toml::from_str(&format!("id = \"probe\"\nalt = \"A probe\"\n{toml}")).unwrap() };
-        let refused = "`case` and `inkstitch` are a differential shot's";
-        for option in ["case = \"inkstitch-ring\"", "inkstitch = \"a.pes\""] {
-            assert_eq!(foreign(&shot(&format!("kind = \"stitch\"\n{option}"))), [refused], "{option}");
-        }
+        let sides = "sides = [{ caption = \"angle 0\", params = { angle = \"0\" } }, { caption = \"angle 90\", params = { angle = \"90\" } }]";
+        assert_eq!(foreign(&shot(&format!("kind = \"stitch\"\n{sides}"))), ["`sides` are a differential shot's"]);
         assert!(foreign(&shot("kind = \"stitch\"")).is_empty());
+        let root = util::root();
+        let drawn = differential(&root, &shot(&format!("kind = \"differential\"\nfixture = \"docs/fixtures/fill.svg\"\n{sides}"))).unwrap();
+        assert!(tiny_skia::Pixmap::decode_png(&drawn).is_ok());
+        let one = "sides = [{ caption = \"angle 0\" }]";
+        assert!(
+            differential(&root, &shot(&format!("kind = \"differential\"\nfixture = \"docs/fixtures/fill.svg\"\n{one}")))
+                .unwrap_err()
+                .contains("2 `sides`")
+        );
+        assert!(differential(&root, &shot(&format!("kind = \"differential\"\n{sides}"))).unwrap_err().contains("`fixture`"));
     }
 
     /// The plan [`part`] gives of the sheet `id` for `shot`.

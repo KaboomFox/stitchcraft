@@ -3,8 +3,8 @@
 # or a declaration without alt text, fails `cargo xtask docs --check`; pages that show a shot use
 # its alt text.
 #
-# Kinds: "stitch" (our renderer, exact bytes), "picture" (drawn by xtask, exact bytes), "differential" (an Ink/Stitch
-# differential case's picture, from a copy of Ink/Stitch's PES file: `case` and `inkstitch`, exact bytes), "vectorcraft-render"
+# Kinds: "stitch" (our renderer, exact bytes), "picture" (drawn by xtask, exact bytes), "differential" (the Ink/Stitch
+# differential's picture layout, of 2 StitchCraft plans of a `fixture`, its `sides`, exact bytes), "vectorcraft-render"
 # (vectorcraft-cli export) and "vectorcraft-ui" (VectorCraft's window, driven through its accessibility
 # tree), both compared within a tolerance, and "photo" (a real sew-out; never regenerated, needs a sew-out
 # report link).
@@ -1469,8 +1469,11 @@ alt = "The patch in VectorCraft's canvas, as the plug-ins' previews show it. The
 # ── The Ink/Stitch differential (conformance, L3) ───────────────────────────────────────────────────
 
 [[shot]]
-id = "differential-ring"
+id = "differential-layout"
 kind = "differential"
-case = "inkstitch-ring"
-inkstitch = "docs/fixtures/differential/inkstitch-ring.inkstitch.pes"
-alt = "The inkstitch-ring case as the differential draws it, with Ink/Stitch's machine file and StitchCraft's side by side at one scale, each with its stitches, size, place, threads, trims and jumps, and a third panel of where their thread lies apart, with the overlap and the verdict."
+fixture = "docs/fixtures/fill.svg"
+sides = [
+  { caption = "StitchCraft, angle 0", params = { angle = "0" } },
+  { caption = "StitchCraft, angle 60", params = { angle = "60" } },
+]
+alt = "How the differential lays out a picture, here of 2 of StitchCraft's own plans of the fill patch, its rows at 0 degrees and at 60: the 2 side by side at one scale, each with its stitches, size, place, threads, trims and jumps, and a third panel of where their thread lies apart, with the overlap."
