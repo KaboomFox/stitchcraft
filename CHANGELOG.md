@@ -20,9 +20,9 @@ What a user can do with this version, before its first release. The entries belo
 
 ### Added
 - M13.64: `auto_short_stitches` `knots` (`REQ-AUTO-195`, `REQ-AUTO-196`). With it, automatic digitizing
-  also thins a satin column below 4 fills, down to the cap of 3.25: it pulls in the stitch ends of a tight
-  turn, where the ends on the inside lie closer than half the spacing, and ends that a shape sewn later
-  covers, each by a quarter of the column. On a gentle curve the plan moves no end in. A line 5 mm wide
+  also thins a satin column below 4 fills, down to the cap of 3.25. It pulls in the stitch ends of a tight
+  turn, where the ends on the inside lie closer than half the spacing. It also pulls in ends that a shape
+  sewn later covers. Each moves in by a quarter of the column. On a gentle curve the plan moves no end in. A line 5 mm wide
   turning by 60° sews 3.09 fills at the turn, where it sews 3.83 by default. On 67 designs the area at 3.25
   fills or more falls from 161.8 to 136.5 mm² under the default style and from 1,152.2 to 791.0 mm² under the
   logo style, and no design's thickest spot rises. The default stays `above_limit`: TS-13A's export in

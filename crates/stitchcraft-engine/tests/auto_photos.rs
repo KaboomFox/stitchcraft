@@ -514,9 +514,10 @@ fn req_auto_094_digitized_dogs_keep_their_likeness_as_recorded() {
 /// With a column's pull compensation tapered into its points (M13.62), the dog on turf in 9 threads keeps 106
 /// parts and 0.933 of its likeness, and the running dog in 6 threads 75 parts and 0.986.
 /// With each thread threaded once (M13.63), the blocks sew in another order: the dogs keep 97, 105, 74 and 95
-/// parts, and 1.000, 0.960, 0.977 and 0.958 of their likeness. Not traced further.
+/// parts, and 1.000, 0.960, 0.977 and 0.958 of their likeness. Not traced further. With the cap going on past a
+/// spot it can't lower (M13.64, REQ-AUTO-194), the dog on turf in 6 threads keeps 96 parts and 0.986.
 const LINED: [(&str, usize, usize, f64); 4] =
-    [("dog-on-turf-6", 97, 97, 1000.0), ("dog-on-turf-9", 111, 105, 960.0), ("dog-running-6", 77, 74, 977.0), ("dog-running-9", 100, 95, 958.0)];
+    [("dog-on-turf-6", 97, 96, 986.0), ("dog-on-turf-9", 111, 105, 960.0), ("dog-running-6", 77, 74, 977.0), ("dog-running-9", 100, 95, 958.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]

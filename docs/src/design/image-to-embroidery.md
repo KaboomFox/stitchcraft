@@ -3802,8 +3802,9 @@ The cap runs its pull-in and its last resort as before, each stopping at the fir
 fails to lower it, and then runs both again, going on past such spots. Main's first run is kept as it was so that a large letter sheet
 doesn't run the last resort out of work, as the measuring found. Going on, they look only at the spots that
 have a top stitch of their points' shapes near, from the stitches the cap already files by cells of a
-millimetre for their cover. For a spot they look at the points at either end of such a stitch: the points that
-the cap looked at before, of those whose stitches come within 1 mm of the spot, in the same order. The spots
+millimetre for their cover. For a spot, the points looked at are those at either end of such a stitch. Among
+them are all the points with a stitch within 1 mm of the spot that the cap looked at before, in the same
+order. The spots
 wait in order of their thread, thickest first. A spot whose thread changed goes back in its new place. Going
 through every spot of the measure for each spot passed by, and every point for each spot, cost TS-13D, whose
 hand-set half sews far above 4 fills, 25 times its plan's work. Then come the pull-ins below the limit, on the
@@ -3833,7 +3834,7 @@ export took 9,261 million of the 10,609 million instructions allowed with `knots
 takes 8,993 million on main. The native savings from keeping the thickest spot between changes did not carry
 over to the WebAssembly build, whose instructions count differently, while the pull-in's own work did. That is
 why the perf job passed and the gate failed. So `knots` stays a
-value to set. With `above_limit`, the default, the cap does the work of main and of `REQ-AUTO-194` alone, and
+value to set. With `above_limit`, the default, the cap runs only what main runs and `REQ-AUTO-194`, and
 takes less than on main: TS-13A 3,175 million instructions at opt-level 1, TS-13B 2,531 million, TS-13E 1,581
 million. The default flips to `knots` in a step of its own once a test sheet has that room in VectorCraft's
 export budget. TS-13A has to fall from 87.3 % to under 85 % of it, about 2.7 % of its work. M13.66's window on
