@@ -83,6 +83,7 @@ pub stitchcraft_engine::auto::AutoParams::auto_thick_fail_fills: <stitchcraft_pa
 pub stitchcraft_engine::auto::AutoParams::auto_thick_fail_points: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_thick_warn_fills: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_thick_warn_points: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_thread_once: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 impl stitchcraft_engine::auto::AutoParams
 pub const stitchcraft_engine::auto::AutoParams::GROUP: stitchcraft_params::spec::ParamGroup
 pub const stitchcraft_engine::auto::AutoParams::SPECS: &'static [stitchcraft_params::spec::ParamSpec]
@@ -133,6 +134,7 @@ pub const stitchcraft_engine::auto::PREFER: &str
 pub const stitchcraft_engine::auto::SHORT_STITCHES: &str
 pub const stitchcraft_engine::auto::STITCH: &str
 pub const stitchcraft_engine::auto::TAPER: &str
+pub const stitchcraft_engine::auto::THREAD_ONCE: &str
 pub const stitchcraft_engine::auto::TOUCHING: f64
 pub const stitchcraft_engine::auto::WARNING_CHARS: usize
 pub const stitchcraft_engine::auto::WIDEST_SPLIT_SATIN: f64

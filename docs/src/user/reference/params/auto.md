@@ -433,6 +433,24 @@ mark must keep its edge clear. The design goes by the setting of its lowest auto
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 
+### `auto_thread_once`
+
+**Thread each colour once.** Whether each thread is threaded once wherever the shapes as drawn allow it. On, the default, a line
+that borders a fill sews after it only where that costs no thread change, and otherwise with its
+thread, before the fill, whose rows then end on it: a design of 6 threads is threaded 6 times. Off, a
+line sews after every fill it borders and covers the fill's edge, even where its thread is then
+threaded again, as a machine with several needles that changes thread by itself allows. Where a
+shade is drawn both under and over another, no order threads each thread once, and `SC-W0925` names
+the shapes. Thickness comes first: where threading once leaves a spot above the warning's limit and
+the order with each line after its fills doesn't, the design sews in that order, and `SC-W0927` says
+how many more times its threads are threaded. The design goes by the setting of its lowest automatic
+shape.
+
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
+- **Default:** `true`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
 ### `auto_smooth_mm`
 
 **Smooth outlines.** How far a point of an area's outline may move when the outline is smoothed, before anything is

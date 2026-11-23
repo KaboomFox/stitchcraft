@@ -10,14 +10,23 @@
 //!    between its rails as they are sewn, and a line the area its stroke paints as drawn. Shapes that only
 //!    meet, as abutting paths do, may sew in either order. Rounding leaves a sliver no wider than
 //!    [`TOUCHING`] between edges drawn as one, and shapes overlap only where their overlap is wider.
-//! 2. **A line after the fill it borders.** A line that touches a fill without overlapping it sews after
-//!    the fill, unless shapes that overlap hold it before: rule 1 comes first. A running stitch is as wide
-//!    as its thread and can't reach under the fill, and a fill sewn after it would bury it.
+//! 2. **A line after the fill it borders, where that costs no thread change** (`REQ-AUTO-184`). A line that
+//!    touches a fill without overlapping it covers the fill's edge when it sews after it. A running stitch
+//!    is as wide as its thread and can't reach under the fill, and a fill sewn after it lays the ends of its
+//!    rows on it. On a machine with one needle each change of thread is a rethread by hand, and a design of 6
+//!    threads should be threaded 6 times, so the line goes as a column does by rule 4: of the rows with the
+//!    fewest changes, the one that sews more lines after their fills is taken. With `auto_thread_once` off
+//!    (`REQ-AUTO-186`) the line always sews after the fill, as before M13.63, unless shapes that overlap hold
+//!    it before: rule 1 comes first.
 //! 3. **The fewest thread changes** (`REQ-AUTO-037`). Within rules 1 and 2 the elements sew in batches of
 //!    one thread, in the row of batches that changes thread least of any ([`fewest`]). Threads are the same
 //!    when their colours are, as plan assembly counts thread changes. An element sewn in several threads
 //!    moves as one, its colours together and in their order: it has the thread it starts in, and leaves the
-//!    one it ends in sewing (`REQ-AUTO-024`).
+//!    one it ends in sewing (`REQ-AUTO-024`). The base layer sews before the first automatic element, in the
+//!    thread the order starts with: the largest area's thread when an order as good starts with it, and
+//!    otherwise the first thread of the best order found with no thread sewing (`REQ-AUTO-185`, [`once`]).
+//!    Where the shapes as drawn hold a thread both before and after another, as a shade drawn under and
+//!    over another does, no order threads each thread once, and `SC-W0925` names the shapes (`REQ-AUTO-187`).
 //! 4. **A satin column after the fill it borders, where that costs no thread change.** A column that
 //!    automatic digitizing made covers the fill's edge when it sews after the fill, and reaches under the
 //!    fill when it sews first (`REQ-AUTO-029`), so the fabric is covered either way. Of the rows with the
@@ -77,6 +86,7 @@ use crate::normalize::region::ops::{area_of, buffered, difference, intersection,
 const PLACE: &str = "it keeps its place in paint order: the elements drawn before it sew before it, and those drawn after it after it";
 
 mod fewest;
+mod once;
 
 /// The share of the strip round an automatic area that the other shapes must cover for them to close in
 /// on it, so that it is a detail of the larger ones it meets ([`Order::closed_in`]): an eye or a mark on a
@@ -96,15 +106,40 @@ pub(super) struct Moving {
     pub(super) shape: usize,
 }
 
+/// The rules that a design turns on or off.
+#[derive(Clone, Copy, Debug)]
+pub(super) struct Rules {
+    /// Whether the details sew last where that costs no thread change (rule 5, `auto_details_last`).
+    pub(super) last: bool,
+    /// Whether a line sews after the fill it borders only where that costs no thread change (rule 2,
+    /// `auto_thread_once`).
+    pub(super) once: bool,
+}
+
+/// What ordering the elements gives besides their order.
+pub(super) struct Ordered {
+    /// What is said of the order.
+    pub(super) said: Vec<Diagnostic>,
+    /// The thread the base layer sews in when the order chose another than the one it was given.
+    pub(super) under: Option<Rgb>,
+    /// Whether the order is one the strict rules allow too, those of `auto_thread_once` off: no line sews
+    /// before a fill it borders, the base layer keeps the thread it was given, and no column is held after a
+    /// part's running line (`REQ-AUTO-189`). Without `auto_thread_once` it always is.
+    pub(super) strict: bool,
+}
+
 /// `shapes` put in the order they sew in, each element moving round the others as `moving` says, and what
 /// is said of it: `SC-I0907` when the order isn't paint order, and for each element left in paint order.
 /// `under` is the thread of the base layer, if there is one: it sews before the first element that automatic
-/// digitizing made, and is sewing when that element's run starts. With `last`, the details sew last where
-/// that costs no thread change (rule 5); without it, no area is looked at for details.
-pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, under: Option<Rgb>, last: bool) -> Vec<Diagnostic> {
+/// digitizing made, and is sewing when that element's run starts, unless the order starts better in another
+/// thread, which it gives back. With `rules.last`, the details sew last where that costs no thread change
+/// (rule 5); without it, no area is looked at for details. With `rules.once`, a line sews after the fill it
+/// borders only where that costs no thread change (rule 2).
+pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, under: Option<Rgb>, rules: Rules) -> Ordered {
+    let Rules { last, once } = rules;
     let live: Vec<usize> = (0..shapes.len()).filter(|&index| !shapes.left_out(index)).collect();
     if !live.iter().any(|&index| moving.get(index).is_some_and(|moving| moving.free)) {
-        return Vec::new();
+        return Ordered { said: Vec::new(), under: None, strict: true };
     }
     let reaches: Vec<Option<Envelope>> = (0..shapes.len()).map(|index| reach(shapes, index)).collect();
     let facts: Vec<Facts> = shapes.elements.iter().zip(reaches).map(|(element, reach)| Facts::of(element, reach)).collect();
@@ -121,6 +156,12 @@ pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, u
         kept,
         unsought: None,
         under,
+        once,
+        overlaps: Vec::new(),
+        lined: Vec::new(),
+        held: Vec::new(),
+        found: Vec::new(),
+        chosen: None,
     };
     let stop = |index: usize| facts.get(index).is_some_and(|facts| facts.stop);
     let mut said = Vec::new();
@@ -142,10 +183,16 @@ pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, u
         said.push(summary(changes(&live, &facts), changes(&sewing.order, &facts)));
     }
     said.extend(early(&order.details, &sewing.order));
+    // Whether the order is one that the strict rules, those of `auto_thread_once` off, allow too
+    // (`REQ-AUTO-189`).
+    let strict = !once || once::allowed(&order, &sewing.order, budget);
+    if once {
+        said.extend(once::told(&order, &sewing.order, shapes, budget));
+    }
     // The elements left out go last, where they are left out.
     sewing.order.extend((0..shapes.len()).filter(|&index| shapes.left_out(index)));
     shapes.reorder(&sewing.order);
-    said
+    Ordered { said, under: order.chosen, strict }
 }
 
 /// What the order needs to know of an element.
@@ -251,6 +298,19 @@ struct Order<'o> {
     /// The thread of the base layer, until the run of the first element that automatic digitizing made
     /// starts.
     under: Option<Rgb>,
+    /// Whether a line sews after the fill it borders only where that costs no thread change (rule 2).
+    once: bool,
+    /// Each pair of elements whose paint overlaps, the lower and the upper, in the order they were found.
+    overlaps: Vec<(usize, usize)>,
+    /// Each line that borders a fill, as the fill and the line, in the order they were found.
+    lined: Vec<(usize, usize)>,
+    /// Each part's running line that a satin column of another shape borders, and the column, in the order
+    /// they were found: rule 4 widened, with `auto_thread_once` on.
+    held: Vec<(usize, usize)>,
+    /// Each run whose batches were found, and its batches, each the elements it sews.
+    found: Vec<(Vec<usize>, Vec<Vec<usize>>)>,
+    /// The thread the base layer sews in when the order chose another than the one it was given.
+    chosen: Option<Rgb>,
 }
 
 /// How a shape lies beside one drawn before it.
@@ -318,9 +378,23 @@ impl Order<'_> {
     fn settle(&mut self, shapes: &mut Shapes, index: usize, found: Vec<Beside>, meter: &mut Meter) -> Result<(), Failed> {
         for beside in found {
             match beside {
-                Beside::After(other) => self.graph.add(index, other),
-                Beside::Border(fill, line) if shapes.column(line).is_some() => self.wished.push((fill, line)),
-                Beside::Border(fill, line) => self.borders.push((fill, line)),
+                Beside::After(other) => {
+                    self.graph.add(index, other);
+                    self.overlaps.push((index, other));
+                }
+                Beside::Border(fill, line) => {
+                    if shapes.column(line).is_none() {
+                        self.lined.push((fill, line));
+                    } else if shapes.kind(fill) != Some(Kind::Area) {
+                        // A column beside a part's running line: rule 4 widened, with `auto_thread_once` on.
+                        self.held.push((fill, line));
+                    }
+                    if self.once || shapes.column(line).is_some() {
+                        self.wished.push((fill, line));
+                    } else {
+                        self.borders.push((fill, line));
+                    }
+                }
                 Beside::Meet(first, second) => {
                     if self.detail(shapes, second, first, meter)? {
                         self.details.push((first, second));
@@ -361,7 +435,7 @@ impl Order<'_> {
         for &other in later {
             meter.charge(1)?;
             if self.near(index, other) {
-                found.extend(lie(shapes, index, other, self.last, meter)?);
+                found.extend(lie(shapes, index, other, (self.last, self.once), meter)?);
             }
         }
         Ok(found)
@@ -384,12 +458,22 @@ impl Order<'_> {
             // sewing when that element's run starts. Where elements with settings of the same run sew before
             // that element, the base layer sews between them and it, and may change thread once more than
             // the batches found count.
-            if run.iter().any(|&index| self.moving.get(index).is_some_and(|moving| moving.made)) {
-                sewing.thread = self.under.take().or(sewing.thread);
-            }
+            let base = if run.iter().any(|&index| self.moving.get(index).is_some_and(|moving| moving.made)) { self.under.take() } else { None };
+            sewing.thread = base.or(sewing.thread);
             let at = |place: usize| run.get(place).copied();
-            match seeking.as_mut().map(|meter| fewest::fewest(&self.sought(run, sewing.thread), meter)) {
-                Some(Ok(found)) => {
+            let searched = seeking.as_mut().map(|meter| match base {
+                // The base layer sews in the thread the best order starts with (`REQ-AUTO-185`), with
+                // `auto_thread_once` on; off, in the largest area's, as before M13.63 (`REQ-AUTO-186`).
+                Some(base) if self.once => once::based(self, run, base, meter),
+                _ => fewest::fewest(&self.sought(run, sewing.thread), meter).map(|found| (found, sewing.thread)),
+            });
+            match searched {
+                Some(Ok((found, starts))) => {
+                    if starts != sewing.thread {
+                        (sewing.thread, self.chosen) = (starts, starts);
+                    }
+                    let batches = found.batches.iter().map(|batch| batch.iter().filter_map(|&place| at(place)).collect()).collect();
+                    self.found.push((run.clone(), batches));
                     for (fill, column) in found.granted.iter().filter_map(|&(fill, column)| at(fill).zip(at(column))) {
                         self.graph.add(fill, column);
                     }
@@ -494,9 +578,9 @@ impl Order<'_> {
 
 /// How `second`, drawn after `first`, lies beside it, with `meter`'s work: after it when they overlap, or
 /// when what one of them paints can't be found, each with the budget's work to itself; a line bordering a
-/// fill; 2 automatic areas that meet without overlapping, when the details sew `last`; or `None`, either
+/// fill, or, with `auto_thread_once` on (`once`), a satin column bordering a part's running line of another shape; 2 automatic areas that meet without overlapping, when the details sew `last`; or `None`, either
 /// way round.
-fn lie(shapes: &mut Shapes, first: usize, second: usize, last: bool, meter: &mut Meter) -> Result<Option<Beside>, Failed> {
+fn lie(shapes: &mut Shapes, first: usize, second: usize, (last, once): (bool, bool), meter: &mut Meter) -> Result<Option<Beside>, Failed> {
     shapes.find(first);
     shapes.find(second);
     let (Some((a, painted_first)), Some((b, painted_second))) = (shapes.paint(first), shapes.paint(second)) else {
@@ -505,9 +589,19 @@ fn lie(shapes: &mut Shapes, first: usize, second: usize, last: bool, meter: &mut
     if overlap(painted_first, painted_second, meter)? {
         return Ok(Some(Beside::After(second)));
     }
+    // A part's running line and a satin column of another shape: the column sews after the line where that
+    // costs no thread change (rule 4), as after a fill, since sewn first it would reach its overlap under
+    // the line's part.
+    let running = |index: usize| shapes.kind(index) == Some(Kind::Part) && !shapes.satin(index);
+    let column = |index: usize| matches!(shapes.kind(index), Some(Kind::Column | Kind::Part)) && shapes.satin(index);
+    // Only with `auto_thread_once` on: off, the order is as before M13.63 (`REQ-AUTO-186`).
+    let apart = once && shapes.of_shape.get(first) != shapes.of_shape.get(second);
+    let (beside, under) = (apart && running(first) && column(second), apart && running(second) && column(first));
     let (fill, line) = match (a, b) {
         (Kind::Area, Kind::Column | Kind::Line | Kind::Part) => (first, second),
         (Kind::Column | Kind::Line | Kind::Part, Kind::Area) => (second, first),
+        _ if beside => (first, second),
+        _ if under => (second, first),
         (Kind::Area, Kind::Area) if last && shapes.is_area(first) && shapes.is_area(second) => {
             return Ok(touch(shapes, first, second, meter)?.then_some(Beside::Meet(first, second)));
         }
@@ -674,10 +768,17 @@ fn changes(order: &[usize], facts: &[Facts]) -> usize {
 }
 
 /// `SC-I0907` saying the elements sew in an order of their own, with `after` thread changes where paint
-/// order has `before`.
+/// order has `before`, and so how many times the machine is threaded each way: once more than it changes
+/// thread, as a person with a machine of one needle counts.
 fn summary(before: usize, after: usize) -> Diagnostic {
     let changes = |count: usize| if count == 1 { "1 thread change".to_string() } else { format!("{count} thread changes") };
-    let message = format!("The elements are sewn in an order of their own, with {} where paint order has {before}.", changes(after));
+    let threaded = |count: usize| if count == 0 { "once".to_string() } else { format!("{} times", count + 1) };
+    let message = format!(
+        "The elements are sewn in an order of their own: threaded {}, with {}, where paint order is threaded {}.",
+        threaded(after),
+        changes(after),
+        threaded(before)
+    );
     Diagnostic::new(Code::AutoOrder, message)
 }
 

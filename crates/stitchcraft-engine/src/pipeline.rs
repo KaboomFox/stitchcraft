@@ -60,7 +60,24 @@ pub struct PlanOutcome {
 /// work to itself, and the stitches the elements before it left; assembling and finalizing have the work
 /// once more, and the design `budget`'s stitches.
 pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanOutcome {
-    let Sewing { elements, mut diagnostics, base, made, limits, leaning } = sewing(design, budget);
+    let (outcome, once, thickest) = planned(design, profile, budget, false);
+    // Thickness comes before threading: a design threaded once that sews too thick is planned again with each
+    // line after the fills it borders (`REQ-AUTO-189`).
+    match once.zip(thickest) {
+        Some(once) => thick::under(outcome, once, || {
+            let (outcome, _, thickest) = planned(design, profile, budget, true);
+            (outcome, thickest)
+        }),
+        None => outcome,
+    }
+}
+
+/// [`plan`] once, each line after the fills it borders when `strict` (`REQ-AUTO-189`); the warning's limit of
+/// thickness, in fills, when automatic digitizing threaded each thread once in an order that the strict rules
+/// wouldn't allow; and the plan's thickest spot, in fills, as the cap at the end of planning measured it.
+fn planned(design: &Design, profile: &MachineProfile, budget: &Budget, strict: bool) -> (PlanOutcome, Option<f64>, Option<f64>) {
+    let Sewing { elements, mut diagnostics, base, made, limits, leaning, once } = sewing(design, budget, strict);
+    let once = limits.as_ref().filter(|_| once).map(|held| held.limits.warn_fills);
     let candidates: Vec<Candidate> = elements.iter().map(|element| Candidate::of(element, &design.settings)).collect();
     let (steps, lone) = steps(&candidates);
     diagnostics.extend(lone.into_iter().filter_map(|(k, why)| elements.get(k).map(|element| alone(element, why))));
@@ -90,7 +107,7 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
             Err(said) => {
                 diagnostics.extend(said);
                 let names = named(design, (&elements, &base, &generated), profile, budget, &mut diagnostics);
-                return PlanOutcome { plan: None, diagnostics, names };
+                return (PlanOutcome { plan: None, diagnostics, names }, None, None);
             }
         };
         // A top whose work ran out skips its element: its underlay is left out too, and its stitches come back.
@@ -149,6 +166,8 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
         None => Ok(None),
     });
     diagnostics.extend(routing.and_then(|routing| routing.said(budget)));
+    // The thickest spot of the plan, as the cap at the end of planning measures it.
+    let mut thickest = None;
     let plan = match finished {
         Ok(Some(Finalized { plan, diagnostics: said })) => {
             diagnostics.extend(said);
@@ -156,7 +175,12 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
             // told where it sews thick (`SC-W0913`), and is written.
             let cap = |plan: &mut StitchPlan| match &limits {
                 Some(held) if reach.is_empty() => thick::measured(plan, held, (&names, &leaning), budget),
-                Some(held) => thick::finished(plan, held, (&base, &reach, &columns, &lettering, &pulls), profile, (&names, &leaning), budget),
+                Some(held) => {
+                    let (said, most) =
+                        thick::finished(plan, held, (&base, &reach, &columns, &lettering, &pulls), profile, (&names, &leaning), budget);
+                    thickest = most;
+                    said
+                }
                 None => Vec::new(),
             };
             let asked = check::asked(generated.iter().map(|(element, sewn)| (&element.id, sewn)));
@@ -173,7 +197,7 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
         }
     };
     names.tell(&mut diagnostics);
-    PlanOutcome { plan, diagnostics, names }
+    (PlanOutcome { plan, diagnostics, names }, once, thickest)
 }
 
 /// `plan`, finalized, through the stages that come after finalize, `cap` (on an automatic design the
@@ -207,3 +231,6 @@ fn named(
         Names::default()
     })
 }
+
+#[cfg(test)]
+mod tests;

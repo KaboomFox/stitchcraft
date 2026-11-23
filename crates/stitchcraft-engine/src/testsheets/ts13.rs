@@ -25,7 +25,7 @@
 
 use stitchcraft_core::Code::{
     self, AutoBase, AutoDigitized, AutoLayers, AutoOrder, AutoSatinFilled, AutoSpeck, AutoStyle, AutoThick, AutoThinned, AutoUnder, FillPartsApart,
-    StitchesMerged,
+    LockStitchLengthened, StitchesMerged,
 };
 
 use super::designed::Drawing;
@@ -58,10 +58,13 @@ pub(super) const NEIGHBOURS_SAY: [Code; 16] = [
 ];
 
 /// What the engine says of TS-13B, in order: how many shapes it digitized, the order, the areas that reach
-/// under others, the base layer, the needle points left out, and what the last pass took. Its letters
-/// sew as strokes (`REQ-AUTO-087`), and no stitch of the M leans where its strokes meet, as 6 did until
-/// M13.37. No place of 1 mm² sews 4 fills, the warning's limit since M13.46 (`REQ-AUTO-113`).
-pub(super) const LETTERS_SAY: [Code; 6] = [AutoDigitized, AutoOrder, AutoUnder, AutoBase, StitchesMerged, AutoThinned];
+/// under others, the base layer, a lock stitch sewn along the last stitch, the needle points left out, and
+/// what the last pass took. Its letters sew as strokes (`REQ-AUTO-087`), and no stitch of the M leans where
+/// its strokes meet, as 6 did until M13.37. No place of 1 mm² sews 4 fills, the warning's limit since M13.46
+/// (`REQ-AUTO-113`). With each thread threaded once (M13.63) a letter's column sews into its end from the
+/// other side, and its end lock, inside the column since M13.62, would sew a stitch of 0.14 mm: it is sewn
+/// along the last stitch, and said.
+pub(super) const LETTERS_SAY: [Code; 7] = [AutoDigitized, AutoOrder, AutoUnder, AutoBase, LockStitchLengthened, StitchesMerged, AutoThinned];
 
 /// What the engine says of TS-13C, in order: how many shapes it digitized, the pupils and hairs that no
 /// satin column can follow, filled; the face, digitized whole under the eyes in its holes; the order; the
@@ -191,7 +194,7 @@ mod tests {
         // changes with any change to what a picture sews.
         let recorded = [
             ("TS-13A", [126.001, 167.98], 23_779),
-            ("TS-13B", [110.594, 148.4], 14_422),
+            ("TS-13B", [110.511, 148.4], 14_415),
             ("TS-13C", [111.397, 107.75], 9_971),
             ("TS-13D", [89.8, 100.4], 19_534),
             ("TS-13E", [23.998, 108.395], 5_822),
@@ -273,8 +276,7 @@ mod tests {
             let said = format!("The bottom half changes thread {a} times and jumps {b} times, the top half {c} and {d} times.");
             assert!(sheet.checks.iter().any(|check| check.contains(&said)), "{id}: {said}");
             // Digitized, no sheet changes thread more often: the shapes start in the base layer's thread,
-            // and each thread sews once but TS-13B's black, whose lines sew after the fills they border
-            // (REQ-AUTO-037). A letter digitized is columns, with jumps between them, where a letter filled
+            // and each thread sews once (REQ-AUTO-184, REQ-AUTO-185). A letter digitized is columns, with jumps between them, where a letter filled
             // sews in one piece: TS-13B jumps more than twice as often digitized.
             assert!(c <= a, "{id}: {said}");
             assert_eq!(d > 2 * b, id == "TS-13B", "{id}: {said}");

@@ -97,14 +97,15 @@ fn hundredths(value: f64) -> f64 {
 /// pulls no point in and takes less of a column's doubled top. It stays under the warning's limit. With a
 /// column's pull compensation tapered into its points (M13.62, `REQ-AUTO-183`), the 2 badges sew 3.99 where
 /// they sewed 3.96, and TS-13A 3.99 where it sewed 3.95: the cap takes a column's top points only above 4,
-/// and a narrower point changes where it stops. Their area above the cap falls.
+/// and a narrower point changes where it stops. Their area above the cap falls. With each thread threaded once
+/// (M13.63) TS-13B's digitized half sews in another order, its base layer red, and sews 3.40 at its thickest.
 const ABOVE: [(&str, f64); 8] = [
     ("badges-abutting", 3.99),
     ("badges-stacked", 3.99),
     ("pear", 3.95),
     ("lettered-patch", 3.95),
     ("ts-13a", 3.99),
-    ("ts-13b", 3.46),
+    ("ts-13b", 3.4),
     ("ts-13c", 3.93),
     ("ts-13d", 3.79),
 ];
@@ -113,8 +114,9 @@ const ABOVE: [(&str, f64); 8] = [
 /// (`REQ-AUTO-073`): TS-13B's red and blue fills meet over the base layer under its window, and the top of
 /// each shows, which the cap takes only where a shape lays it twice. It is TS-13B's thickest spot since its
 /// columns keep their spacing on the inside of a bend (M13.58), where a column's spot of 3.85 was. The list
-/// only shrinks.
-const FILLS_ALONE: [(&str, f64); 1] = [("ts-13b", 3.46)];
+/// only shrinks. With each thread threaded once (M13.63) TS-13B leaves it: its thickest spot, 3.40, lies where
+/// a satin column sews, and the list is empty.
+const FILLS_ALONE: [(&str, f64); 0] = [];
 
 #[test]
 fn req_auto_073_a_spot_of_a_digitized_picture_sews_above_the_cap_only_on_satin_columns() {

@@ -299,7 +299,7 @@ fn req_auto_011_stitch_plan_sort_colours_sews_the_shapes_with_settings_by_thread
     let out = run(&PlanArgs { report: Some(sorted.clone()), reading: sorting, ..args(design.clone(), dir.join("sorted.pes")) });
     assert_eq!(out.status, Status::Done, "{}", out.stderr);
     assert!(
-        out.stderr.contains("info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 2.\n"),
+        out.stderr.contains("info SC-I0907: The elements are sewn in an order of their own: threaded 2 times, with 1 thread change, where paint order is threaded 3 times.\n"),
         "{}",
         out.stderr
     );
