@@ -230,9 +230,9 @@ fn lined(width: f64, params: &[(&str, &str)]) -> Vec<Element> {
 /// `REQ-AUTO-188`: how much of a navy line's thread still shows round a cream fill sewn after it, as recorded on
 /// 2026-11-22, for lines 0.3, 0.6, 0.8 and 1.5 mm wide, in thousandths: with `auto_thread_once` on, as by
 /// default, and off, which sews the line after the fill, as before M13.63. A line narrower than the narrowest
-/// satin stroke sews as a running stitch along its middle, and the cream fill's rows, sewn after it, reach
-/// their pull compensation onto it. The line 1.5 mm wide sews as a satin column, which sews after the fill
-/// either way (rule 4).
+/// satin stroke sews as a running stitch along its middle, and the cream fill's outline and the thread of its
+/// rows' ends, sewn after it, lie on it (M13.65 measured it). The line 1.5 mm wide sews as a satin column, which
+/// sews after the fill either way (rule 4).
 #[test]
 fn req_auto_188_a_line_sewn_before_the_fill_beside_it_keeps_the_share_recorded() {
     let share = |width: f64, params: &[(&str, &str)]| {
@@ -276,4 +276,81 @@ fn req_auto_189_a_design_above_the_limit_either_way_keeps_the_plan_threaded_once
     assert_eq!(threaded(plan), BTreeMap::from([(NAVY.color, 1), (CREAM.color, 1), (GOLD.color, 1)]));
     let codes: Vec<String> = outcome.diagnostics.iter().map(|said| said.code.to_string()).collect();
     assert!(codes.contains(&"SC-W0913".to_string()) && !codes.contains(&"SC-W0927".to_string()), "{codes:?}");
+}
+
+/// The sew-out piece of M13.65 (`docs/src/plan/machine-testing.md`): on a navy fill broad enough to be digitized
+/// whole, a cream square in a navy line 0.3 mm wide, which sews as a running stitch, a cream square in a navy line
+/// 1.2 mm wide, which sews as 4 satin columns, and a gold square beside them. With one pass both lines sew with
+/// the navy fill, before the cream squares they border. Each shape has `params`.
+fn lines_first(params: &[(&str, &str)]) -> Vec<Element> {
+    let shape = |id: &str, rings: &[&[Pt]], thread: &Thread| automatic(fill(id, rings, thread, params));
+    vec![
+        shape("dark", &[&rect(2.0, 2.0, 66.0, 42.0)], &NAVY),
+        shape("thin", &[&rect(7.7, 9.7, 30.3, 34.3), &hole(8.0, 10.0, 30.0, 34.0)], &NAVY),
+        shape("cream-a", &[&rect(8.0, 10.0, 30.0, 34.0)], &CREAM),
+        shape("wide", &[&rect(36.8, 8.8, 61.2, 35.2), &hole(38.0, 10.0, 60.0, 34.0)], &NAVY),
+        shape("cream-b", &[&rect(38.0, 10.0, 60.0, 34.0)], &CREAM),
+        shape("gold", &[&rect(70.0, 32.0, 78.0, 42.0)], &GOLD),
+    ]
+}
+
+/// The share of their thread that the M13.65 piece's thin line and each column of its wide line show, in
+/// thousandths, with `params`.
+fn lines_shown(params: &[(&str, &str)]) -> (f64, Vec<f64>) {
+    let outcome = placed(lines_first(params));
+    let plan = plan_of(&outcome);
+    let columns: Vec<f64> = plan
+        .elements
+        .iter()
+        .filter(|id| id.as_str() == "wide" || id.as_str().starts_with("wide#"))
+        .map(|id| (shown(plan, id.as_str()) * 1000.0).round())
+        .collect();
+    ((shown(plan, "thin") * 1000.0).round(), columns)
+}
+
+/// `REQ-AUTO-202`: a cream fill sewn after a navy line it borders ends where its thread meets the line's, and its
+/// outline leaves that edge out. The line 0.3 mm wide shows 0.9 of its thread or more, where it showed 0.469 on
+/// `main` at f08be379, and each satin column 0.6 or more, where they showed 0.482 to 0.589. Nothing opens a gap
+/// that a disc 0.35 mm across fits on.
+#[test]
+#[ignore = "planned: M13.65 builds the fill that meets a line sewn before it"]
+fn req_auto_202_a_fill_sewn_after_a_line_ends_where_their_threads_meet() {
+    let (thin, columns) = lines_shown(&[]);
+    assert!(thin >= 900.0, "{thin}");
+    assert!(columns.len() == 4 && columns.iter().all(|&shown| shown >= 600.0), "{columns:?}");
+    let design = Design::new(lines_first(&[]), DesignSettings::default()).unwrap();
+    let outcome = in_place(&design);
+    let faults = stitchcraft_testkit::fabric::cover(&design, plan_of(&outcome), stitchcraft_testkit::fabric::GAP)
+        .faults(&stitchcraft_testkit::designs::rules());
+    assert!(faults.is_empty(), "{faults:?}");
+}
+
+/// `REQ-AUTO-203`: with `auto_fill_to_line` off the M13.65 piece sews as `main` sewed it at f08be379, its lines
+/// showing the shares recorded there, in thousandths. An area beside a line sewn after it is planned as before: TS-13B's digitized
+/// windows, whose lines sew after the panes, sew the same stitches with the rule on and off.
+#[test]
+#[ignore = "planned: M13.65 builds the fill that meets a line sewn before it"]
+fn req_auto_203_the_rule_off_and_a_line_sewn_after_its_fill_sew_as_before() {
+    let (thin, columns) = lines_shown(&[("auto_fill_to_line", "false")]);
+    assert_eq!((thin, columns), (469.0, vec![582.0, 482.0, 577.0, 589.0]));
+    let sheet = SHEETS.iter().find(|sheet| sheet.id == "TS-13B").unwrap().design().unwrap().unwrap();
+    let windows = |value: &str| {
+        let mut shapes: Vec<Element> = sheet.elements().iter().filter(|element| element.automatic).cloned().collect();
+        for shape in &mut shapes {
+            shape.params.set("auto_fill_to_line", value);
+        }
+        plan_of(&in_place(&Design::new(shapes, sheet.settings).unwrap())).clone()
+    };
+    assert_eq!(windows("true"), windows("false"));
+}
+
+/// `REQ-AUTO-204`: `auto_line_gap_mm` sets how far the area's thread stays from the line's. At −0.2 mm the rows lap
+/// onto the line 0.3 mm wide, which shows less of its thread than at 0 and more than with the rule off.
+#[test]
+#[ignore = "planned: M13.65 builds the fill that meets a line sewn before it"]
+fn req_auto_204_the_gap_setting_laps_the_rows_onto_the_line() {
+    let (at_zero, _) = lines_shown(&[]);
+    let (lapped, _) = lines_shown(&[("auto_line_gap_mm", "-0.2")]);
+    let (off, _) = lines_shown(&[("auto_fill_to_line", "false")]);
+    assert!(off < lapped && lapped < at_zero, "{off} {lapped} {at_zero}");
 }

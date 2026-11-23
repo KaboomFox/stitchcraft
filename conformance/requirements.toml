@@ -3863,7 +3863,7 @@ id = "REQ-AUTO-188"
 area = "auto"
 level = "L2"
 statement = "With auto_thread_once on, a running line that sews before a fill of another thread it borders, so that each thread is threaded once, keeps the share of its thread recorded for a line round a fill on a broad fill of the line's thread: of a line 0.3, 0.6 and 0.8 mm wide 0.491, 0.823 and 0.924 of its top thread show, where with the setting off each shows whole. SC-I0926 counts the lines of a design that sew before a fill of another thread beside them, and names the 3 with such fills on the most sides, of those the ones that paint least."
-rationale = "A fill sewn after a line ends its rows on it, and their pull compensation covers the line's thread on that side: the narrower the line, the more of it. Measured on 78 designs (M13.63), 37 fur lines of the 4 traced dogs newly show less than half their thread, the worst 2, 13 and 13 %, while 18 of the 37 that main hides show more, and no line of the drawings, the fixtures, the test pictures or the TS-13 halves does. The likeness of every design is as it was. Holding the fill's pull compensation back from the line would leave the fabric to show where the rows pull in, so nothing is held back, and the notice says where to look."
+rationale = "A fill sewn after a line ends its rows on it, and its outline and its rows' thread cover the line's thread on that side (M13.65): the narrower the line, the more of it. Measured on 78 designs (M13.63), 37 fur lines of the 4 traced dogs newly show less than half their thread, the worst 2, 13 and 13 %, while 18 of the 37 that main hides show more, and no line of the drawings, the fixtures, the test pictures or the TS-13 halves does. The likeness of every design is as it was. Holding the fill's pull compensation back from the line would leave the fabric to show where the rows pull in, so nothing is held back, and the notice says where to look."
 milestone = "M13"
 status = "active"
 
@@ -3875,6 +3875,33 @@ statement = "Thickness comes before threading. When a design digitized automatic
 rationale = "A line sewn before a fill it borders saves threading its thread again (REQ-AUTO-184), and the fill's rows then end on the line, where the last pass and the cap may take less of them: on 78 designs measured (M13.63) none went above 4 fills at the default settings, but with auto_details_last on the dog on turf in 6 threads sewed 4.07 and the running dog in 6 threads 4.18, where main sews 3.96 and 3.99. The owner's first concern is whether her machine sews a design, so the limit outweighs the threadings saved. Planned again with each line after its fills, both sew under 4, with 3 more threadings each."
 milestone = "M13"
 status = "active"
+
+[[req]]
+id = "REQ-AUTO-202"
+area = "auto"
+level = "L2"
+statement = "With auto_fill_to_line on, as by default, an automatic area sewn after a line of another thread it borders (a part's running line or satin column, an automatic satin column, or a line digitized from a stroke) ends where its thread meets the line's: its region is held back from a running line's middle and from a satin column's rails as drawn by a thread, 0.4 mm, plus auto_line_gap_mm, wherever what is left of the area stays at least 1 mm wide, and its outline leaves out the edge along such a line. On the M13.65 sew-out piece the line 0.3 mm wide shows 0.9 of its top thread or more and each satin column of the line 1.2 mm wide 0.6 or more, and no gap that a disc 0.35 mm across fits on opens."
+rationale = "A line sewn before the fill it borders saves threading its thread again (REQ-AUTO-184), and the fill then hid it: its outline ran along the line, its rows' thread lay half a thread past its edge, and it covered a column's own pull compensation. Measured on 75 designs (M13.65), the lines sewn before a fill they border showed a median 0.59 of their thread. Held back from a column's rails as sewn, or wherever lines lie close, the fill opened 21 to 33 new gaps of up to 2.3 mm², and the owner dislikes fabric beside an outline more than a line half hidden."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-203"
+area = "auto"
+level = "L2"
+statement = "With auto_fill_to_line off an automatic design sews as before M13.65, step for step. An automatic area beside a line sewn after it, beside another area or beside lettering is planned as with the setting off: TS-13B's digitized windows, whose lines sew after the panes, sew the same stitches either way."
+rationale = "The rule changes only what a line sewn first loses. A person who prefers the fill whole under the line, as before, turns it off for a design or one shape (the owner prefers a manual control)."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-204"
+area = "auto"
+level = "L2"
+statement = "auto_line_gap_mm, 0 by default, sets how far an area's thread stays from the thread of a line sewn before it: a negative value laps the area's rows onto the line by that much. On the M13.65 sew-out piece the line 0.3 mm wide shows less of its thread at -0.2 mm than at 0, and more than with auto_fill_to_line off."
+rationale = "Our measure places the stitches where they lie, and on the machine a fill's rows pull in at their ends. Whether a fill that ends on a line's edge shows fabric there is for MC-8's sew-out to say, and this setting is what it sets."
+milestone = "M13"
+status = "planned"
 
 [[req]]
 id = "REQ-AUTO-071"

@@ -4199,8 +4199,8 @@ falls from 4.52 to 4.05 fills. The order's search keeps 133 and 1,452 rows on th
 
 #### What gets worse
 
-- **What shows of a thin line.** A line sewn before a fill beside it loses up to the fill's pull compensation,
-  0.4 mm, under the fill's rows. Measured on each running line of the set, as the share of its top thread that
+- **What shows of a thin line.** A line sewn before a fill beside it loses the part of its thread that the fill's
+  outline and its rows' ends lie on ([a line sewn before its fill stays seen](#a-line-sewn-before-its-fill-stays-seen)). Measured on each running line of the set, as the share of its top thread that
   no later stitch covers. On the 4 traced dogs 37 fur lines newly show less than half their thread, the worst
   2, 13 and 13 %. 18 of the 37 that main hides as much now show more, so 56 lines show less than half where main
   has 37. On the traced magnolia and the traced coleus leaf, measured whole only for the build, 80 and 81

@@ -124,17 +124,19 @@ jumps and colour changes, which the rethreads and the cuts at the machine are co
 | The test piece of 12 tiles under satin columns | M13.55 | Made by hand. Its tiles are fills 20 mm wide in navy and in orange, with a black satin column along each tile's top, straight on some tiles and curved on the others, in widths from 2 to 6 mm. No file of the repository draws it |
 | 2 mirrored leaves, a crescent and 2 rays, once as `main` plans them and once with M13.59 | M13.59 | `one-shape.svg` from the commands after this table, `stitch plan one-shape.svg --auto -o one-shape.pes` at each commit. Look at whether the leaves sew alike and whether the crescent's fill and outline reach its points with no seam. The rays sew as on `main`, blunt at their points, for the step that will point a column |
 | A cream fill with a navy line round it on a broad navy fill, with a gold square beside them, threaded once a thread and as before | M13.63 | `one-pass.svg` from the commands after this table, `stitch plan one-pass.svg --auto -o one-pass.pes`, and again with `--set auto_thread_once=false` into `one-pass-off.pes`. Count the threadings: 3, and 4 with the setting off |
+| 2 cream squares on a broad navy fill, one in a navy line 0.3 mm wide and one in a navy line 1.2 mm wide, with a gold square beside them, each line sewn before its square | M13.65 | `lines-first.svg` from the commands after this table, `stitch plan lines-first.svg --auto -o lines-first.pes`, again with `--set auto_fill_to_line=false` into `lines-first-off.pes`, and with `--set auto_line_gap_mm=-0.2` into `lines-first-lapped.pes`. Sew the 3 side by side |
 | The smooth-edges test piece: lines 3 mm wide drawn as a mug's handle, a ring and a sharp corner | M13.58 | `edges.svg` from the commands after this table, planned with `--auto` into `edges.pes`, and again with `--set auto_short_stitches=crowded` into `edges-today.pes`. Sew both on one piece of fabric. Check each inside edge for a second row of short ends, each outside edge for fabric showing between the stitches, and the corner for thread piling up |
 | Satin columns meeting, as `main` plans them and with M13.57: bars 2 to 4 mm wide side by side in pairs, with 2 rings round each other | M13.57 | `stitch plan docs/fixtures/joins.svg --auto -o joins.pes`, and again with `--set auto_column_reach_mm=1` into `joins-1mm.pes` |
 | A circle 40 mm across, its fill in one colour and a 2 mm stroke round it in another | M13.8 | Made by hand in VectorCraft, without StitchCraft effects. `stitch plan circle.vectorcraft -o circle.pes`, and again with `--no-auto` |
 
-The arc, the bars and the rings of M13.54, the smooth-edges piece of M13.58, M13.59's shapes and M13.63's piece, each written by one command from nothing but the command
+The arc, the bars and the rings of M13.54, the smooth-edges piece of M13.58, M13.59's shapes and the pieces of M13.63 and M13.65, each written by one command from nothing but the command
 itself:
 
 ```sh
 printf '<svg xmlns="http://www.w3.org/2000/svg" width="80mm" height="40mm" viewBox="0 0 80 40"><path fill="#3a7d44" d="M16.5 10Q8 5 2 11Q9 16 16.5 10Z"/><path fill="#3a7d44" d="M17 15Q25 9 32 14Q25 20 17 15Z"/><path fill="#f4d9a0" d="M45 3Q22 18 45 33Q38 18 45 3Z"/><path fill="#e8a900" d="M55 30L56 8L57 30Z"/><path fill="#e8a900" d="M62.2 30L63 10L63.8 30Z"/></svg>\n' > one-shape.svg
 printf '<svg xmlns="http://www.w3.org/2000/svg" width="110mm" height="60mm" viewBox="0 0 110 60"><path d="M 10 55 A 45 45 0 0 1 100 55" fill="none" stroke="#000"/></svg>\n' > arc.svg
 printf '<svg xmlns="http://www.w3.org/2000/svg" width="72mm" height="44mm" viewBox="0 0 72 44"><path fill="#1d3557" d="M2 2H58V42H2Z"/><path fill="#1d3557" fill-rule="evenodd" d="M15.2 11.2H44.8V32.8H15.2Z M16 12H44V32H16Z"/><path fill="#f4e8c9" d="M16 12H44V32H16Z"/><path fill="#e8a900" d="M62 32H70V42H62Z"/></svg>\n' > one-pass.svg
+printf '<svg xmlns="http://www.w3.org/2000/svg" width="80mm" height="44mm" viewBox="0 0 80 44"><path fill="#1d3557" d="M2 2H66V42H2Z"/><path fill="#1d3557" fill-rule="evenodd" d="M7.7 9.7H30.3V34.3H7.7Z M8 10H30V34H8Z"/><path fill="#f4e8c9" d="M8 10H30V34H8Z"/><path fill="#1d3557" fill-rule="evenodd" d="M36.8 8.8H61.2V35.2H36.8Z M38 10H60V34H38Z"/><path fill="#f4e8c9" d="M38 10H60V34H38Z"/><path fill="#e8a900" d="M70 32H78V42H70Z"/></svg>\n' > lines-first.svg
 for w in 6 8 10; do
   awk -v w=$w 'BEGIN { printf "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"60mm\" height=\"20mm\" viewBox=\"0 0 60 20\"><path fill=\"#0a55a3\" d=\"M5 %gH55V%gH5Z\"/></svg>\n", 10 - w / 2, 10 + w / 2 }' > bar-${w}mm.svg
   awk -v w=$w 'BEGIN { R = 20 + w / 2; r = 20 - w / 2; printf "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"60mm\" height=\"60mm\" viewBox=\"0 0 60 60\"><path fill=\"#ed171f\" fill-rule=\"evenodd\" d=\"M%g 30A%g %g 0 1 0 %g 30A%g %g 0 1 0 %g 30Z M%g 30A%g %g 0 1 1 %g 30A%g %g 0 1 1 %g 30Z\"/></svg>\n", 30 + R, R, R, 30 - R, R, R, 30 + R, 30 + r, r, r, 30 - r, r, r, 30 + r }' > ring-${w}mm.svg
@@ -599,8 +601,8 @@ running dog in 9 threads with `--set auto_smooth_mm=0.2` beside the dog as plann
 
 M13.63 threads each thread of an automatic design once wherever its shapes allow it
 ([each thread threaded once](../design/image-to-embroidery.md#each-thread-threaded-once)). A line then sews before
-the fill it borders where sewing it after would thread its thread again, and the fill's rows end on it, their
-pull compensation reaching onto the line's thread. At MC-8, sew the one-pass piece with the default and with
+the fill it borders where sewing it after would thread its thread again, and the fill's rows and outline end on
+it. At MC-8, sew the one-pass piece with the default and with
 `auto_thread_once` off, side by side, and the running dog in 6 threads:
 
 - Count the rethreads on each. Does the navy line still read as a line round the cream fill with the default,
@@ -608,6 +610,12 @@ pull compensation reaching onto the line's thread. At MC-8, sew the one-pass pie
 - Does fabric show between the cream fill and the line on either piece? Measure the widest gap.
 - On the dog, find the fur lines that `SC-I0926` names. Do they still read as lines?
 - Count the jump threads you cut on each.
+
+M13.65 makes a fill sewn after a line end where its thread meets the line's, and leaves the fill's outline off that edge ([a line sewn before its fill stays seen](../design/image-to-embroidery.md#a-line-sewn-before-its-fill-stays-seen)). Our measure places the stitches where they lie, and on fabric the rows pull in. At MC-8, sew the lines-first piece 3 ways side by side: with the default, with `auto_fill_to_line` off and with `auto_line_gap_mm` at -0.2:
+
+- Does each navy line read whole round its cream square? Which of the 3 shows the line 0.3 mm wide best?
+- Does fabric show between a cream square and its line? Measure the widest gap on each.
+- Is the line 1.2 mm wide as wide as drawn, or wider where the cream no longer covers the edge of its columns?
 
 ## Report template
 
