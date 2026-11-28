@@ -1,0 +1,482 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Machine formats - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-0bb77291.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-0c8f9390.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/design/formats.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="machine-formats"><a class="header" href="#machine-formats">Machine formats</a></h1>
+<!-- implements: crates/stitchcraft-formats/src/**, apps/stitchcraft-cli/src/commands/convert.rs, apps/stitchcraft-cli/src/commands/inspect.rs -->
+<p><code>stitchcraft-formats</code> encodes a <code>StitchPlan</code> into machine files and decodes machine files into plans.
+PES (Brother) and DST (Tajima) come first because the first target machine is a Brother and DST is the
+lingua franca every machine and digitizer reads.</p>
+<h2 id="principles"><a class="header" href="#principles">Principles</a></h2>
+<ul>
+<li><strong>Quantize once.</strong> Absolute positions are rounded to 0.1 mm (round half to even) at the start of
+encoding; deltas are differences of quantized positions, so error never accumulates
+(<a href="determinism.html">determinism</a>).</li>
+<li><strong>Format limits live in the encoder.</strong> Each writer knows its maximum displacement per record and
+splits long moves into several jump records; the engine never needs to know.</li>
+<li><strong>Commands are explicit.</strong> Each writer documents how it expresses <code>Jump</code>, <code>Trim</code>, <code>Stop</code>,
+<code>ColorChange</code> and <code>End</code>, and conformance checks every one of them per format (<code>REQ-FMT-003</code>).</li>
+<li><strong>Readers are hostile-input parsers.</strong> Every length, count and offset is checked before use; total
+records are capped at the stitch budget (2,000,000) in a file of anyone’s; allocation is proportional to
+verified sizes; the reader returns the plan or a typed error, never a panic (fuzzed, <code>NFR-SEC-1</code>). A file
+StitchCraft just wrote is read back whole (<code>read_back</code>), up to as many records as it has bytes, since a
+plan within the stitch budget has more records than needle points.</li>
+<li><strong>Positions are rounded once.</strong> A writer rounds each absolute position to 0.1 mm, half to even, and
+writes moves between rounded positions (<code>REQ-FMT-002</code>). A stitch in the file is then within 0.1 mm each
+way of the plan’s, up to 0.14 mm longer or shorter, and so past the machine’s longest or shortest stitch
+by as much: 11.95 mm from (0.04, 0.04) to (8.49, 8.49) is 12.02 mm in the file. The machine’s limits hold
+for the plan (<code>REQ-PLAN-002</code>). Fitting the file’s stitches again would split some stitches at the longest
+by where the grid falls, and leave out needle points of tatami fills and satin columns that their
+generators spaced.</li>
+<li><strong>Never write an empty file</strong> (<code>SC-E0010</code>), and accept empty or zero-stitch files when reading
+(<code>REQ-FMT-004</code>).</li>
+<li><strong>Facts are cited.</strong> Format knowledge comes from public descriptions and MIT-licensed pyembroidery /
+pystitch as a reference implementation; where we rely on them, the source is noted in the module and
+in <code>NOTICE</code>.</li>
+</ul>
+<h2 id="pes-and-pec"><a class="header" href="#pes-and-pec">PES and PEC</a></h2>
+<p>PES is Brother’s design format. A PES file is a PES header (and, for newer versions, design-editor
+data) followed by a <strong>PEC block</strong>, which is what the machine actually sews from.</p>
+<h3 id="what-we-write-v1"><a class="header" href="#what-we-write-v1">What we write (v1)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Part</th><th>Content</th></tr>
+</thead>
+<tbody>
+<tr><td>Signature</td><td><code>#PES0001</code></td></tr>
+<tr><td>PEC offset</td><td>32-bit little-endian offset of the PEC block: 22</td></tr>
+<tr><td>PES section</td><td>A hoop indicator (0 = 100 × 100 mm, 1 = 130 × 180 mm; we write 1 for designs larger than 100 × 100 mm) and no design-editor objects. Machines sew from the PEC block; the section is for PE-Design.</td></tr>
+<tr><td>PEC header</td><td><code>LA:</code> + label (16 characters, padded) + carriage return; thumbnail size; colour entries − 1; one Brother palette index per colour entry (each block, and each stop); padding to 512 bytes</td></tr>
+<tr><td>PEC graphics header</td><td>Bytes to the thumbnails, the design’s width and height in 0.1 mm, and the start as seen from the design’s top-left corner. That field holds −204.8 to 204.7 mm on each axis, and a design whose corner lies farther from the start is refused (<code>REQ-FMT-011</code>, <code>SC-E0602</code>)</td></tr>
+<tr><td>PEC stitches</td><td>Relative moves in 0.1 mm (see below)</td></tr>
+<tr><td>Thumbnails</td><td>48 × 38 one-bit pictures with a rounded frame, of the whole design and then of each colour entry, at one scale so that they line up. No thread is drawn before the needle first goes down. Stitches stay inside the frame, and the byte after the stitch data’s end mark is <code>00</code> (<code>REQ-FMT-012</code>)</td></tr>
+</tbody>
+</table>
+</div>
+<p>The byte-level layout is documented in the writer modules (<code>crates/stitchcraft-formats/src/pes/</code>), next
+to the code that writes it, with the spec vectors that test it.</p>
+<p><strong>Stitch encoding.</strong> A move is encoded per axis: a short form (one byte, 7-bit two’s complement) for small
+displacements, and a long form (two bytes, 12-bit two’s complement with flags) for larger ones up to ±2047
+units (204.7 mm). Each axis is short or long on its own; we use the short form for −63…62. Long-form flags
+mark the move as a <strong>jump (<code>0x10</code>)</strong> or a <strong>trim (<code>0x20</code>)</strong>. A colour change is <code>0xFE 0xB0</code> followed by a
+byte that alternates between <code>0x02</code> and <code>0x01</code>, starting with <code>0x02</code>; the end is <code>0xFF</code>. PEC has no separate
+stop command: a stop is a colour change to the same thread, which readers recognise as a stop.</p>
+<p><strong>Trims ride on the next move.</strong> PEC cannot cut in place, so a trim flags the next jump; a sewn move after a
+trim becomes a trim-flagged jump to its target and a zero-length stitch there, so the needle still goes
+down where the plan says. A trim right before the end needs no record.</p>
+<p><strong>Jumps are trim-flagged, as pystitch writes them</strong> (REQ-FMT-010). A machine treats a StitchCraft file
+as it treats one from Ink/Stitch. Only the stitch data’s first record, the move from the origin,
+keeps the plain jump flag. StitchCraft first flagged only the jumps that follow a <code>Trim</code> in the plan and
+wrote the others as plain jumps, so the plan decided. Whether a trim-flagged jump is cut is the machine’s
+choice. At machine checkpoint MC-1 the reference PE800 cut no jump of either flag and sewed test sheet
+TS-02 the same with both, and it cut the thread only at thread changes and stops. Machines that trim
+jumps cut those longer than their setting. A jump that goes nowhere has no record, since a record of it
+would be trim-flagged.
+The pieces of a sewn move longer than 204.7 mm keep the plain flag, because a cut there would cut the
+stitch’s own thread. No profile allows a stitch that long.</p>
+<p><strong>Checked against a reference.</strong> For the canonical plans, whose threads are palette colours, every PEC
+header byte equals pystitch’s output for the same stitches, the palette indices and the origin fields
+among them. A pinned pyembroidery reads our files to the same needle-downs, cuts and pauses as
+StitchCraft’s own reader (REQ-FMT-005, run as a pinned CI job from M2.4). Threads of other colours can get
+other entries than pystitch gives them (<code>DEV-THREAD-001</code>).</p>
+<p><strong>Colours</strong> (<code>REQ-THREAD-002</code>). The PEC header stores palette <em>indices</em>, not RGB, and a machine knows
+threads only by them. Threads written as one entry are one thread to it, shown in one colour, and a change
+between them reads as a stop. So the threads of a design get their entries together. A thread read from a
+PES file is an entry, by its colour and name, and is written back as it, Brother’s applique steps 62 to 64
+included. The other threads are given the 61 thread colours, one each while they last, the nearest pairs
+first by CIEDE2000. A thread gets its nearest entry unless a thread nearer to it took it. Equal threads
+share one. With more different threads than that, the rest share their nearest entries, and <code>SC-W0606</code>
+says how many. <code>stitch plan</code>, <code>convert</code> and <code>inspect</code> name each thread by the entry the file has. A PES
+file’s index that is none of Brother’s entries is read as a grey thread named after it, with a warning, and
+<code>inspect</code> says it is not one of the palette’s colours rather than naming the entry nearest that grey.
+Catalogue numbers from other brands cannot survive PES v1. A PES v6 writer (below) could store a thread
+list with RGB and codes. The writers know colour blocks, not elements: an element sewn in several threads
+(M10.5) is written in each of its blocks’ threads, as the blocks of different elements are
+(<code>REQ-THREAD-003</code>).</p>
+<h3 id="risks-found-in-the-field-and-how-we-test-them"><a class="header" href="#risks-found-in-the-field-and-how-we-test-them">Risks found in the field, and how we test them</a></h3>
+<p>Embroiderers report these with files from other software:</p>
+<ol>
+<li><strong>Trims ignored</strong> on some Brother machines. Test sheet TS-02 sews jumps with and without a trim
+before them. At MC-1 the PE800 cut none of them: on that machine the operator cuts the jump
+threads. Its profiles’ trim support is none, from MC-1’s sew-out, and previews draw those threads.</li>
+<li><strong>Large designs hidden</strong> by an older Brother-family machine for PES v1 files beyond about 130 ×
+180 mm (root cause unknown). The PES v1 section carries a hoop indication, and pystitch sets it to
+the 130 × 180 mm class, which is our unconfirmed hypothesis for that report. The reference PE800’s
+largest field is that class, 130 × 180 mm. MC-1 sews TS-10 at the whole field of each of its hoops from
+a PES v1 file. If one of them does not load, a PES v6 writer with explicit hoop dimensions follows, and
+the test is repeated.</li>
+<li><strong>Colour expectations:</strong> documented behaviour — what you see on the machine is the PEC
+palette colour; the thread chart in the report lists the source colour and the PEC match.</li>
+</ol>
+<h3 id="later-versions"><a class="header" href="#later-versions">Later versions</a></h3>
+<p>A PES v6 writer (<code>#PES0060</code>) is planned behind the profile’s <code>format</code> field, only if a machine
+checkpoint needs it (hoop dimensions, thread lists). Its header contains fields whose meaning is only
+partly known publicly; every field we write is either understood or copied from the v1 values that
+machines accept, and covered by a golden file.</p>
+<h2 id="dst-tajima"><a class="header" href="#dst-tajima">DST (Tajima)</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Part</th><th>Content</th></tr>
+</thead>
+<tbody>
+<tr><td>Header</td><td>512 bytes of ASCII fields — <code>LA:</code> label, <code>ST:</code> stitch count, <code>CO:</code> colour changes, <code>+X</code>, <code>-X</code>, <code>+Y</code>, <code>-Y</code> extents, <code>AX</code>, <code>AY</code>, <code>MX</code>, <code>MY</code>, <code>PD</code> — padded with spaces and terminated by <code>0x1A</code></td></tr>
+<tr><td>Records</td><td>3 bytes each; x and y displacements in balanced-ternary bit patterns up to ±121 units (12.1 mm) per record</td></tr>
+<tr><td>Axis</td><td>y is up: positive y in the plan (down) is written negative</td></tr>
+</tbody>
+</table>
+</div>
+<p>The third byte always has bits 0 and 1 set; bit 7 marks a jump (<code>0x83</code> with no other bits); <code>0xC3</code>
+is a colour change (and, by common convention, a stop); <code>0xF3</code> with zero displacement ends the design.</p>
+<p><strong>DST has no trim command.</strong> Machines count jump records in a row, and when there are as many as their
+setting, they cut the thread before the jumps — if something was sewn since it was last cut or changed
+(<code>REQ-FMT-008</code>). The setting is commonly three (it can be as high as five; Brother’s PR machines take 1 to
+8, matched by PE-DESIGN’s “number of jumps for trim”), and three is how pyembroidery reads DST too. So:</p>
+<ul>
+<li>a <strong>trim</strong> is three small jumps that cancel out — (+2, −2), (−4, +4), (+2, −2) units, the sequence
+pystitch writes — so the frame goes nowhere while the machine counts three;</li>
+<li>a <strong>jump longer than 24.2 mm</strong> takes three or more records, so it is a trim too, whether the plan asks
+for one or not. The writer says so: <code>SC-I0605</code> counts the places where its machines will cut the
+thread and the plan does not trim. With a tie-off before the jump the cut is usually welcome — there is no jump thread
+to clip; without one (an element whose <code>ties</code> are off), the stitching may unravel.</li>
+</ul>
+<p>A machine set to another count cuts before other jumps, and does not cut at a three-jump trim if set
+higher. A machine profile that writes DST records its count, validated on that machine.</p>
+<p>Moves longer than 12.1 mm are split evenly into several records by the encoder: all jumps for a jump, and
+jumps then the final stitch for a sewn move (the thread lies the same way: the needle only goes down at the
+end). Header extents are measured in DST axes (y up) over every position the frame visits; <code>ST</code> counts the
+records before the end record.</p>
+<h2 id="reading"><a class="header" href="#reading">Reading</a></h2>
+<p><code>stitch inspect</code> and the round-trip tests read machine files back. Readers treat every file as possibly
+damaged or hostile: every offset and length is checked before use, the record count is capped at the stitch
+budget (2,000,000), positions must stay within ±10 m, and a problem is a typed error (<code>SC-E0603</code>) — never a
+panic and never a silent guess. Readers are literal: each record becomes one plan entry, so <code>inspect</code> shows
+what is in the file. Unusual but readable things (a thread index outside the palette, a thumbnail offset
+that points nowhere) become warnings in the result. <code>stitch inspect</code> gives lengths to a hundredth of a
+millimetre and counts a stitch that does not move on its own. A file does not mark its lock stitches, so of
+the stitches shorter than a profile’s shortest it also counts those 0.2 mm or longer, as a lock stitch may
+be. <code>stitch plan</code>, <code>testsheet</code> and <code>convert</code> read the file they wrote back the same way, and give its counts
+and size (<code>REQ-CLI-008</code>).</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Reader</th><th>Reads</th><th>What it has to infer</th></tr>
+</thead>
+<tbody>
+<tr><td>PES / PEC</td><td>the PEC block of any PES version (<code>#PES0001</code> … <code>#PES0060</code>), and bare <code>#PEC0001</code> files; the block must start with <code>LA:</code></td><td>A colour change to the same palette entry is a <strong>stop</strong>, as PEC writes stops. StitchCraft’s writer gives different threads different entries, so only threads beyond the palette’s 61 colours read back as a stop. Whether the stitch data starts with the <strong>origin field</strong> (below).</td></tr>
+<tr><td>DST</td><td>the header’s label and every record</td><td>Three or more jumps in a row are a <strong>trim</strong> before them where something was sewn since the thread was last cut or changed, as DST machines read them (<code>REQ-FMT-008</code>); a trim’s own spelling at the start of the run — up to 8 jumps of at most 1 mm that end where they started — moves the frame nowhere and is not kept as jumps. Colours: none — each block gets a placeholder thread, and a stop reads as a colour change.</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>The PEC origin field</strong> (<code>REQ-FMT-009</code>). Brother’s software, pystitch and StitchCraft write 4 bytes
+before the first record, shaped like a long jump on both axes. They hold the offset from the corner of
+the box that the header’s width and height give to the start of the design. pyembroidery 1.4.32 to
+1.5.1 leave the field out, and their first record is often a long jump that looks the same. The reader
+takes the 4 bytes as the field only if the design read after them fits that box, and otherwise reads them
+as the first record, with a warning that Brother machines expect the field. Files from pyembroidery
+1.5.1 itself test both cases (<code>conformance/oracle/write_pes.py</code>).</p>
+<p>Every reader survives every truncation and single-byte change of the golden files (a deterministic test
+that runs on every PR), and an hour of coverage-guided fuzzing every night (<code>REQ-FMT-006</code>;
+<a href="conformance.html#fuzzing">fuzzing</a>).</p>
+<p><strong>Round trips.</strong> A file cannot say everything a plan says (a trim is a flag in PEC and three jumps in DST;
+long moves become several records), so a plan read back is not the same plan — it makes the machine do
+the same thing. <code>stitchcraft-testkit::equivalence</code> defines that: where the needle goes down, where the
+thread is cut, where the machine pauses. Every writer/reader pair keeps it on 256 random plans per PR (fixed
+seed) and 10,000 more each night (fresh seed). DST is held to what its machines do with the plan
+(<code>equivalence::dst_events</code>): they cut the thread before long jumps the plan does not trim. Fresh seeds
+paid off before this was even merged: they found a DST design whose split jump pieces cancelled exactly,
+which is why only jumps of at most 1 mm make up a trim’s spelling.
+PES is held to what its file says (<code>equivalence::pes_events</code>): a trim flag on every jump.</p>
+<p><strong>Reading back.</strong> <code>read_back</code> reads a file just written, with its plan’s threads, as a machine reads it.
+The command line describes and draws what it wrote from it (<code>REQ-CLI-008</code>). The command line and the
+VectorCraft exporters also call it before they hand a file out. A file StitchCraft wrote that doesn’t read
+back is a bug in it (<code>SC-E0009</code>), and then nothing is written.</p>
+<p><strong>Converting.</strong> <code>stitch convert</code> is a read followed by a write, so the converted file makes the machine do
+the same thing as the original: the round-trip guarantee above — except that a DST file cuts the thread
+before long jumps where a PES machine leaves a jump thread, which <code>SC-I0605</code> reports. A PES file from
+StitchCraft has a trim flag on every jump already, so only PES files with plain jumps get those cuts.
+Records carry over
+literally (a DST file’s 12 mm jump pieces stay separate jumps in a PES file), and what the new format
+cannot say is reported instead of guessed. A DST file’s threads are placeholders, all black (<code>SC-W0604</code>).
+A PES file made from one names each by the Brother colour nearest black that is still free.</p>
+<h2 id="later-formats"><a class="header" href="#later-formats">Later formats</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Format</th><th>Machines</th><th>Milestone</th><th>Notes</th></tr>
+</thead>
+<tbody>
+<tr><td>EXP</td><td>Melco, Bernina</td><td>M11</td><td>2-byte records, <code>0x80</code> escape codes for commands</td></tr>
+<tr><td>JEF</td><td>Janome</td><td>M11</td><td>Janome thread table indices; per-palette mapping</td></tr>
+<tr><td>VP3</td><td>Husqvarna Viking, Pfaff</td><td>M11</td><td>Nested length-prefixed sections; thread descriptions as strings</td></tr>
+<tr><td>XXX</td><td>Singer</td><td>M11</td><td></td></tr>
+<tr><td>U01</td><td>Barudan</td><td>M11</td><td></td></tr>
+<tr><td>CSV / JSON</td><td>Debugging and interchange</td><td>M2</td><td>Human-readable plan dumps; the conformance suite’s golden format for stitch lists</td></tr>
+<tr><td>HUS, VIP</td><td>Husqvarna (older)</td><td>—</td><td>Compressed; read-only candidates after 1.0</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="conformance"><a class="header" href="#conformance">Conformance</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Requirement</th><th>What it checks</th></tr>
+</thead>
+<tbody>
+<tr><td><code>REQ-FMT-001</code></td><td>Golden bytes: canonical plans encode to committed files byte for byte</td></tr>
+<tr><td><code>REQ-FMT-002</code></td><td>Round trip: <code>decode(encode(plan))</code> makes the machine do what the plan does — needle-downs, cuts and pauses at the same 0.1 mm positions — for every writer/reader pair, on random plans</td></tr>
+<tr><td><code>REQ-FMT-003</code></td><td>Every command kind survives every writer/reader pair (and is sewn in TS-02)</td></tr>
+<tr><td><code>REQ-FMT-004</code></td><td>Empty and zero-stitch files read cleanly; empty plans are never written</td></tr>
+<tr><td><code>REQ-FMT-005</code></td><td>Independent oracle: pyembroidery reads our files to the same stitches (CI job with a pinned version)</td></tr>
+<tr><td><code>REQ-FMT-006</code></td><td>Fuzzed readers never panic, never allocate beyond caps, always terminate</td></tr>
+<tr><td><code>REQ-FMT-007</code></td><td>Long moves are split within the format’s per-record limit</td></tr>
+<tr><td><code>REQ-FMT-008</code></td><td>DST is read as its machines sew it (three or more jumps in a row after sewing cut the thread), and writing DST reports where they will cut and the plan does not (<code>SC-I0605</code>)</td></tr>
+<tr><td><code>REQ-FMT-011</code></td><td>A PES design whose top-left corner lies more than 204.7 mm from the start is refused, not written with its origin field wrapped round</td></tr>
+<tr><td><code>REQ-FMT-012</code></td><td>PEC thumbnails draw stitches only inside their frames, so the stitch data’s end mark is followed by <code>00</code></td></tr>
+<tr><td><code>REQ-THREAD-002</code></td><td>Different threads get different palette entries, the nearest pairs first, and a thread read from a file keeps its entry</td></tr>
+</tbody>
+</table>
+</div>
+<p>The pyembroidery oracle is a conformance case (<code>conformance/cases/formats/pyembroidery-oracle.toml</code>): a
+pinned pyembroidery, installed by hash in CI, reads every golden machine file through
+<code>conformance/oracle/decode.py</code>, and its reading must make the machine do what our reader’s does. Only its
+output is compared; no pyembroidery code is vendored. pyembroidery places a PES design’s top-left corner at
+its origin where StitchCraft keeps the machine origin, so both readings are compared from their first
+needle-down.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../design/fonts.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../design/rendering.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../design/fonts.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../design/rendering.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

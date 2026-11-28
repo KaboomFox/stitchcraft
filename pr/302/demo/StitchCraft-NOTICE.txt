@@ -1,0 +1,57 @@
+StitchCraft
+Copyright (c) 2026 The StitchCraft contributors
+
+Licensed under the MIT License or the Apache License, Version 2.0, at your option
+(LICENSE-MIT, LICENSE-APACHE).
+
+Interoperability
+----------------
+StitchCraft reads and writes the embroidery parameters used by Ink/Stitch (https://inkstitch.org) as
+SVG attributes. Parameter names, meanings and defaults are used for file compatibility only. StitchCraft
+contains no Ink/Stitch source code, documentation text, images, fonts or data files; Ink/Stitch is
+licensed under the GNU GPL v3.
+
+Third-party data
+----------------
+Entries are added here when a data table is derived from a third-party source.
+
+- Brother PEC thread palette (crates/stitchcraft-plan/src/palette/brother_pec.rs): index, name and RGB
+  of the 64 PEC colours as published in pyembroidery (https://github.com/EmbroidePy/pyembroidery, MIT
+  License; author Tatarize). Entries 62 and 63, appliqué functions on Brother machines, follow its fork
+  pystitch (https://github.com/inkstitch/pystitch, MIT License, main branch at commit b72b557), where
+  pyembroidery 1.5.1 lists two thread colours. No pyembroidery or pystitch code is included.
+- PES/PEC and DST encoding conventions (crates/stitchcraft-formats): where public format descriptions
+  leave a detail open (trim flags, header fields, thumbnail bit order, DST trim sequences), StitchCraft
+  matches the output of pystitch (MIT), observed as a black box: we ran the library and compared bytes.
+  Each such detail is noted in the module that writes it. How machines read DST jumps — three or more
+  in a row cut the thread — comes from public descriptions (Brother's support pages, Wilcom's
+  documentation, the EduTech Wiki's DST page) and agrees with pyembroidery's reader (MIT), observed the
+  same way.
+- Tartan colour shades (crates/stitchcraft-engine/src/generators/tartan/shades.rs): for each of 25 colour
+  letters, the name and value of one of its shades, chosen from "Tartan Register colours"
+  (https://www.tartanregister.gov.uk/docs/Colour_shades.pdf). Crown copyright; source: the Scottish
+  Register of Tartans, "Tartan Register colours". Re-used free of charge, as the register's copyright terms
+  allow for its website's material (https://www.tartanregister.gov.uk/copyright).
+
+Third-party models
+------------------
+The subject cut-out (`stitch plan --subject`, `stitch cutout`; apps/stitchcraft-cutout) runs 2 models that
+it fetches on first use from StitchCraft's release cutout-models-1, which publishes them with their licences,
+a notice of their own and their export record. The repository holds only their pins
+(apps/stitchcraft-cutout/models/models.toml), and no part of either model.
+
+- U²-Net-p, the small model of U²-Net, by Xuebin Qin, Zichen Zhang, Chenyang Huang, Masood Dehghan, Osmar
+  Zaiane and Martin Jagersand (https://github.com/xuebinqin/U-2-Net), under the Apache License 2.0, which its
+  repository is under and which its author applies to its models (its issue 208). The file is rembg's ONNX
+  conversion of the author's checkpoint (https://github.com/danielgatis/rembg, MIT License, Copyright (c)
+  2020 Daniel Gatis), as rembg publishes it.
+- MobileSAM, by Chaoning Zhang, Dongshen Han, Yu Qiao, Jung Uk Kim, Sung-Ho Bae, Seungkyu Lee and Choong Seon
+  Hong (https://github.com/ChaoningZhang/MobileSAM), distilled from Meta AI's Segment Anything, under the
+  Apache License 2.0, which covers its weights. StitchCraft exported its encoder and its decoder to ONNX
+  from the checkpoint in its repository, with apps/stitchcraft-cutout/models/export.py.
+
+Third-party files
+-----------------
+- Prose-lint rules (.vale/styles/ai-tells/): vale-ai-tells v1.37.0 by Tony Burns
+  (https://github.com/tbhb/vale-ai-tells, MIT License, copied unchanged with its LICENSE file). Used by
+  `cargo xtask prose` and not part of any built crate.

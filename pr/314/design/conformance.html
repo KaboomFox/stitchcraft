@@ -1,0 +1,776 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Conformance testing - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-d0c2d730.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-e9ab2988.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/design/conformance.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="conformance-testing"><a class="header" href="#conformance-testing">Conformance testing</a></h1>
+<!-- implements: crates/stitchcraft-testkit/src/**, crates/stitchcraft-engine/src/normalize/fixture.rs -->
+<p>When behaviour is specified only by its implementation, fixes for one input break another and nobody
+can say what “correct” means. StitchCraft specifies behaviour as <strong>requirements</strong>, proves each with <strong>cases</strong>, and reports the result
+as a <strong>matrix</strong> on every pull request. Code is written to make cases pass, not the other way round
+(<a href="adr/0008-conformance-first.html">ADR-0008</a>).</p>
+<h2 id="vocabulary"><a class="header" href="#vocabulary">Vocabulary</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Term</th><th>Meaning</th></tr>
+</thead>
+<tbody>
+<tr><td>Requirement</td><td>A numbered, testable statement: <code>REQ-FILL-TAT-006: pull compensation preserves region topology</code></td></tr>
+<tr><td>Case</td><td>Input + parameters + profile + expectations, as a data file, linked to ≥ 1 requirement</td></tr>
+<tr><td>Check</td><td>A reusable assertion (an invariant, a metric bound, a golden comparison, an expected diagnostic)</td></tr>
+<tr><td>Level</td><td>Where the case’s truth comes from (L0 invariants … L4 a real machine)</td></tr>
+<tr><td>Bless</td><td>Accept a changed golden output, in a PR, with a reason</td></tr>
+<tr><td>Deviation</td><td>A documented, intended difference from Ink/Stitch’s behaviour</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="requirements"><a class="header" href="#requirements">Requirements</a></h2>
+<p><code>conformance/requirements.toml</code>:</p>
+<pre><code class="language-toml">[[req]]
+id = "REQ-FILL-TAT-006"
+area = "fill/tatami"
+level = "L2"
+statement = "Pull compensation preserves the number of holes and connected components of the region."
+rationale = "Compensating by growing the whole shape closes gaps the designer left on purpose."
+milestone = "M5"
+status = "planned"        # planned | active | retired
+</code></pre>
+<p>Rules, enforced in CI:</p>
+<ul>
+<li>ids are unique (<code>--check</code>), and never reused: a retired requirement stays in the file as <code>retired</code>.
+The checks read the file as it is, so review keeps the second rule. <code>--check</code> helps, failing for a case
+that names an id the file lacks, and <code>docs --check</code> fails for a page that names one;</li>
+<li>every case names existing requirements, and an <code>active</code> requirement has at least one case (<code>--check</code>)
+that passes (the run);</li>
+<li>a milestone cannot be closed while one of its requirements is <code>planned</code> (review);</li>
+<li>docs that mention a <code>REQ-…</code> id must refer to an existing one (part of <code>cargo xtask docs --check</code>).</li>
+</ul>
+<h2 id="cases"><a class="header" href="#cases">Cases</a></h2>
+<p>Cases come in two forms, and the report treats them alike.</p>
+<p><strong>Rust tests named after a requirement.</strong> A test function named <code>req_&lt;area&gt;_&lt;nnn&gt;_&lt;what&gt;</code> is a case for
+<code>REQ-&lt;AREA&gt;-&lt;NNN&gt;</code>: <code>req_plan_002_stitch_lengths</code> proves <code>REQ-PLAN-002</code>, <code>req_fill_tat_006_gap_preserved</code>
+would prove <code>REQ-FILL-TAT-006</code>. The name is the link, so there is no list to keep in sync; <code>--check</code> finds
+them by scanning the source and rejects a name that points at no requirement. Use them for rules best
+shown with small hand-built inputs — an invariant’s violating and passing examples, a palette’s spot
+checks.</p>
+<p><strong>Rust tests named after a diagnostic code.</strong> A test function named <code>diag_sc_&lt;e|w|i&gt;&lt;nnnn&gt;_&lt;what&gt;</code> is a
+case for the code <code>SC-&lt;E|W|I&gt;&lt;NNNN&gt;</code>: it produces the code from real input through the public API and
+checks the full text a user reads, message and fix (<code>diag_sc_e0701_a_design_larger_than_the_hoop_names_both_sizes</code>).
+Every registered code needs one: <code>--check</code> fails for a code without a <code>diag_</code> case and for a <code>diag_</code> name
+that points at no registered code, and the run fails when a code’s cases do not pass. The report lists
+the codes in a table of their own. This is what keeps error paths alive
+(<a href="diagnostics.html#the-registry">diagnostics</a>).</p>
+<p><strong>Data cases</strong>, <code>conformance/cases/&lt;area&gt;/&lt;name&gt;.toml</code>: an input, a profile and expectations, run by the
+suite in-process. Unknown fields are errors, so a typo cannot silently switch a check off. M1 has the
+<code>testsheet</code> kind:</p>
+<pre><code class="language-toml">id = "ts-10b"
+requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PRF-002", "REQ-FMT-001"]
+kind = "testsheet"
+sheet = "TS-10B"
+profile = "brother-pe800-5x7"
+
+[expect]
+size_mm = [130.0, 180.0]
+diagnostics = []                                 # exactly these codes, here none
+golden = ["golden/testsheets/TS-10B.pes"]        # byte for byte; the format comes from the extension
+</code></pre>
+<p>The plan invariants run on the sheet’s plan before anything else. The golden files are the very bytes
+sewn at the machine checkpoint, so a change to how a sheet sews cannot slip through unnoticed.</p>
+<p>The <code>oracle</code> kind reads machine files with an independent reader — a pinned pyembroidery, through
+<code>conformance/oracle/decode.py</code> — and with StitchCraft’s, and requires the machine to do the same thing
+either way (<code>REQ-FMT-005</code>):</p>
+<pre><code class="language-toml">id = "pyembroidery-oracle"
+requirements = ["REQ-FMT-005"]
+kind = "oracle"
+files = ["golden/formats/every-command.pes", "golden/testsheets/TS-01.dst"]   # …
+</code></pre>
+<p>It needs Python with pyembroidery (<code>STITCHCRAFT_PYTHON</code>, see <code>conformance/oracle/requirements.txt</code>):
+without it the case is skipped locally (⏭ in the report) and fails in CI, like every optional tool. A
+requirement whose cases were all skipped is skipped too, and fails the run only in CI.</p>
+<p>Geometry that Ink/Stitch leaves to shapely is checked against shapely’s own answers. Scripts in
+<code>conformance/oracle/</code> ask a pinned shapely, through its public API alone, about random shapes:</p>
+<ul>
+<li>the nearest points of rails (<code>nearest.py</code>)</li>
+<li>offset curves (<code>offset.py</code>)</li>
+<li>the measures that make a satin column’s rails from its centre line (<code>centre_line.py</code>)</li>
+<li>polygons shrunk and grown, for a fill’s inset underlay and its expanded rows (<code>buffer.py</code>)</li>
+<li>the pieces of rows that polygons cut, for a fill’s rows (<code>rows.py</code>)</li>
+</ul>
+<p>Their answers are fixtures under <code>conformance/fixtures/geometry/</code>, one question to a line of text, and the
+engine’s unit tests read them with a shared reader (<code>normalize::fixture</code>) and answer every question the
+same way. Regenerating a fixture needs shapely, and checking it does not. The same module draws, from
+their corners, the parts that the unit tests of centre lines and columns take.</p>
+<p>The <code>plan</code> kind takes a design, an SVG file or a VectorCraft document, the whole way to machine files, as
+<code>stitch plan</code> does for a profile. It checks the plan, and compares the files written from it with golden
+files. The <code>strokes</code> case:</p>
+<pre><code class="language-toml"># The whole way from a design to a machine file: an SVG of strokes in two threads and back, two lines
+# that nearly touch and a fill in 2 parts, each with its underlay, planned as `stitch plan` plans it. The
+# golden files are what that writes.
+id = "strokes"
+requirements = ["REQ-ASM-001", "REQ-ASM-002", "REQ-LCK-001", "REQ-FIN-001", "REQ-FIN-003", "REQ-FILL-TAT-001", "REQ-FILL-TAT-008", "REQ-FILL-TAT-011"]
+kind = "plan"
+design = "fixtures/svg/strokes.svg"
+profile = "brother-pe800-5x7"
+
+[expect]
+size_mm = [59.920508, 45.0]
+diagnostics = ["SC-W0307", "SC-I0504"]
+golden = ["golden/plans/strokes.pes", "golden/plans/strokes.dst"]
+</code></pre>
+<p>What a generator keeps of a shape, such as the holes of a fill, is checked by Rust tests named after their
+requirement. Fixtures are small files under <code>conformance/fixtures/</code>, hand-written or generated, each with
+a row in the fixtures index stating its origin and licence (<code>--check</code>). Large real-world corpora live in
+repositories of their own, as VectorCraft’s do, and are never committed. <code>cargo xtask corpus</code> fetches
+Ink/Stitch’s fonts at a commit and with a SHA-256 this repository pins (<a href="fonts.html#the-corpus">fonts</a>).</p>
+<p>The <code>font</code> kind reads one font of that corpus with the font reader and plans each of its glyphs, as the
+glyph differential plans a glyph (<code>REQ-FONT-008</code>, <code>xtask/src/conformance/font.rs</code>). It names the font’s
+folder and the glyphs it has in each direction:</p>
+<pre><code class="language-toml"># One font of the corpus read by the font reader, and each of its glyphs planned (M14.1): Ink/Stitch Small
+# Font, under the OFL, from the cache `cargo xtask corpus` fills. Never a font file in this repository.
+id = "font-small-font"
+requirements = ["REQ-FONT-008"]
+kind = "font"
+font = "small_font"
+
+# Its glyphs in each direction, as Ink/Stitch's lettering counts them.
+[glyphs]
+ltr = 98
+rtl = 89
+</code></pre>
+<p>Without the corpus the case is skipped, and says so. In CI every job that runs <code>cargo xtask ci</code> fetches the
+corpus first (<code>.github/actions/fonts</code>), and the case runs.</p>
+<p>The engine’s cases build their small designs with <code>stitchcraft_testkit::designs</code>. It also reads a plan’s
+shape at a glance: <code>J L4 S5 L4</code> is a jump, 4 lock stitches, 5 needle points of stitching and 4 more lock
+stitches. Its strokes are as wide as an SVG stroke whose style says nothing, and <code>widened</code> gives one a
+width, <code>capped</code> a cap, <code>clipped</code> one clip path more, and <code>automatic</code> makes any element one whose stitches
+StitchCraft chooses, by the settings of the rules that <code>rules</code> gives at their defaults. Its fills are
+closed rings filled by the nonzero rule (<code>fill</code>, through <code>rings</code>), so a hole is drawn the other way round
+from its outline. No stitch type gives its groups threads of their own before M10.6. Until then <code>threaded</code>
+puts the groups of each element in the threads a case gives them, <code>block</code> and <code>within</code>, and assembles and
+finalizes the elements as <code>plan</code> does. <code>three_threads</code> is one element sewn in red, green and blue, which the
+cases of the writers, the previews and the report sew (<code>REQ-THREAD-003</code>). The plug-in has no dev-dependencies,
+and its own <code>testing</code> module makes the same element for the cases of its exporters and live effects. The satin cases sew their columns with <code>stitchcraft_testkit::satins</code>, as an element is
+sewn on the reference machine, with the stitch lengths the engine gives it there (<code>satin_lengths</code>), and
+read the needle points back in pairs across the column. A column is sewn alone (<code>sewn_satin</code>) or between
+the neighbours a case gives it (<code>sewn_between</code>), and <code>satin_diagnostics</code> keeps its warnings’ places for
+the cases that check where a warning points. The cases of a satin method sew a straight column by that
+method (<code>sewn_ladder</code>) and compare its needle points with the ones they expect, but for rounding
+(<code>near</code>). The cases of automatic digitizing sew the test pictures, which
+<code>stitchcraft_engine::testsheets::pictures</code> draws in code and the TS-13 sheets sew too, each with the
+edges where its shapes meet. <code>stitchcraft_testkit::pictures</code> places them where the cases measure them.
+There are 3 stripes side by side, and a badge, a row of badges, an emblem and a button, each traced
+abutting or stacked (<a href="image-to-embroidery.html#testing">image to embroidery</a>). The cases sew the pear that the
+docs show too, a photo that VectorCraft traced into ragged shapes (<code>stitchcraft_testkit::pictures::pear</code>). The
+cases of letters sewn as strokes measure how far each satin stitch of the traced M and A lies from square
+to the stroke a person draws it with, <code>stitchcraft_testkit::strokes</code>, which holds those strokes.
+<code>stitchcraft_testkit::pictures::marked</code> draws a patch of 2 halves with a ring, a dot and a mark on it,
+traced either way, for the cases of details sewn last.</p>
+<h2 id="levels"><a class="header" href="#levels">Levels</a></h2>
+<h3 id="l0--plan-invariants-every-pr"><a class="header" href="#l0--plan-invariants-every-pr">L0 — Plan invariants (every PR)</a></h3>
+<p>The <a href="data-model.html#plan-invariants">plan invariants</a> run on <em>every</em> plan the
+suite produces, whatever the case is about. A case never needs to ask for them.</p>
+<h3 id="l1--formats-every-pr-fuzzing-nightly"><a class="header" href="#l1--formats-every-pr-fuzzing-nightly">L1 — Formats (every PR; fuzzing nightly)</a></h3>
+<p>Golden bytes for canonical plans; round trips on random plans (<code>proptest</code>); every command per format;
+empty and degenerate files; the <strong>pyembroidery oracle</strong> job (pinned version, in its own CI job) decodes
+our files and must agree on every stitch; <code>cargo-fuzz</code> targets run nightly with a persisted corpus
+(<a href="formats.html#conformance">formats</a>).
+A file read back must do what its format tells the machine, which can mean more cuts than the plan has.
+DST machines cut before long runs of jumps (<code>REQ-FMT-008</code>), and a PES file flags every jump as a trim
+(<code>REQ-FMT-010</code>). <code>stitchcraft_testkit::equivalence::format_events</code> gives both, and drops a cut with
+nothing sewn since the last one, which changes nothing on the fabric.</p>
+<h4 id="fuzzing"><a class="header" href="#fuzzing">Fuzzing</a></h4>
+<p><code>fuzz/</code> has a target for each reader (<code>read_pes</code>, <code>read_dst</code>, <code>read_svg</code> and <code>read_vectorcraft</code>), and
+one for a file’s whole journey (<code>read_write_preview</code>: read, write in every format, read the files back,
+preview). Each target is one line. Its body is in <code>stitchcraft-testkit::fuzz</code>, where every pull request
+runs it on the seed files, every shortening of them and random or damaged bytes, on stable Rust and all
+three operating systems. The properties:</p>
+<ul>
+<li><strong>machine files</strong> (<code>REQ-FMT-006</code>). No reader panics or gives more than 2,000,000 entries or a position
+beyond ±10 m. Each format writes a plan read from anything or refuses it. PES refuses a design more
+than 204.7 mm from its start (<code>REQ-FMT-011</code>). Each file reads back to a plan the machine sews the same
+way, for DST the way DST machines sew it (<code>REQ-FMT-008</code>). Previews never panic.</li>
+<li><strong>SVG</strong> (<code>REQ-SVG-002</code>): no panic; the reader refuses only with its own codes (<code>SC-E0801</code>,
+<code>SC-E0004</code>); what it reads is a valid design, with no point beyond ±10 m, and everything it says about
+the file is a warning.</li>
+<li><strong>VectorCraft</strong> (<code>REQ-VC-001</code>), as for SVG, with <code>SC-E0806</code> for a file that isn’t a VectorCraft
+document. The same bytes compressed with gzip read the same, unless unpacking them spends the budget.</li>
+</ul>
+<p>Every night <code>nightly.yml</code> fuzzes each target for 20 minutes with libFuzzer (<code>-timeout=10</code>,
+<code>-rss_limit_mb=2048</code>). The corpus starts from the seeds, the golden machine files or the SVG and
+VectorCraft fixtures (with dictionaries of their keywords, <code>fuzz/svg.dict</code> and <code>fuzz/vectorcraft.dict</code>).
+It is kept, minimised, in the Actions cache, and each night continues where the last stopped. A crash
+fails the job and keeps the input as an artifact. To work on one locally:</p>
+<pre><code class="language-sh">cargo +nightly fuzz run read_pes                        # until stopped; corpus in fuzz/corpus/read_pes
+cargo +nightly fuzz run read_pes fuzz/artifacts/read_pes/crash-…   # reproduce a crash
+</code></pre>
+<p>A crash becomes a regression test next to the code it found a bug in, before the fix.</p>
+<h3 id="l2--generator-properties-every-pr"><a class="header" href="#l2--generator-properties-every-pr">L2 — Generator properties (every PR)</a></h3>
+<p>Property tests per generator (<a href="algorithms/">algorithms</a>), run over:</p>
+<ul>
+<li>hand-written cases (the shapes people actually draw: letters, circles, leaves, rings, stars);</li>
+<li>the <strong>degenerate corpus</strong> (zero-area, hair-thin, self-touching, collinear, duplicate points, single
+points, near-coincident rings, huge coordinates, 10⁶ vertices) in <code>stitchcraft_testkit::degenerate</code>;</li>
+<li>random shapes from <code>stitchcraft-testkit</code> strategies, with fixed seeds in PR CI (fast, reproducible)
+and fresh seeds nightly (with failing seeds saved as new cases).</li>
+</ul>
+<p>Every stitch type sews the degenerate corpus, and random paths whose points lie on a coarse grid so that
+they coincide, lie in line and cross often (<code>tests/degenerate.rs</code>): 64 on every PR, and 2,000 with a fresh
+seed every night. Each shape is a fill by each fill method under each fill rule, a stroke by each stroke
+method 0.5 and 3 mm wide, and a satin column by each satin method. None may report a bug (<code>SC-E0009</code>),
+and each gives a plan or an error that says why it doesn’t. Each sews the same planned again, and its plan keeps the machine’s invariants. From M10.10 the
+engine sews all 17 stitch types, and <code>SC-W0011</code> is retired. The path of 10⁶ points is sewn within a thousandth of the
+default budget, so that every way of sewing it shows that it runs out of work only by saying so
+(<code>SC-E0004</code>).</p>
+<p>Metrics are defined once in <code>stitchcraft-testkit::metrics</code> so every case measures the same way:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Metric</th><th>Definition</th></tr>
+</thead>
+<tbody>
+<tr><td>Coverage</td><td>Rasterize the region and the stitch lines (thread width 0.4 mm) at 0.05 mm; covered fraction of region pixels</td></tr>
+<tr><td>Edge coverage</td><td>Points every 0.05 mm along an edge where 2 shapes meet. The fraction within 0.2 mm of a top stitch, with each stitch pulled in where the thread turns</td></tr>
+<tr><td>Containment</td><td>Maximum distance of any stitch point outside the region (0 if inside)</td></tr>
+<tr><td>Row spacing</td><td>Median and spread of perpendicular distances between consecutive rows</td></tr>
+<tr><td>Stitch length</td><td>Min, max and distribution of <code>Normal</code> stitch lengths by role</td></tr>
+<tr><td>Furrows</td><td>Longest run of rows whose needle points align within 0.1 mm</td></tr>
+<tr><td>Topology</td><td>Holes and components of the region vs. of the stitched area</td></tr>
+<tr><td>Bare fabric</td><td>The design painted at 0.05 mm as a viewer paints it, its background left out: the largest patch the top stitches leave bare, once opened with a disc as wide as the thread (<code>stitchcraft_testkit::fabric</code>)</td></tr>
+<tr><td>Cover</td><td>The same painting, read more strictly: the gaps a thread wide that the top stitches leave inside the design, and the share of the design they leave bare (<code>stitchcraft_testkit::fabric::cover</code>, <code>REQ-AUTO-027</code>)</td></tr>
+<tr><td>Each shape’s own</td><td>What of each area’s shape shows its own thread: how much of each hole shows what lies under it, and the gaps a thread wide and the notches 0.15 mm wide where another colour shows inside its outline (<code>stitchcraft_testkit::fabric::shown</code>, <code>REQ-AUTO-084</code>, <code>REQ-AUTO-085</code>)</td></tr>
+<tr><td>Thread astray</td><td>The longest stretch of a stitch that shows on another colour or on bare fabric, or of an underlay or travel stitch that shows at all. Moves between elements and jump threads are counted apart</td></tr>
+<tr><td>Likeness</td><td>What of each colour’s parts of the trace the stitches keep, each part counted once whatever its size, and the mean over the colours (<code>stitchcraft_testkit::fabric::likeness</code>, <code>REQ-AUTO-093</code>). A part is what <code>stitchcraft_engine::auto::is_part</code> says, which line merging shares (<code>REQ-AUTO-095</code>)</td></tr>
+<tr><td>Thickness</td><td>The thread over each spot, in fills, and the needle points per mm², which the plan itself measures (<code>stitchcraft_plan::thickness</code>, <code>REQ-AUTO-060</code>) and <code>stitchcraft_testkit::fabric::thickness</code> reads for the cases and the before and after sheet. <code>fabric::thickest</code> splits the thickest spot’s thread into what satin columns’ top stitches lay there and the rest (<code>fabric::columns</code>, <code>REQ-AUTO-073</code>). The pixel and the thread’s width of the metrics above are that measure’s</td></tr>
+</tbody>
+</table>
+</div>
+<p>Coverage is defined since M5.9 and edge coverage since M13.2, and the other metrics arrive with the cases that
+need them. <code>stitchcraft-testkit::stitches</code> reads back what a test sheet’s stitches show against its
+drawing: where each element’s needle goes in and where a satin column’s rungs lie. It also finds the jump
+threads the PE800 leaves, as it cuts none, and the later stitches that sew them down. A pixel is the region’s when its centre lies inside the region’s rings, by the even-odd rule, and
+covered when its centre lies within 0.2 mm of a stitch the plan sews, whatever its role: the thread is the
+stitch widened to 0.4 mm and rounded at its ends. Each stitch is drawn a row of pixels at a time, along the
+stretch where the row crosses that shape. The work grows with the pixels the thread covers, not with the
+stitches times the pixels.</p>
+<p>Edge coverage pulls each top stitch in where the thread turns, as thread pulls a row in at its ends. The
+needle holes along a straight run stay where they are. Underlay and locks are left out, as they are
+meant to be covered (<code>stitchcraft_testkit::metrics</code>).</p>
+<p><strong>Transformations.</strong> A design mirrored or turned half round must sew its stitches mirrored or turned with
+it (<code>stitchcraft-testkit::transformed</code>, <code>tests/transformed.rs</code>), and a shape drawn again the other way
+round, from another point or with points added along its edges must sew the same thread. Since the checks
+don’t need an expected answer, they run on every element of every test sheet drawn as a design, and on
+random letters digitized automatically. They compare the share of each element’s top stitches and
+underlay that lies within 0.3 mm of the other plan’s, which overlooks needle points placed a little apart
+but still tells a column from a line sewn along its middle. A fill lays out its rows from the point (0,
+0). So a design is mirrored and turned about that point, its fill angles and its elements’ start, end and
+target positions and clips with it, and a move is left out of the changes. The design’s turn on export
+turns the other way in a mirror image, whose plan is then the mirror image of the design’s. A rule that
+depends on a tie broken by coordinates fails the checks: TS-13B’s letter A 6 mm tall sewed one leg as a
+satin column and the other as a line, and its mirror image the other way round. Each element of the
+sheets keeps 0.993 or more of its thread where the change takes it, against a bound of 0.98. A zigzag
+stroke and an E-stitch are laid by design from where their shape is drawn, as Ink/Stitch lays them, and
+are not measured where that changes. A zigzag stroke moves its first needle point to the right of its
+way, so mirrored or drawn from its end it zigzags from the other side. An E-stitch’s spikes lie a spacing
+apart from its start, so drawn from its end they lie elsewhere along it. TS-11A’s sparse zigzags and
+E-stitches keep as little as 0.42 of their thread so.</p>
+<h3 id="l3--inkstitch-differential-nightly"><a class="header" href="#l3--inkstitch-differential-nightly">L3 — Ink/Stitch differential (nightly)</a></h3>
+<p>A pinned Ink/Stitch runs as a black box on a corpus of SVG files written for StitchCraft, and writes
+machine files. Running Ink/Stitch as an oracle uses it and doesn’t copy it
+(<a href="adr/0001-license-and-clean-room.html">ADR-0001</a>, decision 6). The job fetches it at the commit
+<code>conformance/inkstitch/pin.toml</code> names, and implementers see measures instead of Ink/Stitch’s code.
+<code>cargo xtask conformance --differential</code> runs the <code>inkstitch</code> cases (<code>conformance/cases/inkstitch/</code>):
+for each, Ink/Stitch and StitchCraft, planning on the reference machine, each write a PES file, and
+StitchCraft’s reader reads both back, so that both are measured on PES’s 0.1 mm grid
+(<code>xtask/src/conformance/differential.rs</code>). We compare <strong>measures, not stitches</strong>:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Measure</th><th>Tolerance</th></tr>
+</thead>
+<tbody>
+<tr><td>stitches, the needle-downs</td><td>within 10 %</td></tr>
+<tr><td>size, the bounds of the needle points</td><td>each side within 0.5 mm</td></tr>
+<tr><td>threads, in order</td><td>the same</td></tr>
+<tr><td>trims, and jumps</td><td>each within 1</td></tr>
+<tr><td>overlap of the thread’s footprints, once their centres are made one (<code>stitchcraft_testkit::metrics</code>)</td><td>0.9 at least</td></tr>
+</tbody>
+</table>
+</div>
+<p>Differences we intend are recorded in the <strong>deviations ledger</strong> (<code>conformance/deviations.toml</code>), each
+with a reason and a link to the requirement that motivates it (<code>DEV-LCK-001</code>, say: the lock shapes
+are StitchCraft’s own). A case excuses a measure with the entry that explains it, and the report shows
+the difference as excused. An excuse for a measure that agrees fails the case, so that every reason in
+the ledger is still true. Where the differential can undo a deviation in Ink/Stitch’s file, it measures
+the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch’s jumps that go
+nowhere (<code>DEV-FMT-001</code>) excuse as many trims and jumps as there are of them, and no more. Within a colour
+block, pystitch writes such a jump after lock stitches an element forces as it writes one after a trim of
+the plan. Only as many are left out there as Ink/Stitch’s file has trims more than StitchCraft’s. Where both files
+change thread at the same colour blocks, Ink/Stitch’s threads, named by other entries of Brother’s palette
+(<code>DEV-THREAD-001</code>), take StitchCraft’s names. StitchCraft fits each stitch to the machine (<code>DEV-FIN-001</code>),
+so to undo that, Ink/Stitch’s stitches longer than the machine’s longest are split and its needle points
+nearer the one before than the machine’s shortest stitch left out. A needle point Ink/Stitch sews alone,
+where a path’s move-to draws nothing after it, is left out with the jumps and the trim that lead to it
+(<code>DEV-SVG-011</code>).</p>
+<p><code>REQ-SVG-008</code>, <code>REQ-AUTO-021</code>, <code>REQ-AUTO-022</code>, <code>REQ-RUN-013</code>, <code>REQ-SAT-029</code>, <code>REQ-FILL-CON-008</code>,
+<code>REQ-FILL-CIR-007</code>, <code>REQ-FILL-CRS-007</code>, <code>REQ-FILL-CRS-012</code>, <code>REQ-FONT-001</code>, <code>REQ-ROUTE-008</code>,
+<code>REQ-ROUTE-013</code>, <code>REQ-RIP-011</code> and <code>REQ-RIP-019</code> are the requirements of level L3. The other runs of the suite leave them and their cases to this one. The corpus is
+designs the SVG reader sews in full, with their settings (<code>REQ-SVG-009</code>), trim and stop commands and the file
+version. A case may name a test sheet drawn as a design instead (<code>sheet</code>). With <code>elements</code>, the measures
+judge only the sheet’s elements whose ids start with it. Both programs sew an SVG file
+of the elements StitchCraft sews the sheet with, written with their parameters, their start, end and
+target positions as Ink/Stitch’s commands and their clips as clip paths, the design’s origin and stop
+position as commands too, and its turn on export (<code>stitchcraft_testkit::inkstitch</code>), which StitchCraft’s
+reader reads back unchanged (<code>REQ-PRM-003</code>). An element’s guide line and anchor line are paths beside it
+in its own group, each started with Ink/Stitch’s marker, the guide with its stroke and its settings. The file leaves out an element that sets a setting of
+StitchCraft’s own that its stitch type reads, which Ink/Stitch would pass over and sew otherwise
+(<code>sewn_alike</code>). So TS-17C’s file has no crossing columns with their underlays first. An element a sheet
+draws as a clone of another is written as a <code>&lt;use&gt;</code> of it, and each command in a group with its
+connector, as Ink/Stitch’s Attach Commands writes them, since Ink/Stitch moves a command its clone copies
+only from a group. Automatic digitizing chooses ordinary elements with Ink/Stitch’s parameters, so
+Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check StitchCraft’s stitches of those
+choices against Ink/Stitch’s (<code>REQ-AUTO-021</code>). TS-11B checks the contour fills so, each strategy and join style among them (<code>REQ-FILL-CON-008</code>), and its
+circular fills (<code>REQ-FILL-CIR-007</code>). TS-11A checks the zigzag strokes (<code>REQ-RUN-013</code>), and the
+E-stitches, S-stitches and zigzag satins (<code>REQ-SAT-029</code>), along straights and round curves. TS-17A checks
+the simple crosses of cross stitch, on grids of 2 and 3 mm with 2 and 4 threads, flipped, and over a
+letter whose slanted edges cut their cells in half (<code>REQ-FILL-CRS-007</code>). It checks the other methods too,
+upright, dense upright, double, Smyrna and half crosses, and simple crosses on a grid turned 30°. The
+<code>cross-methods</code> case adds each full cross’s flipped variant, grids turned on the canvas and from a part’s
+own corner, and half crosses round a hole, through cells that meet at a corner and in 2 pieces of one
+part (<code>REQ-FILL-CRS-012</code>). TS-17B checks the tartans, with setts mirrored and repeated and a warp and a
+weft apart. Its narrow stripes sew as runs, one sett is turned and scaled, and one is a herringbone. The
+<code>tartan-herringbone</code> case adds 4 herringbones turned both ways. One of them lies round a hole, its warp and
+weft apart and 3 rows a thread, and another has stripes sewn as runs. The <code>tartan-marks</code>, <code>tartan-hole</code>,
+<code>tartan-parts</code> and <code>tartan-stop</code> cases add stripes left unsewn or sewn in the colour before them, a sett
+moved by its offsets, a disc round a hole in stitches 3 mm long, a fill in 2 parts with its rows at 30° and one row a thread, and
+a fill that stops at its end with its runs sewn as bean stitches (<code>REQ-FILL-TRT-011</code>). Every stripe is one of
+Brother’s threads, so both files name each thread as itself. Below its tartans, TS-17B checks linear gradients
+of 2 stops and of 3, one of them transparent, each at a slant of its own. The <code>gradient-</code> cases add a gradient
+of no length, one that a <code>gradientTransform</code> turns, a fill in 2 parts that stops at its end, and a fill without a
+gradient (<code>REQ-FILL-GRD-009</code>). Their gradients placed in the shape’s box and by the gradient their <code>href</code>
+names, and stops that all lie before the fill’s first row, sew otherwise in Ink/Stitch, as the ledger explains
+(<code>DEV-SVG-027</code>, <code>DEV-FILL-032</code>). The <code>inkstitch-ts17b-guided</code> case judges TS-17B’s guided
+leaf alone, its rows copies of an S-shaped guide from tip to tip over its underlay (<code>REQ-FILL-GDD-008</code>).
+The <code>ts17c-ripple-</code> cases check each of TS-17C’s
+ripple stitches on its own, the one along a column and the 2 that shrink to a target point (<code>REQ-RIP-011</code>).
+The <code>ts17c-guided-</code> cases check its guided ripples so (<code>REQ-RIP-019</code>). A wave and a zigzag cut to a circle
+follow guide lines. A circle and a diamond stand between satin guides’ rails, the diamond at its guide’s
+rungs with an anchor line, and a column has a grid across it.
+TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills’ sheet, are cases of
+<code>REQ-SVG-008</code> (M8.2). The <code>drawn-locks</code> case and TS-16 check custom locks drawn as
+paths, of each kind of command, which both programs sew at the same nodes (<code>REQ-LCK-005</code>).
+<code>conformance/inkstitch/README.md</code> says how to run it by hand and how to add a case.</p>
+<p><strong>Routes.</strong> A route is a design of its own, so sewing StitchCraft’s route in both programs would compare 2
+sewings of one route. A case with a <code>[route]</code> table instead routes elements of a sheet in each program
+(<code>REQ-ROUTE-008</code>, <code>REQ-ROUTE-013</code>, <code>xtask/src/conformance/routing.rs</code>). The table’s <code>tool</code> names
+Ink/Stitch’s tool, Auto-Route Satin Columns or Auto-Route Running Stitch, which routes the SVG file of the
+elements with the table’s options and writes its route for Ink/Stitch to sew. <code>stitchcraft_engine::route</code>
+routes the same elements with the same options, and StitchCraft sews its route. The 2 PES files are
+measured as any case’s. The <code>route-ts17c</code> cases route TS-17C’s letters as drawn, once with the options at
+their defaults and once with Preserve order on and trims off. The <code>route-ts17c-lines</code> cases route its
+network of running stitches as drawn, once with the options at their defaults and once each with Trim jump
+stitches on, Preserve order on and Add nodes at intersections off. <code>ts17c</code> sews the sheet’s file, whose
+lower letters and right-hand lines StitchCraft routed, in both programs.</p>
+<p><strong>Centre lines.</strong> Sewing what StitchCraft chose can’t find a choice that is wrong: TS-13B’s small T sewed
+a Γ, the left arm of its bar left out of its centre line, and the differential agreed by every measure.
+The <code>centre-lines</code> cases compare a step before the stitches (<code>REQ-AUTO-022</code>,
+<code>xtask/src/conformance/centre_lines.rs</code>). Each shape that automatic digitizing sews wholly as running
+stitches is digitized alone, and its lines are compared with the lines Ink/Stitch’s Fill to Stroke draws
+for it, with its threshold at the shape’s width. Fill to Stroke finds them another way, from a Voronoi
+diagram of the outline. Where one program leaves a branch out, or puts a line off the middle, the 2
+differ. With <code>reach</code> the width and 0.1 mm:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Measure</th><th>Tolerance</th></tr>
+</thead>
+<tbody>
+<tr><td>each end of Ink/Stitch’s lines</td><td>an end of StitchCraft’s within <code>reach</code></td></tr>
+<tr><td>each end of StitchCraft’s lines</td><td>within <code>reach</code> of Ink/Stitch’s lines</td></tr>
+<tr><td>each program’s lines, farther than <code>reach</code> from their ends</td><td>within a quarter of the width of the other’s</td></tr>
+</tbody>
+</table>
+</div>
+<p>The ends differ by design. StitchCraft’s line stops short of a round or square end (<code>REQ-AUTO-014</code>), and
+Fill to Stroke’s runs to the end’s middle. Fill to Stroke leaves out a branch shorter than its threshold,
+such as the stub up into the top of an A, which StitchCraft sews to cover the top. A case names a test
+sheet, an SVG file of shapes, or letters that <code>stitchcraft_testkit::designs::letter</code> draws (<code>[letters]</code>).
+The report has a row for each shape, and <code>target/conformance/differential/</code> the shapes as written for
+Ink/Stitch and a picture of both programs’ lines over them. Run on the code from before the T was fixed
+(<code>03f0ab69</code>), the letters case finds a branch missing in 3 letters 3 mm tall: the Ts in 0.5 and 0.7 mm
+lines, and the E in 0.7 mm lines.</p>
+<p><strong>Ink/Stitch’s fonts.</strong> The <code>fonts</code> case sews each glyph of Ink/Stitch’s fonts as a design of its own
+(<code>REQ-FONT-001</code>, <code>xtask/src/conformance/fonts/</code>), from the 131 fonts whose licence file allows it
+(<a href="fonts.html#the-corpus">fonts</a>). Each glyph is cut out of its glyph file, its group shown and the other
+glyphs left out, and both programs sew that file, compared by the measures above. StitchCraft plans it for
+the reference machine with a hoop 400 mm a side, as a glyph file is drawn at its font’s height and a glyph
+may be wider than the reference hoop. Every night the case sews 4 glyphs of each font, and every Sunday all
+21,179, in 6 parts. A glyph whose stitch types StitchCraft doesn’t sew yet is listed, and joins the
+comparison with M10’s steps. An element whose setting StitchCraft can’t read is left out with <code>SC-E0101</code>,
+where Ink/Stitch sews the setting’s default: its glyph is excused by <code>DEV-PRM-001</code> and not compared. A glyph
+neither program writes a file of agrees. Ink/Stitch writes none when it finds nothing to sew, an element it
+can’t sew or elements that sew no stitch, as of a glyph of one empty path, and StitchCraft none when an
+element is left out with an error, as <code>stitch plan</code> does. <code>--font</code> sews the glyphs of the fonts it names
+alone, so that the fonts a weekly run found differing sew again in minutes.</p>
+<p>The corpus can’t have an excuse for each of its glyphs. <code>conformance/inkstitch/glyphs.toml</code> excuses a
+measure by an entry of the ledger for the glyphs where its cause is. A diagnostic picks them, such as
+<code>SC-I0703</code> where StitchCraft splits stitches longer than the machine’s longest, and so do a stitch type, a
+setting and a font. A cause that only the drawing of a few glyphs shows, such as a rung that rounding leaves
+a hair short of a rail, is named by its glyphs, and an excuse that names <code>sewn</code> explains a glyph that only one
+program sews. The excuses the differential can check are checked as a case’s are. StitchCraft’s
+running stitches place their needle points otherwise (<code>DEV-RUN-002</code>), and that excuse counts only where each
+program’s thread lies within 0.3 mm of the other’s, for 0.9 of it. The report, <code>target/conformance/fonts.md</code>,
+has a row for each font, the glyphs each excuse excused, and each glyph that differs with its measures.</p>
+<h3 id="l4--physical-milestone-gates"><a class="header" href="#l4--physical-milestone-gates">L4 — Physical (milestone gates)</a></h3>
+<p>Machine checkpoints sew generated test sheets on the target machine and record the results through the
+<strong>Sew-out report</strong> issue form (<a href="../plan/machine-testing.html">machine testing</a>). A checkpoint result is
+linked from the requirements it validates (<code>physical = ["MC-1"]</code>), and a profile value can change only
+with such a record.</p>
+<h2 id="the-runner-and-its-report"><a class="header" href="#the-runner-and-its-report">The runner and its report</a></h2>
+<p><code>cargo xtask conformance</code> runs every data case in-process and every Rust-test case through one <code>cargo test</code>, then writes <code>target/conformance/</code>:</p>
+<ul>
+<li><code>report.md</code> — the requirement × case matrix, failures first, requirements nobody tests yet folded
+away; in GitHub Actions it is appended to the job summary, so every pull request shows it;</li>
+<li><code>report.json</code> — machine-readable results, for the docs (requirement pages will show their status);</li>
+<li><code>diffs/</code> — for a machine-file golden that differs, previews (simple style) of the golden file and of
+the new output, so a reviewer sees what sews differently; CI keeps them as a workflow artifact when a
+run fails.</li>
+</ul>
+<p>It fails when a case fails or an active requirement has no passing case. <code>--filter &lt;text&gt;</code> runs only the
+cases whose id, test name or requirements contain the text (and skips the “every active requirement”
+rule, since the run is partial). <code>cargo xtask ci</code> runs the whole suite; the docs workflow runs <code>--check</code>.</p>
+<h3 id="cases-in-the-release-build"><a class="header" href="#cases-in-the-release-build">Cases in the release build</a></h3>
+<p>A case may be too slow for the tests’ debug build, as the owner’s traced dogs are. Each dog is about a
+hundred shapes, and takes some 45 to 70 s there to digitize and measure, against some 6 s in the release
+build. Such a
+case is ignored in the debug build alone, with a reason of a fixed form that says where it runs, and a step
+of CI runs its test file in the release build:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[test]
+#[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
+fn req_auto_025_digitized_dogs_leave_no_patch_of_fabric_bare() { … }
+<span class="boring">}</span></code></pre>
+<p>The runner, which runs the debug build, lists such a case as skipped with its reason (⏭ in the report),
+and CI doesn’t fail on it as on a missing tool: the release step runs it. A case ignored any other way
+fails, so that no case hides behind <code>#[ignore]</code>. <code>--check</code> finds each release-only case by its attribute.
+Its file must be a test target of its own, <code>&lt;package&gt;/tests/&lt;target&gt;.rs</code>, and a line of
+<code>.github/workflows/ci.yml</code> must run <code>cargo test --release … -p &lt;package&gt; --test &lt;target&gt;</code>. A case ignored
+as release only in every build fails <code>--check</code> too, as the release build would leave it out as well. Each
+requirement still needs a case that runs in the debug build.</p>
+<h3 id="cases-with-the-models"><a class="header" href="#cases-with-the-models">Cases with the models</a></h3>
+<p>The subject cut-out’s models are 49 MB, which StitchCraft’s release <code>cutout-models-1</code> publishes
+(<a href="image-to-embroidery.html#subject-cut-out">image to embroidery</a>), so the cases that run them need them
+fetched. Such a case is ignored in every build, with a reason of a fixed form that says where it runs:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[test]
+#[ignore = "models only: the models job runs tests/models.rs"]
+fn req_cli_019_the_cut_out_from_u2netps_box_keeps_each_dog_within_the_bounds() { … }
+<span class="boring">}</span></code></pre>
+<p>The models’ job, in <code>.github/workflows/models.yml</code>, runs each file that holds such cases with <code>--ignored</code>,
+with the models in the folder <code>STITCHCRAFT_MODELS</code> names. When the release exists, the job leaves that folder
+empty, and the cases fetch the models from the release as <code>stitch</code> does. Until the owner has published it,
+the job puts there the files the workflow’s build job has just made from the authors’ own, and its summary
+says which of the 2 sources it used. From either, a file must match its pin before tract reads it. A build’s encoder may have the other of its
+2 sums (ADR-0019, decision 5). The cases then check it against that sum and compare its outputs with the
+fixtures, and the job leaves <code>stitch plan --subject</code> end to end out with a warning. The runner lists a
+models-only case as skipped with its reason (⏭ in the report), and CI doesn’t fail on it as on a missing
+tool: the models’ job runs it. A case ignored for any other reason fails, so that no case hides behind
+<code>#[ignore]</code>. <code>--check</code> finds each models-only case by its attribute: its file must be a test target of its
+own, <code>&lt;package&gt;/tests/&lt;target&gt;.rs</code>, and a line of <code>models.yml</code> must run
+<code>cargo test … -p &lt;package&gt; --test &lt;target&gt;</code> with <code>--ignored</code>. <code>stitch</code>’s <code>tests/picture.rs</code> has a harness of its own, which prints the same reason
+for its models-only case, so that case has no attribute for <code>--check</code> to find. Each requirement still needs a case that runs everywhere. <code>REQ-CLI-019</code>‘s is
+the cut-out of each photo from the models’ outputs saved as fixtures, which the models’ job checks tract
+still gives.</p>
+<p><code>cargo xtask conformance --bless &lt;case&gt;</code> rewrites a data case’s golden files. CI refuses a pull request
+that changes files under <code>conformance/golden/</code> unless it carries the <code>golden-change</code> label and a line in
+<code>CHANGELOG.md</code>. For the canonical-plan goldens of the format tests, bless with
+<code>STITCHCRAFT_BLESS=1 cargo test -p stitchcraft-formats --test golden</code>; for the preview goldens
+(<code>REQ-RND-002</code>), with <code>STITCHCRAFT_BLESS=1 cargo test -p stitchcraft-render --test preview</code>. Later, <code>stitch conformance run</code>
+will let users validate a machine profile with the same cases.</p>
+<h2 id="gates"><a class="header" href="#gates">Gates</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>When</th><th>What must pass</th></tr>
+</thead>
+<tbody>
+<tr><td>Every PR</td><td>L0, L1 (no fuzzing), L2 with fixed seeds, <code>--check</code> rules, the data cases’ golden files on Linux, macOS and Windows (<a href="determinism.html#cross-platform-check">cross-platform check</a>), coverage floors, mutants in the changed lines</td></tr>
+<tr><td>Nightly</td><td>L1 fuzzing, L2 fresh seeds, L3 differential (also on a pull request that changes it)</td></tr>
+<tr><td>Weekly</td><td>Mutation testing of every shipped crate, against the recorded counts</td></tr>
+<tr><td>Weekly</td><td>Every glyph of Ink/Stitch’s fonts in the L3 differential</td></tr>
+<tr><td>Milestone close</td><td>All requirements of the milestone <code>active</code> and green; its machine checkpoint signed off</td></tr>
+<tr><td>Release</td><td>Everything above, plus the compatibility gate green on VectorCraft <code>stable</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="unit-snapshot-and-doc-tests-still-exist"><a class="header" href="#unit-snapshot-and-doc-tests-still-exist">Unit, snapshot and doc tests still exist</a></h2>
+<p>Conformance cases describe behaviour users see. Unit tests (in modules), snapshot tests (<code>insta</code>, for
+intermediate structures such as cell decompositions) and CLI examples in the docs (<code>trycmd</code>) still cover
+internals and documentation; mutation testing (<code>cargo-mutants</code>) and a coverage ratchet (<code>cargo-llvm-cov</code>)
+measure how well all of them together bite (<a href="guardrails.html">guardrails</a>).</p>
+<p>Both are ratchets. <code>conformance/coverage.toml</code> holds a line-coverage floor per crate, which a pull
+request may not fall below and <code>cargo xtask coverage --record</code> only raises. <code>conformance/mutation.toml</code>
+holds, per crate, how many mutants no test notices: the weekly run fails when a crate has more, and
+<code>cargo xtask mutants --record</code> only lowers the counts. The weekly job summary lists every missed mutant,
+which is the to-do list for better tests. Each mutant is judged by its own crate’s tests
+(<code>.cargo/mutants.toml</code>), so each crate answers for its own code.</p>
+<p>New code answers for itself at once: every pull request runs the mutants in the lines it changes
+(<code>cargo mutants --in-diff</code>, minutes rather than the full run’s quarter of an hour per part), and
+<code>cargo xtask mutants --changed</code> fails for any that no test notices. The exception is an <em>equivalent</em>
+mutant, which changes nothing a test could observe; it is listed under <code>[[equivalent]]</code> in
+<code>conformance/mutation.toml</code> with its file, its description, the source line it changes and why, so a
+listed equivalent stops counting as one as soon as its line changes.</p>
+<p>A mutant can also break the condition that ends a loop, as when a walk over a graph never takes away the
+edges it has used. The loop then runs until the work budget ends or cargo-mutants’ timeout stops it,
+which counts apart. A loop that keeps 40 bytes for each unit of work wants 20 GB by the end of the
+default budget, more than a CI runner has, and the job ends without a result when the runner runs out of
+memory. So in the mutants jobs each test binary runs with at most 4 GiB of address space, through
+<code>prlimit</code> as Cargo’s runner: such a mutant aborts at the cap, which counts as noticed.</p>
+<p>Each mutant builds its crate again and runs the crate’s tests, and the tests take most of the time. So
+the mutants jobs build without debug information, and with the workspace’s own code optimized a little
+(<code>opt-level</code> 1, where its dependencies are at 2 in every build). On 2 cores an engine mutant then takes
+157 s against 267 s: its build 114 s against 47 s, and its tests 43 s against 220 s. The results stay the
+same. Rust keeps floating-point arithmetic as written at every level, and debug assertions and overflow
+checks stay on.</p>
+<p>Mutation testing runs the tests hundreds of times for one pull request. A test that writes files puts
+them in a folder of its own (<code>stitchcraft_testkit::temp::TempDir</code>), which goes with everything in it
+when the test ends, whether it passed or failed. Until October 2026 the command line’s tests left their
+folders in the system’s temporary folder: 14 folders and about 65 MB on each run of the workspace’s
+tests.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../design/compatibility-gate.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../design/determinism.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../design/compatibility-gate.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../design/determinism.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

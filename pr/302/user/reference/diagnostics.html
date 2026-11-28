@@ -1,0 +1,1749 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Diagnostic codes - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../searchindex-0bb77291.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../toc-0c8f9390.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/user/reference/diagnostics.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <!-- Generated by `cargo xtask docs` from the registry in `stitchcraft-core/src/diag/registry.rs`. Edit the source, not this page. -->
+<h1 id="diagnostic-codes"><a class="header" href="#diagnostic-codes">Diagnostic codes</a></h1>
+<p>Every problem StitchCraft reports has a code. <code>E</code> codes are errors (nothing is written), <code>W</code> codes are warnings (the file is written), <code>I</code> codes are information. <code>stitch explain &lt;code&gt;</code> prints the same explanation in the terminal. Codes are never reused.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Code</th><th>Severity</th><th>Title</th></tr>
+</thead>
+<tbody>
+<tr><td><a href="#sc-e0004"><code>SC-E0004</code></a></td><td>Error</td><td>Budget exhausted</td></tr>
+<tr><td><a href="#sc-e0005"><code>SC-E0005</code></a></td><td>Error</td><td>Preview too large</td></tr>
+<tr><td><a href="#sc-e0009"><code>SC-E0009</code></a></td><td>Error</td><td>Internal check failed</td></tr>
+<tr><td><a href="#sc-e0010"><code>SC-E0010</code></a></td><td>Error</td><td>Nothing to stitch</td></tr>
+<tr><td><a href="#sc-w0011"><code>SC-W0011</code></a></td><td>Warning</td><td>Stitch type not sewn yet, element skipped (retired)</td></tr>
+<tr><td><a href="#sc-e0012"><code>SC-E0012</code></a></td><td>Error</td><td>Bug-report bundle could not be replayed</td></tr>
+<tr><td><a href="#sc-w0013"><code>SC-W0013</code></a></td><td>Warning</td><td>Element outside its clip paths; left out</td></tr>
+<tr><td><a href="#sc-e0101"><code>SC-E0101</code></a></td><td>Error</td><td>Parameter has the wrong type or an unknown choice</td></tr>
+<tr><td><a href="#sc-w0102"><code>SC-W0102</code></a></td><td>Warning</td><td>Parameter clamped to its allowed range</td></tr>
+<tr><td><a href="#sc-w0105"><code>SC-W0105</code></a></td><td>Warning</td><td>Unknown parameter preserved but ignored</td></tr>
+<tr><td><a href="#sc-i0106"><code>SC-I0106</code></a></td><td>Info</td><td>Value only the node’s other stitch type reads; default used here</td></tr>
+<tr><td><a href="#sc-e0201"><code>SC-E0201</code></a></td><td>Error</td><td>Satin column has no rails</td></tr>
+<tr><td><a href="#sc-w0202"><code>SC-W0202</code></a></td><td>Warning</td><td>Satin rails taken as the two longest subpaths</td></tr>
+<tr><td><a href="#sc-w0203"><code>SC-W0203</code></a></td><td>Warning</td><td>Satin rung does not cross both rails</td></tr>
+<tr><td><a href="#sc-w0205"><code>SC-W0205</code></a></td><td>Warning</td><td>Satin subpath is one point; left out</td></tr>
+<tr><td><a href="#sc-w0206"><code>SC-W0206</code></a></td><td>Warning</td><td>Satin contour underlay too short for its insets; it keeps its length</td></tr>
+<tr><td><a href="#sc-w0207"><code>SC-W0207</code></a></td><td>Warning</td><td>Satin rung crosses a rail more than once; left out</td></tr>
+<tr><td><a href="#sc-w0208"><code>SC-W0208</code></a></td><td>Warning</td><td>Satin stitches lean more than 45° from square to the column; add a rung here</td></tr>
+<tr><td><a href="#sc-w0209"><code>SC-W0209</code></a></td><td>Warning</td><td>Satin stitch longer than 12 mm; it may snag</td></tr>
+<tr><td><a href="#sc-w0210"><code>SC-W0210</code></a></td><td>Warning</td><td>Satin rails without rungs have different numbers of nodes</td></tr>
+<tr><td><a href="#sc-w0211"><code>SC-W0211</code></a></td><td>Warning</td><td>Satin push compensation too long for a rail; that rail keeps its length</td></tr>
+<tr><td><a href="#sc-w0212"><code>SC-W0212</code></a></td><td>Warning</td><td>Satin column drawn as one path too narrow; sewn as a stroke</td></tr>
+<tr><td><a href="#sc-w0213"><code>SC-W0213</code></a></td><td>Warning</td><td>Parts of a satin column drawn as one path left out</td></tr>
+<tr><td><a href="#sc-e0214"><code>SC-E0214</code></a></td><td>Error</td><td>Satin column drawn as one path could not be made into rails</td></tr>
+<tr><td><a href="#sc-w0215"><code>SC-W0215</code></a></td><td>Warning</td><td>Satin column too small for the shortest stitch; left out</td></tr>
+<tr><td><a href="#sc-e0216"><code>SC-E0216</code></a></td><td>Error</td><td>Satin column has no section to sew</td></tr>
+<tr><td><a href="#sc-w0217"><code>SC-W0217</code></a></td><td>Warning</td><td>Satin column is clipped; sewn whole</td></tr>
+<tr><td><a href="#sc-w0303"><code>SC-W0303</code></a></td><td>Warning</td><td>Parts of a fill too small to sew left out</td></tr>
+<tr><td><a href="#sc-w0304"><code>SC-W0304</code></a></td><td>Warning</td><td>Fill smaller than 1.4 mm²</td></tr>
+<tr><td><a href="#sc-w0305"><code>SC-W0305</code></a></td><td>Warning</td><td>Fill part too thin for rows; sewn round its outline</td></tr>
+<tr><td><a href="#sc-i0306"><code>SC-I0306</code></a></td><td>Info</td><td>Nonzero fill rule fills a part inside that the even-odd rule leaves empty</td></tr>
+<tr><td><a href="#sc-w0307"><code>SC-W0307</code></a></td><td>Warning</td><td>Fill in parts that are apart; each sewn on its own</td></tr>
+<tr><td><a href="#sc-i0308"><code>SC-I0308</code></a></td><td>Info</td><td>Fill underlay too thin for rows; sewn round the outline</td></tr>
+<tr><td><a href="#sc-w0309"><code>SC-W0309</code></a></td><td>Warning</td><td>Fill’s expand shrinks a part away; sewn at its own size</td></tr>
+<tr><td><a href="#sc-w0310"><code>SC-W0310</code></a></td><td>Warning</td><td>Fill’s underlay inset shrinks a part away; underlay over all of it</td></tr>
+<tr><td><a href="#sc-w0311"><code>SC-W0311</code></a></td><td>Warning</td><td>Contour fill leaves out rings it does not reach</td></tr>
+<tr><td><a href="#sc-w0312"><code>SC-W0312</code></a></td><td>Warning</td><td>Fill’s pull compensation below 0; read as 0</td></tr>
+<tr><td><a href="#sc-i0313"><code>SC-I0313</code></a></td><td>Info</td><td>Fill drawn twice along its edge; Ink/Stitch fills the part left empty</td></tr>
+<tr><td><a href="#sc-w0314"><code>SC-W0314</code></a></td><td>Warning</td><td>Legacy fill sewn as a tatami fill without underlay</td></tr>
+<tr><td><a href="#sc-i0315"><code>SC-I0315</code></a></td><td>Info</td><td>Contour fill’s part too narrow for its spiral; sewn inner to outer</td></tr>
+<tr><td><a href="#sc-w0316"><code>SC-W0316</code></a></td><td>Warning</td><td>Meander pattern is one of Ink/Stitch’s tiles; sewn with StitchCraft’s default tile</td></tr>
+<tr><td><a href="#sc-w0317"><code>SC-W0317</code></a></td><td>Warning</td><td>Meander fill part too small for its tile; sewn round its outline</td></tr>
+<tr><td><a href="#sc-w0318"><code>SC-W0318</code></a></td><td>Warning</td><td>Circular fill part within its row spacing of its middle; sewn as one circle</td></tr>
+<tr><td><a href="#sc-w0319"><code>SC-W0319</code></a></td><td>Warning</td><td>Cross stitch part covers no cell of its grid enough; sews nothing</td></tr>
+<tr><td><a href="#sc-w0320"><code>SC-W0320</code></a></td><td>Warning</td><td>Cross stitch with an odd thread count; an even count sewn</td></tr>
+<tr><td><a href="#sc-w0321"><code>SC-W0321</code></a></td><td>Warning</td><td>Cross stitch grid too fine for the shortest stitch; needle points left out</td></tr>
+<tr><td><a href="#sc-w0322"><code>SC-W0322</code></a></td><td>Warning</td><td>Half cross with an even thread count; the odd count above sewn</td></tr>
+<tr><td><a href="#sc-e0323"><code>SC-E0323</code></a></td><td>Error</td><td>Tartan fill’s sett can’t be read; skipped</td></tr>
+<tr><td><a href="#sc-w0324"><code>SC-W0324</code></a></td><td>Warning</td><td>Tartan’s herringbone sewn as straight rows (retired)</td></tr>
+<tr><td><a href="#sc-w0325"><code>SC-W0325</code></a></td><td>Warning</td><td>Tartan fill without a sett; Ink/Stitch’s default sett sewn</td></tr>
+<tr><td><a href="#sc-w0326"><code>SC-W0326</code></a></td><td>Warning</td><td>Tartan sett with no stripe to sew; only the underlay sewn</td></tr>
+<tr><td><a href="#sc-w0327"><code>SC-W0327</code></a></td><td>Warning</td><td>Tartan sett too fine for the shortest stitch; needle points left out</td></tr>
+<tr><td><a href="#sc-w0328"><code>SC-W0328</code></a></td><td>Warning</td><td>Tartan stripe’s colour can’t be read; left out</td></tr>
+<tr><td><a href="#sc-w0329"><code>SC-W0329</code></a></td><td>Warning</td><td>Linear gradient fill without a linear gradient; its colour fades out</td></tr>
+<tr><td><a href="#sc-w0330"><code>SC-W0330</code></a></td><td>Warning</td><td>Gradient stop within 2 rows of the blend before; passed over</td></tr>
+<tr><td><a href="#sc-w0331"><code>SC-W0331</code></a></td><td>Warning</td><td>Guided fill without a guide line; sewn as a tatami fill</td></tr>
+<tr><td><a href="#sc-w0332"><code>SC-W0332</code></a></td><td>Warning</td><td>Guided fill’s rows along its guide meet no part; sewn as a tatami fill</td></tr>
+<tr><td><a href="#sc-w0333"><code>SC-W0333</code></a></td><td>Warning</td><td>Guided fill’s rows apart, the needle jumps between them</td></tr>
+<tr><td><a href="#sc-w0401"><code>SC-W0401</code></a></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td></tr>
+<tr><td><a href="#sc-w0402"><code>SC-W0402</code></a></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised</td></tr>
+<tr><td><a href="#sc-w0403"><code>SC-W0403</code></a></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td></tr>
+<tr><td><a href="#sc-w0404"><code>SC-W0404</code></a></td><td>Warning</td><td>Hand-placed stitch longer than max_stitch_length_mm; kept for the shortest stitch</td></tr>
+<tr><td><a href="#sc-w0405"><code>SC-W0405</code></a></td><td>Warning</td><td>Zigzag stitch shorter than the shortest stitch; the zigzag sews narrower</td></tr>
+<tr><td><a href="#sc-w0406"><code>SC-W0406</code></a></td><td>Warning</td><td>Ripple stitch setting not applied; sewn without it</td></tr>
+<tr><td><a href="#sc-w0407"><code>SC-W0407</code></a></td><td>Warning</td><td>Ripple stitch of more than 1,000 lines; cut to 1,000</td></tr>
+<tr><td><a href="#sc-w0408"><code>SC-W0408</code></a></td><td>Warning</td><td>Ripple stitch’s skips would leave out every line; every line sewn</td></tr>
+<tr><td><a href="#sc-w0409"><code>SC-W0409</code></a></td><td>Warning</td><td>Ripple stitch’s guide can’t place its copies; sewn without it</td></tr>
+<tr><td><a href="#sc-w0502"><code>SC-W0502</code></a></td><td>Warning</td><td>Lock stitch shorter than 0.2 mm; lengthened</td></tr>
+<tr><td><a href="#sc-w0503"><code>SC-W0503</code></a></td><td>Warning</td><td>Custom lock cannot be sewn as written</td></tr>
+<tr><td><a href="#sc-i0504"><code>SC-I0504</code></a></td><td>Info</td><td>Stitches shorter than the shortest stitch merged</td></tr>
+<tr><td><a href="#sc-w0505"><code>SC-W0505</code></a></td><td>Warning</td><td>Trim or stop after an element that sews nothing; left out</td></tr>
+<tr><td><a href="#sc-i0506"><code>SC-I0506</code></a></td><td>Info</td><td>Underlays first joins no run; the element sews as without it</td></tr>
+<tr><td><a href="#sc-e0601"><code>SC-E0601</code></a></td><td>Error</td><td>Too many colour changes for the file format</td></tr>
+<tr><td><a href="#sc-e0602"><code>SC-E0602</code></a></td><td>Error</td><td>Design too large for the file format</td></tr>
+<tr><td><a href="#sc-e0603"><code>SC-E0603</code></a></td><td>Error</td><td>Machine file could not be read</td></tr>
+<tr><td><a href="#sc-w0604"><code>SC-W0604</code></a></td><td>Warning</td><td>Thread colours unknown</td></tr>
+<tr><td><a href="#sc-i0605"><code>SC-I0605</code></a></td><td>Info</td><td>Long jumps cut in DST</td></tr>
+<tr><td><a href="#sc-w0606"><code>SC-W0606</code></a></td><td>Warning</td><td>Threads share a Brother colour</td></tr>
+<tr><td><a href="#sc-e0701"><code>SC-E0701</code></a></td><td>Error</td><td>Design does not fit the hoop</td></tr>
+<tr><td><a href="#sc-w0702"><code>SC-W0702</code></a></td><td>Warning</td><td>Design is larger than the comfort zone</td></tr>
+<tr><td><a href="#sc-i0703"><code>SC-I0703</code></a></td><td>Info</td><td>Stitches longer than the machine’s longest stitch; split</td></tr>
+<tr><td><a href="#sc-e0801"><code>SC-E0801</code></a></td><td>Error</td><td>SVG could not be read</td></tr>
+<tr><td><a href="#sc-w0802"><code>SC-W0802</code></a></td><td>Warning</td><td>SVG feature ignored</td></tr>
+<tr><td><a href="#sc-i0805"><code>SC-I0805</code></a></td><td>Info</td><td>Object left out, as the file asks</td></tr>
+<tr><td><a href="#sc-i0818"><code>SC-I0818</code></a></td><td>Info</td><td>Ink/Stitch file from an older version, read as Ink/Stitch updates it</td></tr>
+<tr><td><a href="#sc-e0819"><code>SC-E0819</code></a></td><td>Error</td><td>More than one origin or stop position</td></tr>
+<tr><td><a href="#sc-e0820"><code>SC-E0820</code></a></td><td>Error</td><td>VectorCraft selection not routed</td></tr>
+<tr><td><a href="#sc-e0821"><code>SC-E0821</code></a></td><td>Error</td><td>VectorCraft tartan’s sett not set</td></tr>
+<tr><td><a href="#sc-w0804"><code>SC-W0804</code></a></td><td>Warning</td><td>Element geometry invalid or out of range</td></tr>
+<tr><td><a href="#sc-w0803"><code>SC-W0803</code></a></td><td>Warning</td><td>VectorCraft file from a newer format version; read best-effort</td></tr>
+<tr><td><a href="#sc-e0806"><code>SC-E0806</code></a></td><td>Error</td><td>VectorCraft file could not be read</td></tr>
+<tr><td><a href="#sc-w0807"><code>SC-W0807</code></a></td><td>Warning</td><td>VectorCraft object or feature not stitched</td></tr>
+<tr><td><a href="#sc-w0808"><code>SC-W0808</code></a></td><td>Warning</td><td>VectorCraft geometry unusable</td></tr>
+<tr><td><a href="#sc-i0809"><code>SC-I0809</code></a></td><td>Info</td><td>VectorCraft layer or guide left out, as it does not print</td></tr>
+<tr><td><a href="#sc-i0810"><code>SC-I0810</code></a></td><td>Info</td><td>VectorCraft live effect leaves the object as it is</td></tr>
+<tr><td><a href="#sc-i0811"><code>SC-I0811</code></a></td><td>Info</td><td>VectorCraft object left out, as its name asks</td></tr>
+<tr><td><a href="#sc-w0812"><code>SC-W0812</code></a></td><td>Warning</td><td>VectorCraft design setting ignored</td></tr>
+<tr><td><a href="#sc-e0813"><code>SC-E0813</code></a></td><td>Error</td><td>VectorCraft too old for the filter</td></tr>
+<tr><td><a href="#sc-e0814"><code>SC-E0814</code></a></td><td>Error</td><td>VectorCraft line not made into a satin column</td></tr>
+<tr><td><a href="#sc-e0815"><code>SC-E0815</code></a></td><td>Error</td><td>VectorCraft’s command line could not be started</td></tr>
+<tr><td><a href="#sc-e0816"><code>SC-E0816</code></a></td><td>Error</td><td>VectorCraft could not trace the picture</td></tr>
+<tr><td><a href="#sc-e0817"><code>SC-E0817</code></a></td><td>Error</td><td>VectorCraft test sheet not drawn</td></tr>
+<tr><td><a href="#sc-i0901"><code>SC-I0901</code></a></td><td>Info</td><td>Shapes digitized automatically</td></tr>
+<tr><td><a href="#sc-i0902"><code>SC-I0902</code></a></td><td>Info</td><td>Satin column can’t be made; filled</td></tr>
+<tr><td><a href="#sc-w0903"><code>SC-W0903</code></a></td><td>Warning</td><td>Line too wide to fill; left out</td></tr>
+<tr><td><a href="#sc-i0904"><code>SC-I0904</code></a></td><td>Info</td><td>Areas reach under the shapes sewn after them</td></tr>
+<tr><td><a href="#sc-i0905"><code>SC-I0905</code></a></td><td>Info</td><td>Speck merged into a neighbour</td></tr>
+<tr><td><a href="#sc-w0906"><code>SC-W0906</code></a></td><td>Warning</td><td>Background left out</td></tr>
+<tr><td><a href="#sc-i0907"><code>SC-I0907</code></a></td><td>Info</td><td>Elements sewn in an order of their own</td></tr>
+<tr><td><a href="#sc-i0908"><code>SC-I0908</code></a></td><td>Info</td><td>Layers flattened</td></tr>
+<tr><td><a href="#sc-i0909"><code>SC-I0909</code></a></td><td>Info</td><td>Base layer sewn under the design</td></tr>
+<tr><td><a href="#sc-w0910"><code>SC-W0910</code></a></td><td>Warning</td><td>Base layer left out</td></tr>
+<tr><td><a href="#sc-i0911"><code>SC-I0911</code></a></td><td>Info</td><td>Base layer turned off</td></tr>
+<tr><td><a href="#sc-i0912"><code>SC-I0912</code></a></td><td>Info</td><td>Rule that chose a shape’s stitches</td></tr>
+<tr><td><a href="#sc-w0913"><code>SC-W0913</code></a></td><td>Warning</td><td>Design sews thick</td></tr>
+<tr><td><a href="#sc-i0914"><code>SC-I0914</code></a></td><td>Info</td><td>Jumps not looked at for a run under later shapes</td></tr>
+<tr><td><a href="#sc-i0915"><code>SC-I0915</code></a></td><td>Info</td><td>Thin line merged into a neighbour</td></tr>
+<tr><td><a href="#sc-e1001"><code>SC-E1001</code></a></td><td>Error</td><td>Nothing to route</td></tr>
+<tr><td><a href="#sc-i1002"><code>SC-I1002</code></a></td><td>Info</td><td>Element left out of the route</td></tr>
+<tr><td><a href="#sc-w1003"><code>SC-W1003</code></a></td><td>Warning</td><td>Piece of a routed satin column may sew otherwise</td></tr>
+<tr><td><a href="#sc-w1004"><code>SC-W1004</code></a></td><td>Warning</td><td>Too many lines to cut where they cross</td></tr>
+<tr><td><a href="#sc-e1101"><code>SC-E1101</code></a></td><td>Error</td><td>Font could not be read</td></tr>
+<tr><td><a href="#sc-w1102"><code>SC-W1102</code></a></td><td>Warning</td><td>Font setting not read, its default kept</td></tr>
+<tr><td><a href="#sc-w1103"><code>SC-W1103</code></a></td><td>Warning</td><td>Font file not read</td></tr>
+<tr><td><a href="#sc-w1104"><code>SC-W1104</code></a></td><td>Warning</td><td>Glyph left out</td></tr>
+<tr><td><a href="#sc-i1105"><code>SC-I1105</code></a></td><td>Info</td><td>Font read as Ink/Stitch reads it</td></tr>
+<tr><td><a href="#sc-w1106"><code>SC-W1106</code></a></td><td>Warning</td><td>Scale outside the font’s range</td></tr>
+<tr><td><a href="#sc-w1107"><code>SC-W1107</code></a></td><td>Warning</td><td>Character not in the font</td></tr>
+<tr><td><a href="#sc-e1108"><code>SC-E1108</code></a></td><td>Error</td><td>Text could not be set</td></tr>
+<tr><td><a href="#sc-w1109"><code>SC-W1109</code></a></td><td>Warning</td><td>Text longer than its path</td></tr>
+<tr><td><a href="#sc-w1110"><code>SC-W1110</code></a></td><td>Warning</td><td>Lettering setting not applied</td></tr>
+<tr><td><a href="#sc-w1111"><code>SC-W1111</code></a></td><td>Warning</td><td>Text not sewn in its embroidery font</td></tr>
+<tr><td><a href="#sc-i1112"><code>SC-I1112</code></a></td><td>Info</td><td>Traced letters replaced by lettering</td></tr>
+<tr><td><a href="#sc-w1113"><code>SC-W1113</code></a></td><td>Warning</td><td>Text marker not used</td></tr>
+<tr><td><a href="#sc-w1114"><code>SC-W1114</code></a></td><td>Warning</td><td>Shape crosses a text marker’s edge</td></tr>
+<tr><td><a href="#sc-w1115"><code>SC-W1115</code></a></td><td>Warning</td><td>Lettering not the traced letters’ size</td></tr>
+<tr><td><a href="#sc-i1116"><code>SC-I1116</code></a></td><td>Info</td><td>Text sewn in an embroidery font</td></tr>
+<tr><td><a href="#sc-w1117"><code>SC-W1117</code></a></td><td>Warning</td><td>Lettering longer than its text’s place</td></tr>
+<tr><td><a href="#sc-i1118"><code>SC-I1118</code></a></td><td>Info</td><td>Font chosen by the letters’ weight</td></tr>
+<tr><td><a href="#sc-i1119"><code>SC-I1119</code></a></td><td>Info</td><td>Thread taken from thick spots</td></tr>
+<tr><td><a href="#sc-e1201"><code>SC-E1201</code></a></td><td>Error</td><td>Subject cut-out’s models not ready</td></tr>
+<tr><td><a href="#sc-e1202"><code>SC-E1202</code></a></td><td>Error</td><td>No subject found to cut out</td></tr>
+<tr><td><a href="#sc-e1203"><code>SC-E1203</code></a></td><td>Error</td><td>Picture could not be read for the cut-out</td></tr>
+<tr><td><a href="#sc-e1204"><code>SC-E1204</code></a></td><td>Error</td><td>Cut-out model could not be run</td></tr>
+<tr><td><a href="#sc-e1205"><code>SC-E1205</code></a></td><td>Error</td><td>Cut-out model has a random operator</td></tr>
+<tr><td><a href="#sc-i1206"><code>SC-I1206</code></a></td><td>Info</td><td>Subject cut out</td></tr>
+<tr><td><a href="#sc-e1207"><code>SC-E1207</code></a></td><td>Error</td><td>Subject cut-out left out of this build</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="sc-e0004"><a class="header" href="#sc-e0004">SC-E0004</a></h2>
+<p><strong>Error</strong> — Budget exhausted</p>
+<p>A budget limits how much work StitchCraft may spend on one element, and how many stitches one
+design may have, so that no input can make it run for hours or run out of memory — on the
+command line or inside VectorCraft’s live preview.</p>
+<p>When planning, an element that needs more work than its budget was skipped and the rest of the
+design was planned: simplify the element (fewer nodes, wider spacing, a smaller area) or split it
+into several elements. A design that needs more stitches than its limit was not planned, and the
+message names the element where it ran out: widen the spacing of its largest elements, lower their
+repeats or bean stitch, or split the design into several files. When reading a file or drawing a
+preview, nothing was produced: simplify the drawing, or split it into several files.</p>
+<h2 id="sc-e0005"><a class="header" href="#sc-e0005">SC-E0005</a></h2>
+<p><strong>Error</strong> — Preview too large</p>
+<p>Preview images have a size limit, so that drawing one never runs out of memory. At the scale
+asked for, this design’s preview would be larger, so no image was written.</p>
+<p>Use a smaller scale: the message says the largest that fits. A design that runs more than 10
+metres from the hoop centre cannot be previewed at any scale.</p>
+<h2 id="sc-e0009"><a class="header" href="#sc-e0009">SC-E0009</a></h2>
+<p><strong>Error</strong> — Internal check failed</p>
+<p>StitchCraft checks every stitch plan against its own rules before writing a machine file. One of
+those checks failed, which means StitchCraft has a bug: the file was not written, so nothing
+wrong reaches your machine. <code>stitch plan</code> writes a bug-report bundle instead, next to the file it
+was asked for. An export in VectorCraft writes nothing, and <code>stitch bug-report</code> of the saved
+document writes the bundle.</p>
+<p>Please attach the bundle to an issue; the message names the rule that failed. The bundle holds
+your design, so that the bug can be reproduced.</p>
+<h2 id="sc-e0010"><a class="header" href="#sc-e0010">SC-E0010</a></h2>
+<p><strong>Error</strong> — Nothing to stitch</p>
+<p>The design has no stitches: it is empty, or every element was skipped (see the other messages).
+StitchCraft never writes an empty machine file, because some machines refuse or mishandle them.</p>
+<p>Add an element with an embroidery stitch type, or fix the errors reported for the elements.</p>
+<h2 id="sc-w0011"><a class="header" href="#sc-w0011">SC-W0011</a></h2>
+<p><strong>Warning</strong> — Stitch type not sewn yet, element skipped (retired)</p>
+<p>The element’s stitch type is one this version of StitchCraft does not sew yet, so the element was
+skipped; the rest of the design is planned. Running and manual stitches are sewn from milestone M3,
+satin columns from M4, tatami fills from M5, and zigzag strokes and the other satin methods from M7.
+The other stitch types follow (<code>docs/src/plan/roadmap.md</code>), but for Ink/Stitch’s legacy fill, which
+is sewn as a tatami fill (<code>SC-W0314</code>).</p>
+<p>The message names the stitch type. Choose one StitchCraft sews, or sew the element with another
+tool for now.</p>
+<p>Retired in M10.10, which sews the guided fill’s parallel offset and buffer strategies, the last
+that were skipped: StitchCraft sews every stitch type, and no longer gives this code. Plan the
+file again with this StitchCraft to sew the element.</p>
+<h2 id="sc-e0012"><a class="header" href="#sc-e0012">SC-E0012</a></h2>
+<p><strong>Error</strong> — Bug-report bundle could not be replayed</p>
+<p><code>stitch bug-report --replay</code> was given a file that is not a bug-report bundle it can replay: not
+JSON, not a bundle, a bundle format newer than this StitchCraft, or one that names a profile or a
+format this StitchCraft does not have. Nothing was replayed.</p>
+<p>The message says what is wrong. A bundle written by a newer StitchCraft needs that version or a
+later one; a bundle changed by hand, or by an email program, needs the original file.</p>
+<h2 id="sc-w0013"><a class="header" href="#sc-w0013">SC-W0013</a></h2>
+<p><strong>Warning</strong> — Element outside its clip paths; left out</p>
+<p>The element is cut to clip paths, its own or those of the groups round it, or to the clipping objects
+of the VectorCraft clip groups round it, and they leave nothing of it: it lies wholly outside them,
+they don’t overlap one another, or one of them has no area, such as an empty clip path, one of text
+alone, or a clipping object StitchCraft doesn’t read (<code>SC-W0807</code>). A viewer shows nothing of it, so it
+sews nothing (<code>REQ-GEN-005</code>), and a trim or stop after it is left out (<code>SC-W0505</code>). Ink/Stitch sews
+nothing of an element outside its clip path too, but sews an element whose clip path has no area whole
+(<code>DEV-SVG-019</code>).</p>
+<p>Move the element or what clips it, or delete the element if it is hidden on purpose.</p>
+<h2 id="sc-e0101"><a class="header" href="#sc-e0101">SC-E0101</a></h2>
+<p><strong>Error</strong> — Parameter has the wrong type or an unknown choice</p>
+<p>A parameter’s value could not be understood: a number where a word was expected, a choice that
+is not one of the parameter’s options, or a list with the wrong number of values. The element was
+not stitched: guessing could sew something you did not ask for.</p>
+<p>The message names the parameter, the value and what the parameter accepts. The parameter
+reference lists every parameter with its accepted values.</p>
+<h2 id="sc-w0102"><a class="header" href="#sc-w0102">SC-W0102</a></h2>
+<p><strong>Warning</strong> — Parameter clamped to its allowed range</p>
+<p>A parameter’s value is outside the range StitchCraft accepts, so the nearest allowed value was
+used, and the element was stitched with it. Values outside the range are impossible (a negative
+length) or beyond what machines sew reliably.</p>
+<p>The message names the parameter, your value and the range. Change the value to remove the
+warning.</p>
+<h2 id="sc-w0105"><a class="header" href="#sc-w0105">SC-W0105</a></h2>
+<p><strong>Warning</strong> — Unknown parameter preserved but ignored</p>
+<p>The design carries a parameter StitchCraft does not know: one from a newer version of StitchCraft
+or Ink/Stitch, or one for a stitch type StitchCraft does not support yet. It was kept, so saving
+the design does not lose it, but it does not change the stitches. A fill set to Ink/Stitch’s legacy
+fill, which StitchCraft sews as a tatami fill (<code>SC-W0314</code>), names its <code>flip</code> and <code>reverse</code> so, though
+a ripple stitch reads a <code>reverse</code> of its own.</p>
+<p>The Ink/Stitch compatibility page says when each Ink/Stitch parameter is supported.</p>
+<h2 id="sc-i0106"><a class="header" href="#sc-i0106">SC-I0106</a></h2>
+<p><strong>Info</strong> — Value only the node’s other stitch type reads; default used here</p>
+<p>An SVG node’s fill and its stroke read the same settings, and some keys mean different things to
+each: a zigzag stroke keeps 2 spacings in <code>zigzag_spacing_mm</code>, where a meander fill reads one. A
+value this element can’t read but the node’s other stitch type can is that one’s, so this element
+sews with its own default, as Ink/Stitch does.</p>
+<p>The message names the key and the value. To give this element a value of its own, set it on a
+node of its own.</p>
+<h2 id="sc-e0201"><a class="header" href="#sc-e0201">SC-E0201</a></h2>
+<p><strong>Error</strong> — Satin column has no rails</p>
+<p>A satin column’s path has no subpath longer than a point, so it has no rails to sew between. The
+element was not stitched.</p>
+<p>Draw the column as two rails, its edges, with rungs across both.</p>
+<h2 id="sc-w0202"><a class="header" href="#sc-w0202">SC-W0202</a></h2>
+<p><strong>Warning</strong> — Satin rails taken as the two longest subpaths</p>
+<p>Where the subpaths of a satin column meet does not say which two are its rails, so the two
+longest were taken as the rails. The rule is Ink/Stitch’s: with one rung, the rails are the two
+subpaths that meet only one other, and with more rungs, the two that meet more than two others.
+With exactly two rungs across two rails, each of the four meets two others, as the strokes of a
+<code>#</code> do, and the rule cannot tell rails from rungs.</p>
+<p>The message names the two subpaths taken, numbered from 1 in the order the path draws them. If
+they are not the rails, use three rungs or more, each crossing both rails once.</p>
+<h2 id="sc-w0203"><a class="header" href="#sc-w0203">SC-W0203</a></h2>
+<p><strong>Warning</strong> — Satin rung does not cross both rails</p>
+<p>A rung of a satin column misses one of the rails, or both. It still says which points go together:
+where it misses a rail, the point of that rail nearest the rung is used, as in Ink/Stitch.</p>
+<p>The message names the rung, numbered from 1 in the order the path draws it. Extend it across both
+rails, so that where it joins them is what you drew.</p>
+<h2 id="sc-w0205"><a class="header" href="#sc-w0205">SC-W0205</a></h2>
+<p><strong>Warning</strong> — Satin subpath is one point; left out</p>
+<p>A subpath of a satin column is one point, a stray node, so it is neither a rail nor a rung. It was
+left out.</p>
+<p>The message names the subpath, numbered from 1 in the order the path draws it. Delete the node, or
+if it was meant as a rung, draw the rung across both rails.</p>
+<h2 id="sc-w0206"><a class="header" href="#sc-w0206">SC-W0206</a></h2>
+<p><strong>Warning</strong> — Satin contour underlay too short for its insets; it keeps its length</p>
+<p>A satin column’s contour underlay stops short of the column’s start and end by its inset, but a side
+of it is so short that this would leave less than half a CSS pixel (0.13 mm), so that side runs to
+the column’s ends, as in Ink/Stitch.</p>
+<p>The message gives the insets at each end. Lower <code>contour_underlay_inset_mm</code>, or turn the contour
+underlay off for so short a column.</p>
+<h2 id="sc-w0207"><a class="header" href="#sc-w0207">SC-W0207</a></h2>
+<p><strong>Warning</strong> — Satin rung crosses a rail more than once; left out</p>
+<p>A rung of a satin column crosses a rail more than once, so it does not say which point of one rail
+goes with which point of the other, and it was left out. The column is sewn without it.</p>
+<p>The message names the subpath, numbered from 1 in the order the path draws it. Redraw the rung as a
+straight line across both rails.</p>
+<h2 id="sc-w0208"><a class="header" href="#sc-w0208">SC-W0208</a></h2>
+<p><strong>Warning</strong> — Satin stitches lean more than 45° from square to the column; add a rung here</p>
+<p>The stitches of a satin column lean more than 45° from square to the column, to a tenth of a degree:
+they go further along it than across it. The column runs halfway between its 2 rails. Without rungs,
+or with too few, a column’s stitches follow its rails’ lengths alone, and where one rail runs on ahead
+of the other they lean. Every satin method says so, at the middle of each stretch of stitches that
+lean. Ink/Stitch does not.</p>
+<p>The message gives how many stitches lean and the most any of them leans. Add a rung across the
+column at the place named, square to it, and the stitches follow it.</p>
+<h2 id="sc-w0209"><a class="header" href="#sc-w0209">SC-W0209</a></h2>
+<p><strong>Warning</strong> — Satin stitch longer than 12 mm; it may snag</p>
+<p>A top stitch of a satin column is longer than 12 mm, as the column sews it. A stitch that long floats
+loose over the fabric, where it snags and sags. Every satin method says so once, at the middle of its
+longest top stitch, and its underlays and travel do not count. Ink/Stitch does not say so.</p>
+<p>The message gives the stitch’s length. Set <code>max_stitch_length_mm</code> to split long stitches, make the
+column narrower, or sew the shape as a fill. Finalize splits a stitch longer than the machine’s
+longest stitch anyway (<code>SC-I0703</code>).</p>
+<h2 id="sc-w0210"><a class="header" href="#sc-w0210">SC-W0210</a></h2>
+<p><strong>Warning</strong> — Satin rails without rungs have different numbers of nodes</p>
+<p>A satin column’s path draws no rungs, so its rails’ nodes pair up instead, as in Ink/Stitch: the
+2nd node of one rail with the 2nd of the other, and on in order. Its rails have different numbers
+of nodes, so the rail with more has nodes that pair with none, and between them the stitches
+follow the rails’ lengths alone.</p>
+<p>The message gives both counts. Add rungs across the column, or give both rails the same number of
+nodes.</p>
+<h2 id="sc-w0211"><a class="header" href="#sc-w0211">SC-W0211</a></h2>
+<p><strong>Warning</strong> — Satin push compensation too long for a rail; that rail keeps its length</p>
+<p>A satin column’s push compensation, taken off a rail at the column’s start and end, would leave less
+than half a CSS pixel (0.13 mm) of it, so that rail keeps its length, as in Ink/Stitch. A negative
+value at the other end still lengthens it.</p>
+<p>The message gives the push compensation at each end. Lower <code>push_compensation_mm</code>, or lengthen the
+column.</p>
+<h2 id="sc-w0212"><a class="header" href="#sc-w0212">SC-W0212</a></h2>
+<p><strong>Warning</strong> — Satin column drawn as one path too narrow; sewn as a stroke</p>
+<p>A satin column is drawn as one path, its centre line, and its stroke is no wider than the design’s
+<code>min_satin_stroke_width_mm</code> (1 mm unless the design sets it). A column that narrow is sewn as a
+stroke, by the element’s stroke settings, as in Ink/Stitch: a running stitch unless they say
+otherwise.</p>
+<p>The message gives the stroke’s width and the limit. Widen the stroke to sew a satin column, or draw
+the column with 2 rails.</p>
+<h2 id="sc-w0213"><a class="header" href="#sc-w0213">SC-W0213</a></h2>
+<p><strong>Warning</strong> — Parts of a satin column drawn as one path left out</p>
+<p>A satin column drawn as one path, its centre line, is made into rails by offsetting the line by half
+the stroke’s width to each side. Where the line crosses itself or comes back near itself, the
+offsets split into several curves, and the line is cut in half, and the halves again, at most 20
+times. Parts whose offsets still split are left out, and so are parts that turn so tightly that an
+offset vanishes. Ink/Stitch leaves out the same parts without a word. The rest of the column is sewn.</p>
+<p>The message says how many parts were left out. Draw the column with 2 rails where its line crosses
+itself or turns more tightly than the column is wide, or make the stroke narrower.</p>
+<h2 id="sc-e0214"><a class="header" href="#sc-e0214">SC-E0214</a></h2>
+<p><strong>Error</strong> — Satin column drawn as one path could not be made into rails</p>
+<p>A satin column drawn as one path, its centre line, could not be made into rails. Its offsets split
+however it is cut, an offset vanishes because the stroke is wider than the line’s turns allow, or
+the line is shorter than a CSS pixel. The column is not sewn.</p>
+<p>Draw the column with 2 rails, or make the stroke narrower.</p>
+<h2 id="sc-w0215"><a class="header" href="#sc-w0215">SC-W0215</a></h2>
+<p><strong>Warning</strong> — Satin column too small for the shortest stitch; left out</p>
+<p>A satin column is so small that every needle point of it lies within the shortest stitch of its
+first: a speck of a column, a few tenths of a millimetre across. Any stitch it could sew would be
+shorter than the machine sews well, would hammer one spot of the fabric and could break the thread,
+so it is left out, as a stroke that small is (<code>SC-W0401</code>). Ink/Stitch sews such a column. A zigzag
+satin 0.1 mm long or less is left out too, its underlays with it: its zigzag has one point and no
+stitch across. Ink/Stitch sews its underlays alone.</p>
+<p>The message gives the shortest stitch, or says the column is too short for a stitch across. Draw the
+column larger, or delete it if it is a stray.</p>
+<h2 id="sc-e0216"><a class="header" href="#sc-e0216">SC-E0216</a></h2>
+<p><strong>Error</strong> — Satin column has no section to sew</p>
+<p>A satin column’s rungs, or its push compensation, leave each of its sections with no length on one of
+its rails, so no stitch goes across it and the column is not sewn. A rung from the first rail’s
+start to the second rail’s end does this, and so does push compensation that takes off the parts of
+a short column’s rails where its rungs meet them. Ink/Stitch says such a column cannot be stitched.</p>
+<p>Move the rungs so that each meets both rails away from their ends, or lower <code>push_compensation_mm</code>.</p>
+<h2 id="sc-w0217"><a class="header" href="#sc-w0217">SC-W0217</a></h2>
+<p><strong>Warning</strong> — Satin column is clipped; sewn whole</p>
+<p>A satin column is cut to clip paths, its own or those of the groups round it, or to the clipping
+objects of the VectorCraft clip groups round it, which StitchCraft doesn’t apply to a satin column: it
+is sewn whole, as Ink/Stitch sews it, where a viewer shows only what lies inside them (<code>REQ-GEN-005</code>).</p>
+<p>Draw the column as far as it should sew, or make it a fill if it should take the clip’s shape.</p>
+<h2 id="sc-w0303"><a class="header" href="#sc-w0303">SC-W0303</a></h2>
+<p><strong>Warning</strong> — Parts of a fill too small to sew left out</p>
+<p>A fill is sewn in rows of stitches across each part of its area. A part of 0.21 mm² or less (3
+square CSS pixels), a speck about half a millimetre across, is too small for a row, so it is left
+out, as Ink/Stitch leaves it out. Where every part is that small, the fill sews nothing. So does a
+fill that bounds no area at all: subpaths that are lines or points, or that its fill rule leaves
+empty, such as 2 copies of one square under the even-odd rule.</p>
+<p>The message counts the parts left out and is placed at the first. Draw them larger, or sew them as a
+running stitch.</p>
+<h2 id="sc-w0304"><a class="header" href="#sc-w0304">SC-W0304</a></h2>
+<p><strong>Warning</strong> — Fill smaller than 1.4 mm²</p>
+<p>This fill covers less than 1.4 mm² (20 square CSS pixels). Rows of stitches packed into so small an
+area pile up, and a running stitch round it or a satin column across it usually sews it better.
+Ink/Stitch gives the same advice. The fill is kept as drawn.</p>
+<h2 id="sc-w0305"><a class="header" href="#sc-w0305">SC-W0305</a></h2>
+<p><strong>Warning</strong> — Fill part too thin for rows; sewn round its outline</p>
+<p>A fill is sewn in rows of stitches the row spacing apart, and a part of it so thin that no row
+crosses it gets none. Such a part is sewn as a running stitch round its outline instead, as
+Ink/Stitch sews it.</p>
+<p>The message counts the parts. Make them wider, set a smaller <code>row_spacing_mm</code>, or sew them as a
+stroke or a satin column.</p>
+<h2 id="sc-i0306"><a class="header" href="#sc-i0306">SC-I0306</a></h2>
+<p><strong>Info</strong> — Nonzero fill rule fills a part inside that the even-odd rule leaves empty</p>
+<p>A fill’s fill rule says which parts of it are filled where its subpaths lie inside each other or
+overlap. Under the rule <code>nonzero</code>, SVG’s default, a part that the subpaths wind round twice the same
+way is filled; the even-odd rule leaves it empty. StitchCraft fills it, as the drawing shows it.
+Ink/Stitch takes every subpath but the largest as a hole, whatever the fill rule. Where such a part
+lies inside the fill, away from its edge, the same file leaves it empty in Ink/Stitch.</p>
+<p>To leave the part empty in both, set the fill rule to even-odd, or draw the inner subpath the other
+way round.</p>
+<h2 id="sc-w0307"><a class="header" href="#sc-w0307">SC-W0307</a></h2>
+<p><strong>Warning</strong> — Fill in parts that are apart; each sewn on its own</p>
+<p>A fill whose area falls into separate parts, such as one drawn as several shapes side by side, or
+an outline that crosses itself, is sewn one part after another: each part’s rows on their own, then
+the next part’s. Where the next part starts far off, the needle jumps to it, and the plan may trim;
+where it starts near, as the halves of a bow tie do, the needle sews straight on. Ink/Stitch warns
+about such fills too.</p>
+<p>To choose the order the parts are sewn in, break the fill apart into one element for each part.</p>
+<h2 id="sc-i0308"><a class="header" href="#sc-i0308">SC-I0308</a></h2>
+<p><strong>Info</strong> — Fill underlay too thin for rows; sewn round the outline</p>
+<p>A fill’s underlay is sewn in rows <code>fill_underlay_row_spacing_mm</code> apart, 3 times the row spacing
+unless set. On a part so thin across those rows that none crosses it, that layer of underlay is
+sewn as a running stitch round the part’s outline instead, as Ink/Stitch sews it, and the top rows
+are sewn over it as usual.</p>
+<p>The message counts the layers, and each part has one for each underlay angle. To sew the underlay
+in rows, set a smaller <code>fill_underlay_row_spacing_mm</code> or another <code>fill_underlay_angle</code>. To sew no
+underlay, turn <code>fill_underlay</code> off.</p>
+<h2 id="sc-w0309"><a class="header" href="#sc-w0309">SC-W0309</a></h2>
+<p><strong>Warning</strong> — Fill’s expand shrinks a part away; sewn at its own size</p>
+<p>A fill’s top rows are sewn on each part grown by <code>expand_mm</code>, or shrunk where it is negative. A part
+too thin for that much shrinking, which wears it away entirely, is sewn at its own size instead, as
+Ink/Stitch sews it, and Ink/Stitch warns of it too.</p>
+<p>The message counts the parts. Make <code>expand_mm</code> nearer 0.</p>
+<h2 id="sc-w0310"><a class="header" href="#sc-w0310">SC-W0310</a></h2>
+<p><strong>Warning</strong> — Fill’s underlay inset shrinks a part away; underlay over all of it</p>
+<p>A fill’s underlay is sewn on each part shrunk by <code>fill_underlay_inset_mm</code>. A part too thin for that
+much shrinking, which wears it away entirely, has its underlay sewn over all of it instead, as
+Ink/Stitch sews it, and Ink/Stitch warns of it too.</p>
+<p>The message counts the parts. Set a smaller <code>fill_underlay_inset_mm</code>, or turn <code>fill_underlay</code> off.</p>
+<h2 id="sc-w0311"><a class="header" href="#sc-w0311">SC-W0311</a></h2>
+<p><strong>Warning</strong> — Contour fill leaves out rings it does not reach</p>
+<p>A contour fill sews rings that follow the shape’s outline inward, a row spacing apart. Some of its
+rings are not sewn, and fabric shows where they lie. Inner to outer, the default strategy, leaves out
+a ring that no point of the ring round it comes within 2.05 row spacings of, where the shape narrows
+or rings lie far apart at a mitred corner. A spiral follows one chain of rings inward, and leaves out
+the rings off it: the other side where the shape parts, and usually the rings round a hole. Ink/Stitch
+leaves out the same rings without a word.</p>
+<p>The message counts the rings left out. Sew the shape with inner to outer, or draw its parts as
+shapes of their own; a round <code>join_style</code> keeps the rings a row spacing apart at corners.</p>
+<h2 id="sc-w0312"><a class="header" href="#sc-w0312">SC-W0312</a></h2>
+<p><strong>Warning</strong> — Fill’s pull compensation below 0; read as 0</p>
+<p>A fill’s rows reach past its edge by its pull compensation, which makes up for the thread pulling
+the fabric in. Ink/Stitch reads a fill’s <code>pull_compensation_mm</code> or <code>pull_compensation_percent</code> below
+0 as 0, so that the rows reach the edge and no less, and so does StitchCraft. A satin column reads
+the same settings below 0 as narrower.</p>
+<p>The message names the settings. Set them to 0 or more; to keep the rows inside the edge, use a
+negative <code>expand_mm</code>.</p>
+<h2 id="sc-i0313"><a class="header" href="#sc-i0313">SC-I0313</a></h2>
+<p><strong>Info</strong> — Fill drawn twice along its edge; Ink/Stitch fills the part left empty</p>
+<p>Two subpaths of a fill run along each other at its edge, around a part that its fill rule leaves
+empty. A notch drawn as a hole whose sides lie on the outline is one, and a shape drawn twice is
+another. StitchCraft leaves the part empty, as the drawing shows it. Ink/Stitch repairs such a shape
+by merging each stretch drawn twice into one, which fills the part, and the same file then sews it
+filled in Ink/Stitch.</p>
+<p>To sew it alike in both, draw the outline round the empty part instead of a subpath along it.</p>
+<h2 id="sc-w0314"><a class="header" href="#sc-w0314">SC-W0314</a></h2>
+<p><strong>Warning</strong> — Legacy fill sewn as a tatami fill without underlay</p>
+<p>Ink/Stitch’s legacy fill is its first fill method, which it keeps for its older files: it gives the
+method to a fill whose <code>auto_fill</code> is off. StitchCraft does not sew it, and sews such a fill as a
+tatami fill with the same settings and no underlay, as legacy fill sews none. Nor does it take pull
+compensation, random stitch lengths or gap-filling rows, which legacy fill has no use for. Its rows and their
+needle points are a tatami fill’s, as in Ink/Stitch. Ink/Stitch sews a legacy fill’s rows in
+stretches that join, each on its own and back and forth; its <code>flip</code> starts the rows from the other
+side, and its <code>reverse</code> sews the fill backwards. A tatami fill routes its rows and joins them with
+travel stitches, and StitchCraft keeps <code>flip</code> and <code>reverse</code> without reading them (<code>SC-W0105</code>).</p>
+<p>To sew the fill alike in both, set its fill method to tatami fill and turn <code>fill_underlay</code> off.</p>
+<h2 id="sc-i0315"><a class="header" href="#sc-i0315">SC-I0315</a></h2>
+<p><strong>Info</strong> — Contour fill’s part too narrow for its spiral; sewn inner to outer</p>
+<p>A contour fill’s spiral turns from each ring to the next inside it. A part too narrow for a turn,
+with one ring for the single spiral or 2 or fewer for the double, is sewn inner to outer instead,
+round its rings. Ink/Stitch fails on such a part or sews nothing of it, as its version decides.</p>
+<p>The message counts the parts. To sew them in a spiral, widen them to more than 2 row spacings for the
+single spiral, or 4 for the double, or make <code>row_spacing_mm</code> smaller.</p>
+<h2 id="sc-w0316"><a class="header" href="#sc-w0316">SC-W0316</a></h2>
+<p><strong>Warning</strong> — Meander pattern is one of Ink/Stitch’s tiles; sewn with StitchCraft’s default tile</p>
+<p>The meander fill’s pattern names one of Ink/Stitch’s tiles. Those are drawings that ship with
+Ink/Stitch, which StitchCraft doesn’t copy, so the fill wanders through StitchCraft’s default tile,
+the honeycomb, instead.</p>
+<p>Choose one of StitchCraft’s tiles for <code>meander_pattern</code> to remove the warning.</p>
+<h2 id="sc-w0317"><a class="header" href="#sc-w0317">SC-W0317</a></h2>
+<p><strong>Warning</strong> — Meander fill part too small for its tile; sewn round its outline</p>
+<p>A part of a meander fill is too small for any line of its tile, or none of its lines join up, so it
+has nothing to wander through. It is sewn as a running stitch round its outline. Ink/Stitch stops
+the whole fill with an error there.</p>
+<p>The message counts the parts. Make <code>meander_scale_percent</code> smaller to fit the tile into them.</p>
+<h2 id="sc-w0318"><a class="header" href="#sc-w0318">SC-W0318</a></h2>
+<p><strong>Warning</strong> — Circular fill part within its row spacing of its middle; sewn as one circle</p>
+<p>A part of a circular fill lies within its row spacing of its middle, too small for a spiral, so it is
+sewn as one circle with a radius of the row spacing round its middle, as Ink/Stitch sews it. The
+circle may reach past the part.</p>
+<p>The message counts the parts. Make <code>row_spacing_mm</code> smaller for a spiral, or sew so small a part as a
+running stitch or a satin column.</p>
+<h2 id="sc-w0319"><a class="header" href="#sc-w0319">SC-W0319</a></h2>
+<p><strong>Warning</strong> — Cross stitch part covers no cell of its grid enough; sews nothing</p>
+<p>A cross stitch fill sews a cross in each cell of its grid that it covers enough of: <code>fill_coverage</code>
+percent of the cell or more, once the fill is grown by <code>expand_mm</code>. A part that covers no cell so
+much sews nothing, as in Ink/Stitch, which warns of it too. Such a part is smaller or narrower than a
+cell, or lies across the grid’s lines so that no cell holds enough of it.</p>
+<p>The message counts the parts. Make <code>pattern_size_mm</code> smaller, lower <code>fill_coverage</code>, raise
+<code>expand_mm</code>, or move the grid with <code>cross_offset_mm</code>.</p>
+<h2 id="sc-w0320"><a class="header" href="#sc-w0320">SC-W0320</a></h2>
+<p><strong>Warning</strong> — Cross stitch with an odd thread count; an even count sewn</p>
+<p>Each half of a cross’s 2 diagonals takes <code>cross_thread_count</code> passes of the thread. The needle goes
+out from the cross’s middle and back again, so the passes come in pairs, and the count is an even
+number. An odd count sews the even count below it, as in Ink/Stitch, and 1 sews 2. Ink/Stitch sews
+a stitch from a corner of each cell to its middle for 1, and no cross.</p>
+<p>The message gives the count set and the count sewn. Set an even number.</p>
+<h2 id="sc-w0321"><a class="header" href="#sc-w0321">SC-W0321</a></h2>
+<p><strong>Warning</strong> — Cross stitch grid too fine for the shortest stitch; needle points left out</p>
+<p>A cross’s shortest stitches run from its corners to its middle, half its diagonal long. On a grid
+this fine they are shorter than the shortest stitch the machine sews well, so needle points of the
+crosses are left out where they lie too near the one before, and the crosses lose their shape.</p>
+<p>The message gives the cells’ size, the stitch’s length and the shortest stitch. Make
+<code>pattern_size_mm</code> larger.</p>
+<h2 id="sc-w0322"><a class="header" href="#sc-w0322">SC-W0322</a></h2>
+<p><strong>Warning</strong> — Half cross with an even thread count; the odd count above sewn</p>
+<p>A half cross sews each stitch of its rows an odd number of times: along the stitch, and then back
+and forth over it, as bean stitch does. An even <code>cross_thread_count</code> sews the odd count above it, as
+in Ink/Stitch, whose own help for the count says that half crosses take an odd one.</p>
+<p>The message gives the count set and the count sewn. Set an odd number.</p>
+<h2 id="sc-e0323"><a class="header" href="#sc-e0323">SC-E0323</a></h2>
+<p><strong>Error</strong> — Tartan fill’s sett can’t be read; skipped</p>
+<p>A tartan fill’s sett is its <code>tartan</code> setting, an object of JSON as Ink/Stitch’s tartan editor saves
+it, whose <code>palette</code> gives the stripes: a palette code, a threadcount of colour letters or the
+threadcount the Scottish Register of Tartans’ search gives. This one can’t be read: it isn’t JSON, it
+has no <code>palette</code>, a number in it isn’t one, its <code>scale</code> isn’t above 0, its code has more than one <code>|</code>,
+a stripe’s width or count isn’t a number, or letters of a register’s threadcount have no count. The
+element is skipped.</p>
+<p>The message says what is wrong. Set the sett again with VectorCraft’s StitchCraft Tartan filter or
+Ink/Stitch’s tartan editor, or write its palette code as a colour in brackets and a width for each
+stripe.</p>
+<h2 id="sc-w0324"><a class="header" href="#sc-w0324">SC-W0324</a></h2>
+<p><strong>Warning</strong> — Tartan’s herringbone sewn as straight rows (retired)</p>
+<p>Retired in M10.7, which sews tartans’ herringbones: StitchCraft no longer gives this code. Before
+M10.7, a tartan whose <code>herringbone_width_mm</code> was above 0 sewed straight rows, as a tartan with a width
+of 0 sews them, and this warning said so.</p>
+<p>Plan the file again with this StitchCraft to sew the herringbone.</p>
+<h2 id="sc-w0325"><a class="header" href="#sc-w0325">SC-W0325</a></h2>
+<p><strong>Warning</strong> — Tartan fill without a sett; Ink/Stitch’s default sett sewn</p>
+<p>A tartan fill without a sett sews Ink/Stitch’s default one, as Ink/Stitch does: stripes 5 mm wide of a
+thread almost black, with 5 mm left unsewn between them. VectorCraft’s fill dialog holds no sett
+before M10.7, so a tartan fill made there sews this one.</p>
+<p>Set the sett with Ink/Stitch’s tartan editor, and sew the file it saves.</p>
+<h2 id="sc-w0326"><a class="header" href="#sc-w0326">SC-W0326</a></h2>
+<p><strong>Warning</strong> — Tartan sett with no stripe to sew; only the underlay sewn</p>
+<p>Every stripe of this sett is left unsewn: each is marked <code>?</code>, has a colour that can’t be read, or has
+no width, so neither the warp nor the weft has a stripe to sew. Only the fill’s underlay is sewn, as
+in Ink/Stitch.</p>
+<p>Give a stripe a colour and a width.</p>
+<h2 id="sc-w0327"><a class="header" href="#sc-w0327">SC-W0327</a></h2>
+<p><strong>Warning</strong> — Tartan sett too fine for the shortest stitch; needle points left out</p>
+<p>The rows cross a tartan’s narrowest stripe sewn as a fill in stretches shorter than the shortest
+stitch the machine sews well: a warp stripe in its width over the cosine of the rows’ angle to the
+stripes, and a weft stripe over its sine. Needle points too near the one before are left out, so the
+stripe’s rows lose stitches and it can look thin.</p>
+<p>The message gives the stripe’s width, the stretch and the shortest stitch. Widen the stripe, raise
+the sett’s <code>scale</code>, or raise its <code>min_stripe_width</code> so that the stripe sews as a run.</p>
+<h2 id="sc-w0328"><a class="header" href="#sc-w0328">SC-W0328</a></h2>
+<p><strong>Warning</strong> — Tartan stripe’s colour can’t be read; left out</p>
+<p>A stripe’s colour is <code>#</code> and 3 or 6 hexadecimal digits or a colour name of SVG, in a palette code, and
+the letters of one of the Scottish Register of Tartans’ shades, or of a colour of its own palette, in a
+threadcount. This sett names a colour that is none of these, and its stripes are left unsewn, as
+Ink/Stitch leaves them.</p>
+<p>The message names the colours. Write each as <code>#</code> and 6 hexadecimal digits, or as the register’s
+letters.</p>
+<h2 id="sc-w0329"><a class="header" href="#sc-w0329">SC-W0329</a></h2>
+<p><strong>Warning</strong> — Linear gradient fill without a linear gradient; its colour fades out</p>
+<p>A linear gradient fill sews the colours of the linear gradient its shape is painted with. This shape is
+painted with a plain colour, a gradient of one colour, or a gradient that isn’t linear, so its own colour
+fades out along the fill’s <code>angle</code>, its rows thinning out to none, as Ink/Stitch sews it.</p>
+<p>Paint the shape with a linear gradient, or choose another fill method.</p>
+<h2 id="sc-w0330"><a class="header" href="#sc-w0330">SC-W0330</a></h2>
+<p><strong>Warning</strong> — Gradient stop within 2 rows of the blend before; passed over</p>
+<p>Between 2 stops of a gradient, the rows go to their 2 colours in a fixed pattern, which takes 3 rows or
+more. This stop lies within 2 rows of where the blend before it ends, so no blend starts at it. The next
+blend starts a row later and blends from the colour before the stop, and the row between is left out,
+as Ink/Stitch sews it. A gradient whose start and end are one point puts all its stops at one row.</p>
+<p>The message names the stops. Move them at least 3 row spacings apart.</p>
+<h2 id="sc-w0331"><a class="header" href="#sc-w0331">SC-W0331</a></h2>
+<p><strong>Warning</strong> — Guided fill without a guide line; sewn as a tatami fill</p>
+<p>A guided fill’s rows follow its guide line, a line grouped with the fill and marked as one:
+a stroke with Ink/Stitch’s guide-line marker in an SVG file, or a path named <code>stitch:guide</code> in a
+VectorCraft document. This fill has none, or its guide has no length: a dot, or for the copy
+strategy a guide that starts and ends at one point once it is made one line. So it is sewn as a
+tatami fill with its own settings, its angle and the rest, as Ink/Stitch sews a guided fill without
+a guide. A satin column marked as a guide guides a ripple stitch, not a
+fill. VectorCraft’s live preview shows no marker to the fill effect, so it sews the tatami fill, and
+<code>stitch export</code> sews the rows.</p>
+<p>Group a line marked as a guide with the fill, drawn the way its rows should run.</p>
+<h2 id="sc-w0332"><a class="header" href="#sc-w0332">SC-W0332</a></h2>
+<p><strong>Warning</strong> — Guided fill’s rows along its guide meet no part; sewn as a tatami fill</p>
+<p>No row of this guided fill’s guide line leaves a line in a part of the fill, so that part is sewn as
+a tatami fill whose rows run at the angle of the line between the guide’s ends, as Ink/Stitch falls
+back to one where its rows leave no line in a part. Where no copy or offset curve meets the part at
+all, Ink/Stitch stops with an error instead. The message names the strategy’s rows: copies, offset
+curves, or the rings of a buffer. The copies move a row spacing at a time square to that line, or at <code>guided_fill_angle</code>, from
+the copy nearest the part outward, while they meet the part’s bounds. A copy angle near the guide’s
+own direction moves them along the guide, past a small part, and a guide far from a part can place
+its nearest copy beyond it.</p>
+<p>The message counts the parts. Draw the guide across the fill, or clear <code>guided_fill_angle</code>.</p>
+<h2 id="sc-w0333"><a class="header" href="#sc-w0333">SC-W0333</a></h2>
+<p><strong>Warning</strong> — Guided fill’s rows apart, the needle jumps between them</p>
+<p>Some rows of this guided fill lie where the needle finds no way to them from the others, along the
+fill’s edge or under its rows. Rows that only meet a hole’s edge are such, when no other row runs
+from that hole to the outline: a guide drawn as a ring inside a hole, off its middle, gives them.
+The needle jumps to those rows, as Ink/Stitch sews the rows it can’t join on their own, with a jump
+between. Rows that run from edge to edge of the fill are always joined.</p>
+<p>Draw the guide so that its rows cross the fill from its outline to its holes, or cut the jump
+thread after sewing.</p>
+<h2 id="sc-w0401"><a class="header" href="#sc-w0401">SC-W0401</a></h2>
+<p><strong>Warning</strong> — Path too small for the shortest stitch; skipped</p>
+<p>A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
+one stitch that short would hammer one spot of the fabric and could break the thread. The part is
+a single point (a stray node), shorter than the shortest stitch, or longer but curled up so that
+all of it lies within the shortest stitch of its ends: a tiny closed loop, say.</p>
+<p>The message gives the part’s length and the shortest stitch. Enlarge the part, join it to its
+neighbour, or delete it if it is a stray.</p>
+<h2 id="sc-w0402"><a class="header" href="#sc-w0402">SC-W0402</a></h2>
+<p><strong>Warning</strong> — Stitch length below twice the shortest stitch; raised</p>
+<p>A running stitch’s length, a stroke’s or that of one of a satin column’s underlays, is shorter than
+twice the shortest stitch, so it was lengthened to twice the shortest stitch. Stitches are spread
+evenly between corners; at half the length or more, every stitch then stays at or above the
+shortest stitch, whatever the distance between corners.</p>
+<p>The message names the parameter and gives both lengths. Use a longer stitch length, or a shorter
+minimum if your machine sews shorter stitches well.</p>
+<h2 id="sc-w0403"><a class="header" href="#sc-w0403">SC-W0403</a></h2>
+<p><strong>Warning</strong> — Hand-placed stitch shorter than the shortest stitch; point left out</p>
+<p>Hand-placed stitches (manual stitch) shorter than the shortest stitch the machine sews well: the
+needle point that made each one too short was left out, so the stitch before it runs on to the
+next point. A part’s last point is always kept; the one before it goes instead.</p>
+<p>The message gives how many and the shortest of them. Move the nodes apart, or delete the extra
+ones.</p>
+<h2 id="sc-w0404"><a class="header" href="#sc-w0404">SC-W0404</a></h2>
+<p><strong>Warning</strong> — Hand-placed stitch longer than max_stitch_length_mm; kept for the shortest stitch</p>
+<p>Hand-placed stitches (manual stitch) sewn longer than <code>max_stitch_length_mm</code>. A stitch longer than
+that is split into equal parts no longer than it, but never into parts shorter than the shortest
+stitch the machine sews well, which here took fewer parts: a shorter stitch would hammer one spot and
+could break the thread. Ink/Stitch splits such a stitch into the fewest parts no longer than the
+setting, however short they are.</p>
+<p>The message gives how many stitches are longer and the longest of them. Set <code>max_stitch_length_mm</code>
+to at least twice the shortest stitch: every split then leaves parts long enough.</p>
+<h2 id="sc-w0405"><a class="header" href="#sc-w0405">SC-W0405</a></h2>
+<p><strong>Warning</strong> — Zigzag stitch shorter than the shortest stitch; the zigzag sews narrower</p>
+<p>A zigzag stroke’s stitches shorter than the shortest stitch the machine sews well, across a zigzag
+too narrow for its spacing. Finishing leaves out a needle point of each such stitch, as it leaves out
+any point that near the one before it (<code>SC-I0504</code>), so the zigzag sews narrower there. Where every
+stitch is that short, every other point goes, and the zigzag sews as a line along one side.
+Ink/Stitch’s shortest stitch is 0.1 mm by default, and it sews such a zigzag as it is.</p>
+<p>The message gives how many stitches are that short and the shortest. On a straight path, a stitch
+across a zigzag <code>w</code> wide at a spacing <code>s</code> is √(w² + (s/2)²) long. Make the zigzag wider, the stroke
+or its pull compensation, or space it out, until that is at least the shortest stitch.</p>
+<h2 id="sc-w0406"><a class="header" href="#sc-w0406">SC-W0406</a></h2>
+<p><strong>Warning</strong> — Ripple stitch setting not applied; sewn without it</p>
+<p>A ripple stitch sets something StitchCraft doesn’t apply to it, so it sews without it. A ripple along a
+column, a stroke of 2 lines or more drawn as a satin column’s rails and rungs, reads its rails without
+the satin column’s <code>push_compensation_mm</code>, which Ink/Stitch applies to it though its settings window
+doesn’t show it for a ripple.</p>
+<p>The message says what is not applied. Draw the rails as long as the ripple should run, and leave push
+compensation at 0.</p>
+<h2 id="sc-w0407"><a class="header" href="#sc-w0407">SC-W0407</a></h2>
+<p><strong>Warning</strong> — Ripple stitch of more than 1,000 lines; cut to 1,000</p>
+<p><code>min_line_dist_mm</code> gives a ripple stitch more than 1,000 lines, so it sews 1,000, or 999 to keep the
+count’s parity, odd or even, as <code>line_count</code> has it. The count is the shortest distance from the
+stroke’s line to its target point, or across its column, or the length of its guide, divided by
+<code>min_line_dist_mm</code>, and a very short distance between the lines on a large shape gives thousands of
+lines that sew into a solid patch. A guide that places a copy at each of its points or rungs
+(<code>render_at_rungs</code>), or wherever the copies clear each other (<code>adaptive</code>), places at most 1,000 too.</p>
+<p>The message gives the count asked for and the count sewn. Set a larger <code>min_line_dist_mm</code>, or place
+the copies by <code>line_count</code>.</p>
+<h2 id="sc-w0408"><a class="header" href="#sc-w0408">SC-W0408</a></h2>
+<p><strong>Warning</strong> — Ripple stitch’s skips would leave out every line; every line sewn</p>
+<p>A ripple stitch’s <code>skip_start</code> and <code>skip_end</code> together leave out as many lines as it has, or more, so
+they would leave none to sew. No line is left out, as Ink/Stitch does.</p>
+<p>The message gives both settings and the number of lines. Lower <code>skip_start</code> or <code>skip_end</code>, or give
+the ripple more lines.</p>
+<h2 id="sc-w0409"><a class="header" href="#sc-w0409">SC-W0409</a></h2>
+<p><strong>Warning</strong> — Ripple stitch’s guide can’t place its copies; sewn without it</p>
+<p>A ripple stitch’s guide line can’t place its copies, so the ripple sews without it, towards its
+target point or spiralling in to it, as it would with no guide. The guide has no length, its satin
+column has no rails to place copies between, its middle has no length or its first pair of points no
+width, or it is too short for a pair, or its settings don’t read. Ink/Stitch at <code>d59c9ab</code>, run as a
+black box, stacks the copies of a guide line of no length on its point, and stops with an error where
+they are placed by hand (<code>DEV-RIP-004</code>). An anchor line whose ends are one point is left out the same
+way, and the copies’ ends are the line’s own.</p>
+<p>The message says what is wrong with the guide. Draw the guide as a line with length, or as a satin
+column of 2 rails, grouped with the ripple, and the anchor line across the ripple’s line.</p>
+<h2 id="sc-w0502"><a class="header" href="#sc-w0502">SC-W0502</a></h2>
+<p><strong>Warning</strong> — Lock stitch shorter than 0.2 mm; lengthened</p>
+<p>A lock stitch would have been shorter than 0.2 mm, the shortest stitch a lock may have. The needle
+would go back into the hole it just left, which can cut the thread and does not lock it. Each such
+step of a lock made of steps (back and forth, or a custom lock written as numbers) was lengthened
+to 0.2 mm, and a drawn lock was enlarged until its shortest stitch is 0.2 mm long. A lock of steps
+follows the stitching. Where a sharp turn would fold it onto itself, it was sewn straight along the
+first (or last) stitch.</p>
+<p>The message says which lock, and by how much. Set a larger lock size (<code>lock_start_scale_mm</code>,
+<code>lock_end_scale_mm</code>) or scale (<code>lock_start_scale_percent</code>, <code>lock_end_scale_percent</code>), or write
+longer custom steps.</p>
+<h2 id="sc-w0503"><a class="header" href="#sc-w0503">SC-W0503</a></h2>
+<p><strong>Warning</strong> — Custom lock cannot be sewn as written</p>
+<p>The lock is set to custom, but its shape cannot be sewn as written. A custom lock is numbers
+separated by spaces, the steps the needle takes along the stitching in sizes of
+<code>lock_*_scale_mm</code>, or an SVG path that draws it in millimetres, at <code>lock_*_scale_percent</code>. Parts
+that are not numbers, steps of 0 and steps longer than 10 m are left out, and if no step is left,
+the half stitch is sewn instead. A path is read up to an error in it, and a node where the node
+before it is is left out. The half stitch is sewn instead of a path of fewer than 3 nodes or more
+than 100, one whose last segment, which gives its direction, has no length, one that reaches
+farther than 10 m, one with no stitch to sew, and one with a stitch shorter than 0.2 mm even at
+500 %.</p>
+<p>The message says what was wrong. Write the lock as numbers, such as <code>1 -1 1 -1</code>, or as a path of
+at least 3 nodes, such as <code>M 0,0 L 0,1 L 1,1 L 1,0 L 2,0</code>, or choose another lock shape.</p>
+<h2 id="sc-i0504"><a class="header" href="#sc-i0504">SC-I0504</a></h2>
+<p><strong>Info</strong> — Stitches shorter than the shortest stitch merged</p>
+<p>Needle points less than the shortest stitch from a needle point next to them were left out, so the
+stitch before each runs on to the next and none is shorter than the machine sews well. This happens
+where one element’s stitching runs straight on into the next and they nearly touch: the stitch
+between them is whatever is left of the gap. A point that stays, such as a lock point or the last
+point before a jump, trim or stop, leaves out the points before it that it is too near, and a stitch
+into or out of a lock point may be as short as 0.2 mm. Where small elements are sewn over each other,
+a point that stays can go too, when it comes within the shortest stitch of another that stays.
+Nothing visible changes, but across a zigzag too narrow for the shortest stitch, which <code>SC-W0405</code>
+names.</p>
+<p>The message gives how many points were left out and the shortest stitches that applied to them.
+Nothing needs doing. If the count is large, check for elements drawn on top of each other.</p>
+<h2 id="sc-w0505"><a class="header" href="#sc-w0505">SC-W0505</a></h2>
+<p><strong>Warning</strong> — Trim or stop after an element that sews nothing; left out</p>
+<p>The element is set to trim or stop after it (<code>trim_after</code>, <code>stop_after</code>, or Ink/Stitch’s trim and
+stop commands), but it sews no stitch, so there is no place for the trim or the stop: it is left
+out, as Ink/Stitch leaves it out. Another message says why the element sews nothing, such as an
+automatic area that the areas sewn after it cover whole (<code>SC-I0904</code>).</p>
+<p>Make the element sew, or set the trim or stop on the element before it.</p>
+<h2 id="sc-i0506"><a class="header" href="#sc-i0506">SC-I0506</a></h2>
+<p><strong>Info</strong> — Underlays first joins no run; the element sews as without it</p>
+<p>The element sets <code>underlays_first</code>, but its setting joins no run, so it sews its underlay just before
+its top stitches, as it does without the setting. A run is 2 or more elements next to each other in
+sewing order that set it and sew in one thread, with no trim or stop between them. The run sews all
+their underlays first, then their top stitches. This element is alone: the elements next to it don’t
+set it, or sew in another thread, or a trim or a stop parts them. An element sewn in several threads
+is in no run either.</p>
+<p>The message says which. Set <code>underlays_first</code> on the elements that cross or overlap this one too,
+give them its thread, or move the trim or the stop between them. Nothing needs doing if the element
+should sew as it does.</p>
+<h2 id="sc-e0601"><a class="header" href="#sc-e0601">SC-E0601</a></h2>
+<p><strong>Error</strong> — Too many colour changes for the file format</p>
+<p>The file format can record only a limited number of colour changes and stops (PES: 255). This
+design has more, so the file was not written.</p>
+<p>Merge elements that use the same thread so they sew in one block, or remove stops.</p>
+<h2 id="sc-e0602"><a class="header" href="#sc-e0602">SC-E0602</a></h2>
+<p><strong>Error</strong> — Design too large for the file format</p>
+<p>The design’s coordinates or stitch data do not fit the fields of this file format, so the file
+was not written. Within a real hoop this does not happen; it points at a design that is far
+larger than any hoop, or at stray objects far from the rest of the design.</p>
+<p>Check the design’s size and remove stray objects.</p>
+<h2 id="sc-e0603"><a class="header" href="#sc-e0603">SC-E0603</a></h2>
+<p><strong>Error</strong> — Machine file could not be read</p>
+<p>The machine file could not be read: it is not in the format its name or first bytes suggest, it
+ends early, or a record in it makes no sense. StitchCraft reads every file as if it could be
+damaged or hostile, so a bad file is reported, never half-read in silence.</p>
+<p>The message says where reading stopped. If the machine sews the file, it may be a format variant
+StitchCraft does not know yet: please report it with the file.</p>
+<h2 id="sc-w0604"><a class="header" href="#sc-w0604">SC-W0604</a></h2>
+<p><strong>Warning</strong> — Thread colours unknown</p>
+<p>The file stores no thread colours (DST files never do: they only say where the machine pauses for
+the next thread), so every thread has a black placeholder colour in previews. A PES file converted
+from this one names each thread by the Brother colour nearest black that is still free (Black, Dark
+Gray, Dark Brown and so on), which says nothing of the threads the design needs.</p>
+<p>The stitches are not affected. Load the threads the design needs, in the order the design’s
+author gives; StitchCraft cannot know them.</p>
+<h2 id="sc-i0605"><a class="header" href="#sc-i0605">SC-I0605</a></h2>
+<p><strong>Info</strong> — Long jumps cut in DST</p>
+<p>DST has no trim command: machines cut the thread when they meet three or more jump records in a
+row (a machine setting; three is the common one), and a jump longer than 24.2 mm takes three or
+more records. So the thread will be cut before such a jump, although the plan does not trim there.
+With a tie-off before the jump the cut is usually welcome: there is no jump thread to clip by hand.</p>
+<p>Nothing to do. Where an element’s ties are off, turn them on so its stitching holds when it is
+cut, or sew a PES file, where only trims cut. A machine set to another number of jump records cuts
+before other jumps: see its DST setting.</p>
+<h2 id="sc-w0606"><a class="header" href="#sc-w0606">SC-W0606</a></h2>
+<p><strong>Warning</strong> — Threads share a Brother colour</p>
+<p>A PES file names each thread by a colour of the Brother palette, which has 61 thread colours.
+StitchCraft gives each different thread a colour of its own, the nearest one still free, so the
+machine asks for each thread change. A design with more different threads than that has some
+share a colour, and the machine shows that colour for each of them: at a change between 2 of them it
+shows the thread already in the machine, as for a stop.</p>
+<p>Load the threads in the order the report lists them, rather than by the colours the machine shows.
+Or use fewer different threads: merge those of nearly the same colour.</p>
+<h2 id="sc-e0701"><a class="header" href="#sc-e0701">SC-E0701</a></h2>
+<p><strong>Error</strong> — Design does not fit the hoop</p>
+<p>The design is wider or taller than the machine’s hoop, so the machine cannot sew it in one
+hooping (most machines refuse the file). A design that fits the hoop can still reach past its edge
+where it is placed: its origin, which goes to the hoop’s centre, can lie far from its middle, and
+its stop position, where the frame goes before each stop, can lie outside the hoop.</p>
+<p>If the message says the design fits when turned 90 degrees, rotate it, or have the machine file
+turn it: Ink/Stitch’s rotate on export, or Turn on export in StitchCraft’s Design Settings filter.
+Otherwise scale it down, or split it into parts that are sewn in separate hoopings. Where it reaches
+past the edge from where it is placed, move its origin nearer its middle, or its stop position nearer
+the design.</p>
+<h2 id="sc-w0702"><a class="header" href="#sc-w0702">SC-W0702</a></h2>
+<p><strong>Warning</strong> — Design is larger than the comfort zone</p>
+<p>The design fits the hoop but is larger than the profile’s comfort zone: the area where this
+machine and hoop sew most accurately. Near the hoop’s edge fabric is held less firmly, so large
+designs pucker and shift more.</p>
+<p>The file was written. Rotate the design if the message says that brings it inside the comfort
+zone, use a firmer stabilizer, or scale the design down.</p>
+<h2 id="sc-i0703"><a class="header" href="#sc-i0703">SC-I0703</a></h2>
+<p><strong>Info</strong> — Stitches longer than the machine’s longest stitch; split</p>
+<p>Stitches longer than the machine’s longest stitch were split into equal parts, each no longer than
+it: a long stitch placed by hand, say, or a custom lock’s long step. A long loose stitch snags and
+sags; the machine may refuse it.</p>
+<p>To choose where the needle goes down instead, add nodes (manual stitch) or set
+<code>max_stitch_length_mm</code>.</p>
+<h2 id="sc-e0801"><a class="header" href="#sc-e0801">SC-E0801</a></h2>
+<p><strong>Error</strong> — SVG could not be read</p>
+<p>The SVG file could not be read: it is not well-formed XML, its root is not an <code>&lt;svg&gt;</code> element,
+its size or viewBox does not read or makes no sense, or it is larger than StitchCraft reads, its
+style sheets included. Nothing was stitched.</p>
+<p>The message says what is wrong and, for XML errors, where. Open the file in a vector editor and
+save it again as plain SVG.</p>
+<h2 id="sc-w0802"><a class="header" href="#sc-w0802">SC-W0802</a></h2>
+<p><strong>Warning</strong> — SVG feature ignored</p>
+<p>Part of the SVG uses a feature that StitchCraft does not stitch, so that part is left out or
+simplified: text that is not converted to paths, raster images, nested <code>&lt;svg&gt;</code> elements, style sheet
+rules with selectors StitchCraft does not read, or a gradient or pattern used as a colour. Values that
+do not read are named too. A colour that does not read is ignored, as a viewer ignores it, and one of
+Ink/Stitch’s design settings keeps its default. A line that <code>--auto</code> sews across its width, as a satin
+column or a fill, is as wide as its transforms stretch it on average, so a transform that stretches it
+more one way than the other, and draws it wider one way, is named too.</p>
+<p>So is what StitchCraft does not apply of an Ink/Stitch file: the settings of a group, which Ink/Stitch
+doesn’t read either, those of its early versions (<code>embroider_</code> attributes), a turn on export
+(<code>rotate_on_export</code>) that is not a number, and the updates Ink/Stitch would make to a file with its
+settings and no file version, or from a newer Ink/Stitch, which is read as it is. Of its commands, one
+on an object that is not stitched is named, and so is a start, end, target, origin or stop position
+command whose place doesn’t read, an <code>ignore_layer</code> command in no layer, a command on a shape digitized
+automatically (<code>--auto</code>), which places where its parts start and end, and a start, end or target
+command on a clone (<code>&lt;use&gt;</code>), which Ink/Stitch applies to shapes alone. Of a clone, its Ink/Stitch
+settings that change nothing are named, an <code>angle</code> that is not an angle, and its angle settings on a
+shape digitized automatically; a clone inside more than 16 others is left out. Of clip paths, which cut
+the shapes they clip, what isn’t applied is named: text in one, which adds nothing to it, a clip path
+on a clip path’s shape, one that isn’t a reference, such as a CSS shape, clip paths that name each
+other in a loop, <code>objectBoundingBox</code> units on a group, groups in a clip path more than 16 deep, and the
+root’s.</p>
+<p>The message names the element and what was done. Convert text to paths in the editor (in Inkscape:
+Path › Object to Path), and give shapes plain colours.</p>
+<h2 id="sc-i0805"><a class="header" href="#sc-i0805">SC-I0805</a></h2>
+<p><strong>Info</strong> — Object left out, as the file asks</p>
+<p>An object or a layer is left out because the file asks for it: an Ink/Stitch “ignore object” or
+“ignore layer” command, the object’s Ink/Stitch setting <code>ignore_object</code>, or a clone’s setting <code>clone</code>
+turned off. Designs keep templates, placement lines and notes this way, in the drawing but out of the
+sew-out, and Ink/Stitch leaves them out too.</p>
+<p>The message names what was left out and why. To stitch it, delete the command’s symbol, or turn the
+setting off in Ink/Stitch’s parameters.</p>
+<h2 id="sc-i0818"><a class="header" href="#sc-i0818">SC-I0818</a></h2>
+<p><strong>Info</strong> — Ink/Stitch file from an older version, read as Ink/Stitch updates it</p>
+<p>The SVG file was saved by an older Ink/Stitch, and is read as Ink/Stitch updates such a file when it
+opens it, so that it sews as it did: a default or a setting whose meaning has changed since is
+written into the shapes that relied on it. Ink/Stitch numbers the files it saves. Before its file
+version 4, a fill’s stitches were 3 mm long unless it set another length, where they are 4 mm now,
+and a fill with <code>auto_fill</code> off was a legacy fill; before version 3, a zigzag stroke’s pull
+compensation was shared by its 2 sides, and a satin column started and ended where it was drawn;
+before version 2, a polyline whose style set a stroke was sewn as a manual stitch, with a needle
+point at each of its points. A shape digitized automatically (<code>--auto</code>) sews by StitchCraft’s rules
+instead.</p>
+<p>The message gives the file’s version, and how many shapes were updated and how. Nothing needs doing:
+the design sews as Ink/Stitch sews it. To sew a shape otherwise, change the setting the message
+names in Ink/Stitch.</p>
+<h2 id="sc-e0819"><a class="header" href="#sc-e0819">SC-E0819</a></h2>
+<p><strong>Error</strong> — More than one origin or stop position</p>
+<p>The file gives the design 2 origins, or 2 stop positions where the design has a stop: Ink/Stitch’s
+<code>origin</code> or <code>stop_position</code> command more than once, or more than one object named <code>stitch:origin</code> or
+<code>stitch:stop-position</code> in a VectorCraft document. Which one counts isn’t known, so no machine file is
+written, as Ink/Stitch writes none (<code>REQ-ASM-005</code>). 2 stop positions in a design without a stop
+change nothing.</p>
+<p>The message names the command or marker and counts them. Delete or rename all but one.</p>
+<h2 id="sc-e0820"><a class="header" href="#sc-e0820">SC-E0820</a></h2>
+<p><strong>Error</strong> — VectorCraft selection not routed</p>
+<p>StitchCraft’s Auto-Route Satin Columns, a filter in VectorCraft, routes the selected paths whose own
+StitchCraft effects make them satin columns, with the paths among them whose own effects make them
+strokes, which show where the needle may travel. Its Auto-Route Running Stitch routes the selected
+paths whose own effects make them strokes. A path sewn by a group’s effect, or by none, is left as it
+is. The route runs between the objects named <code>stitch:route-start</code> and <code>stitch:route-end</code> selected with
+the paths. It changed nothing, because nothing was selected, because no selected path has an effect of
+its own that the filter routes, or because 2 markers of a kind were selected, and which one counts isn’t
+known, as Ink/Stitch’s Auto-Route Satin Columns stops at 2 <code>autoroute_start</code> or <code>autoroute_end</code>
+commands.</p>
+<p>The message says which. Select the satin columns or the running stitches to route, and put
+StitchCraft’s Satin or Stroke effect on the paths themselves rather than on their group. Keep one start
+marker and one end marker in the selection.</p>
+<h2 id="sc-e0821"><a class="header" href="#sc-e0821">SC-E0821</a></h2>
+<p><strong>Error</strong> — VectorCraft tartan’s sett not set</p>
+<p>StitchCraft Tartan, a filter in VectorCraft, sets the sett of the selected paths’ tartan fills from a
+code: a palette code, a threadcount of colour letters, or the threadcount the Scottish Register of
+Tartans’ search gives. A path takes the sett when its own first StitchCraft effect is the fill effect,
+or when it has none, and the filter then gives it the fill effect. It changed nothing: nothing was
+selected, no selected path takes a sett, or the code can’t be read, names letters the register uses
+for no colour, which the fill would leave unsewn, gives no stripe, or makes a setting longer than the
+fill’s Sett holds.</p>
+<p>The message says which. Select the paths to sew as a tartan, and write each stripe as a colour in
+brackets and its width, or as the register’s colour letters and a count of threads.</p>
+<h2 id="sc-w0804"><a class="header" href="#sc-w0804">SC-W0804</a></h2>
+<p><strong>Warning</strong> — Element geometry invalid or out of range</p>
+<p>An element’s geometry cannot be used: its path data or its list of points has an error (the path is
+stitched up to the error, as SVG viewers draw it), its transform is not valid (it is skipped with
+everything inside it), it draws nothing, or it lies more than 10 metres from the document’s origin,
+beyond what machine files can record (it is skipped). A stroke width, join or miter limit that does
+not read is named as well, and ignored as a viewer ignores it, and so is an empty width, height or
+viewBox of the drawing, or an aspect ratio that does not read, and a symbol’s viewBox, aspect ratio
+or size that a clone gives it. A stroke too wide to measure is skipped, and so is a clone that shows
+itself, directly or through other clones, as viewers skip it, and a symbol shown in a viewport of no
+area. A clone whose source’s place doesn’t read is drawn, but the angles of its fills don’t turn with
+it.</p>
+<p>The message names the element. Check its path data, points and transform, or remove stray objects
+far from the design.</p>
+<h2 id="sc-w0803"><a class="header" href="#sc-w0803">SC-W0803</a></h2>
+<p><strong>Warning</strong> — VectorCraft file from a newer format version; read best-effort</p>
+<p>The <code>.vectorcraft</code> file comes from a newer VectorCraft: its format version is newer than the newest
+StitchCraft reads. StitchCraft reads it as that version, usually all of a design’s paths and paints,
+where older versions of VectorCraft refuse the file.</p>
+<p>The message gives the file’s format version and the newest StitchCraft reads. Compare the stitches
+with the drawing, or save a copy in that format from the newer VectorCraft: File › Save a Copy, then
+the Version in VectorCraft Options.</p>
+<h2 id="sc-e0806"><a class="header" href="#sc-e0806">SC-E0806</a></h2>
+<p><strong>Error</strong> — VectorCraft file could not be read</p>
+<p>The <code>.vectorcraft</code> file could not be read: it is not a VectorCraft document (its JSON does not
+read, it names another format, or it holds no document), the data VectorCraft keeps after its JSON
+is damaged, it unpacks to more JSON than StitchCraft reads, or its objects’ names, settings or paths,
+copied into each fill and stroke made of them, come to more than StitchCraft holds. Nothing was
+stitched.</p>
+<p>A StitchCraft live effect or filter gives this message when what VectorCraft passes it does not read
+as VectorCraft’s plug-in ABI v1 says, which a VectorCraft with another plug-in ABI would do. The
+effect leaves the object as it is, and the filter changes nothing.</p>
+<p>The message says what is wrong and, for JSON errors, where. Open the file in VectorCraft and save it
+again. For a plug-in, install the StitchCraft plug-ins made for that version of VectorCraft.</p>
+<h2 id="sc-w0807"><a class="header" href="#sc-w0807">SC-W0807</a></h2>
+<p><strong>Warning</strong> — VectorCraft object or feature not stitched</p>
+<p>Part of the VectorCraft document is not stitched: text, images, symbols, objects VectorCraft computes as
+it draws them (blends, envelopes, meshes, repeats, placed documents and Intertwine objects), a kind of
+object StitchCraft does not read, opacity masks, VectorCraft’s own effects, a brush’s art, a StitchCraft
+effect it cannot use, such as an Auto effect beside a stitch effect, which says how the object sews, or
+a group’s or a layer’s own fills and strokes. A clip group cuts what it holds to its clipping object:
+text, an image, a placed document, a live object or a kind StitchCraft does not read there adds nothing
+to the clip, which is said too. So is a clipping object that StitchCraft effects reach: VectorCraft
+clips the preview to the stitches they draw of it, and what sews is cut to it as it is drawn. A gradient
+is sewn in its first colour, and a pattern, or a colour that does not read, in black. An object that
+StitchCraft effects reach from more than one level, its own and a group’s around it, or 2 groups’, sews
+as the nearest say: VectorCraft runs each on the stitches the one before drew, which no machine sews. A
+start or end marker, an object named <code>stitch:start</code> or <code>stitch:end</code>, is never stitched: the shapes
+grouped with it start or end there, and a marker they don’t use is said, a second one of its kind in a
+group or one with no point that reads, as are those beside a shape digitized automatically, which places
+where its parts start and end. So is an origin or stop position marker, <code>stitch:origin</code> or
+<code>stitch:stop-position</code>, with no point that reads. A name that begins with <code>stitch:</code> and names no marker
+StitchCraft reads is said too, as is a group or a layer named as a marker, which only a shape can be:
+the name is ignored. A satin column, a zigzag or a fill made of a stroke is as wide as the stroke all
+along and centred on its path, so a stroke aligned inside or outside a closed path is said, as is a
+width profile, and round or square caps where the stitches end at the path’s end.</p>
+<p>The message names the object and what was done. In VectorCraft, Type › Create Outlines makes paths
+of text, and Object › Expand of blends, envelopes, repeats and placed documents. Break Link to Symbol
+makes paths of a symbol, and Object › Expand Appearance of what effects and brushes draw.</p>
+<h2 id="sc-w0808"><a class="header" href="#sc-w0808">SC-W0808</a></h2>
+<p><strong>Warning</strong> — VectorCraft geometry unusable</p>
+<p>An object’s geometry cannot be used, and the object, or the stroke, is left out: a coordinate or a
+stroke’s width is not a number, the object draws nothing, or it lies more than 10 metres from the
+document’s origin, beyond what machine files can record. A StitchCraft stroke or satin effect takes
+a width that is not a number as 0. Such a path in a clip group’s clipping object adds nothing to the
+clip. A StitchCraft live effect leaves such an object as it is, with this message as the plug-in’s
+last error.</p>
+<p>The message names the object. Check its anchors, or remove stray objects far from the design.</p>
+<h2 id="sc-i0809"><a class="header" href="#sc-i0809">SC-I0809</a></h2>
+<p><strong>Info</strong> — VectorCraft layer or guide left out, as it does not print</p>
+<p>A layer or a guide is left out because VectorCraft does not print it: a template layer, a layer
+whose Print option is off, or a guide. VectorCraft shows them, dimmed or as guides, and keeps them
+out of what it prints and exports; StitchCraft keeps them out of the sew-out.</p>
+<p>The message names the layer or the guide. To stitch a layer, turn its Template option off, or its
+Print option on, in VectorCraft’s Layer Options.</p>
+<h2 id="sc-i0810"><a class="header" href="#sc-i0810">SC-I0810</a></h2>
+<p><strong>Info</strong> — VectorCraft live effect leaves the object as it is</p>
+<p>A StitchCraft live effect draws the object it is applied to as its stitches, or as much of them as its
+preview level shows. It leaves the object as it is when it cannot show them, and VectorCraft shows this
+message as the plug-in’s last error. The object sews no stitch, or its preview level needs more work
+than VectorCraft lets a live effect do. Or it is as wide as its stroke, a satin column drawn as one
+path or a zigzag stroke, and VectorCraft gives the effect no stroke: before 0.14, for an object without
+one, or where the stroke is a group’s. The Auto effect sews an object by its fill and its stroke, and
+leaves it as it is when VectorCraft gives it neither. Or the effect sits on one of the object’s fills
+or strokes, which <code>stitch export</code> doesn’t use. When another message says why an object sews no stitch,
+the effect shows that message instead.</p>
+<p>The message says which. A satin column drawn as one path, and a zigzag stroke, sew as wide as the
+stroke that paints them when exported with <code>stitch export</code>. To see their stitches in VectorCraft, give
+the object a stroke as wide as they are, or draw a satin column’s 2 rails and join them with Object ›
+Compound Path › Make. Apply StitchCraft’s effects to the object itself, not to one of its fills or
+strokes. For a preview that needs more work, the hint names a cheaper level to set the effect’s
+<code>preview_level</code> to.</p>
+<h2 id="sc-i0811"><a class="header" href="#sc-i0811">SC-I0811</a></h2>
+<p><strong>Info</strong> — VectorCraft object left out, as its name asks</p>
+<p>An object or a layer is left out because its name asks for it: the name is <code>stitch:ignore</code>, alone
+or followed by white space and a note, in any mix of upper and lower case. Designs keep placement
+lines, templates and notes this way, in the drawing but out of the sew-out, as Ink/Stitch’s ignore
+commands keep them. Everything in a group or a layer so named is left out with it.</p>
+<p>The message names what was left out. To stitch it, rename it in VectorCraft’s Layers panel.</p>
+<h2 id="sc-w0812"><a class="header" href="#sc-w0812">SC-W0812</a></h2>
+<p><strong>Warning</strong> — VectorCraft design setting ignored</p>
+<p>A design setting that StitchCraft’s Design Settings filter keeps with a VectorCraft document does not
+read: a length that is not a number of 0 or more, or a machine this StitchCraft doesn’t have, as a
+document from a newer one may name. The setting keeps its default, and the design is planned for
+the machine <code>--profile</code> or the export names, or else for the reference machine, the Brother PE800’s
+5 × 7 in hoop.</p>
+<p>The message names the setting and what it holds. To set it again, choose Object › Plug-ins ›
+StitchCraft Design Settings in VectorCraft, which keeps every setting anew.</p>
+<h2 id="sc-e0813"><a class="header" href="#sc-e0813">SC-E0813</a></h2>
+<p><strong>Error</strong> — VectorCraft too old for the filter</p>
+<p>A StitchCraft filter needs what the VectorCraft that ran it doesn’t give a filter, so it declined to
+run, and nothing changed. StitchCraft Design Settings keeps a document’s design settings and machine
+as data VectorCraft keeps with a document for a filter, from 0.16. Stroke to Satin and Test Sheet
+give the objects they make StitchCraft’s effects, as effect records VectorCraft keeps from 0.15.
+Test Sheet tells such a VectorCraft by what it gives every filter from 0.16, since a 0.15 with
+nothing selected looks as 0.14 does.</p>
+<p>The message names the version the filter needs. Update VectorCraft to it or later. Until then, the
+export’s Machine option and <code>stitch export --profile</code> name the machine, the design settings keep
+their defaults, a satin column is drawn with its 2 rails and joined with Make Compound Path, and
+<code>stitch testsheet</code> makes the test sheets.</p>
+<h2 id="sc-e0814"><a class="header" href="#sc-e0814">SC-E0814</a></h2>
+<p><strong>Error</strong> — VectorCraft line not made into a satin column</p>
+<p>StitchCraft’s Stroke to Satin filter makes each selected line into a satin column drawn with rails
+and rungs, which sews as the line does with the satin effect. It changed nothing, because nothing was
+selected, or one of the lines can’t be made so: its path has no stroke to take the column’s width
+from, or can’t be used, its rails can’t be made or would leave parts of it out, as <code>SC-E0214</code> and
+<code>SC-W0213</code> say of a satin column drawn as one path, or the column would be read back with other rails
+or rungs, as one whose rails cross each other is, or would need a rung across an end that its satin
+effect’s push compensation lengthens, which would sew what that adds apart.</p>
+<p>The message names the object. Select the lines, give the path a stroke as wide as the column, draw
+that column with its 2 rails, set the satin effect’s push compensation to 0 or more at one end, or
+leave the object out of the selection.</p>
+<h2 id="sc-e0815"><a class="header" href="#sc-e0815">SC-E0815</a></h2>
+<p><strong>Error</strong> — VectorCraft’s command line could not be started</p>
+<p><code>stitch plan</code> and <code>stitch export</code> trace a picture, a PNG or JPEG file, with VectorCraft’s command
+line, <code>vectorcraft-cli</code>, which VectorCraft publishes with each release. It could not be started: it
+isn’t on the <code>PATH</code>, or the program <code>--vectorcraft-cli</code> names isn’t there or can’t be run. Nothing was
+written but the report.</p>
+<p>The message names the program and why it didn’t start. Install VectorCraft’s command line from
+VectorCraft’s releases, and put it on the <code>PATH</code> or name it with <code>--vectorcraft-cli</code>. Or trace the
+picture with Image Trace in VectorCraft, as the tutorial “From a picture to a machine file” does, and
+plan the document you save.</p>
+<h2 id="sc-e0816"><a class="header" href="#sc-e0816">SC-E0816</a></h2>
+<p><strong>Error</strong> — VectorCraft could not trace the picture</p>
+<p>VectorCraft’s command line ran to trace a picture for <code>stitch plan</code> or <code>stitch export</code>, and it failed
+or saved no document. Nothing was written but the report.</p>
+<p>The message ends with what VectorCraft said. It fails on a file it can’t read as a picture, such as a
+file named <code>.png</code> that holds something else. It fails too when it is a version without the commands
+StitchCraft traces with: the user guide lists the versions the compatibility gate passed. Check that
+VectorCraft places the picture, or trace it with Image Trace in VectorCraft and plan the document you
+save.</p>
+<h2 id="sc-e0817"><a class="header" href="#sc-e0817">SC-E0817</a></h2>
+<p><strong>Error</strong> — VectorCraft test sheet not drawn</p>
+<p>StitchCraft’s Test Sheet filter draws a sheet in the middle of an artboard, the one under the
+selection or else the first. It drew nothing, because there parts of the sheet would lie more than
+10 m from the document’s origin, farther than StitchCraft stitches: a machine file can’t record a
+position past it, and the reader leaves objects there out (<code>SC-W0808</code>).</p>
+<p>The message names the sheet. Select an object on an artboard nearer the origin, or move the artboard
+nearer it, and draw the sheet again.</p>
+<h2 id="sc-i0901"><a class="header" href="#sc-i0901">SC-I0901</a></h2>
+<p><strong>Info</strong> — Shapes digitized automatically</p>
+<p><code>--auto</code>, or StitchCraft’s Auto effect in VectorCraft, digitized the design’s shapes that have no
+settings: StitchCraft chose each one’s stitches by its width, measured to the micrometre. An area is a
+tatami fill; a part of it narrower than the design’s narrowest satin stroke
+(<code>min_satin_stroke_width_mm</code>, 1 mm unless the design sets it) everywhere is a running stitch along its
+centre line, and a part nowhere wider than the widest satin column sews satin columns along its centre
+lines. A line no wider than that narrowest stroke is a running stitch, a line up to the widest satin
+column a satin column as wide as the line, and a wider line a tatami fill of the area it paints. A
+running stitch is tripled from the narrowest triple run. The widest satin column is 7 mm and the
+narrowest triple run 0.5 mm, unless the shape sets others (<code>auto_max_satin_width_mm</code>,
+<code>auto_min_triple_run_width_mm</code>). A line whose every part a satin column cannot follow is filled too
+(<code>SC-I0902</code>), and counted as a fill. An area whose every part runs is counted as a running stitch, one
+none of which is filled and one of whose parts sews a satin column as satin columns, and any other as a
+fill. A narrower part is filled too when it is compact, a blob short for its width, or uneven, a
+branching patch whose width varies. Each shape says which rule chose its stitches (<code>SC-I0912</code>).</p>
+<p>The message counts the shapes that sew by the stitches they sew as: an area that the areas sewn after
+it cover whole sews nothing (<code>SC-I0904</code>), and isn’t counted. To sew a shape another way, give it
+settings: in VectorCraft, apply StitchCraft’s Fill, Stroke or Satin effect to it. A shape with settings
+is not digitized automatically.</p>
+<h2 id="sc-i0902"><a class="header" href="#sc-i0902">SC-I0902</a></h2>
+<p><strong>Info</strong> — Satin column can’t be made; filled</p>
+<p><code>--auto</code> sews a line up to the widest satin column as a satin column along its path, and a part of an
+area nowhere wider than that as satin columns along its centre lines, but it can’t make a satin column
+of this one. The widest satin column is 7 mm unless the shape sets another (<code>auto_max_satin_width_mm</code>).
+A column cannot follow a part of a line that turns more tightly than the line is wide, so the
+column’s edges would fold over themselves, or that is shorter than a CSS pixel, or that is a dot the
+line’s round or square cap draws. The area it paints is filled instead, as a wider line is. A part of
+an area doesn’t make columns where the triangles round one of its centre lines don’t make a column
+with 2 sides, or where one of its columns, drawn with its rails and rungs, would be read back
+otherwise, or when a column would sew a stitch between its rails longer than the widest satin column,
+as at the corners of a square ring: such a stitch lies loose. The part stays in the area’s fill.</p>
+<p>The message says which. To sew it as satin columns, draw the line with gentler turns or narrower, or
+the part with smoother edges, or draw the columns with 2 rails each and give them settings.</p>
+<h2 id="sc-w0903"><a class="header" href="#sc-w0903">SC-W0903</a></h2>
+<p><strong>Warning</strong> — Line too wide to fill; left out</p>
+<p><code>--auto</code> fills the area a line paints when the line is wider than the widest satin column, 7 mm unless
+it sets another (<code>auto_max_satin_width_mm</code>), or when a satin column cannot follow it, and the area this
+line paints would reach more than 10 metres from the design’s origin, beyond what machine files can
+record. It is left out. A stroke that wide is usually a mistake in the file.</p>
+<p>The message gives the line’s width. Check the line’s stroke width.</p>
+<h2 id="sc-i0904"><a class="header" href="#sc-i0904">SC-I0904</a></h2>
+<p><strong>Info</strong> — Areas reach under the shapes sewn after them</p>
+<p><code>--auto</code> makes each automatic area reach its overlap, 1 mm unless it sets another
+(<code>auto_overlap_mm</code>), under the shapes sewn after it, from where it touches them. The thread pulls
+stitches in from the edges of their shape, and without the overlap fabric shows between shapes that
+only meet. Where an area sewn after it covers part of it, as the details on an area digitized whole
+under them do (SC-I0908), the covered part is cut away, its overlap inside the covering area’s edge,
+and sewn once. The running stitch or the satin column along a narrow part of an area covers that part
+as an area does: the areas of other shapes sewn before it are cut away under it, and when the shapes
+sewn after it cover the part whole it sews nothing. A satin column or a line digitized from a stroke
+and sewn after an area goes over it, and the area is sewn whole under it.</p>
+<p>The message counts the areas that reach under others and those cut away. An area that the areas drawn
+or sewn after it cover whole sews nothing, and the message names it, as it does a narrow part’s line.
+It also
+names an area whose neighbours need more work to find than the budget allows it, which neither reaches
+under them nor is cut away, and a satin column whose area needs more, which the areas before it don’t
+reach under, and which keeps its place in paint order beside the shapes near it. To sew a shape as it
+is drawn, give it settings: in VectorCraft, apply StitchCraft’s Fill, Stroke or Satin effect to it.</p>
+<h2 id="sc-i0905"><a class="header" href="#sc-i0905">SC-I0905</a></h2>
+<p><strong>Info</strong> — Speck merged into a neighbour</p>
+<p><code>--auto</code> takes an automatic area smaller than its smallest area, 1 mm² unless it sets another
+(<code>auto_min_area_mm2</code>), or a part of one that small, for a speck the trace left. It is too small to
+sew, and would sew a knot. It is merged into the automatic area it shares the longest edge with,
+which may be the rest of its own area, and no hole shows where it was. A speck that shares no edge
+with an automatic area is left out.</p>
+<p>The message gives the speck’s area and says where it went: into a neighbour, back to the rest of its
+area, or nowhere, as when finding its neighbours needs more work than the budget allows it. To sew it
+as it is, give it settings: in VectorCraft, apply StitchCraft’s Fill, Stroke or Satin effect to it. A
+larger Noise in VectorCraft’s Image Trace leaves such specks out of the trace.</p>
+<h2 id="sc-w0906"><a class="header" href="#sc-w0906">SC-W0906</a></h2>
+<p><strong>Warning</strong> — Background left out</p>
+<p><code>--auto</code> takes the lowest shape of the design for the picture’s background when it is an automatic
+area, a shape on another path than its own is drawn on it, and it covers the whole design to within
+0.5 mm of each side, its holes aside, and the notches aside that the shapes drawn on it fill where
+they touch the picture’s edge. It is left out, unless it switches <code>auto_ignore_background</code> off, but
+for what shows of it inside the picture once the layers are flattened (SC-I0908): its parts that come
+no nearer than 0.5 mm to the design’s sides, such as a white disc on a badge traced with its colours
+stacked, which sew, and which the message counts. A background is usually the fabric’s own colour, and
+sewing it doubles the stitches and stiffens the design. A background that needs more work to find than
+the budget allows is sewn, and the message says so.</p>
+<p>To sew it, give it settings: in VectorCraft, apply StitchCraft’s Fill, Stroke or Satin effect to it.
+Ignore White in VectorCraft’s Image Trace leaves a white background out of the trace.</p>
+<h2 id="sc-i0907"><a class="header" href="#sc-i0907">SC-I0907</a></h2>
+<p><strong>Info</strong> — Elements sewn in an order of their own</p>
+<p><code>--auto</code> sews the automatic elements in an order of its own, and <code>--sort-colours</code> every element.
+Shapes that overlap as drawn keep their paint order, the lower one first, and a satin column or a
+line that borders a fill sews after it, over its edge. Within those rules each thread sews as long
+as an element of it is free to sew, and the next element is the nearest. Elements with settings keep
+their order among themselves unless <code>--sort-colours</code> is given, and nothing moves across a stop.</p>
+<p>The message says how many thread changes the order has, and how many paint order has. It also names
+an element whose neighbours need more work to find than the budget allows, which keeps its place in
+paint order as an element with a stop after it does, and a line whose paint can’t be found, which
+keeps its place beside the shapes near it. SC-I0904 names a satin column whose paint can’t be found.
+And it names the elements left in paint order when choosing the order needs more work than the budget
+allows. To keep shapes in their paint order among themselves, give them settings and leave
+<code>--sort-colours</code> off: in VectorCraft, apply StitchCraft’s Fill, Stroke or Satin effect to each.</p>
+<h2 id="sc-i0908"><a class="header" href="#sc-i0908">SC-I0908</a></h2>
+<p><strong>Info</strong> — Layers flattened</p>
+<p><code>--auto</code> flattens the layers of a traced picture before it digitizes them. Each automatic area sews
+only what shows of it: the automatic areas drawn over it are taken from it, a hairline that rounding
+leaves along their edges shows nothing, and one they cover whole sews nothing (SC-I0904). An automatic
+area that is filled (wider than a satin column somewhere, 7 mm unless <code>auto_max_satin_width_mm</code> says
+another, or compact, or uneven: <code>SC-I0912</code>) is digitized whole under its details, the automatic areas
+that fill its holes: its stitches are chosen with those holes closed, it sews before its details, and it
+is cut away under them, its overlap inside their edges. So a picture traced with its colours stacked
+sews as one traced with its colours abutting, and a broad area with details on it is one fill, not
+narrow columns between the details. An area that sews as satin columns, such as a letter or an
+outline, keeps its holes, and the shapes in them sew beside it.</p>
+<p>The message counts the areas that sew only what shows of them and those digitized whole under their
+details. It also names an area whose layers need more work to find than the budget allows: one whose
+part that shows can’t be found is sewn as it is drawn, in its place, or left out whole when it is the
+background; one whose holes can’t be found keeps them open; one that can’t be moved keeps its place;
+and one whose region can’t be given is sewn as it is drawn. To sew a shape as it is drawn, give it
+settings: in VectorCraft, apply StitchCraft’s Fill, Stroke or Satin effect to it.</p>
+<h2 id="sc-i0909"><a class="header" href="#sc-i0909">SC-I0909</a></h2>
+<p><strong>Info</strong> — Base layer sewn under the design</p>
+<p><code>--auto</code> sews one base layer under the whole design before anything else, so that fabric of any
+colour shows less where 2 shapes leave a slit between them. Its shape is what the automatic shapes
+paint together, with the slits narrower than a thread closed, offset by -0.4 mm, which is inwards,
+unless the design sets another offset (<code>auto_base_offset_mm</code>). It is an open fill of stitches 3 mm
+long in 3 directions (<code>auto_base_stitch_length_mm</code>), in the thread that paints the largest area, and
+every stitch of it is underlay. The fills on it sew no underlay of their own. A piece of it that has
+no room for a row of those stitches is left out, as under a satin column that stands alone, which
+sews the underlay of its width.</p>
+<p>The message gives its area, how many pieces it has and its thread. A design that is nowhere wide
+enough for one has none, and the message says so. A design whose shapes all sew as lines and
+columns has none either, and nothing is said. To sew the design without a base layer, turn
+<code>auto_base_layer</code> off: each fill then sews the underlay of its settings (SC-I0911).</p>
+<p>Where thin shapes meet, the top thread can leave a sliver bare, and the base layer’s thread shows
+there in place of the fabric. The check that StitchCraft’s test pictures pass allows a sliver of up
+to 0.4 mm² with the base layer under it (<code>auto_base_sliver_mm2</code>), and up to 0.5 % of the design left
+to the base layer in all (<code>auto_base_bare_percent</code>). A larger gap fails it.</p>
+<h2 id="sc-w0910"><a class="header" href="#sc-w0910">SC-W0910</a></h2>
+<p><strong>Warning</strong> — Base layer left out</p>
+<p><code>--auto</code> could not find the shape of the design’s base layer within the work budget, so the design
+sews without one, and every fill sews the underlay of its settings. On dark fabric the slits between
+shapes then show the fabric. Raise the work budget, or simplify the picture: fewer colours and less
+detail in VectorCraft’s Image Trace give fewer shapes.</p>
+<h2 id="sc-i0911"><a class="header" href="#sc-i0911">SC-I0911</a></h2>
+<p><strong>Info</strong> — Base layer turned off</p>
+<p><code>--auto</code> sews no base layer, because the design’s lowest automatic shape turns <code>auto_base_layer</code>
+off. Each fill sews the underlay of its settings, and nothing lies under a place that the top thread
+leaves bare between 2 shapes. On fabric of another colour than the design, the fabric may show
+there. With the base layer, its thread shows in such a place (SC-I0909). This is information and no
+warning, because the design sews as its settings ask. To sew the base layer, turn <code>auto_base_layer</code>
+on, or leave it unset.</p>
+<h2 id="sc-i0912"><a class="header" href="#sc-i0912">SC-I0912</a></h2>
+<p><strong>Info</strong> — Rule that chose a shape’s stitches</p>
+<p><code>--auto</code> chooses the stitches of each part of a shape from the part’s geometry, by the first rule
+of one table that the part matches. The message names that rule for each part, with the measures
+that decided it: the part’s width along its centre lines, its slenderness (its area over its width
+squared), how much its width varies along those lines, and how many of them it has. A shape of many
+parts gives the measures of its first 3 and counts the rest by rule.</p>
+<p>To sew the shape another way, set <code>auto_stitch</code> on it to <code>run</code>, <code>satin</code> or <code>fill</code>: in VectorCraft,
+in the dialog of StitchCraft’s Auto effect. For the whole design, lean the rules with <code>auto_prefer</code>,
+turn <code>auto_fill_uneven</code> off, or set a bound itself with <code>stitch plan --set</code>.</p>
+<h2 id="sc-w0913"><a class="header" href="#sc-w0913">SC-W0913</a></h2>
+<p><strong>Warning</strong> — Design sews thick</p>
+<p>A design digitized with <code>--auto</code> puts thread on thread. Each area reaches under the shapes sewn
+after it, and a base layer lies under all of them. An outline lies on a fill’s edge. Where too much
+thread lies over one spot, a needle deflects and the thread shreds or breaks. Planning measures the
+design in 2 ways, in the window of 1 mm² round each spot. The first is the thread, in fills: the
+length of thread over the spot, as a share of what a fill with rows 0.4 mm apart lays. The second is
+the needle points in a square millimetre, the locks left out. The warning is given when a place of
+1 mm² or more has 3 fills or more (<code>auto_thick_warn_fills</code>), or 15 needle points or more to a
+square millimetre (<code>auto_thick_warn_points</code>). The message gives the most of each measure and where,
+from the design’s centre, the shapes whose thread is stacked there, and the area at each limit
+and at the failing limits, 6 fills (<code>auto_thick_fail_fills</code>) and 30 needle points
+(<code>auto_thick_fail_points</code>).</p>
+<p>The design is written all the same. The limits are starting values for a 75/11 needle and
+40-weight polyester thread, from the public advice of machine and software makers, and no sew-out
+has confirmed them yet: sew a test piece of the thickest part before the whole design.
+<code>stitch preview --style thickness</code> draws where the thread is thick. A design too large to measure,
+or one whose measuring needs more work than the budget allows, gets this warning too, and its
+message says that the design was not measured.</p>
+<h2 id="sc-i0914"><a class="header" href="#sc-i0914">SC-I0914</a></h2>
+<p><strong>Info</strong> — Jumps not looked at for a run under later shapes</p>
+<p>Between 2 elements of one thread that <code>--auto</code> made, the needle sews a run under the shapes sewn
+later where they cover a way from one to the next, and leaves no jump thread to cut. Finding what
+covers, and the ways, has the work budget once for the whole design. This design needed more, so
+from the element named on its moves are as they were before: sewn on within the collapse length,
+and jumps beyond it. The design sews, with more jump threads than it need have. To have the runs,
+plan it with a larger work budget, or digitize fewer shapes: trace the picture in fewer colours,
+or raise <code>auto_min_area_mm2</code>.</p>
+<h2 id="sc-i0915"><a class="header" href="#sc-i0915">SC-I0915</a></h2>
+<p><strong>Info</strong> — Thin line merged into a neighbour</p>
+<p><code>--auto</code> takes a part of an automatic area narrower than the design’s narrowest satin stroke
+everywhere, a thin line such as soft shading and the strands of fur trace into, and merges it into
+the automatic area it shares the longest edge with, which may be the rest of its own area. Sewn on
+its own, such a line is a running stitch between 2 fills, and the fills beside it end their rows on
+it. Merged, it sews as part of the fill beside it. An area whose every part is such a line, merged,
+sews nothing of its own. A thin part that shares no edge with an automatic area sews as a line.</p>
+<p>The message gives the line’s area and says where it went. To sew such lines as running stitches,
+turn <code>auto_fill_uneven</code> off, as the <code>logo</code> style does, or give the shape settings.</p>
+<h2 id="sc-e1001"><a class="header" href="#sc-e1001">SC-E1001</a></h2>
+<p><strong>Error</strong> — Nothing to route</p>
+<p>Routing joins satin columns, and the running stitches among them, into one route, as Ink/Stitch’s
+Auto-Route Satin Columns does: StitchCraft Auto-Route Satin Columns in VectorCraft, and lettering in a
+font whose <code>auto_satin</code> is on. It joins running stitches alone as Ink/Stitch’s Auto-Route Running
+Stitch does, in StitchCraft Auto-Route Running Stitch. It routed nothing, because none of the elements
+it was given is one the tool can route (<code>SC-I1002</code>). Routing satin columns, they are fills, strokes
+alone, or columns left out of the route. Routing running stitches, they are fills, satin columns, or
+strokes left out of the route. Nothing changed.</p>
+<p>The message names the tool and counts the elements given. Give the satin columns to route, with the
+running stitches among them that show where the needle may travel, or the running stitches.</p>
+<h2 id="sc-i1002"><a class="header" href="#sc-i1002">SC-I1002</a></h2>
+<p><strong>Info</strong> — Element left out of the route</p>
+<p>Routing takes satin columns, and the strokes among them, which show where the needle may travel, or
+running stitches alone. This element is kept as it is, in its place: it is a fill, a shape digitized
+automatically, an element whose settings don’t read, a satin column whose rails can’t be made, a
+column or a stroke of no length, or a stroke whose first subpath ends where it starts, which shows no
+way between 2 places. Routing running stitches, it is also a satin column, which that tool doesn’t
+take. Ink/Stitch’s tools leave a fill as it is too, and Auto-Route Satin Columns an element of no
+length.</p>
+<p>The message says why. Nothing needs doing unless the element was meant to be routed: then give it
+settings that read, draw it as a satin column or as a stroke, as the tool takes it, or open the
+stroke’s first subpath.</p>
+<h2 id="sc-w1003"><a class="header" href="#sc-w1003">SC-W1003</a></h2>
+<p><strong>Warning</strong> — Piece of a routed satin column may sew otherwise</p>
+<p>Routing cuts each satin column into pieces along its centre line, each drawn with its share of the
+column’s rails and rungs and a rung more at an end where it needs one, so that it sews the pairs the
+column sews along it. This piece, read back as any satin column is, has other rails or pairs other
+points: the column’s rails cross each other there, or a rung crosses a rail twice. It is kept in the
+route, and may sew otherwise than the column did there.</p>
+<p>The message names the column. Draw the column with rails that don’t cross and rungs that cross each
+rail once, with more rungs where it turns sharply.</p>
+<h2 id="sc-w1004"><a class="header" href="#sc-w1004">SC-W1004</a></h2>
+<p><strong>Warning</strong> — Too many lines to cut where they cross</p>
+<p>Routing running stitches cuts each line where it crosses or touches another, and where 2 pass within
+50 CSS pixels (13.2 mm) of each other, at their nearest points, so that the route can turn there. That
+compares every pair of lines, so it is done for at most 1,000 lines, each subpath a line and each part
+of one that crosses itself another. These are more, so no line is cut by another: they are routed as
+drawn, each cut only where it crosses itself, as with Ink/Stitch’s Add nodes at intersections off.
+The route joins lines that meet only at points they share, and jumps between the others.</p>
+<p>The message counts the lines. Route fewer running stitches at a time, or turn Add nodes at
+intersections off and draw a node of both lines wherever 2 meet.</p>
+<h2 id="sc-e1101"><a class="header" href="#sc-e1101">SC-E1101</a></h2>
+<p><strong>Error</strong> — Font could not be read</p>
+<p>A font in Ink/Stitch’s format is a folder. Its <code>font.json</code> gives the font’s settings, and a glyph file
+for each direction it sews in, such as <code>ltr.svg</code>, or a folder of them, draws its glyphs. This font
+wasn’t read: its <code>font.json</code> is missing, compressed, or doesn’t hold an object of settings, it has no
+glyph file StitchCraft reads, or a glyph file isn’t SVG that StitchCraft reads. Nothing of it can be
+sewn.</p>
+<p>The message names the file and says what is wrong with it. Ink/Stitch’s Font Management › Generate
+JSON writes a <code>font.json</code>. A glyph file opened in Inkscape and saved again as Inkscape SVG reads.</p>
+<h2 id="sc-w1102"><a class="header" href="#sc-w1102">SC-W1102</a></h2>
+<p><strong>Warning</strong> — Font setting not read, its default kept</p>
+<p>A setting in the font’s <code>font.json</code> has a value of another type than the setting takes, such as a
+text where it takes a number, or a word it doesn’t take. The setting keeps Ink/Stitch’s default, and
+the rest of the font is read. An entry of a list or a table that isn’t of its type, such as a kerning
+pair whose value is a text, is left out, and the others are read.</p>
+<p>The message names the setting, what it takes and what the file gives. The font settings page of the
+user’s guide lists what each setting takes. Correct the value in <code>font.json</code>, or write the file again
+with Ink/Stitch’s Font Management › Edit JSON.</p>
+<h2 id="sc-w1103"><a class="header" href="#sc-w1103">SC-W1103</a></h2>
+<p><strong>Warning</strong> — Font file not read</p>
+<p>A glyph file of the font is compressed with xz, as Ink/Stitch’s own packages ship their fonts.
+StitchCraft reads glyph files of plain SVG, so the glyphs drawn in this one are left out. The font’s
+other glyph files are read.</p>
+<p>The message names the file. Unpack it with <code>xz --decompress</code>: the fonts in Ink/Stitch’s source
+repository are plain SVG.</p>
+<h2 id="sc-w1104"><a class="header" href="#sc-w1104">SC-W1104</a></h2>
+<p><strong>Warning</strong> — Glyph left out</p>
+<p>A glyph of the font is left out, as Ink/Stitch’s lettering leaves it out. Lettering places each glyph
+by its box, the space its paths take across, and this glyph has none: its layer has no path, or a path
+in it draws nothing, such as one of empty path data. Or its file’s baseline guide doesn’t give a
+place, and every glyph of the file is left out. Text that needs the glyph sews the font’s default
+glyph in its place.</p>
+<p>The message names the glyph or the file. Draw the glyph with paths and delete the paths in its layer
+that draw nothing, or place the baseline guide again in Inkscape.</p>
+<h2 id="sc-i1105"><a class="header" href="#sc-i1105">SC-I1105</a></h2>
+<p><strong>Info</strong> — Font read as Ink/Stitch reads it</p>
+<p>The font was read as Ink/Stitch’s lettering reads it, in a way its author may not expect. A key of
+<code>font.json</code> that the format doesn’t have changes nothing. Of 2 glyphs of one name in a direction, the
+later counts. A glyph file without a guide labelled <code>baseline</code> puts its glyphs’ baseline at the page’s
+top. A font without a glyph file for its <code>default_variant</code> sews its first direction by default.</p>
+<p>The message says which. Nothing needs doing when the font sews as wanted. Otherwise correct the key,
+delete or rename the glyph drawn twice, add the baseline guide, or set <code>default_variant</code> to a
+direction the font has.</p>
+<h2 id="sc-w1106"><a class="header" href="#sc-w1106">SC-W1106</a></h2>
+<p><strong>Warning</strong> — Scale outside the font’s range</p>
+<p>Lettering sets text at a scale, in percent of the font’s own size. A font in Ink/Stitch’s format says
+how small and how large it sews well, with <code>min_scale</code> and <code>max_scale</code> in its <code>font.json</code>: its
+author digitized its columns for those heights. The scale asked for lies outside them, and the text
+is set at the nearest scale within them.</p>
+<p>The message names the scale asked for, the font’s range in percent and in millimetres, and the scale
+the text is set at. Choose a scale within the range, or a font drawn for the size you want: small
+letters have fonts of their own, such as Ink/Stitch Small Font.</p>
+<h2 id="sc-w1107"><a class="header" href="#sc-w1107">SC-W1107</a></h2>
+<p><strong>Warning</strong> — Character not in the font</p>
+<p>The text has a character that the font draws no glyph for. The font’s default glyph, which
+<code>default_glyph</code> names in its <code>font.json</code>, sews in its place, as in Ink/Stitch. In a font without that
+glyph, the character is left as a space.</p>
+<p>The message names each such character with its Unicode number, and what sews for it. Choose a font
+that has the characters, or write the text without them. The 4 forms of an Arabic letter aren’t
+chosen yet, so Arabic text sews as default glyphs.</p>
+<h2 id="sc-e1108"><a class="header" href="#sc-e1108">SC-E1108</a></h2>
+<p><strong>Error</strong> — Text could not be set</p>
+<p>Lettering couldn’t set the text, and nothing was written. No character of the text sews: the text is
+empty or only spaces, or the font has no glyphs. Or a glyph can’t be placed: the scale or a spacing
+is no number, or the text is longer than the 10 m a design may span.</p>
+<p>The message says which. Give a text with a character the font draws, and spacings of a few
+millimetres.</p>
+<h2 id="sc-w1109"><a class="header" href="#sc-w1109">SC-W1109</a></h2>
+<p><strong>Warning</strong> — Text longer than its path</p>
+<p>A text set along a path has a line longer than the path. Nothing is left out. On an open path the
+line goes on straight past the path’s end, the way the path ends, and before its start when the
+line is centred or ends at the path’s end. On a closed path it goes round again, over its own
+start. A stretched line has its letters pushed together to fit, and they overlap.</p>
+<p>The message gives the line’s length and the path’s. Draw a longer path, set the text at a smaller
+scale, or write a shorter text.</p>
+<h2 id="sc-w1110"><a class="header" href="#sc-w1110">SC-W1110</a></h2>
+<p><strong>Warning</strong> — Lettering setting not applied</p>
+<p>A setting of lettering asks for something the font isn’t drawn for, and the text sews without it.
+Lines sew back and forth only in a font that draws its glyphs for both directions and whose
+<code>font.json</code> doesn’t say <code>reversible</code> is false: in another font every line sews the same way, and
+the thread jumps from each line’s end to the next line’s start. Colours are sorted only in a font
+whose <code>font.json</code> says it is <code>sortable</code>: another font sews each letter’s colours before the next
+letter.</p>
+<p>The message names the font and the setting. Choose a font drawn for what you ask. Between lines
+that sew the same way, a machine that cuts its threads cuts the long one, and on another machine you
+cut it after sewing. Ink/Stitch Small Font and Medium Font sew both ways.</p>
+<h2 id="sc-w1111"><a class="header" href="#sc-w1111">SC-W1111</a></h2>
+<p><strong>Warning</strong> — Text not sewn in its embroidery font</p>
+<p>A text object wasn’t sewn: one of a VectorCraft document that has StitchCraft’s Lettering effect,
+or one that automatic digitizing sews as lettering (<code>SC-I1116</code>), an SVG file’s too. Of the second
+kind, the default embroidery font isn’t there, or a line of the text can’t be set. The rest of the document sews. The font the effect names isn’t one this build of the
+plug-ins holds or <code>stitch</code> finds in its font folders, or the font didn’t read. Or the text is
+area type, type on a path or vertical type, which lettering doesn’t set yet. Or no character of
+the text is one the font draws.</p>
+<p>The message says which, and names the fonts that are there. Choose one of them in the effect’s
+dialog, set <code>STITCHCRAFT_FONTS</code> to the folder that holds the font’s folder for <code>stitch</code>, or write
+the text as point type on one line or more.</p>
+<h2 id="sc-i1112"><a class="header" href="#sc-i1112">SC-I1112</a></h2>
+<p><strong>Info</strong> — Traced letters replaced by lettering</p>
+<p>A shape or a line named <code>stitch:text</code> marks text in a picture, and the traced shapes inside it were
+replaced by lettering of the marker’s text, as tall as they were.</p>
+<p>The message names the marker, counts the shapes taken out, and gives their height, the text, the
+font and the lettering’s height. Nothing needs doing.</p>
+<h2 id="sc-w1113"><a class="header" href="#sc-w1113">SC-W1113</a></h2>
+<p><strong>Warning</strong> — Text marker not used</p>
+<p>A shape or a line named <code>stitch:text</code> marks text in a picture, and it wasn’t used, or one of its
+settings wasn’t. A marker that isn’t used is not sewn, and what lies inside it sews as it was
+traced. The marker has no text, or encloses no area, or no shape lies wholly inside it. Or its
+font isn’t one this build of the plug-ins holds or <code>stitch</code> finds in its font folders, or doesn’t
+read, or draws none of the text’s characters.</p>
+<p>The message says which. Draw the marker round every letter, name it <code>stitch:text</code> and the text,
+and name a font that is there with <code>font=NAME</code> after the text in double quotes.</p>
+<h2 id="sc-w1114"><a class="header" href="#sc-w1114">SC-W1114</a></h2>
+<p><strong>Warning</strong> — Shape crosses a text marker’s edge</p>
+<p>Shapes lie more than half inside a text marker and cross its edge. Only what lies wholly inside a
+marker is replaced, so they sew as they were traced, beside the lettering. They may be letters the
+marker doesn’t reach round, or letters the tracing joined to something outside it.</p>
+<p>The message counts them. Draw the marker round every letter of the text and round nothing else,
+or part the joined shapes in the drawing first.</p>
+<h2 id="sc-w1115"><a class="header" href="#sc-w1115">SC-W1115</a></h2>
+<p><strong>Warning</strong> — Lettering not the traced letters’ size</p>
+<p>The lettering that replaced a picture’s traced letters isn’t their size. The letters are shorter
+or taller than the font sews, and the text is set at the nearest height it does sew. Or the font’s
+letters are much narrower or wider than the traced ones, and spreading them by up to half their
+height, or closing them up by a tenth, didn’t make the text as wide.</p>
+<p>The message gives both heights and both widths. The lettering is centred on the traced letters,
+and may reach past them or leave room. Choose a font that sews at the letters’ height, or sew the
+design larger.</p>
+<h2 id="sc-i1116"><a class="header" href="#sc-i1116">SC-I1116</a></h2>
+<p><strong>Info</strong> — Text sewn in an embroidery font</p>
+<p>Automatic digitizing sewed a text object, an SVG file’s <code>&lt;text&gt;</code> or a VectorCraft document’s point
+type, as lettering in an embroidery font. A drawing keeps a text’s characters and names its
+typeface, and StitchCraft reads no typeface’s file yet, so the embroidery font’s letters stand in:
+the word sews where the drawing has it, and doesn’t look like the drawing’s typeface. Each line
+sews 0.7 of its font size tall, which is about how tall a typeface draws its capitals, within the
+heights the embroidery font sews at. A line that would then be longer than its text most likely was
+in the drawing is set smaller to fit: an embroidery font’s letters are wider than most typefaces’.</p>
+<p>The message names the text, the embroidery font, the height and why, and the longest line’s length.
+Nothing needs doing. For the
+typeface’s own letter shapes, convert the text to paths in the drawing program. In VectorCraft,
+StitchCraft’s Lettering effect on the text chooses the embroidery font and its size.</p>
+<h2 id="sc-w1117"><a class="header" href="#sc-w1117">SC-W1117</a></h2>
+<p><strong>Warning</strong> — Lettering longer than its text’s place</p>
+<p>A line of a text object that automatic digitizing sewed as lettering (<code>SC-I1116</code>) is longer than
+its text’s place in the drawing. The lettering is fitted to the length the text most likely had:
+the one the drawing states, or half the font size for each character. Its gaps are narrowed and
+then it is set smaller. Here it reached the smallest height the embroidery font sews at and is
+still longer, so it reaches past the place of the text, perhaps over a shape beside it.</p>
+<p>The message names the line, its length as sewn, the height and the length of its place. Make the
+text larger or shorter in the drawing, or convert it to paths there.</p>
+<h2 id="sc-i1118"><a class="header" href="#sc-i1118">SC-I1118</a></h2>
+<p><strong>Info</strong> — Font chosen by the letters’ weight</p>
+<p>A text marker names no font, so the font was chosen among those the plug-ins hold: the one whose
+strokes are nearest in width to the traced letters’, among the fonts that sew at the letters’
+height. A bold font sews bold letters, and a light one light letters.</p>
+<p>The message gives the letters’ height and how wide their strokes are in heights, and names the font
+with its own width. When the nearest font in weight doesn’t sew that small or that large, it says
+so, and from what height that font sews. Nothing needs doing. To choose yourself, name a font with
+<code>font=NAME</code> after the text in double quotes.</p>
+<p>For a text object under automatic digitizing, which has no traced letters, a bold weight chooses
+the bold font when it sews every line at its size. The message says so, or gives the font size
+from which the bold font sews.</p>
+<h2 id="sc-i1119"><a class="header" href="#sc-i1119">SC-I1119</a></h2>
+<p><strong>Info</strong> — Thread taken from thick spots</p>
+<p>A design digitized automatically still sewed more than 4 fills of thread on a spot of a millimetre once it was planned, and a last pass
+took thread there that is hidden or does no visible work: travel that went out and back on itself, lock stitches beyond one back and
+forth, and row ends that lie under shapes sewn later, moved back along their rows, the base layer’s first. It took no top stitch that
+shows, and made no jump thread.</p>
+<p>The message gives the area that was above 4 fills, how much thread of each kind was taken in how many places, the area still above, and
+the thickest spot left. Nothing needs doing. A spot still above 4 fills is one where no more thread is hidden: <code>SC-W0913</code> names what is
+stacked there. If the pass needs more work than the budget allows, it takes nothing, and the message says so.</p>
+<h2 id="sc-e1201"><a class="header" href="#sc-e1201">SC-E1201</a></h2>
+<p><strong>Error</strong> — Subject cut-out’s models not ready</p>
+<p><code>--subject</code> and <code>stitch cutout</code> cut a picture’s subject out with 3 models, which <code>stitch</code> fetches with
+curl on first use into the folder <code>STITCHCRAFT_MODELS</code> names, or else <code>stitchcraft/models</code> in your
+cache folder, and checks before each use. A file couldn’t be fetched, or isn’t the one pinned. Nothing
+was written but the report.</p>
+<p>The message says why, and names each file’s address, size and SHA-256 and the folder. Offline, fetch
+the files elsewhere and put them in the folder. Without <code>--subject</code>, the picture plans as before.</p>
+<h2 id="sc-e1202"><a class="header" href="#sc-e1202">SC-E1202</a></h2>
+<p><strong>Error</strong> — No subject found to cut out</p>
+<p><code>--subject</code> cuts a picture’s subject out of a box: the one <code>--subject-box</code> gives, or else the one
+U²-Net-p finds round the main subject. U²-Net-p found none, as no part of its map reaches a half, or
+MobileSAM kept no pixel. Nothing was written but the report.</p>
+<p>Give the subject’s box with <code>--subject-box X0,Y0,X1,Y1</code>, in the picture’s pixels, and mark a point of
+the subject with <code>--subject-point X,Y</code> if nothing is kept still.</p>
+<h2 id="sc-e1203"><a class="header" href="#sc-e1203">SC-E1203</a></h2>
+<p><strong>Error</strong> — Picture could not be read for the cut-out</p>
+<p><code>--subject</code> and <code>stitch cutout</code> decode the picture themselves. It isn’t a PNG or JPEG file the cut-out
+reads, or it is more than 16,384 px on a side or 50 megapixels in all. Nothing was written but the
+report.</p>
+<p>The message says why. Give a PNG or JPEG file within those sizes, or plan the picture without
+<code>--subject</code>.</p>
+<h2 id="sc-e1204"><a class="header" href="#sc-e1204">SC-E1204</a></h2>
+<p><strong>Error</strong> — Cut-out model could not be run</p>
+<p>The cut-out’s models are checked against their pins before each use, so a model <code>stitch</code> can’t run
+is no file changed in the folder: tract, which runs the models, refused it on this computer. Nothing
+was written but the report.</p>
+<p>The message ends with what tract said. Please report it at StitchCraft’s issues with the message.
+Without <code>--subject</code>, the picture plans as before.</p>
+<h2 id="sc-e1205"><a class="header" href="#sc-e1205">SC-E1205</a></h2>
+<p><strong>Error</strong> — Cut-out model has a random operator</p>
+<p>tract seeds a model’s random operator from the computer’s own randomness when the model gives no
+seed, so a model with one would cut a picture out otherwise on each run. The pinned models have none,
+and <code>stitch</code> refuses any model that has one, before it runs. Nothing was written but the report.</p>
+<p>The message names the model and the operator. It can’t come from the pinned files: please report it.</p>
+<h2 id="sc-i1206"><a class="header" href="#sc-i1206">SC-I1206</a></h2>
+<p><strong>Info</strong> — Subject cut out</p>
+<p><code>--subject</code> cut the picture’s subject out before VectorCraft traced it, or <code>stitch cutout</code> cut it out:
+MobileSAM kept the pixels of an alpha of 128 or more, which Image Trace keeps, and the picture was
+cropped to them, everything else transparent.</p>
+<p>The message gives the box the subject was cut out of, which <code>--subject-box</code> gave or U²-Net-p found,
+how much of the picture is kept, and the cut-out’s size. To correct it, give another box, or mark
+points with <code>--subject-point</code> and <code>--not-subject</code>. <code>--cutout FILE</code> writes the cut-out to look at.</p>
+<h2 id="sc-e1207"><a class="header" href="#sc-e1207">SC-E1207</a></h2>
+<p><strong>Error</strong> — Subject cut-out left out of this build</p>
+<p>A build of <code>stitch</code> may leave the subject cut-out out, and its models and tract with it: its <code>cutout</code>
+feature, on by default. This <code>stitch</code> was built without it, as the WASI build that makes StitchCraft’s
+golden files is, so <code>--subject</code> and <code>stitch cutout</code> can’t run. Nothing was written but the report.</p>
+<p>Plan the picture without <code>--subject</code>, or use a <code>stitch</code> built with its default features.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../user/reference/test-sheets.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../user/reference/auto-rules.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../user/reference/test-sheets.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../user/reference/auto-rules.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../mark-09e88c2c.min.js"></script>
+        <script src="../../searcher-09f2665d.js"></script>
+
+        <script src="../../clipboard-1626706a.min.js"></script>
+        <script src="../../highlight-abc7f01d.js"></script>
+        <script src="../../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

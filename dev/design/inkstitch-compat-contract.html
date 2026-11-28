@@ -1,0 +1,631 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Ink/Stitch compatibility contract - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-406f71a7.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-95df4fb0.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/design/inkstitch-compat-contract.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <!-- GENERATED by `cargo xtask docs` from conformance/inkstitch-params.toml. Do not edit by hand. -->
+<h1 id="inkstitch-compatibility-contract"><a class="header" href="#inkstitch-compatibility-contract">Ink/Stitch compatibility contract</a></h1>
+<p>The parameters an Ink/Stitch SVG can carry, as <code>inkstitch:&lt;name&gt;</code> attributes, its other attributes and
+its commands, and when StitchCraft supports each one. This is the interoperability contract: StitchCraft’s
+registry uses these names as its keys so files move between the tools unchanged
+(<a href="adr/0001-license-and-clean-room.html">ADR-0001</a>).</p>
+<ul>
+<li><strong>Checked against:</strong> Ink/Stitch <code>main</code> at <code>d59c9ab</code> (2026-09-17). The last line counts the declarations.</li>
+<li><strong>Facts only:</strong> names, types, units, defaults and applicability. Ink/Stitch’s descriptions are GPL text
+and are not copied; StitchCraft’s own help text lives in the <a href="params.html">parameter registry</a>.</li>
+<li><strong>Machine-readable source:</strong> <code>conformance/inkstitch-params.toml</code>. <code>cargo xtask docs</code> generates this page
+from it and from the parameter registry, and <code>cargo xtask docs --check</code> fails if they disagree. A
+parameter declared with an Ink/Stitch origin must be listed here with a compatible type, and its default
+must be the value Ink/Stitch sews. In the other direction, a registered row’s parameter must apply to
+each stitch type of the row that StitchCraft sews, unless the section
+<a href="#settings-a-stitch-type-does-not-take">Settings a stitch type does not take</a> gives the reason. A
+stitch type sewn as another takes that one’s settings, as a legacy fill takes a tatami fill’s.</li>
+<li><strong>Default</strong> is the value Ink/Stitch’s settings window shows. For a few parameters its code sews another
+value when a file sets none, and the cell gives that value after the default, as in <code>0.1 (0.2 when unset)</code>. <code>—</code> means no default: the value is derived from another parameter or the shape.</li>
+<li><strong>StitchCraft</strong> says whether the <a href="../user/reference/params.html">parameter registry</a> declares the
+parameter. <em>planned</em>: not yet; a design that sets it keeps it unchanged and gets <code>SC-W0105</code>. <em>not
+planned</em>: never, and a design that sets it gets the same.
+<em>registered</em>: StitchCraft reads and checks it under the same key, meaning and default; it changes the
+stitches once its stitch type or feature lands (see <em>Phase</em> and the parameter’s reference entry).
+<em>deviates</em>: registered, with a meaning that differs as its reference entry describes. A clone’s settings
+say what the SVG adapter does with them. An element’s other attribute that the registry declares, such
+as a tartan’s sett, is registered too.</li>
+<li><strong>Applies to</strong> lists the stitch types Ink/Stitch’s settings window shows the parameter for. <em>Read by</em>
+adds those whose sewing reads it without showing it, as a contour fill’s underlay reads the tatami
+fill’s <code>angle</code>, and StitchCraft’s registry gives it those too.</li>
+<li><strong>Phase</strong> is when the parameter’s stitch type lands (<a href="../plan/roadmap.html">roadmap</a>); <code>—</code> when it is not
+planned.</li>
+</ul>
+<h2 id="all-stitch-types-ties-locks-trims-stops"><a class="header" href="#all-stitch-types-ties-locks-trims-stops">All stitch types (ties, locks, trims, stops)</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Attribute</th><th>Type</th><th>Unit</th><th>Default</th><th>Applies to</th><th>Phase</th><th>StitchCraft</th></tr>
+</thead>
+<tbody>
+<tr><td><code>min_stitch_length_mm</code></td><td>float</td><td>mm</td><td>—</td><td>all</td><td>P1 (M3)</td><td><a href="../user/reference/params/common.html#min_stitch_length_mm">registered</a></td></tr>
+<tr><td><code>min_jump_stitch_length_mm</code></td><td>float</td><td>mm</td><td>—</td><td>all</td><td>P1 (M3)</td><td><a href="../user/reference/params/common.html#min_jump_stitch_length_mm">registered</a></td></tr>
+<tr><td><code>ties</code></td><td>dropdown</td><td>—</td><td>0</td><td>all</td><td>P1 (M3)</td><td><a href="../user/reference/params/common.html#ties">registered</a></td></tr>
+<tr><td><code>force_lock_stitches</code></td><td>boolean</td><td>—</td><td>false</td><td>all</td><td>P1 (M3)</td><td><a href="../user/reference/params/common.html#force_lock_stitches">registered</a></td></tr>
+<tr><td><code>lock_start</code></td><td>combo</td><td>—</td><td>half_stitch</td><td>all</td><td>P1 (M3)</td><td><a href="../user/reference/params/common.html#lock_start">deviates</a></td></tr>
+<tr><td><code>lock_custom_start</code></td><td>string</td><td>—</td><td>—</td><td><code>custom</code></td><td>P1 (M3)</td><td><a href="../user/reference/params/common.html#lock_custom_start">deviates</a></td></tr>
+<tr><td><code>lock_start_scale_mm</code></td><td>float</td><td>mm</td><td>0.7</td><td><code>back_forth</code>, <code>custom</code></td><td>P1 (M3)</td><td><a href="../user/reference/params/common.html#lock_start_scale_mm">registered</a></td></tr>
+<tr><td><code>lock_start_scale_percent</code></td><td>float</td><td>%</td><td>100</td><td><code>arrow</code>, <code>bowtie</code>, <code>cross</code>, <code>star</code>, <code>simple</code>, <code>triangle</code>, <code>zigzag</code>, <code>custom</code></td><td>P1 (M3)</td><td><a href="../user/reference/params/common.html#lock_start_scale_percent">registered</a></td></tr>
+<tr><td><code>lock_end</code></td><td>combo</td><td>—</td><td>half_stitch</td><td>all</td><td>P1 (M3)</td><td><a href="../user/reference/params/common.html#lock_end">deviates</a></td></tr>
+<tr><td><code>lock_custom_end</code></td><td>string</td><td>—</td><td>—</td><td><code>custom</code></td><td>P1 (M3)</td><td><a href="../user/reference/params/common.html#lock_custom_end">deviates</a></td></tr>
+<tr><td><code>lock_end_scale_mm</code></td><td>float</td><td>mm</td><td>0.7</td><td><code>back_forth</code>, <code>custom</code></td><td>P1 (M3)</td><td><a href="../user/reference/params/common.html#lock_end_scale_mm">registered</a></td></tr>
+<tr><td><code>lock_end_scale_percent</code></td><td>float</td><td>%</td><td>100</td><td><code>arrow</code>, <code>bowtie</code>, <code>cross</code>, <code>star</code>, <code>simple</code>, <code>triangle</code>, <code>zigzag</code>, <code>custom</code></td><td>P1 (M3)</td><td><a href="../user/reference/params/common.html#lock_end_scale_percent">registered</a></td></tr>
+<tr><td><code>trim_after</code></td><td>boolean</td><td>—</td><td>false</td><td>all</td><td>P1 (M3)</td><td><a href="../user/reference/params/common.html#trim_after">registered</a></td></tr>
+<tr><td><code>stop_after</code></td><td>boolean</td><td>—</td><td>false</td><td>all</td><td>P1 (M3)</td><td><a href="../user/reference/params/common.html#stop_after">registered</a></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="strokes-running-ripple-zigzag-manual"><a class="header" href="#strokes-running-ripple-zigzag-manual">Strokes: running, ripple, zigzag, manual</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Attribute</th><th>Type</th><th>Unit</th><th>Default</th><th>Applies to</th><th>Phase</th><th>StitchCraft</th></tr>
+</thead>
+<tbody>
+<tr><td><code>satin_column</code></td><td>toggle</td><td>—</td><td>—</td><td>all</td><td>P1 (M3)</td><td><a href="../user/reference/params/satin.html#satin_column">registered</a></td></tr>
+<tr><td><code>stroke_method</code></td><td>combo</td><td>—</td><td>0</td><td>all</td><td>P1 (M3)</td><td><a href="../user/reference/params/stroke.html#stroke_method">registered</a></td></tr>
+<tr><td><code>repeats</code></td><td>int</td><td>—</td><td>1</td><td><code>running_stitch</code>, <code>ripple_stitch</code>, <code>zigzag_stitch</code></td><td>P1 (M3)</td><td><a href="../user/reference/params/repeat.html#repeats">registered</a></td></tr>
+<tr><td><code>bean_stitch_repeats</code></td><td>str</td><td>—</td><td>0</td><td><code>running_stitch</code>, <code>ripple_stitch</code>, <code>manual_stitch</code>, <code>zigzag_stitch</code></td><td>P1 (M3)</td><td><a href="../user/reference/params/repeat.html#bean_stitch_repeats">registered</a></td></tr>
+<tr><td><code>manual_pattern_placement</code></td><td>boolean</td><td>—</td><td>false</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#manual_pattern_placement">registered</a></td></tr>
+<tr><td><code>running_stitch_length_mm</code></td><td>string</td><td>mm</td><td>2.5</td><td><code>running_stitch</code>, <code>ripple_stitch</code></td><td>P1 (M3)</td><td><a href="../user/reference/params/running.html#running_stitch_length_mm">registered</a></td></tr>
+<tr><td><code>running_stitch_tolerance_mm</code></td><td>float</td><td>mm</td><td>0.2</td><td><code>running_stitch</code>, <code>ripple_stitch</code></td><td>P1 (M3)</td><td><a href="../user/reference/params/running.html#running_stitch_tolerance_mm">deviates</a></td></tr>
+<tr><td><code>enable_random_stitch_length</code></td><td>boolean</td><td>—</td><td>false</td><td><code>running_stitch</code>, <code>ripple_stitch</code></td><td>P1 (M3)</td><td><a href="../user/reference/params/running.html#enable_random_stitch_length">registered</a></td></tr>
+<tr><td><code>random_stitch_length_jitter_percent</code></td><td>float</td><td>± %</td><td>10</td><td><code>running_stitch</code>, <code>ripple_stitch</code></td><td>P1 (M3)</td><td><a href="../user/reference/params/running.html#random_stitch_length_jitter_percent">registered</a></td></tr>
+<tr><td><code>max_stitch_length_mm</code></td><td>float</td><td>mm</td><td>—</td><td><code>manual_stitch</code></td><td>P1 (M3)</td><td><a href="../user/reference/params/common.html#max_stitch_length_mm">registered</a></td></tr>
+<tr><td><code>zigzag_spacing_mm</code></td><td>string</td><td>mm</td><td>0.4</td><td><code>zigzag_stitch</code></td><td>P2 (M7)</td><td><a href="../user/reference/params/zigzag-stroke.html#zigzag_spacing_mm">registered</a></td></tr>
+<tr><td><code>stroke_pull_compensation_mm</code></td><td>float</td><td>mm (each side)</td><td>0</td><td><code>zigzag_stitch</code></td><td>P2 (M7)</td><td><a href="../user/reference/params/zigzag-stroke.html#stroke_pull_compensation_mm">registered</a></td></tr>
+<tr><td><code>zigzag_angle</code></td><td>float</td><td>°</td><td>0</td><td><code>zigzag_stitch</code></td><td>P2 (M7)</td><td><a href="../user/reference/params/zigzag-stroke.html#zigzag_angle">registered</a></td></tr>
+<tr><td><code>line_count</code></td><td>int</td><td>—</td><td>10</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#line_count">registered</a></td></tr>
+<tr><td><code>min_line_dist_mm</code></td><td>float</td><td>mm</td><td>—</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#min_line_dist_mm">registered</a></td></tr>
+<tr><td><code>satin_guide_pattern_position</code></td><td>combo</td><td>—</td><td>default</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#satin_guide_pattern_position">registered</a></td></tr>
+<tr><td><code>staggers</code></td><td>int</td><td>—</td><td>0 (1 when unset)</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#staggers">registered</a></td></tr>
+<tr><td><code>skip_start</code></td><td>int</td><td>—</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#skip_start">registered</a></td></tr>
+<tr><td><code>skip_end</code></td><td>int</td><td>—</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#skip_end">registered</a></td></tr>
+<tr><td><code>flip_copies</code></td><td>boolean</td><td>—</td><td>true</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#flip_copies">registered</a></td></tr>
+<tr><td><code>exponent</code></td><td>float</td><td>—</td><td>1</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#exponent">registered</a></td></tr>
+<tr><td><code>flip_exponent</code></td><td>boolean</td><td>—</td><td>false</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#flip_exponent">registered</a></td></tr>
+<tr><td><code>reverse</code></td><td>boolean</td><td>—</td><td>false</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#reverse">registered</a></td></tr>
+<tr><td><code>reverse_rails</code></td><td>combo</td><td>—</td><td>automatic</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#reverse_rails">registered</a></td></tr>
+<tr><td><code>swap_satin_rails</code></td><td>boolean</td><td>—</td><td>false</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#swap_satin_rails">registered</a></td></tr>
+<tr><td><code>grid_size_mm</code></td><td>float</td><td>mm</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#grid_size_mm">registered</a></td></tr>
+<tr><td><code>grid_first</code></td><td>boolean</td><td>—</td><td>false</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#grid_first">registered</a></td></tr>
+<tr><td><code>scale_axis</code></td><td>dropdown</td><td>—</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#scale_axis">registered</a></td></tr>
+<tr><td><code>scale_start</code></td><td>float</td><td>%</td><td>100</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#scale_start">registered</a></td></tr>
+<tr><td><code>scale_end</code></td><td>float</td><td>%</td><td>0.0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#scale_end">registered</a></td></tr>
+<tr><td><code>rotate_ripples</code></td><td>boolean</td><td>—</td><td>true</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#rotate_ripples">registered</a></td></tr>
+<tr><td><code>join_style</code></td><td>dropdown</td><td>—</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#join_style">registered</a></td></tr>
+<tr><td><code>random_seed</code></td><td>random_seed</td><td>—</td><td>—</td><td><code>running_stitch</code>, <code>ripple_stitch</code></td><td>P1 (M3)</td><td><a href="../user/reference/params/common.html#random_seed">registered</a></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="satin-columns"><a class="header" href="#satin-columns">Satin columns</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Attribute</th><th>Type</th><th>Unit</th><th>Default</th><th>Applies to</th><th>Phase</th><th>StitchCraft</th></tr>
+</thead>
+<tbody>
+<tr><td><code>satin_column</code></td><td>toggle</td><td>—</td><td>—</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#satin_column">registered</a></td></tr>
+<tr><td><code>satin_method</code></td><td>combo</td><td>—</td><td>0</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#satin_method">registered</a></td></tr>
+<tr><td><code>random_width_decrease_percent</code></td><td>float</td><td>% (each side)</td><td>0</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#random_width_decrease_percent">registered</a></td></tr>
+<tr><td><code>random_width_increase_percent</code></td><td>float</td><td>% (each side)</td><td>0</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#random_width_increase_percent">registered</a></td></tr>
+<tr><td><code>random_zigzag_spacing_percent</code></td><td>float</td><td>± %</td><td>0</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#random_zigzag_spacing_percent">registered</a></td></tr>
+<tr><td><code>split_method</code></td><td>combo</td><td>—</td><td>0</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#split_method">registered</a></td></tr>
+<tr><td><code>max_stitch_length_mm</code></td><td>float</td><td>mm</td><td>—</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/common.html#max_stitch_length_mm">registered</a></td></tr>
+<tr><td><code>random_split_jitter_percent</code></td><td>float</td><td>± %</td><td>0</td><td><code>default</code></td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#random_split_jitter_percent">registered</a></td></tr>
+<tr><td><code>random_split_phase</code></td><td>boolean</td><td>—</td><td>false</td><td><code>default</code></td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#random_split_phase">registered</a></td></tr>
+<tr><td><code>min_random_split_length_mm</code></td><td>float</td><td>mm</td><td>—</td><td><code>default</code></td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#min_random_split_length_mm">registered</a></td></tr>
+<tr><td><code>split_staggers</code></td><td>float</td><td>—</td><td>4</td><td><code>staggered</code></td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#split_staggers">registered</a></td></tr>
+<tr><td><code>short_stitch_inset</code></td><td>float</td><td>%</td><td>15</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#short_stitch_inset">registered</a></td></tr>
+<tr><td><code>short_stitch_distance_mm</code></td><td>float</td><td>mm</td><td>0.25</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#short_stitch_distance_mm">registered</a></td></tr>
+<tr><td><code>zigzag_spacing_mm</code></td><td>float</td><td>mm/cycle</td><td>0.4</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#zigzag_spacing_mm">registered</a></td></tr>
+<tr><td><code>pull_compensation_percent</code></td><td>float</td><td>% (each side)</td><td>0</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/pull.html#pull_compensation_percent">registered</a></td></tr>
+<tr><td><code>pull_compensation_mm</code></td><td>float</td><td>mm (each side)</td><td>0</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/pull.html#pull_compensation_mm">registered</a></td></tr>
+<tr><td><code>push_compensation_mm</code></td><td>float</td><td>mm (each side)</td><td>0</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#push_compensation_mm">registered</a></td></tr>
+<tr><td><code>reverse_rails</code></td><td>combo</td><td>—</td><td>automatic</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#reverse_rails">registered</a></td></tr>
+<tr><td><code>swap_satin_rails</code></td><td>boolean</td><td>—</td><td>false</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#swap_satin_rails">registered</a></td></tr>
+<tr><td><code>running_stitch_length_mm</code></td><td>float</td><td>mm</td><td>2.5</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/running.html#running_stitch_length_mm">registered</a></td></tr>
+<tr><td><code>running_stitch_tolerance_mm</code></td><td>float</td><td>mm</td><td>0.1 (0.2 when unset)</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/running.html#running_stitch_tolerance_mm">deviates</a></td></tr>
+<tr><td><code>running_stitch_position</code></td><td>float</td><td>%</td><td>50</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#running_stitch_position">registered</a></td></tr>
+<tr><td><code>start_at_nearest_point</code></td><td>boolean</td><td>—</td><td>true</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#start_at_nearest_point">registered</a></td></tr>
+<tr><td><code>end_at_nearest_point</code></td><td>boolean</td><td>—</td><td>true</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#end_at_nearest_point">registered</a></td></tr>
+<tr><td><code>contour_underlay</code></td><td>toggle</td><td>—</td><td>—</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#contour_underlay">registered</a></td></tr>
+<tr><td><code>contour_underlay_stitch_length_mm</code></td><td>float</td><td>mm</td><td>3</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#contour_underlay_stitch_length_mm">registered</a></td></tr>
+<tr><td><code>contour_underlay_stitch_tolerance_mm</code></td><td>float</td><td>mm</td><td>0.2</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#contour_underlay_stitch_tolerance_mm">registered</a></td></tr>
+<tr><td><code>contour_underlay_inset_mm</code></td><td>float</td><td>mm (each side)</td><td>0.4</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#contour_underlay_inset_mm">registered</a></td></tr>
+<tr><td><code>contour_underlay_inset_percent</code></td><td>float</td><td>% (each side)</td><td>0</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#contour_underlay_inset_percent">registered</a></td></tr>
+<tr><td><code>center_walk_underlay</code></td><td>toggle</td><td>—</td><td>—</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#center_walk_underlay">registered</a></td></tr>
+<tr><td><code>center_walk_underlay_stitch_length_mm</code></td><td>float</td><td>mm</td><td>3</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#center_walk_underlay_stitch_length_mm">registered</a></td></tr>
+<tr><td><code>center_walk_underlay_stitch_tolerance_mm</code></td><td>float</td><td>mm</td><td>0.2</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#center_walk_underlay_stitch_tolerance_mm">deviates</a></td></tr>
+<tr><td><code>center_walk_underlay_repeats</code></td><td>int</td><td>—</td><td>2</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#center_walk_underlay_repeats">registered</a></td></tr>
+<tr><td><code>center_walk_underlay_position</code></td><td>float</td><td>%</td><td>50</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#center_walk_underlay_position">registered</a></td></tr>
+<tr><td><code>zigzag_underlay</code></td><td>toggle</td><td>—</td><td>—</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#zigzag_underlay">registered</a></td></tr>
+<tr><td><code>zigzag_underlay_spacing_mm</code></td><td>float</td><td>mm</td><td>3</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#zigzag_underlay_spacing_mm">registered</a></td></tr>
+<tr><td><code>zigzag_underlay_inset_mm</code></td><td>float</td><td>mm (each side)</td><td>—</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#zigzag_underlay_inset_mm">registered</a></td></tr>
+<tr><td><code>zigzag_underlay_inset_percent</code></td><td>float</td><td>% (each side)</td><td>—</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#zigzag_underlay_inset_percent">registered</a></td></tr>
+<tr><td><code>zigzag_underlay_max_stitch_length_mm</code></td><td>float</td><td>mm</td><td>—</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/satin.html#zigzag_underlay_max_stitch_length_mm">registered</a></td></tr>
+<tr><td><code>random_seed</code></td><td>random_seed</td><td>—</td><td>—</td><td>all</td><td>P1 (M4)</td><td><a href="../user/reference/params/common.html#random_seed">registered</a></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="fills"><a class="header" href="#fills">Fills</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Attribute</th><th>Type</th><th>Unit</th><th>Default</th><th>Applies to</th><th>Phase</th><th>StitchCraft</th></tr>
+</thead>
+<tbody>
+<tr><td><code>fill</code></td><td>toggle</td><td>—</td><td>true</td><td>all</td><td>P1 (M5)</td><td><a href="../user/reference/params/fill.html#fill">registered</a></td></tr>
+<tr><td><code>fill_method</code></td><td>combo</td><td>—</td><td>0</td><td>all</td><td>P1 (M5)</td><td><a href="../user/reference/params/fill.html#fill_method">registered</a></td></tr>
+<tr><td><code>guided_fill_strategy</code></td><td>dropdown</td><td>—</td><td>0</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/guided.html#guided_fill_strategy">registered</a></td></tr>
+<tr><td><code>contour_strategy</code></td><td>dropdown</td><td>—</td><td>0</td><td><code>contour_fill</code></td><td>P2 (M7)</td><td><a href="../user/reference/params/contour.html#contour_strategy">registered</a></td></tr>
+<tr><td><code>join_style</code></td><td>dropdown</td><td>—</td><td>0</td><td><code>contour_fill</code></td><td>P2 (M7)</td><td><a href="../user/reference/params/contour.html#join_style">registered</a></td></tr>
+<tr><td><code>avoid_self_crossing</code></td><td>boolean</td><td>—</td><td>false</td><td><code>contour_fill</code></td><td>P2 (M7)</td><td><a href="../user/reference/params/contour.html#avoid_self_crossing">registered</a></td></tr>
+<tr><td><code>clockwise</code></td><td>boolean</td><td>—</td><td>true</td><td><code>contour_fill</code></td><td>P2 (M7)</td><td><a href="../user/reference/params/contour.html#clockwise">registered</a></td></tr>
+<tr><td><code>meander_pattern</code></td><td>combo</td><td>—</td><td>0</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td><a href="../user/reference/params/meander.html#meander_pattern">deviates</a></td></tr>
+<tr><td><code>meander_angle</code></td><td>float</td><td>degrees</td><td>0</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td><a href="../user/reference/params/meander.html#meander_angle">registered</a></td></tr>
+<tr><td><code>meander_scale_percent</code></td><td>float</td><td>%</td><td>100</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td><a href="../user/reference/params/meander.html#meander_scale_percent">registered</a></td></tr>
+<tr><td><code>clip</code></td><td>boolean</td><td>—</td><td>false</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td><a href="../user/reference/params/meander.html#clip">registered</a></td></tr>
+<tr><td><code>smoothness_mm</code></td><td>float</td><td>mm</td><td>0</td><td><code>contour_fill</code>, <code>guided_fill</code>, <code>meander_fill</code></td><td>P2 (M7)</td><td><a href="../user/reference/params/path-fill.html#smoothness_mm">registered</a></td></tr>
+<tr><td><code>expand_mm</code></td><td>float</td><td>mm</td><td>0</td><td>all</td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#expand_mm">registered</a></td></tr>
+<tr><td><code>gap_fill_rows</code></td><td>int</td><td>rows</td><td>0</td><td><code>tatami_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#gap_fill_rows">registered</a></td></tr>
+<tr><td><code>angle</code></td><td>float</td><td>deg</td><td>0</td><td><code>tatami_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>meander_fill</code>, <code>tartan_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#angle">registered</a></td></tr>
+<tr><td><code>guided_fill_angle</code></td><td>float</td><td>deg</td><td>—</td><td><code>guided_fill</code>, <code>0</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/guided.html#guided_fill_angle">registered</a></td></tr>
+<tr><td><code>tartan_angle</code></td><td>float</td><td>deg</td><td>-45</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/tartan.html#tartan_angle">registered</a></td></tr>
+<tr><td><code>max_stitch_length_mm</code></td><td>float</td><td>mm</td><td>4.0</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code>, <code>meander_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/common.html#max_stitch_length_mm">registered</a></td></tr>
+<tr><td><code>row_spacing_mm</code></td><td>float</td><td>mm</td><td>0.25</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code>; read by <code>meander_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#row_spacing_mm">registered</a></td></tr>
+<tr><td><code>end_row_spacing_mm</code></td><td>float</td><td>mm</td><td>—</td><td><code>tatami_fill</code>, <code>circular_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#end_row_spacing_mm">deviates</a></td></tr>
+<tr><td><code>stitch_position_method</code></td><td>combo</td><td>—</td><td>0</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/guided.html#stitch_position_method">registered</a></td></tr>
+<tr><td><code>staggers</code></td><td>int</td><td>—</td><td>4</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code>, <code>contour_fill</code>, <code>meander_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#staggers">registered</a></td></tr>
+<tr><td><code>skip_last</code></td><td>boolean</td><td>—</td><td>false</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code>, <code>tartan_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#skip_last">registered</a></td></tr>
+<tr><td><code>flip</code></td><td>boolean</td><td>—</td><td>false</td><td><code>legacy_fill</code></td><td>—</td><td>not planned</td></tr>
+<tr><td><code>reverse</code></td><td>boolean</td><td>—</td><td>false</td><td><code>legacy_fill</code></td><td>—</td><td>not planned</td></tr>
+<tr><td><code>stop_at_ending_point</code></td><td>boolean</td><td>—</td><td>false</td><td><code>linear_gradient_fill</code>, <code>tartan_fill</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/tartan.html#stop_at_ending_point">registered</a></td></tr>
+<tr><td><code>underpath</code></td><td>boolean</td><td>—</td><td>true</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>circular_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#underpath">registered</a></td></tr>
+<tr><td><code>running_stitch_length_mm</code></td><td>float</td><td>mm</td><td>2.5</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>meander_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>; read by <code>contour_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/running.html#running_stitch_length_mm">registered</a></td></tr>
+<tr><td><code>running_stitch_tolerance_mm</code></td><td>float</td><td>mm</td><td>0.1 (0.2 when unset)</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>meander_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/running.html#running_stitch_tolerance_mm">deviates</a></td></tr>
+<tr><td><code>enable_random_stitch_length</code></td><td>boolean</td><td>—</td><td>false</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/running.html#enable_random_stitch_length">registered</a></td></tr>
+<tr><td><code>random_stitch_length_jitter_percent</code></td><td>float</td><td>± %</td><td>10</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/running.html#random_stitch_length_jitter_percent">registered</a></td></tr>
+<tr><td><code>repeats</code></td><td>int</td><td>—</td><td>1</td><td><code>meander_fill</code>, <code>contour_fill</code>, <code>circular_fill</code></td><td>P2 (M7)</td><td><a href="../user/reference/params/path-fill.html#repeats">registered</a></td></tr>
+<tr><td><code>bean_stitch_repeats</code></td><td>str</td><td>—</td><td>0</td><td><code>meander_fill</code>, <code>circular_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>tartan_fill</code></td><td>P2 (M7)</td><td><a href="../user/reference/params/path-fill.html#bean_stitch_repeats">registered</a></td></tr>
+<tr><td><code>zigzag_spacing_mm</code></td><td>float</td><td>mm</td><td>0</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td><a href="../user/reference/params/meander.html#zigzag_spacing_mm">registered</a></td></tr>
+<tr><td><code>zigzag_width_mm</code></td><td>float</td><td>mm</td><td>3</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td><a href="../user/reference/params/meander.html#zigzag_width_mm">registered</a></td></tr>
+<tr><td><code>rows_per_thread</code></td><td>int</td><td>—</td><td>2</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/tartan.html#rows_per_thread">registered</a></td></tr>
+<tr><td><code>herringbone_width_mm</code></td><td>int</td><td>mm</td><td>0</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/tartan.html#herringbone_width_mm">registered</a></td></tr>
+<tr><td><code>pull_compensation_mm</code></td><td>float</td><td>mm (each side)</td><td>0</td><td><code>tatami_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/pull.html#pull_compensation_mm">registered</a></td></tr>
+<tr><td><code>pull_compensation_percent</code></td><td>float</td><td>% (each side)</td><td>0</td><td><code>tatami_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/pull.html#pull_compensation_percent">registered</a></td></tr>
+<tr><td><code>fill_underlay</code></td><td>toggle</td><td>—</td><td>true</td><td>all</td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#fill_underlay">registered</a></td></tr>
+<tr><td><code>fill_underlay_angle</code></td><td>float</td><td>deg</td><td>—</td><td>all</td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#fill_underlay_angle">registered</a></td></tr>
+<tr><td><code>fill_underlay_row_spacing_mm</code></td><td>float</td><td>mm</td><td>—</td><td>all</td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#fill_underlay_row_spacing_mm">registered</a></td></tr>
+<tr><td><code>fill_underlay_max_stitch_length_mm</code></td><td>float</td><td>mm</td><td>—</td><td>all</td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#fill_underlay_max_stitch_length_mm">registered</a></td></tr>
+<tr><td><code>fill_underlay_inset_mm</code></td><td>float</td><td>mm</td><td>0</td><td>all</td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#fill_underlay_inset_mm">registered</a></td></tr>
+<tr><td><code>fill_underlay_skip_last</code></td><td>boolean</td><td>—</td><td>false</td><td>all</td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#fill_underlay_skip_last">registered</a></td></tr>
+<tr><td><code>underlay_underpath</code></td><td>boolean</td><td>—</td><td>true</td><td>all</td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#underlay_underpath">registered</a></td></tr>
+<tr><td><code>random_seed</code></td><td>random_seed</td><td>—</td><td>—</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>meander_fill</code>, <code>linear_gradient_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/common.html#random_seed">registered</a></td></tr>
+<tr><td><code>cross_stitch_method</code></td><td>combo</td><td>—</td><td>0</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/cross.html#cross_stitch_method">registered</a></td></tr>
+<tr><td><code>cross_thread_count</code></td><td>int</td><td>—</td><td>4</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/cross.html#cross_thread_count">registered</a></td></tr>
+<tr><td><code>pattern_size_mm</code></td><td>float</td><td>mm (x y)</td><td>3</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/cross.html#pattern_size_mm">registered</a></td></tr>
+<tr><td><code>canvas_grid_origin</code></td><td>boolean</td><td>—</td><td>true</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/cross.html#canvas_grid_origin">registered</a></td></tr>
+<tr><td><code>cross_offset_mm</code></td><td>float</td><td>mm (x y)</td><td>0</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/cross.html#cross_offset_mm">registered</a></td></tr>
+<tr><td><code>cross_rotation</code></td><td>float</td><td>deg</td><td>0</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/cross.html#cross_rotation">registered</a></td></tr>
+<tr><td><code>fill_coverage</code></td><td>int</td><td>%</td><td>50</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/cross.html#fill_coverage">registered</a></td></tr>
+<tr><td><code>max_cross_stitch_length_mm</code></td><td>float</td><td>mm</td><td>11.0</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/cross.html#max_cross_stitch_length_mm">registered</a></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="clones-use"><a class="header" href="#clones-use">Clones (<code>&lt;use&gt;</code>)</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Attribute</th><th>Type</th><th>Unit</th><th>Default</th><th>Applies to</th><th>Phase</th><th>StitchCraft</th></tr>
+</thead>
+<tbody>
+<tr><td><code>clone</code></td><td>toggle</td><td>—</td><td>true</td><td>clones</td><td>P2 (M8)</td><td>applied: off, the clone sews nothing, and is listed (<code>SC-I0805</code>)</td></tr>
+<tr><td><code>angle</code></td><td>float</td><td>deg</td><td>—</td><td>clones</td><td>P2 (M8)</td><td>applied: the angle of every fill the clone shows, in place of the one the clone turns it to</td></tr>
+<tr><td><code>flip_angle</code></td><td>boolean</td><td>—</td><td>false</td><td>clones</td><td>P2 (M8)</td><td>applied: reverses the angle of every fill the clone shows</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="settings-a-stitch-type-does-not-take"><a class="header" href="#settings-a-stitch-type-does-not-take">Settings a stitch type does not take</a></h2>
+<p>Ink/Stitch gives each stitch type here the settings beside it, and StitchCraft’s registry doesn’t, for the
+reason given. They are the <code>[[unapplied]]</code> entries of <code>conformance/inkstitch-params.toml</code>. Every other
+stitch type that StitchCraft sews takes the registered settings that its rows give it.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Element</th><th>Stitch type</th><th>Settings</th><th>Reason</th></tr>
+</thead>
+<tbody>
+<tr><td>fill</td><td><code>cross_stitch</code></td><td><code>fill_underlay</code>, <code>fill_underlay_angle</code>, <code>fill_underlay_row_spacing_mm</code>, <code>fill_underlay_max_stitch_length_mm</code>, <code>fill_underlay_inset_mm</code>, <code>fill_underlay_skip_last</code>, <code>underlay_underpath</code></td><td>Ink/Stitch’s settings window shows the underlay’s settings for every fill method, and its cross stitch sews no underlay. Its fill element’s <code>to_stitch_groups</code> sews the underlay for every method but <code>legacy_fill</code> and <code>cross_stitch</code>, and a cross stitch’s stitches come from <code>do_cross_stitch</code> alone (lib/elements/fill_stitch.py at d59c9ab). StitchCraft’s cross stitch sews no underlay either.</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="method-identifiers"><a class="header" href="#method-identifiers">Method identifiers</a></h2>
+<p>The values the method parameters take (<code>stroke_method</code>, <code>satin_method</code>, <code>fill_method</code>), with phases. A
+value of phase <code>—</code> is not planned as a method of its own, and the deviations ledger
+(<code>conformance/deviations.toml</code>) says how an element set to it is sewn.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Parameter</th><th>Value</th><th>Phase</th></tr>
+</thead>
+<tbody>
+<tr><td><code>stroke_method</code></td><td><code>running_stitch</code></td><td>P1 (M3)</td></tr>
+<tr><td><code>stroke_method</code></td><td><code>ripple_stitch</code></td><td>P3 (M10)</td></tr>
+<tr><td><code>stroke_method</code></td><td><code>zigzag_stitch</code></td><td>P2 (M7)</td></tr>
+<tr><td><code>stroke_method</code></td><td><code>manual_stitch</code></td><td>P1 (M3)</td></tr>
+<tr><td><code>satin_method</code></td><td><code>satin_column</code></td><td>P1 (M4)</td></tr>
+<tr><td><code>satin_method</code></td><td><code>e_stitch</code></td><td>P2 (M7)</td></tr>
+<tr><td><code>satin_method</code></td><td><code>s_stitch</code></td><td>P2 (M7)</td></tr>
+<tr><td><code>satin_method</code></td><td><code>zigzag</code></td><td>P2 (M7)</td></tr>
+<tr><td><code>fill_method</code></td><td><code>tatami_fill</code></td><td>P1 (M5)</td></tr>
+<tr><td><code>fill_method</code></td><td><code>circular_fill</code></td><td>P2 (M7)</td></tr>
+<tr><td><code>fill_method</code></td><td><code>contour_fill</code></td><td>P2 (M7)</td></tr>
+<tr><td><code>fill_method</code></td><td><code>cross_stitch</code></td><td>P3 (M10)</td></tr>
+<tr><td><code>fill_method</code></td><td><code>guided_fill</code></td><td>P3 (M10)</td></tr>
+<tr><td><code>fill_method</code></td><td><code>linear_gradient_fill</code></td><td>P3 (M10)</td></tr>
+<tr><td><code>fill_method</code></td><td><code>meander_fill</code></td><td>P2 (M7)</td></tr>
+<tr><td><code>fill_method</code></td><td><code>tartan_fill</code></td><td>P3 (M10)</td></tr>
+<tr><td><code>fill_method</code></td><td><code>legacy_fill</code></td><td>—</td></tr>
+</tbody>
+</table>
+</div>
+<p>Lock stitch identifiers (<code>lock_start</code>, <code>lock_end</code>): <code>half_stitch</code>, <code>arrow</code>, <code>back_forth</code>, <code>bowtie</code>, <code>cross</code>, <code>star</code>, <code>simple</code>, <code>triangle</code>, <code>zigzag</code>, <code>custom</code>. StitchCraft accepts every identifier; the shapes are its own
+designs with the same intent, a deviation recorded in the deviations ledger (<code>conformance/deviations.toml</code>).</p>
+<p>Meander tiles (<code>meander_pattern</code>), in the order Ink/Stitch’s settings window lists them: <code>N3-11a</code>, <code>N3-12</code>, <code>N3-16a</code>, <code>N3-17</code>, <code>N3-18</code>, <code>N3-18-modified</code>, <code>N3-20</code>, <code>N3-23b</code>, <code>N3-25c</code>, <code>N3-26b</code>, <code>N3-27</code>, <code>N3-30a</code>, <code>N3-51b</code>, <code>N3-57f-modified</code>, <code>N3-58b</code>, <code>N3-6</code>, <code>N3-7</code>, <code>N3-8a</code>, <code>N3-8a-modified</code>, <code>N3-8b</code>, <code>N4-13b</code>, <code>N4-13c</code>, <code>N4-13d</code>, <code>N4-13e</code>, <code>N4-13f</code>, <code>N4-16a</code>, <code>N4-19</code>, <code>N4-20</code>, <code>N4-21c</code>, <code>N4-22</code>, <code>N4-23a</code>, <code>N4-23c</code>, <code>N4-27</code>, <code>N4-29e</code>, <code>N4-29f</code>, <code>N4-31</code>, <code>N4-38</code>, <code>N4-42e</code>, <code>N4-44</code>, <code>N4-52</code>, <code>N4-54d</code>, <code>N4-5a</code>, <code>N4-5a-2</code>, <code>N4-82</code>, <code>N4-85d</code>, <code>N5-1e1</code>, <code>N5-1q2</code>, <code>N5-1t</code>, <code>N6-1</code>, <code>N6-2</code>, <code>N6-5b</code>, <code>N6-6a</code>, <code>N6-6c</code>, <code>NC5-11a</code>, <code>NC5-20a</code>, <code>P3-1</code>, <code>P3-12</code>, <code>P4-1</code>, <code>P4-10</code>, <code>P4-15</code>, <code>P4-19</code>, <code>P4-23</code>, <code>P4-24</code>, <code>P4-25</code>, <code>P4-43</code>, <code>P4-43-modified</code>, <code>P4-47</code>, <code>P5-10_11</code>, <code>P5-19</code>, <code>P5-23_24</code>, <code>P5-4</code>, <code>P6-6_11</code>, <code>diamond-square</code>, <code>hexagon</code>, <code>weird-one</code>. StitchCraft accepts
+every one and sews its own default tile for it, with a warning (<code>DEV-FILL-018</code>).</p>
+<h2 id="commands"><a class="header" href="#commands">Commands</a></h2>
+<p>Ink/Stitch’s command symbols (a <code>&lt;use&gt;</code> of the symbol <code>inkstitch_&lt;name&gt;</code>), where each applies, and what
+StitchCraft’s SVG adapter does with it (<code>stitchcraft_svg::inkstitch</code>). Their connectors are never stitched.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Command</th><th>Applies to</th><th>StitchCraft</th></tr>
+</thead>
+<tbody>
+<tr><td><code>starting_point</code></td><td>the object a connector ties it to</td><td>applied to the object’s fills and satin columns (<code>REQ-GEN-001</code>), unless it is digitized automatically</td></tr>
+<tr><td><code>ending_point</code></td><td>the object a connector ties it to</td><td>applied to the object’s fills and satin columns (<code>REQ-GEN-001</code>), unless it is digitized automatically</td></tr>
+<tr><td><code>target_point</code></td><td>the object a connector ties it to</td><td>applied to the object’s circular fill (<code>REQ-FILL-CIR-008</code>), and from M10 to its ripple stitch, unless it is digitized automatically</td></tr>
+<tr><td><code>autoroute_start</code></td><td>the object a connector ties it to</td><td>nothing to sew: input to Ink/Stitch’s tools</td></tr>
+<tr><td><code>autoroute_end</code></td><td>the object a connector ties it to</td><td>nothing to sew: input to Ink/Stitch’s tools</td></tr>
+<tr><td><code>stop</code></td><td>the object a connector ties it to</td><td>applied: turns on <code>stop_after</code></td></tr>
+<tr><td><code>trim</code></td><td>the object a connector ties it to</td><td>applied: turns on <code>trim_after</code></td></tr>
+<tr><td><code>ignore_object</code></td><td>the object a connector ties it to</td><td>applied: the object is left out and listed (<code>SC-I0805</code>)</td></tr>
+<tr><td><code>satin_cut_point</code></td><td>the object a connector ties it to</td><td>nothing to sew: input to Ink/Stitch’s tools</td></tr>
+<tr><td><code>ignore_layer</code></td><td>every layer it is in</td><td>applied: every layer it is in is left out and listed (<code>SC-I0805</code>)</td></tr>
+<tr><td><code>origin</code></td><td>the document</td><td>applied: the design’s origin, which goes to the hoop’s centre; 2 end planning (<code>SC-E0819</code>)</td></tr>
+<tr><td><code>stop_position</code></td><td>the document</td><td>applied: where the frame moves before each stop; 2 in a design with a stop end planning (<code>SC-E0819</code>)</td></tr>
+</tbody>
+</table>
+</div>
+<p>Before its file version 3, Ink/Stitch named 7 commands otherwise. Its updater renames them in the files it updates, and
+StitchCraft reads them as the commands they became in any file (<code>DEV-SVG-014</code>).</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Old name</th><th>Command</th></tr>
+</thead>
+<tbody>
+<tr><td><code>fill_start</code></td><td><code>starting_point</code></td></tr>
+<tr><td><code>fill_end</code></td><td><code>ending_point</code></td></tr>
+<tr><td><code>satin_start</code></td><td><code>autoroute_start</code></td></tr>
+<tr><td><code>satin_end</code></td><td><code>autoroute_end</code></td></tr>
+<tr><td><code>run_start</code></td><td><code>autoroute_start</code></td></tr>
+<tr><td><code>run_end</code></td><td><code>autoroute_end</code></td></tr>
+<tr><td><code>ripple_target</code></td><td><code>target_point</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="other-attributes"><a class="header" href="#other-attributes">Other attributes</a></h2>
+<p>The <code>inkstitch:*</code> attributes that declare no parameter: settings of an element, of Ink/Stitch’s
+patterns, lettering, tools, stitch plan or sew stack, and legacy names Ink/Stitch’s updater rewrites in older files.
+The SVG adapter reads those marked read itself. It keeps any other of a shape as a parameter of the shape’s
+elements, which the registry names (<code>SC-W0105</code>).</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Attribute</th><th>Kind</th><th>Phase</th><th>StitchCraft</th></tr>
+</thead>
+<tbody>
+<tr><td><code>ignore_object</code></td><td>element</td><td>P1 (M3)</td><td>read</td></tr>
+<tr><td><code>stroke_first</code></td><td>element</td><td>P1 (M8)</td><td>read</td></tr>
+<tr><td><code>cutwork_needle</code></td><td>element</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>pattern_interval</code></td><td>pattern</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>pattern_offset</code></td><td>pattern</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>invisible_layers</code></td><td>stitch plan</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>layer_visibility</code></td><td>stitch plan</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>sew_stack</code></td><td>sew stack</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>sew_stack_only</code></td><td>sew stack</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>tartan</code></td><td>element</td><td>P3 (M10)</td><td><a href="../user/reference/params/tartan.html#tartan">registered</a></td></tr>
+<tr><td><code>color_sort_index</code></td><td>lettering</td><td>P3 (M14)</td><td>planned</td></tr>
+<tr><td><code>letter-group</code></td><td>lettering</td><td>P3 (M14)</td><td>planned</td></tr>
+<tr><td><code>lettering</code></td><td>lettering</td><td>P3 (M14)</td><td>planned</td></tr>
+<tr><td><code>path_type</code></td><td>tool</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>start</code></td><td>tool</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>end</code></td><td>tool</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>polyline</code></td><td>legacy</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>auto_fill</code></td><td>legacy</td><td>P2 (M8)</td><td>planned</td></tr>
+<tr><td><code>e_stitch</code></td><td>legacy</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>manual_stitch</code></td><td>legacy</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>grid_size</code></td><td>legacy</td><td>—</td><td>not planned</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="file-versions"><a class="header" href="#file-versions">File versions</a></h2>
+<p>Ink/Stitch numbers the files it works on (<code>inkstitch_svg_version</code> in the metadata, 4 at the commit above).
+When it opens a file of an older version that has content of its own (an element or an attribute in its namespace, or
+an <code>embroider_</code> attribute), it changes the file so that it sews as it did, version by version: a file of version 2
+gets the changes of versions 3 and 4. A file with its content and no version gets them all if its user says it is an
+old design. StitchCraft applies the changes that alter what it sews today as parameters of the shapes
+(<code>REQ-SVG-007</code>). A file without a version it reads as it is: version 1’s changes don’t apply. Each row is a
+change Ink/Stitch’s updater makes (<code>lib/update.py</code>), in StitchCraft’s words.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Version</th><th>Change</th><th>StitchCraft</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>each <code>embroider_&lt;name&gt;</code> attribute, as Ink/Stitch’s early versions wrote their settings, becomes <code>inkstitch:&lt;name&gt;</code> if <code>&lt;name&gt;</code> is a setting Ink/Stitch knows. The others are removed</td><td>not planned</td></tr>
+<tr><td>1</td><td><code>ties</code> written <code>True</code> becomes 0, and <code>False</code> becomes 3</td><td>not planned</td></tr>
+<tr><td>1</td><td>a <code>fill_method</code> written as 0 to 3 becomes <code>auto_fill</code>, <code>contour_fill</code>, <code>guided_fill</code> or <code>legacy_fill</code>, in that order</td><td>not planned</td></tr>
+<tr><td>1</td><td>commas in <code>fill_underlay_angle</code> become spaces</td><td>not planned</td></tr>
+<tr><td>1</td><td><code>e_stitch</code> on becomes <code>satin_method</code> <code>e_stitch</code></td><td>not planned</td></tr>
+<tr><td>1</td><td>a satin column (<code>satin_column</code> on, or <code>stroke_method</code> 1) gets <code>reverse_rails</code> <code>none</code></td><td>not planned</td></tr>
+<tr><td>1</td><td>an element with an <code>embroider_</code> attribute and without <code>fill_underlay</code> gets it off</td><td>not planned</td></tr>
+<tr><td>1</td><td>an element without <code>running_stitch_length_mm</code> that is not a satin column gets 1.5</td><td>not planned</td></tr>
+<tr><td>1</td><td>a stroke with <code>manual_stitch</code> on gets <code>stroke_method</code> <code>manual_stitch</code>, unless it has <code>inkscape:connection-start</code></td><td>not planned</td></tr>
+<tr><td>1</td><td>a stroke’s <code>stroke_method</code> written as 0 or 1 becomes <code>running_stitch</code> or <code>ripple_stitch</code>, unless it has <code>inkscape:connection-start</code></td><td>not planned</td></tr>
+<tr><td>1</td><td>a stroke with neither a method nor <code>satin_column</code>, whose <code>style</code> doesn’t set <code>stroke-dasharray</code>, gets <code>zigzag_stitch</code>, unless it has <code>inkscape:connection-start</code></td><td>not planned</td></tr>
+<tr><td>1</td><td>a stroke’s <code>grid_size</code>, in pixels, becomes <code>grid_size_mm</code>, unless it has <code>inkscape:connection-start</code></td><td>not planned</td></tr>
+<tr><td>2</td><td>a <code>&lt;polyline&gt;</code> whose <code>style</code> attribute sets a stroke other than <code>none</code> gets <code>stroke_method</code> <code>manual_stitch</code></td><td>applied, unless digitized automatically</td></tr>
+<tr><td>3</td><td>a zigzag stroke’s <code>pull_compensation_mm</code>, unless 0, is halved into <code>stroke_pull_compensation_mm</code>, which applies to each side</td><td>applied, unless digitized automatically</td></tr>
+<tr><td>3</td><td>a satin column gets <code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off</td><td>applied, unless digitized automatically</td></tr>
+<tr><td>3</td><td>the commands’ old names become today’s (the table under Commands)</td><td>applied, in any file (<code>DEV-SVG-014</code>)</td></tr>
+<tr><td>3</td><td>a <code>starting_point</code> or <code>ending_point</code> command is placed anew at its connector’s end on its object</td><td>applied, unless digitized automatically</td></tr>
+<tr><td>4</td><td>an element whose fill is not <code>none</code> (a fill not set is black), and whose <code>max_stitch_length_mm</code> is missing, empty, not a number or 0, gets 3</td><td>applied to the shapes whose fill is sewn, unless digitized automatically</td></tr>
+<tr><td>4</td><td>a fill with <code>auto_fill</code> off gets <code>fill_method</code> <code>legacy_fill</code>, and <code>auto_fill</code> is removed</td><td>applied to the shapes whose fill is sewn, unless digitized automatically (<code>DEV-FILL-014</code> says how a legacy fill sews)</td></tr>
+<tr><td>4</td><td><code>fill_method</code> <code>auto_fill</code> becomes <code>tatami_fill</code></td><td>applied to the shapes whose fill is sewn, unless digitized automatically</td></tr>
+</tbody>
+</table>
+</div>
+<p><em>145 parameter declarations, 140 registered in StitchCraft.</em></p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../design/before-after-sheet.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../design/adr/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../design/before-after-sheet.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../design/adr/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

@@ -1,0 +1,1306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ink/Stitch differential</title>
+<style>body{font-family:sans-serif;margin:16px;max-width:1900px;background:#fff;color:#202020}img{max-width:100%;height:auto;border:1px solid #ccc}table{border-collapse:collapse;margin:8px 0}td,th{border:1px solid #ccc;padding:2px 8px;text-align:left}code{background:#f2f2f2}</style>
+</head>
+<body>
+<h1>Ink/Stitch differential</h1>
+<p>StitchCraft at <code>6b2dd7b</code>, against Ink/Stitch at <code>d59c9ab</code> (conformance/inkstitch/pin.toml).</p>
+<h2>✅ <code>inkstitch-clip-empty</code> (conformance/cases/inkstitch/clip-empty.toml)</h2>
+<ul>
+<li>excused: stitches differ: StitchCraft 1421, Ink/Stitch 3084, as DEV-SVG-019 says</li>
+<li>excused: size differ: StitchCraft 30.0 × 30.0 mm, Ink/Stitch 30.0 × 70.0 mm, as DEV-SVG-019 says</li>
+<li>excused: threads differ: StitchCraft #0a55a3, Ink/Stitch #ed171f #0a55a3, as DEV-SVG-019 says</li>
+<li>excused: overlap 0.293, below 0.9, as DEV-SVG-019 says</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>1421</td><td>3084</td><td>excused by <code>DEV-SVG-019</code></td></tr>
+<tr><td>size</td><td>30.0 × 30.0 mm</td><td>30.0 × 70.0 mm</td><td>excused by <code>DEV-SVG-019</code></td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#0a55a3</td><td>#ed171f #0a55a3</td><td>excused by <code>DEV-SVG-019</code></td></tr>
+<tr><td>trims</td><td>0</td><td>1</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>2</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.293</td><td></td><td>excused by <code>DEV-SVG-019</code></td></tr>
+</table>
+<p><a href="pictures/inkstitch-clip-empty.png"><img src="pictures/inkstitch-clip-empty.png" alt="inkstitch-clip-empty: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-clip-overlap</code> (conformance/cases/inkstitch/clip-overlap.toml)</h2>
+<ul>
+<li>excused: overlap 0.859, below 0.9, as DEV-SVG-016 says</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>2477</td><td>2469</td><td>✅</td></tr>
+<tr><td>size</td><td>45.0 × 45.0 mm</td><td>45.0 × 45.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.859</td><td></td><td>excused by <code>DEV-SVG-016</code></td></tr>
+</table>
+<p><a href="pictures/inkstitch-clip-overlap.png"><img src="pictures/inkstitch-clip-overlap.png" alt="inkstitch-clip-overlap: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-clip-touch</code> (conformance/cases/inkstitch/clip-touch.toml)</h2>
+<ul>
+<li>excused: stitches differ: StitchCraft 17, Ink/Stitch 34, as DEV-RUN-010 says</li>
+<li>excused: size differ: StitchCraft 20.0 × 0.0 mm, Ink/Stitch 60.0 × 0.0 mm, as DEV-RUN-010 says</li>
+<li>excused: overlap 0.337, below 0.9, as DEV-RUN-010 says</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>17</td><td>34</td><td>excused by <code>DEV-RUN-010</code></td></tr>
+<tr><td>size</td><td>20.0 × 0.0 mm</td><td>60.0 × 0.0 mm</td><td>excused by <code>DEV-RUN-010</code></td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#0a55a3</td><td>#0a55a3</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.337</td><td></td><td>excused by <code>DEV-RUN-010</code></td></tr>
+</table>
+<p><a href="pictures/inkstitch-clip-touch.png"><img src="pictures/inkstitch-clip-touch.png" alt="inkstitch-clip-touch: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-clip-transform</code> (conformance/cases/inkstitch/clip-transform.toml)</h2>
+<ul>
+<li>excused: stitches differ: StitchCraft 1422, Ink/Stitch 5459, as DEV-SVG-017 says</li>
+<li>excused: size differ: StitchCraft 30.0 × 30.0 mm, Ink/Stitch 60.0 × 60.0 mm, as DEV-SVG-017 says</li>
+<li>excused: overlap 0.252, below 0.9, as DEV-SVG-017 says</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>1422</td><td>5459</td><td>excused by <code>DEV-SVG-017</code></td></tr>
+<tr><td>size</td><td>30.0 × 30.0 mm</td><td>60.0 × 60.0 mm</td><td>excused by <code>DEV-SVG-017</code></td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.252</td><td></td><td>excused by <code>DEV-SVG-017</code></td></tr>
+</table>
+<p><a href="pictures/inkstitch-clip-transform.png"><img src="pictures/inkstitch-clip-transform.png" alt="inkstitch-clip-transform: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-clip-zigzag</code> (conformance/cases/inkstitch/clip-zigzag.toml)</h2>
+<ul>
+<li>excused: overlap 0.887, below 0.9, as DEV-RUN-009 says</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>282</td><td>282</td><td>✅</td></tr>
+<tr><td>size</td><td>41.6 × 16.8 mm</td><td>41.4 × 16.8 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#0a55a3</td><td>#0a55a3</td><td>✅</td></tr>
+<tr><td>trims</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>jumps</td><td>2</td><td>2</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.887</td><td></td><td>excused by <code>DEV-RUN-009</code></td></tr>
+</table>
+<p><a href="pictures/inkstitch-clip-zigzag.png"><img src="pictures/inkstitch-clip-zigzag.png" alt="inkstitch-clip-zigzag: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-clone-symbol</code> (conformance/cases/inkstitch/clone-symbol.toml)</h2>
+<ul>
+<li>excused: stitches differ: StitchCraft 4662, Ink/Stitch 412, as DEV-SVG-022 says</li>
+<li>excused: size differ: StitchCraft 80.0 × 40.0 mm, Ink/Stitch 20.0 × 10.0 mm, as DEV-SVG-022 says</li>
+<li>excused: overlap 0.065, below 0.9, as DEV-SVG-022 says</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>4662</td><td>412</td><td>excused by <code>DEV-SVG-022</code></td></tr>
+<tr><td>size</td><td>80.0 × 40.0 mm</td><td>20.0 × 10.0 mm</td><td>excused by <code>DEV-SVG-022</code></td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.065</td><td></td><td>excused by <code>DEV-SVG-022</code></td></tr>
+</table>
+<p><a href="pictures/inkstitch-clone-symbol.png"><img src="pictures/inkstitch-clone-symbol.png" alt="inkstitch-clone-symbol: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-fill-rect</code> (conformance/cases/inkstitch/fill-rect.toml)</h2>
+<ul>
+<li>excused: threads differ, as DEV-THREAD-001 says, and agree without it: StitchCraft #fe370f, Ink/Stitch #fe370f</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>2271</td><td>2390</td><td>✅</td></tr>
+<tr><td>size</td><td>50.0 × 30.0 mm</td><td>50.0 × 30.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#fe370f</td><td>#ed171f</td><td>explained by <code>DEV-THREAD-001</code>: Ink/Stitch #fe370f without it</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.991</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-fill-rect.png"><img src="pictures/inkstitch-fill-rect.png" alt="inkstitch-fill-rect: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-fonts</code> (conformance/cases/inkstitch/fonts.toml)</h2>
+<ul>
+<li>excused: a sample of 4 glyphs of each font: 524 glyphs of 131 fonts. 410 agree, 114 differ as the ledger explains, 0 differ as known follow-up work, 0 differ otherwise, 0 are listed for stitch types StitchCraft doesn't sew yet, and 0 didn't sew. (target/conformance/fonts.md)</li>
+</ul>
+<table>
+<tr><th>Font</th><th>Glyphs</th><th>Agree, excused, known</th><th>Differ, listed, didn't sew</th></tr>
+<tr><td>abecedaire</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>abecedaire_small</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>ags_garamond_latin_grec</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>alchemy</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>allegria20</td><td>4</td><td>1, 3, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>allegria55</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>ambigue</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>amitaclo</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>amitaclo_small</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>animals</td><td>4</td><td>1, 3, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>animaux</td><td>4</td><td>1, 3, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>apesplit</td><td>4</td><td>0, 4, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>apex_lake</td><td>4</td><td>0, 4, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>apex_simple_AGS</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>apex_simple_small_AGS</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>art_nouveau</td><td>4</td><td>3, 1, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>auberge_marif</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>auberge_small</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>aventurina</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>barstitch_bold</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>barstitch_cloudy</td><td>4</td><td>0, 4, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>barstitch_crosses</td><td>4</td><td>0, 4, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>barstitch_mandala</td><td>4</td><td>0, 4, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>barstitch_regular</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>barstitch_textured</td><td>4</td><td>0, 4, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>bathaus_FI</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>bathaus_FI_Small</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>bluenesia_satin</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>braille</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>caesarus_SC_FI</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>caffeine_KOR</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>caffeine_tiny</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>califragilistic</td><td>4</td><td>3, 1, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>cats</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>cherryforinkstitch</td><td>4</td><td>0, 4, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>cherryforkaalleen</td><td>4</td><td>0, 4, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>chicken_little</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>chicken_little_small</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>chicken_scratch</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>chopin</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>circular_3letters_monogram</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>cogs_KOR</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>colorful</td><td>4</td><td>0, 4, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>computer</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>computer_small</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>cooper_marif</td><td>4</td><td>0, 4, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>cyrillic</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>decadent_flowers_monogram</td><td>4</td><td>2, 2, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>dejavufont</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>digory_doodles_bean</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>dinomouse72</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>egyptian</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>egyptian_small</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>ellenika</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>eloquent</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>eloquent_small</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>emilio_20</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>emilio_20_applique</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>emilio_20_bold</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>emilio_20_simple</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>emilio_20_simple_small</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>emilio_20_tartan</td><td>4</td><td>1, 3, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>emilio_20_tricolore</td><td>4</td><td>0, 4, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>excalibur_KOR</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>excalibur_small</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>fold_inkstitch</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>geneva_rounded</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>geneva_simple</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>gingo200</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>glacial_tiny</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>heavenly</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>heavenly_small</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>hebrew_font_large</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>hebrew_font_medium</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>hebrew_simple_rounded</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>hebrew_simple_rounded_small</td><td>4</td><td>2, 2, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>honoka</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>inclusif(ve)</td><td>4</td><td>0, 4, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>initials_XL</td><td>4</td><td>3, 1, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>initials_medium</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>inkstitch_masego</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>invercelia</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>jacquard_12</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>jaquarda_bastarda_9</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>jersey_15</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>kum_tsoan_AGS</td><td>4</td><td>0, 4, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>kum_tsoan_relief</td><td>4</td><td>0, 4, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>kum_tsoan_tartan</td><td>4</td><td>0, 4, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>learning_curve</td><td>4</td><td>3, 1, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>magnolia_KOR</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>magnolia_bicolor</td><td>4</td><td>0, 4, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>magnolia_small</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>magnolia_tamed</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>mai_en_fleur</td><td>4</td><td>0, 4, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>malika</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>mam_script</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>manga_impact</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>marifenda</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>medium_font</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>milli_marif_bold</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>mimosa_large</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>mimosa_medium</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>monicha</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>montecarlo</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>neon</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>neon_blinking</td><td>4</td><td>0, 4, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>noble</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>ondulamarif_Medium</td><td>4</td><td>1, 3, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>ondulamarif_S</td><td>4</td><td>2, 2, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>ondulamarif_XL</td><td>4</td><td>1, 3, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>pacificlo</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>pacificlo_tiny</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>paquerette</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>perspective_tricolore_KOR</td><td>4</td><td>0, 4, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>pisankris</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>pixel10</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>roaring_twenties_KOR</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>roaring_twenties_KOR_small</td><td>4</td><td>2, 2, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>roman_ags</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>roman_ags_bicolor</td><td>4</td><td>3, 1, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>sacramarif</td><td>4</td><td>1, 3, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>small_font</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>stebor_AGS</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>sunset</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>tieralphabet</td><td>4</td><td>0, 4, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>tt_directors</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>tt_masters</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>venezia</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>venezia_small</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>violin_serif</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+<tr><td>western_light</td><td>4</td><td>4, 0, 0</td><td>✅ 0, 0, 0</td></tr>
+</table>
+<p><a href="pictures/fonts-excused.png"><img src="pictures/fonts-excused.png" alt="inkstitch-fonts: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<p><a href="pictures/fonts-sample.png"><img src="pictures/fonts-sample.png" alt="inkstitch-fonts: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-gradient-before</code> (conformance/cases/inkstitch/gradient-before.toml)</h2>
+<ul>
+<li>excused: stitches differ: StitchCraft 1779, Ink/Stitch 782, as DEV-FILL-032 says</li>
+<li>excused: size differ: StitchCraft 40.0 × 40.0 mm, Ink/Stitch 15.4 × 40.0 mm, as DEV-FILL-032 says</li>
+<li>excused: overlap 0.390, below 0.9, as DEV-FILL-032 says</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>1779</td><td>782</td><td>excused by <code>DEV-FILL-032</code></td></tr>
+<tr><td>size</td><td>40.0 × 40.0 mm</td><td>15.4 × 40.0 mm</td><td>excused by <code>DEV-FILL-032</code></td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#0a55a3</td><td>#0a55a3</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.390</td><td></td><td>excused by <code>DEV-FILL-032</code></td></tr>
+</table>
+<p><a href="pictures/inkstitch-gradient-before.png"><img src="pictures/inkstitch-gradient-before.png" alt="inkstitch-gradient-before: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-gradient-box</code> (conformance/cases/inkstitch/gradient-box.toml)</h2>
+<ul>
+<li>excused: threads differ: StitchCraft #ed171f #0a55a3 #ed171f #0a55a3, Ink/Stitch #0a55a3, as DEV-SVG-027 says</li>
+<li>excused: trims differ: StitchCraft 3, Ink/Stitch 1, as DEV-SVG-027 says</li>
+<li>excused: jumps differ: StitchCraft 4, Ink/Stitch 2, as DEV-SVG-027 says</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>2800</td><td>2924</td><td>✅</td></tr>
+<tr><td>size</td><td>80.0 × 40.0 mm</td><td>79.6 × 40.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f #0a55a3 #ed171f #0a55a3</td><td>#0a55a3</td><td>excused by <code>DEV-SVG-027</code></td></tr>
+<tr><td>trims</td><td>3</td><td>1</td><td>excused by <code>DEV-SVG-027</code></td></tr>
+<tr><td>jumps</td><td>4</td><td>2</td><td>excused by <code>DEV-SVG-027</code></td></tr>
+<tr><td>overlap</td><td>0.987</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-gradient-box.png"><img src="pictures/inkstitch-gradient-box.png" alt="inkstitch-gradient-box: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-tartan-herringbone</code> (conformance/cases/inkstitch/tartan-herringbone.toml)</h2>
+<ul>
+<li>excused: stitches differ, as DEV-FIN-001 says, and agree without it: StitchCraft 28596, Ink/Stitch 29783</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>28596</td><td>39037</td><td>explained by <code>DEV-FIN-001</code>: Ink/Stitch 29783 without it</td></tr>
+<tr><td>size</td><td>85.0 × 85.0 mm</td><td>85.0 × 85.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#0e1f7c #e8a900 #f0f0f0 #ed171f #e8a900 #000000 #fe9e32 #0a55a3 #000000 #ed171f #0a55a3 #f0f0f0 #000000 #0a55a3 #000000 #f0f0f0 #ed171f</td><td>#0e1f7c #e8a900 #f0f0f0 #ed171f #e8a900 #000000 #fe9e32 #0a55a3 #000000 #ed171f #0a55a3 #f0f0f0 #000000 #0a55a3 #000000 #f0f0f0 #ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>17</td><td>17</td><td>✅</td></tr>
+<tr><td>jumps</td><td>18</td><td>18</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.998</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-tartan-herringbone.png"><img src="pictures/inkstitch-tartan-herringbone.png" alt="inkstitch-tartan-herringbone: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts04</code> (conformance/cases/inkstitch/ts04.toml)</h2>
+<ul>
+<li>excused: size differ: StitchCraft 110.0 × 64.6 mm, Ink/Stitch 111.6 × 64.4 mm, as DEV-LCK-001 says</li>
+<li>excused: overlap 0.564, below 0.9, as DEV-LCK-001 says</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>623</td><td>635</td><td>✅</td></tr>
+<tr><td>size</td><td>110.0 × 64.6 mm</td><td>111.6 × 64.4 mm</td><td>excused by <code>DEV-LCK-001</code></td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>26</td><td>26</td><td>✅</td></tr>
+<tr><td>jumps</td><td>27</td><td>27</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.564</td><td></td><td>excused by <code>DEV-LCK-001</code></td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts04.png"><img src="pictures/inkstitch-ts04.png" alt="inkstitch-ts04: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts11c</code> (conformance/cases/inkstitch/ts11c.toml)</h2>
+<ul>
+<li>excused: stitches differ: StitchCraft 5883, Ink/Stitch 7340, as DEV-FILL-018 says</li>
+<li>excused: overlap 0.743, below 0.9, as DEV-FILL-018 says</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>5883</td><td>7340</td><td>excused by <code>DEV-FILL-018</code></td></tr>
+<tr><td>size</td><td>123.0 × 120.2 mm</td><td>123.0 × 120.2 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#00673e #0a55a3 #ed171f</td><td>#00673e #0a55a3 #ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>10</td><td>9</td><td>✅</td></tr>
+<tr><td>jumps</td><td>11</td><td>10</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.743</td><td></td><td>excused by <code>DEV-FILL-018</code></td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts11c.png"><img src="pictures/inkstitch-ts11c.png" alt="inkstitch-ts11c: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts13a</code> (conformance/cases/inkstitch/ts13a.toml)</h2>
+<ul>
+<li>excused: trims differ, as DEV-FMT-001 says, and agree without it: StitchCraft 35, Ink/Stitch 35</li>
+<li>excused: jumps differ, as DEV-FMT-001 says, and agree without it: StitchCraft 36, Ink/Stitch 36</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>22802</td><td>24521</td><td>✅</td></tr>
+<tr><td>size</td><td>126.0 × 168.0 mm</td><td>126.0 × 168.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f #0a55a3 #e8a900 #ed171f #0a55a3 #e8a900 #0a55a3 #ed171f #0a55a3 #e8a900 #ed171f #0a55a3 #e8a900 #ed171f #0a55a3 #e8a900 #0a55a3 #ed171f #0a55a3 #e8a900</td><td>#ed171f #0a55a3 #e8a900 #ed171f #0a55a3 #e8a900 #0a55a3 #ed171f #0a55a3 #e8a900 #ed171f #0a55a3 #e8a900 #ed171f #0a55a3 #e8a900 #0a55a3 #ed171f #0a55a3 #e8a900</td><td>✅</td></tr>
+<tr><td>trims</td><td>35</td><td>45</td><td>explained by <code>DEV-FMT-001</code>: Ink/Stitch 35 without it</td></tr>
+<tr><td>jumps</td><td>36</td><td>46</td><td>explained by <code>DEV-FMT-001</code>: Ink/Stitch 36 without it</td></tr>
+<tr><td>overlap</td><td>0.994</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts13a.png"><img src="pictures/inkstitch-ts13a.png" alt="inkstitch-ts13a: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts13b</code> (conformance/cases/inkstitch/ts13b.toml)</h2>
+<ul>
+<li>excused: stitches differ, as DEV-FIN-001 says, and agree without it: StitchCraft 14140, Ink/Stitch 13741</li>
+<li>excused: trims differ, as DEV-FMT-001 says, and agree without it: StitchCraft 68, Ink/Stitch 68</li>
+<li>excused: jumps differ, as DEV-FMT-001 says, and agree without it: StitchCraft 69, Ink/Stitch 69</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>14140</td><td>15811</td><td>explained by <code>DEV-FIN-001</code>: Ink/Stitch 13741 without it</td></tr>
+<tr><td>size</td><td>110.6 × 148.4 mm</td><td>110.6 × 148.4 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#000000 #ed171f #0a55a3 #e8a900 #000000 #ed171f #0a55a3 #e8a900 #000000 #ed171f #0a55a3 #e8a900 #000000 #ed171f #0a55a3 #e8a900 #000000</td><td>#000000 #ed171f #0a55a3 #e8a900 #000000 #ed171f #0a55a3 #e8a900 #000000 #ed171f #0a55a3 #e8a900 #000000 #ed171f #0a55a3 #e8a900 #000000</td><td>✅</td></tr>
+<tr><td>trims</td><td>68</td><td>71</td><td>explained by <code>DEV-FMT-001</code>: Ink/Stitch 68 without it</td></tr>
+<tr><td>jumps</td><td>69</td><td>72</td><td>explained by <code>DEV-FMT-001</code>: Ink/Stitch 69 without it</td></tr>
+<tr><td>overlap</td><td>0.985</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts13b.png"><img src="pictures/inkstitch-ts13b.png" alt="inkstitch-ts13b: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts13e</code> (conformance/cases/inkstitch/ts13e.toml)</h2>
+<ul>
+<li>excused: trims differ, as DEV-FMT-001 says, and agree without it: StitchCraft 9, Ink/Stitch 9</li>
+<li>excused: jumps differ, as DEV-FMT-001 says, and agree without it: StitchCraft 10, Ink/Stitch 10</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>5752</td><td>6208</td><td>✅</td></tr>
+<tr><td>size</td><td>24.0 × 108.4 mm</td><td>24.0 × 108.4 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#000000 #ffff00 #fe9e32 #000000 #ffff00 #fe9e32 #ffff00 #000000 #fe9e32</td><td>#000000 #ffff00 #fe9e32 #000000 #ffff00 #fe9e32 #ffff00 #000000 #fe9e32</td><td>✅</td></tr>
+<tr><td>trims</td><td>9</td><td>12</td><td>explained by <code>DEV-FMT-001</code>: Ink/Stitch 9 without it</td></tr>
+<tr><td>jumps</td><td>10</td><td>13</td><td>explained by <code>DEV-FMT-001</code>: Ink/Stitch 10 without it</td></tr>
+<tr><td>overlap</td><td>0.996</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts13e.png"><img src="pictures/inkstitch-ts13e.png" alt="inkstitch-ts13e: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts13f</code> (conformance/cases/inkstitch/ts13f.toml)</h2>
+<ul>
+<li>excused: stitches differ, as DEV-FIN-001 says, and agree without it: StitchCraft 18543, Ink/Stitch 19638</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>18543</td><td>21764</td><td>explained by <code>DEV-FIN-001</code>: Ink/Stitch 19638 without it</td></tr>
+<tr><td>size</td><td>112.0 × 57.0 mm</td><td>112.0 × 57.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#0a55a3 #000000</td><td>#0a55a3 #000000</td><td>✅</td></tr>
+<tr><td>trims</td><td>20</td><td>20</td><td>✅</td></tr>
+<tr><td>jumps</td><td>21</td><td>21</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.995</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts13f.png"><img src="pictures/inkstitch-ts13f.png" alt="inkstitch-ts13f: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts17c-guided-anchor</code> (conformance/cases/inkstitch/ts17c-guided-anchor.toml)</h2>
+<ul>
+<li>excused: overlap 0.814, below 0.9, as DEV-RUN-002 says</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>45</td><td>45</td><td>✅</td></tr>
+<tr><td>size</td><td>9.0 × 12.0 mm</td><td>9.0 × 12.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#00673e</td><td>#00673e</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.814</td><td></td><td>excused by <code>DEV-RUN-002</code></td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts17c-guided-anchor.png"><img src="pictures/inkstitch-ts17c-guided-anchor.png" alt="inkstitch-ts17c-guided-anchor: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts17c-guided-closed</code> (conformance/cases/inkstitch/ts17c-guided-closed.toml)</h2>
+<ul>
+<li>excused: stitches differ: StitchCraft 104, Ink/Stitch 86, as DEV-RUN-002 says</li>
+<li>excused: overlap 0.760, below 0.9, as DEV-RUN-002 says</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>104</td><td>86</td><td>excused by <code>DEV-RUN-002</code></td></tr>
+<tr><td>size</td><td>21.0 × 6.4 mm</td><td>20.8 × 6.4 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#00673e</td><td>#00673e</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.760</td><td></td><td>excused by <code>DEV-RUN-002</code></td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts17c-guided-closed.png"><img src="pictures/inkstitch-ts17c-guided-closed.png" alt="inkstitch-ts17c-guided-closed: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts17c-guided-line</code> (conformance/cases/inkstitch/ts17c-guided-line.toml)</h2>
+<ul>
+<li>excused: overlap 0.841, below 0.9, as DEV-RUN-002 says</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>52</td><td>51</td><td>✅</td></tr>
+<tr><td>size</td><td>22.4 × 9.6 mm</td><td>22.4 × 9.6 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#00673e</td><td>#00673e</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.841</td><td></td><td>excused by <code>DEV-RUN-002</code></td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts17c-guided-line.png"><img src="pictures/inkstitch-ts17c-guided-line.png" alt="inkstitch-ts17c-guided-line: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts17c-ripple-spiral</code> (conformance/cases/inkstitch/ts17c-ripple-spiral.toml)</h2>
+<ul>
+<li>excused: overlap 0.746, below 0.9, as DEV-RUN-002 says</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>105</td><td>97</td><td>✅</td></tr>
+<tr><td>size</td><td>20.0 × 21.0 mm</td><td>20.0 × 21.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#00673e</td><td>#00673e</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.746</td><td></td><td>excused by <code>DEV-RUN-002</code></td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts17c-ripple-spiral.png"><img src="pictures/inkstitch-ts17c-ripple-spiral.png" alt="inkstitch-ts17c-ripple-spiral: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts17c-ripple-towards</code> (conformance/cases/inkstitch/ts17c-ripple-towards.toml)</h2>
+<ul>
+<li>excused: overlap 0.828, below 0.9, as DEV-RUN-002 says</li>
+</ul>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>67</td><td>64</td><td>✅</td></tr>
+<tr><td>size</td><td>22.4 × 20.0 mm</td><td>22.6 × 20.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#00673e</td><td>#00673e</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.828</td><td></td><td>excused by <code>DEV-RUN-002</code></td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts17c-ripple-towards.png"><img src="pictures/inkstitch-ts17c-ripple-towards.png" alt="inkstitch-ts17c-ripple-towards: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-centre-lines-letters</code> (conformance/cases/inkstitch/centre-lines-letters.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>Lines of T 3 mm tall in 0.3 mm lines (0.30 mm wide)</td><td>3 ends; strays 0.14 widths</td><td>3 ends; strays 0.10 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 3 mm tall in 0.5 mm lines (0.50 mm wide)</td><td>3 ends; strays 0.10 widths</td><td>3 ends; strays 0.08 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 3 mm tall in 0.7 mm lines (0.71 mm wide)</td><td>3 ends; strays 0.00 widths</td><td>3 ends; strays 0.00 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 3 mm tall in 0.9 mm lines (0.90 mm wide)</td><td>2 ends; strays 0.00 widths</td><td>2 ends; strays 0.00 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 4 mm tall in 0.3 mm lines (0.30 mm wide)</td><td>3 ends; strays 0.12 widths</td><td>3 ends; strays 0.11 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 4 mm tall in 0.5 mm lines (0.50 mm wide)</td><td>3 ends; strays 0.02 widths</td><td>3 ends; strays 0.03 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 4 mm tall in 0.7 mm lines (0.71 mm wide)</td><td>3 ends; strays 0.03 widths</td><td>3 ends; strays 0.03 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 4 mm tall in 0.9 mm lines (0.93 mm wide)</td><td>3 ends; strays 0.00 widths</td><td>3 ends; strays 0.03 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 5 mm tall in 0.3 mm lines (0.30 mm wide)</td><td>3 ends; strays 0.13 widths</td><td>3 ends; strays 0.11 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 5 mm tall in 0.5 mm lines (0.50 mm wide)</td><td>3 ends; strays 0.12 widths</td><td>3 ends; strays 0.10 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 5 mm tall in 0.7 mm lines (0.70 mm wide)</td><td>3 ends; strays 0.11 widths</td><td>3 ends; strays 0.10 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 5 mm tall in 0.9 mm lines (0.92 mm wide)</td><td>3 ends; strays 0.02 widths</td><td>3 ends; strays 0.04 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 6 mm tall in 0.3 mm lines (0.30 mm wide)</td><td>3 ends; strays 0.13 widths</td><td>3 ends; strays 0.11 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 6 mm tall in 0.5 mm lines (0.50 mm wide)</td><td>3 ends; strays 0.02 widths</td><td>3 ends; strays 0.03 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 6 mm tall in 0.7 mm lines (0.71 mm wide)</td><td>3 ends; strays 0.03 widths</td><td>3 ends; strays 0.03 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 6 mm tall in 0.9 mm lines (0.90 mm wide)</td><td>3 ends; strays 0.10 widths</td><td>3 ends; strays 0.11 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 8 mm tall in 0.3 mm lines (0.30 mm wide)</td><td>3 ends; strays 0.14 widths</td><td>3 ends; strays 0.11 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 8 mm tall in 0.5 mm lines (0.50 mm wide)</td><td>3 ends; strays 0.04 widths</td><td>3 ends; strays 0.06 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 8 mm tall in 0.7 mm lines (0.70 mm wide)</td><td>3 ends; strays 0.04 widths</td><td>3 ends; strays 0.05 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 8 mm tall in 0.9 mm lines (0.91 mm wide)</td><td>3 ends; strays 0.03 widths</td><td>3 ends; strays 0.04 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 10 mm tall in 0.3 mm lines (0.30 mm wide)</td><td>3 ends; strays 0.14 widths</td><td>3 ends; strays 0.12 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 10 mm tall in 0.5 mm lines (0.50 mm wide)</td><td>3 ends; strays 0.13 widths</td><td>3 ends; strays 0.11 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 10 mm tall in 0.7 mm lines (0.70 mm wide)</td><td>3 ends; strays 0.12 widths</td><td>3 ends; strays 0.12 widths</td><td>✅</td></tr>
+<tr><td>Lines of T 10 mm tall in 0.9 mm lines (0.91 mm wide)</td><td>3 ends; strays 0.04 widths</td><td>3 ends; strays 0.04 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 3 mm tall in 0.3 mm lines (0.30 mm wide)</td><td>4 ends; strays 0.13 widths</td><td>4 ends; strays 0.12 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 3 mm tall in 0.5 mm lines (0.50 mm wide)</td><td>4 ends; strays 0.12 widths</td><td>4 ends; strays 0.11 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 3 mm tall in 0.7 mm lines (0.70 mm wide)</td><td>4 ends; strays 0.12 widths</td><td>4 ends; strays 0.12 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 4 mm tall in 0.3 mm lines (0.30 mm wide)</td><td>4 ends; strays 0.08 widths</td><td>4 ends; strays 0.09 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 4 mm tall in 0.5 mm lines (0.50 mm wide)</td><td>4 ends; strays 0.12 widths</td><td>4 ends; strays 0.11 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 4 mm tall in 0.7 mm lines (0.70 mm wide)</td><td>4 ends; strays 0.11 widths</td><td>4 ends; strays 0.11 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 4 mm tall in 0.9 mm lines (0.90 mm wide)</td><td>4 ends; strays 0.13 widths</td><td>4 ends; strays 0.12 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 5 mm tall in 0.3 mm lines (0.30 mm wide)</td><td>4 ends; strays 0.06 widths</td><td>4 ends; strays 0.11 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 5 mm tall in 0.5 mm lines (0.50 mm wide)</td><td>4 ends; strays 0.12 widths</td><td>4 ends; strays 0.12 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 5 mm tall in 0.7 mm lines (0.71 mm wide)</td><td>4 ends; strays 0.04 widths</td><td>4 ends; strays 0.05 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 5 mm tall in 0.9 mm lines (0.90 mm wide)</td><td>4 ends; strays 0.11 widths</td><td>4 ends; strays 0.10 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 6 mm tall in 0.3 mm lines (0.30 mm wide)</td><td>4 ends; strays 0.14 widths</td><td>4 ends; strays 0.13 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 6 mm tall in 0.5 mm lines (0.50 mm wide)</td><td>4 ends; strays 0.13 widths</td><td>4 ends; strays 0.12 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 6 mm tall in 0.7 mm lines (0.70 mm wide)</td><td>4 ends; strays 0.13 widths</td><td>4 ends; strays 0.12 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 6 mm tall in 0.9 mm lines (0.91 mm wide)</td><td>4 ends; strays 0.04 widths</td><td>4 ends; strays 0.04 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 8 mm tall in 0.3 mm lines (0.30 mm wide)</td><td>4 ends; strays 0.06 widths</td><td>4 ends; strays 0.11 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 8 mm tall in 0.5 mm lines (0.50 mm wide)</td><td>4 ends; strays 0.13 widths</td><td>4 ends; strays 0.13 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 8 mm tall in 0.7 mm lines (0.71 mm wide)</td><td>4 ends; strays 0.04 widths</td><td>4 ends; strays 0.05 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 8 mm tall in 0.9 mm lines (0.91 mm wide)</td><td>4 ends; strays 0.04 widths</td><td>4 ends; strays 0.04 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 10 mm tall in 0.3 mm lines (0.30 mm wide)</td><td>4 ends; strays 0.09 widths</td><td>4 ends; strays 0.10 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 10 mm tall in 0.5 mm lines (0.50 mm wide)</td><td>4 ends; strays 0.13 widths</td><td>4 ends; strays 0.12 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 10 mm tall in 0.7 mm lines (0.70 mm wide)</td><td>4 ends; strays 0.13 widths</td><td>4 ends; strays 0.13 widths</td><td>✅</td></tr>
+<tr><td>Lines of H 10 mm tall in 0.9 mm lines (0.91 mm wide)</td><td>4 ends; strays 0.05 widths</td><td>4 ends; strays 0.04 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 3 mm tall in 0.3 mm lines (0.30 mm wide)</td><td>3 ends; strays 0.12 widths</td><td>3 ends; strays 0.10 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 3 mm tall in 0.5 mm lines (0.50 mm wide)</td><td>3 ends; strays 0.12 widths</td><td>3 ends; strays 0.11 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 3 mm tall in 0.7 mm lines (0.70 mm wide)</td><td>3 ends; strays 0.10 widths</td><td>3 ends; strays 0.12 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 3 mm tall in 0.9 mm lines (0.92 mm wide)</td><td>3 ends; strays 0.00 widths</td><td>2 ends; strays 0.04 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 4 mm tall in 0.3 mm lines (0.30 mm wide)</td><td>3 ends; strays 0.09 widths</td><td>3 ends; strays 0.11 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 4 mm tall in 0.5 mm lines (0.50 mm wide)</td><td>3 ends; strays 0.12 widths</td><td>3 ends; strays 0.11 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 4 mm tall in 0.7 mm lines (0.70 mm wide)</td><td>3 ends; strays 0.11 widths</td><td>3 ends; strays 0.11 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 4 mm tall in 0.9 mm lines (0.90 mm wide)</td><td>3 ends; strays 0.11 widths</td><td>3 ends; strays 0.11 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 5 mm tall in 0.3 mm lines (0.30 mm wide)</td><td>3 ends; strays 0.09 widths</td><td>3 ends; strays 0.12 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 5 mm tall in 0.5 mm lines (0.50 mm wide)</td><td>3 ends; strays 0.12 widths</td><td>3 ends; strays 0.12 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 5 mm tall in 0.7 mm lines (0.71 mm wide)</td><td>3 ends; strays 0.06 widths</td><td>3 ends; strays 0.07 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 5 mm tall in 0.9 mm lines (0.91 mm wide)</td><td>3 ends; strays 0.11 widths</td><td>3 ends; strays 0.10 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 6 mm tall in 0.3 mm lines (0.30 mm wide)</td><td>3 ends; strays 0.14 widths</td><td>3 ends; strays 0.13 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 6 mm tall in 0.5 mm lines (0.50 mm wide)</td><td>3 ends; strays 0.13 widths</td><td>3 ends; strays 0.12 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 6 mm tall in 0.7 mm lines (0.71 mm wide)</td><td>3 ends; strays 0.05 widths</td><td>3 ends; strays 0.06 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 6 mm tall in 0.9 mm lines (0.91 mm wide)</td><td>3 ends; strays 0.04 widths</td><td>3 ends; strays 0.04 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 8 mm tall in 0.3 mm lines (0.30 mm wide)</td><td>3 ends; strays 0.11 widths</td><td>3 ends; strays 0.14 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 8 mm tall in 0.5 mm lines (0.50 mm wide)</td><td>3 ends; strays 0.13 widths</td><td>3 ends; strays 0.13 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 8 mm tall in 0.7 mm lines (0.70 mm wide)</td><td>3 ends; strays 0.07 widths</td><td>3 ends; strays 0.08 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 8 mm tall in 0.9 mm lines (0.91 mm wide)</td><td>3 ends; strays 0.05 widths</td><td>3 ends; strays 0.06 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 10 mm tall in 0.3 mm lines (0.30 mm wide)</td><td>3 ends; strays 0.12 widths</td><td>3 ends; strays 0.15 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 10 mm tall in 0.5 mm lines (0.50 mm wide)</td><td>3 ends; strays 0.13 widths</td><td>3 ends; strays 0.11 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 10 mm tall in 0.7 mm lines (0.70 mm wide)</td><td>3 ends; strays 0.12 widths</td><td>3 ends; strays 0.13 widths</td><td>✅</td></tr>
+<tr><td>Lines of E 10 mm tall in 0.9 mm lines (0.91 mm wide)</td><td>3 ends; strays 0.07 widths</td><td>3 ends; strays 0.09 widths</td><td>✅</td></tr>
+</table>
+<h2>✅ <code>inkstitch-centre-lines-ts13b</code> (conformance/cases/inkstitch/centre-lines-ts13b.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>Lines of <code>ts13b:auto:word-4:a</code> (0.74 mm wide)</td><td>3 ends; strays 0.07 widths</td><td>2 ends; strays 0.11 widths</td><td>✅</td></tr>
+<tr><td>Lines of <code>ts13b:auto:word-4:t</code> (0.72 mm wide)</td><td>3 ends; strays 0.11 widths</td><td>3 ends; strays 0.11 widths</td><td>✅</td></tr>
+<tr><td>Lines of <code>ts13b:auto:word-4:c</code> (0.72 mm wide)</td><td>2 ends; strays 0.03 widths</td><td>2 ends; strays 0.03 widths</td><td>✅</td></tr>
+<tr><td>Lines of <code>ts13b:auto:word-4:h</code> (0.73 mm wide)</td><td>4 ends; strays 0.03 widths</td><td>4 ends; strays 0.03 widths</td><td>✅</td></tr>
+<tr><td>Lines of <code>ts13b:auto:window-0.3:line</code> (0.30 mm wide)</td><td>3 ends; strays 0.09 widths</td><td>3 ends; strays 0.10 widths</td><td>✅</td></tr>
+<tr><td>Lines of <code>ts13b:auto:window-0.6:line</code> (0.60 mm wide)</td><td>3 ends; strays 0.03 widths</td><td>3 ends; strays 0.03 widths</td><td>✅</td></tr>
+<tr><td>Lines of <code>ts13b:auto:window-0.9:line</code> (0.90 mm wide)</td><td>3 ends; strays 0.12 widths</td><td>3 ends; strays 0.12 widths</td><td>✅</td></tr>
+</table>
+<h2>✅ <code>inkstitch-clip-group</code> (conformance/cases/inkstitch/clip-group.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>1463</td><td>1576</td><td>✅</td></tr>
+<tr><td>size</td><td>30.0 × 60.0 mm</td><td>30.0 × 60.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f #0a55a3</td><td>#ed171f #0a55a3</td><td>✅</td></tr>
+<tr><td>trims</td><td>2</td><td>2</td><td>✅</td></tr>
+<tr><td>jumps</td><td>3</td><td>3</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.990</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-clip-group.png"><img src="pictures/inkstitch-clip-group.png" alt="inkstitch-clip-group: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-clip-satin</code> (conformance/cases/inkstitch/clip-satin.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>945</td><td>988</td><td>✅</td></tr>
+<tr><td>size</td><td>40.0 × 40.0 mm</td><td>40.0 × 40.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#0a55a3 #ed171f</td><td>#0a55a3 #ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>jumps</td><td>2</td><td>2</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.988</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-clip-satin.png"><img src="pictures/inkstitch-clip-satin.png" alt="inkstitch-clip-satin: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-clone-angle</code> (conformance/cases/inkstitch/clone-angle.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>2332</td><td>2502</td><td>✅</td></tr>
+<tr><td>size</td><td>60.0 × 74.2 mm</td><td>60.0 × 74.2 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>jumps</td><td>2</td><td>2</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.988</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-clone-angle.png"><img src="pictures/inkstitch-clone-angle.png" alt="inkstitch-clone-angle: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-clone-flip</code> (conformance/cases/inkstitch/clone-flip.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>2592</td><td>2614</td><td>✅</td></tr>
+<tr><td>size</td><td>60.0 × 74.2 mm</td><td>60.0 × 74.2 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>jumps</td><td>2</td><td>2</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.994</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-clone-flip.png"><img src="pictures/inkstitch-clone-flip.png" alt="inkstitch-clone-flip: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-clone-group</code> (conformance/cases/inkstitch/clone-group.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>3073</td><td>3135</td><td>✅</td></tr>
+<tr><td>size</td><td>75.0 × 55.0 mm</td><td>75.0 × 55.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f #0a55a3 #ed171f #0a55a3</td><td>#ed171f #0a55a3 #ed171f #0a55a3</td><td>✅</td></tr>
+<tr><td>trims</td><td>3</td><td>3</td><td>✅</td></tr>
+<tr><td>jumps</td><td>4</td><td>4</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.992</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-clone-group.png"><img src="pictures/inkstitch-clone-group.png" alt="inkstitch-clone-group: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-clone-of-clone</code> (conformance/cases/inkstitch/clone-of-clone.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>3216</td><td>3361</td><td>✅</td></tr>
+<tr><td>size</td><td>60.0 × 103.4 mm</td><td>60.0 × 103.4 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>2</td><td>2</td><td>✅</td></tr>
+<tr><td>jumps</td><td>3</td><td>3</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.993</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-clone-of-clone.png"><img src="pictures/inkstitch-clone-of-clone.png" alt="inkstitch-clone-of-clone: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-clone-turn-45</code> (conformance/cases/inkstitch/clone-turn-45.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>2158</td><td>2136</td><td>✅</td></tr>
+<tr><td>size</td><td>60.0 × 79.6 mm</td><td>60.0 × 79.6 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>jumps</td><td>2</td><td>2</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.994</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-clone-turn-45.png"><img src="pictures/inkstitch-clone-turn-45.png" alt="inkstitch-clone-turn-45: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-colours</code> (conformance/cases/inkstitch/colours.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>1288</td><td>1362</td><td>✅</td></tr>
+<tr><td>size</td><td>76.0 × 16.0 mm</td><td>76.0 × 16.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f #2f7e20 #0b3d91</td><td>#ed171f #2f7e20 #0b3d91</td><td>✅</td></tr>
+<tr><td>trims</td><td>2</td><td>2</td><td>✅</td></tr>
+<tr><td>jumps</td><td>3</td><td>3</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.986</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-colours.png"><img src="pictures/inkstitch-colours.png" alt="inkstitch-colours: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-cross-grid</code> (conformance/cases/inkstitch/cross-grid.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>1001</td><td>1001</td><td>✅</td></tr>
+<tr><td>size</td><td>91.0 × 16.0 mm</td><td>91.0 × 16.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>4</td><td>4</td><td>✅</td></tr>
+<tr><td>jumps</td><td>5</td><td>5</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.994</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-cross-grid.png"><img src="pictures/inkstitch-cross-grid.png" alt="inkstitch-cross-grid: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-cross-methods</code> (conformance/cases/inkstitch/cross-methods.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>1077</td><td>1077</td><td>✅</td></tr>
+<tr><td>size</td><td>77.8 × 58.2 mm</td><td>77.8 × 58.2 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>10</td><td>10</td><td>✅</td></tr>
+<tr><td>jumps</td><td>11</td><td>11</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.940</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-cross-methods.png"><img src="pictures/inkstitch-cross-methods.png" alt="inkstitch-cross-methods: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-drawn-locks</code> (conformance/cases/inkstitch/drawn-locks.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>79</td><td>82</td><td>✅</td></tr>
+<tr><td>size</td><td>71.6 × 56.8 mm</td><td>71.6 × 56.8 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>3</td><td>3</td><td>✅</td></tr>
+<tr><td>jumps</td><td>4</td><td>4</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.988</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-drawn-locks.png"><img src="pictures/inkstitch-drawn-locks.png" alt="inkstitch-drawn-locks: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-gradient-fade</code> (conformance/cases/inkstitch/gradient-fade.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>1765</td><td>1772</td><td>✅</td></tr>
+<tr><td>size</td><td>40.0 × 40.0 mm</td><td>40.0 × 40.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.998</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-gradient-fade.png"><img src="pictures/inkstitch-gradient-fade.png" alt="inkstitch-gradient-fade: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-gradient-parts</code> (conformance/cases/inkstitch/gradient-parts.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>4042</td><td>4130</td><td>✅</td></tr>
+<tr><td>size</td><td>80.0 × 60.0 mm</td><td>80.0 × 60.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f #0a55a3 #000000</td><td>#ed171f #0a55a3 #000000</td><td>✅</td></tr>
+<tr><td>trims</td><td>4</td><td>4</td><td>✅</td></tr>
+<tr><td>jumps</td><td>5</td><td>5</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.999</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-gradient-parts.png"><img src="pictures/inkstitch-gradient-parts.png" alt="inkstitch-gradient-parts: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-gradient-point</code> (conformance/cases/inkstitch/gradient-point.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>1816</td><td>1974</td><td>✅</td></tr>
+<tr><td>size</td><td>40.2 × 40.0 mm</td><td>40.2 × 40.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f #0a55a3</td><td>#ed171f #0a55a3</td><td>✅</td></tr>
+<tr><td>trims</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>jumps</td><td>2</td><td>2</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.995</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-gradient-point.png"><img src="pictures/inkstitch-gradient-point.png" alt="inkstitch-gradient-point: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-gradient-turned</code> (conformance/cases/inkstitch/gradient-turned.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>2507</td><td>2632</td><td>✅</td></tr>
+<tr><td>size</td><td>40.0 × 40.2 mm</td><td>40.0 × 39.8 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f #f0f0f0 #0a55a3</td><td>#ed171f #f0f0f0 #0a55a3</td><td>✅</td></tr>
+<tr><td>trims</td><td>2</td><td>2</td><td>✅</td></tr>
+<tr><td>jumps</td><td>3</td><td>3</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.989</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-gradient-turned.png"><img src="pictures/inkstitch-gradient-turned.png" alt="inkstitch-gradient-turned: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-origin-stop</code> (conformance/cases/inkstitch/origin-stop.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>1288</td><td>1364</td><td>✅</td></tr>
+<tr><td>size</td><td>78.0 × 33.0 mm</td><td>78.0 × 33.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>11.0, -21.5 mm</td><td>11.0, -21.5 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>4</td><td>4</td><td>✅</td></tr>
+<tr><td>jumps</td><td>5</td><td>5</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.985</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-origin-stop.png"><img src="pictures/inkstitch-origin-stop.png" alt="inkstitch-origin-stop: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ring</code> (conformance/cases/inkstitch/ring.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>3689</td><td>3880</td><td>✅</td></tr>
+<tr><td>size</td><td>60.0 × 60.0 mm</td><td>60.0 × 60.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#0b3d91</td><td>#0b3d91</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.993</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ring.png"><img src="pictures/inkstitch-ring.png" alt="inkstitch-ring: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-route-ts17c-in-order</code> (conformance/cases/inkstitch/route-ts17c-in-order.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>1666</td><td>1679</td><td>✅</td></tr>
+<tr><td>size</td><td>82.0 × 20.6 mm</td><td>82.0 × 20.6 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#0a55a3</td><td>#0a55a3</td><td>✅</td></tr>
+<tr><td>trims</td><td>5</td><td>6</td><td>✅</td></tr>
+<tr><td>jumps</td><td>6</td><td>7</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.999</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-route-ts17c-in-order.png"><img src="pictures/inkstitch-route-ts17c-in-order.png" alt="inkstitch-route-ts17c-in-order: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-route-ts17c-lines-in-order</code> (conformance/cases/inkstitch/route-ts17c-lines-in-order.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>193</td><td>211</td><td>✅</td></tr>
+<tr><td>size</td><td>38.0 × 24.0 mm</td><td>38.0 × 24.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>2</td><td>2</td><td>✅</td></tr>
+<tr><td>jumps</td><td>3</td><td>3</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.991</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-route-ts17c-lines-in-order.png"><img src="pictures/inkstitch-route-ts17c-lines-in-order.png" alt="inkstitch-route-ts17c-lines-in-order: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-route-ts17c-lines-trimmed</code> (conformance/cases/inkstitch/route-ts17c-lines-trimmed.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>190</td><td>203</td><td>✅</td></tr>
+<tr><td>size</td><td>38.0 × 24.0 mm</td><td>38.0 × 24.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>2</td><td>2</td><td>✅</td></tr>
+<tr><td>jumps</td><td>3</td><td>3</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.980</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-route-ts17c-lines-trimmed.png"><img src="pictures/inkstitch-route-ts17c-lines-trimmed.png" alt="inkstitch-route-ts17c-lines-trimmed: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-route-ts17c-lines-unsplit</code> (conformance/cases/inkstitch/route-ts17c-lines-unsplit.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>199</td><td>214</td><td>✅</td></tr>
+<tr><td>size</td><td>38.0 × 24.0 mm</td><td>38.0 × 24.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>3</td><td>3</td><td>✅</td></tr>
+<tr><td>jumps</td><td>4</td><td>4</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.980</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-route-ts17c-lines-unsplit.png"><img src="pictures/inkstitch-route-ts17c-lines-unsplit.png" alt="inkstitch-route-ts17c-lines-unsplit: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-route-ts17c-lines</code> (conformance/cases/inkstitch/route-ts17c-lines.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>198</td><td>212</td><td>✅</td></tr>
+<tr><td>size</td><td>38.0 × 24.0 mm</td><td>38.0 × 24.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>2</td><td>2</td><td>✅</td></tr>
+<tr><td>jumps</td><td>3</td><td>3</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.981</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-route-ts17c-lines.png"><img src="pictures/inkstitch-route-ts17c-lines.png" alt="inkstitch-route-ts17c-lines: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-route-ts17c</code> (conformance/cases/inkstitch/route-ts17c.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>1656</td><td>1675</td><td>✅</td></tr>
+<tr><td>size</td><td>82.0 × 20.6 mm</td><td>82.0 × 20.6 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#0a55a3</td><td>#0a55a3</td><td>✅</td></tr>
+<tr><td>trims</td><td>4</td><td>4</td><td>✅</td></tr>
+<tr><td>jumps</td><td>5</td><td>5</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.999</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-route-ts17c.png"><img src="pictures/inkstitch-route-ts17c.png" alt="inkstitch-route-ts17c: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-running</code> (conformance/cases/inkstitch/running.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>45</td><td>45</td><td>✅</td></tr>
+<tr><td>size</td><td>60.0 × 30.0 mm</td><td>60.0 × 30.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#000000</td><td>#000000</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.919</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-running.png"><img src="pictures/inkstitch-running.png" alt="inkstitch-running: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-settings</code> (conformance/cases/inkstitch/settings.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>3558</td><td>3550</td><td>✅</td></tr>
+<tr><td>size</td><td>80.0 × 73.0 mm</td><td>80.0 × 73.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f #2f7e20 #0b3d91 #000000 #ed171f</td><td>#ed171f #2f7e20 #0b3d91 #000000 #ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>4</td><td>5</td><td>✅</td></tr>
+<tr><td>jumps</td><td>5</td><td>6</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.997</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-settings.png"><img src="pictures/inkstitch-settings.png" alt="inkstitch-settings: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-start-end</code> (conformance/cases/inkstitch/start-end.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>2461</td><td>2643</td><td>✅</td></tr>
+<tr><td>size</td><td>64.0 × 40.0 mm</td><td>64.0 × 40.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f #0b3d91</td><td>#ed171f #0b3d91</td><td>✅</td></tr>
+<tr><td>trims</td><td>3</td><td>3</td><td>✅</td></tr>
+<tr><td>jumps</td><td>4</td><td>4</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.987</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-start-end.png"><img src="pictures/inkstitch-start-end.png" alt="inkstitch-start-end: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-target-point</code> (conformance/cases/inkstitch/target-point.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>3642</td><td>3546</td><td>✅</td></tr>
+<tr><td>size</td><td>40.0 × 40.0 mm</td><td>40.0 × 40.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.999</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-target-point.png"><img src="pictures/inkstitch-target-point.png" alt="inkstitch-target-point: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-tartan-hole</code> (conformance/cases/inkstitch/tartan-hole.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>4394</td><td>4674</td><td>✅</td></tr>
+<tr><td>size</td><td>40.0 × 40.0 mm</td><td>40.0 × 40.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#0a55a3 #ed171f #70bc1f #0a55a3</td><td>#0a55a3 #ed171f #70bc1f #0a55a3</td><td>✅</td></tr>
+<tr><td>trims</td><td>3</td><td>3</td><td>✅</td></tr>
+<tr><td>jumps</td><td>4</td><td>4</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.998</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-tartan-hole.png"><img src="pictures/inkstitch-tartan-hole.png" alt="inkstitch-tartan-hole: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-tartan-marks</code> (conformance/cases/inkstitch/tartan-marks.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>4334</td><td>4481</td><td>✅</td></tr>
+<tr><td>size</td><td>40.0 × 40.0 mm</td><td>40.0 × 40.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#000000 #ed171f #70bc1f #0e1f7c #f0f0f0 #000000</td><td>#000000 #ed171f #70bc1f #0e1f7c #f0f0f0 #000000</td><td>✅</td></tr>
+<tr><td>trims</td><td>5</td><td>5</td><td>✅</td></tr>
+<tr><td>jumps</td><td>6</td><td>6</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.999</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-tartan-marks.png"><img src="pictures/inkstitch-tartan-marks.png" alt="inkstitch-tartan-marks: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-tartan-parts</code> (conformance/cases/inkstitch/tartan-parts.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>4947</td><td>5250</td><td>✅</td></tr>
+<tr><td>size</td><td>60.0 × 30.0 mm</td><td>60.0 × 30.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f #70bc1f #0a55a3</td><td>#ed171f #70bc1f #0a55a3</td><td>✅</td></tr>
+<tr><td>trims</td><td>7</td><td>7</td><td>✅</td></tr>
+<tr><td>jumps</td><td>8</td><td>8</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.998</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-tartan-parts.png"><img src="pictures/inkstitch-tartan-parts.png" alt="inkstitch-tartan-parts: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-tartan-stop</code> (conformance/cases/inkstitch/tartan-stop.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>3372</td><td>3455</td><td>✅</td></tr>
+<tr><td>size</td><td>70.0 × 40.0 mm</td><td>70.0 × 40.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f #0a55a3 #000000</td><td>#ed171f #0a55a3 #000000</td><td>✅</td></tr>
+<tr><td>trims</td><td>2</td><td>2</td><td>✅</td></tr>
+<tr><td>jumps</td><td>3</td><td>3</td><td>✅</td></tr>
+<tr><td>overlap</td><td>1.000</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-tartan-stop.png"><img src="pictures/inkstitch-tartan-stop.png" alt="inkstitch-tartan-stop: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-trim</code> (conformance/cases/inkstitch/trim.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>853</td><td>910</td><td>✅</td></tr>
+<tr><td>size</td><td>66.0 × 56.0 mm</td><td>66.0 × 56.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>jumps</td><td>2</td><td>2</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.985</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-trim.png"><img src="pictures/inkstitch-trim.png" alt="inkstitch-trim: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts02b</code> (conformance/cases/inkstitch/ts02b.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>230</td><td>247</td><td>✅</td></tr>
+<tr><td>size</td><td>120.0 × 70.0 mm</td><td>120.0 × 70.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f #0a55a3 #00673e</td><td>#ed171f #0a55a3 #00673e</td><td>✅</td></tr>
+<tr><td>trims</td><td>16</td><td>16</td><td>✅</td></tr>
+<tr><td>jumps</td><td>17</td><td>17</td><td>✅</td></tr>
+<tr><td>overlap</td><td>1.000</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts02b.png"><img src="pictures/inkstitch-ts02b.png" alt="inkstitch-ts02b: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts03</code> (conformance/cases/inkstitch/ts03.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>588</td><td>599</td><td>✅</td></tr>
+<tr><td>size</td><td>60.0 × 78.0 mm</td><td>60.0 × 78.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#0a55a3</td><td>#0a55a3</td><td>✅</td></tr>
+<tr><td>trims</td><td>14</td><td>14</td><td>✅</td></tr>
+<tr><td>jumps</td><td>15</td><td>15</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.978</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts03.png"><img src="pictures/inkstitch-ts03.png" alt="inkstitch-ts03: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts05</code> (conformance/cases/inkstitch/ts05.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>3440</td><td>3440</td><td>✅</td></tr>
+<tr><td>size</td><td>91.0 × 76.0 mm</td><td>91.0 × 76.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#0a55a3</td><td>#0a55a3</td><td>✅</td></tr>
+<tr><td>trims</td><td>29</td><td>29</td><td>✅</td></tr>
+<tr><td>jumps</td><td>30</td><td>30</td><td>✅</td></tr>
+<tr><td>overlap</td><td>1.000</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts05.png"><img src="pictures/inkstitch-ts05.png" alt="inkstitch-ts05: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts06</code> (conformance/cases/inkstitch/ts06.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>966</td><td>972</td><td>✅</td></tr>
+<tr><td>size</td><td>62.0 × 30.0 mm</td><td>62.0 × 30.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>4</td><td>4</td><td>✅</td></tr>
+<tr><td>jumps</td><td>5</td><td>5</td><td>✅</td></tr>
+<tr><td>overlap</td><td>1.000</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts06.png"><img src="pictures/inkstitch-ts06.png" alt="inkstitch-ts06: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts07</code> (conformance/cases/inkstitch/ts07.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>13527</td><td>13775</td><td>✅</td></tr>
+<tr><td>size</td><td>126.2 × 126.0 mm</td><td>126.2 × 126.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f #000000</td><td>#ed171f #000000</td><td>✅</td></tr>
+<tr><td>trims</td><td>5</td><td>5</td><td>✅</td></tr>
+<tr><td>jumps</td><td>6</td><td>6</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.995</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts07.png"><img src="pictures/inkstitch-ts07.png" alt="inkstitch-ts07: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts08</code> (conformance/cases/inkstitch/ts08.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>16248</td><td>16382</td><td>✅</td></tr>
+<tr><td>size</td><td>100.0 × 170.0 mm</td><td>100.0 × 170.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#0a55a3</td><td>#0a55a3</td><td>✅</td></tr>
+<tr><td>trims</td><td>14</td><td>14</td><td>✅</td></tr>
+<tr><td>jumps</td><td>15</td><td>15</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.991</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts08.png"><img src="pictures/inkstitch-ts08.png" alt="inkstitch-ts08: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts09</code> (conformance/cases/inkstitch/ts09.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>7780</td><td>8519</td><td>✅</td></tr>
+<tr><td>size</td><td>66.0 × 114.0 mm</td><td>66.0 × 114.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#00673e</td><td>#00673e</td><td>✅</td></tr>
+<tr><td>trims</td><td>5</td><td>5</td><td>✅</td></tr>
+<tr><td>jumps</td><td>6</td><td>6</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.981</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts09.png"><img src="pictures/inkstitch-ts09.png" alt="inkstitch-ts09: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts11a</code> (conformance/cases/inkstitch/ts11a.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>4632</td><td>4709</td><td>✅</td></tr>
+<tr><td>size</td><td>127.0 × 144.4 mm</td><td>127.0 × 144.4 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#00673e #ed171f #0a55a3 #e8a900</td><td>#00673e #ed171f #0a55a3 #e8a900</td><td>✅</td></tr>
+<tr><td>trims</td><td>42</td><td>42</td><td>✅</td></tr>
+<tr><td>jumps</td><td>43</td><td>43</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.993</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts11a.png"><img src="pictures/inkstitch-ts11a.png" alt="inkstitch-ts11a: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts11b</code> (conformance/cases/inkstitch/ts11b.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>15314</td><td>14535</td><td>✅</td></tr>
+<tr><td>size</td><td>125.0 × 166.0 mm</td><td>125.0 × 166.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#00673e #0a55a3 #ed171f #e8a900</td><td>#00673e #0a55a3 #ed171f #e8a900</td><td>✅</td></tr>
+<tr><td>trims</td><td>11</td><td>11</td><td>✅</td></tr>
+<tr><td>jumps</td><td>12</td><td>12</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.986</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts11b.png"><img src="pictures/inkstitch-ts11b.png" alt="inkstitch-ts11b: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts13c</code> (conformance/cases/inkstitch/ts13c.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>9820</td><td>10578</td><td>✅</td></tr>
+<tr><td>size</td><td>111.4 × 107.8 mm</td><td>111.4 × 107.8 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#fdd9de #f0f0f0 #000000 #e8a900 #ed171f #fdd9de #f0f0f0 #000000 #e8a900 #ed171f</td><td>#fdd9de #f0f0f0 #000000 #e8a900 #ed171f #fdd9de #f0f0f0 #000000 #e8a900 #ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>27</td><td>28</td><td>✅</td></tr>
+<tr><td>jumps</td><td>28</td><td>29</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.995</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts13c.png"><img src="pictures/inkstitch-ts13c.png" alt="inkstitch-ts13c: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts13d</code> (conformance/cases/inkstitch/ts13d.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>19021</td><td>20258</td><td>✅</td></tr>
+<tr><td>size</td><td>89.8 × 100.4 mm</td><td>89.8 × 100.4 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#f0f0f0 #0e1f7c #ed171f #e8a900 #f0f0f0 #e8a900 #ed171f #0e1f7c #f0f0f0 #ed171f #e8a900</td><td>#f0f0f0 #0e1f7c #ed171f #e8a900 #f0f0f0 #e8a900 #ed171f #0e1f7c #f0f0f0 #ed171f #e8a900</td><td>✅</td></tr>
+<tr><td>trims</td><td>22</td><td>23</td><td>✅</td></tr>
+<tr><td>jumps</td><td>23</td><td>24</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.995</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts13d.png"><img src="pictures/inkstitch-ts13d.png" alt="inkstitch-ts13d: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts16</code> (conformance/cases/inkstitch/ts16.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>4979</td><td>5300</td><td>✅</td></tr>
+<tr><td>size</td><td>110.0 × 117.2 mm</td><td>110.0 × 117.2 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>-5.0, 28.6 mm</td><td>-5.0, 28.6 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f #0a55a3 #00673e #000000 #ed171f #000000</td><td>#ed171f #0a55a3 #00673e #000000 #ed171f #000000</td><td>✅</td></tr>
+<tr><td>trims</td><td>8</td><td>8</td><td>✅</td></tr>
+<tr><td>jumps</td><td>9</td><td>9</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.993</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts16.png"><img src="pictures/inkstitch-ts16.png" alt="inkstitch-ts16: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts17a</code> (conformance/cases/inkstitch/ts17a.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>10305</td><td>10303</td><td>✅</td></tr>
+<tr><td>size</td><td>114.0 × 114.0 mm</td><td>114.0 × 114.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f #0a55a3 #00673e #000000</td><td>#ed171f #0a55a3 #00673e #000000</td><td>✅</td></tr>
+<tr><td>trims</td><td>13</td><td>13</td><td>✅</td></tr>
+<tr><td>jumps</td><td>14</td><td>14</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.989</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts17a.png"><img src="pictures/inkstitch-ts17a.png" alt="inkstitch-ts17a: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts17b-guided-buffered</code> (conformance/cases/inkstitch/ts17b-guided-buffered.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>1720</td><td>1667</td><td>✅</td></tr>
+<tr><td>size</td><td>37.0 × 31.0 mm</td><td>37.0 × 31.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#fdd9de</td><td>#fdd9de</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.997</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts17b-guided-buffered.png"><img src="pictures/inkstitch-ts17b-guided-buffered.png" alt="inkstitch-ts17b-guided-buffered: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts17b-guided-offset</code> (conformance/cases/inkstitch/ts17b-guided-offset.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>983</td><td>1049</td><td>✅</td></tr>
+<tr><td>size</td><td>38.4 × 22.2 mm</td><td>38.6 × 22.2 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ffff00</td><td>#ffff00</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.989</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts17b-guided-offset.png"><img src="pictures/inkstitch-ts17b-guided-offset.png" alt="inkstitch-ts17b-guided-offset: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts17b-guided</code> (conformance/cases/inkstitch/ts17b-guided.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>1033</td><td>1053</td><td>✅</td></tr>
+<tr><td>size</td><td>34.0 × 34.0 mm</td><td>34.0 × 34.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#00673e</td><td>#00673e</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.994</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts17b-guided.png"><img src="pictures/inkstitch-ts17b-guided.png" alt="inkstitch-ts17b-guided: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts17b</code> (conformance/cases/inkstitch/ts17b.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>49146</td><td>53726</td><td>✅</td></tr>
+<tr><td>size</td><td>130.0 × 172.0 mm</td><td>130.0 × 172.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#0e1f7c #ed171f #f0f0f0 #0e1f7c #e8a900 #000000 #00673e #000000 #f0f0f0 #0a55a3 #ed171f #000000 #0a55a3 #f0f0f0 #000000 #0a55a3 #000000 #f0f0f0 #ed171f #fe9e32 #e8a900 #000000 #fe9e32 #000000 #ed171f #000000 #0a55a3 #f0f0f0 #ed171f #0a55a3 #e8a900 #f0f0f0 #00673e #fe9e32 #0e1f7c #00673e #ffff00 #fdd9de</td><td>#0e1f7c #ed171f #f0f0f0 #0e1f7c #e8a900 #000000 #00673e #000000 #f0f0f0 #0a55a3 #ed171f #000000 #0a55a3 #f0f0f0 #000000 #0a55a3 #000000 #f0f0f0 #ed171f #fe9e32 #e8a900 #000000 #fe9e32 #000000 #ed171f #000000 #0a55a3 #f0f0f0 #ed171f #0a55a3 #e8a900 #f0f0f0 #00673e #fe9e32 #0e1f7c #00673e #ffff00 #fdd9de</td><td>✅</td></tr>
+<tr><td>trims</td><td>37</td><td>37</td><td>✅</td></tr>
+<tr><td>jumps</td><td>38</td><td>38</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.998</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts17b.png"><img src="pictures/inkstitch-ts17b.png" alt="inkstitch-ts17b: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts17c-guided-clip</code> (conformance/cases/inkstitch/ts17c-guided-clip.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>34</td><td>34</td><td>✅</td></tr>
+<tr><td>size</td><td>10.6 × 11.0 mm</td><td>10.6 × 11.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#00673e</td><td>#00673e</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.997</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts17c-guided-clip.png"><img src="pictures/inkstitch-ts17c-guided-clip.png" alt="inkstitch-ts17c-guided-clip: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts17c-guided-grid</code> (conformance/cases/inkstitch/ts17c-guided-grid.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>75</td><td>75</td><td>✅</td></tr>
+<tr><td>size</td><td>12.0 × 12.0 mm</td><td>12.0 × 12.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#00673e</td><td>#00673e</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>1.000</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts17c-guided-grid.png"><img src="pictures/inkstitch-ts17c-guided-grid.png" alt="inkstitch-ts17c-guided-grid: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts17c-ripple-column</code> (conformance/cases/inkstitch/ts17c-ripple-column.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>111</td><td>111</td><td>✅</td></tr>
+<tr><td>size</td><td>28.0 × 14.0 mm</td><td>28.0 × 14.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#00673e</td><td>#00673e</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.950</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts17c-ripple-column.png"><img src="pictures/inkstitch-ts17c-ripple-column.png" alt="inkstitch-ts17c-ripple-column: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-ts17c</code> (conformance/cases/inkstitch/ts17c.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>4876</td><td>4860</td><td>✅</td></tr>
+<tr><td>size</td><td>101.0 × 175.0 mm</td><td>101.0 × 175.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#0a55a3 #ed171f #00673e</td><td>#0a55a3 #ed171f #00673e</td><td>✅</td></tr>
+<tr><td>trims</td><td>29</td><td>29</td><td>✅</td></tr>
+<tr><td>jumps</td><td>30</td><td>30</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.967</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-ts17c.png"><img src="pictures/inkstitch-ts17c.png" alt="inkstitch-ts17c: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-turn-45</code> (conformance/cases/inkstitch/turn-45.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>1183</td><td>1213</td><td>✅</td></tr>
+<tr><td>size</td><td>63.5 × 53.0 mm</td><td>63.6 × 52.8 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>17.8, 5.3 mm</td><td>17.7, 5.4 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f #0a55a3</td><td>#ed171f #0a55a3</td><td>✅</td></tr>
+<tr><td>trims</td><td>2</td><td>2</td><td>✅</td></tr>
+<tr><td>jumps</td><td>3</td><td>3</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.963</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-turn-45.png"><img src="pictures/inkstitch-turn-45.png" alt="inkstitch-turn-45: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-turn-right</code> (conformance/cases/inkstitch/turn-right.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>1183</td><td>1213</td><td>✅</td></tr>
+<tr><td>size</td><td>30.0 × 60.0 mm</td><td>30.0 × 60.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>5.0, 20.0 mm</td><td>5.0, 20.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f #0a55a3</td><td>#ed171f #0a55a3</td><td>✅</td></tr>
+<tr><td>trims</td><td>2</td><td>2</td><td>✅</td></tr>
+<tr><td>jumps</td><td>3</td><td>3</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.981</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-turn-right.png"><img src="pictures/inkstitch-turn-right.png" alt="inkstitch-turn-right: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-version-2-satin</code> (conformance/cases/inkstitch/version-2-satin.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>162</td><td>162</td><td>✅</td></tr>
+<tr><td>size</td><td>70.0 × 60.0 mm</td><td>70.0 × 60.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f #0b3d91 #ed171f</td><td>#ed171f #0b3d91 #ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>2</td><td>2</td><td>✅</td></tr>
+<tr><td>jumps</td><td>3</td><td>3</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.999</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-version-2-satin.png"><img src="pictures/inkstitch-version-2-satin.png" alt="inkstitch-version-2-satin: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-version-2-start-end</code> (conformance/cases/inkstitch/version-2-start-end.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>2696</td><td>2843</td><td>✅</td></tr>
+<tr><td>size</td><td>64.0 × 20.0 mm</td><td>64.0 × 20.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.985</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-version-2-start-end.png"><img src="pictures/inkstitch-version-2-start-end.png" alt="inkstitch-version-2-start-end: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-version-2-zigzag</code> (conformance/cases/inkstitch/version-2-zigzag.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>743</td><td>743</td><td>✅</td></tr>
+<tr><td>size</td><td>79.4 × 34.0 mm</td><td>79.4 × 34.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#0b3d91</td><td>#0b3d91</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.999</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-version-2-zigzag.png"><img src="pictures/inkstitch-version-2-zigzag.png" alt="inkstitch-version-2-zigzag: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-version-3-auto-fill</code> (conformance/cases/inkstitch/version-3-auto-fill.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>5045</td><td>5073</td><td>✅</td></tr>
+<tr><td>size</td><td>60.0 × 40.0 mm</td><td>60.0 × 40.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#2f7e20</td><td>#2f7e20</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.999</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-version-3-auto-fill.png"><img src="pictures/inkstitch-version-3-auto-fill.png" alt="inkstitch-version-3-auto-fill: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-version-3-legacy-fill</code> (conformance/cases/inkstitch/version-3-legacy-fill.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>3439</td><td>3528</td><td>✅</td></tr>
+<tr><td>size</td><td>60.0 × 40.0 mm</td><td>60.0 × 39.8 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.991</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-version-3-legacy-fill.png"><img src="pictures/inkstitch-version-3-legacy-fill.png" alt="inkstitch-version-3-legacy-fill: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+<h2>✅ <code>inkstitch-version-3</code> (conformance/cases/inkstitch/version-3.toml)</h2>
+<table>
+<tr><th>Measure</th><th>StitchCraft</th><th>Ink/Stitch</th><th></th></tr>
+<tr><td>stitches</td><td>2946</td><td>3085</td><td>✅</td></tr>
+<tr><td>size</td><td>50.0 × 30.0 mm</td><td>50.0 × 30.0 mm</td><td>✅</td></tr>
+<tr><td>place</td><td>0.0, 0.0 mm</td><td>0.0, 0.0 mm</td><td>✅</td></tr>
+<tr><td>threads</td><td>#ed171f</td><td>#ed171f</td><td>✅</td></tr>
+<tr><td>trims</td><td>0</td><td>0</td><td>✅</td></tr>
+<tr><td>jumps</td><td>1</td><td>1</td><td>✅</td></tr>
+<tr><td>overlap</td><td>0.992</td><td></td><td>✅</td></tr>
+</table>
+<p><a href="pictures/inkstitch-version-3.png"><img src="pictures/inkstitch-version-3.png" alt="inkstitch-version-3: Ink/Stitch's file, StitchCraft's and where they differ" loading="lazy"></a></p>
+</body>
+</html>

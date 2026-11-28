@@ -1,0 +1,376 @@
+{
+ "revision": "ad552e4644da6751c2ae6471da65b7fa7e0f97ad",
+ "ref": "pr/302",
+ "measures": [
+  {
+   "key": "stitches",
+   "label": "Stitches",
+   "more_is_worse": false
+  },
+  {
+   "key": "thread_changes",
+   "label": "Thread changes",
+   "more_is_worse": true
+  },
+  {
+   "key": "jumps",
+   "label": "Jumps",
+   "more_is_worse": true
+  },
+  {
+   "key": "jump_threads",
+   "label": "Jump threads left to cut",
+   "more_is_worse": true
+  },
+  {
+   "key": "astray",
+   "label": "Stitches astray",
+   "more_is_worse": true
+  },
+  {
+   "key": "slivers",
+   "label": "Slivers",
+   "more_is_worse": true
+  },
+  {
+   "key": "bare_percent",
+   "label": "Bare, % of the design",
+   "more_is_worse": true
+  },
+  {
+   "key": "thickest_fills",
+   "label": "Thickest spot, fills",
+   "more_is_worse": true
+  },
+  {
+   "key": "thick_mm2",
+   "label": "At 3 fills or more, mm\u00b2",
+   "more_is_worse": true
+  },
+  {
+   "key": "needle_points",
+   "label": "Most needle points per mm\u00b2",
+   "more_is_worse": true
+  }
+ ],
+ "pictures": [
+  {
+   "name": "dog-on-turf-6",
+   "picture": "dog-on-turf-6.png",
+   "stitches": 9601,
+   "thread_changes": 6,
+   "jumps": 53,
+   "jump_threads": 46,
+   "astray": 2,
+   "slivers": 0,
+   "bare_percent": 0.013,
+   "thickest_fills": 5.295,
+   "thick_mm2": 102.75,
+   "needle_points": 27
+  },
+  {
+   "name": "dog-on-turf-9",
+   "picture": "dog-on-turf-9.png",
+   "stitches": 10388,
+   "thread_changes": 8,
+   "jumps": 51,
+   "jump_threads": 42,
+   "astray": 1,
+   "slivers": 0,
+   "bare_percent": 0.01,
+   "thickest_fills": 5.273,
+   "thick_mm2": 135,
+   "needle_points": 33
+  },
+  {
+   "name": "dog-running-6",
+   "picture": "dog-running-6.png",
+   "stitches": 10551,
+   "thread_changes": 7,
+   "jumps": 41,
+   "jump_threads": 33,
+   "astray": 2,
+   "slivers": 0,
+   "bare_percent": 0.009,
+   "thickest_fills": 4.809,
+   "thick_mm2": 121.75,
+   "needle_points": 26
+  },
+  {
+   "name": "dog-running-9",
+   "picture": "dog-running-9.png",
+   "stitches": 12096,
+   "thread_changes": 12,
+   "jumps": 55,
+   "jump_threads": 42,
+   "astray": 1,
+   "slivers": 0,
+   "bare_percent": 0.002,
+   "thickest_fills": 4.97,
+   "thick_mm2": 187,
+   "needle_points": 32
+  },
+  {
+   "name": "pear",
+   "picture": "pear.png",
+   "stitches": 4667,
+   "thread_changes": 2,
+   "jumps": 5,
+   "jump_threads": 2,
+   "astray": 0,
+   "slivers": 0,
+   "bare_percent": 0,
+   "thickest_fills": 4.2,
+   "thick_mm2": 13.75,
+   "needle_points": 18
+  },
+  {
+   "name": "lettered-patch",
+   "picture": "lettered-patch.png",
+   "stitches": 4023,
+   "thread_changes": 2,
+   "jumps": 11,
+   "jump_threads": 8,
+   "astray": 0,
+   "slivers": 0,
+   "bare_percent": 0.003,
+   "thickest_fills": 4.203,
+   "thick_mm2": 43.25,
+   "needle_points": 9
+  },
+  {
+   "name": "ts-13a-digitized",
+   "picture": "ts-13a-digitized.png",
+   "stitches": 11520,
+   "thread_changes": 2,
+   "jumps": 21,
+   "jump_threads": 18,
+   "astray": 0,
+   "slivers": 1,
+   "bare_percent": 0.012,
+   "thickest_fills": 4.285,
+   "thick_mm2": 26,
+   "needle_points": 14
+  },
+  {
+   "name": "ts-13b-digitized",
+   "picture": "ts-13b-digitized.png",
+   "stitches": 6861,
+   "thread_changes": 4,
+   "jumps": 49,
+   "jump_threads": 44,
+   "astray": 17,
+   "slivers": 0,
+   "bare_percent": 0.068,
+   "thickest_fills": 3.993,
+   "thick_mm2": 12.25,
+   "needle_points": 13
+  },
+  {
+   "name": "ts-13c-digitized",
+   "picture": "ts-13c-digitized.png",
+   "stitches": 6073,
+   "thread_changes": 4,
+   "jumps": 18,
+   "jump_threads": 13,
+   "astray": 3,
+   "slivers": 0,
+   "bare_percent": 0,
+   "thickest_fills": 4.487,
+   "thick_mm2": 102.5,
+   "needle_points": 15
+  },
+  {
+   "name": "ts-13d-digitized",
+   "picture": "ts-13d-digitized.png",
+   "stitches": 8864,
+   "thread_changes": 3,
+   "jumps": 16,
+   "jump_threads": 12,
+   "astray": 0,
+   "slivers": 0,
+   "bare_percent": 0,
+   "thickest_fills": 4.17,
+   "thick_mm2": 67.75,
+   "needle_points": 15
+  },
+  {
+   "name": "ts-13e-digitized",
+   "picture": "ts-13e-digitized.png",
+   "stitches": 2716,
+   "thread_changes": 2,
+   "jumps": 8,
+   "jump_threads": 5,
+   "astray": 0,
+   "slivers": 0,
+   "bare_percent": 0,
+   "thickest_fills": 3.391,
+   "thick_mm2": 2.5,
+   "needle_points": 10
+  }
+ ],
+ "browser": {
+  "chromium": "145.0.7632.6",
+  "parity": [
+   {
+    "design": "alpine-night",
+    "name": "alpine-night",
+    "pes": {
+     "bytes": 11534,
+     "same": true
+    },
+    "dst": {
+     "bytes": 15221,
+     "same": true
+    },
+    "panel": {
+     "pes": {
+      "bytes": 11534,
+      "same": true,
+      "ms": 415
+     },
+     "dst": {
+      "bytes": 15221,
+      "same": true,
+      "ms": 386
+     },
+     "picture": {
+      "bytes": 157483,
+      "same": true,
+      "ms": 619
+     }
+    }
+   },
+   {
+    "design": "dog-on-turf-6",
+    "name": "dog-on-turf-6",
+    "pes": {
+     "refused": "plug-in exceeded its instruction budget",
+     "ms": 43161
+    },
+    "dst": {
+     "refused": "plug-in exceeded its instruction budget",
+     "ms": 43319
+    },
+    "panel": {
+     "pes": {
+      "bytes": 21807,
+      "same": true,
+      "ms": 2097
+     },
+     "dst": {
+      "bytes": 29570,
+      "same": true,
+      "ms": 2102
+     },
+     "picture": {
+      "bytes": 162614,
+      "same": true,
+      "ms": 2633
+     }
+    }
+   },
+   {
+    "design": "dog-on-turf-9",
+    "panel": {
+     "pes": {
+      "bytes": 23831,
+      "same": true,
+      "ms": 2290
+     },
+     "dst": {
+      "bytes": 31940,
+      "same": true,
+      "ms": 2278
+     },
+     "picture": {
+      "bytes": 167331,
+      "same": true,
+      "ms": 2569
+     }
+    }
+   },
+   {
+    "design": "dog-running-6",
+    "panel": {
+     "pes": {
+      "bytes": 23886,
+      "same": true,
+      "ms": 2427
+     },
+     "dst": {
+      "bytes": 32387,
+      "same": true,
+      "ms": 2422
+     },
+     "picture": {
+      "bytes": 167321,
+      "same": true,
+      "ms": 2707
+     }
+    }
+   },
+   {
+    "design": "dog-running-9",
+    "panel": {
+     "pes": {
+      "bytes": 28187,
+      "same": true,
+      "ms": 2954
+     },
+     "dst": {
+      "bytes": 37115,
+      "same": true,
+      "ms": 2972
+     },
+     "picture": {
+      "bytes": 196268,
+      "same": true,
+      "ms": 3268
+     }
+    }
+   }
+  ],
+  "speed": {
+   "design": "dog-on-turf-6",
+   "shapes": 1,
+   "runs": [
+    {
+     "shapes": 1,
+     "apply_ms": 7548.099999999977,
+     "turn_ms": 9749.099999999977,
+     "waiting": 0,
+     "export_ms": null,
+     "export_refused_after_ms": 43161
+    },
+    {
+     "shapes": 1,
+     "apply_ms": 1162.3999999999069,
+     "turn_ms": 3363,
+     "waiting": 0,
+     "export_ms": null
+    },
+    {
+     "shapes": 1,
+     "apply_ms": 1144.6000000000931,
+     "turn_ms": 3373.3000000000466,
+     "waiting": 0,
+     "export_ms": null
+    }
+   ],
+   "limit_ms": {
+    "turn": 30000,
+    "export": null
+   },
+   "middle_ms": {
+    "turn": 3373.3000000000466,
+    "export": null
+   }
+  },
+  "editor": "editor.png"
+ },
+ "seconds": {
+  "build": 72,
+  "measure": 43
+ }
+}

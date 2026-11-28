@@ -1,0 +1,634 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Test sheets - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../searchindex-406f71a7.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../toc-95df4fb0.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/user/reference/test-sheets.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <!-- Generated by `cargo xtask docs` from `stitchcraft-engine/src/testsheets/` and the `stitch` shots in `docs/shots.toml`. Edit the source, not this page. -->
+<h1 id="test-sheets"><a class="header" href="#test-sheets">Test sheets</a></h1>
+<p>Designs drawn in code for the <a href="../../plan/machine-testing.html">machine checkpoints</a>, each for one hoop of the reference machine. Write one with <code>stitch testsheet &lt;id&gt; -o &lt;id&gt;.pes</code>. The command checks it against the profile of that hoop, or the one <code>--profile</code> names, and prints what to check after sewing it, as listed here. The pictures are previews: they show what the machine will sew, including jump threads it leaves for you to cut. In VectorCraft, the Test Sheet filter draws the sheets that say so into a document (<a href="../how-to/embroider-a-vectorcraft-design.html#draw-a-test-sheet">how</a>).</p>
+<h2 id="ts-01--orientation-and-scale"><a class="header" href="#ts-01--orientation-and-scale">TS-01 — Orientation and scale</a></h2>
+<p>120.0 × 120.0 mm · 274 stitches, 7 jumps, 6 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-01.png" alt="TS-01 as it will sew, in black: a cross with arms 100 mm long and a tick every 10 mm, an upright F in the top-left quarter, and a 10 mm square in each corner."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-01.png" alt="TS-01 as it will sew, in black: a cross with arms 100 mm long and a tick every 10 mm, an upright F in the top-left quarter, and a 10 mm square in each corner."></span></label></p>
+<p>Threads: Black.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>The F reads normally: not mirrored, not upside down, not turned.</li>
+<li>Each arm of the cross measures 100.0 ± 0.5 mm end to end, horizontally and vertically.</li>
+<li>The corner squares measure 10.0 mm on every side.</li>
+<li>Ticks are 10 mm apart; the long ticks mark the ends and the centre.</li>
+</ul>
+<h2 id="ts-02--colour-changes-a-stop-jumps-and-trims"><a class="header" href="#ts-02--colour-changes-a-stop-jumps-and-trims">TS-02 — Colour changes, a stop, jumps and trims</a></h2>
+<p>120.0 × 70.0 mm · 93 stitches, 17 jumps, 16 trims, 2 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-02.png" alt="TS-02 as it will sew if the machine leaves plain jumps uncut: four red rows of two dashes with nothing between them, four blue rows whose dashes and rows are joined by loose threads, and a green line underneath."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-02.png" alt="TS-02 as it will sew if the machine leaves plain jumps uncut: four red rows of two dashes with nothing between them, four blue rows whose dashes and rows are joined by loose threads, and a green line underneath."></span></label></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-02-simple.png" alt="TS-02 in the simple style. A red cross marks the trim after the first dash of each red row, and a blue square marks the stop in the middle of the green line. Grey dashes show moves after a cut, and blue dashes show jump threads left in place."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-02-simple.png" alt="TS-02 in the simple style. A red cross marks the trim after the first dash of each red row, and a blue square marks the stop in the middle of the green line. Grey dashes show moves after a cut, and blue dashes show jump threads left in place."></span></label></p>
+<p>Threads: Red, Blue, Emerald Green, Emerald Green (stop).</p>
+<p>After sewing, check:</p>
+<ul>
+<li>The machine stops for red → blue and blue → green, and once more in the middle of the green line (the stop).</li>
+<li>Left half (red, a trim before every jump): for each row (gaps of 2, 5, 15, 30 mm, top to bottom), was the thread between the two dashes cut?</li>
+<li>Right half (blue, jumps without trims, which a PES file flags as trims too): did every dash sew? For each row, and between rows, was the thread cut?</li>
+<li>Any loose loops, knots or bird’s nests on the back, and where.</li>
+</ul>
+<h2 id="ts-02b--ts-02-drawn-as-a-design-trims-elements-ask-for"><a class="header" href="#ts-02b--ts-02-drawn-as-a-design-trims-elements-ask-for">TS-02B — TS-02 drawn as a design: trims elements ask for</a></h2>
+<p>120.0 × 70.0 mm · 230 stitches, 17 jumps, 16 trims, 2 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-02b.png" alt="TS-02B as it will sew if the machine leaves plain jumps uncut: four red rows of two dashes with nothing between them, four blue rows whose top row is one line and whose other dashes and rows are joined by loose threads, and a green line underneath."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-02b.png" alt="TS-02B as it will sew if the machine leaves plain jumps uncut: four red rows of two dashes with nothing between them, four blue rows whose top row is one line and whose other dashes and rows are joined by loose threads, and a green line underneath."></span></label></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-02b-simple.png" alt="TS-02B in the simple style: a red cross marks the trim after every red dash but the last, grey dashes show moves after a cut, blue dashes show jump threads left in place, and a blue square marks the stop in the middle of the green line."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-02b-simple.png" alt="TS-02B in the simple style: a red cross marks the trim after every red dash but the last, grey dashes show moves after a cut, blue dashes show jump threads left in place, and a blue square marks the stop in the middle of the green line."></span></label></p>
+<p>Threads: Red, Blue, Emerald Green, Emerald Green (stop).</p>
+<p>After sewing, check:</p>
+<ul>
+<li>The machine stops for red → blue and blue → green, and once more in the middle of the green line (the stop), and cuts the thread at each.</li>
+<li>Left half (red; every dash but the last asks for a trim after it): the machine cuts no jump, so its rows (gaps of 2, 5, 15, 30 mm, top to bottom) are joined by threads. Did every dash stay sewn while the machine went on to the next?</li>
+<li>Right half (blue; no trims): the 2 mm gap is sewn across, and threads join the other dashes and the rows. Did every dash stay sewn?</li>
+<li>Each dash starts and ends with a small lock. Snip the threads between the dashes, then pull each tail gently: does the dash hold?</li>
+<li>Any loose loops, knots or bird’s nests on the back, and where.</li>
+</ul>
+<h2 id="ts-03--running-stitch-lengths-bean-stitch-curves-the-shortest-stitch"><a class="header" href="#ts-03--running-stitch-lengths-bean-stitch-curves-the-shortest-stitch">TS-03 — Running stitch: lengths, bean stitch, curves, the shortest stitch</a></h2>
+<p>60.0 × 78.0 mm · 588 stitches, 15 jumps, 14 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-03.png" alt="TS-03 as it will sew, in blue: five long lines with stitches from 1.5 to 4 mm, two bolder bean-stitch lines, three small circles, the right-hand one visibly many-sided, and five short lines of tiny stitches growing longer towards the bottom."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-03.png" alt="TS-03 as it will sew, in blue: five long lines with stitches from 1.5 to 4 mm, two bolder bean-stitch lines, three small circles, the right-hand one visibly many-sided, and five short lines of tiny stitches growing longer towards the bottom."></span></label></p>
+<p>Threads: Blue.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>Running stitch lines (top five; 1.5, 2.0, 2.5, 3.0 and 4.0 mm): the stitches of each line are even; ten stitches, counted inside the small lock at each end, measure 15, 20, 25, 30 and 40 mm.</li>
+<li>Bean stitch lines (next two; each stitch sewn three and five times): solid and raised, with no gaps.</li>
+<li>Circles (6 mm across; tolerance 0.1, 0.2 and 0.5 mm, left to right): round, with fewer and straighter stitches to the right.</li>
+<li>Short stitches placed by hand (bottom five; 0.3, 0.4, 0.5, 0.7 and 1.0 mm, each with a small back-and-forth lock at both ends): which lines sew cleanly, with no thread breaks, knots or bunching on the back? The shortest clean one is the machine’s shortest stitch; if the 0.3 mm line is clean, it is 0.3 mm or less: the sheet has no shorter line.</li>
+</ul>
+<h2 id="ts-04--lock-stitches-do-they-hold-and-do-they-show"><a class="header" href="#ts-04--lock-stitches-do-they-hold-and-do-they-show">TS-04 — Lock stitches: do they hold, and do they show?</a></h2>
+<p>110.0 × 64.6 mm · 623 stitches, 27 jumps, 26 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-04.png" alt="TS-04 as it will sew, in red: nine rows of three lines, each line ending in a small lock at both ends, the locks’ shapes differing from row to row and growing from left to right."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-04.png" alt="TS-04 as it will sew, in red: nine rows of three lines, each line ending in a small lock at both ends, the locks’ shapes differing from row to row and growing from left to right."></span></label></p>
+<p>Threads: Red.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>Rows, top to bottom: half stitch, arrow, back and forth, bowtie, cross, star, simple, triangle, zigzag. Each line has its lock at both ends and was trimmed after, but the machine cuts no jump: snip the threads between the lines, then pull each tail gently. Does the lock hold, or does the line come undone?</li>
+<li>Columns, left to right, are small, medium and large: the half stitch on first stitches of 1, 1.5 and 2.5 mm, back and forth at 0.5, 0.7 and 1.0 mm, the others at 70, 100 and 150 %.</li>
+<li>Rows 1, 3, 5, 7 and 9 are sewn left to right and the others right to left: a line’s start is the end it was sewn from.</li>
+<li>Which locks show from the front, and how much (1 hidden to 5 obvious)?</li>
+<li>Any thread breaks or knots at the locks, and where.</li>
+</ul>
+<h2 id="ts-05--satin-width-ladder-spacing-width-and-pull"><a class="header" href="#ts-05--satin-width-ladder-spacing-width-and-pull">TS-05 — Satin width ladder: spacing, width and pull</a></h2>
+<p>91.0 × 76.0 mm · 3440 stitches, 30 jumps, 29 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-05.png" alt="TS-05 as it will sew, in blue: three rows of ten solid satin columns, each row’s columns growing from 1 to 10 mm wide left to right, the top row densest and the bottom row the most open."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-05.png" alt="TS-05 as it will sew, in blue: three rows of ten solid satin columns, each row’s columns growing from 1 to 10 mm wide left to right, the top row densest and the bottom row the most open."></span></label></p>
+<p>Threads: Blue.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>Rows, top to bottom, are at zigzag spacings of 0.3, 0.4 and 0.5 mm, and the columns of each row are 1 to 10 mm wide, left to right.</li>
+<li>Coverage: in which columns does the fabric show between the stitches? Rate each row 1 (bare) to 5 (solid).</li>
+<li>Width: measure the 2, 6 and 10 mm columns of each row across, halfway down. How much narrower than drawn are they?</li>
+<li>Edges: straight and crisp, or wavy? From which width on do the long stitches lie loose or catch?</li>
+<li>Any puckering round the columns, thread breaks, or loops on the back, and where.</li>
+</ul>
+<h2 id="ts-06--satin-underlays-side-by-side"><a class="header" href="#ts-06--satin-underlays-side-by-side">TS-06 — Satin underlays side by side</a></h2>
+<p>62.0 × 30.0 mm · 966 stitches, 5 jumps, 4 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-06.png" alt="TS-06 as it will sew, in red: five satin columns 6 mm wide side by side, which look alike from above because their underlays lie beneath the top stitches."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-06.png" alt="TS-06 as it will sew, in red: five satin columns 6 mm wide side by side, which look alike from above because their underlays lie beneath the top stitches."></span></label></p>
+<p>Threads: Red.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>Columns, left to right: no underlay, a centre walk, a contour, a zigzag, and a contour with a zigzag, each 6 mm wide.</li>
+<li>Edges: rate each column 1 (ragged) to 5 (crisp).</li>
+<li>Loft: rate each column 1 (flat) to 5 (full and raised).</li>
+<li>Does any underlay show past the top stitches, at the edges or at the ends?</li>
+<li>Measure each column across, halfway down, and note any puckering round it.</li>
+</ul>
+<h2 id="ts-07--fill-and-outline-registration-at-3-pull-compensations"><a class="header" href="#ts-07--fill-and-outline-registration-at-3-pull-compensations">TS-07 — Fill and outline registration at 3 pull compensations</a></h2>
+<p>126.2 × 126.0 mm · 13527 stitches, 6 jumps, 5 trims, 1 colour change, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-07.png" alt="TS-07 as it will sew: three red tatami circles, two side by side and one below them, each with a thin black outline along its edge."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-07.png" alt="TS-07 as it will sew: three red tatami circles, two side by side and one below them, each with a thin black outline along its edge."></span></label></p>
+<p>Threads: Red, Black.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>Circles: top left with no pull compensation, top right with 0.2 mm, bottom with 0.4 mm. Each red fill is 60 mm across, with a black running stitch along its edge.</li>
+<li>At 12 points round each circle, as the hours of a clock: does fabric show between the fill and the outline, or does the fill reach past it? Measure the largest gap and the largest overlap of each circle.</li>
+<li>Measure each fill across, left to right and top to bottom. How much less than 60 mm is it, and how much of that does the compensation make up?</li>
+<li>Any puckering round the circles, and where.</li>
+</ul>
+<h2 id="ts-08--fill-density-and-angle"><a class="header" href="#ts-08--fill-density-and-angle">TS-08 — Fill density and angle</a></h2>
+<p>100.0 × 170.0 mm · 16248 stitches, 15 jumps, 14 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-08.png" alt="TS-08 as it will sew, in blue: fifteen tatami squares in five rows of three, their rows level, slanting and upright from left to right, the top squares dense and the bottom ones open enough to show the underlay and travel beneath them."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-08.png" alt="TS-08 as it will sew, in blue: fifteen tatami squares in five rows of three, their rows level, slanting and upright from left to right, the top squares dense and the bottom ones open enough to show the underlay and travel beneath them."></span></label></p>
+<p>Threads: Blue.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>Rows, top to bottom, are at row spacings of 0.25, 0.3, 0.4, 0.5 and 0.6 mm, and the columns at angles of 0°, 45° and 90°, left to right. Each square is 30 mm wide.</li>
+<li>Coverage: in which squares does the fabric show between the rows? Rate each row of squares 1 (bare) to 5 (solid).</li>
+<li>At 0.25 mm the rows lie nearer each other than the machine’s shortest stitch of 0.3 mm. In the 0° and 90° squares, whose edges meet the rows square on, each row’s first needle point is left out: does a sliver of fabric show at the rows’ starts, along those edges? The 45° square’s rows end 0.35 mm apart along its edges and keep their starts.</li>
+<li>Stiffness: rate each row of squares 1 (soft) to 5 (stiff as card). Is there puckering round any square, or furrows where needle points line up?</li>
+<li>Measure the 0° and the 90° square at 0.4 mm across, both ways. How much less than 30 mm are they?</li>
+</ul>
+<h2 id="ts-09--fill-underlay-travel-and-gap-filling-rows-round-holes"><a class="header" href="#ts-09--fill-underlay-travel-and-gap-filling-rows-round-holes">TS-09 — Fill underlay, travel and gap-filling rows round holes</a></h2>
+<p>66.0 × 114.0 mm · 7780 stitches, 6 jumps, 5 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-09.png" alt="TS-09 as it will sew, in green: the same shape three times, top to bottom, a rectangle with a square hole and a round hole and a bar to its right, which a jump thread along the bottom joins to it."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-09.png" alt="TS-09 as it will sew, in green: the same shape three times, top to bottom, a rectangle with a square hole and a round hole and a bar to its right, which a jump thread along the bottom joins to it."></span></label></p>
+<p>Threads: Emerald Green.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>Top to bottom: without underlay, with Ink/Stitch’s default underlay, and with the underlay and 2 gap-filling rows. Each is a 50 × 30 mm rectangle with a square hole and a round hole, and a bar 6 mm to its right that belongs to the same fill.</li>
+<li>Travel: does any running stitch between rows show on top of the fill? Where?</li>
+<li>The bar: was the thread to it cut, or does a jump thread run to it? Does the fill hold at both ends of that jump?</li>
+<li>Holes: are their edges clean, with no row across them and no fabric showing round them?</li>
+<li>Where the rows round a hole meet again, does a gap open along a row? Does the bottom copy, with gap-filling rows, close it?</li>
+<li>How the 3 copies differ in stiffness, and any puckering.</li>
+</ul>
+<h2 id="ts-10a--hoop-size-the-4--4-in-hoop-a-100--100-mm-frame"><a class="header" href="#ts-10a--hoop-size-the-4--4-in-hoop-a-100--100-mm-frame">TS-10A — Hoop size: the 4 × 4 in hoop, a 100 × 100 mm frame</a></h2>
+<p>100.0 × 100.0 mm · 195 stitches, 4 jumps, 3 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 4 × 4 in hoop, profile <a href="profiles.html#brother-pe800-4x4"><code>brother-pe800-4x4</code></a>.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-10a.png" alt="TS-10A as it will sew: a blue square frame 100 mm on each side, the 4 × 4 in hoop’s field, with an F at the top left and a small cross in the centre."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-10a.png" alt="TS-10A as it will sew: a blue square frame 100 mm on each side, the 4 × 4 in hoop’s field, with an F at the top left and a small cross in the centre."></span></label></p>
+<p>Threads: Blue.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>With the 4 × 4 in hoop on the machine: does the machine take the file and sew it, without asking for a larger hoop?</li>
+<li>The frame measures 100.0 × 100.0 mm (± 0.5 mm), the F at the top left.</li>
+</ul>
+<h2 id="ts-10b--hoop-size-the-5--7-in-hoop-a-130--180-mm-frame"><a class="header" href="#ts-10b--hoop-size-the-5--7-in-hoop-a-130--180-mm-frame">TS-10B — Hoop size: the 5 × 7 in hoop, a 130 × 180 mm frame</a></h2>
+<p>130.0 × 180.0 mm · 283 stitches, 4 jumps, 3 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-10b.png" alt="TS-10B as it will sew: a blue frame 130 mm wide and 180 mm high, the 5 × 7 in hoop’s field, with an F at the top left and a small cross in the centre."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-10b.png" alt="TS-10B as it will sew: a blue frame 130 mm wide and 180 mm high, the 5 × 7 in hoop’s field, with an F at the top left and a small cross in the centre."></span></label></p>
+<p>Threads: Blue.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>With the 5 × 7 in hoop on the machine: does the machine take the file and sew it?</li>
+<li>The frame measures 130.0 × 180.0 mm (± 0.5 mm), tall side top to bottom, the F at the top left.</li>
+</ul>
+<h2 id="ts-10c--hoop-size-the-small-hoop-a-20--60-mm-frame"><a class="header" href="#ts-10c--hoop-size-the-small-hoop-a-20--60-mm-frame">TS-10C — Hoop size: the small hoop, a 20 × 60 mm frame</a></h2>
+<p>20.0 × 60.0 mm · 92 stitches, 4 jumps, 3 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its small hoop, profile <a href="profiles.html#brother-pe800-small"><code>brother-pe800-small</code></a>.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-10c.png" alt="TS-10C as it will sew: a blue frame 20 mm wide and 60 mm high, the small hoop’s field, with a small F at the top left and a small cross in the middle."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-10c.png" alt="TS-10C as it will sew: a blue frame 20 mm wide and 60 mm high, the small hoop’s field, with a small F at the top left and a small cross in the middle."></span></label></p>
+<p>Threads: Blue.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>With the small hoop on the machine: does the machine take the file and sew it, without asking for a larger hoop?</li>
+<li>If it asks for a larger hoop, turn the design a quarter turn on the machine’s screen. Does it take it then?</li>
+<li>The frame measures 20.0 × 60.0 mm (± 0.5 mm), tall side top to bottom, the F at the top left.</li>
+</ul>
+<h2 id="ts-11a--new-strokes-and-satins-zigzag-strokes-e-stitches-s-stitches-and-zigzag-satins"><a class="header" href="#ts-11a--new-strokes-and-satins-zigzag-strokes-e-stitches-s-stitches-and-zigzag-satins">TS-11A — New strokes and satins: zigzag strokes, E-stitches, S-stitches and zigzag satins</a></h2>
+<p>127.0 × 144.4 mm · 4632 stitches, 43 jumps, 42 trims, 3 colour changes, 3 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-11a.png" alt="TS-11A as it will sew: 4 bands of the new strokes and satins, most of them hooks that run straight and then turn down, in rows that turn back on each other. At the top, in green, 9 zigzag strokes in 3 rows, narrow to wide, and a straight one whose stitches slant. Under them, in red, E-stitches along the sides of a square and round 4 circles, over the lines that place and tack down the appliqué fabric. Then, in blue, 6 S-stitches in 2 rows, 6 and 10 mm wide. At the bottom, in gold, zigzag satins beside satin columns in 2 rows, 4 and 8 mm wide, and one more under them. Jump threads join the samples in each band."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-11a.png" alt="TS-11A as it will sew: 4 bands of the new strokes and satins, most of them hooks that run straight and then turn down, in rows that turn back on each other. At the top, in green, 9 zigzag strokes in 3 rows, narrow to wide, and a straight one whose stitches slant. Under them, in red, E-stitches along the sides of a square and round 4 circles, over the lines that place and tack down the appliqué fabric. Then, in blue, 6 S-stitches in 2 rows, 6 and 10 mm wide. At the bottom, in gold, zigzag satins beside satin columns in 2 rows, 4 and 8 mm wide, and one more under them. Jump threads join the samples in each band."></span></label></p>
+<p>Threads: Emerald Green, Red, Red (stop), Red (stop), Blue, Deep Gold, Deep Gold (stop).</p>
+<p>After sewing, check:</p>
+<ul>
+<li>4 bands, a thread to each, every sample trimmed after. Most samples are hooks, straight and then turning a quarter circle. Top band, in green: zigzag strokes 1, 2 and 4 mm wide down the rows, at spacings of 0.4, 1 and 2 mm across them, and beside the last row a straight line 4 mm wide at 1 mm whose stitches turn 45°.</li>
+<li>Second band, in red: E-stitches for appliqué, round a square 26 mm a side and 4 circles 18 mm across. The machine sews a line 1 mm inside each edge and stops: lay the appliqué fabric over the lines. It sews them again to tack the fabric down and stops: trim the fabric 1 mm outside the lines. Clockwise from the top, the square’s sides are 3 mm wide at spacings of 2 and 3 mm, then 5 mm wide at 2 and 3 mm. The rings, left to right, are the same 4.</li>
+<li>Third band, in blue: S-stitches 6 mm wide, then 10 mm wide split at 3 mm by the default method and by the staggered one. The first row is at a spacing of 0.4 mm and the second at 0.6 mm.</li>
+<li>Bottom band, in gold: zigzag satins, each followed by a satin column of the same width and spacing, 4 mm wide in the first row and 8 mm in the second, at spacings of 0.4 and 1 mm. Under them, after a stop, a zigzag satin 8 mm wide at 1 mm over a contour underlay: go on with the same thread.</li>
+<li>Measure the zigzag strokes: how much narrower than drawn does each sew? Are their sides even round the curves? Note the narrowest width that sews cleanly, and the spacing that looks best. The line at 45° should sew as wide as the hooks beside it, its stitches slanting.</li>
+<li>Does each E-stitch’s spine cover the fabric’s cut edge, and do its spikes hold the fabric flat, without puckering? Compare the widths of 3 and 5 mm, and the spacings of 2 and 3 mm, on the straight sides and round the circles.</li>
+<li>Do the S-stitches cover their bands at 0.4 mm, with even steps along their edges? On the 10 mm bands, do the default method’s splits leave a furrow along the band that the staggered ones don’t? Round the curves, the inside of each S-stitch packs its steps closer than the machine’s shortest stitch, and StitchCraft leaves those needle points out (SC-I0504): does the inner edge still look even?</li>
+<li>Does each zigzag satin cover its band at 0.4 mm as the satin column beside it does? Measure both: does the zigzag satin sew narrower? On the last one, does the contour underlay show past the zigzag at either end?</li>
+</ul>
+<h2 id="ts-11b--new-fills-contour-and-circular-fills"><a class="header" href="#ts-11b--new-fills-contour-and-circular-fills">TS-11B — New fills: contour and circular fills</a></h2>
+<p>125.0 × 166.0 mm · 15314 stitches, 12 jumps, 11 trims, 3 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-11b.png" alt="TS-11B as it will sew: 9 contour fills in 3 rows and 3 circular fills under them. At the top, in green, 3 discs: one round a hole set off its middle, a single spiral and a double spiral. In the second row, in blue, 3 five-pointed stars whose rings have round, mitred and bevelled corners. In the third, in red, 2 squares joined by a narrow neck, a rectangle, and a leaf. At the bottom, in gold, a spiral round the middle of a disc with a hole, of a star and of a rectangle whose rings fade. Jump threads join the samples in each row."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-11b.png" alt="TS-11B as it will sew: 9 contour fills in 3 rows and 3 circular fills under them. At the top, in green, 3 discs: one round a hole set off its middle, a single spiral and a double spiral. In the second row, in blue, 3 five-pointed stars whose rings have round, mitred and bevelled corners. In the third, in red, 2 squares joined by a narrow neck, a rectangle, and a leaf. At the bottom, in gold, a spiral round the middle of a disc with a hole, of a star and of a rectangle whose rings fade. Jump threads join the samples in each row."></span></label></p>
+<p>Threads: Emerald Green, Blue, Red, Deep Gold.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>The top 3 rows are contour fills: rings that follow the outline inward, a row spacing apart, sewn as one line over the default underlay. Top row, in green, left to right: a disc 36 mm across sewn inner to outer round a hole, then a single spiral and a double spiral, the rings 0.25 mm apart. Second row, in blue: stars 40 mm across with round, mitred and bevelled corners, the rings 0.4 mm apart. Third row, in red: 2 squares joined by a neck 3 mm wide, a rectangle whose rings alternate direction, and a leaf smoothed by 0.5 mm.</li>
+<li>The bottom row, in gold, is circular fills: a spiral round the middle of each shape, cut by its outline, over the default underlay. Left to right: the disc round its hole, the star, and a rectangle whose circles fade from 0.25 mm apart at its middle to 1 mm at its corners. Where the spiral leaves the shape and comes back, the needle travels inside it under the spiral sewn later.</li>
+<li>Does fabric show between the rings, or does a fill pucker? Measure the discs: do they sew 36 mm across?</li>
+<li>Inner to outer steps in from ring to ring and sews each on its way out. Do the steps show as a line across the rings? On the rectangle, whose rings alternate, the steps don’t cross: does it look calmer than the disc?</li>
+<li>Where do the spirals end in the middle, and the double spiral on its outline? Is there a knot or a bump there?</li>
+<li>On the stars, do the mitred rings reach into the points, and the round and bevelled ones leave a gap at each tip? Which star looks best?</li>
+<li>Does the neck between the 2 squares fill, where the rings part to each side? Does the smoothed leaf’s line run evenly, without kinks?</li>
+<li>Do the circular fills’ circles look round and even, and does fabric show between them? Does the travel between the pieces of a spiral show anywhere, on the star’s points or round the disc’s hole? Does the fading rectangle look denser at its middle and lighter at its corners, as it should?</li>
+<li>How long does the sheet take? A contour fill sews as one line, with no travel between rows.</li>
+</ul>
+<h2 id="ts-11c--new-fills-meander-fills"><a class="header" href="#ts-11c--new-fills-meander-fills">TS-11C — New fills: meander fills</a></h2>
+<p>123.0 × 120.2 mm · 5880 stitches, 11 jumps, 10 trims, 2 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-11c.png" alt="TS-11C as it will sew: 9 meander fills in 3 rows, each a line that wanders along the sides of a tiling over the underlay’s rows. At the top, in green, 3 discs in hexagons, squares and triangles. In the middle, in blue, 3 discs in octagons and squares, hexagons and triangles, and hexagons, squares and triangles. At the bottom, in red, a five-pointed star in squares and triangles, a rectangle in large hexagons sewn as a zigzag, and a leaf in small hexagons, turned. Jump threads join the samples in each row."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-11c.png" alt="TS-11C as it will sew: 9 meander fills in 3 rows, each a line that wanders along the sides of a tiling over the underlay’s rows. At the top, in green, 3 discs in hexagons, squares and triangles. In the middle, in blue, 3 discs in octagons and squares, hexagons and triangles, and hexagons, squares and triangles. At the bottom, in red, a five-pointed star in squares and triangles, a rectangle in large hexagons sewn as a zigzag, and a leaf in small hexagons, turned. Jump threads join the samples in each row."></span></label></p>
+<p>Threads: Emerald Green, Blue, Red.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>Each sample is a meander fill: one line that wanders along the sides of a tiling without crossing itself, over the default underlay. Top row, in green, left to right: discs 36 mm across in hexagons, squares and triangles, each side 2 mm long. Middle row, in blue: discs in octagons and squares, hexagons and triangles, and hexagons, squares and triangles. Bottom row, in red: a star 40 mm across in squares and triangles, a rectangle in hexagons twice as large sewn as a zigzag 2.5 mm wide, and a leaf in hexagons half as large, turned by 30° and smoothed by 0.5 mm.</li>
+<li>Does each tiling show in the stitches? Does the line look even, or do bare patches show where it didn’t reach? Which tile looks best, and at which size?</li>
+<li>Does the underlay show between the line’s turns? A meander covers the area lightly: is it too light to hide the fabric, or the underlay?</li>
+<li>On the rectangle, does the zigzag stay inside its outline, and lie flat? Is 2.5 mm too wide?</li>
+<li>On the leaf, does the smoothed line run evenly round its turns, without kinks? Do the 1 mm sides sew cleanly, or do the stitches bunch?</li>
+<li>Does any sample pucker, or the line pull the fabric where it turns?</li>
+</ul>
+<h2 id="ts-13a--pictures-digitized-automatically-neighbours-and-sewing-order"><a class="header" href="#ts-13a--pictures-digitized-automatically-neighbours-and-sewing-order">TS-13A — Pictures digitized automatically: neighbours and sewing order</a></h2>
+<p>126.0 × 168.0 mm · 23779 stitches, 36 jumps, 35 trims, 19 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design whose shapes StitchCraft digitizes automatically, as <code>--auto</code> does a shape without settings. VectorCraft’s Test Sheet filter draws it too, those shapes with the Auto effect.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-13a.png" alt="TS-13A as it will sew: the same pictures twice, digitized at the top and in paint order at the bottom. Each half has 2 red badges with a blue square and a gold disc on them, a blue disc with specks round it, a row of 3 smaller badges, and a gold square beside a blue bar. At the top the specks are blue bumps on the disc’s edge, and at the bottom red knots."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-13a.png" alt="TS-13A as it will sew: the same pictures twice, digitized at the top and in paint order at the bottom. Each half has 2 red badges with a blue square and a gold disc on them, a blue disc with specks round it, a row of 3 smaller badges, and a gold square beside a blue bar. At the top the specks are blue bumps on the disc’s edge, and at the bottom red knots."></span></label></p>
+<p>Threads: Red, Blue, Deep Gold, Red, Blue, Deep Gold, Blue, Red, Blue, Deep Gold, Red, Blue, Deep Gold, Red, Blue, Deep Gold, Blue, Blue (stop), Red, Blue, Deep Gold.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Top row, left to right: a badge traced abutting and one traced stacked, each 40 mm across, and a blue disc with 7 red specks round it. Bottom row: 3 badges drawn badge by badge, and a gold square with a blue bar beside it.</li>
+<li>The bottom half changes thread 16 times and jumps 15 times, the top half 2 and 21 times. The base layer’s thread and pieces are among the top half’s. How long does each half take?</li>
+<li>Does fabric show between colours, on either half? On the top half, each area reaches 1 mm under the next: does that cover the gap, or show as a ridge?</li>
+<li>On the top half, a base layer sews first under all the shapes, in the red that paints the most of them: an open fill in 3 directions, 0.4 mm inside the shapes’ outer edges, and the fills on it sew no underlay of their own. Does it show beside a shape’s edge, or through the gold and the blue? Do the fills on it lie as flat as those of the bottom half, which sew their own underlays?</li>
+<li>On the top half, the stacked badge sews only what shows of each colour, as the abutting badge beside it does: the red disc whole, cut away under the square, and the blue square whole, cut away under the gold disc. A satin column round the gold disc would sew stitches of 7.3 mm at the square’s corners, longer than a satin stitch may be, so both badges’ squares are filled. Does it sew as flat as the abutting badge? On the bottom half, it sews its lower colours whole, under the upper ones.</li>
+<li>On the bottom half, each speck round the disc sews a red knot. On the top half, the 6 specks that touch the disc are blue, part of it, and the one apart is left out. Does the disc’s edge show where they were?</li>
+<li>The blue bar meets the gold square along the top half of its side, and runs on 0.5 mm from it below. On the top half, the bar, sewn first, reaches under the square only where they meet. Does the fabric that shows below read as a gap drawn there?</li>
+<li>Does any shape cover one drawn over it? The order must never let that happen.</li>
+<li>The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?</li>
+</ul>
+<h2 id="ts-13b--pictures-digitized-automatically-letters-and-lines-traced-as-areas"><a class="header" href="#ts-13b--pictures-digitized-automatically-letters-and-lines-traced-as-areas">TS-13B — Pictures digitized automatically: letters and lines traced as areas</a></h2>
+<p>110.6 × 148.4 mm · 14415 stitches, 66 jumps, 65 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design whose shapes StitchCraft digitizes automatically, as <code>--auto</code> does a shape without settings. VectorCraft’s Test Sheet filter draws it too, those shapes with the Auto effect.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-13b.png" alt="TS-13B as it will sew: the word MATCH in black block letters of 4 sizes, and 3 windows of red, blue and gold areas between black lines, twice. At the top, digitized, the letters are satin columns and the smallest thin runs, and the lines thin runs. At the bottom, in paint order, every letter and line is filled."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-13b.png" alt="TS-13B as it will sew: the word MATCH in black block letters of 4 sizes, and 3 windows of red, blue and gold areas between black lines, twice. At the top, digitized, the letters are satin columns and the smallest thin runs, and the lines thin runs. At the bottom, in paint order, every letter and line is filled."></span></label></p>
+<p>Threads: Black, Red, Blue, Deep Gold, Black, Red, Blue, Deep Gold, Black, Red, Blue, Deep Gold, Black, Black (stop), Red, Blue, Deep Gold, Black.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left: the word MATCH in block letters 15, 10, 6 and 4 mm tall, top to bottom, each letter traced as an area. Right: 3 windows, top to bottom, whose black lines, traced as areas, are 0.3, 0.6 and 0.9 mm wide. One line runs down each window, and a branch runs across to its right side from it.</li>
+<li>The bottom half changes thread 12 times and jumps 16 times, the top half 3 and 50 times. The top half threads each of its 4 threads once, the base layer’s red first. A letter filled sews in one piece, and digitized it is columns and lines with jumps between them. How long does each half take?</li>
+<li>Which is the smallest word that reads, on each half?</li>
+<li>On the top half, the letters from 6 mm tall sew as satin columns between their own edges, and the 4 mm ones as triple runs along their middles. Do the columns’ stitches lie square to their strokes, round the C’s bend and the A’s hole?</li>
+<li>Where a stroke stops against another, as the T’s stem does under its bar and the H’s crossbar against its stems, the 2 meet at the bar’s side, and the bar’s stitches reach 0.4 mm over the seam: does fabric show along it, or a ridge? Does a crossbar sewn as a column of its own, as the H’s is, read as one stroke with its stems? The M’s and the A’s feet should end flat along the baseline, and the C’s ends round.</li>
+<li>Do the underlays hold the columns up? With 0.4 mm of pull compensation, do they sew as wide as drawn? Measure the 15 mm T’s stem, drawn 2.7 mm wide.</li>
+<li>Each letter sews a column along each of its straight strokes, its stitches square to the stroke: the M’s stems run top to bottom, and its middle strokes stop against them and meet at an upright line at the V. Do its stitches lie level, as a font’s M’s do?</li>
+<li>On the top half, each window’s lines sew along their middles after the areas beside them, which reach under them: a single run at 0.3 mm, and a triple run at 0.6 and 0.9 mm. Does each line reach as far as it is drawn? Do the triple runs look as wide as their lines, and the single run not too thin? Does fabric show along a line, or a gap or a knot where the branch ends at the line it meets?</li>
+<li>The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?</li>
+</ul>
+<h2 id="ts-13c--pictures-digitized-automatically-lines-and-shapes-in-parts"><a class="header" href="#ts-13c--pictures-digitized-automatically-lines-and-shapes-in-parts">TS-13C — Pictures digitized automatically: lines, and shapes in parts</a></h2>
+<p>111.4 × 107.8 mm · 9971 stitches, 27 jumps, 26 trims, 9 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design whose shapes StitchCraft digitizes automatically, as <code>--auto</code> does a shape without settings. VectorCraft’s Test Sheet filter draws it too, those shapes with the Auto effect.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-13c.png" alt="TS-13C as it will sew: a pink face drawn with black lines, a gold star and a red balloon on its string, twice. At the top, digitized, the face’s outlines are wide satin columns, and the star’s points and the string are columns over their fill. At the bottom, in paint order, the lines are thin running stitches."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-13c.png" alt="TS-13C as it will sew: a pink face drawn with black lines, a gold star and a red balloon on its string, twice. At the top, digitized, the face’s outlines are wide satin columns, and the star’s points and the string are columns over their fill. At the bottom, in paint order, the lines are thin running stitches."></span></label></p>
+<p>Threads: Flesh Pink, White, Black, Deep Gold, Red, Red (stop), Flesh Pink, White, Black, Deep Gold, Red.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left to right: a face drawn with black lines, a star, and a balloon on its string.</li>
+<li>The bottom half changes thread 4 times and jumps 14 times, the top half 4 and 13 times. The base layer’s thread and pieces are among the top half’s. How long does each half take?</li>
+<li>The face’s outline is 4 mm wide, its eyes’ 2 mm and its brows’ 1 mm. On the top half, the outlines sew as satin columns and the brows as triple runs. Do the columns cover the edges of the pink and white areas beside them? Do the triple runs look as wide as the brows are drawn?</li>
+<li>The smile is 2 mm wide with round caps, and on the top half its column ends square, 1 mm past each end of its line, where the round cap ends. How far does its corner show past the round end?</li>
+<li>The pupils are small rings, and the 3 hairs hairpins, which turn more tightly than they are wide: the top half fills them. How solid do they sew beside the columns round them?</li>
+<li>On the top half, the star’s points and the balloon’s string sew as satin columns over the fill of the star’s middle and of the balloon, cut square where they meet it. Does each column’s flat end cover the fill’s edge, or does fabric or a ridge show there? Do each point’s stitches lie square to it from its tip to its cut?</li>
+<li>Does each line sewn after the area it borders cover the area’s edge? Does any shape cover one drawn over it?</li>
+<li>The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?</li>
+</ul>
+<h2 id="ts-13d--pictures-digitized-automatically-a-traced-emblem"><a class="header" href="#ts-13d--pictures-digitized-automatically-a-traced-emblem">TS-13D — Pictures digitized automatically: a traced emblem</a></h2>
+<p>89.8 × 100.4 mm · 19534 stitches, 23 jumps, 22 trims, 10 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design whose shapes StitchCraft digitizes automatically, as <code>--auto</code> does a shape without settings. VectorCraft’s Test Sheet filter draws it too, those shapes with the Auto effect.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-13d.png" alt="TS-13D as it will sew: 2 emblems, a navy square in a white frame with a red star on a white disc and 3 gold bars, traced abutting and stacked, twice. At the top, digitized, both emblems sew alike: one navy fill under the disc and the bars, the bars satin columns, and the white round each star a satin column. At the bottom, in paint order, every shape is a fill."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-13d.png" alt="TS-13D as it will sew: 2 emblems, a navy square in a white frame with a red star on a white disc and 3 gold bars, traced abutting and stacked, twice. At the top, digitized, both emblems sew alike: one navy fill under the disc and the bars, the bars satin columns, and the white round each star a satin column. At the bottom, in paint order, every shape is a fill."></span></label></p>
+<p>Threads: White, Prussian Blue, Red, Deep Gold, White, Deep Gold, Red, Prussian Blue, Prussian Blue (stop), White, Red, Deep Gold.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left to right: an emblem traced abutting and the same emblem traced stacked, each 42 mm wide, a navy square with a white disc, a red star on the disc and 3 gold bars, on white.</li>
+<li>The bottom half changes thread 7 times and jumps 8 times, the top half 3 and 15 times. The base layer’s thread and pieces are among the top half’s. How long does each half take?</li>
+<li>On the bottom half, the stacked emblem sews each colour whole under the colours drawn over it, the white under everything. How stiff is it beside the abutting one? On the top half, it sews only what shows of each colour: does it sew as the abutting emblem beside it?</li>
+<li>On the top half, each navy square is one fill under the white disc and the bars, which sew after it, cut away 1 mm inside their edges. The white round each star, narrower than a satin column there, is a satin column round it. On the bottom half, the abutting emblem’s navy sews round the disc and between the bars as drawn. Which sews better between the bars? Does fabric or a ridge show round the bars, the disc and the star?</li>
+<li>On the top half, the gold bars sew as satin columns, 2.1 mm tall as drawn. Do they keep their height, and do their ends stay square?</li>
+<li>The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?</li>
+</ul>
+<h2 id="ts-13e--pictures-digitized-automatically-a-traced-button"><a class="header" href="#ts-13e--pictures-digitized-automatically-a-traced-button">TS-13E — Pictures digitized automatically: a traced button</a></h2>
+<p>24.0 × 108.4 mm · 5822 stitches, 10 jumps, 9 trims, 8 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design whose shapes StitchCraft digitizes automatically, as <code>--auto</code> does a shape without settings. VectorCraft’s Test Sheet filter draws it too, those shapes with the Auto effect.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-13e.png" alt="TS-13E as it will sew: 2 buttons, a yellow disc with 7 orange dots in a black rim, one above the other, twice. At the top, digitized, each button’s rim is a satin column round one yellow fill under its dots. At the bottom, in paint order, every shape is a fill."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-13e.png" alt="TS-13E as it will sew: 2 buttons, a yellow disc with 7 orange dots in a black rim, one above the other, twice. At the top, digitized, each button’s rim is a satin column round one yellow fill under its dots. At the bottom, in paint order, every shape is a fill."></span></label></p>
+<p>Threads: Black, Yellow, Tangerine, Black, Yellow, Tangerine, Tangerine (stop), Yellow, Black, Tangerine.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. A button traced abutting above the same button traced stacked, a yellow disc 19 mm across with 7 orange dots, in a black rim.</li>
+<li>The bottom half changes thread 5 times and jumps 4 times, the top half 2 and 6 times. The base layer’s thread and pieces are among the top half’s. How long does each half take?</li>
+<li>On the bottom half, the stacked button sews its yellow whole under the dots and the rim. How stiff is it beside the abutting one? On the top half, it sews only what shows of each colour: does it sew as the abutting button above it?</li>
+<li>On the top half, each button’s yellow is one fill under the dots, which sew after it, and its black rim a satin column round it. On the bottom half, the abutting button’s yellow sews round the dots as drawn. Which sews better between the dots? Does the rim cover the yellow’s edge?</li>
+<li>The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?</li>
+</ul>
+<h2 id="ts-13f--how-thick-a-design-may-sew-squares-of-1-to-6-fills"><a class="header" href="#ts-13f--how-thick-a-design-may-sew-squares-of-1-to-6-fills">TS-13F — How thick a design may sew: squares of 1 to 6 fills</a></h2>
+<p>112.0 × 57.0 mm · 18543 stitches, 21 jumps, 20 trims, 1 colour change, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-13f.png" alt="TS-13F as it will sew: 3 rows in blue. At the top, 6 squares 15 mm a side, of 1 to 6 fills on each other from left to right. In the middle, the same 6 squares, each with a black satin outline along its edge. At the bottom, 3 blocks 12 mm a side, each a fill cut into square patches 1.5, 2 and 3 mm across."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-13f.png" alt="TS-13F as it will sew: 3 rows in blue. At the top, 6 squares 15 mm a side, of 1 to 6 fills on each other from left to right. In the middle, the same 6 squares, each with a black satin outline along its edge. At the bottom, 3 blocks 12 mm a side, each a fill cut into square patches 1.5, 2 and 3 mm across."></span></label></p>
+<p>Threads: Blue, Black.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>Top row, left to right: squares 15 mm a side of 1, 2, 3, 4, 5 and 6 fills on each other, each fill’s rows turned 30° from those of the fill under it. Middle row: the same squares, each with a satin outline 2 mm wide along its edge. Every square lies on one open layer of rows, as a design digitized automatically does, and no fill has an underlay of its own.</li>
+<li>For each square, count the thread breaks and the places where the thread shreds. Listen for a thumping needle. Which is the first square that breaks thread or thumps, in the top row and in the middle row?</li>
+<li>After sewing, look at the needle for a bend or a burr, and at the fabric round each square for puckers. Bend each square, and measure how thick it is with calipers.</li>
+<li>Bottom row: 3 blocks 12 mm a side, each one fill cut into patches 1.5, 2 and 3 mm across, left to right. Each patch reaches 1 mm under the patch sewn after it in its row and under the one below it, as the areas of a traced photo do. Which block is the stiffest, and does thread break or the needle thump on any of them? Does the base layer show between patches?</li>
+</ul>
+<h2 id="ts-16--an-inkstitch-file-start-and-end-commands-clip-paths-origin-stop-position-turn-a-clone-and-drawn-locks"><a class="header" href="#ts-16--an-inkstitch-file-start-and-end-commands-clip-paths-origin-stop-position-turn-a-clone-and-drawn-locks">TS-16 — An Ink/Stitch file: start and end commands, clip paths, origin, stop position, turn, a clone and drawn locks</a></h2>
+<p>110.0 × 117.2 mm · 4979 stitches, 9 jumps, 8 trims, 5 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-16.png" alt="TS-16 as it will sew, turned right: from the left, a black zigzag in 2 pieces, a green quarter of a disc, a blue satin column 40 mm long and a red tatami rectangle 30 mm wide and 40 mm tall, its rows running down. Below the red rectangle, its red clone, turned 45° from it, its rows along its long sides. Above them, 2 black lines 40 mm long with small locks drawn as paths at their ends."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-16.png" alt="TS-16 as it will sew, turned right: from the left, a black zigzag in 2 pieces, a green quarter of a disc, a blue satin column 40 mm long and a red tatami rectangle 30 mm wide and 40 mm tall, its rows running down. Below the red rectangle, its red clone, turned 45° from it, its rows along its long sides. Above them, 2 black lines 40 mm long with small locks drawn as paths at their ends."></span></label></p>
+<p>Threads: Red, Blue, Blue (stop), Emerald Green, Black, Red, Black.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>Sew it beside Ink/Stitch’s machine file of the same sheet, which the differential keeps (<code>target/conformance/differential/ts-16.inkstitch.pes</code>). Each element should start and end in the same place in both.</li>
+<li>The red fill, 40 by 30 mm, starts at its top-right corner, where its start command is, and ends at its bottom-left corner, at its end command.</li>
+<li>The blue satin column below it, 40 mm long and 5 mm wide, starts in its middle, where its start command is: the needle runs under the column to its left end, sews it to three quarters along, runs on under it to its right end and sews back. It ends three quarters along, at its end command. Is the needle’s way under the column hidden?</li>
+<li>The green fill is a quarter of a disc, 25 mm round its bottom-right corner: what its clip path, a circle, leaves of a 30 mm square. Is its round edge smooth, with no row past it?</li>
+<li>The black zigzag at the bottom sews its first 15 mm and its last 15 mm, and nothing between, where its clip path leaves a gap: the needle jumps it. Does each piece end where the gap begins?</li>
+<li>The design’s origin, on the blue column’s top edge 10 mm in from its left end, goes to the hoop’s centre, where the needle waits before it sews. Does the machine put the design there, or its middle?</li>
+<li>The machine stops after the blue column. Before it stops, the frame moves to the stop position, 20 mm right of the red fill’s top-right corner and 10 mm above it. Does the frame wait there, and does the needle come back for the green fill?</li>
+<li>The file turns the sheet right about its origin, as Ink/Stitch’s rotate on export does: its first 4 shapes sew 100 mm wide and 40 mm tall, the red fill at the right and the zigzag at the left. Does the machine sew it so, or turn it back?</li>
+<li>In red again, the red fill’s clone sews below the fill, turned 45° right. Do its rows run along its long sides, as the fill’s run along its own? It starts at its corner turned from the fill’s top-right one and ends at the one turned from the fill’s bottom-left.</li>
+<li>Last, in black after a colour change, 2 lines 40 mm long sew above the rest, each locked at both ends with a lock drawn as a path and trimmed after. The lower one, sewn from the right, starts with a zigzag across its first 1.6 mm and ends with a triangle over its last 1.4 mm, sewn backwards. The upper one, sewn from the left at 150 %, starts with a triangle along its first 1.8 mm and ends with one over its last 1.8 mm. Snip the thread between them, then pull each tail gently: does each lock hold? Does each look as it does in Ink/Stitch’s sew-out?</li>
+<li>Any difference between the 2 sew-outs, and where.</li>
+</ul>
+<h2 id="ts-17a--new-stitch-types-cross-stitch"><a class="header" href="#ts-17a--new-stitch-types-cross-stitch">TS-17A — New stitch types: cross stitch</a></h2>
+<p>114.0 × 114.0 mm · 10305 stitches, 14 jumps, 13 trims, 3 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-17a.png" alt="TS-17A as it will sew: a row of 4 red squares of crosses 24 mm wide, on grids of 2 and 3 mm with 2 and 4 threads. Below them in blue, the 2 mm and 3 mm squares again with their crosses flipped, and a K 24 mm tall in crosses on a 2 mm grid, its slanted arms stepping along the grid. Below them in green, squares of upright, dense upright, double and Smyrna crosses, and at the bottom in black, squares of half crosses plain and flipped, and a square turned 30° with its crosses square to its sides."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-17a.png" alt="TS-17A as it will sew: a row of 4 red squares of crosses 24 mm wide, on grids of 2 and 3 mm with 2 and 4 threads. Below them in blue, the 2 mm and 3 mm squares again with their crosses flipped, and a K 24 mm tall in crosses on a 2 mm grid, its slanted arms stepping along the grid. Below them in green, squares of upright, dense upright, double and Smyrna crosses, and at the bottom in black, squares of half crosses plain and flipped, and a square turned 30° with its crosses square to its sides."></span></label></p>
+<p>Threads: Red, Blue, Emerald Green, Black.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>Each sample is a cross stitch fill, trimmed after. First row, in red, left to right: squares 24 mm wide on grids of 2 mm with 2 and 4 threads, then of 3 mm with 2 and 4 threads. Second row, in blue: the 2 mm square with 2 threads and the 3 mm one with 4, flipped, then a K 24 mm tall on a 2 mm grid with 2 threads, grown by 0.1 mm as Ink/Stitch’s cross-stitch fonts grow their letters. Third row, in green, on the 3 mm grid: squares of upright, dense upright, double and Smyrna crosses, the double ones with 2 threads. Fourth row, in black: squares of half crosses with 3 threads, plain and flipped, and a square 18 mm wide turned 30°, its grid turned with it.</li>
+<li>Does every cross of the top row lie with its / diagonal on top, and every cross of the flipped squares with its \ diagonal on top?</li>
+<li>Between its 2 diagonals the needle passes through each cross’s middle, under the diagonal sewn last. Do those stitches show? The squares and the K first travel from where the needle comes in to where they end, through the middles of their crosses: does that travel show?</li>
+<li>Does fabric show between the crosses at 2 threads? At 4, do the holes at the cells’ corners stay clean, or do they pack and tear? Which grid and thread count look best?</li>
+<li>The K’s arms slant across the grid, and each cell their edges cut in half sews a cross, so the arms step along the grid. Does the K read at 24 mm on a 2 mm grid? A few of its crosses are reached by a corner of their bottom diagonal, and end with a stitch from their middle to it on top: do those show?</li>
+<li>Each upright cross sews its bar across and then its bar down over it, a + in each cell. The dense square adds a second grid of them half a cell over, on the corners of the first, and those along its sides reach half a cell past them. Does the dense square close the gaps of the plain one, or pack too much thread?</li>
+<li>Each double cross sews its \ diagonal, an upright cross over it and its / diagonal over that, and each Smyrna cross both diagonals and an upright cross over them, its bar down on top. How do the layers look at 2 and 4 threads? Do the many stitches through each cell’s middle pack or tear it?</li>
+<li>The half crosses sew one diagonal in each cell, \ on the left square and / on the flipped one, 3 times, joined into rows along the square’s diagonals. Between the rows the needle travels along the square’s sides, sewn once. Do those travel stitches show on its edges?</li>
+<li>The square turned 30° sews its crosses square to its own sides, as a letter turned along a path sews its own. Do its rows of crosses run along its edges, with no part cell along them?</li>
+<li>How long does the sheet take?</li>
+</ul>
+<h2 id="ts-17b--new-fills"><a class="header" href="#ts-17b--new-fills">TS-17B — New fills</a></h2>
+<p>130.0 × 172.0 mm · 49146 stitches, 38 jumps, 37 trims, 37 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-17b.png" alt="TS-17B as it will sew: 6 tartans and 3 linear gradients 40 mm square in 3 rows. The tartans are woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, stripes of gold, black and tangerine turned 30°, and stripes of blue, white, red and black in a herringbone, their rows in narrow upright bands slanting one way and then the other. In the bottom row, red blends into blue up to the right and gold through white into green down to the right. The last square’s tangerine thins out to bare fabric, and Prussian blue grows from it down to the left."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-17b.png" alt="TS-17B as it will sew: 6 tartans and 3 linear gradients 40 mm square in 3 rows. The tartans are woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, stripes of gold, black and tangerine turned 30°, and stripes of blue, white, red and black in a herringbone, their rows in narrow upright bands slanting one way and then the other. In the bottom row, red blends into blue up to the right and gold through white into green down to the right. The last square’s tangerine thins out to bare fabric, and Prussian blue grows from it down to the left."></span></label></p>
+<p>Threads: Prussian Blue (unnamed, #0e1f7c), Red (unnamed, #ed171f), White (unnamed, #f0f0f0), Prussian Blue (unnamed, #0e1f7c), Deep Gold (unnamed, #e8a900), Black (unnamed, #000000), Emerald Green (unnamed, #00673e), Black (unnamed, #000000), White (unnamed, #f0f0f0), Blue (unnamed, #0a55a3), Red (unnamed, #ed171f), Black (unnamed, #000000), Blue (unnamed, #0a55a3), White (unnamed, #f0f0f0), Black (unnamed, #000000), Blue (unnamed, #0a55a3), Black (unnamed, #000000), White (unnamed, #f0f0f0), Red (unnamed, #ed171f), Tangerine (unnamed, #fe9e32), Deep Gold (unnamed, #e8a900), Black (unnamed, #000000), Tangerine (unnamed, #fe9e32), Black (unnamed, #000000), Red (unnamed, #ed171f), Black (unnamed, #000000), Blue (unnamed, #0a55a3), White (unnamed, #f0f0f0), Red (unnamed, #ed171f), Blue (unnamed, #0a55a3), Deep Gold (unnamed, #e8a900), White (unnamed, #f0f0f0), Emerald Green (unnamed, #00673e), Tangerine (unnamed, #fe9e32), Prussian Blue (unnamed, #0e1f7c), Emerald Green (unnamed, #00673e), Yellow (unnamed, #ffff00), Flesh Pink (unnamed, #fdd9de).</p>
+<p>After sewing, check:</p>
+<ul>
+<li>Each sample is 40 mm square, trimmed after each colour. Top row, left to right, tartan fills: a sett of red, white, Prussian blue and deep gold, mirrored at its ends, then one of emerald green, black and white, repeated, then a warp of red and black under a weft of blue and white. Middle row: blue and black with a white stripe 0.5 mm wide and a red one 0.8 mm wide, each sewn as a run along its middle, then deep gold, black and tangerine turned 30° and scaled by 150 %, then blue, white, red and black in a herringbone 3 mm wide. Bottom row, linear gradient fills: red to blue up to the right, deep gold through white to emerald green down to the right, and tangerine to Prussian blue down to the left through a transparent stop.</li>
+<li>Do the warp and the weft read as a weave, each colour’s stripes crossing the other direction’s in a twill of rows 2 by 2?</li>
+<li>On the herringbone, do the rows turn at each band’s edge into columns of chevrons, and do the weft’s rows run on from band to band without a gap?</li>
+<li>Do the runs lie flat along the middles of their stripes, on top of the fills, and do they show as lines of their own colour?</li>
+<li>Where the rows of one colour are joined along a stripe’s edge, does the join show?</li>
+<li>Seen from a step away, does each gradient’s colour change smoothly, with no step where one stop’s rows give way to the next’s? Where the transparent stop lies, do tangerine’s rows and blue’s thin out evenly to bare fabric?</li>
+<li>Fourth row, on the left: a leaf from its bottom left tip to its top right one, sewn as a guided fill in emerald green over its underlay, trimmed after. Its rows are copies of an S-shaped line from tip to tip, 0.25 mm apart. Do the rows bend with the S, and do they keep their spacing round its bends? Where do they crowd or open up?</li>
+<li>How many times does the thread change, and how long does the sheet take? Each tartan sews its underlay in its own thread, then each colour once. Each gradient sews its underlay in its first colour, then each colour once.</li>
+</ul>
+<h2 id="ts-17c--ripples-routing-and-layers-satin-letters-and-a-network-of-lines-as-drawn-and-routed-crossing-columns-and-ripple-stitches-with-and-without-guides"><a class="header" href="#ts-17c--ripples-routing-and-layers-satin-letters-and-a-network-of-lines-as-drawn-and-routed-crossing-columns-and-ripple-stitches-with-and-without-guides">TS-17C — Ripples, routing and layers: satin letters and a network of lines, as drawn and routed, crossing columns, and ripple stitches with and without guides</a></h2>
+<p>101.0 × 175.0 mm · 5425 stitches, 31 jumps, 30 trims, 2 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="profiles.html#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-17c.png" alt="TS-17C as it will sew. In blue, the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E’s arms. Below them the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next. Below the routed letters, in red, a network of 6 bean-stitched lines, twice: on the left sewn as drawn, line by line, with a jump thread from each line to the next, and on the right routed, sewn in one go but for the jump to the line that crosses itself, above the others, and back. Below the network, in red, 2 crosses of satin columns 5 mm wide, a bar and a post each, as drawn on the left and with their underlays first on the right, which look alike from above. Below the crosses, in green, 3 ripple stitches: a rainbow of 7 arches, a wave whose copies shrink to a point above it, and a circle that spirals in to its middle. At the bottom, in green, 5 guided ripples: a wave’s copies along an arch, circles between 2 curved rails, a column with a grid across it, thin diamonds standing across a ladder, and a zigzag’s copies cut to a circle."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-17c.png" alt="TS-17C as it will sew. In blue, the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E’s arms. Below them the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next. Below the routed letters, in red, a network of 6 bean-stitched lines, twice: on the left sewn as drawn, line by line, with a jump thread from each line to the next, and on the right routed, sewn in one go but for the jump to the line that crosses itself, above the others, and back. Below the network, in red, 2 crosses of satin columns 5 mm wide, a bar and a post each, as drawn on the left and with their underlays first on the right, which look alike from above. Below the crosses, in green, 3 ripple stitches: a rainbow of 7 arches, a wave whose copies shrink to a point above it, and a circle that spirals in to its middle. At the bottom, in green, 5 guided ripples: a wave’s copies along an arch, circles between 2 curved rails, a column with a grid across it, thin diamonds standing across a ladder, and a zigzag’s copies cut to a circle."></span></label></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/routing-letters.png" alt="TS-17C’s letters ROUTE drawn as thin lines, twice: at the top sewn column by column, and at the bottom as Auto-Route Satin Columns routes them. Dashed lines are jumps, which the reference machine leaves as threads to cut by hand, and orange rings mark lock stitches. The routed letters jump only from one letter to the next."><span class="img-wrapper"><img src="../../images/generated/routing-letters.png" alt="TS-17C’s letters ROUTE drawn as thin lines, twice: at the top sewn column by column, and at the bottom as Auto-Route Satin Columns routes them. Dashed lines are jumps, which the reference machine leaves as threads to cut by hand, and orange rings mark lock stitches. The routed letters jump only from one letter to the next."></span></label></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/routing-lines.png" alt="TS-17C’s network of 6 running stitches drawn as thin lines, twice: on the left sewn line by line, and on the right as Auto-Route Running Stitch routes them with Trim jump stitches on. A rail along the bottom, a post across it, a brace from the post down to the rail, a hook curving up from the rail, a line that crosses itself above them, and a tick beside the rail. Dashed lines are jumps, and orange rings mark lock stitches. Sewn line by line, the machine jumps from each line to the next. Routed, it jumps only out to the line apart and back, and trims before each of those jumps. It reaches the tick, 0.5 mm off the rail, with a stitch."><span class="img-wrapper"><img src="../../images/generated/routing-lines.png" alt="TS-17C’s network of 6 running stitches drawn as thin lines, twice: on the left sewn line by line, and on the right as Auto-Route Running Stitch routes them with Trim jump stitches on. A rail along the bottom, a post across it, a brace from the post down to the rail, a hook curving up from the rail, a line that crosses itself above them, and a tick beside the rail. Dashed lines are jumps, and orange rings mark lock stitches. Sewn line by line, the machine jumps from each line to the next. Routed, it jumps only out to the line apart and back, and trims before each of those jumps. It reaches the tick, 0.5 mm off the rail, with a stitch."></span></label></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/ripple-kinds.png" alt="TS-17C’s 3 ripple stitches in green. On the left, a rainbow: 7 arches sewn back and forth from the outer edge of a column drawn as 2 arches and a rung to its inner edge. In the middle, a wave and its copies, which shrink to a point 20 mm above its middle, each copy meeting the next at a point. On the right, a circle 22 mm across that spirals in to its middle."><span class="img-wrapper"><img src="../../images/generated/ripple-kinds.png" alt="TS-17C’s 3 ripple stitches in green. On the left, a rainbow: 7 arches sewn back and forth from the outer edge of a column drawn as 2 arches and a rung to its inner edge. In the middle, a wave and its copies, which shrink to a point 20 mm above its middle, each copy meeting the next at a point. On the right, a circle 22 mm across that spirals in to its middle."></span></label></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/ripple-guided.png" alt="TS-17C’s 5 guided ripples in green. From the left: 8 copies of a wave follow an arch, shrinking to 30 % of its size and turning with it. Copies of a small circle run between 2 curved rails, spiralling on from one to the next. A column of 5 lines has a grid across it, its lines 3 mm apart. Copies of a thin diamond stand across a ladder at its rungs, their points on its rails. Copies of a zigzag run along a line and are cut to a circle."><span class="img-wrapper"><img src="../../images/generated/ripple-guided.png" alt="TS-17C’s 5 guided ripples in green. From the left: 8 copies of a wave follow an arch, shrinking to 30 % of its size and turning with it. Copies of a small circle run between 2 curved rails, spiralling on from one to the next. A column of 5 lines has a grid across it, its lines 3 mm apart. Copies of a thin diamond stand across a ladder at its rungs, their points on its rails. Copies of a zigzag run along a line and are cut to a circle."></span></label></p>
+<p>Threads: Blue, Red, Emerald Green.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>Top: the word ROUTE in satin columns 3 mm wide, sewn as drawn, column by column. Below it: the same letters as auto-satin routing joins them, cut into pieces, with running stitches under the satins and a trim between letters.</li>
+<li>Count the jump threads of each half, within each letter and between the letters. The routed half should have none within a letter. Its file asks for a trim between letters, which a machine that obeys trims cuts.</li>
+<li>On the routed half, do the running stitches under the satins show anywhere, at a column’s edge, at its ends or where 2 columns meet?</li>
+<li>Where a routed column is cut into pieces, is the satin even across the cut, or does a gap, a ridge or a stitch out of line show?</li>
+<li>Below the letters, in red: 6 bean-stitched lines, a rail, a post across it, a brace, a hook, a line that crosses itself and a tick, sewn as drawn on the left and as auto-run routing joins them on the right. Count the jump threads of each: the routed network should jump only to the line that crosses itself and back, trimming before each jump.</li>
+<li>On the routed network, do the plain runs under the bean stitches show beside them, where a branch is sewn out and back?</li>
+<li>The time each half takes, from its first stitch to its last.</li>
+<li>Below the network, in red: 2 satin columns 5 mm wide that cross, a bar and a post, each with a contour and a zigzag underlay. On the left they sew as drawn, so the post’s underlay lies on the bar’s top stitches. On the right they sew with their underlays first: both underlays, then both tops. Compare the 2 crossings: does the right one lie flatter, with less bulk or fewer stitches showing through where the columns meet?</li>
+<li>On the right, the needle goes back from the post’s underlay to the bar for the top stitches. Does its way there show, or a jump thread or its locks where it jumps?</li>
+<li>Below the columns, in green: 3 ripple stitches. On the left, a rainbow of 7 lines sewn back and forth between 2 arches. In the middle, 8 copies of a wave that shrink to a point 20 mm above it, each meeting the next at a point. On the right, a circle that spirals in to its middle.</li>
+<li>Do the ripples’ lines lie evenly apart, and does each turn or meet the next where its neighbours do, without a loop of thread or a stitch across?</li>
+<li>Bottom row, in green: guided ripples. From the left, 8 copies of a wave follow an arch, shrinking to a third and turning with it. Copies of a small circle run between 2 curved rails, spiralling on from one to the next. A column of 5 lines has a grid across it, sewn first. Copies of a thin diamond stand across a ladder at its rungs. Copies of a zigzag are cut to a circle.</li>
+<li>Do the guided copies keep their spacing along the guide, and does the clipped one sew only inside its circle, with no jump thread between its pieces?</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../user/reference/formats.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../user/reference/diagnostics.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../user/reference/formats.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../user/reference/diagnostics.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../mark-09e88c2c.min.js"></script>
+        <script src="../../searcher-09f2665d.js"></script>
+
+        <script src="../../clipboard-1626706a.min.js"></script>
+        <script src="../../highlight-abc7f01d.js"></script>
+        <script src="../../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

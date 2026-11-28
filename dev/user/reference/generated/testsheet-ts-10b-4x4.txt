@@ -1,0 +1,6 @@
+$ stitch testsheet TS-10B --profile brother-pe800-4x4 -o TS-10B.pes
+error SC-E0701: The design is 130.0 × 180.0 mm, but the Brother PE800 with its 4 × 4 in hoop sews at most 100 × 100 mm.
+  hint: Scale the design down, or split it into parts sewn in separate hoopings.
+  more: stitch explain SC-E0701
+nothing was written
+(exit status 1)

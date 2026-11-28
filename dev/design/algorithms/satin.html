@@ -1,0 +1,922 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Satin - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../searchindex-406f71a7.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../toc-95df4fb0.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/design/algorithms/satin.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="satin-generators"><a class="header" href="#satin-generators">Satin generators</a></h1>
+<!-- implements: crates/stitchcraft-engine/src/normalize/satin.rs, crates/stitchcraft-engine/src/normalize/near.rs, crates/stitchcraft-engine/src/normalize/centre_line.rs, crates/stitchcraft-engine/src/generators/satin/**, crates/stitchcraft-engine/src/generators/pull.rs -->
+<p>A satin column is a band of closely spaced stitches that swing from one edge to the other. It is the
+signature look of lettering and borders, and the stitch type where pull compensation and underlay
+matter most. Phase P1 (M4); the E, S and zigzag variants are P2 (M7).</p>
+<p>A satin column of any method is sewn whole whatever clip paths cut it, as Ink/Stitch sews it, and
+<code>SC-W0217</code> says so (<code>REQ-GEN-005</code>).</p>
+<h2 id="shape"><a class="header" href="#shape">Shape</a></h2>
+<pre><code class="language-text"> rail A  ●────────●──────────●─────────●
+          \  |     \    |     \   |
+ rungs     \ |      \   |      \  |       (optional: say which points correspond)
+ rail B  ●──\┴───────\──┴───────\─┴───●
+</code></pre>
+<ul>
+<li><strong>Rails</strong> are the two edges. They run in the same general direction.</li>
+<li><strong>Rungs</strong> are short segments crossing both rails; they pin which point on rail A corresponds to which
+point on rail B, controlling the stitch angle through curves.</li>
+<li><strong>Single-path satin</strong>: a centre line whose stroke gives the width (<a href="#single-path-satin">below</a>). It makes quick borders.</li>
+</ul>
+<h2 id="recognizing-rails-and-rungs"><a class="header" href="#recognizing-rails-and-rungs">Recognizing rails and rungs</a></h2>
+<p>An element is a satin column when its <code>satin_column</code> setting is on, whatever its <code>stroke_method</code> says.
+Its path’s subpaths are flattened as Ink/Stitch flattens them: each curve is halved until its control
+points lie within a tenth of a CSS pixel of the line between its ends. The same subpaths are then the
+same polylines in both, which decide where the needle points go, where subpaths meet, and where a column
+drawn as one path gets its rungs. A path read from SVG has the subpaths a viewer draws, and inkex, which
+Ink/Stitch reads files with, does not always count them alike (<code>DEV-SVG-011</code>). The reader finds where
+each pair of subpaths meets, crossing or touching. A point the two share counts once, and a rung that
+ends exactly on a rail meets it. So does a rung whose end rounding leaves a hair short of the rail, by
+less than a billionth of a segment’s length. Ink/Stitch’s test is exact, and with 3 subpaths it can take
+such a rung for a rail (<code>DEV-SAT-013</code>).</p>
+<p>StitchCraft tells rails from rungs as Ink/Stitch does, and a file sews the same in both.</p>
+<ol>
+<li>A subpath that is one point is left out, with <code>SC-W0205</code>.</li>
+<li>With 1 subpath left, the path is the column’s centre line (<a href="#single-path-satin">below</a>). With 2, they
+are the rails, and their nodes pair up in place of rungs (see Correspondence). With none, the element gets
+<code>SC-E0201</code> and no stitches.</li>
+<li>With 3 subpaths, the rails are the 2 that meet exactly 1 other subpath. With 4 or more, the rails are
+the 2 that meet more than 2 others. This step takes only subpaths longer than a tenth of a CSS pixel.</li>
+<li>When step 3 does not find exactly 2 rails, the 2 longest subpaths are taken as the rails, and
+<code>SC-W0202</code> names them. Of equally long subpaths, the first drawn comes first. Rails apart from each
+other, with exactly 2 rungs between them, are always taken by length, because each of the 4
+subpaths meets 2 others, as the strokes of a <code>#</code> do. The longer pair is usually the rails, and with
+a third rung step 3 finds them.</li>
+<li>Rails may meet each other, as the two sides of a pointed column do at its tips. That meeting counts
+in step 3.</li>
+<li>Every other subpath is a rung. A rung joins the point where it crosses the first rail to the point
+where it crosses the second. Where it misses a rail, the point of that rail nearest the rung is used,
+with <code>SC-W0203</code>, measured against the rail as push compensation leaves it (<a href="#compensation">Compensation</a>).
+Of points as near as each other, it is the one shapely’s nearest points of the rung and the rail give
+(see <em>Equally near points</em>). A rung that crosses a rail more than once does not say
+which crossing it means. It is left out, with <code>SC-W0207</code>, and the satin is sewn without it.</li>
+</ol>
+<p>Recognition runs before any stitch is computed. The generator only ever gets rails, and odd geometry is
+a diagnostic that names the subpath, never a crash. Subpaths are numbered from 1 in the order the path
+draws them, and the rails keep that order.</p>
+<p>StitchCraft differs from Ink/Stitch in 2 places, <code>DEV-SAT-001</code> in the deviations ledger
+(<code>conformance/deviations.toml</code>). Ink/Stitch still uses a rung that crosses one rail twice and misses
+the other, or that runs along a rail for a while, at one of its crossings. StitchCraft leaves it out.
+Ink/Stitch also counts a line of zero length among the subpaths in step 3, where StitchCraft leaves it
+out as a point.</p>
+<h2 id="single-path-satin"><a class="header" href="#single-path-satin">Single-path satin</a></h2>
+<p>A satin column drawn as one subpath is its centre line. Its stroke gives the column its width and its
+corners: the stroke’s width as the transforms scale it, and its join
+(<a href="../svg-input.html#stroke-width-and-join">SVG input</a>).</p>
+<p>A column no wider than the design’s narrowest satin stroke is too narrow to stitch across
+(<code>REQ-SAT-015</code>). That limit is <code>DesignSettings::min_satin_stroke_width</code>, Ink/Stitch’s
+<code>min_satin_stroke_width_mm</code>, and it is 1 mm unless the design sets it. Such a column is sewn as the
+element’s stroke settings sew a stroke, by default in running stitch. <code>SC-W0212</code> gives its width and the
+limit. As a stroke, it offers the element before it its first point.</p>
+<p>The rule counts the path’s subpaths as Ink/Stitch counts them, before any is left out as a point. A path
+of 2 subpaths, one of them a point, is never sewn as a stroke for its width. Recognition leaves the point
+out and reads the other subpath as a centre line. In SVG, a move-to with nothing drawn after it is no
+subpath, where inkex keeps it as a point, so Ink/Stitch can sew a path as a satin column where
+StitchCraft sews it as a stroke (<code>DEV-SVG-011</code>).</p>
+<p>A wider column is sewn between 2 rails made from its centre line. Ink/Stitch makes the rails and places
+the rungs this way. It measures in CSS pixels, and its limits below are converted to millimetres.</p>
+<h3 id="rails"><a class="header" href="#rails">Rails</a></h3>
+<p>The rails are the centre line offset by half the stroke’s width to each side, with the stroke’s join at
+their corners (<code>REQ-SAT-016</code>). In y-up axes the first lies to the right of the line as it runs and the
+second to its left. The offsets are shapely’s <code>offset_curve</code>, which Ink/Stitch calls, point for point
+(<a href="offset.html">offset curves</a>). Inside a bend the offsets meet, and outside it they turn as the join
+says.</p>
+<h3 id="rungs"><a class="header" href="#rungs">Rungs</a></h3>
+<p>Rungs cross the column where its line runs straight beside a sharp corner, and at its nodes
+(<code>REQ-SAT-017</code>):</p>
+<ol>
+<li>Each corner of the line scores the square of its turn in degrees, in the hundredth of the line’s
+length where it lies. Each score is spread over 4 hundredths to either side, weighted 1, 2, 4, 8, 16,
+8, 4, 2, 1. A rung goes where the spread scores stop falling or start rising: before and after each
+sharp corner, where the stitches can fan round it.</li>
+<li>A rung goes at each point of the flattened line as well, never at its very start or end. A straight
+line of 2 points gets one rung in its middle.</li>
+<li>Going along the line, a rung less than 1 mm from the last place tried is left out, whether step 4
+kept that place’s rung or not.</li>
+<li>Each rung is perpendicular to the line, 1.2 times the column’s width long, and is kept only when it
+crosses each rail exactly once. It pairs the 2 points where it crosses them.</li>
+</ol>
+<p>A column whose rungs are all left out is one section, from its rails’ starts to their ends (see
+Correspondence), as in Ink/Stitch. Ink/Stitch adds rungs across the nodes from the path as drawn, and a
+path of one line gives none.</p>
+<h3 id="lines-that-cross-themselves"><a class="header" href="#lines-that-cross-themselves">Lines that cross themselves</a></h3>
+<p>Where the line crosses itself or comes back near itself, its offsets split into several curves. A line
+whose offsets split, or whose ends lie within a CSS pixel of each other, is cut in half by length, and
+each half is made on its own, the halves of a half again, at most 20 times deep. The halves’ rails are
+joined end to end, and a rung pairs the first points of the second half’s rails, where the halves meet.</p>
+<p>A part whose offsets still split after 20 cuts is left out, and so is a part whose offset vanishes to
+one side, where the line turns more tightly than the column is wide. <code>SC-W0213</code> counts the stretches of the line left
+out, and the rest of the column is sewn. A stretch shorter than a CSS pixel is left out at once, since
+every half of it would be too. A column with no part left has no rails, and gets <code>SC-E0214</code> and no
+stitches.</p>
+<h3 id="closed-lines"><a class="header" href="#closed-lines">Closed lines</a></h3>
+<p>A line whose subpath is closed with <code>Z</code> is a closed line, as Ink/Stitch reads a path whose last command
+is <code>Z</code>. Subpaths left out as points have no say, and an open line followed by a point closed with <code>Z</code> is
+open. After a closed line, a move-to, which draws nothing, leaves it closed, where Ink/Stitch reads it as
+open (<code>DEV-SAT-001</code>).</p>
+<p>Before its rails are made, a closed line is rolled to start in the middle of its first segment whose
+rung, a thousandth of a CSS pixel longer than the column is wide, crosses the edge of the stroke exactly
+twice: away from where the line crosses itself or folds tight. An end of the rung that lies on the edge
+counts as a crossing, as shapely counts it. A line that ends where it starts, closed or drawn back to its
+start, then starts and ends in the middle of its first segment. Its points are rounded to a
+ten-thousandth of a CSS pixel as Ink/Stitch rounds them. Points that then repeat are left out.</p>
+<h3 id="which-lines-are-the-rails"><a class="header" href="#which-lines-are-the-rails">Which lines are the rails</a></h3>
+<p>The rails made from the line are the column’s rails, and every rung pairs the points where it crosses
+them. Ink/Stitch hands the lines it makes back to its satin column as subpaths, which tells rails from
+rungs again by the rules of <a href="#recognizing-rails-and-rungs">Recognizing rails and rungs</a>. When a column
+is short beside its width, its rungs are longer than its rails. With exactly 2 rungs, or with rungs
+that cross each other, where the lines meet does not tell the rails apart, and Ink/Stitch takes the 2
+longest lines, rungs, as the rails. With 3 rungs or more that do not cross, each rail meets more than 2
+lines and each rung only the 2 rails, so the rails are found by where they meet. A line that crosses
+itself can make a rung meet more lines than a rail does. StitchCraft keeps the rails it made in both
+cases, <code>DEV-SAT-007</code> in the deviations ledger. Where 2 parts join, Ink/Stitch adds a rung across the gap
+and uses the points where it crosses the rails. Those are the first points of the second part’s rails
+wherever the parts meet on a straight stretch, and StitchCraft pairs those first points. Ink/Stitch also
+keeps a first part whose offset vanishes to one side, with its other rail, where StitchCraft leaves it
+out with the rest.</p>
+<p>Making the rails costs work in proportion to the square of the line’s number of points. A line of 1,000
+points takes up to about 35 million units of the default budget of 500 million. A plan makes a column’s
+rails twice: once to sew it, and once for the element before it to end near it.</p>
+<h3 id="drawn-with-its-rails-and-rungs"><a class="header" href="#drawn-with-its-rails-and-rungs">Drawn with its rails and rungs</a></h3>
+<p>Ink/Stitch’s Stroke to Satin hands the user a column made from a centre line as a path of its rails and
+rungs, and StitchCraft’s does in VectorCraft (<code>REQ-VC-014</code>, <a href="../vectorcraft-integration.html#tools-stroke-to-satin-and-test-sheet">VectorCraft
+integration</a>). <code>generators::satin::drawn</code>
+draws the rails as they are made. Each rung is a straight line that starts and ends past the points it
+pairs, by a hundredth of the distance between them, so that it crosses each rail once. Read back by <a href="#recognizing-rails-and-rungs">the
+rules above</a>, the path gives the same rails, and its rungs pair the points
+the line’s rungs pair, to within a millionth of a millimetre. It sews as the line does.</p>
+<p>A column of 2 rungs or none would be read back otherwise. With 2 rungs, where the lines meet doesn’t tell
+the rails apart, and the 2 longest lines are taken, which on a column shorter than it is wide are its
+rungs. With none, a path of 2 lines is 2 rails whose nodes pair up. So such a column is drawn with one
+more rung, which pairs the rails’ first points: the section it ends has no length, and the column sews as
+before. Rails that meet each other, as a pointed column’s do at its tip, meet one more line, and only 2
+rungs or more tell them from the rungs: such a column with fewer is drawn with a rung pairing the rails’
+other ends. Push compensation lengthens the rails before they are cut. Across an end it lengthens, the
+rung would make the part added there a section of its own, whose points pair otherwise. So where it
+lengthens the column’s start, the rung pairs the rails’ last points, and an end it lengthens takes the
+rung only when no other can. Stroke to Satin refuses a line whose column would need one there
+(<code>SC-E0814</code>). Automatic digitizing draws the columns it finds in a part as wide as a satin column the same
+way, from their rails and rungs (<code>drawn::from_rails</code>, <code>REQ-AUTO-017</code>), and reads each back. One that
+reaches under other columns at both ends then sews the overlap at the end that takes the rung as a section
+of its own. A line whose
+rails can’t be made (<code>SC-E0214</code>), or leave parts of it out (<code>SC-W0213</code>), isn’t made into a column, since the
+column would sew less than the line. Rails that cross each other aren’t drawn
+either, since their column reads back with other rails. A line no wider than the design’s narrowest satin stroke sews as a
+stroke (<a href="#single-path-satin">above</a>). Drawn with its rails, it is a satin column as narrow as it is drawn,
+which is what the tool is asked for.</p>
+<h2 id="orientation"><a class="header" href="#orientation">Orientation</a></h2>
+<ul>
+<li><code>swap_satin_rails</code> makes the second rail the first, before any reversal. The first rail sews first in
+each pair, and the column starts on it, but for an S-stitch, whose first pair goes from the second rail.
+Asymmetric values (one value per side) name it first, and the E-stitch spine runs on it.</li>
+<li><code>reverse_rails = automatic</code> reverses rail B, the second, when that brings the rails’ points closer
+together, as in Ink/Stitch. Points at every tenth of each rail’s length, from its start to 90 %, are
+paired twice, with rail B forwards and with it backwards. The pairing whose distances add up to less
+wins. <code>none</code>, <code>first</code>, <code>second</code> and <code>both</code> force it.</li>
+<li>Of 2 rails that are rings, each ending where it starts (closed with <code>Z</code>, or drawn back to its start),
+rail B first starts at its node nearest rail A’s first node, before any reversal (<code>DEV-SAT-009</code>).
+Ink/Stitch takes each ring’s own start, and warns that a closed rail has no definite start.
+Rail B takes only a node whose line from rail A’s first node crosses none of the drawn rungs, unless
+every node’s line crosses one. Started past a rung, each part of rail B between rungs would pair with
+rail A’s next part. In Emilio 20 tricolore’s E, both rings of the bowl start at a step, and the outer
+ring’s node nearest the inner ring’s start lies past the rung across the step.
+VectorCraft’s Make Compound Path, from 0.10.0, turns the front of 2 rings round, which starts it at
+what was its last node. Rings sewn from their own starts then get stitches across the column. A node,
+not the nearest point, keeps rings that start together as drawn, with a rung across their starts where
+one is drawn. A column made from a centre line keeps its rails as made, which start together.</li>
+</ul>
+<h2 id="correspondence"><a class="header" href="#correspondence">Correspondence</a></h2>
+<p>Every rung cuts each rail at the distance along it of the rung’s point on it, after any reversal. Each
+rail is cut at its own distances, in order, and the n-th part of one rail goes with the n-th part of the
+other: a section. A part of no length leaves its section out, as where two rungs meet a rail at one
+point or one meets it at an end. A column left with no section sews nothing, and <code>SC-E0216</code> says why.
+Ink/Stitch refuses it too, unless rounding its rails in CSS pixels leaves a section a few millionths of
+a pixel long, which it sews as a fan. Within a section, the point at a fraction of rail A’s part goes with the
+point at the same fraction of rail B’s.</p>
+<p>A column of 2 subpaths has no rungs, and gets rungs across its rails’ nodes instead, as Ink/Stitch adds
+them. The 2nd node of one rail goes with the 2nd node of the other, and on in order, without each rail’s
+2 ends. Rails with different numbers of nodes pair as many as the one with fewer has (<code>SC-W0210</code>).
+Ink/Stitch’s own warning for this counts the rails’ points after flattening, not their nodes, and can
+warn where the nodes pair as drawn. Rails of 2 nodes each get one rung, across the points 0.2 CSS pixels
+along the straight line from each rail’s first node to its last, and sew as one section. Of 2 rings, the
+second’s nodes start at the node its line starts at, and each ring’s start counts once at each end of
+its nodes. VectorCraft closes a ring with a segment back to its start and <code>Z</code>, which lists its start
+twice at the end of its nodes.</p>
+<p>Each rail’s nodes are turned as <code>reverse_rails</code> turns the rail drawn in that place, first or second,
+before any swap. Swapping the rails then changes only which one sews first, and the same nodes pair
+either way. Where the rails have different numbers of nodes, the longer rail’s last nodes, in the order
+the turning leaves them, go without a partner.</p>
+<p>Each rung added is a tenth longer than the line between its points, half at each end, and cuts each
+rail where it comes nearest it, measured as at the start and end (see <em>Equally near points</em>). That is
+the node itself, or on a curved rail of 2 nodes, where the rung crosses the curve, or the curve’s point
+nearest the rung when the rung does not reach it. A rung added that meets the rails, as push
+compensation leaves them, at more than 2 points doesn’t say which points pair, and is left out, as
+Ink/Stitch leaves it out. Such a rung crosses a node whose rail turns back across it.</p>
+<p>Where the pairing leaves stitches leaning far along the column, <code>SC-W0208</code> names the place to add a rung
+(<a href="#leaning-and-long-stitches">Leaning and long stitches</a>).</p>
+<p>A ripple stitch along a column reads its rails and rungs as a satin column does, with the satin column’s
+defaults but for the ripple’s own <code>reverse_rails</code> and <code>swap_satin_rails</code>. Its lines run through pairs of
+points placed in each section as the top stitches’ pairs are, every <code>running_stitch_tolerance_mm</code>, with no
+compensation and nothing at random. A satin guide’s copies lie on such pairs too, and its middle is measured
+through pairs moved in to the middle of the column, half its width from each rail
+(<a href="strokes.html#ripple-stitch-m108-m1011">ripple stitch</a>).</p>
+<h2 id="compensation"><a class="header" href="#compensation">Compensation</a></h2>
+<p>Thread under tension pulls the fabric in across a satin column, which then sews narrower than it is
+drawn. The stitches also push the fabric out at the column’s ends, and it sews longer. StitchCraft makes
+up for both as Ink/Stitch does.</p>
+<ul>
+<li><strong>Push compensation</strong> (<code>push_compensation_mm</code>) acts on the rails after any reversal, before they are
+cut into sections. It takes its length off each rail at the column’s start and end, or adds it where
+negative, straight on from the rail’s first or last segment. 2 values set the start, then the end.
+The points where a drawn rung crosses the rails come from the rails as drawn, so a rung in a part taken
+off cuts the rail at its end and leaves its section out. A rung that misses a rail, and a rung added
+across the nodes, are measured against the compensated rails, as Ink/Stitch measures every rung. Near
+an end that push compensation lengthens, a rung that misses the rail can come nearest the part it adds.
+It then cuts the rail on that part. Ink/Stitch at d59c9ab, run as a black box, sews such a column as it
+sews one drawn with longer rails and a rung across them there. A rail the shortening would leave shorter than half a CSS pixel keeps its length
+(<code>SC-W0211</code>), and a lengthening at its other end still applies.</li>
+<li><strong>Pull compensation</strong> acts on each pair as it is placed. Both ends move outward along the line through
+the pair, each by <code>pull_compensation_mm</code> plus <code>pull_compensation_percent</code> of the pair’s width, and 2
+values set the first rail’s side, then the second’s. Negative values move the ends inward. Ends that
+would cross meet instead, where their moves divide the width. A pair whose ends are closer than a
+ten-thousandth of a CSS pixel has no direction to move them in, and stays as it is. A tatami fill
+lengthens its rows with the same move, as Ink/Stitch does, and the 2 settings are declared once for
+both (<code>stitchcraft_engine::generators::pull</code>, <a href="fills.html#7-pull-compensation-and-gap-fill-rows">fills</a>).</li>
+<li><strong>Point taper</strong> (<code>point_taper_mm</code>, StitchCraft’s own, <code>REQ-SAT-032</code>) tapers the pull compensation into a
+point: an end whose rails’ last points lie closer together than the element’s shortest stitch. A pair
+whose middle lies within the taper of such an end keeps the share of its pull compensation, in
+millimetres and in percent, that its distance from the end’s middle is of the taper. 2 values set the
+start, then the end. At 0, the default, every pair keeps all of it, as in Ink/Stitch. The random share is
+drawn as before. Automatic digitizing sets 2 mm on its columns
+(<a href="../image-to-embroidery.html#a-columns-point">a column’s point</a>).</li>
+<li><strong>Random variation</strong> comes from the element’s generator, seeded with <code>random_seed</code>
+(<a href="../determinism.html">determinism</a>). Each pair’s share of the width on each side is drawn between
+<code>pull_compensation_percent</code> less <code>random_width_decrease_percent</code> and plus
+<code>random_width_increase_percent</code>. Each step’s spacing is drawn between the zigzag spacing less and plus
+<code>random_zigzag_spacing_percent</code> of it, and never below a hundredth of it. As in Ink/Stitch, a spacing
+is drawn at each section’s start and after each pair, and the widths with each pair. Ink/Stitch draws
+from another generator, and its random values differ (<code>DEV-SAT-002</code>).</li>
+</ul>
+<p>Pairs are placed and measured from each other before pull compensation, which leaves each pair’s place
+along the column as it was.</p>
+<h2 id="top-stitches-method-satin_column"><a class="header" href="#top-stitches-method-satin_column">Top stitches (method <code>satin_column</code>)</a></h2>
+<ol>
+<li><strong>Place pairs along the sections,</strong> as Ink/Stitch places them. A pair of needle points goes across
+the column, one on each rail at the same fraction of its section. Each pair is meant to lie
+<code>zigzag_spacing_mm</code> from the one before, measured across the column. The measure is taken at a right
+angle to the previous pair, at whichever of its ends is farther (the outside of a curve). Where the
+previous pair has no length, it is the distance from that pair’s point.
+<ul>
+<li>Within a section, a pair is placed the spacing’s share of the section’s longer part past the one
+before. A pair that lands more than 5 % off the spacing moves by its step scaled by how far off it
+is. It moves at most twice, and the first move stops at the section’s end. That brings the pairs of
+a smooth curve within 5 % of the spacing. Round a sharp corner, where the next pair turns far from
+the one before, a pair can end further off: one 17.5 % off on rails that bend by 63° and 72° and
+back (<code>req_sat_002_on_a_curve_the_outer_edge_is_sewn_at_the_spacing</code>).</li>
+<li>The first pair of a section after the first goes as far past the section’s start as the previous
+pair is short of the spacing.</li>
+<li>The column starts with a pair at its start and ends with one at its end, unless the last pair is
+within 0.1 mm of it.</li>
+<li>With <code>random_zigzag_spacing_percent</code>, each step’s spacing is drawn at random (<em>Compensation</em>), and
+a pair moves to lie that spacing from the one before.</li>
+<li>With <code>bend_open_percent</code>, StitchCraft’s own and 0 by default (<code>REQ-SAT-030</code>), a pair is measured at the
+nearer end instead, or at the farther end divided by 1 plus that percentage, whichever is more. At 25
+the outside of a bend opens to 1.25 times the spacing before the inside closes up, so a gentle bend
+keeps the spacing on its inside. Automatic digitizing sets 25
+(<a href="../image-to-embroidery.html#smooth-satin-edges">Smooth satin edges</a>).</li>
+</ul>
+</li>
+<li><strong>Compensate width.</strong> Each pair is widened by pull compensation as it is placed, with its random
+share (<em>Compensation</em>).</li>
+<li><strong>Short stitches on curves,</strong> as in Ink/Stitch, where they are on by default. On the inside of a
+tight curve, a rail’s needle points crowd together and the thread piles up. On each rail, a point
+closer than <code>short_stitch_distance_mm</code> to the last point left in place there moves in along its
+stitch, by a <code>short_stitch_inset</code> percentage of the stitch’s width. Points that crowd one after
+another take turns with the percentages and start over at the first, so <code>15 30</code> insets them by 15 %,
+30 %, 15 % and on. A point at least that far from the last one left in place stays, and the next
+points are measured from it. A distance of 0 insets none. The points are the compensated ones, and an
+inset moves its point toward the other end of the stitch as negative pull compensation does. Even
+splits (step 4) hold an inset to a third of the longest stitch.</li>
+<li><strong>Split long stitches,</strong> as Ink/Stitch splits them, where the element sets a longest stitch
+(<code>max_stitch_length_mm</code>, one of the settings every stitch type shares). A stitch’s ends are its pair’s
+compensated points, and it is sewn between their insets. <code>split_method</code> says where the splits go.
+<ul>
+<li><code>default</code> splits a stitch into the fewest equal parts no longer than the longest stitch, and the
+stitch back after it into as many parts as the stitch across before. <code>random_split_jitter_percent</code>
+moves each split by up to that share of a part, either way, at random.</li>
+<li>With <code>random_split_phase</code>, the default method starts the splits a random share of the longest
+stitch from the stitch’s inset start instead, and follows at the longest stitch, longer or shorter
+by up to the jitter. Stitches no longer than <code>min_random_split_length_mm</code> (by default the longest
+stitch) are not split. Of 2 or more splits, one within the element’s shortest stitch of an end is
+left out.</li>
+<li><code>simple</code> splits at whole multiples of the longest stitch from a stitch’s start, and from a stitch
+back’s end, where they lie between its insets. The splits line up in rows.</li>
+<li><code>staggered</code> does the same from a start that moves along by a <code>split_staggers</code>-th of the longest
+stitch from one stitch to the next, and comes back after that many stitches. Fractions are allowed.</li>
+<li>With even splits (the default method without random phase), a short stitch’s inset (step 3) is at
+most a third of the longest stitch.</li>
+</ul>
+</li>
+<li><strong>Alternate.</strong> Each pair is sewn rail A first, then rail B, and the needle goes A, B, A, B and on.
+The stitch from A to B goes straight across, and the one from B to the next A slants. One zigzag cycle
+(A → B → A) spans <code>zigzag_spacing_mm</code>. The exit end is chosen by assembly (see <em>Start and end</em>).
+Random splits are drawn after the pairs are placed, in the order the stitches are sewn.</li>
+</ol>
+<p><strong>A column too small to sew.</strong> A column whose needle points, underlays and travel included, all lie
+within its shortest stitch of its first, a speck a few tenths of a millimetre across, has no stitch the
+machine sews well. It sews nothing, and <code>SC-W0215</code> says so, as a stroke that small is left out
+(<code>SC-W0401</code>). Ink/Stitch sews it (<code>DEV-SAT-008</code>).</p>
+<h2 id="e-stitch-method-e_stitch"><a class="header" href="#e-stitch-method-e_stitch">E-stitch (method <code>e_stitch</code>)</a></h2>
+<p>An E-stitch edges appliqué with a spine of stitches along the first rail and a spike across the column at
+each pair, like a row of E’s laid end to end: the blanket stitch. Ink/Stitch’s documentation suggests a
+wider zigzag spacing for it than for a satin. StitchCraft sews it as Ink/Stitch sews its “E” stitch, read
+at <code>d59c9ab</code>.</p>
+<ol>
+<li><strong>Pairs.</strong> The pairs are placed, compensated and inset as the top stitches’ are (steps 1 to 3 of
+<a href="#top-stitches-method-satin_column">Top stitches</a>), with their random variation drawn alike. Each pair
+is a spike, and the spikes lie <code>zigzag_spacing_mm</code> apart.</li>
+<li><strong>Spikes.</strong> At each pair the needle goes from the first rail’s point across to the second rail’s, and
+back down the same needle holes. The stitch across is split as a top stitch across is (step 4), as the
+stitch across that a satin column would sew at that pair. Its way back goes through the same splits in
+reverse, where a satin column’s stitch back to the next pair is split anew.</li>
+<li><strong>The spine.</strong> From one spike to the next, the needle goes along the first rail in one stitch, from the
+spike’s inset point to the next spike’s. Where the zigzag spacing is longer than the longest stitch,
+that stitch is split, with no randomness. Its splits are those of a stitch from the spike’s inset point
+to the next pair’s compensated point on the first rail: by the default method the fewest equal parts no
+longer than the longest stitch, and by the simple and staggered methods whole multiples of the longest
+stitch from its start. As in Ink/Stitch, the zigzag spacing as set decides whether the spine is split,
+whatever length its stitches come out.</li>
+<li><strong>Order.</strong> The spikes go from the column’s start to its end, or from its end after an odd centre walk,
+and <code>swap_satin_rails</code> puts the spine on the other rail. The underlays, the start and the end are a
+satin column’s: the top stitches’ run is cut and turned as a satin column’s is
+(<a href="#start-and-end">Start and end</a>).</li>
+</ol>
+<h2 id="s-stitch-method-s_stitch"><a class="header" href="#s-stitch-method-s_stitch">S-stitch (method <code>s_stitch</code>)</a></h2>
+<p>An S-stitch sews one stitch across the column at each pair, every other one back the other way, and goes
+on from each to the next along a rail, so that the needle draws S’s laid end to end. Split by a longest
+stitch, its stitches cover the column in rows that follow it, as a fill’s rows do. StitchCraft sews it as
+Ink/Stitch sews its “S” stitch, read at <code>6555892</code>. That commit is outside the history of the pin <code>d59c9ab</code>, and
+<code>REQ-SAT-029</code>’s differential sews the S-stitch and the zigzag satin in the pinned Ink/Stitch.</p>
+<ol>
+<li><strong>Pairs.</strong> The pairs are placed, compensated and inset as the top stitches’ are (steps 1 to 3 of
+<a href="#top-stitches-method-satin_column">Top stitches</a>), with their random variation drawn alike.</li>
+<li><strong>Stitches across.</strong> Each pair is sewn once, from one inset point to the other. The first pair, and
+every other one after it, goes from the second rail to the first, and the others from the first to the
+second. Each stitch ends on the rail the next one starts from. A stitch splits as a stitch across from
+the first rail to the second would (step 4). It is sewn the way its pair goes, with its
+splits in reverse where it starts on the second rail. The default method splits it into the fewest
+equal parts, with no count taken from the stitch before. The simple and staggered methods number the
+stitches 0, 1, 2 and on, where a satin column’s stitches across take 1, 3, 5. The staggered method
+moves an S-stitch’s splits along at every stitch.</li>
+<li><strong>Steps.</strong> From one pair to the next, the needle goes along the rail its stitch ended on in one stitch,
+from that inset point to the next pair’s. The step is never split, whatever its length. Ink/Stitch
+works out splits for it where the zigzag spacing is longer than the longest stitch, and sews none of
+them (<code>lib/elements/satin_column/stitches.py</code>, <code>_do_s_stitch</code>).</li>
+<li><strong>Order.</strong> The pairs go from the column’s start to its end, and an odd centre walk turns the whole run
+round, to go from its end. <code>swap_satin_rails</code> swaps the rail the column starts on. Its underlays, start
+and end are those of a satin column (<a href="#start-and-end">Start and end</a>).</li>
+</ol>
+<h2 id="zigzag-satin-method-zigzag"><a class="header" href="#zigzag-satin-method-zigzag">Zigzag satin (method <code>zigzag</code>)</a></h2>
+<p>A zigzag satin sews a zigzag between the rails. The needle goes from a point on the first rail to a point
+on the second half the zigzag spacing along, then back to the first rail half the spacing on again. Each
+rail’s points lie the zigzag spacing apart, and the needle crosses the column twice for each spacing along
+it, as a satin column’s needle does. Every stitch slants, where a satin column’s stitches across go square
+to the column. StitchCraft sews it as Ink/Stitch sews its zigzag satin, read at <code>6555892</code>
+(<code>lib/elements/satin_column/stitches.py</code>, <code>_do_zigzag</code>).</p>
+<ol>
+<li><strong>Pairs.</strong> The pairs are placed and compensated as the top stitches’ are (steps 1 and 2 of
+<a href="#top-stitches-method-satin_column">Top stitches</a>), at half the zigzag spacing. Their random variation
+is drawn alike.</li>
+<li><strong>Alternate points.</strong> One point of each pair is sewn. The first pair gives its first rail’s point, the
+next pair its second rail’s point, and the pairs after them alternate the same way. Each 2 of those
+points in a row are a pair of the zigzag, from the first rail to the second. A point left over at the
+column’s end is left out. A column with no second pair, 0.1 mm long or less, has no stitch across. It
+is left out with its underlays, as a column too small to sew is (<code>SC-W0215</code>, <code>DEV-SAT-008</code>).</li>
+<li><strong>Short stitches</strong> inset those pairs where their points crowd (step 3). Each point moves along its own
+slanted stitch.</li>
+<li><strong>Stitches.</strong> The needle goes across each pair, from its first inset point to its second, then back
+to the next pair’s first, as in a satin column. Long stitches split by the column’s split method
+(step 4). By the simple and staggered methods, the stitch back to the zigzag’s pair numbered i splits
+as a satin column’s stitch numbered 2i would, measured from its end on the first rail. The stitch
+across that pair splits as one numbered 2i + 1. By the default method each stitch splits into its own
+fewest equal parts. A satin column’s stitch back takes its count from the stitch across before it, and
+a zigzag satin’s does not, as in Ink/Stitch.</li>
+<li><strong>Order, start and end</strong> follow a satin column’s. An odd centre walk turns the run round. The end cuts
+the top stitches where they come nearest the end’s cut (<a href="#start-and-end">Start and end</a>), which on a
+zigzag falls on one of its points or part way along a stitch. The outline that the start and the end
+are found on is Ink/Stitch’s. It runs through pairs placed and compensated at the full zigzag
+spacing, as a satin column’s top stitches are, and not through the zigzag’s own. An outline through
+those would end where they do, as much as 0.1 mm from where Ink/Stitch’s ends, and turn its corners
+elsewhere. The outline’s random variation is drawn from a copy of the generator as the zigzag’s pairs
+found it, so that the zigzag’s own draws stay as they were. With none, the outline is exactly
+Ink/Stitch’s.</li>
+<li><strong>Underlays</strong> are a satin column’s, but the contour stops where the zigzag does, as in Ink/Stitch
+(<code>lib/elements/satin_column/underlay.py</code>, <code>_do_contour_underlay</code>). The zigzag’s points, as inset, mark
+where it stops on each rail: its last point on the first rail, and its first and last on the second.
+Each side is cut at its points nearest those on its rail, and then stops short of the column’s ends by
+the insets (<a href="#underlays">Underlays</a>). A cut that would leave less than half a CSS pixel of a side is
+not made, as for the insets. Such a cut comes from a zigzag of one stitch. After an odd centre walk
+the sides stop at the same places. Ink/Stitch looks for the points in the run as sewn, turned round,
+and so cuts its first side nowhere and its second to a stub (<code>DEV-SAT-011</code>).</li>
+</ol>
+<h2 id="leaning-and-long-stitches"><a class="header" href="#leaning-and-long-stitches">Leaning and long stitches</a></h2>
+<p>Every satin method gives 2 warnings about how its stitches lie. Ink/Stitch gives neither.</p>
+<ul>
+<li><strong>Leaning stitches</strong> (<code>SC-W0208</code>). Without rungs, or with too few, the stitches follow the rails’
+lengths alone, and where one rail runs on ahead of the other they lean along the column. The column
+looks for that in the pairs placed at the zigzag spacing with no compensation and nothing random, the
+pairs that cut it (<em>Cuts</em> in <a href="#start-and-end">Start and end</a>). At a pair, the column runs halfway
+between the ways its 2 rails run there, each the line from the point of the pair before on that rail to
+the point of the pair after, taken with length 1. The first and last pair use their own point in place
+of the missing neighbour’s, and a rail whose 2 points coincide gives way to the other. Where one rail
+steps out, a stitch square to the other rail so leans less than 45°. A pair leans too far when its
+stitch goes further along the column than across it, more than 45° from square to a tenth of a degree,
+so that rounding never tips a 45° stitch over. A pair shorter than the element’s shortest stitch does
+not lean, as where the rails meet, and neither does one whose rails both stand still or run opposite
+ways. Each stretch of pairs in a row that lean too far gets one <code>SC-W0208</code>, at the middle of its middle
+pair, with the number of its stitches and the most any of them leans, to a tenth of a degree. A rung
+there, square to the column, sets them straight.</li>
+<li><strong>Long stitches</strong> (<code>SC-W0209</code>). A stitch longer than 12 mm floats loose over the fabric, where it snags
+and sags. The longest of the column’s top stitches, sewn with their splits and insets, gets one
+<code>SC-W0209</code> when it is longer than 12 mm. The warning is at the stitch’s middle and gives its length.
+The stitches are measured as the column sews them: where its end cuts a stitch in 2, each half is a
+stitch. The underlays and the needle’s travel are left out. Setting <code>max_stitch_length_mm</code> splits long
+stitches, and a shape that wide may sew better as a fill. Finalize splits a stitch longer than the
+machine’s longest stitch anyway (<code>SC-I0703</code>).</li>
+</ul>
+<h2 id="underlays"><a class="header" href="#underlays">Underlays</a></h2>
+<p>Underlays are sewn before the top stitches, as Ink/Stitch sews them. The centre walk comes first, then the
+contour and the zigzag, each one the element turns on, and all of them go into one run with the top
+stitches. From M10.15 a column in a run of <code>underlays_first</code> sews its underlays apart from its top
+stitches, each layer started and ended by its own neighbours
+(<a href="../engine-pipeline.html#underlays-first">engine pipeline</a>). Each layer then follows
+<a href="#start-and-end">Start and end</a> with the parts it sews. The column is placed once, its top stitches
+drawing its random numbers, and the 2 layers are sewn from that placing (<code>generators::satin::Column</code>). A
+start position places the start of the underlays, and an end position the end of the top stitches. The
+top stitches run from the rails’ starts whatever the centre walk’s repeats, since the centre walk sews in
+the other layer. In a run, a column is left out whole when every needle point of its underlays and its
+top stitches lies within the shortest stitch of the first (<code>SC-W0215</code>). A column with no section sews
+neither layer, and says what it says when it is sewn whole (<code>SC-E0216</code>).</p>
+<p>Each underlay places pairs of points across the column as the top stitches are placed (step 1 of <em>Top
+stitches</em>), along the same sections, after any swap, reversal and push compensation. A pair moves in by
+its underlay’s insets as negative pull compensation moves it, and nothing varies at random, so turning an
+underlay on leaves the top stitches as they were.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Underlay</th><th>Parameters</th><th>What it does</th></tr>
+</thead>
+<tbody>
+<tr><td>Centre walk</td><td><code>center_walk_underlay</code>, <code>_stitch_length_mm</code>, <code>_stitch_tolerance_mm</code>, <code>_repeats</code>, <code>_position</code></td><td>Pairs every <code>_stitch_tolerance_mm</code>, each moved in until its ends meet <code>_position</code> percent of the way from the first rail to the second (50 is the middle). A running stitch of <code>_stitch_length_mm</code> follows the line through them within the tolerance, there and back <code>_repeats</code> times</td></tr>
+<tr><td>Contour</td><td><code>contour_underlay</code>, <code>_stitch_length_mm</code>, <code>_stitch_tolerance_mm</code>, <code>_inset_mm</code>, <code>_inset_percent</code></td><td>Pairs every <code>_stitch_tolerance_mm</code>, inset by <code>_inset_mm</code> plus <code>_inset_percent</code> of the width on each side, and a running stitch along each side. Each side then stops short of the column’s start by the first rail’s inset in millimetres and of its end by the second’s, as push compensation shortens a rail. A side too short for that keeps its length (<code>SC-W0206</code>). The first rail’s side goes towards the column’s end, and the second’s back</td></tr>
+<tr><td>Zigzag</td><td><code>zigzag_underlay</code>, <code>_spacing_mm</code>, <code>_inset_mm</code>, <code>_inset_percent</code>, <code>_max_stitch_length_mm</code></td><td>Pairs every half <code>_spacing_mm</code>, inset by its own insets, which are half the contour’s when left empty. It zigzags to the column’s end through one end of each pair, the rails taking turns. It comes back through the other ends. Each way, a rail’s points lie the spacing apart. A stitch longer than <code>_max_stitch_length_mm</code> is split into equal parts</td></tr>
+</tbody>
+</table>
+</div>
+<p>A centre walk with an odd number of repeats ends at the column’s end. The contour’s first side then goes
+back and its second side on, the zigzag starts from the end, and the top stitches run from the end to the
+start. Straight stitches join each part to the next, all of one length and no longer than the column’s
+travel length. That is the first of the running stitch’s lengths (<code>running_stitch_length_mm</code>), raised to
+twice the shortest stitch where it is shorter, as a running stitch’s lengths are (<code>DEV-RUN-003</code>), and
+<code>SC-W0402</code> says so once for the column.</p>
+<p>Where a part starts within the shortest stitch of the needle, the needle’s last point gives way to the
+part’s first. An underlay’s last point, or the column’s start, moves to it, and the stitch into that
+point ends there. Points that only route the needle are left out (<a href="#start-and-end">Start and end</a>). A top
+stitch’s point gives way to no part. Where the way along the line leaves the needle at one, the next
+part’s points within the shortest stitch of it are left out instead, and the needle goes on to the first
+one farther. Otherwise finalize leaves out the part’s first point with <code>SC-I0504</code>, even where it is a top
+stitch’s end. Parts meet that near in many columns. A zigzag underlay comes back 0.2 mm in from the rail
+where an S-stitch starts, and after an odd centre walk it often ends that near where the top stitches
+start. The end’s cut can fall where the zigzag underlay’s 2 ways cross, and the way along the line can
+end beside where a centre walk is cut. In a column 0.5 mm wide, the centre walk is cut beside the top
+stitches’ end. Ink/Stitch joins its parts as they are, and its plan keeps a stitch longer than its own
+shortest stitch, 0.1 mm by default (<code>DEV-RUN-003</code>).</p>
+<p>Under a zigzag satin the contour’s sides first stop where the zigzag does
+(<a href="#zigzag-satin-method-zigzag">Zigzag satin</a>, step 6).</p>
+<p>The walks are running stitches, placed as a stroke’s are (<a href="strokes.html#running-stitch">strokes</a>), and they
+differ from Ink/Stitch’s in the same ways (<code>DEV-RUN-001</code> to <code>DEV-RUN-003</code>). Where the insets cross in a
+narrow column, a pair’s ends meet as pull compensation’s do, and the contour’s sides then run along one
+line. StitchCraft differs from Ink/Stitch in 2 more places. The centre walk keeps to its own tolerance,
+where Ink/Stitch uses the satin’s running stitch tolerance (<code>DEV-SAT-004</code>). A running stitch length of
+several values gives the travel its first, where Ink/Stitch falls back to 2.5 mm (<code>DEV-SAT-005</code>).</p>
+<h2 id="start-and-end"><a class="header" href="#start-and-end">Start and end</a></h2>
+<p>A column starts near where the elements before it left the needle, and ends near where the next element
+starts, as in Ink/Stitch, which does both by default. The engine gives each element 2 neighbours
+(<a href="../adr/0014-generators-see-their-neighbours.html">ADR 0014</a>). The first is the last needle point of the
+elements before it, whatever their thread. The second is what the next element offers to end near. Strokes
+offer their first point. Satin columns that start at their own nearest point offer their rails, and
+others the start of their first rail. Either way the rails are as they are sewn, after any swap and
+reversal. Tatami fills offer their area, their parts.</p>
+<p><strong>The line.</strong> The way to the start and the way to the end follow a line between the rails,
+<code>running_stitch_position</code> percent of the way from the first rail to the second (50 is the middle). It is
+built as the centre walk’s is. Pairs are placed every <code>running_stitch_tolerance_mm</code> and moved in until
+their ends meet the line. A running stitch of the column’s travel length
+(<a href="#underlays">Underlays</a>) goes through them within the same tolerance.</p>
+<p><strong>Cuts.</strong> A place on the column is found by its cut, one of the pairs placed at the zigzag spacing with
+no compensation and nothing random. The cut is the pair with the point nearest the place. Where the
+needle enters the line for a place is the line’s point nearest that cut. A part of the column is cut in 2
+at its own point nearest the cut. A side of it that lies along the cut, both its ends within 1e-5 CSS
+pixels of the cut’s line, meets the cut as sides along one line do. So a stitch across that pull
+compensation widens past the rails is cut at the cut’s first rail point, and one it narrows at its own
+start (<code>DEV-SAT-010</code>). Where a needle point of the part lies within the element’s shortest stitch of that
+point, as finalize measures it, the part is cut at the needle point instead. Each half then ends in a
+stitch the machine sews, where finalize would leave a needle point out with a note (<code>SC-I0504</code>). Cuts
+fall beside needle points most on a zigzag satin, whose cuts lie on its own points or within their pull
+compensation, and at a stitch across that lies along the cut, where pull compensation moves the stitch’s
+end just past the cut’s first rail point. Ink/Stitch cuts where the part comes nearest, and its plan drops
+a stitch no longer than its shortest stitch. When the cut’s 2 points coincide, where the rails meet, a
+part is not cut: it is all first, or all second when its start is within 0.1 CSS pixels of the place.</p>
+<p><strong>Starting at the nearest point</strong> (<code>start_at_nearest_point</code>). With a needle point before it, the column
+starts at the point of the line nearest that needle point. When that point is farther from the needle
+than the jump length, and the compensated outline is nearer than the jump length, it starts at the
+outline’s point nearest the needle instead. The jump length is the element’s <code>min_jump_stitch_length_mm</code>,
+or the design’s collapse length when the element sets none or 0. The compensated outline is the 2
+polylines through the ends of the top stitches’ pairs, after pull compensation and random width, before
+short stitches. A zigzag satin’s runs through pairs at the full spacing (<em>Zigzag satin</em>, step 5). From its
+start, the needle enters the line where the start’s cut says and follows it to
+where the first stitch’s cut says, and the column goes on from its first stitch as before.</p>
+<p>Both are on by default. A satin column of a file of Ink/Stitch’s version 1 or 2 started and ended where it
+was drawn, and the SVG reader turns both off there, as Ink/Stitch’s update does (<code>REQ-SVG-007</code>).</p>
+<p><strong>Ending at the nearest point</strong> (<code>end_at_nearest_point</code>). With an element after it, the column ends at
+the point of its compensated outline nearest the next stitch. The next stitch is the point of the
+column’s rails nearest the next element’s first point, or nearest its rails when it offers them. Before
+a fill whose area holds the start of the column’s first rail, or failing that of its second, the next
+stitch is that start, and otherwise the point of the rails nearest the fill’s rings. The column’s rails
+are measured as they are sewn. The column ignores an end less than 5 CSS pixels (1.32 mm)
+from the line’s end, and ends as if it were the last element. Otherwise every part of the column is cut
+in 2 at the end’s cut. The centre walk is cut before its repeats, and the zigzag’s ways before their long
+stitches are split. The contour’s sides and the top stitches are cut too. The column sews every part’s
+first half in order. Then the needle follows the line from the end’s cut to the line’s end, and the
+column sews every part’s second half in order and stitches the end last.</p>
+<p>The halves follow each part’s direction. The centre walk’s second half is turned to run from the
+column’s end, and each half is sewn its repeats. The contour’s first pass is its first side up to the cut
+and its second side from the cut back to the start, and its second pass the rest of the second side, then
+the rest of the first. The zigzag’s first pass goes to the cut and back, and its second goes from the end
+to the cut and back to the end. The top stitches’ second half is turned to run from the column’s end to
+the cut.</p>
+<p><strong>After an odd centre walk,</strong> which brings the needle to the column’s end, the column’s start and end
+trade places in the halves above. The first pass works from the column’s end towards the cut, and the
+second from its start. The centre walk’s halves are its part from the cut to the end and its part from
+the cut to the start, each sewn its repeats. The first pass begins at the cut. Between the passes the
+needle goes to the line at the cut, where the second pass begins.</p>
+<p><strong>Start and end positions</strong> (<code>REQ-GEN-001</code>). A design places them with Ink/Stitch’s start and end
+commands or VectorCraft’s markers, and they apply whatever <code>start_at_nearest_point</code> and
+<code>end_at_nearest_point</code> say. The start position takes the needle’s place: it is the column’s first needle
+point, from which the needle enters the line where the position’s cut says and follows it to where the
+first stitch’s cut says. The end position takes the place of the end above and is the column’s last
+needle point, unless it lies less than 5 CSS pixels from the line’s end, where the column ends as if it
+were the last element. Ink/Stitch does the same. The element before a column with a start position ends
+nearest it (<code>DEV-SAT-012</code>).</p>
+<p><strong>A point inside an area.</strong> An area is 0 away from every point in it or on its rings, so before it
+measures between lines, Ink/Stitch’s geometry library looks for such a point. It tests the next
+element’s points first, then the element’s own, each against every part of the other’s area before the
+next point, and the first that lies in a part is the next stitch. Polylines are tested by their starts,
+in order, and an area by its parts’ outline starts, never a hole’s. So before a fill, the column’s next
+stitch is the start of its first rail that lies in the fill, or else of its second. These rules were
+checked against shapely 2.2.0 as a black box. A fill finds its own next stitch by them too
+(<a href="fills.html#5-parts">fills</a>).</p>
+<p><strong>Equally near points.</strong> Shapes are often equally near at several points, as rails side by side are. The
+column takes the point Ink/Stitch takes, found in the order its geometry library, shapely, finds them.
+Shapes are measured from one to the other, polyline by polyline and side by side. Sides that cross or
+touch meet exactly where they do, and distances are measured as that library measures them, so equal
+distances compare as equal. A cut is measured from the part it cuts, and the line is entered measuring
+from the cut. The engine’s tests check its answers against shapely’s for 1,600 random cases on coarse
+grids, where ties are common (<code>conformance/fixtures/geometry/shapely-nearest.txt</code>, written by
+<code>conformance/oracle/nearest.py</code>). Shapely computes a crossing point in extended precision, so where that
+point also lies on another side, the 2 can differ in which side they find it on.</p>
+<p>Straight stitches join each piece to the next as between underlays, no longer than the travel length. A
+point of the line within the shortest stitch of the needle, or of the next piece’s first point, only
+routes it, and is left out. An end within
+the shortest stitch of the column’s last needle point moves that point to the end. The column’s last
+stitch, often a top stitch, then goes to the end in one stitch. Ink/Stitch sews the end as a stitch of
+its own, which its stitch plan drops when it is no longer than its shortest stitch.</p>
+<h2 id="cut-in-2"><a class="header" href="#cut-in-2">Cut in 2</a></h2>
+<p>From M10.4 the <a href="../routing.html">routing tools</a> cut satin columns into pieces, each of which sews the pairs
+the column sewed along it (<a href="../adr/0017-routing-is-one-engine-function.html">ADR-0017</a>), in the engine’s
+<code>generators::satin::cut</code>. The cut is one of the column’s cuts (<em>Cuts</em> in <a href="#start-and-end">Start and end</a>),
+taken with no compensation and nothing random. Given as a fraction of the column’s centre line, the line
+through the middles of the cuts, a place takes the cut of the point at that fraction of the cuts’ points,
+2 to a cut, rounded to the nearest, as Ink/Stitch’s tools take it (read at <code>d59c9ab</code>).</p>
+<ul>
+<li><strong>Rails.</strong> Each rail is cut where it comes nearest its point of the cut. A piece is drawn as the column
+is drawn. Its rails keep the column’s order, and a rail that <code>reverse_rails</code> names is turned back, so
+that the piece’s own settings turn it again as they turn the column’s rail. With <code>automatic</code>, the rails
+are drawn running the same way, which the setting leaves as they are (<code>DEV-ROUTE-002</code>).</li>
+<li><strong>Rungs.</strong> Each piece keeps the column’s rungs whose points both lie on its parts of the rails, and a
+column of 2 subpaths keeps the rungs across its nodes (<a href="#correspondence">Correspondence</a>) as rungs it
+draws. A rung across the piece’s start or its end, on both rails, is that end’s, and is left out. When
+its rungs alone wouldn’t tell its rails from them, the piece gets a rung more across an end, like a
+column <a href="#drawn-with-its-rails-and-rungs">drawn with its rails and rungs</a>. Ink/Stitch adds its rung 0.3 CSS
+pixels from the piece’s start, and a piece with none gets 2 more, at the middle of its rails and 0.3 CSS
+pixels from its end (<code>DEV-ROUTE-001</code>). A piece read back otherwise all the same is kept, with
+<code>SC-W1003</code>.</li>
+<li><strong>Settings.</strong> Each piece keeps every setting of the column, and so sews the column’s pairs along it.</li>
+<li><strong>A column drawn as one path</strong> is cut as the rails and rungs the engine makes of it (<code>REQ-SAT-016</code>,
+<code>REQ-SAT-017</code>), and each piece is drawn with its share of them. Its stroke’s width no longer makes the
+piece.</li>
+<li><strong>Short pieces.</strong> A piece whose rails both have no length sews nothing and is none, while one whose rail
+is shorter than the zigzag spacing still sews the column’s pairs there, as the cut’s tests show.
+Ink/Stitch doesn’t make that piece, and leaves the stretch unsewn (<code>DEV-ROUTE-004</code>).</li>
+</ul>
+<p>Ink/Stitch’s Cut Satin Column cuts a column this way at each of its <code>satin_cut_point</code> commands, or where
+a stroke selected with it crosses its rails. No step plans such a tool in StitchCraft.</p>
+<h2 id="variants-p2-m7"><a class="header" href="#variants-p2-m7">Variants (P2, M7)</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th><code>satin_method</code></th><th>Look</th><th>Design notes</th></tr>
+</thead>
+<tbody>
+<tr><td><code>e_stitch</code></td><td>A spine of running stitches along one rail with regular spikes to the other: the “E” or blanket stitch used for appliqué edges</td><td>Sewn from M7.3 (<a href="#e-stitch-method-e_stitch">E-stitch</a>)</td></tr>
+<tr><td><code>s_stitch</code></td><td>Stitches across the column, every other one back the other way, joined by steps along the rails</td><td>Sewn from M7.4 (<a href="#s-stitch-method-s_stitch">S-stitch</a>)</td></tr>
+<tr><td><code>zigzag</code></td><td>An open zigzag between the rails</td><td>Sewn from M7.5 (<a href="#zigzag-satin-method-zigzag">Zigzag satin</a>)</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="properties-conformance"><a class="header" href="#properties-conformance">Properties (conformance)</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Requirement</th><th>Property</th></tr>
+</thead>
+<tbody>
+<tr><td><code>REQ-SAT-001</code></td><td>Pull compensation moves both ends of every top stitch outward along it, by <code>pull_compensation_mm</code> plus <code>pull_compensation_percent</code> of its width (± 0.01 mm). Ends moved past each other meet</td></tr>
+<tr><td><code>REQ-SAT-002</code></td><td>Consecutive pairs are the zigzag spacing apart, measured across the previous pair at its farther end, exactly so between straight parallel rails. A pair more than 5 % off moves at most twice, which brings a smooth curve’s pairs within 5 %. Round a sharp corner a pair can end further off. The last pair is at most a spacing on</td></tr>
+<tr><td><code>REQ-SAT-003</code></td><td>With a longest stitch, a longer top stitch is split as <code>split_method</code> says. By default it splits into the fewest equal parts, and the stitch back into as many as the stitch across before. Simple and staggered splits fall at whole multiples of the longest stitch, from a start that <code>staggered</code> moves along</td></tr>
+<tr><td><code>REQ-SAT-004</code></td><td>Underlays come before the top stitches and leave them as they were: the centre walk, then the contour and the zigzag. Straight stitches of one length join them, no longer than the running stitch’s length raised to twice the shortest stitch. A part that starts within the shortest stitch of the needle takes the place of an underlay’s last point, and the needle’s way gives way to it. Beside a top stitch’s point the part’s points give way instead. After an odd centre walk the rest runs from the column’s end</td></tr>
+<tr><td><code>REQ-SAT-005</code></td><td>Rails and rungs are told apart as Ink/Stitch tells them, in any drawing order. A path with no subpath longer than a point produces <code>SC-E0201</code> and no stitches, and a rung that misses a rail joins the rail’s nearest point (<code>SC-W0203</code>), the one shapely gives of points as near, once push compensation has moved the rail’s ends. A column with no section to sew produces <code>SC-E0216</code> and no stitches</td></tr>
+<tr><td><code>REQ-SAT-006</code></td><td>A parameter with a value for each side changes only its own side: a rail’s stitch ends, or the column’s start or end</td></tr>
+<tr><td><code>REQ-SAT-007</code></td><td>Random widths and spacing are reproducible from the element and its seed, and stay within their ranges</td></tr>
+<tr><td><code>REQ-SAT-008</code></td><td>Push compensation shortens the rails at the column’s start and end before they are cut, or lengthens them where negative. A rung that misses a rail cuts it where the rail so compensated comes nearest the rung. A rail it would leave shorter than half a CSS pixel keeps its length (<code>SC-W0211</code>)</td></tr>
+<tr><td><code>REQ-SAT-009</code></td><td>On each rail, a top stitch end closer than <code>short_stitch_distance_mm</code> to the last end left in place moves in along its stitch by the next <code>short_stitch_inset</code> percentage. Ends far enough from it stay</td></tr>
+<tr><td><code>REQ-SAT-010</code></td><td>The centre walk follows the line at its position between the rails within its tolerance, in stitches no longer than its length, there and back its repeats</td></tr>
+<tr><td><code>REQ-SAT-011</code></td><td>The contour runs along each rail at its insets, towards the end on the first rail’s side and back on the second’s. It stops short of the column’s start and end by the rails’ insets in millimetres</td></tr>
+<tr><td><code>REQ-SAT-012</code></td><td>The zigzag goes through one end of each pair, the rails taking turns, and back through the others. Its insets are half the contour’s when left empty, and its long stitches split into equal parts</td></tr>
+<tr><td><code>REQ-SAT-013</code></td><td>Starting at its nearest point, a column begins on the line between its rails nearest the needle, or on its outline when only that is within the jump length, and follows the line to its first stitch</td></tr>
+<tr><td><code>REQ-SAT-014</code></td><td>Ending at its nearest point, a column ends on its outline nearest the next stitch. Every part is cut in 2 there, at its own needle point when one lies within the shortest stitch of the cut. The column sews the first halves, then the second halves from the line’s end, and stitches the end last</td></tr>
+<tr><td><code>REQ-SAT-015</code></td><td>A column drawn as one subpath whose stroke is no wider than the design’s narrowest satin stroke sews as a stroke would, with <code>SC-W0212</code>. It offers its first point, as a stroke does</td></tr>
+<tr><td><code>REQ-SAT-016</code></td><td>A column drawn as one subpath and wider than the design’s narrowest satin stroke is sewn between 2 rails, its centre line offset by half the stroke’s width to each side, with the stroke’s join</td></tr>
+<tr><td><code>REQ-SAT-017</code></td><td>The rungs of a column made from its centre line are Ink/Stitch’s, at the lows of the line’s blurred corner scores and at its nodes, 1 mm apart or more. A rung is kept only when it crosses each rail once</td></tr>
+<tr><td><code>REQ-SAT-018</code></td><td>A column whose needle points all lie within its shortest stitch of its first sews nothing, with <code>SC-W0215</code>, and the rest of the design is planned. A zigzag satin with no stitch across sews nothing either, not even its underlays</td></tr>
+<tr><td><code>REQ-SAT-019</code></td><td>Of 2 rings, the second starts at its node nearest the first’s first node that no drawn rung lies before, its nodes too. The stitches go straight across whatever node each ring was drawn from and however it is closed, and rings drawn alike keep their starts (<code>DEV-SAT-009</code>)</td></tr>
+<tr><td><code>REQ-SAT-020</code></td><td>An E-stitch sews each of a satin column’s pairs as a spike: from the first rail’s inset point across to the second’s and back through the same splits. The stitch across splits as a top stitch across does, by default into the fewest equal parts</td></tr>
+<tr><td><code>REQ-SAT-021</code></td><td>Between spikes an E-stitch goes along the first rail in one stitch. Where the zigzag spacing is longer than the longest stitch, that stitch splits with no randomness: into the fewest equal parts by default, at whole multiples of the longest stitch by the simple and staggered methods</td></tr>
+<tr><td><code>REQ-SAT-022</code></td><td>Each stretch of pairs in a row whose stitches lean more than 45° from square to the column, to a tenth of a degree, gets one <code>SC-W0208</code> at the middle of its middle pair, whatever the satin method. The column runs halfway between its 2 rails. Stitches square to a rail, and stitches at 45°, give none</td></tr>
+<tr><td><code>REQ-SAT-023</code></td><td>A satin column whose longest top stitch, as sewn, is longer than 12 mm gets one <code>SC-W0209</code> at that stitch’s middle, whatever the satin method. A longest stitch that splits them, or an end that cuts one in 2, leaves none</td></tr>
+<tr><td><code>REQ-SAT-024</code></td><td>An S-stitch sews each of a satin column’s pairs once across, the first and every other one from the second rail, the rest from the first. A stitch splits as one from the first rail to the second would. The default method makes the fewest equal parts, and the simple and staggered methods number the stitch as its pair is, from 0</td></tr>
+<tr><td><code>REQ-SAT-025</code></td><td>An S-stitch steps along a rail from each pair’s inset point to the next pair’s in one stitch, which it never splits</td></tr>
+<tr><td><code>REQ-SAT-026</code></td><td>A zigzag satin places a satin column’s pairs at half the zigzag spacing and sews one point of each, the rails alternating from the first rail. Each 2 points in a row are a pair across, and a point left over is left out. The pairs are inset along their own stitches and sewn across and back as a satin column’s. Its outline runs through pairs at the full spacing</td></tr>
+<tr><td><code>REQ-SAT-027</code></td><td>A zigzag satin’s stitches split by the column’s split method. The simple and staggered methods number the stitch back to pair i 2i and the stitch across it 2i + 1. By default each splits into its own fewest equal parts, the stitch back taking no count from the stitch across before it</td></tr>
+<tr><td><code>REQ-SAT-028</code></td><td>Under a zigzag satin, the contour’s first side stops at the zigzag’s last point on the first rail, and its second side at its first and last points on the second rail, before the insets. An odd centre walk moves none of these places</td></tr>
+<tr><td><code>REQ-SAT-029</code></td><td>The E-stitches, S-stitches and zigzag satins of TS-11A sew in the pinned Ink/Stitch as in StitchCraft, by the differential’s measures</td></tr>
+</tbody>
+</table>
+</div>
+<p>Machine checkpoint MC-3 sews a width ladder (1–10 mm) and an underlay comparison to tune defaults
+(<a href="../../plan/machine-testing.html">machine testing</a>).</p>
+<h2 id="diagnostics"><a class="header" href="#diagnostics">Diagnostics</a></h2>
+<p><code>SC-E0201</code>, <code>SC-W0202</code>, <code>SC-W0203</code>, <code>SC-W0205</code>, <code>SC-W0206</code> (a contour underlay too short for its insets
+keeps its length), <code>SC-W0207</code>, <code>SC-W0208</code> (stitches leaning more than 45° from square to the column),
+<code>SC-W0209</code> (a top stitch longer than 12 mm), <code>SC-W0210</code>, <code>SC-W0211</code>, <code>SC-W0212</code>, <code>SC-W0213</code>, <code>SC-E0214</code>,
+<code>SC-W0215</code> (a column too small to sew), <code>SC-E0216</code> (a column without a section to sew) and <code>SC-W0217</code> (a
+clipped column sewn whole). The running
+stitch’s <code>SC-W0402</code> names a travel length raised to twice the shortest stitch.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../design/algorithms/strokes.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../design/algorithms/offset.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../design/algorithms/strokes.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../design/algorithms/offset.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../mark-09e88c2c.min.js"></script>
+        <script src="../../searcher-09f2665d.js"></script>
+
+        <script src="../../clipboard-1626706a.min.js"></script>
+        <script src="../../highlight-abc7f01d.js"></script>
+        <script src="../../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

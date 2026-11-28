@@ -1,0 +1,34 @@
+{
+ "plugins": [
+  "stroke",
+  "satin",
+  "fill",
+  "auto",
+  "pes",
+  "dst",
+  "settings",
+  "testsheet",
+  "tartan",
+  "lettering"
+ ],
+ "optionalPlugins": [
+  "stroke-to-satin",
+  "route-satins",
+  "route-runs"
+ ],
+ "version": "8c1aea720d81c803",
+ "vectorcraft": {
+  "tag": "v0.24.1",
+  "revision": "f4922aa7ac99a4f6d56fc68a83a44945207ec610"
+ },
+ "fonts": [
+  {
+   "folder": "small_font",
+   "licence": "fonts/small_font/LICENSE"
+  },
+  {
+   "folder": "barstitch_bold",
+   "licence": "fonts/barstitch_bold/LICENSE"
+  }
+ ]
+}
